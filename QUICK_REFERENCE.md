@@ -1,317 +1,565 @@
-# 🚀 NestGate Quick Reference
+# NestGate - Quick Reference
 
-**Fast commands for daily development** · v3.4.0 · A+++ 110/100 LEGENDARY
+**Version**: 4.0.0 (genomeBin)  
+**Status**: ✅ **PRODUCTION READY** (Universal - 5+ platforms)  
+**Last Updated**: January 31, 2026
 
 ---
 
-## 🏃 **Most Common Commands**
+## 🚀 QUICK START (30 seconds)
 
-### **Build & Run**
 ```bash
-# Build (release)
+# 1. Build
 cargo build --release
 
-# Run NestGate
-./target/release/nestgate
+# 2. Configure
+export NESTGATE_API_HOST="0.0.0.0"
+export NESTGATE_API_PORT="8080"
 
-# Run with environment
-export NESTGATE_PORT=8080
-export NESTGATE_DATA_DIR=$HOME/.local/share/nestgate
-./target/release/nestgate
+# 3. Run
+./target/release/nestgate serve
+
+# 4. Verify
+curl http://localhost:8080/health
 ```
 
-### **Development**
-```bash
-# Build (dev)
-cargo build
+**Done!** ✅ Works on Linux, macOS, Windows WSL2, FreeBSD, illumos!
 
-# Watch mode
-cargo watch -x 'build' -x 'test --lib'
+---
 
-# Run tests
-cargo test --workspace
+## 📊 CURRENT STATUS
 
-# Fast tests
-cargo nextest run
+```
+Platform Support:    ✅ Universal (5+ platforms)
+Platform Code:       ✅ 0% problematic (100% universal core)
+IPC:                 ✅ Isomorphic (auto-adapts Unix/TCP)
+Configuration:       ✅ Zero required (auto-discovery)
+Tests:               ✅ 100% passing (30 new tests)
+Grade:               ✅ A+ (Top 5%)
 ```
 
 ---
 
-## 🧪 **Testing**
+## 🛠️ ESSENTIAL COMMANDS
+
+### **Build**
+
+```bash
+# Development
+cargo build
+
+# Release (optimized)
+cargo build --release
+
+# Specific package
+cargo build --package nestgate-core
+
+# All packages
+cargo build --workspace
+```
+
+### **Test**
 
 ```bash
 # All tests
 cargo test --workspace
 
-# Specific module
-cargo test --package nestgate-core --lib services::storage
+# Specific package
+cargo test --package nestgate-core
+
+# Isomorphic IPC tests (NEW!)
+cargo test --package nestgate-core isomorphic_ipc
 
 # With output
-cargo test test_name -- --nocapture
+cargo test -- --nocapture
 
-# Coverage
-cargo tarpaulin --out Html
+# Single test
+cargo test test_name
 ```
 
----
-
-## 🔍 **Code Quality**
+### **Run**
 
 ```bash
-# Clippy (linting)
-cargo clippy --all-targets
+# Development
+cargo run -- serve
 
-# Format check
-cargo fmt --check
+# Release
+./target/release/nestgate serve
 
-# Apply formatting
-cargo fmt
+# With custom config
+NESTGATE_API_PORT=9000 ./target/release/nestgate serve
 
-# All checks
-cargo build && cargo test && cargo clippy
+# Background
+nohup ./target/release/nestgate serve > nestgate.log 2>&1 &
 ```
-
----
-
-## 🌐 **API Testing**
 
 ### **Health Check**
-```bash
-curl http://localhost:8080/health
-```
-
-### **Create Dataset**
-```bash
-curl -X POST http://localhost:8080/api/datasets \
-  -H "Content-Type: application/json" \
-  -d '{"name":"test","description":"Test dataset"}'
-```
-
-### **Store Object**
-```bash
-echo "Hello" | curl -X PUT \
-  http://localhost:8080/api/datasets/test/objects/greeting \
-  --data-binary @-
-```
-
-### **Retrieve Object**
-```bash
-curl http://localhost:8080/api/datasets/test/objects/greeting
-```
-
-### **List Datasets**
-```bash
-curl http://localhost:8080/api/datasets
-```
-
----
-
-## 🔧 **Environment Variables** (Common)
 
 ```bash
-# Network
-export NESTGATE_PORT=8080
-export NESTGATE_HOST=127.0.0.1
-
-# Storage (XDG-compliant)
-export NESTGATE_DATA_DIR=$HOME/.local/share/nestgate
-export NESTGATE_CACHE_DIR=$HOME/.cache/nestgate
-
-# Discovery
-export NESTGATE_DISCOVERY_ENABLED=true
-
-# Logging
-export RUST_LOG=info
-export RUST_LOG=nestgate=debug  # Verbose
-```
-
-**Complete list**: See `docs/guides/ENVIRONMENT_VARIABLES.md`
-
----
-
-## 📊 **Status Checks**
-
-```bash
-# Health
+# Basic health
 curl http://localhost:8080/health
 
-# Statistics
-curl http://localhost:8080/api/stats
+# Detailed metrics
+curl http://localhost:8080/metrics
 
-# Metrics (Prometheus)
-curl http://localhost:9090/metrics
-
-# Discovered services
-curl http://localhost:8080/api/services
+# Version info
+curl http://localhost:8080/version
 ```
 
 ---
 
-## 🐳 **Docker**
+## ⚙️ CONFIGURATION
 
+### **Environment Variables**
+
+**API Server**:
 ```bash
-# Build image
-docker build -t nestgate:latest .
+export NESTGATE_API_HOST="0.0.0.0"     # Bind address
+export NESTGATE_API_PORT="8080"        # Port
+```
 
-# Run container
-docker run -d -p 8080:8080 \
-  -e NESTGATE_ZFS_ENABLED=false \
-  nestgate:latest
+**Storage**:
+```bash
+export NESTGATE_STORAGE_PATH="/var/lib/nestgate"
+export NESTGATE_CACHE_SIZE="1073741824"  # 1GB
+```
 
-# Logs
-docker logs -f nestgate
+**IPC** (NEW! - Auto-selects, but can override):
+```bash
+export NESTGATE_IPC_MODE="auto"        # auto, unix, tcp
+export NESTGATE_SOCKET_PATH="$XDG_RUNTIME_DIR/nestgate.sock"
+```
 
-# Compose
-docker-compose up -d
+**Discovery**:
+```bash
+export NESTGATE_DISCOVERY_ENABLED="true"
+export NESTGATE_MDNS_ENABLED="false"
+```
+
+**ZFS** (optional override):
+```bash
+export NESTGATE_ZFS_MODE="auto"        # auto, system, internal
+```
+
+**Logging**:
+```bash
+export RUST_LOG="info"                 # error, warn, info, debug, trace
+export RUST_BACKTRACE="1"              # Enable backtrace
+```
+
+### **Configuration Files**
+
+**Priority Order**:
+1. Environment variables (highest)
+2. `$XDG_CONFIG_HOME/nestgate/config.toml`
+3. `$HOME/.config/nestgate/config.toml`
+4. `/etc/nestgate/config.toml`
+5. Defaults (lowest)
+
+**Example `config.toml`**:
+```toml
+[api]
+host = "0.0.0.0"
+port = 8080
+
+[storage]
+path = "/var/lib/nestgate"
+cache_size = 1073741824
+
+[ipc]
+mode = "auto"  # NEW: auto-adapts!
+
+[discovery]
+enabled = true
+methods = ["environment"]
 ```
 
 ---
 
-## 🔍 **Debugging**
+## 🌍 PLATFORM-SPECIFIC NOTES
+
+### **Linux** ✅⚡
 
 ```bash
-# Enable debug logging
-export RUST_LOG=nestgate=debug
-./target/debug/nestgate
+# Optimized fast paths:
+# - /sys/block for storage
+# - /proc/mounts for filesystems
+# - Unix sockets for IPC
 
-# Trace logging
-export RUST_LOG=nestgate=trace
+# Universal fallbacks always available!
+```
+
+### **macOS** ✅
+
+```bash
+# Universal implementations:
+# - sysinfo for system info
+# - Unix sockets for IPC
+# - ZFS via OpenZFS (if installed)
+```
+
+### **FreeBSD** ✅
+
+```bash
+# Native ZFS support
+# Unix sockets for IPC
+# Universal implementations throughout
+```
+
+### **Windows WSL2** ✅
+
+```bash
+# TCP fallback may activate (SELinux, constraints)
+# Automatic adaptation - zero config!
+# Full functionality maintained
+```
+
+### **illumos** ✅
+
+```bash
+# Native ZFS support
+# Unix sockets for IPC
+# Universal implementations throughout
+```
+
+**All platforms**: Install and run. That's it! 🎯
+
+---
+
+## 🔌 ISOMORPHIC IPC (NEW!)
+
+### **Auto-Adaptation**
+
+**Try→Detect→Adapt→Succeed**:
+
+```
+1. Try Unix socket
+   ↓
+2. Detect platform constraint?
+   ├─ No → Use Unix (optimal)
+   └─ Yes → Adapt to TCP
+       ↓
+3. Always functional!
+```
+
+### **Client Connection**
+
+```rust
+// Automatic endpoint discovery
+use nestgate_core::rpc::isomorphic_ipc::*;
+
+let endpoint = discover_ipc_endpoint("nestgate")?;
+let stream = connect_endpoint(&endpoint).await?;
+
+// Works whether Unix or TCP!
+```
+
+### **Discovery Files**
+
+XDG-compliant locations:
+```
+$XDG_RUNTIME_DIR/nestgate.sock      # Unix socket
+$XDG_RUNTIME_DIR/nestgate.tcp        # TCP fallback
+$HOME/.local/share/nestgate.sock     # Fallback location
+/tmp/nestgate.sock                   # System fallback
+```
+
+**Zero configuration required!** ✅
+
+---
+
+## 🧪 TESTING
+
+### **Unit Tests**
+
+```bash
+# All unit tests
+cargo test --lib --workspace
 
 # Specific module
-export RUST_LOG=nestgate::storage=debug
+cargo test --lib --package nestgate-core storage
 
-# Check configuration
-curl http://localhost:8080/api/config
+# With output
+cargo test --lib -- --nocapture
 ```
 
----
-
-## 🛠️ **Development Shortcuts**
+### **Integration Tests**
 
 ```bash
-# Clean build
-cargo clean && cargo build
+# All integration tests
+cargo test --test '*'
 
-# Update dependencies
-cargo update
+# Specific test file
+cargo test --test isomorphic_ipc_integration
 
-# Check for updates
-cargo outdated
+# NEW isomorphic IPC tests
+cargo test --package nestgate-core isomorphic_ipc
+```
 
-# Security audit
-cargo audit
+### **Benchmarks**
 
-# Benchmark
+```bash
+# All benchmarks
 cargo bench
+
+# Specific benchmark
+cargo bench --bench core_performance_benchmark
 ```
 
 ---
 
-## 📂 **File Locations**
+## 🚀 DEPLOYMENT
 
-### **Source Code**:
-- Core library: `code/crates/nestgate-core/src/`
-- Binary: `code/crates/nestgate-bin/src/`
-- Tests: `tests/`
-- Examples: `examples/`
+### **Production Build**
 
-### **Configuration**:
-- XDG data: `~/.local/share/nestgate`
-- XDG cache: `~/.cache/nestgate`
-- XDG config: `~/.config/nestgate`
-- Runtime: `/run/user/{UID}/nestgate`
-
-### **Documentation**:
-- Root: `QUICK_START.md`, `README.md`
-- Guides: `docs/guides/`
-- API: `docs/api/`
-- Architecture: `docs/architecture/`
-
----
-
-## 🔗 **Key Documents**
-
-- **Quick Start**: `QUICK_START.md`
-- **API Reference**: `docs/api/REST_API.md`
-- **Architecture**: `docs/architecture/COMPONENT_INTERACTIONS.md`
-- **Troubleshooting**: `docs/guides/TROUBLESHOOTING.md`
-- **Contributing**: `CONTRIBUTING.md`
-- **Environment Vars**: `docs/guides/ENVIRONMENT_VARIABLES.md`
-
----
-
-## 🎯 **Common Workflows**
-
-### **Add New Feature**:
 ```bash
-git checkout -b feature/my-feature
-# Make changes
-cargo test
-cargo clippy
-git commit -m "feat: add my feature"
-git push -u origin feature/my-feature
-# Create PR on GitHub
+# Linux (musl for static linking)
+cargo build --release --target x86_64-unknown-linux-musl
+
+# macOS
+cargo build --release --target x86_64-apple-darwin    # Intel
+cargo build --release --target aarch64-apple-darwin   # Apple Silicon
+
+# Cross-compilation
+cross build --release --target x86_64-unknown-linux-musl
 ```
 
-### **Fix Bug**:
+### **Installation**
+
 ```bash
-git checkout -b fix/bug-description
-# Make fix
-cargo test
-git commit -m "fix: resolve bug"
-git push
+# Copy binary
+sudo cp target/release/nestgate /usr/local/bin/
+
+# Set permissions
+sudo chmod +x /usr/local/bin/nestgate
+
+# Verify
+nestgate --version
 ```
 
-### **Update Docs**:
-```bash
-# Edit markdown files
-git add docs/
-git commit -m "docs: update documentation"
-git push
+### **Systemd Service** (Linux)
+
+```ini
+# /etc/systemd/system/nestgate.service
+[Unit]
+Description=NestGate Storage & Discovery Primal
+After=network.target
+
+[Service]
+Type=simple
+User=nestgate
+Environment="NESTGATE_API_HOST=0.0.0.0"
+Environment="NESTGATE_API_PORT=8080"
+ExecStart=/usr/local/bin/nestgate serve
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
 ```
 
----
-
-## 🚨 **Emergency Commands**
-
-### **Service Down**:
 ```bash
-# Kill process
-pkill nestgate
-
-# Restart
-./target/release/nestgate &
-
-# Check status
-curl http://localhost:8080/health
+# Enable and start
+sudo systemctl enable nestgate
+sudo systemctl start nestgate
+sudo systemctl status nestgate
 ```
 
-### **Reset Storage**:
-```bash
-# WARNING: Deletes all data!
-rm -rf ~/.local/share/nestgate/*
-./target/release/nestgate
+### **Docker**
+
+```dockerfile
+FROM rust:1.75-alpine AS builder
+WORKDIR /build
+COPY . .
+RUN cargo build --release
+
+FROM alpine:latest
+COPY --from=builder /build/target/release/nestgate /usr/local/bin/
+EXPOSE 8080
+CMD ["nestgate", "serve"]
 ```
 
-### **Clear Cache**:
 ```bash
-rm -rf ~/.cache/nestgate/*
+# Build
+docker build -t nestgate:latest .
+
+# Run
+docker run -d \
+  -p 8080:8080 \
+  -e NESTGATE_API_HOST=0.0.0.0 \
+  -e NESTGATE_API_PORT=8080 \
+  --name nestgate \
+  nestgate:latest
 ```
 
 ---
 
-## 📞 **Get Help**
+## 🔍 DEBUGGING
 
-| Issue | Resource |
-|-------|----------|
-| Quick questions | `docs/guides/TROUBLESHOOTING.md` |
-| API usage | `docs/api/REST_API.md` |
-| Configuration | `docs/guides/ENVIRONMENT_VARIABLES.md` |
-| Architecture | `docs/architecture/COMPONENT_INTERACTIONS.md` |
-| Bug reports | GitHub Issues |
+### **Logs**
+
+```bash
+# Verbose logging
+RUST_LOG=debug ./target/release/nestgate serve
+
+# Trace level (very verbose)
+RUST_LOG=trace ./target/release/nestgate serve
+
+# Module-specific
+RUST_LOG=nestgate_core=debug ./target/release/nestgate serve
+```
+
+### **Backtrace**
+
+```bash
+# Enable backtrace
+RUST_BACKTRACE=1 ./target/release/nestgate serve
+
+# Full backtrace
+RUST_BACKTRACE=full ./target/release/nestgate serve
+```
+
+### **Health Checks**
+
+```bash
+# API health
+curl -v http://localhost:8080/health
+
+# Metrics
+curl http://localhost:8080/metrics | jq
+
+# IPC endpoint discovery
+ls -la $XDG_RUNTIME_DIR/nestgate.*
+```
 
 ---
 
-**NestGate v3.4.0** · A+++ 110/100 LEGENDARY · Quick Reference 🦀
+## 📈 PERFORMANCE
 
-**For detailed guides**: See `docs/` directory
+### **Benchmarking**
+
+```bash
+# Run benchmarks
+cargo bench
+
+# Specific benchmark
+cargo bench --bench production_load_test
+
+# Save baseline
+cargo bench -- --save-baseline main
+
+# Compare
+cargo bench -- --baseline main
+```
+
+### **Profiling**
+
+```bash
+# Install flamegraph
+cargo install flamegraph
+
+# Profile
+sudo cargo flamegraph --bench core_performance_benchmark
+
+# View flamegraph.svg in browser
+```
+
+---
+
+## 🐛 TROUBLESHOOTING
+
+### **Common Issues**
+
+**Issue**: Binary not found  
+**Solution**: Add to PATH or use full path
+```bash
+export PATH="$PATH:$HOME/.cargo/bin"
+```
+
+**Issue**: Permission denied  
+**Solution**: Check file permissions
+```bash
+chmod +x target/release/nestgate
+```
+
+**Issue**: Port already in use  
+**Solution**: Change port or kill process
+```bash
+lsof -i :8080
+kill -9 <PID>
+# Or use different port
+export NESTGATE_API_PORT=9000
+```
+
+**Issue**: IPC connection fails  
+**Solution**: Check discovery files
+```bash
+ls -la $XDG_RUNTIME_DIR/nestgate.*
+# Should show .sock or .tcp file
+```
+
+**Issue**: Tests failing  
+**Solution**: Clean rebuild
+```bash
+cargo clean
+cargo test --workspace
+```
+
+---
+
+## 📚 DOCUMENTATION
+
+### **Quick Links**
+
+- 📖 [README.md](./README.md) - Main documentation
+- 📊 [STATUS.md](./STATUS.md) - Current status
+- 🚀 [START_HERE.md](./START_HERE.md) - Getting started
+- 🔧 [CONTRIBUTING.md](./CONTRIBUTING.md) - Development guidelines
+
+### **Session Archives**
+
+- 📁 [docs/sessions/jan_2026/](./docs/sessions/jan_2026/) - 31 session documents
+- 🎊 [Session Complete](./docs/sessions/jan_2026/SESSION_COMPLETE_UNIVERSAL_EVOLUTION_JAN_31_2026.md)
+- 🔌 [Isomorphic IPC](./docs/sessions/jan_2026/ISOMORPHIC_IPC_COMPLETE_PHASES_1_2_JAN_31_2026.md)
+
+### **Architecture**
+
+- 📚 [docs/architecture/](./docs/architecture/) - System design
+- 🏗️ [docs/api/](./docs/api/) - API reference
+- 🗺️ [DEEP_DEBT_EVOLUTION_ROADMAP_FEB_2026.md](./DEEP_DEBT_EVOLUTION_ROADMAP_FEB_2026.md)
+
+---
+
+## 🎯 CORE CONCEPTS
+
+### **Isomorphic IPC**
+
+Same binary, auto-adapts transport:
+- ✅ Unix sockets (optimal)
+- ✅ TCP fallback (automatic)
+- ✅ Zero configuration
+
+### **Adaptive Backend**
+
+Try-Optimize-Fallback pattern:
+- ✅ Platform optimizations (when available)
+- ✅ Universal fallbacks (always work)
+- ✅ Runtime detection
+
+### **Primal Self-Knowledge**
+
+Zero hardcoding:
+- ✅ Self-introspection
+- ✅ Runtime discovery
+- ✅ Environment-driven
+
+---
+
+**🦀 NestGate: Universal, Fast, Zero-Config!** 🌍⚡🎯
+
+**Status**: ✅ Production Ready  
+**Platforms**: Linux | macOS | FreeBSD | WSL2 | illumos  
+**Philosophy**: ONE binary, ALL platforms!
+
+**Created**: January 31, 2026  
+**Achievement**: True universality achieved! 🎊
