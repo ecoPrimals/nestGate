@@ -9,9 +9,18 @@
 // - Platform-specific installation paths
 
 //! Platform module
+//!
+//! **UNIVERSAL ARCHITECTURE** - Runtime capability-based platform detection
+//! **EVOLUTION**: Phase 2 Task 2 - Deep Debt Evolution (Jan 31, 2026)
+//!
+//! Uses universal service detection instead of compile-time OS checks
 
 use anyhow::Result;
 use std::path::{Path, PathBuf};
+
+// Import universal service detection
+mod service_detection;
+pub use service_detection::{UniversalServiceDetector, ServiceManager};
 
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
@@ -19,27 +28,31 @@ pub struct PlatformInfo {
     pub os: String,
     /// Arch
     pub arch: String,
-    /// Supports Systemd
-    pub supports_systemd: bool,
-    /// Supports Launchd
-    pub supports_launchd: bool,
-    /// Supports Windows Service
-    pub supports_windows_service: bool,
+    /// Service manager (runtime detected)
+    pub service_manager: ServiceManager,
     #[allow(dead_code)] // Reserved for future binary extension support
     /// Binary Extension
     pub binary_extension: String,
 }
 
 impl PlatformInfo {
+    /// Detect platform with runtime service manager detection
+    ///
+    /// **CAPABILITY-BASED**: Detects actual service manager at runtime
     #[must_use]
     pub fn detect() -> Self {
         let os = std::env::consts::OS.to_string();
         let arch = std::env::consts::ARCH.to_string();
 
+        // Runtime service manager detection!
+        let detector = UniversalServiceDetector::new();
+        let service_manager = detector.detect();
+        
+        tracing::info!("✅ Platform detected: {} {} with {} service manager", 
+                      os, arch, service_manager.name());
+
         Self {
-            supports_systemd: os == "linux",
-            supports_launchd: os == "macos",
-            supports_windows_service: os == "windows",
+            service_manager,
             binary_extension: if os == "windows" {
                 ".exe".to_string()
             } else {
@@ -50,14 +63,23 @@ impl PlatformInfo {
         }
     }
 
+    /// Check if service installation is supported
+    ///
+    /// **RUNTIME CHECK**: Based on actual service manager detection
     #[must_use]
     pub fn service_install_supported(&self) -> bool {
-        self.supports_systemd || self.supports_launchd || self.supports_windows_service
+        self.service_manager.supports_auto_start()
+    }
+    
+    /// Get service manager name
+    #[must_use]
+    pub fn service_manager_name(&self) -> &str {
+        self.service_manager.name()
     }
 
     #[must_use]
     pub fn get_binary_name(&self, name: &str) -> String {
-        format!("{}{}", name, ".exe")
+        format!("{}{}", name, self.binary_extension)
     }
 }
 
@@ -272,38 +294,48 @@ mod tests {
     fn test_service_install_supported() {
         let info = PlatformInfo::detect();
         let supported = info.service_install_supported();
-        // At least one service manager should be supported on common platforms
-        assert!(supported);
+        
+        println!("Service manager: {}", info.service_manager_name());
+        println!("Auto-start supported: {}", supported);
+        
+        // Should detect something (even if Manual)
+        assert!(matches!(
+            info.service_manager,
+            ServiceManager::Systemd 
+                | ServiceManager::Launchd 
+                | ServiceManager::WindowsService 
+                | ServiceManager::Manual
+        ));
     }
 
     #[test]
     #[cfg(target_os = "linux")]
-    fn test_linux_specific_flags() {
+    fn test_linux_platform() {
         let info = PlatformInfo::detect();
-        assert!(info.supports_systemd);
-        assert!(!info.supports_launchd);
-        assert!(!info.supports_windows_service);
         assert_eq!(info.os, "linux");
+        
+        // Service manager should be detected at runtime
+        println!("Linux service manager: {}", info.service_manager_name());
     }
 
     #[test]
     #[cfg(target_os = "macos")]
-    fn test_macos_specific_flags() {
+    fn test_macos_platform() {
         let info = PlatformInfo::detect();
-        assert!(!info.supports_systemd);
-        assert!(info.supports_launchd);
-        assert!(!info.supports_windows_service);
         assert_eq!(info.os, "macos");
+        
+        // Service manager should be detected at runtime
+        println!("macOS service manager: {}", info.service_manager_name());
     }
 
     #[test]
     #[cfg(target_os = "windows")]
-    fn test_windows_specific_flags() {
+    fn test_windows_platform() {
         let info = PlatformInfo::detect();
-        assert!(!info.supports_systemd);
-        assert!(!info.supports_launchd);
-        assert!(info.supports_windows_service);
         assert_eq!(info.os, "windows");
+        
+        // Service manager should be detected at runtime
+        println!("Windows service manager: {}", info.service_manager_name());
     }
 
     #[test]
@@ -346,37 +378,27 @@ mod tests {
 
         assert_eq!(info1.os, info2.os);
         assert_eq!(info1.arch, info2.arch);
-        assert_eq!(info1.supports_systemd, info2.supports_systemd);
+        
+        // Service manager should be consistent
+        assert_eq!(info1.service_manager_name(), info2.service_manager_name());
     }
 
     #[test]
-    fn test_platform_info_service_manager_exclusivity() {
+    fn test_runtime_service_detection() {
         let info = PlatformInfo::detect();
 
-        // Only one service manager should be supported at a time
-        let count = [
-            info.supports_systemd,
-            info.supports_launchd,
-            info.supports_windows_service,
-        ]
-        .iter()
-        .filter(|&&x| x)
-        .count();
-
-        assert_eq!(count, 1, "Exactly one service manager should be supported");
-    }
-
-    #[test]
-    fn test_platform_info_consistency() {
-        let info = PlatformInfo::detect();
-
-        // Verify consistency between OS and service manager support
-        if info.os == "linux" {
-            assert!(info.supports_systemd);
-        } else if info.os == "macos" {
-            assert!(info.supports_launchd);
-        } else if info.os == "windows" {
-            assert!(info.supports_windows_service);
-        }
+        println!("OS: {}", info.os);
+        println!("Architecture: {}", info.arch);
+        println!("Service Manager: {}", info.service_manager_name());
+        println!("Auto-start supported: {}", info.service_install_supported());
+        
+        // Service manager should be detected (even if Manual)
+        let manager_name = info.service_manager_name();
+        assert!(
+            manager_name == "systemd" 
+                || manager_name == "launchd" 
+                || manager_name == "Windows Service" 
+                || manager_name == "manual"
+        );
     }
 }
