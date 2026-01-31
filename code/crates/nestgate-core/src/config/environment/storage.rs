@@ -16,7 +16,7 @@ pub struct StorageConfig {
     /// ZFS pool name (default: tank)
     pub zfs_pool: String,
 
-    /// Data directory path (default: /var/lib/nestgate)
+    /// Data directory path (default: XDG-compliant or /var/lib/nestgate)
     pub data_dir: String,
 
     /// Cache size in megabytes (default: 512)
@@ -39,7 +39,11 @@ impl StorageConfig {
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
         Ok(Self {
             zfs_pool: Self::env_var_or(prefix, "ZFS_POOL", "tank".to_string())?,
-            data_dir: Self::env_var_or(prefix, "DATA_DIR", "/var/lib/nestgate".to_string())?,
+            data_dir: Self::env_var_or(prefix, "DATA_DIR", 
+                crate::config::storage_paths::StoragePaths::from_environment()
+                    .data_dir()
+                    .to_string_lossy()
+                    .to_string())?,
             cache_size_mb: Self::env_var_or(prefix, "CACHE_SIZE_MB", 512)?,
             compression_enabled: Self::env_var_or(prefix, "COMPRESSION", true)?,
             snapshot_retention_days: Self::env_var_or(prefix, "SNAPSHOT_RETENTION_DAYS", 30)?,
@@ -66,7 +70,10 @@ impl Default for StorageConfig {
     fn default() -> Self {
         Self {
             zfs_pool: "tank".to_string(),
-            data_dir: "/var/lib/nestgate".to_string(),
+            data_dir: crate::config::storage_paths::StoragePaths::from_environment()
+                .data_dir()
+                .to_string_lossy()
+                .to_string(),
             cache_size_mb: 512,
             compression_enabled: true,
             snapshot_retention_days: 30,

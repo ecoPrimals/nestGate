@@ -1,61 +1,31 @@
 // System utilities for NestGate core functionality
 //! System functionality and utilities.
 // Provides safe system operations and utilities.
+//!
+//! **UNIVERSAL SYSTEM INFO** - Uses `sysinfo` crate for cross-platform support
+//! **EVOLUTION**: Migrated from Linux `/proc/` to universal Rust (Jan 31, 2026)
+//! **Phase 1**: Deep Debt Evolution - Modern Idiomatic Rust
 
 use crate::{NestGateError, Result};
+use sysinfo::{System, SystemExt, CpuExt, ProcessExt, Pid};
 
 // ==================== SECTION ====================
 
 /// Get the operating system name
 pub fn get_os_name() -> String {
-    #[cfg(target_os = "linux")]
-    return "Linux".to_string();
-    #[cfg(target_os = "macos")]
-    return "macOS".to_string();
-
-    #[cfg(target_os = "windows")]
-    return "Windows".to_string();
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
-    return "Unknown".to_string();
+    System::name().unwrap_or_else(|| "Unknown".to_string())
 }
 
 /// Get the system architecture
 pub fn get_architecture() -> String {
     std::env::consts::ARCH.to_string()
 }
+
 /// Get the operating system version
 pub fn get_os_version() -> Result<String> {
-    #[cfg(target_os = "linux")]
-    {
-        match std::fs::read_to_string("/etc/os-release") {
-            Ok(content) => {
-                for line in content.lines() {
-                    if line.starts_with("VERSION=") {
-                        return Ok(line
-                            .trim_start_matches("VERSION=")
-                            .trim_matches('"')
-                            .to_string());
-                    }
-                }
-                Ok("unknown".to_string())
-            }
-            Err(_) => Ok("unknown".to_string()),
-        }
-    }
-    #[cfg(target_os = "macos")]
-    {
-        Ok("macOS".to_string())
-    }
-    #[cfg(target_os = "windows")]
-    {
-        Ok("Windows".to_string())
-    }
-    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
-    {
-        Ok("unknown".to_string())
-    }
+    Ok(System::os_version().unwrap_or_else(|| "unknown".to_string()))
 }
+
 /// Get detailed OS information
 pub fn get_os_info() -> Result<OsInfo> {
     Ok(OsInfo {
@@ -65,6 +35,7 @@ pub fn get_os_info() -> Result<OsInfo> {
         kernel_version: get_kernel_version()?,
     })
 }
+
 /// OS information structure
 #[derive(Debug, Clone)]
 /// Osinfo
@@ -78,46 +49,38 @@ pub struct OsInfo {
     /// Kernel Version
     pub kernel_version: String,
 }
+
 /// Get kernel version
 pub fn get_kernel_version() -> Result<String> {
-    #[cfg(target_os = "linux")]
-    {
-        match std::fs::read_to_string("/proc/version") {
-            Ok(content) => {
-                // Extract kernel version from the first line
-                if let Some(version) = content.split_whitespace().nth(2) {
-                    Ok(version.to_string())
-                } else {
-                    Ok("unknown".to_string())
-                }
-            }
-            Err(_) => Ok("unknown".to_string()),
-        }
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        Ok("unknown".to_string())
-    }
+    Ok(System::kernel_version().unwrap_or_else(|| "unknown".to_string()))
 }
 // ==================== SECTION ====================
 
-/// Get the number of CPU cores
+/// Get the number of CPU cores (universal via sysinfo)
 pub fn get_cpu_count() -> usize {
-    num_cpus::get()
+    let sys = System::new_all();
+    sys.cpus().len()
 }
-/// Get the number of physical CPU cores
+
+/// Get the number of physical CPU cores (universal via sysinfo)
 pub fn get_physical_cpu_count() -> usize {
-    num_cpus::get_physical()
+    let sys = System::new_all();
+    sys.physical_core_count().unwrap_or_else(|| sys.cpus().len())
 }
-/// Get CPU information
+
+/// Get CPU information (universal via sysinfo)
 pub fn get_cpu_info() -> CpuInfo {
+    let sys = System::new_all();
+    let cpus = sys.cpus();
+    
     CpuInfo {
-        logical_cores: get_cpu_count(),
-        physical_cores: get_physical_cpu_count(),
-        model: get_cpu_model(),
-        frequency: get_cpu_frequency(),
+        logical_cores: cpus.len(),
+        physical_cores: sys.physical_core_count().unwrap_or(cpus.len()),
+        model: cpus.first().map(|c| c.brand().to_string()).unwrap_or_else(|| "Unknown CPU".to_string()),
+        frequency: cpus.first().map(|c| c.frequency() as f64 / 1000.0), // MHz to GHz
     }
 }
+
 /// CPU information structure
 #[derive(Debug, Clone)]
 /// Cpuinfo
@@ -131,124 +94,47 @@ pub struct CpuInfo {
     /// Frequency
     pub frequency: Option<f64>, // in GHz
 }
-/// Get CPU model name
-pub fn get_cpu_model() -> String {
-    #[cfg(target_os = "linux")]
-    {
-        match std::fs::read_to_string("/proc/cpuinfo") {
-            Ok(content) => {
-                for line in content.lines() {
-                    if line.starts_with("model name") {
-                        if let Some(model) = line.split(':').nth(1) {
-                            return model.trim().to_string();
-                        }
-                    }
-                }
-                "Unknown CPU".to_string()
-            }
-            Err(_) => "Unknown CPU".to_string(),
-        }
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        "Unknown CPU".to_string()
-    }
-}
-/// Get CPU frequency in GHz (if available)
-pub fn get_cpu_frequency() -> Option<f64> {
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(content) = std::fs::read_to_string("/proc/cpuinfo") {
-            for line in content.lines() {
-                if line.starts_with("cpu MHz") {
-                    if let Some(freq_str) = line.split(':').nth(1) {
-                        if let Ok(freq_mhz) = freq_str.trim().parse::<f64>() {
-                            return Some(freq_mhz / 1000.0); // Convert MHz to GHz
-                        }
-                    }
-                }
-            }
-        }
-    }
-    None
-}
 // ==================== SECTION ====================
 
-/// Get total system memory in bytes
+/// Get total system memory in bytes (universal via sysinfo)
 pub fn get_total_memory() -> Result<u64> {
-    #[cfg(target_os = "linux")]
-    {
-        match std::fs::read_to_string("/proc/meminfo") {
-            Ok(content) => {
-                for line in content.lines() {
-                    if line.starts_with("MemTotal:") {
-                        if let Some(mem_str) = line.split_whitespace().nth(1) {
-                            if let Ok(mem_kb) = mem_str.parse::<u64>() {
-                                return Ok(mem_kb * 1024); // Convert KB to bytes
-                            }
-                        }
-                    }
-                }
-                Ok(8 * 1024 * 1024 * 1024) // Default to 8GB
-            }
-            Err(_) => Ok(8 * 1024 * 1024 * 1024), // Default to 8GB
-        }
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        // Fallback for non-Linux systems
-        Ok(8 * 1024 * 1024 * 1024) // Default to 8GB
-    }
+    let sys = System::new_all();
+    Ok(sys.total_memory())
 }
-/// Get free system memory in bytes
+
+/// Get free system memory in bytes (universal via sysinfo)
 pub fn get_free_memory() -> Result<u64> {
-    #[cfg(target_os = "linux")]
-    {
-        match std::fs::read_to_string("/proc/meminfo") {
-            Ok(content) => {
-                for line in content.lines() {
-                    if line.starts_with("MemAvailable:") {
-                        if let Some(mem_str) = line.split_whitespace().nth(1) {
-                            if let Ok(mem_kb) = mem_str.parse::<u64>() {
-                                return Ok(mem_kb * 1024); // Convert KB to bytes
-                            }
-                        }
-                    }
-                }
-                Ok(4 * 1024 * 1024 * 1024) // Default to 4GB free
-            }
-            Err(_) => Ok(4 * 1024 * 1024 * 1024), // Default to 4GB free
-        }
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        // Fallback for non-Linux systems
-        Ok(4 * 1024 * 1024 * 1024) // Default to 4GB free
-    }
+    let sys = System::new_all();
+    Ok(sys.available_memory())
 }
-/// Get used system memory in bytes
+
+/// Get used system memory in bytes (universal via sysinfo)
 pub fn get_used_memory() -> Result<u64> {
-    let total = get_total_memory()?;
-    let free = get_free_memory()?;
-    Ok(total.saturating_sub(free))
+    let sys = System::new_all();
+    Ok(sys.used_memory())
 }
-/// Get memory information
+
+/// Get memory information (universal via sysinfo)
 pub fn get_memory_info() -> Result<MemoryInfo> {
+    let sys = System::new_all();
+    let total = sys.total_memory();
+    let used = sys.used_memory();
+    let free = sys.available_memory();
+    
+    let usage_percent = if total > 0 {
+        (used as f64 / total as f64 * 100.0).round()
+    } else {
+        0.0
+    };
+    
     Ok(MemoryInfo {
-        total: get_total_memory()?,
-        free: get_free_memory()?,
-        used: get_used_memory()?,
-        usage_percent: {
-            let total = get_total_memory()? as f64;
-            let used = get_used_memory()? as f64;
-            if total > 0.0 {
-                (used / total * 100.0).round()
-            } else {
-                0.0
-            }
-        },
+        total,
+        free,
+        used,
+        usage_percent,
     })
 }
+
 /// Memory information structure
 #[derive(Debug, Clone)]
 /// Memoryinfo
@@ -266,95 +152,70 @@ pub struct MemoryInfo {
 
 /// Get total disk space in bytes for the root filesystem
 ///
-/// **100% SAFE**: This function uses completely safe filesystem operations
+/// **100% SAFE**: This function uses completely safe filesystem operations via sysinfo
 pub fn get_total_disk() -> Result<u64> {
-    // **SAFE**: Use standard library filesystem operations
-    match std::fs::metadata("/") {
-        Ok(_) => {
-            // For root filesystem, use safe approximation
-            // In production, this would use safe system calls via std::fs
-            Ok(1024 * 1024 * 1024 * 100) // 100GB safe default estimate
-        }
-        Err(e) => Err(NestGateError::Io {
-            error_message: format!(
-                "Could not access root filesystem: {e
-            }"
-            ),
-            // retryable: true}),
+    use sysinfo::{System, Disks, DisksExt};
+    
+    let disks = Disks::new_with_refreshed_list();
+    
+    // Find root disk or return sum of all disks
+    let total = disks.iter()
+        .map(|disk| disk.total_space())
+        .sum();
+    
+    if total > 0 {
+        Ok(total)
+    } else {
+        // Fallback estimate if no disks detected
+        Ok(100 * 1024 * 1024 * 1024) // 100GB estimate
     }
 }
+
 /// Get free disk space in bytes for the root filesystem
 ///
-/// **100% SAFE**: This function uses completely safe filesystem operations
+/// **100% SAFE**: This function uses completely safe filesystem operations via sysinfo
 pub fn get_free_disk() -> Result<u64> {
-    // **SAFE**: Use standard library filesystem operations
-    match std::fs::metadata("/tmp") {
-        Ok(_) => {
-            // For free space, use safe approximation
-            // In production, this would use safe system calls via std::fs
-            Ok(1024 * 1024 * 1024 * 50) // 50GB safe default estimate
-        }
-        Err(e) => Err(NestGateError::Io {
-            error_message: format!(
-                "Could not access filesystem: {e
-            }"
-            ),
-            // retryable: true}),
+    use sysinfo::{System, Disks, DisksExt};
+    
+    let disks = Disks::new_with_refreshed_list();
+    
+    // Find root disk or return sum of available space
+    let free = disks.iter()
+        .map(|disk| disk.available_space())
+        .sum();
+    
+    if free > 0 {
+        Ok(free)
+    } else {
+        // Fallback estimate if no disks detected
+        Ok(50 * 1024 * 1024 * 1024) // 50GB estimate
     }
 }
 // ==================== SECTION ====================
 
-/// Get system hostname
+/// Get system hostname (universal)
 pub fn get_hostname() -> Result<String> {
     gethostname::gethostname()
         .to_str()
         .map(|s| s.to_string())
-        .ok_or_else(|| NestGateError::internal_error(
+        .ok_or_else(|| NestGateError::internal_error("Failed to get hostname"))
 }
-/// Get system uptime in seconds
-pub fn get_uptime() -> Result<u64> {
-    #[cfg(target_os = "linux")]
-    {
-        match std::fs::read_to_string("/proc/uptime") {
-            Ok(content) => {
-                if let Some(uptime_str) = content.split_whitespace().next() {
-                    if let Ok(uptime_f64) = uptime_str.parse::<f64>() {
-                        return Ok(uptime_f64 as u64);
-                    }
-                }
-                Ok(0)
-            }
-            Err(_) => Ok(0),
-        }
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        Ok(0) // Default for non-Linux systems
-    }
-}
-/// Get load average (Linux only)
-pub fn get_load_average() -> Result<LoadAverage> {
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(content) = std::fs::read_to_string("/proc/loadavg") {
-            let parts: Vec<&str> = content.split_whitespace().collect();
-            if parts.len() >= 3 {
-                let one_min = parts[0].parse::<f64>().unwrap_or(0.0);
-                let five_min = parts[1].parse::<f64>().unwrap_or(0.0);
-                let fifteen_min = parts[2].parse::<f64>().unwrap_or(0.0);
-                return Ok(LoadAverage {
-                    one_minute: one_min,
-                    five_minutes: five_min,
-                    fifteen_minutes: fifteen_min,
-                );
-            }
-        }
-    }
 
+/// Get system uptime in seconds (universal via sysinfo)
+pub fn get_uptime() -> Result<u64> {
+    let sys = System::new_all();
+    Ok(System::uptime(&sys))
+}
+
+/// Get load average (universal via sysinfo)
+pub fn get_load_average() -> Result<LoadAverage> {
+    let sys = System::new_all();
+    let load = System::load_average(&sys);
+    
     Ok(LoadAverage {
-        one_minute: 0.0,
-        five_minutes: 0.0,
-        fifteen_minutes: 0.0,
+        one_minute: load.one,
+        five_minutes: load.five,
+        fifteen_minutes: load.fifteen,
     })
 }
 
