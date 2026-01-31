@@ -158,6 +158,7 @@ pub mod tcp_fallback;
 pub mod server;
 pub mod discovery;
 pub mod streams;
+pub mod unix_adapter;
 
 // Re-exports for convenience
 pub use platform_detection::is_platform_constraint;
@@ -165,3 +166,4 @@ pub use tcp_fallback::{RpcHandler, TcpFallbackServer};
 pub use server::IsomorphicIpcServer;
 pub use discovery::{IpcEndpoint, discover_ipc_endpoint};
 pub use streams::{IpcStream, connect_endpoint};
+pub use unix_adapter::UnixSocketRpcHandler;

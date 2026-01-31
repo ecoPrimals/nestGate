@@ -103,7 +103,7 @@ pub use unix_socket_server::JsonRpcUnixServer;
 // NEW: Isomorphic IPC exports (v0.3.0)
 pub use isomorphic_ipc::{
     connect_endpoint, discover_ipc_endpoint, is_platform_constraint, IpcEndpoint, IpcStream,
-    IsomorphicIpcServer, RpcHandler, TcpFallbackServer,
+    IsomorphicIpcServer, RpcHandler, TcpFallbackServer, UnixSocketRpcHandler,
 };
 
 #[cfg(test)]

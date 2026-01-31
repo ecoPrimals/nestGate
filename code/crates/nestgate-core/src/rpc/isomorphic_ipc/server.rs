@@ -78,6 +78,7 @@
 //! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)
 
 use anyhow::Result;
+use serde_json::Value;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
@@ -184,19 +185,113 @@ impl IsomorphicIpcServer {
 
     /// Try to start Unix socket server
     ///
-    /// **NOTE**: This is a placeholder implementation.
-    /// In production, this should call the existing Unix socket server.
-    ///
-    /// TODO: Wire up to existing `JsonRpcUnixServer` once interface is compatible
+    /// **INTEGRATED**: Now uses the existing Unix socket infrastructure
+    /// via the `UnixSocketRpcHandler` adapter.
     async fn try_unix_server(&self) -> Result<()> {
-        // Placeholder: In production, this would call:
-        // let unix_server = JsonRpcUnixServer::new(&self.service_name, self.handler.clone()).await?;
-        // unix_server.serve().await
+        use tokio::net::UnixListener;
 
-        // For now, simulate Unix socket attempt
-        Err(anyhow::anyhow!(
-            "Unix socket server integration pending (see TODO in server.rs)"
-        ))
+        // Get socket path (XDG-compliant)
+        let socket_path = self.get_socket_path()?;
+
+        // Prepare socket path (create dirs, remove old socket)
+        self.prepare_socket_path(&socket_path)?;
+
+        // Bind to Unix socket
+        let listener = UnixListener::bind(&socket_path)
+            .map_err(|e| anyhow::anyhow!("Failed to bind Unix socket: {}", e))?;
+
+        info!("✅ Unix socket bound: {}", socket_path.display());
+
+        // Accept connections
+        loop {
+            match listener.accept().await {
+                Ok((stream, _addr)) => {
+                    let handler = self.handler.clone();
+
+                    tokio::spawn(async move {
+                        if let Err(e) = Self::handle_unix_connection(stream, handler).await {
+                            error!("Unix connection error: {}", e);
+                        }
+                    });
+                }
+                Err(e) => {
+                    error!("Failed to accept Unix connection: {}", e);
+                }
+            }
+        }
+    }
+
+    /// Handle Unix socket connection
+    async fn handle_unix_connection(
+        stream: tokio::net::UnixStream,
+        handler: Arc<dyn RpcHandler>,
+    ) -> Result<()> {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let (reader, mut writer) = stream.into_split();
+        let mut reader = BufReader::new(reader);
+        let mut line = String::new();
+
+        loop {
+            line.clear();
+
+            match reader.read_line(&mut line).await {
+                Ok(0) => break, // Connection closed
+                Ok(_) => {
+                    // Parse and handle request
+                    match serde_json::from_str::<Value>(&line) {
+                        Ok(request) => {
+                            let response = handler.handle_request(request).await;
+                            let response_str = serde_json::to_string(&response)?;
+
+                            writer.write_all(response_str.as_bytes()).await?;
+                            writer.write_all(b"\n").await?;
+                        }
+                        Err(e) => {
+                            warn!("Invalid JSON-RPC request: {}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    error!("Unix socket read error: {}", e);
+                    break;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Get socket path (XDG-compliant)
+    fn get_socket_path(&self) -> Result<std::path::PathBuf> {
+        // Try XDG_RUNTIME_DIR first (preferred)
+        if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+            return Ok(std::path::PathBuf::from(format!(
+                "{}/{}.sock",
+                runtime_dir, self.service_name
+            )));
+        }
+
+        // Fallback to /tmp
+        Ok(std::path::PathBuf::from(format!(
+            "/tmp/{}.sock",
+            self.service_name
+        )))
+    }
+
+    /// Prepare socket path (create dirs, remove old socket)
+    fn prepare_socket_path(&self, socket_path: &std::path::Path) -> Result<()> {
+        // Create parent directory if needed
+        if let Some(parent) = socket_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        // Remove old socket if exists
+        if socket_path.exists() {
+            std::fs::remove_file(socket_path)?;
+        }
+
+        Ok(())
     }
 
     /// Start TCP fallback server
