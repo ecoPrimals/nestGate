@@ -231,15 +231,17 @@ impl CapabilityConfig {
         // Otherwise, introspect what we have available
         let mut capabilities = vec!["storage".to_string()];
 
-        // Check if ZFS is available
-        #[cfg(target_os = "linux")]
-        if tokio::process::Command::new("zfs")
+        // Check if ZFS is available (runtime capability detection - universal!)
+        // This works on ALL platforms with ZFS installed
+        if let Ok(output) = tokio::process::Command::new("zfs")
             .arg("--version")
             .output()
             .await
-            .is_ok()
         {
-            capabilities.push("zfs".to_string());
+            if output.status.success() {
+                debug!("✅ ZFS capability detected (universal runtime check)");
+                capabilities.push("zfs".to_string());
+            }
         }
 
         Ok(capabilities)

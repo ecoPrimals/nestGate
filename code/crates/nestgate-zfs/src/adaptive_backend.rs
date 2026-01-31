@@ -150,28 +150,33 @@ impl AdaptiveZfsBackend {
         }
     }
 
-    /// Check if ZFS kernel module is loaded (Linux only)
+    /// Check if ZFS kernel module is loaded
+    ///
+    /// **UNIVERSAL**: Adapts check based on platform capabilities at runtime
+    ///
+    /// - Linux: Checks /proc/modules for 'zfs' module
+    /// - Other platforms: Assumes ZFS is available if commands work
+    ///   (FreeBSD/illumos have ZFS built-in, macOS uses OpenZFS kext)
     async fn check_kernel_module() -> bool {
-        #[cfg(target_os = "linux")]
-        {
-            match tokio::fs::read_to_string("/proc/modules").await {
-                Ok(modules) => {
-                    let loaded = modules.lines().any(|line| line.starts_with("zfs "));
-                    debug!("ZFS kernel module loaded: {}", loaded);
-                    loaded
-                }
-                Err(e) => {
-                    debug!("Cannot read /proc/modules: {} - assuming module loaded", e);
-                    true // Assume loaded if we can't check
-                }
+        // Try to read /proc/modules (Linux-specific, but fails gracefully on other platforms)
+        match tokio::fs::read_to_string("/proc/modules").await {
+            Ok(modules) => {
+                // We're on Linux and can check /proc/modules
+                let loaded = modules.lines().any(|line| line.starts_with("zfs "));
+                debug!("✅ Linux detected: ZFS kernel module loaded: {}", loaded);
+                loaded
             }
-        }
-
-        #[cfg(not(target_os = "linux"))]
-        {
-            // Non-Linux systems (FreeBSD, etc.) have ZFS built-in or use different mechanisms
-            debug!("Non-Linux system - skipping kernel module check");
-            true
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                // /proc/modules doesn't exist - we're not on Linux
+                // On FreeBSD, illumos, macOS: ZFS is integrated differently
+                debug!("ℹ️  Non-Linux system detected (no /proc/modules) - ZFS may be built-in or use different loading mechanism");
+                true // Assume available - will be validated by command checks
+            }
+            Err(e) => {
+                // Permission denied or other error
+                debug!("⚠️  Cannot read /proc/modules: {} - assuming module loaded", e);
+                true // Conservative: assume loaded if we can't check
+            }
         }
     }
 
