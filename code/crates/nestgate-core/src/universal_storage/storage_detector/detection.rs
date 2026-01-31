@@ -6,7 +6,7 @@
 //! **EVOLUTION**: Platform-specific code eliminated, universal trait-based detection
 
 use super::config::DetectionConfig;
-use super::types::{DetectedStorage, FilesystemStats};
+use super::types::DetectedStorage;
 use super::filesystem_detection::UniversalFilesystemDetector;
 use crate::unified_enums::storage_types::UnifiedStorageType;
 use crate::Result;
@@ -264,12 +264,6 @@ impl<'a> DetectionEngine<'a> {
         Ok(Vec::new())
     }
 
-    /// Analyze Block Device
-    async fn analyze_block_device(&self, _device: &str) -> Result<Option<DetectedStorage>> {
-        // Placeholder for block device analysis
-        Ok(None)
-    }
-
     /// Detect Tmpfs
     async fn detect_tmpfs(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for tmpfs detection
@@ -282,21 +276,7 @@ impl<'a> DetectionEngine<'a> {
         Ok(Vec::new())
     }
 
-    // Platform-specific methods removed - now using universal detection!
-
-    // Helper method for getting filesystem stats
-    async fn get_filesystem_stats(&self, _mount_point: &str) -> Result<FilesystemStats> {
-        // Placeholder implementation - would use system calls in real implementation
-        Ok(FilesystemStats {
-            total_bytes: 1_000_000_000, // 1GB
-            free_bytes: 500_000_000,    // 500MB
-            used_bytes: 500_000_000,    // 500MB
-            usage_percent: 50.0,
-            inode_total: 100_000,
-            inode_free: 50000,
-            filesystem_type: "ext4".to_string(),
-            mount_point: "/".to_string(),
-            device: "/dev/sda1".to_string(),
-        })
-    }
+    // Dead helper methods removed - superseded by universal filesystem detection (Phase 3.1)
+    // Previously: analyze_block_device(), get_filesystem_stats() 
+    // Now handled by: UniversalFilesystemDetector in filesystem_detection.rs
 }
