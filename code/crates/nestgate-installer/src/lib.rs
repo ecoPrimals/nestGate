@@ -736,8 +736,8 @@ mod installer_comprehensive_tests {
         // Verify all required fields are populated
         assert!(!platform.os.is_empty());
         assert!(!platform.arch.is_empty());
-        // PlatformInfo has boolean feature flags instead of distribution string
-        let _supports_systemd = platform.supports_systemd;
+        // PlatformInfo now uses service_manager runtime detection instead of compile-time flags
+        let _service_manager = &platform.service_manager;
         let _binary_ext = &platform.binary_extension;
     }
 

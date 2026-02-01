@@ -312,7 +312,7 @@ mod tests {
         let (manager, messages) = detector.detect_with_info();
         
         println!("Service manager: {}", manager.name());
-        for msg in messages {
+        for msg in &messages {
             println!("  {}", msg);
         }
         

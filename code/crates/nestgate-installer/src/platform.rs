@@ -280,7 +280,7 @@ mod tests {
         let cloned = info.clone();
         assert_eq!(info.os, cloned.os);
         assert_eq!(info.arch, cloned.arch);
-        assert_eq!(info.supports_systemd, cloned.supports_systemd);
+        assert_eq!(format!("{:?}", info.service_manager), format!("{:?}", cloned.service_manager));
     }
 
     #[test]
@@ -343,7 +343,13 @@ mod tests {
         let info = PlatformInfo::detect();
         let binary = info.get_binary_name("nestgate");
         assert!(binary.contains("nestgate"));
+        
+        // Platform-specific check
+        #[cfg(target_os = "windows")]
         assert!(binary.ends_with(".exe"));
+        
+        #[cfg(not(target_os = "windows"))]
+        assert!(!binary.ends_with(".exe"));
     }
 
     #[test]
