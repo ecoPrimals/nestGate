@@ -908,7 +908,6 @@ pub mod download;
 pub mod error;
 pub mod installer;
 pub mod platform;
-pub mod service_detection; // Universal service detection (used by platform)
 pub mod wizard;
 
 // Re-export commonly used types

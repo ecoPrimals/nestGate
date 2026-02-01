@@ -72,7 +72,9 @@ impl ServerConfig {
     /// # Errors
     /// Returns an error if the bind address cannot be parsed
     pub fn bind_endpoint(&self) -> Result<SocketAddr, std::net::AddrParseError> {
-        self.env_config.bind_address()
+        let host = &self.env_config.network.host;
+        let port = self.env_config.network.port.get();
+        format!("{}:{}", host, port).parse()
     }
 
     /// Get API port

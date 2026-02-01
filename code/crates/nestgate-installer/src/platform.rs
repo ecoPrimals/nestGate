@@ -18,8 +18,9 @@
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-// Re-export service detection types (declared in lib.rs)
-pub use crate::service_detection::{ServiceManager, UniversalServiceDetector};
+// Platform submodule
+mod service_detection;
+pub use service_detection::{ServiceManager, UniversalServiceDetector};
 
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
