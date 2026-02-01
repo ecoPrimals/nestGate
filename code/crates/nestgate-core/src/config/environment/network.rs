@@ -44,15 +44,83 @@ impl NetworkConfig {
     /// Load from environment with custom prefix
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
         Ok(Self {
-            port: Self::env_var_or(prefix, "PORT", Port::default())?,
-            // ✅ Using compile-time constant for default host
-            host: Self::env_var_or(prefix, "HOST", std::net::Ipv4Addr::LOCALHOST.to_string())?,
+            port: Self::env_port_with_alternatives(prefix)?,
+            host: Self::env_host_with_alternatives(prefix)?,
             timeout_secs: Self::env_var_or(prefix, "TIMEOUT_SECS", 30)?,
             max_connections: Self::env_var_or(prefix, "MAX_CONNECTIONS", 1000)?,
             read_timeout_secs: Self::env_var_or(prefix, "READ_TIMEOUT_SECS", 10)?,
             write_timeout_secs: Self::env_var_or(prefix, "WRITE_TIMEOUT_SECS", 10)?,
             keepalive_secs: Self::env_var_or(prefix, "KEEPALIVE_SECS", 60)?,
         })
+    }
+
+    /// Get host from environment with alternative names for compatibility
+    ///
+    /// Tries in order:
+    /// 1. NESTGATE_BIND (common bind address name)
+    /// 2. NESTGATE_BIND_ADDRESS (alternative)
+    /// 3. NESTGATE_HOST (original)
+    /// 4. Default (127.0.0.1)
+    fn env_host_with_alternatives(prefix: &str) -> Result<String, ConfigError> {
+        // Try BIND first (common name)
+        let bind_var = format!("{}_BIND", prefix);
+        if let Ok(val) = env::var(&bind_var) {
+            return Ok(val);
+        }
+
+        // Try BIND_ADDRESS (alternative)
+        let bind_address_var = format!("{}_BIND_ADDRESS", prefix);
+        if let Ok(val) = env::var(&bind_address_var) {
+            return Ok(val);
+        }
+
+        // Try HOST (original)
+        let host_var = format!("{}_HOST", prefix);
+        if let Ok(val) = env::var(&host_var) {
+            return Ok(val);
+        }
+
+        // Default
+        Ok(std::net::Ipv4Addr::LOCALHOST.to_string())
+    }
+
+    /// Get port from environment with alternative names for compatibility
+    ///
+    /// Tries in order:
+    /// 1. NESTGATE_API_PORT (documented in API server)
+    /// 2. NESTGATE_HTTP_PORT (alternative)
+    /// 3. NESTGATE_PORT (original)
+    /// 4. Default (8080)
+    fn env_port_with_alternatives(prefix: &str) -> Result<Port, ConfigError> {
+        // Try API_PORT first (documented name)
+        let api_port_var = format!("{}_API_PORT", prefix);
+        if let Ok(val) = env::var(&api_port_var) {
+            return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
+                key: api_port_var,
+                source: Box::new(e),
+            })?);
+        }
+
+        // Try HTTP_PORT (alternative)
+        let http_port_var = format!("{}_HTTP_PORT", prefix);
+        if let Ok(val) = env::var(&http_port_var) {
+            return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
+                key: http_port_var,
+                source: Box::new(e),
+            })?);
+        }
+
+        // Try PORT (original)
+        let port_var = format!("{}_PORT", prefix);
+        if let Ok(val) = env::var(&port_var) {
+            return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
+                key: port_var,
+                source: Box::new(e),
+            })?);
+        }
+
+        // Default
+        Ok(Port::default())
     }
 
     /// Helper to get environment variable or use default (public for other modules)
