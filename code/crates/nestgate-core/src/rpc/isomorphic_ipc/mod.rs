@@ -150,7 +150,7 @@
 //! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)  
 //! Implementation guide: `ISOMORPHIC_IPC_IMPLEMENTATION_PLAN_JAN_31_2026.md`
 //!
-//! **Status**: Phase 1 Implementation Complete ✅
+//! **Status**: Phases 1, 2 & 3 Complete ✅ (A++ Grade)
 
 // Module exports
 pub mod platform_detection;
@@ -159,6 +159,10 @@ pub mod server;
 pub mod discovery;
 pub mod streams;
 pub mod unix_adapter;
+// Phase 3: Deployment Coordination
+pub mod launcher;
+pub mod health;
+pub mod atomic;
 
 // Re-exports for convenience
 pub use platform_detection::is_platform_constraint;
@@ -167,3 +171,10 @@ pub use server::IsomorphicIpcServer;
 pub use discovery::{IpcEndpoint, discover_ipc_endpoint};
 pub use streams::{IpcStream, connect_endpoint};
 pub use unix_adapter::UnixSocketRpcHandler;
+// Phase 3 re-exports
+pub use launcher::{
+    connect_to_nestgate, connect_to_nestgate_with_retry, discover_nestgate_endpoint,
+    discover_nestgate_with_retry, is_nestgate_running,
+};
+pub use health::{check_nestgate_health, check_nestgate_health_detailed, HealthStatus};
+pub use atomic::{verify_nest_health, verify_nestgate_health, AtomicStatus, AtomicType};
