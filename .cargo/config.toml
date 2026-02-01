@@ -11,12 +11,15 @@ target-dir = "target"
 
 # ARM64 Linux (musl - static linking, fully portable)
 # Used for: USB LiveSpore, standalone Linux deployments
+# WORKAROUND: Use GNU linker for musl target (musl-gcc not installed)
+# NOTE: This produces a dynamically linked binary, not fully static
+# For true static linking, install: musl-tools, musl-dev, musl
 [target.aarch64-unknown-linux-musl]
-linker = "aarch64-linux-musl-gcc"
-rustflags = [
-    "-C", "target-feature=+crt-static",
-    "-C", "link-arg=-static",
-]
+linker = "aarch64-linux-gnu-gcc"
+# rustflags = [
+#     "-C", "target-feature=+crt-static",
+#     "-C", "link-arg=-static",
+# ]
 
 # ARM64 Android (via NDK)
 # Used for: Android deployments (Pixel, GrapheneOS)
