@@ -61,6 +61,28 @@ pub struct Cli {
     /// Command
     pub command: Commands,
 }
+
+/// Read port from environment with fallback chain (UniBin compliance)
+/// Priority: NESTGATE_API_PORT → NESTGATE_HTTP_PORT → NESTGATE_PORT → default
+fn port_from_env_or_default() -> u16 {
+    std::env::var("NESTGATE_API_PORT")
+        .or_else(|_| std::env::var("NESTGATE_HTTP_PORT"))
+        .or_else(|_| std::env::var("NESTGATE_PORT"))
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(nestgate_core::defaults::network::DEFAULT_API_PORT)
+}
+
+/// Read bind address from environment with fallback (UniBin compliance)
+/// Priority: NESTGATE_BIND → NESTGATE_BIND_ADDRESS → NESTGATE_HOST → default
+fn bind_from_env_or_default() -> String {
+    std::env::var("NESTGATE_BIND")
+        .or_else(|_| std::env::var("NESTGATE_BIND_ADDRESS"))
+        .or_else(|_| std::env::var("NESTGATE_HOST"))
+        .ok()
+        .unwrap_or_else(|| nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS.to_string())
+}
+
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Run NestGate as a daemon (server mode) - UniBin pattern
@@ -68,10 +90,12 @@ pub enum Commands {
     #[command(about = "Run NestGate daemon (server mode)")]
     Daemon {
         /// Port to bind to (ignored in socket-only mode)
-        #[arg(short, long, default_value_t = nestgate_core::defaults::network::DEFAULT_API_PORT)]
+        /// Reads from: NESTGATE_API_PORT, NESTGATE_HTTP_PORT, or NESTGATE_PORT
+        #[arg(short, long, default_value_t = port_from_env_or_default())]
         port: u16,
         /// Bind address (ignored in socket-only mode)
-        #[arg(long, default_value = nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS)]
+        /// Reads from: NESTGATE_BIND, NESTGATE_BIND_ADDRESS, or NESTGATE_HOST
+        #[arg(long, default_value_t = bind_from_env_or_default())]
         bind: String,
         /// Enable development mode
         #[arg(long)]
