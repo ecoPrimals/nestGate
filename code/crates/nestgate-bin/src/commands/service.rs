@@ -84,12 +84,9 @@ impl ServiceManager {
         // Log configuration
         socket_config.log_summary();
 
-        // Get family ID for server creation
-        let family_id = socket_config.family_id.clone();
-
         println!("✅ Configuration validated");
         println!("🔌 Socket path: {}", socket_config.socket_path.display());
-        println!("👪 Family ID: {}", family_id);
+        println!("👪 Family ID: {}", socket_config.family_id);
         println!("🆔 Node ID: {}", socket_config.node_id);
         println!(
             "📍 Source: {}",
@@ -102,7 +99,7 @@ impl ServiceManager {
         );
 
         // Create Unix socket server
-        let server = JsonRpcUnixServer::new(&family_id).await.map_err(|e| {
+        let server = JsonRpcUnixServer::new(&socket_config.family_id).await.map_err(|e| {
             crate::error::NestGateBinError::service_init_error(
                 format!("Failed to create Unix socket server: {}", e),
                 Some("unix-socket".to_string()),
@@ -348,8 +345,6 @@ async fn run_socket_only_daemon() -> BinResult<()> {
         )
     })?;
 
-    let family_id = socket_config.family_id.clone();
-
     println!("✅ Socket-only mode activated");
     println!("   • No HTTP server (avoids port conflicts)");
     println!("   • No external dependencies (DB, Redis, etc.)");
@@ -362,7 +357,7 @@ async fn run_socket_only_daemon() -> BinResult<()> {
 
     // Create Unix socket server with persistent storage backend
     println!("📦 Initializing persistent storage backend...");
-    let server = JsonRpcUnixServer::new(&family_id).await.map_err(|e| {
+    let server = JsonRpcUnixServer::new(&socket_config.family_id).await.map_err(|e| {
         crate::error::NestGateBinError::service_init_error(
             format!("Failed to create Unix socket server: {}", e),
             Some("unix-socket".to_string()),
