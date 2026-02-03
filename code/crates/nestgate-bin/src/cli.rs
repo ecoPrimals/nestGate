@@ -89,21 +89,22 @@ pub enum Commands {
     #[command(name = "daemon", alias = "server")]
     #[command(about = "Run NestGate daemon (server mode)")]
     Daemon {
-        /// Port to bind to (ignored in socket-only mode)
+        /// Port to bind to (only used with --enable-http)
         /// Reads from: NESTGATE_API_PORT, NESTGATE_HTTP_PORT, or NESTGATE_PORT
         #[arg(short, long, default_value_t = port_from_env_or_default())]
         port: u16,
-        /// Bind address (ignored in socket-only mode)
+        /// Bind address (only used with --enable-http)
         /// Reads from: NESTGATE_BIND, NESTGATE_BIND_ADDRESS, or NESTGATE_HOST
         #[arg(long, default_value_t = bind_from_env_or_default())]
         bind: String,
         /// Enable development mode
         #[arg(long)]
         dev: bool,
-        /// Run in Unix socket-only mode (no HTTP server, no external dependencies)
-        /// Perfect for NUCLEUS atomic patterns and inter-primal communication
+        /// Enable HTTP server (socket-only is default for TRUE ecoBin compliance)
+        /// Socket-only mode: Zero external dependencies, perfect for NUCLEUS atomic patterns
+        /// HTTP mode: Enables REST API and web endpoints (use only when needed)
         #[arg(long)]
-        socket_only: bool,
+        enable_http: bool,
     },
 
     /// Show daemon status (UniBin)
@@ -318,13 +319,13 @@ impl Cli {
         // Handle commands
         match self.command {
             // UniBin: Daemon mode command
-            Commands::Daemon { port, bind, dev, socket_only } => {
-                if socket_only {
-                    tracing::info!("🔌 Starting NestGate in Unix socket-only mode (NUCLEUS integration)");
+            Commands::Daemon { port, bind, dev, enable_http } => {
+                if enable_http {
+                    tracing::info!("🌐 Starting NestGate with HTTP server enabled");
                 } else {
-                    tracing::info!("🏰 Starting NestGate daemon (UniBin mode)");
+                    tracing::info!("🔌 Starting NestGate in socket-only mode (TRUE ecoBin - default)");
                 }
-                crate::commands::service::run_daemon(port, &bind, dev, socket_only)
+                crate::commands::service::run_daemon(port, &bind, dev, enable_http)
                     .await
                     .map_err(|e| {
                         BinErrorHelper::runtime_error(e.to_string(), Some("daemon".to_string()))

@@ -314,22 +314,22 @@ impl Default for ServiceManager {
 /// Run NestGate in daemon mode (UniBin pattern)
 ///
 /// This is the main server mode for NestGate, supporting:
-/// - Unix socket mode (ecosystem)
-/// - HTTP mode (standalone)
-pub async fn run_daemon(port: u16, bind: &str, dev: bool, socket_only: bool) -> BinResult<()> {
-    if socket_only {
-        info!("🔌 Starting NestGate in Unix socket-only mode (NUCLEUS integration)");
-        run_socket_only_daemon().await
-    } else {
-        info!("🏰 Starting NestGate daemon (UniBin mode)");
+/// - Socket-only mode (TRUE ecoBin default - zero external dependencies)
+/// - HTTP mode (optional - requires --enable-http flag)
+pub async fn run_daemon(port: u16, bind: &str, dev: bool, enable_http: bool) -> BinResult<()> {
+    if enable_http {
+        info!("🌐 Starting NestGate with HTTP server (optional mode)");
         info!("   Port: {}, Bind: {}, Dev: {}", port, bind, dev);
 
         let manager = ServiceManager::new();
         manager.start_service(Some(port), None).await
+    } else {
+        info!("🔌 Starting NestGate in socket-only mode (TRUE ecoBin - default)");
+        run_socket_only_daemon().await
     }
 }
 
-/// Run NestGate in Unix socket-only mode (NUCLEUS integration)
+/// Run NestGate in socket-only mode (TRUE ecoBin default - no HTTP dependencies)
 async fn run_socket_only_daemon() -> BinResult<()> {
     use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
 
