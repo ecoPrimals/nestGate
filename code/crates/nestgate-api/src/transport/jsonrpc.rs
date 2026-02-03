@@ -65,21 +65,74 @@ pub struct JsonRpcError {
     pub data: Option<Value>,
 }
 
+impl JsonRpcError {
+    /// Parse error (-32700)
+    #[must_use]
+    pub fn parse_error() -> Self {
+        Self {
+            code: -32700,
+            message: "Parse error".to_string(),
+            data: None,
+        }
+    }
+
+    /// Invalid request (-32600)
+    #[must_use]
+    pub fn invalid_request() -> Self {
+        Self {
+            code: -32600,
+            message: "Invalid Request".to_string(),
+            data: None,
+        }
+    }
+
+    /// Method not found (-32601)
+    #[must_use]
+    pub fn method_not_found() -> Self {
+        Self {
+            code: -32601,
+            message: "Method not found".to_string(),
+            data: None,
+        }
+    }
+
+    /// Internal error (-32603)
+    #[must_use]
+    pub fn internal_error() -> Self {
+        Self {
+            code: -32603,
+            message: "Internal error".to_string(),
+            data: None,
+        }
+    }
+}
+
 impl JsonRpcResponse {
     /// Create success response
     #[must_use]
-    pub fn success(id: Value, result: Value) -> Self {
+    pub fn success(id: impl Into<Value>, result: impl Into<Value>) -> Self {
         Self {
             jsonrpc: "2.0".to_string(),
-            result: Some(result),
+            result: Some(result.into()),
             error: None,
-            id,
+            id: id.into(),
         }
     }
 
     /// Create error response
     #[must_use]
-    pub fn error(id: Value, code: i32, message: impl Into<String>) -> Self {
+    pub fn error(id: impl Into<Value>, error: JsonRpcError) -> Self {
+        Self {
+            jsonrpc: "2.0".to_string(),
+            result: None,
+            error: Some(error),
+            id: id.into(),
+        }
+    }
+
+    /// Create error response with code and message
+    #[must_use]
+    pub fn error_with_code(id: impl Into<Value>, code: i32, message: impl Into<String>) -> Self {
         Self {
             jsonrpc: "2.0".to_string(),
             result: None,
@@ -88,7 +141,7 @@ impl JsonRpcResponse {
                 message: message.into(),
                 data: None,
             }),
-            id,
+            id: id.into(),
         }
     }
 }
@@ -149,7 +202,7 @@ where
                 Ok(req) => req,
                 Err(e) => {
                     error!("Invalid JSON-RPC request: {}", e);
-                    let error_response = JsonRpcResponse::error(Value::Null, -32700, "Parse error");
+                    let error_response = JsonRpcResponse::error_with_code(Value::Null, -32700, "Parse error");
                     let _ = self.send_response(&mut stream, &error_response).await;
                     continue;
                 }
@@ -180,7 +233,7 @@ where
             Ok(result) => JsonRpcResponse::success(request.id, result),
             Err(e) => {
                 error!("Method '{}' failed: {}", request.method, e);
-                JsonRpcResponse::error(request.id, -32603, format!("Internal error: {}", e))
+                JsonRpcResponse::error_with_code(request.id, -32603, format!("Internal error: {}", e))
             }
         }
     }
@@ -243,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_jsonrpc_response_error() {
-        let response = JsonRpcResponse::error(Value::from(1), -32600, "Invalid Request");
+        let response = JsonRpcResponse::error_with_code(Value::from(1), -32600, "Invalid Request");
         assert_eq!(response.jsonrpc, "2.0");
         assert!(response.result.is_none());
         assert!(response.error.is_some());
