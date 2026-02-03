@@ -48,19 +48,26 @@ export NESTGATE_BIND=0.0.0.0   # Default: 127.0.0.1
 ### **3. Run** (instant)
 
 ```bash
+# Default: Socket-only mode (TRUE ecoBin - zero dependencies!)
 ./target/release/nestgate daemon
+
+# OR with HTTP API (if needed):
+./target/release/nestgate daemon --enable-http --port 8085
 ```
 
 ### **4. Verify** (instant)
 
 ```bash
-# Check health
+# Socket-only mode (default):
+# Check via Unix socket (ecosystem integration)
+# Or enable HTTP for testing:
+./target/release/nestgate daemon --enable-http --port 8085 &
 curl http://localhost:8085/health
 
 # Expected: {"status":"healthy","version":"4.0.0"}
 ```
 
-**That's it!** NestGate auto-configures with flexible ports! 🎉
+**That's it!** NestGate defaults to socket-only (TRUE ecoBin)! 🎉
 
 ═══════════════════════════════════════════════════════════════════
 
