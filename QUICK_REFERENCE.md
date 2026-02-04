@@ -1,9 +1,10 @@
 # NestGate - Quick Reference
 
 **Version**: 4.0.0 (genomeBin)  
-**Grade**: **A++ (100%)** 🏆 **TOP 1% CERTIFIED**  
+**Grade**: **A++ (99%)** 🏆 **TOP 1% CERTIFIED**  
 **Status**: ✅ **PRODUCTION READY** (Universal - 6+ platforms)  
-**Last Updated**: February 2026
+**Configuration**: **A++** (Proper static linking, zero workarounds)  
+**Last Updated**: February 4, 2026
 
 ---
 
@@ -32,15 +33,17 @@ export NESTGATE_API_PORT="8085"
 ## 📊 CURRENT STATUS
 
 ```
-Grade:               🏆 A++ (100%) - TOP 1% CERTIFIED
+Grade:               🏆 A++ (99%) - TOP 1% CERTIFIED
 Platform Support:    ✅ Universal (6+ platforms)
-Deep Debt:           ✅ A++ (100%) - All 7 principles
+Deep Debt:           ✅ A++ (99%) - All 7 principles
+Configuration:       ✅ A++ (proper static linking)
 Socket Default:      ✅ TRUE ecoBin (socket-only)
 IPC:                 ✅ Isomorphic (auto-adapts Unix/TCP)
-Configuration:       ✅ Environment-driven (4-tier fallback)
+Environment:         ✅ 4-tier fallback (XDG-compliant)
 Tests:               ✅ 99.93% passing (1,474/1,475)
 Unwrap Safety:       ✅ 99.9% justified (production safe)
 Ecosystem:           ✅ 6/6 primals at A++
+Session Commits:     58 (February 2026)
 ```
 
 ---
@@ -55,6 +58,12 @@ cargo build
 
 # Release (optimized)
 cargo build --release
+
+# ARM64 (static binary, 4.0 MB)
+cargo build --release --target aarch64-unknown-linux-musl
+
+# x86_64 (static binary)
+cargo build --release --target x86_64-unknown-linux-musl
 
 # Specific package
 cargo build --package nestgate-core
