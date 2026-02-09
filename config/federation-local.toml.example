@@ -1,11 +1,36 @@
 # ==============================================================================
-# NestGate Local Federation Configuration
+# NestGate Local Federation Configuration - EXAMPLE
 # ==============================================================================
 #
-# Connects NestGate to local songbird orchestrator and toadstool services
+# ✅ DEEP DEBT PRINCIPLE #5: Hardcoding Elimination
 #
-# Date: November 10, 2025
-# Status: LIVE INTEGRATION
+# This is an EXAMPLE file for LOCAL DEVELOPMENT ONLY!
+# DO NOT use this file directly in production.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# PREFERRED: Environment-First Configuration (Zero Hardcoding)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Instead of using this file, set environment variables:
+#
+#   export NESTGATE_FEDERATION_ENABLED=true
+#   export NESTGATE_SONGBIRD_URL=http://YOUR_LOCAL_IP:8080
+#   export NESTGATE_TOADSTOOL_URL=http://YOUR_LOCAL_IP:8084
+#   export NESTGATE_SERVICE_PORT=9001
+#   export NESTGATE_DATA_DIR=/your/data/dir
+#
+# NestGate uses environment-first discovery (see discovery.methods below)
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# TO USE THIS EXAMPLE:
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# 1. Copy: cp config/federation-local.toml.example config/federation-local.toml
+# 2. Replace: {{LOCAL_IP}} with your actual local network IP
+# 3. Adjust: Other settings as needed for your environment
+#
+# Date: November 10, 2025 (Updated: February 9, 2026)
+# Status: EXAMPLE (Environment-first configuration recommended)
 #
 # ==============================================================================
 
@@ -16,7 +41,9 @@ primal_type = "storage"
 description = "NestGate ZFS Storage & Data Management for Ecosystem"
 
 # Service binding
-host = "192.168.1.144"  # Local network IP
+# ✅ REPLACE {{LOCAL_IP}} with your actual local network IP
+# ✅ BETTER: Use environment variable NESTGATE_SERVICE_HOST={{LOCAL_IP}}
+host = "{{LOCAL_IP}}"    # PLACEHOLDER: Your local network IP (e.g., 192.168.1.144)
 port = 9001              # NestGate service port
 health_port = 9002       # Health check port
 
@@ -32,10 +59,12 @@ discovery_mode = "active"  # active | passive | hybrid
 
 [federation.songbird]
 enabled = true
-orchestrator_url = "http://192.168.1.144:8080"
-health_endpoint = "http://192.168.1.144:8080/health"
-register_endpoint = "http://192.168.1.144:8080/api/v1/register"
-capabilities_endpoint = "http://192.168.1.144:8080/api/v1/capabilities"
+# ✅ REPLACE {{LOCAL_IP}} with your actual local network IP
+# ✅ BETTER: Use environment variable NESTGATE_SONGBIRD_URL=http://{{LOCAL_IP}}:8080
+orchestrator_url = "http://{{LOCAL_IP}}:8080"
+health_endpoint = "http://{{LOCAL_IP}}:8080/health"
+register_endpoint = "http://{{LOCAL_IP}}:8080/api/v1/register"
+capabilities_endpoint = "http://{{LOCAL_IP}}:8080/api/v1/capabilities"
 
 # Service registration details for songbird
 registration = { \
@@ -53,8 +82,10 @@ registration = { \
 
 [federation.toadstool]
 enabled = true
-byob_server_url = "http://192.168.1.144:8084"
-health_endpoint = "http://192.168.1.144:8084/health"
+# ✅ REPLACE {{LOCAL_IP}} with your actual local network IP
+# ✅ BETTER: Use environment variable NESTGATE_TOADSTOOL_URL=http://{{LOCAL_IP}}:8084
+byob_server_url = "http://{{LOCAL_IP}}:8084"
+health_endpoint = "http://{{LOCAL_IP}}:8084/health"
 
 # Capabilities we provide to toadstool
 capabilities = [
@@ -100,7 +131,8 @@ concurrent_operations = 100
 # ==============================================================================
 
 [endpoints]
-base_url = "http://192.168.1.144:9001"
+# ✅ REPLACE {{LOCAL_IP}} with your actual local network IP
+base_url = "http://{{LOCAL_IP}}:9001"
 
 [endpoints.datasets]
 list = "/api/v1/datasets"
@@ -243,9 +275,11 @@ announcement_ttl_secs = 300
 # Example Environment Variables (for dynamic configuration)
 # ==============================================================================
 #
+# ✅ DEEP DEBT: Environment-first configuration (recommended)
 # NESTGATE_FEDERATION_ENABLED=true
-# NESTGATE_SONGBIRD_URL=http://192.168.1.144:8080
-# NESTGATE_TOADSTOOL_URL=http://192.168.1.144:8084
+# NESTGATE_SONGBIRD_URL=http://{{YOUR_LOCAL_IP}}:8080
+# NESTGATE_TOADSTOOL_URL=http://{{YOUR_LOCAL_IP}}:8084
+# NESTGATE_SERVICE_HOST={{YOUR_LOCAL_IP}}
 # NESTGATE_SERVICE_PORT=9001
 # NESTGATE_DATA_DIR=/nestgate_data
 #
