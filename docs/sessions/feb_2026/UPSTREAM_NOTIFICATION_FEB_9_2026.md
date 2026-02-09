@@ -41,10 +41,12 @@
 - ✅ Mesh-ready (cross-gate model discovery)
 
 **Bugs Addressed**:
-- Bug 1 (Inverted Boolean): ❌ FALSE POSITIVE (no fix needed)
+- Bug 1 (Inverted Boolean): ✅ NOT PRESENT in NestGate main (biomeOS fork issue only)
 - Bug 2 (storage.retrieve): ⚠️ Enhanced logging (see details below)
 - Bug 3 (ZFS assumed): ✅ FIXED (universal backend)
 - Feature (storage.exists): ✅ IMPLEMENTED
+
+**IMPORTANT**: Bug 1 exists in biomeOS fork only. NestGate main is correct!
 
 **New API**:
 ```json
@@ -141,6 +143,50 @@ host = "{{LOCAL_IP}}"   # ✅ Placeholder
 - `CLEANUP_AUDIT_FEB_9_2026.md` (409 lines)
 
 ═══════════════════════════════════════════════════════════════════
+
+## 🚨 **BUG 1: Inverted Boolean - FORK DIVERGENCE**
+
+### **Status**: ✅ Not Present in NestGate Main
+
+**Critical Finding**: The reported boolean inversion bug does **NOT** exist in NestGate main branch!
+
+**NestGate Main Implementation** (CORRECT):
+```rust
+Daemon {
+    #[arg(long)]
+    enable_http: bool,  // No socket_only field!
+}
+
+Commands::Daemon { port, bind, dev, enable_http } => {
+    run_daemon(port, &bind, dev, enable_http)  // Direct pass-through ✅
+}
+```
+
+**biomeOS Fork Implementation** (BUG):
+```rust
+Daemon {
+    socket_only: bool,      // ← Added in fork
+    enable_http: bool,      // ← Kept from upstream
+}
+
+// Calculates and inverts:
+let use_socket_only = socket_only && !enable_http;
+run_daemon(port, &bind, dev, use_socket_only)  // ← INVERSION! ❌
+```
+
+**Root Cause**: biomeOS fork added `socket_only` field downstream, creating dual-boolean complexity
+
+**Recommendation**: **Sync with NestGate main** to resolve
+- Remove `socket_only` field addition
+- Use NestGate's proven single-boolean pattern
+- Eliminates need for downstream patch
+
+**Documentation**: `docs/sessions/feb_2026/BUG_INVESTIGATION_UPSTREAM_FEB_9_2026.md` (354 lines)
+- Complete analysis
+- Pattern guide
+- Sync recommendations
+
+---
 
 ## 🔧 **BUG 2: storage.retrieve - COORDINATION NEEDED**
 
