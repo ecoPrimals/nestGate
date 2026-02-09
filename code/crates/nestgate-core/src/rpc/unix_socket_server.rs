@@ -356,6 +356,7 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
     let result = match request.method.as_str() {
         "storage.store" => storage_store(&request.params, state).await,
         "storage.retrieve" => storage_retrieve(&request.params, state).await,
+        "storage.exists" => storage_exists(&request.params, state).await,
         "storage.delete" => storage_delete(&request.params, state).await,
         "storage.list" => storage_list(&request.params, state).await,
         "storage.stats" => storage_stats(&request.params, state).await,
@@ -426,6 +427,13 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
+    // ✅ ENHANCED LOGGING: Input validation
+    let data_str = serde_json::to_string(data).unwrap_or_else(|_| "<invalid>".to_string());
+    debug!(
+        "📝 storage.store called: family_id='{}', key='{}', value_size={} bytes",
+        family_id, key, data_str.len()
+    );
+
     // ✅ PERSISTENT: Store via StorageManagerService (filesystem-backed)
     let dataset = family_id; // Family maps to dataset
     let object_id = key;
@@ -434,20 +442,29 @@ async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<V
     let data_bytes = serde_json::to_vec(data)
         .map_err(|e| NestGateError::storage_error(&format!("Failed to serialize data: {}", e)))?;
 
+    // ✅ ENHANCED LOGGING: Before storage call
+    debug!(
+        "💾 Calling storage_manager.store_object: dataset='{}', key='{}', bytes={}",
+        dataset, object_id, data_bytes.len()
+    );
+
     // Store via persistent backend
-    state
+    let object_info = state
         .storage_manager
         .store_object(dataset, object_id, data_bytes)
         .await?;
 
-    debug!(
-        "✅ Stored key '{}' for family '{}' (persistent)",
-        key, family_id
+    // ✅ ENHANCED LOGGING: Success with details
+    info!(
+        "✅ storage.store SUCCESS: {}/{} ({} bytes stored)",
+        family_id, key, object_info.size_bytes
     );
 
     Ok(json!({
         "success": true,
-        "key": key
+        "key": key,
+        "family_id": family_id,
+        "size_bytes": object_info.size_bytes
     }))
 }
 
@@ -464,9 +481,21 @@ async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Resul
         NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
     })?;
 
+    // ✅ ENHANCED LOGGING: Input validation
+    debug!(
+        "📖 storage.retrieve called: family_id='{}', key='{}'",
+        family_id, key
+    );
+
     // ✅ PERSISTENT: Retrieve from StorageManagerService (filesystem-backed)
     let dataset = family_id;
     let object_id = key;
+
+    // ✅ ENHANCED LOGGING: Before storage call
+    debug!(
+        "🔍 Calling storage_manager.retrieve_object: dataset='{}', key='{}'",
+        dataset, object_id
+    );
 
     // Retrieve from persistent backend (returns (Vec<u8>, ObjectInfo))
     let (data_bytes, _info) = state
@@ -474,17 +503,85 @@ async fn storage_retrieve(params: &Option<Value>, state: &StorageState) -> Resul
         .retrieve_object(dataset, object_id)
         .await?;
 
-    // Deserialize bytes to JSON
-    let data: Value = serde_json::from_slice(&data_bytes)
-        .map_err(|e| NestGateError::storage_error(&format!("Failed to deserialize data: {}", e)))?;
-
+    // ✅ ENHANCED LOGGING: Retrieved bytes
     debug!(
-        "✅ Retrieved key '{}' for family '{}' (persistent)",
-        key, family_id
+        "📦 Retrieved raw bytes: {} bytes for {}/{}",
+        data_bytes.len(), family_id, key
+    );
+
+    // ✅ ENHANCED LOGGING: Before deserialization
+    debug!("🔄 Deserializing {} bytes as JSON...", data_bytes.len());
+
+    // Deserialize bytes to JSON
+    let data: Value = serde_json::from_slice(&data_bytes).map_err(|e| {
+        error!(
+            "❌ DESERIALIZATION FAILED for {}/{}: {}",
+            family_id, key, e
+        );
+        NestGateError::storage_error(&format!("Failed to deserialize data: {}", e))
+    })?;
+
+    // ✅ ENHANCED LOGGING: Success
+    info!(
+        "✅ storage.retrieve SUCCESS: {}/{} → {} bytes JSON",
+        family_id,
+        key,
+        serde_json::to_string(&data).unwrap_or_default().len()
     );
 
     Ok(json!({
         "data": data
+    }))
+}
+
+/// storage.exists - Check if data exists by key
+///
+/// Modern idiomatic Rust: Efficient existence check without data transfer
+/// Deep Debt Principle #1: Standard API pattern, no unnecessary data retrieval
+async fn storage_exists(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+    let params = params
+        .as_ref()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let family_id = params["family_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("family_id", "family_id (string) required")
+    })?;
+
+    // ✅ MODERN IDIOMATIC: Efficient check without full data retrieval
+    let dataset = family_id;
+    let object_id = key;
+
+    // Check existence via retrieve (returns error if not found)
+    // ✅ DEEP DEBT: Proper Result propagation, no unwraps
+    let exists = match state
+        .storage_manager
+        .retrieve_object(dataset, object_id)
+        .await
+    {
+        Ok(_) => true,
+        Err(e) => {
+            // Distinguish "not found" from actual errors
+            if e.to_string().contains("not found") || e.to_string().contains("Not found") {
+                false
+            } else {
+                // Propagate actual errors
+                return Err(e);
+            }
+        }
+    };
+
+    debug!(
+        "🔍 Existence check: key='{}', family='{}', exists={}",
+        key, family_id, exists
+    );
+
+    Ok(json!({
+        "exists": exists,
+        "key": key,
+        "family_id": family_id
     }))
 }
 

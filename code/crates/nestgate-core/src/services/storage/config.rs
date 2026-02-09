@@ -3,6 +3,7 @@
 /// for the storage management system.
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use tracing::info;
 /// ZFS configuration for command execution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration for Zfs
@@ -211,6 +212,40 @@ impl StorageServiceConfig {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Create configuration with auto-detected backend capabilities
+    ///
+    /// ✅ DEEP DEBT: Agnostic, capability-based (no hardcoding)
+    /// ✅ UNIVERSAL: Works on ANY filesystem
+    /// ✅ OPTIMIZED: Uses ZFS features when available
+    #[must_use]
+    pub fn with_auto_detect() -> Self {
+        use super::capabilities;
+        
+        // Detect available storage backends
+        let caps = capabilities::detect_and_log();
+        
+        let mut config = Self::default();
+        
+        // ✅ CAPABILITY-BASED: Only enable ZFS features if ZFS is available
+        match caps.backend_type {
+            capabilities::BackendType::Zfs => {
+                // ZFS available - enable optimization features
+                config.auto_discover_pools = true;
+                config.enable_quotas = true;
+                info!("🚀 ZFS optimization enabled (native features available)");
+            }
+            capabilities::BackendType::Filesystem => {
+                // No ZFS - use filesystem-only mode
+                config.auto_discover_pools = false;
+                config.enable_quotas = false;
+                info!("🌍 Filesystem mode (universal compatibility)");
+                info!("   Works on: ext4, NTFS, APFS, btrfs, XFS, etc.");
+            }
+        }
+        
+        config
     }
 
     /// Create a development configuration
