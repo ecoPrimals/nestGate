@@ -232,28 +232,43 @@ impl LiveServiceRegistry {
         }
     }
 
-    /// Check network service health
+    /// Check network service health via TCP connectivity
+    ///
+    /// **EVOLVED**: Replaced reqwest with raw TCP for ecoBin compliance.
+    /// NestGate delegates external HTTP to network primals.
     async fn check_network_service_health(&self, endpoint: &str) -> Result<()> {
-        // Try to connect to the service endpoint
-        if endpoint.starts_with("http") {
-            let client = reqwest::Client::new();
-            let response = client.get(endpoint).send().await;
+        use tokio::net::TcpStream;
 
-            match response {
-                Ok(resp) if resp.status().is_success() => {
-                    debug!("Network service health check passed");
-                    Ok(())
-                }
-                _ => Err(
-                    crate::canonical_modernization::NestGateError::service_unavailable(
-                        "network_health_check",
-                        &format!("Network service at {} is not responding", endpoint),
-                    ),
-                ),
-            }
+        // Extract host:port from endpoint URL
+        let addr = if endpoint.starts_with("http://") {
+            endpoint.trim_start_matches("http://")
+        } else if endpoint.starts_with("https://") {
+            endpoint.trim_start_matches("https://")
         } else {
-            // For non-HTTP endpoints, assume healthy for now
-            Ok(())
+            endpoint
+        };
+
+        // Strip any path component
+        let addr = addr.split('/').next().unwrap_or(addr);
+
+        // Add default port if missing
+        let addr = if addr.contains(':') {
+            addr.to_string()
+        } else {
+            format!("{addr}:80")
+        };
+
+        match TcpStream::connect(&addr).await {
+            Ok(_stream) => {
+                debug!("Network service health check passed (TCP reachable)");
+                Ok(())
+            }
+            Err(_) => Err(
+                crate::canonical_modernization::NestGateError::service_unavailable(
+                    "network_health_check",
+                    &format!("Network service at {} is not responding", endpoint),
+                ),
+            ),
         }
     }
 

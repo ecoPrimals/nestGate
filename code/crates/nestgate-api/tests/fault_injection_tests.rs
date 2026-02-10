@@ -2,7 +2,6 @@
 //!
 //! Tests for system behavior under injected faults.
 
-use nestgate_api::transport::jsonrpc::JsonRpcError;
 use nestgate_api::transport::{
     JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, NestGateRpcHandler, TransportConfig,
 };
@@ -37,7 +36,7 @@ async fn test_fault_empty_method_name() {
 
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
-        method: "".to_string(), // Empty method
+        method: String::new(), // Empty method
         params: json!({}),
         id: Value::from(2),
     };
@@ -147,7 +146,7 @@ async fn test_fault_handler_under_extreme_load() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"load_test": i}),
-                id: Value::from(i as i64),
+                id: Value::from(i64::from(i)),
             };
             h.handle_request(request).await
         });
@@ -166,8 +165,7 @@ async fn test_fault_handler_under_extreme_load() {
     // At least 90% should succeed under extreme load
     assert!(
         success_count >= 180,
-        "Only {}/200 succeeded under load",
-        success_count
+        "Only {success_count}/200 succeeded under load"
     );
 }
 
@@ -180,7 +178,7 @@ async fn test_fault_extremely_large_payload() {
     let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // 1MB of data
-    let large_data: Vec<String> = (0..100000).map(|i| format!("data_{}", i)).collect();
+    let large_data: Vec<String> = (0..100000).map(|i| format!("data_{i}")).collect();
 
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
@@ -308,7 +306,7 @@ async fn test_fault_request_during_high_cpu() {
 
 #[tokio::test]
 async fn test_fault_error_response_structure() {
-    let response = JsonRpcResponse::error(Value::from(1), -32600, "Invalid Request");
+    let response = JsonRpcResponse::error_with_code(Value::from(1), -32600, "Invalid Request");
 
     assert_eq!(response.id, Value::from(1));
     assert!(response.result.is_none());
@@ -326,15 +324,15 @@ async fn test_fault_multiple_errors_in_sequence() {
     for i in 0..20 {
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
-            method: format!("invalid.method.{}", i),
+            method: format!("invalid.method.{i}"),
             params: json!({}),
-            id: Value::from(i as i64),
+            id: Value::from(i64::from(i)),
         };
 
         let response = handler.handle_request(request).await;
 
-        // Should consistently return errors (internal error for method not found)
+        // Should consistently return errors (method not found per JSON-RPC spec)
         assert!(response.error.is_some());
-        assert_eq!(response.error.unwrap().code, -32603);
+        assert_eq!(response.error.unwrap().code, -32601);
     }
 }

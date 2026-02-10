@@ -104,7 +104,7 @@ fn test_health_status_deserialization() {
 
 #[test]
 fn test_health_status_all_variants() {
-    let statuses = vec![
+    let statuses = [
         HealthStatus::Healthy,
         HealthStatus::Warning,
         HealthStatus::Critical,
@@ -267,7 +267,7 @@ fn test_alert_level_serialization() {
 
 #[test]
 fn test_alert_level_all_variants() {
-    let levels = vec![AlertLevel::Info, AlertLevel::Warning, AlertLevel::Critical];
+    let levels = [AlertLevel::Info, AlertLevel::Warning, AlertLevel::Critical];
 
     assert_eq!(levels.len(), 3);
 }
@@ -424,7 +424,7 @@ fn test_alert_with_control_characters() {
 
 #[test]
 fn test_multiple_health_statuses() {
-    let statuses = vec![
+    let statuses = [
         HealthStatus::Healthy,
         HealthStatus::Warning,
         HealthStatus::Critical,
@@ -513,7 +513,7 @@ fn test_pool_health_degradation_scenario() {
 
 #[test]
 fn test_alert_escalation_scenario() {
-    let alerts = vec![
+    let alerts = [
         Alert {
             id: "alert-1".to_string(),
             level: AlertLevel::Info,
@@ -542,7 +542,6 @@ fn test_alert_escalation_scenario() {
 
 #[test]
 fn test_concurrent_health_reports() {
-    use std::sync::Arc;
     use std::thread;
 
     let reports: Vec<_> = (0..100)
@@ -573,7 +572,7 @@ fn test_concurrent_health_reports() {
 
 #[test]
 fn test_health_status_frequency_analysis() {
-    let statuses = vec![
+    let statuses = [
         HealthStatus::Healthy,
         HealthStatus::Healthy,
         HealthStatus::Warning,

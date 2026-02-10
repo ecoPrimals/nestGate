@@ -50,6 +50,7 @@ async fn main() -> BinResult<()> {
             nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS,
             false,
             false, // enable_http = false (socket-only is default)
+            None,  // family_id: discovered at runtime
         )
         .await;
     }

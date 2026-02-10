@@ -69,8 +69,8 @@ impl KubernetesDiscovery {
         // Get k8s API server address
         let api_server = std::env::var("KUBERNETES_SERVICE_HOST")
             .map(|host| {
-                let port = std::env::var("KUBERNETES_SERVICE_PORT")
-                    .unwrap_or_else(|_| "443".to_string());
+                let port =
+                    std::env::var("KUBERNETES_SERVICE_PORT").unwrap_or_else(|_| "443".to_string());
                 format!("https://{}:{}", host, port)
             })
             .unwrap_or_else(|_| "https://kubernetes.default.svc".to_string());
@@ -84,10 +84,7 @@ impl KubernetesDiscovery {
             .danger_accept_invalid_certs(true) // In-cluster certs are self-signed
             .build()
             .map_err(|e| {
-                crate::error::NestGateError::config(&format!(
-                    "Failed to create HTTP client: {}",
-                    e
-                ))
+                crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e))
             })?;
 
         Ok(Self {
@@ -170,10 +167,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
         }
 
         let service_list: K8sServiceList = response.json().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!(
-                "Failed to parse k8s response: {}",
-                e
-            ))
+            crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e))
         })?;
 
         Ok(service_list
@@ -212,10 +206,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
         }
 
         let service: K8sService = response.json().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!(
-                "Failed to parse k8s response: {}",
-                e
-            ))
+            crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e))
         })?;
 
         Ok(self.service_to_info(service))

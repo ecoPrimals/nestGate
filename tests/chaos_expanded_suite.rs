@@ -269,23 +269,26 @@ async fn chaos_test_resource_starvation() {
 
     use tokio::sync::Semaphore;
 
-    let resources = Arc::new(Semaphore::new(2)); // Only 2 resources
+    let resources = Arc::new(Semaphore::new(1)); // Only 1 resource
     let starved = Arc::new(AtomicU32::new(0));
 
-    let mut handles = Vec::new();
+    // Blocker: hold the single resource for 100ms so others starve
+    let resources_block = Arc::clone(&resources);
+    let blocker = tokio::spawn(async move {
+        let _permit = resources_block.acquire().await.unwrap();
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    });
 
-    // 10 tasks competing for 2 resources
-    for _ in 0..10 {
+    // 9 tasks competing - will timeout waiting (10ms << 100ms)
+    let mut handles = Vec::new();
+    for _ in 0..9 {
         let resources_clone = Arc::clone(&resources);
         let starved_clone = Arc::clone(&starved);
 
         let handle = tokio::spawn(async move {
-            match tokio::time::timeout(Duration::from_millis(50), resources_clone.acquire()).await {
-                Ok(_permit) => {
-                    // Got resource
-                }
+            match tokio::time::timeout(Duration::from_millis(10), resources_clone.acquire()).await {
+                Ok(_) => {}
                 Err(_) => {
-                    // Starved - couldn't get resource in time
                     starved_clone.fetch_add(1, Ordering::Relaxed);
                 }
             }
@@ -296,6 +299,7 @@ async fn chaos_test_resource_starvation() {
     for handle in handles {
         handle.await.unwrap();
     }
+    blocker.await.unwrap();
 
     let starved_count = starved.load(Ordering::Relaxed);
     println!("  ⚠️  {} tasks starved of resources", starved_count);

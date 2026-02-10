@@ -29,7 +29,7 @@ fn test_yaml_parsing(input: &FuzzConfigParsingSettings) {
     let yaml_content = generate_yaml_content(input);
 
     // Should never panic, even with malformed YAML
-    let parse_result = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content);
+    let parse_result = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_content);
     match parse_result {
         Ok(_) => {
             // If it parses, validate the content is safe
@@ -380,7 +380,7 @@ fn validate_zfs_config_safety(_config: &ZfsConfig) {
 fn test_yaml_bomb(depth: u32) {
     let depth = std::cmp::min(depth, 100); // Limit depth to prevent actual DoS
     let bomb = "a: &a\n".to_string() + &"  - *a\n".repeat(depth as usize);
-    let _ = serde_yaml::from_str::<serde_yaml::Value>(&bomb);
+    let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&bomb);
 }
 
 fn test_json_bomb(depth: u32) {
@@ -403,47 +403,47 @@ fn test_billion_laughs() {
     lol3: &lol3 [*lol2,*lol2,*lol2,*lol2,*lol2,*lol2,*lol2,*lol2,*lol2]
     lol4: [*lol3,*lol3,*lol3,*lol3,*lol3,*lol3,*lol3,*lol3,*lol3]
     "#;
-    let _ = serde_yaml::from_str::<serde_yaml::Value>(bomb);
+    let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(bomb);
 }
 
 fn test_unicode_corruption(bytes: &[u8]) {
     if let Ok(s) = String::from_utf8(bytes.to_vec()) {
         let yaml_content = format!("test: \"{}\"", s);
-        let _ = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content);
+        let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_content);
     }
 }
 
 fn test_null_byte_injection() {
     let malicious = "test: \"normal\0malicious\"";
-    let _ = serde_yaml::from_str::<serde_yaml::Value>(malicious);
+    let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(malicious);
 }
 
 fn test_path_traversal(path: &str) {
     let yaml_content = format!("file_path: \"{}\"", path);
-    let _ = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content);
+    let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_content);
 }
 
 fn test_sql_injection(injection: &str) {
     let yaml_content = format!("database_url: \"{}\"", injection);
-    let _ = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content);
+    let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_content);
 }
 
 fn test_command_injection(injection: &str) {
     let yaml_content = format!("command: \"{}\"", injection);
-    let _ = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content);
+    let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_content);
 }
 
 fn test_extremely_long_string(length: usize) {
     let length = std::cmp::min(length, 1_000_000); // Limit to prevent actual DoS
     let long_string = "a".repeat(length);
     let yaml_content = format!("long_field: \"{}\"", long_string);
-    let _ = serde_yaml::from_str::<serde_yaml::Value>(&yaml_content);
+    let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_content);
 }
 
 fn test_invalid_utf8(bytes: &[u8]) {
     // Try to parse invalid UTF-8 as if it were a config file
     if bytes.len() < 1000 {
         // Limit size
-        let _ = serde_yaml::from_slice::<serde_yaml::Value>(bytes);
+        let _ = serde_yaml_ng::from_slice::<serde_yaml_ng::Value>(bytes);
     }
 }

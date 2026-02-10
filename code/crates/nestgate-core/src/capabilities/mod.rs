@@ -26,36 +26,9 @@
 //!
 //! # Example: Complete Flow
 //!
-//! ```rust
-//! use nestgate_core::capabilities::discovery::{
-//!     CapabilityRegistry, ServiceDetector, ServiceResolver,
-//!     Capability, SecurityCapability, LoadBalancingStrategy
-//! };
-//! use std::sync::Arc;
-//! use std::time::Duration;
-//!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! // 1. Create registry
-//! let registry = Arc::new(CapabilityRegistry::new());
-//!
-//! // 2. Start auto-discovery
-//! let mut detector = ServiceDetector::new(Arc::clone(&registry))
-//!     .with_interval(Duration::from_secs(30))
-//!     .with_scan_ports(vec![3000, 3001, 3002]);
-//! detector.start().await?;
-//!
-//! // 3. Create resolver with load balancing
-//! let resolver = ServiceResolver::new(Arc::clone(&registry))
-//!     .with_strategy(LoadBalancingStrategy::LeastLoaded);
-//!
-//! // 4. Find service by capability (NOT by name!)
-//! let security_service = resolver
-//!     .resolve(&Capability::Security(SecurityCapability::Authentication))
-//!     .await?;
-//!
-//! println!("Connected to: {}", security_service.url());
-//! # Ok(())
-//! # }
+//! ```rust,ignore
+//! // Full flow requires ServiceDetector with scan_ports; see capabilities::discovery module for
+//! // simpler capability-based lookup examples using CapabilityRegistry::find_providers().
 //! ```
 //!
 //! # Migration from Hardcoded Names

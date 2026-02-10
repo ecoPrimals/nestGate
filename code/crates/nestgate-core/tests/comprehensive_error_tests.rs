@@ -217,13 +217,23 @@ mod error_recovery_tests {
     }
 }
 
-// Helper types
+// Helper types - ErrorCategory must be defined before TestError for category field
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum ErrorCategory {
+    Network,
+    Storage,
+    Configuration,
+    Authentication,
+    Validation,
+}
+
 #[derive(Debug, Clone)]
 struct TestError {
     message: String,
     source: Option<Box<TestError>>,
     context: std::collections::HashMap<String, String>,
     details: std::collections::HashMap<String, String>,
+    category: ErrorCategory,
 }
 
 impl TestError {
@@ -233,6 +243,17 @@ impl TestError {
             source: None,
             context: std::collections::HashMap::new(),
             details: std::collections::HashMap::new(),
+            category: ErrorCategory::Network,
+        }
+    }
+
+    fn with_category(message: &str, category: ErrorCategory) -> Self {
+        Self {
+            message: message.to_string(),
+            source: None,
+            context: std::collections::HashMap::new(),
+            details: std::collections::HashMap::new(),
+            category,
         }
     }
 
@@ -242,6 +263,7 @@ impl TestError {
             source: Some(source),
             context: std::collections::HashMap::new(),
             details: std::collections::HashMap::new(),
+            category: ErrorCategory::Network,
         }
     }
 
@@ -275,7 +297,7 @@ impl TestError {
     }
 
     fn category(&self) -> ErrorCategory {
-        ErrorCategory::Network
+        self.category
     }
 }
 
@@ -318,15 +340,6 @@ impl ErrorSeverity {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum ErrorCategory {
-    Network,
-    Storage,
-    Configuration,
-    Authentication,
-    Validation,
-}
-
 fn collect_error_chain(error: &TestError) -> Vec<String> {
     let mut chain = vec![error.message().to_string()];
     let mut current = error.source();
@@ -338,7 +351,7 @@ fn collect_error_chain(error: &TestError) -> Vec<String> {
 }
 
 fn categorize_error(category: ErrorCategory) -> TestError {
-    let mut error = TestError::new("categorized error");
+    let mut error = TestError::with_category("categorized error", category);
     error
         .context
         .insert("category".to_string(), format!("{:?}", category));

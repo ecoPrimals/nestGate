@@ -24,7 +24,7 @@ mod tests {
     #[test]
     fn test_storage_handler_clone() {
         let handler1 = StorageHandler::new();
-        let _handler2 = handler1.clone();
+        let _handler2 = handler1;
         // Both handlers should be valid (smoke test)
     }
 

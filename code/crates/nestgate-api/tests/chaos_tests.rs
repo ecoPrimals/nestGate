@@ -32,7 +32,7 @@ async fn test_chaos_delayed_responses() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"delay_test": i}),
-                id: Value::from(i as i64),
+                id: Value::from(i64::from(i)),
             };
             h.handle_request(request).await
         });
@@ -42,7 +42,7 @@ async fn test_chaos_delayed_responses() {
     // All should eventually succeed
     for (i, handle) in handles.into_iter().enumerate() {
         let response = handle.await.unwrap();
-        assert!(response.error.is_none(), "Request {} failed under delay", i);
+        assert!(response.error.is_none(), "Request {i} failed under delay");
     }
 }
 
@@ -61,7 +61,7 @@ async fn test_chaos_burst_traffic() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"burst_id": i}),
-                id: Value::from(i as i64),
+                id: Value::from(i64::from(i)),
             };
             h.handle_request(request).await
         });
@@ -78,14 +78,14 @@ async fn test_chaos_burst_traffic() {
     }
 
     // At least 95% should succeed
-    assert!(success_count >= 95, "Only {}/100 succeeded", success_count);
+    assert!(success_count >= 95, "Only {success_count}/100 succeeded");
 }
 
 #[tokio::test]
 async fn test_chaos_interleaved_methods() {
     let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
-    let methods = vec!["health.ping", "health.status", "identity.get"];
+    let methods = ["health.ping", "health.status", "identity.get"];
 
     for i in 0..30 {
         let method = methods[i % methods.len()];
@@ -98,7 +98,7 @@ async fn test_chaos_interleaved_methods() {
         };
 
         let response = handler.handle_request(request).await;
-        assert!(response.error.is_none(), "Method {} failed", method);
+        assert!(response.error.is_none(), "Method {method} failed");
     }
 }
 
@@ -111,7 +111,7 @@ async fn test_chaos_memory_pressure() {
     let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Create large payloads to simulate memory pressure
-    let large_data: Vec<String> = (0..10000).map(|i| format!("data_{}", i)).collect();
+    let large_data: Vec<String> = (0..10000).map(|i| format!("data_{i}")).collect();
 
     for i in 0..10 {
         let request = JsonRpcRequest {
@@ -124,8 +124,7 @@ async fn test_chaos_memory_pressure() {
         let response = handler.handle_request(request).await;
         assert!(
             response.error.is_none(),
-            "Failed under memory pressure at iteration {}",
-            i
+            "Failed under memory pressure at iteration {i}"
         );
     }
 }
@@ -134,10 +133,10 @@ async fn test_chaos_memory_pressure() {
 async fn test_chaos_rapid_config_changes() {
     // Simulate rapid config creation and validation
     for i in 0..100 {
-        let config = TransportConfig::new(&format!("chaos_family_{}", i))
-            .with_socket_path(&format!("/tmp/chaos_{}.sock", i));
+        let config = TransportConfig::new(format!("chaos_family_{i}"))
+            .with_socket_path(format!("/tmp/chaos_{i}.sock"));
 
-        assert!(config.validate().is_ok(), "Config {} validation failed", i);
+        assert!(config.validate().is_ok(), "Config {i} validation failed");
     }
 }
 
@@ -154,7 +153,7 @@ async fn test_chaos_concurrent_handler_creation() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"handler_id": i}),
-                id: Value::from(i as i64),
+                id: Value::from(i64::from(i)),
             };
 
             handler.handle_request(request).await
@@ -182,7 +181,7 @@ async fn test_chaos_timeout_simulation() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({"timeout_sim": i * 10}),
-            id: Value::from(i as i64),
+            id: Value::from(i64::from(i)),
         };
 
         // Even with "timeout" params, should still respond
@@ -211,7 +210,7 @@ async fn test_chaos_race_conditions() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.status".to_string(),
                 params: json!({"race_id": i}),
-                id: Value::from(i as i64),
+                id: Value::from(i64::from(i)),
             };
             h.handle_request(request).await
         });
@@ -244,13 +243,13 @@ async fn test_chaos_mixed_valid_invalid_requests() {
             jsonrpc: "2.0".to_string(),
             method,
             params: json!({}),
-            id: Value::from(i as i64),
+            id: Value::from(i64::from(i)),
         };
 
         let response = handler.handle_request(request).await;
 
         // Should always return a response, even for invalid methods
-        assert_eq!(response.id, Value::from(i as i64));
+        assert_eq!(response.id, Value::from(i64::from(i)));
     }
 }
 
@@ -319,22 +318,17 @@ async fn test_chaos_error_recovery() {
             jsonrpc: "2.0".to_string(),
             method: method.to_string(),
             params: json!({}),
-            id: Value::from(i as i64),
+            id: Value::from(i64::from(i)),
         };
 
         let response = handler.handle_request(request).await;
 
         if i % 2 == 0 {
-            assert!(
-                response.error.is_some(),
-                "Expected error at iteration {}",
-                i
-            );
+            assert!(response.error.is_some(), "Expected error at iteration {i}");
         } else {
             assert!(
                 response.error.is_none(),
-                "Expected success at iteration {}",
-                i
+                "Expected success at iteration {i}"
             );
         }
     }
@@ -369,8 +363,7 @@ async fn test_chaos_sustained_failure_recovery() {
         let response = handler.handle_request(request).await;
         assert!(
             response.error.is_none(),
-            "Failed to recover at iteration {}",
-            i
+            "Failed to recover at iteration {i}"
         );
     }
 }

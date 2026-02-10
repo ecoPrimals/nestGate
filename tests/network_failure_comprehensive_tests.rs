@@ -251,9 +251,11 @@ async fn test_rate_limiting() {
     let max_requests_per_second = 10;
     let mut request_count = 0;
     let start = std::time::Instant::now();
+    let interval = Duration::from_millis(1000 / max_requests_per_second as u64);
 
     while request_count < max_requests_per_second {
         request_count += 1;
+        tokio::time::sleep(interval).await;
     }
 
     let elapsed = start.elapsed();
@@ -366,7 +368,11 @@ async fn test_connection_pooling() {
 async fn test_request_timeout_with_cancellation() {
     let timeout = Duration::from_millis(50);
 
-    let result = tokio::time::timeout(timeout, async { "completed" }).await;
+    let result = tokio::time::timeout(timeout, async {
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        "completed"
+    })
+    .await;
 
     assert!(
         result.is_err(),

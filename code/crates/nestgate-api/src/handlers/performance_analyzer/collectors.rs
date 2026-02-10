@@ -280,7 +280,7 @@ mod tests {
             timestamp: std::time::SystemTime::now(),
         };
 
-        let snapshots = vec![
+        let snapshots = [
             MetricsSnapshot {
                 system_metrics: metrics.clone(),
                 collection_timestamp: std::time::SystemTime::now(),

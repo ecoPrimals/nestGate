@@ -25,7 +25,7 @@
 //! # async fn example() -> nestgate_core::Result<()> {
 //! // Discover storage service endpoint
 //! let endpoint = capability_discovery::discover_service("storage").await?;
-//! println!("Found storage at: {}", endpoint);
+//! println!("Found storage at: {}", endpoint.endpoint);
 //!
 //! // With fallback chain
 //! let endpoint = capability_discovery::discover_with_fallback(

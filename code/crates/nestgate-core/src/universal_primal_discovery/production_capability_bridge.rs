@@ -269,18 +269,10 @@ impl CapabilityAwareDiscovery {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
-    /// # use nestgate_core::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery;
-    /// # use nestgate_core::universal_primal_discovery::capability_based_discovery::{DiscoveryQuery, PrimalCapability};
-    /// # async fn example(discovery: &CapabilityAwareDiscovery) -> nestgate_core::Result<()> {
-    /// let query = DiscoveryQuery {
-    ///     required_capabilities: vec![PrimalCapability::ZfsStorage],
-    ///     ..Default::default()
-    /// };
-    ///
+    /// ```rust,ignore
+    /// // Requires initialized CapabilityAwareDiscovery; see tests for full example
+    /// let query = DiscoveryQuery::for_capability(PrimalCapability::ZfsStorage);
     /// let services = discovery.query_services(&query).await?;
-    /// # Ok(())
-    /// # }
     /// ```
     pub async fn query_services(&self, query: &DiscoveryQuery) -> Result<Vec<PeerDescriptor>> {
         self.capability_discovery.query(query).await

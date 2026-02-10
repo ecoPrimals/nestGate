@@ -24,13 +24,10 @@ toml = "0.8"
 anyhow = "1.0"
 thiserror = "1.0"
 etcetera = "0.8"
-tempfile = "3.0"
-tar = "0.4"
-flate2 = "1.0"
-zip = "0.6"
+tempfile = "3.8"
+# tar, flate2, zip, indicatif removed: unused dependencies
 sysinfo = "0.30"
 console = "0.15"
-indicatif = "0.17"
 tracing = "0.1"
 futures-util = "0.3"
 
@@ -55,7 +52,7 @@ version = "0.4"
 features = [ "serde",]
 
 [dependencies.uuid]
-version = "1.0"
+version = "1.6"
 features = [ "v4",]
 
 [dependencies.nestgate-core]

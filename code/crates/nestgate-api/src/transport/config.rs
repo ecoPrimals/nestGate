@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 ///
 /// ## Examples
 ///
-/// ```rust
+/// ```rust,ignore
 /// // From environment
 /// let config = TransportConfig::from_env()?;
 ///
@@ -57,10 +57,10 @@ impl TransportConfig {
             std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
 
         let socket_path = std::env::var("NESTGATE_SOCKET_PATH")
-            .unwrap_or_else(|_| format!("/tmp/nestgate-{}.sock", family_id));
+            .unwrap_or_else(|_| format!("/tmp/nestgate-{family_id}.sock"));
 
         let security_provider = std::env::var("NESTGATE_SECURITY_PROVIDER")
-            .unwrap_or_else(|_| format!("/tmp/beardog-{}-default.sock", family_id));
+            .unwrap_or_else(|_| format!("/tmp/beardog-{family_id}-default.sock"));
 
         let http_port = std::env::var("NESTGATE_HTTP_PORT")
             .ok()
@@ -84,8 +84,8 @@ impl TransportConfig {
     pub fn new(family_id: impl Into<String>) -> Self {
         let family_id = family_id.into();
         Self {
-            socket_path: PathBuf::from(format!("/tmp/nestgate-{}.sock", family_id)),
-            security_provider: PathBuf::from(format!("/tmp/beardog-{}-default.sock", family_id)),
+            socket_path: PathBuf::from(format!("/tmp/nestgate-{family_id}.sock")),
+            security_provider: PathBuf::from(format!("/tmp/beardog-{family_id}-default.sock")),
             family_id,
             http_port: None,
             verbose: false,
@@ -108,14 +108,14 @@ impl TransportConfig {
 
     /// Enable HTTP fallback on specified port
     #[must_use]
-    pub fn with_http_fallback(mut self, port: u16) -> Self {
+    pub const fn with_http_fallback(mut self, port: u16) -> Self {
         self.http_port = Some(port);
         self
     }
 
     /// Enable verbose logging
     #[must_use]
-    pub fn with_verbose(mut self) -> Self {
+    pub const fn with_verbose(mut self) -> Self {
         self.verbose = true;
         self
     }

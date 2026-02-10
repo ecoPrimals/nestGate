@@ -18,7 +18,7 @@ thiserror = "1.0"
 tokio-tungstenite = "0.24"
 tracing = "0.1"
 tungstenite = "0.24"
-warp = "0.3"
+# warp removed: unused dependency (HTTP evolution → Unix sockets)
 async-stream = "0.3"
 rand = "0.8"
 
@@ -44,7 +44,7 @@ version = "1.0"
 features = [ "full",]
 
 [dependencies.uuid]
-version = "1.0"
+version = "1.6"
 features = [ "v4", "serde",]
 
 [dependencies.tower]

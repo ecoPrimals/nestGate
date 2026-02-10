@@ -25,7 +25,7 @@ fuzz_target!(|input: FuzzManifest| {
     // Test basic parsing based on format
     match input.format {
         ManifestFormat::Yaml => {
-            let _ = serde_yaml::from_str::<serde_yaml::Value>(&input.content);
+            let _ = serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&input.content);
         }
         ManifestFormat::Json => {
             let _ = serde_json::from_str::<serde_json::Value>(&input.content);

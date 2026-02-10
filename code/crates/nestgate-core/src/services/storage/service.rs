@@ -518,6 +518,8 @@ impl StorageManagerService {
 
     /// Store an object in a dataset
     ///
+    /// Accepts `impl AsRef<[u8]>` to avoid forcing `.to_vec()` in hot paths.
+    ///
     /// # Errors
     ///
     /// Returns error if storage fails
@@ -525,12 +527,14 @@ impl StorageManagerService {
         &self,
         dataset: &str,
         key: &str,
-        data: Vec<u8>,
+        data: impl AsRef<[u8]>,
     ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
         super::operations::objects::store_object(&self.config, dataset, key, data).await
     }
 
     /// Retrieve an object from a dataset
+    ///
+    /// Returns `Bytes` (zero-copy) instead of `Vec<u8>` in hot paths.
     ///
     /// # Errors
     ///
@@ -539,7 +543,7 @@ impl StorageManagerService {
         &self,
         dataset: &str,
         key: &str,
-    ) -> Result<(Vec<u8>, crate::rpc::tarpc_types::ObjectInfo)> {
+    ) -> Result<(bytes::Bytes, crate::rpc::tarpc_types::ObjectInfo)> {
         super::operations::objects::retrieve_object(&self.config, dataset, key).await
     }
 
@@ -558,23 +562,6 @@ impl StorageManagerService {
     ///
     /// Returns error if dataset not found or deletion fails
     pub async fn delete_dataset(&self, name: &str) -> Result<()> {
-        use std::path::PathBuf;
-
-        info!("🗑️  Deleting dataset: {}", name);
-
-        let base_path = PathBuf::from(&self.config.base_path);
-        let dataset_path = base_path.join("datasets").join(name);
-
-        tokio::fs::remove_dir_all(&dataset_path)
-            .await
-            .map_err(|e| {
-                if e.kind() == std::io::ErrorKind::NotFound {
-                    NestGateError::not_found(&format!("dataset {}", name))
-                } else {
-                    NestGateError::io_error(&format!("Failed to delete dataset {}: {}", name, e))
-                }
-            })?;
-
         super::operations::datasets::delete_dataset(&self.config, name).await
     }
 }

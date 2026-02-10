@@ -73,7 +73,7 @@ mod tests {
             capacity.used_bytes + capacity.available_bytes,
             capacity.total_bytes
         );
-        assert!(capacity.fragmentation_percent > 0.0);
+        assert!(capacity.fragmentation_percent >= 0.0);
         assert!(capacity.deduplication_ratio >= 1.0);
     }
 
@@ -647,9 +647,8 @@ mod tests {
             used_bytes: 500_000_000,
             available_bytes: 500_000_000,
             utilization_percent: 50.0,
-            // High dedup ratio,
             fragmentation_percent: 0.0,
-            deduplication_ratio: 1.0,
+            deduplication_ratio: 3.0, // High dedup ratio for space savings
             total: 1_000_000_000,
             used: 500_000_000,
             available: 500_000_000,

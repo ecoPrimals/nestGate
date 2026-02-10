@@ -12,7 +12,7 @@
 //! ## Example
 //! ```rust
 //! use nestgate_core::config::capability_based::CapabilityConfigBuilder;
-//! use nestgate_core::capability::PrimalCapability;
+//! use nestgate_core::universal_traits::types::PrimalCapability;
 //!
 //! # async fn example() -> nestgate_core::Result<()> {
 //! // Build capability-aware config
@@ -22,7 +22,7 @@
 //!     .build()?;
 //!
 //! // Discover services by capability (not by primal name!)
-//! let auth_service = config.discover(PrimalCapability::Authentication).await?;
+//! let security_service = config.discover(PrimalCapability::Security).await?;
 //! let storage_service = config.discover(PrimalCapability::Storage).await?;
 //!
 //! // Services discovered at runtime, no hardcoding!
@@ -44,7 +44,6 @@ use std::time::Duration;
 pub struct CapabilityConfig {
     /// How long to wait for service discovery
     /// Used by runtime discovery system for dynamic capability location
-    #[allow(dead_code)] // Used by capability discovery runtime
     discovery_timeout: Duration,
 
     /// Number of retry attempts for discovery

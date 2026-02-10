@@ -16,7 +16,7 @@ impl BiomeManifest {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
         pub fn from_yaml(yaml_content: &str) -> Result<Self>  {
-        serde_yaml::from_str(yaml_content).map_err(|e| NestGateError::internal_error(&format!("Failed to parse biome.yaml: {e}"), "component"management_discovery"))
+        serde_yaml_ng::from_str(yaml_content).map_err(|e| NestGateError::internal_error(&format!("Failed to parse biome.yaml: {e}"), "component"management_discovery"))
     }
 
     /// Load Management manifest from file

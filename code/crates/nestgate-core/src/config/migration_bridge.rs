@@ -14,14 +14,17 @@
 //!
 //! ```rust
 //! use nestgate_core::config::migration_bridge;
+//! use nestgate_core::config::environment::EnvironmentConfig;
 //!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Legacy code continues to work
 //! let port = migration_bridge::get_api_port();
 //!
 //! // But new code should use:
-//! use nestgate_core::config::environment::EnvironmentConfig;
-//! let config = EnvironmentConfig::from_env()?;
+//! let config = EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 //! let port = config.network.port.get();
+//! # Ok(())
+//! # }
 //! ```
 
 use super::environment::EnvironmentConfig;
@@ -64,11 +67,13 @@ fn global_config() -> &'static EnvironmentConfig {
 /// # Migration Example
 ///
 /// ```rust
-/// // OLD
-/// let port = migration_bridge::get_api_port();
+/// use nestgate_core::config::environment::EnvironmentConfig;
 ///
-/// // NEW
-/// let config = EnvironmentConfig::from_env()?;
+/// // OLD
+/// let port = nestgate_core::config::migration_bridge::get_api_port();
+///
+/// // NEW (with fallback to defaults on error)
+/// let config = EnvironmentConfig::from_env().unwrap_or_default();
 /// let port = config.network.port.get();
 /// ```
 #[deprecated(

@@ -556,137 +556,38 @@ impl RealHardwareTuningHandler {
 
 /// **GET HARDWARE CAPABILITIES HANDLER**
 ///
-/// Retrieve system hardware capabilities and specifications.
+/// Returns 501 - Hardware tuning not implemented (no fake data).
 pub fn get_hardware_capabilities() -> std::result::Result<Json<SystemCapabilities>, StatusCode> {
-    let capabilities = SystemCapabilities {
-        cpu_cores: 16,
-        cpu_model: "Intel Xeon E5-2680 v4".to_string(),
-        memory_gb: 64,
-        gpu_available: true,
-        gpu_info: Some(GpuInfo {
-            name: "NVIDIA RTX 4090".to_string(),
-            memory_mb: 24576,
-        }),
-    };
-
-    Ok(Json(capabilities))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
 /// **GET SYSTEM PROFILE HANDLER**
 ///
-/// Retrieve current system tuning profile configuration.
+/// Returns 501 - Hardware tuning not implemented (no fake data).
 pub fn get_system_profile() -> std::result::Result<Json<SystemProfile>, StatusCode> {
-    let profile = SystemProfile {
-        cpu_profile: "performance".to_string(),
-        memory_profile: "balanced".to_string(),
-        storage_profile: "high_performance".to_string(),
-        network_profile: "optimized".to_string(),
-    };
-
-    Ok(Json(profile))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
 /// **OPTIMIZE HARDWARE PERFORMANCE HANDLER**
 ///
-/// Apply hardware performance optimizations based on current workload.
+/// Returns 501 - Hardware tuning not implemented (no fake data).
 pub fn optimize_hardware_performance() -> std::result::Result<Json<TuningResult>, StatusCode> {
-    let before_metrics = LiveHardwareMetrics {
-        cpu_usage: 45.0,
-        memory_usage: 60.0,
-        disk_io: 120.0,
-        network_io: 80.0,
-        power_consumption: 350.0,
-        temperature: 65.0,
-        gpu_usage: 30.0,
-        disk_usage: 75.0,
-        network_usage: 40.0,
-        timestamp: Utc::now(),
-    };
-
-    let after_metrics = LiveHardwareMetrics {
-        cpu_usage: 40.0,
-        memory_usage: 55.0,
-        disk_io: 140.0,
-        network_io: 95.0,
-        power_consumption: 380.0,
-        temperature: 62.0,
-        gpu_usage: 35.0,
-        disk_usage: 75.0,
-        network_usage: 45.0,
-        timestamp: Utc::now(),
-    };
-
-    let result = TuningResult {
-        profile_name: "optimized_performance".to_string(),
-        optimizations_applied: vec![
-            "CPU frequency scaling enabled".to_string(),
-            "Memory prefetch optimization".to_string(),
-            "I/O scheduler tuning".to_string(),
-        ],
-        estimated_power_increase: 8.5,
-        performance_improvement: 12.3,
-        before_metrics,
-        after_metrics,
-    };
-
-    Ok(Json(result))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
 /// **RUN HARDWARE BENCHMARK HANDLER**
 ///
-/// Execute hardware benchmark tests and return performance metrics.
+/// Returns 501 - Hardware tuning not implemented (no fake data).
 pub fn run_hardware_benchmark() -> std::result::Result<Json<BenchmarkResult>, StatusCode> {
-    let benchmark_metrics = LiveHardwareMetrics {
-        cpu_usage: 95.0,
-        memory_usage: 80.0,
-        disk_io: 200.0,
-        network_io: 150.0,
-        power_consumption: 450.0,
-        temperature: 75.0,
-        gpu_usage: 90.0,
-        disk_usage: 75.0,
-        network_usage: 60.0,
-        timestamp: Utc::now(),
-    };
-
-    let result = BenchmarkResult {
-        benchmark_type: "comprehensive_system_benchmark".to_string(),
-        score: 8750.0,
-        duration_ms: 30000,
-        metrics: benchmark_metrics,
-    };
-
-    Ok(Json(result))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
 /// **START HARDWARE TUNING SESSION HANDLER**
 ///
-/// Initialize a new hardware tuning session with real-time monitoring.
+/// Returns 501 - Hardware tuning not implemented (no fake data).
 pub fn start_hardware_tuning_session(
 ) -> std::result::Result<Json<LiveHardwareTuningSession>, StatusCode> {
-    let session = LiveHardwareTuningSession {
-        session_id: format!("session_{}", Utc::now().timestamp()),
-        started_at: Utc::now(),
-        resource_allocation: ComputeAllocation {
-            cpu_cores: 8,
-            memory_gb: 32,
-            gpu_count: 1,
-        },
-        current_metrics: LiveHardwareMetrics {
-            cpu_usage: 25.0,
-            memory_usage: 40.0,
-            disk_io: 80.0,
-            network_io: 60.0,
-            power_consumption: 280.0,
-            temperature: 58.0,
-            gpu_usage: 15.0,
-            disk_usage: 70.0,
-            network_usage: 30.0,
-            timestamp: Utc::now(),
-        },
-    };
-
-    Ok(Json(session))
+    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
 #[cfg(test)]

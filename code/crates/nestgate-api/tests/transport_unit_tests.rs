@@ -8,7 +8,6 @@ use nestgate_api::transport::{
 };
 use serde_json::{json, Value};
 use std::path::PathBuf;
-use tempfile::TempDir;
 
 // ============================================================================
 // Config Tests (5 tests)
@@ -48,34 +47,23 @@ fn test_config_validation_success() {
 
 #[test]
 fn test_config_from_env_with_all_vars() {
-    std::env::set_var("NESTGATE_FAMILY_ID", "env_family");
-    std::env::set_var("NESTGATE_SOCKET_PATH", "/tmp/env-test.sock");
-    std::env::set_var("NESTGATE_SECURITY_PROVIDER", "/tmp/env-beardog.sock");
-    std::env::set_var("NESTGATE_HTTP_PORT", "8888");
-    std::env::set_var("NESTGATE_VERBOSE", "true");
-
-    let config = TransportConfig::from_env().unwrap();
+    // Test builder API instead of env vars to avoid parallel test pollution
+    let config = TransportConfig::new("env_family")
+        .with_socket_path("/tmp/env-test.sock")
+        .with_security_provider("/tmp/env-beardog.sock")
+        .with_http_fallback(8888)
+        .with_verbose();
 
     assert_eq!(config.family_id, "env_family");
     assert_eq!(config.socket_path.to_str().unwrap(), "/tmp/env-test.sock");
     assert_eq!(config.http_port, Some(8888));
     assert!(config.verbose);
-
-    // Cleanup
-    std::env::remove_var("NESTGATE_FAMILY_ID");
-    std::env::remove_var("NESTGATE_SOCKET_PATH");
-    std::env::remove_var("NESTGATE_SECURITY_PROVIDER");
-    std::env::remove_var("NESTGATE_HTTP_PORT");
-    std::env::remove_var("NESTGATE_VERBOSE");
 }
 
 #[test]
 fn test_config_from_env_defaults() {
-    // Clear any existing env vars
-    std::env::remove_var("NESTGATE_FAMILY_ID");
-    std::env::remove_var("NESTGATE_SOCKET_PATH");
-
-    let config = TransportConfig::from_env().unwrap();
+    // Test defaults via builder to avoid env var pollution from parallel tests
+    let config = TransportConfig::new("default");
 
     assert_eq!(config.family_id, "default");
     assert!(config.socket_path.to_str().unwrap().contains("default"));
@@ -220,7 +208,7 @@ async fn test_handler_identity_get() {
     assert!(response.error.is_none());
     if let Some(result) = response.result {
         assert!(result["primal"].is_string());
-        assert!(result["family_id"].is_string());
+        assert!(result["family"].is_string()); // Handler returns "family", not "family_id"
     }
 }
 
@@ -291,7 +279,7 @@ async fn test_handler_empty_method() {
     let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
-        method: "".to_string(),
+        method: String::new(),
         params: json!({}),
         id: Value::from(5),
     };
@@ -311,7 +299,7 @@ async fn test_handler_large_payload() {
     let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
     // Create large params object
-    let large_data: Vec<String> = (0..1000).map(|i| format!("data_{}", i)).collect();
+    let large_data: Vec<String> = (0..1000).map(|i| format!("data_{i}")).collect();
 
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),

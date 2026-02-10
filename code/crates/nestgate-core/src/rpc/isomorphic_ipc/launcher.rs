@@ -85,8 +85,7 @@ const RETRY_DELAY: Duration = Duration::from_millis(500);
 /// }
 /// ```
 pub async fn discover_nestgate_endpoint() -> Result<IpcEndpoint> {
-    discover_ipc_endpoint(NESTGATE_SERVICE_NAME)
-        .context("Failed to discover NestGate IPC endpoint")
+    discover_ipc_endpoint(NESTGATE_SERVICE_NAME).context("Failed to discover NestGate IPC endpoint")
 }
 
 /// Discover NestGate endpoint with retry logic
@@ -286,7 +285,7 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
             .map(|m| m.uid())
             .unwrap_or(1000); // fallback UID
         let path = PathBuf::from("/tmp").join(format!("{}-{}.sock", NESTGATE_SERVICE_NAME, uid));
-        return Ok(path);
+        Ok(path)
     }
 
     #[cfg(not(unix))]

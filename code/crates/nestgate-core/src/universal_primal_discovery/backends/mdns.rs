@@ -113,11 +113,12 @@ impl MdnsDiscoveryBackend {
             .unwrap_or_else(|_| "unknown".to_string());
 
         // Generate unique service name with random suffix for multiple instances
+        // ✅ EVOLVED: unwrap() → unwrap_or_default() for safety
         let unique_id = uuid::Uuid::new_v4()
             .to_string()
             .split('-')
             .next()
-            .unwrap()
+            .unwrap_or_default()
             .to_string();
 
         Self {
@@ -226,7 +227,6 @@ impl MdnsDiscoveryBackend {
     ///
     /// This constructs the full mDNS service name for a capability
     /// proper service discovery names following mDNS conventions.
-    #[allow(dead_code)] // Reserved for full mDNS protocol implementation (v0.12+)
     fn service_name_for_capability(&self, capability: &PrimalCapability) -> String {
         let cap_str = match capability {
             PrimalCapability::ZfsStorage => "zfs-storage",

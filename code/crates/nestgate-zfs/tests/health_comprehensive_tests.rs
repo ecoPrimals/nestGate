@@ -365,7 +365,7 @@ fn test_multiple_alerts() {
 #[test]
 fn test_health_report_collection() {
     let now = SystemTime::now();
-    let reports = vec![
+    let reports = [
         HealthReport {
             component_type: "pool".to_string(),
             component_name: "pool1".to_string(),

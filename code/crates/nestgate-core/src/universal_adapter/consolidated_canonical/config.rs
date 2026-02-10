@@ -27,7 +27,10 @@ use super::enums::{DiscoveryMethod, RetryBackoff};
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 #[allow(deprecated)]
 pub struct CanonicalAdapterConfig {
     /// Service identification
@@ -91,7 +94,10 @@ impl Default for DiscoveryConfig {
         Self {
             auto_discovery: true,
             discovery_interval: Duration::from_secs(30),
-            discovery_methods: vec![DiscoveryMethod::Environment, DiscoveryMethod::ServiceRegistry],
+            discovery_methods: vec![
+                DiscoveryMethod::Environment,
+                DiscoveryMethod::ServiceRegistry,
+            ],
             discovery_timeout: Duration::from_secs(10),
             retry_attempts: 3,
         }
@@ -106,7 +112,10 @@ impl Default for DiscoveryConfig {
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct RequestConfig {
     /// Request timeout
     pub timeout: Duration,
@@ -173,7 +182,10 @@ impl Default for MonitoringConfig {
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "0.11.0", note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 #[allow(deprecated)]
 pub struct SecurityConfig {
     /// Enable authentication
@@ -259,7 +271,10 @@ impl Default for AlertThresholds {
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 pub struct RateLimitConfig {
     /// Requests per second allowed
     pub requests_per_second: u32,

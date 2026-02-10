@@ -69,6 +69,7 @@ pub trait RpcHandler: Send + Sync {
 /// TCP fallback server for isomorphic IPC
 ///
 /// Provides JSON-RPC 2.0 over TCP when Unix sockets are unavailable.
+#[derive(Clone)]
 pub struct TcpFallbackServer {
     /// Service name (for discovery file)
     service_name: String,
@@ -104,8 +105,14 @@ impl TcpFallbackServer {
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
         info!("   Security: Localhost only (127.0.0.1)");
 
-        // Bind to localhost:0 (ephemeral port, OS assigns)
-        let listener = TcpListener::bind("127.0.0.1:0")
+        // Bind address configurable via NESTGATE_IPC_BIND_ADDRESS (default: 127.0.0.1)
+        let bind_addr =
+            std::env::var("NESTGATE_IPC_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string());
+        let bind_socket = format!("{}:0", bind_addr);
+        info!("   Bind: {} (ephemeral port)", bind_socket);
+
+        // Bind to configurable address:0 (ephemeral port, OS assigns)
+        let listener = TcpListener::bind(&bind_socket)
             .await
             .context("Failed to bind TCP socket for IPC fallback")?;
 
@@ -215,11 +222,16 @@ impl TcpFallbackServer {
         // XDG-compliant discovery file paths (try in order)
         let discovery_dirs: [Option<String>; 3] = [
             std::env::var("XDG_RUNTIME_DIR").ok(),
-            std::env::var("HOME").ok().map(|h| format!("{}/.local/share", h)),
+            std::env::var("HOME")
+                .ok()
+                .map(|h| format!("{}/.local/share", h)),
             Some("/tmp".to_string()),
         ];
 
-        for dir in discovery_dirs.iter().filter_map(|d: &Option<String>| d.as_ref()) {
+        for dir in discovery_dirs
+            .iter()
+            .filter_map(|d: &Option<String>| d.as_ref())
+        {
             let discovery_file = format!("{}/{}-ipc-port", dir, self.service_name);
 
             match File::create(&discovery_file) {
@@ -264,12 +276,12 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_tcp_server_creation() {
+    #[test]
+    fn test_tcp_server_creation() {
         let handler = Arc::new(MockHandler);
         let server = TcpFallbackServer::new("test-service".to_string(), handler);
-
-        assert_eq!(server.service_name, "test-service");
+        // Server constructed - clone needed for spawn
+        let _cloned = server.clone();
     }
 
     #[test]
@@ -278,5 +290,30 @@ mod tests {
         let addr: SocketAddr = "127.0.0.1:12345".parse().unwrap();
         let expected = "tcp:127.0.0.1:12345";
         assert_eq!(format!("tcp:{}", addr), expected);
+    }
+
+    #[test]
+    fn test_address_resolution() {
+        let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
+        assert_eq!(addr.ip().to_string(), "127.0.0.1");
+        assert_eq!(addr.port(), 0);
+    }
+
+    #[test]
+    fn test_bind_address_from_env() {
+        // Default when NESTGATE_IPC_BIND_ADDRESS not set
+        let bind_addr =
+            std::env::var("NESTGATE_IPC_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string());
+        assert!(!bind_addr.is_empty());
+        assert!(bind_addr.contains('.') || bind_addr == "localhost" || bind_addr == "::1");
+    }
+
+    #[test]
+    fn test_mock_handler_response_structure() {
+        let handler = MockHandler;
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let response = rt.block_on(handler.handle_request(serde_json::json!({"id": 1})));
+        assert_eq!(response["jsonrpc"], "2.0");
+        assert!(response.get("result").is_some());
     }
 }

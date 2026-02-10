@@ -239,6 +239,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[ignore] // Requires network/socket for capability discovery
     async fn test_discovery_sovereignty_compliance() {
         // Test that discovery doesn't hardcode any primal names
         std::env::set_var(

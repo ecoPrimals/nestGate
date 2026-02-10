@@ -174,7 +174,10 @@ impl AdaptiveZfsBackend {
             }
             Err(e) => {
                 // Permission denied or other error
-                debug!("⚠️  Cannot read /proc/modules: {} - assuming module loaded", e);
+                debug!(
+                    "⚠️  Cannot read /proc/modules: {} - assuming module loaded",
+                    e
+                );
                 true // Conservative: assume loaded if we can't check
             }
         }

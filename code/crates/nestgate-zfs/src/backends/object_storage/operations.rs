@@ -11,7 +11,7 @@ use crate::zero_cost_zfs_operations::ZeroCostZfsOperations;
 use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 /// S3 object for listing operations
 #[derive(Debug)]

@@ -3,7 +3,7 @@
 //! Provides safe abstractions for getting the current user ID across platforms.
 //!
 //! ## Evolution: Unsafe C → Safe Pure Rust
-//! ```rust
+//! ```rust,ignore
 //! // ❌ OLD (unsafe C via libc):
 //! let uid = unsafe { libc::getuid() };
 //!

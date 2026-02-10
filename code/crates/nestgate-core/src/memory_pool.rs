@@ -232,6 +232,7 @@ where
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
     #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn get(&self) -> &T {
+        // SAFETY: PoolGuard invariants; buffer is Some until take() is called
         self.buffer
             .as_ref()
             .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
@@ -243,6 +244,7 @@ where
     /// Panics if the buffer has already been taken with `take()`. This indicates a logic error.
     #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn get_mut(&mut self) -> &mut T {
+        // SAFETY: PoolGuard invariants; buffer is Some until take() is called
         self.buffer
             .as_mut()
             .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
@@ -254,6 +256,7 @@ where
     /// Panics if the buffer has already been taken. This indicates a logic error.
     #[allow(clippy::expect_used)] // Documented panic for logic errors
     pub fn take(mut self) -> Box<T> {
+        // SAFETY: PoolGuard invariants; buffer is Some until take() is called
         self.buffer
             .take()
             .expect("BUG: Buffer was already taken - logic error in PooledBuffer usage")
@@ -417,57 +420,64 @@ impl PoolStatistics {
 pub type BufferPool = MemoryPool<Vec<u8>>;
 /// Type alias for Stringpool
 pub type StringPool = MemoryPool<String>;
+// ✅ EVOLVED: lazy_static → std::sync::LazyLock (Pure Rust std, zero deps)
 // Global buffer pools for common usage patterns
-lazy_static::lazy_static! {
-    // Global 4KB buffer pool for file I/O operations
-    pub static ref GLOBAL_4KB_BUFFER_POOL: BufferPool = MemoryPool::new(
+
+/// Global 4KB buffer pool for file I/O operations
+pub static GLOBAL_4KB_BUFFER_POOL: std::sync::LazyLock<BufferPool> =
+    std::sync::LazyLock::new(|| MemoryPool::new(
         || Vec::with_capacity(DEFAULT_BUFFER_SIZE),
         10,  // min_size
         100  // max_size
-    );
+    ));
 
-    // Global 64KB buffer pool for large data operations
-    pub static ref GLOBAL_64KB_BUFFER_POOL: BufferPool = MemoryPool::new(
+/// Global 64KB buffer pool for large data operations
+pub static GLOBAL_64KB_BUFFER_POOL: std::sync::LazyLock<BufferPool> =
+    std::sync::LazyLock::new(|| MemoryPool::new(
         || Vec::with_capacity(NETWORK_BUFFER_SIZE),
         5,   // min_size
         50   // max_size
-    );
+    ));
 
-    // Global 1MB buffer pool for bulk operations
-    pub static ref GLOBAL_1MB_BUFFER_POOL: BufferPool = MemoryPool::new(
+/// Global 1MB buffer pool for bulk operations
+pub static GLOBAL_1MB_BUFFER_POOL: std::sync::LazyLock<BufferPool> =
+    std::sync::LazyLock::new(|| MemoryPool::new(
         || Vec::with_capacity(1048576),
         2,   // min_size
         20   // max_size
-    );
+    ));
 
-    // Global string pool for text operations
-    pub static ref GLOBAL_STRING_POOL: StringPool = MemoryPool::new(
+/// Global string pool for text operations
+pub static GLOBAL_STRING_POOL: std::sync::LazyLock<StringPool> =
+    std::sync::LazyLock::new(|| MemoryPool::new(
         || String::with_capacity(1024),
         20,  // min_size
         200  // max_size
-    );
+    ));
 
-    // Global command output buffer pool for ZFS operations (optimized for command output)
-    pub static ref GLOBAL_CMD_BUFFER_POOL: BufferPool = MemoryPool::new(
+/// Global command output buffer pool for ZFS operations (optimized for command output)
+pub static GLOBAL_CMD_BUFFER_POOL: std::sync::LazyLock<BufferPool> =
+    std::sync::LazyLock::new(|| MemoryPool::new(
         || Vec::with_capacity(16384),  // 16KB for command outputs
         15,  // min_size
         100  // max_size
-    );
+    ));
 
-    // Global network buffer pool for WebSocket/SSE operations
-    pub static ref GLOBAL_NETWORK_BUFFER_POOL: BufferPool = MemoryPool::new(
+/// Global network buffer pool for WebSocket/SSE operations
+pub static GLOBAL_NETWORK_BUFFER_POOL: std::sync::LazyLock<BufferPool> =
+    std::sync::LazyLock::new(|| MemoryPool::new(
         || Vec::with_capacity(8192),   // 8KB for network data
         25,  // min_size
         150  // max_size
-    );
+    ));
 
-    // Global JSON buffer pool for serialization operations
-    pub static ref GLOBAL_JSON_BUFFER_POOL: StringPool = MemoryPool::new(
+/// Global JSON buffer pool for serialization operations
+pub static GLOBAL_JSON_BUFFER_POOL: std::sync::LazyLock<StringPool> =
+    std::sync::LazyLock::new(|| MemoryPool::new(
         || String::with_capacity(4096), // 4KB for JSON serialization
         30,  // min_size
         200  // max_size
-    );
-}
+    ));
 
 /// Convenience functions for global buffer pools
 pub fn get_4kb_buffer() -> PoolGuard<Vec<u8>> {

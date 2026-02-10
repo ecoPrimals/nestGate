@@ -81,13 +81,9 @@ impl CertificateManager {
 
 /// Create a default certificate manager
 ///
-/// # Panics
+/// # Errors
 ///
-/// Panics if the default manager cannot be created (indicates serious system misconfiguration)
-#[must_use]
-pub fn create_default_certificate_manager() -> CertificateManager {
+/// Returns an error if the manager cannot be created (e.g. no adapter endpoint configured)
+pub fn create_default_certificate_manager() -> Result<CertificateManager> {
     CertificateManager::new(NestGateCanonicalConfig::default())
-        .unwrap_or_else(|e| {
-            panic!("Critical: Failed to create default certificate manager: {e}. This indicates a serious system misconfiguration.")
-        })
 }

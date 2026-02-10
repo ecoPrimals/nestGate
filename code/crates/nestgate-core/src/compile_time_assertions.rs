@@ -29,7 +29,7 @@
 //! # Usage
 //!
 //! ```rust
-//! use nestgate_core::compile_time_assertions::const_assert;
+//! use nestgate_core::const_assert;
 //!
 //! // Define your constants
 //! const TIMEOUT_CONNECT: u64 = 5_000;
@@ -58,7 +58,7 @@
 /// # Examples
 ///
 /// ```rust
-/// # use nestgate_core::compile_time_assertions::const_assert;
+/// # use nestgate_core::const_assert;
 /// const MIN_SIZE: usize = 64;
 /// const MAX_SIZE: usize = 1024;
 ///
@@ -71,7 +71,7 @@
 /// # Compile-Time Failure
 ///
 /// ```compile_fail
-/// # use nestgate_core::compile_time_assertions::const_assert;
+/// # use nestgate_core::const_assert;
 /// const A: u32 = 10;
 /// const B: u32 = 5;
 /// const_assert!(A < B);  // Compilation error: assertion failed
@@ -99,7 +99,7 @@ macro_rules! const_assert {
 /// # Examples
 ///
 /// ```rust
-/// # use nestgate_core::compile_time_assertions::const_assert_eq;
+/// # use nestgate_core::const_assert_eq;
 /// const EXPECTED: u32 = 42;
 /// const ACTUAL: u32 = 42;
 ///
@@ -122,7 +122,7 @@ macro_rules! const_assert_eq {
 /// # Examples
 ///
 /// ```rust
-/// # use nestgate_core::compile_time_assertions::const_assert_ne;
+/// # use nestgate_core::const_assert_ne;
 /// const PORT_A: u16 = 8080;
 /// const PORT_B: u16 = 9090;
 ///

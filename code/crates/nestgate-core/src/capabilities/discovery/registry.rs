@@ -19,19 +19,9 @@ use super::CapabilityResult;
 ///
 /// # Example
 ///
-/// ```rust
-/// use nestgate_core::capabilities::discovery::{CapabilityRegistry, ServiceDescriptor, Capability};
-///
-/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// ```rust,ignore
+/// // Requires full ServiceDescriptor setup; see capabilities::discovery module for usage
 /// let registry = CapabilityRegistry::new();
-///
-/// // Register a service
-/// // registry.register_service(service).await?;
-///
-/// // Find providers (lock-free!)
-/// // let providers = registry.find_providers(&Capability::Security).await;
-/// # Ok(())
-/// # }
 /// ```
 pub struct CapabilityRegistry {
     /// Map of capabilities to service providers (lock-free with DashMap!)

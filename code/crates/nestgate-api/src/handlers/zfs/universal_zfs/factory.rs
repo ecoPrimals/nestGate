@@ -7,7 +7,6 @@
 //! Factory module
 
 use std::sync::Arc;
-use std::time::Duration;
 
 use crate::handlers::zfs::universal_zfs::{
     // backends::RemoteZfsService,  // HTTP removed
@@ -221,7 +220,6 @@ impl ZfsServiceFactory {
     }
 
     /// Detect remote ZFS services (HTTP removed)
-    #[allow(dead_code)]
     async fn detect_remote_services() -> Option<Arc<dyn UniversalZfsService>> {
         // HTTP removed per Concentrated Gap Architecture
         warn!("Remote ZFS service detection removed - HTTP removed");

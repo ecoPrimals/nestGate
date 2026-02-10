@@ -19,7 +19,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_api::transport::{TransportServer, TransportConfig};
 //!
 //! // Primary mode: Unix socket only
@@ -42,7 +42,9 @@ pub mod unix_socket;
 
 pub use config::TransportConfig;
 pub use handlers::{NestGateRpcHandler, StorageBackend};
-pub use jsonrpc::{JsonRpcError, JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, RpcMethodHandler};
+pub use jsonrpc::{
+    JsonRpcError, JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, RpcMethodHandler,
+};
 pub use security::BearDogClient;
 pub use server::TransportServer;
 pub use unix_socket::UnixSocketListener;

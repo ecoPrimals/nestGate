@@ -110,6 +110,7 @@ pub struct JsonRpcError {
 ///
 /// Supports Unix socket connections (primary) with future support for
 /// other transports (HTTP, Named Pipes, etc.)
+#[derive(Debug)]
 pub struct JsonRpcClient {
     /// Unix socket stream
     stream: Option<UnixStream>,

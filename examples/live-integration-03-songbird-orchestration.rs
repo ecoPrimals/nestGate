@@ -1,7 +1,44 @@
 // NestGate → Songbird Integration Demo
 // Demonstrates orchestration of storage operations via Songbird
+//
+// **EVOLVED**: Replaced reqwest with raw TCP for ecoBin compliance.
+// NestGate delegates external HTTP to network primals.
 
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
+
+/// Check if a TCP endpoint is reachable and responds to HTTP
+async fn check_endpoint(addr: &str, path: &str) -> Option<(u16, String)> {
+    let mut stream = TcpStream::connect(addr).await.ok()?;
+
+    let request = format!("GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+    stream.write_all(request.as_bytes()).await.ok()?;
+
+    // Short timeout for response
+    let mut buf = vec![0u8; 4096];
+    let read_future = stream.read(&mut buf);
+    let n = tokio::time::timeout(Duration::from_secs(2), read_future)
+        .await
+        .ok()?
+        .ok()?;
+
+    if n == 0 {
+        return None;
+    }
+
+    let response = String::from_utf8_lossy(&buf[..n]).to_string();
+    let status = response
+        .lines()
+        .next()
+        .and_then(|line| line.split_whitespace().nth(1))
+        .and_then(|code| code.parse::<u16>().ok())
+        .unwrap_or(0);
+
+    let body = response.split("\r\n\r\n").nth(1).unwrap_or("").to_string();
+
+    Some((status, body))
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -14,22 +51,17 @@ async fn main() -> anyhow::Result<()> {
     println!("   Looking for orchestration service on the network...");
     println!();
 
-    let songbird_endpoint = "http://localhost:8080";
+    let songbird_addr = "127.0.0.1:8080";
 
-    // Try to connect to Songbird
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()?;
-
-    // Check if Songbird is reachable
-    match client.get(songbird_endpoint).send().await {
-        Ok(response) => {
+    // Check if Songbird is reachable via TCP
+    match check_endpoint(songbird_addr, "/").await {
+        Some((status, _)) => {
             println!("   ✅ Songbird orchestrator reachable");
-            println!("      Status: {}", response.status());
-            println!("      Endpoint: {}", songbird_endpoint);
+            println!("      Status: {}", status);
+            println!("      Endpoint: {}", songbird_addr);
         }
-        Err(e) => {
-            println!("   ⚠️  Songbird not reachable: {}", e);
+        None => {
+            println!("   ⚠️  Songbird not reachable at {}", songbird_addr);
             println!();
             println!("⚠️  No orchestration service discovered");
             println!("   Reason: Songbird orchestrator not running or not discoverable");
@@ -60,7 +92,7 @@ async fn main() -> anyhow::Result<()> {
     println!("🎼 Step 2: Checking Songbird capabilities...");
 
     // Try common capability endpoints
-    let capability_endpoints = vec![
+    let capability_paths = [
         "/api/capabilities",
         "/capabilities",
         "/api/v1/capabilities",
@@ -68,18 +100,14 @@ async fn main() -> anyhow::Result<()> {
     ];
 
     let mut capabilities_found = false;
-    for endpoint in capability_endpoints {
-        let url = format!("{}{}", songbird_endpoint, endpoint);
-        match client.get(&url).send().await {
-            Ok(response) if response.status().is_success() => {
-                println!("   ✅ Found capabilities endpoint: {}", endpoint);
-                if let Ok(body) = response.text().await {
-                    println!("   Response: {}", body);
-                }
+    for path in capability_paths {
+        if let Some((status, body)) = check_endpoint(songbird_addr, path).await {
+            if (200..300).contains(&status) {
+                println!("   ✅ Found capabilities endpoint: {}", path);
+                println!("   Response: {}", body);
                 capabilities_found = true;
                 break;
             }
-            _ => continue,
         }
     }
 
@@ -114,7 +142,7 @@ async fn main() -> anyhow::Result<()> {
     println!("   - NestGate provides storage capabilities");
     println!("   - Songbird can orchestrate workflows");
     println!("   - Zero hardcoded dependencies");
-    println!("   - Runtime discovery successful");
+    println!("   - Runtime discovery successful (TCP, no reqwest)");
     println!();
 
     println!("📊 Integration Summary:");

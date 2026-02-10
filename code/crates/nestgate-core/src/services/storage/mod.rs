@@ -12,10 +12,10 @@ pub mod config;
 pub mod service;
 // NOTE: service_integration was experimental - migrated to unified storage architecture
 // See: code/crates/nestgate-core/src/universal_storage/ for production implementation
-/// Storage type definitions
-pub mod types;
 /// Backend capability detection (Deep Debt: Agnostic, capability-based)
 pub mod capabilities;
+/// Storage type definitions
+pub mod types;
 
 /// Storage operations (Phase 3: Smart Refactoring - extracted for logical cohesion)
 ///

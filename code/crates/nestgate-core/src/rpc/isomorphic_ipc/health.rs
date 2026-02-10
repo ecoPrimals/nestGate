@@ -116,7 +116,7 @@ pub struct HealthCheckResponse {
 /// async fn main() -> anyhow::Result<()> {
 ///     match health::check_nestgate_health().await {
 ///         Ok(status) => {
-///             println!("NestGate is {}", 
+///             println!("NestGate is {}",
 ///                 if status.is_operational() { "operational" } else { "down" }
 ///             );
 ///         }
@@ -191,14 +191,13 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
     debug!("📥 Received health check response: {}", response_line);
 
     // Parse JSON-RPC response
-    let response: Value = serde_json::from_str(&response_line)
-        .context("Failed to parse health check response")?;
+    let response: Value =
+        serde_json::from_str(&response_line).context("Failed to parse health check response")?;
 
     // Extract result
     if let Some(result) = response.get("result") {
         // Try to parse as HealthCheckResponse
-        if let Ok(health_response) = serde_json::from_value::<HealthCheckResponse>(result.clone())
-        {
+        if let Ok(health_response) = serde_json::from_value::<HealthCheckResponse>(result.clone()) {
             return Ok(health_response);
         }
 
@@ -231,7 +230,8 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
     if let Some(error) = response.get("error") {
         return Err(anyhow::anyhow!(
             "Health check returned error: {}",
-            error.get("message")
+            error
+                .get("message")
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown error")
         ));
@@ -283,7 +283,9 @@ where
     loop {
         interval_timer.tick().await;
 
-        let status = check_nestgate_health().await.unwrap_or(HealthStatus::Unreachable);
+        let status = check_nestgate_health()
+            .await
+            .unwrap_or(HealthStatus::Unreachable);
 
         match status {
             HealthStatus::Healthy => debug!("✅ NestGate health check: Healthy"),
@@ -377,7 +379,9 @@ mod tests {
     #[tokio::test]
     async fn test_check_health_when_not_running() {
         // This test assumes NestGate is not running
-        let status = check_nestgate_health().await.unwrap_or(HealthStatus::Unreachable);
+        let status = check_nestgate_health()
+            .await
+            .unwrap_or(HealthStatus::Unreachable);
         // Should be Unreachable if not running
         // We can't assert this because NestGate might be running in CI
         let _ = status;

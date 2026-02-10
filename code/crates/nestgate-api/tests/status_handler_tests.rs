@@ -57,7 +57,7 @@ mod status_handler_extended_tests {
 
     #[test]
     fn test_uptime_calculation() {
-        use std::time::{Duration, SystemTime};
+        use std::time::SystemTime;
 
         let start_time = SystemTime::now();
         let current_time = SystemTime::now();

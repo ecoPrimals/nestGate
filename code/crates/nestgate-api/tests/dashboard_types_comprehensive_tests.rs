@@ -309,7 +309,7 @@ fn test_dashboard_time_range_data_points_performance() {
 #[test]
 fn test_dashboard_time_range_real_time_monitoring() {
     // Scenario: Real-time monitoring of last 15 minutes with 5-second granularity
-    let range = DashboardTimeRange::last_hours(0); // Effectively 0 hours
+    let _range = DashboardTimeRange::last_hours(0); // Effectively 0 hours
     let end = SystemTime::now();
     let start = end - Duration::from_secs(15 * 60); // 15 minutes ago
     let granularity = Duration::from_secs(5); // 5 seconds

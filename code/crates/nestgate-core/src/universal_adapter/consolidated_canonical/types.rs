@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-use super::enums::{CapabilityCategory, DataType, RequestPriority, ResponseStatus, ScalabilityRating};
+use super::enums::{
+    CapabilityCategory, DataType, RequestPriority, ResponseStatus, ScalabilityRating,
+};
 use super::health::ResourceRequirements;
 
 // ==================== CAPABILITY TYPES ====================

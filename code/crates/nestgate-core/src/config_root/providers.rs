@@ -51,7 +51,7 @@ where
 
         let config = match self.format {
             ConfigFormat::Json => serde_json::from_str(&content)?,
-            ConfigFormat::Yaml => serde_yaml::from_str(&content)?,
+            ConfigFormat::Yaml => serde_yaml_ng::from_str(&content)?,
             ConfigFormat::Toml => toml::from_str(&content)?,
         };
 

@@ -136,7 +136,7 @@ pub fn metrics_port() -> u16 {
 /// # Examples
 ///
 /// ```
-/// use nestgate_core::constants::network_environment::health_port();
+/// use nestgate_core::constants::network_environment::health_port;
 ///
 /// let port = health_port();
 /// assert!(port > 0);

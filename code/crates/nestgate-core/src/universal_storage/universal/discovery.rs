@@ -541,8 +541,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_concurrent_discovery() {
-        use std::sync::Arc;
-
         let handle1 = tokio::spawn(async { UniversalStorageDiscovery::discover_local().await });
 
         let handle2 = tokio::spawn(async { UniversalStorageDiscovery::discover_local().await });

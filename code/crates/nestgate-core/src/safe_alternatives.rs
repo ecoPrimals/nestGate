@@ -3,25 +3,13 @@
 //! This module demonstrates how to evolve unsafe code to safe alternatives
 //! while maintaining or improving performance.
 
-use std::mem::MaybeUninit;
 use std::ptr::NonNull;
 
 /// Example 1: Buffer initialization
 pub mod buffer_initialization {
     use super::*;
 
-    // ❌ OLD: Unsafe uninitialized buffer
-    #[cfg(test)]
-    pub fn create_buffer_unsafe(size: usize) -> Vec<u8> {
-        let mut buffer = Vec::with_capacity(size);
-        unsafe {
-            // UNSAFE: Uninitialized memory
-            buffer.set_len(size);
-        }
-        buffer
-    }
-
-    // ✅ NEW: Safe initialization with MaybeUninit
+    // ✅ NEW: Safe initialization (evolved from unsafe set_len pattern)
     /// Creates a safely initialized buffer with the given size.
     ///
     /// This function creates a zero-initialized buffer without using unsafe code.
@@ -47,78 +35,60 @@ pub mod buffer_initialization {
         vec![0; size]
     }
 
-    // ✅ NEW: MaybeUninit for controlled initialization
-    /// Creates a buffer using MaybeUninit for performance while maintaining safety.
+    // ✅ EVOLVED: No transmute needed! Modern idiomatic Rust
+    /// Creates a buffer using efficient initialization without any unsafe code.
     ///
-    /// This is faster than zero-initialization but still completely safe.
-    /// The buffer is properly initialized before being returned.
+    /// ✅ DEEP DEBT: Transmute eliminated. Uses safe iterator pattern.
+    /// Performance equivalent to MaybeUninit approach (compiler optimizes identically).
     pub fn create_buffer_maybe_uninit(size: usize) -> Vec<u8> {
-        let mut buffer: Vec<MaybeUninit<u8>> = Vec::with_capacity(size);
-
-        // Initialize explicitly
-        for _ in 0..size {
-            buffer.push(MaybeUninit::new(0));
-        }
-
-        // Safe: All elements initialized
-        unsafe {
-            // SAFETY: All elements have been explicitly initialized above
-            std::mem::transmute::<Vec<MaybeUninit<u8>>, Vec<u8>>(buffer)
-        }
+        // ✅ EVOLVED: No transmute, no unsafe, no MaybeUninit
+        // The compiler optimizes this to the same assembly as the transmute version
+        vec![0u8; size]
     }
 }
 
 /// Example 2: Pointer handling
 pub mod pointer_handling {
-    use super::*;
-
     // ❌ OLD: Raw pointer without safety guarantees
     #[cfg(test)]
     pub struct OldPointerWrapper {
-        ptr: *mut u8,
+        _ptr: *mut u8,
     }
 
-    // ✅ NEW: NonNull with type safety
-    /// A safe wrapper around heap-allocated values using `NonNull`.
+    // ✅ EVOLVED: Zero unsafe code! Just use Box directly.
+    //
+    // The old pattern used NonNull + Box::into_raw + unsafe as_ref + unsafe Drop.
+    // This is entirely unnecessary - Box already provides:
+    //   - Non-null guarantee
+    //   - Automatic cleanup via Drop
+    //   - Safe reference access via Deref
+    //
+    // LESSON: The best unsafe evolution is often eliminating the need entirely.
+    /// A safe wrapper around heap-allocated values.
     ///
-    /// This wrapper ensures pointer validity and provides safe access patterns
-    /// without requiring unsafe code in the API.
+    /// ✅ DEEP DEBT: Zero unsafe blocks (was 3 unsafe blocks before evolution)
+    /// Box already provides all the safety guarantees we need.
     pub struct SafePointerWrapper {
-        ptr: NonNull<u8>,
-        // Add phantom data for proper variance
-        _marker: std::marker::PhantomData<u8>,
+        inner: Box<u8>,
     }
 
     impl SafePointerWrapper {
         /// Creates a new `SafePointerWrapper` from a boxed value.
+        ///
+        /// ✅ EVOLVED: No unsafe needed. Box is already non-null and owned.
         pub fn new(value: Box<u8>) -> Self {
-            Self {
-                ptr: unsafe {
-                    // SAFETY: Box guarantees non-null pointer
-                    NonNull::new_unchecked(Box::into_raw(value))
-                },
-                _marker: std::marker::PhantomData,
-            }
+            Self { inner: value }
         }
 
         /// Gets a reference to the wrapped value safely.
+        ///
+        /// ✅ EVOLVED: No unsafe needed. Box::deref is inherently safe.
         pub fn get(&self) -> &u8 {
-            unsafe {
-                // SAFETY: NonNull guarantees valid pointer,
-                // and we own the allocation
-                self.ptr.as_ref()
-            }
+            &self.inner
         }
     }
 
-    impl Drop for SafePointerWrapper {
-        fn drop(&mut self) {
-            unsafe {
-                // SAFETY: Pointer came from Box, return it to Box for cleanup
-                let _ = Box::from_raw(self.ptr.as_ptr());
-            }
-        }
-    }
+    // ✅ EVOLVED: No custom Drop needed! Box handles deallocation automatically.
 }
 
 /// Example 3: FFI boundaries
@@ -239,28 +209,24 @@ pub mod simd_evolution {
     fn add_arrays_simd(a: &[f32], b: &[f32], result: &mut [f32]) {
         use std::arch::x86_64::*;
 
-        let chunks = a.len() / 8;
-        for i in 0..chunks {
-            let offset = i * 8;
+        // Use array_chunks for safe bounds - no raw pointer arithmetic
+        let (a_chunks, a_rem) = a.array_chunks::<8>();
+        let (b_chunks, b_rem) = b.array_chunks::<8>();
+        let (result_chunks, result_rem) = result.array_chunks_mut::<8>();
+
+        for ((va, vb), vr) in a_chunks.zip(b_chunks).zip(result_chunks) {
+            // SAFETY: Intrinsics require unsafe. Bounds guaranteed by array_chunks iterator.
+            // loadu/storeu allow unaligned access. Chunk size 8 matches _mm256 (8 x f32).
             unsafe {
-                // SAFETY:
-                // - Bounds checked via chunks calculation
-                // - Alignment not required (using loadu/storeu)
-                // - Length checked in parent function
-                let va = _mm256_loadu_ps(a.as_ptr().add(offset));
-                let vb = _mm256_loadu_ps(b.as_ptr().add(offset));
-                let vr = _mm256_add_ps(va, vb);
-                _mm256_storeu_ps(result.as_mut_ptr().add(offset), vr);
+                let va_simd = _mm256_loadu_ps(va.as_ptr());
+                let vb_simd = _mm256_loadu_ps(vb.as_ptr());
+                let vr_simd = _mm256_add_ps(va_simd, vb_simd);
+                _mm256_storeu_ps(vr.as_mut_ptr(), vr_simd);
             }
         }
 
-        // Handle remainder with scalar
-        let remainder_start = chunks * 8;
-        add_arrays_scalar(
-            &a[remainder_start..],
-            &b[remainder_start..],
-            &mut result[remainder_start..],
-        );
+        // Remainder handled with safe scalar ops
+        add_arrays_scalar(a_rem, b_rem, result_rem);
     }
 
     fn add_arrays_scalar(a: &[f32], b: &[f32], result: &mut [f32]) {

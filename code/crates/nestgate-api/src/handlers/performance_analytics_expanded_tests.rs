@@ -425,7 +425,7 @@ mod expanded_performance_tests {
 
     #[test]
     fn test_multi_severity_alert_handling() {
-        let alerts = vec![
+        let alerts = [
             PerformanceAlert {
                 id: "a1".to_string(),
                 message: "Minor issue".to_string(),
@@ -454,7 +454,7 @@ mod expanded_performance_tests {
 
     #[test]
     fn test_recommendation_prioritization() {
-        let mut recommendations = vec![
+        let mut recommendations = [
             PerformanceRecommendation {
                 id: "r1".to_string(),
                 title: "Low priority".to_string(),

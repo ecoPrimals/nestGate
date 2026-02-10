@@ -166,13 +166,8 @@ impl ProductionZfsOperations {
     }
 }
 
-impl Default for ProductionZfsOperations {
-    /// Returns the default instance
-    fn default() -> Self {
-        // This will be implemented with async constructor pattern
-        panic!("Use ProductionZfsOperations::new() instead")
-    }
-}
+// ProductionZfsOperations intentionally does not implement Default.
+// Use ProductionZfsOperations::new(config).await for proper async initialization.
 
 // ==================== OPERATIONS REPORT ====================
 

@@ -39,33 +39,26 @@
 //!
 //! ## Usage Pattern
 //!
-//! ```rust,no_run
+//! ```rust
 //! use nestgate_core::service_metadata::{ServiceMetadata, ServiceMetadataStore};
+//! use std::time::SystemTime;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> nestgate_core::Result<()> {
 //! let store = ServiceMetadataStore::new().await?;
-//!
-//! // Store service metadata (typically called by Songbird)
+//! let now = SystemTime::now();
 //! let meta = ServiceMetadata {
 //!     name: "beardog".to_string(),
 //!     version: "1.0.0".to_string(),
 //!     capabilities: vec!["crypto".to_string(), "btsp".to_string()],
 //!     virtual_endpoint: "/primal/beardog".to_string(),
-//!     registered_at: std::time::SystemTime::now(),
-//!     last_seen: std::time::SystemTime::now(),
+//!     registered_at: now,
+//!     last_seen: now,
 //!     platform: std::env::consts::OS.to_string(),
 //!     native_endpoint: "/tmp/primal-beardog.sock".to_string(),
+//!     metadata: std::collections::HashMap::new(),
 //! };
 //! store.store_service(meta).await?;
-//!
-//! // Find services by capability
-//! let crypto_providers = store.find_by_capability("crypto").await?;
-//!
-//! // Get specific service
-//! let beardog_meta = store.get_service("beardog").await?;
-//!
-//! // Connect to service (use Songbird, NOT NestGate!)
-//! // let stream = songbird::ipc::connect(&beardog_meta.virtual_endpoint).await?;
+//! let _crypto_providers = store.find_by_capability("crypto").await?;
 //! # Ok(())
 //! # }
 //! ```

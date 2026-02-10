@@ -54,12 +54,11 @@ fn test_discovery_config_default_retry_attempts() {
 }
 
 #[test]
-fn test_discovery_config_default_port_range() {
+fn test_discovery_config_default_cache_ttl() {
     use nestgate_core::config::environment::DiscoveryConfig;
 
     let config = DiscoveryConfig::default();
-    assert!(!config.port_range.is_empty());
-    assert!(config.port_range.contains(&3000));
+    assert_eq!(config.cache_ttl_secs, 300);
 }
 
 #[test]
@@ -162,27 +161,27 @@ fn test_discovery_config_custom_retry_attempts() {
 }
 
 #[test]
-fn test_discovery_config_custom_port_range() {
+fn test_discovery_config_custom_cache_ttl() {
     use nestgate_core::config::environment::DiscoveryConfig;
 
     let config = DiscoveryConfig {
-        port_range: vec![8000, 8001, 8002],
+        cache_ttl_secs: 600,
         ..Default::default()
     };
 
-    assert_eq!(config.port_range, vec![8000, 8001, 8002]);
+    assert_eq!(config.cache_ttl_secs, 600);
 }
 
 #[test]
-fn test_discovery_config_empty_port_range() {
+fn test_discovery_config_zero_cache_ttl() {
     use nestgate_core::config::environment::DiscoveryConfig;
 
     let config = DiscoveryConfig {
-        port_range: vec![],
+        cache_ttl_secs: 0,
         ..Default::default()
     };
 
-    assert!(config.port_range.is_empty());
+    assert_eq!(config.cache_ttl_secs, 0);
 }
 
 #[test]

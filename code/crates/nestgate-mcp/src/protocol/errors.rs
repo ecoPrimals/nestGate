@@ -65,19 +65,22 @@ impl From<McpProtocolError> for NestGateError {
     fn from(err: McpProtocolError) -> Self {
         match err {
             McpProtocolError::ProtocolError { message } => {
-                NestGateError::simple(format!("Protocol error: {}", message))
+                NestGateError::network_error(&format!("MCP protocol error: {message}"))
             }
             McpProtocolError::ConnectionError { message } => {
-                NestGateError::network_error("mcp_connection", message)
+                NestGateError::network_error(&format!("MCP connection error: {message}"))
             }
             McpProtocolError::MessageParsingError { message } => {
-                NestGateError::simple(format!("Parsing error: {}", message))
+                NestGateError::network_error(&format!("MCP parsing error: {message}"))
             }
             McpProtocolError::AuthenticationError { message } => {
-                NestGateError::simple(format!("Auth error: {}", message))
+                NestGateError::security_authentication_failed(
+                    "mcp",
+                    format!("MCP auth error: {message}"),
+                )
             }
             McpProtocolError::SessionError { message } => {
-                NestGateError::simple(format!("Session error: {}", message))
+                NestGateError::network_error(&format!("MCP session error: {message}"))
             }
         }
     }

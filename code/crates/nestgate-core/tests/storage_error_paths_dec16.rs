@@ -198,7 +198,7 @@ fn test_backend_unavailable() {
         Degraded,
     }
 
-    let backends = vec![
+    let backends = [
         ("primary", BackendStatus::Unavailable),
         ("secondary", BackendStatus::Available),
         ("tertiary", BackendStatus::Degraded),

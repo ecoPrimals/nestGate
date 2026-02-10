@@ -105,6 +105,7 @@ mod config_discovery_integration_tests {
     }
 
     #[tokio::test]
+    #[ignore] // Requires network for capability discovery
     async fn test_concurrent_discovery_requests() {
         std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000");
         std::env::set_var(

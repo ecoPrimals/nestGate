@@ -29,7 +29,7 @@
 //!     .build()
 //!     .await?;
 //!
-//! println!("API endpoint: {}", config.api_endpoint());
+//! println!("API endpoint: {:?}", config.api_endpoint());
 //! # Ok(())
 //! # }
 //! ```

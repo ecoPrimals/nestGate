@@ -187,6 +187,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tokio::net::TcpListener;
 
     #[test]
     fn test_stream_type_description() {
@@ -201,5 +202,48 @@ mod tests {
 
         assert!(unix_endpoint.description().contains("Unix"));
         assert!(tcp_endpoint.description().contains("TCP"));
+    }
+
+    #[test]
+    fn test_ipc_endpoint_is_unix_is_tcp() {
+        let unix_ep = IpcEndpoint::UnixSocket(std::path::PathBuf::from("/tmp/x.sock"));
+        let tcp_ep = IpcEndpoint::TcpLocal("127.0.0.1:99".parse().unwrap());
+        assert!(unix_ep.is_unix_socket());
+        assert!(!unix_ep.is_tcp());
+        assert!(tcp_ep.is_tcp());
+        assert!(!tcp_ep.is_unix_socket());
+    }
+
+    #[tokio::test]
+    async fn test_stream_type_tcp() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let endpoint = IpcEndpoint::TcpLocal(addr);
+        let stream = connect_endpoint(&endpoint).await.unwrap();
+        assert_eq!(stream.stream_type(), "TCP (localhost)");
+    }
+
+    #[tokio::test]
+    async fn test_connect_tcp_stream_operations() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            drop(stream);
+        });
+        let endpoint = IpcEndpoint::TcpLocal(addr);
+        let mut stream = connect_endpoint(&endpoint).await.unwrap();
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        // Stream may be closed by server - exercise write/read without strict assertions
+        let _ = stream.write_all(b"test").await;
+        let mut buf = [0u8; 4];
+        let _ = stream.read(&mut buf).await;
+    }
+
+    #[tokio::test]
+    async fn test_connect_unix_nonexistent_fails() {
+        let endpoint = IpcEndpoint::UnixSocket(std::path::PathBuf::from("/nonexistent/path.sock"));
+        let result = connect_endpoint(&endpoint).await;
+        assert!(result.is_err());
     }
 }

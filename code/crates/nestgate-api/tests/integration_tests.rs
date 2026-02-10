@@ -7,9 +7,6 @@ use nestgate_api::transport::{
 };
 use serde_json::{json, Value};
 use std::sync::Arc;
-use tempfile::TempDir;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::UnixStream;
 
 // ============================================================================
 // Transport + Handler Integration (3 tests)
@@ -75,7 +72,7 @@ async fn test_multiple_handlers_concurrent() {
                 jsonrpc: "2.0".to_string(),
                 method: "health.ping".to_string(),
                 params: json!({"id": i}),
-                id: Value::from(i as i64),
+                id: Value::from(i64::from(i)),
             };
             h.handle_request(request).await
         });
@@ -155,7 +152,7 @@ async fn test_invalid_method_error_flow() {
     assert!(response.error.is_some());
 
     let error = response.error.unwrap();
-    assert_eq!(error.code, -32603); // Internal error (method not found wrapped)
+    assert_eq!(error.code, -32601); // Method not found (JSON-RPC spec)
 }
 
 #[tokio::test]
@@ -263,13 +260,13 @@ async fn test_e2e_stress_sequential_requests() {
             jsonrpc: "2.0".to_string(),
             method: "health.ping".to_string(),
             params: json!({"iteration": i}),
-            id: Value::from(i as i64),
+            id: Value::from(i64::from(i)),
         };
 
         let response = handler.handle_request(request).await;
 
-        assert!(response.error.is_none(), "Request {} failed", i);
-        assert_eq!(response.id, i as i64);
+        assert!(response.error.is_none(), "Request {i} failed");
+        assert_eq!(response.id, i64::from(i));
     }
 }
 
@@ -297,7 +294,7 @@ async fn test_concurrent_load() {
                     "identity.get".to_string()
                 },
                 params: json!({"id": i}),
-                id: Value::from(i as i64),
+                id: Value::from(i64::from(i)),
             };
             h.handle_request(request).await
         });
@@ -332,5 +329,5 @@ async fn test_rapid_fire_requests() {
     let duration = start.elapsed();
 
     // Should complete 1000 requests in reasonable time
-    assert!(duration.as_secs() < 10, "Too slow: {:?}", duration);
+    assert!(duration.as_secs() < 10, "Too slow: {duration:?}");
 }

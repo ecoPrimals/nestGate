@@ -75,10 +75,7 @@ impl ConsulDiscovery {
             .timeout(builder.timeout)
             .build()
             .map_err(|e| {
-                crate::error::NestGateError::config(&format!(
-                    "Failed to create HTTP client: {}",
-                    e
-                ))
+                crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e))
             })?;
 
         Ok(Self {
@@ -125,15 +122,14 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
         let (address, port) = Self::extract_address_port(&primary_endpoint);
 
-        let health_check =
-            self_knowledge
-                .endpoints
-                .get("health")
-                .map(|addr| ConsulHealthCheck {
-                    http: addr.to_string(),
-                    interval: "10s".to_string(),
-                    timeout: format!("{}s", self.timeout.as_secs()),
-                });
+        let health_check = self_knowledge
+            .endpoints
+            .get("health")
+            .map(|addr| ConsulHealthCheck {
+                http: addr.to_string(),
+                interval: "10s".to_string(),
+                timeout: format!("{}s", self.timeout.as_secs()),
+            });
 
         let mut meta = HashMap::new();
         meta.insert("version".to_string(), self_knowledge.version.clone());
@@ -235,10 +231,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
         let url = format!("{}/v1/health/service/{}", self.consul_addr, service_id);
         let response = self.client.get(&url).send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!(
-                "Consul health check failed: {}",
-                e
-            ))
+            crate::error::NestGateError::api_error(&format!("Consul health check failed: {}", e))
         })?;
 
         Ok(response.status().is_success())
@@ -252,10 +245,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
             self.consul_addr, service_id
         );
         self.client.put(&url).send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!(
-                "Consul deregistration failed: {}",
-                e
-            ))
+            crate::error::NestGateError::api_error(&format!("Consul deregistration failed: {}", e))
         })?;
 
         tracing::info!("Successfully deregistered from Consul");

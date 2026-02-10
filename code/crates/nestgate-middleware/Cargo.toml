@@ -11,7 +11,7 @@ readme = "README.md"
 categories = [ "web-programming", "middleware",]
 
 [dependencies]
-num_cpus = "1.0"
+num_cpus = "1.16"
 
 [dev-dependencies]
 mockall = "0.11"

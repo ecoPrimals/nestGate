@@ -20,14 +20,14 @@
 //! # Example Usage
 //!
 //! ```rust
-//! use nestgate_core::config::external::{ExternalConfig, ServiceEndpoints};
+//! use nestgate_core::config::external::ExternalConfig;
 //!
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! # fn main() -> nestgate_core::Result<()> {
 //! // Load from environment
 //! let config = ExternalConfig::from_env()?;
 //!
-//! // Access typed endpoints
-//! let discovery_url = config.services.discovery_endpoint();
+//! // Access typed endpoints (ServicesConfig uses get_discovery_url)
+//! let discovery_url = config.services.get_discovery_url();
 //! let api_port = config.network.api_port();
 //! # Ok(())
 //! # }

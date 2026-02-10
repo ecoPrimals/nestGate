@@ -85,9 +85,9 @@ impl SovereigntyRuntimeConfig {
     /// # Example
     ///
     /// ```rust
-    /// use nestgate_core::config::sovereignty_config::SovereigntyConfig;
+    /// use nestgate_core::config::sovereignty_config::SovereigntyRuntimeConfig;
     ///
-    /// let config = SovereigntyConfig::default()
+    /// let config = SovereigntyRuntimeConfig::default()
     ///     .with_api_endpoint("http://api.example.com".to_string());
     /// ```
     pub fn with_api_endpoint(mut self, endpoint: String) -> Self {

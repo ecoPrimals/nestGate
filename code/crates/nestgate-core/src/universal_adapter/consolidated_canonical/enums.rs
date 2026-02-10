@@ -84,19 +84,19 @@ pub enum RetryBackoff {
     /// Linear backoff with fixed increment
     Linear {
         /// Increment duration
-        increment: Duration
+        increment: Duration,
     },
     /// Exponential backoff with base and maximum
     Exponential {
         /// Base duration
         base: Duration,
         /// Maximum duration
-        max: Duration
+        max: Duration,
     },
     /// Fixed delay between retries
     Fixed {
         /// Fixed delay duration
-        delay: Duration
+        delay: Duration,
     },
 }
 

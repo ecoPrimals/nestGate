@@ -7,6 +7,7 @@
 
 use crate::error::NestGateError;
 use crate::Result;
+use bytes::Bytes;
 use std::path::PathBuf;
 use std::time::SystemTime;
 use tracing::info;
@@ -15,6 +16,9 @@ use super::super::config::StorageServiceConfig;
 
 /// Store an object in a dataset
 ///
+/// Accepts `impl AsRef<[u8]>` to avoid forcing `.to_vec()` at call sites - allows Bytes,
+/// Vec<u8>, and &[u8] without extra allocation in hot paths.
+///
 /// # Errors
 ///
 /// Returns error if storage fails
@@ -22,13 +26,14 @@ pub async fn store_object(
     config: &StorageServiceConfig,
     dataset: &str,
     key: &str,
-    data: Vec<u8>,
+    data: impl AsRef<[u8]>,
 ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
+    let data_ref = data.as_ref();
     info!(
         "💾 Storing object: {}/{} ({} bytes)",
         dataset,
         key,
-        data.len()
+        data_ref.len()
     );
 
     // Get dataset path
@@ -40,27 +45,26 @@ pub async fn store_object(
     tokio::fs::create_dir_all(&dataset_path)
         .await
         .map_err(|e| {
-            NestGateError::io_error(&format!("Failed to create dataset directory: {}", e))
+            NestGateError::io_error(format!("Failed to create dataset directory: {}", e))
         })?;
 
     // Write object
-    tokio::fs::write(&object_path, &data).await.map_err(|e| {
-        NestGateError::io_error(&format!(
-            "Failed to write object {}/{}: {}",
-            dataset, key, e
-        ))
-    })?;
+    tokio::fs::write(&object_path, data_ref)
+        .await
+        .map_err(|e| {
+            NestGateError::io_error(format!("Failed to write object {}/{}: {}", dataset, key, e))
+        })?;
 
     let now = current_timestamp();
     let object_info = crate::rpc::tarpc_types::ObjectInfo {
         key: key.to_string(),
         dataset: dataset.to_string(),
-        size_bytes: data.len() as u64,
+        size_bytes: data_ref.len() as u64,
         created_at: now,
         modified_at: now,
         content_type: Some("application/octet-stream".to_string()),
         // ✅ EVOLVED: Calculate SHA-256 checksum for data integrity
-        checksum: Some(calculate_checksum(&data)),
+        checksum: Some(calculate_checksum(data_ref)),
         encrypted: false,
         compressed: false,
         metadata: std::collections::HashMap::new(),
@@ -72,6 +76,8 @@ pub async fn store_object(
 
 /// Retrieve an object from a dataset
 ///
+/// Returns `Bytes` (zero-copy) instead of `Vec<u8>` to avoid extra allocation in hot paths.
+///
 /// # Errors
 ///
 /// Returns error if object not found or retrieval fails
@@ -79,7 +85,7 @@ pub async fn retrieve_object(
     config: &StorageServiceConfig,
     dataset: &str,
     key: &str,
-) -> Result<(Vec<u8>, crate::rpc::tarpc_types::ObjectInfo)> {
+) -> Result<(Bytes, crate::rpc::tarpc_types::ObjectInfo)> {
     info!("📖 Retrieving object: {}/{}", dataset, key);
 
     let base_path = PathBuf::from(&config.base_path);
@@ -89,23 +95,20 @@ pub async fn retrieve_object(
     // Read object
     let data = tokio::fs::read(&object_path).await.map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
-            NestGateError::not_found(&format!("object {}/{}", dataset, key))
+            NestGateError::not_found(format!("object {}/{}", dataset, key))
         } else {
-            NestGateError::io_error(&format!(
-                "Failed to read object {}/{}: {}",
-                dataset, key, e
-            ))
+            NestGateError::io_error(format!("Failed to read object {}/{}: {}", dataset, key, e))
         }
     })?;
 
     // Get metadata
     let metadata = tokio::fs::metadata(&object_path)
         .await
-        .map_err(|e| NestGateError::io_error(&format!("Failed to get metadata: {}", e)))?;
+        .map_err(|e| NestGateError::io_error(format!("Failed to get metadata: {}", e)))?;
 
-    let modified = metadata.modified().map_err(|e| {
-        NestGateError::io_error(&format!("Failed to get modification time: {}", e))
-    })?;
+    let modified = metadata
+        .modified()
+        .map_err(|e| NestGateError::io_error(format!("Failed to get modification time: {}", e)))?;
     let modified_at = modified
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap_or_default()
@@ -130,7 +133,8 @@ pub async fn retrieve_object(
         key,
         data.len()
     );
-    Ok((data, object_info))
+    // Zero-copy: Bytes::from takes ownership of Vec from fs::read
+    Ok((Bytes::from(data), object_info))
 }
 
 /// Delete an object from a dataset
@@ -147,9 +151,9 @@ pub async fn delete_object(config: &StorageServiceConfig, dataset: &str, key: &s
 
     tokio::fs::remove_file(&object_path).await.map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
-            NestGateError::not_found(&format!("object {}/{}", dataset, key))
+            NestGateError::not_found(format!("object {}/{}", dataset, key))
         } else {
-            NestGateError::io_error(&format!(
+            NestGateError::io_error(format!(
                 "Failed to delete object {}/{}: {}",
                 dataset, key, e
             ))

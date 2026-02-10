@@ -58,33 +58,26 @@ pub enum SocketConfigSource {
 }
 
 impl SocketConfig {
-    /// Get socket configuration with standardized 3-tier fallback
+    /// Resolve socket configuration from explicit parameters
+    ///
+    /// This is the pure-logic core that does not read environment variables.
+    /// Prefer this over `from_environment()` when parameters are already known.
     ///
     /// # Priority Order
     ///
-    /// 1. `NESTGATE_SOCKET` env var (if set, use as-is)
-    /// 2. XDG runtime: `/run/user/{uid}/nestgate-{family}.sock`
-    /// 3. Temp fallback: `/tmp/nestgate-{family}-{node}.sock`
-    ///
-    /// # Returns
-    ///
-    /// Socket configuration with path, IDs, and source information
-    pub fn from_environment() -> Result<Self> {
-        // Get family_id (required)
-        let family_id = std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| {
-            warn!("NESTGATE_FAMILY_ID not set, using 'default'");
-            "default".to_string()
-        });
-
-        // Get node_id (optional, for multi-instance)
-        let node_id = std::env::var("NESTGATE_NODE_ID").unwrap_or_else(|_| "default".to_string());
-
-        // Tier 1: Check for explicit NESTGATE_SOCKET env var (highest priority)
-        if let Ok(socket_path) = std::env::var("NESTGATE_SOCKET") {
-            info!(
-                "🔌 Using explicit socket path from NESTGATE_SOCKET: {}",
-                socket_path
-            );
+    /// 1. `socket_override` (if `Some`, use as-is)
+    /// 2. `biomeos_socket_dir` (if `Some`, use `{dir}/nestgate.sock`)
+    /// 3. XDG runtime: `/run/user/{uid}/biomeos/nestgate.sock`
+    /// 4. Temp fallback: `/tmp/nestgate-{family}-{node}.sock`
+    pub fn resolve(
+        family_id: String,
+        node_id: String,
+        socket_override: Option<String>,
+        biomeos_socket_dir: Option<String>,
+    ) -> Result<Self> {
+        // Tier 1: Explicit socket path override (highest priority)
+        if let Some(socket_path) = socket_override {
+            info!("🔌 Using explicit socket path: {}", socket_path);
             return Ok(Self {
                 socket_path: PathBuf::from(socket_path),
                 family_id,
@@ -93,17 +86,17 @@ impl SocketConfig {
             });
         }
 
-        // Tier 2: Check for biomeOS shared directory (biomeOS standard)
-        if let Ok(biomeos_dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+        // Tier 2: biomeOS shared directory (biomeOS standard)
+        if let Some(biomeos_dir) = biomeos_socket_dir {
             let socket_path = PathBuf::from(biomeos_dir).join("nestgate.sock");
-            
+
             info!(
                 "🔌 Using biomeOS socket directory: {} (family: {}, node: {})",
                 socket_path.display(),
                 family_id,
                 node_id
             );
-            
+
             return Ok(Self {
                 socket_path,
                 family_id,
@@ -115,7 +108,7 @@ impl SocketConfig {
         // Get UID for XDG path
         let uid = crate::platform::get_current_uid();
 
-        // Tier 3: Try XDG runtime directory with biomeOS subdirectory (preferred, more secure)
+        // Tier 3: XDG runtime directory with biomeOS subdirectory (preferred, more secure)
         let xdg_runtime_dir = format!("/run/user/{}/biomeos", uid);
         if Path::new(&format!("/run/user/{}", uid)).exists() {
             let socket_path = PathBuf::from(format!("{}/nestgate.sock", xdg_runtime_dir));
@@ -153,6 +146,31 @@ impl SocketConfig {
             node_id,
             source: SocketConfigSource::TempDirectory,
         })
+    }
+
+    /// Get socket configuration from environment variables
+    ///
+    /// Reads `NESTGATE_SOCKET`, `NESTGATE_FAMILY_ID`, `NESTGATE_NODE_ID`,
+    /// and `BIOMEOS_SOCKET_DIR` from the environment and delegates to `resolve()`.
+    ///
+    /// # Environment Variables
+    ///
+    /// - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
+    /// - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional)
+    /// - `NESTGATE_FAMILY_ID`: Family identifier (defaults to "default")
+    /// - `NESTGATE_NODE_ID`: Node identifier (defaults to "default")
+    pub fn from_environment() -> Result<Self> {
+        let family_id = std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| {
+            warn!("NESTGATE_FAMILY_ID not set, using 'default'");
+            "default".to_string()
+        });
+
+        let node_id = std::env::var("NESTGATE_NODE_ID").unwrap_or_else(|_| "default".to_string());
+
+        let socket_override = std::env::var("NESTGATE_SOCKET").ok();
+        let biomeos_socket_dir = std::env::var("BIOMEOS_SOCKET_DIR").ok();
+
+        Self::resolve(family_id, node_id, socket_override, biomeos_socket_dir)
     }
 
     /// Prepare socket path for binding
@@ -236,77 +254,88 @@ mod tests {
     use std::os::unix::net::UnixListener;
 
     // ========================================================================
-    // UNIT TESTS - Configuration Logic
+    // UNIT TESTS - Pure Logic via resolve() (no env var races)
     // ========================================================================
 
     #[test]
     fn test_explicit_socket_path_has_highest_priority() {
-        std::env::set_var("NESTGATE_SOCKET", "/tmp/explicit.sock");
-        std::env::set_var("NESTGATE_FAMILY_ID", "test");
-        std::env::remove_var("BIOMEOS_SOCKET_DIR");
-
-        let config = SocketConfig::from_environment().unwrap();
+        // Uses resolve() directly - no env var pollution between parallel tests
+        let config = SocketConfig::resolve(
+            "test".to_string(),
+            "default".to_string(),
+            Some("/tmp/explicit.sock".to_string()),
+            None,
+        )
+        .unwrap();
 
         assert_eq!(config.socket_path, PathBuf::from("/tmp/explicit.sock"));
         assert_eq!(config.family_id, "test");
         assert_eq!(config.source, SocketConfigSource::Environment);
-
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::remove_var("NESTGATE_FAMILY_ID");
     }
 
     #[test]
-    fn test_xdg_runtime_path_second_priority() {
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_DIR");
-        std::env::set_var("NESTGATE_FAMILY_ID", "xdgtest");
+    fn test_biomeos_dir_second_priority() {
+        let config = SocketConfig::resolve(
+            "biotest".to_string(),
+            "default".to_string(),
+            None,
+            Some("/tmp/biomeos-test-dir".to_string()),
+        )
+        .unwrap();
 
-        let config = SocketConfig::from_environment().unwrap();
-
-        // Should use XDG with biomeOS subdirectory if available, /tmp otherwise
-        let path_str = config.socket_path.to_str().unwrap();
-        assert!(
-            path_str.contains("nestgate.sock") || path_str.contains("nestgate-xdgtest"),
-            "Socket path should be nestgate.sock (biomeOS standard) or nestgate-xdgtest.sock (fallback)"
+        assert_eq!(
+            config.socket_path,
+            PathBuf::from("/tmp/biomeos-test-dir/nestgate.sock")
         );
-
-        std::env::remove_var("NESTGATE_FAMILY_ID");
+        assert_eq!(config.source, SocketConfigSource::BiomeOSDirectory);
     }
 
     #[test]
-    fn test_tmp_fallback_with_node_id() {
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_DIR");
-        std::env::set_var("NESTGATE_FAMILY_ID", "tmptest");
-        std::env::set_var("NESTGATE_NODE_ID", "node42");
-
-        let config = SocketConfig::from_environment().unwrap();
+    fn test_fallback_without_overrides() {
+        // No socket override, no biomeOS dir -> falls through to XDG or /tmp
+        let config =
+            SocketConfig::resolve("fallback".to_string(), "node42".to_string(), None, None)
+                .unwrap();
 
         let path_str = config.socket_path.to_str().unwrap();
         assert!(
-            path_str.contains("tmptest") || path_str.contains("nestgate"),
-            "Socket path should contain family ID or nestgate"
+            path_str.contains("nestgate"),
+            "Socket path should contain 'nestgate'"
         );
-
-        std::env::remove_var("NESTGATE_FAMILY_ID");
-        std::env::remove_var("NESTGATE_NODE_ID");
+        assert_eq!(config.family_id, "fallback");
+        assert_eq!(config.node_id, "node42");
     }
 
     #[test]
-    fn test_default_family_id_when_not_set() {
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::remove_var("NESTGATE_FAMILY_ID");
-        std::env::remove_var("NESTGATE_NODE_ID");
+    fn test_explicit_override_beats_biomeos_dir() {
+        // Both provided - explicit should win
+        let config = SocketConfig::resolve(
+            "test".to_string(),
+            "default".to_string(),
+            Some("/tmp/override.sock".to_string()),
+            Some("/tmp/biomeos-dir".to_string()),
+        )
+        .unwrap();
 
-        let config = SocketConfig::from_environment().unwrap();
+        assert_eq!(config.socket_path, PathBuf::from("/tmp/override.sock"));
+        assert_eq!(config.source, SocketConfigSource::Environment);
+    }
 
-        // If parent process has env vars set, they may persist
-        // Just verify that config was created successfully
-        assert!(!config.family_id.is_empty());
-        assert!(!config.node_id.is_empty());
+    #[test]
+    fn test_multi_instance_unique_sockets() {
+        // Pure logic test - no env vars
+        let config1 =
+            SocketConfig::resolve("multi".to_string(), "instance1".to_string(), None, None)
+                .unwrap();
 
-        // Cleanup if needed
-        let _ = fs::remove_file(&config.socket_path);
+        let config2 =
+            SocketConfig::resolve("multi".to_string(), "instance2".to_string(), None, None)
+                .unwrap();
+
+        assert_eq!(config1.node_id, "instance1");
+        assert_eq!(config2.node_id, "instance2");
+        assert_eq!(config1.family_id, "multi");
+        assert_eq!(config2.family_id, "multi");
     }
 
     #[test]
@@ -351,7 +380,6 @@ mod tests {
 
         assert!(config.prepare_socket_path().is_ok());
 
-        // Old file should be removed
         assert!(
             !Path::new(test_socket).exists(),
             "Old socket should be removed"
@@ -386,86 +414,63 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_multi_instance_unique_sockets() {
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::set_var("NESTGATE_FAMILY_ID", "multi");
-
-        // Instance 1
-        std::env::set_var("NESTGATE_NODE_ID", "instance1");
-        let config1 = SocketConfig::from_environment().unwrap();
-
-        // Instance 2
-        std::env::set_var("NESTGATE_NODE_ID", "instance2");
-        let config2 = SocketConfig::from_environment().unwrap();
-
-        // Should have different node IDs
-        assert_eq!(config1.node_id, "instance1");
-        assert_eq!(config2.node_id, "instance2");
-        assert_eq!(config1.family_id, "multi");
-        assert_eq!(config2.family_id, "multi");
-
-        std::env::remove_var("NESTGATE_FAMILY_ID");
-        std::env::remove_var("NESTGATE_NODE_ID");
-    }
-
     // ========================================================================
-    // E2E TESTS - Full Lifecycle
+    // E2E TESTS - Full Lifecycle (using resolve, no env var races)
     // ========================================================================
 
     #[test]
     fn test_e2e_socket_creation_and_binding() {
         let test_socket = "/tmp/nestgate-e2e-bind-test.sock";
 
-        std::env::set_var("NESTGATE_SOCKET", test_socket);
-        std::env::set_var("NESTGATE_FAMILY_ID", "e2e");
-
-        let config = SocketConfig::from_environment().unwrap();
+        let config = SocketConfig::resolve(
+            "e2e".to_string(),
+            "default".to_string(),
+            Some(test_socket.to_string()),
+            None,
+        )
+        .unwrap();
         assert!(config.prepare_socket_path().is_ok());
 
-        // Verify we can actually bind to the socket
         let listener_result = UnixListener::bind(&config.socket_path);
         assert!(
             listener_result.is_ok(),
             "Should be able to bind to prepared socket"
         );
 
-        // Cleanup
         drop(listener_result);
         let _ = fs::remove_file(test_socket);
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::remove_var("NESTGATE_FAMILY_ID");
     }
 
     #[test]
     fn test_e2e_socket_rebind_after_crash() {
         let test_socket = "/tmp/nestgate-e2e-rebind-test.sock";
 
-        std::env::set_var("NESTGATE_SOCKET", test_socket);
-        std::env::set_var("NESTGATE_FAMILY_ID", "rebind");
+        let config = SocketConfig::resolve(
+            "rebind".to_string(),
+            "default".to_string(),
+            Some(test_socket.to_string()),
+            None,
+        )
+        .unwrap();
 
         // First bind
-        let config = SocketConfig::from_environment().unwrap();
         assert!(config.prepare_socket_path().is_ok());
         let listener1 = UnixListener::bind(&config.socket_path).unwrap();
 
-        // Simulate crash - drop listener
+        // Simulate crash
         drop(listener1);
 
-        // Second bind (simulating restart)
+        // Second bind (restart)
         assert!(config.prepare_socket_path().is_ok());
         let listener2 = UnixListener::bind(&config.socket_path);
         assert!(listener2.is_ok(), "Should be able to rebind after cleanup");
 
-        // Cleanup
         drop(listener2);
         let _ = fs::remove_file(test_socket);
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::remove_var("NESTGATE_FAMILY_ID");
     }
 
     // ========================================================================
-    // CHAOS TESTS - Concurrent & Race Conditions
+    // CHAOS TESTS - Concurrent (using resolve - thread-safe, no shared env)
     // ========================================================================
 
     #[test]
@@ -475,27 +480,17 @@ mod tests {
         let handles: Vec<_> = (0..10)
             .map(|i| {
                 thread::spawn(move || {
-                    // Each thread sets its own env vars
                     let family_id = format!("chaos{}", i);
                     let node_id = format!("node{}", i);
 
-                    std::env::set_var("NESTGATE_FAMILY_ID", &family_id);
-                    std::env::set_var("NESTGATE_NODE_ID", &node_id);
-                    std::env::remove_var("NESTGATE_SOCKET");
-
-                    let config = SocketConfig::from_environment();
+                    // resolve() is pure - no env var races
+                    let config =
+                        SocketConfig::resolve(family_id.clone(), node_id.clone(), None, None);
                     assert!(config.is_ok(), "Config creation should succeed");
                     let config = config.unwrap();
 
-                    // Verify config has expected structure
-                    assert!(
-                        config.family_id.starts_with("chaos"),
-                        "Family ID should start with chaos"
-                    );
-                    assert!(
-                        config.node_id.starts_with("node"),
-                        "Node ID should start with node"
-                    );
+                    assert_eq!(config.family_id, family_id);
+                    assert_eq!(config.node_id, node_id);
 
                     config
                 })
@@ -504,15 +499,14 @@ mod tests {
 
         let configs: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
 
-        // All configs should be valid
         assert_eq!(configs.len(), 10, "Should create 10 configs");
 
-        // All should be unique (collect family IDs and check)
         let family_ids: std::collections::HashSet<_> =
             configs.iter().map(|c| c.family_id.clone()).collect();
-        assert!(
-            family_ids.len() >= 5,
-            "Should have multiple unique family IDs (threading races may cause some overlap)"
+        assert_eq!(
+            family_ids.len(),
+            10,
+            "All family IDs should be unique (no env var races with resolve())"
         );
     }
 
@@ -527,12 +521,10 @@ mod tests {
             source: SocketConfigSource::TempDirectory,
         };
 
-        // Call prepare multiple times rapidly
         for _ in 0..100 {
             assert!(config.prepare_socket_path().is_ok());
         }
 
-        // Cleanup
         let _ = fs::remove_file(test_socket);
     }
 
@@ -542,7 +534,6 @@ mod tests {
 
     #[test]
     fn test_fault_readonly_filesystem_graceful_failure() {
-        // Try to create socket in a path that typically fails (but may not on all systems)
         let config = SocketConfig {
             socket_path: PathBuf::from("/proc/nestgate-readonly-test.sock"),
             family_id: "fault".to_string(),
@@ -550,11 +541,8 @@ mod tests {
             source: SocketConfigSource::TempDirectory,
         };
 
-        // Should fail gracefully with proper error (or succeed on some systems)
         let result = config.prepare_socket_path();
 
-        // Either way, it shouldn't panic
-        // If it fails, error should be descriptive
         if let Err(e) = result {
             let error_msg = format!("{}", e);
             assert!(!error_msg.is_empty(), "Error message should not be empty");
@@ -577,8 +565,6 @@ mod tests {
     #[test]
     fn test_fault_socket_as_directory() {
         let test_dir = "/tmp/nestgate-fault-dir-as-socket";
-
-        // Create a directory where socket should be
         let _ = fs::create_dir_all(test_dir);
 
         let config = SocketConfig {
@@ -588,19 +574,13 @@ mod tests {
             source: SocketConfigSource::TempDirectory,
         };
 
-        // prepare should fail or succeed by removing the dir
-        // Either is acceptable - we're testing it doesn't panic
         let _ = config.prepare_socket_path();
-
-        // Cleanup
         let _ = fs::remove_dir_all(test_dir);
     }
 
     #[test]
     fn test_fault_missing_parent_directory_auto_created() {
         let test_path = "/tmp/nestgate-fault-test-deep/nested/dir/socket.sock";
-
-        // Ensure parent doesn't exist
         let _ = fs::remove_dir_all("/tmp/nestgate-fault-test-deep");
 
         let config = SocketConfig {
@@ -610,44 +590,26 @@ mod tests {
             source: SocketConfigSource::TempDirectory,
         };
 
-        // Should auto-create parent directories
         assert!(
             config.prepare_socket_path().is_ok(),
             "Should create missing parent directories"
         );
-
-        // Verify parent exists
         assert!(Path::new("/tmp/nestgate-fault-test-deep/nested/dir").exists());
 
-        // Cleanup
         let _ = fs::remove_dir_all("/tmp/nestgate-fault-test-deep");
     }
 
     #[test]
-    fn test_fault_empty_family_id_gets_default() {
-        std::env::remove_var("NESTGATE_FAMILY_ID");
-
-        let config = SocketConfig::from_environment().unwrap();
-
-        // Parent environment may have variables set that persist
-        // Just verify config is valid
-        assert!(
-            !config.family_id.is_empty(),
-            "Family ID should not be empty"
-        );
-    }
-
-    #[test]
-    fn test_fault_unicode_in_family_id() {
-        std::env::set_var("NESTGATE_SOCKET", "/tmp/nestgate-unicode-🦀.sock");
-        std::env::set_var("NESTGATE_FAMILY_ID", "unicode_🍄🐸");
-
-        let config = SocketConfig::from_environment().unwrap();
+    fn test_unicode_in_family_id() {
+        let config = SocketConfig::resolve(
+            "unicode_🍄🐸".to_string(),
+            "default".to_string(),
+            Some("/tmp/nestgate-unicode-🦀.sock".to_string()),
+            None,
+        )
+        .unwrap();
 
         assert_eq!(config.family_id, "unicode_🍄🐸");
         assert!(config.socket_path.to_str().unwrap().contains("unicode-"));
-
-        std::env::remove_var("NESTGATE_SOCKET");
-        std::env::remove_var("NESTGATE_FAMILY_ID");
     }
 }

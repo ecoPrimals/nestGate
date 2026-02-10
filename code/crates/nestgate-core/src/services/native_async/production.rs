@@ -323,7 +323,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
             unified_message_type: "system".to_string(),
             payload: serde_json::json!({"type": "heartbeat"}),
             timestamp: SystemTime::now(),
-            priority: super::types::MessagePriority::Normal,
+            priority: crate::services::native_async::types::MessagePriority::Normal,
         })
     }
 
@@ -455,6 +455,216 @@ impl ProductionCommunicationProvider {
             ];
             Ok(connections)
         }
+    }
+}
+
+// ==================== TESTS ====================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::service_discovery::types::{
+        CommunicationProtocol, ServiceCapability, ServiceEndpoint, ServiceMetadata,
+    };
+    use crate::universal_traits::ServiceRequest;
+    use std::collections::HashMap;
+    use uuid::Uuid;
+
+    fn make_service_info(name: &str) -> crate::service_discovery::types::ServiceInfo {
+        use crate::service_discovery::types::{ServiceCategory, StorageType};
+        crate::service_discovery::types::ServiceInfo {
+            service_id: Uuid::new_v4(),
+            metadata: ServiceMetadata {
+                name: name.to_string(),
+                category: ServiceCategory::Storage,
+                version: "1.0".to_string(),
+                description: "test".to_string(),
+                health_endpoint: None,
+                metrics_endpoint: None,
+            },
+            capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
+            endpoints: vec![ServiceEndpoint {
+                url: "http://localhost:8080".to_string(),
+                protocol: CommunicationProtocol::Http,
+                health_check: None,
+            }],
+            last_seen: SystemTime::now(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_default() {
+        let lb = ProductionLoadBalancer::default();
+        let stats = lb.get_stats().await.unwrap();
+        assert_eq!(stats.total_requests, 0);
+        assert_eq!(stats.algorithm, "round_robin");
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_add_remove_service() {
+        let lb = ProductionLoadBalancer::default();
+        let svc = make_service_info("test-svc");
+
+        lb.add_service(svc).await.unwrap();
+        assert!(lb.service_exists("test-svc").await.unwrap());
+
+        lb.remove_service("test-svc").await.unwrap();
+        assert!(!lb.service_exists("test-svc").await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_list_services() {
+        let lb = ProductionLoadBalancer::default();
+        lb.add_service(make_service_info("a")).await.unwrap();
+        lb.add_service(make_service_info("b")).await.unwrap();
+
+        let list = lb.list_services().await.unwrap();
+        assert_eq!(list.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_get_service() {
+        let lb = ProductionLoadBalancer::default();
+        lb.add_service(make_service_info("my-svc")).await.unwrap();
+
+        let opt = lb.get_service("my-svc").await.unwrap();
+        assert!(opt.is_some());
+        assert_eq!(opt.unwrap().metadata.name, "my-svc");
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_get_stats_after_add() {
+        let lb = ProductionLoadBalancer::default();
+        lb.add_service(make_service_info("s1")).await.unwrap();
+
+        let stats = lb.get_stats().await.unwrap();
+        assert!(stats.service_stats.contains_key("s1"));
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_route_request_no_service() {
+        let lb = ProductionLoadBalancer::default();
+        let req = ServiceRequest {
+            service_id: "x".to_string(),
+            action: "get".to_string(),
+            parameters: HashMap::new(),
+            timeout_seconds: None,
+        };
+        let res = lb.route_request(req).await;
+        assert!(res.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_health_check_all() {
+        let lb = ProductionLoadBalancer::default();
+        lb.add_service(make_service_info("h")).await.unwrap();
+
+        let health = lb.health_check_all().await.unwrap();
+        assert_eq!(health.len(), 1);
+        assert_eq!(health[0].0, "h");
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_update_service_weight() {
+        let lb = ProductionLoadBalancer::default();
+        lb.add_service(make_service_info("w")).await.unwrap();
+        let result = lb.update_service_weight("w", 2.0).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_get_service_stats() {
+        let lb = ProductionLoadBalancer::default();
+        lb.add_service(make_service_info("stats")).await.unwrap();
+        let s = lb.get_service_stats("stats").await.unwrap();
+        assert_eq!(s.requests, 0);
+    }
+
+    #[tokio::test]
+    async fn test_production_load_balancer_get_service_stats_not_found() {
+        let lb = ProductionLoadBalancer::default();
+        let res = lb.get_service_stats("nonexistent").await;
+        assert!(res.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_production_communication_provider_default() {
+        let provider = ProductionCommunicationProvider::default();
+        let msg = provider.receive_message().await.unwrap();
+        assert!(!msg.message_id.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_production_communication_provider_connect_disconnect() {
+        let provider = ProductionCommunicationProvider::default();
+        let addr = NetworkAddress {
+            host: "localhost".to_string(),
+            port: 9999,
+        };
+        let conn = provider.connect(addr).await.unwrap();
+        assert!(matches!(conn.status, ConnectionStatus::Connected));
+
+        provider.disconnect(&conn).await.unwrap();
+        let list = provider.list_connections().await.unwrap();
+        assert!(!list.iter().any(|c| c.connection_id == conn.connection_id));
+    }
+
+    #[tokio::test]
+    async fn test_production_communication_provider_send_message() {
+        let provider = ProductionCommunicationProvider::default();
+        let addr = NetworkAddress {
+            host: "127.0.0.1".to_string(),
+            port: 8080,
+        };
+        let msg = CommunicationMessage {
+            message_id: "m1".to_string(),
+            sender: "s".to_string(),
+            recipient: "r".to_string(),
+            unified_message_type: "test".to_string(),
+            payload: serde_json::json!({}),
+            timestamp: SystemTime::now(),
+            priority: crate::services::native_async::types::MessagePriority::Normal,
+        };
+        provider.send_message(addr, msg).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_production_communication_provider_broadcast() {
+        let provider = ProductionCommunicationProvider::default();
+        let msg = CommunicationMessage {
+            message_id: "b1".to_string(),
+            sender: "s".to_string(),
+            recipient: "r".to_string(),
+            unified_message_type: "broadcast".to_string(),
+            payload: serde_json::json!({}),
+            timestamp: SystemTime::now(),
+            priority: crate::services::native_async::types::MessagePriority::Normal,
+        };
+        let count = provider.broadcast(msg).await.unwrap();
+        let _ = count; // number of connections broadcast to
+    }
+
+    #[tokio::test]
+    async fn test_production_communication_provider_connection_status() {
+        let provider = ProductionCommunicationProvider::default();
+        let addr = NetworkAddress {
+            host: "localhost".to_string(),
+            port: 8888,
+        };
+        let conn = provider.connect(addr).await.unwrap();
+        let status = provider.connection_status(&conn).await.unwrap();
+        assert!(status.contains("Connected"));
+    }
+
+    #[tokio::test]
+    async fn test_production_communication_provider_ping() {
+        let provider = ProductionCommunicationProvider::default();
+        let addr = NetworkAddress {
+            host: "localhost".to_string(),
+            port: 7777,
+        };
+        let conn = provider.connect(addr).await.unwrap();
+        let _ = provider.ping(&conn).await.unwrap();
     }
 }
 

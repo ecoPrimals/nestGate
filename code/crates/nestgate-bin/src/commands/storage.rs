@@ -1,236 +1,318 @@
-//! Storage module
-
-use nestgate_core::error::{Result as CoreResult, NestGateUnifiedError};
-use tracing::{info, warn, error};
+//! Storage management commands
+//!
+//! ✅ EVOLVED: Real implementations replacing println stubs
+//! Provides storage backend listing, scanning, benchmarking, and configuration.
 
 use crate::cli::StorageAction;
-use crate::error::BinResult;
+use anyhow::Result;
 
-// Storage Management Commands
-///
-// Handles storage backend operations for NestGate
-
-// Storage manager for CLI operations
-pub struct StorageManager {
-    // Future: Could hold ZFS manager, storage registry, etc.
+/// Execute storage management commands
+pub async fn execute(action: StorageAction) -> Result<()> {
+    match action {
+        StorageAction::List => list_backends().await,
+        StorageAction::Scan {
+            path,
+            cloud,
+            network,
+        } => scan_storage(path, cloud, network).await,
+        StorageAction::Benchmark {
+            backend,
+            duration,
+            size,
+        } => benchmark_storage(&backend, duration, size).await,
+        StorageAction::Configure { backend, set } => configure_storage(&backend, &set).await,
+    }
 }
 
-impl StorageManager {
-    // Create a new storage manager
-    pub fn new() -> Self {
-        Self {}
+/// List all available and detected storage backends
+async fn list_backends() -> Result<()> {
+    println!("💾 NestGate Storage Backends");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    // ✅ REAL: Detect backend capabilities
+    let caps = nestgate_core::services::storage::capabilities::detect_backend();
+    println!("\n📊 Active Backend:");
+    println!("  Type:       {:?}", caps.backend_type);
+    println!("  Features:");
+    if caps.native_snapshots {
+        println!("    ✅ snapshots");
+    }
+    if caps.native_deduplication {
+        println!("    ✅ deduplication");
+    }
+    if caps.native_compression {
+        println!("    ✅ compression");
+    }
+    if caps.native_checksums {
+        println!("    ✅ checksums");
+    }
+    if caps.native_replication {
+        println!("    ✅ replication");
+    }
+    if caps.basic_operations {
+        println!("    ✅ basic_operations");
     }
 
-    // Execute a storage action
-    pub async fn execute(&mut self, action: StorageAction) -> BinResult<(), NestGateUnifiedError> {
-        match action {
-            StorageAction::List => {
-                self.list_storage().await
+    // Storage path
+    let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
+        .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
+    println!("\n📁 Storage Path: {}", storage_path);
+
+    if std::path::Path::new(&storage_path).exists() {
+        // Check available space
+        println!("  Status: ✅ Exists");
+        if let Ok(metadata) = tokio::fs::metadata(&storage_path).await {
+            if metadata.is_dir() {
+                println!("  Type:   Directory");
             }
-            StorageAction::Create { name, size } => {
-                self.create_storage(&name, size.as_deref()).await
+        }
+    } else {
+        println!("  Status: ⚠️  Not found (will be created on first use)");
+    }
+
+    // List supported backends
+    println!("\n📋 Supported Backends:");
+    println!("  ✅ filesystem  - Local filesystem (ext4, xfs, btrfs, etc.)");
+    println!("  ✅ zfs         - ZFS with snapshots, dedup, compression");
+    println!("  ✅ tmpfs       - In-memory temporary storage");
+    println!("  ⏳ s3          - AWS S3 compatible (future)");
+    println!("  ⏳ nfs         - Network File System (future)");
+
+    Ok(())
+}
+
+/// Scan for available storage at a path
+async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> Result<()> {
+    println!("🔍 Scanning for storage at: {}", path.display());
+
+    if !path.exists() {
+        println!("  ❌ Path does not exist");
+        return Ok(());
+    }
+
+    let metadata = tokio::fs::metadata(&path).await?;
+    println!(
+        "  Type: {}",
+        if metadata.is_dir() {
+            "Directory"
+        } else {
+            "File"
+        }
+    );
+    println!("  Readable: ✅");
+
+    // Check write permission by attempting to create a temp file
+    let test_path = path.join(".nestgate_scan_test");
+    let writable = tokio::fs::write(&test_path, b"test").await.is_ok();
+    if writable {
+        let _ = tokio::fs::remove_file(&test_path).await;
+        println!("  Writable: ✅");
+    } else {
+        println!("  Writable: ❌");
+    }
+
+    // Detect filesystem type
+    let caps = nestgate_core::services::storage::capabilities::detect_backend();
+    println!("  Backend:  {:?}", caps.backend_type);
+
+    // Scan for existing NestGate data
+    let nestgate_data = path.join("nestgate");
+    if nestgate_data.exists() {
+        println!("\n  📦 Found existing NestGate data directory");
+        if let Ok(mut entries) = tokio::fs::read_dir(&nestgate_data).await {
+            let mut count = 0;
+            while let Ok(Some(_)) = entries.next_entry().await {
+                count += 1;
             }
-            StorageAction::Delete { name } => {
-                self.delete_storage(&name).await
-            }
-            StorageAction::Status { name } => {
-                self.show_storage_status(name.as_deref()).await
+            println!("  📊 Objects: {}", count);
+        }
+    }
+
+    if cloud {
+        println!("\n  ☁️  Cloud scanning: Environment-based detection");
+        if std::env::var("AWS_ACCESS_KEY_ID").is_ok() {
+            println!("    ✅ AWS credentials detected");
+        }
+        if std::env::var("AZURE_STORAGE_ACCOUNT").is_ok() {
+            println!("    ✅ Azure credentials detected");
+        }
+        if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok() {
+            println!("    ✅ GCP credentials detected");
+        }
+    }
+
+    if network {
+        println!("\n  🌐 Network scanning: checking for NFS/SMB mounts");
+        #[cfg(unix)]
+        {
+            // Check /proc/mounts for network filesystems
+            if let Ok(mounts) = tokio::fs::read_to_string("/proc/mounts").await {
+                let nfs_count = mounts.lines().filter(|l| l.contains("nfs")).count();
+                let smb_count = mounts.lines().filter(|l| l.contains("cifs")).count();
+                println!("    NFS mounts:  {}", nfs_count);
+                println!("    SMB/CIFS mounts: {}", smb_count);
             }
         }
     }
 
-    // List available storage backends
-    async fn list_storage(&self) -> BinResult<(), NestGateUnifiedError> {
-        info!("📋 Listing storage backends");
-        
-        // Production-safe storage enumeration
-        match self.get_storage_backends().await {
-            Ok(backends) => {
-                println!("💾 NestGate Storage Backends:");
-                println!("  Name        Type    Size      Status");
-                println!("  ────────────────────────────────────");
-                for backend in backends {
-                    println!("  {:<10}  {:<6}  {:<8}  {}", 
-                        backend.name, backend.storage_type, backend.size, backend.status);
+    Ok(())
+}
+
+/// Run storage performance benchmark
+async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result<()> {
+    println!("⚡ NestGate Storage Benchmark");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("  Backend:    {}", backend);
+    println!("  Duration:   {}s", duration);
+    println!("  Test Size:  {} MB", size_mb);
+    println!();
+
+    let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
+        .unwrap_or_else(|_| "/tmp/nestgate-benchmark".to_string());
+    let bench_dir = std::path::PathBuf::from(&storage_path).join("benchmark");
+    tokio::fs::create_dir_all(&bench_dir).await?;
+
+    let size_bytes = size_mb * 1024 * 1024;
+    let data = vec![0xABu8; size_bytes as usize];
+
+    // Write benchmark
+    println!("📝 Write benchmark...");
+    let write_start = std::time::Instant::now();
+    let write_path = bench_dir.join("bench_data");
+    tokio::fs::write(&write_path, &data).await?;
+    let write_elapsed = write_start.elapsed();
+    let write_mbps = size_mb as f64 / write_elapsed.as_secs_f64();
+    println!(
+        "  Write: {:.1} MB/s ({:.2}ms for {} MB)",
+        write_mbps,
+        write_elapsed.as_millis(),
+        size_mb
+    );
+
+    // Read benchmark
+    println!("📖 Read benchmark...");
+    let read_start = std::time::Instant::now();
+    let _read_data = tokio::fs::read(&write_path).await?;
+    let read_elapsed = read_start.elapsed();
+    let read_mbps = size_mb as f64 / read_elapsed.as_secs_f64();
+    println!(
+        "  Read:  {:.1} MB/s ({:.2}ms for {} MB)",
+        read_mbps,
+        read_elapsed.as_millis(),
+        size_mb
+    );
+
+    // Cleanup
+    let _ = tokio::fs::remove_dir_all(&bench_dir).await;
+
+    println!("\n📊 Summary:");
+    println!("  Sequential Write: {:.1} MB/s", write_mbps);
+    println!("  Sequential Read:  {:.1} MB/s", read_mbps);
+
+    Ok(())
+}
+
+/// Configure a storage backend
+async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
+    println!("⚙️  Configuring storage backend: {}", backend);
+
+    if settings.is_empty() {
+        // Show current config
+        let runtime_config = nestgate_core::config::runtime::get_config();
+        println!("\n📋 Current configuration:");
+        println!("  API Port:    {}", runtime_config.network.api_port);
+        println!(
+            "  Backend:     {:?}",
+            nestgate_core::services::storage::capabilities::detect_backend().backend_type
+        );
+
+        let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
+            .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
+        println!("  Storage:     {}", storage_path);
+
+        println!("\n💡 Use --set key=value to modify settings:");
+        println!(
+            "  nestgate storage configure {} --set storage_path=/data/nestgate",
+            backend
+        );
+        return Ok(());
+    }
+
+    for setting in settings {
+        if let Some((key, value)) = setting.split_once('=') {
+            println!("  Setting {}={}", key, value);
+            match key {
+                "storage_path" => {
+                    // Validate the path exists or can be created
+                    let path = std::path::Path::new(value);
+                    if !path.exists() {
+                        tokio::fs::create_dir_all(path).await?;
+                        println!("    ✅ Created directory: {}", value);
+                    } else {
+                        println!("    ✅ Path exists: {}", value);
+                    }
+                    println!(
+                        "    💡 Set NESTGATE_STORAGE_PATH={} in your environment",
+                        value
+                    );
+                }
+                _ => {
+                    println!("    ⚠️  Unknown key: {} (supported: storage_path)", key);
                 }
             }
-            Err(e) => {
-                error!("Failed to list storage backends: {}", e);
-                println!("❌ Failed to list storage backends: {}", e);
-            }
+        } else {
+            println!("  ⚠️  Invalid format: {} (expected key=value)", setting);
         }
-        
-        Ok(())
     }
 
-    // Create a new storage backend
-    async fn create_storage(&self, name: &str, size: Option<&str>) -> BinResult<(), NestGateUnifiedError> {
-        info!("🔧 Creating storage backend: {}", name);
-        
-        // Production-safe validation
-        if name.is_empty() {
-            let error = NestGateUnifiedError::validation_error(
-                "Storage name cannot be empty".to_string()
-            );
-            error!("Storage creation failed: {}", error);
-            println!("❌ Storage creation failed: {}", error);
-            return Ok(());
-        }
-
-        let size_str = size.unwrap_or("1GB");
-        
-        // Production-safe storage creation
-        match self.create_storage_backend(name, size_str).await {
-            Ok(_) => {
-                println!("✅ Created storage backend '{}' with size {}", name, size_str);
-            }
-            Err(e) => {
-                error!("Failed to create storage backend '{}': {}", name, e);
-                println!("❌ Failed to create storage backend '{}': {}", name, e);
-            }
-        }
-        
-        Ok(())
-    }
-
-    // Delete a storage backend
-    async fn delete_storage(&self, name: &str) -> BinResult<(), NestGateUnifiedError> {
-        info!("🗑️ Deleting storage backend: {}", name);
-        
-        // Production-safe validation
-        if name.is_empty() {
-            let error = NestGateUnifiedError::validation_error(
-                "Storage name cannot be empty".to_string()
-            );
-            error!("Storage deletion failed: {}", error);
-            println!("❌ Storage deletion failed: {}", error);
-            return Ok(());
-        }
-        
-        // Production-safe deletion with confirmation
-        match self.delete_storage_backend(name).await {
-            Ok(_) => {
-                println!("✅ Deleted storage backend '{}'", name);
-            }
-            Err(e) => {
-                error!("Failed to delete storage backend '{}': {}", name, e);
-                println!("❌ Failed to delete storage backend '{}': {}", name, e);
-            }
-        }
-        
-        Ok(())
-    }
-
-    // Show storage status
-    async fn show_storage_status(&self, name: Option<&str>) -> BinResult<(), NestGateUnifiedError> {
-        match name {
-            Some(storage_name) => {
-                info!("📊 Showing status for storage: {}", storage_name);
-                
-                // Production-safe status retrieval
-                match self.get_storage_status(storage_name).await {
-                    Ok(status) => {
-                        println!("📊 Storage Status for '{}':", storage_name);
-                        println!("  Status: {}", status.status);
-                        println!("  Used: {}/{}", status.used_space, status.total_space);
-                        println!("  Health: {}", status.health);
-                        println!("  Last Check: {}", status.last_check);
-                    }
-                    Err(e) => {
-                        error!("Failed to get status for storage '{}': {}", storage_name, e);
-                        println!("❌ Failed to get status for storage '{}': {}", storage_name, e);
-                    }
-                }
-            }
-            None => {
-                info!("📊 Showing status for all storage backends");
-                self.list_storage().await?;
-            }
-        }
-        
-        Ok(())
-    }
-
-    // Production-safe helper methods
-    async fn get_storage_backends(&self) -> CoreResult<Vec<StorageBackend>> {
-        // Simulate storage backend discovery
-        // In production, this would query actual storage systems
-        Ok(vec![
-            StorageBackend {
-                name: "main".to_string(),
-                storage_type: "ZFS".to_string(),
-                size: "500GB".to_string(),
-                status: "Online".to_string(),
-            },
-            StorageBackend {
-                name: "backup".to_string(),
-                storage_type: "ZFS".to_string(),
-                size: "1TB".to_string(),
-                status: "Online".to_string(),
-            },
-            StorageBackend {
-                name: "cache".to_string(),
-                storage_type: "Memory".to_string(),
-                size: "8GB".to_string(),
-                status: "Online".to_string(),
-            },
-            StorageBackend {
-                name: "archive".to_string(),
-                storage_type: "ZFS".to_string(),
-                size: "2TB".to_string(),
-                status: "Offline".to_string(),
-            },
-        ])
-    }
-
-    /// Creates  Storage Backend
-    async fn create_storage_backend(&self, name: &str, size: &str) -> CoreResult<(), NestGateUnifiedError> {
-        // Production implementation would create actual storage backend
-        info!("Creating storage backend '{}' with size {}", name, size);
-        Ok(())
-    }
-
-    /// Deletes  Storage Backend
-    async fn delete_storage_backend(&self, name: &str) -> CoreResult<(), NestGateUnifiedError> {
-        // Production implementation would delete actual storage backend
-        info!("Deleting storage backend '{}'", name);
-        Ok(())
-    }
-
-    /// Gets Storage Status
-    async fn get_storage_status(&self, name: &str) -> CoreResult<StorageStatus, NestGateUnifiedError> {
-        // Production implementation would query actual storage status
-        Ok(StorageStatus {
-            status: "Online".to_string(),
-            used_space: "250GB".to_string(),
-            total_space: "500GB".to_string(),
-            health: "Good".to_string(),
-            last_check: "2025-01-30 10:30:00".to_string(),
-        })
-    }
+    Ok(())
 }
 
-impl Default for StorageManager {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self::new()
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_list_backends_succeeds() {
+        let result = list_backends().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_scan_nonexistent_path() {
+        let result = scan_storage(
+            std::path::PathBuf::from("/tmp/nestgate_test_nonexistent_path_12345"),
+            false,
+            false,
+        )
+        .await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_scan_existing_path() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let result = scan_storage(temp_dir.path().to_path_buf(), false, false).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_benchmark_storage_basic() {
+        let result = benchmark_storage("filesystem", 1, 1).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_configure_storage_no_settings() {
+        let result = configure_storage("filesystem", &[]).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_configure_storage_with_settings() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let setting = format!("storage_path={}", temp_dir.path().display());
+        let result = configure_storage("filesystem", &[setting]).await;
+        assert!(result.is_ok());
     }
 }
-
-// Supporting types for production-safe operations
-#[derive(Debug, Clone)]
-struct StorageBackend {
-    name: String,
-    storage_type: String,
-    size: String,
-    status: String,
-}
-
-#[derive(Debug, Clone)]
-struct StorageStatus {
-    status: String,
-    used_space: String,
-    total_space: String,
-    health: String,
-    last_check: String,
-} 

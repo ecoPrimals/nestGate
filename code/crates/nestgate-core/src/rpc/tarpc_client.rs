@@ -150,19 +150,22 @@ impl NestGateRpcClient {
     pub async fn discover_by_capability(capability: &str) -> Result<Self> {
         // ✅ EVOLVED: Integrate with universal primal discovery
         use crate::primal_discovery::RuntimeDiscovery;
-        
+
         let discovery = RuntimeDiscovery::new().await?;
-        
+
         // Discover primal by capability
         let connection = match capability {
             "storage" => discovery.find_storage_primal().await?,
             "security" => discovery.find_security_primal().await?,
             "orchestration" => discovery.find_orchestrator().await?,
-            _ => return Err(NestGateError::api_internal_error(
-                format!("Unknown capability for discovery: {}", capability)
-            )),
+            _ => {
+                return Err(NestGateError::api_internal_error(format!(
+                    "Unknown capability for discovery: {}",
+                    capability
+                )))
+            }
         };
-        
+
         // Use discovered endpoint
         Self::new(&connection.endpoint)
     }
@@ -607,6 +610,7 @@ impl NestGateRpcClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rpc::tarpc_types::NestGateRpcError;
 
     #[test]
     fn test_parse_endpoint() {
@@ -615,8 +619,32 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_endpoint_invalid() {
+    fn test_parse_endpoint_ipv6() {
+        let addr = NestGateRpcClient::parse_endpoint("tarpc://[::1]:8091").unwrap();
+        assert!(addr.to_string().contains("8091"));
+    }
+
+    #[test]
+    fn test_parse_endpoint_invalid_prefix() {
         let result = NestGateRpcClient::parse_endpoint("http://127.0.0.1:8080");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_endpoint_invalid_host() {
+        let result = NestGateRpcClient::parse_endpoint("tarpc://invalid-host-name:8091");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_endpoint_invalid_port() {
+        let result = NestGateRpcClient::parse_endpoint("tarpc://127.0.0.1:99999");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_endpoint_missing_port() {
+        let result = NestGateRpcClient::parse_endpoint("tarpc://127.0.0.1");
         assert!(result.is_err());
     }
 
@@ -632,5 +660,86 @@ mod tests {
             .unwrap()
             .with_timeout(Duration::from_secs(10));
         assert_eq!(client.timeout, Duration::from_secs(10));
+    }
+
+    #[test]
+    fn test_client_creation_invalid_endpoint() {
+        let result = NestGateRpcClient::new("http://127.0.0.1:8080");
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_connection_refused() {
+        let client = NestGateRpcClient::new("tarpc://127.0.0.1:1").unwrap();
+        let result = client.health().await;
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("Failed to connect") || err_msg.contains("Connection refused"),
+            "Expected connection error, got: {}",
+            err_msg
+        );
+    }
+
+    #[tokio::test]
+    async fn test_create_dataset_connection_fails() {
+        let client = NestGateRpcClient::new("tarpc://127.0.0.1:2").unwrap();
+        let result = client.create_dataset("test-ds", Default::default()).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_list_datasets_connection_fails() {
+        let client = NestGateRpcClient::new("tarpc://127.0.0.1:3").unwrap();
+        let result = client.list_datasets().await;
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_convert_rpc_error_dataset_not_found() {
+        let err = NestGateRpcError::DatasetNotFound {
+            dataset: "missing".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(nest_err.to_string().to_lowercase().contains("not found"));
+    }
+
+    #[test]
+    fn test_convert_rpc_error_invalid_params() {
+        let err = NestGateRpcError::InvalidParameters {
+            message: "bad param".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(!nest_err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_convert_rpc_error_storage_full() {
+        let err = NestGateRpcError::StorageFull {
+            required: 1000,
+            available: 100,
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(
+            nest_err.to_string().contains("Storage") || nest_err.to_string().contains("storage")
+        );
+    }
+
+    #[test]
+    fn test_convert_rpc_error_timeout() {
+        let err = NestGateRpcError::Timeout {
+            operation: "create_dataset".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(!nest_err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_convert_rpc_error_connection_error() {
+        let err = NestGateRpcError::ConnectionError {
+            message: "connection lost".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(!nest_err.to_string().is_empty());
     }
 }

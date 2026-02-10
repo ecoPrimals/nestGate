@@ -310,6 +310,83 @@ pub mod sizes {
     pub const DEFAULT_MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_network_default_api_base_url() {
+        let url = network::default_api_base_url();
+        assert!(url.starts_with("http://"));
+        assert!(url.contains("localhost"));
+        assert!(url.split(':').next_back().unwrap().parse::<u16>().is_ok());
+    }
+
+    #[test]
+    fn test_network_default_websocket_url() {
+        let url = network::default_websocket_url();
+        assert!(url.starts_with("ws://"));
+        assert!(url.contains("/ws"));
+    }
+
+    #[test]
+    fn test_network_default_metrics_url() {
+        let url = network::default_metrics_url();
+        assert!(url.starts_with("http://"));
+        assert!(url.contains("localhost"));
+    }
+
+    #[test]
+    fn test_network_default_web_ui_url() {
+        let url = network::default_web_ui_url();
+        assert!(url.starts_with("http://"));
+        assert!(url.contains("localhost"));
+    }
+
+    #[test]
+    fn test_network_constants() {
+        assert_eq!(network::LOCALHOST, "127.0.0.1");
+        assert_eq!(network::DEFAULT_BIND_ADDRESS, "0.0.0.0");
+    }
+
+    #[test]
+    fn test_network_limits_constants() {
+        assert!(network::limits::MAX_CONCURRENT_REQUESTS > 0);
+        assert!(network::limits::MAX_REQUEST_SIZE > 0);
+        assert!(network::limits::CONNECTION_TIMEOUT_MS > 0);
+    }
+
+    #[test]
+    fn test_performance_constants() {
+        assert!(performance::NETWORK_BUFFER_SIZE > 0);
+        assert!(performance::DEFAULT_BUFFER_SIZE > 0);
+        assert!(performance::MAX_CONNECTIONS > 0);
+    }
+
+    #[test]
+    fn test_concurrency_constants() {
+        assert!(concurrency::DEFAULT_THREAD_POOL_SIZE > 0);
+        assert!(concurrency::DEFAULT_MAX_CONNECTIONS > 0);
+        assert!(concurrency::DEFAULT_WORKER_COUNT > 0);
+        assert!(concurrency::DEFAULT_QUEUE_SIZE > 0);
+    }
+
+    #[test]
+    fn test_sizes_constants() {
+        assert!(sizes::DEFAULT_CACHE_SIZE > 0);
+        assert!(sizes::DEFAULT_RECORD_SIZE > 0);
+        assert!(sizes::DEFAULT_FILE_SIZE_LIMIT > 0);
+        assert!(sizes::DEFAULT_MEMORY_LIMIT > 0);
+    }
+
+    #[test]
+    fn test_timeouts_constants() {
+        assert!(timeouts::DEFAULT_TIMEOUT_MS > 0);
+        assert!(timeouts::CONNECTION_TIMEOUT_MS > 0);
+        assert!(timeouts::REQUEST_TIMEOUT_MS > 0);
+    }
+}
+
 pub mod timeouts {
     //! Timeout constants
     use std::time::Duration;

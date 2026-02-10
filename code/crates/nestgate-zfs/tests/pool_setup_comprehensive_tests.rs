@@ -105,7 +105,7 @@ fn test_storage_tier_equality() {
 #[test]
 fn test_storage_tier_clone() {
     let tier1 = ConfigStorageTier::Hot;
-    let tier2 = tier1.clone();
+    let tier2 = tier1;
     assert_eq!(tier1, tier2);
 }
 

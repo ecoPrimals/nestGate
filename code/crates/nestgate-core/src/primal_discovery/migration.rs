@@ -22,22 +22,11 @@ use tracing::{debug, info, warn};
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
+/// // Requires Arc<PrimalDiscovery> and reqwest; see tests for full usage
 /// use nestgate_core::primal_discovery::migration::DiscoveryOrEnv;
-///
-/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let helper = DiscoveryOrEnv::new(discovery);
-///
-/// // Automatically tries: discovery → env → default
-/// let auth_endpoint = helper
-///     .endpoint_for("security", "AUTH_SERVICE_PORT", 5000)
-///     .await?;
-///     
-/// // Connect with discovered/configured endpoint
-/// let client = reqwest::Client::new();
-/// let response = client.get(&auth_endpoint).send().await?;
-/// # Ok(())
-/// # }
+/// let auth_endpoint = helper.endpoint_for("security", "AUTH_SERVICE_PORT", 5000).await?;
 /// ```
 pub struct DiscoveryOrEnv {
     #[allow(dead_code)] // Reserved for future async discovery integration

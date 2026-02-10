@@ -102,12 +102,10 @@ impl<T, const SIZE: usize> LockFreeRingBuffer<T, SIZE> {
             return false; // Buffer full
         }
 
-        // SAFETY: Writing to buffer is safe because:
-        // 1. Bounds check: current_head is always < SIZE due to masking
-        // 2. Uniqueness: Single producer ensures no concurrent writes
-        // 3. Memory ordering: Acquire on tail ensures we see all previous writes
-        // 4. Initialization: write() properly initializes the MaybeUninit slot
-        // 5. Overwrite safety: We checked buffer isn't full (next_head != tail)
+        // SAFETY: MaybeUninit::write is required for lock-free ring buffer (no Option<T> overhead).
+        // - Bounds: current_head < SIZE (power-of-2 mask)
+        // - Single producer: no concurrent writes to this slot
+        // - Not full: next_head != tail checked above
         unsafe {
             self.buffer[current_head].as_mut_ptr().write(item);
         }
@@ -125,12 +123,8 @@ impl<T, const SIZE: usize> LockFreeRingBuffer<T, SIZE> {
             return None; // Buffer empty
         }
 
-        // SAFETY: Reading from buffer is safe because:
-        // 1. Bounds check: current_tail is always < SIZE due to masking
-        // 2. Initialization: Acquire on head ensures item was written
-        // 3. Uniqueness: Single consumer ensures no concurrent reads
-        // 4. Memory ordering: Acquire synchronizes with Release in push()
-        // 5. Move semantics: read() moves value out, preventing double-read
+        // SAFETY: MaybeUninit::read for lock-free SPSC. Single consumer; Release in push
+        // synchronizes with this Acquire. read() consumes, preventing double-read.
         let item = unsafe { self.buffer[current_tail].as_ptr().read() };
         let next_tail = (current_tail + 1) & (SIZE - 1); // Fast modulo for power of 2
 
@@ -185,15 +179,24 @@ impl SimdOperations {
         data.iter().max().copied()
     }
 
-    /// Copy memory with optimal alignment and prefetching
+    /// Safe memory copy - use this instead of raw pointer version.
+    ///
+    /// The standard `copy_from_slice` is already optimized by the compiler
+    /// (vectorization, alignment). Prefer this for all slice-based code.
+    #[inline(always)]
+    pub fn copy_safe(dst: &mut [u8], src: &[u8]) {
+        let len = src.len().min(dst.len());
+        dst[..len].copy_from_slice(&src[..len]);
+    }
+
+    /// Copy memory with raw pointers - for FFI or when slices aren't available.
     ///
     /// # Safety
     /// Caller must ensure:
     /// - `src` is valid for reads of `len` bytes
     /// - `dst` is valid for writes of `len` bytes
-    /// - `src` and `dst` do not overlap (use copy, not copy_nonoverlapping otherwise)
-    /// - Both pointers are properly aligned for their access patterns
-    /// - Both regions are within a single allocated object
+    /// - `src` and `dst` do not overlap
+    /// - Both regions are within allocated objects
     #[inline(always)]
     pub unsafe fn optimized_copy(dst: *mut u8, src: *const u8, len: usize) {
         // Check alignment for optimal copy strategy
@@ -285,6 +288,31 @@ impl BranchOptimized {
     }
 }
 
+/// RAII guard for memory pool block - deallocates on drop
+pub struct PoolBlockGuard<'a, const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
+    pool: &'a MemoryPool<BLOCK_SIZE, POOL_SIZE>,
+    ptr: NonNull<u8>,
+}
+
+impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE> {
+    /// Get mutable slice to the allocated block
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        // SAFETY: ptr from this pool's allocate(); block is BLOCK_SIZE bytes
+        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), BLOCK_SIZE) }
+    }
+}
+
+impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Drop
+    for PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE>
+{
+    fn drop(&mut self) {
+        // SAFETY: ptr came from this pool's allocate(); no use after drop
+        unsafe {
+            self.pool.deallocate(self.ptr);
+        }
+    }
+}
+
 /// **MEMORY POOL ALLOCATOR**
 /// High-performance memory pool for frequent allocations
 ///
@@ -332,7 +360,14 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
         }
     }
 
-    /// Allocate block from pool
+    /// Allocate block with RAII guard - preferred safe API
+    #[inline(always)]
+    pub fn allocate_guard(&self) -> Option<PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE>> {
+        self.allocate()
+            .map(|ptr| PoolBlockGuard { pool: self, ptr })
+    }
+
+    /// Allocate block from pool (raw pointer - use allocate_guard for safe API)
     #[inline(always)]
     pub fn allocate(&self) -> Option<NonNull<u8>> {
         loop {
@@ -346,6 +381,7 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
             let start = current_free * BLOCK_SIZE;
             let end = start + std::mem::size_of::<usize>();
             let next_free_bytes = &self.pool[start..end];
+            // SAFETY: end - start == size_of::<usize>(), so try_into to [u8; 8] always succeeds
             #[allow(clippy::expect_used)] // Slice length guaranteed by usize size
             let next_free = usize::from_ne_bytes(
                 next_free_bytes
@@ -636,11 +672,11 @@ mod tests {
         assert_eq!(stats.allocated_blocks, 0);
         assert_eq!(stats.free_blocks, 10);
 
-        // Allocate some blocks
-        let mut blocks = Vec::new();
+        // Allocate using safe RAII guards
+        let mut guards = Vec::new();
         for _ in 0..5 {
-            if let Some(block) = pool.allocate() {
-                blocks.push(block);
+            if let Some(guard) = pool.allocate_guard() {
+                guards.push(guard);
             }
         }
 
@@ -648,12 +684,8 @@ mod tests {
         assert_eq!(stats.allocated_blocks, 5);
         assert_eq!(stats.free_blocks, 5);
 
-        // Deallocate blocks
-        for block in blocks {
-            unsafe {
-                pool.deallocate(block);
-            }
-        }
+        // Guards drop and deallocate automatically
+        drop(guards);
 
         let stats = pool.stats();
         assert_eq!(stats.allocated_blocks, 0);

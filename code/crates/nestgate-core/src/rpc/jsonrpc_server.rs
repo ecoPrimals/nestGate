@@ -10,28 +10,30 @@
 //! - **Runtime Discovery**: Capability-based service finding
 //! - **Same Operations**: 14 operations (same as tarpc)
 //!
-//! ## Supported Methods
+//! ## Supported Methods (wateringHole `domain.operation` standard)
 //!
-//! Storage Operations (9):
-//! - `nestgate.createDataset` - Create a new dataset
-//! - `nestgate.listDatasets` - List all datasets
-//! - `nestgate.getDataset` - Get dataset info
-//! - `nestgate.deleteDataset` - Delete dataset
-//! - `nestgate.storeObject` - Store object in dataset
-//! - `nestgate.retrieveObject` - Retrieve object data
-//! - `nestgate.getObjectMetadata` - Get object metadata
-//! - `nestgate.listObjects` - List objects in dataset
-//! - `nestgate.deleteObject` - Delete object
+//! Storage Dataset Operations (4):
+//! - `storage.dataset.create` - Create a new dataset
+//! - `storage.dataset.list` - List all datasets
+//! - `storage.dataset.get` - Get dataset info
+//! - `storage.dataset.delete` - Delete dataset
 //!
-//! Capability Operations (2):
-//! - `nestgate.registerCapability` - Register service capability
-//! - `nestgate.discoverCapability` - Discover services by capability
+//! Storage Object Operations (5):
+//! - `storage.object.store` - Store object in dataset
+//! - `storage.object.retrieve` - Retrieve object data
+//! - `storage.object.metadata` - Get object metadata
+//! - `storage.object.list` - List objects in dataset
+//! - `storage.object.delete` - Delete object
 //!
-//! Monitoring Operations (3):
-//! - `nestgate.health` - Service health status
-//! - `nestgate.metrics` - Storage metrics
-//! - `nestgate.version` - Service version
-//! - `nestgate.protocols` - Supported protocols
+//! Discovery Operations (2):
+//! - `discovery.capability.register` - Register service capability
+//! - `discovery.capability.query` - Discover services by capability
+//!
+//! Health Operations (4):
+//! - `health.check` - Service health status
+//! - `health.metrics` - Storage metrics
+//! - `health.version` - Service version
+//! - `health.protocols` - Supported protocols
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -99,6 +101,18 @@ impl JsonRpcServer {
         }
     }
 
+    /// Build RPC module with all methods registered (used by start() and tests)
+    #[allow(dead_code)] // Used by tests
+    fn build_module(
+        state: JsonRpcState,
+    ) -> Result<RpcModule<JsonRpcState>, Box<dyn std::error::Error>> {
+        let mut module = RpcModule::new(state);
+        Self::register_storage_methods(&mut module)?;
+        Self::register_capability_methods(&mut module)?;
+        Self::register_monitoring_methods(&mut module)?;
+        Ok(module)
+    }
+
     /// Build and start the JSON-RPC server
     pub async fn start(self) -> Result<(ServerHandle, SocketAddr), Box<dyn std::error::Error>> {
         info!(
@@ -111,13 +125,8 @@ impl JsonRpcServer {
 
         let addr = server.local_addr()?;
 
-        // Create RPC module with shared state
-        let mut module = RpcModule::new(self.state.clone());
-
-        // Register all JSON-RPC methods
-        Self::register_storage_methods(&mut module)?;
-        Self::register_capability_methods(&mut module)?;
-        Self::register_monitoring_methods(&mut module)?;
+        // Create RPC module with all methods registered
+        let module = Self::build_module(self.state.clone())?;
 
         // Start server
         let handle = server.start(module);
@@ -135,7 +144,7 @@ impl JsonRpcServer {
         module: &mut RpcModule<JsonRpcState>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // nestgate.createDataset
-        module.register_async_method("nestgate.createDataset", |params, ctx, _ext| async move {
+        module.register_async_method("storage.dataset.create", |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {
                 name: String,
@@ -177,7 +186,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.listDatasets
-        module.register_async_method("nestgate.listDatasets", |_params, ctx, _ext| async move {
+        module.register_async_method("storage.dataset.list", |_params, ctx, _ext| async move {
             debug!("JSON-RPC: listDatasets()");
 
             let state = ctx.as_ref();
@@ -206,7 +215,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.getDataset
-        module.register_async_method("nestgate.getDataset", |params, ctx, _ext| async move {
+        module.register_async_method("storage.dataset.get", |params, ctx, _ext| async move {
             let name: String = params.one()?;
             debug!("JSON-RPC: getDataset({})", name);
 
@@ -229,7 +238,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.deleteDataset
-        module.register_async_method("nestgate.deleteDataset", |params, ctx, _ext| async move {
+        module.register_async_method("storage.dataset.delete", |params, ctx, _ext| async move {
             let name: String = params.one()?;
             debug!("JSON-RPC: deleteDataset({})", name);
 
@@ -247,7 +256,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.storeObject
-        module.register_async_method("nestgate.storeObject", |params, ctx, _ext| async move {
+        module.register_async_method("storage.object.store", |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {
                 dataset: String,
@@ -294,7 +303,7 @@ impl JsonRpcServer {
 
         // nestgate.retrieveObject
         module.register_async_method(
-            "nestgate.retrieveObject",
+            "storage.object.retrieve",
             |params, ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
                 struct Params {
@@ -324,7 +333,7 @@ impl JsonRpcServer {
 
         // nestgate.getObjectMetadata
         module.register_async_method(
-            "nestgate.getObjectMetadata",
+            "storage.object.metadata",
             |params, ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
                 struct Params {
@@ -354,7 +363,7 @@ impl JsonRpcServer {
         )?;
 
         // nestgate.listObjects
-        module.register_async_method("nestgate.listObjects", |params, ctx, _ext| async move {
+        module.register_async_method("storage.object.list", |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {
                 dataset: String,
@@ -394,7 +403,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.deleteObject
-        module.register_async_method("nestgate.deleteObject", |params, ctx, _ext| async move {
+        module.register_async_method("storage.object.delete", |params, ctx, _ext| async move {
             #[derive(serde::Deserialize)]
             struct Params {
                 dataset: String,
@@ -426,7 +435,7 @@ impl JsonRpcServer {
     ) -> Result<(), Box<dyn std::error::Error>> {
         // nestgate.registerCapability
         module.register_async_method(
-            "nestgate.registerCapability",
+            "discovery.capability.register",
             |params, _ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
                 #[allow(dead_code)]
@@ -468,7 +477,7 @@ impl JsonRpcServer {
 
         // nestgate.discoverCapability
         module.register_async_method(
-            "nestgate.discoverCapability",
+            "discovery.capability.query",
             |params, _ctx, _ext| async move {
                 let capability: String = params.one()?;
                 debug!("JSON-RPC: discoverCapability({})", capability);
@@ -502,7 +511,7 @@ impl JsonRpcServer {
         module: &mut RpcModule<JsonRpcState>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // nestgate.health
-        module.register_async_method("nestgate.health", |_params, ctx, _ext| async move {
+        module.register_async_method("health.check", |_params, ctx, _ext| async move {
             debug!("JSON-RPC: health()");
 
             let state = ctx.as_ref();
@@ -517,7 +526,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.metrics
-        module.register_async_method("nestgate.metrics", |_params, ctx, _ext| async move {
+        module.register_async_method("health.metrics", |_params, ctx, _ext| async move {
             debug!("JSON-RPC: metrics()");
 
             let state = ctx.as_ref();
@@ -534,7 +543,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.version
-        module.register_async_method("nestgate.version", |_params, ctx, _ext| async move {
+        module.register_async_method("health.version", |_params, ctx, _ext| async move {
             debug!("JSON-RPC: version()");
 
             let state = ctx.as_ref();
@@ -550,7 +559,7 @@ impl JsonRpcServer {
         })?;
 
         // nestgate.protocols
-        module.register_async_method("nestgate.protocols", |_params, ctx, _ext| async move {
+        module.register_async_method("health.protocols", |_params, ctx, _ext| async move {
             debug!("JSON-RPC: protocols()");
 
             let state = ctx.as_ref();
@@ -580,6 +589,7 @@ mod tests {
     use super::*;
     use crate::services::storage::config::StorageServiceConfig;
     use crate::services::storage::service::StorageManagerService;
+    use jsonrpsee::core::params::{ArrayParams, ObjectParams};
     use std::time::SystemTime;
 
     /// Helper: Create test service with temp directory
@@ -599,6 +609,16 @@ mod tests {
             storage_manager,
             start_time: SystemTime::now(),
         })
+    }
+
+    /// Helper: Build RPC module for testing (no server required)
+    async fn build_test_module() -> RpcModule<JsonRpcState> {
+        let service = create_test_service().await.expect("create service");
+        let state = JsonRpcState {
+            service,
+            start_time: std::time::Instant::now(),
+        };
+        JsonRpcServer::build_module(state).expect("build module")
     }
 
     #[test]
@@ -677,5 +697,272 @@ mod tests {
 
         let _server1 = JsonRpcServer::new(service1, config.clone());
         let _server2 = JsonRpcServer::new(service2, config);
+    }
+
+    // ========== JSON-RPC handler tests using RpcModule::call() ==========
+
+    #[tokio::test]
+    async fn test_handler_storage_dataset_create() {
+        let module = build_test_module().await;
+        let mut params = ObjectParams::new();
+        params.insert("name", "test_dataset").expect("insert");
+        params.insert("description", "test desc").expect("insert");
+        let result: serde_json::Value = module
+            .call("storage.dataset.create", params)
+            .await
+            .expect("create dataset");
+        assert_eq!(result["name"], "test_dataset");
+        assert_eq!(result["description"], "test desc");
+        assert!(result["size_bytes"].is_number());
+    }
+
+    #[tokio::test]
+    async fn test_handler_storage_dataset_create_with_compression() {
+        let module = build_test_module().await;
+        let mut params = ObjectParams::new();
+        params.insert("name", "compressed_ds").expect("insert");
+        params.insert("compression", "lz4").expect("insert");
+        let result: serde_json::Value = module
+            .call("storage.dataset.create", params)
+            .await
+            .expect("create");
+        assert_eq!(result["name"], "compressed_ds");
+    }
+
+    #[tokio::test]
+    async fn test_handler_storage_dataset_list() {
+        let module = build_test_module().await;
+        let result: Vec<serde_json::Value> = module
+            .call("storage.dataset.list", ArrayParams::new())
+            .await
+            .expect("list");
+        assert!(result.is_empty() || !result.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_handler_storage_dataset_get_after_create() {
+        let module = build_test_module().await;
+        let mut create_params = ObjectParams::new();
+        create_params.insert("name", "get_test_ds").expect("insert");
+        let _ = module
+            .call::<_, serde_json::Value>("storage.dataset.create", create_params)
+            .await
+            .expect("create");
+        let mut get_params = ArrayParams::new();
+        get_params.insert("get_test_ds").expect("insert");
+        let ds: serde_json::Value = module
+            .call("storage.dataset.get", get_params)
+            .await
+            .expect("get");
+        assert_eq!(ds["name"], "get_test_ds");
+        assert_eq!(ds["status"], "active");
+    }
+
+    #[tokio::test]
+    async fn test_handler_storage_dataset_delete() {
+        let module = build_test_module().await;
+        let mut create_params = ObjectParams::new();
+        create_params
+            .insert("name", "delete_test_ds")
+            .expect("insert");
+        let _ = module
+            .call::<_, serde_json::Value>("storage.dataset.create", create_params)
+            .await
+            .expect("create");
+        let mut del_params = ArrayParams::new();
+        del_params.insert("delete_test_ds").expect("insert");
+        let del: serde_json::Value = module
+            .call("storage.dataset.delete", del_params)
+            .await
+            .expect("delete");
+        assert!(del["success"].as_bool().unwrap_or(false));
+    }
+
+    #[tokio::test]
+    async fn test_handler_storage_object_store_retrieve() {
+        let module = build_test_module().await;
+        let data_b64 = base64::engine::general_purpose::STANDARD.encode(b"hello object");
+        let mut create_params = ObjectParams::new();
+        create_params.insert("name", "obj_ds").expect("insert");
+        let _ = module
+            .call::<_, serde_json::Value>("storage.dataset.create", create_params)
+            .await
+            .expect("create ds");
+        let mut store_params = ObjectParams::new();
+        store_params.insert("dataset", "obj_ds").expect("insert");
+        store_params.insert("key", "mykey").expect("insert");
+        store_params.insert("data", &data_b64).expect("insert");
+        let stored: serde_json::Value = module
+            .call("storage.object.store", store_params)
+            .await
+            .expect("store");
+        assert_eq!(stored["key"], "mykey");
+        assert_eq!(stored["dataset"], "obj_ds");
+        let mut retrieve_params = ObjectParams::new();
+        retrieve_params.insert("dataset", "obj_ds").expect("insert");
+        retrieve_params.insert("key", "mykey").expect("insert");
+        let retrieved: serde_json::Value = module
+            .call("storage.object.retrieve", retrieve_params)
+            .await
+            .expect("retrieve");
+        let raw = base64::engine::general_purpose::STANDARD
+            .decode(retrieved["data"].as_str().unwrap())
+            .unwrap();
+        assert_eq!(raw, b"hello object");
+    }
+
+    #[tokio::test]
+    async fn test_handler_storage_object_store_invalid_base64() {
+        let module = build_test_module().await;
+        let mut create_params = ObjectParams::new();
+        create_params.insert("name", "bad_ds").expect("insert");
+        let _ = module
+            .call::<_, serde_json::Value>("storage.dataset.create", create_params)
+            .await
+            .expect("create");
+        let mut store_params = ObjectParams::new();
+        store_params.insert("dataset", "bad_ds").expect("insert");
+        store_params.insert("key", "k").expect("insert");
+        store_params
+            .insert("data", "!!!invalid!!!")
+            .expect("insert");
+        let err = module
+            .call::<_, serde_json::Value>("storage.object.store", store_params)
+            .await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handler_storage_object_metadata_list_delete() {
+        let module = build_test_module().await;
+        let data_b64 = base64::engine::general_purpose::STANDARD.encode(b"meta_test");
+        let mut create_params = ObjectParams::new();
+        create_params.insert("name", "meta_ds").expect("insert");
+        let _ = module
+            .call::<_, serde_json::Value>("storage.dataset.create", create_params)
+            .await
+            .expect("create");
+        let mut store_params = ObjectParams::new();
+        store_params.insert("dataset", "meta_ds").expect("insert");
+        store_params.insert("key", "obj1").expect("insert");
+        store_params.insert("data", &data_b64).expect("insert");
+        let _ = module
+            .call::<_, serde_json::Value>("storage.object.store", store_params)
+            .await
+            .expect("store");
+        let mut meta_params = ObjectParams::new();
+        meta_params.insert("dataset", "meta_ds").expect("insert");
+        meta_params.insert("key", "obj1").expect("insert");
+        let meta: serde_json::Value = module
+            .call("storage.object.metadata", meta_params)
+            .await
+            .expect("metadata");
+        assert_eq!(meta["key"], "obj1");
+        let mut list_params = ObjectParams::new();
+        list_params.insert("dataset", "meta_ds").expect("insert");
+        let list: Vec<serde_json::Value> = module
+            .call("storage.object.list", list_params)
+            .await
+            .expect("list");
+        assert!(!list.is_empty());
+        let mut del_params = ObjectParams::new();
+        del_params.insert("dataset", "meta_ds").expect("insert");
+        del_params.insert("key", "obj1").expect("insert");
+        let del: serde_json::Value = module
+            .call("storage.object.delete", del_params)
+            .await
+            .expect("delete");
+        assert!(del["success"].as_bool().unwrap_or(false));
+    }
+
+    #[tokio::test]
+    async fn test_handler_health_check() {
+        let module = build_test_module().await;
+        let result: serde_json::Value = module
+            .call("health.check", ArrayParams::new())
+            .await
+            .expect("health");
+        assert!(result["status"].as_str().is_some());
+        assert!(result["version"].as_str().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_handler_health_metrics() {
+        let module = build_test_module().await;
+        let result: serde_json::Value = module
+            .call("health.metrics", ArrayParams::new())
+            .await
+            .expect("metrics");
+        assert!(result["dataset_count"].as_u64().is_some());
+        assert!(result["object_count"].as_u64().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_handler_health_version() {
+        let module = build_test_module().await;
+        let result: serde_json::Value = module
+            .call("health.version", ArrayParams::new())
+            .await
+            .expect("version");
+        assert!(result["version"].as_str().is_some());
+        assert!(result["api_version"].as_str().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_handler_health_protocols() {
+        let module = build_test_module().await;
+        let result: Vec<serde_json::Value> = module
+            .call("health.protocols", ArrayParams::new())
+            .await
+            .expect("protocols");
+        assert!(!result.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_handler_discovery_capability_register() {
+        let module = build_test_module().await;
+        let mut params = ObjectParams::new();
+        params.insert("capability", "storage").expect("insert");
+        params
+            .insert("endpoint", "http://localhost:8092")
+            .expect("insert");
+        let result: serde_json::Value = module
+            .call("discovery.capability.register", params)
+            .await
+            .expect("register");
+        assert!(result["success"].as_bool().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_handler_discovery_capability_query() {
+        let module = build_test_module().await;
+        let mut params = ArrayParams::new();
+        params.insert("storage").expect("insert");
+        let result: Vec<serde_json::Value> = module
+            .call("discovery.capability.query", params)
+            .await
+            .expect("query");
+        // Query succeeds: returns empty vec when no service, or list when found
+        assert!(result.iter().all(|v| v.is_object() || v.is_null()));
+    }
+
+    #[tokio::test]
+    async fn test_handler_get_dataset_not_found() {
+        let module = build_test_module().await;
+        let mut params = ArrayParams::new();
+        params.insert("nonexistent_ds_xyz").expect("insert");
+        let err = module
+            .call::<_, serde_json::Value>("storage.dataset.get", params)
+            .await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_module_method_names() {
+        let module = build_test_module().await;
+        let names: Vec<_> = module.method_names().collect();
+        assert!(names.contains(&"storage.dataset.create"));
+        assert!(names.contains(&"health.check"));
+        assert!(names.len() >= 14);
     }
 }

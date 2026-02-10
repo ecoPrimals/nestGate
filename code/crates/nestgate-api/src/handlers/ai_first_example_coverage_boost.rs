@@ -4,7 +4,6 @@
 
 use super::*;
 use axum::extract::{Json, Path};
-use axum::http::StatusCode;
 
 #[cfg(test)]
 mod tests {
@@ -428,6 +427,6 @@ mod tests {
     fn test_create_handler() {
         let router = create_handler();
         // Just verify it creates without panic
-        assert!(format!("{:?}", router).contains("Router"));
+        assert!(format!("{router:?}").contains("Router"));
     }
 }

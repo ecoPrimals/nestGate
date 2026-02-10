@@ -4,12 +4,9 @@
 
 #[cfg(test)]
 #[path = "auth_comprehensive_tests.rs"]
-//! Auth module
-
 mod auth_comprehensive_tests;
 
 use axum::{
-    debug_handler,
     extract::State,
     http::StatusCode,
     response::{IntoResponse, Json},
@@ -18,6 +15,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+/// Feature-not-available error for authentication
+const AUTH_NOT_AVAILABLE_MSG: &str =
+    "Authentication service is not available. Use nestgate-core security module for production auth.";
 
 // Simple auth service stub for canonical modernization
 #[derive(Debug, Clone)]
@@ -34,32 +35,32 @@ impl AuthService {
         }
     }
 
-    /// Authenticate
+    /// Authenticate - returns Err with feature-not-available (no fake success)
     pub fn authenticate(
         &self,
         _credentials: &nestgate_core::universal_traits::Credentials,
-    ) -> bool {
-        // Stub implementation - always return true for now
-        true
+    ) -> Result<bool, nestgate_core::NestGateError> {
+        Err(nestgate_core::NestGateError::validation(
+            "security.authentication.decentralized: Decentralized authentication required - use nestgate-core security module",
+        ))
     }
 
-    /// Gets Auth Status
-    pub fn get_auth_status(&self) -> AuthStatus {
+    /// Gets Auth Status - returns unauthenticated (no fake stub_user)
+    pub const fn get_auth_status(&self) -> AuthStatus {
         AuthStatus {
-            authenticated: true,
-            user_id: Some("stub_user".to_string()),
-            permissions: vec!["read".to_string(), "write".to_string()],
+            authenticated: false,
+            user_id: None,
+            permissions: vec![],
         }
     }
 
-    /// Security Primal Available
-    pub fn security_primal_available(&self) -> bool {
-        // Stub - assume available
-        true
+    /// Security Primal Available - returns false (no fake availability)
+    pub const fn security_primal_available(&self) -> bool {
+        false
     }
 
     /// Gets Mode
-    pub fn get_mode(&self) -> AuthMode {
+    pub const fn get_mode(&self) -> AuthMode {
         AuthMode::Development
     }
 }
@@ -85,7 +86,7 @@ pub struct AuthStatus {
     pub permissions: Vec<String>,
 }
 /// Authentication mode
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 /// Authmode
 pub enum AuthMode {
     /// Development
@@ -139,57 +140,60 @@ pub fn auth_router() -> Router<crate::routes::AppState> {
         .route("/status", get(get_status))
         .route("/mode", post(set_mode))
 }
-/// Login endpoint
-#[debug_handler]
-fn login(
-    State(app_state): State<crate::routes::AppState>,
+/// Login endpoint - returns 501 when auth is not implemented
+async fn login(
+    State(_app_state): State<crate::routes::AppState>,
     Json(request): Json<AuthRequest>,
-) -> Json<AuthResponse> {
+) -> impl IntoResponse {
     let credentials = nestgate_core::universal_traits::Credentials {
         username: request.username,
         password: request.password,
-        domain: request.domain,
-        token: None,
+        mfa_token: None,
+        client_info: request.domain,
     };
     let auth_service = AuthService::new();
-    let auth_result = auth_service.authenticate(&credentials).await;
-
-    Json(AuthResponse {
-        success: auth_result,
-        token: if auth_result {
-            Some("stub_token".to_string())
-        } else {
-            None
-        },
-        expires_at: if auth_result {
-            Some(std::time::SystemTime::now() + std::time::Duration::from_secs(3600))
-        } else {
-            None
-        },
-        permissions: if auth_result {
-            Some(vec!["read".to_string(), "write".to_string()])
-        } else {
-            None
-        },
-        message: if auth_result {
-            "Authentication successful"
-        } else {
-            "Authentication failed"
-        }
-        .to_string(),
-    })
+    match auth_service.authenticate(&credentials) {
+        Ok(true) => Json(AuthResponse {
+            success: true,
+            token: None,
+            expires_at: None,
+            permissions: None,
+            message: "Authentication successful".to_string(),
+        })
+        .into_response(),
+        Ok(false) => (
+            StatusCode::UNAUTHORIZED,
+            Json(AuthResponse {
+                success: false,
+                token: None,
+                expires_at: None,
+                permissions: None,
+                message: "Authentication failed".to_string(),
+            }),
+        )
+            .into_response(),
+        Err(_e) => (
+            StatusCode::NOT_IMPLEMENTED,
+            Json(AuthResponse {
+                success: false,
+                token: None,
+                expires_at: None,
+                permissions: None,
+                message: AUTH_NOT_AVAILABLE_MSG.to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 /// Get authentication status endpoint
-#[debug_handler]
-async fn get_status(State(app_state): State<crate::routes::AppState>) -> Json<AuthStatus> {
+async fn get_status(State(_app_state): State<crate::routes::AppState>) -> Json<AuthStatus> {
     let auth_service = AuthService::new();
-    Json(auth_service.get_auth_status().await)
+    Json(auth_service.get_auth_status())
 }
 /// Set authentication mode endpoint
-#[debug_handler]
 async fn set_mode(
-    State(app_state): State<crate::routes::AppState>,
+    State(_app_state): State<crate::routes::AppState>,
     Json(request): Json<SetModeRequest>,
 ) -> Json<SetModeResponse> {
     match request.mode.as_str() {
@@ -200,7 +204,7 @@ async fn set_mode(
         }),
         "security_primal" => {
             let auth_service = AuthService::new();
-            if auth_service.security_primal_available().await {
+            if auth_service.security_primal_available() {
                 Json(SetModeResponse {
                     success: true,
                     mode: "security_primal",
@@ -268,45 +272,77 @@ impl From<crate::routes::AppState> for AppStateWithAuth {
     }
 }
 
+/// Authenticate user with credentials
+pub fn authenticate_user(
+    State(_app_state): State<crate::routes::AppState>,
+    Json(credentials): Json<AuthCredentials>,
+) -> impl IntoResponse {
+    let auth_service = AuthService::new();
+    match auth_service.authenticate(&nestgate_core::universal_traits::Credentials {
+        username: credentials.username,
+        password: credentials.password,
+        mfa_token: None,
+        client_info: None,
+    }) {
+        Ok(true) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "status": "success",
+                "message": "Authentication successful",
+                "authenticated": true
+            })),
+        )
+            .into_response(),
+        Ok(false) => (
+            StatusCode::UNAUTHORIZED,
+            Json(serde_json::json!({
+                "status": "error",
+                "message": "Authentication failed",
+                "authenticated": false
+            })),
+        )
+            .into_response(),
+        Err(_) => (
+            StatusCode::NOT_IMPLEMENTED,
+            Json(serde_json::json!({
+                "status": "error",
+                "message": AUTH_NOT_AVAILABLE_MSG,
+                "authenticated": false
+            })),
+        )
+            .into_response(),
+    }
+}
+/// Get authentication status
+pub async fn get_auth_status(
+    State(_app_state): State<crate::routes::AppState>,
+) -> impl IntoResponse {
+    let auth_service = AuthService::new();
+    Json(auth_service.get_auth_status())
+}
+/// Get system security status
+pub async fn get_security_status(
+    State(_app_state): State<crate::routes::AppState>,
+) -> impl IntoResponse {
+    let auth_service = AuthService::new();
+    Json(serde_json::json!({
+        "security_primal_available": auth_service.security_primal_available(),
+        "auth_mode": auth_service.get_mode(),
+        "status": "not_implemented",
+        "message": AUTH_NOT_AVAILABLE_MSG
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_core::universal_adapter::config::UniversalAdapterConfig;
-    use std::sync::Arc;
 
     #[tokio::test]
     async fn test_auth_service_standalone() {
         let service = AuthService::new();
         let mode = service.get_mode();
-        assert_eq!(mode, nestgate_core::cert::types::CertMode::Development);
-        assert!(!service.security_primal_available().await);
-    }
-    #[tokio::test]
-    async fn test_auth_service_with_adapter() {
-        let config = UniversalAdapterConfig::default();
-        let adapter = Arc::new(nestgate_core::universal_adapter::UniversalAdapter::new(
-            config,
-        ));
-        let service = AuthService::with_primal_adapter(adapter);
-        let mode = service.get_mode();
-        assert!(matches!(
-            mode,
-            nestgate_core::cert::types::CertMode::Development
-        ));
-    }
-
-    #[tokio::test]
-    async fn test_auth_service_hybrid() {
-        let config = UniversalAdapterConfig::default();
-        let adapter = Arc::new(nestgate_core::universal_adapter::UniversalAdapter::new(
-            config,
-        ));
-        let service = AuthService::hybrid(adapter);
-        let mode = service.get_mode();
-        assert!(matches!(
-            mode,
-            nestgate_core::cert::types::CertMode::Lenient
-        ));
+        assert_eq!(mode, AuthMode::Development);
+        assert!(!service.security_primal_available());
     }
 
     #[tokio::test]
@@ -316,15 +352,15 @@ mod tests {
         let credentials = nestgate_core::universal_traits::Credentials {
             username: "admin".to_string(),
             password: "nestgate".to_string(),
-            domain: None,
-            token: None,
+            mfa_token: None,
+            client_info: None,
         };
 
         // With no security services available, decentralized auth should gracefully deny
-        let result = service.authenticate(&credentials).await;
+        let result = service.authenticate(&credentials);
         assert!(result.is_err());
 
-        let _error_message = result
+        let error_message = result
             .expect_err("Expected authentication to fail")
             .to_string();
         assert!(error_message.contains("Decentralized authentication required"));
@@ -338,63 +374,11 @@ mod tests {
         let credentials = nestgate_core::universal_traits::Credentials {
             username: "invalid".to_string(),
             password: "wrong".to_string(),
-            domain: None,
-            token: None,
+            mfa_token: None,
+            client_info: None,
         };
 
-        let result = service.authenticate(&credentials).await;
+        let result = service.authenticate(&credentials);
         assert!(result.is_err());
     }
-}
-
-/// Authenticate user with credentials
-pub fn authenticate_user(
-    State(app_state): State<crate::routes::AppState>,
-    Json(credentials): Json<AuthCredentials>,
-) -> impl IntoResponse {
-    let auth_service = AuthService::new();
-    match auth_service
-        .authenticate(&nestgate_core::universal_traits::Credentials {
-            username: credentials.username,
-            password: credentials.password,
-            domain: None,
-            token: None,
-        })
-        .await
-    {
-        true => (
-            StatusCode::OK,
-            Json(serde_json::json!({
-                "status": "success",
-                "message": "Authentication successful",
-                "authenticated": true
-            }),
-        ),
-        false => (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({
-                "status": "error",
-                "message": "Authentication failed",
-                "authenticated": false
-            }),
-        ),
-    }
-}
-/// Get authentication status
-pub async fn get_auth_status(
-    State(app_state): State<crate::routes::AppState>,
-) -> impl IntoResponse {
-    let auth_service = AuthService::new();
-    Json(auth_service.get_auth_status().await)
-}
-/// Get system security status
-pub async fn get_security_status(
-    State(app_state): State<crate::routes::AppState>,
-) -> impl IntoResponse {
-    let auth_service = AuthService::new();
-    Json(serde_json::json!({
-        "security_primal_available": auth_service.security_primal_available().await,
-        "auth_mode": auth_service.get_mode(),
-        "status": "operational"
-    }))
 }

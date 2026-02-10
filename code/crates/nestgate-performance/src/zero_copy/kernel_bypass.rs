@@ -164,16 +164,9 @@ pub struct ZeroCopyRing<const SIZE: usize> {
 impl<const SIZE: usize> ZeroCopyRing<SIZE> {
     /// Create new zero-copy ring buffer
     pub fn new() -> Self {
-        // SAFETY: We're creating an array of Options, which is safe to initialize with None
-        // Cannot use array initialization directly due to const generic limitations
-        let buffers = {
-            let mut arr: [Option<ZeroCopyBuffer<2048>>; SIZE] =
-                unsafe { std::mem::MaybeUninit::zeroed().assume_init() };
-            for slot in &mut arr {
-                *slot = None;
-            }
-            arr
-        };
+        // ✅ EVOLVED: Eliminated unsafe MaybeUninit::zeroed().assume_init()
+        // Using std::array::from_fn for safe const-generic array initialization
+        let buffers: [Option<ZeroCopyBuffer<2048>>; SIZE] = std::array::from_fn(|_| None);
 
         Self {
             buffers,

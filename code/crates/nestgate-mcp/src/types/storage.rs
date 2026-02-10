@@ -1,4 +1,3 @@
-
 //! Storage module
 
 use serde::{Deserialize, Serialize};

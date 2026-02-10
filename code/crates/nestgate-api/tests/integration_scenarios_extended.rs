@@ -319,7 +319,7 @@ async fn test_extreme_concurrent_requests() {
 fn test_many_pool_metrics() {
     let pools: Vec<PoolMetrics> = (0..1000)
         .map(|i| PoolMetrics {
-            name: format!("pool-{}", i),
+            name: format!("pool-{i}"),
             health_status: if i % 10 == 0 {
                 "DEGRADED".to_string()
             } else {
@@ -331,9 +331,9 @@ fn test_many_pool_metrics() {
             available_space: 500000 * i as u64,
             read_iops: i as u64,
             write_iops: i as u64 / 2,
-            read_throughput: (i as f64) * 1024.0,
-            write_throughput: (i as f64) * 512.0,
-            fragmentation_level: (i as f64) / 1000.0,
+            read_throughput: f64::from(i) * 1024.0,
+            write_throughput: f64::from(i) * 512.0,
+            fragmentation_level: f64::from(i) / 1000.0,
             error_count: 0,
         })
         .collect();
@@ -376,13 +376,9 @@ async fn test_status_timestamps_are_current() {
         .as_secs();
 
     // Timestamp should be within 1 second of now
-    let diff = if now > status.0.timestamp {
-        now - status.0.timestamp
-    } else {
-        status.0.timestamp - now
-    };
+    let diff = now.abs_diff(status.0.timestamp);
 
-    assert!(diff <= 1, "Timestamp should be current: diff={}", diff);
+    assert!(diff <= 1, "Timestamp should be current: diff={diff}");
 }
 
 // ==================== POOL METRICS EDGE CASES ====================

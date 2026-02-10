@@ -27,8 +27,7 @@ mod workspace_error_path_tests {
             let is_valid = validate_workspace_id(invalid_id);
             assert!(
                 !is_valid,
-                "ID '{}' should be invalid but was accepted",
-                invalid_id
+                "ID '{invalid_id}' should be invalid but was accepted"
             );
         }
 
@@ -53,7 +52,7 @@ mod workspace_error_path_tests {
         assert!(
             matches!(
                 result,
-                Err(StatusCode::SERVICE_UNAVAILABLE) | Err(StatusCode::INTERNAL_SERVER_ERROR)
+                Err(StatusCode::SERVICE_UNAVAILABLE | StatusCode::INTERNAL_SERVER_ERROR)
             ),
             "Should return error when ZFS is unavailable"
         );
@@ -80,9 +79,7 @@ mod workspace_error_path_tests {
             );
             if let Ok(workspaces) = result {
                 // If it returns OK, it should filter out invalid entries
-                assert!(
-                    workspaces.is_empty() || workspaces.iter().all(|w| validate_workspace_entry(w))
-                );
+                assert!(workspaces.is_empty() || workspaces.iter().all(validate_workspace_entry));
             }
         }
     }
@@ -98,12 +95,7 @@ mod workspace_error_path_tests {
 
         for (quota, description) in invalid_configs {
             let result = validate_workspace_quota(quota);
-            assert!(
-                result.is_err(),
-                "Should reject {}: {:?}",
-                description,
-                quota
-            );
+            assert!(result.is_err(), "Should reject {description}: {quota:?}");
         }
     }
 
@@ -191,8 +183,7 @@ mod workspace_error_path_tests {
             let result = validate_compression_algorithm(algo);
             assert!(
                 result.is_err(),
-                "Should reject invalid compression algorithm: {}",
-                algo
+                "Should reject invalid compression algorithm: {algo}"
             );
         }
     }
@@ -282,7 +273,7 @@ mod workspace_error_path_tests {
         }
     }
 
-    async fn simulate_workspace_update(id: &str, update: &str) -> Result<(), String> {
+    async fn simulate_workspace_update(_id: &str, _update: &str) -> Result<(), String> {
         // Simulate workspace update
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
         Ok(())
@@ -313,7 +304,7 @@ mod workspace_error_path_tests {
 
     fn validate_workspace_usage(current_usage: u64, quota: u64) -> Result<(), String> {
         if current_usage > quota {
-            Err(format!("Quota exceeded: {} > {}", current_usage, quota))
+            Err(format!("Quota exceeded: {current_usage} > {quota}"))
         } else {
             Ok(())
         }
@@ -340,7 +331,7 @@ mod workspace_error_path_tests {
             }
         }
 
-        Err(format!("Invalid compression algorithm: {}", algo))
+        Err(format!("Invalid compression algorithm: {algo}"))
     }
 
     async fn retry_with_backoff<F, Fut, T>(

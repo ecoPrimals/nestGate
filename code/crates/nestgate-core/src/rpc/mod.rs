@@ -69,6 +69,8 @@ pub mod orchestrator_registration;
 // pub mod semantic_router; // NEW: Semantic method routing for TRUE PRIMAL compliance (Jan 27, 2026)
 pub mod socket_config;
 // pub mod songbird_registration; // REMOVED: Deprecated since v2.3.0, zero production usage
+/// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
+pub(crate) mod model_cache_handlers;
 pub mod tarpc_client;
 pub mod tarpc_server;
 pub mod tarpc_types;

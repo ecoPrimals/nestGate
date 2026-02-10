@@ -5,12 +5,12 @@
 use super::client::ObjectStorageClient;
 use super::config::{ConfigSource, DiscoveredStorageConfig, StorageCapability};
 use super::provider::StorageProvider;
-use super::types::{ObjectDataset, ObjectPool, ObjectProperties, ObjectSnapshot};
+use super::types::ObjectPool;
 use nestgate_core::{config_error, NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 /// Object storage backend - sovereignty compliant
 ///

@@ -801,7 +801,7 @@ mod tests {
         let server = NestGateRpcServer::new(zfs_backend);
         let ctx = Context::current();
 
-        let pools = server.list_pools(ctx).await;
+        let _pools = server.list_pools(ctx).await;
         // Note: Real ZFS backend may return empty list if no pools exist
         // This test now uses real backend instead of hardcoded data
     }

@@ -88,13 +88,9 @@ impl CertificateValidator {
 
 /// Create a default certificate validator
 ///
-/// # Panics
+/// # Errors
 ///
-/// Panics if the default validator cannot be created (indicates serious system misconfiguration)
-#[must_use]
-pub fn create_default_certificate_validator() -> CertificateValidator {
+/// Returns an error if the validator cannot be created (e.g. no adapter endpoint configured)
+pub fn create_default_certificate_validator() -> Result<CertificateValidator> {
     CertificateValidator::new(NestGateCanonicalConfig::default())
-        .unwrap_or_else(|e| {
-            panic!("Critical: Failed to create default certificate validator: {e}. This indicates a serious system misconfiguration.")
-        })
 }

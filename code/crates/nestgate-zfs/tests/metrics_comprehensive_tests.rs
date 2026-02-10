@@ -4,7 +4,6 @@
 //! Focus on atomic operations, metrics calculation, and concurrency.
 
 use nestgate_zfs::metrics::{MetricsSnapshot, ZfsMetrics};
-use std::time::Duration;
 
 // ==================== ZFSMETRICS CREATION TESTS ====================
 
@@ -27,7 +26,7 @@ fn test_metrics_default() {
 
 #[test]
 fn test_metrics_new_for_testing() {
-    let metrics = ZfsMetrics::new_for_testing();
+    let metrics = ZfsMetrics::new();
     let snapshot = metrics.get_current_metrics();
 
     assert_eq!(snapshot.total_operations, 0);

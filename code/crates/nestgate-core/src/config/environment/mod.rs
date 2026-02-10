@@ -132,12 +132,52 @@ impl EnvironmentConfig {
             security: SecurityConfig::from_env_with_prefix(prefix)?,
         })
     }
+
+    /// Get the bind address as a `SocketAddr`
+    ///
+    /// Resolves `network.host` and `network.port` into a standard socket address.
+    /// Handles IPv4, IPv6, and hostname resolution. Falls back to `127.0.0.1` if
+    /// the host cannot be resolved.
+    ///
+    /// # Errors
+    ///
+    /// Returns error only if both host parsing and fallback fail (should not happen).
+    pub fn bind_address(&self) -> Result<std::net::SocketAddr, ConfigError> {
+        use std::net::{IpAddr, SocketAddr};
+
+        let port = self.network.port.get();
+
+        // Try parsing as IP address first (handles both IPv4 and IPv6)
+        if let Ok(ip) = self.network.host.parse::<IpAddr>() {
+            return Ok(SocketAddr::new(ip, port));
+        }
+
+        // Try as host:port string (e.g. "localhost:8080")
+        let addr_str = format!("{}:{}", self.network.host, port);
+        if let Ok(addr) = addr_str.parse::<SocketAddr>() {
+            return Ok(addr);
+        }
+
+        // Try DNS resolution for hostnames (e.g. "localhost")
+        if let Ok(mut addrs) = std::net::ToSocketAddrs::to_socket_addrs(&addr_str) {
+            if let Some(addr) = addrs.next() {
+                return Ok(addr);
+            }
+        }
+
+        // Fallback: invalid/unresolvable host -> 127.0.0.1
+        // SAFETY: "127.0.0.1" is a constant valid IPv4 address; parse() cannot fail
+        Ok(SocketAddr::new(
+            "127.0.0.1".parse().expect("hardcoded IP is valid"),
+            port,
+        ))
+    }
 }
 
 /// Validated port number (1024-65535)
 ///
 /// Enforces valid port range at construction time for type safety.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Port(u16);
 
 impl Port {
@@ -181,12 +221,10 @@ impl FromStr for Port {
     type Err = ConfigError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let port: u16 = s
-            .parse()
-            .map_err(|e| ConfigError::ParseError {
-                key: "port".to_string(),
-                source: Box::new(e),
-            })?;
+        let port: u16 = s.parse().map_err(|e| ConfigError::ParseError {
+            key: "port".to_string(),
+            source: Box::new(e),
+        })?;
         Self::new(port)
     }
 }

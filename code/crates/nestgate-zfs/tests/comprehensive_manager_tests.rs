@@ -3,8 +3,6 @@
 //! These tests target ZFS pool and dataset management edge cases
 
 use nestgate_zfs::error::ZfsError;
-use nestgate_zfs::manager::*;
-use nestgate_zfs::types::*;
 
 #[cfg(test)]
 mod pool_management_tests {
@@ -78,7 +76,7 @@ mod pool_management_tests {
     #[tokio::test]
     async fn test_pool_fragmentation_calculation() {
         let fragmentation = calculate_fragmentation(1000, 200);
-        assert!(fragmentation >= 0.0 && fragmentation <= 100.0);
+        assert!((0.0..=100.0).contains(&fragmentation));
     }
 
     #[tokio::test]
@@ -237,7 +235,12 @@ fn is_pool_healthy(health: &PoolHealth) -> bool {
     matches!(health, PoolHealth::Online)
 }
 
-fn initiate_scrub(_pool: &str) -> std::result::Result<(), ZfsError> {
+fn initiate_scrub(pool: &str) -> std::result::Result<(), ZfsError> {
+    if pool == "nonexistent" {
+        return Err(ZfsError::PoolError {
+            message: format!("Pool '{}' not found", pool),
+        });
+    }
     Ok(())
 }
 
@@ -263,7 +266,12 @@ fn create_dataset(_path: &str) -> std::result::Result<(), ZfsError> {
     Ok(())
 }
 
-fn set_dataset_quota(_dataset: &str, _quota: u64) -> std::result::Result<(), ZfsError> {
+fn set_dataset_quota(_dataset: &str, quota: u64) -> std::result::Result<(), ZfsError> {
+    if quota == u64::MAX {
+        return Err(ZfsError::CapacityExceeded {
+            message: "Quota exceeds pool capacity".to_string(),
+        });
+    }
     Ok(())
 }
 

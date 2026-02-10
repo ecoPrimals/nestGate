@@ -307,7 +307,7 @@ mod config_integration_tests {
 
     #[test]
     fn test_config_in_vec() {
-        let configs = vec![
+        let configs = [
             create_default_config(),
             create_default_config(),
             create_default_config(),

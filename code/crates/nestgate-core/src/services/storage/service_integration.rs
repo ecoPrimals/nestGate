@@ -63,6 +63,7 @@ impl AdaptiveStorageService {
             .map_err(|_| anyhow::anyhow!("Invalid hash length"))?;
         
         let data: Bytes = self.engine.retrieve(&hash_array).await?;
+        // Cold path: adaptive storage (behind feature flag). Return Vec for API compatibility.
         Ok(data.to_vec())
     }
     

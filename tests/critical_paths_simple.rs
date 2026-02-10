@@ -35,6 +35,7 @@ async fn test_timeout_handling() {
 
     let result = tokio::time::timeout(timeout, async {
         // Sleep significantly longer than timeout to ensure it triggers
+        tokio::time::sleep(Duration::from_millis(100)).await;
         "completed"
     })
     .await;

@@ -26,10 +26,11 @@
 //! ```
 
 use dashmap::DashSet;
-use once_cell::sync::OnceCell;
+// ✅ EVOLVED: once_cell → std::sync::OnceLock (Pure Rust std)
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::Arc;
+use std::sync::OnceLock;
 use tempfile::TempDir;
 use tokio::sync::{watch, Notify, RwLock};
 
@@ -108,7 +109,7 @@ impl PortAllocator {
     ///
     /// All tests share the same allocator to prevent conflicts.
     pub fn shared() -> Arc<Self> {
-        static INSTANCE: OnceCell<Arc<PortAllocator>> = OnceCell::new();
+        static INSTANCE: OnceLock<Arc<PortAllocator>> = OnceLock::new();
         INSTANCE
             .get_or_init(|| {
                 Arc::new(Self {

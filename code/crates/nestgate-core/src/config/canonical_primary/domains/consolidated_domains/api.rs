@@ -11,7 +11,7 @@
 //! use nestgate_core::config::canonical_primary::domains::consolidated_domains::api::*;
 //!
 //! let api_config = ApiDomainConfig::default();
-//! assert_eq!(api_config.server.port, 8000);
+//! assert_eq!(api_config.server.port, 8080);
 //! ```
 
 use super::validation::DomainConfigValidation;

@@ -51,35 +51,14 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // Requires SocketAddr for endpoints; see self_knowledge::discovery for full example
 //! use nestgate_core::self_knowledge::{SelfKnowledge, PrimalDiscovery};
-//! use nestgate_core::capabilities::Capability;
-//!
-//! # async fn example() -> anyhow::Result<()> {
-//! // 1. Initialize with self-knowledge
 //! let self_knowledge = SelfKnowledge::builder()
-//!     .with_capability(Capability::Storage)
-//!     .with_capability(Capability::ZfsManagement)
-//!     .with_endpoint("api", "0.0.0.0:8080")
-//!     .with_endpoint("metrics", "0.0.0.0:9090")
+//!     .with_id("nestgate")
+//!     .with_capability("storage")
 //!     .build()?;
-//!
-//! // 2. Announce ourselves to discovery system
-//! let discovery = PrimalDiscovery::new(self_knowledge.clone());
-//! discovery.announce().await?;
-//!
-//! // 3. Discover other primals by capability (not by name!)
-//! let orchestrators = discovery
-//!     .find_capability(Capability::Orchestration)
-//!     .await?;
-//!
-//! // 4. Use discovered primal
-//! for orch in orchestrators {
-//!     println!("Found orchestrator: {} at {}", orch.id, orch.endpoint);
-//!     // Connect and use...
-//! }
-//! # Ok(())
-//! # }
+//! let discovery = PrimalDiscovery::new(self_knowledge);
 //! ```
 //!
 //! ## Evolution from Old Pattern

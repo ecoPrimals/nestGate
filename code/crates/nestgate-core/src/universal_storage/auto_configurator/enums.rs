@@ -42,9 +42,10 @@ pub enum RedundancyLevel {
 }
 
 /// Redundancy strategy options
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum RedundancyStrategy {
     /// No redundancy
+    #[default]
     None,
     /// Mirror (2-way)
     Mirror,
@@ -56,12 +57,6 @@ pub enum RedundancyStrategy {
     RaidZ3,
     /// Custom redundancy configuration
     Custom(String),
-}
-
-impl Default for RedundancyStrategy {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 /// Cross-tier redundancy strategy

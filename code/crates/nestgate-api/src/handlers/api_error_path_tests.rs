@@ -10,28 +10,28 @@ mod api_handler_error_tests {
     #[test]
     fn test_api_error_not_found() {
         let error = ApiError::NotFound("Resource not found".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("not found") || display.contains("Not found"));
     }
 
     #[test]
     fn test_api_error_invalid_request() {
         let error = ApiError::InvalidRequest("Invalid JSON".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Invalid") || display.contains("request"));
     }
 
     #[test]
     fn test_api_error_internal() {
         let error = ApiError::Internal("Database connection failed".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Internal") || display.contains("error"));
     }
 
     #[test]
     fn test_api_error_service_unavailable() {
         let error = ApiError::ServiceUnavailable("ZFS service down".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("unavailable") || display.contains("Service"));
     }
 
@@ -39,7 +39,7 @@ mod api_handler_error_tests {
     fn test_api_error_from_io() {
         let io_error = std::io::Error::new(std::io::ErrorKind::NotFound, "File not found");
         let error = ApiError::Io(io_error);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("I/O") || display.contains("error"));
     }
 
@@ -48,7 +48,7 @@ mod api_handler_error_tests {
         let json_str = "{invalid json}";
         let json_error = serde_json::from_str::<serde_json::Value>(json_str).unwrap_err();
         let error = ApiError::Json(json_error);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("JSON") || display.contains("error"));
     }
 
@@ -61,7 +61,7 @@ mod api_handler_error_tests {
         ];
 
         for error in errors {
-            let display = format!("{}", error);
+            let display = format!("{error}");
             assert!(!display.is_empty());
         }
     }
@@ -157,14 +157,14 @@ mod api_authorization_tests {
 
     #[test]
     fn test_scope_validation() {
-        let user_scopes = vec!["read:data"];
+        let user_scopes = ["read:data"];
         let required_scope = "write:data";
         assert!(!user_scopes.contains(&required_scope));
     }
 
     #[test]
     fn test_role_hierarchy() {
-        let roles = vec!["user", "moderator", "admin"];
+        let roles = ["user", "moderator", "admin"];
         let user_role = "user";
         let admin_index = roles.iter().position(|&r| r == "admin").unwrap();
         let user_index = roles.iter().position(|&r| r == user_role).unwrap();
@@ -292,7 +292,7 @@ mod api_response_tests {
     #[test]
     fn test_pagination_metadata() {
         let total = 1000;
-        let page = 1;
+        let _page = 1;
         let per_page = 20;
         let total_pages = (total + per_page - 1) / per_page;
 

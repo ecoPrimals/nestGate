@@ -32,36 +32,12 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
-//! use nestgate_core::discovery_mechanism::{DiscoveryMechanism, ServiceInfo};
+//! ```rust,ignore
+//! // Full example requires DiscoveryBuilder, SelfKnowledge with SocketAddr endpoints
+//! use nestgate_core::discovery_mechanism::{DiscoveryBuilder, MdnsDiscovery};
 //! use nestgate_core::self_knowledge::SelfKnowledge;
-//! use nestgate_core::capabilities::Capability;
-//!
-//! # async fn example() -> anyhow::Result<()> {
-//! // 1. Auto-detect available discovery mechanism
-//! let discovery = DiscoveryMechanism::detect().await?
-//!     .unwrap_or(DiscoveryMechanism::mdns_default());
-//!
-//! // 2. Build self-knowledge (only know ourselves)
-//! let self_knowledge = SelfKnowledge::builder()
-//!     .with_name("nestgate")
-//!     .with_capability(Capability::Storage)
-//!     .with_capability(Capability::ZfsManagement)
-//!     .build()?;
-//!
-//! // 3. Announce ourselves
-//! discovery.announce(&self_knowledge).await?;
-//!
-//! // 4. Discover others by capability (not by name!)
-//! let orchestrators = discovery
-//!     .find_by_capability(Capability::Orchestration)
-//!     .await?;
-//!
-//! for orch in orchestrators {
-//!     println!("Found orchestrator: {} at {}", orch.id, orch.endpoint);
-//! }
-//! # Ok(())
-//! # }
+//! let discovery = DiscoveryBuilder::default().detect().await?;
+//! let self_knowledge = SelfKnowledge::builder().with_id("nestgate").build()?;
 //! ```
 
 use crate::self_knowledge::SelfKnowledge;

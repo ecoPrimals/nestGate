@@ -6,7 +6,7 @@ use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::net::UnixStream;
 use tracing::{debug, error, trace};
 
@@ -175,9 +175,10 @@ where
 
         loop {
             // Read request
-            let _n = stream.readable().await.map_err(|e| {
-                NestGateError::network_error(&format!("Socket not readable: {}", e))
-            })?;
+            stream
+                .readable()
+                .await
+                .map_err(|e| NestGateError::network_error(&format!("Socket not readable: {e}")))?;
 
             let n = match stream.try_read(&mut buffer) {
                 Ok(0) => {
@@ -202,7 +203,8 @@ where
                 Ok(req) => req,
                 Err(e) => {
                     error!("Invalid JSON-RPC request: {}", e);
-                    let error_response = JsonRpcResponse::error_with_code(Value::Null, -32700, "Parse error");
+                    let error_response =
+                        JsonRpcResponse::error_with_code(Value::Null, -32700, "Parse error");
                     let _ = self.send_response(&mut stream, &error_response).await;
                     continue;
                 }
@@ -232,8 +234,14 @@ where
         {
             Ok(result) => JsonRpcResponse::success(request.id, result),
             Err(e) => {
+                let err_msg = e.to_string();
+                let (code, message) = if err_msg.contains("Unknown method") {
+                    (-32601, "Method not found".to_string())
+                } else {
+                    (-32603, format!("Internal error: {e}"))
+                };
                 error!("Method '{}' failed: {}", request.method, e);
-                JsonRpcResponse::error_with_code(request.id, -32603, format!("Internal error: {}", e))
+                JsonRpcResponse::error_with_code(request.id, code, message)
             }
         }
     }
@@ -243,23 +251,20 @@ where
         stream: &mut UnixStream,
         response: &JsonRpcResponse,
     ) -> Result<()> {
-        let response_str = serde_json::to_string(response).map_err(|e| {
-            NestGateError::api_error(&format!("Failed to serialize response: {}", e))
-        })?;
+        let response_str = serde_json::to_string(response)
+            .map_err(|e| NestGateError::api_error(&format!("Failed to serialize response: {e}")))?;
 
         trace!("Sending response: {}", response_str);
 
         stream
             .writable()
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Socket not writable: {}", e)))?;
+            .map_err(|e| NestGateError::network_error(&format!("Socket not writable: {e}")))?;
 
         stream
             .write_all(response_str.as_bytes())
             .await
-            .map_err(|e| {
-                NestGateError::network_error(&format!("Failed to write response: {}", e))
-            })?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to write response: {e}")))?;
 
         Ok(())
     }

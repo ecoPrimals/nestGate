@@ -348,3 +348,65 @@ impl Clone for UniversalStorageBridge {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_universal_storage_bridge_new() {
+        let result = UniversalStorageBridge::new();
+        assert!(result.is_ok());
+        let _bridge = result.unwrap();
+    }
+
+    #[test]
+    fn test_universal_storage_bridge_clone() {
+        let bridge = UniversalStorageBridge::new().unwrap();
+        let _cloned = bridge;
+    }
+
+    #[tokio::test]
+    async fn test_universal_storage_bridge_detect_best_backend() {
+        let mut bridge = UniversalStorageBridge::new().unwrap();
+        let result = bridge.detect_best_backend().await;
+        assert!(result.is_ok());
+        // Either zfs or filesystem depending on system
+        let backend = result.unwrap();
+        assert!(backend == "zfs" || backend == "filesystem");
+    }
+
+    #[tokio::test]
+    async fn test_universal_storage_bridge_list_pools() {
+        let bridge = UniversalStorageBridge::new().unwrap();
+        let result = bridge.list_pools().await;
+        assert!(result.is_ok());
+        let pools = result.unwrap();
+        // Pools may be empty in restricted test environments (sandbox, no zfs/df)
+        let _ = pools;
+    }
+
+    #[tokio::test]
+    async fn test_universal_storage_bridge_create_dataset_filesystem() {
+        let mut bridge = UniversalStorageBridge::new().unwrap();
+        bridge.detect_best_backend().await.ok();
+
+        let temp_path =
+            std::env::temp_dir().join(format!("nestgate_test_dataset_{}", uuid::Uuid::new_v4()));
+        let config = DatasetConfig {
+            name: temp_path.to_string_lossy().to_string(),
+            mountpoint: None,
+            compression: false,
+            quota: None,
+            reservation: None,
+            properties: HashMap::new(),
+        };
+
+        let result = bridge.create_dataset(&config).await;
+        if let Ok(dataset) = result {
+            assert_eq!(dataset.name, config.name);
+            assert_eq!(dataset.dataset_type, DatasetType::Filesystem);
+            let _ = std::fs::remove_dir_all(&config.name);
+        }
+    }
+}

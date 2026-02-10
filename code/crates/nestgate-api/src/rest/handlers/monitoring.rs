@@ -644,7 +644,7 @@ mod tests {
         let result = get_alerts(State(state)).await;
 
         assert!(result.is_ok());
-        let alerts = &result.expect("Test: get_alerts should return Ok").0.data;
+        let _alerts = &result.expect("Test: get_alerts should return Ok").0.data;
 
         // Verify alert structure is valid (alerts may be empty if no alerts active)
         // Note: Length is always >= 0 by definition, but we're verifying the structure exists

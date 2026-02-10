@@ -27,7 +27,7 @@ impl Default for ZfsConfig {
             .zfs_binary_path()
             .to_string_lossy()
             .to_string();
-        
+
         let zpool_binary = crate::config::storage_paths::get_storage_paths()
             .zpool_binary_path()
             .to_string_lossy()
@@ -222,12 +222,12 @@ impl StorageServiceConfig {
     #[must_use]
     pub fn with_auto_detect() -> Self {
         use super::capabilities;
-        
+
         // Detect available storage backends
         let caps = capabilities::detect_and_log();
-        
+
         let mut config = Self::default();
-        
+
         // ✅ CAPABILITY-BASED: Only enable ZFS features if ZFS is available
         match caps.backend_type {
             capabilities::BackendType::Zfs => {
@@ -244,7 +244,7 @@ impl StorageServiceConfig {
                 info!("   Works on: ext4, NTFS, APFS, btrfs, XFS, etc.");
             }
         }
-        
+
         config
     }
 

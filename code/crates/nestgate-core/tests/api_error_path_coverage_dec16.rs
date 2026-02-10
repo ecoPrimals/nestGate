@@ -83,11 +83,11 @@ fn test_missing_auth_header() {
 #[test]
 fn test_invalid_auth_format() {
     let invalid_formats = vec![
-        "Bearer",           // Missing token
-        "Bearer ",          // Empty token
-        "Basic not_base64", // Invalid base64
-        "Unknown scheme",   // Unknown scheme
-        "",                 // Empty
+        "Bearer",         // Missing token (only one part)
+        "Bearer ",        // Empty token
+        "Basic",          // Basic with no token
+        "Unknown scheme", // Unknown scheme
+        "",               // Empty
     ];
 
     for format in invalid_formats {
@@ -111,7 +111,7 @@ fn test_expired_token() {
 
 #[test]
 fn test_revoked_token() {
-    let revoked_tokens = vec!["token123", "token456"];
+    let revoked_tokens = ["token123", "token456"];
     let check_token = "token123";
 
     assert!(
@@ -141,10 +141,7 @@ fn test_rate_limit_tracking() {
 
         fn check(&mut self, client: &str) -> bool {
             let now = std::time::Instant::now();
-            let requests = self
-                .requests
-                .entry(client.to_string())
-                .or_insert_with(Vec::new);
+            let requests = self.requests.entry(client.to_string()).or_default();
 
             // Remove old requests outside window
             requests.retain(|&t| now.duration_since(t) < self.window);

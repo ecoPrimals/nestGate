@@ -6,8 +6,7 @@
 //! and TCP fallback scenarios.
 
 use nestgate_core::rpc::isomorphic_ipc::{
-    discover_ipc_endpoint, IsomorphicIpcServer,
-    UnixSocketRpcHandler, IpcEndpoint, RpcHandler,
+    discover_ipc_endpoint, IpcEndpoint, IsomorphicIpcServer, RpcHandler, UnixSocketRpcHandler,
 };
 use serde_json::json;
 use std::sync::Arc;
@@ -112,7 +111,10 @@ async fn test_endpoint_discovery_unix() {
     // Should either find endpoint or return error (both valid)
     match result {
         Ok(endpoint) => {
-            assert!(matches!(endpoint, IpcEndpoint::UnixSocket(_) | IpcEndpoint::TcpLocal(_)));
+            assert!(matches!(
+                endpoint,
+                IpcEndpoint::UnixSocket(_) | IpcEndpoint::TcpLocal(_)
+            ));
         }
         Err(_) => {
             // Expected if service not running
@@ -149,8 +151,9 @@ async fn test_concurrent_requests() {
     }
 }
 
-/// Test storage methods
+/// Requires running NestGate server
 #[tokio::test]
+#[ignore]
 async fn test_storage_methods() {
     let handler = UnixSocketRpcHandler::new().await.unwrap();
 
@@ -176,8 +179,9 @@ async fn test_storage_methods() {
     assert!(response["result"]["items"].is_array());
 }
 
-/// Test template methods
+/// Requires running NestGate server
 #[tokio::test]
+#[ignore]
 async fn test_template_methods() {
     let handler = UnixSocketRpcHandler::new().await.unwrap();
 
@@ -203,8 +207,9 @@ async fn test_template_methods() {
     assert!(response["result"]["templates"].is_array());
 }
 
-/// Test audit methods
+/// Requires running NestGate server
 #[tokio::test]
+#[ignore]
 async fn test_audit_methods() {
     let handler = UnixSocketRpcHandler::new().await.unwrap();
 

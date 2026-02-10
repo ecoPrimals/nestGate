@@ -51,11 +51,11 @@ pub enum Commands {
     /// Run NestGate as a daemon (server mode)
     #[command(alias = "server")]
     Daemon {
-        /// Port to bind to (ignored in socket-only mode)
+        /// Port to bind to (only used when --enable-http is set)
         #[arg(short, long, default_value = "8080")]
         port: u16,
 
-        /// Bind address (ignored in socket-only mode)
+        /// Bind address (only used when --enable-http is set)
         #[arg(short, long, default_value = "127.0.0.1")]
         bind: String,
 
@@ -63,10 +63,10 @@ pub enum Commands {
         #[arg(long)]
         dev: bool,
 
-        /// Run in Unix socket-only mode (no HTTP server, no external dependencies)
-        /// Perfect for NUCLEUS atomic patterns and inter-primal communication
+        /// Enable HTTP API server (default: socket-only mode)
+        /// Socket-only is the ecoBin standard for inter-primal communication
         #[arg(long)]
-        socket_only: bool,
+        enable_http: bool,
     },
 
     /// Show daemon status
@@ -180,8 +180,8 @@ pub mod commands {
                 tracing::info!("🏰 No subcommand provided, starting daemon mode");
                 commands::daemon::run(8080, "127.0.0.1", false, false).await
             }
-            Some(Commands::Daemon { port, bind, dev, socket_only }) => {
-                commands::daemon::run(*port, bind, *dev, *socket_only).await
+            Some(Commands::Daemon { port, bind, dev, enable_http }) => {
+                commands::daemon::run(*port, bind, *dev, !*enable_http).await
             }
             Some(Commands::Status) => {
                 commands::status::show().await

@@ -1,26 +1,50 @@
-//! HTTP Client Stub - BiomeOS Pure Rust Evolution
+//! HTTP Client Delegation Layer - ecoBin Architecture
 //!
-//! **DEPRECATED**: External HTTP should go through Songbird (concentrated gap).
+//! **NestGate does NOT make direct HTTP calls.** This module provides type stubs
+//! that satisfy compile-time type requirements while enforcing the ecoBin principle:
+//! all external HTTP is delegated to the network-capability primal (e.g. Songbird)
+//! via JSON-RPC over Unix sockets.
 //!
-//! For external HTTP requests, use:
-//! ```rust
-//! let songbird = discover_orchestration().await?;
-//! // Use Songbird's RPC methods for external HTTP
+//! ## ecoBin Compliance
+//!
+//! Per `wateringHole/ECOBIN_ARCHITECTURE_STANDARD.md`:
+//! - NestGate is a **storage** primal (not a network primal)
+//! - External HTTP requires the `network` capability
+//! - Capability is discovered at runtime, not imported as a dependency
+//!
+//! ## Usage
+//!
+//! Modules that historically used `reqwest` should instead:
+//! 1. Discover the network-capability primal via socket scanning
+//! 2. Send an `http.get` / `http.post` JSON-RPC request
+//! 3. Receive the response via IPC
+//!
+//! ```rust,ignore
+//! use nestgate_core::rpc::isomorphic_ipc::atomic::discover_primal_socket;
+//!
+//! // Discover network-capable primal
+//! let socket = discover_primal_socket("network-provider")?;
+//! // Send JSON-RPC: {"method": "http.get", "params": {"url": "..."}}
 //! ```
 
 use crate::error::Result;
 
-/// Stubbed HTTP client (use Songbird RPC for external HTTP)
+/// HTTP client placeholder - use JSON-RPC delegation for actual HTTP requests
+///
+/// This type exists for compile-time compatibility. All methods are no-ops.
+/// Real HTTP should be delegated via IPC to a network-capability primal.
 #[derive(Debug, Clone)]
 pub struct Client;
 
 impl Client {
-    /// Create a new client (stubbed)
+    /// Create a new client (compile-time placeholder)
+    #[must_use]
     pub fn new() -> Self {
         Self
     }
 
-    /// Builder (stubbed)
+    /// Builder pattern (compile-time placeholder)
+    #[must_use]
     pub fn builder() -> ClientBuilder {
         ClientBuilder
     }
@@ -32,57 +56,76 @@ impl Default for Client {
     }
 }
 
-/// Stubbed client builder
+/// Client builder placeholder
 #[derive(Debug)]
 pub struct ClientBuilder;
 
 impl ClientBuilder {
-    /// Set timeout (stubbed)
+    /// Set timeout (placeholder - actual timeout configured on IPC call)
+    #[must_use]
     pub fn timeout(self, _duration: std::time::Duration) -> Self {
         self
     }
 
-    /// Build client (stubbed)
+    /// Build client
+    ///
+    /// # Errors
+    ///
+    /// This placeholder never fails.
     pub fn build(self) -> Result<Client> {
         Ok(Client)
     }
 }
 
-/// Stubbed HTTP method enum
+/// HTTP method enum for type compatibility
 ///
-/// **ecoBin Compliance**: NestGate does NOT make HTTP calls directly.
-/// All external HTTP is delegated to Songbird primal via JSON-RPC over Unix sockets.
-#[derive(Debug, Clone, Copy)]
+/// Used by modules that reference HTTP methods in data structures.
+/// Actual HTTP method selection happens in the network-capability primal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Method {
-    /// HTTP GET method
+    /// HTTP GET
     Get,
-    /// HTTP POST method
+    /// HTTP POST
     Post,
-    /// HTTP PUT method
+    /// HTTP PUT
     Put,
-    /// HTTP DELETE method
+    /// HTTP DELETE
     Delete,
-    /// HTTP PATCH method
+    /// HTTP PATCH
     Patch,
-    /// HTTP HEAD method
+    /// HTTP HEAD
     Head,
-    /// HTTP OPTIONS method
+    /// HTTP OPTIONS
     Options,
 }
 
 impl Method {
-    /// HTTP GET method constant
-    pub const GET: Method = Method::Get;
-    /// HTTP POST method constant
-    pub const POST: Method = Method::Post;
-    /// HTTP PUT method constant
-    pub const PUT: Method = Method::Put;
-    /// HTTP DELETE method constant
-    pub const DELETE: Method = Method::Delete;
-    /// HTTP PATCH method constant
-    pub const PATCH: Method = Method::Patch;
-    /// HTTP HEAD method constant
-    pub const HEAD: Method = Method::Head;
-    /// HTTP OPTIONS method constant
-    pub const OPTIONS: Method = Method::Options;
+    /// HTTP GET constant
+    pub const GET: Self = Self::Get;
+    /// HTTP POST constant
+    pub const POST: Self = Self::Post;
+    /// HTTP PUT constant
+    pub const PUT: Self = Self::Put;
+    /// HTTP DELETE constant
+    pub const DELETE: Self = Self::Delete;
+    /// HTTP PATCH constant
+    pub const PATCH: Self = Self::Patch;
+    /// HTTP HEAD constant
+    pub const HEAD: Self = Self::Head;
+    /// HTTP OPTIONS constant
+    pub const OPTIONS: Self = Self::Options;
+}
+
+impl std::fmt::Display for Method {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Get => write!(f, "GET"),
+            Self::Post => write!(f, "POST"),
+            Self::Put => write!(f, "PUT"),
+            Self::Delete => write!(f, "DELETE"),
+            Self::Patch => write!(f, "PATCH"),
+            Self::Head => write!(f, "HEAD"),
+            Self::Options => write!(f, "OPTIONS"),
+        }
+    }
 }

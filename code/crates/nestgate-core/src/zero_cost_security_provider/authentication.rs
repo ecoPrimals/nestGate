@@ -32,15 +32,18 @@ pub struct AuthenticationConfig {
 impl Default for AuthenticationConfig {
     /// Returns the default instance
     fn default() -> Self {
+        // Capability-based auth discovery (no hardcoded provider):
+        // 1. AUTH_CAPABILITY_ENDPOINT - capability-based (primary)
+        // 2. NESTGATE_SECURITY_AUTH_ENDPOINT - generic Security primal
+        // 3. BEARDOG_AUTH_ENDPOINT - deprecated, for legacy compatibility
+        let auth_endpoint = std::env::var("AUTH_CAPABILITY_ENDPOINT")
+            .or_else(|_| std::env::var("NESTGATE_SECURITY_AUTH_ENDPOINT"))
+            .or_else(|_| std::env::var("BEARDOG_AUTH_ENDPOINT"))
+            .ok();
+
         Self {
-            // Capability-based: NESTGATE_SECURITY_AUTH_ENDPOINT (generic)
-            // Legacy: BEARDOG_AUTH_ENDPOINT (deprecated but supported)
-            use_external_auth: std::env::var("NESTGATE_SECURITY_AUTH_ENDPOINT")
-                .or_else(|_| std::env::var("BEARDOG_AUTH_ENDPOINT"))
-                .is_ok(),
-            external_auth_endpoint: std::env::var("NESTGATE_SECURITY_AUTH_ENDPOINT")
-                .or_else(|_| std::env::var("BEARDOG_AUTH_ENDPOINT"))
-                .ok(),
+            use_external_auth: auth_endpoint.is_some(),
+            external_auth_endpoint: auth_endpoint,
             local_token_settings: LocalTokenConfig::default(),
             auth_timeout: Duration::from_secs(30),
             max_auth_attempts: 3,
@@ -463,13 +466,14 @@ impl HybridAuthenticationManager {
         let new_expiry_seconds = self.config.local_token_settings.token_expiry.as_secs() as i64;
         let new_claims = JwtClaims {
             sub: old_claims.sub.clone(),
+            // ✅ EVOLVED: unwrap() → unwrap_or_default() for clock safety
             iat: SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_default()
                 .as_secs() as i64,
             exp: SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_default()
                 .as_secs() as i64
                 + new_expiry_seconds,
             iss: old_claims.iss.clone(),

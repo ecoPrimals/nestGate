@@ -12,21 +12,15 @@ use std::time::SystemTime;
 ///
 /// ## Example
 ///
-/// ```rust,no_run
+/// ```rust,ignore
+/// // Uses get_api_port/get_metrics_port - see tests for full example
 /// use nestgate_core::self_knowledge::SelfKnowledgeBuilder;
-///
-/// # fn example() -> anyhow::Result<()> {
 /// let knowledge = SelfKnowledgeBuilder::new()
 ///     .with_id("nestgate")
 ///     .with_name("NestGate Storage")
-///     .with_version(env!("CARGO_PKG_VERSION"))
 ///     .with_capability("storage")
-///     .with_capability("zfs")
-///     .with_endpoint("api", &format!("0.0.0.0:{}", get_api_port()).parse()?)
-///     .with_endpoint("metrics", &format!("0.0.0.0:{}", get_metrics_port()).parse()?)
-///     .build()?;
-/// # Ok(())
-/// # }
+///     .build()
+///     .expect("valid config");
 /// ```
 #[derive(Debug, Default)]
 pub struct SelfKnowledgeBuilder {

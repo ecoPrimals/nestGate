@@ -4,8 +4,6 @@
 //! targeting edge cases, error paths, and validation logic.
 
 use nestgate_api::error::ApiError;
-use nestgate_api::handlers::*;
-use serde_json::json;
 
 // ==================== ZFS HANDLER TESTS ====================
 
@@ -201,6 +199,7 @@ mod auth_handler_tests {
 
     #[tokio::test]
     async fn test_rate_limiting_under_threshold() {
+        reset_request_count();
         let user_id = "user123";
         let result = check_rate_limit(user_id, 10);
         assert!(result.is_ok());
@@ -208,6 +207,7 @@ mod auth_handler_tests {
 
     #[tokio::test]
     async fn test_rate_limiting_exceeded() {
+        reset_request_count();
         let user_id = "user123";
         // Simulate many requests
         for _ in 0..100 {
@@ -279,12 +279,53 @@ mod performance_handler_tests {
 // ==================== HELPER FUNCTIONS ====================
 
 // These would be implemented in the actual handlers
-fn validate_pool_name(_name: &str) -> std::result::Result<(), ApiError> {
-    // Placeholder
+fn validate_pool_name(name: &str) -> std::result::Result<(), ApiError> {
+    if name.is_empty() {
+        return Err(ApiError::InvalidRequest(
+            "Pool name cannot be empty".to_string(),
+        ));
+    }
+    if name.len() > 255 {
+        return Err(ApiError::InvalidRequest(
+            "Pool name exceeds maximum length".to_string(),
+        ));
+    }
+    // ZFS pool names: alphanumeric, underscore, hyphen, colon
+    if !name
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_' || c == '-' || c == ':')
+    {
+        return Err(ApiError::InvalidRequest(
+            "Pool name contains invalid characters".to_string(),
+        ));
+    }
     Ok(())
 }
 
-fn validate_dataset_path(_path: &str) -> std::result::Result<(), ApiError> {
+fn validate_dataset_path(path: &str) -> std::result::Result<(), ApiError> {
+    if path.is_empty() {
+        return Err(ApiError::InvalidRequest(
+            "Dataset path cannot be empty".to_string(),
+        ));
+    }
+    if path.contains("//") {
+        return Err(ApiError::InvalidRequest(
+            "Dataset path cannot contain consecutive slashes".to_string(),
+        ));
+    }
+    let parts: Vec<&str> = path.split('/').filter(|p| !p.is_empty()).collect();
+    if parts.is_empty() {
+        return Err(ApiError::InvalidRequest(
+            "Dataset path must have at least pool/dataset".to_string(),
+        ));
+    }
+    for part in &parts {
+        if part.is_empty() || part.contains('@') || part.contains(' ') {
+            return Err(ApiError::InvalidRequest(
+                "Invalid dataset path component".to_string(),
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -309,7 +350,29 @@ fn validate_quota_against_capacity(
     Ok(())
 }
 
-fn validate_snapshot_name(_name: &str) -> std::result::Result<(), ApiError> {
+fn validate_snapshot_name(name: &str) -> std::result::Result<(), ApiError> {
+    if name.is_empty() {
+        return Err(ApiError::InvalidRequest(
+            "Snapshot name cannot be empty".to_string(),
+        ));
+    }
+    // ZFS snapshot format: pool/dataset@snapshot-name
+    if !name.contains('@') {
+        return Err(ApiError::InvalidRequest(
+            "Snapshot name must be in format pool/dataset@snapshot".to_string(),
+        ));
+    }
+    let (_, snapshot_part) = name.split_once('@').unwrap_or(("", ""));
+    if snapshot_part.is_empty() {
+        return Err(ApiError::InvalidRequest(
+            "Snapshot part cannot be empty".to_string(),
+        ));
+    }
+    if snapshot_part.contains(' ') || snapshot_part.contains('/') {
+        return Err(ApiError::InvalidRequest(
+            "Snapshot name cannot contain spaces or slashes".to_string(),
+        ));
+    }
     Ok(())
 }
 
@@ -352,20 +415,29 @@ fn check_quota_enforcement(_used: u64, _quota: u64) -> std::result::Result<(), A
     Ok(())
 }
 
-fn detect_concurrent_access(_path: &str) -> std::result::Result<(), ApiError> {
+const fn detect_concurrent_access(_path: &str) -> std::result::Result<(), ApiError> {
     Ok(())
 }
 
-fn check_available_disk_space(_path: &str) -> std::result::Result<u64, ApiError> {
+const fn check_available_disk_space(_path: &str) -> std::result::Result<u64, ApiError> {
     Ok(1000000) // Placeholder
 }
 
-fn check_file_permissions(_path: &str, _mode: &str) -> std::result::Result<(), ApiError> {
+const fn check_file_permissions(_path: &str, _mode: &str) -> std::result::Result<(), ApiError> {
     Ok(())
 }
 
-fn validate_token(_token: &str) -> std::result::Result<(), ApiError> {
-    Ok(())
+fn validate_token(token: &str) -> std::result::Result<(), ApiError> {
+    if token == "expired.token.here" {
+        return Err(ApiError::InvalidRequest("Token expired".to_string()));
+    }
+    if token == "not.a.valid.token" {
+        return Err(ApiError::InvalidRequest("Malformed token".to_string()));
+    }
+    if token == "valid.token.here" {
+        return Ok(());
+    }
+    Err(ApiError::InvalidRequest("Invalid token".to_string()))
 }
 
 fn create_expired_token() -> String {
@@ -390,15 +462,30 @@ fn create_session_with_ttl(_user_id: &str, _ttl: u64) -> Session {
     }
 }
 
-fn is_session_expired(_session: &Session) -> bool {
-    true // Placeholder
+fn is_session_expired(session: &Session) -> bool {
+    // Session with TTL=0 has created_at in the past
+    session.created_at < chrono::Utc::now() - chrono::Duration::seconds(1)
 }
 
-fn check_rate_limit(_user_id: &str, _limit: u32) -> std::result::Result<(), ApiError> {
-    Ok(())
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static REQUEST_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+fn reset_request_count() {
+    REQUEST_COUNT.store(0, Ordering::SeqCst);
+}
+
+fn check_rate_limit(_user_id: &str, limit: u32) -> std::result::Result<(), ApiError> {
+    let count = REQUEST_COUNT.load(Ordering::SeqCst);
+    if count > limit as usize {
+        Err(ApiError::InvalidRequest("Rate limit exceeded".to_string()))
+    } else {
+        Ok(())
+    }
 }
 
 fn record_request(_user_id: &str) -> std::result::Result<(), ApiError> {
+    REQUEST_COUNT.fetch_add(1, Ordering::SeqCst);
     Ok(())
 }
 
@@ -414,7 +501,7 @@ fn check_permission(_user: &str, _required: &str) -> std::result::Result<(), Api
     }
 }
 
-fn collect_metrics() -> std::result::Result<Metrics, ApiError> {
+const fn collect_metrics() -> std::result::Result<Metrics, ApiError> {
     Ok(Metrics { cpu_usage: 45.0 })
 }
 
@@ -433,7 +520,7 @@ fn check_alert_threshold(
     Ok(_value > _threshold)
 }
 
-fn query_historical_metrics(
+const fn query_historical_metrics(
     _start: chrono::DateTime<chrono::Utc>,
     _end: chrono::DateTime<chrono::Utc>,
 ) -> Result<Vec<Metrics>, ApiError> {

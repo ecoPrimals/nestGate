@@ -5,7 +5,10 @@
 //! measurable performance improvements.
 
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
+
+/// Empty buffer used as fallback when the buffer has been taken (logic error path)
+static EMPTY_BUFFER: OnceLock<Vec<u8>> = OnceLock::new();
 
 /// A simple memory pool for reusing allocations
 pub struct SimpleMemoryPool {
@@ -101,29 +104,22 @@ impl PooledBuffer {
     ///
     /// # Panics
     ///
-    /// Panics if the buffer has been taken (logic error)
+    /// Panics if the buffer has been taken - cannot return `Err` as `DerefMut` requires `&mut`.
+    /// TODO: API change in v0.2.0 to avoid this.
     pub fn buffer_mut(&mut self) -> &mut Vec<u8> {
-        // Safety: Buffer should always be Some during normal usage (before drop)
-        // If this fails, it indicates a serious logic error in the buffer lifecycle
-        self.buffer.as_mut().unwrap_or_else(|| {
-            // This should never happen in correct usage
-            panic!("Logic error: Buffer has been taken before drop")
-        })
+        self.buffer
+            .as_mut()
+            .expect("Logic error: Buffer has been taken before drop")
     }
 
     /// Get a reference to the buffer
     ///
-    /// # Panics
-    ///
-    /// Panics if the buffer has been taken (logic error)
+    /// Returns a reference to an empty buffer if the buffer has been taken (logic error).
     #[must_use]
     pub fn buffer_ref(&self) -> &Vec<u8> {
-        // Safety: Buffer should always be Some during normal usage (before drop)
-        // If this fails, it indicates a serious logic error in the buffer lifecycle
-        self.buffer.as_ref().unwrap_or_else(|| {
-            // This should never happen in correct usage
-            panic!("Logic error: Buffer has been taken before drop")
-        })
+        self.buffer
+            .as_ref()
+            .unwrap_or_else(|| EMPTY_BUFFER.get_or_init(Vec::new))
     }
 
     /// Get the length of the buffer

@@ -67,14 +67,14 @@ fn test_api_status_error() {
 
 #[test]
 fn test_zero_cost_pool_handler_creation() {
-    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
+    let _handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
     assert_eq!(ZeroCostPoolHandler::<100, 5000>::max_requests(), 100);
     assert_eq!(ZeroCostPoolHandler::<100, 5000>::timeout_ms(), 5000);
 }
 
 #[test]
 fn test_zero_cost_pool_handler_default() {
-    let handler: ZeroCostPoolHandler<50, 3000> = ZeroCostPoolHandler::default();
+    let _handler: ZeroCostPoolHandler<50, 3000> = ZeroCostPoolHandler::default();
     assert_eq!(ZeroCostPoolHandler::<50, 3000>::max_requests(), 50);
     assert_eq!(ZeroCostPoolHandler::<50, 3000>::timeout_ms(), 3000);
 }

@@ -7,12 +7,13 @@
 //! from the new modular structure.
 //!
 //! ## Migration (Optional - Recommended)
-//! ```rust
-//! // Old (still works):
-//! use nestgate_core::universal_storage::consolidated_types::UniversalStorageType;
 //!
-//! // New (preferred):
+//! Both paths refer to the same type; use the preferred path:
+//!
+//! ```rust
 //! use nestgate_core::universal_storage::types::UniversalStorageType;
+//!
+//! let _storage = UniversalStorageType::Local;
 //! ```
 //!
 //! ## New Modular Structure

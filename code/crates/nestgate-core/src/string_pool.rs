@@ -17,8 +17,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::canonical_modernization::canonical_constants::{
-    network::{LOCALHOST, DEFAULT_API_PORT},
     api::{STATUS_OK, STATUS_NOT_FOUND},
+    network::{LOCALHOST, DEFAULT_API_PORT},
 };
 
 // Type aliases to reduce complexity
@@ -227,43 +227,51 @@ impl StringPoolStatistics {
     }
 }
 
+// ✅ EVOLVED: lazy_static → std::sync::LazyLock (Pure Rust std, zero deps)
 // Global string pool instance for application-wide usage
-lazy_static::lazy_static! {
-    /// Global string pool accessible throughout the application
-    pub static ref GLOBAL_STRING_POOL: StringPool = {
-        let pool = StringPool::new();
 
-        // Preload common strings
-        pool.preload_sync(vec![
-            // Status strings
-            "active", "inactive", "pending", "completed", "failed", "success", "error",
-            "healthy", "unhealthy", "online", "offline", "provisioned", "deprecated",
+/// Global string pool accessible throughout the application
+pub static GLOBAL_STRING_POOL: std::sync::LazyLock<StringPool> = std::sync::LazyLock::new(|| {
+    let pool = StringPool::new();
 
-            // Storage tiers
-            "hot", "warm", "cold", "archive",
+    // Port strings from canonical constants (avoids hardcoded "8080" and "3000")
+    let api_port_str = DEFAULT_API_PORT.to_string();
+    let dev_port_str = crate::constants::port_defaults::DEFAULT_DEV_PORT.to_string();
 
-            // Protocols
-            "HTTP", "HTTPS", "ZFS", "NFS", "SMB", "TCP", "UDP",
+    // Preload common strings
+    pool.preload_sync(vec![
+        // Status strings
+        "active", "inactive", "pending", "completed", "failed", "success", "error",
+        "healthy", "unhealthy", "online", "offline", "provisioned", "deprecated",
 
-            // Common endpoints
-            "/health", "/metrics", "/api/v1", "/ws",
+        // Storage tiers
+        "hot", "warm", "cold", "archive",
 
-            // Service names
-            "nestgate", "storage", "zfs-manager", "security", "ai", "orchestration", "compute",
+        // Protocols
+        "HTTP", "HTTPS", "ZFS", "NFS", "SMB", "TCP", "UDP",
 
-            // Common error messages
-            "Not found", "Internal error", "Invalid input", "Unauthorized", "Timeout",
+        // Common endpoints
+        "/health", "/metrics", "/api/v1", "/ws",
 
-            // Configuration values
-            LOCALHOST, DEFAULT_API_PORT, "3000", STATUS_OK, "false",
+        // Service names
+        "nestgate", "storage", "zfs-manager", "security", "ai", "orchestration", "compute",
 
-            // ZFS specific
-            "ONLINE", "DEGRADED", "FAULTED", "lz4", "gzip", "compression",
-        ]);
+        // Common error messages
+        "Not found", "Internal error", "Invalid input", "Unauthorized", "Timeout",
 
-        pool
-    };
-}
+        // Configuration values (from port_defaults / canonical_constants)
+        LOCALHOST,
+        api_port_str.as_str(),
+        dev_port_str.as_str(),
+        STATUS_OK,
+        "false",
+
+        // ZFS specific
+        "ONLINE", "DEGRADED", "FAULTED", "lz4", "gzip", "compression",
+    ]);
+
+    pool
+});
 
 /// Global string interning function - high performance API
 pub fn intern_string(value: &str) -> Arc<str> {

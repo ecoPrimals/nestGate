@@ -108,7 +108,10 @@ pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
             info!("✅ Discovered Unix socket: {}", socket_path.display());
             return Ok(IpcEndpoint::UnixSocket(socket_path));
         }
-        debug!("   Unix socket path does not exist: {}", socket_path.display());
+        debug!(
+            "   Unix socket path does not exist: {}",
+            socket_path.display()
+        );
     }
 
     // 2. Try TCP discovery file (fallback)
@@ -148,7 +151,10 @@ fn discover_unix_socket(service_name: &str) -> Result<PathBuf> {
 
     // Fallback to /tmp
     let socket_path = PathBuf::from(format!("/tmp/{}.sock", service_name));
-    debug!("   Unix socket candidate (fallback): {}", socket_path.display());
+    debug!(
+        "   Unix socket candidate (fallback): {}",
+        socket_path.display()
+    );
     Ok(socket_path)
 }
 

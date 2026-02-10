@@ -270,3 +270,78 @@ impl super::UnifiedEnum for UnifiedServiceType {
         matches!(self, Self::Custom(_))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::unified_enums::UnifiedEnum;
+
+    #[test]
+    fn test_unified_service_type_display() {
+        assert_eq!(UnifiedServiceType::AI.to_string(), "ai");
+        assert_eq!(UnifiedServiceType::Storage.to_string(), "storage");
+        assert_eq!(UnifiedServiceType::Unknown.to_string(), "unknown");
+        assert_eq!(
+            UnifiedServiceType::Custom("my-service".to_string()).to_string(),
+            "my-service"
+        );
+    }
+
+    #[test]
+    fn test_unified_service_type_default() {
+        assert_eq!(UnifiedServiceType::default(), UnifiedServiceType::Unknown);
+    }
+
+    #[test]
+    fn test_unified_service_type_unified_enum() {
+        let st = UnifiedServiceType::AI;
+        assert_eq!(st.as_str(), "ai");
+        assert!(!st.is_custom());
+
+        let custom = UnifiedServiceType::Custom("custom".to_string());
+        assert!(custom.is_custom());
+        assert_eq!(custom.as_str(), "custom");
+
+        assert_eq!(
+            UnifiedServiceType::from_str("storage"),
+            UnifiedServiceType::Storage
+        );
+        assert_eq!(
+            UnifiedServiceType::from_str("STORAGE"),
+            UnifiedServiceType::Storage
+        );
+        assert_eq!(
+            UnifiedServiceType::from_str("unknown"),
+            UnifiedServiceType::Unknown
+        );
+        assert!(matches!(
+            UnifiedServiceType::from_str("custom-type"),
+            UnifiedServiceType::Custom(_)
+        ));
+    }
+
+    #[test]
+    fn test_unified_health_status_display() {
+        assert_eq!(UnifiedHealthStatus::Healthy.to_string(), "healthy");
+        assert_eq!(UnifiedHealthStatus::Degraded.to_string(), "degraded");
+        assert_eq!(UnifiedHealthStatus::Critical.to_string(), "critical");
+        assert_eq!(UnifiedHealthStatus::default(), UnifiedHealthStatus::Unknown);
+    }
+
+    #[test]
+    fn test_unified_service_state_display() {
+        assert_eq!(UnifiedServiceState::Running.to_string(), "running");
+        assert_eq!(UnifiedServiceState::Error.to_string(), "error");
+        assert_eq!(UnifiedServiceState::default(), UnifiedServiceState::Unknown);
+    }
+
+    #[test]
+    fn test_unified_connection_status_display() {
+        assert_eq!(UnifiedConnectionStatus::Connected.to_string(), "connected");
+        assert_eq!(UnifiedConnectionStatus::Timeout.to_string(), "timeout");
+        assert_eq!(
+            UnifiedConnectionStatus::default(),
+            UnifiedConnectionStatus::Unknown
+        );
+    }
+}

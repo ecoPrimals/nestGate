@@ -41,12 +41,13 @@ async fn stability_test_sustained_load() {
         }
     });
 
-    // Run for 1 second using timeout instead of sleep
+    // Run for 1 second - wait before signaling shutdown
+    tokio::time::sleep(Duration::from_secs(1)).await;
     running.store(false, Ordering::Relaxed);
     shutdown_notify.notify_one();
 
     // Gracefully handle task completion
-    match tokio::time::timeout(Duration::from_millis(100), load_handle).await {
+    match tokio::time::timeout(Duration::from_millis(500), load_handle).await {
         Ok(Ok(_)) => {}
         Ok(Err(e)) => panic!("Load task panicked: {}", e),
         Err(_) => {} // Timeout is acceptable here

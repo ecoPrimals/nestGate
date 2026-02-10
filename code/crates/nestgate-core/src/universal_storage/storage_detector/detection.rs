@@ -6,8 +6,8 @@
 //! **EVOLUTION**: Platform-specific code eliminated, universal trait-based detection
 
 use super::config::DetectionConfig;
-use super::types::DetectedStorage;
 use super::filesystem_detection::UniversalFilesystemDetector;
+use super::types::DetectedStorage;
 use crate::unified_enums::storage_types::UnifiedStorageType;
 use crate::Result;
 
@@ -38,9 +38,12 @@ impl<'a> DetectionEngine<'a> {
         // Use universal filesystem detector (no platform-specific code!)
         let detector = UniversalFilesystemDetector::new();
         let discovered = detector.discover().await?;
-        
-        tracing::debug!("Detector: {} | Discovered: {} filesystems", 
-                       detector.detector_name(), discovered.len());
+
+        tracing::debug!(
+            "Detector: {} | Discovered: {} filesystems",
+            detector.detector_name(),
+            discovered.len()
+        );
 
         // Convert to DetectedStorage format and filter
         let mut filesystems = Vec::new();
@@ -49,36 +52,42 @@ impl<'a> DetectionEngine<'a> {
             if fs.storage_type != UnifiedStorageType::Local {
                 continue;
             }
-            
+
             // Filter by minimum size
             if fs.available_bytes < self.config.minimum_storage_size {
                 continue;
             }
-            
-            let mut storage = DetectedStorage::new(
-                fs.id.clone(),
-                fs.storage_type,
-                fs.name.clone(),
-            );
-            
+
+            let mut storage = DetectedStorage::new(fs.id.clone(), fs.storage_type, fs.name.clone());
+
             storage.available_space = fs.available_bytes;
             storage.add_metadata("filesystem_type".to_string(), fs.fs_type.clone());
             storage.add_metadata("device".to_string(), fs.device.clone());
             storage.add_metadata("total_bytes".to_string(), fs.total_bytes.to_string());
-            storage.add_metadata("mount_point".to_string(), fs.mount_point.to_string_lossy().to_string());
-            
+            storage.add_metadata(
+                "mount_point".to_string(),
+                fs.mount_point.to_string_lossy().to_string(),
+            );
+
             // Add detected capabilities
             for cap in fs.capabilities {
                 storage.add_capability(cap);
             }
-            
+
             filesystems.push(storage);
-            tracing::debug!("✅ Local filesystem: {} ({}) - {}GB available", 
-                           fs.device, fs.fs_type, fs.available_bytes / 1_000_000_000);
+            tracing::debug!(
+                "✅ Local filesystem: {} ({}) - {}GB available",
+                fs.device,
+                fs.fs_type,
+                fs.available_bytes / 1_000_000_000
+            );
         }
 
-        tracing::info!("✅ Detected {} local filesystems using {}", 
-                      filesystems.len(), detector.detector_name());
+        tracing::info!(
+            "✅ Detected {} local filesystems using {}",
+            filesystems.len(),
+            detector.detector_name()
+        );
         Ok(filesystems)
     }
 
@@ -164,7 +173,7 @@ impl<'a> DetectionEngine<'a> {
         // Use universal filesystem detector to find block-backed filesystems
         let detector = UniversalFilesystemDetector::new();
         let discovered = detector.discover().await?;
-        
+
         let mut block_devices = Vec::new();
         for fs in discovered {
             // Filter for block devices (not tmpfs, network, etc.)
@@ -172,25 +181,28 @@ impl<'a> DetectionEngine<'a> {
                 if fs.available_bytes < self.config.minimum_storage_size {
                     continue;
                 }
-                
+
                 let mut storage = DetectedStorage::new(
                     fs.id.clone(),
                     UnifiedStorageType::Local, // Block devices are local storage
                     fs.name.clone(),
                 );
-                
+
                 storage.available_space = fs.available_bytes;
                 storage.add_metadata("device".to_string(), fs.device.clone());
                 storage.add_metadata("filesystem_type".to_string(), fs.fs_type.clone());
                 storage.add_metadata("total_bytes".to_string(), fs.total_bytes.to_string());
-                
+
                 for cap in fs.capabilities {
                     storage.add_capability(cap);
                 }
-                
+
                 block_devices.push(storage);
-                tracing::debug!("✅ Block device: {} - {}GB available", 
-                               fs.device, fs.available_bytes / 1_000_000_000);
+                tracing::debug!(
+                    "✅ Block device: {} - {}GB available",
+                    fs.device,
+                    fs.available_bytes / 1_000_000_000
+                );
             }
         }
 
@@ -277,6 +289,6 @@ impl<'a> DetectionEngine<'a> {
     }
 
     // Dead helper methods removed - superseded by universal filesystem detection (Phase 3.1)
-    // Previously: analyze_block_device(), get_filesystem_stats() 
+    // Previously: analyze_block_device(), get_filesystem_stats()
     // Now handled by: UniversalFilesystemDetector in filesystem_detection.rs
 }

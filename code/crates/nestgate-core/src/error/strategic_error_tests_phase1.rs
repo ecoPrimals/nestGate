@@ -171,7 +171,7 @@ mod strategic_error_tests {
         // Test 1: Should complete successfully with depth < 100
         let result_success = recursive_call(0, 1000);
         assert_eq!(result_success, Ok(100), "Should stop at depth 100");
-        
+
         // Test 2: Should fail when max depth is lower than recursion target
         let result_fail = recursive_call(0, 50);
         assert!(result_fail.is_err(), "Should fail when max < 100");
@@ -235,9 +235,12 @@ mod strategic_error_tests {
         // Character count: "Hello " (6) + "世界" (2) + " " (1) + "🚀" (1) + " " (1) + "مرحبا" (5) = 16
         let char_count = unicode.chars().count();
         assert_eq!(char_count, 16, "Should have 16 Unicode characters");
-        
+
         // Byte count is different due to multi-byte UTF-8 encoding
-        assert!(unicode.len() > char_count, "Byte length > character count for Unicode");
+        assert!(
+            unicode.len() > char_count,
+            "Byte length > character count for Unicode"
+        );
 
         // Should handle unicode safely
         let trimmed = unicode.trim();

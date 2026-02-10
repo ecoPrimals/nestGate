@@ -284,7 +284,7 @@ mod hardware_tuning_strategic_tests {
     #[test]
     fn test_debug_formatting() {
         let config = HardwareTuningConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("HardwareTuningConfig"));
     }
@@ -297,7 +297,7 @@ mod hardware_tuning_strategic_tests {
             gpu_count: 1,
         };
 
-        let debug_str = format!("{:?}", allocation);
+        let debug_str = format!("{allocation:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("ComputeAllocation"));
     }

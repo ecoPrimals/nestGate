@@ -16,7 +16,7 @@
 //! # Example
 //!
 //! ```rust
-//! use nestgate_core::capabilities::discovery::{CapabilityRegistry, Capability};
+//! use nestgate_core::capabilities::discovery::{CapabilityRegistry, Capability, SecurityCapability};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create registry
@@ -24,15 +24,13 @@
 //!
 //! // Find services by capability (NOT by name!)
 //! let security_services = registry
-//!     .find_providers(&Capability::Security)
-//!     .await?;
+//!     .find_providers(&Capability::Security(SecurityCapability::Authentication))
+//!     .await;
 //!
-//! // Connect to any service providing the capability
-//! let conn = security_services
-//!     .first()
-//!     .ok_or("No security service available")?
-//!     .connect()
-//!     .await?;
+//! // Use any service providing the capability
+//! if let Some(service) = security_services.first() {
+//!     println!("Security service at: {}", service.url());
+//! }
 //! # Ok(())
 //! # }
 //! ```
@@ -77,7 +75,9 @@ pub mod taxonomy;
 pub use detector::ServiceDetector;
 pub use registry::CapabilityRegistry;
 pub use resolver::ServiceResolver;
-pub use service_descriptor::{Endpoint, ServiceDescriptor, ServiceMetadata};
+pub use service_descriptor::{
+    Endpoint, Protocol, ServiceDescriptor, ServiceHealth, ServiceMetadata,
+};
 pub use taxonomy::{AICapability, Capability, NetworkingCapability, SecurityCapability};
 
 /// Result type for capability operations

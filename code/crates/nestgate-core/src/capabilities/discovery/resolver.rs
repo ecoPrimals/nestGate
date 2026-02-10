@@ -19,18 +19,10 @@ use super::taxonomy::{
 ///
 /// # Example
 ///
-/// ```rust
-/// use nestgate_core::capabilities::discovery::{ServiceResolver, CapabilityRegistry, Capability};
-/// use std::sync::Arc;
-///
-/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// ```rust,ignore
+/// // Requires registry with registered services; see capabilities::discovery module
 /// let registry = Arc::new(CapabilityRegistry::new());
 /// let resolver = ServiceResolver::new(registry);
-///
-/// // Connect by capability (NOT by name!)
-/// // let conn = resolver.resolve(&Capability::Security).await?;
-/// # Ok(())
-/// # }
 /// ```
 pub struct ServiceResolver {
     /// Capability registry

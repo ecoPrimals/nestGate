@@ -23,9 +23,9 @@ fuzz_target!(|input: FuzzData| {
     }
 
     // YAML roundtrip
-    if let Ok(yaml) = serde_yaml::to_string(&input) {
+    if let Ok(yaml) = serde_yaml_ng::to_string(&input) {
         if yaml.len() < 65536 {
-            let _: Result<FuzzData, _> = serde_yaml::from_str(&yaml);
+            let _: Result<FuzzData, _> = serde_yaml_ng::from_str(&yaml);
         }
     }
 

@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -36,13 +35,15 @@ pub struct ProviderCapabilities {
 }
 impl Default for ProviderCapabilities {
     /// Returns the default instance
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             protocols: vec!["nfs".to_string(), "smb".to_string()],
             max_capacity: 1_000_000_000_000, // 1TB default
             iops: IopsCapabilities::default(),
             throughput: ThroughputCapabilities::default(),
             availability_zones: vec!["local".to_string()],
-         }
+        }
+    }
 }
 
 /// IOPS capabilities of a storage provider.
@@ -58,11 +59,13 @@ pub struct IopsCapabilities {
 }
 impl Default for IopsCapabilities {
     /// Returns the default instance
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             min_iops: 1000,
             max_iops: 50000,
             burst_iops: Some(10_000),
-         }
+        }
+    }
 }
 
 /// Throughput capabilities of a storage provider.
@@ -78,11 +81,13 @@ pub struct ThroughputCapabilities {
 }
 impl Default for ThroughputCapabilities {
     /// Returns the default instance
-    fn default() -> Self { Self {
+    fn default() -> Self {
+        Self {
             min_throughput_mbs: 100,          // 100MB/s
             max_throughput_mbs: 1000,         // 1GB/s
             burst_throughput_mbs: Some(2000), // 2GB/s burst
-         }
+        }
+    }
 }
 
 /// Status of a storage provider.

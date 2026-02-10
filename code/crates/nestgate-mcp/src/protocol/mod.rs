@@ -26,7 +26,7 @@
 //!   - Maintains all functionality and tests
 
 // Canonical error types
-pub use nestgate_core::error::{McpResult, Result};
+pub use nestgate_core::error::Result;
 
 // Core protocol modules
 pub mod capabilities;

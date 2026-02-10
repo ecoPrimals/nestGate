@@ -630,3 +630,63 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dyn_zfs_service_native_service_name() {
+        let service = DynZfsService::Native(NativeZfsService::new());
+        assert_eq!(service.service_name(), "native-zfs");
+    }
+
+    #[test]
+    fn test_dyn_zfs_service_native_service_version() {
+        let service = DynZfsService::Native(NativeZfsService::new());
+        assert_eq!(service.service_version(), "1.0.0");
+    }
+
+    #[test]
+    fn test_universal_zfs_service_enum_new_native() {
+        let service = UniversalZfsServiceEnum::new_native();
+        assert_eq!(service.service_name(), "native-zfs");
+    }
+
+    #[test]
+    fn test_universal_zfs_service_enum_native_is_available() {
+        let service = UniversalZfsServiceEnum::new_native();
+        // Is_available is async - we test the sync service_name/version
+        assert_eq!(service.service_version(), "1.0.0");
+    }
+
+    #[tokio::test]
+    async fn test_dyn_zfs_service_health_check() {
+        let service = DynZfsService::Native(NativeZfsService::new());
+        let result = service.health_check().await;
+        // May succeed or fail depending on ZFS availability
+        let _ = result;
+    }
+
+    #[tokio::test]
+    async fn test_universal_zfs_service_enum_list_pools() {
+        let service = UniversalZfsServiceEnum::new_native();
+        let result = service.list_pools().await;
+        // May succeed or fail depending on ZFS availability
+        let _ = result;
+    }
+
+    #[tokio::test]
+    async fn test_universal_zfs_service_enum_list_datasets() {
+        let service = UniversalZfsServiceEnum::new_native();
+        let result = service.list_datasets().await;
+        let _ = result;
+    }
+
+    #[tokio::test]
+    async fn test_universal_zfs_service_enum_get_metrics() {
+        let service = UniversalZfsServiceEnum::new_native();
+        let result = service.get_metrics().await;
+        let _ = result;
+    }
+}

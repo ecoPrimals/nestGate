@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::services::{ClusterHealth, NodeRole, ServiceInfo, ServiceStatus};
+use super::services::ServiceInfo;
 
 /// Orchestrator Route Payload
 #[derive(Debug, Clone, Serialize, Deserialize)]

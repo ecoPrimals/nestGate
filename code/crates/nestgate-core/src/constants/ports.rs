@@ -12,9 +12,12 @@
 //! ```rust
 //! use nestgate_core::config::environment::EnvironmentConfig;
 //!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let config = EnvironmentConfig::from_env()?;
 //! let api_port = config.network.port.get();          // Type-safe port
 //! let metrics_port = config.monitoring.metrics_port.get();
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! # Legacy Usage (Deprecated)
@@ -26,6 +29,7 @@
 //! let api_port = ports::API_SERVER_DEFAULT;  // Hardcoded, no env support
 //!
 //! // These functions work but show deprecation warnings
+//! #[allow(deprecated)]
 //! let port = ports::api_server_port();  // Deprecated
 //! ```
 
@@ -114,12 +118,15 @@ pub const SECURITY_SERVICE_DEFAULT: u16 = 9092;
 /// # Migration Example
 ///
 /// ```rust
-/// // OLD
-/// let port = ports::api_server_port();
+/// use nestgate_core::config::environment::EnvironmentConfig;
 ///
-/// // NEW
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // OLD (deprecated): nestgate_core::constants::ports::api_server_port()
+/// // NEW (preferred):
 /// let config = EnvironmentConfig::from_env()?;
 /// let port = config.network.port.get();
+/// # Ok(())
+/// # }
 /// ```
 #[deprecated(
     since = "0.6.0",

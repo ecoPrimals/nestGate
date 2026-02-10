@@ -606,7 +606,7 @@ mod tests {
     #[test]
     fn test_storage_paths_default() {
         let paths = StoragePaths::from_environment();
-        
+
         // All paths should be non-empty
         assert!(!paths.data_dir().as_os_str().is_empty());
         assert!(!paths.config_dir().as_os_str().is_empty());
@@ -637,7 +637,7 @@ mod tests {
     fn test_home_fallback() {
         env::remove_var("NESTGATE_DATA_DIR");
         env::remove_var("XDG_DATA_HOME");
-        
+
         if let Ok(home) = env::var("HOME") {
             let data_dir = StoragePaths::resolve_data_dir();
             assert_eq!(data_dir, PathBuf::from(home).join(".local/share/nestgate"));
@@ -647,13 +647,13 @@ mod tests {
     #[test]
     fn test_specialized_paths() {
         let paths = StoragePaths::from_environment();
-        
+
         let storage = paths.storage_base_path();
         assert!(storage.ends_with("storage"));
-        
+
         let pid_file = paths.pid_file_path();
         assert!(pid_file.ends_with("nestgate.pid"));
-        
+
         let lock_file = paths.lock_file_path();
         assert!(lock_file.ends_with("nestgate.lock"));
     }
@@ -661,10 +661,10 @@ mod tests {
     #[test]
     fn test_zfs_binary_paths() {
         let paths = StoragePaths::from_environment();
-        
+
         let zfs_bin = paths.zfs_binary_path();
         assert_eq!(zfs_bin, PathBuf::from("/usr/sbin/zfs"));
-        
+
         let zpool_bin = paths.zpool_binary_path();
         assert_eq!(zpool_bin, PathBuf::from("/usr/sbin/zpool"));
     }
@@ -691,7 +691,7 @@ mod tests {
     fn test_global_instance() {
         let paths1 = get_storage_paths();
         let paths2 = get_storage_paths();
-        
+
         // Should be same instance (singleton)
         assert!(std::ptr::eq(paths1, paths2));
     }
@@ -704,7 +704,7 @@ mod tests {
         let log_dir = get_log_dir();
         let temp_dir = get_temp_dir();
         let runtime_dir = get_runtime_dir();
-        
+
         // All should return valid paths
         assert!(!data_dir.as_os_str().is_empty());
         assert!(!config_dir.as_os_str().is_empty());

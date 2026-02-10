@@ -4,7 +4,7 @@
 //! the orchestrator integration module.
 
 use nestgate_zfs::orchestrator_integration::{
-    ServiceInfo, ServiceRegistration, ZfsHealthStatus, ZfsService, ZfsServiceConfig,
+    ServiceRegistration, ZfsHealthStatus, ZfsService, ZfsServiceConfig,
 };
 use std::collections::HashMap;
 
@@ -16,7 +16,7 @@ fn test_config_empty_service_name() {
     config.service_name = String::new();
 
     let service = ZfsService::new(config.clone());
-    assert_eq!(service.get_service_info().service_id.is_empty(), false); // UUID is always generated
+    assert!(!service.get_service_info().service_id.is_empty()); // UUID is always generated
 }
 
 #[test]
@@ -295,7 +295,8 @@ async fn test_register_with_invalid_url() {
 
 #[tokio::test]
 async fn test_register_with_localhost() {
-    let config = ZfsServiceConfig::default();
+    let mut config = ZfsServiceConfig::default();
+    config.orchestrator_endpoints = vec!["http://localhost:3000".to_string()];
     let mut service = ZfsService::new(config);
 
     let result = service
@@ -306,7 +307,8 @@ async fn test_register_with_localhost() {
 
 #[tokio::test]
 async fn test_register_with_ipv4() {
-    let config = ZfsServiceConfig::default();
+    let mut config = ZfsServiceConfig::default();
+    config.orchestrator_endpoints = vec!["http://192.168.1.1:8080".to_string()];
     let mut service = ZfsService::new(config);
 
     let result = service
@@ -317,17 +319,19 @@ async fn test_register_with_ipv4() {
 
 #[tokio::test]
 async fn test_register_with_very_long_url() {
-    let config = ZfsServiceConfig::default();
+    let long_url = format!("http://example.com/{}", "a".repeat(10000));
+    let mut config = ZfsServiceConfig::default();
+    config.orchestrator_endpoints = vec![long_url.clone()];
     let mut service = ZfsService::new(config);
 
-    let long_url = format!("http://example.com/{}", "a".repeat(10000));
     let result = service.register_with_orchestrator(&long_url).await;
     assert!(result.is_ok());
 }
 
 #[tokio::test]
 async fn test_register_multiple_times() {
-    let config = ZfsServiceConfig::default();
+    let mut config = ZfsServiceConfig::default();
+    config.orchestrator_endpoints = vec!["http://example.com".to_string()];
     let mut service = ZfsService::new(config);
 
     let result1 = service

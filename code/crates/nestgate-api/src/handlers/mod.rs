@@ -65,6 +65,12 @@ use axum::Router;
 
 // ==================== CORE HANDLER MODULES ====================
 
+/// **AUTH MODULE**
+///
+/// Authentication handlers - returns 501 when auth not implemented.
+/// Use nestgate-core security module for production auth.
+pub mod auth;
+
 /// **AI-FIRST EXAMPLE MODULE**
 ///
 /// AI-powered example handlers and demonstrations.

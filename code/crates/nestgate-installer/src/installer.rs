@@ -62,7 +62,6 @@ pub struct InstallationInfo {
 
 pub struct NestGateInstaller {
     platform: PlatformInfo,
-    #[allow(dead_code)] // Used for future installation functionality
     install_dir: Option<PathBuf>,
     downloader: DownloadManager,
 }
@@ -134,14 +133,14 @@ impl NestGateInstaller {
                 if remove_data { " (including data)" } else { "" }
             );
 
-            #[allow(clippy::expect_used)] // install_dir must be set by builder
+            let install_dir = self
+                .install_dir
+                .as_ref()
+                .context("BUG: install_dir must be set before uninstall")?;
             if !Confirm::new()
                 .with_prompt(format!(
                     "Directory {} already exists. Overwrite?",
-                    self.install_dir
-                        .as_ref()
-                        .expect("BUG: install_dir must be set before uninstall")
-                        .display()
+                    install_dir.display()
                 ))
                 .interact()?
             {
@@ -473,13 +472,11 @@ impl NestGateInstaller {
 
         etcetera::base_strategy::choose_base_strategy()
             .ok()
-            .and_then(|strategy| {
-                Some(
-                    strategy
-                        .data_dir()
-                        .join("nestgate")
-                        .join("install-info.json"),
-                )
+            .map(|strategy| {
+                strategy
+                    .data_dir()
+                    .join("nestgate")
+                    .join("install-info.json")
             })
             .unwrap_or_else(|| PathBuf::from(".nestgate-install-info.json"))
     }

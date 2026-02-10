@@ -10,7 +10,8 @@ async fn test_api_request_timeout() {
     let timeout = Duration::from_millis(100);
 
     let result = tokio::time::timeout(timeout, async {
-        // Modern: 200ms sleep is sufficient to test timeout (was 5s - 25x faster!)
+        // Sleep longer than timeout to trigger timeout
+        tokio::time::sleep(Duration::from_millis(200)).await;
         "response"
     })
     .await;

@@ -95,14 +95,14 @@ mod status_additional_tests {
 
     #[tokio::test]
     async fn test_get_status_consistency() {
-        let result1 = get_status();
-        let result2 = get_status();
+        let _result1 = get_status();
+        let _result2 = get_status();
     }
 
     #[tokio::test]
     async fn test_get_status_multiple_calls() {
         for _ in 0..10 {
-            let result = get_status();
+            let _result = get_status();
             // Result is Json, always succeeds;
         }
     }
@@ -111,14 +111,14 @@ mod status_additional_tests {
 
     #[tokio::test]
     async fn test_health_check_endpoint() {
-        let result = health_check();
+        let _result = health_check();
         // Result is Json, always succeeds;
     }
 
     #[tokio::test]
     async fn test_health_check_rapid_calls() {
         for _ in 0..100 {
-            let result = health_check();
+            let _result = health_check();
             // Result is Json, always succeeds;
         }
     }
@@ -148,7 +148,7 @@ mod status_additional_tests {
 
         let response = result;
         {
-            let info = response.0;
+            let _info = response.0;
             // assert!(!info.version.is_empty());
             // assert!(!info.status.is_empty());
         }
@@ -191,9 +191,9 @@ mod status_additional_tests {
     #[tokio::test]
     async fn test_full_status_workflow() {
         // Get status
-        let status_result = get_status(); // Health check
-        let health_result = health_check(); // Get system info
-        let info_result = get_status();
+        let _status_result = get_status(); // Health check
+        let _health_result = health_check(); // Get system info
+        let _info_result = get_status();
     }
 
     #[tokio::test]
@@ -212,7 +212,7 @@ mod status_additional_tests {
 
         let results = join_all(tasks).await;
 
-        for result in results {
+        for _result in results {
             // Result is Json, always succeeds;
         }
     }
@@ -357,7 +357,7 @@ mod status_additional_tests {
 
         let response = result;
         {
-            let info = response.0;
+            let _info = response.0;
 
             // All string fields should not be empty
             // assert!(!info.version.is_empty());

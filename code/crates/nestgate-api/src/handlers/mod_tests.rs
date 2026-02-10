@@ -205,7 +205,6 @@ mod handlers_module_tests {
 #[cfg(test)]
 mod handler_functionality_tests {
     use super::super::*;
-    use std::any::Any;
 
     // ==================== HANDLER COLLECTION TESTS ====================
 
@@ -481,7 +480,7 @@ mod handler_functionality_tests {
 
     #[test]
     fn test_health_handler_default() {
-        let _handler = HealthHandler::default();
+        let _handler = HealthHandler;
     }
 
     #[test]
@@ -656,7 +655,7 @@ mod handler_functionality_tests {
 
     #[test]
     fn test_handler_collection_contains_all_available() {
-        let collection = HandlerCollection::new();
+        let _collection = HandlerCollection::new();
         let available = available_handlers();
 
         // Verify we have the right number

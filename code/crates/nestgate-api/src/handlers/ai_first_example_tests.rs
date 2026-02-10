@@ -672,7 +672,7 @@ mod tests {
 
     #[test]
     fn test_multiple_action_types_in_vec() {
-        let actions = vec![
+        let actions = [
             SuggestedAction {
                 action_id: "1".to_string(),
                 action_type: ActionType::Optimize,

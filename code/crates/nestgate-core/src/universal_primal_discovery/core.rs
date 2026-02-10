@@ -14,7 +14,6 @@ use std::time::Duration;
 
 /// **UNIVERSAL PRIMAL PRINCIPLE**: No hardcoded values, everything discovered
 /// **Performance**: Lock-free discovery with DashMap (5-15x faster)
-#[allow(dead_code)]
 /// Universalprimaldiscovery
 pub struct UniversalPrimalDiscovery {
     /// Network discovery subsystem

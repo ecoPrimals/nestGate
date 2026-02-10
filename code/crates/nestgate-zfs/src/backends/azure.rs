@@ -609,6 +609,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_pool_properties() {
+        std::env::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
         let backend = AzureBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
 

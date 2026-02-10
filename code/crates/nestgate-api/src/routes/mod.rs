@@ -354,7 +354,7 @@ pub fn create_router_with_state() -> Router {
         }
         #[cfg(not(feature = "streaming-rpc"))]
         {
-            AppState::new().with_zfs_manager().await
+            AppState::new().with_zfs_manager()
         }
     };
     create_router_with_initialized_state(app_state)
@@ -855,4 +855,45 @@ async fn sse_health(
         },
         "generated_at": chrono::Utc::now().to_rfc3339()
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_state_default() {
+        let state = AppState::default();
+        assert!(state.get_zfs_manager().is_some());
+    }
+
+    #[test]
+    fn test_app_state_new() {
+        let state = AppState::new();
+        assert!(state.get_zfs_manager().is_some());
+    }
+
+    #[test]
+    fn test_app_state_without_streaming() {
+        let state = AppState::without_streaming();
+        assert!(state.get_zfs_manager().is_some());
+    }
+
+    #[test]
+    fn test_app_state_with_zfs_manager() {
+        let state = AppState::new().with_zfs_manager();
+        assert!(state.get_zfs_manager().is_some());
+    }
+
+    #[test]
+    fn test_create_router_returns_router() {
+        let router = create_router();
+        let _ = router;
+    }
+
+    #[test]
+    fn test_create_router_with_state_returns_router() {
+        let router = create_router_with_state();
+        let _ = router;
+    }
 }

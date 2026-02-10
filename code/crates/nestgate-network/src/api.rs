@@ -13,11 +13,8 @@ use tokio::sync::RwLock;
 // Type alias to reduce complexity
 type PortAllocationMap = Arc<RwLock<HashMap<String, u16>>>;
 
-use nestgate_core::error::Result as NestGateResult;
-use tracing::debug;
-use tracing::error;
+use nestgate_core::error::{NestGateError, Result as NestGateResult};
 use tracing::info;
-use tracing::warn;
 
 /// Service status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -82,46 +79,51 @@ impl OrchestrationCapability {
 
     /// Register a service with Orchestration
     ///
-    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    /// ✅ EVOLVED: Returns error instead of panicking via unimplemented!()
+    /// HTTP removed per Concentrated Gap Architecture - use Unix sockets via Songbird
     #[allow(dead_code)]
     pub async fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
-        // HTTP removed per Concentrated Gap Architecture
         let _ = service;
-        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
+        Err(NestGateError::network_error(
+            "HTTP removed - use Unix sockets via Songbird gateway for service registration",
+        ))
     }
 
     /// Request port allocation from Orchestration
     ///
-    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    /// ✅ EVOLVED: Returns error instead of panicking
     #[allow(dead_code)]
     pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
-        // HTTP removed per Concentrated Gap Architecture
         let _ = (service_name, port_type);
-        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
+        Err(NestGateError::network_error(
+            "HTTP removed - use Unix sockets via Songbird gateway for port allocation",
+        ))
     }
 
     /// Release port allocation
     ///
-    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    /// ✅ EVOLVED: Returns error instead of panicking
     #[allow(dead_code)]
     pub async fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
-        // HTTP removed per Concentrated Gap Architecture
         let _ = (service_name, port);
-        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
+        Err(NestGateError::network_error(
+            "HTTP removed - use Unix sockets via Songbird gateway for port release",
+        ))
     }
 
     /// Send health status to Orchestration
     ///
-    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    /// ✅ EVOLVED: Returns error instead of panicking
     #[allow(dead_code)]
     pub async fn send_health_status(
         &self,
         service_name: &str,
         status: ServiceStatus,
     ) -> NestGateResult<()> {
-        // HTTP removed per Concentrated Gap Architecture
         let _ = (service_name, status);
-        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
+        Err(NestGateError::network_error(
+            "HTTP removed - use Unix sockets via Songbird gateway for health reporting",
+        ))
     }
 }
 

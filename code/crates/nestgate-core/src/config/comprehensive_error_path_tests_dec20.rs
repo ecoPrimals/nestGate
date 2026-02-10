@@ -195,7 +195,7 @@ mod config_error_path_comprehensive_tests {
     fn test_config_with_unicode_service_name() {
         // Test that config handles unicode gracefully
         let service_name = "NestGate-🚀";
-        assert!(service_name.len() > 0);
+        assert!(!service_name.is_empty());
         assert!(service_name.contains("🚀"));
     }
 
@@ -379,7 +379,7 @@ mod config_capability_discovery_error_tests {
         for cap in capabilities {
             // Test that special characters are handled gracefully
             assert!(!cap.is_empty());
-            assert!(cap.len() > 0);
+            assert!(!cap.is_empty());
         }
     }
 

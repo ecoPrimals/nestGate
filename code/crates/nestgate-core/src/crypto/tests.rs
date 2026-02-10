@@ -1,6 +1,6 @@
 //! **CRYPTO MODULE INTEGRATION TESTS**
 //!
-//! Comprehensive security tests for the cryptography module.
+//! ✅ EVOLVED: Tests updated for real Pure Rust crypto implementation
 //!
 //! # Test Coverage
 //!
@@ -24,6 +24,7 @@ mod crypto_tests {
 
         let crypto = crypto.unwrap();
         assert_eq!(crypto.algorithm, EncryptionAlgorithm::Aes256Gcm);
+        assert!(crypto.cipher.is_some(), "Cipher should be initialized");
     }
 
     #[tokio::test]
@@ -34,40 +35,57 @@ mod crypto_tests {
     }
 
     #[tokio::test]
-    async fn test_encrypt_returns_proper_error() {
-        // Until dependencies are added, should return helpful error
+    async fn test_encrypt_decrypt_roundtrip() {
         let crypto = SecureCrypto::new().unwrap();
+        let plaintext = b"sensitive data that must be protected";
         let params = EncryptionParams::default();
 
-        let result = crypto.encrypt(b"test data", &params).await;
+        let encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
         assert!(
-            result.is_err(),
-            "Should error until crypto dependencies added"
+            !encrypted.ciphertext.is_empty(),
+            "Ciphertext should not be empty"
         );
+        assert_eq!(
+            encrypted.nonce.len(),
+            12,
+            "Nonce should be 12 bytes (96 bits)"
+        );
+        assert!(encrypted.timestamp > 0, "Timestamp should be set");
 
-        let err = result.unwrap_err();
-        let err_msg = err.to_string();
-        assert!(
-            err_msg.contains("crypto dependencies") || err_msg.contains("not yet implemented"),
-            "Error should mention missing dependencies"
-        );
+        let decrypted = crypto.decrypt(&encrypted).await.unwrap();
+        assert_eq!(plaintext, &decrypted[..]);
     }
 
     #[tokio::test]
-    async fn test_decrypt_returns_proper_error() {
+    async fn test_tamper_detection() {
         let crypto = SecureCrypto::new().unwrap();
-        let encrypted = EncryptedData {
-            ciphertext: vec![1, 2, 3],
-            nonce: vec![4, 5, 6],
-            algorithm: EncryptionAlgorithm::Aes256Gcm,
-            timestamp: 0,
-        };
+        let plaintext = b"important data";
+        let params = EncryptionParams::default();
 
+        let mut encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
+
+        // Tamper with ciphertext
+        if !encrypted.ciphertext.is_empty() {
+            encrypted.ciphertext[0] ^= 0xFF;
+        }
+
+        // Should fail authentication
         let result = crypto.decrypt(&encrypted).await;
-        assert!(
-            result.is_err(),
-            "Should error until crypto dependencies added"
-        );
+        assert!(result.is_err(), "Decryption should fail for tampered data");
+    }
+
+    #[tokio::test]
+    async fn test_nonce_uniqueness() {
+        let crypto = SecureCrypto::new().unwrap();
+        let params = EncryptionParams::default();
+
+        let encrypted1 = crypto.encrypt(b"data", &params).await.unwrap();
+        let encrypted2 = crypto.encrypt(b"data", &params).await.unwrap();
+
+        // Nonces should be different even for same plaintext
+        assert_ne!(encrypted1.nonce, encrypted2.nonce);
+        // Ciphertext should be different too (different nonce = different output)
+        assert_ne!(encrypted1.ciphertext, encrypted2.ciphertext);
     }
 
     #[test]
@@ -111,55 +129,63 @@ mod crypto_tests {
         assert!(crypto_chacha.is_ok());
     }
 
-    // Future tests (when real crypto is implemented):
+    #[test]
+    fn test_key_generation() {
+        let key = SecureCrypto::generate_key(32).unwrap();
+        assert_eq!(key.len(), 32);
+
+        // Keys should be unique
+        let key2 = SecureCrypto::generate_key(32).unwrap();
+        assert_ne!(key, key2, "Generated keys should be unique");
+    }
+
+    #[test]
+    fn test_from_key() {
+        let key = SecureCrypto::generate_key(32).unwrap();
+        let crypto = SecureCrypto::from_key(&key);
+        assert!(
+            crypto.is_ok(),
+            "Should create crypto from valid 32-byte key"
+        );
+
+        // Invalid key length should fail
+        let short_key = vec![0u8; 16];
+        let result = SecureCrypto::from_key(&short_key);
+        assert!(result.is_err(), "Should reject non-32-byte key");
+    }
 
     #[tokio::test]
-    #[ignore] // Enable after adding crypto dependencies
-    async fn test_encrypt_decrypt_roundtrip() {
-        let crypto = SecureCrypto::new().unwrap();
-        let plaintext = b"sensitive data that must be protected";
+    async fn test_from_key_roundtrip() {
+        // Create crypto, get the key implicitly via from_key
+        let key = SecureCrypto::generate_key(32).unwrap();
+        let crypto = SecureCrypto::from_key(&key).unwrap();
+
+        let plaintext = b"data encrypted with specific key";
         let params = EncryptionParams::default();
-
         let encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
-        let decrypted = crypto.decrypt(&encrypted).await.unwrap();
 
+        // Same key should decrypt
+        let crypto2 = SecureCrypto::from_key(&key).unwrap();
+        let decrypted = crypto2.decrypt(&encrypted).await.unwrap();
         assert_eq!(plaintext, &decrypted[..]);
     }
 
     #[tokio::test]
-    #[ignore] // Enable after adding crypto dependencies
-    async fn test_tamper_detection() {
-        let crypto = SecureCrypto::new().unwrap();
-        let plaintext = b"important data";
+    async fn test_wrong_key_fails() {
+        let key1 = SecureCrypto::generate_key(32).unwrap();
+        let key2 = SecureCrypto::generate_key(32).unwrap();
+
+        let crypto1 = SecureCrypto::from_key(&key1).unwrap();
         let params = EncryptionParams::default();
+        let encrypted = crypto1.encrypt(b"secret", &params).await.unwrap();
 
-        let mut encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
-
-        // Tamper with ciphertext
-        if !encrypted.ciphertext.is_empty() {
-            encrypted.ciphertext[0] ^= 0xFF;
-        }
-
-        // Should fail authentication
-        let result = crypto.decrypt(&encrypted).await;
-        assert!(result.is_err(), "Decryption should fail for tampered data");
+        // Different key should fail to decrypt
+        let crypto2 = SecureCrypto::from_key(&key2).unwrap();
+        let result = crypto2.decrypt(&encrypted).await;
+        assert!(result.is_err(), "Wrong key should fail decryption");
     }
 
     #[tokio::test]
-    #[ignore] // Enable after adding crypto dependencies
-    async fn test_nonce_uniqueness() {
-        let crypto = SecureCrypto::new().unwrap();
-        let params = EncryptionParams::default();
-
-        let encrypted1 = crypto.encrypt(b"data", &params).await.unwrap();
-        let encrypted2 = crypto.encrypt(b"data", &params).await.unwrap();
-
-        // Nonces should be different even for same plaintext
-        assert_ne!(encrypted1.nonce, encrypted2.nonce);
-    }
-
-    #[tokio::test]
-    #[ignore] // Enable after adding crypto dependencies
     async fn test_encryption_performance() {
         use std::time::Instant;
 
@@ -183,7 +209,6 @@ mod crypto_tests {
     }
 
     #[tokio::test]
-    #[ignore] // Enable after adding crypto dependencies
     async fn test_large_data_encryption() {
         let crypto = SecureCrypto::new().unwrap();
         let params = EncryptionParams::default();
@@ -196,17 +221,22 @@ mod crypto_tests {
     }
 
     #[tokio::test]
-    #[ignore] // Enable after adding crypto dependencies
-    async fn test_associated_data() {
+    async fn test_empty_data_encryption() {
         let crypto = SecureCrypto::new().unwrap();
-        let mut params = EncryptionParams::default();
-        params.associated_data = b"user_id=12345".to_vec();
+        let params = EncryptionParams::default();
 
-        let plaintext = b"secret message";
-        let encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
-
-        // Should decrypt successfully with correct associated data
+        let encrypted = crypto.encrypt(b"", &params).await.unwrap();
         let decrypted = crypto.decrypt(&encrypted).await.unwrap();
-        assert_eq!(plaintext, &decrypted[..]);
+        assert!(decrypted.is_empty());
+    }
+
+    #[test]
+    fn test_nonce_generation() {
+        let crypto = SecureCrypto::new().unwrap();
+        let nonce = crypto.generate_nonce().unwrap();
+        assert_eq!(nonce.len(), 12, "AES-GCM nonce should be 12 bytes");
+
+        let nonce2 = crypto.generate_nonce().unwrap();
+        assert_ne!(nonce, nonce2, "Nonces should be unique");
     }
 }

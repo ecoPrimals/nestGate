@@ -441,3 +441,115 @@ impl BidirectionalStreamManager {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rest::rpc::types::RequestPriority;
+
+    fn make_request(method: &str) -> UnifiedRpcRequest {
+        UnifiedRpcRequest {
+            id: Uuid::new_v4(),
+            source: "test".to_string(),
+            target: "storage".to_string(),
+            method: method.to_string(),
+            _params: serde_json::json!({}),
+            _metadata: std::collections::HashMap::new(),
+            timestamp: chrono::Utc::now(),
+            streaming: true,
+            priority: RequestPriority::Normal,
+            timeout: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_bidirectional_stream_manager_new() {
+        let manager = BidirectionalStreamManager::new();
+        assert_eq!(manager.get_active_stream_count().await, 0);
+    }
+
+    #[tokio::test]
+    async fn test_bidirectional_stream_manager_default() {
+        let manager = BidirectionalStreamManager::default();
+        assert_eq!(manager.get_active_stream_count().await, 0);
+    }
+
+    #[tokio::test]
+    async fn test_create_realtime_metrics_stream() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("stream_realtime_metrics");
+        let result = manager.create_bidirectional_stream(request).await;
+        assert!(result.is_ok());
+        let (tx, mut rx) = result.unwrap();
+        assert_eq!(manager.get_active_stream_count().await, 1);
+
+        // Receive at least one event
+        let event = tokio::time::timeout(std::time::Duration::from_secs(5), rx.recv()).await;
+        assert!(event.is_ok());
+        assert!(event.unwrap().is_some());
+
+        drop(tx);
+    }
+
+    #[tokio::test]
+    async fn test_create_zfs_events_stream() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("stream_zfs_events");
+        let result = manager.create_bidirectional_stream(request).await;
+        assert!(result.is_ok());
+        let (tx, mut rx) = result.unwrap();
+
+        let event = tokio::time::timeout(std::time::Duration::from_secs(15), rx.recv()).await;
+        assert!(event.is_ok());
+        assert!(event.unwrap().is_some());
+
+        drop(tx);
+    }
+
+    #[tokio::test]
+    async fn test_create_unknown_stream_fails() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("unknown_method");
+        let result = manager.create_bidirectional_stream(request).await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Unknown streaming method"));
+    }
+
+    #[tokio::test]
+    async fn test_close_stream() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("stream_realtime_metrics");
+        let (tx, _rx) = manager.create_bidirectional_stream(request).await.unwrap();
+        let streams_info = manager.get_active_streams_info().await;
+        assert_eq!(streams_info.len(), 1);
+        let stream_id = streams_info[0].0;
+
+        let result = manager.close_stream(stream_id).await;
+        assert!(result.is_ok());
+        assert_eq!(manager.get_active_stream_count().await, 0);
+
+        drop(tx);
+    }
+
+    #[tokio::test]
+    async fn test_close_nonexistent_stream_fails() {
+        let manager = BidirectionalStreamManager::new();
+        let result = manager.close_stream(Uuid::new_v4()).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_rpc_stream_event_serialization() {
+        let event = RpcStreamEvent {
+            stream_id: Uuid::new_v4(),
+            event_type: "test".to_string(),
+            data: serde_json::json!({"key": "value"}),
+            timestamp: chrono::Utc::now(),
+        };
+        let json = serde_json::to_string(&event);
+        assert!(json.is_ok());
+    }
+}

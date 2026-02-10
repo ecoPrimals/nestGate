@@ -13,6 +13,8 @@ pub use error::{
 
 pub mod config;
 pub mod error;
+pub mod protocol;
+pub mod types;
 
 // ==================== SECTION ====================
 

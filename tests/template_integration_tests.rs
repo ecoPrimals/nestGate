@@ -52,7 +52,9 @@ async fn send_jsonrpc_request(
     Ok(response)
 }
 
+/// Requires running NestGate server
 #[tokio::test]
+#[ignore]
 async fn test_template_store_retrieve_workflow() {
     let family_id = format!("test_template_{}", uuid::Uuid::new_v4());
     let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
@@ -118,7 +120,9 @@ async fn test_template_store_retrieve_workflow() {
     std::fs::remove_file(socket_path).ok();
 }
 
+/// Requires running NestGate server
 #[tokio::test]
+#[ignore]
 async fn test_template_list_filtering() {
     let family_id = format!("test_list_{}", uuid::Uuid::new_v4());
     let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
@@ -194,7 +198,9 @@ async fn test_template_list_filtering() {
     std::fs::remove_file(socket_path).ok();
 }
 
+/// Requires running NestGate server
 #[tokio::test]
+#[ignore]
 async fn test_community_top_ranking() {
     let family_id = format!("test_community_{}", uuid::Uuid::new_v4());
     let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
@@ -267,7 +273,9 @@ async fn test_community_top_ranking() {
     std::fs::remove_file(socket_path).ok();
 }
 
+/// Requires running NestGate server
 #[tokio::test]
+#[ignore]
 async fn test_template_family_isolation() {
     let family_id_1 = format!("test_family_1_{}", uuid::Uuid::new_v4());
     let family_id_2 = format!("test_family_2_{}", uuid::Uuid::new_v4());

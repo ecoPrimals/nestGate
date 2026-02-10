@@ -84,20 +84,12 @@ pub fn create_discovery_service(
 ///
 /// ## Example
 ///
-/// ```rust,no_run
+/// ```rust,ignore
+/// // Requires config from_env; PrimalDiscovery uses find_capability returning Vec
 /// use nestgate_core::universal_primal_discovery::migration_to_self_knowledge::initialize_discovery;
 /// use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
-///
-/// # async fn example() -> anyhow::Result<()> {
-/// let config = NestGateCanonicalConfig::from_env()?;
+/// let config = NestGateCanonicalConfig::default();
 /// let discovery = initialize_discovery(&config).await?;
-///
-/// // Now use capability-based discovery
-/// let orchestrators = discovery
-///     .find_capability("orchestration")
-///     .await?;
-/// # Ok(())
-/// # }
 /// ```
 pub async fn initialize_discovery(
     config: &NestGateCanonicalConfig,

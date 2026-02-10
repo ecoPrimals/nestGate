@@ -114,19 +114,19 @@ impl PolicyManager {
                 require_tls: false, // Development-friendly default
                 min_tls_version: "1.2".to_string(),
                 allowed_auth_methods: vec!["token".to_string(), "certificate".to_string()],
-            }
+            },
             rate_limits: RateLimits {
                 requests_per_minute: 1000,
                 max_concurrent_connections: 100,
                 burst_size: 50,
                 window_duration: Duration::from_secs(60),
-            }
+            },
             session_policy: SessionPolicy {
                 max_session_duration: Duration::from_secs(3600), // 1 hour
                 idle_timeout: Duration::from_secs(1800),         // 30 minutes
                 require_renewal: false,
                 max_sessions_per_user: 10,
-            }
+            },
             audit_requirements: AuditRequirements {
                 log_access_attempts: true,
                 log_failed_auth: true,
@@ -146,19 +146,19 @@ impl PolicyManager {
                 require_tls: true,
                 min_tls_version: "1.3".to_string(),
                 allowed_auth_methods: vec!["certificate".to_string()],
-            }
+            },
             rate_limits: RateLimits {
                 requests_per_minute: 100,
                 max_concurrent_connections: 20,
                 burst_size: 10,
                 window_duration: Duration::from_secs(60),
-            }
+            },
             session_policy: SessionPolicy {
                 max_session_duration: Duration::from_secs(1800), // 30 minutes
                 idle_timeout: Duration::from_secs(600),          // 10 minutes
                 require_renewal: true,
                 max_sessions_per_user: 3,
-            }
+            },
             audit_requirements: AuditRequirements {
                 log_access_attempts: true,
                 log_failed_auth: true,
@@ -190,13 +190,20 @@ impl PolicyManager {
         self.policies.get(name)
     }
 
-    /// Get the default policy
-    pub fn get_default_policy(&self) -> &SecurityPolicy {
-        self.policies.get(&self.default_policy).unwrap_or_else(|| {
-            tracing::error!("Expect failed: Default policy must exist");
-            panic!(
-                "Default policy must exist - this indicates a logic error in policy initialization"
-            );
+    /// Get the default policy, or the first available policy if default is missing
+    #[must_use]
+    pub fn get_default_policy(&self) -> Option<&SecurityPolicy> {
+        self.policies.get(&self.default_policy).or_else(|| {
+            if self.policies.is_empty() {
+                tracing::error!("No security policies available - PolicyManager may be misconfigured");
+                None
+            } else {
+                tracing::warn!(
+                    "Default policy '{}' not found, using first available policy",
+                    self.default_policy
+                );
+                self.policies.values().next()
+            }
         })
     }
 
@@ -211,7 +218,7 @@ impl PolicyManager {
                 pub fn set_default_policy(&mut self, name: &str) -> Result<()>  {
         if !self.policies.contains_key(name) {
             return Err(NestGateError::mcp_error(
-                &format!("Policy '{e}' does not exist"),
+                &format!("Policy '{}' does not exist", name),
                 "set_default_policy",
                 None,
             ));
@@ -261,7 +268,7 @@ impl PolicyManager {
     ) -> Result<bool>  {
         let policy = self.get_policy(policy_name).ok_or_else(|| {
             NestGateError::mcp_error(
-                &format!("Policy '{e}' not found"),
+                &format!("Policy '{}' not found", policy_name),
                 "validate_access",
                 None,
             )

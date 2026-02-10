@@ -39,15 +39,14 @@
 //! ## Usage
 //!
 //! ```rust
-//! use nestgate_installer::service_detection::{UniversalServiceDetector, ServiceManager};
+//! use nestgate_installer::platform::{UniversalServiceDetector, ServiceManager};
 //!
-//! async fn detect_service_manager() -> Option<ServiceManager> {
+//! fn detect_service_manager() -> ServiceManager {
 //!     let detector = UniversalServiceDetector::new();
-//!     detector.detect().await
+//!     detector.detect()
 //! }
 //! ```
 
-use anyhow::Result;
 use std::path::Path;
 
 /// Service manager types
@@ -73,7 +72,7 @@ impl ServiceManager {
             Self::Manual => "manual",
         }
     }
-    
+
     /// Check if this service manager supports automatic startup
     pub fn supports_auto_start(&self) -> bool {
         !matches!(self, Self::Manual)
@@ -88,10 +87,10 @@ pub trait ServiceDetector: Send + Sync {
     ///
     /// **RUNTIME CHECK**: Actually verifies the service manager exists and is functional
     fn detect(&self) -> bool;
-    
+
     /// Get service manager type
     fn manager_type(&self) -> ServiceManager;
-    
+
     /// Get detector name for logging
     fn name(&self) -> &str;
 }
@@ -109,7 +108,7 @@ impl ServiceDetector for SystemdDetector {
             tracing::debug!("✅ Detected systemd (runtime directory exists)");
             return true;
         }
-        
+
         // Alternative check: systemctl command available
         if std::process::Command::new("systemctl")
             .arg("--version")
@@ -120,15 +119,15 @@ impl ServiceDetector for SystemdDetector {
             tracing::debug!("✅ Detected systemd (systemctl available)");
             return true;
         }
-        
+
         tracing::debug!("❌ Systemd not detected");
         false
     }
-    
+
     fn manager_type(&self) -> ServiceManager {
         ServiceManager::Systemd
     }
-    
+
     fn name(&self) -> &str {
         "systemd-detector"
     }
@@ -146,7 +145,7 @@ impl ServiceDetector for LaunchdDetector {
             tracing::debug!("✅ Detected launchd (socket exists)");
             return true;
         }
-        
+
         // Alternative: check for launchctl command
         if std::process::Command::new("launchctl")
             .arg("version")
@@ -157,15 +156,15 @@ impl ServiceDetector for LaunchdDetector {
             tracing::debug!("✅ Detected launchd (launchctl available)");
             return true;
         }
-        
+
         tracing::debug!("❌ Launchd not detected");
         false
     }
-    
+
     fn manager_type(&self) -> ServiceManager {
         ServiceManager::Launchd
     }
-    
+
     fn name(&self) -> &str {
         "launchd-detector"
     }
@@ -191,15 +190,15 @@ impl ServiceDetector for WindowsServiceDetector {
                 return true;
             }
         }
-        
+
         tracing::debug!("❌ Windows Service Manager not detected");
         false
     }
-    
+
     fn manager_type(&self) -> ServiceManager {
         ServiceManager::WindowsService
     }
-    
+
     fn name(&self) -> &str {
         "windows-service-detector"
     }
@@ -224,22 +223,22 @@ impl UniversalServiceDetector {
     /// **UNIVERSAL**: Works on all platforms, detects at runtime
     pub fn new() -> Self {
         tracing::info!("🔍 Initializing universal service manager detector");
-        
+
         let detectors: Vec<Box<dyn ServiceDetector>> = vec![
             Box::new(SystemdDetector),
             Box::new(LaunchdDetector),
             Box::new(WindowsServiceDetector),
         ];
-        
+
         Self { detectors }
     }
-    
+
     /// Detect available service manager
     ///
     /// **RUNTIME DETECTION**: Checks actual capability, not compile-time OS
     pub fn detect(&self) -> ServiceManager {
         tracing::info!("🔍 Detecting available service manager...");
-        
+
         // Try each detector in order
         for detector in &self.detectors {
             tracing::debug!("Trying detector: {}", detector.name());
@@ -249,20 +248,20 @@ impl UniversalServiceDetector {
                 return manager;
             }
         }
-        
+
         tracing::warn!("⚠️  No service manager detected, will use manual service");
         ServiceManager::Manual
     }
-    
+
     /// Check if any service manager is available
     pub fn has_service_manager(&self) -> bool {
         !matches!(self.detect(), ServiceManager::Manual)
     }
-    
+
     /// Get detailed detection info for diagnostics
     pub fn detect_with_info(&self) -> (ServiceManager, Vec<String>) {
         let mut messages = Vec::new();
-        
+
         for detector in &self.detectors {
             let detected = detector.detect();
             let msg = if detected {
@@ -272,7 +271,7 @@ impl UniversalServiceDetector {
             };
             messages.push(msg);
         }
-        
+
         let manager = self.detect();
         (manager, messages)
     }
@@ -281,51 +280,51 @@ impl UniversalServiceDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_universal_detector_creation() {
         let detector = UniversalServiceDetector::new();
         assert!(!detector.detectors.is_empty(), "Should have detectors");
     }
-    
+
     #[test]
     fn test_detection() {
         let detector = UniversalServiceDetector::new();
         let manager = detector.detect();
-        
+
         // Should detect something (or manual)
         println!("Detected service manager: {}", manager.name());
-        
+
         // Should always return a valid value
         assert!(matches!(
             manager,
-            ServiceManager::Systemd 
-                | ServiceManager::Launchd 
-                | ServiceManager::WindowsService 
+            ServiceManager::Systemd
+                | ServiceManager::Launchd
+                | ServiceManager::WindowsService
                 | ServiceManager::Manual
         ));
     }
-    
+
     #[test]
     fn test_detection_with_info() {
         let detector = UniversalServiceDetector::new();
         let (manager, messages) = detector.detect_with_info();
-        
+
         println!("Service manager: {}", manager.name());
         for msg in &messages {
             println!("  {}", msg);
         }
-        
+
         // Should have detection messages
         assert!(!messages.is_empty());
     }
-    
+
     #[test]
     fn test_service_manager_properties() {
         let systemd = ServiceManager::Systemd;
         assert_eq!(systemd.name(), "systemd");
         assert!(systemd.supports_auto_start());
-        
+
         let manual = ServiceManager::Manual;
         assert_eq!(manual.name(), "manual");
         assert!(!manual.supports_auto_start());

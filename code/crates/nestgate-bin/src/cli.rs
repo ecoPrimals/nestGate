@@ -105,6 +105,11 @@ pub enum Commands {
         /// HTTP mode: Enables REST API and web endpoints (use only when needed)
         #[arg(long)]
         enable_http: bool,
+        /// Family ID for multi-family socket support
+        /// Creates family-scoped socket: nestgate-{family_id}.sock
+        /// Reads from: NESTGATE_FAMILY_ID environment variable if not specified
+        #[arg(long)]
+        family_id: Option<String>,
     },
 
     /// Show daemon status (UniBin)
@@ -319,17 +324,39 @@ impl Cli {
         // Handle commands
         match self.command {
             // UniBin: Daemon mode command
-            Commands::Daemon { port, bind, dev, enable_http } => {
+            Commands::Daemon {
+                port,
+                bind,
+                dev,
+                enable_http,
+                family_id,
+            } => {
+                // Multi-family support: CLI flag > env var > default
+                let resolved_family_id =
+                    family_id.or_else(|| std::env::var("NESTGATE_FAMILY_ID").ok());
+
+                if let Some(ref fid) = resolved_family_id {
+                    tracing::info!("👪 Family ID: {} (creates nestgate-{}.sock)", fid, fid);
+                }
+
                 if enable_http {
                     tracing::info!("🌐 Starting NestGate with HTTP server enabled");
                 } else {
-                    tracing::info!("🔌 Starting NestGate in socket-only mode (TRUE ecoBin - default)");
+                    tracing::info!(
+                        "🔌 Starting NestGate in socket-only mode (TRUE ecoBin - default)"
+                    );
                 }
-                crate::commands::service::run_daemon(port, &bind, dev, enable_http)
-                    .await
-                    .map_err(|e| {
-                        BinErrorHelper::runtime_error(e.to_string(), Some("daemon".to_string()))
-                    })?;
+                crate::commands::service::run_daemon(
+                    port,
+                    &bind,
+                    dev,
+                    enable_http,
+                    resolved_family_id.as_deref(),
+                )
+                .await
+                .map_err(|e| {
+                    BinErrorHelper::runtime_error(e.to_string(), Some("daemon".to_string()))
+                })?;
             }
 
             // UniBin: Status command
@@ -355,21 +382,14 @@ impl Cli {
                     })?;
             }
 
-            // UniBin: Discover command
-            Commands::Discover { target } => match target {
-                DiscoverTarget::Primals => {
-                    println!("🔍 Discovered Primals:");
-                    println!("   (Discovery commands coming soon)");
-                }
-                DiscoverTarget::Services => {
-                    println!("🔍 Discovered Services:");
-                    println!("   (Discovery commands coming soon)");
-                }
-                DiscoverTarget::Capabilities => {
-                    println!("🔍 Available Capabilities:");
-                    println!("   (Discovery commands coming soon)");
-                }
-            },
+            // UniBin: Discover command (EVOLVED: Real implementations)
+            Commands::Discover { target } => {
+                crate::commands::discover::execute(target)
+                    .await
+                    .map_err(|e| {
+                        BinErrorHelper::runtime_error(e.to_string(), Some("discover".to_string()))
+                    })?;
+            }
 
             Commands::Zfs { command } => {
                 let mut zfs_handler = crate::commands::zfs::ZfsHandler::new();
@@ -387,22 +407,36 @@ impl Cli {
                 })?;
             }
             Commands::Doctor { comprehensive, fix } => {
-                println!(
-                    "🩺 System diagnostics not yet implemented - comprehensive: {comprehensive}, fix: {fix}"
-                );
+                crate::commands::doctor::execute(comprehensive, fix)
+                    .await
+                    .map_err(|e| {
+                        BinErrorHelper::runtime_error(e.to_string(), Some("doctor".to_string()))
+                    })?;
             }
             Commands::Storage { action } => {
-                println!("💾 Storage management not yet implemented: {action:?}");
+                crate::commands::storage::execute(action)
+                    .await
+                    .map_err(|e| {
+                        BinErrorHelper::runtime_error(e.to_string(), Some("storage".to_string()))
+                    })?;
             }
             Commands::Config { action } => {
-                println!("⚙️  Configuration management not yet implemented: {action:?}");
+                crate::commands::config::execute(action)
+                    .await
+                    .map_err(|e| {
+                        BinErrorHelper::runtime_error(e.to_string(), Some("config".to_string()))
+                    })?;
             }
             Commands::Monitor {
                 interval,
                 output,
                 duration,
             } => {
-                println!("📊 Performance monitoring not yet implemented - interval: {interval:?}, output: {output:?}, duration: {duration:?}");
+                crate::commands::monitor::execute(interval, output, duration)
+                    .await
+                    .map_err(|e| {
+                        BinErrorHelper::runtime_error(e.to_string(), Some("monitor".to_string()))
+                    })?;
             }
         }
 

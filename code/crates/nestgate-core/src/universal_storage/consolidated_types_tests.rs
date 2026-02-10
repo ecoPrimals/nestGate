@@ -269,7 +269,7 @@ mod enum_variants_coverage_tests {
 
     #[test]
     fn test_universal_storage_type_coverage() {
-        let types = vec![
+        let types = [
             UniversalStorageType::Local,
             UniversalStorageType::Object,
             UniversalStorageType::Block,

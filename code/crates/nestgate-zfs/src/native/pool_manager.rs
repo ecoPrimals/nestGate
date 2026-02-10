@@ -34,7 +34,7 @@ pub struct NativeZfsPoolManager {
 ///     size_bytes: 1_000_000_000,
 ///     allocated_bytes: 500_000_000,
 ///     free_bytes: 500_000_000,
-///     health: PoolHealth::Online,
+///     health: PoolHealth::Healthy,
 ///     capacity_percentage: 50.0,
 ///     deduplication_ratio: 1.2,
 ///     compression_ratio: 1.5,

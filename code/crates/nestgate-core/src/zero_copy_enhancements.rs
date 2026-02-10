@@ -337,36 +337,12 @@ impl ZeroCopyMemoryMap {
     }
 }
 
-// SAFETY: Send implementation is safe because:
-// 1. File handle: std::fs::File is Send
-// 2. Pointer: *const u8 is just an address, safe to send if memory mapping is stable
-// 3. Invariants: Memory mapping remains valid across thread boundaries
-// 4. No thread-local state: Struct contains no thread-local data
-// Note: Real implementation should ensure memory mapping is stable before enabling Send
-//
-// SAFETY PROOF:
-// - **File handle**: std::fs::File implements Send, safe to transfer ownership
-// - **Pointer validity**: *const u8 is Copy and just an address value
-// - **Memory mapping**: Caller must ensure mapping lives long enough and is stable
-// - **No thread-local**: Struct contains no thread-local storage or state
-// - **Resource safety**: File descriptor properly managed by File type
-// ⚠️ **CONTRACT**: Memory mapping must remain valid for lifetime of this object
+// SAFETY: Send - ZeroCopyMemoryMap holds Vec<u8> and File.
+// Both are Send. Data is owned; no shared references across threads.
 unsafe impl Send for ZeroCopyMemoryMap {}
 
-// SAFETY: Sync implementation is safe because:
-// 1. Immutable access: as_slice() only provides &[u8], which is Sync
-// 2. Interior mutability: No interior mutability in this struct
-// 3. File handle: std::fs::File is Sync for read-only access
-// 4. Data race freedom: All access is read-only through shared references
-// Note: Real implementation must ensure memory mapping allows concurrent reads
-//
-// SAFETY PROOF:
-// - **Shared access**: Only provides &[u8] through public API, which is Sync
-// - **No interior mutability**: Struct has no Cell, RefCell, or atomic fields
-// - **Read-only**: Memory mapping is read-only, no writes through this interface
-// - **Concurrent reads**: Memory mapping supports concurrent reads safely
-// - **File handle**: std::fs::File is Sync for shared references
-// ⚠️ **CONTRACT**: Memory mapping must support concurrent reads
+// SAFETY: Sync - No interior mutability. as_slice() returns &[u8] (Sync).
+// Concurrent reads via shared references are safe.
 unsafe impl Sync for ZeroCopyMemoryMap {}
 
 /// **ZERO-COPY JSON PARSER**

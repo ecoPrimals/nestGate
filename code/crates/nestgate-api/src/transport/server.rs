@@ -152,7 +152,7 @@ where
 
             loop {
                 tokio::select! {
-                    _ = shutdown.notified() => {
+                    () = shutdown.notified() => {
                         info!("Unix socket listener received shutdown signal");
                         break;
                     }
@@ -206,7 +206,7 @@ where
 
     /// Get server configuration
     #[must_use]
-    pub fn config(&self) -> &TransportConfig {
+    pub const fn config(&self) -> &TransportConfig {
         &self.config
     }
 }

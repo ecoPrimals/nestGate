@@ -24,8 +24,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::RwLock;
-use uuid::Uuid;
 use tracing::{debug, info, warn};
+use uuid::Uuid;
 
 use crate::{NestGateError, Result};
 
@@ -43,12 +43,12 @@ mod tests;
 
 // Re-export all public types for backward compatibility
 pub use config::{
-    AlertThresholds, CanonicalAdapterConfig, DiscoveryConfig, MonitoringConfig,
-    PerformanceConfig, RateLimitConfig, RequestConfig, SecurityConfig,
+    AlertThresholds, CanonicalAdapterConfig, DiscoveryConfig, MonitoringConfig, PerformanceConfig,
+    RateLimitConfig, RequestConfig, SecurityConfig,
 };
 pub use enums::{
-    CapabilityCategory, DataType, DiscoveryMethod, RequestPriority, ResponseStatus,
-    RetryBackoff, ScalabilityRating,
+    CapabilityCategory, DataType, DiscoveryMethod, RequestPriority, ResponseStatus, RetryBackoff,
+    ScalabilityRating,
 };
 pub use health::{AdapterHealthStatus, AdapterStats, ResourceRequirements};
 pub use types::{CapabilityRequest, CapabilityResponse, ServiceCapability, ServiceRegistration};
@@ -120,7 +120,7 @@ impl ConsolidatedCanonicalAdapter {
             config,
             our_capabilities: Arc::new(RwLock::new(Vec::new())),
             discovered_capabilities: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
-            active_requests: Arc::new(DashMap::new()),         // ✅ FIXED: Was incorrectly RwLock<HashMap>
+            active_requests: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
             client,
             health_status: Arc::new(RwLock::new(AdapterHealthStatus::default())),
             stats: Arc::new(RwLock::new(AdapterStats::default())),
@@ -322,10 +322,7 @@ impl ConsolidatedCanonicalAdapter {
         // Wait for active requests to complete (lock-free len)
         let active_count = self.active_requests.len();
         if active_count > 0 {
-            warn!(
-                "Waiting for {} active requests to complete",
-                active_count
-            );
+            warn!("Waiting for {} active requests to complete", active_count);
             // Implementation would wait with timeout
         }
 

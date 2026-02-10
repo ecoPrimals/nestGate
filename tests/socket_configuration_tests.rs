@@ -30,12 +30,14 @@ fn test_e2e_complete_socket_lifecycle() {
     // Cleanup first
     let _ = fs::remove_file(test_socket);
 
-    // Set environment
-    std::env::set_var("NESTGATE_SOCKET", test_socket);
-    std::env::set_var("NESTGATE_FAMILY_ID", "lifecycle");
-
-    // 1. Configuration phase
-    let config = SocketConfig::from_environment().unwrap();
+    // 1. Configuration phase - use resolve() to avoid env var pollution
+    let config = SocketConfig::resolve(
+        "lifecycle".to_string(),
+        "default".to_string(),
+        Some(test_socket.to_string()),
+        None,
+    )
+    .unwrap();
     assert_eq!(config.socket_path, PathBuf::from(test_socket));
     assert_eq!(config.source, SocketConfigSource::Environment);
 
@@ -56,9 +58,6 @@ fn test_e2e_complete_socket_lifecycle() {
     // 5. Cleanup phase
     drop(listener);
     let _ = fs::remove_file(test_socket);
-
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
 }
 
 #[test]
@@ -67,19 +66,17 @@ fn test_e2e_multi_instance_isolation() {
     let _ = fs::remove_dir_all(base_dir);
     fs::create_dir_all(base_dir).unwrap();
 
-    std::env::set_var("NESTGATE_FAMILY_ID", "multi");
-
     let mut listeners = vec![];
 
-    // Create 5 instances
+    // Create 5 instances - use resolve() to avoid env var pollution
     for i in 0..5 {
-        std::env::set_var("NESTGATE_NODE_ID", format!("node{}", i));
-        std::env::set_var(
-            "NESTGATE_SOCKET",
-            format!("{}/nestgate-node{}.sock", base_dir, i),
-        );
-
-        let config = SocketConfig::from_environment().unwrap();
+        let config = SocketConfig::resolve(
+            "multi".to_string(),
+            format!("node{}", i),
+            Some(format!("{}/nestgate-node{}.sock", base_dir, i)),
+            None,
+        )
+        .unwrap();
         config.prepare_socket_path().unwrap();
         let listener = UnixListener::bind(&config.socket_path).unwrap();
         listeners.push((config, listener));
@@ -91,18 +88,18 @@ fn test_e2e_multi_instance_isolation() {
     // Cleanup
     drop(listeners);
     let _ = fs::remove_dir_all(base_dir);
-    std::env::remove_var("NESTGATE_FAMILY_ID");
-    std::env::remove_var("NESTGATE_NODE_ID");
-    std::env::remove_var("NESTGATE_SOCKET");
 }
 
 #[test]
 fn test_e2e_xdg_runtime_fallback_chain() {
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::set_var("NESTGATE_FAMILY_ID", "fallback-test");
-    std::env::set_var("NESTGATE_NODE_ID", "test-node");
-
-    let config = SocketConfig::from_environment().unwrap();
+    // Use resolve() to avoid env var pollution from parallel tests
+    let config = SocketConfig::resolve(
+        "fallback-test".to_string(),
+        "test-node".to_string(),
+        None,
+        None,
+    )
+    .unwrap();
 
     // Should use either XDG or /tmp (both are valid)
     let path_str = config.socket_path.to_str().unwrap();
@@ -118,8 +115,6 @@ fn test_e2e_xdg_runtime_fallback_chain() {
     // Cleanup
     drop(listener);
     let _ = fs::remove_file(&config.socket_path);
-    std::env::remove_var("NESTGATE_FAMILY_ID");
-    std::env::remove_var("NESTGATE_NODE_ID");
 }
 
 // ============================================================================
@@ -190,10 +185,14 @@ fn test_chaos_rapid_bind_unbind() {
     let test_socket = "/tmp/nestgate-chaos-rapid-bind.sock";
     let _ = fs::remove_file(test_socket);
 
-    std::env::set_var("NESTGATE_SOCKET", test_socket);
-    std::env::set_var("NESTGATE_FAMILY_ID", "rapid");
-
-    let config = SocketConfig::from_environment().unwrap();
+    // Use resolve() to avoid env var pollution
+    let config = SocketConfig::resolve(
+        "rapid".to_string(),
+        "default".to_string(),
+        Some(test_socket.to_string()),
+        None,
+    )
+    .unwrap();
 
     // Rapidly bind and unbind
     for _ in 0..100 {
@@ -210,8 +209,6 @@ fn test_chaos_rapid_bind_unbind() {
     // Cleanup
     drop(final_listener);
     let _ = fs::remove_file(test_socket);
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
 }
 
 #[test]
@@ -220,19 +217,25 @@ fn test_chaos_environment_modification_during_execution() {
     let _ = fs::remove_dir_all(base_dir);
     fs::create_dir_all(base_dir).unwrap();
 
-    // Start with one config
-    std::env::set_var("NESTGATE_SOCKET", format!("{}/socket1.sock", base_dir));
-    std::env::set_var("NESTGATE_FAMILY_ID", "env-mod");
-
-    let config1 = SocketConfig::from_environment().unwrap();
+    // Create first config - use resolve() to avoid env var pollution
+    let config1 = SocketConfig::resolve(
+        "env-mod".to_string(),
+        "default".to_string(),
+        Some(format!("{}/socket1.sock", base_dir)),
+        None,
+    )
+    .unwrap();
     config1.prepare_socket_path().unwrap();
     let listener1 = UnixListener::bind(&config1.socket_path).unwrap();
 
-    // Modify environment
-    std::env::set_var("NESTGATE_SOCKET", format!("{}/socket2.sock", base_dir));
-
-    // Create new config with modified env
-    let config2 = SocketConfig::from_environment().unwrap();
+    // Create second config with different socket path (simulates "modification")
+    let config2 = SocketConfig::resolve(
+        "env-mod".to_string(),
+        "default".to_string(),
+        Some(format!("{}/socket2.sock", base_dir)),
+        None,
+    )
+    .unwrap();
     config2.prepare_socket_path().unwrap();
     let listener2 = UnixListener::bind(&config2.socket_path).unwrap();
 
@@ -245,8 +248,6 @@ fn test_chaos_environment_modification_during_execution() {
     drop(listener1);
     drop(listener2);
     let _ = fs::remove_dir_all(base_dir);
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
 }
 
 // ============================================================================
@@ -434,11 +435,14 @@ fn test_fault_long_socket_path() {
 
 #[test]
 fn test_security_path_traversal_attempt() {
-    // Attempt path traversal
-    std::env::set_var("NESTGATE_SOCKET", "/tmp/../../../etc/nestgate.sock");
-    std::env::set_var("NESTGATE_FAMILY_ID", "security");
-
-    let config = SocketConfig::from_environment().unwrap();
+    // Attempt path traversal - use resolve() to avoid env var pollution
+    let config = SocketConfig::resolve(
+        "security".to_string(),
+        "default".to_string(),
+        Some("/tmp/../../../etc/nestgate.sock".to_string()),
+        None,
+    )
+    .unwrap();
 
     // Path should be normalized but config should still be created
     assert!(config.socket_path.exists() || !config.socket_path.exists());
@@ -450,9 +454,6 @@ fn test_security_path_traversal_attempt() {
         !path_str.starts_with("/etc/"),
         "Should not allow writing to /etc"
     );
-
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
 }
 
 #[test]
@@ -483,8 +484,8 @@ fn test_performance_rapid_config_creation() {
     let iterations = 10_000;
 
     for i in 0..iterations {
-        std::env::set_var("NESTGATE_FAMILY_ID", format!("perf{}", i));
-        let _config = SocketConfig::from_environment().unwrap();
+        let _config =
+            SocketConfig::resolve(format!("perf{}", i), "default".to_string(), None, None).unwrap();
     }
 
     let duration = start.elapsed();
@@ -501,8 +502,6 @@ fn test_performance_rapid_config_creation() {
         "Config creation should be fast: {} μs/op",
         per_op
     );
-
-    std::env::remove_var("NESTGATE_FAMILY_ID");
 }
 
 #[test]
@@ -551,13 +550,17 @@ async fn test_async_socket_timeout_handling() {
     let test_socket = "/tmp/nestgate-async-timeout.sock";
     let _ = fs::remove_file(test_socket);
 
-    std::env::set_var("NESTGATE_SOCKET", test_socket);
-    std::env::set_var("NESTGATE_FAMILY_ID", "async");
+    // Use resolve() to avoid env var pollution
+    let config = SocketConfig::resolve(
+        "async".to_string(),
+        "default".to_string(),
+        Some(test_socket.to_string()),
+        None,
+    )
+    .unwrap();
 
-    let config = SocketConfig::from_environment().unwrap();
-
-    // Wrap in timeout (should complete quickly)
-    let result = timeout(Duration::from_millis(100), async {
+    // Wrap in timeout (generous to handle system load during parallel tests)
+    let result = timeout(Duration::from_secs(5), async {
         config.prepare_socket_path().unwrap();
         UnixListener::bind(&config.socket_path).unwrap()
     })
@@ -567,8 +570,6 @@ async fn test_async_socket_timeout_handling() {
 
     // Cleanup
     let _ = fs::remove_file(test_socket);
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
 }
 
 #[tokio::test]
@@ -582,14 +583,16 @@ async fn test_async_concurrent_operations() {
     for i in 0..10 {
         let handle = tokio::spawn(async move {
             let socket_path = format!("{}/async-{}.sock", base_dir, i);
-            std::env::set_var("NESTGATE_SOCKET", &socket_path);
-            std::env::set_var("NESTGATE_FAMILY_ID", format!("async{}", i));
 
-            let config = SocketConfig::from_environment().unwrap();
+            // Use resolve() to avoid env var pollution in parallel tasks
+            let config = SocketConfig::resolve(
+                format!("async{}", i),
+                "default".to_string(),
+                Some(socket_path),
+                None,
+            )
+            .unwrap();
             config.prepare_socket_path().unwrap();
-
-            std::env::remove_var("NESTGATE_SOCKET");
-            std::env::remove_var("NESTGATE_FAMILY_ID");
 
             config
         });

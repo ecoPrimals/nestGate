@@ -100,8 +100,7 @@ path = "../nestgate-automation"
 [dependencies.config]
 workspace = true
 
-[dependencies.warp]
-workspace = true
+# warp removed: unused dependency (HTTP evolution → Unix sockets)
 
 [dependencies.tarpc]
 version = "0.37"

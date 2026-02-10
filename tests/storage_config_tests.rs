@@ -49,10 +49,14 @@ fn test_storage_config_data_dir_default() {
     use nestgate_core::config::environment::StorageConfig;
 
     let config = StorageConfig::default();
-    assert_eq!(
-        config.data_dir, "/var/lib/nestgate",
-        "Default data dir should be /var/lib/nestgate"
+    // XDG-compliant: defaults to ~/.local/share/nestgate when HOME set,
+    // or /var/lib/nestgate when not. Either is valid.
+    assert!(
+        config.data_dir.ends_with("nestgate"),
+        "Default data dir should end with 'nestgate', got: {}",
+        config.data_dir
     );
+    assert!(!config.data_dir.is_empty());
 }
 
 #[test]

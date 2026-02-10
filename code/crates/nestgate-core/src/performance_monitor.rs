@@ -359,11 +359,12 @@ impl PerformanceSummary {
     }
 }
 
+// ✅ EVOLVED: lazy_static → std::sync::LazyLock (Pure Rust std, zero deps)
 // Global performance monitor instance
-lazy_static::lazy_static! {
-    /// Global performance monitor accessible throughout the application
-    pub static ref GLOBAL_PERFORMANCE_MONITOR: PerformanceMonitor = PerformanceMonitor::new();
-}
+
+/// Global performance monitor accessible throughout the application
+pub static GLOBAL_PERFORMANCE_MONITOR: std::sync::LazyLock<PerformanceMonitor> =
+    std::sync::LazyLock::new(PerformanceMonitor::new);
 
 /// Convenience function for recording operations globally
 pub fn record_operation(name: &str, duration: Duration) {

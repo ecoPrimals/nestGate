@@ -47,9 +47,13 @@ impl PlatformInfo {
         // Runtime service manager detection!
         let detector = UniversalServiceDetector::new();
         let service_manager = detector.detect();
-        
-        tracing::info!("✅ Platform detected: {} {} with {} service manager", 
-                      os, arch, service_manager.name());
+
+        tracing::info!(
+            "✅ Platform detected: {} {} with {} service manager",
+            os,
+            arch,
+            service_manager.name()
+        );
 
         Self {
             service_manager,
@@ -70,7 +74,7 @@ impl PlatformInfo {
     pub fn service_install_supported(&self) -> bool {
         self.service_manager.supports_auto_start()
     }
-    
+
     /// Get service manager name
     #[must_use]
     pub fn service_manager_name(&self) -> &str {
@@ -280,7 +284,10 @@ mod tests {
         let cloned = info.clone();
         assert_eq!(info.os, cloned.os);
         assert_eq!(info.arch, cloned.arch);
-        assert_eq!(format!("{:?}", info.service_manager), format!("{:?}", cloned.service_manager));
+        assert_eq!(
+            format!("{:?}", info.service_manager),
+            format!("{:?}", cloned.service_manager)
+        );
     }
 
     #[test]
@@ -294,16 +301,16 @@ mod tests {
     fn test_service_install_supported() {
         let info = PlatformInfo::detect();
         let supported = info.service_install_supported();
-        
+
         println!("Service manager: {}", info.service_manager_name());
         println!("Auto-start supported: {}", supported);
-        
+
         // Should detect something (even if Manual)
         assert!(matches!(
             info.service_manager,
-            ServiceManager::Systemd 
-                | ServiceManager::Launchd 
-                | ServiceManager::WindowsService 
+            ServiceManager::Systemd
+                | ServiceManager::Launchd
+                | ServiceManager::WindowsService
                 | ServiceManager::Manual
         ));
     }
@@ -313,7 +320,7 @@ mod tests {
     fn test_linux_platform() {
         let info = PlatformInfo::detect();
         assert_eq!(info.os, "linux");
-        
+
         // Service manager should be detected at runtime
         println!("Linux service manager: {}", info.service_manager_name());
     }
@@ -323,7 +330,7 @@ mod tests {
     fn test_macos_platform() {
         let info = PlatformInfo::detect();
         assert_eq!(info.os, "macos");
-        
+
         // Service manager should be detected at runtime
         println!("macOS service manager: {}", info.service_manager_name());
     }
@@ -333,7 +340,7 @@ mod tests {
     fn test_windows_platform() {
         let info = PlatformInfo::detect();
         assert_eq!(info.os, "windows");
-        
+
         // Service manager should be detected at runtime
         println!("Windows service manager: {}", info.service_manager_name());
     }
@@ -343,11 +350,11 @@ mod tests {
         let info = PlatformInfo::detect();
         let binary = info.get_binary_name("nestgate");
         assert!(binary.contains("nestgate"));
-        
+
         // Platform-specific check
         #[cfg(target_os = "windows")]
         assert!(binary.ends_with(".exe"));
-        
+
         #[cfg(not(target_os = "windows"))]
         assert!(!binary.ends_with(".exe"));
     }
@@ -384,7 +391,7 @@ mod tests {
 
         assert_eq!(info1.os, info2.os);
         assert_eq!(info1.arch, info2.arch);
-        
+
         // Service manager should be consistent
         assert_eq!(info1.service_manager_name(), info2.service_manager_name());
     }
@@ -397,13 +404,13 @@ mod tests {
         println!("Architecture: {}", info.arch);
         println!("Service Manager: {}", info.service_manager_name());
         println!("Auto-start supported: {}", info.service_install_supported());
-        
+
         // Service manager should be detected (even if Manual)
         let manager_name = info.service_manager_name();
         assert!(
-            manager_name == "systemd" 
-                || manager_name == "launchd" 
-                || manager_name == "Windows Service" 
+            manager_name == "systemd"
+                || manager_name == "launchd"
+                || manager_name == "Windows Service"
                 || manager_name == "manual"
         );
     }

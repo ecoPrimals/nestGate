@@ -11,6 +11,11 @@ use super::responses::{Response, ResponsePayload};
 use super::services::{HealthStatus, ServiceStatus};
 use nestgate_core::error::Result;
 
+/// Helper to create an "unsupported operation" error using canonical error patterns
+fn unsupported_error(message: impl Into<String>) -> nestgate_core::NestGateError {
+    crate::error::protocol_error(&message.into(), Some("handler"))
+}
+
 /// Enhanced Protocol Handler with advanced integration with v2 orchestrator
 pub struct ProtocolHandler {
     _node_id: String,
@@ -54,7 +59,7 @@ impl ProtocolHandler {
             MessageType::FederationJoin => self.handle_federation_join(message).await,
             MessageType::OrchestratorRoute => self.handle_orchestrator_route(message).await,
             MessageType::ServiceRegistration => self.handle_service_registration(message).await,
-            _ => Err(crate::error::Error::unsupported(format!(
+            _ => Err(unsupported_error(format!(
                 "Message type {:?} not supported",
                 message.message_type
             ))),
@@ -77,10 +82,10 @@ impl ProtocolHandler {
     }
 
     /// Handles Capability Query
-    async fn handle_capability_query(&self, _message: Message) -> Result<Response> {
+    async fn handle_capability_query(&self, message: Message) -> Result<Response> {
         // Return our capabilities
         Ok(Response::success(
-            _message.id,
+            message.id,
             ResponsePayload::CapabilityResponse(self.capabilities.clone()),
         ))
     }
@@ -93,9 +98,7 @@ impl ProtocolHandler {
         }
 
         // Direct handling for standalone mode
-        Err(crate::error::Error::unsupported(
-            "Volume operations require orchestrator".to_string(),
-        ))
+        Err(unsupported_error("Volume operations require orchestrator"))
     }
 
     /// Handles Volume Mount
@@ -106,9 +109,7 @@ impl ProtocolHandler {
         }
 
         // Direct handling for standalone mode
-        Err(crate::error::Error::unsupported(
-            "Mount operations require orchestrator".to_string(),
-        ))
+        Err(unsupported_error("Mount operations require orchestrator"))
     }
 
     /// Handles Metrics Report
@@ -126,7 +127,7 @@ impl ProtocolHandler {
     async fn handle_health_check(&self, message: Message) -> Result<Response> {
         let health_status = HealthStatus {
             status: ServiceStatus::Online,
-            uptime: nestgate_core::constants::timeouts::REQUEST_DEFAULT,
+            uptime: std::time::Duration::from_secs(0), // Placeholder: real uptime tracked elsewhere
             last_check: std::time::SystemTime::now(),
             details: HashMap::new(),
         };
@@ -145,9 +146,7 @@ impl ProtocolHandler {
         }
 
         // Standalone mode doesn't support federation
-        Err(crate::error::Error::unsupported(
-            "Federation join not yet implemented".to_string(),
-        ))
+        Err(unsupported_error("Federation join not yet implemented"))
     }
 
     /// Handle orchestrator routing
@@ -178,14 +177,14 @@ impl ProtocolHandler {
         }
 
         // Standalone mode doesn't support service registration
-        Err(crate::error::Error::unsupported(
-            "Service registration not yet implemented".to_string(),
+        Err(unsupported_error(
+            "Service registration not yet implemented",
         ))
     }
 
     /// Route To Orchestrator
     async fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
-        // In a real implementation, this would make an HTTP request to the orchestrator
+        // In a real implementation, this would use IPC to forward to the orchestrator
         // Process the actual request and return real response
         Ok(Response::success(message.id, ResponsePayload::Empty))
     }

@@ -23,22 +23,12 @@
 //!
 //! # Examples
 //!
-//! ```no_run
+//! ```rust,ignore
+//! // discover_capability may fail without env/discovery; ServiceEndpoint has url() method
 //! use nestgate_core::capability_based_config::CapabilityConfig;
-//! use anyhow::Result;
-//!
-//! # async fn example() -> Result<()> {
-//! // Modern capability-based approach
 //! let config = CapabilityConfig::initialize().await?;
-//!
-//! // Discover API service at runtime (no hardcoding!)
 //! let api_endpoint = config.discover_capability("api").await?;
-//! println!("Found API at: {}", api_endpoint);
-//!
-//! // Or use explicit environment config
-//! let port = config.get_port("NESTGATE_API_PORT").await?;
-//! # Ok(())
-//! # }
+//! println!("Found API at: {}", api_endpoint.url());
 //! ```
 
 use anyhow::{Context, Result};

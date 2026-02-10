@@ -92,17 +92,40 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Check if BearDog is available
+/// Check if BearDog is available via TCP health probe
+///
+/// **EVOLVED**: Replaced reqwest with raw TCP for ecoBin compliance.
+/// NestGate does not make HTTP calls directly - this is a connectivity check only.
 async fn check_beardog_available() -> bool {
-    // Try to connect to BearDog's health endpoint
-    match reqwest::get("http://localhost:9000/health").await {
-        Ok(response) if response.status().is_success() => {
-            println!("   ✅ BearDog health check passed\n");
-            true
-        }
-        Ok(response) => {
-            println!("   ⚠️  BearDog responded with: {}\n", response.status());
-            false
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpStream;
+
+    match TcpStream::connect("127.0.0.1:9000").await {
+        Ok(mut stream) => {
+            // Send minimal HTTP health check
+            let request = b"GET /health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+            if stream.write_all(request).await.is_err() {
+                println!("   ⚠️  BearDog not reachable (write failed)\n");
+                return false;
+            }
+
+            let mut buf = vec![0u8; 1024];
+            match stream.read(&mut buf).await {
+                Ok(n) if n > 0 => {
+                    let response = String::from_utf8_lossy(&buf[..n]);
+                    if response.contains("200") {
+                        println!("   ✅ BearDog health check passed\n");
+                        true
+                    } else {
+                        println!("   ⚠️  BearDog responded with non-200 status\n");
+                        false
+                    }
+                }
+                _ => {
+                    println!("   ⚠️  BearDog not reachable (no response)\n");
+                    false
+                }
+            }
         }
         Err(_) => {
             println!("   ⚠️  BearDog not reachable (not running?)\n");

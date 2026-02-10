@@ -10,22 +10,12 @@
 //!
 //! # Usage
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // ServiceRegistry::new() requires Vec<PrimalCapability>; find_by_capability needs running backends
 //! use nestgate_core::universal_primal_discovery::ServiceRegistry;
 //! use nestgate_core::universal_primal_discovery::capability_based_discovery::PrimalCapability;
-//!
-//! # async fn example() -> nestgate_core::Result<()> {
-//! // Create registry (discovers services automatically)
-//! let registry = ServiceRegistry::new().await?;
-//!
-//! // Find service by capability (no hardcoded URLs!)
-//! let networking_service = registry
-//!     .find_by_capability(&PrimalCapability::Networking)
-//!     .await?;
-//!
-//! println!("Found networking service at: {}", networking_service.url());
-//! # Ok(())
-//! # }
+//! let registry = ServiceRegistry::new(vec![PrimalCapability::ZfsStorage]).await?;
+//! let service = registry.find_by_capability(&PrimalCapability::ZfsStorage).await?;
 //! ```
 //!
 //! # Architecture
@@ -153,16 +143,12 @@ impl ServiceRegistry {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
+    /// // Requires capabilities for new(); find needs discovery backends with services
     /// # use nestgate_core::universal_primal_discovery::ServiceRegistry;
     /// # use nestgate_core::universal_primal_discovery::capability_based_discovery::PrimalCapability;
-    /// # async fn example() -> nestgate_core::Result<()> {
-    /// let registry = ServiceRegistry::new().await?;
-    /// let service = registry
-    ///     .find_by_capability(&PrimalCapability::Networking)
-    ///     .await?;
-    /// # Ok(())
-    /// # }
+    /// let registry = ServiceRegistry::new(vec![PrimalCapability::ZfsStorage]).await?;
+    /// let service = registry.find_by_capability(&PrimalCapability::ZfsStorage).await?;
     /// ```
     pub async fn find_by_capability(
         &self,
@@ -212,26 +198,8 @@ impl ServiceRegistry {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
-    /// # use nestgate_core::universal_primal_discovery::ServiceRegistry;
-    /// # use nestgate_core::universal_primal_discovery::capability_based_discovery::{
-    /// #     PrimalCapability, PrimalId, BindingInfo, HealthStatus
-    /// # };
-    /// # use std::net::{IpAddr, Ipv4Addr};
-    /// # async fn example() -> nestgate_core::Result<()> {
-    /// let registry = ServiceRegistry::new().await?;
-    ///
-    /// registry.announce(
-    ///     PrimalId::from_environment()?,
-    ///     vec![PrimalCapability::ZfsStorage, PrimalCapability::ApiGateway],
-    ///     BindingInfo {
-    ///         address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
-    ///         port: 8080,
-    ///         protocol: nestgate_core::universal_primal_discovery::capability_based_discovery::Protocol::Http,
-    ///     },
-    /// ).await?;
-    /// # Ok(())
-    /// # }
+    /// ```rust,ignore
+    /// // Requires PrimalId::from_environment(), BindingInfo; see tests
     /// ```
     pub async fn announce(
         &self,

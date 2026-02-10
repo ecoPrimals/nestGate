@@ -4,6 +4,11 @@
 //!
 //! Provides the server implementation of the NestGate RPC interface.
 //!
+//! ## TODO(v0.2.0): Daemon wiring
+//! `serve_tarpc()` is implemented but not yet called from nestgate-bin daemon startup.
+//! Use nestgate-bin `tarpc-server` feature when wiring. Protocol capabilities advertise
+//! the port for discovery; no server listens until wired.
+//!
 //! ## Philosophy (Primal Sovereignty)
 //! - **tarpc PRIMARY** for primal-to-primal communication
 //! - **Zero unsafe blocks**
@@ -280,14 +285,14 @@ impl NestGateRpc for NestGateRpcService {
             dataset, key
         );
 
-        // Delegate to storage manager
+        // Delegate to storage manager (returns Bytes; convert to Vec at RPC boundary)
         let (data, _info) = self
             .storage_manager
             .retrieve_object(&dataset, &key)
             .await
             .map_err(Self::convert_error)?;
 
-        Ok(data)
+        Ok(data.to_vec())
     }
 
     async fn get_object_metadata(

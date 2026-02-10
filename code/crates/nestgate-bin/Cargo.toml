@@ -72,5 +72,13 @@ features = ["tokio1", "serde-transport", "serde-transport-json"]
 [dependencies.futures]
 version = "0.3"
 
+[features]
+default = []
+# TODO(v0.2.0): When enabled, wire up nestgate_core::rpc::serve_tarpc() in service startup
+tarpc-server = []
+
 [dev-dependencies.tokio-test]
 workspace = true
+
+[dev-dependencies.tempfile]
+version = "3.8"

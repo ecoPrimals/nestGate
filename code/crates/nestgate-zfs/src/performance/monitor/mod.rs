@@ -13,12 +13,14 @@
 //!
 //! # Examples
 //!
-//! ```no_run
+//! ```rust,ignore
+//! // ZfsPerformanceMonitor requires pool_manager and dataset_manager.
+//! // Use ZfsPerformanceMonitor::new_for_testing() for quick setup in tests.
 //! use nestgate_zfs::performance::monitor::ZfsPerformanceMonitor;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let monitor = ZfsPerformanceMonitor::new(config, pool_manager, dataset_manager)?;
-//! monitor.start_monitoring().await?;
+//! let mut monitor = ZfsPerformanceMonitor::new_for_testing();
+//! monitor.start().await?;
 //! # Ok(())
 //! # }
 //! ```

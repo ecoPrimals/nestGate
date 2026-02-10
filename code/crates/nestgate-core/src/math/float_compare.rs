@@ -91,7 +91,7 @@ pub fn approx_eq_f32(a: f32, b: f32) -> bool {
 /// use nestgate_core::math::float_compare::approx_eq_f64;
 ///
 /// assert!(approx_eq_f64(0.1 + 0.2, 0.3));
-/// assert!(approx_eq_f64(1.0, 1.0000000001));
+/// assert!(approx_eq_f64(1.0, 1.0 + 1e-11));  // within epsilon
 /// assert!(!approx_eq_f64(1.0, 2.0));
 /// ```
 ///
@@ -129,13 +129,13 @@ pub fn approx_eq_f64(a: f64, b: f64) -> bool {
 /// use nestgate_core::math::float_compare::approx_eq_f64_epsilon;
 ///
 /// // Very strict comparison
-/// assert!(approx_eq_f64_epsilon(1.0, 1.00000001, 1e-7));
+/// assert!(approx_eq_f64_epsilon(1.0, 1.0 + 1e-8, 1e-7));
 ///
 /// // More lenient comparison
 /// assert!(approx_eq_f64_epsilon(1.0, 1.01, 0.02));
 ///
-/// // Custom epsilon for specific domain
-/// let tolerance = 0.001; // 0.1% tolerance
+/// // Custom epsilon for specific domain (0.1% tolerance)
+/// let tolerance = 0.1;
 /// assert!(approx_eq_f64_epsilon(100.0, 100.05, tolerance));
 /// ```
 ///

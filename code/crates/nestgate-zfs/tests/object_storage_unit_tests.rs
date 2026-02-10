@@ -3,9 +3,7 @@
 //! Comprehensive unit tests for refactored object storage backend.
 
 use nestgate_core::canonical_types::StorageTier;
-use nestgate_zfs::backends::object_storage::{
-    ObjectDataset, ObjectPool, ObjectStorageBackend, StorageProvider,
-};
+use nestgate_zfs::backends::object_storage::{ObjectDataset, ObjectPool, StorageProvider};
 use std::collections::HashMap;
 
 // ============================================================================

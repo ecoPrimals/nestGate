@@ -29,22 +29,22 @@ pub enum BackendType {
 pub struct BackendCapabilities {
     /// Backend type
     pub backend_type: BackendType,
-    
+
     /// Native snapshot support (instant, copy-on-write)
     pub native_snapshots: bool,
-    
+
     /// Native deduplication (automatic space savings)
     pub native_deduplication: bool,
-    
+
     /// Native compression (transparent, efficient)
     pub native_compression: bool,
-    
+
     /// Native checksums (data integrity verification)
     pub native_checksums: bool,
-    
+
     /// Native replication (efficient send/receive)
     pub native_replication: bool,
-    
+
     /// Always available (filesystem-level operations)
     pub basic_operations: bool,
 }
@@ -98,7 +98,7 @@ pub fn is_zfs_available() -> bool {
                 "❌ ZFS not available (zpool version exit code: {})",
                 exit_code
             );
-            
+
             // Log stderr for debugging (but don't treat as error)
             if !output.stderr.is_empty() {
                 if let Ok(stderr) = String::from_utf8(output.stderr) {
@@ -145,7 +145,7 @@ pub fn detect_backend() -> BackendCapabilities {
 pub fn detect_and_log() -> BackendCapabilities {
     info!("🔍 Detecting storage backend capabilities...");
     let capabilities = detect_backend();
-    
+
     match capabilities.backend_type {
         BackendType::Zfs => {
             info!("✨ NestGate: Universal Data Orchestrator with ZFS Optimization");
@@ -155,7 +155,7 @@ pub fn detect_and_log() -> BackendCapabilities {
             info!("   Works on ANY filesystem: ext4, NTFS, APFS, btrfs, etc.");
         }
     }
-    
+
     capabilities
 }
 

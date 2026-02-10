@@ -469,7 +469,7 @@ mod tests {
     async fn test_metrics_update_many_metrics() {
         let mut metrics = HashMap::new();
         for i in 0..100 {
-            metrics.insert(format!("metric_{}", i), i as f64);
+            metrics.insert(format!("metric_{i}"), f64::from(i));
         }
 
         let event = WebSocketEvent::metrics_update(metrics);

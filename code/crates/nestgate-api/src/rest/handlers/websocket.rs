@@ -496,3 +496,81 @@ fn generate_realtime_cache_hit_ratio() -> f64 {
     let variation = ((seed % 100) as f64) * 0.002; // Small real-time variation
     (base + variation).min(0.99).max(0.70)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_api_state() -> ApiState {
+        ApiState::new().expect("Failed to create test state")
+    }
+
+    #[test]
+    fn test_websocket_query_debug() {
+        let query = WebSocketQuery {
+            interval: Some(5),
+            level: Some("info".to_string()),
+        };
+        assert_eq!(query.interval, Some(5));
+        assert_eq!(query.level.as_deref(), Some("info"));
+    }
+
+    #[test]
+    fn test_log_entry_serialization() {
+        let entry = LogEntry {
+            timestamp: chrono::Utc::now(),
+            level: "INFO".to_string(),
+            message: "Test message".to_string(),
+            module: "nestgate::test".to_string(),
+            thread: "worker-1".to_string(),
+        };
+        let json = serde_json::to_string(&entry);
+        assert!(json.is_ok());
+        let parsed: serde_json::Value = serde_json::from_str(&json.unwrap()).unwrap();
+        assert_eq!(parsed["level"], "INFO");
+        assert_eq!(parsed["message"], "Test message");
+    }
+
+    #[test]
+    fn test_system_event_serialization() {
+        let event = SystemEvent {
+            id: "evt_1".to_string(),
+            timestamp: chrono::Utc::now(),
+            event_type: "dataset_created".to_string(),
+            description: "Test event".to_string(),
+            data: serde_json::json!({"key": "value"}),
+            severity: "info".to_string(),
+        };
+        let json = serde_json::to_string(&event);
+        assert!(json.is_ok());
+        let parsed: serde_json::Value = serde_json::from_str(&json.unwrap()).unwrap();
+        assert_eq!(parsed["event_type"], "dataset_created");
+    }
+
+    #[test]
+    fn test_generate_sample_log_entry() {
+        let entry = generate_sample_log_entry("info");
+        assert!(["DEBUG", "INFO", "WARN", "ERROR"].contains(&entry.level.as_str()));
+        assert!(!entry.message.is_empty());
+        assert!(!entry.module.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_generate_sample_system_event() {
+        let state = create_test_api_state();
+        let event = generate_sample_system_event(&state).await;
+        assert!(!event.id.is_empty());
+        assert!(!event.event_type.is_empty());
+        assert!(!event.description.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_get_current_metrics() {
+        let state = create_test_api_state();
+        let result = get_current_metrics(&state).await;
+        assert!(result.is_ok());
+        let metrics = result.unwrap();
+        assert!(metrics.cpu_usage_percent >= 0.0);
+        assert!(metrics.memory_usage_percent >= 0.0);
+    }
+}

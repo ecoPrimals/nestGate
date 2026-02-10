@@ -317,7 +317,7 @@ mod metrics_collector_tests {
 
     #[test]
     fn test_metrics_aggregation_over_time() {
-        let snapshots = vec![
+        let snapshots = [
             SystemMetrics {
                 _cpu_usage: 50.0,
                 memory_usage: 50.0,

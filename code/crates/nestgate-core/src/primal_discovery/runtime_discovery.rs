@@ -12,21 +12,12 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
+//! // PrimalConnection exposes endpoint; authenticate/register are application-specific
 //! use nestgate_core::primal_discovery::RuntimeDiscovery;
-//!
-//! # async fn example() -> anyhow::Result<()> {
 //! let discovery = RuntimeDiscovery::new().await?;
-//!
-//! // Discover security primal by capability
 //! let security = discovery.find_security_primal().await?;
-//! let token = security.authenticate(credentials).await?;
-//!
-//! // Discover orchestrator
-//! let orchestrator = discovery.find_orchestrator().await?;
-//! orchestrator.register_service(info).await?;
-//! # Ok(())
-//! # }
+//! let _url = &security.endpoint;
 //! ```
 
 use crate::error::{NestGateError, Result};
@@ -472,18 +463,20 @@ mod tests {
     async fn test_cache_invalidation() {
         let discovery = RuntimeDiscovery::new().await.unwrap();
 
-        // Should not panic
         discovery.invalidate_cache("test_capability").await;
         discovery.clear_cache().await;
     }
 
     #[test]
     fn test_primal_connection_methods() {
+        let mut metadata = std::collections::HashMap::new();
+        metadata.insert("key1".to_string(), "value1".to_string());
+
         let capability = CapabilityDescriptor {
             id: "test-id".to_string(),
             capability_type: CapabilityType::Storage,
             endpoint: Some("http://localhost:8080".to_string()),
-            metadata: std::collections::HashMap::new(),
+            metadata: metadata.clone(),
             sovereignty_compliant: true,
         };
 
@@ -495,5 +488,89 @@ mod tests {
         assert_eq!(connection.id(), "test-id");
         assert!(connection.is_sovereignty_compliant());
         assert_eq!(connection.endpoint, "http://localhost:8080");
+        assert_eq!(connection.capability_type(), &CapabilityType::Storage);
+        assert_eq!(connection.metadata("key1"), Some(&"value1".to_string()));
+        assert_eq!(connection.metadata("absent"), None);
+    }
+
+    #[tokio::test]
+    async fn test_find_security_primal_no_services() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let result = discovery.find_security_primal().await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_find_orchestrator_no_services() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let result = discovery.find_orchestrator().await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_find_ai_primal_no_services() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let result = discovery.find_ai_primal().await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_find_storage_primal() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let result = discovery.find_storage_primal().await;
+        // InfantDiscoverySystem may return mock Storage capability
+        if result.is_ok() {
+            let conn = result.unwrap();
+            assert!(!conn.endpoint.is_empty());
+            assert_eq!(conn.capability_type(), &CapabilityType::Storage);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_find_capability_compute() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let result = discovery.find_capability("compute").await;
+        // InfantDiscoverySystem may return mock Compute capability
+        if result.is_ok() {
+            let conn = result.unwrap();
+            assert_eq!(conn.capability_type(), &CapabilityType::Compute);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_find_all_capabilities_no_services() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let result = discovery
+            .find_all_capabilities("security_authentication")
+            .await;
+        assert!(result.is_ok());
+        let connections = result.unwrap();
+        assert!(connections.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_invalidate_then_rediscover() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        discovery.invalidate_cache("storage").await;
+        let result = discovery.find_storage_primal().await;
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_clear_cache_then_discover() {
+        let discovery = RuntimeDiscovery::new().await.unwrap();
+        discovery.clear_cache().await;
+        let result = discovery.find_orchestrator().await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_discovery_with_short_ttl() {
+        let discovery = RuntimeDiscovery::new()
+            .await
+            .unwrap()
+            .with_cache_ttl(Duration::from_millis(1));
+        let result = discovery.find_capability("storage").await;
+        assert!(result.is_ok() || result.is_err());
     }
 }

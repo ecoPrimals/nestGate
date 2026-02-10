@@ -237,10 +237,14 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
         }
     }
 
-    /// Allocate a block (zero-cost when inlined)
+    /// Allocate and initialize a block with the given value (safe, zero-cost when inlined)
+    ///
+    /// ✅ EVOLVED: Safe version that initializes memory before returning a reference.
+    /// Uses `MaybeUninit::write()` to properly initialize the block, then returns
+    /// a mutable reference to the now-initialized data.
     #[inline(always)]
     #[must_use]
-    pub fn allocate(&mut self) -> Option<&mut [T; BLOCK_SIZE]> {
+    pub fn allocate_with(&mut self, value: [T; BLOCK_SIZE]) -> Option<&mut [T; BLOCK_SIZE]> {
         if self.free_mask == 0 {
             return None; // No free blocks
         }
@@ -251,32 +255,38 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
         // Mark block as used
         self.free_mask &= !(1u64 << block_index);
 
-        // SAFETY: Assuming initialized is safe because:
-        // 1. Block index: Derived from free_mask, guaranteed valid
-        // 2. Bounds: block_index < POOL_SIZE due to free_mask bit operations
-        // 3. Initialization: Caller responsible for initializing before use
-        // 4. Uniqueness: Clearing free_mask bit prevents double-allocation
-        // 5. Lifetime: Returned mutable reference lifetime tied to &mut self
-        // Note: This is experimental code - production should initialize before returning
-        unsafe { Some(self.blocks[block_index].assume_init_mut()) }
+        // ✅ SAFE: Write initializes the MaybeUninit, then we can safely get a reference
+        let initialized = self.blocks[block_index].write(value);
+        Some(initialized)
     }
 
-    /// Deallocate a block
+    /// Allocate an uninitialized block (caller must initialize before read).
     ///
     /// # Safety
     ///
-    /// The caller must ensure that:
-    /// - `block_index` is a valid index that was previously allocated
-    /// - The block is not accessed after deallocation
-    /// - No double-free occurs
+    /// Caller must ensure all elements are initialized before reading, and the
+    /// block is deallocated via `deallocate()` when done.
     ///
-    /// # Safety Proof
+    /// **Prefer `allocate_with()` for safe initialization.**
+    #[inline(always)]
+    #[must_use]
+    pub unsafe fn allocate_uninit(&mut self) -> Option<&mut [T; BLOCK_SIZE]> {
+        if self.free_mask == 0 {
+            return None;
+        }
+
+        let block_index = self.free_mask.trailing_zeros() as usize;
+        self.free_mask &= !(1u64 << block_index);
+
+        // SAFETY: Caller guarantees initialization before read; block_index valid
+        unsafe { Some(self.blocks[block_index].assume_init_mut()) }
+    }
+
+    /// Deallocate a block by index.
     ///
-    /// - **Bounds**: block_index < POOL_SIZE verified by debug_assert
-    /// - **Previously allocated**: free_mask bit check verifies block was allocated
-    /// - **No double-free**: Setting free_mask bit prevents double deallocation
-    /// - **Exclusive access**: &mut self ensures no concurrent deallocations
-    /// - **No use-after-free**: Caller guarantees no further access to block
+    /// # Safety
+    ///
+    /// `block_index` must be a valid index previously allocated (not yet deallocated).
     #[inline(always)]
     pub unsafe fn deallocate(&mut self, block_index: usize) {
         debug_assert!(block_index < POOL_SIZE, "Block index out of bounds");
@@ -284,7 +294,6 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
             self.free_mask & (1u64 << block_index) == 0,
             "Block not allocated"
         );
-
         self.free_mask |= 1u64 << block_index;
     }
 
@@ -547,27 +556,26 @@ mod tests {
     fn test_zero_cost_pool() -> Result<(), Box<dyn std::error::Error>> {
         let mut pool: ZeroCostPool<u8, 4, 16> = ZeroCostPool::new();
 
-        // Test allocation
-        let block1 = pool.allocate().ok_or_else(|| {
-            crate::NestGateError::internal_error("Pool allocation failed", "test")
-        })?;
-        assert_eq!(block1.len(), 16);
+        // Test allocate_with
+        {
+            let block1 = pool.allocate_with([0u8; 16]).ok_or_else(|| {
+                crate::NestGateError::internal_error("Pool allocation failed", "test")
+            })?;
+            assert_eq!(block1.len(), 16);
+        }
         assert_eq!(pool.available_blocks(), 3);
 
-        let _block2 = pool.allocate().ok_or_else(|| {
-            crate::NestGateError::internal_error("Pool allocation failed", "test")
-        })?;
-        assert_eq!(pool.available_blocks(), 2);
-
-        // Test deallocation
-        // SAFETY: Test deallocation is safe because:
-        // 1. Valid index: 0 is within bounds (POOL_SIZE = 4)
-        // 2. Previously allocated: block1 was allocated at index 0
-        // 3. No double-free: This is the only deallocation of block 0
-        // 4. Test environment: Controlled test with known allocation state
-        unsafe {
-            pool.deallocate(0);
+        // Test allocate_uninit + deallocate (unsafe path)
+        {
+            let block2 = unsafe { pool.allocate_uninit() }.ok_or_else(|| {
+                crate::NestGateError::internal_error("Pool allocation failed", "test")
+            })?;
+            block2.fill(1);
+            assert_eq!(block2[0], 1);
         }
+        assert_eq!(pool.available_blocks(), 2);
+        // SAFETY: block 1 was allocated by allocate_uninit (block 0 from allocate_with)
+        unsafe { pool.deallocate(1) };
         assert_eq!(pool.available_blocks(), 3);
         Ok(())
     }

@@ -628,10 +628,16 @@ pub trait CanonicalSecurity: CanonicalService {
     ) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
     where
         Self: Sized,
+        crate::NestGateError: Into<Self::Error>,
     {
         async {
             // Default: not supported - implementations must override
-            panic!("hash_data not implemented - override this method to provide hashing")
+            // TODO: Implement in v0.2.0
+            Err(crate::NestGateError::internal_error(
+                "hash_data not implemented - override this method to provide hashing",
+                "canonical_hierarchy",
+            )
+            .into())
         }
     }
 
@@ -645,10 +651,16 @@ pub trait CanonicalSecurity: CanonicalService {
     ) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
     where
         Self: Sized,
+        crate::NestGateError: Into<Self::Error>,
     {
         async {
             // Default: not supported - implementations must override
-            panic!("generate_random not implemented - override this method to provide random generation")
+            // TODO: Implement in v0.2.0
+            Err(crate::NestGateError::internal_error(
+                "generate_random not implemented - override this method to provide random generation",
+                "canonical_hierarchy",
+            )
+            .into())
         }
     }
 
@@ -664,10 +676,16 @@ pub trait CanonicalSecurity: CanonicalService {
     ) -> impl Future<Output = Result<Vec<u8>, Self::Error>> + Send
     where
         Self: Sized,
+        crate::NestGateError: Into<Self::Error>,
     {
         async {
             // Default: not supported - implementations must override
-            panic!("derive_key not implemented - override this method to provide key derivation")
+            // TODO: Implement in v0.2.0
+            Err(crate::NestGateError::internal_error(
+                "derive_key not implemented - override this method to provide key derivation",
+                "canonical_hierarchy",
+            )
+            .into())
         }
     }
 

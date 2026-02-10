@@ -28,8 +28,15 @@ impl HttpClient {
     }
 
     /// Perform health check (HTTP removed)
+    ///
+    /// ✅ EVOLVED: Returns error instead of panicking via unimplemented!()
     pub async fn health_check(&self) -> UniversalZfsResult<()> {
-        unimplemented!("HTTP removed - use Unix sockets via Songbird gateway")
+        return Err(UniversalZfsError::RemoteError(
+            "HTTP removed - use Unix sockets via Songbird gateway".to_string(),
+        ));
+
+        // Dead code below: original HTTP implementation preserved as reference
+        #[allow(unreachable_code)]
         let health_url = format!("{}/health", self.endpoint);
 
         // Try with exponential backoff

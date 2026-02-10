@@ -152,18 +152,11 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
                 Ok(_) => {
                     // Successfully allocated slot!
                     
-                    // SAFETY: This is safe because:
-                    // 1. We have exclusive access to this slot (bitmap guarantees it)
-                    // 2. The slot is within bounds (slot < CAPACITY)
-                    // 3. No other thread can access this slot (bitmap protects it)
-                    //
-                    // However, we can make this even safer using safe abstractions!
-                    // Instead of direct UnsafeCell access, we use the fact that
-                    // the bitmap provides exclusive access semantics.
-                    
-                    // Store value safely
+                    // SAFETY: UnsafeCell::get() required for lock-free bitmap allocator.
+                    // - Bounds: slot < CAPACITY (from trailing_zeros on bitmap)
+                    // - Exclusive access: compare_exchange succeeded, so we own this slot
+                    // - No races: bitmap bit cleared atomically before we write
                     unsafe {
-                        // SAFETY: Bitmap guarantees exclusive access to this slot
                         *self.inner.slots[slot].get() = Some(value);
                     }
 
@@ -228,7 +221,11 @@ impl<T, const CAPACITY: usize> Clone for SafeMemoryPool<T, CAPACITY> {
 impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
     /// Get immutable reference to value
     pub fn value(&self) -> &T {
-        // SAFETY: Bitmap guarantees exclusive access during handle lifetime
+        // SAFETY: UnsafeCell::get() for interior mutability. Safe because:
+        // - Only one PoolHandle exists per slot (slot reserved at allocation)
+        // - Handle not dropped while we hold the reference (borrow from self)
+        // - Slot was written in allocate() before handle was returned
+        // SAFETY: PoolHandle invariants guarantee slot contains Some(T); empty slot = logic bug
         unsafe {
             (*self.pool.slots[self.slot].get())
                 .as_ref()
@@ -238,7 +235,7 @@ impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
 
     /// Get mutable reference to value
     pub fn value_mut(&mut self) -> &mut T {
-        // SAFETY: Bitmap guarantees exclusive access during handle lifetime
+        // SAFETY: Same as value(); exclusive mutability via &mut self. PoolHandle guarantees slot has Some(T).
         unsafe {
             (*self.pool.slots[self.slot].get())
                 .as_mut()
@@ -249,21 +246,24 @@ impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
     /// Take ownership of value, consuming the handle
     ///
     /// This deallocates the slot and returns the value.
+    ///
+    /// ✅ EVOLVED: Fixed use-after-forget ordering bug.
+    /// All field access happens BEFORE std::mem::forget(self).
     pub fn into_inner(self) -> T {
-        // Take value out before drop
+        // SAFETY: Exclusive access via handle ownership; slot valid until dealloc. PoolHandle guarantees slot has Some(T).
         let value = unsafe {
             (*self.pool.slots[self.slot].get())
                 .take()
                 .expect("Pool handle points to empty slot - this is a bug")
         };
 
-        // Don't run Drop (we've already taken the value)
-        std::mem::forget(self);
-
-        // Manually deallocate
+        // ✅ SAFE: Deallocate slot BEFORE forgetting self
         let mask = 1u64 << self.slot;
         self.pool.free_bitmap.fetch_or(mask, Ordering::Release);
         self.pool.stats.deallocated.fetch_add(1, Ordering::Relaxed);
+
+        // Prevent Drop from running (we've already cleaned up above)
+        std::mem::forget(self);
 
         value
     }
@@ -275,9 +275,8 @@ impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
 /// no risk of forgetting to deallocate. Rust's type system handles it all!
 impl<T, const CAPACITY: usize> Drop for PoolHandle<T, CAPACITY> {
     fn drop(&mut self) {
-        // Clear the slot
+        // SAFETY: Handle owns slot; no other refs exist (handle not cloneable)
         unsafe {
-            // SAFETY: We have exclusive access to this slot via the handle
             *self.pool.slots[self.slot].get() = None;
         }
 
@@ -290,7 +289,14 @@ impl<T, const CAPACITY: usize> Drop for PoolHandle<T, CAPACITY> {
     }
 }
 
-// Send/Sync implementations
+// SAFETY: Send/Sync for PoolHandle
+//
+// Send: PoolHandle holds Arc<PoolInner> + slot index. Transferring the handle
+// transfers exclusive ownership of that slot. No other handle references the
+// same slot. T: Send ensures the stored value is safe to transfer.
+//
+// Sync: &PoolHandle allows shared access. value() returns &T which requires T: Sync
+// for concurrent reads. Only one PoolHandle exists per slot, so no data races.
 unsafe impl<T: Send, const CAPACITY: usize> Send for PoolHandle<T, CAPACITY> {}
 unsafe impl<T: Sync, const CAPACITY: usize> Sync for PoolHandle<T, CAPACITY> {}
 

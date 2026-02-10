@@ -164,6 +164,19 @@ fn test_cache_stats_clone() {
     assert_eq!(stats1.ttl_seconds, stats2.ttl_seconds);
 }
 
+#[tokio::test]
+async fn test_discover_songbird_ipc_returns_error_when_unavailable() {
+    // When Songbird is not running, discover_songbird_ipc should return Err
+    let result = CapabilityDiscovery::discover_songbird_ipc().await;
+    assert!(result.is_err());
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        err_msg.contains("Songbird IPC not found") || err_msg.contains("Songbird"),
+        "Expected Songbird-related error, got: {}",
+        err_msg
+    );
+}
+
 // Integration tests (require Songbird IPC to be running)
 // These are marked as ignored by default
 #[tokio::test]

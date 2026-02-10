@@ -515,8 +515,11 @@ fn test_pool_capacity_serialization() {
 #[test]
 fn test_pool_capacity_deserialization() {
     let json = r#"{
+        "total": 1000000000,
         "total_bytes": 1000000000,
+        "used": 500000000,
         "used_bytes": 500000000,
+        "available": 500000000,
         "available_bytes": 500000000,
         "utilization_percent": 50.0
     }"#;

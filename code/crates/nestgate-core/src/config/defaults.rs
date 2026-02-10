@@ -221,20 +221,32 @@ impl TimeoutDefaults {
 mod tests {
     use super::*;
 
-    // NetworkPortDefaults tests
+    // NetworkPortDefaults tests - verify non-zero defaults (actual values are env-driven)
     #[test]
     fn test_network_port_defaults_api_port() {
-        assert_eq!(NetworkPortDefaults::api_port(), 8080); // HTTP_DEFAULT = 8080
+        let port = NetworkPortDefaults::api_port();
+        assert!(
+            port >= 1024,
+            "API port should be non-privileged, got {port}"
+        );
     }
 
     #[test]
     fn test_network_port_defaults_websocket_port() {
-        assert_eq!(NetworkPortDefaults::websocket_port(), 8081); // Uses ADMIN_PORT = 8081
+        let port = NetworkPortDefaults::websocket_port();
+        assert!(
+            port >= 1024,
+            "WebSocket port should be non-privileged, got {port}"
+        );
     }
 
     #[test]
     fn test_network_port_defaults_http_port() {
-        assert_eq!(NetworkPortDefaults::http_port(), 8080); // HTTP_DEFAULT = 8080
+        let port = NetworkPortDefaults::http_port();
+        assert!(
+            port >= 1024,
+            "HTTP port should be non-privileged, got {port}"
+        );
     }
 
     #[test]

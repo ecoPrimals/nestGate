@@ -223,3 +223,102 @@ impl EraMapping {
         &self.preferred_era == era || self.fallback_eras.contains(era)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::device::{
+        PerformanceTier, PhysicalDimensions, StorageEra, StorageTechnology, TemporalDevice,
+    };
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_system_new_empty() {
+        let system = TemporalStorageSystem::new();
+        assert!(system.devices.is_empty());
+        assert!(system.era_mappings.is_empty());
+        assert_eq!(system.device_count(), 0);
+        assert_eq!(system.total_capacity_mb(), 0);
+    }
+
+    #[test]
+    fn test_system_default() {
+        let system = TemporalStorageSystem::default();
+        assert_eq!(system.device_count(), 0);
+    }
+
+    #[test]
+    fn test_system_add_device_and_devices_for_era() {
+        let mut system = TemporalStorageSystem::new();
+        let device = TemporalDevice {
+            era: StorageEra::Modern,
+            technology: StorageTechnology::NVMe,
+            capacity_mb: 512,
+            performance_tier: PerformanceTier::Ultra,
+            physical_dimensions: PhysicalDimensions {
+                width_mm: 22.0,
+                height_mm: 3.5,
+                depth_mm: 80.0,
+            },
+            supported_formats: vec!["ext4".to_string()],
+            metadata: HashMap::new(),
+        };
+        system.add_device(device);
+        assert_eq!(system.device_count(), 1);
+        assert_eq!(system.total_capacity_mb(), 512);
+        let modern_devices = system.devices_for_era(&StorageEra::Modern);
+        assert_eq!(modern_devices.len(), 1);
+    }
+
+    #[test]
+    fn test_system_with_discovery() {
+        let system = TemporalStorageSystem::with_discovery().unwrap();
+        assert!(system.era_mappings.contains_key("hot"));
+        assert!(system.era_mappings.contains_key("archive"));
+        assert!(system.era_mappings.contains_key("cold"));
+    }
+
+    #[test]
+    fn test_system_add_era_mapping() {
+        let mut system = TemporalStorageSystem::new();
+        let mapping = EraMapping::new(StorageEra::Digital);
+        system.add_era_mapping("custom".to_string(), mapping);
+        let retrieved = system.get_era_mapping("custom").unwrap();
+        assert_eq!(&retrieved.preferred_era, &StorageEra::Digital);
+    }
+
+    #[test]
+    fn test_era_mapping_new() {
+        let mapping = EraMapping::new(StorageEra::Biological);
+        assert_eq!(mapping.preferred_era, StorageEra::Biological);
+        assert!(mapping.fallback_eras.is_empty());
+        assert!(!mapping.cross_era_replication);
+    }
+
+    #[test]
+    fn test_era_mapping_add_fallback_and_accepts_era() {
+        let mut mapping = EraMapping::new(StorageEra::Modern);
+        mapping.add_fallback(StorageEra::Digital);
+        assert_eq!(mapping.fallback_eras.len(), 1);
+        assert!(mapping.accepts_era(&StorageEra::Modern));
+        assert!(mapping.accepts_era(&StorageEra::Digital));
+        assert!(!mapping.accepts_era(&StorageEra::Biological));
+    }
+
+    #[test]
+    fn test_era_mapping_enable_cross_era_replication() {
+        let mut mapping = EraMapping::new(StorageEra::Magnetic);
+        mapping.enable_cross_era_replication();
+        assert!(mapping.cross_era_replication);
+    }
+
+    #[test]
+    fn test_default_era_mappings_content() {
+        let system = TemporalStorageSystem::with_discovery().unwrap();
+        let hot = system.get_era_mapping("hot").unwrap();
+        assert_eq!(hot.preferred_era, StorageEra::Modern);
+        let archive = system.get_era_mapping("archive").unwrap();
+        assert_eq!(archive.preferred_era, StorageEra::Biological);
+        assert!(archive.cross_era_replication);
+    }
+}

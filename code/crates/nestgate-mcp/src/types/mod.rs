@@ -1,6 +1,4 @@
-///
-//! This module contains all type definitions for the MCP system including
-//! authentication types, provider types, and storage types.
+//! MCP type definitions for authentication, providers, and storage.
 pub mod auth;
 pub mod provider;
 pub mod storage;

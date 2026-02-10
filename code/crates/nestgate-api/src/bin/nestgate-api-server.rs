@@ -74,12 +74,12 @@ impl ServerConfig {
     pub fn bind_endpoint(&self) -> Result<SocketAddr, std::net::AddrParseError> {
         let host = &self.env_config.network.host;
         let port = self.env_config.network.port.get();
-        format!("{}:{}", host, port).parse()
+        format!("{host}:{port}").parse()
     }
 
     /// Get API port
     #[must_use]
-    pub fn api_port(&self) -> u16 {
+    pub const fn api_port(&self) -> u16 {
         self.env_config.network.port.get()
     }
 

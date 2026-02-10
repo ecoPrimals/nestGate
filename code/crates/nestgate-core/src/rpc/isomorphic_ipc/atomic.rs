@@ -57,8 +57,9 @@ use super::launcher::{discover_nestgate_endpoint, is_nestgate_running};
 
 /// Check health of a primal via capability-based discovery
 ///
+/// ✅ EVOLVED: Real implementation using socket discovery + JSON-RPC health check
 /// ✅ DEEP DEBT PRINCIPLE #6: Primal Self-Knowledge
-/// - Discovers primal at runtime (no hardcoding)
+/// - Discovers primal socket at runtime (no hardcoding)
 /// - Gracefully handles unavailable primals
 /// - Returns error if primal not available (caller decides fallback)
 ///
@@ -69,17 +70,131 @@ use super::launcher::{discover_nestgate_endpoint, is_nestgate_running};
 /// * `Ok(HealthStatus)` - Health status if primal discovered and responsive
 /// * `Err(_)` - Primal not available or health check failed
 async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
-    debug!("🔍 Attempting to discover {} health endpoint...", primal_name);
-    
-    // TODO: Implement actual primal discovery and health check
-    // When beardog/songbird/squirrel implement isomorphic IPC health endpoints:
-    // 1. Use universal primal discovery to find the primal
-    // 2. Connect via isomorphic IPC (Unix socket or TCP)
-    // 3. Send health check JSON-RPC request
-    // 4. Return HealthStatus based on response
-    //
-    // For now, return error to trigger fallback (assume healthy)
-    anyhow::bail!("{} health endpoint not yet implemented", primal_name)
+    debug!(
+        "🔍 Attempting to discover {} health endpoint...",
+        primal_name
+    );
+
+    // ✅ CAPABILITY-BASED: Discover primal socket via standard paths
+    // Priority: BIOMEOS_SOCKET_DIR → XDG_RUNTIME_DIR/biomeos → /tmp
+    let socket_path = discover_primal_socket(primal_name);
+
+    let Some(socket) = socket_path else {
+        anyhow::bail!("{} socket not found in any standard location", primal_name);
+    };
+
+    // ✅ RUNTIME DISCOVERY: Attempt to connect to the primal's socket
+    debug!("🔌 Connecting to {} at {}", primal_name, socket.display());
+
+    let stream = tokio::net::UnixStream::connect(&socket)
+        .await
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "{} not reachable at {}: {}",
+                primal_name,
+                socket.display(),
+                e
+            )
+        })?;
+
+    // ✅ JSON-RPC 2.0: Send health check request
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    let (reader, mut writer) = stream.into_split();
+
+    let health_request = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "health",
+        "id": 1
+    });
+
+    let mut request_bytes = serde_json::to_vec(&health_request)?;
+    request_bytes.push(b'\n');
+    writer.write_all(&request_bytes).await?;
+
+    // Read response with timeout
+    let mut buf_reader = BufReader::new(reader);
+    let mut response_line = String::new();
+
+    let read_result = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        buf_reader.read_line(&mut response_line),
+    )
+    .await;
+
+    match read_result {
+        Ok(Ok(_)) if !response_line.is_empty() => {
+            // Parse response to check for health
+            if let Ok(resp) = serde_json::from_str::<serde_json::Value>(&response_line) {
+                if resp.get("result").is_some() {
+                    debug!("✅ {} is healthy (responded to health check)", primal_name);
+                    return Ok(HealthStatus::Healthy);
+                } else if resp.get("error").is_some() {
+                    debug!("⚠️  {} responded with error", primal_name);
+                    return Ok(HealthStatus::Degraded);
+                }
+            }
+            // Got a response but couldn't parse - still alive
+            debug!("⚠️  {} responded but health format unknown", primal_name);
+            Ok(HealthStatus::Degraded)
+        }
+        Ok(Ok(_)) => {
+            // Empty response
+            debug!("⚠️  {} connected but no response", primal_name);
+            Ok(HealthStatus::Degraded)
+        }
+        Ok(Err(e)) => {
+            debug!("❌ {} read error: {}", primal_name, e);
+            Ok(HealthStatus::Unreachable)
+        }
+        Err(_) => {
+            debug!("⏰ {} health check timed out (5s)", primal_name);
+            Ok(HealthStatus::Degraded)
+        }
+    }
+}
+
+/// Discover a primal's Unix socket path via standard locations
+///
+/// ✅ ZERO HARDCODING: Uses environment and standard paths only
+fn discover_primal_socket(primal_name: &str) -> Option<std::path::PathBuf> {
+    // 1. Check biomeOS socket directory
+    if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+        let path = std::path::PathBuf::from(dir).join(format!("{primal_name}.sock"));
+        if path.exists() {
+            return Some(path);
+        }
+    }
+
+    // 2. Check XDG runtime directory with biomeOS subdirectory
+    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+        let path = std::path::PathBuf::from(xdg)
+            .join("biomeos")
+            .join(format!("{primal_name}.sock"));
+        if path.exists() {
+            return Some(path);
+        }
+    }
+
+    // 3. Check /tmp fallback
+    let tmp_path = std::path::PathBuf::from("/tmp").join(format!("{primal_name}.sock"));
+    if tmp_path.exists() {
+        return Some(tmp_path);
+    }
+
+    // 4. Check family-scoped socket patterns
+    if let Ok(family_id) = std::env::var("NESTGATE_FAMILY_ID") {
+        // Try family-scoped pattern: {primal_name}-{family_id}.sock
+        if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+            let path = std::path::PathBuf::from(xdg)
+                .join("biomeos")
+                .join(format!("{primal_name}-{family_id}.sock"));
+            if path.exists() {
+                return Some(path);
+            }
+        }
+    }
+
+    None
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -87,38 +202,81 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// Atomic composition type
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+///
+/// Compositions define **required capabilities**, not specific primal names.
+/// At runtime, capability discovery resolves which primals satisfy each role.
+/// The well-known names are defaults that can be overridden via configuration.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AtomicType {
-    /// TOWER = beardog + songbird (device + network foundation)
+    /// TOWER = device-capability + network-capability (foundation)
     Tower,
-    /// NODE = TOWER + toadstool (adds GPU compute)
+    /// NODE = TOWER + gpu-compute-capability
     Node,
-    /// NEST = TOWER + nestgate + squirrel (adds storage + AI)
+    /// NEST = TOWER + storage-capability + ai-capability
     Nest,
+    /// Custom composition with arbitrary capability requirements
+    Custom {
+        /// Human-readable composition name
+        name: String,
+        /// List of capability roles required by this composition
+        required_capabilities: Vec<String>,
+    },
+}
+
+/// Well-known capability roles for atomic compositions
+pub mod capabilities {
+    /// Device abstraction and hardware management
+    pub const DEVICE: &str = "device";
+    /// Network discovery and federation
+    pub const NETWORK: &str = "network";
+    /// Universal storage and data management
+    pub const STORAGE: &str = "storage";
+    /// AI/MCP integration and model orchestration
+    pub const AI_INTEGRATION: &str = "ai-integration";
+    /// GPU compute acceleration
+    pub const GPU_COMPUTE: &str = "gpu-compute";
 }
 
 impl AtomicType {
     /// Get human-readable name
-    pub fn name(&self) -> &'static str {
+    pub fn name(&self) -> &str {
         match self {
-            AtomicType::Tower => "TOWER",
-            AtomicType::Node => "NODE",
-            AtomicType::Nest => "NEST",
+            Self::Tower => "TOWER",
+            Self::Node => "NODE",
+            Self::Nest => "NEST",
+            Self::Custom { name, .. } => name,
         }
     }
 
-    /// Get component primals
-    pub fn components(&self) -> &'static [&'static str] {
+    /// Get required capabilities for this composition
+    ///
+    /// Returns capability roles (not primal names). At runtime, capability
+    /// discovery determines which primals satisfy each role.
+    pub fn required_capabilities(&self) -> Vec<&str> {
         match self {
-            AtomicType::Tower => &["beardog", "songbird"],
-            AtomicType::Node => &["beardog", "songbird", "toadstool"],
-            AtomicType::Nest => &["beardog", "songbird", "nestgate", "squirrel"],
+            Self::Tower => vec![capabilities::DEVICE, capabilities::NETWORK],
+            Self::Node => vec![
+                capabilities::DEVICE,
+                capabilities::NETWORK,
+                capabilities::GPU_COMPUTE,
+            ],
+            Self::Nest => vec![
+                capabilities::DEVICE,
+                capabilities::NETWORK,
+                capabilities::STORAGE,
+                capabilities::AI_INTEGRATION,
+            ],
+            Self::Custom {
+                required_capabilities,
+                ..
+            } => required_capabilities.iter().map(String::as_str).collect(),
         }
     }
 
-    /// Check if this atomic includes NestGate
-    pub fn includes_nestgate(&self) -> bool {
-        matches!(self, AtomicType::Nest)
+    /// Check if this composition requires the storage capability (i.e. NestGate's role)
+    pub fn requires_storage(&self) -> bool {
+        self.required_capabilities()
+            .contains(&capabilities::STORAGE)
     }
 }
 
@@ -193,10 +351,7 @@ pub async fn verify_nestgate_health() -> Result<()> {
         .context("Failed to check NestGate health")?;
 
     if !status.is_operational() {
-        return Err(anyhow::anyhow!(
-            "NestGate is not operational: {:?}",
-            status
-        ));
+        return Err(anyhow::anyhow!("NestGate is not operational: {:?}", status));
     }
 
     info!("✅ NestGate health verified: {:?}", status);
@@ -223,7 +378,10 @@ pub async fn verify_nestgate_health() -> Result<()> {
 /// }
 /// ```
 pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
-    info!("⏳ Waiting for NestGate to start (timeout: {:?})...", timeout);
+    info!(
+        "⏳ Waiting for NestGate to start (timeout: {:?})...",
+        timeout
+    );
     wait_for_healthy(timeout)
         .await
         .context("Timeout waiting for NestGate")
@@ -265,43 +423,48 @@ pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
 ///     Ok(())
 /// }
 /// ```
-pub async fn verify_nest_health() -> Result<AtomicStatus> {
-    info!("🔍 Verifying NEST atomic composition health...");
+/// Verify an atomic composition's health by discovering primals at runtime
+///
+/// Uses capability-based discovery to find which primals are running and
+/// checks their health via JSON-RPC. Does **not** assume any specific primal
+/// names -- discovers all available primals and maps them to required capabilities.
+///
+/// # Self-Knowledge Principle
+///
+/// NestGate checks its own health directly. For all other capabilities,
+/// it discovers primals via socket scanning and checks them dynamically.
+pub async fn verify_composition_health(composition: &AtomicType) -> Result<AtomicStatus> {
+    info!(
+        "🔍 Verifying {} atomic composition health...",
+        composition.name()
+    );
 
     let mut component_statuses = Vec::new();
 
-    // Check NestGate (implemented via isomorphic IPC)
+    // Self-knowledge: check our own health directly
     let nestgate_status = check_nestgate_health().await.unwrap_or_else(|e| {
         warn!("⚠️  Failed to check NestGate health: {}", e);
         HealthStatus::Unreachable
     });
-    component_statuses.push(("nestgate".to_string(), nestgate_status));
+    component_statuses.push(("nestgate (self)".to_string(), nestgate_status));
 
-    // ✅ CAPABILITY-BASED: Discover beardog health endpoint (Deep Debt Principle #6)
-    // Try to check beardog health via isomorphic IPC discovery
-    // If not available, assume healthy (graceful degradation)
-    let beardog_status = check_primal_health("beardog").await
-        .unwrap_or_else(|_| {
-            debug!("beardog health endpoint not available, assuming healthy");
-            HealthStatus::Healthy
-        });
-    component_statuses.push(("beardog".to_string(), beardog_status));
-    
-    // ✅ CAPABILITY-BASED: Discover songbird health endpoint
-    let songbird_status = check_primal_health("songbird").await
-        .unwrap_or_else(|_| {
-            debug!("songbird health endpoint not available, assuming healthy");
-            HealthStatus::Healthy
-        });
-    component_statuses.push(("songbird".to_string(), songbird_status));
+    // Discover and check all other primals via socket scanning
+    let discovered_primals = discover_available_primals().await;
 
-    // ✅ CAPABILITY-BASED: Discover squirrel health endpoint (Deep Debt Principle #6)
-    let squirrel_status = check_primal_health("squirrel").await
-        .unwrap_or_else(|_| {
-            debug!("squirrel health endpoint not available, assuming healthy");
-            HealthStatus::Healthy
+    for primal_name in &discovered_primals {
+        if primal_name == "nestgate" {
+            continue; // Already checked via self-knowledge
+        }
+
+        let status = check_primal_health(primal_name).await.unwrap_or_else(|_| {
+            debug!(
+                "{} health endpoint not available, marking as degraded",
+                primal_name
+            );
+            HealthStatus::Degraded
         });
-    component_statuses.push(("squirrel".to_string(), squirrel_status));
+        component_statuses.push((primal_name.clone(), status));
+    }
 
     // Determine overall health
     let overall_health = if component_statuses
@@ -319,17 +482,89 @@ pub async fn verify_nest_health() -> Result<AtomicStatus> {
     };
 
     let status = AtomicStatus {
-        atomic_type: AtomicType::Nest,
+        atomic_type: composition.clone(),
         overall_health,
         component_statuses,
     };
 
-    info!("📊 NEST atomic health: {:?}", status.overall_health);
+    info!(
+        "📊 {} health: {:?}",
+        composition.name(),
+        status.overall_health
+    );
     for (component, component_status) in &status.component_statuses {
         info!("  - {}: {:?}", component, component_status);
     }
 
     Ok(status)
+}
+
+/// Backward-compatible wrapper for NEST composition health check
+pub async fn verify_nest_health() -> Result<AtomicStatus> {
+    verify_composition_health(&AtomicType::Nest).await
+}
+
+/// Discover available primals by scanning standard socket locations
+///
+/// Scans BIOMEOS_SOCKET_DIR, XDG_RUNTIME_DIR/biomeos, and /tmp for
+/// primal sockets. Returns discovered primal names (without assuming
+/// which primals should exist).
+async fn discover_available_primals() -> Vec<String> {
+    let mut primals = Vec::new();
+    let socket_dirs = gather_socket_search_dirs();
+
+    for dir in &socket_dirs {
+        let dir_path = std::path::Path::new(dir);
+        if !dir_path.exists() {
+            continue;
+        }
+
+        let Ok(entries) = std::fs::read_dir(dir_path) else {
+            continue;
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let Some(name) = path.file_stem().and_then(|s| s.to_str()) else {
+                continue;
+            };
+
+            // Socket files are named {primal}.sock or {primal}-{family}.sock
+            if path.extension().and_then(|e| e.to_str()) == Some("sock") {
+                // Extract base primal name (strip family suffix if present)
+                let primal_name = name.split('-').next().unwrap_or(name);
+                if !primal_name.is_empty() && !primals.contains(&primal_name.to_string()) {
+                    primals.push(primal_name.to_string());
+                }
+            }
+        }
+    }
+
+    debug!("🔍 Discovered primals via socket scan: {:?}", primals);
+    primals
+}
+
+/// Gather standard directories to search for primal sockets
+fn gather_socket_search_dirs() -> Vec<String> {
+    let mut dirs = Vec::new();
+
+    if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+        dirs.push(dir);
+    }
+
+    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+        dirs.push(format!("{}/biomeos", xdg));
+    }
+
+    // UID-based XDG fallback
+    let uid = crate::platform::get_current_uid();
+    let xdg_default = format!("/run/user/{}/biomeos", uid);
+    if !dirs.contains(&xdg_default) {
+        dirs.push(xdg_default);
+    }
+
+    dirs.push("/tmp".to_string());
+    dirs
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -367,17 +602,43 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_atomic_type_components() {
-        assert_eq!(AtomicType::Tower.components().len(), 2);
-        assert_eq!(AtomicType::Node.components().len(), 3);
-        assert_eq!(AtomicType::Nest.components().len(), 4);
+    fn test_atomic_type_required_capabilities() {
+        assert_eq!(AtomicType::Tower.required_capabilities().len(), 2);
+        assert_eq!(AtomicType::Node.required_capabilities().len(), 3);
+        assert_eq!(AtomicType::Nest.required_capabilities().len(), 4);
     }
 
     #[test]
-    fn test_atomic_type_includes_nestgate() {
-        assert!(!AtomicType::Tower.includes_nestgate());
-        assert!(!AtomicType::Node.includes_nestgate());
-        assert!(AtomicType::Nest.includes_nestgate());
+    fn test_atomic_capabilities_are_roles_not_primal_names() {
+        // Verify we use capability roles, not hardcoded primal names
+        for cap in AtomicType::Nest.required_capabilities() {
+            assert!(
+                !["beardog", "songbird", "nestgate", "squirrel", "toadstool"].contains(&cap),
+                "Capability '{}' should be a role, not a primal name",
+                cap
+            );
+        }
+    }
+
+    #[test]
+    fn test_atomic_type_requires_storage() {
+        assert!(!AtomicType::Tower.requires_storage());
+        assert!(!AtomicType::Node.requires_storage());
+        assert!(AtomicType::Nest.requires_storage());
+    }
+
+    #[test]
+    fn test_custom_atomic_type() {
+        let custom = AtomicType::Custom {
+            name: "EDGE".to_string(),
+            required_capabilities: vec![
+                capabilities::DEVICE.to_string(),
+                capabilities::STORAGE.to_string(),
+            ],
+        };
+        assert_eq!(custom.name(), "EDGE");
+        assert_eq!(custom.required_capabilities().len(), 2);
+        assert!(custom.requires_storage());
     }
 
     #[test]
@@ -386,31 +647,29 @@ mod tests {
             atomic_type: AtomicType::Nest,
             overall_health: HealthStatus::Healthy,
             component_statuses: vec![
-                ("nestgate".to_string(), HealthStatus::Healthy),
-                ("beardog".to_string(), HealthStatus::Healthy),
+                ("nestgate (self)".to_string(), HealthStatus::Healthy),
+                ("device-provider".to_string(), HealthStatus::Healthy),
             ],
         };
         assert!(status.is_operational());
 
-        // Degraded is still operational, but needs attention
         let degraded_status = AtomicStatus {
             atomic_type: AtomicType::Nest,
             overall_health: HealthStatus::Degraded,
             component_statuses: vec![
-                ("nestgate".to_string(), HealthStatus::Degraded),
-                ("beardog".to_string(), HealthStatus::Healthy),
+                ("nestgate (self)".to_string(), HealthStatus::Degraded),
+                ("device-provider".to_string(), HealthStatus::Healthy),
             ],
         };
-        assert!(degraded_status.is_operational()); // Degraded is still operational
-        assert!(degraded_status.overall_health.needs_attention()); // But needs attention
-        
-        // Unhealthy is NOT operational
+        assert!(degraded_status.is_operational());
+        assert!(degraded_status.overall_health.needs_attention());
+
         let unhealthy_status = AtomicStatus {
             atomic_type: AtomicType::Nest,
             overall_health: HealthStatus::Unhealthy,
             component_statuses: vec![
-                ("nestgate".to_string(), HealthStatus::Unhealthy),
-                ("beardog".to_string(), HealthStatus::Healthy),
+                ("nestgate (self)".to_string(), HealthStatus::Unhealthy),
+                ("device-provider".to_string(), HealthStatus::Healthy),
             ],
         };
         assert!(!unhealthy_status.is_operational());
@@ -418,10 +677,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_nest_health() {
-        // This will check NestGate health
-        // May fail if NestGate is not running, which is OK for this test
+        // May fail if NestGate is not running -- that's expected
         let result = verify_nest_health().await;
-        // Just verify function doesn't panic
         let _ = result;
+    }
+
+    #[tokio::test]
+    async fn test_discover_available_primals_does_not_panic() {
+        // Should gracefully handle missing socket directories
+        let primals = discover_available_primals().await;
+        // Just verify it returns without panic
+        let _ = primals;
     }
 }

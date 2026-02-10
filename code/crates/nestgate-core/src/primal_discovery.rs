@@ -16,29 +16,15 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
+//! // Uses reqwest; discovery.announce spawns network - use capability_helpers for production
 //! use nestgate_core::primal_discovery::{PrimalDiscovery, SelfKnowledge};
-//!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! // 1. Announce self (what we provide)
 //! let self_knowledge = SelfKnowledge::builder()
 //!     .name("nestgate")
 //!     .capability("storage")
-//!     .capability("zfs_management")
 //!     .endpoint_http(8080)
 //!     .build();
-//!
 //! let discovery = PrimalDiscovery::new(self_knowledge);
-//! discovery.announce().await?;
-//!
-//! // 2. Discover others by capability (NOT by name!)
-//! let security_primal = discovery.discover_capability("security").await?;
-//! let auth_url = security_primal.primary_endpoint();
-//!
-//! // 3. Connect (no hardcoded ports!)
-//! let response = reqwest::get(&auth_url).await?;
-//! # Ok(())
-//! # }
 //! ```
 
 /// Capability-based discovery helpers (NEW - USE THIS!)

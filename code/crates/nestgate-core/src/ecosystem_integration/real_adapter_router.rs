@@ -120,7 +120,7 @@ pub struct ServiceRequest {
     pub timeout: Option<Duration>,
 }
 /// Request priority levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Requestpriority
 pub enum RequestPriority {
     /// Low
@@ -150,7 +150,7 @@ pub struct ServiceResponse {
     pub processing_time: Duration,
 }
 /// Response status codes
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Status values for Response
 pub enum ResponseStatus {
     /// Success
@@ -636,17 +636,25 @@ mod tests {
 
     #[tokio::test]
     async fn test_router_creation() {
-        // This would require a real UniversalAdapter for testing
-        // For now, just test that the types compile correctly
-        // Test passes by compilation
+        let adapter = Arc::new(UniversalAdapter::new("http://127.0.0.1:1".to_string()));
+        let router = UniversalAdapterRouter::new(adapter);
+        // Router constructed - verify metrics are accessible
+        let metrics = router.get_metrics().await;
+        assert_eq!(metrics.total_requests, 0);
     }
 
     #[tokio::test]
     async fn test_fallback_strategy_default() {
         let strategy = FallbackStrategy::default();
         match strategy {
-            FallbackStrategy::RetryWithBackoff { .. } => {
-                // Expected default strategy
+            FallbackStrategy::RetryWithBackoff {
+                initial_delay,
+                max_delay,
+                multiplier,
+            } => {
+                assert_eq!(initial_delay, Duration::from_millis(100));
+                assert_eq!(max_delay, Duration::from_secs(10));
+                assert!((multiplier - 2.0).abs() < 0.001);
             }
             _ => panic!("Unexpected fallback strategy"),
         }
@@ -658,5 +666,76 @@ mod tests {
         assert_eq!(config.operation_timeout, Duration::from_secs(30));
         assert_eq!(config.max_retries, 3);
         assert_eq!(config.failure_threshold, 5);
+        assert_eq!(config.recovery_timeout, Duration::from_secs(60));
+        assert!(config.enable_monitoring);
+    }
+
+    #[tokio::test]
+    async fn test_fail_fast_fallback() {
+        let adapter = Arc::new(UniversalAdapter::new("http://127.0.0.1:1".to_string()));
+        let config = AdapterRoutingConfig::default();
+        let router =
+            UniversalAdapterRouter::with_config(adapter, config, FallbackStrategy::FailFast);
+
+        let request = ServiceRequest {
+            request_id: "test-1".to_string(),
+            capability: "storage".to_string(),
+            payload: serde_json::json!({}),
+            priority: RequestPriority::Normal,
+            timeout: Some(Duration::from_millis(100)),
+        };
+
+        let response = router.route_request(request).await.unwrap();
+        assert_eq!(response.status, ResponseStatus::Failed);
+        assert!(response.error.is_some());
+        assert_eq!(response.request_id, "test-1");
+    }
+
+    #[tokio::test]
+    async fn test_service_request_response_types() {
+        let request = ServiceRequest {
+            request_id: "req-1".to_string(),
+            capability: "crypto".to_string(),
+            payload: serde_json::json!({"key": "value"}),
+            priority: RequestPriority::High,
+            timeout: None,
+        };
+        assert_eq!(request.capability, "crypto");
+        assert_eq!(request.priority, RequestPriority::High);
+
+        let response = ServiceResponse {
+            request_id: "req-1".to_string(),
+            status: ResponseStatus::Success,
+            data: Some(serde_json::json!({"result": "ok"})),
+            error: None,
+            metadata: HashMap::new(),
+            processing_time: Duration::from_millis(10),
+        };
+        assert_eq!(response.status, ResponseStatus::Success);
+        assert!(response.data.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_health_check_no_requests() {
+        let adapter = Arc::new(UniversalAdapter::new("http://127.0.0.1:1".to_string()));
+        let router = UniversalAdapterRouter::new(adapter);
+        let health = router.health_check().await;
+        assert!(health.is_healthy);
+        assert_eq!(health.success_rate, 100.0);
+        assert_eq!(health.total_requests, 0);
+    }
+
+    #[tokio::test]
+    async fn test_fallback_strategy_variants() {
+        let _retry = FallbackStrategy::RetryWithBackoff {
+            initial_delay: Duration::from_millis(50),
+            max_delay: Duration::from_secs(5),
+            multiplier: 2.0,
+        };
+        let _local = FallbackStrategy::LocalFallback;
+        let _queue = FallbackStrategy::QueueForRetry {
+            queue_size: 100,
+            retry_interval: Duration::from_secs(1),
+        };
     }
 }

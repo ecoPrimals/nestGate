@@ -3,11 +3,9 @@
 //! This module provides the main network service implementation,
 //! managing connections, services, and network operations.
 
-use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
 use super::types::{

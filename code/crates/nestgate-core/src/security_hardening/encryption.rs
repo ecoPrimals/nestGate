@@ -36,12 +36,12 @@ impl EncryptionManager {
     
     /// Add an encryption key
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if key is not exactly 32 bytes (AES-256 requirement)
-    pub fn add_key(&mut self, key_id: String, key: Vec<u8>) {
+    /// Returns an error if key is not exactly 32 bytes (AES-256 requirement)
+    pub fn add_key(&mut self, key_id: String, key: Vec<u8>) -> Result<(), String> {
         if key.len() != 32 {
-            panic!("Key must be 32 bytes for AES-256");
+            return Err("Key must be 32 bytes for AES-256".to_string());
         }
         
         self.keys.insert(key_id.clone(), key);
@@ -49,6 +49,7 @@ impl EncryptionManager {
         if self.default_key_id.is_none() {
             self.default_key_id = Some(key_id);
         }
+        Ok(())
     }
     
     /// Encrypt data
@@ -108,7 +109,7 @@ impl EncryptionManager {
             return Err("Old key not found".to_string());
         }
         
-        self.add_key(new_key_id.clone(), new_key);
+        self.add_key(new_key_id.clone(), new_key)?;
         
         if self.default_key_id.as_ref() == Some(&old_key_id.to_string()) {
             self.default_key_id = Some(new_key_id);
@@ -153,7 +154,7 @@ mod tests {
     #[test]
     fn test_encryption_manager() {
         let mut manager = EncryptionManager::new();
-        manager.add_key("key1".to_string(), vec![42u8; 32]);
+        manager.add_key("key1".to_string(), vec![42u8; 32]).unwrap();
         
         let data = b"sensitive data";
         let encrypted = manager.encrypt(data, Some("key1")).unwrap();
@@ -165,7 +166,7 @@ mod tests {
     #[test]
     fn test_default_key() {
         let mut manager = EncryptionManager::new();
-        manager.add_key("default".to_string(), vec![42u8; 32]);
+        manager.add_key("default".to_string(), vec![42u8; 32]).unwrap();
         
         // Should use default key when not specified
         let data = b"test";
@@ -176,7 +177,7 @@ mod tests {
     #[test]
     fn test_key_rotation() {
         let mut manager = EncryptionManager::new();
-        manager.add_key("old".to_string(), vec![1u8; 32]);
+        manager.add_key("old".to_string(), vec![1u8; 32]).unwrap();
         
         manager.rotate_key("old", "new".to_string(), vec![2u8; 32]).unwrap();
         
@@ -185,10 +186,11 @@ mod tests {
     }
     
     #[test]
-    #[should_panic(expected = "Key must be 32 bytes")]
     fn test_invalid_key_length() {
         let mut manager = EncryptionManager::new();
-        manager.add_key("bad".to_string(), vec![1u8; 16]); // Wrong size
+        let result = manager.add_key("bad".to_string(), vec![1u8; 16]); // Wrong size
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("32 bytes"));
     }
 }
 

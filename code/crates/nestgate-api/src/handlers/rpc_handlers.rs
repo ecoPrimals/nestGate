@@ -73,6 +73,9 @@ pub struct ProtocolInfo {
     /// Typical latency in microseconds
     #[serde(skip_serializing_if = "Option::is_none")]
     pub latency_us: Option<u64>,
+    /// Availability status - "available", "planned", etc. Omitted if available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
 }
 
 /// Protocol capabilities response
@@ -171,6 +174,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
                 "streaming".to_string(),
             ],
             latency_us: Some(5000), // ~5ms
+            status: None,
         },
     );
 
@@ -188,10 +192,11 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
                 "language-agnostic".to_string(),
             ],
             latency_us: Some(2000), // ~2ms
+            status: None,
         },
     );
 
-    // tarpc protocol (high-performance binary RPC)
+    // tarpc protocol - planned for v0.2.0, not yet running (serve_tarpc not wired)
     protocols.insert(
         "tarpc".to_string(),
         ProtocolInfo {
@@ -207,6 +212,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
                 "zero-copy".to_string(),
             ],
             latency_us: Some(50), // ~50μs (40x faster than JSON-RPC!)
+            status: Some("planned_v0.2.0".to_string()),
         },
     );
 
@@ -233,7 +239,7 @@ pub async fn rpc_health() -> Json<serde_json::Value> {
         "status": "healthy",
         "rpc": {
             "jsonrpc": "available",
-            "tarpc": "available"
+            "tarpc": "planned_v0.2.0"
         }
     }))
 }
@@ -286,9 +292,10 @@ mod tests {
         assert!(capabilities.protocols.contains_key("jsonrpc"));
         assert!(capabilities.protocols.contains_key("tarpc"));
 
-        // Verify tarpc has best performance
+        // Verify tarpc has best performance and is marked as planned (not yet running)
         let tarpc = capabilities.protocols.get("tarpc").unwrap();
         assert_eq!(tarpc.latency_us, Some(50));
+        assert_eq!(tarpc.status, Some("planned_v0.2.0".to_string()));
 
         let jsonrpc = capabilities.protocols.get("jsonrpc").unwrap();
         assert_eq!(jsonrpc.latency_us, Some(2000));
@@ -302,5 +309,6 @@ mod tests {
         let health = rpc_health().await.0;
         assert_eq!(health["status"], "healthy");
         assert_eq!(health["rpc"]["jsonrpc"], "available");
+        assert_eq!(health["rpc"]["tarpc"], "planned_v0.2.0");
     }
 }

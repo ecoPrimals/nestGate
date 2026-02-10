@@ -26,6 +26,7 @@ pub mod websocket;
 /// **ZFS HANDLERS**
 ///
 /// API endpoints for ZFS filesystem operations and management.
+/// Split into: dataset_handlers, snapshot_handlers, helpers.
 pub mod zfs;
 
 // Re-export commonly used handlers for convenience

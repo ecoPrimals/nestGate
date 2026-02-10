@@ -6,15 +6,16 @@
 //!
 //! ```rust
 //! use nestgate_core::config::canonical_primary::domains::consolidated_domains::validation::*;
+//! use nestgate_core::Result;
 //!
 //! struct MyConfig;
 //!
 //! impl DomainConfigValidation for MyConfig {
-//!     fn validate(&self) -> crate::error::Result<Vec<String>> {
+//!     fn validate(&self) -> Result<Vec<String>> {
 //!         Ok(vec![])
 //!     }
 //!
-//!     fn validate_for_environment(&self, env: &str) -> crate::error::Result<()> {
+//!     fn validate_for_environment(&self, _env: &str) -> Result<()> {
 //!         Ok(())
 //!     }
 //!

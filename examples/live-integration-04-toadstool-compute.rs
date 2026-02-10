@@ -1,7 +1,29 @@
 // NestGate → ToadStool Integration Demo
 // Demonstrates compute workloads using NestGate storage
+//
+// **EVOLVED**: Replaced reqwest with raw TCP for ecoBin compliance.
+// NestGate delegates external HTTP to network primals.
 
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
+
+/// Check if a TCP endpoint is reachable
+async fn check_tcp_reachable(addr: &str) -> bool {
+    let connect_future = TcpStream::connect(addr);
+    match tokio::time::timeout(Duration::from_secs(2), connect_future).await {
+        Ok(Ok(mut stream)) => {
+            // Send minimal HTTP request
+            let request = b"GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+            if stream.write_all(request).await.is_err() {
+                return false;
+            }
+            let mut buf = [0u8; 256];
+            matches!(stream.read(&mut buf).await, Ok(n) if n > 0)
+        }
+        _ => false,
+    }
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -36,38 +58,30 @@ async fn main() -> anyhow::Result<()> {
     println!("   Looking for compute capabilities on the network...");
     println!();
 
-    let toadstool_endpoint = "http://localhost:8081";
+    let toadstool_addr = "127.0.0.1:8081";
 
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()?;
+    // Try to connect to ToadStool via TCP
+    if check_tcp_reachable(toadstool_addr).await {
+        println!("   ✅ ToadStool compute service reachable");
+        println!("      Endpoint: {}", toadstool_addr);
+    } else {
+        println!("   ⚠️  ToadStool not reachable on default port");
+        println!("   Note: ToadStool may be using different configuration");
+        println!();
+        println!("📝 Step 3: Demonstrating integration pattern (conceptual)...");
+        println!();
 
-    // Try to connect to ToadStool
-    match client.get(toadstool_endpoint).send().await {
-        Ok(response) => {
-            println!("   ✅ ToadStool compute service reachable");
-            println!("      Status: {}", response.status());
-            println!("      Endpoint: {}", toadstool_endpoint);
-        }
-        Err(_e) => {
-            println!("   ⚠️  ToadStool not reachable on default port");
-            println!("   Note: ToadStool may be using different configuration");
-            println!();
-            println!("📝 Step 3: Demonstrating integration pattern (conceptual)...");
-            println!();
+        // Show the integration pattern even without live ToadStool
+        demonstrate_integration_pattern();
 
-            // Show the integration pattern even without live ToadStool
-            demonstrate_integration_pattern();
+        println!();
+        println!("✅ SUCCESS: Integration pattern demonstrated!");
+        println!("   - NestGate storage ready");
+        println!("   - ToadStool integration pattern clear");
+        println!("   - Compute + Storage workflow understood");
+        println!();
 
-            println!();
-            println!("✅ SUCCESS: Integration pattern demonstrated!");
-            println!("   - NestGate storage ready");
-            println!("   - ToadStool integration pattern clear");
-            println!("   - Compute + Storage workflow understood");
-            println!();
-
-            return Ok(());
-        }
+        return Ok(());
     }
 
     println!();
@@ -91,16 +105,16 @@ async fn main() -> anyhow::Result<()> {
     println!("📊 Integration Summary:");
     println!("   Storage: ✅ NestGate ready");
     println!("   Compute: ✅ ToadStool available");
-    println!("   Discovery: ✅ Operational");
+    println!("   Discovery: ✅ Operational (TCP, no reqwest)");
     println!("   Workflow: ✅ Integrated");
     println!();
 
     println!("💡 Complete Ecosystem Workflow:");
     println!("   1. User submits ML training task (via Songbird)");
     println!("   2. Songbird orchestrates to ToadStool");
-    println!("   3. ToadStool loads training data (from NestGate) ←");
+    println!("   3. ToadStool loads training data (from NestGate)");
     println!("   4. ToadStool executes training");
-    println!("   5. ToadStool saves model (to NestGate) ←");
+    println!("   5. ToadStool saves model (to NestGate)");
     println!("   6. BearDog encrypts sensitive data (security)");
     println!("   7. Squirrel caches hot data (optimization)");
     println!();
@@ -146,9 +160,9 @@ fn demonstrate_integration_pattern() {
     println!();
 
     println!("   Key Integration Points:");
-    println!("      • ToadStool → NestGate: Read training data");
-    println!("      • ToadStool → NestGate: Write results");
-    println!("      • NestGate → BearDog: Encrypt sensitive data");
-    println!("      • All → Squirrel: Cache hot data");
-    println!("      • Songbird orchestrates: Complete workflow");
+    println!("      ToadStool → NestGate: Read training data");
+    println!("      ToadStool → NestGate: Write results");
+    println!("      NestGate → BearDog: Encrypt sensitive data");
+    println!("      All → Squirrel: Cache hot data");
+    println!("      Songbird orchestrates: Complete workflow");
 }

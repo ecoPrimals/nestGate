@@ -36,7 +36,10 @@ mod humantime_serde {
 /// # Example
 ///
 /// ```rust
-/// use nestgate_core::capabilities::discovery::{ServiceDescriptor, Capability, SecurityCapability};
+/// use nestgate_core::capabilities::discovery::{
+///     Endpoint, Protocol, SecurityCapability, ServiceDescriptor,
+///     ServiceHealth, ServiceMetadata, Capability,
+/// };
 /// use uuid::Uuid;
 ///
 /// let service = ServiceDescriptor {
@@ -46,12 +49,7 @@ mod humantime_serde {
 ///         Capability::Security(SecurityCapability::Authentication),
 ///         Capability::Security(SecurityCapability::Encryption),
 ///     ],
-///     endpoint: Endpoint {
-///         host: "10.0.1.5".to_string(),
-///         port: 8443, // Example - use network_hardcoded::ports::HTTPS_DEFAULT in production
-///         protocol: Protocol::HTTPS,
-///         tls: true,
-///     },
+///     endpoint: Endpoint::https("10.0.1.5".to_string(), 8443),
 ///     metadata: ServiceMetadata::default(),
 ///     health: ServiceHealth::Healthy,
 /// };

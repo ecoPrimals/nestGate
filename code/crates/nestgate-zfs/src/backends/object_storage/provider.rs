@@ -29,7 +29,10 @@ impl StorageProvider {
     pub fn detect_from_endpoint(endpoint: &str) -> Self {
         if endpoint.contains("amazonaws.com") || endpoint.contains("s3.") {
             Self::AwsS3
-        } else if endpoint.contains("minio") || endpoint.contains("min.io") {
+        } else if endpoint.contains("minio")
+            || endpoint.contains("min.io")
+            || endpoint.contains("localhost:9000")
+        {
             Self::MinIO
         } else if endpoint.contains("wasabi") {
             Self::Wasabi

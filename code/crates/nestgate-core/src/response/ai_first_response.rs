@@ -477,19 +477,17 @@ pub trait IntoAIFirstResponse<T> {
     /// Convert to AI-First response format
     fn into_ai_first(self, request_id: Uuid, processing_time_ms: u64) -> AIFirstResponse<T>;
 }
-impl<T> IntoAIFirstResponse<T> for Result<T, NestGateError> {
+impl<T: Default> IntoAIFirstResponse<T> for Result<T, NestGateError> {
     /// Into Ai First
     fn into_ai_first(self, request_id: Uuid, processing_time_ms: u64) -> AIFirstResponse<T> {
         match self {
             Ok(data) => AIFirstResponse::success(data, request_id, processing_time_ms),
-            Err(error) => {
-                // Use a default value for T in error cases
-                // This requires T: Default, but we'll handle this at the call site
-                let _ai_error = AIFirstError::from_nestgate_error(&error);
-                // For now, we'll need to handle this differently since T might not have Default
-                // We'll return this as a separate error constructor
-                panic!("Use AIFirstResponse::error_from_nestgate instead")
-            }
+            Err(error) => AIFirstResponse::error_from_nestgate(
+                T::default(),
+                error,
+                request_id,
+                processing_time_ms,
+            ),
         }
     }
 }

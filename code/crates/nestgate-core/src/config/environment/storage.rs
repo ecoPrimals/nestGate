@@ -39,11 +39,14 @@ impl StorageConfig {
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
         Ok(Self {
             zfs_pool: Self::env_var_or(prefix, "ZFS_POOL", "tank".to_string())?,
-            data_dir: Self::env_var_or(prefix, "DATA_DIR", 
+            data_dir: Self::env_var_or(
+                prefix,
+                "DATA_DIR",
                 crate::config::storage_paths::StoragePaths::from_environment()
                     .data_dir()
                     .to_string_lossy()
-                    .to_string())?,
+                    .to_string(),
+            )?,
             cache_size_mb: Self::env_var_or(prefix, "CACHE_SIZE_MB", 512)?,
             compression_enabled: Self::env_var_or(prefix, "COMPRESSION", true)?,
             snapshot_retention_days: Self::env_var_or(prefix, "SNAPSHOT_RETENTION_DAYS", 30)?,

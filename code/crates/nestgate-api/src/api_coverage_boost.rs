@@ -164,7 +164,7 @@ mod api_coverage_boost_tests {
 
     #[test]
     fn test_error_source_io() {
-        let io_error = std::io::Error::new(std::io::ErrorKind::Other, "test");
+        let io_error = std::io::Error::other("test");
         let api_error = ApiError::Io(io_error);
 
         assert!(api_error.source().is_some());
@@ -264,10 +264,7 @@ mod api_coverage_boost_tests {
                 "Core error",
                 ApiError::Core(nestgate_core::error::NestGateError::internal("test")),
             ),
-            (
-                "I/O error",
-                ApiError::Io(std::io::Error::new(std::io::ErrorKind::Other, "test")),
-            ),
+            ("I/O error", ApiError::Io(std::io::Error::other("test"))),
             (
                 "Invalid request",
                 ApiError::InvalidRequest("test".to_string()),
@@ -284,9 +281,7 @@ mod api_coverage_boost_tests {
             let message = error.to_string();
             assert!(
                 message.starts_with(prefix),
-                "Expected '{}' to start with '{}'",
-                message,
-                prefix
+                "Expected '{message}' to start with '{prefix}'"
             );
         }
     }
@@ -330,7 +325,7 @@ mod api_coverage_boost_tests {
 
     #[test]
     fn test_chain_error_conversions() {
-        let io_error = std::io::Error::new(std::io::ErrorKind::Other, "test");
+        let io_error = std::io::Error::other("test");
         let api_error: ApiError = io_error.into();
         let _response = api_error.into_response();
         // Should complete without panic
@@ -345,7 +340,7 @@ mod api_coverage_boost_tests {
             timestamp: chrono::Utc::now(),
         };
 
-        let debug_str = format!("{:?}", response);
+        let debug_str = format!("{response:?}");
         assert!(debug_str.contains("ErrorResponse"));
     }
 

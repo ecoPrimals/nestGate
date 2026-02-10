@@ -37,7 +37,7 @@ fn test_security_config_rate_limit_default_value() {
     use nestgate_core::config::environment::SecurityConfig;
 
     let config = SecurityConfig::default();
-    assert_eq!(config.rate_limit_per_minute, 1000);
+    assert_eq!(config.rate_limit_rpm, 100);
 }
 
 #[test]
@@ -65,7 +65,7 @@ fn test_security_config_clone() {
 
     assert_eq!(config1.tls_enabled, config2.tls_enabled);
     assert_eq!(config1.rate_limit_enabled, config2.rate_limit_enabled);
-    assert_eq!(config1.rate_limit_per_minute, config2.rate_limit_per_minute);
+    assert_eq!(config1.rate_limit_rpm, config2.rate_limit_rpm);
 }
 
 #[test]
@@ -154,7 +154,7 @@ fn test_security_config_multiple_instances() {
 
     // Both should have same defaults
     assert_eq!(config1.tls_enabled, config2.tls_enabled);
-    assert_eq!(config1.rate_limit_per_minute, config2.rate_limit_per_minute);
+    assert_eq!(config1.rate_limit_rpm, config2.rate_limit_rpm);
 }
 
 #[test]
@@ -162,11 +162,11 @@ fn test_security_config_custom_rate_limit() {
     use nestgate_core::config::environment::SecurityConfig;
 
     let config = SecurityConfig {
-        rate_limit_per_minute: 1000,
+        rate_limit_rpm: 500,
         ..Default::default()
     };
 
-    assert_eq!(config.rate_limit_per_minute, 1000);
+    assert_eq!(config.rate_limit_rpm, 500);
 }
 
 #[test]
@@ -186,11 +186,11 @@ fn test_security_config_zero_rate_limit() {
     use nestgate_core::config::environment::SecurityConfig;
 
     let config = SecurityConfig {
-        rate_limit_per_minute: 0,
+        rate_limit_rpm: 0,
         ..Default::default()
     };
 
-    assert_eq!(config.rate_limit_per_minute, 0);
+    assert_eq!(config.rate_limit_rpm, 0);
 }
 
 #[test]
@@ -198,11 +198,11 @@ fn test_security_config_high_rate_limit() {
     use nestgate_core::config::environment::SecurityConfig;
 
     let config = SecurityConfig {
-        rate_limit_per_minute: 10000,
+        rate_limit_rpm: 10000,
         ..Default::default()
     };
 
-    assert_eq!(config.rate_limit_per_minute, 10000);
+    assert_eq!(config.rate_limit_rpm, 10000);
 }
 
 #[test]
