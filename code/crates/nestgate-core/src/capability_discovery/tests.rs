@@ -171,8 +171,10 @@ async fn test_discover_songbird_ipc_returns_error_when_unavailable() {
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("Songbird IPC not found") || err_msg.contains("Songbird"),
-        "Expected Songbird-related error, got: {}",
+        err_msg.contains("IPC gateway not found")
+            || err_msg.contains("Songbird")
+            || err_msg.contains("SONGBIRD_IPC_PATH"),
+        "Expected IPC gateway discovery error, got: {}",
         err_msg
     );
 }

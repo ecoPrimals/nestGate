@@ -190,7 +190,7 @@ impl CacheStatistics {
     }
 }
 
-// ✅ EVOLVED: lazy_static → std::sync::LazyLock (Pure Rust std, zero deps)
+// Uses std::sync::LazyLock for thread-safe lazy initialization
 // Global UUID cache instance for application-wide usage
 // This provides a singleton UUID cache accessible throughout the application
 // for consistent UUID management across all modules.

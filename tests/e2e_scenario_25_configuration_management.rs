@@ -9,9 +9,9 @@ mod configuration_management {
     use std::time::Duration;
 
     #[tokio::test]
-    // ✅ EVOLUTION: Un-ignored - now concurrent-safe with temp-env!
     async fn test_config_from_environment() {
-        // Simulate environment variable configuration
+        let orig_timeout = std::env::var("NESTGATE_TIMEOUT").ok();
+        let orig_connections = std::env::var("NESTGATE_MAX_CONNECTIONS").ok();
         std::env::set_var("NESTGATE_TIMEOUT", "5000");
         std::env::set_var("NESTGATE_MAX_CONNECTIONS", "100");
 
@@ -24,16 +24,19 @@ mod configuration_management {
             .ok()
             .and_then(|s| s.parse::<usize>().ok());
 
+        match orig_timeout {
+            Some(v) => std::env::set_var("NESTGATE_TIMEOUT", v),
+            None => std::env::remove_var("NESTGATE_TIMEOUT"),
+        }
+        match orig_connections {
+            Some(v) => std::env::set_var("NESTGATE_MAX_CONNECTIONS", v),
+            None => std::env::remove_var("NESTGATE_MAX_CONNECTIONS"),
+        }
         assert_eq!(timeout, Some(Duration::from_millis(5000)));
         assert_eq!(max_connections, Some(100));
-
-        // Cleanup
-        std::env::remove_var("NESTGATE_TIMEOUT");
-        std::env::remove_var("NESTGATE_MAX_CONNECTIONS");
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_config_validation() {
         fn validate_timeout(ms: u64) -> Result<Duration, String> {
             if ms == 0 {
@@ -51,7 +54,6 @@ mod configuration_management {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_config_defaults() {
         #[derive(Debug)]
         struct Config {
@@ -77,7 +79,6 @@ mod configuration_management {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_config_override_precedence() {
         // Test: Environment > File > Default
         let mut config_map = HashMap::new();
@@ -88,7 +89,6 @@ mod configuration_management {
         // File override
         config_map.insert("timeout", "60000");
 
-        // ✅ EVOLUTION: Isolated environment
         temp_env::with_var("CONFIG_TIMEOUT", Some("90000"), || {
             let env_timeout = std::env::var("CONFIG_TIMEOUT").ok();
 
@@ -98,9 +98,5 @@ mod configuration_management {
 
             assert_eq!(final_timeout, "90000");
         });
-        // Environment automatically restored!
-
-        // Cleanup
-        std::env::remove_var("CONFIG_TIMEOUT");
     }
 }

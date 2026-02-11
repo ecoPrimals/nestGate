@@ -165,15 +165,10 @@ impl Drop for IsolatedEnvironment {
 ///
 /// # Example
 ///
-/// ```rust
-/// use tests::common::env_isolation::EnvGuard;
-///
-/// #[test]
-/// fn test_with_single_var() {
-///     let _guard = EnvGuard::new("NESTGATE_TIMEOUT_MS", "10000");
-///     assert_eq!(std::env::var("NESTGATE_TIMEOUT_MS").unwrap(), "10000");
-///     // Automatic cleanup
-/// }
+/// ```rust,ignore
+/// let _guard = EnvGuard::new("NESTGATE_TIMEOUT_MS", "10000");
+/// assert_eq!(std::env::var("NESTGATE_TIMEOUT_MS").unwrap(), "10000");
+/// // Automatic cleanup on drop
 /// ```
 pub struct EnvGuard {
     key: String,
@@ -228,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_isolated_environment_restores_var() {
-        // Set a unique variable first
+        let orig = std::env::var("NESTGATE_TEST_VAR_UNIQUE_2").ok();
         std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_2", "original");
 
         {
@@ -240,14 +235,12 @@ mod tests {
             );
         }
 
-        // After drop, should be restored
-        assert_eq!(
-            std::env::var("NESTGATE_TEST_VAR_UNIQUE_2").unwrap(),
-            "original"
-        );
-
-        // Cleanup
-        std::env::remove_var("NESTGATE_TEST_VAR_UNIQUE_2");
+        let current = std::env::var("NESTGATE_TEST_VAR_UNIQUE_2").ok();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_2", v),
+            None => std::env::remove_var("NESTGATE_TEST_VAR_UNIQUE_2"),
+        }
+        assert_eq!(current, Some("original".to_string()));
     }
 
     #[test]
@@ -268,6 +261,7 @@ mod tests {
 
     #[test]
     fn test_isolated_environment_removes_var() {
+        let orig = std::env::var("NESTGATE_TEST_VAR_UNIQUE_4").ok();
         std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_4", "to_remove");
 
         {
@@ -276,14 +270,12 @@ mod tests {
             assert!(std::env::var("NESTGATE_TEST_VAR_UNIQUE_4").is_err());
         }
 
-        // After drop, should be restored
-        assert_eq!(
-            std::env::var("NESTGATE_TEST_VAR_UNIQUE_4").unwrap(),
-            "to_remove"
-        );
-
-        // Cleanup
-        std::env::remove_var("NESTGATE_TEST_VAR_UNIQUE_4");
+        let current = std::env::var("NESTGATE_TEST_VAR_UNIQUE_4").ok();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_4", v),
+            None => std::env::remove_var("NESTGATE_TEST_VAR_UNIQUE_4"),
+        }
+        assert_eq!(current, Some("to_remove".to_string()));
     }
 
     #[test]

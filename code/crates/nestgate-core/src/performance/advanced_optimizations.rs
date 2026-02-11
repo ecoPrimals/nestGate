@@ -191,6 +191,9 @@ impl SimdOperations {
 
     /// Copy memory with raw pointers - for FFI or when slices aren't available.
     ///
+    /// **Prefer [`copy_safe`](Self::copy_safe) when you have slices** - it is 100% safe
+    /// and compiles to the same optimized assembly.
+    ///
     /// # Safety
     /// Caller must ensure:
     /// - `src` is valid for reads of `len` bytes
@@ -439,7 +442,8 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
         loop {
             let current_free = self.free_list.load(Ordering::Acquire);
 
-            // Set next pointer in the deallocated block
+            // SAFETY: ptr from allocate(); block spans BLOCK_SIZE bytes; we write
+            // only first size_of::<usize>() bytes as free-list next pointer.
             let block_ptr = ptr.as_ptr() as *mut usize;
             *block_ptr = current_free;
 

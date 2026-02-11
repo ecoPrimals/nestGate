@@ -101,7 +101,7 @@ impl Default for Metrics {
 
 // Legacy error types removed - use NestGateUnifiedError instead
 
-// ==================== IMPLEMENTATION STUB ====================
+// ==================== DEFAULT IMPLEMENTATION ====================
 
 /// Default implementation of the service
 #[derive(Debug)]

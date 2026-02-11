@@ -366,3 +366,64 @@ async fn handle_rpc_health(
         }))))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_data_response_new() {
+        let resp = DataResponse::new(42);
+        assert_eq!(resp.data, 42);
+        assert!(resp.meta.is_none());
+    }
+
+    #[test]
+    fn test_data_response_paginated() {
+        let resp = DataResponse::<Vec<i32>>::paginated(vec![1, 2, 3], 100, 1, 10);
+        assert_eq!(resp.data.len(), 3);
+        assert!(resp.meta.is_some());
+        let meta = resp.meta.unwrap();
+        assert_eq!(meta.total, 100);
+        assert_eq!(meta.page, 1);
+        assert_eq!(meta.per_page, 10);
+        assert!(meta.has_more);
+    }
+
+    #[test]
+    fn test_data_error_new() {
+        let err = DataError::new("test error".to_string(), "ERR_CODE".to_string());
+        assert_eq!(err.error, "test error");
+        assert_eq!(err.code, "ERR_CODE");
+    }
+
+    #[test]
+    fn test_response_meta_fields() {
+        let meta = ResponseMeta {
+            total: 50,
+            page: 2,
+            per_page: 10,
+            has_more: true,
+        };
+        assert_eq!(meta.total, 50);
+        assert_eq!(meta.has_more, true);
+    }
+
+    #[test]
+    fn test_list_query_deserialization() {
+        let json = r#"{"page": 1, "per_page": 20, "sort": "name", "order": "asc"}"#;
+        let query: ListQuery = serde_json::from_str(json).unwrap();
+        assert_eq!(query.page, Some(1));
+        assert_eq!(query.per_page, Some(20));
+        assert_eq!(query.sort.as_deref(), Some("name"));
+        assert_eq!(query.order.as_deref(), Some("asc"));
+    }
+
+    #[tokio::test]
+    async fn test_api_state_new() {
+        let state = ApiState::new();
+        assert!(state.is_ok());
+        let state = state.unwrap();
+        assert!(state.get_rpc_manager().is_some());
+    }
+}

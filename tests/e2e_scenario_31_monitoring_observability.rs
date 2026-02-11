@@ -9,7 +9,6 @@ mod monitoring_observability {
     use std::time::Instant;
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_31_monitoring_observability -- --ignored
     async fn test_metrics_collection() {
         struct Metrics {
             requests_total: u64,
@@ -38,7 +37,6 @@ mod monitoring_observability {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_distributed_tracing() {
         #[derive(Debug, Clone)]
         struct TraceContext {
@@ -64,7 +62,6 @@ mod monitoring_observability {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_structured_logging() {
         #[derive(Debug)]
         #[allow(dead_code)] // Demonstration struct for logging pattern
@@ -95,7 +92,6 @@ mod monitoring_observability {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_health_check_monitoring() {
         async fn check_service_health() -> Result<String, String> {
             // Simulate health check

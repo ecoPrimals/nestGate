@@ -29,7 +29,8 @@ mod tests {
         let json = serde_json::to_string(&trend).expect("Test setup failed");
         assert!(!json.is_empty());
 
-        let deserialized: PerformanceTrend = serde_json::from_str(&json).expect("Test setup failed");
+        let deserialized: PerformanceTrend =
+            serde_json::from_str(&json).expect("Test setup failed");
         assert!(matches!(deserialized, PerformanceTrend::Improving));
     }
 
@@ -73,7 +74,8 @@ mod tests {
         assert!(json.contains("Memory"));
         assert!(json.contains("82.3"));
 
-        let deserialized: ComponentAnalysis = serde_json::from_str(&json).expect("Test setup failed");
+        let deserialized: ComponentAnalysis =
+            serde_json::from_str(&json).expect("Test setup failed");
         assert_eq!(deserialized.component_name, "Memory");
         assert_eq!(deserialized.current_usage, 82.3);
     }
@@ -309,7 +311,8 @@ mod tests {
     fn test_performance_analysis_config_serialization() {
         let config = PerformanceAnalysisConfig::default();
         let json = serde_json::to_string(&config).expect("Test setup failed");
-        let deserialized: PerformanceAnalysisConfig = serde_json::from_str(&json).expect("Test setup failed");
+        let deserialized: PerformanceAnalysisConfig =
+            serde_json::from_str(&json).expect("Test setup failed");
 
         assert_eq!(
             deserialized.analysis_interval_seconds,

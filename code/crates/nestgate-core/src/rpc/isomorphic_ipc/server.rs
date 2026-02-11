@@ -336,4 +336,20 @@ mod tests {
         assert_eq!(response["result"], "ok");
         assert_eq!(response["id"], 1);
     }
+
+    #[test]
+    fn test_server_creation_with_different_service_names() {
+        let handler = Arc::new(MockHandler);
+        let _server1 = IsomorphicIpcServer::new("nestgate".to_string(), handler.clone());
+        let _server2 = IsomorphicIpcServer::new("test-svc-123".to_string(), handler);
+    }
+
+    #[test]
+    fn test_mock_handler_handles_empty_request() {
+        let handler = MockHandler;
+        let request = serde_json::json!({});
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let response = rt.block_on(handler.handle_request(request));
+        assert!(response.get("jsonrpc").is_some());
+    }
 }

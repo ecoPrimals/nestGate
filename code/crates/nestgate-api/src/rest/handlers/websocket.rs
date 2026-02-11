@@ -255,7 +255,7 @@ pub struct LogEntry {
     pub thread: String,
 }
 /// Generate sample log entry
-fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
+pub(crate) fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut hasher = DefaultHasher::new();
@@ -396,7 +396,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
 }
 
 // Real-time metric generators (with more variation than historical)
-fn generate_realtime_cpu_usage() -> f64 {
+pub(crate) fn generate_realtime_cpu_usage() -> f64 {
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
@@ -407,7 +407,7 @@ fn generate_realtime_cpu_usage() -> f64 {
 }
 
 /// Generate Realtime Memory Usage
-fn generate_realtime_memory_usage() -> f64 {
+pub(crate) fn generate_realtime_memory_usage() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 1).hash(&mut hasher);
     let seed = hasher.finish();
@@ -418,7 +418,7 @@ fn generate_realtime_memory_usage() -> f64 {
 }
 
 /// Generate Realtime Disk Read
-fn generate_realtime_disk_read() -> f64 {
+pub(crate) fn generate_realtime_disk_read() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 2).hash(&mut hasher);
     let seed = hasher.finish();
@@ -429,7 +429,7 @@ fn generate_realtime_disk_read() -> f64 {
 }
 
 /// Generate Realtime Disk Write
-fn generate_realtime_disk_write() -> f64 {
+pub(crate) fn generate_realtime_disk_write() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 3).hash(&mut hasher);
     let seed = hasher.finish();
@@ -440,17 +440,17 @@ fn generate_realtime_disk_write() -> f64 {
 }
 
 /// Generate Realtime Read Iops
-fn generate_realtime_read_iops() -> u64 {
+pub(crate) fn generate_realtime_read_iops() -> u64 {
     (generate_realtime_disk_read() * 120.0) as u64
 }
 
 /// Generate Realtime Write Iops
-fn generate_realtime_write_iops() -> u64 {
+pub(crate) fn generate_realtime_write_iops() -> u64 {
     (generate_realtime_disk_write() * 110.0) as u64
 }
 
 /// Generate Realtime Queue Depth
-fn generate_realtime_queue_depth() -> f64 {
+pub(crate) fn generate_realtime_queue_depth() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 4).hash(&mut hasher);
     let seed = hasher.finish();
@@ -461,7 +461,7 @@ fn generate_realtime_queue_depth() -> f64 {
 }
 
 /// Generate Realtime Network Rx
-fn generate_realtime_network_rx() -> u64 {
+pub(crate) fn generate_realtime_network_rx() -> u64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 5).hash(&mut hasher);
     let seed = hasher.finish();
@@ -472,22 +472,22 @@ fn generate_realtime_network_rx() -> u64 {
 }
 
 /// Generate Realtime Network Tx
-fn generate_realtime_network_tx() -> u64 {
+pub(crate) fn generate_realtime_network_tx() -> u64 {
     generate_realtime_network_rx() / 2
 }
 
 /// Generate Realtime Network Rx Packets
-fn generate_realtime_network_rx_packets() -> u64 {
+pub(crate) fn generate_realtime_network_rx_packets() -> u64 {
     generate_realtime_network_rx() / 1400
 }
 
 /// Generate Realtime Network Tx Packets
-fn generate_realtime_network_tx_packets() -> u64 {
+pub(crate) fn generate_realtime_network_tx_packets() -> u64 {
     generate_realtime_network_tx() / 1400
 }
 
 /// Generate Realtime Cache Hit Ratio
-fn generate_realtime_cache_hit_ratio() -> f64 {
+pub(crate) fn generate_realtime_cache_hit_ratio() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 6).hash(&mut hasher);
     let seed = hasher.finish();

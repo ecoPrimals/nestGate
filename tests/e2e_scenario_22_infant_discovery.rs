@@ -10,7 +10,6 @@ mod infant_discovery_validation {
     use tokio::sync::RwLock;
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_22_infant_discovery -- --ignored
     async fn test_service_auto_registration() {
         // Simulate automatic service registration
         let registry = Arc::new(RwLock::new(HashMap::new()));
@@ -31,7 +30,6 @@ mod infant_discovery_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_zero_configuration_discovery() {
         // Test that services can discover each other without pre-configuration
         let discovered_services = [
@@ -47,7 +45,6 @@ mod infant_discovery_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_service_health_propagation() {
         #[derive(Debug, Clone)]
         #[allow(dead_code)]
@@ -81,7 +78,6 @@ mod infant_discovery_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_dynamic_endpoint_resolution() {
         // Test O(1) service endpoint lookup
         let mut endpoint_map = HashMap::new();

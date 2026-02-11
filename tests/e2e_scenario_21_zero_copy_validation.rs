@@ -12,7 +12,6 @@ mod zero_copy_validation {
     // Add to Cargo.toml dev-dependencies: bytes = "1.5"
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_21_zero_copy_validation -- --ignored
     async fn test_zero_copy_data_transfer() {
         // Validate Arc-based zero-copy data sharing
         let data = Arc::new(vec![0u8; 1024 * 1024]); // 1MB
@@ -30,7 +29,6 @@ mod zero_copy_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_zero_copy_concurrent_read() {
         let shared_data = Arc::new(vec![42u8; 10000]);
         let mut handles = vec![];
@@ -56,7 +54,6 @@ mod zero_copy_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_zero_copy_buffer_sharing() {
         // TODO: Enable when bytes crate is added to dev-dependencies
         // use bytes::Bytes;
@@ -85,7 +82,6 @@ mod zero_copy_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_reference_counted_config() {
         // Test Arc-based config sharing (zero-copy)
         #[derive(Debug, Clone)]

@@ -201,11 +201,12 @@ pub fn normalize_mac_address(mac: &str) -> Option<String> {
     let normalized = cleaned
         .chars()
         .enumerate()
-        .map(|(i, c)| ", 
+        .map(|(i, c)| {
+            let lower = c.to_ascii_lowercase();
             if i > 0 && i % 2 == 0 {
-                format!(":{c.to_ascii_lowercase()"))
+                format!(":{}", lower)
             } else {
-                c.to_ascii_lowercase().to_string()
+                lower.to_string()
             }
         })
         .collect::<String>();

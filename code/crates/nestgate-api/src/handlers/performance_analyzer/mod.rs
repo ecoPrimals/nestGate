@@ -24,14 +24,14 @@ pub use reports::{MultiFormatReport, PerformanceReport, ReportConfig, ReportGene
 // Re-export legacy types for backward compatibility
 pub use types::*;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod types_tests;
+#[cfg(test)]
+mod types_tests;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod collectors_tests;
+#[cfg(test)]
+mod collectors_tests;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod metrics_tests;
+#[cfg(test)]
+mod metrics_tests;
 
 #[cfg(test)]
 mod reports_tests;

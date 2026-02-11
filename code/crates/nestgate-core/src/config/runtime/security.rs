@@ -67,3 +67,67 @@ impl Default for SecurityConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_security_config_default() {
+        let config = SecurityConfig::default();
+        assert!(config.auth_enabled);
+        assert_eq!(config.jwt_secret, "change-me-in-production");
+        assert!(config.encryption_enabled);
+        assert!(config.tls_cert_path.is_none());
+        assert!(config.tls_key_path.is_none());
+    }
+
+    #[test]
+    fn test_security_config_from_environment_defaults() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_AUTH_ENABLED", None::<&str>),
+                ("NESTGATE_JWT_SECRET", None::<&str>),
+                ("NESTGATE_ENCRYPTION_ENABLED", None::<&str>),
+                ("NESTGATE_TLS_CERT_PATH", None::<&str>),
+                ("NESTGATE_TLS_KEY_PATH", None::<&str>),
+            ],
+            || {
+                let config = SecurityConfig::from_environment().unwrap();
+                assert!(config.auth_enabled);
+                assert_eq!(config.jwt_secret, "change-me-in-production");
+                assert!(config.encryption_enabled);
+                assert!(config.tls_cert_path.is_none());
+                assert!(config.tls_key_path.is_none());
+            },
+        );
+    }
+
+    #[test]
+    fn test_security_config_from_environment_overrides() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_AUTH_ENABLED", Some("false")),
+                ("NESTGATE_JWT_SECRET", Some("my-secret-key")),
+                ("NESTGATE_ENCRYPTION_ENABLED", Some("false")),
+                ("NESTGATE_TLS_CERT_PATH", Some("/path/to/cert.pem")),
+                ("NESTGATE_TLS_KEY_PATH", Some("/path/to/key.pem")),
+            ],
+            || {
+                let config = SecurityConfig::from_environment().unwrap();
+                assert!(!config.auth_enabled);
+                assert_eq!(config.jwt_secret, "my-secret-key");
+                assert!(!config.encryption_enabled);
+                assert_eq!(config.tls_cert_path.as_deref(), Some("/path/to/cert.pem"));
+                assert_eq!(config.tls_key_path.as_deref(), Some("/path/to/key.pem"));
+            },
+        );
+    }
+
+    #[test]
+    fn test_security_config_jwt_secret_skipped_in_serialization() {
+        let config = SecurityConfig::default();
+        let json = serde_json::to_string(&config).unwrap();
+        assert!(!json.contains("change-me-in-production"));
+    }
+}

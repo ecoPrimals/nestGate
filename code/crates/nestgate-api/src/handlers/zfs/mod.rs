@@ -74,5 +74,5 @@ pub use production_placeholders::*;
 
 pub use zero_cost_factory::*;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod production_handler_tests;
+#[cfg(test)]
+mod production_handler_tests;

@@ -1,6 +1,6 @@
-//! # Crypto Delegation - BearDog Integration
+//! # Crypto Delegation — BearDog Integration
 //!
-//! **Deep Debt Solution**: Replace DEVELOPMENT STUB with capability-based delegation.
+//! Capability-based delegation to an external crypto provider.
 //!
 //! ## Philosophy (Primal Sovereignty)
 //!
@@ -13,60 +13,22 @@
 //!
 //! ```text
 //! NestGate (needs crypto)
-//!   ↓
-//! CryptoDelegate::new()
-//!   ↓
-//! CapabilityDiscovery::find("crypto")
-//!   ↓
-//! ServiceMetadataStore → Find service with "crypto" capability
-//!   ↓
-//! Connect to crypto provider (could be BearDog, or any crypto service!)
-//!   ↓
-//! Delegate crypto.* operations via JSON-RPC
+//!   → CryptoDelegate::new()
+//!   → CapabilityDiscovery::find("crypto")
+//!   → Connect to discovered crypto provider (BearDog or compatible)
+//!   → Delegate crypto.* operations via JSON-RPC
 //! ```
-//!
-//! ## Usage
-//!
-//! ```rust,ignore
-//! use nestgate_core::crypto::CryptoDelegate;
-//!
-//! // Create delegate (discovers crypto provider automatically)
-//! let crypto = CryptoDelegate::new().await?;
-//!
-//! // Encrypt data (delegated to BearDog or other crypto provider)
-//! let encrypted = crypto.encrypt(b"sensitive data", &params).await?;
-//!
-//! // Decrypt data
-//! let decrypted = crypto.decrypt(&encrypted).await?;
-//!
-//! // Generate key
-//! let key = crypto.generate_key(32).await?;
-//! ```
-//!
-//! ## Benefits
-//!
-//! - ✅ Zero crypto dependencies in NestGate (Pure Rust still maintained!)
-//! - ✅ Primal autonomy (BearDog can be replaced by any crypto provider)
-//! - ✅ Runtime discovery (no hardcoded endpoints)
-//! - ✅ Capability-based (discover by "crypto" capability)
-//! - ✅ Production-ready (eliminates DEVELOPMENT STUB)
 //!
 //! ## Semantic Method Mapping
 //!
-//! | NestGate Method | JSON-RPC Method | BearDog Implementation |
-//! |-----------------|-----------------|------------------------|
-//! | `encrypt()` | `crypto.encrypt` | AES-256-GCM / ChaCha20 |
-//! | `decrypt()` | `crypto.decrypt` | AES-256-GCM / ChaCha20 |
-//! | `generate_key()` | `crypto.generate_key` | Secure random (rand) |
-//! | `generate_nonce()` | `crypto.generate_nonce` | Secure random |
-//! | `hash()` | `crypto.hash` | SHA-256 / SHA-512 |
-//! | `verify_hash()` | `crypto.verify_hash` | Constant-time compare |
-//!
-//! ## References
-//!
-//! - `CAPABILITY_MAPPINGS.md` - NestGate capability requirements
-//! - `wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md` - Semantic naming
-//! - `wateringHole/PRIMAL_SOVEREIGNTY_STANDARD.md` - Self-knowledge principle
+//! | Operation | JSON-RPC Method |
+//! |-----------|-----------------|
+//! | encrypt | `crypto.encrypt` |
+//! | decrypt | `crypto.decrypt` |
+//! | generate_key | `crypto.generate_key` |
+//! | generate_nonce | `crypto.generate_nonce` |
+//! | hash | `crypto.hash` |
+//! | verify_hash | `crypto.verify_hash` |
 
 use crate::{
     capability_discovery::{CapabilityDiscovery, ServiceEndpoint},
@@ -75,173 +37,139 @@ use crate::{
     NestGateError, Result,
 };
 use serde_json::{json, Value};
-use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{debug, info, warn};
+use tokio::sync::Mutex;
+use tracing::{debug, info};
 
-/// Crypto operations delegator to external crypto service (BearDog or compatible)
+/// Base64 helpers using the `base64` crate already in our dependency tree.
+mod b64 {
+    use base64::Engine;
+
+    pub fn encode(data: &[u8]) -> String {
+        base64::engine::general_purpose::STANDARD.encode(data)
+    }
+
+    pub fn decode(data: &str) -> crate::Result<Vec<u8>> {
+        base64::engine::general_purpose::STANDARD
+            .decode(data)
+            .map_err(|e| crate::NestGateError::api_error(&format!("base64 decode: {e}")))
+    }
+}
+
+/// Crypto operations delegator to an external crypto service.
 ///
-/// This struct discovers and delegates to a primal providing the "crypto" capability.
-/// It maintains no crypto implementation itself, following the separation of concerns
-/// and primal sovereignty principles.
+/// Discovers a primal that advertises the "crypto" capability and delegates
+/// all cryptographic operations to it via JSON-RPC semantic methods.
 pub struct CryptoDelegate {
-    /// JSON-RPC client to crypto provider
-    client: Arc<JsonRpcClient>,
-
-    /// Endpoint information (for logging/debugging only)
+    /// JSON-RPC client to the crypto provider (mutable for call())
+    client: Mutex<JsonRpcClient>,
+    /// Endpoint information (for logging/debugging)
     endpoint: ServiceEndpoint,
 }
 
 impl CryptoDelegate {
-    /// Create new crypto delegate by discovering crypto provider
+    /// Create new crypto delegate by discovering a crypto provider.
     ///
-    /// # Discovery Process
-    ///
-    /// 1. Discover Songbird IPC service (registry)
+    /// 1. Discover Songbird IPC service
     /// 2. Query for services providing "crypto" capability
-    /// 3. Connect to first available crypto provider
-    /// 4. Return delegate ready for operations
-    ///
-    /// # Errors
-    ///
-    /// Returns error if:
-    /// - No crypto provider found (no service with "crypto" capability)
-    /// - Connection to crypto provider fails
-    /// - Songbird discovery fails
-    ///
-    /// # Examples
-    ///
-    /// ```rust,ignore
-    /// let crypto = CryptoDelegate::new().await?;
-    /// // crypto is now connected to BearDog (or any crypto provider)
-    /// ```
+    /// 3. Connect to the first available crypto provider
     pub async fn new() -> Result<Self> {
-        info!("🔍 Discovering crypto provider via capability-based discovery...");
+        info!("Discovering crypto provider via capability-based discovery");
 
-        // Discover Songbird IPC service (registry)
-        let songbird = CapabilityDiscovery::discover_songbird_ipc().await.map_err(|e| {
-            NestGateError::discovery_error(&format!("Failed to discover Songbird: {}", e))
-        })?;
+        let ipc_gateway = CapabilityDiscovery::discover_songbird_ipc()
+            .await
+            .map_err(|e| {
+                NestGateError::internal_error(
+                    format!("Failed to discover IPC gateway: {e}"),
+                    "crypto_delegate",
+                )
+            })?;
 
-        // Create capability discovery client
-        let discovery = CapabilityDiscovery::new(songbird);
+        let mut discovery = CapabilityDiscovery::new(ipc_gateway);
 
-        // Find service providing "crypto" capability
         let endpoint = discovery.find("crypto").await.map_err(|e| {
-            NestGateError::discovery_error(&format!(
-                "No crypto provider found. Is BearDog running? Error: {}",
-                e
-            ))
+            NestGateError::internal_error(
+                format!("No crypto provider found: {e}"),
+                "crypto_delegate",
+            )
         })?;
 
         info!(
-            "✅ Found crypto provider: {} at {}",
+            "Found crypto provider: {} at {}",
             endpoint.name, endpoint.endpoint
         );
 
-        // Connect to crypto provider
-        let client = JsonRpcClient::connect(&endpoint.endpoint).await?;
+        let client = JsonRpcClient::connect_unix(&endpoint.endpoint).await?;
 
         Ok(Self {
-            client: Arc::new(client),
+            client: Mutex::new(client),
             endpoint,
         })
     }
 
-    /// Create delegate with explicit endpoint (for testing)
-    ///
-    /// This bypasses discovery and connects directly to a specific endpoint.
-    /// Useful for testing or when crypto provider location is known.
-    pub async fn with_endpoint(endpoint: &str) -> Result<Self> {
-        debug!("🔌 Connecting directly to crypto provider: {}", endpoint);
+    /// Create delegate with an explicit Unix socket path (for testing).
+    pub async fn with_endpoint(path: &str) -> Result<Self> {
+        debug!("Connecting directly to crypto provider: {path}");
 
-        let client = JsonRpcClient::connect(endpoint).await?;
+        let client = JsonRpcClient::connect_unix(path).await?;
 
         Ok(Self {
-            client: Arc::new(client),
+            client: Mutex::new(client),
             endpoint: ServiceEndpoint {
                 capability: "crypto".to_string(),
                 name: "crypto-provider".to_string(),
-                endpoint: endpoint.to_string(),
+                endpoint: path.to_string(),
                 version: "unknown".to_string(),
                 discovered_at: std::time::Instant::now(),
             },
         })
     }
 
-    /// Get crypto provider information
-    ///
-    /// Returns the discovered service endpoint information.
-    /// Useful for logging, monitoring, and debugging.
+    /// Get crypto provider information.
     pub fn provider_info(&self) -> &ServiceEndpoint {
         &self.endpoint
     }
 
-    /// Encrypt data using crypto provider
-    ///
-    /// Delegates to `crypto.encrypt` semantic method on discovered provider.
-    ///
-    /// # Arguments
-    ///
-    /// * `plaintext` - Data to encrypt
-    /// * `params` - Encryption parameters (algorithm, associated data)
-    ///
-    /// # Security
-    ///
-    /// - Encryption is performed by the crypto provider (BearDog)
-    /// - Uses provider's secure random nonce generation
-    /// - Provides authenticated encryption (AEAD)
-    ///
-    /// # Examples
-    ///
-    /// ```rust,ignore
-    /// let encrypted = crypto.encrypt(b"secret data", &params).await?;
-    /// ```
+    /// Encrypt data — delegates to `crypto.encrypt`.
     pub async fn encrypt(
         &self,
         plaintext: &[u8],
         params: &EncryptionParams,
     ) -> Result<EncryptedData> {
-        debug!(
-            "🔐 Delegating encryption to {} ({} bytes)",
-            self.endpoint.name,
-            plaintext.len()
-        );
+        let algo_str = match params.algorithm {
+            EncryptionAlgorithm::Aes256Gcm => "aes256gcm",
+            EncryptionAlgorithm::ChaCha20Poly1305 => "chacha20poly1305",
+        };
 
-        // Prepare JSON-RPC request
         let request = json!({
-            "plaintext": base64::encode(plaintext),
-            "algorithm": match params.algorithm {
-                EncryptionAlgorithm::Aes256Gcm => "aes256gcm",
-                EncryptionAlgorithm::ChaCha20Poly1305 => "chacha20poly1305",
-            },
-            "associated_data": base64::encode(&params.associated_data),
+            "plaintext": b64::encode(plaintext),
+            "algorithm": algo_str,
+            "associated_data": b64::encode(&params.associated_data),
         });
 
-        // Call crypto.encrypt on provider
-        let response = self.client.call("crypto.encrypt", request).await?;
+        let response = self
+            .client
+            .lock()
+            .await
+            .call("crypto.encrypt", request)
+            .await?;
 
-        // Parse response
-        let ciphertext = base64::decode(
+        let ciphertext = b64::decode(
             response["ciphertext"]
                 .as_str()
-                .ok_or_else(|| NestGateError::rpc_error("Missing ciphertext in response"))?,
-        )
-        .map_err(|e| NestGateError::rpc_error(&format!("Invalid base64 ciphertext: {}", e)))?;
+                .ok_or_else(|| NestGateError::api_error("Missing ciphertext in response"))?,
+        )?;
 
-        let nonce = base64::decode(
+        let nonce = b64::decode(
             response["nonce"]
                 .as_str()
-                .ok_or_else(|| NestGateError::rpc_error("Missing nonce in response"))?,
-        )
-        .map_err(|e| NestGateError::rpc_error(&format!("Invalid base64 nonce: {}", e)))?;
+                .ok_or_else(|| NestGateError::api_error("Missing nonce in response"))?,
+        )?;
 
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-
-        debug!("✅ Encryption complete ({} bytes)", ciphertext.len());
 
         Ok(EncryptedData {
             ciphertext,
@@ -251,223 +179,129 @@ impl CryptoDelegate {
         })
     }
 
-    /// Decrypt data using crypto provider
-    ///
-    /// Delegates to `crypto.decrypt` semantic method on discovered provider.
-    ///
-    /// # Security
-    ///
-    /// - Decryption is performed by the crypto provider
-    /// - Verifies authentication tag before decryption
-    /// - Detects tampering and forgery
-    ///
-    /// # Errors
-    ///
-    /// Returns error if:
-    /// - Authentication tag verification fails
-    /// - Data has been tampered with
-    /// - Decryption operation fails
+    /// Decrypt data — delegates to `crypto.decrypt`.
     pub async fn decrypt(&self, encrypted: &EncryptedData) -> Result<Vec<u8>> {
-        debug!(
-            "🔓 Delegating decryption to {} ({} bytes)",
-            self.endpoint.name,
-            encrypted.ciphertext.len()
-        );
+        let algo_str = match encrypted.algorithm {
+            EncryptionAlgorithm::Aes256Gcm => "aes256gcm",
+            EncryptionAlgorithm::ChaCha20Poly1305 => "chacha20poly1305",
+        };
 
-        // Prepare JSON-RPC request
         let request = json!({
-            "ciphertext": base64::encode(&encrypted.ciphertext),
-            "nonce": base64::encode(&encrypted.nonce),
-            "algorithm": match encrypted.algorithm {
-                EncryptionAlgorithm::Aes256Gcm => "aes256gcm",
-                EncryptionAlgorithm::ChaCha20Poly1305 => "chacha20poly1305",
-            },
+            "ciphertext": b64::encode(&encrypted.ciphertext),
+            "nonce": b64::encode(&encrypted.nonce),
+            "algorithm": algo_str,
         });
 
-        // Call crypto.decrypt on provider
-        let response = self.client.call("crypto.decrypt", request).await?;
+        let response = self
+            .client
+            .lock()
+            .await
+            .call("crypto.decrypt", request)
+            .await?;
 
-        // Parse response
-        let plaintext = base64::decode(
+        b64::decode(
             response["plaintext"]
                 .as_str()
-                .ok_or_else(|| NestGateError::rpc_error("Missing plaintext in response"))?,
+                .ok_or_else(|| NestGateError::api_error("Missing plaintext in response"))?,
         )
-        .map_err(|e| NestGateError::rpc_error(&format!("Invalid base64 plaintext: {}", e)))?;
-
-        debug!("✅ Decryption complete ({} bytes)", plaintext.len());
-
-        Ok(plaintext)
     }
 
-    /// Generate secure random key
-    ///
-    /// Delegates to `crypto.generate_key` semantic method.
-    ///
-    /// # Arguments
-    ///
-    /// * `length` - Key length in bytes (e.g., 32 for 256-bit key)
-    ///
-    /// # Security
-    ///
-    /// - Uses cryptographically secure random number generator
-    /// - Keys are generated by crypto provider (BearDog)
+    /// Generate a secure random key — delegates to `crypto.generate_key`.
     pub async fn generate_key(&self, length: usize) -> Result<Vec<u8>> {
-        debug!("🔑 Generating key ({} bytes) via {}", length, self.endpoint.name);
+        let response = self
+            .client
+            .lock()
+            .await
+            .call("crypto.generate_key", json!({ "length": length }))
+            .await?;
 
-        let request = json!({ "length": length });
-
-        let response = self.client.call("crypto.generate_key", request).await?;
-
-        let key = base64::decode(
+        let key = b64::decode(
             response["key"]
                 .as_str()
-                .ok_or_else(|| NestGateError::rpc_error("Missing key in response"))?,
-        )
-        .map_err(|e| NestGateError::rpc_error(&format!("Invalid base64 key: {}", e)))?;
+                .ok_or_else(|| NestGateError::api_error("Missing key in response"))?,
+        )?;
 
         if key.len() != length {
-            return Err(NestGateError::rpc_error(&format!(
-                "Key length mismatch: expected {}, got {}",
-                length,
+            return Err(NestGateError::api_error(&format!(
+                "Key length mismatch: expected {length}, got {}",
                 key.len()
             )));
         }
 
-        debug!("✅ Key generated ({} bytes)", key.len());
-
         Ok(key)
     }
 
-    /// Generate secure random nonce
-    ///
-    /// Delegates to `crypto.generate_nonce` semantic method.
-    ///
-    /// # Arguments
-    ///
-    /// * `algorithm` - Algorithm requiring the nonce
-    ///
-    /// # Returns
-    ///
-    /// Nonce of appropriate length for the algorithm:
-    /// - AES-256-GCM: 12 bytes (96 bits)
-    /// - ChaCha20-Poly1305: 12 bytes (96 bits)
+    /// Generate a secure random nonce — delegates to `crypto.generate_nonce`.
     pub async fn generate_nonce(&self, algorithm: EncryptionAlgorithm) -> Result<Vec<u8>> {
-        debug!("🎲 Generating nonce for {:?} via {}", algorithm, self.endpoint.name);
+        let algo_str = match algorithm {
+            EncryptionAlgorithm::Aes256Gcm => "aes256gcm",
+            EncryptionAlgorithm::ChaCha20Poly1305 => "chacha20poly1305",
+        };
 
-        let request = json!({
-            "algorithm": match algorithm {
-                EncryptionAlgorithm::Aes256Gcm => "aes256gcm",
-                EncryptionAlgorithm::ChaCha20Poly1305 => "chacha20poly1305",
-            }
-        });
+        let response = self
+            .client
+            .lock()
+            .await
+            .call("crypto.generate_nonce", json!({ "algorithm": algo_str }))
+            .await?;
 
-        let response = self.client.call("crypto.generate_nonce", request).await?;
-
-        let nonce = base64::decode(
+        b64::decode(
             response["nonce"]
                 .as_str()
-                .ok_or_else(|| NestGateError::rpc_error("Missing nonce in response"))?,
+                .ok_or_else(|| NestGateError::api_error("Missing nonce in response"))?,
         )
-        .map_err(|e| NestGateError::rpc_error(&format!("Invalid base64 nonce: {}", e)))?;
-
-        debug!("✅ Nonce generated ({} bytes)", nonce.len());
-
-        Ok(nonce)
     }
 
-    /// Hash data using secure hash function
-    ///
-    /// Delegates to `crypto.hash` semantic method.
-    ///
-    /// # Arguments
-    ///
-    /// * `data` - Data to hash
-    /// * `algorithm` - Hash algorithm ("sha256", "sha512")
+    /// Hash data — delegates to `crypto.hash`.
     pub async fn hash(&self, data: &[u8], algorithm: &str) -> Result<Vec<u8>> {
-        debug!(
-            "🔨 Hashing {} bytes with {} via {}",
-            data.len(),
-            algorithm,
-            self.endpoint.name
-        );
+        let response = self
+            .client
+            .lock()
+            .await
+            .call(
+                "crypto.hash",
+                json!({
+                    "data": b64::encode(data),
+                    "algorithm": algorithm,
+                }),
+            )
+            .await?;
 
-        let request = json!({
-            "data": base64::encode(data),
-            "algorithm": algorithm
-        });
-
-        let response = self.client.call("crypto.hash", request).await?;
-
-        let hash = base64::decode(
+        b64::decode(
             response["hash"]
                 .as_str()
-                .ok_or_else(|| NestGateError::rpc_error("Missing hash in response"))?,
+                .ok_or_else(|| NestGateError::api_error("Missing hash in response"))?,
         )
-        .map_err(|e| NestGateError::rpc_error(&format!("Invalid base64 hash: {}", e)))?;
-
-        debug!("✅ Hash computed ({} bytes)", hash.len());
-
-        Ok(hash)
     }
 
-    /// Verify hash matches data
-    ///
-    /// Delegates to `crypto.verify_hash` semantic method.
-    ///
-    /// # Security
-    ///
-    /// - Uses constant-time comparison (timing attack resistant)
-    /// - Verification performed by crypto provider
+    /// Verify a hash — delegates to `crypto.verify_hash`.
     pub async fn verify_hash(&self, data: &[u8], hash: &[u8], algorithm: &str) -> Result<bool> {
-        debug!(
-            "🔍 Verifying hash ({} bytes) with {} via {}",
-            hash.len(),
-            algorithm,
-            self.endpoint.name
-        );
+        let response = self
+            .client
+            .lock()
+            .await
+            .call(
+                "crypto.verify_hash",
+                json!({
+                    "data": b64::encode(data),
+                    "hash": b64::encode(hash),
+                    "algorithm": algorithm,
+                }),
+            )
+            .await?;
 
-        let request = json!({
-            "data": base64::encode(data),
-            "hash": base64::encode(hash),
-            "algorithm": algorithm
-        });
-
-        let response = self.client.call("crypto.verify_hash", request).await?;
-
-        let valid = response["valid"]
+        response["valid"]
             .as_bool()
-            .ok_or_else(|| NestGateError::rpc_error("Missing 'valid' in response"))?;
-
-        debug!("✅ Hash verification: {}", if valid { "VALID" } else { "INVALID" });
-
-        Ok(valid)
+            .ok_or_else(|| NestGateError::api_error("Missing 'valid' in response"))
     }
 
-    /// Check if crypto provider is healthy
-    ///
-    /// Calls `health.check` on the crypto provider.
+    /// Health check on the crypto provider.
     pub async fn health_check(&self) -> Result<Value> {
-        self.client.call("health.check", json!({})).await
-    }
-}
-
-/// Helper module for base64 encoding/decoding
-mod base64 {
-    use crate::{NestGateError, Result};
-
-    /// Encode bytes to base64 string
-    pub fn encode(data: &[u8]) -> String {
-        use base64::Engine;
-        base64::engine::general_purpose::STANDARD.encode(data)
-    }
-
-    /// Decode base64 string to bytes
-    pub fn decode(data: &str) -> Result<Vec<u8>> {
-        use base64::Engine;
-        base64::engine::general_purpose::STANDARD
-            .decode(data)
-            .map_err(|e| NestGateError::api_error(&format!("Base64 decode error: {}", e)))
+        self.client
+            .lock()
+            .await
+            .call("health.check", json!({}))
+            .await
     }
 }
 
@@ -475,14 +309,16 @@ mod base64 {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    #[ignore] // Requires running BearDog instance
-    async fn test_crypto_delegate_discovery() {
-        // This test requires:
-        // 1. Songbird IPC service running
-        // 2. BearDog registered with "crypto" capability
-        // 3. BearDog responding to crypto.* methods
+    #[test]
+    fn test_encryption_params_default() {
+        let params = EncryptionParams::default();
+        assert_eq!(params.algorithm, EncryptionAlgorithm::Aes256Gcm);
+        assert!(params.associated_data.is_empty());
+    }
 
+    #[tokio::test]
+    #[ignore = "requires running BearDog instance"]
+    async fn test_crypto_delegate_discovery() {
         let result = CryptoDelegate::new().await;
         assert!(result.is_ok(), "Should discover crypto provider");
 
@@ -491,39 +327,27 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // Requires running BearDog instance
+    #[ignore = "requires running BearDog instance"]
     async fn test_crypto_delegate_encrypt_decrypt() {
         let delegate = CryptoDelegate::new().await.unwrap();
 
         let plaintext = b"Hello, BearDog!";
-        let params = EncryptionParams {
-            algorithm: EncryptionAlgorithm::Aes256Gcm,
-            associated_data: Vec::new(),
-        };
+        let params = EncryptionParams::default();
 
-        // Encrypt
         let encrypted = delegate.encrypt(plaintext, &params).await.unwrap();
         assert!(!encrypted.ciphertext.is_empty());
         assert!(!encrypted.nonce.is_empty());
 
-        // Decrypt
         let decrypted = delegate.decrypt(&encrypted).await.unwrap();
         assert_eq!(decrypted, plaintext);
     }
 
     #[tokio::test]
-    #[ignore] // Requires running BearDog instance
+    #[ignore = "requires running BearDog instance"]
     async fn test_crypto_delegate_key_generation() {
         let delegate = CryptoDelegate::new().await.unwrap();
 
         let key = delegate.generate_key(32).await.unwrap();
         assert_eq!(key.len(), 32);
-    }
-
-    #[test]
-    fn test_encryption_params_default() {
-        let params = EncryptionParams::default();
-        assert_eq!(params.algorithm, EncryptionAlgorithm::Aes256Gcm);
-        assert!(params.associated_data.is_empty());
     }
 }

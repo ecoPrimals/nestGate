@@ -884,4 +884,145 @@ mod tests {
         assert!(analysis.total_files >= 1_000_000);
         assert!(analysis.total_size_bytes > 1024 * 1024 * 1024);
     }
+
+    #[test]
+    fn test_pattern_analyzer_new() {
+        let analyzer = PatternAnalyzer::new();
+        drop(analyzer);
+    }
+
+    #[test]
+    fn test_pattern_analyzer_default() {
+        let analyzer = PatternAnalyzer::default();
+        drop(analyzer);
+    }
+
+    #[tokio::test]
+    async fn test_pattern_analyzer_record_and_get() {
+        let analyzer = PatternAnalyzer::new();
+        analyzer
+            .record_access("/path/file.txt", AccessType::Read)
+            .await;
+        let patterns = analyzer.get_patterns("/path/file.txt").await;
+        assert_eq!(patterns.len(), 1);
+        assert!(matches!(patterns[0].access_type, AccessType::Read));
+    }
+
+    #[tokio::test]
+    async fn test_pattern_analyzer_get_nonexistent() {
+        let analyzer = PatternAnalyzer::new();
+        let patterns = analyzer.get_patterns("/nonexistent").await;
+        assert!(patterns.is_empty());
+    }
+
+    #[test]
+    fn test_pattern_analyzer_recommend_tier_log() {
+        let analyzer = PatternAnalyzer::new();
+        let tier = analyzer.recommend_tier("/var/log/app.log");
+        assert_eq!(tier, StorageTier::Cold);
+    }
+
+    #[test]
+    fn test_pattern_analyzer_recommend_tier_doc() {
+        let analyzer = PatternAnalyzer::new();
+        let tier = analyzer.recommend_tier("/docs/file.pdf");
+        assert_eq!(tier, StorageTier::Warm);
+    }
+
+    #[test]
+    fn test_pattern_analyzer_recommend_tier_video() {
+        let analyzer = PatternAnalyzer::new();
+        let tier = analyzer.recommend_tier("/media/movie.mp4");
+        assert_eq!(tier, StorageTier::Hot);
+    }
+
+    #[test]
+    fn test_dataset_analyzer_default() {
+        let analyzer = DatasetAnalyzer::default();
+        drop(analyzer);
+    }
+
+    #[test]
+    fn test_dataset_analyzer_predict_optimal_tier_archive() {
+        let analyzer = DatasetAnalyzer::new();
+        let tier = analyzer.predict_optimal_tier("/data/archive").unwrap();
+        assert_eq!(tier, StorageTier::Cold);
+    }
+
+    #[test]
+    fn test_dataset_analyzer_predict_optimal_tier_active() {
+        let analyzer = DatasetAnalyzer::new();
+        let tier = analyzer.predict_optimal_tier("/data/active").unwrap();
+        assert_eq!(tier, StorageTier::Hot);
+    }
+
+    #[test]
+    fn test_dataset_analyzer_predict_optimal_tier_default() {
+        let analyzer = DatasetAnalyzer::new();
+        let tier = analyzer.predict_optimal_tier("/data/misc").unwrap();
+        assert_eq!(tier, StorageTier::Warm);
+    }
+
+    #[tokio::test]
+    async fn test_dataset_analyzer_analyze_nonexistent() {
+        let analyzer = DatasetAnalyzer::new();
+        let result = analyzer.analyze_dataset("/nonexistent/path/xyz").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_dataset_analyzer_aggregate_patterns_empty() {
+        let analyzer = DatasetAnalyzer::new();
+        let result = analyzer
+            .aggregate_patterns(&[], &AccessPattern::default())
+            .await;
+        assert!(result.is_ok());
+        let pattern = result.unwrap();
+        assert_eq!(pattern.total_accesses, 0);
+    }
+
+    #[test]
+    fn test_file_analyzer_with_cache_size() {
+        let analyzer = FileAnalyzer::new().with_cache_size(1000);
+        drop(analyzer);
+    }
+
+    #[test]
+    fn test_file_analyzer_with_timeout() {
+        let analyzer = FileAnalyzer::new().with_timeout(std::time::Duration::from_secs(5));
+        drop(analyzer);
+    }
+
+    #[test]
+    fn test_dataset_summary_creation() {
+        let summary = DatasetSummary {
+            dataset_name: "pool/data".to_string(),
+            total_files: 100,
+            total_size_bytes: 1024 * 1024,
+            average_file_size: 10240,
+            file_types: HashMap::new(),
+            access_pattern: AccessPattern::default(),
+            compressible_files: 50,
+            dedupable_files: 10,
+        };
+        assert_eq!(summary.dataset_name, "pool/data");
+        assert_eq!(summary.total_files, 100);
+        assert_eq!(summary.compressible_files, 50);
+    }
+
+    #[test]
+    fn test_dataset_summary_serialization() {
+        let summary = DatasetSummary {
+            dataset_name: "pool/data".to_string(),
+            total_files: 50,
+            total_size_bytes: 1024,
+            average_file_size: 20,
+            file_types: HashMap::new(),
+            access_pattern: AccessPattern::default(),
+            compressible_files: 5,
+            dedupable_files: 2,
+        };
+        let serialized = serde_json::to_string(&summary).unwrap();
+        assert!(serialized.contains("dataset_name"));
+    }
 }

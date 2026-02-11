@@ -9,7 +9,6 @@ mod expanded_fault_injection {
     // ==================== Network Fault Injection ====================
 
     #[tokio::test]
-    #[ignore] // Run with: cargo test --test fault_injection_expanded -- --ignored
     async fn fault_inject_connection_refused() {
         // Simulate connection refused error
         async fn connect_to_service(_url: &str) -> Result<(), String> {
@@ -22,7 +21,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_connection_timeout() {
         // Simulate connection timeout
         async fn connect_with_timeout(_timeout_ms: u64) -> Result<(), String> {
@@ -34,7 +32,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_ssl_handshake_failure() {
         // Simulate SSL/TLS handshake failure
         async fn ssl_connect(_host: &str) -> Result<(), String> {
@@ -47,7 +44,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_partial_response() {
         // Simulate incomplete/partial response
         async fn fetch_data() -> Result<Vec<u8>, String> {
@@ -66,7 +62,6 @@ mod expanded_fault_injection {
     // ==================== Database Fault Injection ====================
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_database_connection_pool_exhausted() {
         // Simulate connection pool exhaustion
         struct ConnectionPool {
@@ -96,10 +91,10 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_query_timeout() {
-        // Simulate database query timeout
+        // Simulate database query timeout - slow query exceeds timeout window
         async fn execute_slow_query() -> Result<Vec<String>, String> {
+            tokio::time::sleep(Duration::from_millis(600)).await;
             Ok(vec!["result".to_string()])
         }
 
@@ -109,7 +104,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_transaction_deadlock() {
         // Simulate transaction deadlock
         async fn execute_transaction() -> Result<(), String> {
@@ -122,7 +116,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_constraint_violation() {
         // Simulate database constraint violation
         async fn insert_duplicate_key() -> Result<(), String> {
@@ -137,7 +130,6 @@ mod expanded_fault_injection {
     // ==================== API Fault Injection ====================
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_malformed_json_request() {
         // Simulate malformed JSON in request
         fn parse_json(json_str: &str) -> Result<serde_json::Value, String> {
@@ -152,7 +144,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_missing_required_field() {
         // Simulate missing required field in request
         #[derive(Debug)]
@@ -182,7 +173,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_invalid_authentication_token() {
         // Simulate invalid auth token
         fn verify_token(token: &str) -> Result<String, String> {
@@ -199,7 +189,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_rate_limit_exceeded() {
         // Simulate rate limit exceeded
         struct RateLimiter {
@@ -231,7 +220,6 @@ mod expanded_fault_injection {
     // ==================== Storage Fault Injection ====================
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_disk_full() {
         // Simulate disk full condition
         async fn write_file(_data: &[u8]) -> Result<(), String> {
@@ -246,7 +234,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_permission_denied() {
         // Simulate permission denied error
         async fn access_file(_path: &str) -> Result<Vec<u8>, String> {
@@ -259,7 +246,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_file_not_found() {
         // Simulate file not found
         async fn read_file(_path: &str) -> Result<String, String> {
@@ -274,7 +260,6 @@ mod expanded_fault_injection {
     // ==================== Service Fault Injection ====================
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_service_unavailable() {
         // Simulate service unavailable (503)
         async fn call_service() -> Result<String, String> {
@@ -287,7 +272,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_internal_server_error() {
         // Simulate internal server error (500)
         async fn process_request() -> Result<String, String> {
@@ -300,7 +284,6 @@ mod expanded_fault_injection {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn fault_inject_dependency_failure() {
         // Simulate dependency service failure
         async fn external_service_call() -> Result<String, String> {

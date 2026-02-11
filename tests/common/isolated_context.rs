@@ -270,12 +270,18 @@ impl Default for ConcurrentCoordinator {
 /// Cleanup guard - ensures cleanup even on panic
 ///
 /// Runs registered cleanup functions in LIFO order when dropped.
+/// Uses `tokio::sync::RwLock` which does not require `T: Sync`.
+/// Boxed cleanup function for LIFO execution
+type CleanupFn = Box<dyn FnOnce() + Send + 'static>;
+
+#[allow(clippy::arc_with_non_send_sync)]
 pub struct CleanupGuard {
-    cleanups: Arc<RwLock<Vec<Box<dyn FnOnce() + Send + 'static>>>>,
+    cleanups: Arc<RwLock<Vec<CleanupFn>>>,
 }
 
 impl CleanupGuard {
     /// Create new cleanup guard
+    #[allow(clippy::arc_with_non_send_sync)]
     pub fn new() -> Self {
         Self {
             cleanups: Arc::new(RwLock::new(Vec::new())),

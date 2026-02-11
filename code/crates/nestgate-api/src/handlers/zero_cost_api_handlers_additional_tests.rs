@@ -2,8 +2,10 @@
 //!
 //! Comprehensive tests for zero-cost API handler functionality.
 
-use super::*;
-
+use crate::handlers::zero_cost_api_handlers::*;
+use crate::zfs::types::PoolConfig;
+use axum::http::StatusCode;
+use std::collections::HashMap;
 use std::sync::Arc;
 // Pool Handler Tests
 
@@ -25,8 +27,16 @@ fn test_pool_handler_get_pool_tank() {
 
     assert!(result.is_ok());
     let pool = result.expect("Test setup failed").0;
-    assert_eq!(pool.get("name").and_then(|v| v.as_str()), Some("tank"));
-    assert_eq!(pool.get("state").and_then(|v| v.as_str()), Some("ONLINE"));
+    assert_eq!(
+        pool.get("name")
+            .and_then(|v: &serde_json::Value| v.as_str()),
+        Some("tank")
+    );
+    assert_eq!(
+        pool.get("state")
+            .and_then(|v: &serde_json::Value| v.as_str()),
+        Some("ONLINE")
+    );
 }
 
 #[test]
@@ -36,7 +46,11 @@ fn test_pool_handler_get_pool_backup() {
 
     assert!(result.is_ok());
     let pool = result.expect("Test setup failed").0;
-    assert_eq!(pool.get("name").and_then(|v| v.as_str()), Some("backup"));
+    assert_eq!(
+        pool.get("name")
+            .and_then(|v: &serde_json::Value| v.as_str()),
+        Some("backup")
+    );
 }
 
 #[test]
@@ -52,10 +66,10 @@ fn test_pool_handler_get_pool_not_found() {
 fn test_pool_handler_create_pool() {
     let handler = ZeroCostPoolHandler::<100, 5000>::new();
     let config = PoolConfig {
+        raid_level: None,
         compression: Some("lz4".to_string()),
         dedup: Some(false),
         encryption: Some(true),
-        ..Default::default()
     };
 
     let result = handler.handle_create_pool(config);
@@ -63,7 +77,9 @@ fn test_pool_handler_create_pool() {
 
     let response = result.expect("Test setup failed").0;
     assert_eq!(
-        response.get("status").and_then(|v| v.as_str()),
+        response
+            .get("status")
+            .and_then(|v: &serde_json::Value| v.as_str()),
         Some("created")
     );
 }
@@ -76,7 +92,9 @@ fn test_pool_handler_delete_pool_tank() {
     assert!(result.is_ok());
     let response = result.expect("Test setup failed").0;
     assert_eq!(
-        response.get("status").and_then(|v| v.as_str()),
+        response
+            .get("status")
+            .and_then(|v: &serde_json::Value| v.as_str()),
         Some("deleted")
     );
 }
@@ -315,7 +333,7 @@ fn test_request_clone() {
     };
 
     let cloned = request.clone();
-    assert_eq!(cloned.request_id, "clone-test");
+    assert_eq!(cloned.request_id.as_ref(), "clone-test");
 }
 
 #[test]
@@ -325,11 +343,11 @@ fn test_response_clone() {
         request_id: Arc::new("resp-clone".to_string()),
         status: ApiStatus::Success,
         processing_time_ms: 10,
-        _metadata: Arc::new(HashMap::new()),
+        _metadata: HashMap::new(),
     };
 
     let cloned = response.clone();
-    assert_eq!(cloned.request_id, "resp-clone");
+    assert_eq!(cloned.request_id.as_ref(), "resp-clone");
     assert_eq!(cloned.processing_time_ms, 10);
 }
 
@@ -420,7 +438,12 @@ fn test_multiple_pool_handlers_different_configs() {
 #[test]
 fn test_pool_creation_with_default_config() {
     let handler = ProductionPoolHandler::new();
-    let config = PoolConfig::default();
+    let config = PoolConfig {
+        raid_level: None,
+        compression: None,
+        dedup: None,
+        encryption: None,
+    };
 
     let result = handler.handle_create_pool(config);
     assert!(result.is_ok());
@@ -439,14 +462,14 @@ fn test_pool_handler_get_multiple_pools() {
 
 #[tokio::test]
 async fn test_benchmark_zero_requests() {
-    let duration = ApiHandlerBenchmark::benchmark_api_operations(0).await;
+    let duration: std::time::Duration = ApiHandlerBenchmark::benchmark_api_operations(0).await;
     // Should complete quickly with no requests
     assert!(duration.as_millis() < 10);
 }
 
 #[tokio::test]
 async fn test_benchmark_many_requests() {
-    let duration = ApiHandlerBenchmark::benchmark_api_operations(100).await;
+    let duration: std::time::Duration = ApiHandlerBenchmark::benchmark_api_operations(100).await;
     // Should take at least 10ms (100 * 100μs)
     assert!(duration.as_micros() >= 10000);
 }

@@ -100,3 +100,36 @@ impl ZfsManager {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_create_pool_error_path() {
+        let manager = ZfsManager::mock();
+        let result = manager.create_pool("nonexistent", &[]).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_destroy_pool_error_path() {
+        let manager = ZfsManager::mock();
+        let result = manager.destroy_pool("nonexistent-pool").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_get_pool_status_error_path() {
+        let manager = ZfsManager::mock();
+        let result = manager.get_pool_status("nonexistent").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_scrub_pool_error_path() {
+        let manager = ZfsManager::mock();
+        let result = manager.scrub_pool("nonexistent").await;
+        assert!(result.is_err());
+    }
+}

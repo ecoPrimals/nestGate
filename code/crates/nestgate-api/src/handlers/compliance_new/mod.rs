@@ -9,16 +9,13 @@
 pub mod types;
 pub mod handlers;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod tests;
-// TEMP_DISABLED: 
-// TEMP_DISABLED: // Re-export commonly used types
-// TEMP_DISABLED: pub use types::*;
-// TEMP_DISABLED: pub use handlers::{create_compliance_routes, initialize_compliance_manager};
-// TEMP_DISABLED: pub use handlers::{
-// TEMP_DISABLED:     get_compliance_dashboard,
-// TEMP_DISABLED:     get_retention_policies,
-// TEMP_DISABLED:     create_retention_policy,
-// TEMP_DISABLED:     get_audit_logs,
-// TEMP_DISABLED:     get_violations,
-// TEMP_DISABLED: };
+// Re-export commonly used types
+pub use types::*;
+pub use handlers::{create_compliance_routes, initialize_compliance_manager};
+pub use handlers::{
+    get_compliance_dashboard,
+    get_retention_policies,
+    create_retention_policy,
+    get_audit_logs,
+    get_violations,
+};

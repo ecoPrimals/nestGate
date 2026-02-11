@@ -452,3 +452,186 @@ pub trait NativeAsyncWorkflowService<
         EXECUTION_TIMEOUT_SECS
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockLoadBalancer;
+
+    impl NativeAsyncLoadBalancer<100, 1000, 3600, 30> for MockLoadBalancer {
+        type ServiceInfo = String;
+        type ServiceRequest = String;
+        type ServiceResponse = String;
+        type LoadBalancerStats = String;
+        type ServiceStats = String;
+
+        fn add_service(
+            &self,
+            _service: Self::ServiceInfo,
+        ) -> impl std::future::Future<Output = Result<()>> + Send {
+            std::future::ready(Ok(()))
+        }
+        fn remove_service(
+            &self,
+            _service_id: &str,
+        ) -> impl std::future::Future<Output = Result<()>> + Send {
+            std::future::ready(Ok(()))
+        }
+        fn route_request(
+            &self,
+            _request: Self::ServiceRequest,
+        ) -> impl std::future::Future<Output = Result<Self::ServiceResponse>> + Send {
+            std::future::ready(Ok("response".to_string()))
+        }
+        fn get_stats(
+            &self,
+        ) -> impl std::future::Future<Output = Result<Self::LoadBalancerStats>> + Send {
+            std::future::ready(Ok("stats".to_string()))
+        }
+        fn get_service_stats(
+            &self,
+            _service_id: &str,
+        ) -> impl std::future::Future<Output = Result<Self::ServiceStats>> + Send {
+            std::future::ready(Ok("svc_stats".to_string()))
+        }
+        fn health_check_all(
+            &self,
+        ) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send {
+            std::future::ready(Ok(vec![]))
+        }
+        fn update_service_weight(
+            &self,
+            _service_id: &str,
+            _weight: f64,
+        ) -> impl std::future::Future<Output = Result<()>> + Send {
+            std::future::ready(Ok(()))
+        }
+        fn list_services(
+            &self,
+        ) -> impl std::future::Future<Output = Result<Vec<Self::ServiceInfo>>> + Send {
+            std::future::ready(Ok(vec![]))
+        }
+        fn get_service(
+            &self,
+            _service_id: &str,
+        ) -> impl std::future::Future<Output = Result<Option<Self::ServiceInfo>>> + Send {
+            std::future::ready(Ok(None))
+        }
+        fn service_exists(
+            &self,
+            _service_id: &str,
+        ) -> impl std::future::Future<Output = Result<bool>> + Send {
+            std::future::ready(Ok(false))
+        }
+    }
+
+    #[test]
+    fn test_load_balancer_max_services() {
+        assert_eq!(MockLoadBalancer::max_services(), 100);
+    }
+
+    #[test]
+    fn test_load_balancer_max_concurrent_requests() {
+        assert_eq!(MockLoadBalancer::max_concurrent_requests(), 1000);
+    }
+
+    #[test]
+    fn test_load_balancer_stats_retention() {
+        assert_eq!(MockLoadBalancer::stats_retention_seconds(), 3600);
+    }
+
+    #[test]
+    fn test_load_balancer_health_check_interval() {
+        assert_eq!(MockLoadBalancer::health_check_interval_seconds(), 30);
+    }
+
+    struct MockMcpService;
+
+    impl NativeAsyncMcpService<500, 120> for MockMcpService {
+        type Request = String;
+        type Response = String;
+
+        fn process_request(
+            &self,
+            _request: Self::Request,
+        ) -> impl std::future::Future<Output = Result<Self::Response>> + Send {
+            std::future::ready(Ok("ok".to_string()))
+        }
+        fn health_check(&self) -> impl std::future::Future<Output = Result<bool>> + Send {
+            std::future::ready(Ok(true))
+        }
+    }
+
+    #[test]
+    fn test_mcp_service_max_connections() {
+        assert_eq!(MockMcpService::max_connections(), 500);
+    }
+
+    #[test]
+    fn test_mcp_service_request_timeout() {
+        assert_eq!(MockMcpService::request_timeout_seconds(), 120);
+    }
+
+    #[test]
+    fn test_workflow_service_constants() {
+        struct MockWorkflow;
+        impl NativeAsyncWorkflowService<50, 60> for MockWorkflow {
+            type Workflow = String;
+            type ExecutionContext = String;
+
+            fn execute(
+                &self,
+                _workflow: Self::Workflow,
+            ) -> impl std::future::Future<Output = Result<Self::ExecutionContext>> + Send
+            {
+                std::future::ready(Ok("ctx".to_string()))
+            }
+            fn get_status(
+                &self,
+                _execution_id: &str,
+            ) -> impl std::future::Future<Output = Result<String>> + Send {
+                std::future::ready(Ok("running".to_string()))
+            }
+        }
+        assert_eq!(MockWorkflow::max_workflows(), 50);
+        assert_eq!(MockWorkflow::execution_timeout_seconds(), 60);
+    }
+
+    #[test]
+    fn test_universal_service_provider_constants() {
+        struct MockProvider;
+        impl NativeAsyncUniversalServiceProvider<200, 600> for MockProvider {
+            type ServiceDefinition = String;
+            type ServiceInstance = String;
+
+            fn register_service(
+                &self,
+                _def: Self::ServiceDefinition,
+            ) -> impl std::future::Future<Output = Result<String>> + Send {
+                std::future::ready(Ok("id".to_string()))
+            }
+            fn unregister_service(
+                &self,
+                _id: &str,
+            ) -> impl std::future::Future<Output = Result<()>> + Send {
+                std::future::ready(Ok(()))
+            }
+            fn get_service_instance(
+                &self,
+                _id: &str,
+            ) -> impl std::future::Future<Output = Result<Option<Self::ServiceInstance>>> + Send
+            {
+                std::future::ready(Ok(None))
+            }
+            fn list_services(
+                &self,
+            ) -> impl std::future::Future<Output = Result<Vec<Self::ServiceDefinition>>> + Send
+            {
+                std::future::ready(Ok(vec![]))
+            }
+        }
+        assert_eq!(MockProvider::max_services(), 200);
+        assert_eq!(MockProvider::service_timeout_seconds(), 600);
+    }
+}

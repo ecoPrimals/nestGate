@@ -370,17 +370,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_from_env() {
+        let orig = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
         std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
 
         let config = CapabilityConfigBuilder::new().build().unwrap();
 
         let result = config.discover(PrimalCapability::Storage).await;
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
+            None => std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
+        }
         assert!(result.is_ok());
-
         let service = result.unwrap();
         assert_eq!(service.capability, PrimalCapability::Storage);
         assert_eq!(service.endpoint.port(), 9000);
-
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
     }
 }

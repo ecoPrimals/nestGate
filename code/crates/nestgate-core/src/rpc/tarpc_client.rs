@@ -742,4 +742,95 @@ mod tests {
         let nest_err = NestGateRpcClient::convert_rpc_error(err);
         assert!(!nest_err.to_string().is_empty());
     }
+
+    #[test]
+    fn test_convert_rpc_error_dataset_already_exists() {
+        let err = NestGateRpcError::DatasetAlreadyExists {
+            dataset: "exists".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(nest_err.to_string().to_lowercase().contains("exists"));
+    }
+
+    #[test]
+    fn test_convert_rpc_error_object_not_found() {
+        let err = NestGateRpcError::ObjectNotFound {
+            dataset: "ds".to_string(),
+            key: "key".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(nest_err.to_string().to_lowercase().contains("not found"));
+    }
+
+    #[test]
+    fn test_convert_rpc_error_object_already_exists() {
+        let err = NestGateRpcError::ObjectAlreadyExists {
+            dataset: "ds".to_string(),
+            key: "key".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(!nest_err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_convert_rpc_error_quota_exceeded() {
+        let err = NestGateRpcError::QuotaExceeded {
+            dataset: "ds".to_string(),
+            quota: 100,
+            requested: 200,
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(nest_err.to_string().to_lowercase().contains("quota"));
+    }
+
+    #[test]
+    fn test_convert_rpc_error_permission_denied() {
+        let err = NestGateRpcError::PermissionDenied {
+            message: "access denied".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(!nest_err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_convert_rpc_error_internal_error() {
+        let err = NestGateRpcError::InternalError {
+            message: "internal".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(!nest_err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_convert_rpc_error_service_unavailable() {
+        let err = NestGateRpcError::ServiceUnavailable {
+            message: "unavailable".to_string(),
+        };
+        let nest_err = NestGateRpcClient::convert_rpc_error(err);
+        assert!(!nest_err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_parse_endpoint_empty() {
+        let result = NestGateRpcClient::parse_endpoint("");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_endpoint_hostname() {
+        // Use 127.0.0.1 for portability (localhost resolution varies by system)
+        let addr = NestGateRpcClient::parse_endpoint("tarpc://127.0.0.1:8091").unwrap();
+        assert_eq!(addr.port(), 8091);
+    }
+
+    #[tokio::test]
+    async fn test_discover_by_capability_unknown() {
+        let result = NestGateRpcClient::discover_by_capability("unknown_capability").await;
+        assert!(result.is_err());
+        let err_msg = match &result {
+            Err(e) => e.to_string(),
+            Ok(_) => String::new(),
+        };
+        assert!(err_msg.contains("Unknown capability"));
+    }
 }

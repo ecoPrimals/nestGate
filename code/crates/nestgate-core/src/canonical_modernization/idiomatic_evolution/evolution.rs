@@ -327,3 +327,55 @@ impl CanonicalEvolutionSystem {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_evolution_tracker_new() {
+        let tracker = EvolutionTracker::new();
+        assert!(tracker.get_overall_score().abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_evolution_tracker_track_and_score() {
+        let mut tracker = EvolutionTracker::new();
+        tracker.track_component("api", "1.0");
+        tracker.set_evolution_score("api", 0.8);
+        assert!((tracker.get_overall_score() - 0.8).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_migration_manager_new() {
+        let manager = MigrationManager::new();
+        assert_eq!(manager.get_completed_count(), 0);
+    }
+
+    #[test]
+    fn test_migration_manager_update_status() {
+        let mut manager = MigrationManager::new();
+        manager.update_migration_status("comp", "2.0").unwrap();
+        assert_eq!(manager.get_completed_count(), 1);
+    }
+
+    #[test]
+    fn test_compatibility_checker_validate() {
+        let checker = CompatibilityChecker::new();
+        assert!(checker.validate(&"item").is_ok());
+        assert!((checker.get_overall_score() - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_modernization_engine_apply_patterns() {
+        let engine = ModernizationEngine::new();
+        let result = engine.apply_patterns(42);
+        assert_eq!(result.unwrap(), 42);
+    }
+
+    #[test]
+    fn test_canonical_evolution_system_validate() {
+        let system = CanonicalEvolutionSystem::new();
+        assert!(system.validate().is_ok());
+    }
+}

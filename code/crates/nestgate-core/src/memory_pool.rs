@@ -420,7 +420,7 @@ impl PoolStatistics {
 pub type BufferPool = MemoryPool<Vec<u8>>;
 /// Type alias for Stringpool
 pub type StringPool = MemoryPool<String>;
-// ✅ EVOLVED: lazy_static → std::sync::LazyLock (Pure Rust std, zero deps)
+// Uses std::sync::LazyLock for thread-safe lazy initialization
 // Global buffer pools for common usage patterns
 
 /// Global 4KB buffer pool for file I/O operations

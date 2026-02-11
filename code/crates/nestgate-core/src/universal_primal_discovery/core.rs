@@ -174,6 +174,18 @@ impl UniversalPrimalDiscovery {
         self.cache.store_timeout_discovery(service_name, timeout);
     }
 
+    /// Cache discovered limit (lock-free)
+    pub async fn cache_discovered_limit(&mut self, resource_type: &str, limit: usize) {
+        self.discovered_limits
+            .insert(resource_type.to_string(), limit);
+    }
+
+    /// Retrieve a previously discovered limit
+    #[must_use]
+    pub fn get_cached_limit(&self, resource_type: &str) -> Option<usize> {
+        self.discovered_limits.get(resource_type).map(|v| *v)
+    }
+
     /// **SYSTEM HEALTH**: Get comprehensive discovery status
     ///
     /// # Errors
@@ -197,6 +209,12 @@ impl UniversalPrimalDiscovery {
         // Cache status
         let cache_stats = self.cache.get_cache_stats();
         status.insert("cache_entries".to_string(), cache_stats.to_string());
+
+        // Discovered limits count
+        status.insert(
+            "discovered_limits".to_string(),
+            self.discovered_limits.len().to_string(),
+        );
 
         Ok(status)
     }

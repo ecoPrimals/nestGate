@@ -581,3 +581,75 @@ pub type HighPerformanceZfsManager = ZeroCostZfsManager<200, 20000, 200000, 4500
 pub type TestingZfsManager = ZeroCostZfsManager<2, 10, 100, 5000>; // 2 pools, 10 datasets, 100 snapshots, 5s timeout
 /// Enterprise ZFS manager: Very large limits, long timeout
 pub type EnterpriseZfsManager = ZeroCostZfsManager<1000, 100_000, 1_000_000, 60000>; // 1k pools, 100k datasets, 1M snapshots, 60s timeout
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_zero_cost_zfs_manager_new() {
+        let manager = ZeroCostZfsManager::<10, 100, 1000, 10_000>::new();
+        drop(manager);
+    }
+
+    #[test]
+    fn test_zero_cost_zfs_manager_default() {
+        let manager = TestingZfsManager::default();
+        drop(manager);
+    }
+
+    #[test]
+    fn test_command_timeout_development() {
+        let timeout = DevelopmentZfsManager::command_timeout();
+        assert_eq!(timeout.as_millis(), 10_000);
+    }
+
+    #[test]
+    fn test_command_timeout_production() {
+        let timeout = ProductionZfsManager::command_timeout();
+        assert_eq!(timeout.as_millis(), 30_000);
+    }
+
+    #[test]
+    fn test_command_timeout_high_performance() {
+        let timeout = HighPerformanceZfsManager::command_timeout();
+        assert_eq!(timeout.as_millis(), 45_000);
+    }
+
+    #[test]
+    fn test_command_timeout_testing() {
+        let timeout = TestingZfsManager::command_timeout();
+        assert_eq!(timeout.as_millis(), 5000);
+    }
+
+    #[test]
+    fn test_command_timeout_enterprise() {
+        let timeout = EnterpriseZfsManager::command_timeout();
+        assert_eq!(timeout.as_millis(), 60_000);
+    }
+
+    #[test]
+    fn test_type_alias_development_zfs_manager() {
+        let _manager: DevelopmentZfsManager = DevelopmentZfsManager::new();
+    }
+
+    #[test]
+    fn test_type_alias_production_zfs_manager() {
+        let _manager: ProductionZfsManager = ProductionZfsManager::new();
+    }
+
+    #[test]
+    fn test_type_alias_high_performance_zfs_manager() {
+        let _manager: HighPerformanceZfsManager = HighPerformanceZfsManager::new();
+    }
+
+    #[test]
+    fn test_type_alias_testing_zfs_manager() {
+        let _manager: TestingZfsManager = TestingZfsManager::new();
+    }
+
+    #[test]
+    fn test_type_alias_enterprise_zfs_manager() {
+        let _manager: EnterpriseZfsManager = EnterpriseZfsManager::new();
+    }
+}

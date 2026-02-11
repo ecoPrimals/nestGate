@@ -62,9 +62,9 @@
 //! cargo test --lib network::client_tests::client_stats_tests
 //! ```
 
-// TEMP_DISABLED: API changed, needs rewrite
-// mod client_config_tests;
-// mod client_stats_tests;
+// TEMP_DISABLED: client_config_tests and client_stats_tests - module files were removed during
+// refactoring (Dec 4, 2025); API changed. Tests were split into configuration_validation_tests,
+// connection_*_tests, etc. Re-enable only if those modules are recreated.
 mod configuration_validation_tests;
 mod connection_lifecycle_tests;
 mod connection_pool_semaphore_tests;

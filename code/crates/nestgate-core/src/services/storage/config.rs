@@ -358,11 +358,26 @@ mod tests {
 
     #[test]
     fn test_zfs_config_default() {
+        // Save/restore to avoid env-var race conditions with parallel tests
+        let orig_zfs = std::env::var("NESTGATE_ZFS_BINARY").ok();
+        let orig_zpool = std::env::var("NESTGATE_ZPOOL_BINARY").ok();
+        std::env::remove_var("NESTGATE_ZFS_BINARY");
+        std::env::remove_var("NESTGATE_ZPOOL_BINARY");
+
         let config = ZfsConfig::default();
         assert_eq!(config.zfs_binary, "/usr/sbin/zfs");
         assert_eq!(config.zpool_binary, "/usr/sbin/zpool");
         assert!(config.use_sudo);
         assert_eq!(config.command_timeout, Duration::from_secs(30));
+
+        match orig_zfs {
+            Some(v) => std::env::set_var("NESTGATE_ZFS_BINARY", v),
+            None => std::env::remove_var("NESTGATE_ZFS_BINARY"),
+        }
+        match orig_zpool {
+            Some(v) => std::env::set_var("NESTGATE_ZPOOL_BINARY", v),
+            None => std::env::remove_var("NESTGATE_ZPOOL_BINARY"),
+        }
     }
 
     #[test]

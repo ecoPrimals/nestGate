@@ -150,4 +150,15 @@ mod tests {
         let prod = CapabilityDefaults::secure();
         assert_eq!(prod.bind_address, "0.0.0.0");
     }
+
+    #[test]
+    fn test_discovery_backend_variants() {
+        use super::DiscoveryBackend;
+        let env_backend = DiscoveryBackend::Environment;
+        let mdns = DiscoveryBackend::MDns {
+            service_type: "_nestgate._tcp.local".to_string(),
+        };
+        assert!(matches!(env_backend, DiscoveryBackend::Environment));
+        assert!(matches!(mdns, DiscoveryBackend::MDns { .. }));
+    }
 }

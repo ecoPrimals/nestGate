@@ -74,7 +74,9 @@ version = "0.3"
 
 [features]
 default = []
-# TODO(v0.2.0): When enabled, wire up nestgate_core::rpc::serve_tarpc() in service startup
+# Enable tarpc high-performance RPC server alongside HTTP.
+# When enabled, `nestgate service start` will spawn a tarpc listener
+# on the configured tarpc_port for primal-to-primal communication.
 tarpc-server = []
 
 [dev-dependencies.tokio-test]

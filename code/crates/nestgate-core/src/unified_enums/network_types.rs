@@ -155,3 +155,44 @@ impl fmt::Display for UnifiedProxyType {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unified_protocol_type_default() {
+        assert!(matches!(
+            UnifiedProtocolType::default(),
+            UnifiedProtocolType::Http
+        ));
+    }
+
+    #[test]
+    fn test_unified_protocol_type_custom() {
+        let pt = UnifiedProtocolType::Custom("mqtt".to_string());
+        assert_eq!(pt.to_string(), "mqtt");
+    }
+
+    #[test]
+    fn test_unified_protocol_type_serialization() {
+        let pt = UnifiedProtocolType::WebSocket;
+        let json = serde_json::to_string(&pt).unwrap();
+        let parsed: UnifiedProtocolType = serde_json::from_str(&json).unwrap();
+        assert_eq!(pt, parsed);
+    }
+
+    #[test]
+    fn test_unified_integration_type_display() {
+        assert_eq!(UnifiedIntegrationType::DirectApi.to_string(), "direct_api");
+        assert_eq!(UnifiedIntegrationType::Database.to_string(), "database");
+    }
+
+    #[test]
+    fn test_unified_proxy_type_default() {
+        assert!(matches!(
+            UnifiedProxyType::default(),
+            UnifiedProxyType::None
+        ));
+    }
+}

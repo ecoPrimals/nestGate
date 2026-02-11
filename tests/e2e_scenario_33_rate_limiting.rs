@@ -9,7 +9,6 @@ mod rate_limiting {
     use std::time::{Duration, Instant};
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_33_rate_limiting -- --ignored
     async fn test_token_bucket_rate_limiter() {
         struct TokenBucket {
             capacity: usize,
@@ -55,7 +54,6 @@ mod rate_limiting {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_sliding_window_rate_limiter() {
         struct SlidingWindow {
             window_size: Duration,
@@ -106,7 +104,6 @@ mod rate_limiting {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_backpressure_mechanism() {
         use tokio::sync::mpsc;
 
@@ -130,7 +127,6 @@ mod rate_limiting {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_adaptive_rate_limiting() {
         struct AdaptiveRateLimiter {
             current_limit: usize,

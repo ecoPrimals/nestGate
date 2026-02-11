@@ -2,6 +2,7 @@
 //!
 //! BearDog client for hardware-backed security and authentication.
 
+use nestgate_core::capability_discovery::CapabilityDiscovery;
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -53,22 +54,40 @@ impl BearDogClient {
         })
     }
 
-    /// Discover BearDog via runtime socket scanning
+    /// Discover security provider via capability-based discovery or runtime socket scanning.
+    ///
+    /// **Discovery order**:
+    /// 1. `NESTGATE_SECURITY_PROVIDER` environment variable
+    /// 2. Capability discovery (IPC gateway + "security" capability)
+    /// 3. Socket scan fallback: `/tmp/beardog-{family}-*.sock`, etc.
     ///
     /// # Errors
     ///
-    /// Returns error if BearDog cannot be discovered
+    /// Returns error if security provider cannot be discovered
     pub async fn discover(family_id: &str) -> Result<Self> {
-        // Try environment variable first
+        // 1. Environment variable first
         if let Ok(socket_path) = std::env::var("NESTGATE_SECURITY_PROVIDER") {
             info!(
-                "Found BearDog via NESTGATE_SECURITY_PROVIDER: {}",
+                "Found security provider via NESTGATE_SECURITY_PROVIDER: {}",
                 socket_path
             );
             return Self::new(socket_path);
         }
 
-        // Scan for BearDog sockets
+        // 2. Capability discovery (IPC gateway + "security" capability)
+        if let Ok(songbird) = CapabilityDiscovery::discover_songbird_ipc().await {
+            let mut discovery = CapabilityDiscovery::new(songbird);
+            if let Ok(endpoint) = discovery.find("security").await {
+                let ep = endpoint.endpoint;
+                // Endpoint may be Unix socket path or URL; use as path if it looks like one
+                if ep.starts_with('/') && std::path::Path::new(&ep).exists() {
+                    info!("Found security provider via capability discovery: {}", ep);
+                    return Self::new(ep);
+                }
+            }
+        }
+
+        // 3. Scan for security provider sockets (sensible default)
         let patterns = vec![
             format!("/tmp/beardog-{}-*.sock", family_id),
             format!("/tmp/beardog-{}.sock", family_id),
@@ -82,8 +101,8 @@ impl BearDogClient {
             }
         }
 
-        warn!("BearDog not found - security features disabled");
-        Err(NestGateError::network_error("BearDog not found"))
+        warn!("Security provider not found - security features disabled");
+        Err(NestGateError::network_error("Security provider not found"))
     }
 
     async fn try_socket(pattern: &str) -> Result<PathBuf> {

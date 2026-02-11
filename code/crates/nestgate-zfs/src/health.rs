@@ -437,3 +437,77 @@ impl ZfsHealthMonitor {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+    use std::sync::Arc;
+
+    #[test]
+    fn test_health_status_is_critical_variants() {
+        assert!(HealthStatus::Critical.is_critical());
+        assert!(!HealthStatus::Healthy.is_critical());
+    }
+
+    #[test]
+    fn test_health_status_is_healthy_variants() {
+        assert!(HealthStatus::Healthy.is_healthy());
+        assert!(!HealthStatus::Critical.is_healthy());
+    }
+
+    #[test]
+    fn test_health_status_display_all() {
+        assert_eq!(format!("{}", HealthStatus::Healthy), "Healthy");
+        assert_eq!(format!("{}", HealthStatus::Warning), "Warning");
+        assert_eq!(format!("{}", HealthStatus::Critical), "Critical");
+        assert_eq!(format!("{}", HealthStatus::Unknown), "Unknown");
+    }
+
+    #[test]
+    fn test_health_report_serialization() {
+        let report = HealthReport {
+            component_type: "pool".to_string(),
+            component_name: "tank".to_string(),
+            status: HealthStatus::Healthy,
+            last_check: SystemTime::now(),
+            details: "OK".to_string(),
+        };
+        let json = serde_json::to_string(&report).unwrap();
+        assert!(json.contains("tank"));
+    }
+
+    #[test]
+    fn test_alert_creation() {
+        let alert = Alert {
+            id: "a1".to_string(),
+            level: AlertLevel::Info,
+            message: "msg".to_string(),
+            timestamp: SystemTime::now(),
+            component: "pool".to_string(),
+        };
+        assert_eq!(alert.id, "a1");
+        assert!(matches!(alert.level, AlertLevel::Info));
+    }
+
+    #[test]
+    fn test_health_monitor_new() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
+        let result = ZfsHealthMonitor::new(pool_manager, dataset_manager);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_start_monitoring_idempotent() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
+        let mut monitor = ZfsHealthMonitor::new(pool_manager, dataset_manager).unwrap();
+        let r1 = monitor.start_monitoring();
+        assert!(r1.is_ok());
+        let r2 = monitor.start_monitoring();
+        assert!(r2.is_ok());
+    }
+}

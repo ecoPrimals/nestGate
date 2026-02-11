@@ -294,32 +294,62 @@ mod tests {
 
     #[test]
     fn test_network_port_defaults_get_api_port_default() {
+        let orig = std::env::var("NESTGATE_API_PORT").ok();
         std::env::remove_var("NESTGATE_API_PORT");
-        assert_eq!(NetworkPortDefaults::get_api_port(), 3000); // API_DEFAULT = 3000
+        let port = NetworkPortDefaults::get_api_port();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_API_PORT", v),
+            None => {}
+        }
+        assert_eq!(port, 3000); // API_DEFAULT = 3000
     }
 
     #[test]
     fn test_network_port_defaults_get_http_port_default() {
+        let orig = std::env::var("NESTGATE_HTTP_PORT").ok();
         std::env::remove_var("NESTGATE_HTTP_PORT");
-        assert_eq!(NetworkPortDefaults::get_http_port(), 8080); // HTTP_DEFAULT = 8080
+        let port = NetworkPortDefaults::get_http_port();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_HTTP_PORT", v),
+            None => {}
+        }
+        assert_eq!(port, 8080); // HTTP_DEFAULT = 8080
     }
 
     #[test]
     fn test_network_port_defaults_get_metrics_port_default() {
+        let orig = std::env::var("NESTGATE_METRICS_PORT").ok();
         std::env::remove_var("NESTGATE_METRICS_PORT");
-        assert_eq!(NetworkPortDefaults::get_metrics_port(), 9090);
+        let port = NetworkPortDefaults::get_metrics_port();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_METRICS_PORT", v),
+            None => {}
+        }
+        assert_eq!(port, 9090);
     }
 
     #[test]
     fn test_network_port_defaults_get_health_port_default() {
+        let orig = std::env::var("NESTGATE_HEALTH_PORT").ok();
         std::env::remove_var("NESTGATE_HEALTH_PORT");
-        assert_eq!(NetworkPortDefaults::get_health_port(), 8081);
+        let port = NetworkPortDefaults::get_health_port();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_HEALTH_PORT", v),
+            None => {}
+        }
+        assert_eq!(port, 8081);
     }
 
     #[test]
     fn test_network_port_defaults_get_orchestrator_port_default() {
+        let orig = std::env::var("NESTGATE_ORCHESTRATOR_PORT").ok();
         std::env::remove_var("NESTGATE_ORCHESTRATOR_PORT");
-        assert_eq!(NetworkPortDefaults::get_orchestrator_port(), 8090);
+        let port = NetworkPortDefaults::get_orchestrator_port();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_ORCHESTRATOR_PORT", v),
+            None => {}
+        }
+        assert_eq!(port, 8090);
     }
 
     #[test]
@@ -362,29 +392,50 @@ mod tests {
 
     #[test]
     fn test_network_address_defaults_get_bind_address_default() {
+        let orig = std::env::var("NESTGATE_BIND_ADDRESS").ok();
         std::env::remove_var("NESTGATE_BIND_ADDRESS");
-        assert_eq!(NetworkAddressDefaults::get_bind_address(), "127.0.0.1");
+        let addr = NetworkAddressDefaults::get_bind_address();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_BIND_ADDRESS", v),
+            None => {}
+        }
+        assert_eq!(addr, "127.0.0.1");
     }
 
     #[test]
     fn test_network_address_defaults_get_development_bind_address_default() {
+        let orig = std::env::var("NESTGATE_DEV_BIND_ADDRESS").ok();
         std::env::remove_var("NESTGATE_DEV_BIND_ADDRESS");
-        assert_eq!(
-            NetworkAddressDefaults::get_development_bind_address(),
-            "0.0.0.0"
-        );
+        let addr = NetworkAddressDefaults::get_development_bind_address();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_DEV_BIND_ADDRESS", v),
+            None => {}
+        }
+        assert_eq!(addr, "0.0.0.0");
     }
 
     #[test]
     fn test_network_address_defaults_get_hostname_default() {
+        let orig = std::env::var("NESTGATE_HOSTNAME").ok();
         std::env::remove_var("NESTGATE_HOSTNAME");
-        assert_eq!(NetworkAddressDefaults::get_hostname(), "localhost");
+        let host = NetworkAddressDefaults::get_hostname();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_HOSTNAME", v),
+            None => {}
+        }
+        assert_eq!(host, "localhost");
     }
 
     #[test]
     fn test_network_address_defaults_get_external_hostname_default() {
+        let orig = std::env::var("NESTGATE_EXTERNAL_HOSTNAME").ok();
         std::env::remove_var("NESTGATE_EXTERNAL_HOSTNAME");
-        assert_eq!(NetworkAddressDefaults::get_external_hostname(), "localhost");
+        let host = NetworkAddressDefaults::get_external_hostname();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_EXTERNAL_HOSTNAME", v),
+            None => {}
+        }
+        assert_eq!(host, "localhost");
     }
 
     #[test]
@@ -418,8 +469,14 @@ mod tests {
 
     #[test]
     fn test_timeout_defaults_get_connection_timeout_ms_default() {
+        let orig = std::env::var("NESTGATE_CONNECTION_TIMEOUT_MS").ok();
         std::env::remove_var("NESTGATE_CONNECTION_TIMEOUT_MS");
-        assert_eq!(TimeoutDefaults::get_connection_timeout_ms(), 3000);
+        let timeout = TimeoutDefaults::get_connection_timeout_ms();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_CONNECTION_TIMEOUT_MS", v),
+            None => {}
+        }
+        assert_eq!(timeout, 3000);
     }
 
     #[test]

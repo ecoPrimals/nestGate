@@ -9,7 +9,6 @@ mod concurrency_safety {
     use tokio::sync::{Mutex, RwLock};
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_26_concurrency_safety -- --ignored
     async fn test_concurrent_reads_rwlock() {
         let data = Arc::new(RwLock::new(vec![1, 2, 3, 4, 5]));
         let mut handles = vec![];
@@ -31,7 +30,6 @@ mod concurrency_safety {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_concurrent_writes_mutex() {
         let counter = Arc::new(Mutex::new(0));
         let mut handles = vec![];
@@ -55,7 +53,6 @@ mod concurrency_safety {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_rwlock_write_exclusivity() {
         let data = Arc::new(RwLock::new(0));
 
@@ -79,7 +76,6 @@ mod concurrency_safety {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_arc_reference_counting() {
         let data = Arc::new(vec![1, 2, 3]);
         assert_eq!(Arc::strong_count(&data), 1);

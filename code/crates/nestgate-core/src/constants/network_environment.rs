@@ -290,44 +290,62 @@ mod tests {
 
     #[test]
     fn test_api_port_default() {
-        // Clear any existing environment variable
+        let orig = env::var("NESTGATE_API_PORT").ok();
         env::remove_var("NESTGATE_API_PORT");
-
-        assert_eq!(api_port(), 8080);
+        let port = api_port();
+        match orig {
+            Some(v) => env::set_var("NESTGATE_API_PORT", v),
+            None => {}
+        }
+        assert_eq!(port, 8080);
     }
 
     #[test]
     fn test_api_port_environment() {
+        let orig = env::var("NESTGATE_API_PORT").ok();
         env::set_var("NESTGATE_API_PORT", "9999");
-
-        assert_eq!(api_port(), 9999);
-
-        // Cleanup
-        env::remove_var("NESTGATE_API_PORT");
+        let port = api_port();
+        match orig {
+            Some(v) => env::set_var("NESTGATE_API_PORT", v),
+            None => env::remove_var("NESTGATE_API_PORT"),
+        }
+        assert_eq!(port, 9999);
     }
 
     #[test]
     fn test_metrics_port_default() {
+        let orig = env::var("NESTGATE_METRICS_PORT").ok();
         env::remove_var("NESTGATE_METRICS_PORT");
-
-        assert_eq!(metrics_port(), 9090);
+        let port = metrics_port();
+        match orig {
+            Some(v) => env::set_var("NESTGATE_METRICS_PORT", v),
+            None => {}
+        }
+        assert_eq!(port, 9090);
     }
 
     #[test]
     fn test_bind_address_default() {
+        let orig = env::var("NESTGATE_BIND_ADDRESS").ok();
         env::remove_var("NESTGATE_BIND_ADDRESS");
-
-        assert_eq!(bind_address(), "0.0.0.0");
+        let addr = bind_address();
+        match orig {
+            Some(v) => env::set_var("NESTGATE_BIND_ADDRESS", v),
+            None => {}
+        }
+        assert_eq!(addr, "0.0.0.0");
     }
 
     #[test]
     fn test_bind_address_environment() {
+        let orig = env::var("NESTGATE_BIND_ADDRESS").ok();
         env::set_var("NESTGATE_BIND_ADDRESS", "127.0.0.1");
-
-        assert_eq!(bind_address(), "127.0.0.1");
-
-        // Cleanup
-        env::remove_var("NESTGATE_BIND_ADDRESS");
+        let addr = bind_address();
+        match orig {
+            Some(v) => env::set_var("NESTGATE_BIND_ADDRESS", v),
+            None => env::remove_var("NESTGATE_BIND_ADDRESS"),
+        }
+        assert_eq!(addr, "127.0.0.1");
     }
 
     #[test]
@@ -338,12 +356,29 @@ mod tests {
 
     #[test]
     fn test_timeout_defaults() {
+        let orig_connect = env::var("NESTGATE_CONNECT_TIMEOUT_MS").ok();
+        let orig_request = env::var("NESTGATE_REQUEST_TIMEOUT_MS").ok();
+        let orig_keepalive = env::var("NESTGATE_KEEPALIVE_MS").ok();
         env::remove_var("NESTGATE_CONNECT_TIMEOUT_MS");
         env::remove_var("NESTGATE_REQUEST_TIMEOUT_MS");
         env::remove_var("NESTGATE_KEEPALIVE_MS");
-
-        assert_eq!(connect_timeout_ms(), 5000);
-        assert_eq!(request_timeout_ms(), 30000);
-        assert_eq!(keepalive_ms(), 60000);
+        let connect = connect_timeout_ms();
+        let request = request_timeout_ms();
+        let keepalive = keepalive_ms();
+        match orig_connect {
+            Some(v) => env::set_var("NESTGATE_CONNECT_TIMEOUT_MS", v),
+            None => {}
+        }
+        match orig_request {
+            Some(v) => env::set_var("NESTGATE_REQUEST_TIMEOUT_MS", v),
+            None => {}
+        }
+        match orig_keepalive {
+            Some(v) => env::set_var("NESTGATE_KEEPALIVE_MS", v),
+            None => {}
+        }
+        assert_eq!(connect, 5000);
+        assert_eq!(request, 30000);
+        assert_eq!(keepalive, 60000);
     }
 }

@@ -1,21 +1,21 @@
-//! # 🧪 biomeOS Integration Tests
+//! # biomeOS Integration Tests
 //!
-//! **Comprehensive Integration Tests for biomeOS Client Compatibility**
-//!
+//! Integration tests for biomeOS client compatibility.
 //! Tests the JSON-RPC Unix socket server with patterns matching
-//! the biomeOS NestGateClient expectations.
+//! the biomeOS `NestGateClient` expectations.
+//!
+//! **Note**: Uses the legacy `JsonRpcUnixServer` API pending migration to
+//! Songbird IPC service-based patterns.
 //!
 //! ## Test Coverage
 //! - Unix socket server lifecycle
 //! - All 7 storage.* methods
-//! - biomeOS client patterns
-//! - Error handling
-//! - Concurrent operations
-//! - Family isolation
+
+#![allow(deprecated, dead_code, unused_imports)]
 
 use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
 use serde_json::{json, Value};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
@@ -23,7 +23,7 @@ mod common;
 use common::sync_utils::wait_for_condition;
 
 /// Helper: Wait for socket to be ready with retries
-async fn wait_for_socket_ready(socket_path: &PathBuf) {
+async fn wait_for_socket_ready(socket_path: &Path) {
     wait_for_condition(|| socket_path.exists(), std::time::Duration::from_secs(5))
         .await
         .expect("Server socket should be created");
@@ -31,7 +31,7 @@ async fn wait_for_socket_ready(socket_path: &PathBuf) {
 
 /// Test helper: Send JSON-RPC request and get response
 async fn send_jsonrpc_request(
-    socket_path: &PathBuf,
+    socket_path: &Path,
     method: &str,
     params: Value,
 ) -> Result<Value, String> {

@@ -1,14 +1,8 @@
-/// Benchmarks to validate performance characteristics and identify bottlenecks
+/// Benchmarks to validate performance characteristics and identify bottlenecks.
 ///
-/// **STATUS**: FIXED - Nov 19, 2025 - Migrated to current module structure
+/// Uses current module paths with proper error handling.
+/// Feature-gated with `#[cfg(feature = "benchmark")]`.
 ///
-/// This benchmark suite has been updated to use current module paths and modern Rust patterns:
-/// - ✅ Uses `nestgate_zfs::pool_setup::config::ZfsConfig` (current structure)
-/// - ✅ Fixed error handling: removed unwrap/expect, use proper match
-/// - ✅ Fixed partial_cmp: use unwrap_or(Ordering::Equal) for NaN handling
-/// - ✅ Feature-gated with `#[cfg(feature = "benchmark")]`
-///
-/// **To Run**:
 /// ```bash
 /// cargo bench --package nestgate-zfs --features benchmark
 /// ```

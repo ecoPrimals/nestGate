@@ -330,16 +330,30 @@ impl ProductionBackend {
     /// Convert primal_discovery SelfKnowledge to discovery_mechanism SelfKnowledge
     fn convert_self_knowledge(knowledge: &SelfKnowledge) -> crate::self_knowledge::SelfKnowledge {
         crate::self_knowledge::SelfKnowledge::builder()
+            .with_id(&knowledge.name)
             .with_name(&knowledge.name)
             .with_capabilities(knowledge.capabilities.clone())
             .build()
             .unwrap_or_else(|e| {
                 tracing::error!("Failed to build self-knowledge: {}", e);
-                // Return minimal valid self-knowledge
+                // Return minimal valid self-knowledge (no unwrap - manual construction)
                 crate::self_knowledge::SelfKnowledge::builder()
+                    .with_id("unknown")
                     .with_name("unknown")
                     .build()
-                    .unwrap()
+                    .unwrap_or_else(|e2| {
+                        tracing::error!("Minimal self-knowledge build failed: {}", e2);
+                        crate::self_knowledge::SelfKnowledge {
+                            id: crate::self_knowledge::PrimalId::new("unknown"),
+                            name: "unknown".to_string(),
+                            version: "0.0.0".to_string(),
+                            capabilities: vec![],
+                            endpoints: std::collections::HashMap::new(),
+                            resources: crate::self_knowledge::ResourceInfo::default(),
+                            health: crate::self_knowledge::HealthStatus::default(),
+                            last_updated: std::time::SystemTime::now(),
+                        }
+                    })
             })
     }
 

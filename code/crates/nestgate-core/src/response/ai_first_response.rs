@@ -504,3 +504,75 @@ impl<T> AIFirstResponse<T> {
         Self::error(default_data, ai_error, request_id, processing_time_ms)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ai_first_response_success() {
+        let id = Uuid::new_v4();
+        let resp: AIFirstResponse<String> = AIFirstResponse::success("data".to_string(), id, 100);
+        assert!(resp.success);
+        assert_eq!(resp.data, "data");
+        assert!(resp.error.is_none());
+        assert_eq!(resp.confidence_score, 1.0);
+    }
+
+    #[test]
+    fn test_ai_first_error_simple() {
+        let err = AIFirstError::simple("ERR", "msg", AIErrorCategory::Validation);
+        assert_eq!(err.code, "ERR");
+        assert_eq!(err.message, "msg");
+        assert!(matches!(err.category, AIErrorCategory::Validation));
+    }
+
+    #[test]
+    fn test_ai_first_error_from_configuration() {
+        let ng_err = NestGateError::configuration_error("field", "bad config");
+        let ai_err = AIFirstError::from_nestgate_error(&ng_err);
+        assert!(matches!(ai_err.category, AIErrorCategory::Configuration));
+    }
+
+    #[test]
+    fn test_ai_first_error_from_network() {
+        let ng_err = NestGateError::network_error("connection failed");
+        let ai_err = AIFirstError::from_nestgate_error(&ng_err);
+        assert!(matches!(ai_err.category, AIErrorCategory::Network));
+    }
+
+    #[test]
+    fn test_ai_first_response_builder_methods() {
+        let id = Uuid::new_v4();
+        let resp: AIFirstResponse<()> = AIFirstResponse::success((), id, 50)
+            .with_confidence(0.8)
+            .with_suggested_actions(vec![SuggestedAction {
+                action_type: "retry".to_string(),
+                description: "Retry operation".to_string(),
+                parameters: std::collections::HashMap::new(),
+                confidence: 0.9,
+                prerequisites: vec![],
+                expected_outcome: "Success".to_string(),
+            }]);
+        assert!((resp.confidence_score - 0.8).abs() < 1e-9);
+        assert_eq!(resp.suggested_actions.len(), 1);
+    }
+
+    #[test]
+    fn test_ai_response_metadata_default() {
+        let meta = AIResponseMetadata::default();
+        assert!(meta.capabilities.is_empty());
+        assert_eq!(meta.resource_usage.cpu_percent, 0.0);
+    }
+
+    #[test]
+    fn test_retry_strategy_variants() {
+        let _none = RetryStrategy::None;
+        let _imm = RetryStrategy::Immediate;
+        let _exp = RetryStrategy::ExponentialBackoff {
+            base_delay_ms: 100,
+            max_retries: 3,
+        };
+        assert!(matches!(RetryStrategy::None, RetryStrategy::None));
+    }
+}

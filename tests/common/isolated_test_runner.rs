@@ -12,18 +12,13 @@
 //! - Automatic cleanup (RAII pattern)
 //!
 //! ## Usage
-//! ```rust
-//! use crate::common::isolated_test_runner::{IsolatedTestRunner, RuntimeConfig};
+//! ```rust,ignore
+//! let runner = IsolatedTestRunner::new("my_test");
 //!
-//! #[test]
-//! fn test_with_isolated_runtime() {
-//!     let runner = IsolatedTestRunner::new("my_test");
-//!     
-//!     runner.run_async(async {
-//!         // Test code here - runs in dedicated runtime
-//!         Ok(())
-//!     }).unwrap();
-//! }
+//! runner.run_async(async {
+//!     // Test code here - runs in dedicated runtime
+//!     Ok(())
+//! }).unwrap();
 //! ```
 
 use std::future::Future;

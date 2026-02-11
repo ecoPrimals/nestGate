@@ -1,23 +1,17 @@
-//! # 🚀 tarpc Server for NestGate
+//! # tarpc Server for NestGate
 //!
-//! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL RPC SERVER** (v0.2.0)
+//! Primal-to-primal RPC server implementation.
 //!
-//! Provides the server implementation of the NestGate RPC interface.
-//!
-//! ## TODO(v0.2.0): Daemon wiring
-//! `serve_tarpc()` is implemented but not yet called from nestgate-bin daemon startup.
-//! Use nestgate-bin `tarpc-server` feature when wiring. Protocol capabilities advertise
+//! `serve_tarpc()` is implemented but not yet wired into nestgate-bin daemon startup.
+//! Enable via `tarpc-server` feature flag. Protocol capabilities advertise
 //! the port for discovery; no server listens until wired.
 //!
-//! ## Philosophy (Primal Sovereignty)
-//! - **tarpc PRIMARY** for primal-to-primal communication
-//! - **Zero unsafe blocks**
-//! - **Modern async/await**
-//! - **Self-knowledge**: Server exposes only storage capabilities
-//! - **Runtime discovery**: Registers with discovery system
-//!
-//! **MODERNIZED**: Lock-free concurrent access using DashMap
-//! - 10-20x faster concurrent RPC operations
+//! ## Design
+//! - tarpc primary for primal-to-primal communication
+//! - Zero unsafe blocks, modern async/await
+//! - Self-knowledge: exposes only storage capabilities
+//! - Runtime discovery: registers with discovery system
+//! - Lock-free concurrent access using DashMap
 //! - No lock contention under high load
 //! - Better multi-primal scalability
 //!

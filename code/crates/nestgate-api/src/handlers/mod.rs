@@ -798,47 +798,21 @@ impl ApiRouter {
     }
 }
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod status_comprehensive_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod storage_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod zero_cost_api_handlers_additional_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod performance_analytics_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod ai_first_example_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod health_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod dashboard_types_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod metrics_collector_enhanced_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod auth_comprehensive_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod zero_cost_api_handlers_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod mod_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod compliance_types_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod auth_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod zero_cost_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod auth_production_tests;
+#[cfg(test)]
+mod auth_tests;
+#[cfg(test)]
+mod compliance_types_tests;
+#[cfg(test)]
+mod health_tests;
+#[cfg(test)]
+mod metrics_collector_enhanced_tests;
+#[cfg(test)]
+mod performance_analytics_tests;
+#[cfg(test)]
+mod status_comprehensive_tests;
+#[cfg(test)]
+mod storage_tests;
+#[cfg(test)]
+mod zero_cost_api_handlers_additional_tests;
+#[cfg(test)]
+mod zero_cost_tests;

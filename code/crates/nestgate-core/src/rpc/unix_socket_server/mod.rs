@@ -83,6 +83,7 @@
 //! ```
 
 mod audit_handlers;
+mod nat_handlers;
 mod storage_handlers;
 mod template_handlers;
 
@@ -396,6 +397,18 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "audit.store_execution" => {
             audit_handlers::audit_store_execution(&request.params, state).await
         }
+        // NAT traversal persistence (relay-assisted coordinated punch protocol)
+        "nat.store_traversal_info" => {
+            nat_handlers::nat_store_traversal_info(&request.params, state).await
+        }
+        "nat.retrieve_traversal_info" => {
+            nat_handlers::nat_retrieve_traversal_info(&request.params, state).await
+        }
+        // Known beacon persistence
+        "beacon.store" => nat_handlers::beacon_store(&request.params, state).await,
+        "beacon.retrieve" => nat_handlers::beacon_retrieve(&request.params, state).await,
+        "beacon.list" => nat_handlers::beacon_list(&request.params, state).await,
+        "beacon.delete" => nat_handlers::beacon_delete(&request.params, state).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),

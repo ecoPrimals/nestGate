@@ -63,12 +63,13 @@ pub mod audit_storage;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod orchestrator_registration;
-/// **TEMPORARILY DISABLED**: semantic_router has 120+ compilation errors from untested commit
-/// Created during rustup outage, never compilation-tested before push
-/// NOTE: Disabled pending API cleanup. Semantic routing functional via existing RPC methods.
-// pub mod semantic_router; // NEW: Semantic method routing for TRUE PRIMAL compliance (Jan 27, 2026)
+// NOTE: semantic_router directory exists but is disabled (120+ compilation errors).
+// Semantic method routing is already functional via existing RPC handler dispatch.
+// The module was written during a rustup outage and never compilation-tested.
+// When ready to evolve: fix API mismatches in semantic_router/ against current RPC types.
+// pub mod semantic_router;
 pub mod socket_config;
-// pub mod songbird_registration; // REMOVED: Deprecated since v2.3.0, zero production usage
+// songbird_registration removed in v2.3.0
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
 pub(crate) mod model_cache_handlers;
 pub mod tarpc_client;

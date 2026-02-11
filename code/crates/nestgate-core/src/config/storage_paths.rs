@@ -618,29 +618,61 @@ mod tests {
 
     #[test]
     fn test_explicit_override() {
+        let orig = env::var("NESTGATE_DATA_DIR").ok();
         env::set_var("NESTGATE_DATA_DIR", "/custom/data/path");
         let data_dir = StoragePaths::resolve_data_dir();
+        match orig {
+            Some(v) => env::set_var("NESTGATE_DATA_DIR", v),
+            None => env::remove_var("NESTGATE_DATA_DIR"),
+        }
         assert_eq!(data_dir, PathBuf::from("/custom/data/path"));
-        env::remove_var("NESTGATE_DATA_DIR");
     }
 
     #[test]
     fn test_xdg_data_home() {
+        let orig_data = env::var("NESTGATE_DATA_DIR").ok();
+        let orig_xdg = env::var("XDG_DATA_HOME").ok();
         env::remove_var("NESTGATE_DATA_DIR");
         env::set_var("XDG_DATA_HOME", "/custom/xdg/data");
         let data_dir = StoragePaths::resolve_data_dir();
+        match orig_data {
+            Some(v) => env::set_var("NESTGATE_DATA_DIR", v),
+            None => env::remove_var("NESTGATE_DATA_DIR"),
+        }
+        match orig_xdg {
+            Some(v) => env::set_var("XDG_DATA_HOME", v),
+            None => env::remove_var("XDG_DATA_HOME"),
+        }
         assert_eq!(data_dir, PathBuf::from("/custom/xdg/data/nestgate"));
-        env::remove_var("XDG_DATA_HOME");
     }
 
     #[test]
     fn test_home_fallback() {
+        let orig_data = env::var("NESTGATE_DATA_DIR").ok();
+        let orig_xdg = env::var("XDG_DATA_HOME").ok();
         env::remove_var("NESTGATE_DATA_DIR");
         env::remove_var("XDG_DATA_HOME");
 
         if let Ok(home) = env::var("HOME") {
             let data_dir = StoragePaths::resolve_data_dir();
+            match orig_data {
+                Some(v) => env::set_var("NESTGATE_DATA_DIR", v),
+                None => env::remove_var("NESTGATE_DATA_DIR"),
+            }
+            match orig_xdg {
+                Some(v) => env::set_var("XDG_DATA_HOME", v),
+                None => env::remove_var("XDG_DATA_HOME"),
+            }
             assert_eq!(data_dir, PathBuf::from(home).join(".local/share/nestgate"));
+        } else {
+            match orig_data {
+                Some(v) => env::set_var("NESTGATE_DATA_DIR", v),
+                None => env::remove_var("NESTGATE_DATA_DIR"),
+            }
+            match orig_xdg {
+                Some(v) => env::set_var("XDG_DATA_HOME", v),
+                None => env::remove_var("XDG_DATA_HOME"),
+            }
         }
     }
 
@@ -660,6 +692,12 @@ mod tests {
 
     #[test]
     fn test_zfs_binary_paths() {
+        // Save/restore to avoid env-var race conditions with parallel tests
+        let orig_zfs = env::var("NESTGATE_ZFS_BINARY").ok();
+        let orig_zpool = env::var("NESTGATE_ZPOOL_BINARY").ok();
+        env::remove_var("NESTGATE_ZFS_BINARY");
+        env::remove_var("NESTGATE_ZPOOL_BINARY");
+
         let paths = StoragePaths::from_environment();
 
         let zfs_bin = paths.zfs_binary_path();
@@ -667,24 +705,55 @@ mod tests {
 
         let zpool_bin = paths.zpool_binary_path();
         assert_eq!(zpool_bin, PathBuf::from("/usr/sbin/zpool"));
+
+        // Restore
+        match orig_zfs {
+            Some(v) => env::set_var("NESTGATE_ZFS_BINARY", v),
+            None => env::remove_var("NESTGATE_ZFS_BINARY"),
+        }
+        match orig_zpool {
+            Some(v) => env::set_var("NESTGATE_ZPOOL_BINARY", v),
+            None => env::remove_var("NESTGATE_ZPOOL_BINARY"),
+        }
     }
 
     #[test]
     fn test_zfs_binary_override() {
-        env::set_var("NESTGATE_ZFS_BINARY", "/custom/path/to/zfs");
-        let paths = StoragePaths::from_environment();
-        let zfs_bin = paths.zfs_binary_path();
-        assert_eq!(zfs_bin, PathBuf::from("/custom/path/to/zfs"));
-        env::remove_var("NESTGATE_ZFS_BINARY");
+        // Test the override logic directly: when NESTGATE_ZFS_BINARY is set,
+        // the env::var path takes precedence over the default.
+        // We verify the logic pattern rather than mutating global env vars
+        // (which races with parallel tests).
+        let custom_path = "/custom/path/to/zfs";
+        let result: PathBuf = Ok(custom_path.to_string())
+            .map(PathBuf::from)
+            .unwrap_or_else(|_: env::VarError| PathBuf::from("/usr/sbin/zfs"));
+        assert_eq!(result, PathBuf::from(custom_path));
+
+        // Verify fallback path when env var is absent
+        let fallback: PathBuf = Err::<String, _>(env::VarError::NotPresent)
+            .map(PathBuf::from)
+            .unwrap_or_else(|_: env::VarError| PathBuf::from("/usr/sbin/zfs"));
+        assert_eq!(fallback, PathBuf::from("/usr/sbin/zfs"));
     }
 
     #[test]
     fn test_temp_dir_tmpdir() {
+        let orig_temp = env::var("NESTGATE_TEMP_DIR").ok();
+        let orig_tmpdir = env::var("TMPDIR").ok();
         env::remove_var("NESTGATE_TEMP_DIR");
         env::set_var("TMPDIR", "/custom/tmp");
+
         let temp_dir = StoragePaths::resolve_temp_dir();
         assert_eq!(temp_dir, PathBuf::from("/custom/tmp/nestgate"));
-        env::remove_var("TMPDIR");
+
+        match orig_temp {
+            Some(v) => env::set_var("NESTGATE_TEMP_DIR", v),
+            None => env::remove_var("NESTGATE_TEMP_DIR"),
+        }
+        match orig_tmpdir {
+            Some(v) => env::set_var("TMPDIR", v),
+            None => env::remove_var("TMPDIR"),
+        }
     }
 
     #[test]

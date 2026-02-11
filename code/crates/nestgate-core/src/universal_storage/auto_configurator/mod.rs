@@ -147,9 +147,7 @@ impl AutoConfigurator {
     }
 }
 
-// ==================== PLACEHOLDER METHODS ====================
-// These methods will be moved to separate modules in the next phase
-// For now, keeping minimal implementations to maintain compilation
+// ==================== INTERNAL METHODS ====================
 
 impl AutoConfigurator {
     async fn analyze_storage_landscape(&self) -> Result<StorageLandscapeAnalysis> {

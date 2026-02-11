@@ -181,9 +181,13 @@ mod tests {
 
     #[test]
     fn test_config_from_env() {
+        let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
         std::env::set_var("NESTGATE_FAMILY_ID", "test123");
         let config = TransportConfig::from_env().unwrap();
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
+            None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        }
         assert_eq!(config.family_id, "test123");
-        std::env::remove_var("NESTGATE_FAMILY_ID");
     }
 }

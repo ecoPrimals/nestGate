@@ -227,7 +227,7 @@ impl StringPoolStatistics {
     }
 }
 
-// ✅ EVOLVED: lazy_static → std::sync::LazyLock (Pure Rust std, zero deps)
+// Uses std::sync::LazyLock for thread-safe lazy initialization
 // Global string pool instance for application-wide usage
 
 /// Global string pool accessible throughout the application

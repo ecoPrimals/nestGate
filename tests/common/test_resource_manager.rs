@@ -11,18 +11,12 @@
 //! - Resource quota enforcement
 //!
 //! ## Usage
-//! ```rust
-//! use crate::common::test_resource_manager::{TestResourceManager, ResourceQuota};
+//! ```rust,ignore
+//! let mut manager = TestResourceManager::new("my_test");
+//! manager.set_quota(ResourceQuota::default().with_max_memory_mb(100));
 //!
-//! #[test]
-//! fn test_with_resources() {
-//!     let mut manager = TestResourceManager::new("my_test");
-//!     manager.set_quota(ResourceQuota::default().with_max_memory_mb(100));
-//!     
-//!     // Test code here - manager tracks resource usage
-//!     
-//!     // Automatic cleanup on drop
-//! }
+//! // Test code here - manager tracks resource usage
+//! // Automatic cleanup on drop
 //! ```
 
 use std::collections::HashMap;

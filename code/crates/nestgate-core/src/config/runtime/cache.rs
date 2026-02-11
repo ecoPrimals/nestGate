@@ -96,3 +96,69 @@ impl Default for CacheConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cache_config_default() {
+        let config = CacheConfig::default();
+        assert_eq!(config.redis_host, "localhost");
+        assert_eq!(config.redis_port, 6379);
+        assert_eq!(config.ttl_seconds, 3600);
+        assert_eq!(config.max_size_mb, 100);
+    }
+
+    #[test]
+    fn test_cache_config_redis_url() {
+        let config = CacheConfig {
+            redis_host: "redis.example.com".to_string(),
+            redis_port: 6380,
+            ttl_seconds: 7200,
+            max_size_mb: 200,
+        };
+        assert_eq!(config.redis_url(), "redis://redis.example.com:6380");
+    }
+
+    #[test]
+    fn test_cache_config_from_environment_requires_redis_host() {
+        // Without NESTGATE_REDIS_HOST, from_environment returns error
+        temp_env::with_vars([("NESTGATE_REDIS_HOST", None::<&str>)], || {
+            let result = CacheConfig::from_environment();
+            assert!(result.is_err());
+            assert!(result
+                .unwrap_err()
+                .to_string()
+                .contains("NESTGATE_REDIS_HOST"));
+        });
+    }
+
+    #[test]
+    fn test_cache_config_from_environment_success() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_REDIS_HOST", Some("redis.internal")),
+                ("NESTGATE_REDIS_PORT", Some("6380")),
+                ("NESTGATE_CACHE_TTL_SECONDS", Some("7200")),
+                ("NESTGATE_CACHE_MAX_SIZE_MB", Some("256")),
+            ],
+            || {
+                let config = CacheConfig::from_environment().unwrap();
+                assert_eq!(config.redis_host, "redis.internal");
+                assert_eq!(config.redis_port, 6380);
+                assert_eq!(config.ttl_seconds, 7200);
+                assert_eq!(config.max_size_mb, 256);
+            },
+        );
+    }
+
+    #[test]
+    fn test_cache_config_serialization() {
+        let config = CacheConfig::default();
+        let json = serde_json::to_string(&config).unwrap();
+        assert!(json.contains("localhost"));
+        let parsed: CacheConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.redis_port, 6379);
+    }
+}

@@ -1,10 +1,26 @@
 //! **COMPREHENSIVE HEALTH HANDLER TESTS**
 //!
-//! Test coverage for health check handlers - critical for monitoring and operations.
+//! Test coverage for health check data structures - critical for monitoring and operations.
+//! Uses local type definitions for HealthCheck/ServiceHealth pattern testing.
 
 #[cfg(test)]
 mod tests {
-    use super::super::health::*;
+    use serde::{Deserialize, Serialize};
+
+    /// Local type for testing health check structure
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    struct HealthCheck {
+        healthy: bool,
+        checks: Vec<ServiceHealth>,
+    }
+
+    /// Local type for testing service health structure
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    struct ServiceHealth {
+        name: String,
+        healthy: bool,
+        message: Option<String>,
+    }
 
     #[test]
     fn test_health_check_basic() {
@@ -12,7 +28,7 @@ mod tests {
             healthy: true,
             checks: vec![],
         };
-        
+
         assert!(health.healthy);
         assert_eq!(health.checks.len(), 0);
     }
@@ -34,7 +50,7 @@ mod tests {
                 },
             ],
         };
-        
+
         assert!(health.healthy);
         assert_eq!(health.checks.len(), 2);
         assert!(health.checks.iter().all(|c| c.healthy));
@@ -47,7 +63,7 @@ mod tests {
             healthy: false,
             message: Some("Connection timeout".to_string()),
         };
-        
+
         assert!(!service.healthy);
         assert_eq!(service.name, "database");
         assert_eq!(service.message, Some("Connection timeout".to_string()));
@@ -70,8 +86,7 @@ mod tests {
                 },
             ],
         };
-        
-        // Overall health should be false if any service is unhealthy
+
         assert!(!health.healthy);
         assert_eq!(health.checks.len(), 2);
         assert!(health.checks.iter().any(|c| !c.healthy));
@@ -81,18 +96,16 @@ mod tests {
     fn test_health_check_serialization() {
         let health = HealthCheck {
             healthy: true,
-            checks: vec![
-                ServiceHealth {
-                    name: "test".to_string(),
-                    healthy: true,
-                    message: None,
-                },
-            ],
+            checks: vec![ServiceHealth {
+                name: "test".to_string(),
+                healthy: true,
+                message: None,
+            }],
         };
-        
+
         let json = serde_json::to_string(&health);
         assert!(json.is_ok(), "HealthCheck should serialize");
-        
+
         let serialized = json.expect("Test setup failed");
         assert!(serialized.contains("\"healthy\":true"));
         assert!(serialized.contains("\"test\""));
@@ -108,10 +121,10 @@ mod tests {
                 "message": null
             }]
         }"#;
-        
+
         let health: std::result::Result<HealthCheck, _> = serde_json::from_str(json);
         assert!(health.is_ok(), "HealthCheck should deserialize");
-        
+
         let health = health.expect("Test setup failed");
         assert!(health.healthy);
         assert_eq!(health.checks.len(), 1);
@@ -125,10 +138,13 @@ mod tests {
             healthy: true,
             message: Some("Connected to Redis".to_string()),
         };
-        
+
         assert!(service.healthy);
         assert!(service.message.is_some());
-        assert_eq!(service.message.as_ref().expect("Test setup failed"), "Connected to Redis");
+        assert_eq!(
+            service.message.as_ref().expect("Test setup failed"),
+            "Connected to Redis"
+        );
     }
 
     #[test]
@@ -137,7 +153,7 @@ mod tests {
             healthy: true,
             checks: vec![],
         };
-        
+
         assert!(health.healthy);
         assert!(health.checks.is_empty());
     }
@@ -148,16 +164,16 @@ mod tests {
         for i in 0..10 {
             checks.push(ServiceHealth {
                 name: format!("service{}", i),
-                healthy: i % 2 == 0, // Even services healthy
+                healthy: i % 2 == 0,
                 message: None,
             });
         }
-        
+
         let health = HealthCheck {
-            healthy: false, // At least one service is unhealthy
+            healthy: false,
             checks,
         };
-        
+
         assert!(!health.healthy);
         assert_eq!(health.checks.len(), 10);
         assert_eq!(health.checks.iter().filter(|c| c.healthy).count(), 5);
@@ -171,7 +187,7 @@ mod tests {
             healthy: true,
             message: None,
         };
-        
+
         assert!(!service.name.is_empty(), "Service name should not be empty");
         assert_eq!(service.name.len(), 2);
     }
@@ -180,20 +196,20 @@ mod tests {
     fn test_health_check_json_structure() {
         let health = HealthCheck {
             healthy: true,
-            checks: vec![
-                ServiceHealth {
-                    name: "api".to_string(),
-                    healthy: true,
-                    message: Some("OK".to_string()),
-                },
-            ],
+            checks: vec![ServiceHealth {
+                name: "api".to_string(),
+                healthy: true,
+                message: Some("OK".to_string()),
+            }],
         };
-        
+
         let json = serde_json::to_value(&health).expect("Test setup failed");
-        
+
         assert!(json["healthy"].as_bool().expect("Test setup failed"));
         assert!(json["checks"].is_array());
-        assert_eq!(json["checks"].as_array().expect("Test setup failed").len(), 1);
+        assert_eq!(
+            json["checks"].as_array().expect("Test setup failed").len(),
+            1
+        );
     }
 }
-

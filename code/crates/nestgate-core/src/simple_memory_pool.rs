@@ -105,7 +105,6 @@ impl PooledBuffer {
     /// # Panics
     ///
     /// Panics if the buffer has been taken - cannot return `Err` as `DerefMut` requires `&mut`.
-    /// TODO: API change in v0.2.0 to avoid this.
     pub fn buffer_mut(&mut self) -> &mut Vec<u8> {
         self.buffer
             .as_mut()

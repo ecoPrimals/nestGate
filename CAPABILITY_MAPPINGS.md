@@ -1,8 +1,8 @@
-# NestGate Capability Mappings - January 27, 2026
+# NestGate Capability Mappings
 
-**Purpose**: Document NestGate's provided and required capabilities for TRUE PRIMAL compliance  
+**Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Status**: 🎯 **Ready for Neural API Integration**
+**Last Updated**: February 11, 2026
 
 ---
 
@@ -197,7 +197,7 @@ let crypto = discovery.find("crypto").await?;
 let response = crypto.call_rpc("crypto.encrypt", params).await?;
 ```
 
-**Status**: 📋 Planned (not yet integrated)
+**Status**: Evolved — `crypto/delegate.rs` provides capability-based delegation via JSON-RPC. Discovers crypto provider at runtime (env var -> capability discovery -> socket scan).
 
 ---
 
@@ -376,7 +376,7 @@ optional = ["crypto", "compute"]
 | Capability | Provider | Methods Used | Status |
 |------------|----------|--------------|--------|
 | **ipc** | Songbird | 5 methods | ✅ Integrated |
-| **crypto** | BearDog | 6 methods | 📋 Planned |
+| **crypto** | BearDog | 6 methods | Evolved (delegation) |
 | **networking** | Songbird | 3 methods | 📋 Planned |
 | **compute** | ToadStool | 3 methods | 📋 Future |
 
@@ -433,12 +433,13 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Status**: 🎯 **Ready for Implementation**  
+**Status**: Partial semantic naming implemented. Internal method refactoring ongoing.
+
 **Next Steps**:
-1. Refactor internal methods to semantic routing (8-12 hours)
-2. Create biomeOS graph configuration (2-3 hours)
-3. Test cross-primal integration (2-3 hours)
+1. Complete internal method semantic routing
+2. Create biomeOS graph configuration
+3. Test cross-primal integration
 
 ---
 
-*🦀 TRUE PRIMAL Compliance · Semantic Method Naming · Neural API Ready 🚀*
+**Last Updated**: February 11, 2026

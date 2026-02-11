@@ -1,8 +1,6 @@
 //! Integration tests for storage handlers.
 
 use super::storage::*;
-use nestgate_core::error::{ErrorCategory, SafeUnwrap};
-use nestgate_core::Result;
 
 #[cfg(test)]
 mod tests {
@@ -193,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_pool_serialization() -> Result<()> {
+    fn test_storage_pool_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let pool = StoragePool {
             name: "test-pool".to_string(),
             status: "ONLINE".to_string(),
@@ -204,8 +202,7 @@ mod tests {
             pool_type: "RAIDZ".to_string(),
         };
 
-        let json = serde_json::to_string(&pool)
-            .safe_unwrap(ErrorCategory::Validation, "Failed to serialize StoragePool")?;
+        let json = serde_json::to_string(&pool).unwrap();
 
         assert!(json.contains("\"name\":\"test-pool\""));
         assert!(json.contains("\"status\":\"ONLINE\""));
@@ -215,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_dataset_serialization() -> Result<()> {
+    fn test_storage_dataset_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let dataset = StorageDataset {
             name: "pool/dataset".to_string(),
             pool: "pool".to_string(),
@@ -226,10 +223,7 @@ mod tests {
             compression: "lz4".to_string(),
         };
 
-        let json = serde_json::to_string(&dataset).safe_unwrap(
-            ErrorCategory::Validation,
-            "Failed to serialize StorageDataset",
-        )?;
+        let json = serde_json::to_string(&dataset).unwrap();
 
         assert!(json.contains("\"name\":\"pool/dataset\""));
         assert!(json.contains("\"compression\":\"lz4\""));
@@ -238,7 +232,8 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_snapshot_serialization() -> Result<()> {
+    fn test_storage_snapshot_serialization() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
         let snapshot = StorageSnapshot {
             name: "pool@snap".to_string(),
             dataset: "pool".to_string(),
@@ -247,10 +242,7 @@ mod tests {
             referenced: 500_000,
         };
 
-        let json = serde_json::to_string(&snapshot).safe_unwrap(
-            ErrorCategory::Validation,
-            "Failed to serialize StorageSnapshot",
-        )?;
+        let json = serde_json::to_string(&snapshot).unwrap();
 
         assert!(json.contains("\"name\":\"pool@snap\""));
         assert!(json.contains("\"dataset\":\"pool\""));
@@ -259,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_metrics_serialization() -> Result<()> {
+    fn test_storage_metrics_serialization() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let metrics = StorageMetrics {
             total_pools: 3,
             total_datasets: 10,
@@ -272,10 +264,7 @@ mod tests {
             health_status: "healthy".to_string(),
         };
 
-        let json = serde_json::to_string(&metrics).safe_unwrap(
-            ErrorCategory::Validation,
-            "Failed to serialize StorageMetrics",
-        )?;
+        let json = serde_json::to_string(&metrics).unwrap();
 
         assert!(json.contains("\"total_pools\":3"));
         assert!(json.contains("\"iops\":1500"));
@@ -285,7 +274,8 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_pool_info_serialization() -> Result<()> {
+    fn test_storage_pool_info_serialization() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
         let pool_info = StoragePoolInfo {
             name: "production-pool".to_string(),
             total_capacity_gb: 5000,
@@ -294,19 +284,13 @@ mod tests {
             health_status: "healthy".to_string(),
         };
 
-        let json = serde_json::to_string(&pool_info).safe_unwrap(
-            ErrorCategory::Validation,
-            "Failed to serialize StoragePoolInfo",
-        )?;
+        let json = serde_json::to_string(&pool_info).unwrap();
 
         assert!(json.contains("\"name\":\"production-pool\""));
         assert!(json.contains("\"total_capacity_gb\":5000"));
 
         // Test deserialization
-        let deserialized: StoragePoolInfo = serde_json::from_str(&json).safe_unwrap(
-            ErrorCategory::Validation,
-            "Failed to deserialize StoragePoolInfo",
-        )?;
+        let deserialized: StoragePoolInfo = serde_json::from_str(&json).unwrap();
 
         assert_eq!(deserialized.name, "production-pool");
         assert_eq!(deserialized.total_capacity_gb, 5000);
@@ -315,7 +299,8 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_dataset_info_serialization() -> Result<()> {
+    fn test_storage_dataset_info_serialization(
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let dataset_info = StorageDatasetInfo {
             name: "pool/important-data".to_string(),
             pool_name: "pool".to_string(),
@@ -324,10 +309,7 @@ mod tests {
             dedup_ratio: 1.3,
         };
 
-        let json = serde_json::to_string(&dataset_info).safe_unwrap(
-            ErrorCategory::Validation,
-            "Failed to serialize StorageDatasetInfo",
-        )?;
+        let json = serde_json::to_string(&dataset_info).unwrap();
 
         assert!(json.contains("\"compression_ratio\":1.8"));
 
@@ -335,7 +317,8 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_snapshot_info_serialization() -> Result<()> {
+    fn test_storage_snapshot_info_serialization(
+    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let snapshot_info = StorageSnapshotInfo {
             name: "pool/data@weekly-backup".to_string(),
             dataset_name: "pool/data".to_string(),
@@ -343,10 +326,7 @@ mod tests {
             size_gb: 250,
         };
 
-        let json = serde_json::to_string(&snapshot_info).safe_unwrap(
-            ErrorCategory::Validation,
-            "Failed to serialize StorageSnapshotInfo",
-        )?;
+        let json = serde_json::to_string(&snapshot_info).unwrap();
 
         assert!(json.contains("\"size_gb\":250"));
 

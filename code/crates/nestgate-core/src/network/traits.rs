@@ -123,7 +123,7 @@ impl Default for Metrics {
     }
 }
 
-// ==================== IMPLEMENTATION STUB ====================
+// ==================== DEFAULT IMPLEMENTATION ====================
 
 /// Default implementation of the service
 #[derive(Debug)]

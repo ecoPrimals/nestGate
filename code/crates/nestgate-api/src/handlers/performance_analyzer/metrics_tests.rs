@@ -32,7 +32,10 @@ async fn test_collect_metrics_success() {
 #[tokio::test]
 async fn test_system_metrics_structure() {
     let collector = SystemMetricsCollector::new(60);
-    let metrics = collector.collect_metrics().await.expect("Test setup failed");
+    let metrics = collector
+        .collect_metrics()
+        .await
+        .expect("Test setup failed");
 
     // Verify all fields are populated
     assert!(metrics.cpu_usage_percent >= 0.0);
@@ -77,8 +80,14 @@ fn test_network_metrics_structure() {
 async fn test_multiple_collections_consistency() {
     let collector = SystemMetricsCollector::new(10);
 
-    let metrics1 = collector.collect_metrics().await.expect("Test setup failed");
-    let metrics2 = collector.collect_metrics().await.expect("Test setup failed");
+    let metrics1 = collector
+        .collect_metrics()
+        .await
+        .expect("Test setup failed");
+    let metrics2 = collector
+        .collect_metrics()
+        .await
+        .expect("Test setup failed");
 
     // Both collections should succeed
     assert!(metrics1.cpu_usage_percent >= 0.0);
@@ -201,7 +210,10 @@ fn test_network_metrics_clone() {
 #[tokio::test]
 async fn test_metrics_timestamp_validity() {
     let collector = SystemMetricsCollector::new(60);
-    let metrics = collector.collect_metrics().await.expect("Test setup failed");
+    let metrics = collector
+        .collect_metrics()
+        .await
+        .expect("Test setup failed");
 
     let now = std::time::SystemTime::now();
     let duration = now.duration_since(metrics.timestamp);

@@ -115,6 +115,7 @@ impl PrimalService {
         self.health_score.load(Ordering::SeqCst)
     }
 
+    #[allow(dead_code)]
     fn set_health(&self, score: u8) {
         self.health_score.store(score, Ordering::SeqCst);
     }

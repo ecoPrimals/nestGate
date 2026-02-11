@@ -1,9 +1,12 @@
-//! # 🗂️ Template Storage Integration Tests
+//! # Template Storage Integration Tests
 //!
-//! **Comprehensive Integration Tests for Template Storage via Unix Socket**
+//! Integration tests for template storage via Unix socket.
+//! Tests the `template.*` JSON-RPC methods through the Unix socket server.
 //!
-//! Tests the template.* JSON-RPC methods through the Unix socket server,
-//! verifying full integration with the collaborative intelligence system.
+//! **Note**: Uses the legacy `JsonRpcUnixServer` API pending migration to
+//! Songbird IPC service-based patterns.
+
+#![allow(deprecated)]
 
 use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
 use serde_json::{json, Value};

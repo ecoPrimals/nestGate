@@ -110,7 +110,8 @@ impl E2EScenario for StorageLifecycleScenario {
     }
 
     fn setup(&mut self, _config: &E2ETestConfig) -> Result<(), Box<dyn std::error::Error>> {
-        // Setup storage infrastructure
+        // Setup storage infrastructure using scenario configuration
+        let _ = &self.config; // Scenario-level config retained for lifecycle
         self.setup_complete = true;
         Ok(())
     }
@@ -167,9 +168,9 @@ impl E2EScenario for MultiServiceCoordinationScenario {
         "Multi-Service Coordination"
     }
 
-    fn setup(&mut self, config: &E2ETestConfig) -> Result<(), Box<dyn std::error::Error>> {
-        // Start multiple services
-        self.services_started = config.node_count;
+    fn setup(&mut self, _config: &E2ETestConfig) -> Result<(), Box<dyn std::error::Error>> {
+        // Start multiple services using stored configuration
+        self.services_started = self.config.node_count;
         Ok(())
     }
 
@@ -219,7 +220,8 @@ impl E2EScenario for PrimalDiscoveryScenario {
     }
 
     fn setup(&mut self, _config: &E2ETestConfig) -> Result<(), Box<dyn std::error::Error>> {
-        // Simulate primal ecosystem
+        // Simulate primal ecosystem using scenario-level config
+        let _ = &self.config; // Retained for discovery timeout/retry configuration
         self.discovered_primals = vec![
             "songbird".to_string(),
             "beardog".to_string(),

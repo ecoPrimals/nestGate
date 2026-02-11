@@ -189,3 +189,62 @@ impl ProtocolHandler {
         Ok(Response::success(message.id, ResponsePayload::Empty))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::protocol::capabilities::CapabilityQueryPayload;
+    use crate::protocol::capabilities::CapabilityQueryType;
+    use crate::protocol::messages::{Message, MessagePayload, MessageType};
+    use crate::protocol::services::HealthCheckPayload;
+    use crate::protocol::services::HealthCheckType;
+    use crate::types::ProviderCapabilities;
+
+    #[test]
+    fn test_protocol_handler_new() {
+        let caps = ProviderCapabilities::default();
+        let handler = ProtocolHandler::new("node-1".to_string(), caps);
+        assert!(handler.orchestrator_endpoint.is_none());
+    }
+
+    #[test]
+    fn test_protocol_handler_with_orchestrator() {
+        let caps = ProviderCapabilities::default();
+        let _handler = ProtocolHandler::new("node-1".to_string(), caps)
+            .with_orchestrator("http://orchestrator:9000".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_protocol_handler_capability_query() {
+        let caps = ProviderCapabilities::default();
+        let handler = ProtocolHandler::new("node-1".to_string(), caps);
+        let msg = Message::new(
+            MessageType::CapabilityQuery,
+            MessagePayload::CapabilityQuery(CapabilityQueryPayload {
+                query_type: CapabilityQueryType::All,
+            }),
+        );
+        let resp = handler.handle_message(msg).await.unwrap();
+        assert!(matches!(
+            resp.status,
+            crate::protocol::responses::ResponseStatus::Success
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_protocol_handler_health_check() {
+        let caps = ProviderCapabilities::default();
+        let handler = ProtocolHandler::new("node-1".to_string(), caps);
+        let msg = Message::new(
+            MessageType::HealthCheck,
+            MessagePayload::HealthCheck(HealthCheckPayload {
+                check_type: HealthCheckType::Shallow,
+            }),
+        );
+        let resp = handler.handle_message(msg).await.unwrap();
+        assert!(matches!(
+            resp.status,
+            crate::protocol::responses::ResponseStatus::Success
+        ));
+    }
+}

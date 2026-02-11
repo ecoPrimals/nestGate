@@ -1,426 +1,67 @@
-# NestGate - START HERE
-
-Welcome to NestGate, the universal storage and discovery primal.
-
----
+# NestGate - Start Here
 
 ## Current Status
 
 ```
-Build:       13/13 crates compiling
-Tests:       11,200+ passing (0 failures, 519 ignored)
-Coverage:    66.5% line coverage
-Dependencies: 100% Pure Rust (zero C/C++)
-Platforms:   6+ supported (Linux, FreeBSD, macOS, WSL2, illumos, Android)
+Build:       13/13 crates compiling (0 errors)
+Tests:       12,144 passing, 0 failures, 431 ignored
+Coverage:    70.07% line (target: 90%)
+Clippy:      Clean (-D warnings)
+Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```
 
-**Latest Update**: February 10, 2026
+See [STATUS.md](./STATUS.md) for full measured metrics.
 
-═══════════════════════════════════════════════════════════════════
+---
 
-## ⚡ QUICK START (< 2 MINUTES)
+## Quick Start
 
-### **1. Build** (1m 25s)
+### 1. Build
 
 ```bash
 cargo build --release --workspace
 ```
 
-### **2. Configure** (flexible port configuration!)
+### 2. Configure
 
 ```bash
-# Required
-export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
-export NESTGATE_DB_HOST=localhost
-
-# Optional (NEW: flexible port configuration!)
-export NESTGATE_API_PORT=8085  # Default: 8080
-export NESTGATE_BIND=0.0.0.0   # Default: 127.0.0.1
+export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)  # Required
+export NESTGATE_API_PORT=8085                          # Optional (default: 8080)
 ```
 
-### **3. Run** (instant)
+### 3. Run
 
 ```bash
-# Default: Socket-only mode (TRUE ecoBin - zero dependencies!)
+# Socket-only mode (default, ecoBin compliant)
 ./target/release/nestgate daemon
 
-# OR with HTTP API (if needed):
+# Or with HTTP API:
 ./target/release/nestgate daemon --enable-http --port 8085
 ```
 
-### **4. Verify** (instant)
+### 4. Verify
 
 ```bash
-# Socket-only mode (default):
-# Check via Unix socket (ecosystem integration)
-# Or enable HTTP for testing:
-./target/release/nestgate daemon --enable-http --port 8085 &
+# HTTP mode:
 curl http://localhost:8085/health
 
-# Expected: {"status":"healthy","version":"4.0.0"}
+# Socket mode: Use JSON-RPC over Unix socket
 ```
 
-**That's it!** NestGate defaults to socket-only (TRUE ecoBin)! 🎉
+---
 
-═══════════════════════════════════════════════════════════════════
+## What Is NestGate?
 
-## 📖 WHAT IS NESTGATE?
+NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem. It provides:
 
-**NestGate** is a **universal storage primal** that provides:
+- **Universal storage** — Works on 6+ platforms out of the box
+- **Capability-based discovery** — Discovers other primals at runtime by capability
+- **Isomorphic IPC** — Auto-adapts Unix sockets or TCP based on platform
+- **JSON-RPC 2.0 + tarpc** — Dual IPC with semantic method naming
+- **MCP provider** — Exposes storage via Model Context Protocol
+- **ZFS integration** — Adaptive backend, graceful fallback to standard filesystem
 
-- ✅ **Universal Storage** - Works on 6+ platforms out of the box
-- ✅ **Zero Configuration** - Auto-discovers everything
-- ✅ **Isomorphic IPC** - Adapts to platform constraints automatically
-- ✅ **MCP Provider** - Exposes storage via Model Context Protocol
-- ✅ **NEST Atomic** - Integrates with TOWER + squirrel
-- ✅ **Production Ready** - A++ grade, 99.94% test pass rate
-
-**Philosophy**: ONE codebase, ALL platforms, ZERO compromises
-
-═══════════════════════════════════════════════════════════════════
-
-## 🎯 KEY FEATURES
-
-### **Isomorphic IPC** (All 3 Phases Complete!)
-
-NestGate automatically adapts to your platform:
-
-- **Linux/macOS/FreeBSD**: Unix domain sockets (optimal)
-- **WSL2/Android**: TCP sockets (automatic fallback)
-- **Detection**: Platform constraints detected at runtime
-- **Discovery**: XDG-compliant discovery files
-- **Zero config**: Just works!
-
-### **Universal Storage**
-
-- Block device detection
-- Filesystem detection
-- ZFS backend (adaptive)
-- Network FS support
-- Memory management
-
-### **Primal Features**
-
-- Self-knowledge & introspection
-- Runtime capability discovery
-- Environment-driven config
-- 4-tier fallback: env → XDG → home → system
-- Zero hardcoding
-
-═══════════════════════════════════════════════════════════════════
-
-## 📚 ESSENTIAL DOCUMENTATION
-
-### **Quick Access**
-
-- 📖 **[README.md](./README.md)** - Complete documentation
-- 📊 **[STATUS.md](./STATUS.md)** - Current status & metrics
-- ⚡ **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Essential commands
-- 🗺️ **[DEEP_DEBT_EVOLUTION_ROADMAP_FEB_2026.md](./DEEP_DEBT_EVOLUTION_ROADMAP_FEB_2026.md)** - Evolution plan
-
-### **Session Reports**
-
-- 🎊 **[Latest Session](./docs/sessions/feb_2026/SESSION_EVOLUTION_COMPLETE_FEB_1_2026.md)** - Complete evolution success
-- 📊 **[Test Results](./docs/sessions/feb_2026/WORKSPACE_TEST_RESULTS_FEB_1_2026.md)** - 5,367 tests validated
-- 🏗️ **[Build Success](./docs/sessions/feb_2026/WORKSPACE_BUILD_SUCCESS_FEB_1_2026.md)** - 100% workspace build
-- 🧬 **[Deep Debt](./docs/sessions/feb_2026/DEEP_DEBT_COMPLETE_FEB_1_2026.md)** - 99.7% resolution
-
-═══════════════════════════════════════════════════════════════════
-
-## 🚀 DEPLOYMENT
-
-### **Local Development**
-
-```bash
-# Build
-cargo build --release
-
-# Run
-./target/release/nestgate serve
-
-# Test
-cargo test --workspace --lib
-```
-
-### **Production (Linux)**
-
-```bash
-# Build for production (musl = universal Linux)
-cargo build --release --target x86_64-unknown-linux-musl
-
-# Install
-sudo cp target/x86_64-unknown-linux-musl/release/nestgate /usr/local/bin/
-
-# Configure via environment
-export NESTGATE_API_HOST="0.0.0.0"
-export NESTGATE_API_PORT="8080"
-
-# Run
-nestgate serve
-```
-
-### **Docker**
-
-```bash
-# Build image
-docker build -t nestgate:latest .
-
-# Run container
-docker run -p 8080:8080 -v /data:/data nestgate:latest
-```
-
-### **Kubernetes**
-
-```bash
-# Deploy
-kubectl apply -f deploy/production.yml
-
-# Verify
-kubectl get pods -l app=nestgate
-```
-
-═══════════════════════════════════════════════════════════════════
-
-## 🧪 TESTING
-
-### **Run All Tests** (5,367 tests!)
-
-```bash
-cargo test --workspace --lib
-```
-
-### **Specific Tests**
-
-```bash
-# Isomorphic IPC tests (all 3 phases)
-cargo test -p nestgate-core isomorphic_ipc
-
-# Installer tests (69 tests)
-cargo test -p nestgate-installer
-
-# Core tests (3,650 tests)
-cargo test -p nestgate-core
-```
-
-### **Integration Tests**
-
-```bash
-# E2E tests
-cargo test --test '*' --workspace
-
-# Specific integration test
-cargo test -p nestgate-core --test isomorphic_ipc_integration
-```
-
-═══════════════════════════════════════════════════════════════════
-
-## 🌍 PLATFORM SUPPORT
-
-NestGate runs **universally** on:
-
-| Platform       | Status | IPC      | Build | Tests |
-|----------------|--------|----------|-------|-------|
-| Linux          | ✅ Full | Unix    | ✅    | ✅    |
-| FreeBSD        | ✅ Full | Unix    | ✅    | ✅    |
-| macOS          | ✅ Full | Unix    | ✅    | ✅    |
-| Windows WSL2   | ✅ Full | TCP     | ✅    | ✅    |
-| illumos        | ✅ Full | Unix    | ✅    | ✅    |
-| Android        | ✅ Full | TCP     | ✅    | ✅    |
-
-**Auto-adapts** to platform constraints! 🎉
-
-═══════════════════════════════════════════════════════════════════
-
-## 🔧 CONFIGURATION
-
-### **Zero Configuration Required!**
-
-NestGate auto-discovers everything. But you can override:
-
-### **Environment Variables**
-
-```bash
-# API Configuration
-export NESTGATE_API_HOST="0.0.0.0"      # Default: 127.0.0.1
-export NESTGATE_API_PORT="8080"         # Default: 8080
-
-# Storage Paths (auto-detected if not set)
-export NESTGATE_DATA_DIR="/var/lib/nestgate"
-export NESTGATE_CONFIG_DIR="/etc/nestgate"
-
-# ZFS (auto-detected)
-export NESTGATE_ZFS_POOL="storage"
-```
-
-### **4-Tier Fallback**
-
-NestGate automatically uses the first available:
-
-1. **Environment variables** (highest priority)
-2. **XDG directories** (`$XDG_DATA_HOME`, etc.)
-3. **Home directory** (`~/.local/share/nestgate`)
-4. **System defaults** (`/var/lib/nestgate`)
-
-**No config files needed!** 🎊
-
-═══════════════════════════════════════════════════════════════════
-
-## 💡 ARCHITECTURE
-
-### **Core Principles**
-
-1. **Try→Detect→Adapt→Succeed** - Biological adaptation pattern
-2. **Runtime Discovery** - Platform capabilities as data
-3. **Universal + Optimized** - Works everywhere, fast where possible
-4. **Zero Configuration** - Auto-discovers everything
-5. **Pure Rust Safety** - ZERO unsafe, ZERO C dependencies
-6. **Self-Knowledge** - Discovers other primals at runtime
-
-### **Components**
-
-```
-nestgate (13 crates)
-├── nestgate-core       ⭐ 3,650 tests (Isomorphic IPC!)
-├── nestgate-api        ✅ REST + JSON-RPC
-├── nestgate-mcp        ✅ MCP provider
-├── nestgate-zfs        ✅ ZFS backend
-├── nestgate-network    ✅ Network storage
-├── nestgate-automation ✅ 1,475 tests
-├── nestgate-installer  ✅ 69 tests (FIXED!)
-└── ... 6 more crates   ✅ All working
-```
-
-═══════════════════════════════════════════════════════════════════
-
-## 🎯 COMMON TASKS
-
-### **Health Check**
-
-```bash
-# Built-in
-cargo run -- health-check
-
-# HTTP
-curl http://localhost:8080/health
-```
-
-### **List Storage**
-
-```bash
-curl http://localhost:8080/api/v1/storage/list
-```
-
-### **Check Capabilities**
-
-```bash
-curl http://localhost:8080/api/v1/capabilities
-```
-
-### **MCP Discovery**
-
-```bash
-# NestGate exposes MCP tools automatically
-curl http://localhost:8080/mcp/tools
-```
-
-═══════════════════════════════════════════════════════════════════
-
-## 🆘 TROUBLESHOOTING
-
-### **Build Fails**
-
-```bash
-# Clean and rebuild
-cargo clean
-cargo build --release
-```
-
-### **Tests Fail**
-
-```bash
-# Run specific failing test
-cargo test -p nestgate-core <test_name> -- --nocapture
-
-# Check for environment issues
-env | grep NESTGATE
-```
-
-### **Can't Connect**
-
-```bash
-# Check if running
-pgrep nestgate
-
-# Check port
-netstat -an | grep 8080
-
-# Check IPC discovery
-ls -la $XDG_RUNTIME_DIR/nestgate* || ls -la /tmp/nestgate*
-```
-
-### **Platform Issues**
-
-NestGate auto-adapts, but you can force TCP mode:
-
-```bash
-# Force TCP fallback (for testing)
-export NESTGATE_FORCE_TCP=true
-cargo run -- serve
-```
-
-═══════════════════════════════════════════════════════════════════
-
-## 📈 METRICS
-
-### **Current Status**
-
-```
-Crates:          13 total, 13 building (100%)
-Tests:           5,367 passing (99.94%)
-Code Size:       ~50,000 lines of Rust
-Unsafe Code:     0 blocks (ZERO!)
-C Dependencies:  0 (100% Pure Rust!)
-Platform Code:   0 problematic blocks
-Deep Debt:       99.7% resolved
-Grade:           A++ (Top 1%)
-```
-
-### **Performance**
-
-```
-Build Time:      23.55 seconds (release)
-Binary Size:     ~15 MB (optimized)
-Cold Start:      < 100ms
-Memory Usage:    < 50 MB base
-IPC Latency:     < 1ms (Unix), < 2ms (TCP)
-```
-
-═══════════════════════════════════════════════════════════════════
-
-## What's New
-
-### February 10, 2026
-
-- Production panics eliminated (proper Result returns everywhere)
-- Clippy auto-fix applied (2061 -> 1579 warnings)
-- Large files refactored (all under 1000 lines)
-- 60+ dead stub files removed
-- 150+ new unit tests added
-- 66.5% line coverage achieved
-
-### February 9, 2026
-
-- 48+ failing tests fixed
-- 40+ doctest corrections
-- Integration test hermeticity improved
-
-═══════════════════════════════════════════════════════════════════
-
-## 🔗 ECOSYSTEM INTEGRATION
-
-### **NEST Atomic Composition**
-
-NestGate is part of the NEST atomic:
+### NEST Atomic Composition
 
 ```
 NEST Atomic = TOWER + nestgate + squirrel
@@ -428,44 +69,95 @@ NEST Atomic = TOWER + nestgate + squirrel
             = Security + Network + Storage + AI
 ```
 
-**Status**: 4/6 primals complete (67%)
+---
 
-### **Primal Discovery**
+## Architecture
 
-NestGate discovers other primals automatically:
+```
+nestGate/ (13 crates)
+├── nestgate-core       Core: IPC, config, crypto, discovery
+├── nestgate-api        REST + JSON-RPC API server
+├── nestgate-bin        CLI binary (unibin)
+├── nestgate-zfs        ZFS integration (adaptive)
+├── nestgate-mcp        MCP provider
+├── nestgate-network    Network storage
+├── nestgate-automation Automation engine
+├── nestgate-installer  Platform installer
+├── nestgate-canonical  Canonical types
+├── nestgate-middleware Middleware stack
+├── nestgate-nas        NAS integration
+├── nestgate-fsmonitor  Filesystem monitoring
+└── nestgate-performance Performance monitoring
+```
 
-- 🐻 **beardog**: Crypto & HSM (via universal adapter)
-- 🐦 **songbird**: HTTP & networking (via concentrated gap)
-- 🐿️ **squirrel**: AI & MCP (direct integration)
+### Key Patterns
 
-**Zero hardcoding!** All runtime discovery.
-
-═══════════════════════════════════════════════════════════════════
-
-## 🎯 NEXT STEPS
-
-1. **✅ Build It**: `cargo build --release`
-2. **✅ Run It**: `./target/release/nestgate serve`
-3. **✅ Test It**: `curl http://localhost:8080/health`
-4. **📖 Explore**: Check out [README.md](./README.md) for deep dive
-
-**Need help?** See [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) for commands!
-
-═══════════════════════════════════════════════════════════════════
-
-## 📞 GETTING HELP
-
-- 📖 **Documentation**: [README.md](./README.md)
-- 📊 **Status**: [STATUS.md](./STATUS.md)
-- ⚡ **Commands**: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
-- 🐛 **Issues**: Check existing tests first
-- 🤝 **Contributing**: [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-═══════════════════════════════════════════════════════════════════
+- **Try-Detect-Adapt-Succeed** — Try optimal path, detect constraints, adapt, always succeed
+- **Runtime discovery** — Capabilities are data discovered at runtime, not compile-time config
+- **Environment-driven** — 4-tier fallback: env vars -> XDG -> home -> system defaults
+- **Zero hardcoding** — No primal names or ports in production code
 
 ---
 
-**NestGate**: Universal storage, all platforms, zero compromises.
+## Testing
+
+```bash
+# All tests
+cargo test --workspace
+
+# Coverage
+cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
+
+# Linting
+cargo clippy --all-targets --all-features -- -D warnings
+
+# Format check
+cargo fmt --all -- --check
+```
+
+---
+
+## Configuration
+
+NestGate auto-discovers everything. Override with environment variables:
+
+```bash
+NESTGATE_API_PORT=8085             # API port
+NESTGATE_BIND=0.0.0.0              # Bind address
+NESTGATE_JWT_SECRET=...             # JWT secret
+NESTGATE_STORAGE_PATH=...          # Storage path
+NESTGATE_ZFS_BINARY=...            # ZFS binary override
+NESTGATE_CAPABILITY_CRYPTO_ENDPOINT=...  # Override crypto provider
+SONGBIRD_IPC_PATH=...              # Override Songbird socket
+RUST_LOG=info                       # Logging level
+```
+
+---
+
+## Troubleshooting
+
+**Build fails**: `cargo clean && cargo build --release`
+
+**Tests fail**: `cargo test --workspace -- --nocapture` for verbose output
+
+**Port in use**: Change `NESTGATE_API_PORT` or `lsof -i :8080`
+
+**IPC connection fails**: Check `ls -la $XDG_RUNTIME_DIR/nestgate.*`
+
+---
+
+## Documentation
+
+- [README.md](./README.md) — Project overview
+- [STATUS.md](./STATUS.md) — Current measured metrics (ground truth)
+- [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) — Essential commands
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — Development guidelines
+- [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) — Primal capabilities
+- [CHANGELOG.md](./CHANGELOG.md) — Version history
+- [specs/](./specs/) — Protocol specifications
+- [docs/](./docs/) — Architecture, guides, session archives
+
+---
 
 **Created**: January 31, 2026  
-**Latest**: February 10, 2026
+**Last Updated**: February 11, 2026

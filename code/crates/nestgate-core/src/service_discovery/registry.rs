@@ -372,3 +372,218 @@ impl InMemoryServiceRegistry {
         Ok(matching_services)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::service_discovery::types::{
+        AIModality, CommunicationProtocol, ServiceEndpoint, StorageType,
+    };
+    use crate::service_discovery::{create_service_registration, create_storage_role};
+
+    fn make_registration(
+        name: &str,
+        category: ServiceCategory,
+        capabilities: Vec<ServiceCapability>,
+    ) -> UniversalServiceRegistration {
+        let mut reg = create_service_registration(name.to_string(), category, capabilities);
+        reg.endpoints = vec![ServiceEndpoint {
+            url: format!("http://localhost:8080/{}", name),
+            protocol: CommunicationProtocol::Http,
+            health_check: None,
+        }];
+        reg
+    }
+
+    #[tokio::test]
+    async fn test_register_and_discover() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg = make_registration(
+            "storage-svc",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        let handle = registry.register_service(reg).await.unwrap();
+        assert_eq!(handle.name, "storage-svc");
+
+        let found = registry
+            .discover_by_capabilities(vec![ServiceCapability::Storage(StorageType::Object)])
+            .await
+            .unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].metadata.name, "storage-svc");
+    }
+
+    #[tokio::test]
+    async fn test_discover_empty() {
+        let registry = InMemoryServiceRegistry::new();
+        let found = registry
+            .discover_by_capabilities(vec![ServiceCapability::Storage(StorageType::Object)])
+            .await
+            .unwrap();
+        assert!(found.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_discover_by_role() {
+        let registry = InMemoryServiceRegistry::new();
+        let role = create_storage_role();
+        let reg = make_registration(
+            "storage-svc",
+            ServiceCategory::Storage,
+            role.required_capabilities.clone(),
+        );
+        registry.register_service(reg).await.unwrap();
+
+        let found = registry.discover_by_role(role).await.unwrap();
+        assert_eq!(found.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_find_optimal_service_empty() {
+        let registry = InMemoryServiceRegistry::new();
+        let requirements = ServiceRequirements {
+            capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
+            resource_constraints: None,
+            performance_requirements: None,
+        };
+        let result = registry
+            .find_optimal_service(requirements, SelectionPreferences::default())
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_find_optimal_service() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg = make_registration(
+            "storage-svc",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        registry.register_service(reg).await.unwrap();
+
+        let requirements = ServiceRequirements {
+            capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
+            resource_constraints: None,
+            performance_requirements: None,
+        };
+        let service = registry
+            .find_optimal_service(requirements, SelectionPreferences::default())
+            .await
+            .unwrap();
+        assert_eq!(service.metadata.name, "storage-svc");
+    }
+
+    #[tokio::test]
+    async fn test_update_capabilities() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg = make_registration(
+            "svc",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        let handle = registry.register_service(reg).await.unwrap();
+
+        let result = registry
+            .update_capabilities(
+                handle.service_id,
+                vec![
+                    ServiceCapability::Storage(StorageType::Object),
+                    ServiceCapability::Storage(StorageType::Cache),
+                ],
+            )
+            .await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_update_capabilities_not_found() {
+        let registry = InMemoryServiceRegistry::new();
+        let result = registry
+            .update_capabilities(
+                Uuid::new_v4(),
+                vec![ServiceCapability::Storage(StorageType::Object)],
+            )
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_deregister_service() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg = make_registration(
+            "svc",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        let handle = registry.register_service(reg).await.unwrap();
+        registry
+            .deregister_service(handle.service_id)
+            .await
+            .unwrap();
+
+        let found = registry
+            .discover_by_capabilities(vec![ServiceCapability::Storage(StorageType::Object)])
+            .await
+            .unwrap();
+        assert!(found.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_get_all_services() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg1 = make_registration(
+            "svc1",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        let reg2 = make_registration(
+            "svc2",
+            ServiceCategory::AI,
+            vec![ServiceCapability::AI(AIModality::Nlp)],
+        );
+        registry.register_service(reg1).await.unwrap();
+        registry.register_service(reg2).await.unwrap();
+
+        let all = registry.get_all_services().await;
+        assert_eq!(all.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_service_count() {
+        let registry = InMemoryServiceRegistry::new();
+        assert_eq!(registry.service_count().await, 0);
+
+        let reg = make_registration(
+            "svc",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        registry.register_service(reg).await.unwrap();
+        assert_eq!(registry.service_count().await, 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_services_by_category() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg = make_registration(
+            "storage-svc",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        registry.register_service(reg).await.unwrap();
+
+        let storage_services = registry
+            .get_services_by_category(ServiceCategory::Storage)
+            .await
+            .unwrap();
+        assert_eq!(storage_services.len(), 1);
+
+        let ai_services = registry
+            .get_services_by_category(ServiceCategory::AI)
+            .await
+            .unwrap();
+        assert!(ai_services.is_empty());
+    }
+}

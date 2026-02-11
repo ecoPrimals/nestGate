@@ -378,4 +378,52 @@ mod tests {
         // Cleanup
         env::remove_var("NESTGATE_API_PORT");
     }
+
+    #[test]
+    fn test_extract_port_edge_cases() {
+        assert_eq!(extract_port_from_url("http://host:0"), None);
+        assert_eq!(extract_port_from_url("http://host:65535/path"), Some(65535));
+        assert_eq!(extract_port_from_url("http://host:443/"), Some(443));
+    }
+
+    #[tokio::test]
+    async fn test_discover_metrics_port_default() {
+        env::remove_var("NESTGATE_METRICS_PORT");
+        let port = discover_metrics_port().await.unwrap();
+        assert_eq!(port, 9090);
+    }
+
+    #[tokio::test]
+    async fn test_discover_health_port_default() {
+        env::remove_var("NESTGATE_HEALTH_PORT");
+        let port = discover_health_port().await.unwrap();
+        assert_eq!(port, 8082);
+    }
+
+    #[tokio::test]
+    async fn test_discover_admin_port_default() {
+        env::remove_var("NESTGATE_ADMIN_PORT");
+        let port = discover_admin_port().await.unwrap();
+        assert_eq!(port, 8081);
+    }
+
+    #[tokio::test]
+    async fn test_discover_storage_port_default() {
+        env::remove_var("NESTGATE_STORAGE_PORT");
+        let port = discover_storage_port().await.unwrap();
+        assert_eq!(port, 8083);
+    }
+
+    #[tokio::test]
+    async fn test_discover_tarpc_port_default() {
+        env::remove_var("NESTGATE_TARPC_PORT");
+        let port = discover_tarpc_port().await.unwrap();
+        assert_eq!(port, 8091);
+    }
+
+    #[test]
+    fn test_tarpc_port_sync_default() {
+        env::remove_var("NESTGATE_TARPC_PORT");
+        assert_eq!(discover_tarpc_port_sync(), 8091);
+    }
 }

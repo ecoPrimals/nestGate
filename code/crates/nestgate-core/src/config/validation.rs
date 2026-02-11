@@ -697,4 +697,118 @@ mod tests {
         assert!(result.errors.is_empty());
         assert!(result.warnings.is_empty());
     }
+
+    #[test]
+    fn test_validation_utils_timeout_zero() {
+        assert!(ValidationUtils::validate_timeout("timeout", Duration::ZERO).is_some());
+    }
+
+    #[test]
+    fn test_validation_utils_timeout_too_long() {
+        assert!(ValidationUtils::validate_timeout("timeout", Duration::from_secs(4000)).is_some());
+    }
+
+    #[test]
+    fn test_validation_utils_timeout_valid() {
+        assert!(ValidationUtils::validate_timeout("timeout", Duration::from_secs(30)).is_none());
+    }
+
+    #[test]
+    fn test_validation_utils_socket_address() {
+        assert!(ValidationUtils::validate_socket_address("addr", "invalid").is_some());
+        assert!(ValidationUtils::validate_socket_address("addr", "127.0.0.1:8080").is_none());
+    }
+
+    #[test]
+    fn test_validation_utils_non_empty_string() {
+        assert!(ValidationUtils::validate_non_empty_string("field", "").is_some());
+        assert!(ValidationUtils::validate_non_empty_string("field", "   ").is_some());
+        assert!(ValidationUtils::validate_non_empty_string("field", "value").is_none());
+    }
+
+    #[test]
+    fn test_validation_result_with_warning() {
+        let result = ValidationResult::success().with_warning(ValidationWarning {
+            field: "test".to_string(),
+            message: "warning".to_string(),
+            severity: WarningSeverity::Medium,
+        });
+        assert!(result.is_valid);
+        assert_eq!(result.warnings.len(), 1);
+    }
+
+    #[test]
+    fn test_validation_result_with_suggestion() {
+        let result = ValidationResult::success().with_suggestion(ValidationSuggestion {
+            field: "test".to_string(),
+            message: "suggestion".to_string(),
+            suggested_value: Some("value".to_string()),
+        });
+        assert!(result.is_valid);
+        assert_eq!(result.suggestions.len(), 1);
+    }
+
+    #[test]
+    fn test_validation_error_builder_full() {
+        let err = ValidationErrorBuilder::new("field", "msg", ValidationErrorType::InvalidFormat)
+            .current_value("bad")
+            .expected_format("good")
+            .build();
+        assert_eq!(err.field, "field");
+        assert_eq!(err.error_type, ValidationErrorType::InvalidFormat);
+        assert_eq!(err.current_value, Some("bad".to_string()));
+        assert_eq!(err.expected_format, Some("good".to_string()));
+    }
+
+    #[test]
+    fn test_config_validator_generate_report_valid() {
+        let config = NetworkConfig::development_optimized();
+        let report = ConfigValidator::generate_report(&config);
+        assert!(report.contains("VALID"));
+    }
+
+    #[test]
+    fn test_config_validator_generate_report_invalid() {
+        let mut config = NetworkConfig::development_optimized();
+        config.api.port = 0;
+        let report = ConfigValidator::generate_report(&config);
+        assert!(report.contains("INVALID"));
+        assert!(report.contains("Errors:"));
+    }
+
+    #[test]
+    fn test_validation_schema_network_config() {
+        let schema = NetworkConfig::schema();
+        assert!(!schema.fields.is_empty());
+        assert!(schema.fields.contains_key("port"));
+        assert!(!schema.dependencies.is_empty());
+    }
+
+    #[test]
+    fn test_validation_error_types() {
+        let _ = ValidationErrorType::Required;
+        let _ = ValidationErrorType::InvalidFormat;
+        let _ = ValidationErrorType::OutOfRange;
+        let _ = ValidationErrorType::InvalidValue;
+        let _ = ValidationErrorType::Conflict;
+        let _ = ValidationErrorType::Security;
+    }
+
+    #[test]
+    fn test_warning_severity_levels() {
+        let _ = WarningSeverity::Low;
+        let _ = WarningSeverity::Medium;
+        let _ = WarningSeverity::High;
+    }
+
+    #[test]
+    fn test_field_schema_construction() {
+        let _schema = FieldSchema {
+            field_type: "string".to_string(),
+            required: true,
+            default_value: Some("default".to_string()),
+            constraints: vec!["pattern".to_string()],
+            description: "desc".to_string(),
+        };
+    }
 }

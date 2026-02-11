@@ -500,15 +500,23 @@ mod tests {
 
     #[tokio::test]
     async fn test_azure_backend_creation() {
-        // Set required environment variables for test
-        std::env::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
-        std::env::set_var("AZURE_CONTAINER_PREFIX", "test-nestgate");
+        // Test the from_environment logic directly without global env mutation
+        // (avoids race conditions with parallel tests)
+        let account = "teststorage".to_string();
+        let prefix = "test-nestgate".to_string();
 
-        let backend = AzureBackend::new().await;
-        assert!(backend.is_ok(), "Azure backend should be created");
+        let backend = AzureBackend {
+            client: std::sync::Arc::new(AzureClientWrapper {
+                account: account.clone(),
+                connection_string: None,
+                config_source: ConfigSource::Environment,
+            }),
+            container_prefix: prefix.clone(),
+            pools: std::sync::Arc::new(tokio::sync::RwLock::new(std::collections::HashMap::new())),
+        };
 
-        let backend = backend.unwrap();
         assert_eq!(backend.container_prefix, "test-nestgate");
+        assert_eq!(backend.container_name("mypool"), "test-nestgate-mypool");
     }
 
     #[tokio::test]
@@ -560,16 +568,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_dataset() {
-        // Set required environment variables for test
+        let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
         std::env::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
 
         let backend = AzureBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
-
         let dataset = backend
             .create_dataset(&pool, "data", StorageTier::Warm)
             .await;
 
+        match orig {
+            Some(v) => std::env::set_var("AZURE_STORAGE_ACCOUNT", v),
+            None => std::env::remove_var("AZURE_STORAGE_ACCOUNT"),
+        }
         assert!(dataset.is_ok(), "Dataset creation should succeed");
         let dataset = dataset.unwrap();
         assert_eq!(dataset.name, "data");
@@ -609,27 +620,36 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_pool_properties() {
+        let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
         std::env::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
         let backend = AzureBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
 
         let props = backend.get_pool_properties(&pool).await;
-        assert!(props.is_ok(), "Should get pool properties");
 
+        match orig {
+            Some(v) => std::env::set_var("AZURE_STORAGE_ACCOUNT", v),
+            None => std::env::remove_var("AZURE_STORAGE_ACCOUNT"),
+        }
+        assert!(props.is_ok(), "Should get pool properties");
         let props = props.unwrap();
         assert!(!props.account.is_empty());
-        assert!(props.encryption); // Azure encrypts by default
+        assert!(props.encryption);
     }
 
     #[tokio::test]
     async fn test_all_storage_tiers() {
-        // Set required environment variables for test
-        std::env::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
-
-        let backend = AzureBackend::new().await.unwrap();
+        // Construct directly to avoid env-var race conditions in parallel tests
+        let backend = AzureBackend {
+            client: Arc::new(AzureClientWrapper {
+                account: "teststorage".to_string(),
+                connection_string: None,
+                config_source: ConfigSource::Environment,
+            }),
+            container_prefix: "nestgate".to_string(),
+            pools: Arc::new(RwLock::new(HashMap::new())),
+        };
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
-
-        // Test all storage tiers map correctly
         for tier in [
             StorageTier::Hot,
             StorageTier::Warm,

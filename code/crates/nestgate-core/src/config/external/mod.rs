@@ -36,7 +36,7 @@
 pub mod network;
 /// Network environment configuration
 pub mod network_env_config;
-// pub mod services; // REMOVED: Deprecated in favor of capability-based configuration
+// services module removed — use capability-based configuration
 pub mod services_config;
 
 use crate::Result;

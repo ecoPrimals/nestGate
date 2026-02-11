@@ -223,3 +223,21 @@ pub type SecurityConfig = CanonicalSecurityConfig;
 
 /// Backward compatibility alias for UnifiedSecurityConfig
 pub type UnifiedSecurityConfig = CanonicalSecurityConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_canonical_security_config_new() {
+        let config = CanonicalSecurityConfig::new();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_canonical_security_config_merge() {
+        let a = CanonicalSecurityConfig::default();
+        let b = CanonicalSecurityConfig::default();
+        let _merged = a.merge(b);
+    }
+}

@@ -1,13 +1,17 @@
-/// E2E Test Scenarios: Final Batch - Advanced Integration
-///
-/// Tests advanced integration workflows including:
-/// - Multi-tenant isolation
-/// - API rate limiting and quotas
-/// - Data migration across tiers
-/// - Service mesh integration
-/// - Advanced security scenarios
-///
-/// **Evolution**: Modern async patterns, NO SLEEPS, production-ready
+// E2E test framework — many building blocks defined ahead of use
+#![allow(dead_code, unused_imports)]
+
+// E2E Test Scenarios: Final Batch - Advanced Integration
+//
+// Tests advanced integration workflows including:
+// - Multi-tenant isolation
+// - API rate limiting and quotas
+// - Data migration across tiers
+// - Service mesh integration
+// - Advanced security scenarios
+//
+// Modern async patterns, NO SLEEPS, production-ready
+
 use nestgate_core::Result;
 
 mod common;

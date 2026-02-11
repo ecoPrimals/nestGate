@@ -246,3 +246,45 @@ impl Default for UnifiedAlertSeverity {
         Self::Info
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unified_message_type_default() {
+        assert!(matches!(
+            UnifiedMessageType::default(),
+            UnifiedMessageType::Request
+        ));
+    }
+
+    #[test]
+    fn test_unified_event_type_display() {
+        assert_eq!(UnifiedEventType::SystemStart.to_string(), "system_start");
+        assert_eq!(UnifiedEventType::StorageEvent.to_string(), "storage_event");
+    }
+
+    #[test]
+    fn test_unified_operation_type_serialization() {
+        let op = UnifiedOperationType::Create;
+        let json = serde_json::to_string(&op).unwrap();
+        let parsed: UnifiedOperationType = serde_json::from_str(&json).unwrap();
+        assert_eq!(op, parsed);
+    }
+
+    #[test]
+    fn test_unified_alert_type_default() {
+        assert!(matches!(
+            UnifiedAlertType::default(),
+            UnifiedAlertType::Performance
+        ));
+    }
+
+    #[test]
+    fn test_unified_alert_severity_variants() {
+        let severity = UnifiedAlertSeverity::Critical;
+        assert!(matches!(severity, UnifiedAlertSeverity::Critical));
+        assert_eq!(UnifiedAlertSeverity::default(), UnifiedAlertSeverity::Info);
+    }
+}

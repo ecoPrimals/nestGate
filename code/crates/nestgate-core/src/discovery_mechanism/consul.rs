@@ -118,6 +118,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
             .endpoints
             .get("api")
             .map(|addr| addr.to_string())
+            .or_else(|| std::env::var("NESTGATE_API_URL").ok())
             .unwrap_or_else(|| "http://localhost:8080".to_string());
 
         let (address, port) = Self::extract_address_port(&primary_endpoint);

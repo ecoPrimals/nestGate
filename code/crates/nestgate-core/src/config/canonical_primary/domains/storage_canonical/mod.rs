@@ -305,3 +305,26 @@ pub type StorageConfig = CanonicalStorageConfig;
 
 /// Backward compatibility alias for UnifiedStorageConfig
 pub type UnifiedStorageConfig = CanonicalStorageConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_canonical_storage_config_new() {
+        let config = CanonicalStorageConfig::new();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_canonical_storage_config_get_total_capacity() {
+        let config = CanonicalStorageConfig::default();
+        assert_eq!(config.get_total_capacity(), 0);
+    }
+
+    #[test]
+    fn test_canonical_storage_config_has_backend() {
+        let config = CanonicalStorageConfig::default();
+        assert!(!config.has_backend(&StorageBackendType::Zfs));
+    }
+}

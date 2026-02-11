@@ -257,3 +257,77 @@ impl RealNetworkService {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+    fn test_network_config() -> NetworkConfig {
+        crate::types::NetworkConfigBuilder::new()
+            .port_range(9000, 9010)
+            .max_connections(100)
+            .build()
+    }
+
+    #[test]
+    fn test_real_network_service_new() {
+        let config = test_network_config();
+        let service = RealNetworkService::new(config);
+        let stats = service.get_network_statistics().unwrap();
+        assert_eq!(stats.active_connections, 0);
+        assert_eq!(stats.registered_services, 0);
+        assert_eq!(stats.allocated_ports, 0);
+    }
+
+    #[test]
+    fn test_allocate_port_for_service() {
+        let config = test_network_config();
+        let service = RealNetworkService::new(config);
+        let port1 = service.allocate_port_for_service("svc1").unwrap();
+        let port2 = service.allocate_port_for_service("svc2").unwrap();
+        assert!(port1 >= 9000 && port1 <= 9010);
+        assert!(port2 >= 9000 && port2 <= 9010);
+        assert_ne!(port1, port2);
+    }
+
+    #[test]
+    fn test_release_service_port() {
+        let config = test_network_config();
+        let service = RealNetworkService::new(config);
+        let port = service.allocate_port_for_service("svc1").unwrap();
+        let result = service.release_service_port(port);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_register_and_unregister_service() {
+        let config = test_network_config();
+        let service = RealNetworkService::new(config);
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 9000);
+        let service_info = ServiceInfo::new("id-1".to_string(), "test-svc".to_string(), addr);
+        let result = service.register_service(service_info);
+        assert!(result.is_ok());
+        let details = service.get_service_details("id-1");
+        assert!(details.is_some());
+        assert_eq!(details.unwrap().name, "test-svc");
+        let result = service.unregister_service("id-1");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_get_service_status() {
+        let config = test_network_config();
+        let service = RealNetworkService::new(config);
+        let status = service.get_service_status().unwrap();
+        assert!(matches!(status, ServiceStatus::Running));
+    }
+
+    #[test]
+    fn test_get_connection_details_none() {
+        let config = test_network_config();
+        let service = RealNetworkService::new(config);
+        let details = service.get_connection_details("nonexistent");
+        assert!(details.is_none());
+    }
+}

@@ -8,7 +8,6 @@ mod performance_benchmarks {
     use std::time::Instant;
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_29_performance_benchmarks -- --ignored
     async fn test_operation_latency() {
         let iterations = 1000;
         let start = Instant::now();
@@ -26,7 +25,6 @@ mod performance_benchmarks {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_concurrent_throughput() {
         use std::sync::Arc;
         use tokio::sync::Mutex;
@@ -60,7 +58,6 @@ mod performance_benchmarks {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_memory_allocation_patterns() {
         // Test that we're not creating excessive allocations
         let mut allocations = Vec::new();
@@ -82,7 +79,6 @@ mod performance_benchmarks {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_async_spawn_overhead() {
         let iterations = 100;
         let start = Instant::now();

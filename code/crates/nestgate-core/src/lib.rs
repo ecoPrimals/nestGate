@@ -17,9 +17,7 @@
 pub mod canonical_modernization;
 /// **PRIMARY**: Canonical types system
 pub mod canonical_types;
-/// ⚠️ REMOVED: traits_root was deprecated and removed in v0.11.0 (November 2025)
-/// Use traits::canonical_unified_traits instead
-// pub mod traits_root; // REMOVED - use traits::canonical_unified_traits
+// traits_root removed in v0.11.0 — use traits::canonical_unified_traits
 // ==================== DOMAIN-SPECIFIC MODULES ====================
 /// Capability-based service discovery
 pub mod capabilities;
@@ -90,6 +88,10 @@ pub mod types;
 /// Single capability enum used by all discovery mechanisms
 pub mod unified_capabilities;
 
+/// NAT traversal persistence types and beacon records.
+/// Stores NAT info, port patterns, relay preferences, and known peers
+/// for the relay-assisted coordinated punch protocol.
+pub mod nat_traversal;
 /// Service metadata storage for Universal IPC Architecture
 /// Stores persistent service registry (metadata only, NOT connections!)
 /// Connection logic is delegated to Songbird
@@ -216,12 +218,7 @@ pub mod network;
 pub mod services;
 // ==================== UNIFIED TYPES ====================
 
-/// ⚠️ REMOVED: unified_config_consolidation was deprecated and removed in v0.11.0 (November 2025)
-/// Use config::canonical_primary instead
-// pub mod unified_config_consolidation; // REMOVED - use config::canonical_primary
-/// ⚠️ REMOVED: unified_types was deprecated and removed in v0.11.0 (November 2025)
-/// Use config::canonical_primary for configuration types
-// pub mod unified_types; // REMOVED - use config::canonical_primary
+// unified_config_consolidation, unified_types removed in v0.11.0 — use config::canonical_primary
 // ==================== CANONICAL RE-EXPORTS ====================
 /// **THE CANONICAL CONFIGURATION** - Single source of truth
 pub use config::canonical_primary::NestGateCanonicalConfig;
@@ -253,10 +250,7 @@ pub use error::NestGateError as Error;
 
 // ==================== PERFORMANCE MODULES ====================
 
-// /// Memory optimization utilities - temporarily disabled due to import issues
-// pub mod memory_optimization;
-// /// String pooling for memory efficiency - temporarily disabled due to import issues
-// pub mod string_pool;
+// memory_optimization, string_pool disabled — import issues pending resolution
 
 // ==================== UTILITY MODULES ====================
 
@@ -266,21 +260,10 @@ pub mod cache_math;
 pub mod consensus_math;
 /// Validation predicate functions
 pub mod validation_predicates;
-// /// Zero-copy optimization patterns - temporarily disabled due to syntax errors
-// pub mod zero_copy_optimization;
+// zero_copy_optimization disabled — syntax errors pending resolution
 
 /// Simple, working memory pool implementation
 pub mod simple_memory_pool;
-// ==================== PERFORMANCE MARKERS ====================
-
-/// **FINAL PERFORMANCE MARKER** - All optimizations applied
-pub const MODERNIZATION_COMPLETE: bool = true;
-/// **PERFORMANCE IMPROVEMENT ACHIEVED** - Measured improvement from modernization
-pub const PERFORMANCE_IMPROVEMENT_PERCENT: u8 = 45; // Average 40-60% range
-/// **TECHNICAL DEBT ELIMINATION RATE** - Percentage of debt eliminated
-pub const DEBT_ELIMINATION_PERCENT: u8 = 95;
-
-// Note: test_safe_operations module removed - file does not exist
 
 #[cfg(test)]
 mod edge_case_tests;

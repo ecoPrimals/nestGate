@@ -150,3 +150,61 @@ pub fn generate_maintenance_schedule(
         tasks: scheduled_tasks,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::SystemInfo;
+    use std::time::{Duration, UNIX_EPOCH};
+
+    fn make_system_info(cpu: f64, memory: f64, disk: f64) -> SystemInfo {
+        SystemInfo {
+            timestamp: UNIX_EPOCH + Duration::from_secs(1000),
+            cpu_usage: cpu,
+            memory_usage: memory,
+            disk_usage: disk,
+        }
+    }
+
+    #[test]
+    fn test_monitor_capacity_usage_empty() {
+        let result = monitor_capacity_usage("mypool/dataset", &[]);
+        assert!(result.is_ok());
+        let report = result.unwrap();
+        assert_eq!(report.dataset, "mypool/dataset");
+        assert_eq!(report.current_usage, 0);
+    }
+
+    #[test]
+    fn test_monitor_capacity_usage_with_data() {
+        let data = [make_system_info(50.0, 60.0, 25.0)];
+        let result = monitor_capacity_usage("pool/ds", &data);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().current_usage, 25);
+    }
+
+    #[test]
+    fn test_detect_performance_bottlenecks_empty() {
+        let result = detect_performance_bottlenecks(&[]);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().bottleneck_type, "none");
+    }
+
+    #[test]
+    fn test_detect_performance_bottlenecks_high_cpu() {
+        let data = [make_system_info(90.0, 50.0, 50.0)];
+        let result = detect_performance_bottlenecks(&data);
+        assert!(result.is_ok());
+        let report = result.unwrap();
+        assert!(report.recommendations.iter().any(|r| r.contains("CPU")));
+    }
+
+    #[test]
+    fn test_generate_maintenance_schedule() {
+        let data = [make_system_info(50.0, 50.0, 50.0)];
+        let result = generate_maintenance_schedule("mypool", &data);
+        assert!(result.is_ok());
+        let sched = result.unwrap();
+        assert_eq!(sched.dataset, "mypool");
+    }
+}

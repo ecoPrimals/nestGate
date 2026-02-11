@@ -8,7 +8,6 @@ mod universal_adapter_validation {
     use std::collections::HashMap;
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_23_universal_adapter -- --ignored
     async fn test_universal_adapter_registration() {
         // Simulate universal adapter pattern
         let mut adapters: HashMap<String, Box<dyn std::any::Any>> = HashMap::new();
@@ -24,7 +23,6 @@ mod universal_adapter_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_o1_adapter_lookup() {
         let mut adapter_registry = HashMap::new();
         adapter_registry.insert("protocol_http", "http_adapter_v1");
@@ -41,7 +39,6 @@ mod universal_adapter_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_adapter_protocol_translation() {
         // Test protocol translation through universal adapter
         fn translate_to_http(input: &str) -> String {
@@ -60,7 +57,6 @@ mod universal_adapter_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_multi_protocol_support() {
         #[derive(Debug)]
         #[allow(dead_code)] // Used for demonstration of protocol enumeration

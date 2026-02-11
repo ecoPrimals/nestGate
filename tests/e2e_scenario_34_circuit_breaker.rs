@@ -7,6 +7,11 @@
 mod circuit_breaker_pattern {
     use std::time::{Duration, Instant};
 
+    // Helper to wait for circuit breaker timeout (uses blocking sleep since CircuitBreaker uses Instant)
+    fn wait_for_timeout(d: Duration) {
+        std::thread::sleep(d);
+    }
+
     #[derive(Debug, Clone, Copy, PartialEq)]
     enum CircuitState {
         Closed,   // Normal operation
@@ -69,7 +74,6 @@ mod circuit_breaker_pattern {
     }
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_34_circuit_breaker -- --ignored
     async fn test_circuit_breaker_closed_state() {
         let mut cb = CircuitBreaker::new(3, Duration::from_secs(60));
 
@@ -83,7 +87,6 @@ mod circuit_breaker_pattern {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_circuit_breaker_opens_on_threshold() {
         let mut cb = CircuitBreaker::new(3, Duration::from_secs(60));
 
@@ -98,7 +101,6 @@ mod circuit_breaker_pattern {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_circuit_breaker_half_open_after_timeout() {
         let mut cb = CircuitBreaker::new(2, Duration::from_millis(100));
 
@@ -108,6 +110,7 @@ mod circuit_breaker_pattern {
         assert_eq!(cb.state, CircuitState::Open);
 
         // Wait for timeout
+        wait_for_timeout(Duration::from_millis(150));
 
         // Should transition to half-open
         assert!(cb.can_attempt());
@@ -115,7 +118,6 @@ mod circuit_breaker_pattern {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_circuit_breaker_recovery() {
         let mut cb = CircuitBreaker::new(2, Duration::from_millis(50));
 
@@ -125,6 +127,7 @@ mod circuit_breaker_pattern {
         assert_eq!(cb.state, CircuitState::Open);
 
         // Wait for timeout and transition to half-open
+        wait_for_timeout(Duration::from_millis(75));
         assert!(cb.can_attempt());
 
         // Successful request should close circuit

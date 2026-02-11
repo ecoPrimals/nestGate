@@ -283,3 +283,185 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         Ok(std::time::Duration::from_millis(5))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+    fn make_service_info(name: &str) -> ServiceInfo {
+        ServiceInfo {
+            name: name.to_string(),
+            version: "1.0".to_string(),
+            status: "running".to_string(),
+            start_time: None,
+            pid: None,
+            memory_bytes: None,
+            description: None,
+            dependencies: None,
+            cpu_percent: None,
+            command_line: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_production_service_discovery_default() {
+        let discovery = ProductionServiceDiscovery::default();
+        let services = discovery.list_all().await.unwrap();
+        assert!(services.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_register_and_discover() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("test-svc");
+        discovery.register(service.clone()).await.unwrap();
+
+        let found = discovery.discover("test-svc").await.unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].name, "test-svc");
+    }
+
+    #[tokio::test]
+    async fn test_deregister() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("svc1");
+        discovery.register(service).await.unwrap();
+        discovery.deregister("svc1").await.unwrap();
+
+        let found = discovery.discover("svc1").await.unwrap();
+        assert!(found.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_exists() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("exists-svc");
+        discovery.register(service).await.unwrap();
+
+        assert!(discovery.exists("exists-svc").await.unwrap());
+        assert!(!discovery.exists("nonexistent").await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_get_service() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("get-svc");
+        discovery.register(service).await.unwrap();
+
+        let got = discovery.get_service("get-svc").await.unwrap();
+        assert!(got.is_some());
+        assert_eq!(got.unwrap().name, "get-svc");
+
+        let missing = discovery.get_service("missing").await.unwrap();
+        assert!(missing.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_watch_events() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("watch-svc");
+        discovery.register(service).await.unwrap();
+
+        let events = discovery.watch().await.unwrap();
+        assert!(!events.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_health_update() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("health-svc");
+        discovery.register(service).await.unwrap();
+
+        let result = discovery
+            .health_update(
+                "health-svc",
+                crate::unified_enums::UnifiedHealthStatus::Healthy,
+            )
+            .await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_query_services() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("query-svc");
+        discovery.register(service).await.unwrap();
+
+        let query = ServiceQuery {
+            service_name: Some("query-svc".to_string()),
+            tags: vec![],
+            namespace: None,
+            healthy_only: false,
+            metadata_filters: std::collections::HashMap::new(),
+        };
+        let result = discovery.query(query).await.unwrap();
+        assert_eq!(result.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_update_service() {
+        let discovery = ProductionServiceDiscovery::default();
+        let service = make_service_info("update-svc");
+        discovery.register(service).await.unwrap();
+
+        let mut meta = std::collections::HashMap::new();
+        meta.insert("key".to_string(), "value".to_string());
+        let result = discovery.update_service("update-svc", meta).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_production_protocol_handler_default() {
+        let handler = ProductionProtocolHandler::default();
+        let config = CanonicalNetworkConfig::development_optimized();
+        let conn = handler.connect(&config).await.unwrap();
+        assert!(!conn.connection_id.is_empty());
+        assert_eq!(conn.protocol, "http");
+    }
+
+    #[tokio::test]
+    async fn test_protocol_handler_send_request() {
+        let handler = ProductionProtocolHandler::default();
+        let config = CanonicalNetworkConfig::development_optimized();
+        let conn = handler.connect(&config).await.unwrap();
+
+        let request = NetworkRequest {
+            request_id: "req-1".to_string(),
+            method: "GET".to_string(),
+            headers: std::collections::HashMap::new(),
+            body: vec![],
+            timeout: None,
+        };
+        let response = handler.send_request(&conn, request).await.unwrap();
+        assert_eq!(response.status_code, 200);
+        assert_eq!(response.request_id, "req-1");
+    }
+
+    #[tokio::test]
+    async fn test_protocol_handler_disconnect() {
+        let handler = ProductionProtocolHandler::default();
+        let config = CanonicalNetworkConfig::development_optimized();
+        let conn = handler.connect(&config).await.unwrap();
+        let result = handler.disconnect(&conn).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_protocol_handler_connection_status() {
+        let handler = ProductionProtocolHandler::default();
+        let config = CanonicalNetworkConfig::development_optimized();
+        let conn = handler.connect(&config).await.unwrap();
+        let status = handler.connection_status(&conn).await.unwrap();
+        assert!(!status.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_protocol_handler_ping() {
+        let handler = ProductionProtocolHandler::default();
+        let config = CanonicalNetworkConfig::development_optimized();
+        let conn = handler.connect(&config).await.unwrap();
+        let duration = handler.ping(&conn).await.unwrap();
+        assert_eq!(duration.as_millis(), 5);
+    }
+}

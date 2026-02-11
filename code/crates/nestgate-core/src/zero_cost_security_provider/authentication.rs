@@ -694,4 +694,103 @@ mod tests {
         assert_eq!(token.user_id, "user123");
         assert!(manager.validate_token_signature(&token.token));
     }
+
+    #[tokio::test]
+    async fn test_authenticate_invalid_credentials() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let credentials =
+            ZeroCostCredentials::new_password("wrong".to_string(), "wrong".to_string());
+        let result = auth_manager.authenticate(&credentials).await;
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_validate_token_unknown_token() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let is_valid = auth_manager.validate_token("unknown-token").await?;
+        assert!(!is_valid);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_revoke_token() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let credentials =
+            ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
+        let token = auth_manager.authenticate(&credentials).await?;
+        auth_manager.revoke_token(&token.token).await?;
+        let is_valid = auth_manager.validate_token(&token.token).await?;
+        assert!(!is_valid);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_rate_limit_exceeded() -> Result<()> {
+        let mut config = AuthenticationConfig::default();
+        config.max_auth_attempts = 1;
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let credentials =
+            ZeroCostCredentials::new_password("wrong".to_string(), "wrong".to_string());
+        let _ = auth_manager.authenticate(&credentials).await;
+        let result = auth_manager.authenticate(&credentials).await;
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_refresh_disabled() -> Result<()> {
+        let mut config = AuthenticationConfig::default();
+        config.local_token_settings.enable_refresh = false;
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let result = auth_manager.refresh_token("any-token").await;
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_auth_token_method_certificate() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let credentials =
+            ZeroCostCredentials::new_certificate("user".to_string(), "cert-data".to_string());
+        let result = auth_manager.authenticate(&credentials).await;
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_auth_token_method_token() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let credentials =
+            ZeroCostCredentials::new_token("api-user".to_string(), "api-key".to_string());
+        let token = auth_manager.authenticate(&credentials).await?;
+        assert!(token.token.starts_with("api_"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_auth_token_manager_create_workspace_secret() {
+        let manager = AuthTokenManager::new("key".to_string());
+        let secret = manager.create_workspace_secret("ws-1").unwrap();
+        assert!(secret.starts_with("secret_ws-1_"));
+    }
+
+    #[test]
+    fn test_authentication_config_default() {
+        let config = AuthenticationConfig::default();
+        assert_eq!(config.auth_timeout, Duration::from_secs(30));
+        assert_eq!(config.max_auth_attempts, 3);
+    }
+
+    #[test]
+    fn test_local_token_config_default() {
+        let config = LocalTokenConfig::default();
+        assert_eq!(config.token_expiry, Duration::from_secs(3600));
+        assert!(config.enable_refresh);
+    }
 }

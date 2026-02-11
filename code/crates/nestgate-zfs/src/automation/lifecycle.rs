@@ -188,3 +188,88 @@ pub fn get_or_create_lifecycle(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::StorageTier;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_should_transition_to_stage() {
+        let lifecycle = DatasetLifecycle {
+            dataset_name: "pool/ds".to_string(),
+            current_tier: StorageTier::Warm,
+            created: SystemTime::now(),
+            last_accessed: None,
+            access_count: 0,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: LifecycleStage::New,
+            automation_history: vec![],
+        };
+        assert!(!should_transition_to_stage("pool/ds", &lifecycle));
+    }
+
+    #[test]
+    fn test_get_or_create_lifecycle_new() {
+        let tracker = HashMap::new();
+        let lifecycle = get_or_create_lifecycle("pool/newds", &tracker);
+        assert_eq!(lifecycle.dataset_name, "pool/newds");
+        assert!(matches!(lifecycle.lifecycle_stage, LifecycleStage::New));
+    }
+
+    #[test]
+    fn test_get_or_create_lifecycle_existing() {
+        let mut tracker = HashMap::new();
+        let existing = DatasetLifecycle {
+            dataset_name: "pool/existing".to_string(),
+            current_tier: StorageTier::Hot,
+            created: SystemTime::now(),
+            last_accessed: None,
+            access_count: 10,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: LifecycleStage::Active,
+            automation_history: vec![],
+        };
+        tracker.insert("pool/existing".to_string(), existing);
+        let lifecycle = get_or_create_lifecycle("pool/existing", &tracker);
+        assert_eq!(lifecycle.access_count, 10);
+        assert!(matches!(lifecycle.lifecycle_stage, LifecycleStage::Active));
+    }
+
+    #[test]
+    fn test_evaluate_lifecycle_conditions_always() {
+        let lifecycle = DatasetLifecycle {
+            dataset_name: "pool/ds".to_string(),
+            current_tier: StorageTier::Warm,
+            created: SystemTime::now(),
+            last_accessed: None,
+            access_count: 5,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: LifecycleStage::Active,
+            automation_history: vec![],
+        };
+        let result = evaluate_lifecycle_conditions("pool/ds", &lifecycle, &["always".to_string()]);
+        assert!(result.unwrap());
+    }
+
+    #[test]
+    fn test_evaluate_lifecycle_conditions_never() {
+        let lifecycle = DatasetLifecycle {
+            dataset_name: "pool/ds".to_string(),
+            current_tier: StorageTier::Warm,
+            created: SystemTime::now(),
+            last_accessed: None,
+            access_count: 5,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: LifecycleStage::Active,
+            automation_history: vec![],
+        };
+        let result = evaluate_lifecycle_conditions("pool/ds", &lifecycle, &["never".to_string()]);
+        assert!(!result.unwrap());
+    }
+}

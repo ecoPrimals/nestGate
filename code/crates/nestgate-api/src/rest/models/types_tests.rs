@@ -23,7 +23,8 @@ mod tests {
 
         for dataset_type in types {
             let serialized = serde_json::to_string(&dataset_type).expect("Test setup failed");
-            let deserialized: DatasetType = serde_json::from_str(&serialized).expect("Test setup failed");
+            let deserialized: DatasetType =
+                serde_json::from_str(&serialized).expect("Test setup failed");
             assert_eq!(dataset_type, deserialized);
         }
     }
@@ -108,7 +109,8 @@ mod tests {
 
         for op in operators {
             let serialized = serde_json::to_string(&op).expect("Test setup failed");
-            let deserialized: ComparisonOperator = serde_json::from_str(&serialized).expect("Test setup failed");
+            let deserialized: ComparisonOperator =
+                serde_json::from_str(&serialized).expect("Test setup failed");
             assert_eq!(op, deserialized);
         }
     }
@@ -174,7 +176,8 @@ mod tests {
 
         for alert_type in types {
             let serialized = serde_json::to_value(&alert_type).expect("Test setup failed");
-            let deserialized: AlertType = serde_json::from_value(serialized).expect("Test setup failed");
+            let deserialized: AlertType =
+                serde_json::from_value(serialized).expect("Test setup failed");
             assert_eq!(alert_type, deserialized);
         }
     }

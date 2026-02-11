@@ -6,7 +6,6 @@
 #[cfg(test)]
 mod integration_flows {
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_30_integration_flows -- --ignored
     async fn test_request_response_flow() {
         // Simulate API request → Core processing → Response
 
@@ -24,7 +23,6 @@ mod integration_flows {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_multi_service_orchestration() {
         // Simulate orchestration across multiple services
 
@@ -55,7 +53,6 @@ mod integration_flows {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_data_pipeline_flow() {
         // Simulate data ingestion → transformation → storage flow
 
@@ -73,7 +70,6 @@ mod integration_flows {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_event_driven_flow() {
         use tokio::sync::mpsc;
 

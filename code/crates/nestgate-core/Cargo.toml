@@ -72,6 +72,8 @@ tempfile = "3.8"
 regex = "1.10"
 fastrand = "2.0"
 sysinfo = "0.30"
+# mDNS service discovery (RFC 6762/6763)
+mdns-sd = "0.17"
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }
 tokio-serde = { workspace = true, features = ["bincode"] }
 bincode.workspace = true

@@ -10,7 +10,6 @@ mod expanded_chaos_scenarios {
     // ==================== Network Chaos Scenarios ====================
 
     #[tokio::test]
-    #[ignore] // Run with: cargo test --test chaos_scenarios_expanded -- --ignored
     async fn chaos_network_packet_loss_1_percent() {
         // Simulate 1% packet loss
         let total_requests = 100;
@@ -26,7 +25,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_network_packet_loss_10_percent() {
         // Simulate 10% packet loss
         let total_requests = 100;
@@ -42,17 +40,16 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_network_high_latency() {
         // Simulate high network latency (500ms)
         let start = std::time::Instant::now();
+        tokio::time::sleep(Duration::from_millis(500)).await;
         let elapsed = start.elapsed();
 
         assert!(elapsed >= Duration::from_millis(490));
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_network_jitter() {
         // Simulate network jitter (variable latency)
         let mut latencies = Vec::new();
@@ -69,7 +66,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_network_dns_failure() {
         // Simulate DNS resolution failure
         async fn resolve_hostname(_hostname: &str) -> Result<String, String> {
@@ -84,7 +80,6 @@ mod expanded_chaos_scenarios {
     // ==================== Resource Chaos Scenarios ====================
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_cpu_stress_50_percent() {
         // Simulate 50% CPU usage
         let start = std::time::Instant::now();
@@ -99,7 +94,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_memory_allocation_spike() {
         // Simulate sudden memory allocation spike
         let mut allocations = Vec::new();
@@ -113,7 +107,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_memory_fragmentation() {
         // Simulate memory fragmentation
         let mut allocations = Vec::new();
@@ -130,7 +123,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_file_descriptor_exhaustion() {
         // Simulate file descriptor exhaustion
         use std::collections::HashMap;
@@ -150,7 +142,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_thread_pool_saturation() {
         // Simulate thread pool exhaustion
         let mut handles = Vec::new();
@@ -169,7 +160,6 @@ mod expanded_chaos_scenarios {
     // ==================== Service Chaos Scenarios ====================
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_service_intermittent_failure() {
         // Service fails intermittently
         async fn unreliable_service(attempt: usize) -> Result<String, String> {
@@ -190,10 +180,10 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_service_slow_response() {
-        // Service responds slowly
+        // Service responds slowly - sleep exceeds timeout window
         async fn slow_service() -> Result<String, String> {
+            tokio::time::sleep(Duration::from_millis(600)).await;
             Ok("Slow response".to_string())
         }
 
@@ -205,7 +195,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_service_cascade_failure() {
         // Simulate cascade failure across services
         async fn service_a() -> Result<String, String> {
@@ -228,7 +217,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_service_deadlock_simulation() {
         use std::sync::Arc;
         use tokio::sync::Mutex;
@@ -274,7 +262,6 @@ mod expanded_chaos_scenarios {
     // ==================== Data Chaos Scenarios ====================
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_data_corruption_detection() {
         // Simulate data corruption and detection
         fn calculate_checksum(data: &[u8]) -> u32 {
@@ -292,7 +279,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_partial_data_loss() {
         // Simulate partial data loss
         let mut data = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -305,7 +291,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_data_replication_lag() {
         // Simulate replication lag between primary and replica
         use std::sync::Arc;
@@ -330,7 +315,6 @@ mod expanded_chaos_scenarios {
     // ==================== Configuration Chaos Scenarios ====================
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_config_hot_reload_failure() {
         // Simulate configuration hot-reload failure
         async fn reload_config(config_valid: bool) -> Result<(), String> {
@@ -347,7 +331,6 @@ mod expanded_chaos_scenarios {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn chaos_config_value_corruption() {
         // Simulate configuration value corruption
         use std::collections::HashMap;

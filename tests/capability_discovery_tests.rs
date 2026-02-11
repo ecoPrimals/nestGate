@@ -60,19 +60,23 @@ async fn test_capability_config_has_capabilities() -> Result<()> {
 async fn test_discovery_from_environment_variables() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
-    // Set environment variables for a test service
+    let orig_host = std::env::var("NESTGATE_TESTSERVICE_HOST").ok();
+    let orig_port = std::env::var("NESTGATE_TESTSERVICE_PORT").ok();
     std::env::set_var("NESTGATE_TESTSERVICE_HOST", "localhost");
     std::env::set_var("NESTGATE_TESTSERVICE_PORT", "9999");
 
     let config = CapabilityConfig::initialize().await?;
 
-    // Try to discover the test service
     let result = config.discover_capability("testservice").await;
 
-    // Clean up
-    std::env::remove_var("NESTGATE_TESTSERVICE_HOST");
-    std::env::remove_var("NESTGATE_TESTSERVICE_PORT");
-
+    match orig_host {
+        Some(v) => std::env::set_var("NESTGATE_TESTSERVICE_HOST", v),
+        None => std::env::remove_var("NESTGATE_TESTSERVICE_HOST"),
+    }
+    match orig_port {
+        Some(v) => std::env::set_var("NESTGATE_TESTSERVICE_PORT", v),
+        None => std::env::remove_var("NESTGATE_TESTSERVICE_PORT"),
+    }
     assert!(result.is_ok(), "Should discover service from environment");
     let endpoint = result?;
     assert_eq!(endpoint.address, "localhost");
@@ -85,20 +89,24 @@ async fn test_discovery_from_environment_variables() -> Result<()> {
 async fn test_discovery_caching() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
+    let orig_host = std::env::var("NESTGATE_CACHE_TEST_HOST").ok();
+    let orig_port = std::env::var("NESTGATE_CACHE_TEST_PORT").ok();
     std::env::set_var("NESTGATE_CACHE_TEST_HOST", "cachehost");
     std::env::set_var("NESTGATE_CACHE_TEST_PORT", "8888");
 
     let config = CapabilityConfig::initialize().await?;
 
-    // First discovery
     let endpoint1 = config.discover_capability("cache_test").await?;
-
-    // Second discovery (should use cache)
     let endpoint2 = config.discover_capability("cache_test").await?;
 
-    std::env::remove_var("NESTGATE_CACHE_TEST_HOST");
-    std::env::remove_var("NESTGATE_CACHE_TEST_PORT");
-
+    match orig_host {
+        Some(v) => std::env::set_var("NESTGATE_CACHE_TEST_HOST", v),
+        None => std::env::remove_var("NESTGATE_CACHE_TEST_HOST"),
+    }
+    match orig_port {
+        Some(v) => std::env::set_var("NESTGATE_CACHE_TEST_PORT", v),
+        None => std::env::remove_var("NESTGATE_CACHE_TEST_PORT"),
+    }
     assert_eq!(endpoint1.address, endpoint2.address);
     assert_eq!(endpoint1.port, endpoint2.port);
 
@@ -167,13 +175,16 @@ async fn test_announce_capabilities() -> Result<()> {
 async fn test_get_port_from_environment() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
+    let orig = std::env::var("NESTGATE_CUSTOM_PORT").ok();
     std::env::set_var("NESTGATE_CUSTOM_PORT", "7777");
 
     let config = CapabilityConfig::initialize().await?;
     let port = config.get_port("NESTGATE_CUSTOM_PORT").await?;
 
-    std::env::remove_var("NESTGATE_CUSTOM_PORT");
-
+    match orig {
+        Some(v) => std::env::set_var("NESTGATE_CUSTOM_PORT", v),
+        None => std::env::remove_var("NESTGATE_CUSTOM_PORT"),
+    }
     assert_eq!(port, 7777);
 
     Ok(())
@@ -183,13 +194,16 @@ async fn test_get_port_from_environment() -> Result<()> {
 async fn test_get_port_invalid_value() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
+    let orig = std::env::var("NESTGATE_INVALID_PORT").ok();
     std::env::set_var("NESTGATE_INVALID_PORT", "not_a_number");
 
     let config = CapabilityConfig::initialize().await?;
     let result = config.get_port("NESTGATE_INVALID_PORT").await;
 
-    std::env::remove_var("NESTGATE_INVALID_PORT");
-
+    match orig {
+        Some(v) => std::env::set_var("NESTGATE_INVALID_PORT", v),
+        None => std::env::remove_var("NESTGATE_INVALID_PORT"),
+    }
     assert!(result.is_err(), "Should fail with invalid port");
 
     Ok(())

@@ -268,6 +268,13 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
     /// block is deallocated via `deallocate()` when done.
     ///
     /// **Prefer `allocate_with()` for safe initialization.**
+    ///
+    /// # SAFETY (assume_init_mut)
+    ///
+    /// - `block_index` is valid: computed from `trailing_zeros()` on free_mask,
+    ///   and POOL_SIZE <= 64 so slot is in bounds
+    /// - Slot was uninitialized; caller guarantees initialization before any read
+    /// - No other reference exists to this slot (we just marked it allocated)
     #[inline(always)]
     #[must_use]
     pub unsafe fn allocate_uninit(&mut self) -> Option<&mut [T; BLOCK_SIZE]> {
@@ -278,7 +285,7 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
         let block_index = self.free_mask.trailing_zeros() as usize;
         self.free_mask &= !(1u64 << block_index);
 
-        // SAFETY: Caller guarantees initialization before read; block_index valid
+        // SAFETY: block_index valid (trailing_zeros < POOL_SIZE); caller initializes before read
         unsafe { Some(self.blocks[block_index].assume_init_mut()) }
     }
 
@@ -286,7 +293,14 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
     ///
     /// # Safety
     ///
-    /// `block_index` must be a valid index previously allocated (not yet deallocated).
+    /// - `block_index` must be in 0..POOL_SIZE
+    /// - Block must have been allocated (not yet deallocated)
+    /// - No references to the block may exist after this call
+    ///
+    /// # SAFETY (invariants)
+    ///
+    /// - debug_assert ensures block_index < POOL_SIZE and block was allocated
+    /// - We only flip the free_mask bit; no raw pointer dereference
     #[inline(always)]
     pub unsafe fn deallocate(&mut self, block_index: usize) {
         debug_assert!(block_index < POOL_SIZE, "Block index out of bounds");

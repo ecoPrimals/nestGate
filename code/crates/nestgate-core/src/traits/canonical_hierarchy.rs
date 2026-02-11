@@ -123,11 +123,15 @@ pub trait CanonicalService: Send + Sync + 'static {
     ) -> impl Future<Output = Result<(), Self::Error>> + Send
     where
         Self: Sized,
+        Self::Error: From<crate::NestGateError>,
     {
         async move {
             // Default: Not supported
             // Implementations should override this method to support dynamic configuration
-            panic!("update_config not implemented - this service does not support dynamic configuration updates")
+            Err(crate::NestGateError::not_implemented(
+                "update_config not implemented - this service does not support dynamic configuration updates",
+            )
+            .into())
         }
     }
 
@@ -632,7 +636,6 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            // TODO: Implement in v0.2.0
             Err(crate::NestGateError::internal_error(
                 "hash_data not implemented - override this method to provide hashing",
                 "canonical_hierarchy",
@@ -655,7 +658,6 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            // TODO: Implement in v0.2.0
             Err(crate::NestGateError::internal_error(
                 "generate_random not implemented - override this method to provide random generation",
                 "canonical_hierarchy",
@@ -680,7 +682,6 @@ pub trait CanonicalSecurity: CanonicalService {
     {
         async {
             // Default: not supported - implementations must override
-            // TODO: Implement in v0.2.0
             Err(crate::NestGateError::internal_error(
                 "derive_key not implemented - override this method to provide key derivation",
                 "canonical_hierarchy",
@@ -774,6 +775,34 @@ macro_rules! assert_zero_cost {
             assert_zero_sized::<$t>();
         };
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Minimal struct to test ZeroCostService marker trait
+    #[derive(Debug)]
+    struct TestZeroCostService;
+
+    unsafe impl Send for TestZeroCostService {}
+    unsafe impl Sync for TestZeroCostService {}
+
+    impl ZeroCostService<Self> for TestZeroCostService {}
+
+    #[test]
+    fn test_zero_cost_service_marker() {
+        // ZeroCostService is a marker trait - just verify we can use it
+        let _service = TestZeroCostService;
+    }
+
+    #[test]
+    fn test_zero_cost_service_type_implements_trait() {
+        // Verify the trait can be used as a bound
+        fn requires_zero_cost<T: ZeroCostService<T>>(_t: &T) {}
+        let service = TestZeroCostService;
+        requires_zero_cost(&service);
+    }
 }
 
 // ==================== MODULE EXPORTS ====================

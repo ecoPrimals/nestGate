@@ -18,9 +18,6 @@ pub use handlers::{
     PerformanceDashboard,
 };
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod handlers_tests;
-
 #[cfg(test)]
 mod optimizer_tests;
 

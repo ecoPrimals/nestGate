@@ -177,6 +177,7 @@ async fn test_concurrent_operations_during_partition() {
 struct TestEnvironment {
     temp_dir: std::path::PathBuf,
     original_network_state: NetworkState,
+    orig_partitioned_var: Option<String>,
 }
 
 struct NetworkState {
@@ -216,6 +217,7 @@ async fn setup_test_environment() -> TestEnvironment {
             interfaces: vec![],
             routes: vec![],
         },
+        orig_partitioned_var: std::env::var("NESTGATE_TEST_NETWORK_PARTITIONED").ok(),
     }
 }
 
@@ -247,8 +249,10 @@ async fn simulate_network_partition(env: &TestEnvironment) -> Result<(), Box<dyn
 }
 
 async fn restore_network(env: &TestEnvironment) -> Result<(), Box<dyn std::error::Error>> {
-    // Restore network (would remove iptables rules in real test)
-    std::env::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED");
+    match &env.orig_partitioned_var {
+        Some(v) => std::env::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", v),
+        None => std::env::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED"),
+    }
     Ok(())
 }
 
@@ -281,11 +285,13 @@ async fn get_recovery_state() -> RecoveryState {
 }
 
 async fn cleanup_test_environment(env: &TestEnvironment, pool_name: &str) {
-    // Cleanup test resources
     if !pool_name.is_empty() {
         // Would destroy pool in real test
     }
     let _ = std::fs::remove_dir_all(&env.temp_dir);
-    std::env::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED");
+    match &env.orig_partitioned_var {
+        Some(v) => std::env::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", v),
+        None => std::env::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED"),
+    }
 }
 

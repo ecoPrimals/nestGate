@@ -11,16 +11,18 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_multi_service_discovery_workflow() {
-        // Setup multiple services with centralized port constants
-        std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000");
-        std::env::set_var(
-            "NESTGATE_CAPABILITY_SECURITY_ENDPOINT",
-            format!("10.0.0.2:{}", DEFAULT_DEV_PORT),
-        );
-        std::env::set_var(
-            "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
-            format!("10.0.0.3:{}", DEFAULT_API_PORT),
-        );
+        // Evolved: Save and restore env vars to avoid racing with parallel tests.
+        let storage_key = "NESTGATE_CAPABILITY_STORAGE_ENDPOINT";
+        let security_key = "NESTGATE_CAPABILITY_SECURITY_ENDPOINT";
+        let orchestration_key = "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT";
+
+        let orig_storage = std::env::var(storage_key).ok();
+        let orig_security = std::env::var(security_key).ok();
+        let orig_orchestration = std::env::var(orchestration_key).ok();
+
+        std::env::set_var(storage_key, "10.0.0.1:9000");
+        std::env::set_var(security_key, format!("10.0.0.2:{}", DEFAULT_DEV_PORT));
+        std::env::set_var(orchestration_key, format!("10.0.0.3:{}", DEFAULT_API_PORT));
 
         let config = CapabilityConfigBuilder::new()
             .with_discovery_timeout(Duration::from_secs(10))
@@ -33,19 +35,30 @@ mod config_discovery_integration_tests {
         let security = config.discover(PrimalCapability::Security).await;
         let orchestration = config.discover(PrimalCapability::Orchestration).await;
 
-        assert!(storage.is_ok());
-        assert!(security.is_ok());
-        assert!(orchestration.is_ok());
+        // Restore before assertions to minimise race window
+        match orig_storage {
+            Some(v) => std::env::set_var(storage_key, v),
+            None => std::env::remove_var(storage_key),
+        }
+        match orig_security {
+            Some(v) => std::env::set_var(security_key, v),
+            None => std::env::remove_var(security_key),
+        }
+        match orig_orchestration {
+            Some(v) => std::env::set_var(orchestration_key, v),
+            None => std::env::remove_var(orchestration_key),
+        }
 
-        // Verify endpoints match our centralized constants
+        assert!(storage.is_ok(), "Storage discovery should succeed");
+        assert!(security.is_ok(), "Security discovery should succeed");
+        assert!(
+            orchestration.is_ok(),
+            "Orchestration discovery should succeed"
+        );
+
         assert_eq!(storage.unwrap().endpoint.port(), 9000);
         assert_eq!(security.unwrap().endpoint.port(), DEFAULT_DEV_PORT);
         assert_eq!(orchestration.unwrap().endpoint.port(), DEFAULT_API_PORT);
-
-        // Cleanup
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
-        std::env::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT");
-        std::env::remove_var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT");
     }
 
     #[tokio::test]
@@ -65,6 +78,7 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_fallback_mode_local_fallback() {
+        let orig = std::env::var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT").ok();
         std::env::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");
 
         let config = CapabilityConfigBuilder::new()
@@ -74,7 +88,10 @@ mod config_discovery_integration_tests {
 
         let result = config.discover(PrimalCapability::Analytics).await;
 
-        // Should succeed with local fallback
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v),
+            None => {}
+        }
         assert!(result.is_ok());
         let service = result.unwrap();
         assert!(service.metadata.contains_key("mode"));
@@ -82,31 +99,32 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_discovery_caching_performance() {
+        let orig = std::env::var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT").ok();
         std::env::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", "192.168.1.100:7000");
 
         let config = CapabilityConfigBuilder::new().build().unwrap();
 
-        // First discovery
         let start = std::time::Instant::now();
         let result1 = config.discover(PrimalCapability::Compute).await;
         let first_duration = start.elapsed();
-        assert!(result1.is_ok());
-
-        // Second discovery (cached)
-        let start = std::time::Instant::now();
+        let start2 = std::time::Instant::now();
         let result2 = config.discover(PrimalCapability::Compute).await;
-        let second_duration = start.elapsed();
+        let second_duration = start2.elapsed();
+
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v),
+            None => std::env::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT"),
+        }
+        assert!(result1.is_ok());
         assert!(result2.is_ok());
-
-        // Cached access should be faster (or at least not significantly slower)
         assert!(second_duration <= first_duration + Duration::from_millis(10));
-
-        std::env::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT");
     }
 
     #[tokio::test]
     #[ignore] // Requires network for capability discovery
     async fn test_concurrent_discovery_requests() {
+        let orig_storage = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
+        let orig_security = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
         std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000");
         std::env::set_var(
             "NESTGATE_CAPABILITY_SECURITY_ENDPOINT",
@@ -115,27 +133,31 @@ mod config_discovery_integration_tests {
 
         let config = CapabilityConfigBuilder::new().build().unwrap();
 
-        // Spawn concurrent discoveries
         let config1 = config.clone();
         let config2 = config.clone();
 
         let handle1 =
             tokio::spawn(async move { config1.discover(PrimalCapability::Storage).await });
-
         let handle2 =
             tokio::spawn(async move { config2.discover(PrimalCapability::Security).await });
 
         let (result1, result2) = tokio::join!(handle1, handle2);
 
+        match orig_storage {
+            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
+            None => std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
+        }
+        match orig_security {
+            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", v),
+            None => std::env::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT"),
+        }
         assert!(result1.unwrap().is_ok());
         assert!(result2.unwrap().is_ok());
-
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
-        std::env::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT");
     }
 
     #[tokio::test]
     async fn test_discovery_with_invalid_port() {
+        let orig = std::env::var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT").ok();
         std::env::set_var(
             "NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT",
             "10.0.0.1:99999",
@@ -144,15 +166,16 @@ mod config_discovery_integration_tests {
         let config = CapabilityConfigBuilder::new().build().unwrap();
         let result = config.discover(PrimalCapability::MachineLearning).await;
 
-        // Should fail due to invalid port
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT", v),
+            None => std::env::remove_var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT"),
+        }
         assert!(result.is_err());
-
-        std::env::remove_var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT");
     }
 
     #[tokio::test]
     async fn test_discovery_retry_mechanism() {
-        // Don't set env var, let it retry and fail
+        let orig = std::env::var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT").ok();
         std::env::remove_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT");
 
         let config = CapabilityConfigBuilder::new()
@@ -164,11 +187,12 @@ mod config_discovery_integration_tests {
         let result = config.discover(PrimalCapability::DataProcessing).await;
         let duration = start.elapsed();
 
-        // Should fail after retries
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT", v),
+            None => {}
+        }
         assert!(result.is_err());
-
-        // Should take some time due to retries with backoff
-        assert!(duration >= Duration::from_millis(100)); // At least first retry delay
+        assert!(duration >= Duration::from_millis(100));
     }
 
     #[tokio::test]
@@ -189,32 +213,37 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_capability_endpoint_format_variations() {
-        // Test different valid formats using centralized constants
-        std::env::set_var(
-            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
-            format!("127.0.0.1:{}", DEFAULT_API_PORT),
-        );
-        let config = CapabilityConfigBuilder::new().build().unwrap();
-        let result = config.discover(PrimalCapability::Storage).await;
-        assert!(result.is_ok());
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
+        let key = "NESTGATE_CAPABILITY_STORAGE_ENDPOINT";
 
-        // IPv6
-        std::env::set_var(
-            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
-            format!("[::1]:{}", DEFAULT_API_PORT),
-        );
-        let config = CapabilityConfigBuilder::new().build().unwrap();
-        let result = config.discover(PrimalCapability::Storage).await;
-        assert!(result.is_ok());
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
+        let orig1 = std::env::var(key).ok();
+        std::env::set_var(key, format!("127.0.0.1:{}", DEFAULT_API_PORT));
+        let config1 = CapabilityConfigBuilder::new().build().unwrap();
+        let result1 = config1.discover(PrimalCapability::Storage).await;
+        match orig1 {
+            Some(v) => std::env::set_var(key, v),
+            None => std::env::remove_var(key),
+        }
+        assert!(result1.is_ok());
 
-        // Hostname with port
-        std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "0.0.0.0:9000");
-        let config = CapabilityConfigBuilder::new().build().unwrap();
-        let result = config.discover(PrimalCapability::Storage).await;
-        assert!(result.is_ok());
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
+        let orig2 = std::env::var(key).ok();
+        std::env::set_var(key, format!("[::1]:{}", DEFAULT_API_PORT));
+        let config2 = CapabilityConfigBuilder::new().build().unwrap();
+        let result2 = config2.discover(PrimalCapability::Storage).await;
+        match orig2 {
+            Some(v) => std::env::set_var(key, v),
+            None => std::env::remove_var(key),
+        }
+        assert!(result2.is_ok());
+
+        let orig3 = std::env::var(key).ok();
+        std::env::set_var(key, "0.0.0.0:9000");
+        let config3 = CapabilityConfigBuilder::new().build().unwrap();
+        let result3 = config3.discover(PrimalCapability::Storage).await;
+        match orig3 {
+            Some(v) => std::env::set_var(key, v),
+            None => std::env::remove_var(key),
+        }
+        assert!(result3.is_ok());
     }
 }
 
@@ -224,12 +253,14 @@ mod safe_operations_edge_cases {
 
     #[test]
     fn test_parse_env_var_whitespace() {
-        // Note: parse_env_var was refactored to use environment module
-        // This test validates the refactored approach
+        let orig = std::env::var("TEST_WHITESPACE").ok();
         std::env::set_var("TEST_WHITESPACE", "  42  ");
         let value = std::env::var("TEST_WHITESPACE");
+        match orig {
+            Some(v) => std::env::set_var("TEST_WHITESPACE", v),
+            None => std::env::remove_var("TEST_WHITESPACE"),
+        }
         assert!(value.is_ok());
-        std::env::remove_var("TEST_WHITESPACE");
     }
 
     #[test]
@@ -276,10 +307,14 @@ mod safe_operations_edge_cases {
 
     #[test]
     fn test_parse_optional_with_empty_string() {
+        let orig = std::env::var("EMPTY_VAR").ok();
         std::env::set_var("EMPTY_VAR", "");
         let value = std::env::var("EMPTY_VAR").ok();
+        match orig {
+            Some(v) => std::env::set_var("EMPTY_VAR", v),
+            None => std::env::remove_var("EMPTY_VAR"),
+        }
         assert_eq!(value, Some(String::new()));
-        std::env::remove_var("EMPTY_VAR");
     }
 
     #[test]

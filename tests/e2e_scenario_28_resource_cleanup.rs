@@ -34,7 +34,7 @@ mod resource_cleanup {
     }
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_28_resource_cleanup -- --ignored
+    #[ignore = "block_on in Drop can deadlock in async runtime"]
     async fn test_raii_cleanup() {
         let cleanup_tracker = Arc::new(Mutex::new(false));
 
@@ -49,7 +49,6 @@ mod resource_cleanup {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_cleanup_on_early_return() {
         let cleanup_tracker = Arc::new(Mutex::new(false));
 
@@ -65,7 +64,7 @@ mod resource_cleanup {
     }
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "block_on in Drop can deadlock in multi-threaded tokio runtime"]
     async fn test_multiple_guards() {
         struct Counter {
             count: Arc<Mutex<i32>>,
@@ -99,7 +98,6 @@ mod resource_cleanup {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_scoped_resource_management() {
         let mut resources = Vec::new();
 

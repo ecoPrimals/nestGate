@@ -190,12 +190,38 @@ impl ServiceManager {
                 )
             })?;
 
-        // TODO(v0.2.0): Wire up nestgate_core::rpc::serve_tarpc() - tarpc server not yet running.
-        // Protocol capabilities advertise the port for future discovery; no server listens today.
+        // tarpc high-performance RPC server (primal-to-primal communication)
+        #[cfg(feature = "tarpc-server")]
+        {
+            let tarpc_bind_addr: std::net::SocketAddr = format!("{}:{}", bind_host, tarpc_port)
+                .parse()
+                .map_err(|e| {
+                    crate::error::NestGateBinError::service_init_error(
+                        format!("Invalid tarpc bind address: {}", e),
+                        Some("tarpc-server".to_string()),
+                    )
+                })?;
+
+            // Spawn tarpc server alongside HTTP server
+            tokio::spawn(async move {
+                let service = match nestgate_core::rpc::NestGateRpcService::new().await {
+                    Ok(s) => s,
+                    Err(e) => {
+                        tracing::error!("Failed to create tarpc service: {}", e);
+                        return;
+                    }
+                };
+                tracing::info!("tarpc server starting on {}", tarpc_bind_addr);
+                if let Err(e) = nestgate_core::rpc::serve_tarpc(tarpc_bind_addr, service).await {
+                    tracing::error!("tarpc server error: {}", e);
+                }
+            });
+        }
+
         #[cfg(not(feature = "tarpc-server"))]
         {
             tracing::info!(
-                "tarpc server planned for v0.2.0 (port {} reserved, not yet running)",
+                "tarpc server available via `tarpc-server` feature (port {} reserved)",
                 tarpc_port
             );
         }

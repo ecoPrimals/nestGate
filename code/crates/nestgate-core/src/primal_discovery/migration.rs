@@ -246,75 +246,77 @@ mod tests {
 
     #[tokio::test]
     async fn test_environment_fallback() {
+        let orig = std::env::var("TEST_SERVICE_PORT").ok();
+        std::env::set_var("TEST_SERVICE_PORT", "7777");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
-
-        // Set environment variable
-        std::env::set_var("TEST_SERVICE_PORT", "7777");
 
         let endpoint = helper
             .endpoint_for("nonexistent", "TEST_SERVICE_PORT", 8888)
             .await
             .unwrap();
 
+        match orig {
+            Some(v) => std::env::set_var("TEST_SERVICE_PORT", v),
+            None => std::env::remove_var("TEST_SERVICE_PORT"),
+        }
         assert_eq!(endpoint, "http://localhost:7777");
-
-        // Cleanup
-        std::env::remove_var("TEST_SERVICE_PORT");
     }
 
     #[tokio::test]
     async fn test_default_fallback() {
+        let orig = std::env::var("NONEXISTENT_PORT").ok();
+        std::env::remove_var("NONEXISTENT_PORT");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
-
-        // Ensure env var doesn't exist
-        std::env::remove_var("NONEXISTENT_PORT");
 
         let endpoint = helper
             .endpoint_for("nonexistent", "NONEXISTENT_PORT", 6666)
             .await
             .unwrap();
 
+        match orig {
+            Some(v) => std::env::set_var("NONEXISTENT_PORT", v),
+            None => {}
+        }
         assert_eq!(endpoint, "http://localhost:6666");
     }
 
     #[tokio::test]
     async fn test_cache_invalidation() {
+        let orig = std::env::var("TEST_PORT").ok();
+        std::env::set_var("TEST_PORT", "5555");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
 
-        // Set up environment
-        std::env::set_var("TEST_PORT", "5555");
-
-        // First call - should cache
         let endpoint1 = helper
             .endpoint_for("test", "TEST_PORT", 4444)
             .await
             .unwrap();
 
-        // Change environment
         std::env::set_var("TEST_PORT", "3333");
 
-        // Should still use cache
         let endpoint2 = helper
             .endpoint_for("test", "TEST_PORT", 4444)
             .await
             .unwrap();
-        assert_eq!(endpoint1, endpoint2);
 
-        // Invalidate cache
         helper.invalidate("test").await;
 
-        // Should use new environment value
         let endpoint3 = helper
             .endpoint_for("test", "TEST_PORT", 4444)
             .await
             .unwrap();
-        assert_eq!(endpoint3, "http://localhost:3333");
 
-        // Cleanup
-        std::env::remove_var("TEST_PORT");
+        match orig {
+            Some(v) => std::env::set_var("TEST_PORT", v),
+            None => std::env::remove_var("TEST_PORT"),
+        }
+        assert_eq!(endpoint1, endpoint2);
+        assert_eq!(endpoint3, "http://localhost:3333");
     }
 
     #[tokio::test]
@@ -337,130 +339,124 @@ mod tests {
 
     #[tokio::test]
     async fn test_invalid_port_in_environment_falls_back_to_default() {
+        let orig = std::env::var("INVALID_PORT").ok();
+        std::env::set_var("INVALID_PORT", "99999");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
-
-        // Set invalid port value (too large)
-        std::env::set_var("INVALID_PORT", "99999");
 
         let endpoint = helper
             .endpoint_for("test_service", "INVALID_PORT", 8080)
             .await
             .unwrap();
 
-        // Should fall back to default since parsing fails
+        match orig {
+            Some(v) => std::env::set_var("INVALID_PORT", v),
+            None => std::env::remove_var("INVALID_PORT"),
+        }
         assert_eq!(endpoint, "http://localhost:8080");
-
-        std::env::remove_var("INVALID_PORT");
     }
 
     #[tokio::test]
     async fn test_full_url_in_environment_variable() {
+        let orig = std::env::var("SERVICE_URL").ok();
+        std::env::set_var("SERVICE_URL", "https://api.example.com:8443");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
-
-        // Set full URL in environment
-        std::env::set_var("SERVICE_URL", "https://api.example.com:8443");
 
         let endpoint = helper
             .endpoint_for("test_service", "SERVICE_URL", 8080)
             .await
             .unwrap();
 
+        match orig {
+            Some(v) => std::env::set_var("SERVICE_URL", v),
+            None => std::env::remove_var("SERVICE_URL"),
+        }
         assert_eq!(endpoint, "https://api.example.com:8443");
-
-        std::env::remove_var("SERVICE_URL");
     }
 
     #[tokio::test]
     async fn test_cache_expiration_via_invalidation() {
-        // Modern concurrent pattern: Use explicit invalidation instead of time-based expiration
-        // This is robust, deterministic, and doesn't rely on sleep/timing
+        let orig = std::env::var("TEST_TTL_PORT").ok();
+        std::env::set_var("TEST_TTL_PORT", "5000");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
 
-        std::env::set_var("TEST_TTL_PORT", "5000");
-
-        // First call - caches the value
         let endpoint1 = helper
             .endpoint_for("ttl_test", "TEST_TTL_PORT", 9000)
             .await
             .unwrap();
-        assert_eq!(endpoint1, "http://localhost:5000");
 
-        // Change environment
         std::env::set_var("TEST_TTL_PORT", "6000");
 
-        // Cache still returns old value
         let endpoint2 = helper
             .endpoint_for("ttl_test", "TEST_TTL_PORT", 9000)
             .await
             .unwrap();
-        assert_eq!(
-            endpoint2, "http://localhost:5000",
-            "Cache should still have old value"
-        );
 
-        // Explicitly invalidate cache (modern pattern: explicit > implicit)
         helper.invalidate("ttl_test").await;
 
-        // Now should use new value
         let endpoint3 = helper
             .endpoint_for("ttl_test", "TEST_TTL_PORT", 9000)
             .await
             .unwrap();
-        assert_eq!(
-            endpoint3, "http://localhost:6000",
-            "After invalidation, should use new value"
-        );
 
-        std::env::remove_var("TEST_TTL_PORT");
+        match orig {
+            Some(v) => std::env::set_var("TEST_TTL_PORT", v),
+            None => std::env::remove_var("TEST_TTL_PORT"),
+        }
+        assert_eq!(endpoint1, "http://localhost:5000");
+        assert_eq!(endpoint2, "http://localhost:5000");
+        assert_eq!(endpoint3, "http://localhost:6000");
     }
 
     #[tokio::test]
     async fn test_prefer_environment_over_discovery() {
+        let orig = std::env::var("PRIORITY_PORT").ok();
+        std::env::set_var("PRIORITY_PORT", "7000");
+
         let discovery = create_test_discovery();
         let mut config = MigrationConfig::default();
-        config.prefer_environment = true; // Prefer environment
-
+        config.prefer_environment = true;
         let helper = DiscoveryOrEnv::with_config(discovery, config);
-
-        std::env::set_var("PRIORITY_PORT", "7000");
 
         let endpoint = helper
             .endpoint_for("test", "PRIORITY_PORT", 8000)
             .await
             .unwrap();
 
-        // Should use environment (preferred)
+        match orig {
+            Some(v) => std::env::set_var("PRIORITY_PORT", v),
+            None => std::env::remove_var("PRIORITY_PORT"),
+        }
         assert_eq!(endpoint, "http://localhost:7000");
-
-        std::env::remove_var("PRIORITY_PORT");
     }
 
     #[tokio::test]
     async fn test_clear_cache_removes_all_entries() {
-        let discovery = create_test_discovery();
-        let helper = DiscoveryOrEnv::new(discovery);
-
-        // Add multiple cached entries
+        let orig1 = std::env::var("SERVICE1_PORT").ok();
+        let orig2 = std::env::var("SERVICE2_PORT").ok();
+        let orig3 = std::env::var("SERVICE3_PORT").ok();
         std::env::set_var("SERVICE1_PORT", "5001");
         std::env::set_var("SERVICE2_PORT", "5002");
         std::env::set_var("SERVICE3_PORT", "5003");
+
+        let discovery = create_test_discovery();
+        let helper = DiscoveryOrEnv::new(discovery);
 
         let _ = helper.endpoint_for("service1", "SERVICE1_PORT", 9000).await;
         let _ = helper.endpoint_for("service2", "SERVICE2_PORT", 9000).await;
         let _ = helper.endpoint_for("service3", "SERVICE3_PORT", 9000).await;
 
-        // Clear all cache
         helper.clear_cache().await;
 
-        // Change all environments
         std::env::set_var("SERVICE1_PORT", "6001");
         std::env::set_var("SERVICE2_PORT", "6002");
         std::env::set_var("SERVICE3_PORT", "6003");
 
-        // Should use new values (cache was cleared)
         let e1 = helper
             .endpoint_for("service1", "SERVICE1_PORT", 9000)
             .await
@@ -474,67 +470,80 @@ mod tests {
             .await
             .unwrap();
 
+        match orig1 {
+            Some(v) => std::env::set_var("SERVICE1_PORT", v),
+            None => std::env::remove_var("SERVICE1_PORT"),
+        }
+        match orig2 {
+            Some(v) => std::env::set_var("SERVICE2_PORT", v),
+            None => std::env::remove_var("SERVICE2_PORT"),
+        }
+        match orig3 {
+            Some(v) => std::env::set_var("SERVICE3_PORT", v),
+            None => std::env::remove_var("SERVICE3_PORT"),
+        }
         assert_eq!(e1, "http://localhost:6001");
         assert_eq!(e2, "http://localhost:6002");
         assert_eq!(e3, "http://localhost:6003");
-
-        // Cleanup
-        std::env::remove_var("SERVICE1_PORT");
-        std::env::remove_var("SERVICE2_PORT");
-        std::env::remove_var("SERVICE3_PORT");
     }
 
     #[tokio::test]
     async fn test_empty_environment_variable_falls_back() {
+        let orig = std::env::var("EMPTY_VAR").ok();
+        std::env::set_var("EMPTY_VAR", "");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
-
-        // Set empty environment variable
-        std::env::set_var("EMPTY_VAR", "");
 
         let endpoint = helper
             .endpoint_for("test", "EMPTY_VAR", 7070)
             .await
             .unwrap();
 
-        // Should fall back to default
+        match orig {
+            Some(v) => std::env::set_var("EMPTY_VAR", v),
+            None => std::env::remove_var("EMPTY_VAR"),
+        }
         assert_eq!(endpoint, "http://localhost:7070");
-
-        std::env::remove_var("EMPTY_VAR");
     }
 
     #[tokio::test]
     async fn test_malformed_url_in_environment_falls_back() {
+        let orig = std::env::var("MALFORMED_URL").ok();
+        std::env::set_var("MALFORMED_URL", "not-a-valid-url");
+
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
-
-        // Set malformed URL
-        std::env::set_var("MALFORMED_URL", "not-a-valid-url");
 
         let endpoint = helper
             .endpoint_for("test", "MALFORMED_URL", 8181)
             .await
             .unwrap();
 
-        // Should fall back to default
+        match orig {
+            Some(v) => std::env::set_var("MALFORMED_URL", v),
+            None => std::env::remove_var("MALFORMED_URL"),
+        }
         assert_eq!(endpoint, "http://localhost:8181");
-
-        std::env::remove_var("MALFORMED_URL");
     }
 
     #[tokio::test]
     async fn test_concurrent_endpoint_resolution() {
-        let discovery = create_test_discovery();
-        let helper = Arc::new(DiscoveryOrEnv::new(discovery));
+        let saved: Vec<(String, Option<String>)> = (0..10)
+            .map(|i| {
+                let k = format!("CONCURRENT_PORT_{}", i);
+                (k.clone(), std::env::var(&k).ok())
+            })
+            .collect();
 
-        // Set up environment
         for i in 0..10 {
             std::env::set_var(format!("CONCURRENT_PORT_{}", i), format!("{}", 5000 + i));
         }
 
-        let mut handles = vec![];
+        let discovery = create_test_discovery();
+        let helper = Arc::new(DiscoveryOrEnv::new(discovery));
 
-        // Spawn concurrent resolutions
+        let mut handles = vec![];
         for i in 0..10 {
             let helper = helper.clone();
             let handle = tokio::spawn(async move {
@@ -549,14 +558,19 @@ mod tests {
             handles.push(handle);
         }
 
-        // Wait for all to complete
         let mut results = vec![];
         for handle in handles {
             let result = handle.await.expect("Task should not panic");
             results.push(result);
         }
 
-        // All should succeed
+        for (k, v) in &saved {
+            match v {
+                Some(val) => std::env::set_var(k, val),
+                None => std::env::remove_var(k),
+            }
+        }
+
         assert_eq!(results.len(), 10);
         for (i, result) in results.iter().enumerate() {
             assert!(result.is_ok());
@@ -564,11 +578,6 @@ mod tests {
                 result.as_ref().unwrap(),
                 &format!("http://localhost:{}", 5000 + i)
             );
-        }
-
-        // Cleanup
-        for i in 0..10 {
-            std::env::remove_var(format!("CONCURRENT_PORT_{}", i));
         }
     }
 }

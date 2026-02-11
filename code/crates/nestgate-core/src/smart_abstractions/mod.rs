@@ -18,7 +18,8 @@ pub mod notification_channels;
 pub mod production;
 pub mod service_patterns;
 pub mod smart_default;
-// TEMPORARILY DISABLED: pub mod test_factory; // Needs type migration to unified storage types
+#[cfg(feature = "dev-stubs")]
+pub mod test_factory;
 
 // Re-export key abstractions for easy use
 pub use metadata_container::{MetadataContainer, MetadataExtensions};
@@ -27,11 +28,11 @@ pub use notification_channels::{
     NotificationContent, NotificationError,
 };
 pub use smart_default::SmartDefault;
-// TEMPORARILY DISABLED: test_factory re-exports (module disabled for type migration)
-// pub use test_factory::{
-//     TestFactory, TestScenario, ServiceTestFactory, StorageTestFactory,
-//     ConfigTestFactory, TestDataFactory, ServiceBehavior,
-// };
+#[cfg(feature = "dev-stubs")]
+pub use test_factory::{
+    ConfigTestFactory, ServiceBehavior, ServiceTestFactory, StorageTestFactory, TestDataFactory,
+    TestFactory, TestScenario,
+};
 pub use config_builders::{
     env_loader, load_config_with_env, merge_configs, validate, MergeStrategy, SmartConfigBuilder,
     SmartConfigMerger, SmartConfigPresets, SmartEnvLoader, SmartValidator,

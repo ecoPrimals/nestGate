@@ -134,3 +134,57 @@ impl Default for MetricsCollector {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_metrics_collector_new_and_default() {
+        let _ = MetricsCollector::new();
+        let _ = MetricsCollector::default();
+    }
+
+    #[test]
+    fn test_collect_current_metrics_defaults() {
+        let collector = MetricsCollector::new();
+        let metrics = collector.collect_current_metrics().unwrap();
+        assert_eq!(metrics.cpu_usage, 0.0);
+        assert_eq!(metrics.memory_usage, 0.0);
+        assert_eq!(metrics.network_throughput, 0);
+        assert_eq!(metrics.disk_iops, 0);
+        assert!((metrics.cache_hit_ratio - 95.0).abs() < 0.01);
+        assert!((metrics.allocation_efficiency - 80.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_update_and_collect_metrics() {
+        let collector = MetricsCollector::new();
+        collector.update_cpu_utilization(75.5);
+        collector.update_memory_utilization(60.0);
+        collector.update_network_throughput(1_000_000);
+        collector.update_disk_iops(500);
+        collector.update_cache_hit_ratio(0.92);
+        collector.update_lock_contention_ratio(0.05);
+        collector.update_simd_utilization(80.0);
+        collector.update_allocation_efficiency(85.0);
+
+        let metrics = collector.collect_current_metrics().unwrap();
+        assert!((metrics.cpu_usage - 75.5).abs() < 0.01);
+        assert!((metrics.memory_usage - 60.0).abs() < 0.01);
+        assert_eq!(metrics.network_throughput, 1_000_000);
+        assert_eq!(metrics.disk_iops, 500);
+        assert!((metrics.cache_hit_ratio - 0.92).abs() < 0.01);
+        assert!((metrics.lock_contention - 0.05).abs() < 0.01);
+        assert!((metrics.simd_utilization - 80.0).abs() < 0.01);
+        assert!((metrics.allocation_efficiency - 85.0).abs() < 0.01);
+    }
+
+    #[tokio::test]
+    async fn test_create_snapshot() {
+        let collector = MetricsCollector::new();
+        collector.update_cpu_utilization(50.0);
+        let snapshot = collector.create_snapshot().await.unwrap();
+        assert!((snapshot.cpu_utilization - 50.0).abs() < 0.01);
+    }
+}

@@ -1,9 +1,8 @@
 //! Storage Test Doubles
 //!
-//! These are PURE TEST MOCKS for testing storage functionality.
+//! Pure test mocks for testing storage functionality.
 //! They simulate various failure conditions and edge cases.
-//!
-//! ⚠️ IMPORTANT: These are NOT hardware abstractions - they are test infrastructure only.
+//! These are test infrastructure only — not hardware abstractions.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -34,11 +33,11 @@ impl StorageTestDouble {
 
     /// Create a test double that fails specific operations
     pub fn with_failures(operations: Vec<String>) -> Self {
-        let mut config = TestDoubleConfig::default();
-        config.simulate_failures = true;
-
         Self {
-            config,
+            config: TestDoubleConfig {
+                simulate_failures: true,
+                ..TestDoubleConfig::default()
+            },
             operations: Arc::new(Mutex::new(Vec::new())),
             should_fail_operations: Arc::new(Mutex::new(operations)),
         }

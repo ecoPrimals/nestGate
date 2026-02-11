@@ -71,11 +71,13 @@ pub mod auto_configurator;
 pub mod storage_detector;
 // Storage detector runtime configuration
 pub mod storage_detector_config;
-// Zero-copy optimizations for storage operations
-// TEMPORARILY DISABLED: Compilation issues being resolved
+// Zero-copy optimizations for storage operations.
+// Disabled: zero_copy.rs has compilation issues against current storage traits.
+// Zero-copy functionality is available via zero_cost_storage_backend instead.
 // pub mod zero_copy;
-// Enterprise storage operations
-// TEMPORARILY DISABLED: Compilation issues being resolved
+//
+// Enterprise storage operations module does not exist on disk.
+// Enterprise capabilities are provided via universal storage adapter.
 // pub mod enterprise;
 
 // ==================== MODERN VENDOR-AGNOSTIC STORAGE ====================
@@ -103,14 +105,9 @@ pub use universal::{
     StorageOperationPattern, TransportProtocol, UniversalStorageAdapter, UniversalStorageDiscovery,
 };
 
-// Enterprise storage capabilities
-// TEMPORARILY DISABLED: Module compilation issues being resolved
-// pub use enterprise::{
-//     EnterpriseStorageCapabilities,
-//     EnterpriseStorageMetrics,
-//     EnterpriseStorageProvider,
-//     EnterpriseStorageConfig,
-// };
+// Enterprise storage capabilities provided by universal storage adapter.
+// The enterprise module was planned but never created.
+// Enterprise features are accessible via UniversalStorageAdapter::discover().
 
 // Auto-configuration utilities
 pub use auto_configurator::AutoConfigurator;

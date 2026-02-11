@@ -359,7 +359,7 @@ impl PerformanceSummary {
     }
 }
 
-// ✅ EVOLVED: lazy_static → std::sync::LazyLock (Pure Rust std, zero deps)
+// Uses std::sync::LazyLock for thread-safe lazy initialization
 // Global performance monitor instance
 
 /// Global performance monitor accessible throughout the application

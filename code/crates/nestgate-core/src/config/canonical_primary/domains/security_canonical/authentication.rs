@@ -842,3 +842,45 @@ impl AuthenticationConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_authentication_config_default() {
+        let config = AuthenticationConfig::default();
+        assert!(matches!(
+            config.primary_method,
+            AuthenticationMethod::UsernamePassword
+        ));
+    }
+
+    #[test]
+    fn test_authentication_method_variants() {
+        let _up = AuthenticationMethod::UsernamePassword;
+        let _oauth = AuthenticationMethod::OAuth2;
+        let custom = AuthenticationMethod::Custom("biometric_v2".to_string());
+        assert!(matches!(custom, AuthenticationMethod::Custom(_)));
+    }
+
+    #[test]
+    fn test_mfa_config_default() {
+        let mfa = MfaConfig::default();
+        assert!(!mfa.enabled);
+    }
+
+    #[test]
+    fn test_authentication_config_validate() {
+        let config = AuthenticationConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_jwt_algorithm_serialization() {
+        let alg = JwtAlgorithm::HS256;
+        let json = serde_json::to_string(&alg).unwrap();
+        let parsed: JwtAlgorithm = serde_json::from_str(&json).unwrap();
+        assert_eq!(format!("{:?}", alg), format!("{:?}", parsed));
+    }
+}

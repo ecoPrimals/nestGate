@@ -162,9 +162,21 @@ impl UnixSocketRpcHandler {
                 "capabilities": [
                     "storage.store", "storage.retrieve", "storage.list",
                     "storage.delete", "storage.exists",
+                    "nat.store_traversal_info", "nat.retrieve_traversal_info",
+                    "beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete",
                     "health", "version", "discover_capabilities"
                 ]
             })),
+
+            // NAT traversal persistence
+            "nat.store_traversal_info" => self.handle_nat_store(&request).await,
+            "nat.retrieve_traversal_info" => self.handle_nat_retrieve(&request).await,
+
+            // Known beacon persistence
+            "beacon.store" => self.handle_beacon_store(&request).await,
+            "beacon.retrieve" => self.handle_beacon_retrieve(&request).await,
+            "beacon.list" => self.handle_beacon_list().await,
+            "beacon.delete" => self.handle_beacon_delete(&request).await,
 
             // Unknown method
             _ => Err((-32601, format!("Method not found: {}", request.method))),
@@ -318,6 +330,179 @@ impl UnixSocketRpcHandler {
 
         Ok(json!({"exists": exists, "key": key}))
     }
+
+    // ─── NAT Traversal Handlers ───────────────────────────────────────
+
+    async fn handle_nat_store(
+        &self,
+        request: &JsonRpcRequest,
+    ) -> std::result::Result<Value, (i32, String)> {
+        let params = request
+            .params
+            .as_ref()
+            .ok_or((-32602, "Missing params".to_string()))?;
+
+        let info: crate::nat_traversal::NatTraversalInfo =
+            serde_json::from_value(params.clone())
+                .map_err(|e| (-32602, format!("Invalid NatTraversalInfo: {e}")))?;
+
+        let data_bytes =
+            serde_json::to_vec(&info).map_err(|e| (-32603, format!("Serialization error: {e}")))?;
+
+        self.state
+            .storage_manager
+            .store_object(
+                crate::nat_traversal::NAT_DATASET,
+                crate::nat_traversal::NAT_SELF_KEY,
+                data_bytes,
+            )
+            .await
+            .map_err(|e| (-32603, format!("Storage error: {e}")))?;
+
+        Ok(json!({
+            "success": true,
+            "nat_type": info.our_nat_type,
+            "last_probed": info.last_probed,
+        }))
+    }
+
+    async fn handle_nat_retrieve(
+        &self,
+        _request: &JsonRpcRequest,
+    ) -> std::result::Result<Value, (i32, String)> {
+        match self
+            .state
+            .storage_manager
+            .retrieve_object(
+                crate::nat_traversal::NAT_DATASET,
+                crate::nat_traversal::NAT_SELF_KEY,
+            )
+            .await
+        {
+            Ok((data, _)) => {
+                let info: crate::nat_traversal::NatTraversalInfo = serde_json::from_slice(&data)
+                    .map_err(|e| (-32603, format!("Deserialization error: {e}")))?;
+                serde_json::to_value(&info)
+                    .map_err(|e| (-32603, format!("Serialization error: {e}")))
+            }
+            Err(_) => Ok(Value::Null),
+        }
+    }
+
+    async fn handle_beacon_store(
+        &self,
+        request: &JsonRpcRequest,
+    ) -> std::result::Result<Value, (i32, String)> {
+        let params = request
+            .params
+            .as_ref()
+            .ok_or((-32602, "Missing params".to_string()))?;
+
+        let beacon: crate::nat_traversal::KnownBeacon = serde_json::from_value(params.clone())
+            .map_err(|e| (-32602, format!("Invalid KnownBeacon: {e}")))?;
+
+        let peer_id = beacon.peer_id.clone();
+        let family_id = beacon.family_id.clone();
+
+        let data_bytes = serde_json::to_vec(&beacon)
+            .map_err(|e| (-32603, format!("Serialization error: {e}")))?;
+
+        self.state
+            .storage_manager
+            .store_object(crate::nat_traversal::BEACON_DATASET, &peer_id, data_bytes)
+            .await
+            .map_err(|e| (-32603, format!("Storage error: {e}")))?;
+
+        Ok(json!({
+            "success": true,
+            "peer_id": peer_id,
+            "family_id": family_id,
+        }))
+    }
+
+    async fn handle_beacon_retrieve(
+        &self,
+        request: &JsonRpcRequest,
+    ) -> std::result::Result<Value, (i32, String)> {
+        let params = request
+            .params
+            .as_ref()
+            .ok_or((-32602, "Missing params".to_string()))?;
+        let peer_id = params
+            .get("peer_id")
+            .and_then(|v| v.as_str())
+            .ok_or((-32602, "Missing 'peer_id' parameter".to_string()))?;
+
+        match self
+            .state
+            .storage_manager
+            .retrieve_object(crate::nat_traversal::BEACON_DATASET, peer_id)
+            .await
+        {
+            Ok((data, _)) => {
+                let beacon: crate::nat_traversal::KnownBeacon = serde_json::from_slice(&data)
+                    .map_err(|e| (-32603, format!("Deserialization error: {e}")))?;
+                serde_json::to_value(&beacon)
+                    .map_err(|e| (-32603, format!("Serialization error: {e}")))
+            }
+            Err(_) => Ok(Value::Null),
+        }
+    }
+
+    async fn handle_beacon_list(&self) -> std::result::Result<Value, (i32, String)> {
+        let dataset_path = crate::config::storage_paths::get_storage_base_path()
+            .join("datasets")
+            .join(crate::nat_traversal::BEACON_DATASET);
+
+        let mut peer_ids: Vec<String> = Vec::new();
+
+        if dataset_path.exists() {
+            let mut entries = tokio::fs::read_dir(&dataset_path)
+                .await
+                .map_err(|e| (-32603, format!("Failed to read beacon dataset: {e}")))?;
+
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                if let Some(name) = entry.file_name().to_str() {
+                    if !name.starts_with('.') {
+                        peer_ids.push(name.to_string());
+                    }
+                }
+            }
+        }
+
+        peer_ids.sort();
+        let count = peer_ids.len();
+
+        Ok(json!({
+            "peer_ids": peer_ids,
+            "count": count,
+        }))
+    }
+
+    async fn handle_beacon_delete(
+        &self,
+        request: &JsonRpcRequest,
+    ) -> std::result::Result<Value, (i32, String)> {
+        let params = request
+            .params
+            .as_ref()
+            .ok_or((-32602, "Missing params".to_string()))?;
+        let peer_id = params
+            .get("peer_id")
+            .and_then(|v| v.as_str())
+            .ok_or((-32602, "Missing 'peer_id' parameter".to_string()))?;
+
+        self.state
+            .storage_manager
+            .delete_object(crate::nat_traversal::BEACON_DATASET, peer_id)
+            .await
+            .map_err(|e| (-32603, format!("Storage error: {e}")))?;
+
+        Ok(json!({
+            "success": true,
+            "peer_id": peer_id,
+        }))
+    }
 }
 
 #[async_trait]
@@ -426,5 +611,125 @@ mod tests {
 
         assert!(response["error"].is_object());
         assert!(response["error"]["code"] == -32700);
+    }
+
+    #[tokio::test]
+    async fn test_discover_capabilities_request() {
+        let handler = UnixSocketRpcHandler::new().await.unwrap();
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "discover_capabilities",
+            "id": 1
+        });
+
+        let response = handler.handle_request(request).await;
+
+        assert!(response["result"]["primal"] == "nestgate");
+        assert!(response["result"]["capabilities"].is_array());
+    }
+
+    #[tokio::test]
+    async fn test_storage_store_request() {
+        let handler = UnixSocketRpcHandler::new().await.unwrap();
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "storage.store",
+            "params": {"key": "test-key-store", "value": {"data": "value"}},
+            "id": 1
+        });
+
+        let response = handler.handle_request(request).await;
+
+        assert!(response["result"]["status"] == "stored");
+        assert!(response["result"]["key"] == "test-key-store");
+    }
+
+    #[tokio::test]
+    async fn test_storage_store_missing_params() {
+        let handler = UnixSocketRpcHandler::new().await.unwrap();
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "storage.store",
+            "id": 1
+        });
+
+        let response = handler.handle_request(request).await;
+
+        assert!(response["error"].is_object());
+        assert!(response["error"]["code"] == -32602);
+    }
+
+    #[tokio::test]
+    async fn test_storage_retrieve_missing_key() {
+        let handler = UnixSocketRpcHandler::new().await.unwrap();
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "storage.retrieve",
+            "params": {},
+            "id": 1
+        });
+
+        let response = handler.handle_request(request).await;
+
+        assert!(response["error"].is_object());
+    }
+
+    #[tokio::test]
+    async fn test_storage_list_request() {
+        let handler = UnixSocketRpcHandler::new().await.unwrap();
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "storage.list",
+            "id": 1
+        });
+
+        let response = handler.handle_request(request).await;
+
+        assert!(response["result"]["datasets"].is_array());
+    }
+
+    #[tokio::test]
+    async fn test_storage_exists_request() {
+        let handler = UnixSocketRpcHandler::new().await.unwrap();
+
+        let request = json!({
+            "jsonrpc": "2.0",
+            "method": "storage.exists",
+            "params": {"key": "nonexistent-key-12345"},
+            "id": 1
+        });
+
+        let response = handler.handle_request(request).await;
+
+        assert!(response["result"]["exists"] == false);
+    }
+
+    #[tokio::test]
+    async fn test_storage_store_retrieve_roundtrip() {
+        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let key = format!("roundtrip-{}", uuid::Uuid::new_v4());
+
+        let store_request = json!({
+            "jsonrpc": "2.0",
+            "method": "storage.store",
+            "params": {"key": key, "value": {"test": "data"}},
+            "id": 1
+        });
+        let store_response = handler.handle_request(store_request).await;
+        assert!(store_response["result"]["status"] == "stored");
+
+        let retrieve_request = json!({
+            "jsonrpc": "2.0",
+            "method": "storage.retrieve",
+            "params": {"key": key},
+            "id": 2
+        });
+        let retrieve_response = handler.handle_request(retrieve_request).await;
+        assert!(retrieve_response["result"]["value"]["test"] == "data");
     }
 }

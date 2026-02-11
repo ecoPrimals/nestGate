@@ -393,6 +393,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_config_builder_with_environment() {
+        let orig = env::var("NESTGATE_API_PORT").ok();
         env::set_var("NESTGATE_API_PORT", "9999");
 
         let config = ConfigBuilder::new()
@@ -402,9 +403,11 @@ mod tests {
             .await
             .expect("Should build config");
 
+        match orig {
+            Some(v) => env::set_var("NESTGATE_API_PORT", v),
+            None => env::remove_var("NESTGATE_API_PORT"),
+        }
         assert_eq!(config.api_port(), 9999);
-
-        env::remove_var("NESTGATE_API_PORT");
     }
 
     #[tokio::test]

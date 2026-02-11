@@ -10,6 +10,7 @@ mod tests {
         ApiStatus, ZeroCostApiRequest, ZeroCostApiResponse, ZeroCostPoolHandler,
     };
     use std::collections::HashMap;
+    use std::sync::Arc;
 
     // ==================== ZERO-COST POOL HANDLER TESTS ====================
 
@@ -70,7 +71,7 @@ mod tests {
             _metadata: Arc::new(HashMap::new()),
         };
 
-        assert_eq!(request.request_id, "req-12345");
+        assert_eq!(request.request_id.as_ref(), "req-12345");
         assert!(request._metadata.is_empty());
     }
 
@@ -120,7 +121,7 @@ mod tests {
         assert!(request.is_ok(), "Request should deserialize");
 
         let request = request.expect("Test setup failed");
-        assert_eq!(request.request_id, "req-123");
+        assert_eq!(request.request_id.as_ref(), "req-123");
     }
 
     #[test]
@@ -145,10 +146,10 @@ mod tests {
             request_id: Arc::new("req-123".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 42,
-            _metadata: Arc::new(HashMap::new()),
+            _metadata: HashMap::new(),
         };
 
-        assert_eq!(response.request_id, "req-123");
+        assert_eq!(response.request_id.as_ref(), "req-123");
         assert_eq!(response.processing_time_ms, 42);
         assert!(matches!(response.status, ApiStatus::Success));
     }
@@ -162,7 +163,7 @@ mod tests {
                 message: "Some items failed".to_string(),
             },
             processing_time_ms: 100,
-            _metadata: Arc::new(HashMap::new()),
+            _metadata: HashMap::new(),
         };
 
         assert_eq!(response.processing_time_ms, 100);
@@ -184,7 +185,7 @@ mod tests {
                 message: "Invalid request".to_string(),
             },
             processing_time_ms: 5,
-            _metadata: Arc::new(HashMap::new()),
+            _metadata: HashMap::new(),
         };
 
         match response.status {
@@ -203,7 +204,7 @@ mod tests {
             request_id: Arc::new("test".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 10,
-            _metadata: Arc::new(HashMap::new()),
+            _metadata: HashMap::new(),
         };
 
         let serialized = serde_json::to_string(&response);
@@ -221,7 +222,7 @@ mod tests {
             request_id: Arc::new("req-1".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 50,
-            _metadata: Arc::new(HashMap::new()),
+            _metadata: HashMap::new(),
         };
 
         let response2 = response1.clone();
@@ -295,12 +296,12 @@ mod tests {
     fn test_api_request_empty_metadata() {
         let request = ZeroCostApiRequest {
             data: serde_json::json!(null),
-            request_id: String::new(),
+            request_id: Arc::new(String::new()),
             timestamp: std::time::SystemTime::now(),
             _metadata: Arc::new(HashMap::new()),
         };
 
-        assert!(request.request_id.is_empty());
+        assert!(request.request_id.as_ref().is_empty());
         assert!(request._metadata.is_empty());
     }
 
@@ -311,7 +312,7 @@ mod tests {
             request_id: Arc::new("fast-req".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 0,
-            _metadata: Arc::new(HashMap::new()),
+            _metadata: HashMap::new(),
         };
 
         assert_eq!(response.processing_time_ms, 0);
@@ -324,7 +325,7 @@ mod tests {
             request_id: Arc::new("slow-req".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: u64::MAX,
-            _metadata: Arc::new(HashMap::new()),
+            _metadata: HashMap::new(),
         };
 
         assert_eq!(response.processing_time_ms, u64::MAX);

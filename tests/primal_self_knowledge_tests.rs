@@ -102,16 +102,22 @@ async fn test_primal_announce_self() -> Result<()> {
 async fn test_primal_discover_from_environment() -> Result<()> {
     use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 
-    // Set up environment for beardog primal
+    let orig_host = std::env::var("BEARDOG_HOST").ok();
+    let orig_port = std::env::var("BEARDOG_PORT").ok();
     std::env::set_var("BEARDOG_HOST", "beardog.local");
     std::env::set_var("BEARDOG_PORT", "4000");
 
     let mut primal = PrimalSelfKnowledge::initialize().await?;
     let discovered = primal.discover_primal("beardog").await?;
 
-    std::env::remove_var("BEARDOG_HOST");
-    std::env::remove_var("BEARDOG_PORT");
-
+    match orig_host {
+        Some(v) => std::env::set_var("BEARDOG_HOST", v),
+        None => std::env::remove_var("BEARDOG_HOST"),
+    }
+    match orig_port {
+        Some(v) => std::env::set_var("BEARDOG_PORT", v),
+        None => std::env::remove_var("BEARDOG_PORT"),
+    }
     assert_eq!(discovered.identity.primal_type, "beardog");
     assert_eq!(discovered.primary_endpoint.address, "beardog.local");
     assert_eq!(discovered.primary_endpoint.port, 4000);
@@ -123,21 +129,25 @@ async fn test_primal_discover_from_environment() -> Result<()> {
 async fn test_primal_discovery_caching() -> Result<()> {
     use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 
+    let orig_host = std::env::var("SONGBIRD_HOST").ok();
+    let orig_port = std::env::var("SONGBIRD_PORT").ok();
     std::env::set_var("SONGBIRD_HOST", "songbird.local");
     std::env::set_var("SONGBIRD_PORT", "5000");
 
     let mut primal = PrimalSelfKnowledge::initialize().await?;
 
-    // First discovery
     let _ = primal.discover_primal("songbird").await?;
 
-    // Check cache
+    match orig_host {
+        Some(v) => std::env::set_var("SONGBIRD_HOST", v),
+        None => std::env::remove_var("SONGBIRD_HOST"),
+    }
+    match orig_port {
+        Some(v) => std::env::set_var("SONGBIRD_PORT", v),
+        None => std::env::remove_var("SONGBIRD_PORT"),
+    }
     let discovered = primal.discovered_primals();
     assert!(discovered.contains_key("songbird"));
-
-    std::env::remove_var("SONGBIRD_HOST");
-    std::env::remove_var("SONGBIRD_PORT");
-
     Ok(())
 }
 

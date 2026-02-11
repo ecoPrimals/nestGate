@@ -99,7 +99,7 @@ impl HardwareEnvironmentDetector {
         }
     }
 
-    /// Check if ZFS is available (sync version for `lazy_static`)
+    /// Check if ZFS is available (sync version for non-async callers)
     fn is_zfs_available_sync() -> bool {
         std::process::Command::new("zfs")
             .arg("version")
@@ -111,8 +111,6 @@ impl HardwareEnvironmentDetector {
     /// Detect if we're running in a container
     fn is_container_environment() -> bool {
         // Check for container indicators
-        // DEPRECATED: Docker containerization - migrate to capability-based container runtime
-        // Capability-based discovery implemented
         std::path::Path::exists(std::path::Path::new("/.dockerenv"))
             || std::env::var("container").is_ok()
             || std::env::var("KUBERNETES_SERVICE_HOST").is_ok()

@@ -187,13 +187,15 @@ async fn test_gui_binary_exists() -> std::result::Result<(), Box<dyn std::error:
         return Ok(());
     }
 
-    // Test GUI-related environment variables
+    let orig = std::env::var("DISPLAY").ok();
     std::env::set_var("DISPLAY", ":0");
     let display = std::env::var("DISPLAY").unwrap_or_default();
+    match orig {
+        Some(v) => std::env::set_var("DISPLAY", v),
+        None => std::env::remove_var("DISPLAY"),
+    }
     assert!(!display.is_empty() || display == ":0");
-
     println!("✅ GUI binary configuration test complete");
-    std::env::remove_var("DISPLAY");
     Ok(())
 }
 
@@ -202,39 +204,42 @@ mod cli_tests {
 
     #[test]
     fn test_environment_variable_parsing() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        // Test various environment variable combinations
         let test_cases = vec![
             ("NESTGATE_PORT", "8080".to_string()),
             ("NESTGATE_SERVICE_NAME", "test-service".to_string()),
             (
-                // ✅ FIXED: Use capability-based env var (hardcoded port for test determinism)
                 "NESTGATE_ORCHESTRATION_URL",
                 "http://localhost:8081".to_string(),
             ),
-            // ✅ FIXED: Use capability-based env var
             ("NESTGATE_SECURITY_URL", "http://localhost:8082".to_string()),
         ];
 
         for (key, value) in test_cases {
+            let orig = std::env::var(key).ok();
             std::env::set_var(key, &value);
             let retrieved = std::env::var(key).unwrap_or_else(|e| {
                 tracing::error!("Unwrap failed: {:?}", e);
                 String::new()
             });
+            match orig {
+                Some(v) => std::env::set_var(key, v),
+                None => std::env::remove_var(key),
+            }
             assert_eq!(retrieved, value);
-            std::env::remove_var(key);
         }
         Ok(())
     }
 
     #[test]
     fn test_service_name_generation() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        // Test that service names can be generated if not provided
+        let orig = std::env::var("NESTGATE_SERVICE_NAME").ok();
         std::env::remove_var("NESTGATE_SERVICE_NAME");
 
-        // Service name generation logic would be tested here
-        // This is a placeholder for the actual implementation
         let default_prefix = "nestgate";
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_SERVICE_NAME", v),
+            None => {}
+        }
         assert!(default_prefix.starts_with("nestgate"));
         Ok(())
     }
@@ -255,7 +260,7 @@ mod configuration_tests {
     }
     #[test]
     fn test_configuration_precedence() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        // Test that environment variables override defaults
+        let orig = std::env::var("NESTGATE_PORT").ok();
         std::env::set_var("NESTGATE_PORT", "9090");
 
         let port = std::env::var("NESTGATE_PORT").map_err(|e| {
@@ -269,9 +274,11 @@ mod configuration_tests {
                 format!("Missing environment variable: {}", e),
             )
         })?;
+        match orig {
+            Some(v) => std::env::set_var("NESTGATE_PORT", v),
+            None => std::env::remove_var("NESTGATE_PORT"),
+        }
         assert_eq!(port, "9090");
-
-        std::env::remove_var("NESTGATE_PORT");
         Ok(())
     }
 }
@@ -281,20 +288,40 @@ mod integration_mode_tests {
 
     #[test]
     fn test_standalone_mode_configuration() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        // Test standalone mode (no external URLs)
-        // Unset all orchestration/security vars to ensure standalone
+        let orig_o = std::env::var("NESTGATE_ORCHESTRATION_URL").ok();
+        let orig_s = std::env::var("NESTGATE_SECURITY_URL").ok();
+        let orig_oe = std::env::var("ORCHESTRATION_ENDPOINT").ok();
+        let orig_se = std::env::var("SECURITY_ENDPOINT").ok();
         std::env::remove_var("NESTGATE_ORCHESTRATION_URL");
         std::env::remove_var("NESTGATE_SECURITY_URL");
         std::env::remove_var("ORCHESTRATION_ENDPOINT");
         std::env::remove_var("SECURITY_ENDPOINT");
 
-        // In standalone mode, these should be unset
+        let oe_unset = std::env::var("ORCHESTRATION_ENDPOINT").is_err();
+        let se_unset = std::env::var("SECURITY_ENDPOINT").is_err();
+
+        match orig_o {
+            Some(v) => std::env::set_var("NESTGATE_ORCHESTRATION_URL", v),
+            None => {}
+        }
+        match orig_s {
+            Some(v) => std::env::set_var("NESTGATE_SECURITY_URL", v),
+            None => {}
+        }
+        match orig_oe {
+            Some(v) => std::env::set_var("ORCHESTRATION_ENDPOINT", v),
+            None => {}
+        }
+        match orig_se {
+            Some(v) => std::env::set_var("SECURITY_ENDPOINT", v),
+            None => {}
+        }
         assert!(
-            std::env::var("ORCHESTRATION_ENDPOINT").is_err(),
+            oe_unset,
             "ORCHESTRATION_ENDPOINT should be unset in standalone mode"
         );
         assert!(
-            std::env::var("SECURITY_ENDPOINT").is_err(),
+            se_unset,
             "SECURITY_ENDPOINT should be unset in standalone mode"
         );
         Ok(())
@@ -302,7 +329,8 @@ mod integration_mode_tests {
     #[test]
     #[ignore] // Env var pollution when run in parallel; ORCHESTRATION/SECURITY_ENDPOINT shared
     fn test_ecosystem_mode_configuration() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        // ✅ SOVEREIGNTY COMPLIANT: Test capability-based configuration
+        let orig_oe = std::env::var("ORCHESTRATION_ENDPOINT").ok();
+        let orig_se = std::env::var("SECURITY_ENDPOINT").ok();
         std::env::remove_var("ORCHESTRATION_ENDPOINT");
         std::env::remove_var("SECURITY_ENDPOINT");
         std::env::set_var(
@@ -313,7 +341,6 @@ mod integration_mode_tests {
                 nestgate_core::constants::hardcoding::ports::ORCHESTRATION_DEFAULT
             ),
         );
-        // ✅ SOVEREIGNTY COMPLIANT: Using capability-based endpoints
         std::env::set_var(
             "SECURITY_ENDPOINT",
             format!(
@@ -323,18 +350,39 @@ mod integration_mode_tests {
             ),
         );
 
+        let oe_val = std::env::var("ORCHESTRATION_ENDPOINT").map_err(|e| {
+            tracing::error!(
+                "Environment variable '{}' not found: {}",
+                "ORCHESTRATION_ENDPOINT",
+                e
+            );
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Missing environment variable: {}", e),
+            )
+        })?;
+        let se_val = std::env::var("SECURITY_ENDPOINT").map_err(|e| {
+            tracing::error!(
+                "Environment variable '{}' not found: {}",
+                "SECURITY_ENDPOINT",
+                e
+            );
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Missing environment variable: {}", e),
+            )
+        })?;
+
+        match orig_oe {
+            Some(v) => std::env::set_var("ORCHESTRATION_ENDPOINT", v),
+            None => std::env::remove_var("ORCHESTRATION_ENDPOINT"),
+        }
+        match orig_se {
+            Some(v) => std::env::set_var("SECURITY_ENDPOINT", v),
+            None => std::env::remove_var("SECURITY_ENDPOINT"),
+        }
         assert_eq!(
-            std::env::var("ORCHESTRATION_ENDPOINT").map_err(|e| {
-                tracing::error!(
-                    "Environment variable '{}' not found: {}",
-                    "ORCHESTRATION_ENDPOINT",
-                    e
-                );
-                std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    format!("Missing environment variable: {}", e),
-                )
-            })?,
+            oe_val,
             format!(
                 "http://{}:{}",
                 nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
@@ -342,27 +390,13 @@ mod integration_mode_tests {
             )
         );
         assert_eq!(
-            std::env::var("SECURITY_ENDPOINT").map_err(|e| {
-                tracing::error!(
-                    "Environment variable '{}' not found: {}",
-                    "SECURITY_ENDPOINT",
-                    e
-                );
-                std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    format!("Missing environment variable: {}", e),
-                )
-            })?,
+            se_val,
             format!(
                 "http://{}:{}",
                 nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
                 nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT
             )
         );
-
-        // Cleanup capability-based environment variables
-        std::env::remove_var("ORCHESTRATION_ENDPOINT");
-        std::env::remove_var("SECURITY_ENDPOINT");
         Ok(())
     }
 }

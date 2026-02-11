@@ -261,3 +261,27 @@ pub type HandlerConfig = CanonicalHandlerConfigs;
 pub type UnifiedHandlerConfig = CanonicalHandlerConfigs;
 /// Backward compatibility alias for `CanonicalHandlerConfigs`
 pub type HandlerConfigs = CanonicalHandlerConfigs;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_canonical_handler_configs_new() {
+        let config = CanonicalHandlerConfigs::new();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_canonical_handler_configs_production() {
+        let config = CanonicalHandlerConfigs::production_optimized();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_canonical_handler_configs_merge() {
+        let a = CanonicalHandlerConfigs::new();
+        let b = CanonicalHandlerConfigs::new();
+        let _merged = a.merge(b);
+    }
+}

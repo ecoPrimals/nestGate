@@ -303,23 +303,24 @@ impl CapabilityDiscovery {
             }
         }
 
-        // Try standard Unix socket path
-        let standard_path = "/primal/songbird";
-        tracing::debug!(path = standard_path, "Trying standard Songbird IPC path");
-        if Path::new(standard_path).exists() {
-            match JsonRpcClient::connect_unix(standard_path).await {
+        // Try standard Unix socket path (configurable via env)
+        let standard_path = env::var("SONGBIRD_IPC_STANDARD_PATH")
+            .unwrap_or_else(|_| "/primal/songbird".to_string());
+        tracing::debug!(path = %standard_path, "Trying standard IPC path");
+        if Path::new(&standard_path).exists() {
+            match JsonRpcClient::connect_unix(&standard_path).await {
                 Ok(client) => {
                     tracing::info!(
-                        path = standard_path,
-                        "Connected to Songbird IPC via standard path"
+                        path = %standard_path,
+                        "Connected to IPC gateway via standard path"
                     );
                     return Ok(client);
                 }
                 Err(e) => {
                     tracing::warn!(
-                        path = standard_path,
+                        path = %standard_path,
                         error = %e,
-                        "Failed to connect to Songbird IPC via standard path"
+                        "Failed to connect to IPC gateway via standard path"
                     );
                 }
             }
@@ -337,9 +338,9 @@ impl CapabilityDiscovery {
         // FUTURE: Add TCP transport when Songbird IPC requires it
         // Current design uses Unix sockets (primal-to-primal within same host)
         Err(NestGateError::service_unavailable(
-            "Songbird IPC not found. Ensure Songbird is running and accessible via:\n\
-             1. Unix socket at /primal/songbird, OR\n\
-             2. Environment variable SONGBIRD_IPC_PATH, OR\n\
+            "IPC gateway not found. Ensure the orchestration service is running and accessible via:\n\
+             1. Environment variable SONGBIRD_IPC_PATH (Unix socket path), OR\n\
+             2. Environment variable SONGBIRD_IPC_STANDARD_PATH (default: /primal/songbird), OR\n\
              3. TCP at SONGBIRD_HOST:SONGBIRD_PORT",
         ))
     }

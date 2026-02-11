@@ -757,3 +757,43 @@ impl StorageBackendConfig {
             .any(|b| &b.backend_type == backend_type)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_storage_backend_config_default() {
+        let config = StorageBackendConfig::default();
+        assert!(matches!(
+            config.default_backend,
+            StorageBackendType::Filesystem
+        ));
+    }
+
+    #[test]
+    fn test_storage_backend_type_variants() {
+        let _fs = StorageBackendType::Filesystem;
+        let _zfs = StorageBackendType::Zfs;
+        let custom = StorageBackendType::Custom("mybackend".to_string());
+        assert_eq!(custom, StorageBackendType::Custom("mybackend".to_string()));
+    }
+
+    #[test]
+    fn test_storage_backend_config_validate_empty() {
+        let config = StorageBackendConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_rate_limits_config_default() {
+        let rl = RateLimitsConfig::default();
+        assert!(rl.reads_per_second.is_none());
+    }
+
+    #[test]
+    fn test_zfs_compression_enum() {
+        let _off = ZfsCompression::Off;
+        let _lz4 = ZfsCompression::Lz4;
+    }
+}

@@ -86,17 +86,21 @@ async fn test_fault_invalid_socket_path() {
 
 #[tokio::test]
 async fn test_fault_conflicting_config() {
+    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
+    let orig_port = std::env::var("NESTGATE_HTTP_PORT").ok();
     std::env::set_var("NESTGATE_FAMILY_ID", "env_family");
     std::env::set_var("NESTGATE_HTTP_PORT", "not_a_number");
 
-    // Should handle invalid port gracefully
     let result = TransportConfig::from_env();
 
-    // Cleanup
-    std::env::remove_var("NESTGATE_FAMILY_ID");
-    std::env::remove_var("NESTGATE_HTTP_PORT");
-
-    // Should either succeed with default or fail gracefully
+    match orig_fid {
+        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
+        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+    }
+    match orig_port {
+        Some(v) => std::env::set_var("NESTGATE_HTTP_PORT", v),
+        None => std::env::remove_var("NESTGATE_HTTP_PORT"),
+    }
     assert!(result.is_ok() || result.is_err());
 }
 

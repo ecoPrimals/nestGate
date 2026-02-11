@@ -202,3 +202,80 @@ impl Display for PerformanceTier {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_allocation_status_variants() {
+        let _active = AllocationStatus::Active;
+        let _inactive = AllocationStatus::Inactive;
+        let _pending = AllocationStatus::Pending;
+        let _failed = AllocationStatus::Failed;
+        assert!(matches!(AllocationStatus::Active, AllocationStatus::Active));
+    }
+
+    #[test]
+    fn test_allocation_status_serialization() {
+        let status = AllocationStatus::Active;
+        let json = serde_json::to_string(&status).unwrap();
+        let parsed: AllocationStatus = serde_json::from_str(&json).unwrap();
+        assert_eq!(status, parsed);
+    }
+
+    #[test]
+    fn test_storage_tier_all() {
+        let tiers = StorageTier::all();
+        assert_eq!(tiers.len(), 5);
+        assert!(tiers.contains(&StorageTier::Hot));
+        assert!(tiers.contains(&StorageTier::Archive));
+    }
+
+    #[test]
+    fn test_storage_tier_priority() {
+        assert_eq!(StorageTier::Hot.priority(), 0);
+        assert_eq!(StorageTier::Warm.priority(), 1);
+        assert_eq!(StorageTier::Archive.priority(), 4);
+    }
+
+    #[test]
+    fn test_storage_tier_as_str() {
+        assert_eq!(StorageTier::Hot.as_str(), "hot");
+        assert_eq!(StorageTier::Cache.as_str(), "cache");
+    }
+
+    #[test]
+    fn test_storage_tier_display() {
+        assert_eq!(StorageTier::Hot.to_string(), "Hot");
+        assert_eq!(StorageTier::Cold.to_string(), "Cold");
+    }
+
+    #[test]
+    fn test_storage_tier_default() {
+        assert_eq!(StorageTier::default(), StorageTier::Hot);
+    }
+
+    #[test]
+    fn test_health_status_variants() {
+        assert_eq!(HealthStatus::Healthy.to_string(), "Healthy");
+        assert_eq!(HealthStatus::Degraded.to_string(), "Degraded");
+        assert_eq!(HealthStatus::Unknown.to_string(), "Unknown");
+    }
+
+    #[test]
+    fn test_health_status_default() {
+        assert_eq!(HealthStatus::default(), HealthStatus::Unknown);
+    }
+
+    #[test]
+    fn test_service_state_display() {
+        assert_eq!(ServiceState::Running.to_string(), "Running");
+        assert_eq!(ServiceState::Stopped.to_string(), "Stopped");
+    }
+
+    #[test]
+    fn test_performance_tier_default() {
+        assert_eq!(PerformanceTier::default(), PerformanceTier::Standard);
+    }
+}

@@ -284,18 +284,15 @@ mod tests;
 
 // ==================== CRYPTO DELEGATION ====================
 
-/// **TEMPORARILY DISABLED**: Crypto delegation has compilation errors from untested commit
-/// Created during rustup outage, never compilation-tested before push
-/// Errors: NestGateError::discovery_error(), JsonRpcClient::connect() API mismatches
-/// NOTE: Disabled pending API alignment. BearDog delegation works via existing discovery.
+/// Capability-based crypto delegation to BearDog or any compatible crypto provider.
 ///
-/// Original description:
-/// **PRODUCTION**: Crypto delegation to BearDog or compatible crypto provider
-/// - Discovers crypto provider by "crypto" capability (not hardcoded name)
-/// - Delegates all crypto operations via JSON-RPC semantic methods
-/// - Maintains NestGate as 100% Pure Rust (no crypto dependencies!)
-/// - Follows primal sovereignty (self-knowledge, runtime discovery)
-// pub mod delegate;
+/// Discovers a primal providing "crypto" capability at runtime and delegates
+/// all cryptographic operations via JSON-RPC semantic methods.
+///
+/// **Architecture**: NestGate has local AES-256-GCM for data-at-rest (above),
+/// plus optional delegation for cross-primal crypto coordination.
+pub mod delegate;
+
 // ==================== PURE RUST JWT (RustCrypto) ====================
 
 /// Pure Rust JWT implementation using RustCrypto (100% pure Rust, audited!)

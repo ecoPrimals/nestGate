@@ -564,6 +564,41 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_dns_extract_capability_type_edge_cases() {
+        let discovery = DnsServiceDiscovery::new("local".to_string());
+
+        assert_eq!(discovery.extract_capability_type("_nestgate-ai._tcp"), "ai");
+        assert_eq!(
+            discovery.extract_capability_type("_nestgate-storage._tcp"),
+            "storage"
+        );
+        assert_eq!(
+            discovery.extract_capability_type("_nestgate-compute._tcp"),
+            "compute"
+        );
+        assert_eq!(
+            discovery.extract_capability_type("unknown-service._tcp"),
+            "unknown"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_dns_discovery_empty_result() {
+        let discovery = DnsServiceDiscovery::new("local".to_string());
+        let capabilities = discovery.discover().await.unwrap();
+        // query_srv_record returns empty Vec, so we get empty capabilities
+        assert!(capabilities.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_dns_add_service_type_and_set_timeout() {
+        let mut discovery = DnsServiceDiscovery::new("test".to_string());
+        discovery.add_service_type("_custom._tcp".to_string());
+        discovery.set_timeout(Duration::from_secs(10));
+        assert_eq!(discovery.method_name(), "dns-srv");
+    }
+
+    #[tokio::test]
     async fn test_multicast_discovery() {
         let discovery = MulticastDiscovery::new();
 
@@ -583,6 +618,57 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_multicast_parse_announcement_invalid_format() {
+        let discovery = MulticastDiscovery::new();
+        let result = discovery.parse_announcement("invalid:announcement");
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_multicast_parse_announcement_https_url() {
+        let discovery = MulticastDiscovery::new();
+        let announcement = "NESTGATE-DISCOVERY:storage:https:127.0.0.1:9443:region=us";
+        let capability = discovery.parse_announcement(announcement).unwrap();
+        assert_eq!(capability.capability_type, "storage");
+        assert_eq!(capability.endpoint, "https:127.0.0.1:9443");
+    }
+
+    #[tokio::test]
+    async fn test_multicast_parse_announcement_minimal() {
+        let discovery = MulticastDiscovery::new();
+        let announcement = "NESTGATE-DISCOVERY:compute:host:5000";
+        let capability = discovery.parse_announcement(announcement).unwrap();
+        assert_eq!(capability.capability_type, "compute");
+        assert_eq!(capability.endpoint, "host");
+    }
+
+    #[tokio::test]
+    async fn test_multicast_add_group_and_set_timeout() {
+        let mut discovery = MulticastDiscovery::new();
+        discovery.add_multicast_group("224.0.0.1:5354".parse().unwrap());
+        discovery.set_timeout(Duration::from_secs(5));
+        assert_eq!(discovery.method_name(), "multicast");
+    }
+
+    #[tokio::test]
+    async fn test_multicast_default() {
+        let discovery = MulticastDiscovery::default();
+        assert_eq!(discovery.method_name(), "multicast");
+    }
+
+    #[tokio::test]
+    async fn test_srv_record_construction() {
+        let record = SrvRecord {
+            priority: 10,
+            weight: 5,
+            port: 8080,
+            target: "host.example.com".to_string(),
+        };
+        assert_eq!(record.priority, 10);
+        assert_eq!(record.port, 8080);
+    }
+
+    #[tokio::test]
     async fn test_port_scan_discovery() {
         let mut discovery = PortScanDiscovery::new();
         discovery.add_ip_range(
@@ -590,8 +676,31 @@ mod tests {
             "127.0.0.1".parse().expect("Network operation failed"),
         );
 
-        // Test that discovery method is created correctly
         assert_eq!(discovery.method_name(), "port-scan");
-        assert!(!discovery.capability_ports.is_empty());
+        let capabilities = discovery.discover().await.unwrap();
+        assert!(capabilities.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_port_scan_add_local_networks() {
+        let mut discovery = PortScanDiscovery::new();
+        discovery.add_local_networks();
+        let capabilities = discovery.discover().await.unwrap();
+        assert!(capabilities.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_port_scan_default() {
+        let discovery = PortScanDiscovery::default();
+        assert_eq!(discovery.method_name(), "port-scan");
+    }
+
+    #[tokio::test]
+    async fn test_ip_range_construction() {
+        let range = IpRange {
+            start: "192.168.1.1".parse().unwrap(),
+            end: "192.168.1.254".parse().unwrap(),
+        };
+        assert_eq!(range.start.to_string(), "192.168.1.1");
     }
 }

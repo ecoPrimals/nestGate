@@ -194,9 +194,7 @@ fn test_generate_realtime_cpu_usage() {
 fn test_generate_realtime_cpu_usage_multiple() {
     // Generate multiple values to check variation
     // No sleep needed - RNG is concurrent-safe and each call is independent
-    let values: Vec<f64> = (0..10)
-        .map(|_| generate_realtime_cpu_usage())
-        .collect();
+    let values: Vec<f64> = (0..10).map(|_| generate_realtime_cpu_usage()).collect();
 
     // All should be valid percentages
     for val in &values {

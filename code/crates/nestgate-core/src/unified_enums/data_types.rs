@@ -206,3 +206,43 @@ impl fmt::Display for UnifiedFileType {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unified_data_type_default() {
+        assert!(matches!(
+            UnifiedDataType::default(),
+            UnifiedDataType::Unknown
+        ));
+    }
+
+    #[test]
+    fn test_unified_data_type_display() {
+        assert_eq!(UnifiedDataType::Binary.to_string(), "binary");
+        assert_eq!(UnifiedDataType::Genomic.to_string(), "genomic");
+    }
+
+    #[test]
+    fn test_unified_content_type_serialization() {
+        let ct = UnifiedContentType::Json;
+        let json = serde_json::to_string(&ct).unwrap();
+        let parsed: UnifiedContentType = serde_json::from_str(&json).unwrap();
+        assert_eq!(ct, parsed);
+    }
+
+    #[test]
+    fn test_unified_file_type_default() {
+        assert!(matches!(
+            UnifiedFileType::default(),
+            UnifiedFileType::Regular
+        ));
+    }
+
+    #[test]
+    fn test_unified_content_type_mime() {
+        assert_eq!(UnifiedContentType::Json.to_string(), "application/json");
+    }
+}

@@ -127,32 +127,48 @@ impl OrchestrationCapability {
     }
 }
 
-/// Port allocation request for Orchestration
+/// Port allocation request for orchestration IPC.
+///
+/// Used in JSON-RPC `network.allocate_port` method calls to the orchestration layer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct PortAllocationRequest {
-    service_name: String,
-    port_type: String,
-    preferred_port: Option<u16>,
+pub struct PortAllocationRequest {
+    /// Name of the service requesting a port
+    pub service_name: String,
+    /// Type of port (e.g. "api", "metrics", "admin")
+    pub port_type: String,
+    /// Preferred port number, if any
+    pub preferred_port: Option<u16>,
 }
-/// Port allocation response from Orchestration
+
+/// Port allocation response from orchestration IPC.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct PortAllocationResponse {
-    port: u16,
-    expires_at: Option<String>,
+pub struct PortAllocationResponse {
+    /// Allocated port number
+    pub port: u16,
+    /// Optional expiry for the allocation lease
+    pub expires_at: Option<String>,
 }
-/// Port release request for Orchestration
+
+/// Port release request for orchestration IPC.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct PortReleaseRequest {
-    service_name: String,
-    port: u16,
+pub struct PortReleaseRequest {
+    /// Name of the service releasing the port
+    pub service_name: String,
+    /// Port number being released
+    pub port: u16,
 }
-/// Health status request for Orchestration
+
+/// Health status report for orchestration IPC.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct HealthStatusRequest {
-    service_name: String,
-    status: ServiceStatus,
-    timestamp: chrono::DateTime<chrono::Utc>,
-    metadata: std::collections::HashMap<String, String>,
+pub struct HealthStatusRequest {
+    /// Name of the reporting service
+    pub service_name: String,
+    /// Current service health status
+    pub status: ServiceStatus,
+    /// Timestamp of this health report
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+    /// Additional health metadata
+    pub metadata: std::collections::HashMap<String, String>,
 }
 /// Network API with Orchestration integration
 #[derive(Debug)]
@@ -291,4 +307,191 @@ async fn list_services_handler(
     let service_list: Vec<ServiceInstance> = services.values().cloned().collect();
 
     (StatusCode::OK, Json(ApiResponse::success(service_list)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_service_status_variants() {
+        let statuses = [
+            ServiceStatus::Starting,
+            ServiceStatus::Running,
+            ServiceStatus::Stopping,
+            ServiceStatus::Stopped,
+            ServiceStatus::Failed,
+        ];
+        assert_eq!(statuses.len(), 5);
+        assert_eq!(ServiceStatus::Running, ServiceStatus::Running);
+        assert_ne!(ServiceStatus::Running, ServiceStatus::Stopped);
+    }
+
+    #[test]
+    fn test_service_instance_serialization() {
+        let now = chrono::Utc::now();
+        let instance = ServiceInstance {
+            id: "id-1".to_string(),
+            name: "test-svc".to_string(),
+            host: "127.0.0.1".to_string(),
+            port: 8080,
+            status: ServiceStatus::Running,
+            created_at: now,
+            updated_at: now,
+        };
+        let json = serde_json::to_string(&instance).unwrap();
+        assert!(json.contains("test-svc"));
+        assert!(json.contains("8080"));
+        let deserialized: ServiceInstance = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.name, "test-svc");
+        assert_eq!(deserialized.port, 8080);
+    }
+
+    #[test]
+    fn test_orchestration_capability_new() {
+        let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
+        assert_eq!(cap.base_url, "http://localhost:9000");
+    }
+
+    #[tokio::test]
+    async fn test_orchestration_capability_register_service_returns_error() {
+        let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
+        let instance = ServiceInstance {
+            id: "id".to_string(),
+            name: "svc".to_string(),
+            host: "127.0.0.1".to_string(),
+            port: 8080,
+            status: ServiceStatus::Running,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+        let result = cap.register_service(&instance).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Unix sockets"));
+    }
+
+    #[tokio::test]
+    async fn test_orchestration_capability_allocate_port_returns_error() {
+        let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
+        let result = cap.allocate_port("mysvc", "api").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_orchestration_capability_release_port_returns_error() {
+        let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
+        let result = cap.release_port("mysvc", 8080).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_orchestration_capability_send_health_status_returns_error() {
+        let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
+        let result = cap
+            .send_health_status("mysvc", ServiceStatus::Running)
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_port_allocation_request_serialization() {
+        let req = PortAllocationRequest {
+            service_name: "api".to_string(),
+            port_type: "http".to_string(),
+            preferred_port: Some(8080),
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(json.contains("api"));
+        let parsed: PortAllocationRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.preferred_port, Some(8080));
+    }
+
+    #[test]
+    fn test_port_allocation_response_serialization() {
+        let resp = PortAllocationResponse {
+            port: 9090,
+            expires_at: Some("2025-01-01T00:00:00Z".to_string()),
+        };
+        let json = serde_json::to_string(&resp).unwrap();
+        assert!(json.contains("9090"));
+    }
+
+    #[test]
+    fn test_port_release_request_serialization() {
+        let req = PortReleaseRequest {
+            service_name: "api".to_string(),
+            port: 8080,
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(json.contains("api"));
+    }
+
+    #[test]
+    fn test_health_status_request_serialization() {
+        let req = HealthStatusRequest {
+            service_name: "api".to_string(),
+            status: ServiceStatus::Running,
+            timestamp: chrono::Utc::now(),
+            metadata: std::collections::HashMap::new(),
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(json.contains("api"));
+    }
+
+    #[test]
+    fn test_network_api_new_and_default() {
+        let api = NetworkApi::new();
+        let _router = api.create_router();
+        let _api2 = NetworkApi::default();
+    }
+
+    #[test]
+    fn test_network_api_initialize_with_orchestration() {
+        let mut api = NetworkApi::new();
+        let result = api.initialize_with_orchestration("unix:///tmp/orchestrator.sock".to_string());
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_network_api_register_service_without_orchestration() {
+        let api = NetworkApi::new();
+        let instance = ServiceInstance {
+            id: "id-1".to_string(),
+            name: "test-svc".to_string(),
+            host: "127.0.0.1".to_string(),
+            port: 8080,
+            status: ServiceStatus::Running,
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+        let result = api.register_service(instance).await;
+        assert!(result.is_ok());
+        let status = api.get_service_status("test-svc").await.unwrap();
+        assert_eq!(status, ServiceStatus::Running);
+        let services = api.list_services().await.unwrap();
+        assert_eq!(services.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_network_api_allocate_port_without_orchestration_returns_error() {
+        let api = NetworkApi::new();
+        let result = api.allocate_port("svc", "api").await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Orchestration"));
+    }
+
+    #[tokio::test]
+    async fn test_network_api_get_service_status_not_found() {
+        let api = NetworkApi::new();
+        let result = api.get_service_status("nonexistent").await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not found"));
+    }
+
+    #[tokio::test]
+    async fn test_network_api_release_port_when_not_allocated() {
+        let api = NetworkApi::new();
+        let result = api.release_port("unknown-service").await;
+        assert!(result.is_ok());
+    }
 }

@@ -36,9 +36,8 @@ pub use system::*;
 pub use websocket::*;
 pub use zfs::*;
 
-// TEMP_DISABLED: Needs function visibility fixes
-// #[cfg(test)]
-// mod storage_tests;
+#[cfg(test)]
+mod storage_tests;
 
-// #[cfg(test)]
-// mod websocket_tests;
+#[cfg(test)]
+mod websocket_tests;

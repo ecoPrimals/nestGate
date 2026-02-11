@@ -29,7 +29,6 @@ mod error_propagation_validation {
     }
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_24_error_propagation -- --ignored
     async fn test_error_context_preservation() {
         fn operation_that_fails() -> Result<(), ServiceError> {
             Err(ServiceError {
@@ -46,7 +45,6 @@ mod error_propagation_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_error_recovery_strategy() {
         async fn operation_with_retry() -> Result<String, String> {
             let mut attempts = 0;
@@ -74,7 +72,6 @@ mod error_propagation_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_error_chain_propagation() {
         fn level_3() -> Result<(), String> {
             Err("Level 3 error".to_string())
@@ -97,7 +94,6 @@ mod error_propagation_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_graceful_degradation() {
         async fn primary_service() -> Result<String, String> {
             Err("Primary unavailable".to_string())

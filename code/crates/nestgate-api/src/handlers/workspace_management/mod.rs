@@ -91,26 +91,16 @@ impl WorkspaceManager {
     }
 }
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod lifecycle_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod optimization_tests;
-
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod collaboration_tests;
+// TEMP_DISABLED: mod lifecycle_tests - file does not exist (use lifecycle_comprehensive_tests or lifecycle_new_tests)
 
 #[cfg(test)]
 mod collaboration_tests;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod storage_workspace_tests;
+#[cfg(test)]
+mod storage_workspace_tests;
 
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod tests;
-// TEMP_DISABLED:
-// TEMP_DISABLED: #[cfg(test)]
-// TEMP_DISABLED: mod secrets_tests;
+#[cfg(test)]
+mod tests;
 
 #[cfg(test)]
 mod crud_final_tests;

@@ -1,3 +1,5 @@
-/// Test module declarations
-/// This file makes the common test infrastructure available to all test files
+// Test module declarations — makes common test infrastructure available.
+// Test utility modules contain building blocks that are selectively used.
+#![allow(dead_code)]
+
 pub mod common;

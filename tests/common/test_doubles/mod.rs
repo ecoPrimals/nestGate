@@ -8,11 +8,22 @@
 #[cfg(feature = "dev-stubs")]
 use nestgate_core::config::canonical_primary::domains::test_canonical::CanonicalTestConfigs;
 
-// Re-export all test double implementations
+// Re-export all test double implementations.
+// These are test utility libraries — many building blocks defined for future test scenarios.
+#[allow(dead_code)]
 pub mod hardware_test_doubles;
+#[allow(dead_code)]
 pub mod network_test_doubles;
+#[allow(dead_code)]
 pub mod service_test_doubles;
+#[allow(dead_code)]
 pub mod storage_test_doubles;
+
+// Re-export mock types for ergonomic access
+pub use hardware_test_doubles::MockHardwareForTesting;
+pub use network_test_doubles::MockNetworkForTesting;
+pub use service_test_doubles::MockServiceForTesting;
+pub use storage_test_doubles::MockStorageForTesting;
 
 // Re-export key types using canonical patterns
 
@@ -70,15 +81,13 @@ impl CanonicalTestDoubleFactory {
     }
 }
 
-/// **CANONICAL MODERNIZATION BENEFITS**
+/// Create a complete test environment with all doubles configured.
 ///
 /// The unified test double system provides:
-/// - ✅ Consistent mock configuration across all test types
-/// - ✅ Type-safe test double creation and management
-/// - ✅ Centralized test double lifecycle management
-/// - ✅ Integrated performance and reliability testing
-/// - ✅ Eliminated test double configuration fragmentation
-/// Create a complete test environment with all doubles configured
+/// - Consistent mock configuration across all test types
+/// - Type-safe test double creation and management
+/// - Centralized test double lifecycle management
+/// - Integrated performance and reliability testing
 #[cfg(feature = "dev-stubs")]
 pub fn create_canonical_test_environment(
     config: &CanonicalTestConfigs,

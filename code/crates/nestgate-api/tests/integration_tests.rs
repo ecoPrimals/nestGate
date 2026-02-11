@@ -92,43 +92,48 @@ async fn test_multiple_handlers_concurrent() {
 
 #[tokio::test]
 async fn test_config_env_to_transport() {
+    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
+    let orig_sock = std::env::var("NESTGATE_SOCKET_PATH").ok();
+    let orig_verb = std::env::var("NESTGATE_VERBOSE").ok();
     std::env::set_var("NESTGATE_FAMILY_ID", "integration");
     std::env::set_var("NESTGATE_SOCKET_PATH", "/tmp/integration.sock");
     std::env::set_var("NESTGATE_VERBOSE", "true");
 
     let config = TransportConfig::from_env().unwrap();
 
-    // Note: from_env() may use defaults if env var not set, so just verify it loads
+    match orig_fid {
+        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
+        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+    }
+    match orig_sock {
+        Some(v) => std::env::set_var("NESTGATE_SOCKET_PATH", v),
+        None => std::env::remove_var("NESTGATE_SOCKET_PATH"),
+    }
+    match orig_verb {
+        Some(v) => std::env::set_var("NESTGATE_VERBOSE", v),
+        None => std::env::remove_var("NESTGATE_VERBOSE"),
+    }
     assert!(!config.family_id.is_empty());
-    // assert_eq!(config.family_id, "integration"); // May be "default" if env not picked up
-    // assert!(config.verbose); // May be false if env not picked up
-
-    // Config should be valid
     assert!(config.validate().is_ok());
-
-    // Cleanup
-    std::env::remove_var("NESTGATE_FAMILY_ID");
-    std::env::remove_var("NESTGATE_SOCKET_PATH");
-    std::env::remove_var("NESTGATE_VERBOSE");
 }
 
 #[tokio::test]
 async fn test_config_precedence() {
-    // Set both env and manual config
+    let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
     std::env::set_var("NESTGATE_FAMILY_ID", "env_family");
 
     let manual_config = TransportConfig::new("manual_family").with_socket_path("/tmp/manual.sock");
 
-    // Manual config should take precedence
+    match orig {
+        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
+        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+    }
     assert_eq!(manual_config.family_id, "manual_family");
     assert!(manual_config
         .socket_path
         .to_str()
         .unwrap()
         .contains("manual"));
-
-    // Cleanup
-    std::env::remove_var("NESTGATE_FAMILY_ID");
 }
 
 // ============================================================================
@@ -224,18 +229,19 @@ async fn test_e2e_health_check_flow() {
 
 #[tokio::test]
 async fn test_e2e_config_handler_lifecycle() {
-    // 1. Create config from environment
+    let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
     std::env::set_var("NESTGATE_FAMILY_ID", "e2e_test");
     let config = TransportConfig::from_env().unwrap();
-    std::env::remove_var("NESTGATE_FAMILY_ID");
+    match orig {
+        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
+        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+    }
 
-    // 2. Validate config
     assert!(config.validate().is_ok());
 
-    // 3. Create handler
     let handler = JsonRpcHandler::new(NestGateRpcHandler::new());
 
-    // 4. Send request
+    // Send request
     let request = JsonRpcRequest {
         jsonrpc: "2.0".to_string(),
         method: "health.ping".to_string(),

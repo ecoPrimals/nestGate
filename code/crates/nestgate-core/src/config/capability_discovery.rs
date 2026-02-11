@@ -385,17 +385,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_with_fallback_uses_env() {
+        let orig = env::var("TEST_SERVICE_ENDPOINT").ok();
         env::set_var("TEST_SERVICE_ENDPOINT", "envhost:8888");
 
         let result =
             discover_with_fallback("test_service", "TEST_SERVICE_ENDPOINT", "localhost:9999").await;
 
+        match orig {
+            Some(v) => env::set_var("TEST_SERVICE_ENDPOINT", v),
+            None => env::remove_var("TEST_SERVICE_ENDPOINT"),
+        }
         assert!(result.is_ok());
         let endpoint = result.unwrap();
         assert_eq!(endpoint.endpoint, "envhost:8888");
         assert_eq!(endpoint.source, DiscoverySource::Environment);
-
-        env::remove_var("TEST_SERVICE_ENDPOINT");
     }
 
     #[test]

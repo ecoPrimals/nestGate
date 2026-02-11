@@ -303,25 +303,15 @@ pub mod cleanup {
         Ok(())
     }
     
-    /// Reset environment variables used in tests
+    /// Reset environment variables used in tests.
+    ///
+    /// NOTE: Removing env vars without save/restore causes race conditions when
+    /// tests run in parallel. Tests that mutate env vars should use save/restore
+    /// at test boundaries. This function no longer touches env vars to avoid
+    /// leaking state between parallel tests.
     pub fn cleanup_test_environment() {
-        // Environment cleanup
-        let env_vars = [
-            "NESTGATE_TEST_MODE",
-            "NESTGATE_LOG_LEVEL",
-            "NESTGATE_CONFIG_PATH",
-            "NESTGATE_TEMP_DIR",
-            "NESTGATE_ENABLE_DEBUG",
-            "NESTGATE_PERFORMANCE_MODE",
-            // REMOVED: Legacy endpoint reference
-            "NESTGATE_TEST_TIMEOUT",
-            "NESTGATE_MOCK_SERVICES",
-            "NESTGATE_INTEGRATION_MODE",
-        ];
-        
-        for var in &env_vars {
-            std::env::remove_var(var);
-        }
+        // Env var cleanup removed - tests must use save/restore pattern for
+        // any env vars they mutate to avoid parallel test races.
     }
 }
 

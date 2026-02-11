@@ -846,4 +846,250 @@ mod tests {
         assert!(matches!(task1, ScheduledTask::PolicyUpdate));
         assert!(matches!(task2, ScheduledTask::StatsCollection));
     }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_add_and_remove_dataset() {
+        let manager = DatasetLifecycleManager::new();
+        manager.add_dataset("test-pool/data").await.unwrap();
+        let state = manager.get_dataset_state("test-pool/data").await;
+        assert!(state.is_some());
+        assert_eq!(state.unwrap().current_stage, LifecycleStage::Created);
+        manager.remove_dataset("test-pool/data").await.unwrap();
+        let state = manager.get_dataset_state("test-pool/data").await;
+        assert!(state.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_initialize_and_shutdown() {
+        let manager = DatasetLifecycleManager::new();
+        manager.initialize().await.unwrap();
+        let stats = manager.get_stats().await;
+        assert!(format!("{:?}", stats).len() > 0);
+        manager.shutdown().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_execute_action() {
+        let manager = DatasetLifecycleManager::new();
+        manager.add_dataset("test-ds").await.unwrap();
+        manager
+            .execute_action("test-ds", LifecycleAction::EnableCompression)
+            .await
+            .unwrap();
+        let stats = manager.get_stats().await;
+        assert_eq!(stats.total_actions_executed, 1);
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_add_policy() {
+        let manager = DatasetLifecycleManager::new();
+        let policy = LifecyclePolicy {
+            name: "custom".to_string(),
+            description: "Custom policy".to_string(),
+            transitions: vec![],
+            stage_actions: HashMap::new(),
+            priority: 50,
+            enabled: true,
+        };
+        manager.add_policy(policy).await.unwrap();
+    }
+
+    #[test]
+    fn test_lifecycle_transition_creation() {
+        let transition = LifecycleTransition {
+            from_stage: LifecycleStage::Active,
+            to_stage: LifecycleStage::Aging,
+            conditions: vec![TransitionCondition::AgeExceeds(Duration::from_secs(86400))],
+            min_stage_duration: Duration::from_secs(3600),
+            requires_approval: false,
+        };
+        assert_eq!(transition.from_stage, LifecycleStage::Active);
+        assert_eq!(transition.to_stage, LifecycleStage::Aging);
+        assert!(!transition.requires_approval);
+    }
+
+    #[test]
+    fn test_transition_condition_variants() {
+        let age = TransitionCondition::AgeExceeds(Duration::from_secs(3600));
+        assert!(matches!(age, TransitionCondition::AgeExceeds(_)));
+
+        let access = TransitionCondition::AccessBelowThreshold(10);
+        assert!(matches!(
+            access,
+            TransitionCondition::AccessBelowThreshold(10)
+        ));
+
+        let size = TransitionCondition::SizeExceeds(1_000_000);
+        assert!(matches!(size, TransitionCondition::SizeExceeds(1_000_000)));
+
+        let tier = TransitionCondition::TierMatches(StorageTier::Cold);
+        assert!(matches!(tier, TransitionCondition::TierMatches(_)));
+
+        let custom = TransitionCondition::CustomMetric(
+            "cpu".to_string(),
+            0.8,
+            ComparisonOperator::GreaterThan,
+        );
+        assert!(matches!(custom, TransitionCondition::CustomMetric(_, _, _)));
+    }
+
+    #[test]
+    fn test_comparison_operator_all_variants() {
+        assert!(matches!(
+            ComparisonOperator::GreaterThan,
+            ComparisonOperator::GreaterThan
+        ));
+        assert!(matches!(
+            ComparisonOperator::LessThan,
+            ComparisonOperator::LessThan
+        ));
+        assert!(matches!(
+            ComparisonOperator::Equal,
+            ComparisonOperator::Equal
+        ));
+        assert!(matches!(
+            ComparisonOperator::GreaterThanOrEqual,
+            ComparisonOperator::GreaterThanOrEqual
+        ));
+        assert!(matches!(
+            ComparisonOperator::LessThanOrEqual,
+            ComparisonOperator::LessThanOrEqual
+        ));
+    }
+
+    #[test]
+    fn test_lifecycle_action_all_variants() {
+        let _tier = LifecycleAction::ChangeTier(StorageTier::Hot);
+        let _comp = LifecycleAction::EnableCompression;
+        let _dedup = LifecycleAction::EnableDeduplication;
+        let _snap = LifecycleAction::CreateSnapshot;
+        let _notify = LifecycleAction::SendNotification("msg".to_string());
+        let _script = LifecycleAction::ExecuteScript("echo hi".to_string());
+        let _del = LifecycleAction::ScheduleDeletion(Duration::from_secs(86400));
+        let mut props = HashMap::new();
+        props.insert("key".to_string(), "value".to_string());
+        let _props = LifecycleAction::UpdateProperties(props);
+    }
+
+    #[test]
+    fn test_dataset_lifecycle_state_creation() {
+        let state = DatasetLifecycleState {
+            dataset_name: "pool/ds".to_string(),
+            current_stage: LifecycleStage::Created,
+            stage_entered_at: SystemTime::now(),
+            last_evaluated_at: SystemTime::now(),
+            applied_policies: vec!["standard".to_string()],
+            pending_actions: vec![],
+            metrics: HashMap::new(),
+        };
+        assert_eq!(state.dataset_name, "pool/ds");
+        assert_eq!(state.current_stage, LifecycleStage::Created);
+        assert_eq!(state.applied_policies.len(), 1);
+    }
+
+    #[test]
+    fn test_lifecycle_evaluation_creation() {
+        let eval = LifecycleEvaluation {
+            dataset_name: "pool/ds".to_string(),
+            current_stage: LifecycleStage::Active,
+            recommended_stage: Some(LifecycleStage::Aging),
+            recommended_actions: vec![LifecycleAction::EnableCompression],
+            applied_policies: vec!["standard".to_string()],
+            evaluation_timestamp: SystemTime::now(),
+            next_evaluation: SystemTime::now() + Duration::from_secs(3600),
+        };
+        assert_eq!(eval.dataset_name, "pool/ds");
+        assert_eq!(eval.recommended_stage, Some(LifecycleStage::Aging));
+        assert_eq!(eval.recommended_actions.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_lifecycle_manager_with_config() {
+        let config = LifecycleConfig {
+            evaluation_interval: Duration::from_secs(7200),
+            max_concurrent_actions: 10,
+            require_approval_for_destructive: false,
+            default_policies: vec!["custom".to_string()],
+        };
+        let manager = DatasetLifecycleManager::with_config(config);
+        let _ = manager;
+    }
+
+    #[tokio::test]
+    async fn test_evaluate_dataset_not_found() {
+        let manager = DatasetLifecycleManager::new();
+        let result = manager.evaluate_dataset("nonexistent-dataset").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_execute_action_change_tier() {
+        let manager = DatasetLifecycleManager::new();
+        manager.add_dataset("ds1").await.unwrap();
+        manager
+            .execute_action("ds1", LifecycleAction::ChangeTier(StorageTier::Cold))
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_execute_action_create_snapshot() {
+        let manager = DatasetLifecycleManager::new();
+        manager.add_dataset("ds2").await.unwrap();
+        manager
+            .execute_action("ds2", LifecycleAction::CreateSnapshot)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_execute_action_send_notification() {
+        let manager = DatasetLifecycleManager::new();
+        manager.add_dataset("ds3").await.unwrap();
+        manager
+            .execute_action(
+                "ds3",
+                LifecycleAction::SendNotification("alert".to_string()),
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_execute_action_schedule_deletion() {
+        let manager = DatasetLifecycleManager::new();
+        manager.add_dataset("ds4").await.unwrap();
+        manager
+            .execute_action(
+                "ds4",
+                LifecycleAction::ScheduleDeletion(Duration::from_secs(3600)),
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_execute_action_update_properties() {
+        let manager = DatasetLifecycleManager::new();
+        manager.add_dataset("ds5").await.unwrap();
+        let mut props = HashMap::new();
+        props.insert("compression".to_string(), "lz4".to_string());
+        manager
+            .execute_action("ds5", LifecycleAction::UpdateProperties(props))
+            .await
+            .unwrap();
+    }
+
+    #[test]
+    fn test_scheduled_task_evaluate_dataset() {
+        let task = ScheduledTask::EvaluateDataset("pool/ds".to_string());
+        assert!(matches!(task, ScheduledTask::EvaluateDataset(_)));
+    }
+
+    #[test]
+    fn test_scheduled_task_execute_action() {
+        let task =
+            ScheduledTask::ExecuteAction("pool/ds".to_string(), LifecycleAction::EnableCompression);
+        assert!(matches!(task, ScheduledTask::ExecuteAction(_, _)));
+    }
 }

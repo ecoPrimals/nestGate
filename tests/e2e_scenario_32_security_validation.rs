@@ -8,7 +8,6 @@ mod security_validation {
     use std::collections::HashSet;
 
     #[tokio::test]
-    #[ignore] // Run explicitly: cargo test --test e2e_scenario_32_security_validation -- --ignored
     async fn test_permission_validation() {
         #[allow(dead_code)]
         struct User {
@@ -34,7 +33,6 @@ mod security_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_role_based_access_control() {
         #[derive(Debug, Clone, PartialEq)]
         enum Role {
@@ -65,7 +63,6 @@ mod security_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_input_sanitization() {
         fn sanitize_input(input: &str) -> String {
             input
@@ -84,7 +81,6 @@ mod security_validation {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_secure_defaults() {
         #[derive(Debug)]
         struct SecurityConfig {

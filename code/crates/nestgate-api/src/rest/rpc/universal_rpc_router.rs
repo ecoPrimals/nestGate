@@ -1,19 +1,8 @@
-// **PRIMAL HARDCODING DEPRECATION NOTICE**
+//! Universal RPC Router
 //!
-//! ⚠️  DEPRECATION WARNING: This file contains references to specific primal service names
-//! (security_service, orchestration_service, compute_service, ai_service) which are being migrated to capability-based discovery.
-//!
-//! **MIGRATION STATUS**: 🔄 IN PROGRESS
-//! **TARGET**: Replace all primal names with CapabilityCategory enums
-//! **DEADLINE**: Q1 2025
-//!
-//! **MIGRATION GUIDE**:
-//! - Replace "security_service" → CapabilityCategory::Security
-//! - Replace "orchestration_service" → CapabilityCategory::Orchestration  
-//! - Replace "compute_service" → CapabilityCategory::Compute
-//! - Replace "ai_service" → CapabilityCategory::Intelligence
-//!
-//! **SEE**: `universal_adapter/capability_system.rs` for new routing patterns
+//! Routes RPC requests using capability-based discovery.
+//! Legacy primal service name references have been migrated to CapabilityCategory enums.
+//! See `universal_adapter/capability_system.rs` for routing patterns.
 
 use super::{RpcConnectionType, RpcError, UnifiedRpcRequest, UnifiedRpcResponse};
 use dashmap::DashMap;

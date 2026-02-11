@@ -270,7 +270,13 @@ pub(crate) async fn discover_capabilities() -> Result<Value> {
             "templates.retrieve",
             "templates.list",
             "templates.community_top",
-            "audit.store_execution"
+            "audit.store_execution",
+            "nat.store_traversal_info",
+            "nat.retrieve_traversal_info",
+            "beacon.store",
+            "beacon.retrieve",
+            "beacon.list",
+            "beacon.delete"
         ],
         "backend": {
             "type": if crate::services::storage::capabilities::is_zfs_available() { "zfs" } else { "filesystem" },
@@ -279,7 +285,9 @@ pub(crate) async fn discover_capabilities() -> Result<Value> {
                 "blob_storage": true,
                 "model_cache": true,
                 "templates": true,
-                "audit": true
+                "audit": true,
+                "nat_traversal": true,
+                "beacon_persistence": true
             }
         }
     }))

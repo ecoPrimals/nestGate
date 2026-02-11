@@ -1,274 +1,186 @@
-# 🤝 **Contributing to NestGate Unified Architecture**
+# Contributing to NestGate
 
-Welcome to the NestGate project! This guide will help you contribute effectively to our **world-class unified architecture**.
+## Project Status
 
-## 🌟 **Project Status: 100% Unified**
+NestGate is in active development. Current metrics:
 
-NestGate has achieved **extraordinary architectural unification**:
-- ✅ **100% Unified Architecture** across 15 crates
-- ✅ **Zero Technical Debt** through systematic modernization
-- ✅ **World-Class Performance** with 40-60% improvements
-- ✅ **Perfect Code Discipline** with <2000 lines per file
+- **Build**: 13/13 crates, 0 errors
+- **Tests**: 12,144 passing, 0 failures, 431 ignored
+- **Coverage**: 70.07% line (target: 90%)
+- **Clippy**: Clean under `-D warnings`
+
+See [STATUS.md](./STATUS.md) for full metrics.
 
 ---
 
-## 🏗️ **Unified Architecture Principles**
+## Architecture Principles
 
-### **🎯 Core Principles**
+1. **UniBin**: Single `nestgate` binary per platform
+2. **ecoBin**: Pure Rust, socket-only default, cross-compilation
+3. **Primal Self-Knowledge**: No hardcoded primal names or ports — discover at runtime
+4. **Capability-Based Discovery**: Find primals by capability, not by name
+5. **JSON-RPC 2.0 + tarpc**: Dual IPC with semantic method naming
+6. **Isomorphic IPC**: Auto-adapts Unix sockets or TCP based on platform
+7. **Result over panic**: Zero `unwrap()/expect()` in production code
+8. **File size limit**: Maximum 1000 lines per production file
 
-1. **Single Source of Truth**: All similar functionality consolidated
-2. **Native Async**: No `async_trait` - use native async patterns
-3. **Zero-Cost Abstractions**: Compile-time optimization preferred
-4. **Canonical Types**: Use unified types from `nestgate-core`
-5. **File Size Discipline**: Maximum 2000 lines per file
-
-### **📋 Unified Systems**
+### Unified Systems
 
 | System | Location | Usage |
 |--------|----------|-------|
-| **Error Handling** | `nestgate-core/src/error/` | `use nestgate_core::error::NestGateUnifiedError;` |
-| **Configuration** | `nestgate-core/src/config/canonical/` | `use nestgate_core::config::canonical::CanonicalConfig;` |
-| **Constants** | `nestgate-core/src/constants/unified/` | `use nestgate_core::constants::unified::network;` |
-| **Traits** | `nestgate-core/src/traits/` | `use nestgate_core::traits::CanonicalService;` |
+| Error handling | `nestgate-core/src/error/` | `NestGateError` variants |
+| Configuration | `nestgate-core/src/config/` | Environment-driven, XDG-compliant |
+| Constants | `nestgate-core/src/constants/` | Unified constants |
+| Traits | `nestgate-core/src/traits/` | Canonical service traits |
+| Discovery | `nestgate-core/src/capability_discovery.rs` | Capability-based IPC |
 
 ---
 
-## 🚀 **Development Workflow**
+## Development Workflow
 
-### **🔧 Setup**
+### Setup
 
 ```bash
-# Clone the unified repository
-git clone https://github.com/ecoprimals/nestgate
-cd nestgate
+git clone <repo-url>
+cd nestGate
 
-# Verify unified architecture
+# Verify build
 cargo check --workspace --all-features
 
-# Run unified test suite
-cargo test --workspace --all-features
+# Run tests
+cargo test --workspace
+
+# Verify linting
+cargo clippy --all-targets --all-features -- -D warnings
 ```
 
-### **📝 Code Standards**
+### Code Standards
 
-#### **✅ Required Patterns**
+**Required**:
 
 ```rust
-// ✅ CORRECT: Use unified error system
-use nestgate_core::error::{NestGateUnifiedError, Result};
-
-pub async fn unified_function() -> Result<Data> {
-    // Native async - no async_trait
+// Use Result for all fallible operations — no panic/unwrap in production
+pub async fn operation() -> Result<Data, NestGateError> {
     Ok(data)
 }
 
-// ✅ CORRECT: Use canonical configuration
-use nestgate_core::config::canonical::CanonicalConfig;
+// Environment-driven configuration
+let port = std::env::var("NESTGATE_API_PORT")
+    .unwrap_or_else(|_| "8080".to_string());
 
-pub struct MyService {
-    config: CanonicalConfig,
-}
-
-// ✅ CORRECT: Use unified constants
-use nestgate_core::constants::unified::network;
-
-let port = network::DEFAULT_API_PORT;
+// Capability-based discovery (not hardcoded names)
+let crypto = discovery.find("crypto").await?;
 ```
 
-#### **❌ Deprecated Patterns**
+**Prohibited in production code**:
 
 ```rust
-// ❌ INCORRECT: Multiple error types
-enum NetworkError { ... }
-enum StorageError { ... }
-
-// ❌ INCORRECT: async_trait usage
-#[async_trait]
-trait OldService { ... }
-
-// ❌ INCORRECT: Magic numbers
-let server = HttpServer::bind("127.0.0.1:8080")?;
-
-// ❌ INCORRECT: Scattered configs
-struct SomeConfig { port: u16 }
-struct OtherConfig { api_port: u16 }
+// NO: panic!, unwrap(), expect(), todo!(), unimplemented!()
+let value = map.get("key").unwrap();         // Use .ok_or_else()?
+panic!("something failed");                   // Use return Err(...)
+todo!();                                      // Use return Err(NestGateError::not_implemented(...))
 ```
 
-### **📏 File Size Compliance**
+**Test code**: `unwrap()` and `expect()` are acceptable in tests for clarity.
 
-**CRITICAL**: All files must be ≤2000 lines
+### File Size
+
+All production files must be under 1000 lines. If your file exceeds this:
+1. Extract tests into a separate `_tests.rs` file
+2. Split modules by responsibility
+3. Use composition over monolithic implementations
+
+---
+
+## Testing Standards
+
+### Test Organization
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_basic_functionality() {
+        // ...
+    }
+
+    #[tokio::test]
+    async fn test_async_operation() -> Result<(), Box<dyn std::error::Error>> {
+        // ...
+        Ok(())
+    }
+}
+```
+
+### Environment Variable Isolation
+
+Tests that mutate environment variables MUST use save/restore patterns:
+
+```rust
+#[test]
+fn test_with_env_vars() {
+    let orig = std::env::var("NESTGATE_API_PORT").ok();
+
+    std::env::set_var("NESTGATE_API_PORT", "9999");
+    // ... test logic ...
+
+    // Restore
+    if let Some(v) = orig {
+        std::env::set_var("NESTGATE_API_PORT", v);
+    } else {
+        std::env::remove_var("NESTGATE_API_PORT");
+    }
+}
+```
+
+### Coverage
 
 ```bash
-# Check file size compliance
-find code/crates -name "*.rs" -exec wc -l {} \; | awk '$1 > 2000 {print $2 ": " $1 " lines"}'
-
-# Should return no results
+cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
 ```
 
-If your file exceeds 2000 lines:
-1. **Extract modules** into separate files
-2. **Use composition** instead of large implementations
-3. **Split by domain** (error handling, configuration, etc.)
+The `tools/` directory is excluded from coverage — it contains development tooling, not production code.
 
 ---
 
-## 🧪 **Testing Standards**
+## Pull Request Checklist
 
-### **🎯 Test Organization**
-
-```rust
-// tests/integration/my_feature_test.rs
-use nestgate_core::{
-    error::Result,
-    config::canonical::CanonicalConfig,
-    traits::CanonicalService,
-};
-
-#[tokio::test]
-async fn test_unified_functionality() -> Result<()> {
-    let config = CanonicalConfig::default();
-    let service = MyService::new(config).await?;
-    
-    let result = service.process().await?;
-    assert_eq!(result.status, ServiceStatus::Success);
-    
-    Ok(())
-}
-```
-
-### **📊 Test Categories**
-
-1. **Unit Tests**: `cargo test --lib`
-2. **Integration Tests**: `cargo test --test '*'`
-3. **Performance Tests**: `cargo bench`
-4. **Architecture Validation**: Automated in CI/CD
+- [ ] `cargo clippy --all-targets --all-features -- -D warnings` passes
+- [ ] `cargo fmt --all -- --check` passes
+- [ ] `cargo test --workspace` passes (0 failures)
+- [ ] No new `unwrap()/expect()` in production code
+- [ ] All files under 1000 lines
+- [ ] Tests use env-var save/restore if mutating environment
+- [ ] New functionality has tests
 
 ---
 
-## 🔄 **Pull Request Process**
+## Contribution Areas
 
-### **📋 PR Checklist**
+### High Priority
 
-- [ ] **Architecture Compliance**: Uses unified systems
-- [ ] **File Size**: All files ≤2000 lines
-- [ ] **Constants**: No magic numbers
-- [ ] **Error Handling**: Uses `NestGateUnifiedError`
-- [ ] **Native Async**: No `async_trait` usage
-- [ ] **Tests**: Comprehensive test coverage
-- [ ] **Documentation**: Updated relevant docs
+1. **Coverage**: Push from 70% toward 90% — see STATUS.md for gap analysis
+2. **IMPLEMENTATION STUBs**: Evolve boilerplate DefaultService patterns to real logic
+3. **Semantic method naming**: Align internal methods with `{domain}.{operation}` format
 
-### **🎯 PR Template**
+### Other Areas
 
-```markdown
-## 🎯 **Change Summary**
-Brief description of changes made.
-
-## 🏗️ **Architecture Compliance**
-- [ ] Uses unified error system
-- [ ] Uses canonical configuration
-- [ ] Uses unified constants
-- [ ] Native async patterns
-- [ ] File size compliance
-
-## 🧪 **Testing**
-- [ ] Unit tests added/updated
-- [ ] Integration tests pass
-- [ ] Performance impact assessed
-
-## 📚 **Documentation**
-- [ ] Code comments updated
-- [ ] API documentation updated
-- [ ] Architecture docs updated (if needed)
-```
-
-### **🔍 Review Process**
-
-1. **Automated Validation**: CI/CD pipeline runs
-2. **Architecture Review**: Unified patterns verified
-3. **Code Review**: Quality and standards check
-4. **Performance Review**: Impact assessment
-5. **Final Approval**: Merge to main branch
+- Documentation improvements
+- Performance optimization
+- Platform-specific testing
+- ZFS integration tests (requires ZFS-capable environment)
 
 ---
 
-## 🎯 **Contribution Areas**
+## Getting Help
 
-### **🚀 High-Priority Areas**
-
-1. **Performance Optimization**
-   - Leverage zero-cost abstractions
-   - SIMD optimizations
-   - Memory layout improvements
-
-2. **Feature Development**
-   - Build on unified foundation
-   - Extend canonical patterns
-   - Maintain architecture consistency
-
-3. **Documentation**
-   - API documentation
-   - Architecture guides
-   - Performance benchmarks
-
-4. **Testing**
-   - Comprehensive test coverage
-   - Performance regression tests
-   - Integration test expansion
-
-### **🌟 Innovation Opportunities**
-
-1. **Zero-Cost Extensions**
-   - Compile-time optimizations
-   - Generic programming patterns
-   - Type-level programming
-
-2. **Performance Features**
-   - Advanced caching strategies
-   - Parallel processing patterns
-   - Memory optimization techniques
-
-3. **Developer Experience**
-   - Better error messages
-   - Improved debugging tools
-   - Enhanced development workflow
+- [STATUS.md](./STATUS.md) — Current measured metrics
+- [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) — Primal capability reference
+- [specs/](./specs/) — Protocol specifications
+- [docs/](./docs/) — Architecture, guides, session archives
 
 ---
 
-## 📞 **Getting Help**
-
-### **📚 Resources**
-
-- **Architecture Overview**: `ARCHITECTURE_OVERVIEW.md`
-- **Unification Report**: `UNIFICATION_COMPLETION_REPORT.md`
-- **API Documentation**: Generated via `cargo doc`
-- **Specifications**: `specs/` directory
-
-### **🤝 Community**
-
-- **Discussions**: GitHub Discussions
-- **Issues**: GitHub Issues (use templates)
-- **Questions**: Tag with `question` label
-
----
-
-## 🏆 **Recognition**
-
-Contributors to our unified architecture will be recognized for:
-
-- **🎯 Architecture Excellence**: Following unified patterns
-- **🚀 Performance Improvements**: Measurable optimizations
-- **📚 Documentation**: Clear, comprehensive documentation
-- **🧪 Testing**: Robust test coverage
-- **🌟 Innovation**: Creative solutions within unified framework
-
----
-
-## ✨ **Thank You!**
-
-Your contributions help maintain NestGate as a **world-class unified architecture** and a model for modern Rust development.
-
-**Together, we're building the future of high-performance infrastructure! 🚀**
-
----
-
-*NestGate Unified Architecture - Built with 🦀 Rust • Designed for Excellence • Optimized for Performance* 
+**Last Updated**: February 11, 2026

@@ -9,26 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.1.0-dev
 
-### Evolution Sprint Phase 4 (February 10, 2026)
+### Deep Debt Evolution (February 10-11, 2026)
 
-**Tests**: 11,200+ passing, 66.5% line coverage
+**Tests**: 12,144 passing, 0 failures, 431 ignored  
+**Coverage**: 70.07% line (llvm-cov, excluding tools/)  
+**Clippy**: Clean under `-D warnings`
 
 ### Added
-- 150+ targeted unit tests across under-covered modules
-- Tests for JSON-RPC handlers, capability resolver, runtime discovery, migration framework
-- Tests for security traits, native async services, tarpc client, REST handlers
-- Tests for bidirectional streams, universal ZFS traits, storage bridge
+- Tests for 24+ files at 0% coverage (types, enums, structs, config domains)
+- Tests for 9 core modules at 30-50% coverage (discovery, validation, auth, tarpc, IPC)
+- Tests for 11 additional low-coverage modules (REST handlers, automation, performance)
+- Real mDNS discovery via mdns-sd crate (was cache-only stub)
+- Crypto delegation module evolved to working capability-based implementation
+- tarpc server wired into nestgate-bin daemon startup (feature-gated)
+- Comprehensive env-var save/restore patterns across 80+ tests in 20+ files
 
 ### Changed
-- **Production panics eliminated** - All panic!/todo!/unimplemented! in production code replaced with proper Result returns
-- **Clippy auto-fix** - 2061 -> 1579 warnings (remainder in test code only)
-- **Large file refactoring** - All files under 1000 lines:
-  - `rest/handlers/zfs.rs` split into `zfs/` directory (dataset, snapshot, helpers)
-  - `migration_framework.rs` split into `migration_framework/` directory (types, migrator, safe_migration)
-- **Doctest fixes** - 40+ broken documentation examples corrected
-- **Integration test hermeticity** - Environment variable pollution eliminated via SocketConfig::resolve()
-- **JSON-RPC error codes** - Corrected to spec (-32601 for method not found)
-- **Transport config tests** - Refactored to use builder API instead of environment variables
+- **Production unwrap/expect**: Zero instances remaining
+- **Production panics**: All replaced with Result returns
+- **Clippy**: Fully clean under -D warnings (was 2061+ warnings)
+- **Hardcoded primal names**: Evolved to capability-based discovery
+  - BearDog: env var -> capability discovery -> socket scan fallback
+  - Songbird: env var -> standard paths -> capability discovery
+  - Consul: env var -> default
+- **Large file refactoring**: All files under 1000 lines
+  - `rest/handlers/zfs.rs` -> `zfs/` directory
+  - `migration_framework.rs` -> `migration_framework/` directory
+  - `nestgate-installer/src/lib.rs`: 915 -> 519 lines (tests extracted)
+  - `production_discovery.rs`: 910 -> 576 lines (tests extracted)
+- **Re-enabled 15+ TEMP_DISABLED test modules** in nestgate-api handlers
+- **Un-ignored ~90 test patterns** (e2e, fault injection, chaos)
+- **Doctest fixes**: 40+ broken examples corrected
+- **JSON-RPC error codes**: Corrected to spec (-32601 for method not found)
 
 ### Removed
 - 60+ dead stub files (orphaned modules never compiled)
@@ -36,8 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - 48+ failing integration tests (timing, env pollution, missing server)
-- Flaky test_environment_resolver (env var save/restore)
-- Timing-sensitive benchmark thresholds relaxed for CI
+- Environment variable race conditions in parallel tests (80+ tests affected)
+- Timing-sensitive performance assertions relaxed for parallel CI
+- mDNS capability filtering test flakiness (parallel interference)
+- Azure backend test flakiness (direct construction bypass)
+- ZFS config/storage_paths test flakiness (logic-direct testing)
+- Capability resolver test isolation (comprehensive env-var cleanup)
+- ComplianceReport struct field mismatches in re-enabled test modules
+- Crypto delegate Arc/Mutex usage for mutable client access
 
 ---
 
@@ -257,15 +275,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 63 tarpc RPC tests (async initialization, temp directories)
 - Permission issues in tests (use temp directories)
 
-## [Unreleased] - v0.3.0
+## Active Goals
 
-### Planned
-- Achieve 90%+ test coverage (currently 99.6% passing)
-- Fix remaining 14 port configuration tests
-- Complete Phase 4 modernization (API handlers, compute layer)
-- Unwrap/expect elimination (4,000+ → <500 instances)
-- Hardcoding removal (1,600+ → <300 instances)
-- Full BearDog integration (encryption operational)
+- Push coverage from 70.07% toward 90% target
+- Evolve remaining IMPLEMENTATION STUB sections
+- Complete semantic method naming across all domains
 
 ---
 
@@ -429,48 +443,17 @@ pub mod zfs_stubs { /* ... */ }
 
 ---
 
-## Roadmap
-
-### v1.0.0 (January 2026) - A+ Excellence
-- A+ grade (98/100)
-- 95%+ test coverage
-- Near-zero production hardcoding/unwraps
-- Complete documentation
-- Ecosystem integration ready
-
-### v1.1.0 (February 2026) - Ecosystem Integration
-- Multi-primal workflows
-- Distributed capabilities
-- Advanced orchestration
-- Production deployment templates
-
-### v2.0.0 (Q2 2026) - Advanced Features
-- Multi-tenant support
-- Advanced monitoring
-- Performance optimizations
-- Enterprise features
-
----
-
 ## Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
-For current priorities, see:
-- [`READINESS_CHECKLIST_DEC_19_2025.md`](READINESS_CHECKLIST_DEC_19_2025.md) - Week-by-week tasks
-- [`START_NEXT_SESSION_DEC_19_2025.md`](START_NEXT_SESSION_DEC_19_2025.md) - Getting started
-
----
-
 ## Documentation
 
-- **Quick Start**: [`00_START_HERE.md`](00_START_HERE.md)
-- **Current Status**: [`STATUS.md`](STATUS.md)
-- **Documentation Index**: [`DOCUMENTATION_INDEX.md`](DOCUMENTATION_INDEX.md)
-- **Comprehensive Audit**: [`COMPREHENSIVE_AUDIT_REPORT_DEC_19_2025.md`](COMPREHENSIVE_AUDIT_REPORT_DEC_19_2025.md)
+- [STATUS.md](STATUS.md) — Current measured metrics
+- [README.md](README.md) — Project overview
+- [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) — Full doc index
 
 ---
 
-**Last Updated**: December 19, 2025  
-**Current Version**: 0.1.0  
-**Status**: ✅ Production-Capable (B+ Grade, 87/100)
+**Last Updated**: February 11, 2026  
+**Current Version**: 4.1.0-dev

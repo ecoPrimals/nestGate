@@ -161,9 +161,15 @@ async fn test_batch_collector_parallel_collection() {
 async fn test_multiple_snapshots_sequential() {
     let collector = DataCollector::new(1);
 
-    let snapshot1 = collector.get_latest_snapshot().await.expect("Test setup failed");
+    let snapshot1 = collector
+        .get_latest_snapshot()
+        .await
+        .expect("Test setup failed");
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-    let snapshot2 = collector.get_latest_snapshot().await.expect("Test setup failed");
+    let snapshot2 = collector
+        .get_latest_snapshot()
+        .await
+        .expect("Test setup failed");
 
     // Both should succeed and have different timestamps
     assert!(snapshot2.collection_timestamp >= snapshot1.collection_timestamp);
@@ -210,8 +216,14 @@ async fn test_batch_collector_empty_collect() {
 async fn test_collector_metrics_consistency() {
     let collector = DataCollector::new(30);
 
-    let snapshot = collector.get_latest_snapshot().await.expect("Test setup failed");
-    let direct_metrics = collector.collect_all_metrics().await.expect("Test setup failed");
+    let snapshot = collector
+        .get_latest_snapshot()
+        .await
+        .expect("Test setup failed");
+    let direct_metrics = collector
+        .collect_all_metrics()
+        .await
+        .expect("Test setup failed");
 
     // Both should return valid metrics
     assert!(snapshot.system_metrics.cpu_usage_percent >= 0.0);
