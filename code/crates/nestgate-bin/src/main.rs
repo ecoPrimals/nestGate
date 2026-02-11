@@ -44,7 +44,9 @@ async fn main() -> BinResult<()> {
             .with_target(false)
             .init();
 
-        // Run daemon with defaults (socket-only mode - TRUE ecoBin)
+        // Run daemon with socket-only mode as default (PRIMAL_DEPLOYMENT_STANDARD)
+        // CRITICAL: run_daemon's 4th param is `enable_http`, NOT `socket_only`
+        // enable_http = false means socket-only mode (the correct default)
         return nestgate_bin::commands::service::run_daemon(
             nestgate_core::defaults::network::DEFAULT_API_PORT,
             nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS,

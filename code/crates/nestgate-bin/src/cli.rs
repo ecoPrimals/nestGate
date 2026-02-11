@@ -89,21 +89,25 @@ pub enum Commands {
     #[command(name = "daemon", alias = "server")]
     #[command(about = "Run NestGate daemon (server mode)")]
     Daemon {
-        /// Port to bind to (only used with --enable-http)
+        /// Port to bind to (ignored in socket-only mode)
         /// Reads from: NESTGATE_API_PORT, NESTGATE_HTTP_PORT, or NESTGATE_PORT
         #[arg(short, long, default_value_t = port_from_env_or_default())]
         port: u16,
-        /// Bind address (only used with --enable-http)
+        /// Bind address (ignored in socket-only mode)
         /// Reads from: NESTGATE_BIND, NESTGATE_BIND_ADDRESS, or NESTGATE_HOST
         #[arg(long, default_value_t = bind_from_env_or_default())]
         bind: String,
         /// Enable development mode
         #[arg(long)]
         dev: bool,
-        /// Enable HTTP server (socket-only is default for TRUE ecoBin compliance)
-        /// Socket-only mode: Zero external dependencies, perfect for NUCLEUS atomic patterns
-        /// HTTP mode: Enables REST API and web endpoints (use only when needed)
-        #[arg(long)]
+        /// Run in Unix socket-only mode (no HTTP server, no external dependencies)
+        /// Perfect for NUCLEUS atomic patterns and inter-primal communication
+        /// NOTE: Socket-only is now the DEFAULT per PRIMAL_DEPLOYMENT_STANDARD
+        #[arg(long, default_value_t = true)]
+        socket_only: bool,
+        /// Enable HTTP server mode (legacy/standalone mode)
+        /// Only use when HTTP API is explicitly required
+        #[arg(long, conflicts_with = "socket_only")]
         enable_http: bool,
         /// Family ID for multi-family socket support
         /// Creates family-scoped socket: nestgate-{family_id}.sock
