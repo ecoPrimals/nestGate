@@ -86,9 +86,16 @@ impl SocketConfig {
             });
         }
 
+        // Socket filename: family-scoped when family_id is set and not "default"
+        let socket_filename = if family_id != "default" {
+            format!("nestgate-{}.sock", family_id)
+        } else {
+            "nestgate.sock".to_string()
+        };
+
         // Tier 2: biomeOS shared directory (biomeOS standard)
         if let Some(biomeos_dir) = biomeos_socket_dir {
-            let socket_path = PathBuf::from(biomeos_dir).join("nestgate.sock");
+            let socket_path = PathBuf::from(biomeos_dir).join(&socket_filename);
 
             info!(
                 "🔌 Using biomeOS socket directory: {} (family: {}, node: {})",
@@ -111,7 +118,7 @@ impl SocketConfig {
         // Tier 3: XDG runtime directory with biomeOS subdirectory (preferred, more secure)
         let xdg_runtime_dir = format!("/run/user/{}/biomeos", uid);
         if Path::new(&format!("/run/user/{}", uid)).exists() {
-            let socket_path = PathBuf::from(format!("{}/nestgate.sock", xdg_runtime_dir));
+            let socket_path = PathBuf::from(&xdg_runtime_dir).join(&socket_filename);
 
             info!(
                 "🔌 Using XDG runtime directory with biomeOS standard: {} (family: {}, node: {})",
