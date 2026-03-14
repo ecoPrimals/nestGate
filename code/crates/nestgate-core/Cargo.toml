@@ -80,6 +80,8 @@ bincode.workspace = true
 jsonrpsee = { version = "0.26.0", features = ["server"] }
 # Pure Rust UID/GID retrieval (evolved from unsafe libc)
 uzers.workspace = true
+# Pin projection for safe async (replaces unsafe map_unchecked_mut)
+pin-project = "1.1"
 
 
 [dev-dependencies]

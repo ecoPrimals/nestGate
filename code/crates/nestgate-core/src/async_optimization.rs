@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Async Optimization module
 
 use crate::error::NestGateError;
@@ -6,8 +7,10 @@ use crate::error::NestGateError;
 // This module provides optimized async patterns and utilities to improve
 // performance of async operations throughout NestGate.
 
+use pin_project::pin_project;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::future::Future;
 use std::task::{Context, Poll};
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -109,7 +112,11 @@ impl<T> AsyncStreamProcessor<T> {
 }
 
 /// **IDIOMATIC**: Timeout future with explicit error types
+///
+/// ✅ EVOLVED: Uses pin_project for safe pin projection (replaces unsafe map_unchecked_mut)
+#[pin_project]
 pub struct TimeoutFuture<F, E = NestGateError> {
+    #[pin]
     future: F,
     #[allow(dead_code)]
     timeout: Duration,
@@ -124,25 +131,9 @@ where
     type Output = Result<F::Output, E>;
 
     /// Poll
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        // Implementation would use timeout logic here
-        // For now, just forward to the inner future
-        // SAFETY: Pin projection is safe because:
-        // 1. Structural pinning: `future` field doesn't move when `Self` is pinned
-        // 2. Field access: We're only accessing a structural field, not moving it
-        // 3. Lifetime: Returned Pin<&mut F> has same lifetime as self
-        // 4. Invariants: TimeoutFuture doesn't implement Unpin, preserving pin guarantees
-        // 5. No drop glue: We're not interfering with drop order or moving pinned data
-        //
-        // SAFETY PROOF:
-        // - **Pin projection**: map_unchecked_mut maintains Pin invariants during field access
-        // - **Structural pin**: future field never moved after TimeoutFuture pinned
-        // - **No Unpin impl**: TimeoutFuture doesn't implement Unpin, enforcing pin contract
-        // - **Lifetime**: Mutable borrow &mut s.future has same lifetime as Pin<&mut Self>
-        // - **No Drop**: No Drop impl means no drop glue interference
-        // - **Address stability**: Field address remains stable while parent pinned
-        let future = unsafe { self.as_mut().map_unchecked_mut(|s| &mut s.future) };
-        match future.poll(cx) {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.project();
+        match this.future.poll(cx) {
             Poll::Ready(result) => Poll::Ready(Ok(result)),
             Poll::Pending => Poll::Pending,
         }

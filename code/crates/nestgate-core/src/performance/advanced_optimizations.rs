@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // **ADVANCED PERFORMANCE OPTIMIZATIONS**
 //! Advanced Optimizations functionality and utilities.
 // Cutting-edge performance optimization techniques for maximum throughput
@@ -102,7 +103,8 @@ impl<T, const SIZE: usize> LockFreeRingBuffer<T, SIZE> {
             return false; // Buffer full
         }
 
-        // SAFETY: MaybeUninit::write is required for lock-free ring buffer (no Option<T> overhead).
+        // SAFETY: Lock-free SPSC requires MaybeUninit::write - cannot use Option<T> without
+        // losing lock-free property. VecDeque would require Mutex. Invariants:
         // - Bounds: current_head < SIZE (power-of-2 mask)
         // - Single producer: no concurrent writes to this slot
         // - Not full: next_head != tail checked above
@@ -123,7 +125,7 @@ impl<T, const SIZE: usize> LockFreeRingBuffer<T, SIZE> {
             return None; // Buffer empty
         }
 
-        // SAFETY: MaybeUninit::read for lock-free SPSC. Single consumer; Release in push
+        // SAFETY: Lock-free SPSC requires MaybeUninit::read. Single consumer; Release in push
         // synchronizes with this Acquire. read() consumes, preventing double-read.
         let item = unsafe { self.buffer[current_tail].as_ptr().read() };
         let next_tail = (current_tail + 1) & (SIZE - 1); // Fast modulo for power of 2
@@ -193,6 +195,9 @@ impl SimdOperations {
     ///
     /// **Prefer [`copy_safe`](Self::copy_safe) when you have slices** - it is 100% safe
     /// and compiles to the same optimized assembly.
+    ///
+    /// SAFETY: Required for FFI boundaries where slices aren't available. Cannot be
+    /// replaced with safe code when interfacing with C/MMIO.
     ///
     /// # Safety
     /// Caller must ensure:
@@ -299,8 +304,11 @@ pub struct PoolBlockGuard<'a, const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
 
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE> {
     /// Get mutable slice to the allocated block
+    ///
+    /// SAFETY: ptr from this pool's allocate(); block is BLOCK_SIZE bytes; no safe
+    /// alternative exists for lock-free pool returning raw blocks (slab crate would
+    /// require different API).
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
-        // SAFETY: ptr from this pool's allocate(); block is BLOCK_SIZE bytes
         unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), BLOCK_SIZE) }
     }
 }
@@ -309,7 +317,8 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Drop
     for PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE>
 {
     fn drop(&mut self) {
-        // SAFETY: ptr came from this pool's allocate(); no use after drop
+        // SAFETY: ptr came from this pool's allocate(); no use after drop; deallocate
+        // is unsafe fn but invariants guaranteed by pool's allocation protocol
         unsafe {
             self.pool.deallocate(self.ptr);
         }

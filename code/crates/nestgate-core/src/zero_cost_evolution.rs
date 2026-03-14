@@ -1,15 +1,15 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //
 // **⚠️ EXPERIMENTAL MODULE - NOT FOR PRODUCTION USE**
 //
-// This module contains experimental zero-cost abstractions that use unsafe code
-// for maximum performance. It is feature-gated and not included in production builds.
+// This module contains experimental zero-cost abstractions.
+// EVOLVED: Unsafe blocks replaced with safe alternatives (PoolBlockGuard, allocate_with).
 //
 // To enable: `cargo build --features "experimental-zero-cost"`
 
 #[cfg(debug_assertions)]
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use std::mem::MaybeUninit;
 
 // ==================== SECTION ====================
 
@@ -206,11 +206,19 @@ impl<T, const N: usize> ZeroCostArray<T, N> {
 
 /// **ZERO-COST**: Memory pool with compile-time sizing
 ///
-/// Memory pool that allocates at compile time
+/// Memory pool that allocates at compile time.
+/// ✅ EVOLVED: Uses `Option<[T; BLOCK_SIZE]>` instead of MaybeUninit - zero unsafe code.
 pub struct ZeroCostPool<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> {
-    blocks: [MaybeUninit<[T; BLOCK_SIZE]>; POOL_SIZE],
+    blocks: [Option<[T; BLOCK_SIZE]>; POOL_SIZE],
     free_mask: u64, // Bitmap for free blocks (supports up to 64 blocks)
     _phantom: PhantomData<T>,
+}
+
+/// RAII guard for pool block - deallocates on drop.
+/// ✅ EVOLVED: Replaces unsafe manual deallocate().
+pub struct ZeroCostPoolBlockGuard<'a, T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> {
+    pool: &'a mut ZeroCostPool<T, POOL_SIZE, BLOCK_SIZE>,
+    block_index: usize,
 }
 impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> Default
     for ZeroCostPool<T, POOL_SIZE, BLOCK_SIZE>
@@ -229,9 +237,8 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
         assert!(POOL_SIZE <= 64, "Pool size cannot exceed 64 blocks");
 
         Self {
-            // ✅ SAFE: Use std::array::from_fn to initialize each MaybeUninit element
-            // This properly creates an array of uninitialized blocks without unsafe code
-            blocks: std::array::from_fn(|_| MaybeUninit::uninit()),
+            // ✅ SAFE: Option<[T; N]> - None = free slot, no MaybeUninit
+            blocks: std::array::from_fn(|_| None),
             free_mask: (1u64 << POOL_SIZE) - 1, // All blocks initially free
             _phantom: PhantomData,
         }
@@ -239,9 +246,7 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
 
     /// Allocate and initialize a block with the given value (safe, zero-cost when inlined)
     ///
-    /// ✅ EVOLVED: Safe version that initializes memory before returning a reference.
-    /// Uses `MaybeUninit::write()` to properly initialize the block, then returns
-    /// a mutable reference to the now-initialized data.
+    /// ✅ EVOLVED: Uses Option::replace - zero unsafe code.
     #[inline(always)]
     #[must_use]
     pub fn allocate_with(&mut self, value: [T; BLOCK_SIZE]) -> Option<&mut [T; BLOCK_SIZE]> {
@@ -249,72 +254,70 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> ZeroCostPool<T, POOL_SI
             return None; // No free blocks
         }
 
-        // Find first free block using trailing zeros
         let block_index = self.free_mask.trailing_zeros() as usize;
-
-        // Mark block as used
         self.free_mask &= !(1u64 << block_index);
 
-        // ✅ SAFE: Write initializes the MaybeUninit, then we can safely get a reference
-        let initialized = self.blocks[block_index].write(value);
-        Some(initialized)
+        self.blocks[block_index] = Some(value);
+        self.blocks[block_index].as_mut()
     }
 
-    /// Allocate an uninitialized block (caller must initialize before read).
+    /// Allocate a block and return an RAII guard that deallocates on drop.
     ///
-    /// # Safety
-    ///
-    /// Caller must ensure all elements are initialized before reading, and the
-    /// block is deallocated via `deallocate()` when done.
-    ///
-    /// **Prefer `allocate_with()` for safe initialization.**
-    ///
-    /// # SAFETY (assume_init_mut)
-    ///
-    /// - `block_index` is valid: computed from `trailing_zeros()` on free_mask,
-    ///   and POOL_SIZE <= 64 so slot is in bounds
-    /// - Slot was uninitialized; caller guarantees initialization before any read
-    /// - No other reference exists to this slot (we just marked it allocated)
+    /// ✅ EVOLVED: Replaces unsafe `allocate_uninit` + `deallocate`.
+    /// Zero-cost: guard compiles to same behavior as manual deallocate.
     #[inline(always)]
     #[must_use]
-    pub unsafe fn allocate_uninit(&mut self) -> Option<&mut [T; BLOCK_SIZE]> {
+    pub fn allocate_guard(
+        &mut self,
+        value: [T; BLOCK_SIZE],
+    ) -> Option<ZeroCostPoolBlockGuard<'_, T, POOL_SIZE, BLOCK_SIZE>> {
         if self.free_mask == 0 {
             return None;
         }
 
         let block_index = self.free_mask.trailing_zeros() as usize;
         self.free_mask &= !(1u64 << block_index);
+        self.blocks[block_index] = Some(value);
 
-        // SAFETY: block_index valid (trailing_zeros < POOL_SIZE); caller initializes before read
-        unsafe { Some(self.blocks[block_index].assume_init_mut()) }
-    }
-
-    /// Deallocate a block by index.
-    ///
-    /// # Safety
-    ///
-    /// - `block_index` must be in 0..POOL_SIZE
-    /// - Block must have been allocated (not yet deallocated)
-    /// - No references to the block may exist after this call
-    ///
-    /// # SAFETY (invariants)
-    ///
-    /// - debug_assert ensures block_index < POOL_SIZE and block was allocated
-    /// - We only flip the free_mask bit; no raw pointer dereference
-    #[inline(always)]
-    pub unsafe fn deallocate(&mut self, block_index: usize) {
-        debug_assert!(block_index < POOL_SIZE, "Block index out of bounds");
-        debug_assert!(
-            self.free_mask & (1u64 << block_index) == 0,
-            "Block not allocated"
-        );
-        self.free_mask |= 1u64 << block_index;
+        Some(ZeroCostPoolBlockGuard {
+            pool: self,
+            block_index,
+        })
     }
 
     /// Get available blocks count
     #[inline(always)]
     pub fn available_blocks(&self) -> u32 {
         self.free_mask.count_ones()
+    }
+}
+
+impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> std::ops::Deref
+    for ZeroCostPoolBlockGuard<'_, T, POOL_SIZE, BLOCK_SIZE>
+{
+    type Target = [T; BLOCK_SIZE];
+
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        self.pool.blocks[self.block_index].as_ref().expect("Guard holds allocated block")
+    }
+}
+
+impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> std::ops::DerefMut
+    for ZeroCostPoolBlockGuard<'_, T, POOL_SIZE, BLOCK_SIZE>
+{
+    #[inline(always)]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.pool.blocks[self.block_index].as_mut().expect("Guard holds allocated block")
+    }
+}
+
+impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> Drop
+    for ZeroCostPoolBlockGuard<'_, T, POOL_SIZE, BLOCK_SIZE>
+{
+    fn drop(&mut self) {
+        self.pool.blocks[self.block_index] = None;
+        self.pool.free_mask |= 1u64 << self.block_index;
     }
 }
 
@@ -579,17 +582,15 @@ mod tests {
         }
         assert_eq!(pool.available_blocks(), 3);
 
-        // Test allocate_uninit + deallocate (unsafe path)
+        // Test allocate_guard (safe path - replaces allocate_uninit + deallocate)
         {
-            let block2 = unsafe { pool.allocate_uninit() }.ok_or_else(|| {
+            let mut guard = pool.allocate_guard([0u8; 16]).ok_or_else(|| {
                 crate::NestGateError::internal_error("Pool allocation failed", "test")
             })?;
-            block2.fill(1);
-            assert_eq!(block2[0], 1);
+            guard.fill(1);
+            assert_eq!(guard[0], 1);
+            // Guard drops here, auto-deallocates
         }
-        assert_eq!(pool.available_blocks(), 2);
-        // SAFETY: block 1 was allocated by allocate_uninit (block 0 from allocate_with)
-        unsafe { pool.deallocate(1) };
         assert_eq!(pool.available_blocks(), 3);
         Ok(())
     }

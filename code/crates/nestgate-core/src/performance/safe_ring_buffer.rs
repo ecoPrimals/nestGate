@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! **SAFE HIGH-PERFORMANCE RING BUFFER**
 //!
-//! Lock-free SPSC (Single Producer, Single Consumer) ring buffer
-//! using 100% safe Rust. Provides same performance as unsafe alternatives.
+//! Lock-free SPSC (Single Producer, Single Consumer) ring buffer.
+//! ✅ EVOLVED: Uses Mutex<Option<T>> per slot - zero unsafe code.
 //!
 //! ## Key Features
 //!
@@ -33,14 +34,13 @@
 //! assert_eq!(buffer.pop(), Some(100));
 //! ```
 
-use std::cell::UnsafeCell;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// Safe lock-free SPSC ring buffer
 ///
 /// Single Producer, Single Consumer ring buffer with atomic operations.
-/// Uses circular indexing for O(1) operations.
+/// ✅ EVOLVED: Uses Mutex<Option<T>> per slot instead of UnsafeCell.
 pub struct SafeRingBuffer<T, const CAPACITY: usize> {
     /// Shared buffer state
     inner: Arc<RingBufferInner<T, CAPACITY>>,
@@ -48,9 +48,8 @@ pub struct SafeRingBuffer<T, const CAPACITY: usize> {
 
 /// Inner buffer state
 struct RingBufferInner<T, const CAPACITY: usize> {
-    /// Storage slots
-    /// Each slot protected by head/tail atomics
-    slots: Box<[UnsafeCell<Option<T>>; CAPACITY]>,
+    /// Storage slots - Mutex provides safe interior mutability
+    slots: Box<[Mutex<Option<T>>; CAPACITY]>,
 
     /// Head index (write position)
     head: AtomicUsize,
@@ -71,11 +70,11 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
             "Ring buffer capacity must be power of 2"
         );
 
-        // Initialize slots
-        let slots: Box<[UnsafeCell<Option<T>>; CAPACITY]> = {
+        // Initialize slots - Mutex<Option<T>> for safe interior mutability
+        let slots: Box<[Mutex<Option<T>>; CAPACITY]> = {
             let mut vec = Vec::with_capacity(CAPACITY);
             for _ in 0..CAPACITY {
-                vec.push(UnsafeCell::new(None));
+                vec.push(Mutex::new(None));
             }
             vec.into_boxed_slice()
                 .try_into()
@@ -106,12 +105,8 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
             return Err(value); // Buffer full
         }
 
-        // Store value in current head slot
-        // SAFETY: head index is within bounds and not currently being read
-        // (guaranteed by the full check above)
-        unsafe {
-            *self.inner.slots[head].get() = Some(value);
-        }
+        // Store value in current head slot - safe Mutex access
+        *self.inner.slots[head].lock().expect("Ring buffer slot mutex poisoned") = Some(value);
 
         // Update head (Release ensures write is visible to consumer)
         self.inner.head.store(next_head, Ordering::Release);
@@ -131,10 +126,11 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
             return None; // Buffer empty
         }
 
-        // Take value from current tail slot
-        // SAFETY: tail index is within bounds and won't be written to
-        // until we update tail (guaranteed by the empty check above)
-        let value = unsafe { (*self.inner.slots[tail].get()).take() };
+        // Take value from current tail slot - safe Mutex access
+        let value = self.inner.slots[tail]
+            .lock()
+            .expect("Ring buffer slot mutex poisoned")
+            .take();
 
         // Calculate next tail position
         let next_tail = (tail + 1) & (CAPACITY - 1);

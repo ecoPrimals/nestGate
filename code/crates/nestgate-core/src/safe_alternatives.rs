@@ -1,7 +1,12 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Safe alternatives to unsafe code patterns
 //!
 //! This module demonstrates how to evolve unsafe code to safe alternatives
 //! while maintaining or improving performance.
+//!
+//! ## Kept with SAFETY (cannot be replaced):
+//! - **FFI (ffi_wrapper)**: C library boundaries require raw pointers; wrapped in RAII.
+//! - **SIMD (simd_evolution)**: x86 intrinsics require unsafe; bounds verified by array_chunks.
 
 use std::ptr::NonNull;
 
