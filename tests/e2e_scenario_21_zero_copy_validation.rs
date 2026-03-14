@@ -8,9 +8,6 @@ mod zero_copy_validation {
     use std::sync::Arc;
     use std::time::Duration;
 
-    // Note: bytes crate needed for buffer sharing test
-    // Add to Cargo.toml dev-dependencies: bytes = "1.5"
-
     #[tokio::test]
     async fn test_zero_copy_data_transfer() {
         // Validate Arc-based zero-copy data sharing
@@ -55,28 +52,27 @@ mod zero_copy_validation {
 
     #[tokio::test]
     async fn test_zero_copy_buffer_sharing() {
-        // TODO: Enable when bytes crate is added to dev-dependencies
-        // use bytes::Bytes;
-        //
-        // // Bytes provides zero-copy slicing
-        // let original = Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8]);
-        // let slice1 = original.slice(0..4);
-        // let slice2 = original.slice(4..8);
-        //
-        // // Verify slices are independent views
-        // assert_eq!(slice1.len(), 4);
-        // assert_eq!(slice2.len(), 4);
-        // assert_eq!(&slice1[..], &[1, 2, 3, 4]);
-        // assert_eq!(&slice2[..], &[5, 6, 7, 8]);
+        use bytes::Bytes;
 
-        // Alternative test using Arc (zero-copy via reference counting)
-        let original = Arc::new(vec![1u8, 2, 3, 4, 5, 6, 7, 8]);
-        let view1 = Arc::clone(&original);
-        let view2 = Arc::clone(&original);
+        // Bytes provides zero-copy slicing
+        let original = Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8]);
+        let slice1 = original.slice(0..4);
+        let slice2 = original.slice(4..8);
+
+        // Verify slices are independent views
+        assert_eq!(slice1.len(), 4);
+        assert_eq!(slice2.len(), 4);
+        assert_eq!(&slice1[..], &[1, 2, 3, 4]);
+        assert_eq!(&slice2[..], &[5, 6, 7, 8]);
+
+        // Also verify Arc-based zero-copy (alternative approach)
+        let original_arc = Arc::new(vec![1u8, 2, 3, 4, 5, 6, 7, 8]);
+        let view1 = Arc::clone(&original_arc);
+        let view2 = Arc::clone(&original_arc);
 
         // Verify all views reference same data
-        assert_eq!(Arc::strong_count(&original), 3);
-        assert_eq!(&original[0..4], &[1, 2, 3, 4]);
+        assert_eq!(Arc::strong_count(&original_arc), 3);
+        assert_eq!(&original_arc[0..4], &[1, 2, 3, 4]);
         assert_eq!(&view1[4..8], &[5, 6, 7, 8]);
         assert_eq!(view2.len(), 8);
     }

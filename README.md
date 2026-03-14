@@ -5,7 +5,7 @@
 **Tests**: 12,155 passing, 0 failures, 431 ignored  
 **Coverage**: 70.07% line (llvm-cov, target: 90%)  
 **Clippy**: Clean under `-D warnings`  
-**Last Updated**: February 11, 2026
+**Last Updated**: March 14, 2026
 
 ---
 
@@ -89,6 +89,7 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Tests | 12,155 passing, 0 failures |
 | Coverage | 70.07% line (excluding tools/) |
 | Production unwrap/expect | Zero |
+| Unsafe blocks | 6 replaced with safe alternatives |
 | File size limit (1000 lines) | All compliant |
 | Env-var race conditions | Fixed (80+ tests with save/restore) |
 
@@ -152,7 +153,7 @@ cargo doc --no-deps --workspace
 - **Async Runtime**: Tokio
 - **HTTP**: Axum
 - **Serialization**: Serde, serde_json, serde_yaml_ng
-- **Concurrency**: DashMap, std::sync::LazyLock
+- **Concurrency**: DashMap, std::sync::LazyLock, pin-project
 - **Security**: RustCrypto stack (AES-256-GCM, ed25519-dalek, hmac, argon2, sha2)
 - **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0)
 - **CLI**: Clap 4 (derive mode)
@@ -213,4 +214,4 @@ For details: See `STATUS.md` and `docs/sessions/feb_2026/`.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: February 11, 2026
+**Latest**: March 14, 2026
