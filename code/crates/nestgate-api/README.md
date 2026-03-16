@@ -423,8 +423,8 @@ AGPL-3.0-or-later - See LICENSE file for details
 ## 🆘 **Support**
 
 - **Documentation**: [NestGate Docs](https://docs.nestgate.io)
-- **Issues**: [GitHub Issues](https://github.com/DataScienceBioLab/NestGateV2/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/DataScienceBioLab/NestGateV2/discussions)
+- **Issues**: [GitHub Issues](https://github.com/ecoPrimals/NestGateV2/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/ecoPrimals/NestGateV2/discussions)
 
 ---
 

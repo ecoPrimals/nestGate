@@ -2,7 +2,7 @@
 title: NestGate Network Crate Specification
 description: Network communication and protocol handling specification
 version: 0.5.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: High
 ---
 

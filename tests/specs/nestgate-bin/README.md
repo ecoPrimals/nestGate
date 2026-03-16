@@ -2,7 +2,7 @@
 title: NestGate Binary Crate Specification
 description: Command-line interface and utilities specification
 version: 0.5.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: High
 ---
 

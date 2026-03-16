@@ -2,7 +2,7 @@
 title: NestGate API Contract
 description: HTTP API contract for NAS management
 version: 0.6.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 ---
 
 # NestGate API Contract

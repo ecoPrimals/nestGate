@@ -2,7 +2,7 @@
 title: NestGate-Squirrel MCP Compatibility Requirements
 description: Specifications for ensuring Squirrel MCP supports NestGate integration
 version: 0.1.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: Medium
 last_updated: 2024-09-26
 ---

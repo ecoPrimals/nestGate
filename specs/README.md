@@ -2,7 +2,7 @@
 title: NestGate Specifications - Active Development
 description: Revolutionary Infant Discovery Architecture + Universal Storage + Primal Ecosystem
 version: 0.9.0 (Pre-Release)
-author: DataScienceBioLab & ecoPrimals Team
+author: ecoPrimals Contributors & ecoPrimals Team
 priority: 🎯 IN PROGRESS - 3-6 months to v1.0.0
 status: 🔄 ACTIVE DEVELOPMENT: Excellent Foundation, Test Expansion Phase
 ---

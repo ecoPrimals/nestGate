@@ -2,7 +2,7 @@
 title: NestGate API Crate Specification
 description: HTTP API for NAS management and system control
 version: 0.6.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: High
 ---
 

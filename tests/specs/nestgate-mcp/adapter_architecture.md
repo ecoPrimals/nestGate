@@ -2,7 +2,7 @@
 title: NestGate MCP Adapter Architecture
 description: Modular adapter architecture for NestGate's MCP integration
 version: 0.1.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: Medium
 last_updated: 2024-09-26
 ---

@@ -2,7 +2,7 @@
 title: NestGate-Squirrel MCP Integration Specification
 description: Integration architecture and implementation plan for NestGate with Squirrel MCP
 version: 0.1.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: Medium
 last_updated: 2024-09-25
 ---

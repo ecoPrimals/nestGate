@@ -2,10 +2,10 @@
 name = "nestgate-middleware"
 version = "0.9.2"
 edition = "2021"
-authors = [ "DataScienceBioLab",]
+authors = [ "ecoPrimals Contributors",]
 description = "Middleware components for NestGate NAS system"
 license = "AGPL-3.0-only"
-repository = "https://github.com/DataScienceBioLab/nestgate"
+repository = "https://github.com/ecoPrimals/nestgate"
 keywords = [ "middleware", "nas", "storage",]
 readme = "README.md"
 categories = [ "web-programming", "middleware",]

@@ -38,7 +38,7 @@ NestGate has achieved **100% production readiness** with:
 ### **1. Clone and Prepare**
 ```bash
 # Clone the production-certified repository
-git clone https://github.com/DataScienceBioLab/nestgate.git
+git clone https://github.com/ecoPrimals/nestgate.git
 cd nestgate
 
 # Verify production readiness

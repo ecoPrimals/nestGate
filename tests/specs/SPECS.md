@@ -2,7 +2,7 @@
 title: NestGate System Specifications
 description: Simplified NAS management system with AI/ML capabilities
 version: 0.7.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: High
 last_updated: 2024-09-25
 ---

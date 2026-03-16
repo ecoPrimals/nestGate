@@ -2,7 +2,7 @@
 title: NAS Management System Specifications
 description: Master specification document for a versatile NAS management system with AI/ML readiness and scalable architecture
 version: 0.5.0
-author: DataScienceBioLab
+author: ecoPrimals Contributors
 priority: High
 ---
 
