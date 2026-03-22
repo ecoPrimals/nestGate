@@ -334,6 +334,7 @@ impl Cli {
                 dev,
                 enable_http,
                 family_id,
+                socket_only: _,
             } => {
                 // Multi-family support: CLI flag > env var > default
                 let resolved_family_id =

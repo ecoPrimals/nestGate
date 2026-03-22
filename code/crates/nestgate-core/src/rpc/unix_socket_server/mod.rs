@@ -141,14 +141,22 @@ pub(crate) struct StorageState {
 impl StorageState {
     /// Create new storage state with persistent backend
     pub(crate) async fn new() -> Result<Self> {
-        let storage_manager = Arc::new(
-            crate::services::storage::StorageManagerService::new()
+        // Try auto-detect first; fall back to development config (no ZFS required)
+        let manager_result = crate::services::storage::StorageManagerService::new().await;
+        let storage_manager = Arc::new(match manager_result {
+            Ok(mgr) => mgr,
+            Err(e) => {
+                warn!("Storage auto-detect failed ({}), falling back to dev config", e);
+                crate::services::storage::StorageManagerService::with_config(
+                    crate::services::storage::config::StorageServiceConfig::development(),
+                )
                 .await
-                .map_err(|e| {
-                    warn!("Failed to initialize storage manager: {}", e);
-                    e
-                })?,
-        );
+                .map_err(|e2| {
+                    warn!("Development fallback also failed: {}", e2);
+                    e2
+                })?
+            }
+        });
 
         Ok(Self {
             storage_manager,
