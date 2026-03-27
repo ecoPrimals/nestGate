@@ -2,7 +2,7 @@
 
 **Version**: 4.1.0-dev  
 **Build**: 13/13 crates compiling, 0 errors  
-**Tests**: 12,274 passing, 0 failures, 472 ignored  
+**Tests**: 12,278 passing, 0 failures, 472 ignored  
 **Coverage**: 69.6% line (llvm-cov, target: 90%)  
 **Clippy**: Clean under `-D warnings`  
 **Last Updated**: March 27, 2026
@@ -86,7 +86,7 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Build | 13/13 crates, 0 errors |
 | Clippy | Clean (`-D warnings`) |
 | Format | Clean |
-| Tests | 12,274 passing, 0 failures |
+| Tests | 12,278 passing, 0 failures |
 | Coverage | 69.6% line (excluding tools/) |
 | Production unwrap/expect | Zero |
 | Unsafe blocks | Evolved (most replaced with safe alternatives) |
@@ -199,11 +199,12 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 69.6%)
-2. Wire `data.*` and `nat.*` semantic router routes
-3. Complete sysinfo optional feature gating
-4. Evolve remaining dev stubs to full implementations
-5. Cross-gate replication (multi-node data orchestration)
+1. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
+2. Warm/cold tier data cycling (NVMe SSD warm, HDD cold)
+3. Push test coverage toward 90% target (currently 69.6%)
+4. Wire `data.*` and `nat.*` semantic router routes
+5. Evolve remaining dev stubs to full implementations
+6. Cross-gate replication (multi-node data orchestration)
 
 For details: See [STATUS.md](./STATUS.md).
 

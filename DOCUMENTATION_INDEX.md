@@ -32,14 +32,9 @@
 - [docs/guides/ENVIRONMENT_VARIABLES.md](./docs/guides/ENVIRONMENT_VARIABLES.md) - All configuration options
 - [docs/guides/TROUBLESHOOTING.md](./docs/guides/TROUBLESHOOTING.md) - Common issues & solutions
 
-### Testing
-- [docs/testing/](./docs/testing/) - Test documentation
+### Operations & Testing
+- [docs/operations/](./docs/operations/) - Operations runbook
 - [tests/](./tests/) - Integration and unit tests
-
-### Deployment
-- [deploy/](./deploy/) - Deployment scripts and configs
-- [docker/](./docker/) - Docker production setup
-- [examples/](./examples/) - Usage examples
 
 ---
 
@@ -72,8 +67,8 @@ nestGate/
 ├── benches/                        # Performance benchmarks
 ├── examples/                       # Usage examples
 ├── config/                         # Configuration templates
-├── deploy/                         # Deployment scripts
-└── showcase/                       # Demo scenarios
+├── scripts/                        # Setup and utility scripts
+└── specs/                          # Protocol specifications
 ```
 
 ---

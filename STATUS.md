@@ -12,7 +12,7 @@ Build:              13/13 crates compiling (0 errors)
 Clippy:             CLEAN (0 errors, 0 warnings under -D warnings)
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               CLEAN (cargo doc --no-deps generates, 0 errors)
-Tests:              12,274 passing, 0 failures (472 ignored - ZFS/infra-dependent)
+Tests:              12,278 passing, 0 failures (472 ignored - ZFS/infra-dependent)
 Coverage:           69.6% line (79,517/114,202), 70.9% region (target: 90%)
 Files > 1000 lines: 0 (largest: 988 lines)
 Unwrap/Expect:      ZERO in production code (test-only, gated by workspace lint)
@@ -189,6 +189,28 @@ nestGate/ (13 crates)
 | Windows WSL2| Full   | TCP   | Yes   | Yes   |
 | illumos     | Full   | Unix  | Yes   | Yes   |
 | Android     | Full   | TCP   | Yes   | Yes   |
+
+---
+
+## Test Substrate (March 27, 2026)
+
+Multi-filesystem testing environment on local hardware:
+
+```
+Warm tier (NVMe SSD, rotational=0):
+  ext4       /                           1.8 TiB  Samsung 970 EVO Plus
+
+Cold tier (HDD, rotational=1):
+  ZFS 2.3.5  /mnt/nestgate/cold/zfs     12.7 TiB  sda+sdb mirror, sdf spare
+  btrfs      /mnt/nestgate/cold/btrfs   12.7 TiB  sdc1
+  xfs        /mnt/nestgate/cold/xfs     12.7 TiB  sdd1
+  ext4       /mnt/nestgate/cold/ext4    12.7 TiB  sde1
+```
+
+ZFS datasets: `nestgate/{data,snapshots,cache,testing}`
+btrfs subvolumes: `data`, `snapshots`
+Substrate tier config: `SubstrateTiers::from_environment()` in `config/storage_paths.rs`
+Setup script: `scripts/setup-test-substrate.sh`
 
 ---
 

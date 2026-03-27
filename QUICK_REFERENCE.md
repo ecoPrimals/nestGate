@@ -1,7 +1,7 @@
 # NestGate - Quick Reference
 
 **Version**: 4.1.0-dev  
-**Tests**: 12,274 passing, 0 failures, 472 ignored  
+**Tests**: 12,278 passing, 0 failures, 472 ignored  
 **Coverage**: 69.6% line (llvm-cov, excluding tools/)  
 **Clippy**: Clean (`-D warnings`)  
 **Last Updated**: March 27, 2026

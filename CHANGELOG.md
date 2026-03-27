@@ -11,11 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Comprehensive Audit & Evolution (March 27, 2026)
 
-**Tests**: 12,274 passing, 0 failures, 472 ignored  
+**Tests**: 12,278 passing, 0 failures, 472 ignored  
 **Coverage**: 69.6% line (79,517/114,202 lines)  
 **Clippy**: Clean under `-D warnings`
 
 ### Added
+- Multi-filesystem test substrate: ZFS mirror (sda+sdb), btrfs (sdc), xfs (sdd), ext4 (sde) on real HDD
+- `SubstrateTiers` + `SubstrateMount` runtime discovery (fs type from /proc/mounts, rotational from /sys/block)
+- Warm/cold tier awareness (NVMe SSD warm, HDD cold) with env-var overrides
+- `scripts/setup-test-substrate.sh` for reproducible substrate provisioning
 - Semantic router module compiled and wired (`storage.*`, `health.*`, `crypto.*`, `discovery.*`, `capabilities.list`)
 - `linux_proc` module: pure-Rust `/proc` system metrics (CPU, memory, uptime, loadavg, network, disk)
 - `rust-toolchain.toml` pinning stable 1.94.1 with clippy, rustfmt, llvm-tools

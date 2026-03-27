@@ -5,7 +5,7 @@
 NestGate is in active development. Current metrics:
 
 - **Build**: 13/13 crates, 0 errors
-- **Tests**: 12,274 passing, 0 failures, 472 ignored
+- **Tests**: 12,278 passing, 0 failures, 472 ignored
 - **Coverage**: 69.6% line (target: 90%)
 - **Clippy**: Clean under `-D warnings`
 

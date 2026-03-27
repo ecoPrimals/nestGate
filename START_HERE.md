@@ -4,7 +4,7 @@
 
 ```
 Build:       13/13 crates compiling (0 errors)
-Tests:       12,274 passing, 0 failures, 472 ignored
+Tests:       12,278 passing, 0 failures, 472 ignored
 Coverage:    69.6% line (target: 90%)
 Clippy:      Clean (-D warnings)
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
