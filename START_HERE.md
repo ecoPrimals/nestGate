@@ -4,8 +4,8 @@
 
 ```
 Build:       13/13 crates compiling (0 errors)
-Tests:       12,144 passing, 0 failures, 431 ignored
-Coverage:    70.07% line (target: 90%)
+Tests:       12,274 passing, 0 failures, 472 ignored
+Coverage:    69.6% line (target: 90%)
 Clippy:      Clean (-D warnings)
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```
@@ -160,4 +160,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: February 11, 2026
+**Last Updated**: March 27, 2026

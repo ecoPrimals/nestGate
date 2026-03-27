@@ -463,6 +463,8 @@ impl ProductionCommunicationProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{get_admin_port, get_api_port, get_health_port, get_metrics_port};
+    use crate::constants::{LOCALHOST_IPV4, LOCALHOST_NAME};
     use crate::service_discovery::types::{
         CommunicationProtocol, ServiceCapability, ServiceEndpoint, ServiceMetadata,
     };
@@ -472,6 +474,7 @@ mod tests {
 
     fn make_service_info(name: &str) -> crate::service_discovery::types::ServiceInfo {
         use crate::service_discovery::types::{ServiceCategory, StorageType};
+        let url = format!("http://{}:{}", LOCALHOST_NAME, get_api_port());
         crate::service_discovery::types::ServiceInfo {
             service_id: Uuid::new_v4(),
             metadata: ServiceMetadata {
@@ -484,7 +487,7 @@ mod tests {
             },
             capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
             endpoints: vec![ServiceEndpoint {
-                url: "http://localhost:8080".to_string(),
+                url,
                 protocol: CommunicationProtocol::Http,
                 health_check: None,
             }],
@@ -598,8 +601,8 @@ mod tests {
     async fn test_production_communication_provider_connect_disconnect() {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
-            host: "localhost".to_string(),
-            port: 9999,
+            host: LOCALHOST_NAME.to_string(),
+            port: get_metrics_port(),
         };
         let conn = provider.connect(addr).await.unwrap();
         assert!(matches!(conn.status, ConnectionStatus::Connected));
@@ -613,8 +616,8 @@ mod tests {
     async fn test_production_communication_provider_send_message() {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
-            host: "127.0.0.1".to_string(),
-            port: 8080,
+            host: LOCALHOST_IPV4.to_string(),
+            port: get_api_port(),
         };
         let msg = CommunicationMessage {
             message_id: "m1".to_string(),
@@ -648,8 +651,8 @@ mod tests {
     async fn test_production_communication_provider_connection_status() {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
-            host: "localhost".to_string(),
-            port: 8888,
+            host: LOCALHOST_NAME.to_string(),
+            port: get_admin_port(),
         };
         let conn = provider.connect(addr).await.unwrap();
         let status = provider.connection_status(&conn).await.unwrap();
@@ -660,8 +663,8 @@ mod tests {
     async fn test_production_communication_provider_ping() {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
-            host: "localhost".to_string(),
-            port: 7777,
+            host: LOCALHOST_NAME.to_string(),
+            port: get_health_port(),
         };
         let conn = provider.connect(addr).await.unwrap();
         let _ = provider.ping(&conn).await.unwrap();

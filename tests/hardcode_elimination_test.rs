@@ -7,7 +7,6 @@ use std::fs;
 /// This ensures 100% configurable infrastructure
 
 #[test]
-#[ignore = "Code quality test - non-blocking for functionality"]
 fn test_no_hardcoded_network_values() -> Result<(), Box<dyn std::error::Error>> {
     let violations = scan_specific_files_for_hardcoded_values();
 

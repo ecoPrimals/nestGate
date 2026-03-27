@@ -1,6 +1,6 @@
 # NestGate Documentation Index
 
-**Last Updated**: February 11, 2026  
+**Last Updated**: March 27, 2026  
 **Version**: 4.1.0-dev
 
 ---
@@ -43,26 +43,12 @@
 
 ---
 
-## Session Archives (Fossil Record)
+## Fossil Record
 
-### February 2026 (Current)
-Located in `docs/sessions/feb_2026/`:
-- Evolution Sprint reports
-- Deep debt audits and completions
-- Model cache integration
-- Upstream bug investigations
-- Configuration evolution
+Session archives, planning docs, and historical reports have been moved to
+`ecoPrimals/infra/wateringHole/fossilRecord/nestgate/` for preservation.
 
-### January 2026
-Located in `docs/sessions/jan_2026/`:
-- Isomorphic IPC (Phases 1, 2 & 3)
-- Deep Debt Evolution (Phases 1-3)
-- Platform code elimination
-- genomeBin evolution
-
-### Earlier Sessions
-Located in `docs/sessions/` and `docs/session-reports/`:
-- Historical evolution records preserved as fossil record
+Git history retains the full record of all files that were in this tree.
 
 ---
 
@@ -81,8 +67,7 @@ nestGate/
 │   ├── nestgate-zfs/               # ZFS integration
 │   ├── nestgate-mcp/               # MCP provider
 │   └── ...                         # Additional crates
-├── docs/                           # Documentation
-│   └── sessions/                   # Session archives (fossil record)
+├── docs/                           # Documentation (api, architecture, guides, testing)
 ├── tests/                          # Integration tests
 ├── benches/                        # Performance benchmarks
 ├── examples/                       # Usage examples
@@ -95,12 +80,12 @@ nestGate/
 
 ## Document Naming Convention
 
-**Active Documents**: `DOCUMENT_NAME.md` in root
-**Session Archives**: `docs/sessions/{month}_{year}/DOCUMENT_NAME_{DATE}.md`
-**Preserved as**: Fossil record for historical reference in ecoPrimals
+**Active Documents**: `DOCUMENT_NAME.md` in root  
+**Fossil Record**: `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`  
+**Handoffs**: `ecoPrimals/infra/wateringHole/handoffs/`
 
 ---
 
-**Status**: Documentation cleaned and updated February 11, 2026.  
+**Status**: Documentation cleaned and updated March 27, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: February 11, 2026
+**Last Updated**: March 27, 2026

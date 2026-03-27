@@ -8,10 +8,8 @@ use super::metadata::EvolutionMetadata;
 /// Idiomatic configuration builder
 ///
 /// Builder pattern for constructing `IdiomaticConfig` instances
-#[allow(dead_code)] // Framework infrastructure
 pub struct IdiomaticConfigBuilder<T> {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    inner: Option<T>,
+    _inner: Option<T>,
     metadata: EvolutionMetadata,
 }
 impl<T> IdiomaticConfigBuilder<T> {
@@ -27,7 +25,7 @@ impl<T> IdiomaticConfigBuilder<T> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            inner: None,
+            _inner: None,
             metadata: EvolutionMetadata::default(),
         }
     }
@@ -64,10 +62,8 @@ impl<T> Default for IdiomaticConfigBuilder<T> {
 /// Smart configuration builder with evolution tracking
 ///
 /// Builder pattern for constructing `SmartConfig` instances
-#[allow(dead_code)] // Framework infrastructure
 pub struct SmartConfigBuilder<T> {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    config: Option<T>,
+    _config: Option<T>,
     evolution_metadata: EvolutionMetadata,
     modernization_applied: bool,
 }
@@ -84,7 +80,7 @@ impl<T> SmartConfigBuilder<T> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            config: None,
+            _config: None,
             evolution_metadata: EvolutionMetadata::default(),
             modernization_applied: false,
         }
@@ -128,10 +124,8 @@ impl<T> Default for SmartConfigBuilder<T> {
 /// Evolution-aware builder
 ///
 /// Builder pattern for constructing `EvolutionAware` instances
-#[allow(dead_code)] // Framework infrastructure
 pub struct EvolutionAwareBuilder<T> {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    target: Option<T>,
+    _target: Option<T>,
     compatibility_checked: bool,
     evolution_score: f64,
 }
@@ -148,7 +142,7 @@ impl<T> EvolutionAwareBuilder<T> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            target: None,
+            _target: None,
             compatibility_checked: false,
             evolution_score: 0.0,
         }
@@ -199,11 +193,9 @@ impl<T> Default for EvolutionAwareBuilder<T> {
 }
 
 /// Canonical builder for standardized construction
-#[allow(dead_code)] // Framework infrastructure
 /// Builder pattern for constructing Canonical instances
 pub struct CanonicalBuilder<T> {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    item: Option<T>,
+    _item: Option<T>,
     canonical_patterns_applied: bool,
 }
 impl<T> CanonicalBuilder<T> {
@@ -219,7 +211,7 @@ impl<T> CanonicalBuilder<T> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            item: None,
+            _item: None,
             canonical_patterns_applied: false,
         }
     }
@@ -249,11 +241,9 @@ impl<T> Default for CanonicalBuilder<T> {
 }
 
 /// Modernization builder for legacy type evolution
-#[allow(dead_code)] // Framework infrastructure
 /// Builder pattern for constructing Modernization instances
 pub struct ModernizationBuilder<T> {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    legacy_item: Option<T>,
+    _legacy_item: Option<T>,
     modernization_steps: Vec<String>,
     rollback_enabled: bool,
 }
@@ -270,7 +260,7 @@ impl<T> ModernizationBuilder<T> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            legacy_item: None,
+            _legacy_item: None,
             modernization_steps: Vec::new(),
             rollback_enabled: true,
         }

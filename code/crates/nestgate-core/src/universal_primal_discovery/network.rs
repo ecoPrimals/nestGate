@@ -87,11 +87,9 @@ pub struct InterfaceInfo {
 }
 /// Network discovery subsystem
 #[derive(Debug)]
-#[allow(dead_code)] // Framework infrastructure
 /// Networkdiscovery
 pub struct NetworkDiscovery {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    config: NestGateCanonicalConfig,
+    _config: NestGateCanonicalConfig,
     #[allow(deprecated)]
     discovery_config: NetworkDiscoveryConfig,
     /// Runtime configuration (immutable, thread-safe)
@@ -104,16 +102,16 @@ impl Default for NetworkDiscovery {
     }
 }
 
+#[allow(deprecated)]
 impl NetworkDiscovery {
     /// Create new network discovery subsystem
     ///
     /// This constructor loads runtime configuration from environment variables.
     /// For testing or custom configurations, use `with_runtime_config()`.
     #[must_use]
-    #[allow(deprecated)]
     pub fn new() -> Self {
         Self {
-            config: NestGateCanonicalConfig::default(),
+            _config: NestGateCanonicalConfig::default(),
             discovery_config: NetworkDiscoveryConfig::default(),
             runtime_config: Arc::new(NetworkRuntimeConfig::from_env()),
         }
@@ -121,10 +119,9 @@ impl NetworkDiscovery {
 
     /// Create with custom configuration
     #[must_use]
-    #[allow(deprecated)]
     pub fn with_config(config: NestGateCanonicalConfig) -> Self {
         Self {
-            config,
+            _config: config,
             discovery_config: NetworkDiscoveryConfig::default(),
             runtime_config: Arc::new(NetworkRuntimeConfig::from_env()),
         }
@@ -135,10 +132,9 @@ impl NetworkDiscovery {
     /// This is the recommended constructor for testing and when you need
     /// explicit control over runtime values (bind addresses, ports, endpoints).
     #[must_use]
-    #[allow(deprecated)]
     pub fn with_runtime_config(runtime_config: SharedNetworkRuntimeConfig) -> Self {
         Self {
-            config: NestGateCanonicalConfig::default(),
+            _config: NestGateCanonicalConfig::default(),
             discovery_config: NetworkDiscoveryConfig::default(),
             runtime_config,
         }
@@ -390,24 +386,18 @@ impl NetworkDiscovery {
 }
 
 // ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkdiscoveryconfigcanonical
-pub type NetworkDiscoveryConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkDiscoveryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+// Backward-compatible alias to `CanonicalNetworkConfig` while migrating from deprecated structs.
+#[allow(deprecated, missing_docs)]
+mod deprecated_canonical_aliases {
+    pub type NetworkDiscoveryConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+}
+pub use deprecated_canonical_aliases::NetworkDiscoveryConfigCanonical;
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)] // Tests construct deprecated `NetworkDiscoveryConfig` until migration completes
+
     use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};
 
@@ -442,7 +432,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_network_discovery_config_default() {
         let config = NetworkDiscoveryConfig::default();
         assert_eq!(config.scan_timeout, Duration::from_secs(5));
@@ -451,7 +440,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_network_discovery_config_clone() {
         let config1 = NetworkDiscoveryConfig::default();
         let config2 = config1.clone();

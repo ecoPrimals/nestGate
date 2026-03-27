@@ -292,3 +292,122 @@ async fn apply_obsolete_dataset_rules(dataset_name: &str) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::automation::types::DatasetLifecycle;
+    use crate::types::StorageTier;
+    use std::time::SystemTime;
+
+    fn lifecycle(
+        name: &str,
+        stage: LifecycleStage,
+        tier: StorageTier,
+        access_count: u64,
+    ) -> DatasetLifecycle {
+        DatasetLifecycle {
+            dataset_name: name.to_string(),
+            current_tier: tier,
+            created: SystemTime::UNIX_EPOCH,
+            last_accessed: Some(SystemTime::UNIX_EPOCH),
+            access_count,
+            total_migrations: 0,
+            last_optimization: None,
+            lifecycle_stage: stage,
+            automation_history: vec![],
+        }
+    }
+
+    #[test]
+    fn execute_lifecycle_action_known_actions_succeed() {
+        let ds = "tank/data/app";
+        let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 0);
+        for action in [
+            "compress",
+            "migrate_to_cold",
+            "migrate_to_warm",
+            "migrate_to_hot",
+            "create_snapshot",
+            "optimize_properties",
+            "update_access_time",
+            "archive",
+            "cleanup_temp_files",
+        ] {
+            let r = execute_lifecycle_action(ds, &lc, action).expect("test: known action executes");
+            assert!(r.success, "action={action} msg={}", r.message);
+        }
+    }
+
+    #[test]
+    fn execute_lifecycle_action_unknown_returns_failure_result() {
+        let r = execute_lifecycle_action(
+            "z",
+            &lifecycle("z", LifecycleStage::New, StorageTier::Hot, 0),
+            "not_a_real_action",
+        )
+        .expect("test: unknown action returns Ok");
+        assert!(!r.success);
+        assert!(r.message.contains("Unknown action"));
+    }
+
+    #[tokio::test]
+    async fn apply_automatic_stage_rules_new_and_active() {
+        let ds = "pool/fs1";
+        apply_automatic_stage_rules(
+            ds,
+            &lifecycle(ds, LifecycleStage::New, StorageTier::Warm, 0),
+        )
+        .await
+        .expect("test: new stage rules");
+
+        apply_automatic_stage_rules(
+            ds,
+            &lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 10),
+        )
+        .await
+        .expect("test: active hot low access");
+
+        apply_automatic_stage_rules(
+            ds,
+            &lifecycle(ds, LifecycleStage::Active, StorageTier::Warm, 150),
+        )
+        .await
+        .expect("test: active warm high access migrates");
+    }
+
+    #[tokio::test]
+    async fn apply_automatic_stage_rules_aging_archived_obsolete() {
+        let ds = "pool/fs2";
+        apply_automatic_stage_rules(
+            ds,
+            &lifecycle(ds, LifecycleStage::Aging, StorageTier::Hot, 0),
+        )
+        .await
+        .expect("test: aging");
+
+        apply_automatic_stage_rules(
+            ds,
+            &lifecycle(ds, LifecycleStage::Archived, StorageTier::Cold, 0),
+        )
+        .await
+        .expect("test: archived");
+
+        apply_automatic_stage_rules(
+            ds,
+            &lifecycle(ds, LifecycleStage::Obsolete, StorageTier::Cold, 0),
+        )
+        .await
+        .expect("test: obsolete");
+    }
+
+    #[test]
+    fn execute_optimize_properties_includes_stage_in_message() {
+        let ds = "tank/opt";
+        let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 1);
+        let r = execute_lifecycle_action(ds, &lc, "optimize_properties")
+            .expect("test: optimize_properties");
+        assert!(r.success);
+        assert!(r.message.contains("Active") || r.message.contains("stage"));
+    }
+}

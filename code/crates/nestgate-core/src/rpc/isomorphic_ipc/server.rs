@@ -64,6 +64,10 @@
 //!
 //! ## Reference
 //!
+//! JSON-RPC method names follow wateringHole semantic naming (`health.check`,
+//! `health.liveness`, `health.readiness`, `capabilities.list`, …); see
+//! `SEMANTIC_METHOD_NAMING_STANDARD.md`.
+//!
 //! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)
 
 use anyhow::Result;

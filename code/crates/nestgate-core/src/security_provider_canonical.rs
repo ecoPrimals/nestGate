@@ -469,7 +469,10 @@ pub type SecurityProviderConfigCanonical =
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::traits::canonical_provider_unification::SecurityProvider;
+    use crate::traits::canonical_provider_unification::{
+        CanonicalUniversalProvider, SecurityProvider,
+    };
+    use std::time::{Duration, SystemTime};
 
     #[tokio::test]
     async fn test_create_security_provider() -> Result<()> {
@@ -604,5 +607,138 @@ mod tests {
         assert!(capabilities.operations.contains(&"encrypt".to_string()));
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_rejects_invalid_utf8_credentials() {
+        let provider = create_default();
+        let credentials: Vec<u8> = vec![0xff, 0xfe, 0xfd];
+        let err = provider
+            .authenticate(&credentials)
+            .await
+            .expect_err("test: invalid utf-8 should fail");
+        assert!(
+            err.to_string().contains("Invalid credentials")
+                || err.to_string().contains("credentials")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_requires_username_password_format() {
+        let provider = create_default();
+        let err = provider
+            .authenticate(b"nocolon")
+            .await
+            .expect_err("test: missing colon should fail");
+        assert!(err.to_string().contains("format") || err.to_string().contains("Credentials"));
+    }
+
+    #[tokio::test]
+    async fn test_authenticate_rejects_empty_username() {
+        let provider = create_default();
+        let err = provider
+            .authenticate(b":password")
+            .await
+            .expect_err("test: empty username should fail");
+        assert!(err.to_string().contains("Username") || err.to_string().contains("empty"));
+    }
+
+    #[tokio::test]
+    async fn test_authorize_rejects_expired_token() {
+        let provider = create_default();
+        let token = AuthToken {
+            token: "t".to_string(),
+            expires_at: SystemTime::UNIX_EPOCH,
+            permissions: vec![],
+        };
+        let err = provider
+            .authorize(&token, b"payload")
+            .await
+            .expect_err("test: expired token should not authorize");
+        assert!(err.to_string().contains("expired") || err.to_string().contains("Token"));
+    }
+
+    #[tokio::test]
+    async fn test_encrypt_rejects_unknown_algorithm() {
+        let provider = create_default();
+        let err = provider
+            .encrypt(b"data", "DES-EDE3")
+            .await
+            .expect_err("test: unsupported algorithm should error");
+        assert!(err.to_string().contains("Unsupported encryption"));
+    }
+
+    #[tokio::test]
+    async fn test_sign_rejects_empty_data() {
+        let provider = create_default();
+        let err = provider
+            .sign(&[])
+            .await
+            .expect_err("test: empty data should not sign");
+        assert!(err.to_string().contains("empty") || err.to_string().contains("Cannot sign"));
+    }
+
+    #[tokio::test]
+    async fn test_hash_data_rejects_unknown_algorithm() {
+        let provider = create_default();
+        let err = provider
+            .hash_data(b"x", "MD5")
+            .await
+            .expect_err("test: unsupported hash should error");
+        assert!(err.to_string().contains("Unsupported hash"));
+    }
+
+    #[tokio::test]
+    async fn test_verify_returns_none_for_empty_inputs() {
+        let provider = create_default();
+        assert!(provider
+            .verify(&[], b"sig")
+            .await
+            .expect("test: verify empty data")
+            .is_none());
+        assert!(provider
+            .verify(b"data", &[])
+            .await
+            .expect("test: verify empty signature")
+            .is_none());
+    }
+
+    #[tokio::test]
+    async fn test_validate_config_flags_empty_provider_type() {
+        let provider = create_default();
+        let bad = SecurityProviderConfig {
+            provider_type: String::new(),
+            config: Default::default(),
+        };
+        let issues = provider
+            .validate_config(&bad)
+            .await
+            .expect("test: validate_config");
+        assert!(issues
+            .iter()
+            .any(|s| s.contains("provider_type") && s.contains("empty")));
+    }
+
+    #[tokio::test]
+    async fn test_create_custom_preserves_provider_type() {
+        let mut map = std::collections::HashMap::new();
+        map.insert("k".to_string(), "v".to_string());
+        let p = create_custom("edge-case-type".to_string(), map);
+        assert_eq!(p.config.provider_type, "edge-case-type");
+        assert_eq!(p.id, "custom-provider");
+    }
+
+    #[tokio::test]
+    async fn test_validate_token_false_when_token_string_empty() {
+        let provider = create_default();
+        let token = AuthToken {
+            token: String::new(),
+            expires_at: SystemTime::now() + Duration::from_secs(3600),
+            permissions: vec![],
+        };
+        assert!(!provider
+            .validate_token(&token)
+            .await
+            .expect("test: validate empty token string"));
     }
 }

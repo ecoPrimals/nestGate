@@ -2,6 +2,7 @@
 // Core management implementation for the unified RPC system.
 
 //! Manager module
+#![allow(dead_code)] // Stub RPC stack: fields reserved until full connection/security wiring lands
 
 use super::config::{
     ConnectionPoolConfig, HealthMonitoringConfig, LoadBalancingConfig, NestGateRpcConfig,
@@ -20,7 +21,6 @@ use uuid::Uuid;
 
 /// Main RPC manager for handling unified communications
 #[derive(Clone)] // Remove Debug derive since services field can't be debugged
-#[allow(dead_code)] // Development RPC manager - fields used conditionally
 /// Manager for UnifiedRpc operations
 pub struct UnifiedRpcManager {
     /// Configuration
@@ -51,7 +51,6 @@ impl std::fmt::Display for UnifiedRpcManager {
 }
 /// Connection pool for managing RPC connections
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development connection pool - fields used conditionally
 /// Connectionpool
 pub struct ConnectionPool {
     connections: HashMap<String, Vec<ConnectionInfo>>,
@@ -60,7 +59,6 @@ pub struct ConnectionPool {
 }
 /// Connection information
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development connection info - fields used conditionally
 /// Connectioninfo
 pub struct ConnectionInfo {
     id: Uuid,
@@ -87,7 +85,6 @@ pub enum ConnectionStatus {
 ///
 /// Monitors health of RPC connections and services.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Health monitoring fields used for service reliability
 /// Connectionhealthmonitor
 pub struct ConnectionHealthMonitor {
     /// Health check results for each service
@@ -102,7 +99,6 @@ pub struct ConnectionHealthMonitor {
 ///
 /// Result of a health check for a specific service.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Health check fields used for monitoring
 /// Healthcheckresult
 pub struct HealthCheckResult {
     /// Name of the service being monitored
@@ -421,22 +417,18 @@ impl ConnectionHealthMonitor {
 // Placeholder implementations for other components
 /// Universal security layer for RPC operations
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development security layer - fields used conditionally
 /// Universalsecuritylayer
 pub struct UniversalSecurityLayer;
 /// Load balancer for RPC services
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development load balancer - fields used conditionally
 /// Loadbalancer
 pub struct LoadBalancer;
 /// Stream registry for managing bidirectional streams
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development stream registry - fields used conditionally
 /// Streamregistry
 pub struct StreamRegistry;
 /// Metrics collector for RPC operations
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development metrics collector - fields used conditionally
 /// Metricscollector
 pub struct MetricsCollector;
 impl UniversalSecurityLayer {
@@ -581,18 +573,10 @@ impl Default for MetricsConfig {
 }
 
 // ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Metricsconfigcanonical
-pub type MetricsConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using MetricsConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+// Backward-compatible alias to `CanonicalNetworkConfig` while migrating from deprecated structs.
+#[allow(deprecated, missing_docs)]
+mod deprecated_canonical_aliases {
+    pub type MetricsConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+}
+pub use deprecated_canonical_aliases::MetricsConfigCanonical;

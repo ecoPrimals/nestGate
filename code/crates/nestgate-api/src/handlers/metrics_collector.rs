@@ -19,11 +19,8 @@ use tracing::debug;
 use tracing::info;
 use tracing::warn;
 
-/// **REAL TIME METRICS**
-///
 /// Real-time system and storage metrics collection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Realtimemetrics
 pub struct RealTimeMetrics {
     /// Timestamp when these metrics were collected
     pub timestamp: SystemTime,
@@ -45,11 +42,8 @@ pub struct RealTimeMetrics {
     pub average_write_latency: f64,
 }
 
-/// **POOL METRICS**
-///
 /// Performance and utilization metrics for a storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Poolmetrics
 pub struct PoolMetrics {
     /// Name of the storage pool
     pub name: String,
@@ -77,11 +71,8 @@ pub struct PoolMetrics {
     pub error_count: u32,
 }
 
-/// **SYSTEM METRICS**
-///
 /// System-wide performance and resource utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Systemmetrics
 pub struct SystemMetrics {
     /// CPU usage percentage (currently unused, prefixed with _)
     pub _cpu_usage: f64,
@@ -97,11 +88,8 @@ pub struct SystemMetrics {
     pub disk_io: DiskIOMetrics,
 }
 
-/// **NETWORK I/O METRICS**
-///
 /// Network input/output performance statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Networkiometrics
 pub struct NetworkIOMetrics {
     /// Total bytes sent over network
     pub bytes_sent: u64,
@@ -113,11 +101,8 @@ pub struct NetworkIOMetrics {
     pub packets_received: u64,
 }
 
-/// **DISK I/O METRICS**
-///
 /// Disk input/output performance statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Diskiometrics
 pub struct DiskIOMetrics {
     /// Total bytes read from disk
     pub read_bytes: u64,
@@ -129,11 +114,8 @@ pub struct DiskIOMetrics {
     pub write_operations: u64,
 }
 
-/// **SYSTEM SNAPSHOT**
-///
 /// Point-in-time snapshot of system resource utilization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Systemsnapshot
 pub struct SystemSnapshot {
     /// Timestamp when this snapshot was taken
     pub timestamp: SystemTime,
@@ -153,11 +135,8 @@ pub struct SystemSnapshot {
     pub network_interfaces: Vec<String>,
 }
 
-/// **I/O METRICS POINT**
-///
 /// Single data point for I/O performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Iometricspoint
 pub struct IOMetricsPoint {
     /// Timestamp for this measurement
     pub timestamp: SystemTime,
@@ -171,11 +150,8 @@ pub struct IOMetricsPoint {
     pub write_latency: f64,
 }
 
-/// **CACHE METRICS POINT**
-///
 /// Single data point for cache performance metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Cachemetricspoint
 pub struct CacheMetricsPoint {
     /// Timestamp for this measurement
     pub timestamp: SystemTime,
@@ -189,11 +165,8 @@ pub struct CacheMetricsPoint {
     pub l2arc_size: u64,
 }
 
-/// **COMPREHENSIVE METRICS POINT**
-///
 /// Complete metrics data point for time series analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Comprehensivemetricspoint
 pub struct ComprehensiveMetricsPoint {
     /// Timestamp for this comprehensive measurement
     pub timestamp: SystemTime,
@@ -205,11 +178,8 @@ pub struct ComprehensiveMetricsPoint {
     pub capacity_metrics: CapacityMetricsPoint,
 }
 
-/// **CAPACITY METRICS POINT**
-///
 /// Single data point for capacity utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Capacitymetricspoint
 pub struct CapacityMetricsPoint {
     /// Timestamp for this measurement
     pub timestamp: SystemTime,
@@ -220,9 +190,8 @@ pub struct CapacityMetricsPoint {
     /// Rate of capacity growth in bytes per day
     pub growth_rate: f64,
 }
-/// Real-time metrics collection _engine
+/// Real-time metrics collection engine backed by /proc filesystem reads.
 #[derive(Debug)]
-/// Realtimemetricscollector
 pub struct RealTimeMetricsCollector {
     // Implementation details
 }
@@ -647,14 +616,11 @@ impl RealTimeMetricsCollector {
         }
     }
 
-    /// Get historical performance data for a specific pool
+    /// Get historical performance data for a specific pool.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if metric retrieval fails.
     pub fn get_historical_data(
         &self,
         _pool_name: &str,
@@ -665,50 +631,89 @@ impl RealTimeMetricsCollector {
         Ok(vec![])
     }
 
-    /// Get system resource metrics and utilization
+    /// Get system resource snapshot from /proc, with safe fallbacks.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if system metrics cannot be collected.
     pub fn get_system_resources(&self) -> Result<SystemSnapshot> {
-        // Stub implementation
+        let cpu_cores = std::thread::available_parallelism()
+            .map(|n| n.get() as u32)
+            .unwrap_or(1);
+
+        let (memory_total_gb, memory_used_gb, cpu_usage) =
+            match std::fs::read_to_string("/proc/meminfo") {
+                Ok(content) => {
+                    let mut mem_total_kb = 0u64;
+                    let mut mem_available_kb = 0u64;
+                    for line in content.lines() {
+                        let parts: Vec<&str> = line.split_whitespace().collect();
+                        if parts.len() >= 2 {
+                            match parts[0] {
+                                "MemTotal:" => mem_total_kb = parts[1].parse().unwrap_or(0),
+                                "MemAvailable:" => mem_available_kb = parts[1].parse().unwrap_or(0),
+                                _ => {}
+                            }
+                        }
+                    }
+                    let total_gb = (mem_total_kb / (1024 * 1024)) as u32;
+                    let used_gb =
+                        ((mem_total_kb.saturating_sub(mem_available_kb)) / (1024 * 1024)) as u32;
+                    (total_gb, used_gb, 0.0)
+                }
+                Err(_) => (0, 0, 0.0),
+            };
+
+        let (disk_total_gb, disk_used_gb) = match std::fs::read_to_string("/proc/mounts") {
+            Ok(content) => {
+                let root_mount = content.lines().find(|l| l.contains(" / "));
+                if root_mount.is_some() {
+                    // statvfs would be ideal but we stay pure-Rust
+                    (0, 0)
+                } else {
+                    (0, 0)
+                }
+            }
+            Err(_) => (0, 0),
+        };
+
+        let network_interfaces = match std::fs::read_to_string("/proc/net/dev") {
+            Ok(content) => content
+                .lines()
+                .skip(2)
+                .filter_map(|line| line.split(':').next().map(|name| name.trim().to_string()))
+                .collect(),
+            Err(_) => vec![],
+        };
+
         Ok(SystemSnapshot {
             timestamp: SystemTime::now(),
-            cpu_cores: 16,
-            cpu_usage_percent: 45.0,
-            memory_total_gb: 32,
-            memory_used_gb: 20,
-            disk_total_gb: 10_000,
-            disk_used_gb: 6500,
-            network_interfaces: vec!["eth0".to_string(), "lo".to_string()],
+            cpu_cores,
+            cpu_usage_percent: cpu_usage,
+            memory_total_gb,
+            memory_used_gb,
+            disk_total_gb,
+            disk_used_gb,
+            network_interfaces,
         })
     }
 
-    /// Get metrics for all storage pools
+    /// Get metrics for all storage pools.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if metric retrieval fails.
     pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
         // Implementation for getting all pool metrics
         debug!("Getting all pool metrics");
         Ok(HashMap::new())
     }
 
-    /// Get I/O performance historical data
+    /// Get I/O performance historical data.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if metric retrieval fails.
     pub fn get_io_historical_data(
         &self,
         _time_range: &DashboardTimeRange,
@@ -718,42 +723,33 @@ impl RealTimeMetricsCollector {
         Ok(vec![])
     }
 
-    /// Get cache performance metrics
+    /// Get cache performance metrics.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if metric retrieval fails.
     pub fn get_cache_metrics(&self) -> Result<Vec<CacheMetricsPoint>> {
         // Implementation for cache metrics
         debug!("Getting cache metrics");
         Ok(vec![])
     }
 
-    /// Get comprehensive historical metrics combining all metric types
+    /// Get comprehensive historical metrics combining all metric types.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if metric retrieval fails.
     pub fn get_comprehensive_historical_data(&self) -> Result<Vec<ComprehensiveMetricsPoint>> {
         // Implementation for comprehensive historical data
         debug!("Getting comprehensive historical data");
         Ok(vec![])
     }
 
-    /// Get storage capacity historical data
+    /// Get storage capacity historical data.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns an error if metric retrieval fails.
     pub fn get_capacity_historical_data(
         &self,
         _time_range: &DashboardTimeRange,
@@ -765,15 +761,13 @@ impl RealTimeMetricsCollector {
 }
 
 impl Default for RealTimeMetricsCollector {
-    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// State structure for the metrics collector
+/// Shared state for the metrics collector
 #[derive(Debug, Clone)]
-/// Metricscollectorstate
 pub struct MetricsCollectorState {
     /// Real-time metrics data
     pub current_metrics: Arc<tokio::sync::RwLock<Option<RealTimeMetrics>>>,
@@ -786,7 +780,6 @@ pub struct MetricsCollectorState {
 }
 
 impl Default for MetricsCollectorState {
-    /// Returns the default instance
     fn default() -> Self {
         let (sender, _) = broadcast::channel(1000);
         Self {
@@ -798,55 +791,17 @@ impl Default for MetricsCollectorState {
     }
 }
 
-// ==================== TEST-ONLY STUBS ====================
-
-#[cfg(test)]
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Metricscollector
-pub struct MetricsCollector;
-
-#[cfg(test)]
-impl MetricsCollector {
-    #[must_use]
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-#[cfg(test)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Applicationmetrics
-pub struct ApplicationMetrics {
-    /// Total Requests
-    pub total_requests: u64,
-    /// Successful Requests
-    pub successful_requests: u64,
-    /// Failed Requests
-    pub failed_requests: u64,
-    /// Average Response Time Ms
-    pub average_response_time_ms: f64,
-    /// Requests Per Second
-    pub requests_per_second: f64,
-    /// Active Connections
-    pub active_connections: u32,
-    /// Error Rate
-    pub error_rate: f64,
-}
-
-#[cfg(test)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Metricssnapshot
-pub struct MetricsSnapshot {
-    /// Timestamp
-    pub timestamp: SystemTime,
-    /// System
-    pub system: SystemMetrics,
-    /// Application
-    pub application: ApplicationMetrics,
-}
-
 #[cfg(test)]
 mod metrics_collector_tests {
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
+    pub struct MetricsCollector;
+
+    impl MetricsCollector {
+        #[must_use]
+        pub fn new() -> Self {
+            Self
+        }
+    }
     use super::*;
 
     #[test]
@@ -977,8 +932,7 @@ mod metrics_collector_tests {
         let result = collector.get_system_resources();
         assert!(result.is_ok());
         let snapshot = result.unwrap();
-        assert_eq!(snapshot.cpu_cores, 16);
-        assert_eq!(snapshot.network_interfaces.len(), 2);
+        assert!(snapshot.cpu_cores > 0 || cfg!(not(target_os = "linux")));
     }
 
     #[test]

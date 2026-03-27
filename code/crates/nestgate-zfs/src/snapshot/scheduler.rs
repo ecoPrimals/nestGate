@@ -390,3 +390,137 @@ impl PolicyScheduler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dataset::ZfsDatasetManager;
+    use crate::performance::types::SnapshotPolicyMap;
+    use crate::snapshot::policy::{ScheduleFrequency, SnapshotPolicy};
+    use crate::snapshot::types::SnapshotInfo;
+    use crate::types::StorageTier;
+    use std::collections::HashMap;
+    use std::time::UNIX_EPOCH;
+
+    fn test_scheduler() -> PolicyScheduler {
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let policies: SnapshotPolicyMap = Arc::new(RwLock::new(HashMap::new()));
+        let queue = Arc::new(RwLock::new(Vec::new()));
+        PolicyScheduler::new(dm, policies, queue)
+    }
+
+    #[test]
+    fn matches_pattern_wildcard_and_prefix_suffix() {
+        assert!(PolicyScheduler::matches_pattern("anything", "*"));
+        assert!(PolicyScheduler::matches_pattern("prefixrest", "prefix*"));
+        assert!(PolicyScheduler::matches_pattern("xsuffix", "*suffix"));
+        assert!(PolicyScheduler::matches_pattern("exact", "exact"));
+        assert!(!PolicyScheduler::matches_pattern("no", "yes"));
+    }
+
+    #[test]
+    fn should_execute_custom_schedule_is_false() {
+        let policy = SnapshotPolicy {
+            frequency: ScheduleFrequency::Custom("x".into()),
+            ..SnapshotPolicy::default()
+        };
+        assert!(!PolicyScheduler::should_execute_policy(&policy));
+    }
+
+    #[tokio::test]
+    async fn parse_schedule_variants() {
+        let s = test_scheduler();
+        assert_eq!(
+            s.parse_schedule(&ScheduleFrequency::Minutes(10))
+                .expect("test: minutes"),
+            Duration::from_secs(600)
+        );
+        assert_eq!(
+            s.parse_schedule(&ScheduleFrequency::Hours(3))
+                .expect("test: hours"),
+            Duration::from_secs(10800)
+        );
+        assert_eq!(
+            s.parse_schedule(&ScheduleFrequency::Daily(4))
+                .expect("test: daily"),
+            Duration::from_secs(86400)
+        );
+        assert_eq!(
+            s.parse_schedule(&ScheduleFrequency::Weekly { day: 1, hour: 2 })
+                .expect("test: weekly"),
+            Duration::from_secs(604800)
+        );
+        assert_eq!(
+            s.parse_schedule(&ScheduleFrequency::Monthly { day: 1, hour: 0 })
+                .expect("test: monthly"),
+            Duration::from_secs(2629746)
+        );
+        s.parse_schedule(&ScheduleFrequency::Custom("c".into()))
+            .expect_err("test: custom parse_schedule");
+    }
+
+    #[tokio::test]
+    async fn generate_snapshot_name_formats_by_frequency() {
+        let s = test_scheduler();
+        let mut p = SnapshotPolicy {
+            name_prefix: "pre".into(),
+            ..SnapshotPolicy::default()
+        };
+        p.frequency = ScheduleFrequency::Minutes(5);
+        let n1 = s.generate_snapshot_name(&p, "z/a").await;
+        assert!(n1.contains("pre"));
+        assert!(n1.contains("z_a"));
+
+        p.frequency = ScheduleFrequency::Hours(1);
+        let n2 = s.generate_snapshot_name(&p, "z/a").await;
+        assert!(n2.starts_with("pre_z_a_"));
+
+        p.frequency = ScheduleFrequency::Daily(0);
+        let n3 = s.generate_snapshot_name(&p, "z/a").await;
+        assert!(n3.contains("_daily_"));
+
+        p.frequency = ScheduleFrequency::Weekly { day: 0, hour: 0 };
+        let n4 = s.generate_snapshot_name(&p, "z/a").await;
+        assert!(n4.contains("_weekly_"));
+
+        p.frequency = ScheduleFrequency::Monthly { day: 1, hour: 0 };
+        let n5 = s.generate_snapshot_name(&p, "z/a").await;
+        assert!(n5.contains("_monthly_"));
+
+        p.frequency = ScheduleFrequency::Custom("x".into());
+        let n6 = s.generate_snapshot_name(&p, "z/a").await;
+        assert!(n6.contains("pre"));
+    }
+
+    #[test]
+    fn apply_custom_retention_marks_old_snapshots() {
+        let s = test_scheduler();
+        let old = SnapshotInfo {
+            name: "s1".into(),
+            full_name: "ds@s1".into(),
+            dataset: "ds".into(),
+            created_at: UNIX_EPOCH,
+            size: 1,
+            referenced_size: 1,
+            written_size: 1,
+            compression_ratio: 1.0,
+            properties: HashMap::new(),
+            policy: None,
+            tier: StorageTier::Warm,
+            protected: false,
+            tags: Vec::new(),
+        };
+        let to_delete = s.apply_custom_retention(vec![old.clone()], 0, 0, 0, 0, 1);
+        assert!(
+            to_delete.iter().any(|x| x.full_name == old.full_name),
+            "expected old snapshot beyond yearly cutoff to be selected"
+        );
+    }
+
+    #[test]
+    fn apply_custom_retention_empty_input() {
+        let s = test_scheduler();
+        let out = s.apply_custom_retention(Vec::new(), 1, 1, 1, 1, 1);
+        assert!(out.is_empty());
+    }
+}

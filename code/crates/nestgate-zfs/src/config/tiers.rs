@@ -433,3 +433,102 @@ impl TierConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn capacity_limits_tier_defaults_are_nonzero() {
+        let h = CapacityLimits::hot_tier_defaults();
+        assert!(h.max_size_gb > 0);
+        let w = CapacityLimits::warm_tier_defaults();
+        assert!(w.min_free_space_gb > 0);
+        let c = CapacityLimits::cold_tier_defaults();
+        assert!(c.warning_threshold_percent >= 0.0);
+    }
+
+    #[test]
+    fn tier_configurations_default_has_three_named_tiers() {
+        let t = TierConfigurations::default();
+        assert!(!t.hot.name.is_empty());
+        assert!(!t.warm.name.is_empty());
+        assert!(!t.cold.name.is_empty());
+        t.hot.validate().expect("test: hot valid");
+        t.warm.validate().expect("test: warm valid");
+        t.cold.validate().expect("test: cold valid");
+    }
+
+    #[test]
+    fn tier_configurations_production_and_auto_detect() {
+        let p = TierConfigurations::production_tiers();
+        assert_eq!(p.hot.pool_name, "production");
+        let a = TierConfigurations::auto_detect_tiers("mypool");
+        assert_eq!(a.hot.pool_name, "mypool");
+        assert_eq!(a.warm.pool_name, "mypool");
+        assert_eq!(a.cold.pool_name, "mypool");
+    }
+
+    #[test]
+    fn tier_config_hot_warm_cold_defaults_have_expected_profiles() {
+        assert!(matches!(
+            TierConfig::hot_tier_default().performance_profile,
+            PerformanceProfile::HighPerformance
+        ));
+        assert!(matches!(
+            TierConfig::warm_tier_default().performance_profile,
+            PerformanceProfile::Balanced
+        ));
+        assert!(matches!(
+            TierConfig::cold_tier_default().performance_profile,
+            PerformanceProfile::HighCompression
+        ));
+    }
+
+    #[test]
+    fn tier_config_production_overrides_pool_and_properties() {
+        let hot = TierConfig::hot_tier_production();
+        assert_eq!(hot.pool_name, "production");
+        assert!(hot.properties.contains_key("logbias"));
+
+        let warm = TierConfig::warm_tier_production();
+        assert_eq!(warm.migration_rules.age_threshold_days, 30);
+
+        let cold = TierConfig::cold_tier_production();
+        assert!(cold.properties.contains_key("dedup"));
+    }
+
+    #[test]
+    fn tier_config_validate_errors() {
+        let mut bad = TierConfig::hot_tier_default();
+        bad.name.clear();
+        assert_eq!(
+            bad.validate().expect_err("test: empty name"),
+            ERROR_TIER_NAME_EMPTY
+        );
+
+        let mut bad_pool = TierConfig::warm_tier_default();
+        bad_pool.pool_name.clear();
+        assert_eq!(
+            bad_pool.validate().expect_err("test: empty pool"),
+            ERROR_POOL_NAME_EMPTY
+        );
+
+        let mut bad_prefix = TierConfig::cold_tier_default();
+        bad_prefix.dataset_prefix.clear();
+        assert_eq!(
+            bad_prefix.validate().expect_err("test: empty prefix"),
+            ERROR_DATASET_PREFIX_EMPTY
+        );
+    }
+
+    #[test]
+    fn tier_config_serde_roundtrip() {
+        let cfg = TierConfigurations::default();
+        let json = serde_json::to_string(&cfg).expect("test: serialize tiers");
+        let back: TierConfigurations =
+            serde_json::from_str(&json).expect("test: deserialize tiers");
+        assert_eq!(back.hot.name, cfg.hot.name);
+        assert_eq!(back.cold.pool_name, cfg.cold.pool_name);
+    }
+}

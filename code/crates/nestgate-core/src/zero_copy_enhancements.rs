@@ -7,7 +7,6 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::mem::ManuallyDrop;
 
 /// **ENHANCED ZERO-COPY STRING POOL**
 ///
@@ -336,14 +335,6 @@ impl ZeroCopyMemoryMap {
         self.data.is_empty()
     }
 }
-
-// SAFETY: Send - ZeroCopyMemoryMap holds Vec<u8> and File.
-// Both are Send. Data is owned; no shared references across threads.
-unsafe impl Send for ZeroCopyMemoryMap {}
-
-// SAFETY: Sync - No interior mutability. as_slice() returns &[u8] (Sync).
-// Concurrent reads via shared references are safe.
-unsafe impl Sync for ZeroCopyMemoryMap {}
 
 /// **ZERO-COPY JSON PARSER**
 ///

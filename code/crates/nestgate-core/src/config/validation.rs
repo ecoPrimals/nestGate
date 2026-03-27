@@ -626,6 +626,8 @@ impl ConfigValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_validation_utils_port() {
@@ -645,6 +647,48 @@ mod tests {
         assert!(ValidationUtils::validate_range("test_range", 5, 1, 10).is_none());
         assert!(ValidationUtils::validate_range("test_range", 15, 1, 10).is_some());
         assert!(ValidationUtils::validate_range("test_range", 0, 1, 10).is_some());
+    }
+
+    #[test]
+    fn test_validation_utils_range_inclusive_boundaries() {
+        assert!(ValidationUtils::validate_range("r", 1, 1, 10).is_none());
+        assert!(ValidationUtils::validate_range("r", 10, 1, 10).is_none());
+    }
+
+    #[test]
+    fn test_validation_utils_file_path_existing_file() {
+        let file = NamedTempFile::new().expect("test: temp file");
+        assert!(ValidationUtils::validate_file_path("path", file.path()).is_none());
+    }
+
+    #[test]
+    fn test_validation_utils_file_path_missing() {
+        let path = std::env::temp_dir().join("nestgate_validation_missing_file_xyz");
+        assert!(ValidationUtils::validate_file_path("path", &path).is_some());
+    }
+
+    #[test]
+    fn test_validation_utils_file_path_directory_not_file() {
+        let dir = tempdir().expect("test: temp dir");
+        assert!(ValidationUtils::validate_file_path("path", dir.path()).is_some());
+    }
+
+    #[test]
+    fn test_validation_utils_directory_path_existing() {
+        let dir = tempdir().expect("test: temp dir");
+        assert!(ValidationUtils::validate_directory_path("dir", dir.path()).is_none());
+    }
+
+    #[test]
+    fn test_validation_utils_directory_path_file_not_dir() {
+        let file = NamedTempFile::new().expect("test: temp file");
+        assert!(ValidationUtils::validate_directory_path("dir", file.path()).is_some());
+    }
+
+    #[test]
+    fn test_validation_utils_directory_path_missing() {
+        let path = std::env::temp_dir().join("nestgate_validation_missing_dir_xyz");
+        assert!(ValidationUtils::validate_directory_path("dir", &path).is_some());
     }
 
     #[test]
@@ -810,5 +854,50 @@ mod tests {
             constraints: vec!["pattern".to_string()],
             description: "desc".to_string(),
         };
+    }
+
+    #[test]
+    fn test_config_validator_validate_matches_trait() {
+        let config = NetworkConfig::development_optimized();
+        let a = ConfigValidator::validate(&config);
+        let b = ConfigValidation::validate(&config);
+        assert_eq!(a.is_valid, b.is_valid);
+        assert_eq!(a.errors.len(), b.errors.len());
+    }
+
+    #[tokio::test]
+    async fn test_config_validator_validate_strict_ok() {
+        let config = NetworkConfig::development_optimized();
+        ConfigValidator::validate_strict(&config)
+            .await
+            .expect("test: valid config should pass strict validation");
+    }
+
+    #[tokio::test]
+    async fn test_config_validator_validate_strict_err() {
+        let mut config = NetworkConfig::development_optimized();
+        config.api.port = 0;
+        let err = ConfigValidator::validate_strict(&config)
+            .await
+            .expect_err("test: invalid port should fail strict validation");
+        assert!(!err.to_string().is_empty());
+    }
+
+    #[test]
+    fn test_network_config_invalid_buffer_trait() {
+        let mut config = NetworkConfig::development_optimized();
+        config.performance.buffer_size = 0;
+        let result = ConfigValidation::validate(&config);
+        assert!(!result.is_valid);
+        assert!(!result.errors.is_empty());
+    }
+
+    #[test]
+    fn test_network_config_firewall_warning_trait() {
+        let mut config = NetworkConfig::development_optimized();
+        config.security.firewall_enabled = true;
+        config.security.allowed_ips.clear();
+        let result = ConfigValidation::validate(&config);
+        assert!(!result.warnings.is_empty());
     }
 }

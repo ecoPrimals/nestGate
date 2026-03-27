@@ -58,7 +58,11 @@ features = [ "v4",]
 [dependencies.nestgate-core]
 path = "../nestgate-core"
 
-# reqwest removed (BiomeOS Pure Rust Evolution)
+# Optional HTTP for release downloads (installer UX); core services remain HTTP-free.
+[dependencies.reqwest]
+version = "0.12"
+default-features = false
+features = ["json", "rustls-tls"]
 
 [dependencies.dialoguer]
 version = "0.11"

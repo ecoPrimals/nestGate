@@ -1,45 +1,35 @@
 //! **SAFE HIGH-PERFORMANCE MEMORY POOL**
 //!
 //! Zero-allocation memory pool using 100% safe Rust with RAII patterns.
-//! This module provides the same performance as unsafe alternatives while
-//! maintaining complete memory safety through Rust's type system.
+//! This module provides the same performance intent as raw-pointer slabs while
+//! using `Mutex<Option<T>>` per slot (no `UnsafeCell`, no manual `Send`/`Sync`).
 //!
 //! ## Key Innovations
 //!
 //! - **RAII Handles**: Automatic deallocation through Drop
 //! - **Type Safety**: Compile-time guarantees prevent double-free
 //! - **Zero Unsafe**: Uses safe abstractions exclusively
-//! - **Lock-Free**: Uses atomics for thread-safe operations
-//! - **Zero Cost**: Optimizes to same assembly as unsafe code
-//!
-//! ## Performance
-//!
-//! Benchmarks show this safe implementation matches or exceeds unsafe alternatives:
-//! - Allocation: <5ns (same as unsafe)
-//! - Deallocation: <3ns (automatic via Drop)
-//! - Thread contention: <10ns (lock-free)
+//! - **Concurrency**: Bitmap + atomics for allocation; per-slot mutex for storage
 //!
 //! ## Example
 //!
 //! ```rust
 //! use nestgate_core::memory_layout::safe_memory_pool::SafeMemoryPool;
 //!
-//! let pool = SafeMemoryPool::<String, 1024>::new();
+//! let pool = SafeMemoryPool::<String, 32>::new();
 //!
-//! // Allocate - returns RAII handle
-//! let handle = pool.allocate("Hello".to_string())?;
+//! let handle = pool.allocate("Hello".to_string()).expect("pool has capacity");
 //!
-//! // Use the value
 //! println!("Value: {}", handle.value());
 //!
 //! // Automatic deallocation when handle drops
-//! // No unsafe deallocate() needed!
 //! ```
 
-use std::cell::UnsafeCell;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+
+use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 
 /// Safe memory pool with automatic deallocation via RAII
 ///
@@ -52,14 +42,13 @@ pub struct SafeMemoryPool<T, const CAPACITY: usize = 1024> {
 
 /// Inner pool state (shared between pool and handles)
 struct PoolInner<T, const CAPACITY: usize> {
-    /// Storage slots (using UnsafeCell for interior mutability)
-    /// Each slot is protected by the allocation bitmap
-    slots: Box<[UnsafeCell<Option<T>>; CAPACITY]>,
-    
+    /// Storage slots — mutex per slot (no `UnsafeCell`)
+    slots: Box<[Mutex<Option<T>>; CAPACITY]>,
+
     /// Allocation bitmap (1 = free, 0 = allocated)
     /// Uses atomic for thread-safe operations
     free_bitmap: AtomicU64,
-    
+
     /// Statistics
     stats: PoolStats,
 }
@@ -71,6 +60,8 @@ pub struct PoolStats {
     deallocated: AtomicUsize,
     peak_usage: AtomicUsize,
 }
+
+type MutexOption<T> = Mutex<Option<T>>;
 
 /// RAII handle to allocated memory
 ///
@@ -92,15 +83,14 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
     /// Panics if CAPACITY > 64 (bitmap limitation for this implementation)
     pub fn new() -> Self {
         assert!(
-            CAPACITY <= 64,
-            "Safe memory pool supports up to 64 slots (bitmap limitation)"
+            CAPACITY > 0 && CAPACITY < 64,
+            "Safe memory pool supports 1..63 slots (single u64 bitmap)"
         );
 
-        // Initialize all slots to None
-        let slots: Box<[UnsafeCell<Option<T>>; CAPACITY]> = {
+        let slots: Box<[MutexOption<T>; CAPACITY]> = {
             let mut vec = Vec::with_capacity(CAPACITY);
             for _ in 0..CAPACITY {
-                vec.push(UnsafeCell::new(None));
+                vec.push(MutexOption::new(None));
             }
             vec.into_boxed_slice()
                 .try_into()
@@ -126,23 +116,17 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
     /// Allocate value from pool
     ///
     /// Returns RAII handle that automatically deallocates on drop.
-    /// This is 100% safe - no manual deallocation needed!
     pub fn allocate(&self, value: T) -> Option<PoolHandle<T, CAPACITY>> {
         loop {
-            // Load current free bitmap
             let current = self.inner.free_bitmap.load(Ordering::Acquire);
 
             if current == 0 {
                 return None; // Pool exhausted
             }
 
-            // Find first free slot (trailing zeros of bitmap)
             let slot = current.trailing_zeros() as usize;
-
-            // Calculate new bitmap with this slot marked as allocated
             let new_bitmap = current & !(1u64 << slot);
 
-            // Try to atomically update bitmap
             match self.inner.free_bitmap.compare_exchange(
                 current,
                 new_bitmap,
@@ -150,21 +134,11 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
                 Ordering::Acquire,
             ) {
                 Ok(_) => {
-                    // Successfully allocated slot!
-                    
-                    // SAFETY: UnsafeCell::get() required for lock-free bitmap allocator.
-                    // - Bounds: slot < CAPACITY (from trailing_zeros on bitmap)
-                    // - Exclusive access: compare_exchange succeeded, so we own this slot
-                    // - No races: bitmap bit cleared atomically before we write
-                    unsafe {
-                        *self.inner.slots[slot].get() = Some(value);
-                    }
+                    *self.inner.slots[slot].lock() = Some(value);
 
-                    // Update statistics
                     self.inner.stats.allocated.fetch_add(1, Ordering::Relaxed);
-                    let usage =
-                        self.inner.stats.allocated.load(Ordering::Relaxed)
-                            - self.inner.stats.deallocated.load(Ordering::Relaxed);
+                    let usage = self.inner.stats.allocated.load(Ordering::Relaxed)
+                        - self.inner.stats.deallocated.load(Ordering::Relaxed);
                     let peak = self.inner.stats.peak_usage.load(Ordering::Relaxed);
                     if usage > peak {
                         self.inner.stats.peak_usage.store(usage, Ordering::Relaxed);
@@ -176,10 +150,7 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
                         _phantom: PhantomData,
                     });
                 }
-                Err(_) => {
-                    // Another thread allocated this slot, retry
-                    continue;
-                }
+                Err(_) => continue,
             }
         }
     }
@@ -217,88 +188,50 @@ impl<T, const CAPACITY: usize> Clone for SafeMemoryPool<T, CAPACITY> {
     }
 }
 
-// RAII Handle Implementation
 impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
-    /// Get immutable reference to value
-    pub fn value(&self) -> &T {
-        // SAFETY: UnsafeCell::get() for interior mutability. Safe because:
-        // - Only one PoolHandle exists per slot (slot reserved at allocation)
-        // - Handle not dropped while we hold the reference (borrow from self)
-        // - Slot was written in allocate() before handle was returned
-        // SAFETY: PoolHandle invariants guarantee slot contains Some(T); empty slot = logic bug
-        unsafe {
-            (*self.pool.slots[self.slot].get())
-                .as_ref()
+    /// Get immutable reference to value (locks the slot for the duration of the guard)
+    pub fn value(&self) -> MappedMutexGuard<'_, T> {
+        MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
+            opt.as_mut()
                 .expect("Pool handle points to empty slot - this is a bug")
-        }
+        })
     }
 
     /// Get mutable reference to value
-    pub fn value_mut(&mut self) -> &mut T {
-        // SAFETY: Same as value(); exclusive mutability via &mut self. PoolHandle guarantees slot has Some(T).
-        unsafe {
-            (*self.pool.slots[self.slot].get())
-                .as_mut()
+    pub fn value_mut(&mut self) -> MappedMutexGuard<'_, T> {
+        MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
+            opt.as_mut()
                 .expect("Pool handle points to empty slot - this is a bug")
-        }
+        })
     }
 
     /// Take ownership of value, consuming the handle
-    ///
-    /// This deallocates the slot and returns the value.
-    ///
-    /// ✅ EVOLVED: Fixed use-after-forget ordering bug.
-    /// All field access happens BEFORE std::mem::forget(self).
     pub fn into_inner(self) -> T {
-        // SAFETY: Exclusive access via handle ownership; slot valid until dealloc. PoolHandle guarantees slot has Some(T).
-        let value = unsafe {
-            (*self.pool.slots[self.slot].get())
-                .take()
-                .expect("Pool handle points to empty slot - this is a bug")
-        };
+        let value = self.pool.slots[self.slot]
+            .lock()
+            .take()
+            .expect("Pool handle points to empty slot - this is a bug");
 
-        // ✅ SAFE: Deallocate slot BEFORE forgetting self
         let mask = 1u64 << self.slot;
         self.pool.free_bitmap.fetch_or(mask, Ordering::Release);
         self.pool.stats.deallocated.fetch_add(1, Ordering::Relaxed);
 
-        // Prevent Drop from running (we've already cleaned up above)
         std::mem::forget(self);
 
         value
     }
 }
 
-/// Automatic deallocation via Drop - this is the magic!
-///
-/// No manual deallocation needed, no unsafe deallocate() function,
-/// no risk of forgetting to deallocate. Rust's type system handles it all!
 impl<T, const CAPACITY: usize> Drop for PoolHandle<T, CAPACITY> {
     fn drop(&mut self) {
-        // SAFETY: Handle owns slot; no other refs exist (handle not cloneable)
-        unsafe {
-            *self.pool.slots[self.slot].get() = None;
-        }
+        *self.pool.slots[self.slot].lock() = None;
 
-        // Mark slot as free in bitmap
         let mask = 1u64 << self.slot;
         self.pool.free_bitmap.fetch_or(mask, Ordering::Release);
 
-        // Update statistics
         self.pool.stats.deallocated.fetch_add(1, Ordering::Relaxed);
     }
 }
-
-// SAFETY: Send/Sync for PoolHandle
-//
-// Send: PoolHandle holds Arc<PoolInner> + slot index. Transferring the handle
-// transfers exclusive ownership of that slot. No other handle references the
-// same slot. T: Send ensures the stored value is safe to transfer.
-//
-// Sync: &PoolHandle allows shared access. value() returns &T which requires T: Sync
-// for concurrent reads. Only one PoolHandle exists per slot, so no data races.
-unsafe impl<T: Send, const CAPACITY: usize> Send for PoolHandle<T, CAPACITY> {}
-unsafe impl<T: Sync, const CAPACITY: usize> Sync for PoolHandle<T, CAPACITY> {}
 
 impl PoolStats {
     /// Get total allocations
@@ -330,15 +263,14 @@ mod tests {
     fn test_pool_allocation_and_automatic_deallocation() {
         let pool = SafeMemoryPool::<String, 16>::new();
 
-        // Allocate value
-        let handle = pool.allocate("Hello".to_string()).expect("Allocation failed");
-        assert_eq!(handle.value(), "Hello");
+        let handle = pool
+            .allocate("Hello".to_string())
+            .expect("Allocation failed");
+        assert_eq!(handle.value().as_str(), "Hello");
         assert_eq!(pool.available(), 15);
 
-        // Drop handle - automatic deallocation!
         drop(handle);
 
-        // Slot is free again
         assert_eq!(pool.available(), 16);
     }
 
@@ -351,7 +283,6 @@ mod tests {
         let _h3 = pool.allocate(3).expect("Allocation failed");
         let _h4 = pool.allocate(4).expect("Allocation failed");
 
-        // Pool exhausted
         assert!(pool.allocate(5).is_none());
         assert_eq!(pool.available(), 0);
     }
@@ -361,13 +292,12 @@ mod tests {
         let pool = SafeMemoryPool::<String, 8>::new();
 
         for i in 0..100 {
-            let handle = pool.allocate(format!("Value {}", i))
+            let handle = pool
+                .allocate(format!("Value {}", i))
                 .expect("Allocation failed");
-            assert_eq!(handle.value(), &format!("Value {}", i));
-            // Automatic deallocation on drop
+            assert_eq!(handle.value().as_str(), &format!("Value {}", i));
         }
 
-        // All slots should be free
         assert_eq!(pool.available(), 8);
     }
 
@@ -375,13 +305,14 @@ mod tests {
     fn test_into_inner() {
         let pool = SafeMemoryPool::<String, 8>::new();
 
-        let handle = pool.allocate("Test".to_string()).expect("Allocation failed");
+        let handle = pool
+            .allocate("Test".to_string())
+            .expect("Allocation failed");
         assert_eq!(pool.available(), 7);
 
         let value = handle.into_inner();
         assert_eq!(value, "Test");
 
-        // Slot is freed
         assert_eq!(pool.available(), 8);
     }
 
@@ -390,11 +321,10 @@ mod tests {
         let pool = SafeMemoryPool::<Vec<i32>, 8>::new();
 
         let mut handle = pool.allocate(vec![1, 2, 3]).expect("Allocation failed");
-        
-        // Mutate through handle
+
         handle.value_mut().push(4);
-        
-        assert_eq!(handle.value(), &vec![1, 2, 3, 4]);
+
+        assert_eq!(handle.value().as_slice(), &[1, 2, 3, 4]);
     }
 
     #[test]
@@ -415,4 +345,3 @@ mod tests {
         assert_eq!(pool.stats().in_use(), 0);
     }
 }
-

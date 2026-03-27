@@ -11,23 +11,28 @@ mod expanded_chaos_scenarios {
 
     #[tokio::test]
     async fn chaos_network_packet_loss_1_percent() {
-        // Simulate 1% packet loss
-        let total_requests = 100;
-        let mut successful = 0;
+        // Simulate 1% packet loss: each "request" succeeds with probability 0.99.
+        // Use enough trials so a ≥98% *observed* success rate is statistically stable
+        // (100 Bernoulli trials with p=0.99 often land below 98 successes; that is normal variance).
+        const TOTAL_REQUESTS: usize = 1000;
+        const MIN_SUCCESS: usize = 980; // 98% of 1000 — still validates graceful handling under ~1% loss
 
-        for _ in 0..total_requests {
+        let mut successful = 0;
+        for _ in 0..TOTAL_REQUESTS {
             if rand::random::<f64>() > 0.01 {
                 successful += 1;
             }
         }
 
-        assert!(successful >= 98); // At least 98% success
+        assert!(
+            successful >= MIN_SUCCESS,
+            "expected most requests to succeed under ~1% loss (got {successful}/{TOTAL_REQUESTS})"
+        );
     }
 
     #[tokio::test]
     async fn chaos_network_packet_loss_10_percent() {
-        // Simulate 10% packet loss
-        let total_requests = 100;
+        let total_requests = 2000;
         let mut successful = 0;
 
         for _ in 0..total_requests {
@@ -36,7 +41,10 @@ mod expanded_chaos_scenarios {
             }
         }
 
-        assert!(successful >= 85); // At least 85% success
+        assert!(
+            successful >= 1700,
+            "expected ~90% success under 10% loss (got {successful}/{total_requests})"
+        );
     }
 
     #[tokio::test]

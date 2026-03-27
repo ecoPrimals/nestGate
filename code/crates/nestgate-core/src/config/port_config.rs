@@ -39,37 +39,53 @@ impl PortConfiguration {
     /// All ports configurable via environment variables. No hardcoded assumptions.
     #[must_use]
     pub fn from_env() -> Self {
-        // ✅ MIGRATED: Now uses centralized environment-driven functions for defaults
-        use crate::constants::{get_api_port, get_admin_port, get_metrics_port, get_postgres_port, get_redis_port};
-        
+        use crate::constants::hardcoding::{
+            get_grpc_port, get_message_queue_port, get_orchestration_service_port,
+            get_websocket_port,
+        };
+        use crate::constants::{
+            get_admin_port, get_api_port, get_health_port, get_metrics_port, get_postgres_port,
+            get_redis_port,
+        };
+
         Self {
             api_port: env_var_or_default("NESTGATE_API_PORT", get_api_port()),
-            health_port: env_var_or_default("NESTGATE_HEALTH_PORT", 8443), // HTTPS standard
+            health_port: env_var_or_default("NESTGATE_HEALTH_PORT", get_health_port()),
             metrics_port: env_var_or_default("NESTGATE_METRICS_PORT", get_metrics_port()),
             admin_port: env_var_or_default("NESTGATE_ADMIN_PORT", get_admin_port()),
-            websocket_port: env_var_or_default("NESTGATE_WEBSOCKET_PORT", 8082), // WebSocket standard
-            rpc_port: env_var_or_default("NESTGATE_RPC_PORT", 50051), // gRPC standard
+            websocket_port: env_var_or_default("NESTGATE_WEBSOCKET_PORT", get_websocket_port()),
+            rpc_port: env_var_or_default("NESTGATE_RPC_PORT", get_grpc_port()),
             database_port: env_var_or_default("NESTGATE_DATABASE_PORT", get_postgres_port()),
             redis_port: env_var_or_default("NESTGATE_REDIS_PORT", get_redis_port()),
-            message_queue_port: env_var_or_default("NESTGATE_MQ_PORT", 5672), // RabbitMQ standard
-            orchestration_port: env_var_or_default("NESTGATE_ORCHESTRATION_PORT", 9091), // Prometheus admin
+            message_queue_port: env_var_or_default("NESTGATE_MQ_PORT", get_message_queue_port()),
+            orchestration_port: env_var_or_default(
+                "NESTGATE_ORCHESTRATION_PORT",
+                get_orchestration_service_port(),
+            ),
         }
     }
 
     /// Create configuration with all defaults (for testing)
     #[must_use]
     pub fn with_defaults() -> Self {
+        #[allow(deprecated)]
+        use crate::constants::hardcoding::ports;
+        use crate::constants::port_defaults::{
+            DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT,
+            DEFAULT_POSTGRES_PORT, DEFAULT_RABBITMQ_PORT, DEFAULT_REDIS_PORT,
+        };
+
         Self {
-            api_port: 8080,  // HTTP standard port
-            health_port: 8443, // HTTPS alt port for health
-            metrics_port: 9090, // Prometheus standard port
-            admin_port: 9091,  // Prometheus admin standard
-            websocket_port: 8082, // WebSocket common port
-            rpc_port: 50051, // gRPC standard port
-            database_port: 5432, // PostgreSQL standard port
-            redis_port: 6379, // Redis standard port
-            message_queue_port: 5672, // RabbitMQ standard port
-            orchestration_port: 9091, // Orchestration service port
+            api_port: DEFAULT_API_PORT,
+            health_port: DEFAULT_HEALTH_PORT,
+            metrics_port: DEFAULT_METRICS_PORT,
+            admin_port: DEFAULT_ADMIN_PORT,
+            websocket_port: ports::WEBSOCKET_DEFAULT,
+            rpc_port: ports::GRPC_DEFAULT,
+            database_port: DEFAULT_POSTGRES_PORT,
+            redis_port: DEFAULT_REDIS_PORT,
+            message_queue_port: DEFAULT_RABBITMQ_PORT,
+            orchestration_port: ports::ORCHESTRATION_DEFAULT,
         }
     }
 
@@ -79,14 +95,14 @@ impl PortConfiguration {
     #[must_use]
     pub fn for_testing() -> Self {
         Self {
-            api_port: 18080,  // Test HTTP port (high number to avoid conflicts)
-            health_port: 18443, // Test HTTPS port
-            metrics_port: 19090, // Test Prometheus port
-            admin_port: 18081,  // Test admin port
-            websocket_port: 18082, // Test WebSocket port
-            rpc_port: 15051, // Test gRPC port
-            database_port: 15432, // Test PostgreSQL port
-            redis_port: 16379, // Test Redis port
+            api_port: 18080,           // Test HTTP port (high number to avoid conflicts)
+            health_port: 18443,        // Test HTTPS port
+            metrics_port: 19090,       // Test Prometheus port
+            admin_port: 18081,         // Test admin port
+            websocket_port: 18082,     // Test WebSocket port
+            rpc_port: 15051,           // Test gRPC port
+            database_port: 15432,      // Test PostgreSQL port
+            redis_port: 16379,         // Test Redis port
             message_queue_port: 15672, // Test RabbitMQ port
             orchestration_port: 19091, // Test orchestration port
         }
@@ -121,6 +137,24 @@ pub fn init_port_config(config: PortConfiguration) -> Result<(), &'static str> {
         .map_err(|_| "Port configuration already initialized")
 }
 
+/// API port from the cached global [`PortConfiguration`]
+#[must_use]
+pub fn api_port() -> u16 {
+    get_port_config().api_port
+}
+
+/// Admin port from the cached global [`PortConfiguration`]
+#[must_use]
+pub fn admin_port() -> u16 {
+    get_port_config().admin_port
+}
+
+/// Grafana port from environment ([`crate::constants::get_grafana_port`])
+#[must_use]
+pub fn grafana_port() -> u16 {
+    crate::constants::get_grafana_port()
+}
+
 /// Helper function to parse environment variable or use default
 fn env_var_or_default(var_name: &str, default: u16) -> u16 {
     std::env::var(var_name)
@@ -137,8 +171,9 @@ mod tests {
     fn test_default_ports() {
         let config = PortConfiguration::with_defaults();
         assert_eq!(config.api_port, 8080);
-        assert_eq!(config.health_port, 8443);
+        assert_eq!(config.health_port, 8082);
         assert_eq!(config.metrics_port, 9090);
+        assert_eq!(config.admin_port, 8081);
     }
 
     #[test]
@@ -193,7 +228,7 @@ mod tests {
     fn test_port_configuration_clone() {
         let config1 = PortConfiguration::with_defaults();
         let config2 = config1.clone();
-        
+
         assert_eq!(config1.api_port, config2.api_port);
         assert_eq!(config1.health_port, config2.health_port);
         assert_eq!(config1.metrics_port, config2.metrics_port);
@@ -205,7 +240,7 @@ mod tests {
         let json = serde_json::to_string(&config).expect("Should serialize");
         let deserialized: PortConfiguration =
             serde_json::from_str(&json).expect("Should deserialize");
-        
+
         assert_eq!(config.api_port, deserialized.api_port);
         assert_eq!(config.health_port, deserialized.health_port);
     }
@@ -213,7 +248,7 @@ mod tests {
     #[test]
     fn test_port_ranges() {
         let config = PortConfiguration::for_testing();
-        
+
         // All test ports should be in valid range
         assert!(config.api_port > 1024); // Above privileged ports
         assert!(config.api_port < 65535); // Below max port
@@ -246,7 +281,7 @@ mod tests {
     #[test]
     fn test_testing_ports_no_conflicts() {
         let config = PortConfiguration::for_testing();
-        
+
         // All test ports should be unique
         let mut ports = vec![
             config.api_port,
@@ -260,17 +295,17 @@ mod tests {
             config.message_queue_port,
             config.orchestration_port,
         ];
-        
+
         ports.sort_unstable();
         ports.dedup();
-        
+
         assert_eq!(ports.len(), 10); // All unique
     }
 
     #[test]
     fn test_with_defaults_ports_valid() {
         let config = PortConfiguration::with_defaults();
-        
+
         // All default ports should be non-zero (valid range is guaranteed by u16 type)
         assert!(config.api_port > 0);
         assert!(config.health_port > 0);
@@ -281,7 +316,7 @@ mod tests {
     fn test_get_port_config_singleton() {
         let config1 = get_port_config();
         let config2 = get_port_config();
-        
+
         // Should return same instance (pointer equality check)
         assert_eq!(config1.api_port, config2.api_port);
     }
@@ -290,7 +325,7 @@ mod tests {
     fn test_default_and_testing_differ() {
         let config_default = PortConfiguration::with_defaults();
         let config_testing = PortConfiguration::for_testing();
-        
+
         // Test ports should differ from default ports to avoid conflicts
         assert_ne!(config_default.api_port, config_testing.api_port);
     }
@@ -299,7 +334,7 @@ mod tests {
     fn test_config_debug_format() {
         let config = PortConfiguration::with_defaults();
         let debug_str = format!("{:?}", config);
-        
+
         // Should contain port information
         assert!(debug_str.contains("api_port"));
         assert!(debug_str.contains("health_port"));
@@ -308,7 +343,7 @@ mod tests {
     #[test]
     fn test_standard_service_ports() {
         let config = PortConfiguration::with_defaults();
-        
+
         // Verify standard service port assignments
         assert_eq!(config.database_port, 5432); // PostgreSQL default
         assert_eq!(config.redis_port, 6379); // Redis default
@@ -317,7 +352,7 @@ mod tests {
     #[test]
     fn test_rpc_port_valid() {
         let config = PortConfiguration::with_defaults();
-        
+
         // gRPC default port should be valid
         assert_eq!(config.rpc_port, 50051);
     }
@@ -327,12 +362,12 @@ mod tests {
         let config1 = PortConfiguration::with_defaults();
         let config2 = PortConfiguration::for_testing();
         let config3 = PortConfiguration::from_env();
-        
+
         // All instances should be valid
         assert!(config1.api_port > 0);
         assert!(config2.api_port > 0);
         assert!(config3.api_port > 0);
-        
+
         // Test ports should differ from default ports
         assert_ne!(config1.api_port, config2.api_port);
     }

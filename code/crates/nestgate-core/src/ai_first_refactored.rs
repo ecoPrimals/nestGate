@@ -667,3 +667,191 @@ pub fn ai_response_with_actions<T>(data: T, actions: Vec<SuggestedAction>) -> AI
     }
     builder.build()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::NestGateError;
+    use serde_json::json;
+    use std::collections::HashMap;
+
+    #[test]
+    fn ai_first_response_builder_builds_success_with_defaults() {
+        let resp = AIFirstResponseBuilder::new("payload".to_string()).build();
+        assert!(resp.success);
+        assert_eq!(resp.data, "payload");
+        assert!(resp.error.is_none());
+        assert_eq!(resp.confidence_score, 1.0);
+        assert!(resp.suggested_actions.is_empty());
+        assert_eq!(resp.processing_time_ms, 0);
+    }
+
+    #[test]
+    fn ai_first_response_builder_with_error_sets_failure() {
+        let err = AIFirstError {
+            code: "E_TEST".to_string(),
+            message: "failed".to_string(),
+            category: AIErrorCategory::Internal,
+            retry_strategy: RetryStrategy::NoRetry,
+            automation_hints: vec![],
+            severity: ErrorSeverity::Low,
+            requires_human_intervention: false,
+            context: HashMap::new(),
+            recovery_suggestions: vec![],
+        };
+        let resp = AIFirstResponseBuilder::new(42_i32)
+            .with_error(err.clone())
+            .build();
+        assert!(!resp.success);
+        assert_eq!(resp.error.expect("test: error set").code, "E_TEST");
+    }
+
+    #[test]
+    fn ai_first_response_builder_confidence_clamped() {
+        let low = AIFirstResponseBuilder::new(())
+            .with_confidence(-5.0)
+            .build();
+        assert_eq!(low.confidence_score, 0.0);
+        let high = AIFirstResponseBuilder::new(()).with_confidence(2.0).build();
+        assert_eq!(high.confidence_score, 1.0);
+    }
+
+    #[test]
+    fn ai_first_response_builder_suggestions_and_metadata() {
+        let meta = AIResponseMetadata::default();
+        let action = SuggestedAction {
+            action_id: "a1".to_string(),
+            action_type: ActionType::Retry,
+            description: "retry".to_string(),
+            confidence: 0.5,
+            parameters: HashMap::from([("k".to_string(), json!(1))]),
+            dependencies: vec![],
+            estimated_duration_ms: Some(10),
+        };
+        let resp = AIFirstResponseBuilder::new(vec![1_u8])
+            .with_metadata(meta.clone())
+            .add_suggestion(action)
+            .build();
+        assert_eq!(resp.ai_metadata.generator_version, meta.generator_version);
+        assert_eq!(resp.suggested_actions.len(), 1);
+        assert_eq!(resp.suggested_actions[0].action_id, "a1".to_string());
+    }
+
+    #[test]
+    fn defaults_for_metadata_and_ecosystem() {
+        let m = AIResponseMetadata::default();
+        assert!(!m.generator_version.is_empty());
+        let e = EcosystemMetadata::default();
+        assert_eq!(e.source_primal, "nestgate");
+        assert!(!e.cross_primal_capabilities.is_empty());
+        let ru = ResourceUsage::default();
+        assert_eq!(ru.memory_bytes, 0);
+        let q = QualityIndicators::default();
+        assert_eq!(q.accuracy_score, 1.0);
+        let ec = EcosystemCompatibility::default();
+        assert!(ec.ai_first_compliance > 0.0);
+    }
+
+    #[test]
+    fn into_ai_first_error_maps_network_configuration_security() {
+        let net = NestGateError::network_error("unreachable");
+        let a = net.clone().into_ai_first_error();
+        assert_eq!(a.code, "NETWORK_ERROR");
+        assert!(matches!(a.category, AIErrorCategory::Network));
+        assert!(matches!(
+            a.retry_strategy,
+            RetryStrategy::ExponentialBackoff { .. }
+        ));
+        assert!(matches!(a.severity, ErrorSeverity::Medium));
+        assert!(!a.requires_human_intervention);
+
+        let cfg = NestGateError::configuration_error("x", "bad");
+        let b = cfg.into_ai_first_error();
+        assert_eq!(b.code, "CONFIG_ERROR");
+        assert!(b.requires_human_intervention);
+
+        let sec = NestGateError::security_error("denied");
+        let c = sec.into_ai_first_error();
+        assert_eq!(c.code, "SECURITY_ERROR");
+        assert!(matches!(c.severity, ErrorSeverity::Critical));
+        assert!(c.requires_human_intervention);
+    }
+
+    #[test]
+    fn into_ai_first_error_with_hints_extends() {
+        let e = NestGateError::validation_error("bad input")
+            .into_ai_first_error_with_hints(vec!["hint1".to_string()]);
+        assert!(e.automation_hints.contains(&"hint1".to_string()));
+    }
+
+    #[test]
+    fn ai_success_and_ai_success_with_confidence() {
+        let r = ai_success("ok");
+        assert!(r.success);
+        assert_eq!(r.confidence_score, 0.95);
+        let r2 = ai_success_with_confidence(7_u8, 0.25);
+        assert_eq!(r2.confidence_score, 0.25);
+    }
+
+    #[test]
+    fn ai_error_wraps_nest_gate_error() {
+        let r: AIFirstResponse<String> = ai_error(NestGateError::internal_error("oops", "test"));
+        assert!(!r.success);
+        assert_eq!(r.confidence_score, 0.0);
+        assert_eq!(r.data, String::default());
+    }
+
+    #[test]
+    fn ai_response_with_actions_collects_suggestions() {
+        let a = SuggestedAction {
+            action_id: "x".to_string(),
+            action_type: ActionType::Custom("c".to_string()),
+            description: "d".to_string(),
+            confidence: 0.1,
+            parameters: HashMap::new(),
+            dependencies: vec![],
+            estimated_duration_ms: None,
+        };
+        let r = ai_response_with_actions(true, vec![a]);
+        assert_eq!(r.suggested_actions.len(), 1);
+        assert!(matches!(
+            r.suggested_actions[0].action_type,
+            ActionType::Custom(_)
+        ));
+    }
+
+    #[test]
+    fn serde_roundtrip_ai_first_response() {
+        let original = AIFirstResponseBuilder::new(json!({"k": 1}))
+            .with_confidence(0.5)
+            .build();
+        let s = serde_json::to_string(&original).expect("test: serialize");
+        let back: AIFirstResponse<serde_json::Value> =
+            serde_json::from_str(&s).expect("test: deserialize");
+        assert_eq!(back.data, json!({"k": 1}));
+        assert_eq!(back.confidence_score, 0.5);
+    }
+
+    #[test]
+    fn serde_roundtrip_retry_strategy_variants() {
+        let cases = vec![
+            RetryStrategy::NoRetry,
+            RetryStrategy::LinearBackoff {
+                interval_ms: 100,
+                max_attempts: 3,
+            },
+            RetryStrategy::ExponentialBackoff {
+                base_ms: 50,
+                max_attempts: 2,
+            },
+            RetryStrategy::CustomBackoff {
+                intervals_ms: vec![10, 20],
+            },
+        ];
+        for c in cases {
+            let s = serde_json::to_string(&c).expect("test: ser");
+            let back: RetryStrategy = serde_json::from_str(&s).expect("test: de");
+            assert_eq!(format!("{c:?}"), format!("{back:?}"));
+        }
+    }
+}

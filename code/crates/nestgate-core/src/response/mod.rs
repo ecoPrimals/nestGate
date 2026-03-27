@@ -325,3 +325,167 @@ pub mod testing {
         );
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::middleware;
+    use super::utils;
+    use super::validation;
+    use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
+    use axum::body::Body;
+    use axum::response::Response;
+    use chrono::Utc;
+    use std::collections::HashMap;
+
+    fn sample_api_response_invalid_success_missing_data() -> ApiResponse<i32> {
+        ApiResponse {
+            request_id: "rid".to_string(),
+            status: crate::canonical_types::ResponseStatus::Success,
+            success: true,
+            data: None,
+            error: None,
+            error_code: None,
+            timestamp: Utc::now(),
+            metadata: None,
+            processing_time_ms: 0,
+        }
+    }
+
+    #[test]
+    fn utils_paginated_response_includes_pagination() {
+        let items = vec![serde_json::json!({"n": 1}), serde_json::json!({"n": 2})];
+        let resp = utils::paginated_response(items, 1, 10, 23);
+        assert!(resp.success);
+        let data = resp.data.expect("test: paginated data");
+        let total_pages = data["pagination"]["total_pages"]
+            .as_u64()
+            .expect("test: total_pages number");
+        assert_eq!(total_pages, 3);
+    }
+
+    #[test]
+    fn utils_batch_response_all_success() {
+        let resp = utils::batch_response(vec![serde_json::json!({"a": 1})], vec![]);
+        assert!(resp.success);
+    }
+
+    #[test]
+    fn utils_batch_response_partial_failure() {
+        let resp = utils::batch_response(
+            vec![serde_json::json!(true)],
+            vec![("id1".to_string(), "boom".to_string())],
+        );
+        assert!(!resp.success);
+        assert!(resp
+            .error
+            .expect("test: batch error msg")
+            .contains("failures"));
+    }
+
+    #[test]
+    fn utils_health_check_response_healthy_vs_unhealthy() {
+        let mut ok = HashMap::new();
+        ok.insert("disk".to_string(), true);
+        let good = utils::health_check_response("svc", "up", ok);
+        assert!(good.success);
+
+        let mut bad = HashMap::new();
+        bad.insert("disk".to_string(), false);
+        let poor = utils::health_check_response("svc", "degraded", bad);
+        assert!(!poor.success);
+    }
+
+    #[test]
+    fn utils_validation_response_sets_context() {
+        let mut fe = HashMap::new();
+        fe.insert("email".to_string(), vec!["invalid".to_string()]);
+        let u = utils::validation_response(fe);
+        assert_eq!(u.code, "VALIDATION_ERROR");
+        let details = u.details.expect("test: details");
+        assert!(details.contains_key("field_errors"));
+    }
+
+    #[test]
+    fn utils_rate_limit_response_has_retry_context() {
+        let reset = Utc::now() + chrono::Duration::seconds(30);
+        let u = utils::rate_limit_response(100, 0, reset);
+        let details = u.details.expect("test: rate details");
+        assert!(details.contains_key("rate_limit"));
+        assert!(details.contains_key("retry_after_seconds"));
+    }
+
+    #[test]
+    fn validation_api_response_errors() {
+        let err =
+            validation::validate_api_response(&sample_api_response_invalid_success_missing_data());
+        assert!(err
+            .expect_err("test: invalid success")
+            .contains("must have data"));
+
+        let invalid_fail = ApiResponse::<()> {
+            request_id: "r".to_string(),
+            status: crate::canonical_types::ResponseStatus::Error,
+            success: false,
+            data: None,
+            error: None,
+            error_code: None,
+            timestamp: Utc::now(),
+            metadata: None,
+            processing_time_ms: 0,
+        };
+        let e2 = validation::validate_api_response(&invalid_fail);
+        assert!(e2
+            .expect_err("test: failed without error message")
+            .contains("must have error message"));
+    }
+
+    #[test]
+    fn validation_api_response_success_and_conflicting_error() {
+        let ok = ApiResponse::success(1_i32);
+        validation::validate_api_response(&ok).expect("test: valid success");
+
+        let mut conflict = ApiResponse::success(1_i32);
+        conflict.error = Some("oops".to_string());
+        let e = validation::validate_api_response(&conflict);
+        assert!(e.expect_err("test: conflict").contains("cannot have error"));
+    }
+
+    #[test]
+    fn validation_unified_error_fills_empty_component() {
+        let mut u = UnifiedErrorResponse::simple("m", "C", "");
+        validation::validate_unified_error_response(&mut u).expect("test: validate unified");
+        assert_eq!(u.component, "unknown");
+    }
+
+    #[test]
+    fn validation_success_response_requires_message() {
+        let bad = SuccessResponse {
+            message: String::new(),
+            data: None,
+            metadata: HashMap::new(),
+            timestamp: Utc::now().to_rfc3339(),
+            correlation_id: None,
+        };
+        assert!(validation::validate_success_response(&bad)
+            .expect_err("test: empty message")
+            .contains("must have message"));
+        let good = SuccessResponse::new("ok");
+        validation::validate_success_response(&good).expect("test: good success");
+    }
+
+    #[test]
+    fn middleware_add_correlation_id_and_security_headers() {
+        let base = Response::new(Body::empty());
+        let with_id = middleware::add_correlation_id(base, "abc-123");
+        assert!(with_id.headers().get("X-Correlation-ID").is_some());
+
+        let secured = middleware::add_security_headers(Response::new(Body::empty()));
+        assert!(secured.headers().get("X-Content-Type-Options").is_some());
+
+        let cached = middleware::add_cache_headers(Response::new(Body::empty()), 60);
+        assert!(cached.headers().get("Cache-Control").is_some());
+
+        let no_cache = middleware::add_no_cache_headers(Response::new(Body::empty()));
+        assert!(no_cache.headers().get("Cache-Control").is_some());
+    }
+}

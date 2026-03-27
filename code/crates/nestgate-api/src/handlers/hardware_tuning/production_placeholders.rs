@@ -7,7 +7,7 @@
 //!
 //! These are NOT functional handlers - they exist solely to allow compilation
 //! without `dev-stubs` feature. For production hardware tuning, implement using
-//! `sysinfo` crate as documented in the stub handlers.
+//! `nestgate_core::linux_proc` and `hardware_tuning::linux_proc` (ecoBin v3.0; `sysinfo` is legacy).
 
 use axum::{http::StatusCode, response::Json};
 use serde_json::json;
@@ -25,9 +25,9 @@ fn hardware_tuning_disabled() -> (StatusCode, Json<serde_json::Value>) {
         Json(json!({
             "error": "Hardware tuning API is disabled in production builds",
             "message": "Hardware tuning stubs are development-only",
-            "recommendation": "Implement real hardware detection using sysinfo crate",
-            "implementation_guide": "See handlers.rs (dev-stubs) for implementation examples",
-            "documentation": "https://docs.rs/sysinfo/latest/sysinfo/"
+            "recommendation": "Implement real hardware detection using /proc + rustix (ecoBin v3.0); see linux_proc in nestgate-core",
+            "implementation_guide": "See handlers.rs (dev-stubs) and hardware_tuning::linux_proc for implementation examples",
+            "documentation": "https://docs.rs/rustix/latest/rustix/"
         })),
     )
 }

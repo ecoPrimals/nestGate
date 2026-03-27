@@ -2,6 +2,7 @@
 //! Tests error creation, formatting, and type conversions
 
 use nestgate_core::error::NestGateError;
+use std::hint::black_box;
 
 #[test]
 fn test_internal_error_creation() {
@@ -71,7 +72,11 @@ fn test_error_context_preservation() {
 fn test_result_ok_creation() {
     let result: nestgate_core::Result<i32> = Ok(42);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), 42);
+    if let Ok(v) = result {
+        assert_eq!(v, 42);
+    } else {
+        panic!("expected Ok");
+    }
 }
 
 #[test]
@@ -187,13 +192,17 @@ fn test_error_inequality_different_types() {
 
 #[test]
 fn test_result_unwrap_or_default() {
-    let value: Vec<String> = Err(NestGateError::internal("fail")).unwrap_or_default();
+    let err = NestGateError::internal("fail");
+    let result: nestgate_core::Result<Vec<String>> = Err(err);
+    let value: Vec<String> = black_box(result).unwrap_or_default();
     assert!(value.is_empty());
 }
 
 #[test]
 fn test_result_unwrap_or_else() {
-    let value: i32 = Err(NestGateError::internal("fail")).unwrap_or(99);
+    let err = NestGateError::internal("fail");
+    let result: nestgate_core::Result<i32> = Err(err);
+    let value: i32 = black_box(result).unwrap_or(99);
     assert_eq!(value, 99);
 }
 

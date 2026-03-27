@@ -1,223 +1,117 @@
-# 🚀 NestGate Quick Start (5 Minutes)
+# NestGate Quick Start
 
-**Get NestGate running in 5 minutes!**
-
----
-
-## ⚡ Prerequisites
-
-- **Rust**: 1.75+ (`rustup`)
-- **Git**: Any recent version
-- **OS**: Linux, macOS, or Windows (WSL2)
-
-**Optional**:
-- ZFS (for storage features)
-- Docker (for containerized deployment)
+**Version**: 4.1.0-dev  
+**Last Updated**: March 27, 2026
 
 ---
 
-## 📦 Step 1: Clone & Build (2 minutes)
+## Prerequisites
 
-```bash
-# Clone repository
-git clone https://github.com/ecoPrimals/nestGate.git
-cd nestGate
+- **Rust**: stable toolchain (1.94+) via `rustup`
+- **OS**: Linux, macOS, FreeBSD, Windows (WSL2), illumos, Android
 
-# Build (release mode for performance)
-cargo build --release
-
-# Or build faster in dev mode
-cargo build
-```
-
-**Expected**: Build completes successfully in ~2-3 minutes (first time).
+**Optional**: ZFS (for tiered storage features)
 
 ---
 
-## 🔧 Step 2: Configure (1 minute)
-
-### **Option A: Default Configuration** (Fastest)
+## Build
 
 ```bash
-# Use defaults - no configuration needed!
-# NestGate runs with sensible defaults:
-# - Port: 8080
-# - Host: 127.0.0.1
-# - Storage: XDG-compliant ($HOME/.local/share/nestgate)
-# - Socket: XDG runtime dir
-```
-
-### **Option B: Custom Configuration** (Recommended)
-
-```bash
-# Create .env file
-cat > .env << 'EOF'
-# Network
-NESTGATE_PORT=8080
-NESTGATE_HOST=127.0.0.1
-
-# Storage (XDG-compliant)
-NESTGATE_DATA_DIR=$HOME/.local/share/nestgate
-NESTGATE_CACHE_DIR=$HOME/.cache/nestgate
-
-# Discovery
-NESTGATE_DISCOVERY_ENABLED=true
-
-# Logging
-RUST_LOG=info
-EOF
-
-# Load environment
-source .env
+cargo build --release --workspace
 ```
 
 ---
 
-## 🎬 Step 3: Run (30 seconds)
+## Configure
 
-### **Start NestGate**:
+NestGate uses sensible defaults. Set environment variables to override:
 
 ```bash
-# Run from release build
-./target/release/nestgate
-
-# Or from dev build
-./target/debug/nestgate
-
-# Or with cargo
-cargo run --release
+export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)  # Required for auth
+export NESTGATE_API_PORT=8085                          # HTTP port (default: 8080)
+export NESTGATE_BIND=127.0.0.1                         # Bind address
 ```
 
-**Expected Output**:
-```
-🚀 NestGate v3.3.0 starting...
-✅ Configuration loaded from environment
-✅ Storage initialized at ~/.local/share/nestgate
-✅ Socket listening at /run/user/1000/nestgate/nestgate.sock
-✅ HTTP API listening on http://127.0.0.1:8080
-🎉 NestGate is ready!
-```
+**Storage**: XDG-compliant (`$HOME/.local/share/nestgate` by default)
 
 ---
 
-## ✅ Step 4: Verify (1 minute)
-
-### **Health Check**:
+## Run
 
 ```bash
-# Check health endpoint
-curl http://localhost:8080/health
+# Socket-only (default, ecoBin compliant)
+./target/release/nestgate daemon
 
-# Expected response:
-# {"status":"healthy","version":"3.3.0","uptime_seconds":5}
+# With HTTP enabled
+./target/release/nestgate daemon --enable-http
+
+# Verify (HTTP mode)
+curl http://localhost:8085/health
 ```
 
-### **Create a Dataset**:
+NestGate auto-selects the best IPC transport:
+1. Unix domain socket (optimal on Linux/macOS/FreeBSD)
+2. TCP fallback (Windows WSL2, Android)
+
+---
+
+## Verify
 
 ```bash
-# Create a test dataset
-curl -X POST http://localhost:8080/api/datasets \
-  -H "Content-Type: application/json" \
-  -d '{"name":"test-dataset","description":"My first dataset"}'
+# Health check (HTTP)
+curl http://localhost:8085/health
 
 # Store an object
-echo "Hello NestGate!" > test.txt
-curl -X PUT http://localhost:8080/api/datasets/test-dataset/objects/greeting \
-  --data-binary @test.txt
+curl -X PUT http://localhost:8085/api/datasets/test/objects/hello \
+  --data-binary "Hello NestGate"
 
-# Retrieve the object
-curl http://localhost:8080/api/datasets/test-dataset/objects/greeting
-# Output: Hello NestGate!
+# Retrieve
+curl http://localhost:8085/api/datasets/test/objects/hello
 ```
 
-### **Check Logs**:
+---
+
+## Configuration Priority
+
+1. Environment variables (highest)
+2. `$XDG_CONFIG_HOME/nestgate/config.toml`
+3. `$HOME/.config/nestgate/config.toml`
+4. `/etc/nestgate/config.toml`
+5. Built-in defaults (lowest)
+
+---
+
+## Key Environment Variables
 
 ```bash
-# View logs (if using systemd)
-journalctl -fu nestgate
-
-# Or check log file
-tail -f ~/.local/share/nestgate/logs/nestgate.log
+NESTGATE_API_PORT=8085          # HTTP port
+NESTGATE_BIND=0.0.0.0           # Bind address
+NESTGATE_JWT_SECRET=...          # JWT authentication secret
+NESTGATE_STORAGE_PATH=...       # Override storage location
+NESTGATE_IPC_MODE=auto           # auto, unix, tcp
+RUST_LOG=info                    # Logging level
 ```
 
 ---
 
-## 🎯 You're Ready!
+## Troubleshooting
 
-**What You Have**:
-- ✅ NestGate running locally
-- ✅ HTTP API accessible
-- ✅ Unix socket IPC available
-- ✅ XDG-compliant storage
-- ✅ Capability-based discovery
+**Port in use**: `lsof -i :8085` then change `NESTGATE_API_PORT`
 
----
+**Socket permission**: Set `NESTGATE_SOCKET_DIR=$HOME/.nestgate/sockets`
 
-## 📚 Next Steps
-
-### **Learn More**:
-1. **Architecture**: See `docs/architecture/SYSTEM_OVERVIEW.md`
-2. **API Reference**: See `docs/api/REST_API.md`
-3. **Configuration**: See `docs/guides/ENVIRONMENT_VARIABLES.md`
-4. **Storage**: See `docs/guides/STORAGE_GUIDE.md`
-5. **Development**: See `docs/DEVELOPER_SETUP.md`
-
-### **Common Tasks**:
-- **Add ZFS**: See `docs/guides/ZFS_SETUP.md`
-- **Clustering**: See `docs/guides/CLUSTERING.md`
-- **Production Deploy**: See `docs/operations/PRODUCTION_DEPLOYMENT_CHECKLIST.md`
-- **Integrate**: See `docs/integration/INTEGRATION_GUIDE.md`
-
-### **Get Help**:
-- **Troubleshooting**: See `docs/guides/TROUBLESHOOTING.md`
-- **FAQ**: See `docs/FAQ.md`
-- **Issues**: https://github.com/ecoPrimals/nestGate/issues
+**ZFS not found**: NestGate gracefully falls back to standard filesystem
 
 ---
 
-## 🐛 Quick Troubleshooting
+## Next Steps
 
-### **Port Already in Use**:
-```bash
-# Change port
-export NESTGATE_PORT=8090
-cargo run --release
-```
-
-### **Permission Denied (Socket)**:
-```bash
-# Use custom socket path
-export NESTGATE_SOCKET_DIR=$HOME/.nestgate/sockets
-mkdir -p $NESTGATE_SOCKET_DIR
-cargo run --release
-```
-
-### **ZFS Not Found**:
-```bash
-# Disable ZFS features
-export NESTGATE_ZFS_ENABLED=false
-cargo run --release
-```
+- [STATUS.md](./STATUS.md) -- Current measured metrics
+- [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) -- Essential commands
+- [CONTRIBUTING.md](./CONTRIBUTING.md) -- Development guidelines
+- [CAPABILITY_MAPPINGS.md](./CAPABILITY_MAPPINGS.md) -- Primal capabilities
 
 ---
 
-## 🎉 Success!
-
-You now have NestGate running locally in **under 5 minutes**!
-
-**What's Next?**:
-- 🔍 Explore the API
-- 📦 Create datasets
-- 🔌 Try Unix socket communication
-- 🌍 Deploy to production
-- 🛠️ Contribute to development
-
----
-
-**NestGate**: Storage · Discovery · Security · Pure Rust 🦀
-
-**Version**: 3.3.0  
-**Grade**: A++ 108/100 EXCEPTIONAL  
-**Status**: Production-Ready ✅
-
-**Need Help?** See `docs/` for comprehensive guides!
+**License**: AGPL-3.0-only  
+**Last Updated**: March 27, 2026

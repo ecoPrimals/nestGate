@@ -57,21 +57,11 @@ const NESTGATE_ENV_VARS: &[&str] = &[
 ///
 /// # Example
 ///
-/// ```rust
-/// use tests::common::env_isolation::IsolatedEnvironment;
-///
-/// # Example
-/// ```no_run
-/// #[test]
-/// fn test_with_env_vars() {
-///     let mut env = IsolatedEnvironment::new("my_test");
-///     env.set("NESTGATE_TIMEOUT_MS", "10000");
-///     
-///     // Test code that reads NESTGATE_TIMEOUT_MS
-///     assert_eq!(std::env::var("NESTGATE_TIMEOUT_MS").unwrap(), "10000");
-///     
-///     // Automatic cleanup when env is dropped
-/// }
+/// ```rust,ignore
+/// let mut env = IsolatedEnvironment::new("my_test");
+/// env.set("NESTGATE_TIMEOUT_MS", "10000");
+/// assert_eq!(std::env::var("NESTGATE_TIMEOUT_MS").unwrap(), "10000");
+/// // Automatic cleanup when env is dropped
 /// ```
 pub struct IsolatedEnvironment {
     original_vars: HashMap<String, Option<String>>,

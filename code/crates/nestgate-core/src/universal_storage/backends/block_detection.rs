@@ -67,6 +67,7 @@ pub trait BlockDeviceDetector: Send + Sync {
 
 /// Universal block device detector using sysinfo crate
 ///
+// ecoBin v3.0: `sysinfo` fallback when Linux `/sys/block` is unavailable; primary Linux path is [`LinuxSysfsDetector`].
 /// **UNIVERSAL** - Works on all platforms that sysinfo supports:
 /// - Linux (all architectures)
 /// - Windows (x86_64, ARM64)
@@ -303,6 +304,7 @@ mod tests {
     }
     
     #[tokio::test]
+    // ecoBin v3.0: exercises sysinfo-only fallback detector (Linux prefers `/sys/block`).
     async fn test_sysinfo_detector_available() {
         let detector = SysinfoDetector;
         assert!(detector.is_available(), "Sysinfo detector should always be available");

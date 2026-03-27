@@ -2,12 +2,12 @@
 //! System functionality and utilities.
 // Provides safe system operations and utilities.
 //!
-//! **UNIVERSAL SYSTEM INFO** - Uses `sysinfo` crate for cross-platform support
-//! **EVOLUTION**: Migrated from Linux `/proc/` to universal Rust (Jan 31, 2026)
-//! **Phase 1**: Deep Debt Evolution - Modern Idiomatic Rust
+//! **Linux**: [`crate::linux_proc`] + [`num_cpus`] where possible; **`sysinfo`** for OS branding
+//! and non-Linux / fallback.
+//! **ecoBin v3.0**: `utils` module wiring to `lib.rs` is still pending (`utils.rs` vs `utils/mod.rs`).
 
 use crate::{NestGateError, Result};
-use sysinfo::{System, SystemExt, CpuExt, ProcessExt, Pid};
+use sysinfo::System;
 
 // ==================== SECTION ====================
 
@@ -52,33 +52,69 @@ pub struct OsInfo {
 
 /// Get kernel version
 pub fn get_kernel_version() -> Result<String> {
+    #[cfg(target_os = "linux")]
+    if let Some(k) = crate::linux_proc::kernel_version_line() {
+        return Ok(k);
+    }
     Ok(System::kernel_version().unwrap_or_else(|| "unknown".to_string()))
 }
 // ==================== SECTION ====================
 
-/// Get the number of CPU cores (universal via sysinfo)
+/// Get the number of CPU cores (pure Rust: [`num_cpus`])
 pub fn get_cpu_count() -> usize {
-    let sys = System::new_all();
-    sys.cpus().len()
+    num_cpus::get()
 }
 
-/// Get the number of physical CPU cores (universal via sysinfo)
+/// Get the number of physical CPU cores ([`num_cpus`], with logical count as fallback)
 pub fn get_physical_cpu_count() -> usize {
-    let sys = System::new_all();
-    sys.physical_core_count().unwrap_or_else(|| sys.cpus().len())
+    num_cpus::get_physical().unwrap_or_else(num_cpus::get)
 }
 
-/// Get CPU information (universal via sysinfo)
+/// Get CPU information — Linux reads `/proc/cpuinfo` where helpful; `sysinfo` elsewhere
 pub fn get_cpu_info() -> CpuInfo {
+    #[cfg(target_os = "linux")]
+    {
+        if let Some((model, mhz)) = cpu_model_and_mhz_linux() {
+            return CpuInfo {
+                logical_cores: get_cpu_count(),
+                physical_cores: get_physical_cpu_count(),
+                model,
+                frequency: mhz.map(|m| m / 1000.0),
+            };
+        }
+    }
     let sys = System::new_all();
     let cpus = sys.cpus();
-    
     CpuInfo {
         logical_cores: cpus.len(),
         physical_cores: sys.physical_core_count().unwrap_or(cpus.len()),
-        model: cpus.first().map(|c| c.brand().to_string()).unwrap_or_else(|| "Unknown CPU".to_string()),
-        frequency: cpus.first().map(|c| c.frequency() as f64 / 1000.0), // MHz to GHz
+        model: cpus
+            .first()
+            .map(|c| c.brand().to_string())
+            .unwrap_or_else(|| "Unknown CPU".to_string()),
+        frequency: cpus.first().map(|c| c.frequency() as f64 / 1000.0),
     }
+}
+
+#[cfg(target_os = "linux")]
+fn cpu_model_and_mhz_linux() -> Option<(String, Option<f64>)> {
+    let s = std::fs::read_to_string("/proc/cpuinfo").ok()?;
+    let mut model = None::<String>;
+    let mut mhz = None::<f64>;
+    for line in s.lines() {
+        if line.starts_with("model name") {
+            model = line.split(':').nth(1).map(str::trim).map(String::from);
+        } else if line.starts_with("cpu MHz") {
+            mhz = line
+                .split(':')
+                .nth(1)
+                .and_then(|x| x.trim().parse::<f64>().ok());
+        }
+        if model.is_some() && mhz.is_some() {
+            break;
+        }
+    }
+    Some((model.unwrap_or_else(|| "Unknown CPU".to_string()), mhz))
 }
 
 /// CPU information structure
@@ -96,27 +132,61 @@ pub struct CpuInfo {
 }
 // ==================== SECTION ====================
 
-/// Get total system memory in bytes (universal via sysinfo)
+/// Get total system memory in bytes
 pub fn get_total_memory() -> Result<u64> {
-    let sys = System::new_all();
+    #[cfg(target_os = "linux")]
+    if let Some(t) = crate::linux_proc::total_memory_bytes() {
+        return Ok(t);
+    }
+    let mut sys = System::new_all();
+    sys.refresh_memory();
     Ok(sys.total_memory())
 }
 
-/// Get free system memory in bytes (universal via sysinfo)
+/// Get free system memory in bytes (`available` semantics; see `MemAvailable` on Linux)
 pub fn get_free_memory() -> Result<u64> {
-    let sys = System::new_all();
+    #[cfg(target_os = "linux")]
+    if let Some(a) = crate::linux_proc::available_memory_bytes() {
+        return Ok(a);
+    }
+    let mut sys = System::new_all();
+    sys.refresh_memory();
     Ok(sys.available_memory())
 }
 
-/// Get used system memory in bytes (universal via sysinfo)
+/// Get used system memory in bytes
 pub fn get_used_memory() -> Result<u64> {
-    let sys = System::new_all();
+    #[cfg(target_os = "linux")]
+    if let Some(u) = crate::linux_proc::used_memory_bytes() {
+        return Ok(u);
+    }
+    let mut sys = System::new_all();
+    sys.refresh_memory();
     Ok(sys.used_memory())
 }
 
-/// Get memory information (universal via sysinfo)
+/// Get memory information
 pub fn get_memory_info() -> Result<MemoryInfo> {
-    let sys = System::new_all();
+    #[cfg(target_os = "linux")]
+    if let (Some(total), Some(free)) = (
+        crate::linux_proc::total_memory_bytes(),
+        crate::linux_proc::available_memory_bytes(),
+    ) {
+        let used = total.saturating_sub(free);
+        let usage_percent = if total > 0 {
+            (used as f64 / total as f64 * 100.0).round()
+        } else {
+            0.0
+        };
+        return Ok(MemoryInfo {
+            total,
+            free,
+            used,
+            usage_percent,
+        });
+    }
+    let mut sys = System::new_all();
+    sys.refresh_memory();
     let total = sys.total_memory();
     let used = sys.used_memory();
     let free = sys.available_memory();
@@ -152,43 +222,41 @@ pub struct MemoryInfo {
 
 /// Get total disk space in bytes for the root filesystem
 ///
-/// **100% SAFE**: This function uses completely safe filesystem operations via sysinfo
+/// **100% SAFE**: [`rustix::fs::statvfs`] on Linux; `sysinfo` disks elsewhere
 pub fn get_total_disk() -> Result<u64> {
-    use sysinfo::{System, Disks, DisksExt};
-    
+    #[cfg(target_os = "linux")]
+    if let Ok((total, _)) = crate::linux_proc::statvfs_space(std::path::Path::new("/")) {
+        if total > 0 {
+            return Ok(total);
+        }
+    }
+    use sysinfo::Disks;
     let disks = Disks::new_with_refreshed_list();
-    
-    // Find root disk or return sum of all disks
-    let total = disks.iter()
-        .map(|disk| disk.total_space())
-        .sum();
-    
+    let total: u64 = disks.iter().map(|disk| disk.total_space()).sum();
     if total > 0 {
         Ok(total)
     } else {
-        // Fallback estimate if no disks detected
-        Ok(100 * 1024 * 1024 * 1024) // 100GB estimate
+        Ok(100 * 1024 * 1024 * 1024)
     }
 }
 
 /// Get free disk space in bytes for the root filesystem
 ///
-/// **100% SAFE**: This function uses completely safe filesystem operations via sysinfo
+/// **100% SAFE**: [`rustix::fs::statvfs`] on Linux; `sysinfo` disks elsewhere
 pub fn get_free_disk() -> Result<u64> {
-    use sysinfo::{System, Disks, DisksExt};
-    
+    #[cfg(target_os = "linux")]
+    if let Ok((_, avail)) = crate::linux_proc::statvfs_space(std::path::Path::new("/")) {
+        if avail > 0 {
+            return Ok(avail);
+        }
+    }
+    use sysinfo::Disks;
     let disks = Disks::new_with_refreshed_list();
-    
-    // Find root disk or return sum of available space
-    let free = disks.iter()
-        .map(|disk| disk.available_space())
-        .sum();
-    
+    let free: u64 = disks.iter().map(|disk| disk.available_space()).sum();
     if free > 0 {
         Ok(free)
     } else {
-        // Fallback estimate if no disks detected
-        Ok(50 * 1024 * 1024 * 1024) // 50GB estimate
+        Ok(50 * 1024 * 1024 * 1024)
     }
 }
 // ==================== SECTION ====================
@@ -201,17 +269,28 @@ pub fn get_hostname() -> Result<String> {
         .ok_or_else(|| NestGateError::internal_error("Failed to get hostname"))
 }
 
-/// Get system uptime in seconds (universal via sysinfo)
+/// Get system uptime in seconds
 pub fn get_uptime() -> Result<u64> {
+    #[cfg(target_os = "linux")]
+    if let Some(u) = crate::linux_proc::uptime_secs() {
+        return Ok(u);
+    }
     let sys = System::new_all();
     Ok(System::uptime(&sys))
 }
 
-/// Get load average (universal via sysinfo)
+/// Get load average
 pub fn get_load_average() -> Result<LoadAverage> {
+    #[cfg(target_os = "linux")]
+    if let Some((one, five, fifteen)) = crate::linux_proc::load_averages() {
+        return Ok(LoadAverage {
+            one_minute: one,
+            five_minutes: five,
+            fifteen_minutes: fifteen,
+        });
+    }
     let sys = System::new_all();
     let load = System::load_average(&sys);
-    
     Ok(LoadAverage {
         one_minute: load.one,
         five_minutes: load.five,
@@ -337,8 +416,9 @@ mod tests {
     #[test]
     fn test_load_average() -> Result<()> {
         let load_avg = get_load_average()?;
-        // Load averages should be non-negative
-        assert!(load_avg >= 0.0);
+        assert!(load_avg.one_minute >= 0.0);
+        assert!(load_avg.five_minutes >= 0.0);
+        assert!(load_avg.fifteen_minutes >= 0.0);
 
         Ok(())
     }

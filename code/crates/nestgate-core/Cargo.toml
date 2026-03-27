@@ -71,7 +71,11 @@ gethostname = "0.4"
 tempfile = "3.8"
 regex = "1.10"
 fastrand = "2.0"
+# sysinfo: non-Linux + Linux `/proc` failure fallbacks (observability, universal_storage, API).
+# Making it optional would require a `sysinfo` default feature and `#[cfg(feature = "sysinfo")]`
+# on every call site in nestgate-core, nestgate-api, nestgate-mcp, and dependents.
 sysinfo = "0.30"
+rustix.workspace = true
 # mDNS service discovery (RFC 6762/6763)
 mdns-sd = "0.17"
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }
@@ -123,4 +127,6 @@ mock-services = []
 test-doubles = []
 mock-metrics = [] # TESTING ONLY - use mock metrics instead of real system metrics
 # Development stubs - include mock/stub implementations for testing (CRITICAL for production safety)
-dev-stubs = [] 
+dev-stubs = []
+# Educational `safe_alternatives` module (FFI/SIMD teaching demos — also built under `cfg(test)`)
+safe-alternatives-demo = []

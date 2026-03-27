@@ -106,7 +106,9 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
         }
 
         // Store value in current head slot - safe Mutex access
-        *self.inner.slots[head].lock().expect("Ring buffer slot mutex poisoned") = Some(value);
+        *self.inner.slots[head]
+            .lock()
+            .expect("Ring buffer slot mutex poisoned") = Some(value);
 
         // Update head (Release ensures write is visible to consumer)
         self.inner.head.store(next_head, Ordering::Release);
@@ -189,10 +191,6 @@ impl<T, const CAPACITY: usize> Clone for SafeRingBuffer<T, CAPACITY> {
         }
     }
 }
-
-// Safety: Inner uses atomics for synchronization
-unsafe impl<T: Send, const CAPACITY: usize> Send for SafeRingBuffer<T, CAPACITY> {}
-unsafe impl<T: Send, const CAPACITY: usize> Sync for SafeRingBuffer<T, CAPACITY> {}
 
 #[cfg(test)]
 mod tests {

@@ -2,10 +2,10 @@
 
 **Version**: 4.1.0-dev  
 **Build**: 13/13 crates compiling, 0 errors  
-**Tests**: 12,155 passing, 0 failures, 431 ignored  
-**Coverage**: 70.07% line (llvm-cov, target: 90%)  
+**Tests**: 12,274 passing, 0 failures, 472 ignored  
+**Coverage**: 69.6% line (llvm-cov, target: 90%)  
 **Clippy**: Clean under `-D warnings`  
-**Last Updated**: March 14, 2026
+**Last Updated**: March 27, 2026
 
 ---
 
@@ -46,7 +46,7 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 
 ```
 nestGate/ (13 crates)
-├── nestgate-core       Core: IPC, config, crypto, discovery
+├── nestgate-core       Core: IPC, config, crypto, discovery, linux_proc
 ├── nestgate-api        REST + JSON-RPC API server
 ├── nestgate-bin        CLI binary (unibin)
 ├── nestgate-zfs        ZFS integration (adaptive)
@@ -86,10 +86,10 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Build | 13/13 crates, 0 errors |
 | Clippy | Clean (`-D warnings`) |
 | Format | Clean |
-| Tests | 12,155 passing, 0 failures |
-| Coverage | 70.07% line (excluding tools/) |
+| Tests | 12,274 passing, 0 failures |
+| Coverage | 69.6% line (excluding tools/) |
 | Production unwrap/expect | Zero |
-| Unsafe blocks | 6 replaced with safe alternatives |
+| Unsafe blocks | Evolved (most replaced with safe alternatives) |
 | File size limit (1000 lines) | All compliant |
 | Env-var race conditions | Fixed (80+ tests with save/restore) |
 
@@ -101,7 +101,9 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | ecoBin | Pass — pure Rust, socket-only default |
 | JSON-RPC 2.0 | Pass |
 | tarpc | Pass — wired into daemon (feature-gated) |
-| Semantic naming | Partial — `storage.*`, `crypto.*` compliant |
+| Semantic naming | Pass — `health.*`, `storage.*`, `crypto.*`, `capabilities.*` compliant |
+| Semantic router | Compiled and wired |
+| sysinfo evolution | ecoBin: Linux `/proc` first, sysinfo fallback |
 | File size (<1000) | Pass |
 | Sovereignty | Evolved — capability-based discovery |
 | mDNS Discovery | Evolved — real mdns-sd with cache fallback |
@@ -187,31 +189,35 @@ RUST_LOG=info                 # Logging level
 - [CHANGELOG.md](./CHANGELOG.md) — Version history
 - [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) — Full doc index
 - [specs/](./specs/) — Protocol specifications
-- [docs/](./docs/) — Architecture, API, guides, session archives
+- [docs/](./docs/) — Architecture, API, guides
 
-### Session Archives (Fossil Record)
+### Fossil Record
 
-- `docs/sessions/feb_2026/` — Deep-debt evolution, model cache, upstream bugs
-- `docs/sessions/jan_2026/` — Isomorphic IPC, platform evolution, genomeBin
+Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`.
 
 ---
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 70.07%)
-2. Evolve remaining IMPLEMENTATION STUB sections to full implementations
-3. Complete semantic method naming across all domains
-4. Cross-gate replication (multi-node data orchestration)
+1. Push test coverage toward 90% target (currently 69.6%)
+2. Wire `data.*` and `nat.*` semantic router routes
+3. Complete sysinfo optional feature gating
+4. Evolve remaining dev stubs to full implementations
+5. Cross-gate replication (multi-node data orchestration)
 
-For details: See `STATUS.md` and `docs/sessions/feb_2026/`.
+For details: See [STATUS.md](./STATUS.md).
 
 ---
 
 ## License
 
-[Add your license here]
+AGPL-3.0-only — see [LICENSE](LICENSE) for the full text.
+
+All ecoPrimals software is licensed under the strictest copyleft.
+Humans accessing this software through beardog entropy systems are granted
+free use rights for personal, educational, and non-commercial purposes.
 
 ---
 
 **Created**: January 31, 2026  
-**Latest**: March 14, 2026
+**Latest**: March 27, 2026

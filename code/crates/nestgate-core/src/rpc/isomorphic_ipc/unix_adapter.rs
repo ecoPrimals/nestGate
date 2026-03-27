@@ -145,8 +145,8 @@ impl UnixSocketRpcHandler {
             "storage.delete" => self.handle_storage_delete(&request).await,
             "storage.exists" => self.handle_storage_exists(&request).await,
 
-            // Health/info methods
-            "health" => Ok(json!({
+            // Health/info methods (wateringHole: health.check; `health` retained for compatibility)
+            "health" | "health.check" => Ok(json!({
                 "status": "healthy",
                 "service": "nestgate",
                 "version": env!("CARGO_PKG_VERSION"),
@@ -164,7 +164,7 @@ impl UnixSocketRpcHandler {
                     "storage.delete", "storage.exists",
                     "nat.store_traversal_info", "nat.retrieve_traversal_info",
                     "beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete",
-                    "health", "version", "discover_capabilities"
+                    "health", "health.check", "version", "discover_capabilities"
                 ]
             })),
 

@@ -1,10 +1,10 @@
 # NestGate - Quick Reference
 
 **Version**: 4.1.0-dev  
-**Tests**: 12,144 passing, 0 failures, 431 ignored  
-**Coverage**: 70.07% line (llvm-cov, excluding tools/)  
+**Tests**: 12,274 passing, 0 failures, 472 ignored  
+**Coverage**: 69.6% line (llvm-cov, excluding tools/)  
 **Clippy**: Clean (`-D warnings`)  
-**Last Updated**: February 11, 2026
+**Last Updated**: March 27, 2026
 
 ---
 
@@ -220,4 +220,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: February 11, 2026
+**Last Updated**: March 27, 2026

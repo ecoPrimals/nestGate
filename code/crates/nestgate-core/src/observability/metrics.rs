@@ -64,6 +64,51 @@ impl Default for PerformanceMetrics {
     }
 }
 
+#[cfg(not(feature = "mock-metrics"))]
+fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> Result<PerformanceMetrics> {
+    use sysinfo::{Disks, Networks, System};
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let cpu_usage = sys.global_cpu_info().cpu_usage() as f64;
+    let memory_usage = sys.used_memory();
+    let memory_available = sys.available_memory();
+
+    let networks = Networks::new_with_refreshed_list();
+    let network_bytes_per_sec: f64 = networks
+        .values()
+        .map(|data| (data.received() + data.transmitted()) as f64)
+        .sum();
+
+    let disks = Disks::new_with_refreshed_list();
+    let disk_iops: f64 = disks.iter().map(|_| 1.0).sum();
+
+    Ok(PerformanceMetrics {
+        timestamp: SystemTime::now(),
+        cpu_usage,
+        memory_usage,
+        memory_available,
+        disk_iops,
+        network_bytes_per_sec,
+        custom_metrics: custom
+            .iter()
+            .map(|(k, v)| {
+                (
+                    k.clone(),
+                    match v {
+                        MetricValue::Gauge(val) => *val,
+                        MetricValue::Counter(val) => *val as f64,
+                        MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
+                        MetricValue::Summary { sum, count: _ } => *sum,
+                        MetricValue::String(_) => 0.0,
+                    },
+                )
+            })
+            .collect(),
+    })
+}
+
 /// Metrics registry for collecting and storing performance data
 #[derive(Debug)]
 /// Metricsregistry
@@ -167,58 +212,51 @@ impl MetricsRegistry {
 
         #[cfg(not(feature = "mock-metrics"))]
         {
-            // REAL METRICS: Use sysinfo for actual system monitoring
-            use sysinfo::{Disks, Networks, System};
+            // ecoBin v3.0: Linux uses `/proc` + rustix; `sysinfo` is fallback (non-Linux or parse failure).
+            #[cfg(target_os = "linux")]
+            if let (
+                Some(cpu_usage),
+                Some(memory_usage),
+                Some(memory_available),
+                Some((rx, tx)),
+                Some(disk_iops),
+            ) = (
+                crate::linux_proc::global_cpu_usage_percent_from_stat(),
+                crate::linux_proc::used_memory_bytes(),
+                crate::linux_proc::available_memory_bytes(),
+                crate::linux_proc::network_rx_tx_bytes_sum(),
+                crate::linux_proc::diskstats_entry_count(),
+            ) {
+                let network_bytes_per_sec: f64 = (rx + tx) as f64;
+                return Ok(PerformanceMetrics {
+                    timestamp: SystemTime::now(),
+                    cpu_usage,
+                    memory_usage,
+                    memory_available,
+                    disk_iops,
+                    network_bytes_per_sec,
+                    custom_metrics: custom
+                        .iter()
+                        .map(|(k, v)| {
+                            (
+                                k.clone(),
+                                match v {
+                                    MetricValue::Gauge(val) => *val,
+                                    MetricValue::Counter(val) => *val as f64,
+                                    MetricValue::Histogram(val) => {
+                                        val.iter().sum::<f64>() / (val.len() as f64)
+                                    }
+                                    MetricValue::Summary { sum, count: _ } => *sum,
+                                    MetricValue::String(_) => 0.0,
+                                },
+                            )
+                        })
+                        .collect(),
+                });
+            }
 
-            let mut sys = System::new_all();
-            sys.refresh_all();
-
-            // Calculate CPU usage (average across cores - global CPU)
-            let cpu_usage = sys.global_cpu_info().cpu_usage() as f64;
-
-            // Memory metrics
-            let memory_usage = sys.used_memory();
-            let memory_available = sys.available_memory();
-
-            // Network metrics (sum across all interfaces)
-            let networks = Networks::new_with_refreshed_list();
-            let network_bytes_per_sec: f64 = networks
-                .values()
-                .map(|data| (data.received() + data.transmitted()) as f64)
-                .sum();
-
-            // Disk I/O metrics (sum across all disks)
-            let disks = Disks::new_with_refreshed_list();
-            let disk_iops: f64 = disks
-                .iter()
-                .map(|_| 1.0) // Simplified: count active disks
-                .sum();
-
-            Ok(PerformanceMetrics {
-                timestamp: SystemTime::now(),
-                cpu_usage,
-                memory_usage,
-                memory_available,
-                disk_iops,
-                network_bytes_per_sec,
-                custom_metrics: custom
-                    .iter()
-                    .map(|(k, v)| {
-                        (
-                            k.clone(),
-                            match v {
-                                MetricValue::Gauge(val) => *val,
-                                MetricValue::Counter(val) => *val as f64,
-                                MetricValue::Histogram(val) => {
-                                    val.iter().sum::<f64>() / (val.len() as f64)
-                                }
-                                MetricValue::Summary { sum, count: _ } => *sum,
-                                MetricValue::String(_) => 0.0,
-                            },
-                        )
-                    })
-                    .collect(),
-            })
+            // Non-Linux, or Linux when `/proc` parsing failed: `sysinfo` fallback.
+            gather_performance_metrics_sysinfo(&custom)
         }
 
         #[cfg(feature = "mock-metrics")]

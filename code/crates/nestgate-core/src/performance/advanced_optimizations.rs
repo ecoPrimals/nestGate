@@ -12,9 +12,18 @@
 //! - Memory prefetching and alignment
 //! - Zero-allocation hot paths
 
-use std::mem::{align_of, size_of};
-use std::ptr::NonNull;
+use std::mem::size_of;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+
+use parking_lot::{Mutex, MutexGuard};
+
+/// **LOCK-FREE RING BUFFER** (evolved implementation)
+///
+/// Uses the same safe SPSC design as [`super::safe_ring_buffer::SafeRingBuffer`]
+/// (atomics + `Mutex` per slot). Prefer [`super::safe_ring_buffer::SafeRingBuffer`] directly;
+/// this alias remains for backward compatibility with the deprecated name.
+pub type LockFreeRingBuffer<T, const SIZE: usize> =
+    super::safe_ring_buffer::SafeRingBuffer<T, SIZE>;
 
 /// **CACHE-LINE ALIGNED ATOMIC COUNTER**
 /// Prevents false sharing between CPU cores for optimal performance
@@ -64,99 +73,6 @@ impl CacheAlignedCounter {
     }
 }
 
-/// **LOCK-FREE RING BUFFER**
-/// High-performance single-producer single-consumer ring buffer
-///
-/// Note: SIZE must be a power of 2 for optimal performance
-pub struct LockFreeRingBuffer<T, const SIZE: usize> {
-    buffer: [std::mem::MaybeUninit<T>; SIZE],
-    head: AtomicUsize,
-    tail: AtomicUsize,
-}
-
-impl<T, const SIZE: usize> Default for LockFreeRingBuffer<T, SIZE> {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T, const SIZE: usize> LockFreeRingBuffer<T, SIZE> {
-    /// Create new lock-free ring buffer
-    pub fn new() -> Self {
-        Self {
-            // ✅ SAFE: Use std::array::from_fn to initialize each MaybeUninit element
-            // This properly creates an array of uninitialized values without unsafe code
-            buffer: std::array::from_fn(|_| std::mem::MaybeUninit::uninit()),
-            head: AtomicUsize::new(0),
-            tail: AtomicUsize::new(0),
-        }
-    }
-
-    /// Push item to buffer (returns false if full)
-    #[inline(always)]
-    pub fn push(&mut self, item: T) -> bool {
-        let current_head = self.head.load(Ordering::Relaxed);
-        let next_head = (current_head + 1) & (SIZE - 1); // Fast modulo for power of 2
-
-        if next_head == self.tail.load(Ordering::Acquire) {
-            return false; // Buffer full
-        }
-
-        // SAFETY: Lock-free SPSC requires MaybeUninit::write - cannot use Option<T> without
-        // losing lock-free property. VecDeque would require Mutex. Invariants:
-        // - Bounds: current_head < SIZE (power-of-2 mask)
-        // - Single producer: no concurrent writes to this slot
-        // - Not full: next_head != tail checked above
-        unsafe {
-            self.buffer[current_head].as_mut_ptr().write(item);
-        }
-
-        self.head.store(next_head, Ordering::Release);
-        true
-    }
-
-    /// Pop item from buffer (returns None if empty)
-    #[inline(always)]
-    pub fn pop(&self) -> Option<T> {
-        let current_tail = self.tail.load(Ordering::Relaxed);
-
-        if current_tail == self.head.load(Ordering::Acquire) {
-            return None; // Buffer empty
-        }
-
-        // SAFETY: Lock-free SPSC requires MaybeUninit::read. Single consumer; Release in push
-        // synchronizes with this Acquire. read() consumes, preventing double-read.
-        let item = unsafe { self.buffer[current_tail].as_ptr().read() };
-        let next_tail = (current_tail + 1) & (SIZE - 1); // Fast modulo for power of 2
-
-        self.tail.store(next_tail, Ordering::Release);
-        Some(item)
-    }
-
-    /// Get current buffer utilization
-    #[inline(always)]
-    pub fn len(&self) -> usize {
-        let head = self.head.load(Ordering::Relaxed);
-        let tail = self.tail.load(Ordering::Relaxed);
-        (head.wrapping_sub(tail)) & (SIZE - 1)
-    }
-
-    /// Check if buffer is empty
-    #[inline(always)]
-    pub fn is_empty(&self) -> bool {
-        self.head.load(Ordering::Relaxed) == self.tail.load(Ordering::Relaxed)
-    }
-
-    /// Check if buffer is full
-    #[inline(always)]
-    pub fn is_full(&self) -> bool {
-        let head = self.head.load(Ordering::Relaxed);
-        let tail = self.tail.load(Ordering::Relaxed);
-        ((head + 1) & (SIZE - 1)) == tail
-    }
-}
-
 /// **SIMD-OPTIMIZED OPERATIONS**
 /// Vectorized operations for high-performance data processing
 pub struct SimdOperations;
@@ -191,65 +107,11 @@ impl SimdOperations {
         dst[..len].copy_from_slice(&src[..len]);
     }
 
-    /// Copy memory with raw pointers - for FFI or when slices aren't available.
-    ///
-    /// **Prefer [`copy_safe`](Self::copy_safe) when you have slices** - it is 100% safe
-    /// and compiles to the same optimized assembly.
-    ///
-    /// SAFETY: Required for FFI boundaries where slices aren't available. Cannot be
-    /// replaced with safe code when interfacing with C/MMIO.
-    ///
-    /// # Safety
-    /// Caller must ensure:
-    /// - `src` is valid for reads of `len` bytes
-    /// - `dst` is valid for writes of `len` bytes
-    /// - `src` and `dst` do not overlap
-    /// - Both regions are within allocated objects
+    /// Slice-based copy — same behavior as [`copy_safe`](Self::copy_safe); kept for API parity
+    /// with older `optimized_copy` call sites that used slices.
     #[inline(always)]
-    pub unsafe fn optimized_copy(dst: *mut u8, src: *const u8, len: usize) {
-        // Check alignment for optimal copy strategy
-        if (dst as usize).is_multiple_of(align_of::<u64>())
-            && (src as usize).is_multiple_of(align_of::<u64>())
-            && len >= size_of::<u64>()
-        {
-            // Use 64-bit aligned copies when possible
-            let chunks = len / size_of::<u64>();
-            let remainder = len % size_of::<u64>();
-
-            let dst_u64 = dst as *mut u64;
-            let src_u64 = src as *const u64;
-
-            // SAFETY: 64-bit aligned copy is safe because:
-            // 1. Alignment: Both pointers verified to be u64-aligned above
-            // 2. Bounds: chunks * 8 <= len, so all accesses within bounds
-            // 3. Validity: Caller guarantees src/dst validity for len bytes
-            // 4. Non-overlapping: Caller guarantees no overlap
-            // 5. Type safety: u64 is Copy and properly aligned
-            for i in 0..chunks {
-                *dst_u64.add(i) = *src_u64.add(i);
-            }
-
-            // Handle remainder
-            // SAFETY: Remainder copy is safe because:
-            // 1. Offset: chunks * size_of::<u64>() + remainder == len (total length)
-            // 2. Bounds: Copying remainder bytes from valid end of buffers
-            // 3. Non-overlapping: Inherits from parent function guarantee
-            // 4. Validity: Both regions within caller-guaranteed valid memory
-            if remainder > 0 {
-                std::ptr::copy_nonoverlapping(
-                    src.add(chunks * size_of::<u64>()),
-                    dst.add(chunks * size_of::<u64>()),
-                    remainder,
-                );
-            }
-        } else {
-            // Fallback to standard copy
-            // SAFETY: Standard copy is safe because:
-            // 1. Validity: Caller guarantees src/dst valid for len bytes
-            // 2. Non-overlapping: Caller guarantees no overlap
-            // 3. Standard library: copy_nonoverlapping handles all edge cases
-            std::ptr::copy_nonoverlapping(src, dst, len);
-        }
+    pub fn optimized_copy(dst: &mut [u8], src: &[u8]) {
+        Self::copy_safe(dst, src);
     }
 }
 
@@ -296,20 +158,20 @@ impl BranchOptimized {
     }
 }
 
-/// RAII guard for memory pool block - deallocates on drop
+/// RAII guard for memory pool block — holds the per-slot mutex until dropped, then returns the index.
 pub struct PoolBlockGuard<'a, const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
     pool: &'a MemoryPool<BLOCK_SIZE, POOL_SIZE>,
-    ptr: NonNull<u8>,
+    index: usize,
+    slot_guard: MutexGuard<'a, Option<Box<[u8; BLOCK_SIZE]>>>,
 }
 
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE> {
     /// Get mutable slice to the allocated block
-    ///
-    /// SAFETY: ptr from this pool's allocate(); block is BLOCK_SIZE bytes; no safe
-    /// alternative exists for lock-free pool returning raw blocks (slab crate would
-    /// require different API).
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
-        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), BLOCK_SIZE) }
+        self.slot_guard
+            .as_mut()
+            .expect("pool slot must hold allocated block")
+            .as_mut()
     }
 }
 
@@ -317,21 +179,19 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> Drop
     for PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE>
 {
     fn drop(&mut self) {
-        // SAFETY: ptr came from this pool's allocate(); no use after drop; deallocate
-        // is unsafe fn but invariants guaranteed by pool's allocation protocol
-        unsafe {
-            self.pool.deallocate(self.ptr);
-        }
+        *self.slot_guard = None;
+        self.pool.free_indices.lock().push(self.index);
+        self.pool.allocated_count.fetch_sub(1, Ordering::Relaxed);
     }
 }
 
 /// **MEMORY POOL ALLOCATOR**
-/// High-performance memory pool for frequent allocations
+/// Fixed-size blocks stored in `Box<[u8; BLOCK_SIZE]>` per slot with a `Mutex` stack of free indices.
 ///
-/// Note: BLOCK_SIZE and POOL_SIZE must be > 0
+/// Evolved from a lock-free raw-pointer slab: same O(1) intent, fully safe Rust.
 pub struct MemoryPool<const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
-    pool: Vec<u8>,
-    free_list: AtomicUsize, // Index of next free block
+    slots: [Mutex<Option<Box<[u8; BLOCK_SIZE]>>>; POOL_SIZE],
+    free_indices: Mutex<Vec<usize>>,
     allocated_count: AtomicUsize,
 }
 
@@ -348,130 +208,30 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> MemoryPool<BLOCK_SIZE, POO
     /// Create new memory pool
     #[must_use]
     pub fn new() -> Self {
-        let total_size = POOL_SIZE * BLOCK_SIZE;
-        let mut pool = vec![0u8; total_size];
-
-        // ✅ SAFE: Initialize free list using safe slice operations
-        // Each block stores the index of the next free block
-        for i in 0..POOL_SIZE - 1 {
-            let next_index = i + 1;
-            let start = i * BLOCK_SIZE;
-            let next_index_bytes = next_index.to_ne_bytes();
-            pool[start..start + std::mem::size_of::<usize>()].copy_from_slice(&next_index_bytes);
+        let mut free = Vec::with_capacity(POOL_SIZE);
+        for i in 0..POOL_SIZE {
+            free.push(i);
         }
 
-        // Last block points to invalid index (pool exhausted marker)
-        let start = (POOL_SIZE - 1) * BLOCK_SIZE;
-        let sentinel_bytes = usize::MAX.to_ne_bytes();
-        pool[start..start + std::mem::size_of::<usize>()].copy_from_slice(&sentinel_bytes);
-
         Self {
-            pool,
-            free_list: AtomicUsize::new(0),
+            slots: std::array::from_fn(|_| Mutex::new(None)),
+            free_indices: Mutex::new(free),
             allocated_count: AtomicUsize::new(0),
         }
     }
 
-    /// Allocate block with RAII guard - preferred safe API
+    /// Allocate block with RAII guard
     #[inline(always)]
     pub fn allocate_guard(&self) -> Option<PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE>> {
-        self.allocate()
-            .map(|ptr| PoolBlockGuard { pool: self, ptr })
-    }
-
-    /// Allocate block from pool (raw pointer - use allocate_guard for safe API)
-    #[inline(always)]
-    pub fn allocate(&self) -> Option<NonNull<u8>> {
-        loop {
-            let current_free = self.free_list.load(Ordering::Acquire);
-
-            if current_free == usize::MAX {
-                return None; // Pool exhausted
-            }
-
-            // ✅ SAFE: Use safe slice indexing to read next_free index
-            let start = current_free * BLOCK_SIZE;
-            let end = start + std::mem::size_of::<usize>();
-            let next_free_bytes = &self.pool[start..end];
-            // SAFETY: end - start == size_of::<usize>(), so try_into to [u8; 8] always succeeds
-            #[allow(clippy::expect_used)] // Slice length guaranteed by usize size
-            let next_free = usize::from_ne_bytes(
-                next_free_bytes
-                    .try_into()
-                    .expect("BUG: Slice length matches usize size"),
-            );
-
-            // Try to update free list atomically
-            match self.free_list.compare_exchange_weak(
-                current_free,
-                next_free,
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            ) {
-                Ok(_) => {
-                    self.allocated_count.fetch_add(1, Ordering::Relaxed);
-                    // ✅ SAFE: Get pointer to allocated block using safe slice indexing
-                    let block_slice = &self.pool[start..start + BLOCK_SIZE];
-                    let ptr = block_slice.as_ptr() as *mut u8;
-                    // Note: NonNull::new would be safer, but ptr is guaranteed non-null from Box
-                    return NonNull::new(ptr);
-                }
-                Err(_) => {
-                    // Retry on allocation failure
-                }
-            }
-        }
-    }
-
-    /// Deallocate block back to pool
-    ///
-    /// # Safety
-    ///
-    /// - `ptr` must have been allocated by this pool via `allocate()`
-    /// - `ptr` must not be used after deallocation
-    /// - `ptr` must not be deallocated more than once
-    ///
-    /// # Safety Proof
-    ///
-    /// - **Valid pointer**: ptr must come from this pool's allocate() call
-    /// - **Bounds**: block_index calculated from pool_start is within pool bounds
-    /// - **No double-free**: Caller guarantees ptr not previously deallocated
-    /// - **Atomics**: compare_exchange prevents concurrent free of same block
-    /// - **Free list**: ABA problem handled by storing indices, not pointers
-    /// - **No use-after-free**: Caller guarantees no further use of ptr
-    #[inline(always)]
-    pub unsafe fn deallocate(&self, ptr: NonNull<u8>) {
-        let pool_start = self.pool.as_ptr() as usize;
-        let ptr_addr = ptr.as_ptr() as usize;
-
-        // Calculate block index
-        let block_index = (ptr_addr - pool_start) / BLOCK_SIZE;
-
-        // Add block back to free list
-        loop {
-            let current_free = self.free_list.load(Ordering::Acquire);
-
-            // SAFETY: ptr from allocate(); block spans BLOCK_SIZE bytes; we write
-            // only first size_of::<usize>() bytes as free-list next pointer.
-            let block_ptr = ptr.as_ptr() as *mut usize;
-            *block_ptr = current_free;
-
-            // Try to update free list head
-            match self.free_list.compare_exchange_weak(
-                current_free,
-                block_index,
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            ) {
-                Ok(_) => {
-                    self.allocated_count.fetch_sub(1, Ordering::Relaxed);
-                    break;
-                }
-                Err(_) => {
-                    // Retry on CAS failure
-                }
-            }
-        }
+        let index = self.free_indices.lock().pop()?;
+        let mut slot_guard = self.slots[index].lock();
+        *slot_guard = Some(Box::new([0u8; BLOCK_SIZE]));
+        self.allocated_count.fetch_add(1, Ordering::Relaxed);
+        Some(PoolBlockGuard {
+            pool: self,
+            index,
+            slot_guard,
+        })
     }
 
     /// Get pool utilization statistics
@@ -656,14 +416,14 @@ mod tests {
 
     #[test]
     fn test_lock_free_ring_buffer() {
-        let mut buffer: LockFreeRingBuffer<u32, 8> = LockFreeRingBuffer::new();
+        let buffer: LockFreeRingBuffer<u32, 8> = LockFreeRingBuffer::new();
 
         assert!(buffer.is_empty());
         assert!(!buffer.is_full());
 
         // Fill buffer
         for i in 0..7 {
-            assert!(buffer.push(i));
+            assert!(buffer.push(i).is_ok());
         }
 
         assert!(buffer.is_full());

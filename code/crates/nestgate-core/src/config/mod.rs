@@ -91,6 +91,9 @@ pub mod capability_based;
 /// Environment variables: NESTGATE_API_PORT, NESTGATE_METRICS_PORT, etc.
 pub mod ports;
 
+/// Aggregated port bundle ([`port_config::PortConfiguration`]) for multi-service defaults
+pub mod port_config;
+
 /// XDG-compliant storage path configuration (Phase 4 - Hardcoding Evolution)
 ///
 /// Eliminates hardcoded paths like `/var/lib/nestgate` and `/tmp/nestgate`.

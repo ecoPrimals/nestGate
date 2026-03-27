@@ -731,7 +731,10 @@ mod tests {
         let adapter = SecurityPrimalAdapter(provider);
 
         let creds = b"test";
-        let token = adapter.authenticate(creds).await.unwrap();
+        let token = adapter
+            .authenticate(creds)
+            .await
+            .expect("test: primal adapter authenticate");
         assert_eq!(token.token, "token-123");
     }
 
@@ -746,7 +749,10 @@ mod tests {
             expires_at: SystemTime::now(),
             permissions: vec![],
         };
-        let ok = adapter.validate_token(&token).await.unwrap();
+        let ok = adapter
+            .validate_token(&token)
+            .await
+            .expect("test: primal adapter validate_token");
         assert!(ok);
     }
 
@@ -761,7 +767,10 @@ mod tests {
             expires_at: SystemTime::now(),
             permissions: vec![],
         };
-        let refreshed = adapter.refresh_token(&token).await.unwrap();
+        let refreshed = adapter
+            .refresh_token(&token)
+            .await
+            .expect("test: primal adapter refresh_token");
         assert_eq!(refreshed.token, "t");
     }
 
@@ -771,9 +780,15 @@ mod tests {
             key_id: "key-1".to_string(),
         };
         let adapter = SecurityPrimalAdapter(provider);
-        let enc = adapter.encrypt(b"data", "AES256").await.unwrap();
+        let enc = adapter
+            .encrypt(b"data", "AES256")
+            .await
+            .expect("test: primal adapter encrypt");
         assert_eq!(enc, b"data");
-        let dec = adapter.decrypt(b"data").await.unwrap();
+        let dec = adapter
+            .decrypt(b"data")
+            .await
+            .expect("test: primal adapter decrypt");
         assert_eq!(dec, Some(b"data".to_vec()));
     }
 
@@ -783,7 +798,10 @@ mod tests {
             key_id: "my-key".to_string(),
         };
         let adapter = SecurityPrimalAdapter(provider);
-        let id = adapter.get_key_id().await.unwrap();
+        let id = adapter
+            .get_key_id()
+            .await
+            .expect("test: primal adapter get_key_id");
         assert_eq!(id, "my-key");
     }
 
@@ -793,7 +811,10 @@ mod tests {
             key_id: "k".to_string(),
         };
         let adapter = SecurityPrimalAdapter(provider);
-        let algs = adapter.supported_algorithms().await.unwrap();
+        let algs = adapter
+            .supported_algorithms()
+            .await
+            .expect("test: primal adapter supported_algorithms");
         assert!(!algs.is_empty());
     }
 
@@ -814,7 +835,10 @@ mod tests {
         };
         let adapter = ZeroCostSecurityAdapter(provider);
         let creds = b"user:pass";
-        let token = adapter.authenticate(creds).await.unwrap();
+        let token = adapter
+            .authenticate(creds)
+            .await
+            .expect("test: zero-cost adapter authenticate");
         assert_eq!(token.token, "zc-token");
     }
 
@@ -829,7 +853,10 @@ mod tests {
             expires_at: SystemTime::now(),
             permissions: vec![],
         };
-        let ok = adapter.validate_token(&token).await.unwrap();
+        let ok = adapter
+            .validate_token(&token)
+            .await
+            .expect("test: zero-cost adapter validate_token");
         assert!(ok);
     }
 
@@ -839,9 +866,15 @@ mod tests {
             config: "cfg".to_string(),
         };
         let adapter = ZeroCostSecurityAdapter(provider);
-        let enc = adapter.encrypt(b"secret", "AES").await.unwrap();
+        let enc = adapter
+            .encrypt(b"secret", "AES")
+            .await
+            .expect("test: zero-cost adapter encrypt");
         assert_eq!(enc, b"secret");
-        let dec = adapter.decrypt(b"secret").await.unwrap();
+        let dec = adapter
+            .decrypt(b"secret")
+            .await
+            .expect("test: zero-cost adapter decrypt");
         assert_eq!(dec, Some(b"secret".to_vec()));
     }
 
@@ -851,7 +884,10 @@ mod tests {
             config: "cfg".to_string(),
         };
         let adapter = ZeroCostSecurityAdapter(provider);
-        let id = adapter.get_key_id().await.unwrap();
+        let id = adapter
+            .get_key_id()
+            .await
+            .expect("test: zero-cost adapter get_key_id");
         assert_eq!(id, "zc-key");
     }
 
@@ -861,7 +897,10 @@ mod tests {
             config: "cfg".to_string(),
         };
         let adapter = ZeroCostSecurityAdapter(provider);
-        let algs = adapter.supported_algorithms().await.unwrap();
+        let algs = adapter
+            .supported_algorithms()
+            .await
+            .expect("test: zero-cost adapter supported_algorithms");
         assert_eq!(algs.len(), 2);
     }
 
@@ -871,7 +910,10 @@ mod tests {
             config: "cfg".to_string(),
         };
         let adapter = ZeroCostSecurityAdapter(provider);
-        let hash = adapter.hash_data(b"data", "SHA256").await.unwrap();
+        let hash = adapter
+            .hash_data(b"data", "SHA256")
+            .await
+            .expect("test: zero-cost adapter hash_data");
         assert!(!hash.is_empty());
     }
 
@@ -881,7 +923,84 @@ mod tests {
             config: "cfg".to_string(),
         };
         let adapter = ZeroCostSecurityAdapter(provider);
-        let bytes = adapter.generate_random(32).await.unwrap();
+        let bytes = adapter
+            .generate_random(32)
+            .await
+            .expect("test: zero-cost adapter generate_random");
         assert_eq!(bytes.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn test_security_primal_adapter_authenticate_rejects_invalid_user() {
+        let provider = MockSecurityPrimalProvider {
+            key_id: "key-1".to_string(),
+        };
+        let adapter = SecurityPrimalAdapter(provider);
+        let err = adapter
+            .authenticate(b"not-test")
+            .await
+            .expect_err("test: invalid user should fail");
+        assert!(err.to_string().contains("Invalid") || err.to_string().contains("credentials"));
+    }
+
+    #[tokio::test]
+    async fn test_security_primal_adapter_verify_signature_mismatch_returns_none() {
+        let provider = MockSecurityPrimalProvider {
+            key_id: "key-1".to_string(),
+        };
+        let adapter = SecurityPrimalAdapter(provider);
+        let out = adapter
+            .verify(b"data", b"other")
+            .await
+            .expect("test: primal adapter verify");
+        assert!(out.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_security_primal_adapter_hash_and_random_delegate() {
+        let provider = MockSecurityPrimalProvider {
+            key_id: "key-1".to_string(),
+        };
+        let adapter = SecurityPrimalAdapter(provider);
+        let h = adapter
+            .hash_data(b"abc", "x")
+            .await
+            .expect("test: primal adapter hash_data");
+        assert_eq!(h, b"abc");
+        let r = adapter
+            .generate_random(4)
+            .await
+            .expect("test: primal adapter generate_random");
+        assert_eq!(r, vec![0u8; 4]);
+    }
+
+    #[tokio::test]
+    async fn test_zero_cost_adapter_credentials_without_colon_uses_whole_string_as_username() {
+        let provider = MockZeroCostProvider {
+            config: "cfg".to_string(),
+        };
+        let adapter = ZeroCostSecurityAdapter(provider);
+        let token = adapter
+            .authenticate(b"onlyuser")
+            .await
+            .expect("test: zero-cost authenticate single segment");
+        assert_eq!(token.token, "zc-token");
+    }
+
+    #[tokio::test]
+    async fn test_zero_cost_adapter_revoke_token_delegates() {
+        let provider = MockZeroCostProvider {
+            config: "cfg".to_string(),
+        };
+        let adapter = ZeroCostSecurityAdapter(provider);
+        let token = AuthToken {
+            token: "t".to_string(),
+            expires_at: SystemTime::now(),
+            permissions: vec![],
+        };
+        adapter
+            .revoke_token(&token)
+            .await
+            .expect("test: zero-cost revoke_token");
     }
 }

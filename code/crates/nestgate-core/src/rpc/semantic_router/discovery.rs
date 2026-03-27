@@ -11,7 +11,7 @@ use tracing::{debug, info};
 ///
 /// Registers a service with the discovery system.
 /// Typically called by Songbird when a primal comes online.
-pub(super) async fn discovery_announce(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn discovery_announce(_router: &SemanticRouter, params: Value) -> Result<Value> {
     use crate::error::NestGateError;
     use crate::service_metadata::{ServiceMetadata, ServiceMetadataStore};
     use std::time::SystemTime;
@@ -19,24 +19,21 @@ pub(super) async fn discovery_announce(router: &SemanticRouter, params: Value) -
     // Parse service metadata from params
     let name = params["name"]
         .as_str()
-        .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?
+        .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?
         .to_string();
 
-    let version = params["version"]
-        .as_str()
-        .unwrap_or("unknown")
-        .to_string();
+    let version = params["version"].as_str().unwrap_or("unknown").to_string();
 
     let capabilities: Vec<String> = params["capabilities"]
         .as_array()
-        .ok_or_else(|| NestGateError::invalid_input("capabilities", "array required"))?
+        .ok_or_else(|| NestGateError::invalid_input_with_field("capabilities", "array required"))?
         .iter()
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
 
     let virtual_endpoint = params["endpoint"]
         .as_str()
-        .ok_or_else(|| NestGateError::invalid_input("endpoint", "string required"))?
+        .ok_or_else(|| NestGateError::invalid_input_with_field("endpoint", "string required"))?
         .to_string();
 
     let platform = params["platform"]
@@ -78,13 +75,13 @@ pub(super) async fn discovery_announce(router: &SemanticRouter, params: Value) -
 /// Route discovery.query → find services by capability
 ///
 /// Finds all services that provide a specific capability.
-pub(super) async fn discovery_query(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn discovery_query(_router: &SemanticRouter, params: Value) -> Result<Value> {
     use crate::error::NestGateError;
     use crate::service_metadata::ServiceMetadataStore;
 
     let capability = params["capability"]
         .as_str()
-        .ok_or_else(|| NestGateError::invalid_input("capability", "string required"))?;
+        .ok_or_else(|| NestGateError::invalid_input_with_field("capability", "string required"))?;
 
     let store = ServiceMetadataStore::new().await?;
     let services = store.find_by_capability(capability).await?;
@@ -102,7 +99,11 @@ pub(super) async fn discovery_query(router: &SemanticRouter, params: Value) -> R
         })
         .collect();
 
-    debug!("🔍 Discovery query for '{}': {} services found", capability, result.len());
+    debug!(
+        "🔍 Discovery query for '{}': {} services found",
+        capability,
+        result.len()
+    );
 
     Ok(json!({ "services": result }))
 }
@@ -139,7 +140,10 @@ pub(super) async fn discovery_list(_router: &SemanticRouter, _params: Value) -> 
 }
 
 /// Route discovery.capabilities → get service capabilities (placeholder)
-pub(super) async fn discovery_capabilities(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) async fn discovery_capabilities(
+    _router: &SemanticRouter,
+    _params: Value,
+) -> Result<Value> {
     Ok(json!({
         "capabilities": ["storage", "discovery", "metadata", "health"]
     }))

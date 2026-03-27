@@ -1,21 +1,22 @@
 use nestgate_core::{NestGateError, Result};
 use std::path::{Path, PathBuf};
 
+/// Default GitHub `owner/repo` for release metadata (override with `NESTGATE_RELEASES_REPO`).
+const DEFAULT_GITHUB_REPO: &str = "ecoprimals/nestgate";
+
 /// Installer error type alias
 #[allow(dead_code)] // Reserved for future error handling
 pub type InstallerError = NestGateError;
 
-/// Download manager - STUB
+/// Download manager: fetches release metadata and assets from the GitHub Releases API.
 ///
-/// HTTP functionality removed per BiomeOS Pure Rust Evolution and "100% HTTP-Free" goal.
-/// Downloads should go through Songbird primal per Concentrated Gap architecture.
+/// Set `NESTGATE_RELEASES_REPO` to `owner/repo` if releases are not hosted under the default.
 pub struct DownloadManager {
-    /// Placeholder for future Songbird integration
     _phantom: std::marker::PhantomData<()>,
 }
 
 impl DownloadManager {
-    /// Create a new download manager (stub)
+    /// Create a new download manager
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -23,46 +24,138 @@ impl DownloadManager {
         }
     }
 
-    /// Download a specific release to the target directory (STUB)
-    ///
-    /// # Errors
-    ///
-    /// Returns an error - HTTP downloads not supported.
-    /// Downloads should go through Songbird primal per Concentrated Gap architecture.
-    ///
-    /// # Note
-    ///
-    /// HTTP functionality removed per BiomeOS Pure Rust Evolution and "100% HTTP-Free" goal.
-    /// For production use, integrate with Songbird primal for external HTTP access.
-    pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
-        // Return error with clear guidance
-        Err(NestGateError::internal_error(
-            format!(
-                "HTTP downloads not supported. NestGate is 100% HTTP-Free per Concentrated Gap architecture. \
-                To download version {}, use Songbird primal or manual download to {}",
-                version,
-                target_dir.display()
-            ),
-            "download_release"
-        ))
+    fn github_repo() -> String {
+        std::env::var("NESTGATE_RELEASES_REPO").unwrap_or_else(|_| DEFAULT_GITHUB_REPO.to_string())
     }
 
-    /// Check for the latest available release version (STUB)
+    fn http_client() -> Result<reqwest::Client> {
+        reqwest::Client::builder()
+            .user_agent(concat!("nestgate-installer/", env!("CARGO_PKG_VERSION")))
+            .build()
+            .map_err(|e| {
+                NestGateError::internal_error(
+                    format!("failed to build HTTP client: {e}"),
+                    "DownloadManager::http_client",
+                )
+            })
+    }
+
+    /// Download a release asset for `version` into `target_dir` and return the saved file path.
     ///
     /// # Errors
     ///
-    /// Returns an error - HTTP requests not supported.
-    ///  
-    /// # Note
+    /// Returns when the GitHub API is unreachable, the release or assets are missing, or I/O fails.
+    pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
+        std::fs::create_dir_all(target_dir)?;
+        let repo = Self::github_repo();
+        let tag = if version.starts_with('v') {
+            version.to_string()
+        } else {
+            format!("v{version}")
+        };
+        let meta_url = format!("https://api.github.com/repos/{repo}/releases/tags/{tag}");
+        let client = Self::http_client()?;
+        let resp = client.get(&meta_url).send().await.map_err(|e| {
+            NestGateError::internal_error(
+                format!("request failed for {meta_url}: {e}"),
+                "download_release",
+            )
+        })?;
+        if !resp.status().is_success() {
+            return Err(NestGateError::internal_error(
+                format!(
+                    "GitHub API returned {} for {} (set NESTGATE_RELEASES_REPO if needed)",
+                    resp.status(),
+                    meta_url
+                ),
+                "download_release",
+            ));
+        }
+        let body: serde_json::Value = resp.json().await.map_err(|e| {
+            NestGateError::internal_error(
+                format!("invalid JSON from GitHub release: {e}"),
+                "download_release",
+            )
+        })?;
+        let assets = body["assets"].as_array().ok_or_else(|| {
+            NestGateError::internal_error(
+                "release response missing assets array",
+                "download_release",
+            )
+        })?;
+        let asset = assets
+            .iter()
+            .find(|a| {
+                a["name"].as_str().map_or(false, |n| {
+                    n.ends_with(".tar.gz") || n.ends_with(".tar.xz") || n.ends_with(".zip")
+                })
+            })
+            .or_else(|| assets.first())
+            .ok_or_else(|| {
+                NestGateError::internal_error(
+                    format!("no download assets for release {tag}"),
+                    "download_release",
+                )
+            })?;
+        let download_url = asset["browser_download_url"].as_str().ok_or_else(|| {
+            NestGateError::internal_error("asset missing browser_download_url", "download_release")
+        })?;
+        let asset_name = asset["name"].as_str().unwrap_or("release-asset");
+        let dl = client.get(download_url).send().await.map_err(|e| {
+            NestGateError::internal_error(format!("download failed: {e}"), "download_release")
+        })?;
+        if !dl.status().is_success() {
+            return Err(NestGateError::internal_error(
+                format!("GitHub returned {} for asset download", dl.status()),
+                "download_release",
+            ));
+        }
+        let bytes = dl.bytes().await.map_err(|e| {
+            NestGateError::internal_error(format!("reading release body: {e}"), "download_release")
+        })?;
+        let path = target_dir.join(asset_name);
+        std::fs::write(&path, &bytes)?;
+        Ok(path)
+    }
+
+    /// Latest release tag from GitHub (`releases/latest`), without a leading `v` when present.
     ///
-    /// HTTP functionality removed per "100% HTTP-Free" goal.
-    /// Use Songbird primal for external HTTP/API access.
+    /// # Errors
+    ///
+    /// Returns when the API call fails or the response is not usable.
     pub async fn check_latest_version(&self) -> Result<String> {
-        Err(NestGateError::internal_error(
-            "HTTP API requests not supported. NestGate is 100% HTTP-Free. \
-            Use Songbird primal for version checks.",
-            "check_latest_version",
-        ))
+        let repo = Self::github_repo();
+        let url = format!("https://api.github.com/repos/{repo}/releases/latest");
+        let client = Self::http_client()?;
+        let resp = client.get(&url).send().await.map_err(|e| {
+            NestGateError::internal_error(
+                format!("request failed for {url}: {e}"),
+                "check_latest_version",
+            )
+        })?;
+        if !resp.status().is_success() {
+            return Err(NestGateError::internal_error(
+                format!(
+                    "GitHub API returned {} for {} (set NESTGATE_RELEASES_REPO if needed)",
+                    resp.status(),
+                    url
+                ),
+                "check_latest_version",
+            ));
+        }
+        let body: serde_json::Value = resp.json().await.map_err(|e| {
+            NestGateError::internal_error(
+                format!("invalid JSON from GitHub releases: {e}"),
+                "check_latest_version",
+            )
+        })?;
+        let tag = body["tag_name"].as_str().ok_or_else(|| {
+            NestGateError::internal_error(
+                "missing tag_name in GitHub releases/latest response",
+                "check_latest_version",
+            )
+        })?;
+        Ok(tag.trim_start_matches('v').to_string())
     }
 
     /// Extract downloaded archive to target directory

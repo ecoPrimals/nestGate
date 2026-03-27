@@ -12,6 +12,7 @@ use nestgate_core::Result;
 // ==================== REQUEST VALIDATION ====================
 
 #[test]
+#[allow(clippy::const_is_empty)]
 fn test_empty_request_body() {
     let body = "";
     assert!(body.is_empty(), "Empty body should be detected");
@@ -35,6 +36,7 @@ fn test_missing_required_fields() {
 
     #[derive(serde::Deserialize)]
     struct RequiredFields {
+        #[allow(dead_code)]
         required: String,
         #[allow(dead_code)]
         optional: Option<String>,

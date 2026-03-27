@@ -8,7 +8,7 @@
 //! - **Universal Access**: JSON-RPC works with ANY language
 //! - **Self-Knowledge**: Exposes only storage capabilities
 //! - **Runtime Discovery**: Capability-based service finding
-//! - **Same Operations**: 14 operations (same as tarpc)
+//! - **Same Operations**: 18 operations (same as tarpc)
 //!
 //! ## Supported Methods (wateringHole `domain.operation` standard)
 //!
@@ -29,11 +29,16 @@
 //! - `discovery.capability.register` - Register service capability
 //! - `discovery.capability.query` - Discover services by capability
 //!
-//! Health Operations (4):
+//! Health Operations (6):
 //! - `health.check` - Service health status
+//! - `health.liveness` - Process alive (minimal probe)
+//! - `health.readiness` - Ready to serve traffic
 //! - `health.metrics` - Storage metrics
-//! - `health.version` - Service version
+//! - `health.info` - Service version and build metadata
 //! - `health.protocols` - Supported protocols
+//!
+//! Capabilities (1):
+//! - `capabilities.list` - Supported JSON-RPC method names
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -133,7 +138,7 @@ impl JsonRpcServer {
 
         info!("✅ NestGate JSON-RPC 2.0 server listening on {}", addr);
         info!("   Endpoint: http://{}/jsonrpc", addr);
-        info!("   Methods: 14 registered");
+        info!("   Methods: 18 registered");
         info!("   Protocol: Primary=tarpc, Secondary=JSON-RPC");
 
         Ok((handle, addr))
@@ -503,6 +508,32 @@ impl JsonRpcServer {
             },
         )?;
 
+        // capabilities.list — semantic surface discovery
+        module.register_async_method("capabilities.list", |_params, _ctx, _ext| async move {
+            debug!("JSON-RPC: capabilities.list()");
+            let methods = vec![
+                "storage.dataset.create",
+                "storage.dataset.list",
+                "storage.dataset.get",
+                "storage.dataset.delete",
+                "storage.object.store",
+                "storage.object.retrieve",
+                "storage.object.metadata",
+                "storage.object.list",
+                "storage.object.delete",
+                "discovery.capability.register",
+                "discovery.capability.query",
+                "health.check",
+                "health.liveness",
+                "health.readiness",
+                "health.metrics",
+                "health.info",
+                "health.protocols",
+                "capabilities.list",
+            ];
+            Ok::<_, ErrorObjectOwned>(serde_json::json!({ "methods": methods }))
+        })?;
+
         Ok(())
     }
 
@@ -512,7 +543,7 @@ impl JsonRpcServer {
     ) -> Result<(), Box<dyn std::error::Error>> {
         // nestgate.health
         module.register_async_method("health.check", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: health()");
+            debug!("JSON-RPC: health.check()");
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();
@@ -522,6 +553,32 @@ impl JsonRpcServer {
                 "status": health.status,
                 "uptime_seconds": health.uptime_seconds,
                 "version": health.version,
+            }))
+        })?;
+
+        module.register_async_method("health.liveness", |_params, ctx, _ext| async move {
+            debug!("JSON-RPC: health.liveness()");
+
+            let state = ctx.as_ref();
+            let service_clone = state.service.clone();
+            let health = service_clone.health(tarpc::context::current()).await;
+
+            Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                "alive": true,
+                "status": health.status,
+            }))
+        })?;
+
+        module.register_async_method("health.readiness", |_params, ctx, _ext| async move {
+            debug!("JSON-RPC: health.readiness()");
+
+            let state = ctx.as_ref();
+            let service_clone = state.service.clone();
+            let health = service_clone.health(tarpc::context::current()).await;
+
+            Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                "ready": health.status == "healthy",
+                "status": health.status,
             }))
         })?;
 
@@ -542,9 +599,9 @@ impl JsonRpcServer {
             }))
         })?;
 
-        // nestgate.version
-        module.register_async_method("health.version", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: version()");
+        // nestgate.version (semantic: health.info)
+        module.register_async_method("health.info", |_params, ctx, _ext| async move {
+            debug!("JSON-RPC: health.info()");
 
             let state = ctx.as_ref();
             let service_clone = state.service.clone();

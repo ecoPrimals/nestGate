@@ -554,44 +554,102 @@ pub struct ZfsSnapshot {
 mod tests {
     use super::*;
     use tokio;
-    #[tokio::test]
-    async fn test_zfs_availability() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let available = ZfsCommand::check_zfs_available().unwrap_or_else(|e| {
-            tracing::warn!("ZFS not available in test environment: {:?}", e);
-            false // Return false instead of trying to return an error
-        });
 
-        // In CI/test environments, ZFS might not be available
-        // This is acceptable for unit tests
-        println!("ZFS available: {available}");
-        Ok(())
+    #[test]
+    fn zfs_command_default_and_builder() {
+        let cmd = ZfsCommand::new().with_dry_run(true).with_timeout(120);
+        assert!(cmd.dry_run);
+        assert_eq!(cmd.timeout_seconds, 120);
+        let defaults = ZfsCommand::default();
+        assert!(!defaults.dry_run);
+        assert_eq!(defaults.timeout_seconds, 30);
+    }
+
+    #[test]
+    fn command_result_helpers() {
+        let result = CommandResult {
+            success: true,
+            stdout: "a\nb\n".to_string(),
+            stderr: "e1\ne2".to_string(),
+            exit_code: 0,
+        };
+        assert!(result.is_success());
+        assert_eq!(result.stdout_lines().len(), 2);
+        assert_eq!(result.stderr_lines().len(), 2);
+    }
+
+    #[test]
+    fn command_result_parse_properties_tab_and_space() {
+        let tab = CommandResult {
+            success: true,
+            stdout: "k1\tv1\n# skip\nk2 v2".to_string(),
+            stderr: String::new(),
+            exit_code: 0,
+        };
+        let map = tab
+            .parse_properties()
+            .expect("test: parse tab-separated properties");
+        assert_eq!(map.get("k1"), Some(&"v1".to_string()));
+        assert_eq!(map.get("k2"), Some(&"v2".to_string()));
+    }
+
+    #[test]
+    fn command_result_parse_table_rows_and_malformed_skip() {
+        let result = CommandResult {
+            success: true,
+            stdout: "c1 c2\nv1 v2\nbad\nv3 v4 v5".to_string(),
+            stderr: String::new(),
+            exit_code: 0,
+        };
+        let table = result.parse_table().expect("test: parse table");
+        assert_eq!(table.len(), 1);
+        assert_eq!(table[0]["c1"], "v1");
+        assert_eq!(table[0]["c2"], "v2");
+    }
+
+    #[test]
+    fn command_result_parse_table_empty_stdout() {
+        let result = CommandResult {
+            success: true,
+            stdout: String::new(),
+            stderr: String::new(),
+            exit_code: 0,
+        };
+        let table = result.parse_table().expect("test: empty table");
+        assert!(table.is_empty());
+    }
+
+    #[test]
+    fn extract_scan_status_finds_scan_line() {
+        let out = "  scan: scrub in progress since Sun\n  other: x\n";
+        assert_eq!(
+            super::extract_scan_status(out),
+            "scrub in progress since Sun"
+        );
+    }
+
+    #[test]
+    fn extract_scan_status_default_when_missing() {
+        assert_eq!(super::extract_scan_status("no scan here"), "none requested");
     }
 
     #[tokio::test]
-    async fn test_dry_run_mode() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let cmd = ZfsCommand::new().with_dry_run(true);
-        let result = cmd.zpool(&["list"]).await.unwrap_or_else(|e| {
-            tracing::error!(
-                "Expect failed ({}): {:?}",
-                "Failed to execute zpool list in test",
-                e
-            );
-            // Return a default failed command result for test purposes
-            CommandResult {
-                success: false,
-                stdout: String::new(),
-                stderr: "Operation failed: error details".to_string(),
-                exit_code: 1,
-            }
-        });
+    async fn zfs_availability_check_does_not_panic() {
+        let available = ZfsCommand::check_zfs_available().expect("test: check_zfs_available");
+        let _ = available;
+    }
 
+    #[tokio::test]
+    async fn dry_run_skips_real_execution() {
+        let cmd = ZfsCommand::new().with_dry_run(true);
+        let result = cmd.zpool(&["list"]).await.expect("test: dry-run zpool");
         assert!(result.is_success());
         assert!(result.stdout.contains("DRY RUN"));
-        Ok(())
+        assert_eq!(result.exit_code, 0);
     }
 
     #[tokio::test]
-    async fn test_command_result_parsing() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn command_result_parse_table_tab_separated() {
         let result = CommandResult {
             success: true,
             stdout: "name\tsize\talloc\npool1\t1T\t500G\npool2\t2T\t1T".to_string(),
@@ -599,28 +657,26 @@ mod tests {
             exit_code: 0,
         };
 
-        let table = result.parse_table().unwrap_or_else(|e| {
-            tracing::warn!("Failed to parse table: {:?}", e);
-            vec![] // Return empty vector instead of trying to return an error
-        });
-
-        if !table.is_empty() {
-            assert_eq!(table.len(), 2);
-            assert_eq!(table[0]["name"], "pool1");
-            assert_eq!(table[1]["size"], "2T");
-        }
-        Ok(())
+        let table = result.parse_table().expect("test: parse zpool-style table");
+        assert_eq!(table.len(), 2);
+        assert_eq!(table[0]["name"], "pool1");
+        assert_eq!(table[1]["size"], "2T");
     }
 
     #[tokio::test]
-    async fn test_zfs_operations_dry_run() {
+    async fn zfs_operations_dry_run_list_paths() {
         let ops = ZfsOperations::new().with_dry_run(true);
 
-        // These should work in dry run mode
-        let pools = ops.list_pools().await;
-        assert!(pools.is_ok());
+        ops.list_pools().await.expect("test: list_pools dry run");
+        ops.list_datasets(None)
+            .await
+            .expect("test: list_datasets dry run");
+    }
 
-        let datasets = ops.list_datasets(None).await;
-        assert!(datasets.is_ok());
+    #[tokio::test]
+    #[ignore = "Requires real ZFS"]
+    async fn zfs_command_executes_real_zpool_list() {
+        let cmd = ZfsCommand::new().with_dry_run(false);
+        let _ = cmd.zpool(&["list"]).await;
     }
 }

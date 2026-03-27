@@ -12,7 +12,15 @@ fn test_semantic_method_names() {
     ];
 
     for method in storage_methods {
-        assert!(method.contains('.'), "Method should use dot notation: {}", method);
-        assert!(method.starts_with("storage."), "Storage method should start with storage.: {}", method);
+        assert!(
+            method.contains('.'),
+            "Method should use dot notation: {}",
+            method
+        );
+        assert!(
+            method.starts_with("storage."),
+            "Storage method should start with storage.: {}",
+            method
+        );
     }
 }

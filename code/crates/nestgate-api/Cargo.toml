@@ -2,14 +2,13 @@
 name = "nestgate-api"
 version = "0.1.0"
 edition = "2021"
-authors = ["NestGate Development Team <dev@nestgate.io>"]
+authors = ["ecoPrimals Collective"]
 description = "API server and interface definitions for NestGate with enhanced streaming capabilities"
 license = "AGPL-3.0-only"
-repository = "https://github.com/nestgate/nestgate"
-keywords = [ "api", "kubernetes", "network", "gateway", "service-mesh", "streaming", "sse", "rpc",]
-categories = [ "network-programming", "api-bindings", "web-programming",]
-homepage = "https://nestgate.io"
-documentation = "https://docs.rs/nestgate-api"
+repository = "https://github.com/ecoprimals/nestgate"
+keywords = [ "api", "sovereignty", "network", "gateway", "infrastructure", "streaming", "rpc",]
+categories = [ "network-programming", "web-programming",]
+homepage = "https://ecoprimals.org"
 readme = "README.md"
 
 [dependencies]
@@ -103,8 +102,7 @@ workspace = true
 # warp removed: unused dependency (HTTP evolution → Unix sockets)
 
 [dependencies.tarpc]
-version = "0.37"
-features = [ "tokio1", "serde1", "serde-transport", "tcp",]
+workspace = true
 optional = true
 
 [dependencies.bincode]

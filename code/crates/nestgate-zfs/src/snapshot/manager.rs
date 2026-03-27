@@ -463,3 +463,101 @@ impl ZfsSnapshotManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::snapshot::policy::{ScheduleFrequency, SnapshotPolicy};
+
+    #[tokio::test]
+    async fn add_get_list_remove_policy_roundtrip() {
+        let mgr = ZfsSnapshotManager::new_for_testing();
+        let p = SnapshotPolicy {
+            name: "p1".into(),
+            ..SnapshotPolicy::default()
+        };
+        mgr.add_policy(p.clone()).await.expect("test: add_policy");
+        let got = mgr
+            .get_policy("p1")
+            .await
+            .expect("test: policy p1 should exist");
+        assert_eq!(got.name, "p1");
+
+        let list = mgr.list_policies().await;
+        assert!(list.iter().any(|x| x.name == "p1"));
+
+        let removed = mgr.remove_policy("p1").await.expect("test: remove_policy");
+        assert!(removed);
+        assert!(mgr.get_policy("p1").await.is_none());
+    }
+
+    #[tokio::test]
+    async fn create_and_delete_snapshot_return_operation_ids() {
+        let mgr = ZfsSnapshotManager::new_for_testing();
+        let id_create = mgr
+            .create_snapshot("pool/ds", "snap1", false)
+            .await
+            .expect("test: create_snapshot");
+        let id_delete = mgr
+            .delete_snapshot("pool/ds", "snap1")
+            .await
+            .expect("test: delete_snapshot");
+        assert!(id_create.starts_with("snap_op_"));
+        assert!(id_delete.starts_with("snap_op_"));
+
+        let op_c = mgr
+            .get_operation_status(&id_create)
+            .await
+            .expect("test: create op in queue");
+        assert_eq!(op_c.snapshot_name.as_deref(), Some("snap1"));
+
+        let op_d = mgr
+            .get_operation_status(&id_delete)
+            .await
+            .expect("test: delete op in queue");
+        assert_eq!(op_d.snapshot_name.as_deref(), Some("snap1"));
+    }
+
+    #[tokio::test]
+    async fn list_snapshots_empty_cache() {
+        let mgr = ZfsSnapshotManager::new_for_testing();
+        let snaps = mgr
+            .list_snapshots("any")
+            .await
+            .expect("test: list_snapshots");
+        assert!(snaps.is_empty());
+    }
+
+    #[tokio::test]
+    async fn get_statistics_default() {
+        let mgr = ZfsSnapshotManager::new_for_testing();
+        let stats = mgr.get_statistics().await;
+        assert_eq!(stats.total_snapshots, 0);
+    }
+
+    #[tokio::test]
+    async fn parse_schedule_delegates_to_scheduler() {
+        let mgr = ZfsSnapshotManager::new_for_testing();
+        let d = mgr
+            .parse_schedule(&ScheduleFrequency::Hours(2))
+            .expect("test: parse_schedule hours");
+        assert_eq!(d, std::time::Duration::from_secs(7200));
+    }
+
+    #[tokio::test]
+    async fn parse_schedule_custom_errors() {
+        let mgr = ZfsSnapshotManager::new_for_testing();
+        let err = mgr
+            .parse_schedule(&ScheduleFrequency::Custom("0 * * * *".into()))
+            .expect_err("test: custom schedule should error");
+        let _ = err;
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires real ZFS"]
+    async fn start_loads_policies_and_spawns_background_tasks() {
+        let mut mgr = ZfsSnapshotManager::new_for_testing();
+        mgr.start().await.expect("test: snapshot manager start");
+        mgr.stop().await.expect("test: snapshot manager stop");
+    }
+}

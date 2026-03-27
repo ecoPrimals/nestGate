@@ -29,8 +29,9 @@ pub fn create_zero_hardware_metrics() -> LiveHardwareMetrics {
 /// Create stub compute resources (hardcoded system resources)
 pub fn create_stub_compute_resources() -> ComputeResources {
     ComputeResources {
-        available_cpu: 16,       // HARDCODED - Future: Use sysinfo crate
-        available_memory_gb: 64, // HARDCODED - Future: Use sysinfo crate
+        // ecoBin v3.0: stubs only; production uses `/proc` via `hardware_tuning::linux_proc` (not sysinfo).
+        available_cpu: 16,
+        available_memory_gb: 64,
         available_gpu: 2,        // HARDCODED - Future: Implement GPU detection
         total_compute_units: 16,
         memory: MemoryInfo {

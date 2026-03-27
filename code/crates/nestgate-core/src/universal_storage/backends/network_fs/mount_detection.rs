@@ -227,6 +227,7 @@ impl MountDetector for UnixMtabDetector {
 /// sysinfo-based universal detector
 ///
 /// **UNIVERSAL**: Works on all platforms using sysinfo crate
+// ecoBin v3.0: `sysinfo` fallback when `/proc/mounts` and `/etc/mtab` are unavailable.
 pub struct SysinfoMountDetector;
 
 impl MountDetector for SysinfoMountDetector {
@@ -392,7 +393,7 @@ mod tests {
     #[test]
     fn test_detector_availability() {
         let detector = UniversalMountDetector::new();
-        // Should always have a detector available (at least sysinfo)
+        // ecoBin v3.0: sysinfo-backed fallback is always "available"; Linux prefers `/proc/mounts`.
         assert!(detector.is_available());
     }
     
@@ -443,6 +444,7 @@ mod tests {
     }
     
     #[test]
+    // ecoBin v3.0: sysinfo-only test; production Linux path is `LinuxProcMountDetector`.
     fn test_sysinfo_detector_always_available() {
         let detector = SysinfoMountDetector;
         assert!(detector.is_available(), "sysinfo detector should always be available");

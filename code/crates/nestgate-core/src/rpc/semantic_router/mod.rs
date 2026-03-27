@@ -70,9 +70,13 @@
 //!
 //! ### Health Domain (`health.*`)
 //! - `health.check` → `health_check`
+//! - `health.liveness` → minimal process-alive signal
+//! - `health.readiness` → readiness to serve
 //! - `health.metrics` → `get_metrics`
 //! - `health.info` → `get_info`
-//! - `health.ready` → readiness check
+//!
+//! ### Capabilities Domain (`capabilities.*`)
+//! - `capabilities.list` → supported semantic method names
 //!
 //! ## References
 //!
@@ -81,12 +85,13 @@
 //! - CAPABILITY_MAPPINGS.md
 
 use crate::error::{NestGateError, Result};
-use crate::rpc::tarpc_types::NestGateRpcClient;
+use crate::rpc::NestGateRpcClient;
 use serde_json::Value;
 use std::sync::Arc;
 use tracing::{debug, warn};
 
 // Domain modules
+pub mod capabilities;
 pub mod crypto;
 pub mod discovery;
 pub mod health;
@@ -183,9 +188,13 @@ impl SemanticRouter {
 
             // ==================== HEALTH DOMAIN ====================
             "health.check" => health::health_check(self, params).await,
+            "health.liveness" => health::health_liveness(self, params).await,
+            "health.readiness" => health::health_ready(self, params).await,
             "health.metrics" => health::health_metrics(self, params).await,
             "health.info" => health::health_info(self, params).await,
-            "health.ready" => health::health_ready(self, params).await,
+
+            // ==================== CAPABILITIES DOMAIN ====================
+            "capabilities.list" => capabilities::capabilities_list(self, params).await,
 
             // ==================== METADATA DOMAIN ====================
             "metadata.store" => metadata::metadata_store(self, params).await,
@@ -203,7 +212,10 @@ impl SemanticRouter {
             // Unknown method
             _ => {
                 warn!("❌ Unknown semantic method: {}", method);
-                Err(NestGateError::method_not_found(method))
+                Err(NestGateError::not_found(format!(
+                    "semantic method `{}`",
+                    method
+                )))
             }
         }
     }

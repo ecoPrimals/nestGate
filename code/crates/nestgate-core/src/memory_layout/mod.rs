@@ -19,6 +19,8 @@ pub mod cache_alignment;
 /// **Coverage**: 99.27% (1 uncovered line out of 359 total lines)
 /// **RECOMMENDED**: Production-ready safe code
 pub mod memory_pool_safe;
+/// Bitmap + per-slot `Mutex` pool (alternative safe implementation; sub-path `safe_memory_pool::SafeMemoryPool`)
+pub mod safe_memory_pool;
 
 // Re-export commonly used types
 pub use cache_alignment::{CacheAligned, CachePadded, CACHE_LINE_SIZE};

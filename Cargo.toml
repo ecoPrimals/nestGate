@@ -148,7 +148,11 @@ memmap2 = "0.9"
 # libc REMOVED - evolved to uzers (pure Rust) in Phase 2
 uzers = "0.11"
 num_cpus = "1.16"
+# sysinfo: non-Linux + Linux fallbacks; Linux primary path is `nestgate_core::linux_proc` + rustix.
+# Full removal needs optional feature + cfg on all dependents (audit Mar 2026).
 sysinfo = "0.30"
+# Linux disk space and low-level FS stats (ecoBin v3.0 path alongside /proc)
+rustix = { version = "0.38", default-features = false, features = ["std", "fs"] }
 gethostname = "0.4"
 etcetera = "0.8"
 

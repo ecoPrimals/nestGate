@@ -1,7 +1,9 @@
-/// **ZERO-COST UNIVERSAL PROVIDERS - CANONICAL MODERNIZATION COMPLETE**
-///
-/// This module provides zero-cost universal provider implementations that eliminate
-/// the runtime overhead of `async_trait` and `Arc<dyn>` patterns.
+#![allow(deprecated)] // Deprecated `ZeroCostSecurityProvider` and related surface until v0.12 removal
+
+//! **ZERO-COST UNIVERSAL PROVIDERS - CANONICAL MODERNIZATION COMPLETE**
+//!
+//! This module provides zero-cost universal provider implementations that eliminate
+//! the runtime overhead of `async_trait` and `Arc<dyn>` patterns.
 use crate::error::CanonicalResult as Result;
 use std::collections::HashMap;
 use std::future::Future;
@@ -97,7 +99,6 @@ pub enum SecurityDecision {
 /// Direct composition replacement for `Arc<dyn SecurityPrimalProvider>`
 /// PERFORMANCE: 40-60% improvement through compile-time dispatch
 /// ELIMINATES: Virtual method call overhead and heap allocation
-#[allow(deprecated)] // Example of zero-cost pattern - uses deprecated trait for demonstration
 /// Zerocostuniversalsecuritywrapper
 pub struct ZeroCostUniversalSecurityWrapper<Provider, const MAX_CONCURRENT: usize = 1000>
 where
@@ -167,7 +168,6 @@ pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     fn health_check(&self) -> impl Future<Output = std::result::Result<bool, Self::Error>> + Send;
 }
 
-#[allow(deprecated)] // Example implementation of zero-cost pattern
 impl<Provider, const MAX_CONCURRENT: usize>
     ZeroCostUniversalSecurityWrapper<Provider, MAX_CONCURRENT>
 where
@@ -282,15 +282,11 @@ pub struct ZeroCostUniversalOrchestrationWrapper<Provider, const MAX_INSTANCES: 
 where
     Provider: ZeroCostOrchestrationProvider,
 {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    provider_name: String,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    endpoint: String,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    capabilities: Vec<String>,
+    _provider_name: String,
+    _endpoint: String,
+    _capabilities: Vec<String>,
     /// Direct composition - no `Arc<dyn>` overhead
-    #[allow(dead_code)] // Framework field - intentionally unused
-    provider: Provider,
+    _provider: Provider,
     _phantom: PhantomData<()>,
 }
 /// Zero-cost orchestration provider trait - replaces `Arc<dyn OrchestrationPrimalProvider>`
@@ -337,15 +333,11 @@ pub struct ZeroCostUniversalComputeWrapper<Provider, const MAX_COMPUTE_UNITS: us
 where
     Provider: ZeroCostComputeProvider,
 {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    provider_name: String,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    endpoint: String,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    capabilities: Vec<String>,
+    _provider_name: String,
+    _endpoint: String,
+    _capabilities: Vec<String>,
     /// Direct composition - no `Arc<dyn>` overhead
-    #[allow(dead_code)] // Framework field - intentionally unused
-    provider: Provider,
+    _provider: Provider,
     _phantom: PhantomData<()>,
 }
 /// Zero-cost compute provider trait - replaces `Arc<dyn ComputePrimalProvider>`
@@ -491,7 +483,6 @@ mod tests {
     // Mock provider for testing
     struct MockSecurityProvider;
 
-    #[allow(deprecated)]
     impl ZeroCostSecurityProvider for MockSecurityProvider {
         type Error = String;
 
@@ -544,7 +535,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_zero_cost_security_wrapper_creation() {
         let provider = MockSecurityProvider;
         let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
@@ -561,7 +551,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
     async fn test_zero_cost_wrapper_authenticate() {
         let provider = MockSecurityProvider;
         let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
@@ -584,7 +573,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
     async fn test_zero_cost_wrapper_encrypt() {
         let provider = MockSecurityProvider;
         let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
@@ -601,7 +589,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
     async fn test_zero_cost_wrapper_decrypt() {
         let provider = MockSecurityProvider;
         let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =
@@ -618,7 +605,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
     async fn test_zero_cost_wrapper_batch_authenticate() {
         let provider = MockSecurityProvider;
         let wrapper: ZeroCostUniversalSecurityWrapper<MockSecurityProvider, 1000> =

@@ -17,7 +17,7 @@
 //! │                                                              │
 //! │  2. CONNECT → Establish isomorphic connection               │
 //! │                                                              │
-//! │  3. CHECK → Send health_check JSON-RPC request              │
+//! │  3. CHECK → Send `health.check` JSON-RPC request            │
 //! │                                                              │
 //! │  4. VERIFY → Parse response and return status               │
 //! │                                                              │
@@ -104,7 +104,7 @@ pub struct HealthCheckResponse {
 ///
 /// 1. Discover NestGate endpoint (automatic)
 /// 2. Connect using isomorphic transport
-/// 3. Send `health_check` JSON-RPC request
+/// 3. Send `health.check` JSON-RPC request
 /// 4. Parse and return response
 ///
 /// ## Example
@@ -162,10 +162,10 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
         .await
         .context("Failed to connect to NestGate for health check")?;
 
-    // Create JSON-RPC 2.0 health_check request
+    // Create JSON-RPC 2.0 health.check request (wateringHole semantic naming)
     let request = json!({
         "jsonrpc": "2.0",
-        "method": "health_check",
+        "method": "health.check",
         "params": {},
         "id": 1
     });

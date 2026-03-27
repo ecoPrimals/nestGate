@@ -292,3 +292,180 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         "weighted_random"
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::traits::load_balancing::core::LoadBalancer;
+    use crate::universal_traits::orchestration::ServiceStatus;
+    use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
+    use std::collections::HashMap;
+    use std::time::SystemTime;
+
+    fn svc(name: &str) -> ServiceInfo {
+        ServiceInfo {
+            id: format!("id-{name}"),
+            name: name.to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: vec![],
+            status: ServiceStatus::Healthy,
+            last_seen: SystemTime::UNIX_EPOCH,
+        }
+    }
+
+    fn dummy_request() -> ServiceRequest {
+        ServiceRequest {
+            service_id: "svc".to_string(),
+            action: "ping".to_string(),
+            parameters: Default::default(),
+            timeout_seconds: Some(5),
+        }
+    }
+
+    fn ok_response() -> ServiceResponse {
+        ServiceResponse {
+            success: true,
+            data: None,
+            error_message: None,
+            execution_time_ms: 1,
+        }
+    }
+
+    #[tokio::test]
+    async fn weighted_round_robin_empty_services_errors() {
+        let lb = WeightedRoundRobinLoadBalancer::new();
+        let err = lb
+            .select_service(&[], &dummy_request())
+            .await
+            .expect_err("test: wrr empty must error");
+        assert!(err.to_string().contains("No services") || err.to_string().contains("available"));
+        assert_eq!(lb.algorithm(), "weighted_round_robin");
+    }
+
+    #[tokio::test]
+    async fn weighted_round_robin_selects_and_updates_stats() {
+        let lb = WeightedRoundRobinLoadBalancer::new();
+        let services = vec![svc("a"), svc("b")];
+        let req = dummy_request();
+
+        let s0 = lb
+            .select_service(&services, &req)
+            .await
+            .expect("test: wrr first select");
+        assert!(s0.name == "a" || s0.name == "b");
+
+        lb.update_weights(HashMap::from([
+            ("a".to_string(), 2.0),
+            ("b".to_string(), 1.0),
+        ]))
+        .await
+        .expect("test: wrr update weights");
+
+        let _ = lb
+            .select_service(&services, &req)
+            .await
+            .expect("test: wrr second select");
+
+        let stats = lb.get_stats().await.expect("test: wrr get stats");
+        assert_eq!(stats.algorithm, "weighted_round_robin");
+        assert!(stats.total_requests >= 2);
+    }
+
+    #[tokio::test]
+    async fn weighted_round_robin_record_response_increments_service_stats() {
+        let lb = WeightedRoundRobinLoadBalancer::new();
+        let service = svc("x");
+        lb.record_response(&service, &ok_response())
+            .await
+            .expect("test: wrr record response");
+        let stats = lb.get_stats().await.expect("test: wrr stats after record");
+        assert_eq!(
+            stats
+                .service_stats
+                .get("x")
+                .expect("test: x stats")
+                .requests,
+            1
+        );
+    }
+
+    #[tokio::test]
+    async fn weighted_round_robin_default_matches_new() {
+        let a = WeightedRoundRobinLoadBalancer::new();
+        let b = WeightedRoundRobinLoadBalancer::default();
+        assert_eq!(a.algorithm(), b.algorithm());
+    }
+
+    #[tokio::test]
+    async fn weighted_random_empty_services_errors() {
+        let lb = WeightedRandomLoadBalancer::new();
+        let err = lb
+            .select_service(&[], &dummy_request())
+            .await
+            .expect_err("test: wr empty must error");
+        assert!(err.to_string().contains("No services") || err.to_string().contains("available"));
+        assert_eq!(lb.algorithm(), "weighted_random");
+    }
+
+    #[tokio::test]
+    async fn weighted_random_selects_from_list() {
+        let lb = WeightedRandomLoadBalancer::new();
+        let services = vec![svc("p"), svc("q")];
+        let picked = lb
+            .select_service(&services, &dummy_request())
+            .await
+            .expect("test: wr pick");
+        assert!(picked.name == "p" || picked.name == "q");
+    }
+
+    #[tokio::test]
+    async fn weighted_random_non_positive_total_weight_uses_uniform_fallback() {
+        let lb = WeightedRandomLoadBalancer::new();
+        let services = vec![svc("n1"), svc("n2")];
+        lb.update_weights(HashMap::from([
+            ("n1".to_string(), -1.0),
+            ("n2".to_string(), -1.0),
+        ]))
+        .await
+        .expect("test: wr negative weights");
+
+        for _ in 0..8 {
+            let picked = lb
+                .select_service(&services, &dummy_request())
+                .await
+                .expect("test: wr fallback pick");
+            assert!(picked.name == "n1" || picked.name == "n2");
+        }
+    }
+
+    #[tokio::test]
+    async fn weighted_random_update_weights_get_stats_record_response() {
+        let lb = WeightedRandomLoadBalancer::new();
+        lb.update_weights(HashMap::from([("u".to_string(), 3.0)]))
+            .await
+            .expect("test: wr update weights");
+
+        let service = svc("u");
+        lb.record_response(&service, &ok_response())
+            .await
+            .expect("test: wr record");
+
+        let stats = lb.get_stats().await.expect("test: wr stats");
+        assert_eq!(stats.algorithm, "weighted_random");
+        assert!(
+            stats
+                .service_stats
+                .get("u")
+                .expect("test: u stats")
+                .requests
+                >= 1
+        );
+    }
+
+    #[tokio::test]
+    async fn weighted_random_default_matches_new() {
+        let a = WeightedRandomLoadBalancer::new();
+        let b = WeightedRandomLoadBalancer::default();
+        assert_eq!(a.algorithm(), b.algorithm());
+    }
+}

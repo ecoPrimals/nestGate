@@ -92,9 +92,8 @@ mod capability_config_tests {
             .unwrap();
 
         let result = config.discover(PrimalCapability::Compute).await;
-        match orig {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v),
-            None => {}
+        if let Some(v) = orig {
+            std::env::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v);
         }
         assert!(result.is_err());
     }
@@ -184,9 +183,8 @@ mod capability_config_tests {
             .unwrap();
 
         let result = config.discover(PrimalCapability::Analytics).await;
-        match orig {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v),
-            None => {}
+        if let Some(v) = orig {
+            std::env::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v);
         }
         assert!(result.is_ok());
         let service = result.unwrap();

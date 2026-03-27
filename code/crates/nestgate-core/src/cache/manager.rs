@@ -525,11 +525,108 @@ mod tests {
             .await
             .expect("Cache operation failed");
 
-        // Should be expired now
-        cache.maintenance().await.unwrap_or_else(|e| {
-            tracing::error!("Cache maintenance failed: {:?}", e);
-        });
+        cache
+            .maintenance()
+            .await
+            .expect("test: maintenance with zero TTL should succeed");
 
-        let _ = cache.get("test");
+        assert_eq!(cache.get("test"), None);
+    }
+
+    #[tokio::test]
+    async fn test_cache_remove_and_clear() {
+        let mut cache = CacheManager::default();
+        cache
+            .put("a".to_string(), vec![1])
+            .await
+            .expect("test: put a");
+        cache
+            .put("b".to_string(), vec![2])
+            .await
+            .expect("test: put b");
+        assert!(cache.remove("a"));
+        assert!(!cache.remove("a"));
+        cache.clear();
+        assert_eq!(cache.stats().size, 0);
+        assert_eq!(cache.get("b"), None);
+    }
+
+    #[tokio::test]
+    async fn test_cache_flush_and_reset_stats() {
+        let mut cache = CacheManager::default();
+        cache
+            .put("k".to_string(), vec![9])
+            .await
+            .expect("test: put");
+        let _ = cache.get("k");
+        cache.flush().expect("test: flush");
+        assert_eq!(cache.stats().hits, 0);
+        cache
+            .put("k2".to_string(), vec![1])
+            .await
+            .expect("test: put after flush");
+        let _ = cache.get("k2");
+        assert_eq!(cache.stats().hits, 1);
+        cache.reset_stats();
+        assert_eq!(cache.stats().hits, 0);
+        assert_eq!(cache.stats().misses, 0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_rate() {
+        let mut s = CacheStats::default();
+        assert_eq!(s.hit_rate(), 0.0);
+        s.hits = 3;
+        s.misses = 1;
+        assert!((s.hit_rate() - 0.75).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_cache_entry_access_and_expiry() {
+        let mut e = CacheEntry::new(vec![0u8; 4]);
+        assert_eq!(e.access_count, 1);
+        e.access();
+        assert_eq!(e.access_count, 2);
+        assert!(!e.is_expired(Duration::from_secs(3600)));
+    }
+
+    #[tokio::test]
+    async fn test_cache_warm_tier_promotion() {
+        let config = UnifiedCacheConfig {
+            max_size: 10,
+            ttl_seconds: Some(3600),
+            cache_dir: None,
+            eviction_policy: "lru".to_string(),
+        };
+        let mut cache = CacheManager::new(config);
+        cache
+            .put("warm_key".to_string(), b"payload".to_vec())
+            .await
+            .expect("test: put");
+        let warm_entry = cache.hot_tier.remove("warm_key").expect("test: take hot");
+        cache.warm_tier.insert("warm_key".to_string(), warm_entry);
+        let data = cache.get("warm_key").expect("test: promote warm to hot");
+        assert_eq!(data, b"payload");
+    }
+
+    #[tokio::test]
+    async fn test_cache_cold_tier_promotion() {
+        let config = UnifiedCacheConfig {
+            max_size: 10,
+            ttl_seconds: Some(3600),
+            cache_dir: None,
+            eviction_policy: "lru".to_string(),
+        };
+        let mut cache = CacheManager::new(config);
+        cache
+            .put("cold_key".to_string(), b"c".to_vec())
+            .await
+            .expect("test: put");
+        let entry = cache.hot_tier.remove("cold_key").expect("test: take hot");
+        cache.cold_tier.insert("cold_key".to_string(), entry);
+        let data = cache.get("cold_key").expect("test: cold to warm");
+        assert_eq!(data, b"c");
+        let back = cache.get("cold_key").expect("test: warm to hot");
+        assert_eq!(back, b"c");
     }
 }

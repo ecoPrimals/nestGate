@@ -743,4 +743,108 @@ mod tests {
         assert_eq!(env_or_parse("NONEXISTENT_VAR", 42), 42);
         assert!(env_or_parse("NONEXISTENT_VAR", true));
     }
+
+    #[test]
+    fn test_network_constants_url_helpers() {
+        let nc = NetworkConstants::default();
+        assert!(nc.api_url().starts_with("http://"));
+        assert!(nc.api_url().contains(':'));
+        assert!(nc.api_bind_address().contains(':'));
+        assert!(nc.health_url().starts_with("http://"));
+        assert!(nc.metrics_url().starts_with("http://"));
+        assert!(nc.websocket_url().starts_with("ws://"));
+        assert!(nc.websocket_url().ends_with("/ws"));
+    }
+
+    #[test]
+    fn test_network_constants_localhost_and_bind_literals() {
+        let nc = NetworkConstants::default();
+        assert_eq!(nc.localhost_ipv4(), "127.0.0.1");
+        assert_eq!(nc.localhost_ipv6(), "::1");
+        assert_eq!(nc.bind_all_ipv4(), "0.0.0.0");
+        assert_eq!(nc.bind_all_ipv6(), "::");
+    }
+
+    #[test]
+    fn test_storage_constants_zfs_and_paths() {
+        let sc = StorageConstants::default();
+        assert!(!sc.zfs_pool_name().is_empty());
+        assert!(!sc.zfs_dataset_prefix().is_empty());
+        assert!(!sc.zfs_compression().is_empty());
+        assert!(!sc.data_dir().is_empty());
+        assert!(!sc.cache_dir().is_empty());
+        assert!(!sc.log_dir().is_empty());
+        assert!(sc.postgres_url().contains(sc.postgres_database()));
+    }
+
+    #[test]
+    fn test_storage_constants_singleton() {
+        let a = StorageConstants::get();
+        let b = StorageConstants::get();
+        assert!(Arc::ptr_eq(&a, &b));
+    }
+
+    #[test]
+    fn test_performance_constants_durations_and_buffers() {
+        let pc = PerformanceConstants::default();
+        assert!(pc.connection_timeout().as_millis() > 0);
+        assert!(pc.request_timeout() >= pc.connection_timeout());
+        assert!(pc.network_buffer_size() > 0);
+        assert!(pc.disk_buffer_size() > 0);
+        assert!(pc.memory_pool_size() > 0);
+        assert!(pc.worker_threads() > 0);
+        assert!(pc.async_tasks_limit() > 0);
+    }
+
+    #[test]
+    fn test_performance_constants_singleton() {
+        let a = PerformanceConstants::get();
+        let b = PerformanceConstants::get();
+        assert!(Arc::ptr_eq(&a, &b));
+    }
+
+    #[test]
+    fn test_security_constants_jwt_and_rate_limit() {
+        let sc = SecurityConstants::default();
+        assert!(!sc.jwt_secret().is_empty());
+        assert!(sc.jwt_expiration().as_secs() > 0);
+        assert!(sc.jwt_refresh_expiration() >= sc.jwt_expiration());
+        assert!(sc.rate_limit_requests_per_minute() > 0);
+        assert!(sc.rate_limit_burst_size() > 0);
+    }
+
+    #[test]
+    fn test_security_constants_singleton() {
+        let a = SecurityConstants::get();
+        let b = SecurityConstants::get();
+        assert!(Arc::ptr_eq(&a, &b));
+    }
+
+    #[test]
+    fn test_env_or_parse_invalid_uses_default() {
+        temp_env::with_var(
+            "NESTGATE_CONSOLIDATED_TEST_PARSE_U16",
+            Some("not-a-number"),
+            || {
+                assert_eq!(
+                    env_or_parse("NESTGATE_CONSOLIDATED_TEST_PARSE_U16", 4242u16),
+                    4242
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn test_env_or_set_overrides_default() {
+        temp_env::with_var(
+            "NESTGATE_CONSOLIDATED_TEST_STR",
+            Some("override-value"),
+            || {
+                assert_eq!(
+                    env_or("NESTGATE_CONSOLIDATED_TEST_STR", "default"),
+                    "override-value"
+                );
+            },
+        );
+    }
 }

@@ -465,3 +465,111 @@ pub type ConnectionPoolConfigCanonical =
 // Note: Keep using ConnectionPoolConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn connection_pool_config_default() {
+        let c = ConnectionPoolConfig::default();
+        assert_eq!(c.max_connections, 10);
+        assert!(c.min_connections <= c.max_connections);
+        assert!(c.max_idle_time > Duration::ZERO);
+    }
+
+    #[test]
+    fn pooled_connection_lifecycle() {
+        let mut p = PooledConnection::new(7u64);
+        assert!(!p.in_use);
+        p.mark_used();
+        assert!(p.in_use);
+        p.mark_idle();
+        assert!(!p.in_use);
+    }
+
+    #[test]
+    fn pooled_connection_in_use_not_treated_as_idle_too_long() {
+        let mut p = PooledConnection::new(());
+        p.mark_used();
+        assert!(!p.is_idle_too_long(Duration::from_secs(0)));
+    }
+
+    #[tokio::test]
+    async fn universal_pool_acquires_connection() {
+        let pool = Arc::new(UniversalConnectionPool::new(
+            ConnectionPoolConfig::default(),
+            || Ok::<u32, NestGateError>(42),
+        ));
+        let guard = pool
+            .get_connection()
+            .await
+            .expect("test: pool should yield connection");
+        assert_eq!(*guard.connection(), 42);
+    }
+
+    #[tokio::test]
+    async fn universal_pool_factory_error() {
+        let pool = Arc::new(UniversalConnectionPool::<u32>::new(
+            ConnectionPoolConfig::default(),
+            || {
+                Err(NestGateError::invalid_input_with_field(
+                    "factory",
+                    "simulated failure",
+                ))
+            },
+        ));
+        let result = pool.get_connection().await;
+        assert!(result.is_err(), "test: factory error should propagate");
+    }
+
+    #[tokio::test]
+    async fn pool_stats_empty_pool() {
+        let pool = UniversalConnectionPool::new(ConnectionPoolConfig::default(), || Ok(0u8));
+        let stats = pool.get_stats().await;
+        assert_eq!(stats.total_connections, 0);
+        assert_eq!(stats.active_connections, 0);
+    }
+
+    #[tokio::test]
+    async fn connection_pool_manager_register() {
+        let mgr = ConnectionPoolManager::new();
+        let inner = UniversalConnectionPool::new(ConnectionPoolConfig::default(), || Ok(1i32));
+        mgr.register_pool("p".to_string(), inner).await;
+        assert!(mgr.get_pool::<i32>("p").is_none());
+    }
+
+    #[test]
+    fn http_connection_pool_builds() {
+        let _pool = HttpConnectionPool::new_http_pool(ConnectionPoolConfig::default());
+    }
+
+    #[tokio::test]
+    async fn cleanup_idle_connections_no_panic_with_empty_pool() {
+        let pool = UniversalConnectionPool::new(ConnectionPoolConfig::default(), || {
+            Ok::<usize, NestGateError>(0)
+        });
+        pool.cleanup_idle_connections().await;
+    }
+
+    #[tokio::test]
+    async fn sequential_acquires_increment_counter() {
+        let ctr = Arc::new(AtomicUsize::new(0));
+        let c = ctr.clone();
+        let pool = Arc::new(UniversalConnectionPool::new(
+            ConnectionPoolConfig {
+                max_connections: 4,
+                ..ConnectionPoolConfig::default()
+            },
+            move || {
+                let n = c.fetch_add(1, Ordering::SeqCst);
+                Ok::<usize, NestGateError>(n)
+            },
+        ));
+        let g1 = pool.get_connection().await.expect("test: first");
+        let g2 = pool.get_connection().await.expect("test: second");
+        assert_eq!(*g1.connection(), 0);
+        assert_eq!(*g2.connection(), 1);
+    }
+}

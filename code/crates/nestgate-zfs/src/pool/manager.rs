@@ -522,3 +522,77 @@ impl ZfsPoolManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pool::types::{PoolHealth, PoolState};
+
+    #[test]
+    fn parse_pool_line_valid_tab_row() {
+        let m = ZfsPoolManager::new_for_testing();
+        let line = "tank\t100G\t50G\t50G\t45%\tONLINE";
+        let info = m
+            .parse_pool_line(line)
+            .expect("test: parse_pool_line")
+            .expect("test: parsed pool row");
+        assert_eq!(info.name, "tank");
+        assert_eq!(info.state, PoolState::Online);
+        assert_eq!(info.health, PoolHealth::Healthy);
+        assert!(info.capacity.total_bytes > 0);
+    }
+
+    #[test]
+    fn parse_pool_line_too_few_fields_yields_none() {
+        let m = ZfsPoolManager::new_for_testing();
+        let out = m
+            .parse_pool_line("only\tone")
+            .expect("test: parse_pool_line short");
+        assert!(out.is_none());
+    }
+
+    #[test]
+    fn parse_pool_line_maps_degraded_and_faulted() {
+        let m = ZfsPoolManager::new_for_testing();
+        let degraded = m
+            .parse_pool_line("p\t1T\t0\t1T\t0%\tDEGRADED")
+            .expect("test: parse degraded")
+            .expect("test: degraded row");
+        assert_eq!(degraded.state, PoolState::Degraded);
+        assert_eq!(degraded.health, PoolHealth::Warning);
+
+        let fault = m
+            .parse_pool_line("q\t1T\t0\t1T\t0%\tFAULTED")
+            .expect("test: parse faulted")
+            .expect("test: faulted row");
+        assert_eq!(fault.state, PoolState::Faulted);
+        assert_eq!(fault.health, PoolHealth::Critical);
+    }
+
+    #[tokio::test]
+    async fn get_overall_status_empty_cache() {
+        let m = ZfsPoolManager::new_for_testing();
+        let st = m
+            .get_overall_status()
+            .await
+            .expect("test: get_overall_status");
+        assert_eq!(st.pools_online, 0);
+        assert_eq!(st.pools_degraded, 0);
+        assert_eq!(st.total_capacity, 0);
+        assert_eq!(st.available_capacity, 0);
+    }
+
+    #[tokio::test]
+    async fn list_pools_empty_without_discovery() {
+        let m = ZfsPoolManager::new_for_testing();
+        let pools = m.list_pools().await.expect("test: list_pools");
+        assert!(pools.is_empty());
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires real ZFS"]
+    async fn discover_pools_runs_zpool_list() {
+        let m = ZfsPoolManager::new_for_testing();
+        let _ = m.discover_pools().await;
+    }
+}

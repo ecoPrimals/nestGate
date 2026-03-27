@@ -598,3 +598,68 @@ impl ZfsDatasetManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_core::canonical_types::StorageTier as CoreStorageTier;
+
+    #[test]
+    fn dataset_info_serde_roundtrip() {
+        let info = DatasetInfo {
+            name: "pool/ds".to_string(),
+            used_space: 1,
+            available_space: 2,
+            file_count: Some(3),
+            compression_ratio: Some(1.25),
+            mount_point: "/mnt/pool/ds".to_string(),
+            tier: CoreStorageTier::Warm,
+            properties: HashMap::from([("a".into(), "b".into())]),
+        };
+        let json = serde_json::to_string(&info).expect("test: serialize DatasetInfo");
+        let back: DatasetInfo = serde_json::from_str(&json).expect("test: deserialize DatasetInfo");
+        assert_eq!(back.name, info.name);
+        assert_eq!(back.tier, info.tier);
+        assert_eq!(back.properties.get("a"), Some(&"b".to_string()));
+    }
+
+    #[test]
+    fn new_for_testing_builds_manager() {
+        let m = ZfsDatasetManager::new_for_testing();
+        m.delete_dataset("any")
+            .expect("test: mock delete_dataset succeeds");
+        m.destroy_dataset("any")
+            .expect("test: mock destroy_dataset succeeds");
+    }
+
+    #[test]
+    fn with_shared_config_and_new_construct_managers() {
+        let cfg = Arc::new(ZfsConfig::default());
+        let pm = Arc::new(ZfsPoolManager::new_for_testing());
+        let _shared = ZfsDatasetManager::with_shared_config(Arc::clone(&cfg), Arc::clone(&pm));
+
+        let owned = ZfsConfig::default();
+        let _from_owned = ZfsDatasetManager::new(owned, pm);
+    }
+
+    #[tokio::test]
+    async fn create_fallback_dataset_info_populates_expected_fields() {
+        let m = ZfsDatasetManager::new_for_testing();
+        let info = m
+            .create_fallback_dataset_info("tank/fs")
+            .expect("test: fallback dataset info");
+        assert_eq!(info.name, "tank/fs");
+        assert_eq!(info.mount_point, "/tank/fs");
+        assert_eq!(info.tier, CoreStorageTier::Warm);
+        assert!(info.compression_ratio.is_some());
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires real ZFS"]
+    async fn create_dataset_runs_zfs_create() {
+        let m = ZfsDatasetManager::new_for_testing();
+        let _ = m
+            .create_dataset("tmpds", "nonexistent_pool_xyz", CoreStorageTier::Warm)
+            .await;
+    }
+}

@@ -7,6 +7,7 @@
 //! - Boundary conditions
 
 use nestgate_core::error::{NestGateError, Result};
+use std::hint::black_box;
 
 // ==================== ERROR PATH TESTS ====================
 
@@ -227,7 +228,7 @@ fn test_validation_valid_name() {
 fn test_validation_whitespace_only() {
     // Test that whitespace-only strings are detected
     let name = "   ";
-    assert!(!name.is_empty());
+    assert_eq!(name.len(), 3);
     // Whitespace-only strings have zero length when trimmed
     assert_eq!(name.trim().len(), 0);
 }
@@ -373,8 +374,9 @@ mod advanced_scenarios {
     fn test_error_recovery_pattern() {
         // Test error recovery with fallback
         fn operation_with_fallback() -> String {
-            let result: Result<String> = Err(NestGateError::internal_error("Failed", "test"));
-            result.unwrap_or("fallback".to_string())
+            let err = NestGateError::internal_error("Failed", "test");
+            let result: Result<String> = Err(err);
+            black_box(result).unwrap_or("fallback".to_string())
         }
 
         assert_eq!(operation_with_fallback(), "fallback");

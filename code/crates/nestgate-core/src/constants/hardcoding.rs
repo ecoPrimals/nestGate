@@ -21,6 +21,18 @@
 //! See `PHASE2_HARDCODING_ELIMINATION_PLAN.md` for full migration guide.
 //!
 //! This module will be removed in v0.3.0.
+//!
+//! ## Environment variables (central audit)
+//!
+//! | Variable | Purpose |
+//! |----------|---------|
+//! | `NESTGATE_BIND_ADDRESS`, `NESTGATE_API_PORT`, `NESTGATE_METRICS_PORT`, `NESTGATE_HEALTH_PORT` | Core listen ports |
+//! | `NESTGATE_ORCHESTRATOR_ADDR` | Orchestrator peer when discovery is empty (see [`get_orchestrator_fallback_addr`]) |
+//! | `NESTGATE_WEBSOCKET_PORT`, `NESTGATE_RPC_PORT`, `NESTGATE_MQ_PORT`, `NESTGATE_ORCHESTRATION_PORT` | Service ports (see getters below) |
+//! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`discovery::get_timeout_ms`]) |
+//!
+//! Timeouts and limits in [`timeouts`] and [`limits`] remain compile-time defaults; override via
+//! capability config or future env wiring where those domains expose runtime tuning.
 
 use std::env;
 use std::sync::OnceLock;
@@ -368,6 +380,57 @@ pub fn get_health_port() -> u16 {
         .ok()
         .and_then(|p| p.parse().ok())
         .unwrap_or(ports::HEALTH_CHECK)
+}
+
+/// Fallback orchestrator peer address when capability discovery finds none.
+///
+/// Checks `NESTGATE_ORCHESTRATOR_ADDR` (host:port, unix path, or `unix://…`).
+/// Defaults to `localhost` and [`ports::HTTP_DEFAULT`] when unset.
+/// If the variable is set to an empty string (after trim), returns empty — callers treat that as
+/// "no configured orchestrator".
+#[must_use]
+pub fn get_orchestrator_fallback_addr() -> String {
+    match env::var("NESTGATE_ORCHESTRATOR_ADDR") {
+        Ok(s) if s.trim().is_empty() => String::new(),
+        Ok(s) => s,
+        Err(_) => format!("{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT),
+    }
+}
+
+/// WebSocket port from environment or [`ports::WEBSOCKET_DEFAULT`].
+#[must_use]
+pub fn get_websocket_port() -> u16 {
+    env::var("NESTGATE_WEBSOCKET_PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(ports::WEBSOCKET_DEFAULT)
+}
+
+/// gRPC / RPC port from `NESTGATE_RPC_PORT` or [`ports::GRPC_DEFAULT`].
+#[must_use]
+pub fn get_grpc_port() -> u16 {
+    env::var("NESTGATE_RPC_PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(ports::GRPC_DEFAULT)
+}
+
+/// Message queue (e.g. RabbitMQ) port from `NESTGATE_MQ_PORT` or crate default.
+#[must_use]
+pub fn get_message_queue_port() -> u16 {
+    env::var("NESTGATE_MQ_PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(super::port_defaults::DEFAULT_RABBITMQ_PORT)
+}
+
+/// Standalone orchestration service port from `NESTGATE_ORCHESTRATION_PORT` or default.
+#[must_use]
+pub fn get_orchestration_service_port() -> u16 {
+    env::var("NESTGATE_ORCHESTRATION_PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(ports::ORCHESTRATION_DEFAULT)
 }
 
 // ============================================================================

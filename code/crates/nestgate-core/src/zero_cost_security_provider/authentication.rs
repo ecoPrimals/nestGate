@@ -648,6 +648,7 @@ impl AuthTokenManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::zero_cost_security_provider::types::AuthMethod;
 
     #[tokio::test]
     async fn test_hybrid_authentication_manager() -> Result<()> {
@@ -776,7 +777,9 @@ mod tests {
     #[test]
     fn test_auth_token_manager_create_workspace_secret() {
         let manager = AuthTokenManager::new("key".to_string());
-        let secret = manager.create_workspace_secret("ws-1").unwrap();
+        let secret = manager
+            .create_workspace_secret("ws-1")
+            .expect("test: workspace secret");
         assert!(secret.starts_with("secret_ws-1_"));
     }
 
@@ -792,5 +795,70 @@ mod tests {
         let config = LocalTokenConfig::default();
         assert_eq!(config.token_expiry, Duration::from_secs(3600));
         assert!(config.enable_refresh);
+    }
+
+    #[tokio::test]
+    async fn test_refresh_token_local_unknown_fails() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let err = auth_manager
+            .refresh_token("not-in-cache")
+            .await
+            .expect_err("test: unknown token refresh should fail");
+        assert!(err.to_string().contains("not found") || err.to_string().contains("refresh"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_biometric_requires_external() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let credentials = ZeroCostCredentials {
+            username: "u".to_string(),
+            password: String::new(),
+            auth_method: AuthMethod::Biometric,
+            metadata: std::collections::HashMap::new(),
+        };
+        let err = auth_manager
+            .authenticate(&credentials)
+            .await
+            .expect_err("test: biometric local should fail");
+        assert!(err.to_string().contains("Biometric") || err.to_string().contains("external"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_multifactor_requires_external() -> Result<()> {
+        let config = AuthenticationConfig::default();
+        let auth_manager = HybridAuthenticationManager::new(config);
+        let credentials = ZeroCostCredentials {
+            username: "u".to_string(),
+            password: "p".to_string(),
+            auth_method: AuthMethod::MultiFactor {
+                methods: vec!["totp".to_string()],
+            },
+            metadata: std::collections::HashMap::new(),
+        };
+        let err = auth_manager
+            .authenticate(&credentials)
+            .await
+            .expect_err("test: mfa local should fail");
+        assert!(err.to_string().contains("Multi-factor") || err.to_string().contains("external"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_rate_limit_blocks_after_max_attempts() -> Result<()> {
+        let mut config = AuthenticationConfig::default();
+        config.max_auth_attempts = 2;
+        let mgr = HybridAuthenticationManager::new(config);
+        let w1 = ZeroCostCredentials::new_password("alice".to_string(), "x".to_string());
+        let _ = mgr.authenticate(&w1).await;
+        let w2 = ZeroCostCredentials::new_password("alice".to_string(), "y".to_string());
+        let _ = mgr.authenticate(&w2).await;
+        let w3 = ZeroCostCredentials::new_password("alice".to_string(), "z".to_string());
+        let blocked = mgr.authenticate(&w3).await;
+        assert!(blocked.is_err(), "test: alice should be rate limited");
+        Ok(())
     }
 }

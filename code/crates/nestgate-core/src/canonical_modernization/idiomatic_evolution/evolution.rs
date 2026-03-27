@@ -55,28 +55,26 @@ impl EvolutionTracker {
     ///
     /// The average evolution score, or 0.0 if no components are tracked
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
     pub fn get_overall_score(&self) -> f64 {
         if self.evolution_scores.is_empty() {
             return 0.0;
         }
 
         let sum: f64 = self.evolution_scores.values().sum();
-        sum / (self.evolution_scores.len() as f64)
+        let n = self.evolution_scores.len();
+        let n_f = f64::from(u32::try_from(n).unwrap_or(u32::MAX));
+        sum / n_f
     }
 }
 
 /// Migration manager for handling evolution migrations
 #[derive(Debug, Clone, Default)]
-#[allow(dead_code)] // Framework infrastructure
 #[allow(clippy::struct_field_names)]
 /// Manager for Migration operations
 pub struct MigrationManager {
     completed_migrations: HashMap<String, String>,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    pending_migrations: Vec<String>,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    failed_migrations: Vec<String>,
+    _pending_migrations: Vec<String>,
+    _failed_migrations: Vec<String>,
 }
 
 impl MigrationManager {
@@ -155,18 +153,16 @@ impl MigrationManager {
 
 /// Compatibility checker for validation
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Framework infrastructure
 /// Compatibilitychecker
 pub struct CompatibilityChecker {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    compatibility_rules: Vec<String>,
+    _compatibility_rules: Vec<String>,
     validation_errors: Vec<String>,
 }
 impl Default for CompatibilityChecker {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            compatibility_rules: vec!["Standard compatibility rules".to_string()],
+            _compatibility_rules: vec!["Standard compatibility rules".to_string()],
             validation_errors: Vec::new(),
         }
     }
@@ -218,20 +214,17 @@ impl CompatibilityChecker {
 
 /// Modernization engine for applying patterns
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Framework infrastructure
 /// Modernizationengine
 pub struct ModernizationEngine {
-    #[allow(dead_code)] // Framework field - intentionally unused
-    available_patterns: Vec<String>,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    applied_patterns: HashMap<String, Vec<String>>,
+    _available_patterns: Vec<String>,
+    _applied_patterns: HashMap<String, Vec<String>>,
 }
 impl Default for ModernizationEngine {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            available_patterns: vec!["Canonical patterns".to_string()],
-            applied_patterns: HashMap::new(),
+            _available_patterns: vec!["Canonical patterns".to_string()],
+            _applied_patterns: HashMap::new(),
         }
     }
 }
@@ -277,19 +270,17 @@ impl ModernizationEngine {
 
 /// Canonical evolution system
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Framework infrastructure
 /// Canonicalevolutionsystem
 pub struct CanonicalEvolutionSystem {
     system_version: String,
-    #[allow(dead_code)] // Framework field - intentionally unused
-    active_evolutions: HashMap<String, EvolutionMetadata>,
+    _active_evolutions: HashMap<String, EvolutionMetadata>,
 }
 impl Default for CanonicalEvolutionSystem {
     /// Returns the default instance
     fn default() -> Self {
         Self {
             system_version: "1.0.0".to_string(),
-            active_evolutions: HashMap::new(),
+            _active_evolutions: HashMap::new(),
         }
     }
 }

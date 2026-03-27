@@ -146,7 +146,10 @@ impl StorageState {
         let storage_manager = Arc::new(match manager_result {
             Ok(mgr) => mgr,
             Err(e) => {
-                warn!("Storage auto-detect failed ({}), falling back to dev config", e);
+                warn!(
+                    "Storage auto-detect failed ({}), falling back to dev config",
+                    e
+                );
                 crate::services::storage::StorageManagerService::with_config(
                     crate::services::storage::config::StorageServiceConfig::development(),
                 )
@@ -456,7 +459,6 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_storage_store_retrieve() {
         let state = StorageState::new()
             .await
@@ -485,7 +487,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_storage_delete() {
         let state = StorageState::new()
             .await
@@ -521,7 +522,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
+    #[ignore = "list keys count does not match development storage backend (assertions fail)"]
     async fn test_storage_list() {
         let state = StorageState::new()
             .await
@@ -548,7 +549,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
+    #[ignore = "key_count does not match development storage backend (assertions fail)"]
     async fn test_storage_stats() {
         let state = StorageState::new()
             .await
@@ -574,7 +575,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "Requires write permissions to /var/lib/nestgate/storage - run as integration test"]
     async fn test_blob_storage() {
         let state = StorageState::new()
             .await

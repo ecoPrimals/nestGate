@@ -12,6 +12,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== INITIALIZATION TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_manager_initialization() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config).await;
@@ -25,6 +26,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_manager_with_custom_config() {
         let config = ZfsConfig::default();
         // config.enable_compression (field removed) = true;
@@ -39,6 +41,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_manager_components_are_accessible() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -56,6 +59,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== POOL OPERATIONS TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_pool_status_request() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -70,6 +74,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_pool_manager_integration() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -83,6 +88,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== DATASET OPERATIONS TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_dataset_manager_accessible() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -94,6 +100,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_list_snapshots_request() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -110,6 +117,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== HEALTH MONITORING TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_health_monitor_initialization() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -122,6 +130,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_get_service_status() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -136,6 +145,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_health_state_structure() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -152,6 +162,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== PERFORMANCE ANALYTICS TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_performance_monitor_exists() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -163,6 +174,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_get_performance_analytics() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -177,6 +189,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_trigger_optimization() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -193,6 +206,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== METRICS TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_metrics_collection() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -204,6 +218,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_metrics_structure() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -217,6 +232,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== TIER MANAGEMENT TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_tier_manager_initialized() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -228,6 +244,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_get_ai_tier_recommendation() {
         let config = ZfsConfig::default();
         let _manager = ZfsManager::new(config)
@@ -244,6 +261,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== SNAPSHOT MANAGEMENT TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_snapshot_manager_initialized() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -257,6 +275,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== LIFECYCLE TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_manager_start() {
         let config = ZfsConfig::default();
         let mut manager = ZfsManager::new(config)
@@ -271,6 +290,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_manager_shutdown() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -285,6 +305,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_manager_lifecycle_full_cycle() {
         let config = ZfsConfig::default();
         let mut manager = ZfsManager::new(config)
@@ -305,6 +326,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== AUTOMATION TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_automation_component() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -318,6 +340,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== ERROR HANDLING TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_invalid_pool_name_handling() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -335,6 +358,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_invalid_dataset_name_handling() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -350,6 +374,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== CONFIGURATION TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_config_accessibility() {
         let config = ZfsConfig::default();
         // config.enable_compression (field removed) = true;
@@ -363,6 +388,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_config_immutability() {
         let config = ZfsConfig::default();
         // let original_compression = config.enable_compression;  // Field removed
@@ -378,6 +404,7 @@ mod zfs_manager_comprehensive_tests {
     // ==================== DEBUG IMPLEMENTATION TESTS ====================
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_debug_implementation() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)
@@ -390,6 +417,7 @@ mod zfs_manager_comprehensive_tests {
     }
 
     #[tokio::test]
+    #[ignore = "Requires real ZFS"]
     async fn test_debug_output_structure() {
         let config = ZfsConfig::default();
         let manager = ZfsManager::new(config)

@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: February 11, 2026
+**Last Updated**: March 27, 2026
 
 ---
 
@@ -120,8 +120,8 @@ pub async fn find_by_capability(cap: &str)  // → metadata.search
 {
   "health.check": "Get service health status",
   "health.metrics": "Get performance metrics",
-  "health.ready": "Readiness check",
-  "health.alive": "Liveness check"
+  "health.readiness": "Readiness check",
+  "health.liveness": "Liveness check"
 }
 ```
 
@@ -130,8 +130,8 @@ pub async fn find_by_capability(cap: &str)  // → metadata.search
 ```rust
 // Current (RPC health endpoints):
 pub async fn health_check()  // → health.check
-pub async fn readiness_check()  // → health.ready
-pub async fn liveness_check()  // → health.alive
+pub async fn readiness_check()  // → health.readiness
+pub async fn liveness_check()  // → health.liveness
 ```
 
 **Status**: ✅ Implemented
@@ -442,4 +442,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: February 11, 2026
+**Last Updated**: March 27, 2026

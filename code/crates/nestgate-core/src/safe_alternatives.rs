@@ -4,16 +4,14 @@
 //! This module demonstrates how to evolve unsafe code to safe alternatives
 //! while maintaining or improving performance.
 //!
-//! ## Kept with SAFETY (cannot be replaced):
-//! - **FFI (ffi_wrapper)**: C library boundaries require raw pointers; wrapped in RAII.
-//! - **SIMD (simd_evolution)**: x86 intrinsics require unsafe; bounds verified by array_chunks.
-
-use std::ptr::NonNull;
+//! ## Remaining `unsafe` (when `simd_evolution` is compiled with AVX2):
+//! - **SIMD (`add_arrays_simd`)**: x86 intrinsics require `unsafe`; bounds are enforced by `array_chunks`.
+//!
+//! The **FFI** subsection (`ffi_wrapper`) is a safe-Rust *simulation* of RAII around handles — not real FFI.
+//! Enable with crate feature `safe-alternatives-demo` or compile tests (`cfg(test)`).
 
 /// Example 1: Buffer initialization
 pub mod buffer_initialization {
-    use super::*;
-
     // ✅ NEW: Safe initialization (evolved from unsafe set_len pattern)
     /// Creates a safely initialized buffer with the given size.
     ///
@@ -56,6 +54,7 @@ pub mod buffer_initialization {
 pub mod pointer_handling {
     // ❌ OLD: Raw pointer without safety guarantees
     #[cfg(test)]
+    /// Contrasts with [`SafePointerWrapper`] — retained for documentation only.
     pub struct OldPointerWrapper {
         _ptr: *mut u8,
     }
@@ -96,72 +95,42 @@ pub mod pointer_handling {
     // ✅ EVOLVED: No custom Drop needed! Box handles deallocation automatically.
 }
 
-/// Example 3: FFI boundaries
+/// Example 3: FFI-style RAII (demonstration only — not production FFI)
 pub mod ffi_wrapper {
-    use super::*;
+    //! **Teaching example only.** Production FFI uses `extern "C"` and `unsafe` at the boundary;
+    //! this module shows the *RAII shape* with pure safe Rust (atomic handle id + `Drop`).
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
-    // Simulated FFI functions (would be from external C library)
-    mod ffi {
-        #[repr(C)]
-        pub struct Handle {
-            _private: [u8; 0],
-        }
+    static NEXT_HANDLE: AtomicUsize = AtomicUsize::new(1);
 
-        // These would be extern "C" in real code
-        pub unsafe fn create_handle() -> *mut Handle {
-            std::ptr::null_mut() // Simulated
-        }
-
-        pub unsafe fn destroy_handle(_handle: *mut Handle) {
-            // Simulated cleanup
-        }
-
-        pub unsafe fn use_handle(_handle: *const Handle) -> i32 {
-            0 // Simulated operation
-        }
-    }
-
-    // ✅ NEW: Safe wrapper with RAII
-    /// A safe wrapper around FFI handles with automatic cleanup.
-    ///
-    /// This struct wraps an FFI handle and ensures it is properly destroyed
-    /// when dropped, preventing resource leaks.
+    /// Simulated opaque handle — in real code this would wrap `NonNull<ffi::Handle>`.
     pub struct SafeHandle {
-        inner: NonNull<ffi::Handle>,
+        id: usize,
     }
 
     impl SafeHandle {
-        /// Create a new handle
+        /// Create a new simulated handle
         ///
         /// # Errors
         ///
-        /// Returns error if FFI handle creation fails
+        /// Returns error only if the demonstration counter overflows (practically never).
         pub fn new() -> Result<Self, &'static str> {
-            let ptr = unsafe {
-                // SAFETY: FFI call, validated below
-                ffi::create_handle()
-            };
-
-            NonNull::new(ptr)
-                .map(|inner| Self { inner })
-                .ok_or("Failed to create FFI handle")
+            let id = NEXT_HANDLE.fetch_add(1, Ordering::Relaxed);
+            if id == 0 {
+                return Err("handle id overflow (demonstration only)");
+            }
+            Ok(Self { id })
         }
 
-        /// Use the handle safely
+        /// Simulated use of the handle
         pub fn use_handle(&self) -> i32 {
-            unsafe {
-                // SAFETY: NonNull guarantees valid pointer
-                ffi::use_handle(self.inner.as_ptr())
-            }
+            self.id as i32
         }
     }
 
     impl Drop for SafeHandle {
         fn drop(&mut self) {
-            unsafe {
-                // SAFETY: Automatic cleanup via RAII
-                ffi::destroy_handle(self.inner.as_ptr());
-            }
+            // A real FFI wrapper would call `unsafe { destroy(self.as_ptr()) }` here.
         }
     }
 }
@@ -170,14 +139,19 @@ pub mod ffi_wrapper {
 #[cfg(target_arch = "x86_64")]
 pub mod simd_evolution {
     // ❌ OLD: Direct SIMD intrinsics (unsafe)
+    /// Contrasts with [`super::add_arrays_safe`] — **tests / teaching only**.
     #[cfg(test)]
     pub mod unsafe_simd {
         #[cfg(target_arch = "x86_64")]
+        /// Deliberately unsafe SIMD loop (legacy shape); prefer [`super::add_arrays_safe`].
+        /// Parameters are unused when this crate is built without `target_feature = "avx2"`.
+        #[allow(unused_variables)]
         pub fn add_arrays_unsafe(a: &[f32], b: &[f32], result: &mut [f32]) {
             #[cfg(target_feature = "avx2")]
             unsafe {
                 use std::arch::x86_64::*;
-
+                // SAFETY: Test-only legacy example; caller must ensure `a`, `b`, `result` same length
+                // and length multiple of 8. Prefer `add_arrays_safe` + `array_chunks` in real code.
                 for i in (0..a.len()).step_by(8) {
                     let va = _mm256_loadu_ps(a.as_ptr().add(i));
                     let vb = _mm256_loadu_ps(b.as_ptr().add(i));
@@ -220,8 +194,10 @@ pub mod simd_evolution {
         let (result_chunks, result_rem) = result.array_chunks_mut::<8>();
 
         for ((va, vb), vr) in a_chunks.zip(b_chunks).zip(result_chunks) {
-            // SAFETY: Intrinsics require unsafe. Bounds guaranteed by array_chunks iterator.
-            // loadu/storeu allow unaligned access. Chunk size 8 matches _mm256 (8 x f32).
+            // SAFETY: AVX2 intrinsics are `unsafe` in Rust's API. Invariants:
+            // - `va`, `vb`, `vr` are each exactly 8 `f32` elements (`array_chunks` guarantees length).
+            // - Pointers from `.as_ptr()` / `.as_mut_ptr()` are valid for 8 consecutive `f32`.
+            // - `_mm256_loadu_ps` / `_mm256_storeu_ps` permit unaligned addresses (matches slice layout).
             unsafe {
                 let va_simd = _mm256_loadu_ps(va.as_ptr());
                 let vb_simd = _mm256_loadu_ps(vb.as_ptr());

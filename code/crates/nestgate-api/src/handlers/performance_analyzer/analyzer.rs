@@ -220,6 +220,8 @@ pub type AnalyzerConfigCanonical =
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)] // Tests exercise deprecated `AnalyzerConfig` until canonical migration completes
+
     use super::super::metrics::{DiskIOMetrics, NetworkMetrics};
     use super::*;
 
@@ -245,7 +247,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyzer_config_default() {
         let config = AnalyzerConfig::default();
         assert_eq!(config.cpu_warning_threshold, 70.0);
@@ -254,7 +255,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_performance_analyzer_new() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -262,7 +262,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyze_metrics() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -275,7 +274,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_calculate_overall_score() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -287,7 +285,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyze_cpu_good() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -298,7 +295,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyze_cpu_warning() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -308,7 +304,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyze_cpu_critical() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -318,7 +313,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyze_memory() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -329,7 +323,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyze_disk() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -347,7 +340,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_analyze_network() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);
@@ -365,7 +357,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_generate_recommendations() {
         let config = AnalyzerConfig::default();
         let analyzer = PerformanceAnalyzer::new(config);

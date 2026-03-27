@@ -1,5 +1,8 @@
 //
 // Provider management for MCP integration
+//
+// NOTE: This file is not referenced from `lib.rs` today; keep ecoBin v3.0 `/proc` + `sysinfo`
+// fallback aligned with `nestgate_core::linux_proc` for when it is wired in.
 
 // Deprecated code cleaned up - allow directive no longer needed
 
@@ -83,16 +86,23 @@ impl ProviderManager {
 
     /// Get available system memory
     ///
-    /// **UNIVERSAL**: Uses sysinfo crate for cross-platform memory detection
-    ///
-    /// Works on Linux, Windows, macOS, FreeBSD, and more - no #[cfg] needed!
+    /// ecoBin v3.0: Linux uses `/proc/meminfo` via [`nestgate_core::linux_proc`]; `sysinfo` fallback.
     async fn get_available_memory(&self) -> Result<u64> {
-        use sysinfo::{System, SystemExt};
-        
-        // Universal memory detection via sysinfo
+        #[cfg(target_os = "linux")]
+        if let Some(available) = nestgate_core::linux_proc::available_memory_bytes() {
+            tracing::debug!(
+                "Available memory (from /proc/meminfo): {} bytes ({:.2} GB)",
+                available,
+                available as f64 / 1_073_741_824.0
+            );
+            return Ok(available);
+        }
+
+        use sysinfo::System;
+
         let mut sys = System::new_all();
         sys.refresh_memory();
-        
+
         let available = sys.available_memory();
         
         tracing::debug!(

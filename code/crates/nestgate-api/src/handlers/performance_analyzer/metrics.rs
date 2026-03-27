@@ -39,7 +39,7 @@ impl SystemMetricsCollector {
 
     /// Gets Cpu Usage
     async fn get_cpu_usage(&self) -> Result<f64, MetricsError> {
-        // Implementation would read from /proc/stat or use sysinfo crate
+        // ecoBin v3.0: implement via `/proc/stat` or `nestgate_core::linux_proc` (avoid `sysinfo` here).
         Ok(25.5) // Placeholder value
     }
 

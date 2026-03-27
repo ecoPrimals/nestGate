@@ -309,12 +309,12 @@ async fn test_handler_health_metrics() {
 }
 
 #[tokio::test]
-async fn test_handler_health_version() {
+async fn test_handler_health_info() {
     let module = build_test_module().await;
     let result: serde_json::Value = module
-        .call("health.version", ArrayParams::new())
+        .call("health.info", ArrayParams::new())
         .await
-        .expect("version");
+        .expect("health.info");
     assert!(result["version"].as_str().is_some());
     assert!(result["api_version"].as_str().is_some());
 }
@@ -327,6 +327,38 @@ async fn test_handler_health_protocols() {
         .await
         .expect("protocols");
     assert!(!result.is_empty());
+}
+
+#[tokio::test]
+async fn test_handler_health_liveness_readiness() {
+    let module = build_test_module().await;
+    let live: serde_json::Value = module
+        .call("health.liveness", ArrayParams::new())
+        .await
+        .expect("liveness");
+    assert_eq!(live["alive"], true);
+    assert!(live["status"].as_str().is_some());
+
+    let ready: serde_json::Value = module
+        .call("health.readiness", ArrayParams::new())
+        .await
+        .expect("readiness");
+    assert!(ready["ready"].is_boolean());
+    assert!(ready["status"].as_str().is_some());
+}
+
+#[tokio::test]
+async fn test_handler_capabilities_list() {
+    let module = build_test_module().await;
+    let result: serde_json::Value = module
+        .call("capabilities.list", ArrayParams::new())
+        .await
+        .expect("capabilities.list");
+    let methods = result["methods"].as_array().expect("methods array");
+    assert!(methods.iter().any(|m| m.as_str() == Some("health.check")));
+    assert!(methods
+        .iter()
+        .any(|m| m.as_str() == Some("capabilities.list")));
 }
 
 #[tokio::test]
@@ -374,5 +406,6 @@ async fn test_module_method_names() {
     let names: Vec<_> = module.method_names().collect();
     assert!(names.contains(&"storage.dataset.create"));
     assert!(names.contains(&"health.check"));
-    assert!(names.len() >= 14);
+    assert!(names.contains(&"capabilities.list"));
+    assert!(names.len() >= 18);
 }

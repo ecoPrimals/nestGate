@@ -63,11 +63,7 @@ pub mod audit_storage;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod orchestrator_registration;
-// NOTE: semantic_router directory exists but is disabled (120+ compilation errors).
-// Semantic method routing is already functional via existing RPC handler dispatch.
-// The module was written during a rustup outage and never compilation-tested.
-// When ready to evolve: fix API mismatches in semantic_router/ against current RPC types.
-// pub mod semantic_router;
+pub mod semantic_router;
 pub mod socket_config;
 // songbird_registration removed in v2.3.0
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
@@ -95,7 +91,7 @@ pub use audit_storage::{
 };
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 pub use orchestrator_registration::OrchestratorRegistration;
-// pub use semantic_router::SemanticRouter; // DISABLED: See line 54
+pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
 // pub use songbird_registration::SongbirdRegistration; // REMOVED: Deprecated module removed
 pub use tarpc_client::NestGateRpcClient;

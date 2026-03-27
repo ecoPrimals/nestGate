@@ -299,7 +299,9 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> std::ops::Deref
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
-        self.pool.blocks[self.block_index].as_ref().expect("Guard holds allocated block")
+        self.pool.blocks[self.block_index]
+            .as_ref()
+            .expect("Guard holds allocated block")
     }
 }
 
@@ -308,7 +310,9 @@ impl<T, const POOL_SIZE: usize, const BLOCK_SIZE: usize> std::ops::DerefMut
 {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.pool.blocks[self.block_index].as_mut().expect("Guard holds allocated block")
+        self.pool.blocks[self.block_index]
+            .as_mut()
+            .expect("Guard holds allocated block")
     }
 }
 

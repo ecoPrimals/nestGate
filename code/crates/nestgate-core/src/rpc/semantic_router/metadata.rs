@@ -17,24 +17,21 @@ pub(super) async fn metadata_store(_router: &SemanticRouter, params: Value) -> R
     // Parse service metadata
     let name = params["name"]
         .as_str()
-        .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?
+        .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?
         .to_string();
 
-    let version = params["version"]
-        .as_str()
-        .unwrap_or("unknown")
-        .to_string();
+    let version = params["version"].as_str().unwrap_or("unknown").to_string();
 
     let capabilities: Vec<String> = params["capabilities"]
         .as_array()
-        .ok_or_else(|| NestGateError::invalid_input("capabilities", "array required"))?
+        .ok_or_else(|| NestGateError::invalid_input_with_field("capabilities", "array required"))?
         .iter()
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
 
     let virtual_endpoint = params["endpoint"]
         .as_str()
-        .ok_or_else(|| NestGateError::invalid_input("endpoint", "string required"))?
+        .ok_or_else(|| NestGateError::invalid_input_with_field("endpoint", "string required"))?
         .to_string();
 
     let platform = params["platform"]
@@ -79,7 +76,7 @@ pub(super) async fn metadata_retrieve(_router: &SemanticRouter, params: Value) -
 
     let name = params["name"]
         .as_str()
-        .ok_or_else(|| NestGateError::invalid_input("name", "string required"))?;
+        .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?;
 
     let store = ServiceMetadataStore::new().await?;
     let meta = store.get_service(name).await?;
@@ -114,7 +111,7 @@ pub(super) async fn metadata_search(_router: &SemanticRouter, params: Value) -> 
         .as_str()
         .or_else(|| params["query"].as_str())
         .ok_or_else(|| {
-            NestGateError::invalid_input("capability or query", "string required")
+            NestGateError::invalid_input_with_field("capability or query", "string required")
         })?;
 
     let store = ServiceMetadataStore::new().await?;
@@ -133,7 +130,11 @@ pub(super) async fn metadata_search(_router: &SemanticRouter, params: Value) -> 
         })
         .collect();
 
-    debug!("🔎 Metadata search for '{}': {} results", capability, results.len());
+    debug!(
+        "🔎 Metadata search for '{}': {} results",
+        capability,
+        results.len()
+    );
 
     Ok(json!({
         "results": results,

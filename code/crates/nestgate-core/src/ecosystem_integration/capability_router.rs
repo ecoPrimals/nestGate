@@ -480,3 +480,200 @@ pub type CapabilityRoutingConfigCanonical =
 // Note: Keep using CapabilityRoutingConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ecosystem_integration::fallback_providers::security::{
+        SecurityFallbackMode, SecurityFallbackProvider,
+    };
+    use crate::universal_adapter::{CapabilityInfo, PrimalAgnosticAdapter};
+    use serde::Deserialize;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+    use std::time::SystemTime;
+
+    fn router_with_adapter(adapter: PrimalAgnosticAdapter) -> UniversalCapabilityRouter {
+        UniversalCapabilityRouter::new(Arc::new(adapter))
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct AdapterRouteBody {
+        success: bool,
+        routed_through_adapter: bool,
+        operation: String,
+    }
+
+    #[tokio::test]
+    async fn route_uses_adapter_when_providers_exist_and_deserializes() {
+        let mut adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+        adapter.capabilities.insert(
+            "c1".to_string(),
+            CapabilityInfo {
+                category: "security".to_string(),
+                provider: "p1".to_string(),
+                endpoint: "http://ep.test".to_string(),
+                performance_tier: "std".to_string(),
+                availability: 1.0,
+                metadata: HashMap::new(),
+                discovered_at: SystemTime::now(),
+            },
+        );
+        let router = router_with_adapter(adapter);
+        let out: AdapterRouteBody = router
+            .route_with_fallback("security", "ping", serde_json::json!({}))
+            .await
+            .expect("test: adapter route");
+        assert!(out.success);
+        assert!(out.routed_through_adapter);
+        assert_eq!(out.operation, "ping");
+        let m = router.get_metrics().await;
+        assert_eq!(m.adapter_successes, 1);
+        assert_eq!(m.fallback_uses, 0);
+    }
+
+    #[tokio::test]
+    async fn route_falls_back_when_adapter_has_no_providers() {
+        let router = router_with_adapter(PrimalAgnosticAdapter::new(
+            "http://localhost:18080".to_string(),
+        ));
+        router
+            .register_fallback_capability(
+                "security",
+                FallbackProviderWrapper::Security(SecurityFallbackProvider::new(
+                    SecurityFallbackMode::BasicAuth,
+                )),
+            )
+            .await;
+        let v: serde_json::Value = router
+            .route_with_fallback("security", "authenticate", serde_json::json!({}))
+            .await
+            .expect("test: fallback route");
+        assert_eq!(v["status"], "authenticated");
+        let m = router.get_metrics().await;
+        assert_eq!(m.adapter_failures, 1);
+        assert_eq!(m.fallback_uses, 1);
+    }
+
+    #[tokio::test]
+    async fn route_errors_when_no_fallback_registered() {
+        let router = router_with_adapter(PrimalAgnosticAdapter::new(
+            "http://localhost:18080".to_string(),
+        ));
+        let err = router
+            .route_with_fallback::<serde_json::Value>("unknown", "op", serde_json::json!({}))
+            .await
+            .expect_err("test: missing fallback");
+        match err {
+            CapabilityRoutingError::NoFallbackAvailable(cap) => assert_eq!(cap, "unknown"),
+            other => panic!("test: expected NoFallbackAvailable, got {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn second_identical_route_hits_cache_when_enabled() {
+        let mut adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+        adapter.capabilities.insert(
+            "c1".to_string(),
+            CapabilityInfo {
+                category: "ai".to_string(),
+                provider: "p".to_string(),
+                endpoint: "http://ai".to_string(),
+                performance_tier: "std".to_string(),
+                availability: 1.0,
+                metadata: HashMap::new(),
+                discovered_at: SystemTime::now(),
+            },
+        );
+        let router = router_with_adapter(adapter);
+        let _: AdapterRouteBody = router
+            .route_with_fallback("ai", "infer", serde_json::json!({"q": 1}))
+            .await
+            .expect("test: first ai route");
+        let _: AdapterRouteBody = router
+            .route_with_fallback("ai", "infer", serde_json::json!({"q": 2}))
+            .await
+            .expect("test: cached ai route");
+        let m = router.get_metrics().await;
+        assert_eq!(m.cache_hits, 1);
+    }
+
+    #[tokio::test]
+    async fn get_registered_capabilities_lists_keys() {
+        let router = router_with_adapter(PrimalAgnosticAdapter::new("http://x".to_string()));
+        router
+            .register_fallback_capability(
+                "zfs",
+                FallbackProviderWrapper::Security(SecurityFallbackProvider::new(
+                    SecurityFallbackMode::NoAuth,
+                )),
+            )
+            .await;
+        let caps = router.get_registered_capabilities().await;
+        assert!(caps.contains(&"zfs".to_string()));
+    }
+
+    #[tokio::test]
+    async fn clear_cache_drops_cached_adapter_results_for_health() {
+        let mut adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+        adapter.capabilities.insert(
+            "k".to_string(),
+            CapabilityInfo {
+                category: "storage".to_string(),
+                provider: "p".to_string(),
+                endpoint: "http://s".to_string(),
+                performance_tier: "std".to_string(),
+                availability: 1.0,
+                metadata: HashMap::new(),
+                discovered_at: SystemTime::now(),
+            },
+        );
+        let router = router_with_adapter(adapter);
+        let _: AdapterRouteBody = router
+            .route_with_fallback("storage", "list", serde_json::json!({}))
+            .await
+            .expect("test: storage route");
+        let h1 = router
+            .health_check()
+            .await
+            .expect("test: health with cache");
+        assert!(h1.adapter_available);
+        router.clear_cache().await;
+        let h2 = router
+            .health_check()
+            .await
+            .expect("test: health after clear");
+        assert!(!h2.adapter_available);
+    }
+
+    #[tokio::test]
+    async fn health_check_reflects_cache_and_success_rate() {
+        let router = router_with_adapter(PrimalAgnosticAdapter::new("http://x".to_string()));
+        let h0 = router.health_check().await.expect("test: health empty");
+        assert!(!h0.adapter_available);
+        let mut adapter = PrimalAgnosticAdapter::new("http://localhost:18080".to_string());
+        adapter.capabilities.insert(
+            "k".to_string(),
+            CapabilityInfo {
+                category: "net".to_string(),
+                provider: "p".to_string(),
+                endpoint: "http://n".to_string(),
+                performance_tier: "std".to_string(),
+                availability: 1.0,
+                metadata: HashMap::new(),
+                discovered_at: SystemTime::now(),
+            },
+        );
+        let router2 = router_with_adapter(adapter);
+        let _: AdapterRouteBody = router2
+            .route_with_fallback("net", "x", serde_json::json!({}))
+            .await
+            .expect("test: net route");
+        let h1 = router2
+            .health_check()
+            .await
+            .expect("test: health after route");
+        assert!(h1.adapter_available);
+        assert!(h1.success_rate > 50.0);
+    }
+}

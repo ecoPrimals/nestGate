@@ -17,23 +17,41 @@ pub(super) async fn health_check(router: &SemanticRouter, _params: Value) -> Res
     }))
 }
 
+/// Route health.liveness → minimal alive signal (orchestrator / kube probes)
+pub(super) async fn health_liveness(router: &SemanticRouter, _params: Value) -> Result<Value> {
+    let health = router.client.health().await?;
+
+    Ok(json!({
+        "alive": true,
+        "status": health.status
+    }))
+}
+
 /// Route health.metrics → get_metrics
 pub(super) async fn health_metrics(router: &SemanticRouter, _params: Value) -> Result<Value> {
-    let metrics = router.client.get_storage_metrics().await?;
+    let metrics = router.client.metrics().await?;
 
-    Ok(serde_json::to_value(metrics)
-        .map_err(|e| NestGateError::serialization(&format!("Failed to serialize metrics: {}", e)))?)
+    serde_json::to_value(metrics).map_err(|e| {
+        NestGateError::internal_error(
+            format!("Failed to serialize metrics: {}", e),
+            "semantic_router",
+        )
+    })
 }
 
 /// Route health.info → get_info
 pub(super) async fn health_info(router: &SemanticRouter, _params: Value) -> Result<Value> {
-    let info = router.client.get_info().await?;
+    let info = router.client.version().await?;
 
-    Ok(serde_json::to_value(info)
-        .map_err(|e| NestGateError::serialization(&format!("Failed to serialize info: {}", e)))?)
+    serde_json::to_value(info).map_err(|e| {
+        NestGateError::internal_error(
+            format!("Failed to serialize version info: {}", e),
+            "semantic_router",
+        )
+    })
 }
 
-/// Route health.ready → readiness check
+/// Route health.readiness → readiness check
 pub(super) async fn health_ready(router: &SemanticRouter, _params: Value) -> Result<Value> {
     let health = router.client.health().await?;
 

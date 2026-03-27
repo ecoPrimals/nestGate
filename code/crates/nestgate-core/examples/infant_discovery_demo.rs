@@ -14,7 +14,7 @@
 //! ```
 
 use anyhow::{Context, Result};
-use nestgate_core::discovery_mechanism::{DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
+use nestgate_core::discovery_mechanism::DiscoveryBuilder;
 use nestgate_core::self_knowledge::SelfKnowledge;
 use std::net::SocketAddr;
 

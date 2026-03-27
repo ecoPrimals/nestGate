@@ -3,47 +3,25 @@
 //! ⚠️ **ONLY AVAILABLE WITH `dev-stubs` FEATURE** ⚠️
 //!
 //! HTTP handlers for hardware tuning operations.
-//! Currently contains stub implementations returning hardcoded data.
-//! Real system integration planned for future release.
+//! Resource discovery uses Linux `/proc` via [`super::linux_proc`] (no `sysinfo`).
 //!
-//! **For production hardware tuning**: Implement using `sysinfo` crate.
+//! **Production JSON routes**: see [`super::handlers_production`].
 
-use axum::{http::StatusCode, response::Json};
 use chrono::Utc;
 use tracing::info;
 
+use super::linux_proc;
 use super::types::{
     BenchmarkResult, ComputeAllocation, ComputeResourceRequest, ComputeResources, CpuInfo,
     CpuMonitor, GpuInfo, GpuMonitor, HardwareMonitors, HardwareTuningConfig, LiveHardwareMetrics,
-    LiveHardwareTuningSession, MemoryInfo, MemoryMonitor, SystemCapabilities,
-    SystemMetricsCollector, SystemProfile, TuningResult, TuningServiceRegistration,
+    MemoryInfo, MemoryMonitor, SystemCapabilities, SystemMetricsCollector, SystemProfile,
+    TuningResult, TuningServiceRegistration,
 };
 use nestgate_core::{NestGateError, Result};
 
-/// **HARDWARE TUNING HANDLER (Currently Stub)**
+/// **HARDWARE TUNING HANDLER**
 ///
-/// ⚠️ **PARTIAL STUB IMPLEMENTATION** - Some methods return hardcoded data.
-///
-/// This handler is being developed for production hardware tuning.
-/// Currently contains stub implementations that need to be replaced with real system integration.
-///
-/// # Stub Methods (Future Implementation)
-///
-/// - `get_system_resources()` - Returns hardcoded values (CPU: 16, RAM: 64GB, GPU: 2)
-/// - `allocate_system_resources()` - Returns hardcoded allocation
-/// - `analyze_system_profile()` - Returns hardcoded profile
-/// - `apply_tuning_optimizations()` - Returns stub results
-///
-/// # Production Implementation Needed
-///
-/// Use `sysinfo` crate for real system detection:
-/// ```ignore
-/// use sysinfo::{System, SystemExt};
-/// let mut sys = System::new_all();
-/// sys.refresh_all();
-/// let cpu_count = sys.physical_core_count();
-/// let total_memory = sys.total_memory();
-/// ```
+/// Uses `/proc` and optional `nvidia-smi` for resource discovery; benchmarks remain lightweight stubs.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Fields used for configuration and monitoring
 /// Handler for RealHardwareTuning requests
@@ -88,108 +66,59 @@ impl RealHardwareTuningHandler {
         Ok(())
     }
 
-    /// Get available system resources (STUB - returns hardcoded values)
-    ///
-    /// ⚠️ **STUB IMPLEMENTATION** - Returns hardcoded system resources.
-    ///
-    /// # Current Behavior
-    ///
-    /// Always returns:
-    /// - CPU: 16 cores (HARDCODED)
-    /// - Memory: 64 GB (HARDCODED)
-    /// - GPU: 2 units (HARDCODED)
-    ///
-    /// # Future Production Implementation
-    ///
-    /// Replace with real system detection:
-    /// ```ignore
-    /// use sysinfo::{System, SystemExt};
-    /// let mut sys = System::new_all();
-    /// sys.refresh_all();
-    /// Ok(ComputeResources {
-    ///     available_cpu: sys.physical_core_count().unwrap_or(1) as u32,
-    ///     available_memory_gb: (sys.total_memory() / 1_073_741_824) as u32,
-    ///     available_gpu: detect_gpus().await?,
-    /// })
-    /// ```
+    /// Get available system resources from `/proc` (CPU, RAM) and best-effort GPU detection.
     async fn get_system_resources(&self) -> Result<ComputeResources> {
-        // STUB: Returns hardcoded values - Real implementation pending
-        Ok(ComputeResources {
-            available_cpu: 16,       // HARDCODED - Future: Use sysinfo crate
-            available_memory_gb: 64, // HARDCODED - Future: Use sysinfo crate
-            available_gpu: 2,        // HARDCODED - Future: Implement GPU detection
-        })
+        linux_proc::compute_resources_from_proc()
     }
 
-    /// Allocate system resources
+    /// Allocate system resources (clamped to what [`Self::get_system_resources`] reports).
     async fn allocate_system_resources(
         &self,
-        _request: &ComputeResourceRequest,
+        request: &ComputeResourceRequest,
     ) -> Result<ComputeAllocation> {
-        // Stub implementation for resource allocation
+        let avail = self.get_system_resources().await?;
         Ok(ComputeAllocation {
-            cpu_cores: 8,
-            memory_gb: 16,
-            gpu_count: 1,
+            cpu_cores: request.cpu_cores.min(avail.available_cpu),
+            memory_gb: request.memory_gb.min(avail.available_memory_gb),
+            gpu_count: request.gpu_count.min(avail.available_gpu),
         })
     }
 
-    /// Analyze system profile
+    /// Analyze system profile from detected CPU and memory characteristics.
+    pub async fn get_derived_system_profile(&self) -> Result<SystemProfile> {
+        let metrics = self.get_live_hardware_metrics().await?;
+        self.analyze_system_profile(&metrics).await
+    }
+
+    /// Analyze system profile from detected CPU and memory characteristics.
     async fn analyze_system_profile(
         &self,
         _metrics: &LiveHardwareMetrics,
     ) -> Result<SystemProfile> {
-        // Stub implementation
+        let cpu = self.detect_cpu_info()?;
+        let mem = self.detect_memory_info()?;
         Ok(SystemProfile {
-            cpu_profile: "high_performance".to_string(),
-            memory_profile: "balanced".to_string(),
-            storage_profile: "fast_ssd".to_string(),
-            network_profile: "gigabit".to_string(),
+            cpu_profile: format!("{} cores: {}", cpu.cores, cpu.model),
+            memory_profile: format!("{} GiB total", mem.total_gb),
+            storage_profile: "unknown".to_string(),
+            network_profile: "unknown".to_string(),
         })
     }
 
-    /// Apply tuning optimizations (STUB - returns mock results)
-    ///
-    /// ⚠️ **STUB IMPLEMENTATION** - Returns hardcoded optimization results.
-    ///
-    /// # Future Production Implementation
-    ///
-    /// Implement real system tuning:
-    /// - CPU governor adjustments
-    /// - Memory allocation tuning
-    /// - Disk I/O scheduling
-    /// - Network buffer optimization
-    async fn apply_tuning_optimizations(&self, _profile: &SystemProfile) -> Result<TuningResult> {
-        // STUB: Returns mock results - Real implementation pending
+    /// Apply tuning optimizations (no privileged kernel changes here; reports live metrics before/after sampling).
+    async fn apply_tuning_optimizations(&self, profile: &SystemProfile) -> Result<TuningResult> {
+        let before_metrics = self.get_live_hardware_metrics().await?;
+        let after_metrics = self.get_live_hardware_metrics().await?;
         Ok(TuningResult {
-            profile_name: "test_profile".to_string(), // HARDCODED
-            optimizations_applied: vec!["cpu_governor_performance".to_string()], // HARDCODED
-            estimated_power_increase: 5.0,            // HARDCODED
-            performance_improvement: 15.0,            // HARDCODED
-            before_metrics: LiveHardwareMetrics {
-                timestamp: Utc::now(),
-                cpu_usage: 0.0,    // HARDCODED
-                memory_usage: 0.0, // HARDCODED
-                gpu_usage: 0.0,    // HARDCODED
-                disk_io: 0.0,      // HARDCODED
-                disk_usage: 0.0,
-                network_io: 0.0,
-                network_usage: 0.0,
-                temperature: 0.0,
-                power_consumption: 0.0,
-            },
-            after_metrics: LiveHardwareMetrics {
-                timestamp: Utc::now(),
-                cpu_usage: 0.0,
-                memory_usage: 0.0,
-                gpu_usage: 0.0,
-                disk_io: 0.0,
-                disk_usage: 0.0,
-                network_io: 0.0,
-                network_usage: 0.0,
-                temperature: 0.0,
-                power_consumption: 0.0,
-            },
+            profile_name: profile.cpu_profile.clone(),
+            optimizations_applied: vec![
+                "observed_live_metrics_only".to_string(),
+                "no_kernel_privilege_escalation".to_string(),
+            ],
+            estimated_power_increase: 0.0,
+            performance_improvement: 0.0,
+            before_metrics,
+            after_metrics,
         })
     }
 
@@ -485,11 +414,8 @@ impl RealHardwareTuningHandler {
     /// Detect Cpu Info
     fn detect_cpu_info(&self) -> Result<CpuInfo> {
         // Read from /proc/cpuinfo or use system APIs
-        let cpu_info = std::fs::read_to_string("/proc/cpuinfo").map_err(|_e| {
-            NestGateError::system(
-                "cpu_detection",
-                "Failed to read CPU info: self.base_url".to_string(),
-            )
+        let cpu_info = std::fs::read_to_string("/proc/cpuinfo").map_err(|e| {
+            NestGateError::system("cpu_detection", format!("Failed to read CPU info: {e}"))
         })?;
 
         let cores = cpu_info
@@ -509,10 +435,10 @@ impl RealHardwareTuningHandler {
     /// Detect Memory Info
     fn detect_memory_info(&self) -> Result<MemoryInfo> {
         // Read from /proc/meminfo
-        let meminfo = std::fs::read_to_string("/proc/meminfo").map_err(|_e| {
+        let meminfo = std::fs::read_to_string("/proc/meminfo").map_err(|e| {
             NestGateError::system(
                 "memory_detection",
-                "Failed to read memory info: self.base_url".to_string(),
+                format!("Failed to read memory info: {e}"),
             )
         })?;
 
@@ -552,42 +478,6 @@ impl RealHardwareTuningHandler {
         }
         None
     }
-}
-
-/// **GET HARDWARE CAPABILITIES HANDLER**
-///
-/// Returns 501 - Hardware tuning not implemented (no fake data).
-pub fn get_hardware_capabilities() -> std::result::Result<Json<SystemCapabilities>, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
-}
-
-/// **GET SYSTEM PROFILE HANDLER**
-///
-/// Returns 501 - Hardware tuning not implemented (no fake data).
-pub fn get_system_profile() -> std::result::Result<Json<SystemProfile>, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
-}
-
-/// **OPTIMIZE HARDWARE PERFORMANCE HANDLER**
-///
-/// Returns 501 - Hardware tuning not implemented (no fake data).
-pub fn optimize_hardware_performance() -> std::result::Result<Json<TuningResult>, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
-}
-
-/// **RUN HARDWARE BENCHMARK HANDLER**
-///
-/// Returns 501 - Hardware tuning not implemented (no fake data).
-pub fn run_hardware_benchmark() -> std::result::Result<Json<BenchmarkResult>, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
-}
-
-/// **START HARDWARE TUNING SESSION HANDLER**
-///
-/// Returns 501 - Hardware tuning not implemented (no fake data).
-pub fn start_hardware_tuning_session(
-) -> std::result::Result<Json<LiveHardwareTuningSession>, StatusCode> {
-    Err(StatusCode::NOT_IMPLEMENTED)
 }
 
 #[cfg(test)]

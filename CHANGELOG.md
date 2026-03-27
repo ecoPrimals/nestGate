@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.1.0-dev
 
+### Comprehensive Audit & Evolution (March 27, 2026)
+
+**Tests**: 12,274 passing, 0 failures, 472 ignored  
+**Coverage**: 69.6% line (79,517/114,202 lines)  
+**Clippy**: Clean under `-D warnings`
+
+### Added
+- Semantic router module compiled and wired (`storage.*`, `health.*`, `crypto.*`, `discovery.*`, `capabilities.list`)
+- `linux_proc` module: pure-Rust `/proc` system metrics (CPU, memory, uptime, loadavg, network, disk)
+- `rust-toolchain.toml` pinning stable 1.94.1 with clippy, rustfmt, llvm-tools
+- `LICENSING.md` documenting scyBorg provenance trio
+- Unit tests for 15 zero-coverage production modules
+- 44 tests newly written across config, cache, security, load balancing, ecosystem, ZFS tiers/actions
+
+### Changed
+- **tarpc version skew resolved**: nestgate-api aligned to workspace 0.34
+- **Unsafe code evolved**: manual Send/Sync removed, UnsafeCell replaced with Mutex, FFI → safe RAII
+- **Stubs evolved**: installer download, hardware tuning, ZFS detection now use real system data
+- **Hardcoding evolved**: orchestrator, ports, config all env-driven with capability fallbacks
+- **Semantic naming aligned**: `health.liveness`, `health.readiness`, `health.check`, `health.info`
+- **sysinfo demoted**: Linux paths use `/proc` + `rustix` first, sysinfo = cross-platform fallback
+- **Large files refactored**: lifecycle.rs → directory module, metrics_collector.rs and analysis.rs trimmed
+- **Chaos tests stabilized**: packet loss tests increased from 100→1000-2000 trials
+
+### Fixed
+- Pre-existing `socket_config::test_biomeos_dir_second_priority` test failure
+- `safe_memory_pool` doctest bitmap overflow (CAPACITY=1024 exceeded u64 limit)
+- 40 ZFS-dependent tests properly ignored
+- All clippy lints in test files (needless borrows, const_is_empty, dead_code patterns)
+- Flaky chaos test statistical assertions
+
 ### Deep Debt Evolution (February 10-11, 2026)
 
 **Tests**: 12,144 passing, 0 failures, 431 ignored  
@@ -277,9 +308,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Active Goals
 
-- Push coverage from 70.07% toward 90% target
-- Evolve remaining IMPLEMENTATION STUB sections
-- Complete semantic method naming across all domains
+- Push coverage from 69.6% toward 90% target
+- Wire `data.*` and `nat.*` semantic router routes
+- Complete sysinfo optional feature gating
+- Evolve remaining dev stubs to production implementations
 
 ---
 
@@ -455,5 +487,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: February 11, 2026  
+**Last Updated**: March 27, 2026  
 **Current Version**: 4.1.0-dev

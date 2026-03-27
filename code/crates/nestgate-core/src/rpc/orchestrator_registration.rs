@@ -17,6 +17,9 @@
 //! ## Environment Variables
 //! - `NESTGATE_FAMILY_ID` (required): Own family identifier
 //! - `NESTGATE_DISABLE_ORCHESTRATOR` (optional): Disable auto-registration
+//! - `NESTGATE_ORCHESTRATOR_ADDR` (optional): When capability discovery finds no orchestrator,
+//!   use this endpoint (host:port, unix path, or `unix://…`). Empty value disables the fallback.
+//!   If unset, defaults to `localhost` + HTTP default port (see `hardcoding::get_orchestrator_fallback_addr`).
 //! - Discovery mechanism uses standard discovery env vars (see `DiscoveryMechanism`)
 //!
 //! ## Usage
@@ -50,6 +53,7 @@ use crate::discovery_mechanism::{DiscoveryBuilder, DiscoveryMechanism, ServiceIn
 use crate::error::{NestGateError, Result};
 use crate::self_knowledge::SelfKnowledge;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, error, info, warn};
@@ -182,21 +186,45 @@ impl OrchestratorRegistration {
             .find_by_capability("orchestration".to_string())
             .await
         {
-            Ok(orchestrators) => {
-                if orchestrators.is_empty() {
-                    debug!("No orchestrators found");
-                    None
-                } else {
-                    let orch = &orchestrators[0];
-                    info!("✅ Found orchestrator: {} ({})", orch.name, orch.id);
-                    Some(orch.clone())
-                }
+            Ok(orchestrators) if !orchestrators.is_empty() => {
+                let orch = &orchestrators[0];
+                info!("✅ Found orchestrator: {} ({})", orch.name, orch.id);
+                Some(orch.clone())
+            }
+            Ok(_) => {
+                debug!("No orchestrators found via capability discovery");
+                Self::orchestrator_from_config_fallback()
             }
             Err(e) => {
                 warn!("Failed to discover orchestrator: {}", e);
-                None
+                Self::orchestrator_from_config_fallback()
             }
         }
+    }
+
+    /// Configured orchestrator endpoint when discovery is empty or fails (no hardcoded primal names).
+    fn orchestrator_from_config_fallback() -> Option<ServiceInfo> {
+        use crate::constants::hardcoding::get_orchestrator_fallback_addr;
+
+        let addr = get_orchestrator_fallback_addr();
+        if addr.trim().is_empty() {
+            debug!("Orchestrator fallback disabled (NESTGATE_ORCHESTRATOR_ADDR empty)");
+            return None;
+        }
+
+        info!(
+            "Using orchestrator endpoint from configuration (discovery unavailable or empty): {}",
+            addr
+        );
+
+        Some(ServiceInfo {
+            id: "configured-orchestration-peer".to_string(),
+            name: "orchestration-peer".to_string(),
+            capabilities: vec!["orchestration".to_string()],
+            endpoint: addr,
+            metadata: HashMap::new(),
+            health_endpoint: None,
+        })
     }
 
     /// Register with discovered orchestrator

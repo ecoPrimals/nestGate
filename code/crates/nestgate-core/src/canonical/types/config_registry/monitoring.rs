@@ -240,410 +240,57 @@ impl CanonicalConfigTypeRegistry {
     }
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkinterfaceconfigcanonical
-pub type NetworkInterfaceConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkInterfaceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkprotocolsconfigcanonical
-pub type NetworkProtocolsConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkProtocolsConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkconnectionconfigcanonical
-pub type NetworkConnectionConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkConnectionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networksecurityconfigcanonical
-pub type NetworkSecurityConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkSecurityConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkperformanceconfigcanonical
-pub type NetworkPerformanceConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkPerformanceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkbufferconfigcanonical
-pub type NetworkBufferConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkBufferConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkloadbalancingconfigcanonical
-pub type NetworkLoadBalancingConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkLoadBalancingConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkservicediscoveryconfigcanonical
-pub type NetworkServiceDiscoveryConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkServiceDiscoveryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Networkmonitoringconfigcanonical
-pub type NetworkMonitoringConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using NetworkMonitoringConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Storageconnectionconfigcanonical
-pub type StorageConnectionConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageConnectionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Storageperformanceconfigcanonical
-pub type StoragePerformanceConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StoragePerformanceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Storagesecurityconfigcanonical
-pub type StorageSecurityConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageSecurityConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Storagereplicationconfigcanonical
-pub type StorageReplicationConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageReplicationConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Storagetierconfigcanonical
-pub type StorageTierConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageTierConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Storageprotocolsconfigcanonical
-pub type StorageProtocolsConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageProtocolsConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Storagemonitoringconfigcanonical
-pub type StorageMonitoringConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageMonitoringConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Canonicalsecurityconfigcanonical
-pub type CanonicalSecurityConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using CanonicalSecurityConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Securityauthenticationconfigcanonical
-pub type SecurityAuthenticationConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityAuthenticationConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Securityauthorizationconfigcanonical
-pub type SecurityAuthorizationConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityAuthorizationConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Securityencryptionconfigcanonical
-pub type SecurityEncryptionConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityEncryptionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Securitytlsconfigcanonical
-pub type SecurityTlsConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityTlsConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Securityauditconfigcanonical
-pub type SecurityAuditConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityAuditConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Securitythreatdetectionconfigcanonical
-pub type SecurityThreatDetectionConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityThreatDetectionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Securitycomplianceconfigcanonical
-pub type SecurityComplianceConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SecurityComplianceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+// ==================== CANONICAL TYPE ALIASES ====================
+// Backward-compatible aliases to `CanonicalNetworkConfig` while migrating from deprecated structs.
+#[allow(deprecated, missing_docs)]
+mod deprecated_canonical_aliases {
+    pub type NetworkInterfaceConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkProtocolsConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkConnectionConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkSecurityConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkPerformanceConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkBufferConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkLoadBalancingConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkServiceDiscoveryConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type NetworkMonitoringConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type StorageConnectionConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type StoragePerformanceConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type StorageSecurityConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type StorageReplicationConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type StorageTierConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type StorageProtocolsConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type StorageMonitoringConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type CanonicalSecurityConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SecurityAuthenticationConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SecurityAuthorizationConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SecurityEncryptionConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SecurityTlsConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SecurityAuditConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SecurityThreatDetectionConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SecurityComplianceConfigCanonical =
+        crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+}
+pub use deprecated_canonical_aliases::*;

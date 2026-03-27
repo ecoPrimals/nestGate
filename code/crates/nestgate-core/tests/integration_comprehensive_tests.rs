@@ -88,9 +88,8 @@ mod config_discovery_integration_tests {
 
         let result = config.discover(PrimalCapability::Analytics).await;
 
-        match orig {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v),
-            None => {}
+        if let Some(v) = orig {
+            std::env::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v);
         }
         assert!(result.is_ok());
         let service = result.unwrap();
@@ -187,9 +186,8 @@ mod config_discovery_integration_tests {
         let result = config.discover(PrimalCapability::DataProcessing).await;
         let duration = start.elapsed();
 
-        match orig {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT", v),
-            None => {}
+        if let Some(v) = orig {
+            std::env::set_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT", v);
         }
         assert!(result.is_err());
         assert!(duration >= Duration::from_millis(100));

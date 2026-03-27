@@ -785,9 +785,6 @@ mod tests {
     #[derive(Debug)]
     struct TestZeroCostService;
 
-    unsafe impl Send for TestZeroCostService {}
-    unsafe impl Sync for TestZeroCostService {}
-
     impl ZeroCostService<Self> for TestZeroCostService {}
 
     #[test]

@@ -73,7 +73,7 @@ pub async fn get_metrics(
     };
 
     // Generate realistic system metrics (in production, would read from actual system)
-    // Placeholder metrics until sysinfo crate is added
+    // ecoBin v3.0: placeholders here; use `nestgate_core::linux_proc` + metrics_collector patterns when wired.
     let time_offset = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| (d.as_secs() % 30) as f64)
@@ -185,7 +185,7 @@ pub async fn get_metrics_history(
         // For now, return current real-time metrics for all historical points
         // In production, this would query stored metrics from InfluxDB/Prometheus
 
-        // Placeholder system metrics until sysinfo crate is added
+        // ecoBin v3.0: historical placeholders; real data should come from TSDB or `/proc`-based collectors.
         let metrics = SystemMetrics {
             cpu_usage_percent: 45.0,
             memory_usage_percent: 65.0,
@@ -277,10 +277,20 @@ pub async fn get_alerts(
     }
 
     // Simulate system resource alerts
-    // ✅ REAL METRICS: Get actual current CPU usage
-    let mut sys = sysinfo::System::new();
-    sys.refresh_cpu();
-    let current_cpu = f64::from(sys.global_cpu_info().cpu_usage());
+    // ecoBin v3.0: `/proc/stat` on Linux; `sysinfo` fallback when `/proc` parse fails.
+    #[cfg(target_os = "linux")]
+    let current_cpu = nestgate_core::linux_proc::global_cpu_usage_percent_from_stat()
+        .unwrap_or_else(|| {
+            let mut sys = sysinfo::System::new_all();
+            sys.refresh_cpu();
+            f64::from(sys.global_cpu_info().cpu_usage())
+        });
+    #[cfg(not(target_os = "linux"))]
+    let current_cpu = {
+        let mut sys = sysinfo::System::new_all();
+        sys.refresh_cpu();
+        f64::from(sys.global_cpu_info().cpu_usage())
+    };
     if current_cpu > 80.0 {
         alerts.push(Alert {
             id: "alert_002".to_string(),
@@ -310,10 +320,18 @@ pub async fn get_alerts(
         });
     }
 
-    // ✅ REAL METRICS: Get actual current memory usage
-    let mut sys = sysinfo::System::new();
-    sys.refresh_memory();
-    let current_memory = (sys.used_memory() as f64 / sys.total_memory() as f64) * 100.0;
+    #[cfg(target_os = "linux")]
+    let current_memory = nestgate_core::linux_proc::memory_usage_percent().unwrap_or_else(|| {
+        let mut sys = sysinfo::System::new_all();
+        sys.refresh_memory();
+        (sys.used_memory() as f64 / sys.total_memory() as f64) * 100.0
+    });
+    #[cfg(not(target_os = "linux"))]
+    let current_memory = {
+        let mut sys = sysinfo::System::new_all();
+        sys.refresh_memory();
+        (sys.used_memory() as f64 / sys.total_memory() as f64) * 100.0
+    };
     if current_memory > 85.0 {
         alerts.push(Alert {
             id: "alert_003".to_string(),

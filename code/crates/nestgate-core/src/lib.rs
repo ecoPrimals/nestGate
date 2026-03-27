@@ -58,6 +58,8 @@ pub mod error;
 mod error_path_coverage_tests;
 /// Infant Discovery Architecture implementation
 pub mod infant_discovery;
+/// Linux `/proc` + `rustix` metrics (ecoBin v3.0 evolution from `sysinfo`)
+pub mod linux_proc;
 #[cfg(test)]
 mod orchestration_tests; // Nov 23, 2025 - P1 test expansion
 /// **NEW**: Primal discovery framework (Dec 6, 2025)
@@ -264,6 +266,10 @@ pub mod validation_predicates;
 
 /// Simple, working memory pool implementation
 pub mod simple_memory_pool;
+
+/// Safe alternatives to common `unsafe` patterns (educational; also compiled in unit tests).
+#[cfg(any(test, feature = "safe-alternatives-demo"))]
+pub mod safe_alternatives;
 
 #[cfg(test)]
 mod edge_case_tests;

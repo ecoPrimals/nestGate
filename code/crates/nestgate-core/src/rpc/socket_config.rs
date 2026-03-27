@@ -292,7 +292,7 @@ mod tests {
 
         assert_eq!(
             config.socket_path,
-            PathBuf::from("/tmp/biomeos-test-dir/nestgate.sock")
+            PathBuf::from("/tmp/biomeos-test-dir/nestgate-biotest.sock")
         );
         assert_eq!(config.source, SocketConfigSource::BiomeOSDirectory);
     }

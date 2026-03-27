@@ -644,172 +644,29 @@ impl Default for ZfsServiceConfig {
             environment: HashMap::new(),
          }
 } 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Authhandlerspecificconfigcanonical
-pub type AuthHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using AuthHandlerSpecificConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Oauthproviderconfigcanonical
-pub type OAuthProviderConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using OAuthProviderConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Jwtconfigcanonical
-pub type JwtConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using JwtConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Zfshandlerspecificconfigcanonical
-pub type ZfsHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ZfsHandlerSpecificConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Performancehandlerspecificconfigcanonical
-pub type PerformanceHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using PerformanceHandlerSpecificConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Dashboardhandlerspecificconfigcanonical
-pub type DashboardHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using DashboardHandlerSpecificConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Loadtestinghandlerspecificconfigcanonical
-pub type LoadTestingHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using LoadTestingHandlerSpecificConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Workspacehandlerspecificconfigcanonical
-pub type WorkspaceHandlerSpecificConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using WorkspaceHandlerSpecificConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Zfsserviceconfigcanonical
-pub type ZfsServiceConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using ZfsServiceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-/// 
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Sessionconfigcanonical
-pub type SessionConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SessionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
+// ==================== CANONICAL TYPE ALIASES ====================
+// Backward-compatible aliases to `CanonicalNetworkConfig` while migrating from deprecated structs.
+#[allow(deprecated, missing_docs)]
+mod deprecated_canonical_aliases {
+    pub type AuthHandlerSpecificConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type OAuthProviderConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type JwtConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type ZfsHandlerSpecificConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type PerformanceHandlerSpecificConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type DashboardHandlerSpecificConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type LoadTestingHandlerSpecificConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type WorkspaceHandlerSpecificConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type ZfsServiceConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+    pub type SessionConfigCanonical =
+        nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+}
+pub use deprecated_canonical_aliases::*;

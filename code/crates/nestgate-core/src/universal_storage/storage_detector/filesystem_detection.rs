@@ -142,6 +142,7 @@ pub trait FilesystemDetector: Send + Sync {
 /// Sysinfo-based universal filesystem detector
 ///
 /// **UNIVERSAL**: Works on all platforms using sysinfo crate
+// ecoBin v3.0: `sysinfo` here is a non-Linux / fallback path; Linux uses [`LinuxProcFilesystemDetector`].
 pub struct SysinfoFilesystemDetector;
 
 #[async_trait::async_trait]
@@ -210,8 +211,6 @@ impl FilesystemDetector for LinuxProcFilesystemDetector {
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to read /proc/mounts: {}", e)))?;
 
-        // Use sysinfo to get disk space info efficiently
-        let disks = sysinfo::Disks::new_with_refreshed_list();
         let mut discovered = Vec::new();
 
         for line in mounts_content.lines() {
@@ -240,16 +239,10 @@ impl FilesystemDetector for LinuxProcFilesystemDetector {
                 continue;
             }
 
-            // Find corresponding disk in sysinfo for space info
-            let disk = disks
-                .iter()
-                .find(|d| d.mount_point().to_string_lossy() == mount_point);
-
-            let (total_bytes, available_bytes) = if let Some(disk) = disk {
-                (disk.total_space(), disk.available_space())
-            } else {
-                (0, 0)
-            };
+            // ecoBin v3.0: disk space from `rustix::fs::statvfs` (see `crate::linux_proc::statvfs_space`)
+            let mount_path = std::path::Path::new(mount_point);
+            let (total_bytes, available_bytes) =
+                crate::linux_proc::statvfs_space(mount_path).unwrap_or((0, 0));
 
             let used_bytes = total_bytes.saturating_sub(available_bytes);
             let storage_type = DiscoveredFilesystem::classify_storage_type(fs_type, device);
@@ -481,6 +474,7 @@ mod tests {
     }
 
     #[test]
+    // ecoBin v3.0: sysinfo-only coverage; production Linux path is `LinuxProcFilesystemDetector`.
     fn test_sysinfo_detector_always_available() {
         let detector = SysinfoFilesystemDetector;
         assert!(

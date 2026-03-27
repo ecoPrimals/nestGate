@@ -432,7 +432,7 @@ fn test_self_knowledge_only() {
 
     // ✅ CORRECT: Self-knowledge
     let my_capabilities = ["storage", "compute"];
-    assert!(!my_capabilities.is_empty(), "Should know own capabilities");
+    assert_ne!(my_capabilities.len(), 0, "Should know own capabilities");
 
     // ✅ CORRECT: No hardcoded knowledge of other primals
     // We would discover these at runtime
