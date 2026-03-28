@@ -19,8 +19,8 @@ chrono = { workspace = true }
 bincode = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
-jsonrpsee = { version = "0.26.0", features = ["server"] }
-pin-project = "1.1"
+jsonrpsee = { workspace = true }
+pin-project = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }

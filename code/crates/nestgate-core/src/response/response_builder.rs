@@ -193,7 +193,7 @@ impl ResponseBuilder {
     }
 
     /// Helper method to create error JSON
-    #[allow(dead_code)] // Framework method - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework method - intentionally unused
     fn error_json(message: String) -> Json<ErrorMessage> {
         Json(ErrorMessage { error: message })
     }

@@ -4,46 +4,30 @@ version = "0.1.0"
 edition = "2024"
 description = "Intelligent automation and ecosystem integration for NestGate storage management"
 license = "AGPL-3.0-only"
-repository = "https://github.com/strandgeek/nestgate"
-keywords = [ "zfs", "automation", "ai", "storage", "tier-management",]
-readme = "README.md"
-categories = [ "development-tools", "automation",]
+repository = "https://github.com/ecoprimals/nestgate"
+keywords = ["zfs", "automation", "ai", "storage", "tier-management"]
+categories = ["development-tools", "automation"]
 
 [features]
-default = [ "network-integration",]
-network-integration = [ "uuid",]  # reqwest removed (BiomeOS Pure Rust Evolution)
+default = ["network-integration"]
+network-integration = ["uuid"]
 
 [lints]
 workspace = true
 
 [dependencies]
-serde_json = "1.0"
-tracing = "0.1"
-futures = "0.3"
-thiserror = "1.0"
-anyhow = "1.0"
+nestgate-core = { path = "../nestgate-core" }
+
+serde_json = { workspace = true }
+tracing = { workspace = true }
+futures = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true, optional = true }
 
 [dev-dependencies]
-tokio-test = "0.4"
-tempfile = "3.8"
-
-[dependencies.nestgate-core]
-path = "../nestgate-core"
-
-[dependencies.serde]
-version = "1.0"
-features = [ "derive",]
-
-[dependencies.tokio]
-version = "1.0"
-features = [ "full",]
-
-[dependencies.chrono]
-version = "0.4"
-features = [ "serde",]
-
-[dependencies.uuid]
-version = "1.6"
-optional = true
-
-# reqwest removed (BiomeOS Pure Rust Evolution)
+tokio-test = { workspace = true }
+tempfile = { workspace = true }

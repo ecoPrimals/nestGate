@@ -1,0 +1,28 @@
+[package]
+name = "nestgate-cache"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+description = "Caching subsystem for NestGate: multi-tier, UUID cache, and cache math"
+repository = "https://github.com/ecoprimals/nestgate"
+
+[lints]
+workspace = true
+
+[dependencies]
+nestgate-types = { path = "../nestgate-types" }
+nestgate-config = { path = "../nestgate-config" }
+
+dashmap = { workspace = true }
+lru = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tempfile = { workspace = true }

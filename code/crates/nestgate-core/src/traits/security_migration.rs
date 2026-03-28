@@ -59,8 +59,6 @@
 //! }
 //! ```
 
-#![allow(deprecated)]
-
 use crate::traits::canonical_provider_unification::{
     AuthToken, CanonicalUniversalProvider, ProviderCapabilities, ProviderHealth, SecurityProvider,
     SecurityService,

@@ -34,7 +34,7 @@ use super::enums::{DiscoveryMethod, RetryBackoff};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 pub struct CanonicalAdapterConfig {
     /// Service identification
     pub service_id: String,
@@ -59,7 +59,7 @@ pub struct CanonicalAdapterConfig {
     pub performance: PerformanceConfig,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl Default for CanonicalAdapterConfig {
     fn default() -> Self {
         Self {
@@ -132,7 +132,7 @@ pub struct RequestConfig {
     pub request_queue_size: u32,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl Default for RequestConfig {
     fn default() -> Self {
         Self {
@@ -189,7 +189,7 @@ impl Default for MonitoringConfig {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 pub struct SecurityConfig {
     /// Enable authentication
     pub auth_enabled: bool,
@@ -203,7 +203,7 @@ pub struct SecurityConfig {
     pub rate_limiting: RateLimitConfig,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
@@ -287,7 +287,7 @@ pub struct RateLimitConfig {
     pub window_size: Duration,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl Default for RateLimitConfig {
     fn default() -> Self {
         Self {

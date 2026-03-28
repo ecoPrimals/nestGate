@@ -22,7 +22,6 @@ pub struct UniversalAdapterConfig {
     /// Discovery methods to use
     pub discovery_methods: Vec<DiscoveryMethod>,
 }
-#[allow(deprecated)]
 impl Default for UniversalAdapterConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -100,7 +99,7 @@ pub struct AdapterConfig {
     pub fallback_enabled: bool,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl AdapterConfig {
     /// Create a new adapter configuration
     ///
@@ -152,7 +151,7 @@ impl AdapterConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl Default for AdapterConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -168,7 +167,6 @@ impl Default for AdapterConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Adapterconfigcanonical
 pub type AdapterConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

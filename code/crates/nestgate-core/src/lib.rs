@@ -68,12 +68,11 @@ pub use nestgate_discovery::universal_primal_discovery;
 pub mod canonical_types;
 /// Data source integrations
 pub mod data_sources;
-/// Process environment mutation (`set_var` / `remove_var` are `unsafe` in Rust 2024).
-pub mod env_process;
-/// Linux `/proc` + `rustix` metrics (ecoBin v3.0 evolution from `sysinfo`)
-pub mod linux_proc;
-/// Platform-specific utilities with safe abstractions
-pub mod platform;
+// ==================== PLATFORM RE-EXPORTS (nestgate-platform) ====================
+
+pub use nestgate_platform::env_process;
+pub use nestgate_platform::linux_proc;
+pub use nestgate_platform::platform;
 /// Error recovery and resilience patterns
 pub mod recovery;
 /// Canonical trait system with native async
@@ -86,25 +85,24 @@ pub mod nat_traversal;
 pub mod service_metadata;
 /// Universal adapter for primal integration
 pub mod universal_adapter;
-/// UUID caching for performance optimization
-pub mod uuid_cache;
+// ==================== CACHE RE-EXPORTS (nestgate-cache) ====================
 
-/// HTTP client stub (BiomeOS Pure Rust Evolution)
+pub use nestgate_cache::uuid_cache;
+
+/// HTTP client stub (pure-Rust evolution path)
 pub mod http_client_stub;
-/// Caching system
-pub mod cache;
-/// Certificate management
-pub mod cert;
-/// Cryptographic operations (Pure Rust - RustCrypto)
-pub mod crypto;
-/// Diagnostic tools
-pub mod diagnostics;
-/// Events system for event bus, routing, and pubsub
-pub mod events;
+pub use nestgate_cache::cache;
+// ==================== SECURITY RE-EXPORTS (nestgate-security) ====================
+
+pub use nestgate_security::cert;
+pub use nestgate_security::crypto;
+// ==================== OBSERVE RE-EXPORTS (nestgate-observe) ====================
+
+pub use nestgate_observe::diagnostics;
+pub use nestgate_observe::events;
 /// Mathematical utilities
 pub mod math;
-/// Observability and monitoring
-pub mod observability;
+pub use nestgate_observe::observability;
 /// Response handling
 pub mod response;
 /// Return builders for standardized response construction
@@ -115,12 +113,9 @@ pub mod safe_operations;
 #[cfg(feature = "dev-stubs")]
 pub mod dev_stubs;
 
-/// JWT validation module
-pub mod jwt_validation;
-/// Zero-cost optimization patterns
-pub mod zero_cost;
-/// Zero-cost security provider
-pub mod zero_cost_security_provider;
+pub use nestgate_security::jwt_validation;
+pub use nestgate_security::zero_cost;
+pub use nestgate_security::zero_cost_security_provider;
 /// Canonical type definitions
 pub mod canonical;
 /// Memory layout optimizations
@@ -138,8 +133,7 @@ pub mod network;
 /// Service implementations with native async
 pub mod services;
 
-/// Cache-related mathematical utilities
-pub mod cache_math;
+pub use nestgate_cache::cache_math;
 /// Consensus algorithm mathematics
 pub mod consensus_math;
 /// Validation predicate functions

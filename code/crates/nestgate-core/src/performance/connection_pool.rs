@@ -330,7 +330,7 @@ where
 /// RAII guard for pooled connections
 pub struct PooledConnectionGuard<T> {
     connection: T,
-    #[allow(dead_code)] // Used for RAII cleanup semantics
+    #[expect(dead_code, reason = "framework placeholder")] // Used for RAII cleanup semantics
     pool: Arc<UniversalConnectionPool<T>>,
     _permit: tokio::sync::OwnedSemaphorePermit,
 }
@@ -460,7 +460,6 @@ impl HttpConnectionPool {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Connectionpoolconfigcanonical
 pub type ConnectionPoolConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

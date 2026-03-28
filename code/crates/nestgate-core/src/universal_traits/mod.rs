@@ -26,7 +26,7 @@ pub use compute::ComputePrimalProvider;
 pub use ecosystem::{EcosystemIntegration, UniversalPrimalProvider};
 pub use orchestration::OrchestrationPrimalProvider;
 pub use security::SecurityDecision;
-#[allow(deprecated)] // Re-export for backwards compatibility
+#[expect(deprecated, reason = "migration in progress")] // Re-export for backwards compatibility
 pub use security::SecurityPrimalProvider;
 pub use types::*;
 

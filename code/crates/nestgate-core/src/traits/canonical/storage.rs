@@ -23,8 +23,8 @@ use std::future::Future;
 /// - `UnifiedStorageBackend` (from `unified_storage_traits.rs`)
 /// - `CanonicalStorageBackend` (from `canonical_storage.rs`)  
 /// - `StorageBackend` (from backends/mod.rs)
-/// - `ZeroCostStorageProvider` (from `migration/storage_adapters.rs`)
-/// - `NativeAsyncStorageProvider` (from `migration/storage_adapters.rs`)
+/// - `ZeroCostStorageProvider` (from `migration::storage_adapters`)
+/// - `NativeAsyncStorageProvider` (from `migration::storage_adapters`)
 /// - `ZeroCostUnifiedStorageBackend` (from `zero_cost_unified_storage_traits.rs`)
 /// - `EnterpriseStorageCapabilities` (from enterprise/traits.rs)
 ///

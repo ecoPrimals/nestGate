@@ -2,82 +2,43 @@
 name = "nestgate-mcp"
 version = "0.1.0"
 edition = "2024"
-authors = [ "NestGate Team",]
-description = "Enhanced MCP protocol integration for NestGate v2 with enhanced NestGate capabilities"
+authors = ["ecoPrimals Collective"]
+description = "Enhanced MCP protocol integration for NestGate with enhanced capabilities"
 license = "AGPL-3.0-only"
-repository = "https://github.com/ecoPrimals/NestGateV2"
-readme = "README.md"
-keywords = [ "mcp", "protocol", "messaging", "rust", "nestgate",]
-categories = [ "network-programming", "protocols",]
+repository = "https://github.com/ecoprimals/nestgate"
+keywords = ["mcp", "protocol", "messaging", "rust", "nestgate"]
+categories = ["network-programming", "protocols"]
 
 [lints]
 workspace = true
 
 [dependencies]
-gethostname = "0.4"
-fastrand = "2.0"
-rand = "0.8"
-sha2 = "0.10"
+nestgate-core = { path = "../nestgate-core" }
+
+gethostname = { workspace = true }
+fastrand = { workspace = true }
+rand = { workspace = true }
+sha2 = { workspace = true }
+tokio = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+dashmap = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+sysinfo = { workspace = true }
+config = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
 
 [features]
 default = []
 metrics = []
 security = []
 federation = []
-full = [ "metrics", "security", "federation",]
-
-[dev-dependencies]
-tokio-test = "0.4"
-
-[dependencies.tokio]
-workspace = true
-features = [ "full",]
-
-[dependencies.futures]
-workspace = true
-
-[dependencies.serde]
-workspace = true
-features = [ "derive",]
-
-[dependencies.serde_json]
-workspace = true
-
-# serde_yaml removed: unused dependency (deprecated crate eliminated)
-
-[dependencies.tracing]
-workspace = true
-
-[dependencies.tracing-subscriber]
-workspace = true
-features = [ "env-filter",]
-
-[dependencies.dashmap]
-workspace = true
-
-[dependencies.uuid]
-workspace = true
-features = [ "v4", "serde",]
-
-[dependencies.chrono]
-workspace = true
-features = [ "serde",]
-
-[dependencies.thiserror]
-workspace = true
-
-[dependencies.anyhow]
-workspace = true
-
-[dependencies.nestgate-core]
-path = "../nestgate-core"
-
-# sysinfo: non-Linux + Linux fallbacks; evolution path is Linux `/proc` + rustix (ecoBin v3.0); full removal needs feature-gating across consumers.
-[dependencies.sysinfo]
-workspace = true
-
-# indexmap removed: unused dependency
-# reqwest removed (BiomeOS Pure Rust Evolution) - removed "json" feature
-
-[dependencies.config]
-workspace = true
+full = ["metrics", "security", "federation"]

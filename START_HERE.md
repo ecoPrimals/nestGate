@@ -3,7 +3,7 @@
 ## Current Status
 
 ```
-Build:       18/18 crates compiling (0 errors)
+Build:       22/22 crates compiling (0 errors)
 Tests:       12,383 passing, 0 failures, 469 ignored
 Coverage:    ~72% line (target: 90%)
 Clippy:      ZERO production warnings (pedantic+nursery)
@@ -74,7 +74,7 @@ NEST Atomic = TOWER + nestgate + squirrel
 ## Architecture
 
 ```
-nestGate/ (18 crates)
+nestGate/ (22 crates)
 ├── nestgate-core       Core: IPC, config, crypto, discovery
 ├── nestgate-api        REST + JSON-RPC API server
 ├── nestgate-bin        CLI binary (unibin)

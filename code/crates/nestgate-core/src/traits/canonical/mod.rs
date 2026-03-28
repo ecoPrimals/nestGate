@@ -36,7 +36,7 @@
 //! These traits use `impl Future` returns which may trigger `clippy::type_complexity` warnings
 //! but represent modern async Rust patterns and are more efficient than boxed futures.
 
-#![allow(clippy::type_complexity)]
+#![expect(clippy::type_complexity, reason = "complex trait bounds required")]
 
 // Module declarations
 mod factories;

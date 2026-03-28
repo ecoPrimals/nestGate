@@ -106,7 +106,6 @@ pub use utils::{create_client, http_endpoint, https_endpoint, parse_endpoint};
 /// Type alias to canonical network configuration
 ///
 /// This provides backward compatibility while migrating to unified configuration.
-#[allow(deprecated)]
 pub type ClientConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 

@@ -2,51 +2,36 @@
 name = "nestgate-canonical"
 version = "0.1.0"
 edition = "2024"
-authors = ["NestGate Development Team <dev@nestgate.io>"]
+authors = ["ecoPrimals Collective"]
 description = "Canonical modernization patterns and unified interfaces for NestGate"
-repository = "https://github.com/nestgate/nestgate"
-readme = "README.md"
+repository = "https://github.com/ecoprimals/nestgate"
 license = "AGPL-3.0-only"
 keywords = ["canonical", "modernization", "patterns", "unification", "architecture"]
-categories = ["development-tools", "api-bindings", "asynchronous", "data-structures", "config"]
-homepage = "https://nestgate.io"
-documentation = "https://docs.rs/nestgate-canonical"
+categories = ["development-tools", "api-bindings", "asynchronous"]
+homepage = "https://ecoprimals.org"
 
 [lints]
 workspace = true
 
 [dependencies]
-# Core serialization and error handling
-serde = { version = "1.0", features = ["derive"] }
-thiserror = "1.0"
-anyhow = "1.0"
-
-# Configuration management (based on Songbird success)
-config = "0.14"
-toml = "0.8"
-serde_json = "1.0"
-# serde_yaml removed: unused dependency (deprecated crate eliminated)
-
-# Environment integration
-etcetera = "0.8"
-
-# Performance optimization dependencies
-parking_lot = "0.12"
-
-# File system specific dependencies
-uuid = { version = "1.6", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
-
-# Zero-cost architecture support
-tokio = { version = "1.0", features = ["full"] }
-futures = "0.3"
-
-# Core NestGate types (for canonical type aliases)
 nestgate-core = { path = "../nestgate-core", default-features = false }
+
+serde = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+config = { workspace = true }
+toml = { workspace = true }
+serde_json = { workspace = true }
+etcetera = { workspace = true }
+parking_lot = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+futures = { workspace = true }
 
 [features]
 default = ["unified-config", "zero-cost-patterns"]
-unified-config = []           # Enable unified configuration system
-zero-cost-patterns = []       # Enable zero-cost architecture patterns
-simd-integration = []         # Enable SIMD optimization integration
-performance-monitoring = []   # Enable performance regression testing 
+unified-config = []
+zero-cost-patterns = []
+simd-integration = []
+performance-monitoring = []

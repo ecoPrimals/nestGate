@@ -181,7 +181,6 @@ pub struct SecurityConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Securityconfigcanonical
 pub type SecurityConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-// HTTP removed - use Songbird via capability discovery for external HTTP
+// HTTP removed — use orchestration capability discovery for external HTTP
 // use crate::http_client_stub as reqwest;
 use std::collections::HashMap;
 
@@ -432,20 +432,20 @@ impl ProductionLoadBalancer {
         let _correlation_id = uuid::Uuid::new_v4().to_string();
         let _trace_id = uuid::Uuid::new_v4().to_string();
 
-        // BiomeOS Concentrated Gap: HTTP load balancer deprecated
+        // Concentrated-gap architecture: HTTP load balancer deprecated
         // Use tarpc for primal-to-primal service requests
         Err(crate::NestGateError::api_error(
             "HTTP load balancer deprecated. Use tarpc for primal communication",
         ))
 
         // REMOVED: HTTP load balancer implementation (~85 lines)
-        // Previous HTTP-based load balancer removed (BiomeOS Concentrated Gap)
-        // Migration: Use tarpc for primal-to-primal, Songbird RPC for external HTTP
+        // Previous HTTP-based load balancer removed (concentrated-gap design)
+        // Migration: tarpc for primal-to-primal; orchestration RPC for external HTTP
     }
 }
 
 impl ProductionCommunicationProvider {
-    #[allow(dead_code)] // Framework method - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework method - intentionally unused
     fn list_active_connections(
         &self,
     ) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send {

@@ -6,117 +6,57 @@ authors = ["ecoPrimals Collective"]
 description = "API server and interface definitions for NestGate with enhanced streaming capabilities"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoprimals/nestgate"
-keywords = [ "api", "sovereignty", "network", "gateway", "infrastructure", "streaming", "rpc",]
-categories = [ "network-programming", "web-programming",]
+keywords = ["api", "sovereignty", "network", "gateway", "infrastructure", "streaming", "rpc"]
+categories = ["network-programming", "web-programming"]
 homepage = "https://ecoprimals.org"
-readme = "README.md"
-
-[dependencies]
-# hyper removed — no direct usage; axum handles HTTP internally
-futures-util = "0.3"
-fastrand = "2.0"
-toml = "0.8"
-sha2 = "0.10"
-rand = "0.8"
-# sysinfo: non-Linux + Linux fallbacks; evolution path is Linux `/proc` + rustix (ecoBin v3.0); full removal needs feature-gating across consumers.
-sysinfo = "0.30"
-url = "2.5.7"
-async-stream = "0.3"
-
-[dev-dependencies]
-axum-test = { workspace = true }
-tokio-test = "0.4"
-mockall = { workspace = true }
-rstest = "0.18"
-tempfile = "3.10"
-
-[features]
-default = [ "sse", "streaming-rpc",]
-sse = []
-streaming-rpc = [ "tarpc", "bincode", "tokio-util", "tokio-serde",]
-dev-stubs = []  # ⚠️ Development stubs - DO NOT use in production builds
 
 [lints]
 workspace = true
 
-[dependencies.axum]
-workspace = true
+[dependencies]
+nestgate-core = { path = "../nestgate-core" }
+nestgate-zfs = { path = "../nestgate-zfs" }
+nestgate-network = { path = "../nestgate-network" }
+nestgate-automation = { path = "../nestgate-automation" }
 
-[dependencies.tower]
-workspace = true
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+tokio-stream = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+config = { workspace = true }
+url = { workspace = true }
+async-stream = { workspace = true }
+fastrand = { workspace = true }
+toml = { workspace = true }
+sha2 = { workspace = true }
+rand = { workspace = true }
+sysinfo = { workspace = true }
 
-[dependencies.tower-http]
-workspace = true
+tarpc = { workspace = true, optional = true }
+bincode = { workspace = true, optional = true }
+tokio-serde = { workspace = true, features = ["bincode"], optional = true }
+tokio-util = { workspace = true, optional = true }
 
-[dependencies.tokio]
-workspace = true
+[dev-dependencies]
+axum-test = { workspace = true }
+tokio-test = { workspace = true }
+mockall = { workspace = true }
+rstest = { workspace = true }
+tempfile = { workspace = true }
+tracing-subscriber = { workspace = true }
 
-[dependencies.serde]
-workspace = true
-
-[dependencies.serde_json]
-workspace = true
-
-[dependencies.futures]
-workspace = true
-
-# reqwest removed (BiomeOS Pure Rust Evolution)
-
-[dependencies.tokio-stream]
-version = "0.1"
-features = [ "sync",]
-
-[dependencies.uuid]
-workspace = true
-
-[dependencies.anyhow]
-workspace = true
-
-[dependencies.thiserror]
-workspace = true
-
-[dependencies.tracing]
-workspace = true
-
-[dependencies.chrono]
-workspace = true
-
-[dependencies.nestgate-core]
-path = "../nestgate-core"
-
-[dependencies.nestgate-zfs]
-path = "../nestgate-zfs"
-
-[dependencies.nestgate-network]
-path = "../nestgate-network"
-
-[dependencies.nestgate-automation]
-path = "../nestgate-automation"
-
-[dependencies.config]
-workspace = true
-
-# warp removed: unused dependency (HTTP evolution → Unix sockets)
-
-[dependencies.tarpc]
-workspace = true
-optional = true
-
-[dependencies.bincode]
-version = "1.3"
-optional = true
-
-[dependencies.tokio-serde]
-version = "0.8"
-features = [ "bincode",]
-optional = true
-
-[dependencies.tokio-util]
-version = "0.7"
-features = [ "codec",]
-optional = true
-
-# reqwest removed from dev-dependencies (BiomeOS Pure Rust Evolution)
-
-[dev-dependencies.tracing-subscriber]
-workspace = true
+[features]
+default = ["sse", "streaming-rpc"]
+sse = []
+streaming-rpc = ["tarpc", "bincode", "tokio-util", "tokio-serde"]
+dev-stubs = []

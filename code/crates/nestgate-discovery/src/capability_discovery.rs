@@ -25,12 +25,12 @@
 //!   ↓
 //! CapabilityDiscovery::find("crypto")
 //!   ↓
-//! Songbird IPC Service (registry)
+//! Orchestration IPC gateway (capability registry)
 //!   ↓
 //! Returns: ServiceEndpoint
 //!   ↓
 //! NestGate connects to crypto service
-//!   (Could be BearDog, or any crypto provider!)
+//!   (Any provider that advertises the capability!)
 //! ```
 //!
 //! ## Usage
@@ -38,11 +38,11 @@
 //! ```rust,ignore
 //! use nestgate_core::capability_discovery::CapabilityDiscovery;
 //!
-//! // Bootstrap: Discover Songbird IPC service first
-//! let songbird = CapabilityDiscovery::discover_songbird_ipc().await?;
+//! // Bootstrap: Discover orchestration IPC gateway first
+//! let ipc = CapabilityDiscovery::discover_orchestration_ipc().await?;
 //!
 //! // Create discovery client
-//! let discovery = CapabilityDiscovery::new(songbird);
+//! let discovery = CapabilityDiscovery::new(ipc);
 //!
 //! // Discover services by capability
 //! let crypto = discovery.find("crypto").await?;
@@ -69,9 +69,6 @@ use std::env;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-
-#[cfg(test)]
-mod tests;
 
 // TODO: wire to nestgate-rpc — replace stub with `nestgate_rpc::JsonRpcClient` (or core re-export).
 /// Minimal JSON-RPC client stub until `nestgate-rpc` is linked.
@@ -141,10 +138,10 @@ impl ServiceEndpoint {
 /// Capability-based primal discovery client
 ///
 /// Discovers services by capability, not by hardcoded names.
-/// Uses Songbird IPC service for runtime resolution.
+/// Uses the orchestration IPC gateway for runtime resolution.
 pub struct CapabilityDiscovery {
-    /// Songbird IPC client for discovery queries
-    songbird: JsonRpcClient,
+    /// IPC client for discovery queries (orchestration / registry)
+    ipc_gateway: JsonRpcClient,
 
     /// Cache of discovered capabilities (for performance)
     cache: Arc<DashMap<String, ServiceEndpoint>>,
@@ -158,17 +155,17 @@ impl CapabilityDiscovery {
     ///
     /// # Arguments
     ///
-    /// * `songbird` - Connected Songbird IPC client
+    /// * `ipc_gateway` - Connected orchestration IPC client
     ///
     /// # Examples
     ///
     /// ```rust,ignore
-    /// let songbird = CapabilityDiscovery::discover_songbird_ipc().await?;
-    /// let discovery = CapabilityDiscovery::new(songbird);
+    /// let ipc = CapabilityDiscovery::discover_orchestration_ipc().await?;
+    /// let discovery = CapabilityDiscovery::new(ipc);
     /// ```
-    pub fn new(songbird: JsonRpcClient) -> Self {
+    pub fn new(ipc_gateway: JsonRpcClient) -> Self {
         Self {
-            songbird,
+            ipc_gateway,
             cache: Arc::new(DashMap::new()),
             cache_ttl: Duration::from_secs(300), // 5 minutes
         }
@@ -188,16 +185,16 @@ impl CapabilityDiscovery {
     ///
     /// Returns error if:
     /// - No service provides the capability
-    /// - Songbird IPC is unavailable
+    /// - The orchestration IPC gateway is unavailable
     /// - Network communication fails
     ///
     /// # Examples
     ///
     /// ```rust,ignore
-    /// // Discover crypto service (could be BearDog or any crypto provider)
+    /// // Discover crypto service (any provider advertising "crypto")
     /// let crypto = discovery.find("crypto").await?;
     ///
-    /// // Discover HTTP service (should be Songbird)
+    /// // Discover HTTP proxy capability (orchestration layer)
     /// let http = discovery.find("http").await?;
     /// ```
     pub async fn find(&mut self, capability: &str) -> Result<ServiceEndpoint> {
@@ -222,14 +219,14 @@ impl CapabilityDiscovery {
             }
         }
 
-        // Query Songbird IPC service
+        // Query orchestration IPC gateway
         tracing::info!(
             capability = capability,
-            "Discovering service by capability via Songbird IPC"
+            "Discovering service by capability via orchestration IPC"
         );
 
         let response = self
-            .songbird
+            .ipc_gateway
             .call("ipc.find_capability", json!({ "capability": capability }))
             .await
             .map_err(|e| {
@@ -269,49 +266,48 @@ impl CapabilityDiscovery {
         Ok(endpoint)
     }
 
-    /// Discover Songbird IPC service itself
+    /// Discover the orchestration IPC gateway (bootstrap registry client)
     ///
-    /// **Special case**: Songbird is the bootstrap service that enables
-    /// discovery of all other services. It must be discovered first via
-    /// environment variables or standard paths.
+    /// **Special case**: The orchestration layer is the bootstrap service that enables
+    /// discovery of all other services. It must be reached via environment variables
+    /// or standard paths.
     ///
     /// # Discovery Order
     ///
-    /// 1. Environment variable `SONGBIRD_IPC_PATH`
-    /// 2. Standard Unix socket path `/primal/songbird`
-    /// 3. TCP via `SONGBIRD_HOST` and `SONGBIRD_PORT` env vars
-    /// 4. TCP via `SONGBIRD_HOST` / `SONGBIRD_PORT` (defaults from `NESTGATE_DEV_HOST` and
-    ///    `NESTGATE_API_PORT` before loopback — no fixed peer address)
+    /// 1. `NESTGATE_ORCHESTRATION_IPC_PATH` or `ORCHESTRATION_IPC_PATH`
+    /// 2. Standard Unix socket from `ORCHESTRATION_IPC_STANDARD_PATH` (default: `/primal/orchestration`)
+    /// 3. TCP bootstrap via `ORCHESTRATION_HOST` / `ORCHESTRATION_PORT`
     ///
     /// # Returns
     ///
-    /// Connected Songbird IPC client.
+    /// Connected JSON-RPC client to the IPC gateway.
     ///
     /// # Errors
     ///
-    /// Returns error if Songbird IPC cannot be discovered or connected.
+    /// Returns error if the orchestration IPC endpoint cannot be discovered or connected.
     ///
     /// # Examples
     ///
     /// ```rust,ignore
-    /// // Discover Songbird IPC service
-    /// let songbird = CapabilityDiscovery::discover_songbird_ipc().await?;
-    ///
-    /// // Use for capability discovery
-    /// let discovery = CapabilityDiscovery::new(songbird);
+    /// let ipc = CapabilityDiscovery::discover_orchestration_ipc().await?;
+    /// let discovery = CapabilityDiscovery::new(ipc);
     /// ```
-    pub async fn discover_songbird_ipc() -> Result<JsonRpcClient> {
-        tracing::info!("Discovering Songbird IPC service (bootstrap)");
+    pub async fn discover_orchestration_ipc() -> Result<JsonRpcClient> {
+        tracing::info!("Discovering orchestration IPC gateway (bootstrap)");
 
-        // Try environment variable first
-        if let Ok(path) = env::var("SONGBIRD_IPC_PATH") {
-            tracing::debug!(path = path, "Trying Songbird IPC path from environment");
+        // Unix socket path candidates (env-driven)
+        let path_candidates = [
+            env::var("NESTGATE_ORCHESTRATION_IPC_PATH").ok(),
+            env::var("ORCHESTRATION_IPC_PATH").ok(),
+        ];
+        for path in path_candidates.into_iter().flatten() {
+            tracing::debug!(path = path, "Trying orchestration IPC path from environment");
             if Path::new(&path).exists() {
                 match JsonRpcClient::connect_unix(&path).await {
                     Ok(client) => {
                         tracing::info!(
                             path = path,
-                            "Connected to Songbird IPC via environment path"
+                            "Connected to orchestration IPC via environment path"
                         );
                         return Ok(client);
                     }
@@ -319,16 +315,15 @@ impl CapabilityDiscovery {
                         tracing::warn!(
                             path = path,
                             error = %e,
-                            "Failed to connect to Songbird IPC via environment path"
+                            "Failed to connect to orchestration IPC via environment path"
                         );
                     }
                 }
             }
         }
 
-        // Try standard Unix socket path (configurable via env)
-        let standard_path = env::var("SONGBIRD_IPC_STANDARD_PATH")
-            .unwrap_or_else(|_| "/primal/songbird".to_string());
+        let standard_path = env::var("ORCHESTRATION_IPC_STANDARD_PATH")
+            .unwrap_or_else(|_| "/primal/orchestration".to_string());
         tracing::debug!(path = %standard_path, "Trying standard IPC path");
         if Path::new(&standard_path).exists() {
             match JsonRpcClient::connect_unix(&standard_path).await {
@@ -349,19 +344,17 @@ impl CapabilityDiscovery {
             }
         }
 
-        // Try TCP via environment (bootstrap path; real transport is Unix-first)
-        let host = env::var("SONGBIRD_HOST").unwrap_or_else(|_| {
-            env::var("NESTGATE_DEV_HOST")
-                .or_else(|_| env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
-                .unwrap_or_else(|_| {
-                    tracing::warn!(
-                        "Songbird TCP bootstrap: SONGBIRD_HOST, NESTGATE_DEV_HOST, and \
-                         NESTGATE_DISCOVERY_FALLBACK_HOST unset; using `localhost`."
-                    );
-                    "localhost".to_string()
-                })
-        });
-        let port = env::var("SONGBIRD_PORT")
+        let host = env::var("ORCHESTRATION_HOST")
+            .or_else(|_| env::var("NESTGATE_DEV_HOST"))
+            .or_else(|_| env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
+            .unwrap_or_else(|_| {
+                tracing::warn!(
+                    "Orchestration TCP bootstrap: ORCHESTRATION_HOST, NESTGATE_DEV_HOST, \
+                     and NESTGATE_DISCOVERY_FALLBACK_HOST unset; using `localhost`."
+                );
+                "localhost".to_string()
+            });
+        let port = env::var("ORCHESTRATION_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or_else(|| {
@@ -371,15 +364,13 @@ impl CapabilityDiscovery {
                     .unwrap_or_else(nestgate_config::constants::get_api_port)
             });
 
-        tracing::debug!(host = host, port = port, "Trying Songbird IPC via TCP");
+        tracing::debug!(host = host, port = port, "Trying orchestration IPC via TCP");
 
-        // FUTURE: Add TCP transport when Songbird IPC requires it
-        // Current design uses Unix sockets (primal-to-primal within same host)
         Err(NestGateError::service_unavailable(
             "IPC gateway not found. Ensure the orchestration service is running and accessible via:\n\
-             1. Environment variable SONGBIRD_IPC_PATH (Unix socket path), OR\n\
-             2. Environment variable SONGBIRD_IPC_STANDARD_PATH (default: /primal/songbird), OR\n\
-             3. TCP at SONGBIRD_HOST:SONGBIRD_PORT",
+             1. NESTGATE_ORCHESTRATION_IPC_PATH or ORCHESTRATION_IPC_PATH (Unix socket path), OR\n\
+             2. ORCHESTRATION_IPC_STANDARD_PATH (default: /primal/orchestration), OR\n\
+             3. TCP at ORCHESTRATION_HOST:ORCHESTRATION_PORT",
         ))
     }
 

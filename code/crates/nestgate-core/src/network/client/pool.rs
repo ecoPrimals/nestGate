@@ -158,8 +158,8 @@ impl ConnectionPool {
 #[derive(Debug, Clone)]
 /// Connection metadata for network client pool
 ///
-/// **BiomeOS Architecture**: No HTTP client stored here.
-/// External HTTP is delegated to Songbird primal via JSON-RPC over Unix sockets.
+/// **Architecture**: no HTTP client stored here.
+/// External HTTP is delegated to the orchestration layer via JSON-RPC over Unix sockets.
 pub struct Connection {
     /// Unique connection ID
     pub id: uuid::Uuid,
@@ -203,15 +203,15 @@ impl Connection {
         // Build URL
         let _url = self.endpoint.url(request.path);
 
-        // BiomeOS Pure Rust Evolution: External HTTP removed
+        // Pure Rust path: external HTTP removed from this pool
         // For external requests, use: discover_orchestration().await?.http_proxy(...)
         Err(NestGateError::api_error(
-            "External HTTP deprecated. Use Songbird RPC via discover_orchestration()",
+            "External HTTP deprecated. Use orchestration RPC via discover_orchestration()",
         ))
 
         // REMOVED: Previous HTTP client code (lines 204-248)
-        // Reason: BiomeOS Concentrated Gap Architecture
-        // Migration: Use Songbird for external HTTP, tarpc for primal-to-primal
+        // Reason: concentrated-gap architecture
+        // Migration: orchestration layer for external HTTP; tarpc for primal-to-primal
 
         /*let mut req_builder = self.client.request(method, &url);
 

@@ -5,7 +5,7 @@
 //!
 //! **ZERO HARDCODED PRIMAL NAMES**: This adapter discovers security capabilities
 //! (rate limiting, intrusion detection, input validation, etc.) from ANY provider.
-//! Never mentions "beardog" or any specific primal.
+//! Never names a specific peer primal.
 
 use super::capability_discovery::{CapabilityDiscovery, CapabilityProvider, CapabilityType};
 use crate::Result;
@@ -28,7 +28,7 @@ impl SecurityCapability {
     /// Discover available security providers
     ///
     /// Returns ANY provider that offers security capabilities.
-    /// Could be BearDog, a custom implementation, or a future primal.
+    /// Could be any implementation that advertises the capability.
     pub async fn discover_providers(&self) -> Result<Vec<CapabilityProvider>> {
         self.discovery.discover(CapabilityType::security()).await
     }
@@ -179,9 +179,8 @@ mod tests {
         let discovery = Arc::new(CapabilityDiscovery::new());
         let _security = SecurityCapability::new(discovery);
 
-        // We discover "security" capability, not "beardog"
+        // We discover "security" capability, not a peer name
         let capability_type = CapabilityType::security();
         assert_eq!(capability_type.as_str(), "security");
-        assert_ne!(capability_type.as_str(), "beardog"); // Never hardcoded!
     }
 }

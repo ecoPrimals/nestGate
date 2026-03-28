@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated, reason = "migration in progress")]
     fn test_canonical_network_config_default() {
         let config = CanonicalNetworkConfig::default();
         // Verify default initialization works (deprecated but functional)

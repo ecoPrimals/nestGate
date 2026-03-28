@@ -2,108 +2,71 @@
 name = "nestgate-zfs"
 version = "0.1.0"
 edition = "2024"
-authors = ["NestGate Development Team <dev@nestgate.io>"]
+authors = ["ecoPrimals Collective"]
 description = "ZFS storage management for NestGate with intelligent automation"
 license = "AGPL-3.0-only"
-repository = "https://github.com/nestgate/nestgate"
-homepage = "https://nestgate.io"
-documentation = "https://docs.rs/nestgate-zfs"
-keywords = [ "zfs", "storage", "nas", "automation",]
-readme = "README.md"
-categories = [ "filesystem", "storage",]
+repository = "https://github.com/ecoprimals/nestgate"
+homepage = "https://ecoprimals.org"
+keywords = ["zfs", "storage", "nas", "automation"]
+categories = ["filesystem"]
 
 [lints]
 workspace = true
 
 [features]
-default = [ "dev-environment-fallbacks",]
+default = ["dev-environment-fallbacks"]
 zfs = []
 orchestrator = []
-network-integration = [ "nestgate-automation/network-integration",]
-advanced = [ "zfs", "network-integration",]
-ai = [ "advanced", "network-integration",]
-performance = [ "zfs",]
+network-integration = ["nestgate-automation/network-integration"]
+advanced = ["zfs", "network-integration"]
+ai = ["advanced", "network-integration"]
+performance = ["zfs"]
 dev-environment-fallbacks = []
 hardware-detection = []
 container = []
 dev-verbose-logging = []
 
 [dependencies]
-futures = "0.3"
-serde_json = "1.0"
-# serde_yaml removed: unused dependency (deprecated crate eliminated)
-tracing = "0.1"
-thiserror = "1.0"
-anyhow = "1.0"
-chrono = "0.4"
-dashmap = "5.5"
-rand = "0.8"
-url = "2.4"
-bytes = "1.7"
-regex = "1.10"
-hmac = "0.12"
-sha2 = "0.10"
-base64 = "0.21"
+nestgate-core = { path = "../nestgate-core" }
+nestgate-automation = { path = "../nestgate-automation" }
+nestgate-mcp = { path = "../nestgate-mcp" }
+
+futures = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+dashmap = { workspace = true }
+rand = { workspace = true }
+url = { workspace = true }
+bytes = { workspace = true }
+regex = { workspace = true }
+hmac = { workspace = true }
+sha2 = { workspace = true }
+base64 = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+uuid = { workspace = true }
 
 [dev-dependencies]
-tokio-test = "0.4"
-tempfile = "3.8"
-futures = "0.3"
-rand = "0.8"
-proptest = "1.4"
-quickcheck = "1.0"
-serial_test = "3.0"
-rstest = "0.18"
+tokio-test = { workspace = true }
+tempfile = { workspace = true }
+futures = { workspace = true }
+rand = { workspace = true }
+chrono = { workspace = true }
+tracing-subscriber = { workspace = true }
+criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
 mockall = { workspace = true }
 axum-test = { workspace = true }
+rstest = { workspace = true }
+serial_test = { workspace = true }
+tokio = { workspace = true }
+proptest = "1.4"
+quickcheck = "1.0"
 wiremock = "0.6"
 testcontainers = "0.15"
 assert_matches = "1.5"
 approx = "0.5"
-
-[dependencies.nestgate-core]
-path = "../nestgate-core"
-
-[dependencies.nestgate-automation]
-path = "../nestgate-automation"
-
-[dependencies.nestgate-mcp]
-path = "../nestgate-mcp"
-
-[dependencies.tokio]
-version = "1.0"
-features = [ "full",]
-
-[dependencies.serde]
-version = "1.0"
-features = [ "derive",]
-
-[dependencies.uuid]
-version = "1.6"
-features = [ "v4",]
-
-# reqwest removed (BiomeOS Pure Rust Evolution)
-
-[dev-dependencies.tokio]
-version = "1.0"
-features = [ "full",]
-
-[dev-dependencies.chrono]
-version = "0.4"
-features = [ "serde",]
-
-[dev-dependencies.tracing-subscriber]
-version = "0.3"
-features = [ "env-filter",]
-
-[dev-dependencies.criterion]
-version = "0.5"
-features = [ "html_reports", "async_tokio",]
-
-[dev-dependencies.fake]
-version = "2.9"
-features = [ "derive", "chrono",]
-
-[dev-dependencies.test-log]
-version = "0.2"
-features = [ "trace",]
+fake = { version = "2.9", features = ["derive", "chrono"] }
+test-log = { version = "0.2", features = ["trace"] }

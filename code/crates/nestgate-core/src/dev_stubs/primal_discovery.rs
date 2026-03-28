@@ -44,16 +44,25 @@
 //! [`CapabilityAwareDiscovery`]: crate::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery
 use crate::Result;
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 use crate::config::canonical_primary::{
     domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig, NestGateCanonicalConfig,
 };
 use crate::universal_adapter::stats::AdapterStats;
+use nestgate_config::LOCALHOST_IPV4;
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 // Deprecated type alias removed - use UnifiedNetworkConfig directly
+
+fn stub_loopback_ip() -> IpAddr {
+    std::env::var("NESTGATE_DEV_HOST")
+        .or_else(|_| std::env::var("NESTGATE_BIND_ADDRESS"))
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(IpAddr::V4(LOCALHOST_IPV4))
+}
 
 /// Discover bind address for a service
 ///
@@ -72,17 +81,21 @@ pub fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
             "stub_service_discovery",
         )),
         "internal" | "database" | "cache" => {
+            let loopback = stub_loopback_ip();
             Ok(crate::safe_operations::safe_parse_ip_with_fallback(
-                "127.0.0.1",
-                std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
+                &loopback.to_string(),
+                loopback,
                 "stub_internal_services",
             ))
         }
-        _ => Ok(crate::safe_operations::safe_parse_ip_with_fallback(
-            "127.0.0.1",
-            std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
-            "stub_default_fallback",
-        )),
+        _ => {
+            let loopback = stub_loopback_ip();
+            Ok(crate::safe_operations::safe_parse_ip_with_fallback(
+                &loopback.to_string(),
+                loopback,
+                "stub_default_fallback",
+            ))
+        }
     }
 }
 /// Discover endpoint for a service
@@ -161,19 +174,19 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
     since = "0.9.0",
     note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 /// Networkconfigadapter
 pub struct NetworkConfigAdapter {
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     service_name: String,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     config: NestGateCanonicalConfig,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     stats: Arc<RwLock<AdapterStats>>,
 }
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl NetworkConfigAdapter {
     /// Creates a new NetworkConfigAdapter with default configuration
     ///
@@ -208,13 +221,13 @@ impl NetworkConfigAdapter {
 
 /// Standalone network adapter for isolated deployments
 pub struct StandaloneNetworkAdapter {
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     service_name: String,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     config: NestGateCanonicalConfig,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     stats: Arc<RwLock<AdapterStats>>,
     endpoints: HashMap<String, SocketAddr>,
 }
@@ -232,7 +245,7 @@ impl StandaloneNetworkAdapter {
         let port = get_fallback_port(&service_name);
         endpoints.insert(
             service_name.clone(),
-            SocketAddr::from(([127, 0, 0, 1], port)),
+            SocketAddr::new(stub_loopback_ip(), port),
         );
 
         Self {
@@ -274,7 +287,7 @@ impl StandaloneNetworkAdapter {
 
 /// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_primary` instead
 /// `UnifiedNetworkConfig` helper methods
-#[allow(deprecated)] // Helper methods for deprecated type during migration
+#[expect(deprecated, reason = "migration in progress")] // Helper methods for deprecated type during migration
 impl UnifiedNetworkConfig {
     /// Convert to unified config (identity function now)
     #[must_use]

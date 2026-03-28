@@ -68,7 +68,7 @@ pub enum HealthStatus {
 pub struct UniversalAdapter {
     discovery_methods: Vec<DiscoveryMethod>,
     capability_cache: HashMap<CapabilityType, DiscoveredCapability>,
-    #[allow(dead_code)] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
     discovery_timeout: Duration,
 }
 

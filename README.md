@@ -1,10 +1,10 @@
 # NestGate - Universal Storage & Discovery Primal
 
-**Version**: 4.6.0-dev  
-**Build**: 18/18 crates compiling, 0 errors  
+**Version**: 4.7.0-dev  
+**Build**: 22/22 crates compiling, 0 errors  
 **Tests**: 12,383 passing, 0 failures, 469 ignored  
 **Coverage**: ~72% line (llvm-cov, target: 90%)  
-**Clippy**: ZERO production warnings (pedantic+nursery)  
+**Clippy**: ZERO production warnings (pedantic+nursery+cast lints)  
 **Last Updated**: March 28, 2026
 
 ---
@@ -45,30 +45,43 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ## Architecture
 
 ```
-nestGate/ (18 crates)
-├── nestgate-types      Foundation: error types, result aliases, unified enums (27s)
-├── nestgate-config     Config, constants, defaults, canonical modernization (220s)
-├── nestgate-storage    Universal + temporal storage abstractions (38s)
-├── nestgate-rpc        JSON-RPC + tarpc IPC layer (106s)
-├── nestgate-discovery  Primal discovery, capabilities, service registry (60s)
-├── nestgate-core       Remaining core: traits, network, services, crypto (254s)
-├── nestgate-api        REST + JSON-RPC API server
-├── nestgate-bin        CLI binary (unibin)
-├── nestgate-zfs        ZFS integration (adaptive)
-├── nestgate-mcp        MCP provider
-├── nestgate-network    Network storage
-├── nestgate-automation Automation engine
-├── nestgate-installer  Platform installer
-├── nestgate-canonical  Canonical types
-├── nestgate-middleware Middleware stack
-├── nestgate-nas        NAS integration
-├── nestgate-fsmonitor  Filesystem monitoring
+nestGate/ (22 crates)
+│
+│  Foundation Layer (zero internal deps, compiles first)
+├── nestgate-types       Error types, result aliases, unified enums
+├── nestgate-platform    env_process, linux_proc, OS abstractions (rustix/uzers)
+│
+│  Domain Layer (depends on types/platform)
+├── nestgate-config      Config, constants, defaults, canonical modernization
+├── nestgate-storage     Universal + temporal storage abstractions
+├── nestgate-rpc         JSON-RPC + tarpc IPC layer
+├── nestgate-discovery   Primal discovery, capabilities, service registry
+├── nestgate-security    Crypto (RustCrypto), JWT, certs, zero-cost auth
+├── nestgate-observe     Observability, diagnostics, event system
+├── nestgate-cache       Multi-tier cache, UUID cache, cache math
+│
+│  Integration Layer
+├── nestgate-core        Traits, network, services, adapters (re-exports all above)
+├── nestgate-canonical   Canonical modernization patterns
+│
+│  Application Layer
+├── nestgate-api         REST + JSON-RPC API server
+├── nestgate-bin         CLI binary (unibin)
+├── nestgate-zfs         ZFS integration (adaptive)
+├── nestgate-mcp         MCP provider
+├── nestgate-network     Network storage
+├── nestgate-automation  Automation engine
+├── nestgate-installer   Platform installer
+├── nestgate-middleware  Middleware stack
+├── nestgate-nas         NAS integration
+├── nestgate-fsmonitor   Filesystem monitoring
 └── nestgate-performance Performance monitoring
 ```
 
-The core was decomposed from a 295K-line monolith (488s check) into 6 focused
-crates that compile in parallel. `nestgate-core` re-exports all extracted modules
-for zero downstream breakage.
+The core was decomposed across two phases from a 295K-line monolith (488s check)
+into 13 focused crates that compile in parallel. `nestgate-core` re-exports all
+extracted modules for zero downstream breakage. Core is now ~52K lines with 24
+core-only modules and 44 dependencies (down from 51).
 
 ### Key Design Patterns
 
@@ -92,7 +105,7 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 
 | Area | Status |
 |------|--------|
-| Build | 18/18 crates, 0 errors |
+| Build | 22/22 crates, 0 errors |
 | Clippy | Clean (`-D warnings`) |
 | Format | Clean |
 | Tests | 12,383 passing, 0 failures |

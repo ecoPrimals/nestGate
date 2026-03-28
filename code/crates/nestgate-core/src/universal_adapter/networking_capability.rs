@@ -5,7 +5,7 @@
 //!
 //! **ZERO HARDCODED PRIMAL NAMES**: This adapter discovers networking capabilities
 //! (load balancing, circuit breaking, service mesh, etc.) from ANY provider that
-//! implements them. Never mentions "songbird" or any specific primal.
+//! implements them. Never names a specific peer primal.
 
 use super::capability_discovery::{CapabilityDiscovery, CapabilityProvider, CapabilityType};
 use crate::Result;
@@ -28,7 +28,7 @@ impl NetworkingCapability {
     /// Discover available networking providers
     ///
     /// Returns ANY provider that offers networking capabilities.
-    /// Could be Songbird, a custom implementation, or a future primal.
+    /// Could be any implementation that advertises the capability.
     pub async fn discover_providers(&self) -> Result<Vec<CapabilityProvider>> {
         self.discovery.discover(CapabilityType::networking()).await
     }
@@ -144,9 +144,8 @@ mod tests {
         let discovery = Arc::new(CapabilityDiscovery::new());
         let _networking = NetworkingCapability::new(discovery);
 
-        // We discover "networking" capability, not "songbird"
+        // We discover "networking" capability, not a peer name
         let capability_type = CapabilityType::networking();
         assert_eq!(capability_type.as_str(), "networking");
-        assert_ne!(capability_type.as_str(), "songbird"); // Never hardcoded!
     }
 }

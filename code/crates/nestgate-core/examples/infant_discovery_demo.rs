@@ -89,7 +89,7 @@ async fn main() -> Result<()> {
     println!("4️⃣  DISCOVER OTHERS (Finding siblings)");
     println!("   \"Who else is here? What can they do?\"\n");
 
-    // Look for orchestration capability (NOT by name "songbird"!)
+    // Look for orchestration capability (NOT by hardcoded peer name)
     println!("   🔍 Looking for 'orchestration' capability...");
     let orchestrators = discovery
         .find_by_capability("orchestration".to_string())
@@ -106,7 +106,7 @@ async fn main() -> Result<()> {
     }
     println!();
 
-    // Look for security capability (NOT by name "beardog"!)
+    // Look for security capability (NOT by hardcoded peer name)
     println!("   🔍 Looking for 'authentication' capability...");
     let auth_services = discovery
         .find_by_capability("authentication".to_string())

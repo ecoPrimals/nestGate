@@ -7,7 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 4.6.0-dev
+## [Unreleased] - 4.7.0-dev
+
+### Session 5: Phase 2 Modernization — Compilation Surface & Idiomatic Evolution (March 28, 2026)
+
+**Build**: 22/22 crates (0 errors)  
+**Architecture**: nestgate-core further decomposed into 13 total crates (52K lines, 24 pub mod, 44 deps)
+
+#### Phase 1: Dependency Hygiene
+- Removed unused `mdns-sd` from nestgate-core (declared but never imported)
+- Hoisted 100+ inline dependency versions to `workspace = true` across all crates
+- Fixed version drift: dashmap 5.5→6.1, url 2.4→2.5, tempfile 3.8→3.10, clap 4.0→4.5
+- Added missing workspace deps: jsonrpsee, pin-project, mdns-sd, getrandom, serial_test, temp-env
+- Made `sysinfo` optional feature in nestgate-core (cfg-gated, default on)
+- Pruned 13 unused feature flags from nestgate-core (kept dev-stubs, mock-metrics, sysinfo)
+
+#### Phase 2: Second-Wave Crate Extraction (4 new crates)
+- **nestgate-security**: cert, crypto, jwt_validation, zero_cost, zero_cost_security_provider (RustCrypto stack)
+- **nestgate-platform**: env_process, linux_proc, platform (rustix/uzers/gethostname)
+- **nestgate-observe**: observability, diagnostics, events (telemetry domain)
+- **nestgate-cache**: cache, cache_math, uuid_cache (caching domain)
+- All with re-export facades for zero downstream breakage
+
+#### Phase 3: Primal Sovereignty
+- Removed `BEARDOG_AUTH_ENDPOINT` → generic `AUTH_PROVIDER_ENDPOINT`
+- Replaced `discover_songbird_ipc` → `discover_orchestration_ipc`
+- Cleaned primal-specific names from docs, comments, test data (15+ files)
+
+#### Phase 4: Modern Idiomatic Rust
+- Migrated `#[allow(` to `#[expect(`, reason = "...")]` across core (biomeOS pattern)
+- Removed crate-level `#![allow(deprecated)]` from 4 files
+- Added `clippy::cast_possible_truncation`, `cast_sign_loss`, `cast_precision_loss` lints
+- Fixed `Box<dyn Error>` in auth_token_manager.rs → `NestGateError`
+
+#### Phase 5: File Size Compliance
+- Split `canonical_types.rs` (865L) into 11-file directory module
+- Split `storage_adapters.rs` (841L) into 6-file directory module
+- Split `canonical_hierarchy.rs` (815L) into 7-file directory module
+- Split `universal_providers_zero_cost.rs` (729L) into 9-file directory module
+- Fixed broken test reference in recovery/graceful_degradation.rs
+
+#### Metrics
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Workspace crates | 18 | 22 (+4 new) |
+| Core pub mod | 37 | 24 (+54 re-exports) |
+| Core dependencies | 51 | 44 |
+| Core .rs lines | ~74K | ~52K |
+| Max file size | 865L | 813L (test) |
+| Unused features | 13 | 0 |
+| Version drift | 4 mismatches | 0 |
+| Primal overreach | BEARDOG/SONGBIRD refs | zero |
 
 ### Session 4: nestgate-core Crate Decomposition (March 28, 2026)
 

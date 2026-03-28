@@ -2,105 +2,96 @@
 name = "nestgate-core"
 version = "0.1.0"
 edition = "2024"
-authors = ["NestGate Development Team <dev@nestgate.io>"]
+authors = ["ecoPrimals Collective"]
 description = "Core functionality and canonical patterns for the NestGate storage management system"
-repository = "https://github.com/nestgate/nestgate"
-readme = "README.md"
+repository = "https://github.com/ecoprimals/nestgate"
 license = "AGPL-3.0-only"
 keywords = ["storage", "zfs", "nas", "management", "canonical"]
-categories = ["filesystem", "network-programming", "asynchronous", "api-bindings", "data-structures"]
-homepage = "https://nestgate.io"
-documentation = "https://docs.rs/nestgate-core"
+categories = ["filesystem", "network-programming", "asynchronous"]
+homepage = "https://ecoprimals.org"
 
 [lints]
 workspace = true
 
 [dependencies]
+# Internal crates
 nestgate-types = { path = "../nestgate-types" }
 nestgate-config = { path = "../nestgate-config" }
 nestgate-storage = { path = "../nestgate-storage" }
 nestgate-rpc = { path = "../nestgate-rpc" }
 nestgate-discovery = { path = "../nestgate-discovery" }
-anyhow = "1.0"
-axum = { version = "0.7", features = ["json", "tokio"] }
-chrono = { version = "0.4", features = ["serde"] }
-# reqwest REMOVED (BiomeOS Pure Rust Evolution - no external HTTP!)
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-thiserror = "1.0"
-tokio = { version = "1.0", features = ["full"] }
-toml = "0.8"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
-uuid = { version = "1.6", features = ["v4", "serde"] }
+nestgate-security = { path = "../nestgate-security" }
+nestgate-platform = { path = "../nestgate-platform" }
+nestgate-observe = { path = "../nestgate-observe" }
+nestgate-cache = { path = "../nestgate-cache" }
 
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
 
-# Enhanced dependencies for advanced integration capabilities
-config = "0.14"
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml_ng = { workspace = true }
 
-# Additional dependencies needed by the existing code
-futures = "0.3"
-futures-util = "0.3"
-log = "0.4"
-lru = "0.12"
+# HTTP
+axum = { workspace = true }
 
-# System dependencies for cross-platform functionality
-url = "2.4"
+# Time and identifiers
+chrono = { workspace = true }
+uuid = { workspace = true }
 
-# Zero-copy optimization dependencies
-bytes = "1.7"
+# Logging
+tracing = { workspace = true }
+log = { workspace = true }
 
-# Data source integration dependencies
-urlencoding = "2.0"
-base64 = "0.21"
+# Configuration
+toml = { workspace = true }
+config = { workspace = true }
+regex = { workspace = true }
 
-# Encryption dependencies (v0.2.0) + Pure Rust crypto (RustCrypto)
-aes-gcm = "0.10"
-argon2 = { version = "0.5", features = ["std"] }
-ed25519-dalek = "2.1"     # Ed25519 signatures for JWT
-hmac = "0.12"             # HMAC for token integrity
-getrandom = "0.2"
+# Async runtime
+tokio = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
 
-# Additional dependencies for comprehensive functionality
-rand = "0.8"
-# flate2 removed: unused dependency (only referenced in comments)
-dashmap = "5.5"
-parking_lot = "0.12"
-md5 = "0.7"
-etcetera = "0.8"
-sha2 = "0.10"
-# ✅ EVOLVED: serde_yaml (deprecated) → serde_yaml_ng (maintained fork)
-serde_yaml_ng = "0.10"
-hex = "0.4"
-gethostname = "0.4"
-# lazy_static removed: evolved to std::sync::LazyLock (Pure Rust std)
-tempfile = "3.8"
-regex = "1.10"
-fastrand = "2.0"
-# sysinfo: non-Linux + Linux `/proc` failure fallbacks (observability, universal_storage, API).
-# Evolution path (ecoBin v3.0): Linux `/proc` + rustix first; full removal needs optional feature + cfg on all dependents.
-# Making it optional would require a `sysinfo` default feature and `#[cfg(feature = "sysinfo")]`
-# on every call site in nestgate-core, nestgate-api, nestgate-mcp, and dependents.
-sysinfo = "0.30"
-rustix.workspace = true
-# mDNS service discovery (RFC 6762/6763)
-mdns-sd = "0.17"
+# Concurrency
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+lru = { workspace = true }
+
+# Zero-copy
+bytes = { workspace = true }
+url = { workspace = true }
+
+# Encoding, hashing, and RNG
+base64 = { workspace = true }
+hex = { workspace = true }
+urlencoding = { workspace = true }
+rand = { workspace = true }
+sha2 = { workspace = true }
+getrandom = { workspace = true }
+
+# System utilities
+tempfile = { workspace = true }
+fastrand = { workspace = true }
+
+# sysinfo: non-Linux fallback for metrics; Linux primary path is /proc + rustix.
+sysinfo = { workspace = true, optional = true }
+
+# RPC
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }
 tokio-serde = { workspace = true, features = ["bincode"] }
-bincode.workspace = true
-jsonrpsee = { version = "0.26.0", features = ["server"] }
-# Pure Rust UID/GID retrieval (evolved from unsafe libc)
-uzers.workspace = true
-# Pin projection for safe async (replaces unsafe map_unchecked_mut)
-pin-project = "1.1"
-
+bincode = { workspace = true }
+jsonrpsee = { workspace = true }
+pin-project = { workspace = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }
-tempfile = "3.8"
-criterion = { version = "0.5", features = ["html_reports"] }
-serial_test = "3.0"
-temp-env = { version = "0.3.6", features = ["async_closure"] }
+tempfile = { workspace = true }
+criterion = { workspace = true }
+serial_test = { workspace = true }
+temp-env = { workspace = true }
 mockall = { workspace = true }
 
 [[bench]]
@@ -116,24 +107,10 @@ name = "working_performance_benchmark"
 harness = false
 
 [features]
-default = []
-zfs-advanced-features = []
-legacy-data-sources = []
-experimental-zero-cost = []
-# **CANONICAL MODERNIZATION** - Advanced feature flags
-zero-cost-optimizations = []
-advanced-monitoring = []
-security-scanning = []
-experimental-features = []
-adaptive-storage = [] # Adaptive storage with entropy analysis and smart compression
-# **DISCOVERY BACKENDS** - Service discovery integration
-consul = [] # Consul-based service discovery (datacenter/cloud)
-kubernetes = [] # Kubernetes-based service discovery (orchestrated environments)
-# **MOCK SEPARATION** - Test-only features
-mock-services = []
-test-doubles = []
-mock-metrics = [] # TESTING ONLY - use mock metrics instead of real system metrics
-# Development stubs - include mock/stub implementations for testing (CRITICAL for production safety)
+default = ["sysinfo"]
+# Development stubs - include mock/stub implementations for testing
 dev-stubs = []
-# Educational `safe_alternatives` module (FFI/SIMD teaching demos — also built under `cfg(test)`)
-safe-alternatives-demo = []
+# Mock metrics for testing without real system metrics
+mock-metrics = []
+# sysinfo fallback for non-Linux / /proc failure paths
+sysinfo = ["dep:sysinfo"]

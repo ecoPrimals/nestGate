@@ -24,7 +24,7 @@ pub struct NativeAsyncNetworkService {
     /// Connections
     pub connections: HashMap<String, String>,
     service_id: String,
-    #[allow(dead_code)] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
     state: UnifiedServiceState,
 }
 /// Configuration for native async network service
@@ -269,7 +269,6 @@ impl NativeAsyncNetworkService {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Networkserviceconfigcanonical
 pub type NetworkServiceConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

@@ -4,8 +4,8 @@
 //! NAT Traversal Persistence
 //!
 //! Stores NAT traversal info, port allocation patterns, relay preferences,
-//! and known beacon records so they survive restarts. Other primals (Songbird
-//! for STUN probing, biomeOS for connection strategy) produce this data;
+//! and known beacon records so they survive restarts. Other primals (e.g. a
+//! networking/STUN provider and an ecosystem coordinator) produce this data;
 //! NestGate persists it.
 //!
 //! ## JSON-RPC Methods
@@ -42,7 +42,7 @@ pub const NAT_SELF_KEY: &str = "self";
 
 /// NAT type classification as detected by STUN probing.
 ///
-/// Songbird's `stun.detect_nat_type` produces this value; NestGate persists it.
+/// The networking/STUN capability's `stun.detect_nat_type` produces this value; NestGate persists it.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum NatType {
@@ -75,7 +75,7 @@ impl std::fmt::Display for NatType {
 
 /// Port allocation pattern detected by repeated STUN probes.
 ///
-/// Songbird's `stun.probe_port_pattern` sends N probes from the same socket
+/// The networking/STUN capability's `stun.probe_port_pattern` sends N probes from the same socket
 /// and observes the external port assigned by the NAT. The pattern determines
 /// whether port prediction is feasible for coordinated punch.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
@@ -118,7 +118,7 @@ pub struct RelayEndpoint {
 
 /// This device's NAT traversal information, persisted for fast reconnection.
 ///
-/// After Songbird performs STUN probes, the results are stored here so future
+/// After STUN probes run via the networking capability, the results are stored here so future
 /// connections can skip the probe phase and jump straight to relay or punch.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct NatTraversalInfo {

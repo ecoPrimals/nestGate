@@ -309,7 +309,7 @@ pub struct SaveDataFederation {
     /// Federation nodes
     sync_targets: Arc<RwLock<Vec<FederationNode>>>,
     /// Conflict resolution strategy
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "framework placeholder")]
     conflict_resolution: ConflictResolution,
     /// Encryption configuration (placeholder)
     _encryption_config: (),

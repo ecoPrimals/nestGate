@@ -245,7 +245,7 @@ impl CanonicalConfigTypeRegistry {
 
 // ==================== CANONICAL TYPE ALIASES ====================
 // Backward-compatible aliases to `CanonicalNetworkConfig` while migrating from deprecated structs.
-#[allow(deprecated, missing_docs)]
+#[expect(missing_docs, reason = "migration in progress")]
 mod deprecated_canonical_aliases {
     pub type NetworkInterfaceConfigCanonical =
         crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

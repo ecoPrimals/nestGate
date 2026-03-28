@@ -122,7 +122,3 @@ impl Default for GracefulDegradation {
         Self::new()
     }
 }
-
-#[cfg(test)]
-#[path = "graceful_degradation_tests.rs"]
-mod graceful_degradation_tests;

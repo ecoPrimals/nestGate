@@ -1,7 +1,7 @@
 [[bin]]
-name = "nestgate"              # UNIBIN - Single binary, multiple modes via subcommands
+name = "nestgate"
 path = "src/main.rs"
-doc = false                    # Avoid rustdoc collision with workspace root crate `nestgate`
+doc = false
 
 [package]
 name = "nestgate-bin"
@@ -9,82 +9,38 @@ version = "2.1.0"
 edition = "2024"
 description = "Main binary for NestGate NAS system - standalone distributed service"
 license = "AGPL-3.0-only"
-repository = "https://github.com/eastgate/nestgate"
-readme = "README.md"
-keywords = [ "rust", "nestgate", "core", "async",]
-categories = [ "development-tools",]
+repository = "https://github.com/ecoprimals/nestgate"
+keywords = ["rust", "nestgate", "core", "async"]
+categories = ["development-tools"]
 
 [lints]
 workspace = true
 
-[dependencies.nestgate-core]
-path = "../nestgate-core"
+[dependencies]
+nestgate-core = { path = "../nestgate-core" }
+nestgate-network = { path = "../nestgate-network" }
+nestgate-api = { path = "../nestgate-api" }
+nestgate-mcp = { path = "../nestgate-mcp" }
 
-# [dependencies.nestgate-zfs]
-# path = "../nestgate-zfs"
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+axum = { workspace = true }
+tower-http = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+futures = { workspace = true }
+tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde-transport-json"] }
 
-[dependencies.nestgate-network]
-path = "../nestgate-network"
-
-[dependencies.nestgate-api]
-path = "../nestgate-api"
-
-[dependencies.nestgate-mcp]
-path = "../nestgate-mcp"
-
-[dependencies.tokio]
-workspace = true
-
-[dependencies.tracing]
-workspace = true
-
-[dependencies.tracing-subscriber]
-workspace = true
-
-[dependencies.anyhow]
-workspace = true
-
-[dependencies.axum]
-workspace = true
-
-[dependencies.tower-http]
-workspace = true
-
-[dependencies.uuid]
-workspace = true
-
-[dependencies.chrono]
-workspace = true
-
-[dependencies.clap]
-version = "4.4"
-features = [ "derive",]
-
-[dependencies.serde]
-workspace = true
-
-[dependencies.serde_json]
-workspace = true
-
-[dependencies.thiserror]
-workspace = true
-
-[dependencies.tarpc]
-version = "0.34"
-features = ["tokio1", "serde-transport", "serde-transport-json"]
-
-[dependencies.futures]
-version = "0.3"
+[dev-dependencies]
+tokio-test = { workspace = true }
+tempfile = { workspace = true }
 
 [features]
 default = []
-# Enable tarpc high-performance RPC server alongside HTTP.
-# When enabled, `nestgate service start` will spawn a tarpc listener
-# on the configured tarpc_port for primal-to-primal communication.
 tarpc-server = []
-
-[dev-dependencies.tokio-test]
-workspace = true
-
-[dev-dependencies.tempfile]
-version = "3.8"

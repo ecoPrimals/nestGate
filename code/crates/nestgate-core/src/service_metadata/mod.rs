@@ -1,46 +1,46 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! # 🌍 NestGate Service Metadata - Universal IPC Support
+//! # NestGate service metadata — universal IPC support
 //!
-//! **Role**: Persistent metadata storage for service registry
-//! **NOT**: Connection logic (that's Songbird's domain!)
+//! **Role**: persistent metadata storage for the service registry  
+//! **NOT**: connection logic (that belongs to the IPC orchestration layer)
 //!
 //! ## Architecture
 //!
 //! ```text
+//! ┌──────────────────────┐
+//! │ IPC orchestration    │ ← owns transport (remote + local IPC)
+//! └──────────┬───────────┘
+//!            │ stores metadata
+//!            ↓
 //! ┌─────────────┐
-//! │  Songbird   │ ← Owns ALL communication (remote + local IPC)
-//! └──────┬──────┘
-//!        │ stores metadata
-//!        ↓
-//! ┌─────────────┐
-//! │  NestGate   │ ← Stores persistent service registry
+//! │  NestGate   │ ← stores persistent service registry
 //! └─────────────┘
 //! ```
 //!
 //! ## Philosophy
 //!
-//! - **Separation of Concerns**: Storage ≠ Connection
-//! - **Songbird**: Creates endpoints, handles connections
-//! - **NestGate**: Stores metadata, enables discovery
-//! - **Application Primals**: Use Songbird IPC API (platform-agnostic!)
+//! - **Separation of concerns**: storage ≠ connection
+//! - **Orchestration layer**: creates endpoints, handles connections
+//! - **NestGate**: stores metadata, enables discovery
+//! - **Application primals**: use the orchestration IPC API (platform-agnostic)
 //!
-//! ## What NestGate Provides
+//! ## What NestGate provides
 //!
-//! 1. ✅ Store service metadata (name, version, capabilities, endpoint)
-//! 2. ✅ Retrieve service metadata (by name, by capability)
-//! 3. ✅ List all services
-//! 4. ✅ Capability-based discovery
-//! 5. ✅ Persistent storage (survives restarts)
+//! 1. Store service metadata (name, version, capabilities, endpoint)
+//! 2. Retrieve service metadata (by name, by capability)
+//! 3. List all services
+//! 4. Capability-based discovery
+//! 5. Persistent storage (survives restarts)
 //!
-//! ## What NestGate Does NOT Provide
+//! ## What NestGate does not provide
 //!
-//! 1. ❌ IPC connections (use `songbird::ipc::connect`)
-//! 2. ❌ Socket creation (use `songbird::ipc::register`)
-//! 3. ❌ Platform-specific logic (Songbird abstracts this)
+//! 1. IPC connections (use the orchestration layer’s `ipc::connect` pattern)
+//! 2. Socket creation (use the orchestration layer’s registration API)
+//! 3. Platform-specific logic (abstracted by the orchestration layer)
 //!
-//! ## Usage Pattern
+//! ## Usage pattern
 //!
 //! ```rust
 //! use nestgate_core::service_metadata::{ServiceMetadata, ServiceMetadataStore};
@@ -50,14 +50,14 @@
 //! let store = ServiceMetadataStore::new().await?;
 //! let now = SystemTime::now();
 //! let meta = ServiceMetadata {
-//!     name: "beardog".to_string(),
+//!     name: "example-primal".to_string(),
 //!     version: "1.0.0".to_string(),
 //!     capabilities: vec!["crypto".to_string(), "btsp".to_string()],
-//!     virtual_endpoint: "/primal/beardog".to_string(),
+//!     virtual_endpoint: "/primal/example-primal".to_string(),
 //!     registered_at: now,
 //!     last_seen: now,
 //!     platform: std::env::consts::OS.to_string(),
-//!     native_endpoint: "/tmp/primal-beardog.sock".to_string(),
+//!     native_endpoint: "/tmp/primal-example-primal.sock".to_string(),
 //!     metadata: std::collections::HashMap::new(),
 //! };
 //! store.store_service(meta).await?;
@@ -66,25 +66,25 @@
 //! # }
 //! ```
 //!
-//! ## Integration with Songbird
+//! ## Integration (orchestration layer)
 //!
 //! ```rust,ignore
-//! // Songbird registers a primal and stores metadata in NestGate:
+//! // The orchestration layer registers a service and stores metadata in NestGate:
 //!
-//! // 1. Songbird creates platform-specific endpoint
-//! let endpoint = songbird::ipc::register("beardog").await?;
+//! // 1. Create platform-specific endpoint (orchestration API)
+//! let endpoint = orchestration::ipc::register("example-primal").await?;
 //!
-//! // 2. Songbird stores metadata in NestGate
+//! // 2. Store metadata in NestGate
 //! nestgate::service_metadata::store(ServiceMetadata {
-//!     name: "beardog",
+//!     name: "example-primal",
 //!     virtual_endpoint: endpoint.path,
 //!     capabilities: vec!["crypto", "btsp"],
 //!     // ... other metadata
 //! }).await?;
 //!
-//! // 3. Other primals discover via NestGate, connect via Songbird
+//! // 3. Other primals discover via NestGate, connect via orchestration IPC
 //! let services = nestgate::find_by_capability("crypto").await?;
-//! let stream = songbird::ipc::connect(&services[0].virtual_endpoint).await?;
+//! let stream = orchestration::ipc::connect(&services[0].virtual_endpoint).await?;
 //! ```
 //!
 //! ## References
@@ -102,10 +102,10 @@ use std::time::SystemTime;
 /// Service metadata (stored persistently in NestGate)
 ///
 /// This is what NestGate stores about each service. The actual connection
-/// logic is handled by Songbird.
+/// logic is handled by the IPC orchestration layer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetadata {
-    /// Service name (e.g., "beardog", "squirrel")
+    /// Service name (e.g. `"example-primal"`, `"my-service"`)
     pub name: String,
 
     /// Service version (semantic versioning)
@@ -115,8 +115,8 @@ pub struct ServiceMetadata {
     /// Used for capability-based discovery
     pub capabilities: Vec<String>,
 
-    /// Virtual endpoint (always Unix-style: "/primal/beardog")
-    /// Applications use this with `songbird::ipc::connect()`
+    /// Virtual endpoint (Unix-style path, e.g. `"/primal/example-primal"`)
+    /// Applications use this with the orchestration layer’s `ipc::connect` pattern
     pub virtual_endpoint: String,
 
     /// When service was first registered
@@ -130,12 +130,12 @@ pub struct ServiceMetadata {
     pub platform: String,
 
     /// Native endpoint (platform-specific, for debugging only!)
-    /// - Linux: "/tmp/primal-beardog.sock"
-    /// - Windows: r"\\.\pipe\primal-beardog"
-    /// - Localhost: "127.0.0.1:9001"
+    /// - Linux: `"/tmp/primal-example-primal.sock"`
+    /// - Windows: `r"\\.\pipe\primal-example-primal"`
+    /// - Loopback TCP: `"127.0.0.1:9001"` (from config when applicable)
     ///
-    /// **NOTE**: Applications should NOT use this directly!
-    /// Use `virtual_endpoint` with Songbird instead.
+    /// **NOTE**: applications should not use this directly — use `virtual_endpoint`
+    /// with the orchestration layer instead.
     pub native_endpoint: String,
 
     /// Additional metadata (extensible)
@@ -168,9 +168,9 @@ impl ServiceMetadataStore {
         })
     }
 
-    /// Store service metadata (typically called by Songbird)
+    /// Store service metadata (typically called by the orchestration layer)
     ///
-    /// This is called when Songbird registers a new service. NestGate
+    /// This is called when a new service is registered. NestGate
     /// stores the metadata persistently for discovery purposes.
     pub async fn store_service(&self, meta: ServiceMetadata) -> Result<()> {
         // Store in main service map (lock-free!)
@@ -206,7 +206,7 @@ impl ServiceMetadataStore {
     /// Find services by capability (capability-based discovery!)
     ///
     /// Returns all services that provide the requested capability.
-    /// Applications can then connect to these services via Songbird.
+    /// Applications can then connect to these services via the orchestration layer.
     pub async fn find_by_capability(&self, capability: &str) -> Result<Vec<ServiceMetadata>> {
         let service_names = self
             .capability_index
@@ -245,14 +245,12 @@ impl ServiceMetadataStore {
 
     /// Remove service metadata (cleanup)
     pub async fn remove_service(&self, name: &str) -> Result<()> {
-        // Remove from main service map
         let meta = self
             .services
             .remove(name)
             .ok_or_else(|| NestGateError::not_found(format!("Service not found: {}", name)))?
             .1;
 
-        // Remove from capability index
         for capability in &meta.capabilities {
             if let Some(mut entry) = self.capability_index.get_mut(capability) {
                 entry.retain(|n| n != name);
@@ -301,21 +299,21 @@ mod tests {
         let store = ServiceMetadataStore::new().await.unwrap();
 
         let meta = ServiceMetadata {
-            name: "beardog".to_string(),
+            name: "example-primal".to_string(),
             version: "1.0.0".to_string(),
             capabilities: vec!["crypto".to_string(), "btsp".to_string()],
-            virtual_endpoint: "/primal/beardog".to_string(),
+            virtual_endpoint: "/primal/example-primal".to_string(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
             platform: "linux".to_string(),
-            native_endpoint: "/tmp/primal-beardog.sock".to_string(),
+            native_endpoint: "/tmp/primal-example-primal.sock".to_string(),
             metadata: std::collections::HashMap::new(),
         };
 
         store.store_service(meta.clone()).await.unwrap();
 
-        let retrieved = store.get_service("beardog").await.unwrap();
-        assert_eq!(retrieved.name, "beardog");
+        let retrieved = store.get_service("example-primal").await.unwrap();
+        assert_eq!(retrieved.name, "example-primal");
         assert_eq!(retrieved.capabilities, vec!["crypto", "btsp"]);
     }
 
@@ -325,26 +323,26 @@ mod tests {
 
         // Store multiple services with overlapping capabilities
         let meta1 = ServiceMetadata {
-            name: "beardog".to_string(),
+            name: "example-primal".to_string(),
             version: "1.0.0".to_string(),
             capabilities: vec!["crypto".to_string(), "btsp".to_string()],
-            virtual_endpoint: "/primal/beardog".to_string(),
+            virtual_endpoint: "/primal/example-primal".to_string(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
             platform: "linux".to_string(),
-            native_endpoint: "/tmp/primal-beardog.sock".to_string(),
+            native_endpoint: "/tmp/primal-example-primal.sock".to_string(),
             metadata: std::collections::HashMap::new(),
         };
 
         let meta2 = ServiceMetadata {
-            name: "squirrel".to_string(),
+            name: "example-storage".to_string(),
             version: "1.0.0".to_string(),
             capabilities: vec!["crypto".to_string(), "storage".to_string()],
-            virtual_endpoint: "/primal/squirrel".to_string(),
+            virtual_endpoint: "/primal/example-storage".to_string(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
             platform: "linux".to_string(),
-            native_endpoint: "/tmp/primal-squirrel.sock".to_string(),
+            native_endpoint: "/tmp/primal-example-storage.sock".to_string(),
             metadata: std::collections::HashMap::new(),
         };
 
@@ -358,7 +356,7 @@ mod tests {
         // Find services providing 'btsp'
         let btsp_providers = store.find_by_capability("btsp").await.unwrap();
         assert_eq!(btsp_providers.len(), 1);
-        assert_eq!(btsp_providers[0].name, "beardog");
+        assert_eq!(btsp_providers[0].name, "example-primal");
     }
 
     #[tokio::test]
@@ -366,22 +364,22 @@ mod tests {
         let store = ServiceMetadataStore::new().await.unwrap();
 
         let meta = ServiceMetadata {
-            name: "beardog".to_string(),
+            name: "example-primal".to_string(),
             version: "1.0.0".to_string(),
             capabilities: vec!["crypto".to_string()],
-            virtual_endpoint: "/primal/beardog".to_string(),
+            virtual_endpoint: "/primal/example-primal".to_string(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
             platform: "linux".to_string(),
-            native_endpoint: "/tmp/primal-beardog.sock".to_string(),
+            native_endpoint: "/tmp/primal-example-primal.sock".to_string(),
             metadata: std::collections::HashMap::new(),
         };
 
         store.store_service(meta).await.unwrap();
-        assert!(store.has_service("beardog").await);
+        assert!(store.has_service("example-primal").await);
 
-        store.remove_service("beardog").await.unwrap();
-        assert!(!store.has_service("beardog").await);
+        store.remove_service("example-primal").await.unwrap();
+        assert!(!store.has_service("example-primal").await);
 
         // Should also be removed from capability index
         let crypto_providers = store.find_by_capability("crypto").await.unwrap();
@@ -393,14 +391,14 @@ mod tests {
         let store = ServiceMetadataStore::new().await.unwrap();
 
         let meta = ServiceMetadata {
-            name: "beardog".to_string(),
+            name: "example-primal".to_string(),
             version: "1.0.0".to_string(),
             capabilities: vec!["crypto".to_string()],
-            virtual_endpoint: "/primal/beardog".to_string(),
+            virtual_endpoint: "/primal/example-primal".to_string(),
             registered_at: SystemTime::now(),
             last_seen: SystemTime::now(),
             platform: "linux".to_string(),
-            native_endpoint: "/tmp/primal-beardog.sock".to_string(),
+            native_endpoint: "/tmp/primal-example-primal.sock".to_string(),
             metadata: std::collections::HashMap::new(),
         };
 
@@ -410,7 +408,7 @@ mod tests {
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
         // Update heartbeat
-        store.update_heartbeat("beardog").await.unwrap();
+        store.update_heartbeat("example-primal").await.unwrap();
 
         // Last seen should be updated (implementation detail)
     }

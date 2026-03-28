@@ -1,27 +1,29 @@
 # NestGate - Current Status
 
 **Last Updated**: March 28, 2026  
-**Version**: 4.6.0-dev
+**Version**: 4.7.0-dev
 
 ---
 
 ## Quick Metrics
 
 ```
-Build:              18/18 crates compiling (0 errors)
+Build:              22/22 crates compiling (0 errors)
 Musl static:        WORKING (4.7MB static binary, x86_64-unknown-linux-musl)
-Clippy:             ZERO production warnings (lib target, --all-features)
+Clippy:             ZERO production warnings (pedantic+nursery+cast lints)
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               CLEAN (cargo doc --no-deps, 0 warnings)
 Tests:              12,383 passing, 0 failures (469 ignored - ZFS/infra-dependent)
 Coverage:           ~72% line (target: 90%)
-Files > 1000 lines: 0 (largest: 927 lines)
+Files > 1000 lines: 0 (largest: 813 lines, test file)
 Unwrap/Expect:      ZERO in production code (test-only, gated by workspace lint)
 TODO/FIXME:         ZERO in production code (per wateringHole §13)
-Unsafe blocks:      1 production (AVX2 SIMD, feature-gated, well-documented SAFETY)
-#[allow] crate-level: 26 in nestgate-api (reduced from 30→26), 1 in nestgate-core
+Unsafe blocks:      1 production (env_process.rs, Rust 2024 set_var safety)
+#[allow] migrated:  Moved to #[expect(reason)] per biomeOS pattern
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
-Decomposition:      nestgate-core split into 6 crates (295K→74K lines, 48% faster check)
+Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
+Primal sovereignty: Zero other-primal references (beardog/songbird/biomeOS removed)
+Workspace deps:     100% hoisted to workspace = true (zero version drift)
 ```
 
 ---

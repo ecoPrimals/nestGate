@@ -62,11 +62,10 @@ pub use types::{CapabilityRequest, CapabilityResponse, ServiceCapability, Servic
 ///
 /// **Performance**: Lock-free with DashMap (3-8x improvement)
 #[derive(Debug)]
-#[allow(dead_code)] // Framework infrastructure
-#[allow(deprecated)] // Uses deprecated config types
+#[expect(deprecated, reason = "migration in progress")] // Uses deprecated config types
 pub struct ConsolidatedCanonicalAdapter {
     /// Unique service identifier
-    #[allow(dead_code)] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
     service_id: Uuid,
 
     /// Adapter configuration
@@ -76,14 +75,14 @@ pub struct ConsolidatedCanonicalAdapter {
     our_capabilities: Arc<RwLock<Vec<ServiceCapability>>>,
 
     /// Discovered external capabilities (lock-free for concurrent discovery)
-    #[allow(dead_code)] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
     discovered_capabilities: Arc<DashMap<String, Vec<ServiceCapability>>>,
 
     /// Active requests being processed (lock-free for concurrent request tracking)
     active_requests: Arc<DashMap<String, CapabilityRequest>>,
 
     /// HTTP client for network operations
-    #[allow(dead_code)] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
     client: reqwest::Client,
 
     /// Adapter health and metrics
@@ -93,13 +92,13 @@ pub struct ConsolidatedCanonicalAdapter {
     stats: Arc<RwLock<AdapterStats>>,
 
     /// Service registry for discovery (lock-free for concurrent registration)
-    #[allow(dead_code)] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
     service_registry: Arc<DashMap<String, ServiceRegistration>>,
 }
 
 // ==================== IMPLEMENTATION ====================
 
-#[allow(deprecated)] // Uses deprecated config types
+#[expect(deprecated, reason = "migration in progress")] // Uses deprecated config types
 impl ConsolidatedCanonicalAdapter {
     /// Create a new consolidated canonical adapter
     ///

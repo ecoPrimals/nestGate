@@ -146,7 +146,6 @@ pub use HealthCheckDyn as HealthCheck;
 /// Healthmonitor
 pub struct HealthMonitor {
     /// Registered health checks
-    #[allow(deprecated)]
     checks: HashMap<String, Box<dyn HealthCheckDyn>>,
     /// Component health status
     health_status: HashMap<String, ComponentHealth>,
@@ -171,7 +170,6 @@ impl HealthMonitor {
     ///
     /// **Note**: This uses heap allocation and dynamic dispatch.
     /// For zero-cost registration, use `HealthMonitorZeroCost::register_typed()`.
-    #[allow(deprecated)]
     pub fn register(&mut self, check: Box<dyn HealthCheckDyn>) {
         let name = check.component_name().to_string();
         debug!("Registering health check for: {}", name);

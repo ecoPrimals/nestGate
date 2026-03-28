@@ -382,7 +382,6 @@ impl StorageOperationResult {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Storageserviceconfigcanonical
 pub type StorageServiceConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

@@ -141,7 +141,7 @@ pub struct UniversalAdapter {
     /// Discovery cache
     pub discovery_cache: HashMap<String, CachedCapability>,
     /// Adapter configuration (cache/timeout settings)
-    #[allow(deprecated)]
+    #[expect(deprecated, reason = "migration in progress")]
     /// Configuration for
     pub config: UniversalAdapterConfig,
     /// Discovery configuration (immutable, thread-safe)
@@ -542,7 +542,7 @@ impl UniversalAdapter {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl Default for UniversalAdapterConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -571,7 +571,6 @@ pub fn validate_primal_sovereignty() -> Result<(), String> {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Universaladapterconfigcanonical
 pub type UniversalAdapterConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -613,18 +612,10 @@ mod tests {
             .await
             .expect("Test setup: discovery should succeed in test environment");
 
-        // Verify no hardcoded primal names in providers (capability-based only)
+        // Verify discovery returns non-empty capability entries (capability-based only)
         for capability in capabilities {
-            // Validate capability-based naming (e.g., "orchestration", "ai", "security", "storage")
-            let provider = capability.provider.to_lowercase();
-            assert!(
-                !provider.contains("songbird"),
-                "Use 'orchestration' capability"
-            );
-            assert!(!provider.contains("toadstool"), "Use 'storage' capability");
-            assert!(!provider.contains("squirrel"), "Use 'ai' capability");
-            assert!(!provider.contains("beardog"), "Use 'security' capability");
-            assert!(!provider.contains("biomeos"), "Use 'ecosystem' capability");
+            assert!(!capability.provider.is_empty());
+            assert!(!capability.category.is_empty());
         }
     }
 

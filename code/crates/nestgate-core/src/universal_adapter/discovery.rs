@@ -48,7 +48,7 @@ pub struct DiscoveryConfig {
     /// Enabled discovery methods
     pub methods: Vec<DiscoveryMethod>,
 }
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 impl Default for DiscoveryConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -119,7 +119,7 @@ pub struct DiscoveryResult {
     pub error: Option<String>,
 }
 /// Discover available services using canonical discovery
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     let start_time = std::time::Instant::now();
 
@@ -145,7 +145,7 @@ pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     })
 }
 /// Discover services by capability
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 pub fn discover_by_capability(
     config: &DiscoveryConfig,
     capability: &str,
@@ -323,7 +323,6 @@ impl Default for CapabilityDiscovery {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Discoveryconfigcanonical
 pub type DiscoveryConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

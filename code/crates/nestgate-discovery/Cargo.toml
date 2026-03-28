@@ -16,7 +16,7 @@ nestgate-config = { path = "../nestgate-config" }
 anyhow = { workspace = true }
 bytes = { workspace = true }
 dashmap = { workspace = true }
-mdns-sd = "0.17"
+mdns-sd = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

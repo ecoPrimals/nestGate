@@ -79,8 +79,8 @@ impl BearDogClient {
         }
 
         // 2. Capability discovery (IPC gateway + "security" capability)
-        if let Ok(songbird) = CapabilityDiscovery::discover_songbird_ipc().await {
-            let mut discovery = CapabilityDiscovery::new(songbird);
+        if let Ok(ipc) = CapabilityDiscovery::discover_orchestration_ipc().await {
+            let mut discovery = CapabilityDiscovery::new(ipc);
             if let Ok(endpoint) = discovery.find("security").await {
                 let ep = endpoint.endpoint;
                 // Endpoint may be Unix socket path or URL; use as path if it looks like one

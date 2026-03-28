@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-#![allow(deprecated)]
 // **CANONICAL PROVIDER UNIFICATION**
 //! Trait definitions and implementations.
 // This module provides the unified provider pattern that replaces all
@@ -320,7 +319,7 @@ pub trait SecurityProvider: CanonicalUniversalProvider<Box<dyn SecurityService>>
     /// * `Ok(Some((algorithm, key_id)))` - Signature valid, returns algorithm and key ID
     /// * `Ok(None)` - Signature invalid
     /// * `Err(NestGateError)` - Verification error
-    #[allow(clippy::type_complexity)]
+    #[expect(clippy::type_complexity, reason = "complex trait bounds required")]
     fn verify(
         &self,
         data: &[u8],

@@ -75,7 +75,7 @@ pub use canonical::{
 };
 
 // Re-export provider unification patterns
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 pub use canonical_provider_unification::{
     CacheService, CanonicalUniversalProvider, NetworkProvider, NetworkService, SecurityProvider,
     SecurityService, StorageProvider, StorageService,
@@ -87,7 +87,7 @@ pub use unified_storage::{
 };
 
 // Re-export native async patterns
-#[allow(deprecated)]
+#[expect(deprecated, reason = "migration in progress")]
 pub use native_async::{
     NativeAsyncApiHandler, NativeAsyncAutomationService, NativeAsyncMcpService,
     NativeAsyncMonitoringService, NativeAsyncNetworkService, NativeAsyncSecurityProvider,
