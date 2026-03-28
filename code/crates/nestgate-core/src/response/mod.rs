@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // Response Module System
 // This module system breaks down the large response.rs file into manageable,
 //! focused modules while maintaining the unified response architecture.

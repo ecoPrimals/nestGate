@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **UNIVERSAL ADAPTER ERROR TESTS** - Nov 23, 2025
 //!
 //! Comprehensive tests for universal adapter error handling and resilience

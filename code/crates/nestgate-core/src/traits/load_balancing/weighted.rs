@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! # Weighted Load Balancing Algorithms
 //! Weighted functionality and utilities.
 // Advanced load balancing algorithms that support service weights
@@ -235,7 +238,7 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
                 },
             ))
         })?;
-        let random_weight = rng.gen::<f64>() * total_weight;
+        let random_weight = rng.r#gen::<f64>() * total_weight;
         drop(rng);
 
         // Find the service corresponding to this weight

@@ -97,17 +97,17 @@ async fn test_e2e_unix_socket_server_startup() {
 async fn test_e2e_http_mode_configuration() {
     let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
     let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
+    nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
+    nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
 
     let socket_requested =
         std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
 
     if let Some(v) = orig_sock {
-        std::env::set_var("NESTGATE_SOCKET", v);
+        nestgate_core::env_process::set_var("NESTGATE_SOCKET", v);
     }
     if let Some(v) = orig_fid {
-        std::env::set_var("NESTGATE_FAMILY_ID", v);
+        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v);
     }
     assert!(!socket_requested, "Should use HTTP mode");
 }
@@ -117,24 +117,24 @@ async fn test_e2e_http_mode_configuration() {
 async fn test_e2e_mode_switching() {
     let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
     let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
+    nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
+    nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
 
     let http_mode =
         std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
     assert!(!http_mode, "Should be HTTP mode");
 
-    std::env::set_var("NESTGATE_FAMILY_ID", "switch-test");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "switch-test");
 
     let socket_mode =
         std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
 
     match orig_fid {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     if let Some(v) = orig_sock {
-        std::env::set_var("NESTGATE_SOCKET", v);
+        nestgate_core::env_process::set_var("NESTGATE_SOCKET", v);
     }
     assert!(socket_mode, "Should be socket mode");
 }
@@ -152,12 +152,12 @@ async fn test_chaos_concurrent_mode_detection() {
         .map(|i| {
             task::spawn(async move {
                 let family_id = format!("chaos-{}", i);
-                std::env::set_var("NESTGATE_FAMILY_ID", &family_id);
+                nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", &family_id);
 
                 let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
                     || std::env::var("NESTGATE_FAMILY_ID").is_ok();
 
-                std::env::remove_var("NESTGATE_FAMILY_ID");
+                nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
 
                 assert!(socket_requested, "Should detect socket mode");
                 socket_requested
@@ -181,15 +181,15 @@ async fn test_chaos_rapid_mode_switches() {
     for i in 0..100 {
         if i % 2 == 0 {
             // Socket mode
-            std::env::set_var("NESTGATE_FAMILY_ID", "rapid");
+            nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "rapid");
             let mode = std::env::var("NESTGATE_SOCKET").is_ok()
                 || std::env::var("NESTGATE_FAMILY_ID").is_ok();
             assert!(mode);
-            std::env::remove_var("NESTGATE_FAMILY_ID");
+            nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
         } else {
             // HTTP mode
-            std::env::remove_var("NESTGATE_SOCKET");
-            std::env::remove_var("NESTGATE_FAMILY_ID");
+            nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
+            nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
             let mode = std::env::var("NESTGATE_SOCKET").is_ok()
                 || std::env::var("NESTGATE_FAMILY_ID").is_ok();
             assert!(!mode);
@@ -205,21 +205,21 @@ async fn test_chaos_rapid_mode_switches() {
 async fn test_fault_invalid_socket_path() {
     let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
     let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::set_var(
+    nestgate_core::env_process::set_var(
         "NESTGATE_SOCKET",
         "/invalid/path/that/does/not/exist/socket.sock",
     );
-    std::env::set_var("NESTGATE_FAMILY_ID", "fault-test");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "fault-test");
 
     let config = nestgate_core::rpc::SocketConfig::from_environment();
 
     match orig_sock {
-        Some(v) => std::env::set_var("NESTGATE_SOCKET", v),
-        None => std::env::remove_var("NESTGATE_SOCKET"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_SOCKET", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_SOCKET"),
     }
     match orig_fid {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     assert!(config.is_ok());
 }
@@ -227,13 +227,13 @@ async fn test_fault_invalid_socket_path() {
 #[tokio::test]
 async fn test_fault_empty_family_id() {
     let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::set_var("NESTGATE_FAMILY_ID", "");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "");
 
     let config = nestgate_core::rpc::SocketConfig::from_environment();
 
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     assert!(config.is_ok());
 }
@@ -245,18 +245,18 @@ async fn test_fault_malformed_socket_path() {
     for path in malformed_paths {
         let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
         let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-        std::env::set_var("NESTGATE_SOCKET", path);
-        std::env::set_var("NESTGATE_FAMILY_ID", "malformed");
+        nestgate_core::env_process::set_var("NESTGATE_SOCKET", path);
+        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "malformed");
 
         let config = nestgate_core::rpc::SocketConfig::from_environment();
 
         match orig_sock {
-            Some(v) => std::env::set_var("NESTGATE_SOCKET", v),
-            None => std::env::remove_var("NESTGATE_SOCKET"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_SOCKET", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_SOCKET"),
         }
         match orig_fid {
-            Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-            None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
         }
         assert!(config.is_ok(), "Should create config for path: {}", path);
     }
@@ -266,18 +266,18 @@ async fn test_fault_malformed_socket_path() {
 async fn test_fault_missing_permissions() {
     let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
     let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::set_var("NESTGATE_SOCKET", "/proc/nestgate-test.sock");
-    std::env::set_var("NESTGATE_FAMILY_ID", "permissions");
+    nestgate_core::env_process::set_var("NESTGATE_SOCKET", "/proc/nestgate-test.sock");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "permissions");
 
     let config = nestgate_core::rpc::SocketConfig::from_environment();
 
     match orig_sock {
-        Some(v) => std::env::set_var("NESTGATE_SOCKET", v),
-        None => std::env::remove_var("NESTGATE_SOCKET"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_SOCKET", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_SOCKET"),
     }
     match orig_fid {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     assert!(config.is_ok(), "Config creation should succeed");
     let _ = config.unwrap().prepare_socket_path();
@@ -285,17 +285,14 @@ async fn test_fault_missing_permissions() {
 
 #[tokio::test]
 async fn test_fault_unicode_in_family_id() {
-    let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::set_var("NESTGATE_FAMILY_ID", "test-🦀-🍄-🐸");
-
-    let config = nestgate_core::rpc::SocketConfig::from_environment();
-
-    match orig {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
-    }
+    let config = nestgate_core::rpc::SocketConfig::resolve(
+        "test-🦀-🍄-🐸".to_string(),
+        "default".to_string(),
+        None,
+        None,
+    );
     assert!(config.is_ok(), "Should handle unicode in family ID");
-    let config = config.unwrap();
+    let config = config.expect("resolve succeeded");
     assert!(config.family_id.contains("🦀"));
 }
 
@@ -303,13 +300,13 @@ async fn test_fault_unicode_in_family_id() {
 async fn test_fault_very_long_family_id() {
     let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
     let long_id = "x".repeat(500);
-    std::env::set_var("NESTGATE_FAMILY_ID", &long_id);
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", &long_id);
 
     let config = nestgate_core::rpc::SocketConfig::from_environment();
 
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     assert!(config.is_ok(), "Should handle very long family ID");
 }
@@ -349,17 +346,17 @@ async fn test_integration_atomic_deployment_scenario() {
 async fn test_integration_development_scenario() {
     let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
     let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::remove_var("NESTGATE_SOCKET");
-    std::env::remove_var("NESTGATE_FAMILY_ID");
+    nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
+    nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
 
     let socket_requested =
         std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
 
     if let Some(v) = orig_sock {
-        std::env::set_var("NESTGATE_SOCKET", v);
+        nestgate_core::env_process::set_var("NESTGATE_SOCKET", v);
     }
     if let Some(v) = orig_fid {
-        std::env::set_var("NESTGATE_FAMILY_ID", v);
+        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v);
     }
     assert!(
         !socket_requested,
@@ -375,18 +372,18 @@ async fn test_integration_multi_instance_scenario() {
     for (family, node) in instances {
         let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
         let orig_nid = std::env::var("NESTGATE_NODE_ID").ok();
-        std::env::set_var("NESTGATE_FAMILY_ID", family);
-        std::env::set_var("NESTGATE_NODE_ID", node);
+        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", family);
+        nestgate_core::env_process::set_var("NESTGATE_NODE_ID", node);
 
         let config = nestgate_core::rpc::SocketConfig::from_environment();
 
         match orig_fid {
-            Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-            None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
         }
         match orig_nid {
-            Some(v) => std::env::set_var("NESTGATE_NODE_ID", v),
-            None => std::env::remove_var("NESTGATE_NODE_ID"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_NODE_ID", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_NODE_ID"),
         }
         assert!(config.is_ok());
         let config = config.unwrap();
@@ -404,7 +401,7 @@ async fn test_performance_mode_detection_speed() {
     use std::time::Instant;
 
     let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::set_var("NESTGATE_FAMILY_ID", "perf");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "perf");
 
     let start = Instant::now();
     for _ in 0..10_000 {
@@ -414,8 +411,8 @@ async fn test_performance_mode_detection_speed() {
     let duration = start.elapsed();
 
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     println!(
         "Mode detection: 10,000 iterations in {:?} ({} ns/op)",
@@ -434,7 +431,7 @@ async fn test_performance_config_creation_speed() {
     use std::time::Instant;
 
     let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
-    std::env::set_var("NESTGATE_FAMILY_ID", "perf");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "perf");
 
     let start = Instant::now();
     for _ in 0..1_000 {
@@ -443,8 +440,8 @@ async fn test_performance_config_creation_speed() {
     let duration = start.elapsed();
 
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     println!(
         "Config creation: 1,000 iterations in {:?} ({} μs/op)",

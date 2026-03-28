@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **PRIMAL DISCOVERY STUBS** - Development/Testing Only
 //!
 //! ⚠️ **WARNING**: This module contains hardcoded values and should NEVER be used in production!

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module contains the fail-safe ZFS service implementation split into logical submodules:
 // - circuit_breaker: Circuit breaker implementation

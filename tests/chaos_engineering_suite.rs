@@ -12,7 +12,6 @@ use nestgate_core::{
     service_discovery::types::{ServiceInfo, ServiceMetadata},
     CanonicalNetwork, CanonicalSecurity, CanonicalService, CanonicalStorage,
 };
-use std::alloc::{GlobalAlloc, Layout};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tokio::time::timeout;
@@ -737,9 +736,8 @@ async fn test_cascade_failure_prevention() -> Result<()> {
 async fn test_memory_leak_detection() -> Result<()> {
     println!("🔍 Starting performance test: Memory Leak Detection");
 
-    let layout = Layout::from_size_align(1024, 1)
-        .map_err(|e| NestGateError::internal_error("layout_error", format!("{:?}", e)))?;
-    let initial_allocation = unsafe { std::alloc::System.alloc(layout) };
+    // Stand-in for a one-off heap allocation: same stress pattern without `unsafe` alloc APIs.
+    let mut _initial_allocation = vec![0u8; 1024];
 
     // Simulate operations that might cause memory leaks
     for i in 0..100 {
@@ -760,10 +758,8 @@ async fn test_memory_leak_detection() -> Result<()> {
         }
     }
 
-    // Memory should be properly managed
-    unsafe {
-        std::alloc::System.dealloc(initial_allocation, layout);
-    }
+    // Memory should be properly managed (Vec drops here).
+    _initial_allocation.fill(0);
 
     println!("✅ Memory leak detection test completed");
     Ok(())

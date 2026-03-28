@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Performance monitoring commands
 //!
 //! ✅ EVOLVED: Real implementation replacing println stub

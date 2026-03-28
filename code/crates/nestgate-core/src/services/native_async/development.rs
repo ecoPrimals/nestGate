@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Development Service Implementations
 /// Contains development-focused implementations with enhanced debugging capabilities
 /// Extracted for file size compliance and development workflow optimization

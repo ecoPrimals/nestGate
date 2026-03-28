@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Strategic tests for critical paths - Batch 1
 //!
 //! High-value tests targeting error paths, edge cases, and integration scenarios.

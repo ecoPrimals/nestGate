@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! ZFS Pool Management Types
 //!
 //! Types for managing ZFS pools including health, state, capacity, and scrub status.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 ///
 /// This module contains all configuration structures and settings
 /// for the storage management system.
@@ -361,8 +364,8 @@ mod tests {
         // Save/restore to avoid env-var race conditions with parallel tests
         let orig_zfs = std::env::var("NESTGATE_ZFS_BINARY").ok();
         let orig_zpool = std::env::var("NESTGATE_ZPOOL_BINARY").ok();
-        std::env::remove_var("NESTGATE_ZFS_BINARY");
-        std::env::remove_var("NESTGATE_ZPOOL_BINARY");
+        crate::env_process::remove_var("NESTGATE_ZFS_BINARY");
+        crate::env_process::remove_var("NESTGATE_ZPOOL_BINARY");
 
         let config = ZfsConfig::default();
         assert_eq!(config.zfs_binary, "/usr/sbin/zfs");
@@ -371,12 +374,12 @@ mod tests {
         assert_eq!(config.command_timeout, Duration::from_secs(30));
 
         match orig_zfs {
-            Some(v) => std::env::set_var("NESTGATE_ZFS_BINARY", v),
-            None => std::env::remove_var("NESTGATE_ZFS_BINARY"),
+            Some(v) => crate::env_process::set_var("NESTGATE_ZFS_BINARY", v),
+            None => crate::env_process::remove_var("NESTGATE_ZFS_BINARY"),
         }
         match orig_zpool {
-            Some(v) => std::env::set_var("NESTGATE_ZPOOL_BINARY", v),
-            None => std::env::remove_var("NESTGATE_ZPOOL_BINARY"),
+            Some(v) => crate::env_process::set_var("NESTGATE_ZPOOL_BINARY", v),
+            None => crate::env_process::remove_var("NESTGATE_ZPOOL_BINARY"),
         }
     }
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for snapshot scheduler
 //!
 //! This test suite covers the PolicyScheduler functionality to achieve >40% coverage

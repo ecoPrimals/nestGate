@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ERROR RECOVERY AND RESILIENCE**
 //!
 //! Comprehensive error recovery patterns and resilience mechanisms for NestGate.
@@ -15,3 +18,6 @@ pub use retry_strategy::{ExponentialBackoff, RetryConfig, RetryStrategy};
 
 #[cfg(test)]
 mod recovery_edge_cases; // Nov 23, 2025 - P1-5 edge case tests
+
+#[cfg(test)]
+mod recovery_integration_tests;

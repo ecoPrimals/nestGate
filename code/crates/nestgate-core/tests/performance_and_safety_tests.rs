@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Performance and benchmarking test utilities
 //!
 //! Tests for performance-critical paths and benchmarking infrastructure.

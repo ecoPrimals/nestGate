@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Tests for orchestrator integration
 //!
 //! Comprehensive test coverage for service registration, health reporting,

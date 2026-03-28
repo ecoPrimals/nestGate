@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **RPC METHOD HANDLERS**
 //!
 //! JSON-RPC method implementations for NestGate storage and system operations.
@@ -6,6 +9,8 @@ use super::jsonrpc::RpcMethodHandler;
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use tracing::debug;
 
@@ -47,7 +52,6 @@ impl Default for NestGateRpcHandler {
     }
 }
 
-#[async_trait::async_trait]
 impl RpcMethodHandler for NestGateRpcHandler {
     async fn handle_method(&self, method: &str, params: Value) -> Result<Value> {
         debug!("Handling RPC method: {}", method);
@@ -225,19 +229,24 @@ struct ListRequest {
 /// **STORAGE BACKEND TRAIT**
 ///
 /// Trait for storage implementations to be used by RPC handlers.
-#[async_trait::async_trait]
 pub trait StorageBackend: Send + Sync {
     /// Store a key-value pair
-    async fn store(&self, key: &str, value: &[u8]) -> Result<()>;
+    fn store(&self, key: &str, value: &[u8]) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 
     /// Retrieve a value by key
-    async fn retrieve(&self, key: &str) -> Result<Vec<u8>>;
+    fn retrieve(
+        &self,
+        key: &str,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>>;
 
     /// Delete a key
-    async fn delete(&self, key: &str) -> Result<()>;
+    fn delete(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 
     /// List keys with optional prefix
-    async fn list(&self, prefix: &Option<String>) -> Result<Vec<String>>;
+    fn list(
+        &self,
+        prefix: &Option<String>,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<String>>> + Send + '_>>;
 }
 
 #[cfg(test)]
@@ -246,22 +255,34 @@ mod tests {
 
     struct MockStorage;
 
-    #[async_trait::async_trait]
     impl StorageBackend for MockStorage {
-        async fn store(&self, _key: &str, _value: &[u8]) -> Result<()> {
-            Ok(())
+        fn store(
+            &self,
+            _key: &str,
+            _value: &[u8],
+        ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+            Box::pin(async { Ok(()) })
         }
 
-        async fn retrieve(&self, key: &str) -> Result<Vec<u8>> {
-            Ok(format!("mock_value_{key}").into_bytes())
+        fn retrieve(
+            &self,
+            key: &str,
+        ) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>> {
+            let key = key.to_string();
+            Box::pin(async move { Ok(format!("mock_value_{key}").into_bytes()) })
         }
 
-        async fn delete(&self, _key: &str) -> Result<()> {
-            Ok(())
+        fn delete(&self, _key: &str) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+            Box::pin(async { Ok(()) })
         }
 
-        async fn list(&self, _prefix: &Option<String>) -> Result<Vec<String>> {
-            Ok(vec!["key1".to_string(), "key2".to_string()])
+        fn list(
+            &self,
+            _prefix: &Option<String>,
+        ) -> Pin<Box<dyn Future<Output = Result<Vec<String>>> + Send + '_>> {
+            Box::pin(async {
+                Ok(vec!["key1".to_string(), "key2".to_string()])
+            })
         }
     }
 

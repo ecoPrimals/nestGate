@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **PRIMAL AGNOSTIC RPC SERVICE**
 //!
 //! This module replaces all primal-specific RPC implementations with a universal

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **SAFE PERFORMANCE OPTIMIZATIONS**
 //!
 //! High-performance, 100% safe Rust implementations.

@@ -63,11 +63,11 @@ async fn main() -> Result<()> {
     println!("🔄 Hardcoding Migration Example\n");
 
     // Set up environment for demonstration
-    std::env::set_var(
+    nestgate_core::env_process::set_var(
         "NESTGATE_CAPABILITY_AUTHENTICATION_ENDPOINT",
         "127.0.0.1:3000",
     );
-    std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
+    nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
 
     println!("❌ OLD APPROACH: Hardcoded values");
     println!(

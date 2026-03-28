@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use std::collections::HashMap;
 //
 // Provides comprehensive system metrics collection and analysis.

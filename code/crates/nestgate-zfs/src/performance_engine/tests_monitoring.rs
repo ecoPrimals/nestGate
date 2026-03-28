@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Tests for Real-Time Performance Monitor
 //!
 //! These tests cover the performance monitoring functionality

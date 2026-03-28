@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Type definitions for orchestrator integration
 //!
 //! This module contains all type definitions used for orchestrator integration,

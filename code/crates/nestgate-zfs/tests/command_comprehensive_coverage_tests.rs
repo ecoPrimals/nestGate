@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE COMMAND MODULE TESTS**
 //!
 //! Tests for ZFS command execution framework to achieve >80% coverage.

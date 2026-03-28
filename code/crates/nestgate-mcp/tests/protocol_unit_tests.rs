@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **PROTOCOL MODULE UNIT TESTS**
 //!
 //! Comprehensive unit tests for MCP protocol modules.

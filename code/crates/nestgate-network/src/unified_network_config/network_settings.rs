@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Contains all individual network configuration setting structs.
 /// Extracted from the large `unified_network_config.rs` to achieve file size compliance.
 use serde::{Deserialize, Serialize};

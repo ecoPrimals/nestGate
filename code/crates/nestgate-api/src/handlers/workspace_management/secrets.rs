@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Secrets management functionality that delegates to available security modules.
 // This is outside NestGate's core storage focus and should be handled by

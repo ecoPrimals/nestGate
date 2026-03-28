@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Creates the appropriate ZFS service implementation based on configuration
 // with automatic backend detection and fail-safe wrapping.

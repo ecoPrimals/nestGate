@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Configuration types for snapshot policies including retention rules,
 // scheduling frequencies, and policy definitions.

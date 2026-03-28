@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **NETWORK EDGE CASE TESTS** - Nov 23, 2025
 //!
 //! Comprehensive edge case tests for network retry configurations.

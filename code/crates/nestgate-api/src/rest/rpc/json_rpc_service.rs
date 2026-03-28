@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // **ZERO-COST MODERNIZATION**: Migrated from async_trait to native async patterns
 // Standard JSON RPC service for HTTP-based communication with orchestration.

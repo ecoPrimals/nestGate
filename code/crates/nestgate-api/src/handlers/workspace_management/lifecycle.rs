@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Workspace Lifecycle Management
 //!
 //! This module provides advanced lifecycle operations for workspaces including

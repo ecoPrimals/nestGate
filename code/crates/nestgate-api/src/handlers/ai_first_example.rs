@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module demonstrates how to use the AI-First response format
 // and provides examples of ecosystem-compliant API endpoints.

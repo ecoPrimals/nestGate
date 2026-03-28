@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Ultra-high performance networking with zero-copy I/O patterns,
 // eliminating memory copies and maximizing throughput efficiency.

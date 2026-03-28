@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Native ZFS Backend Implementation
 //!
 //! This module provides native ZFS command execution and management using

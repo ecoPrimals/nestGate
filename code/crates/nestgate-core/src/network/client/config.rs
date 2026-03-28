@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! HTTP Client Configuration
 //!
 //! Type-safe configuration for HTTP client with sensible defaults

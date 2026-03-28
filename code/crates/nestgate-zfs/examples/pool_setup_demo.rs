@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Demonstrates the pure Rust ZFS pool setup functionality with hardware detection
 // and intelligent configuration recommendations.

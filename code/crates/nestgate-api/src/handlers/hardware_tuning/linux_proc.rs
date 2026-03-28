@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Linux `/proc`-based hardware resource discovery (no `sysinfo`).
 //!
 //! On non-Linux hosts, values are best-effort from `std::thread::available_parallelism`

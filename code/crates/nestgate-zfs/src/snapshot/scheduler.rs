@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Handles scheduling and execution of snapshot policies including
 // retention management and automated snapshot creation.

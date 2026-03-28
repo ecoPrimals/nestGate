@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ZERO-COST SECURITY PROVIDER - MODULAR ARCHITECTURE**
 //!
 //! This module consolidates the 921-line `zero_cost_security_provider.rs` into focused,
@@ -57,8 +60,7 @@ pub mod config;
 pub mod metadata;
 
 // Re-export all types for backward compatibility
-#[allow(deprecated)] // Re-export for backwards compatibility during migration
-pub use crate::zero_cost_architecture::ZeroCostSecurityProvider;
+pub use crate::zero_cost::traits::ZeroCostSecurityProvider;
 pub use types::{AuthMethod, ZeroCostAuthToken, ZeroCostCredentials, ZeroCostSignature};
 // Hybrid security module re-exports (implemented via universal adapter + local fallbacks)
 // These will route to Security when available, fall back to local smart implementations

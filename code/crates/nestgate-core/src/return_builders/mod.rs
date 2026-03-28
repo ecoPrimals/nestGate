@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **RETURN BUILDERS MODULE SYSTEM**
 // Breaking down the large return_builders.rs (898 lines) into focused modules
 //! to achieve 2000-line file size compliance while maintaining functionality.

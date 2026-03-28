@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Error Path Test Expansion - December 11, 2025
 //!
 //! High-value error path tests to boost coverage from 74% → 90%

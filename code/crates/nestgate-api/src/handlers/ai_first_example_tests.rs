@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **AI-First Example Tests**
 //!
 //! Comprehensive test suite for AI-First response format and handlers.

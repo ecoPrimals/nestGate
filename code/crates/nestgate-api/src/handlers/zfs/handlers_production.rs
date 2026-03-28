@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ZFS HANDLERS - PRODUCTION IMPLEMENTATION**
 //!
 //! Real ZFS operations using the `nestgate-zfs` crate.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **CANONICAL API TYPES**
 //!
 //! Re-exports of canonical API configuration types for easy access within nestgate-api.

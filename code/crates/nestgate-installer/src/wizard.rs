@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Simplified installation wizard using canonical patterns and `LegacyConfigAdapter`
 use crate::config::InstallerConfig;
 use dialoguer::{Confirm, Input};

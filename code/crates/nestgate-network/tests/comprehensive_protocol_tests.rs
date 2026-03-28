@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive network protocol tests for improved coverage
 //!
 //! Tests for network communication, connection management, and protocol handling

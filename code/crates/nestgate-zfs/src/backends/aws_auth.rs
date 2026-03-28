@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **AWS Signature Version 4 Implementation**
 //!
 //! Pure Rust implementation of AWS SigV4 authentication.

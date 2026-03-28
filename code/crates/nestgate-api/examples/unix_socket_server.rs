@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **UNIX SOCKET SERVER EXAMPLE**
 //!
 //! Demonstrates TRUE PRIMAL transport with Unix sockets + JSON-RPC 2.0.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Health and metrics types for the consolidated canonical adapter
 //!
 //! This module contains structures for tracking adapter health, performance

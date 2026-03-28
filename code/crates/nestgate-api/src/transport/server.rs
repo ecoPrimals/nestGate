@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **TRANSPORT SERVER**
 //!
 //! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
@@ -258,7 +261,6 @@ mod tests {
 
     struct TestHandler;
 
-    #[async_trait::async_trait]
     impl RpcMethodHandler for TestHandler {
         async fn handle_method(&self, method: &str, _params: Value) -> Result<Value> {
             match method {

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Integration tests for Universal Agnostic Storage
 //!
 //! Tests the complete flow: discovery → protocol detection → adapter → operations
@@ -68,8 +71,8 @@ async fn test_endpoint_probe_http() {
 #[tokio::test]
 async fn test_auth_detection_access_key() {
     // Set environment variables for access key authentication
-    env::set_var("STORAGE_TEST_ACCESS_KEY", "test_access_key");
-    env::set_var("STORAGE_TEST_SECRET_KEY", "test_secret_key");
+    nestgate_core::env_process::set_var("STORAGE_TEST_ACCESS_KEY", "test_access_key");
+    nestgate_core::env_process::set_var("STORAGE_TEST_SECRET_KEY", "test_secret_key");
 
     let discovered =
         UniversalStorageDiscovery::probe_endpoint("test", "https://storage.example.com/bucket")
@@ -85,14 +88,14 @@ async fn test_auth_detection_access_key() {
     }
 
     // Cleanup
-    env::remove_var("STORAGE_TEST_ACCESS_KEY");
-    env::remove_var("STORAGE_TEST_SECRET_KEY");
+    nestgate_core::env_process::remove_var("STORAGE_TEST_ACCESS_KEY");
+    nestgate_core::env_process::remove_var("STORAGE_TEST_SECRET_KEY");
 }
 
 #[tokio::test]
 async fn test_auth_detection_bearer_token() {
     // Set environment variable for bearer token
-    env::set_var("STORAGE_TOKEN_TOKEN", "test_bearer_token");
+    nestgate_core::env_process::set_var("STORAGE_TOKEN_TOKEN", "test_bearer_token");
 
     let discovered =
         UniversalStorageDiscovery::probe_endpoint("token", "https://api.example.com/storage")
@@ -108,13 +111,13 @@ async fn test_auth_detection_bearer_token() {
     }
 
     // Cleanup
-    env::remove_var("STORAGE_TOKEN_TOKEN");
+    nestgate_core::env_process::remove_var("STORAGE_TOKEN_TOKEN");
 }
 
 #[tokio::test]
 async fn test_auth_detection_api_key() {
     // Set environment variable for API key
-    env::set_var("STORAGE_API_API_KEY", "test_api_key");
+    nestgate_core::env_process::set_var("STORAGE_API_API_KEY", "test_api_key");
 
     let discovered = UniversalStorageDiscovery::probe_endpoint("api", "https://api.example.com/v1")
         .await
@@ -129,7 +132,7 @@ async fn test_auth_detection_api_key() {
     }
 
     // Cleanup
-    env::remove_var("STORAGE_API_API_KEY");
+    nestgate_core::env_process::remove_var("STORAGE_API_API_KEY");
 }
 
 #[tokio::test]
@@ -185,9 +188,9 @@ async fn test_filesystem_adapter_operations() {
 #[tokio::test]
 async fn test_multiple_storage_discovery() {
     // Set up multiple storage endpoints
-    env::set_var("STORAGE_BACKUP_ENDPOINT", "https://s3.example.com/backup");
-    env::set_var("STORAGE_CACHE_ENDPOINT", "http://localhost:9000/cache");
-    env::set_var(
+    nestgate_core::env_process::set_var("STORAGE_BACKUP_ENDPOINT", "https://s3.example.com/backup");
+    nestgate_core::env_process::set_var("STORAGE_CACHE_ENDPOINT", "http://localhost:9000/cache");
+    nestgate_core::env_process::set_var(
         "STORAGE_ARCHIVE_ENDPOINT",
         "https://archive.example.com/data",
     );
@@ -206,9 +209,9 @@ async fn test_multiple_storage_discovery() {
     assert!(names.contains(&"archive"));
 
     // Cleanup
-    env::remove_var("STORAGE_BACKUP_ENDPOINT");
-    env::remove_var("STORAGE_CACHE_ENDPOINT");
-    env::remove_var("STORAGE_ARCHIVE_ENDPOINT");
+    nestgate_core::env_process::remove_var("STORAGE_BACKUP_ENDPOINT");
+    nestgate_core::env_process::remove_var("STORAGE_CACHE_ENDPOINT");
+    nestgate_core::env_process::remove_var("STORAGE_ARCHIVE_ENDPOINT");
 }
 
 #[tokio::test]

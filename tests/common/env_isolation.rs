@@ -111,7 +111,7 @@ impl IsolatedEnvironment {
             self.original_vars
                 .insert(key.to_string(), std::env::var(key).ok());
         }
-        std::env::set_var(key, value);
+        nestgate_core::env_process::set_var(key, value);
     }
 
     /// Remove an environment variable for this test
@@ -124,7 +124,7 @@ impl IsolatedEnvironment {
             self.original_vars
                 .insert(key.to_string(), std::env::var(key).ok());
         }
-        std::env::remove_var(key);
+        nestgate_core::env_process::remove_var(key);
     }
 
     /// Get the test name
@@ -141,8 +141,8 @@ impl Drop for IsolatedEnvironment {
     fn drop(&mut self) {
         for (key, value) in &self.original_vars {
             match value {
-                Some(v) => std::env::set_var(key, v),
-                None => std::env::remove_var(key),
+                Some(v) => nestgate_core::env_process::set_var(key, v),
+                None => nestgate_core::env_process::remove_var(key),
             }
         }
     }
@@ -177,7 +177,7 @@ impl EnvGuard {
             .expect("Failed to acquire environment test lock");
 
         let original = std::env::var(key).ok();
-        std::env::set_var(key, value);
+        nestgate_core::env_process::set_var(key, value);
 
         Self {
             key: key.to_string(),
@@ -191,8 +191,8 @@ impl Drop for EnvGuard {
     /// Automatically restore the original environment variable value
     fn drop(&mut self) {
         match &self.original {
-            Some(value) => std::env::set_var(&self.key, value),
-            None => std::env::remove_var(&self.key),
+            Some(value) => nestgate_core::env_process::set_var(&self.key, value),
+            None => nestgate_core::env_process::remove_var(&self.key),
         }
     }
 }
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn test_isolated_environment_restores_var() {
         let orig = std::env::var("NESTGATE_TEST_VAR_UNIQUE_2").ok();
-        std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_2", "original");
+        nestgate_core::env_process::set_var("NESTGATE_TEST_VAR_UNIQUE_2", "original");
 
         {
             let mut env = IsolatedEnvironment::new("test_isolated_environment_restores_var");
@@ -227,8 +227,8 @@ mod tests {
 
         let current = std::env::var("NESTGATE_TEST_VAR_UNIQUE_2").ok();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_2", v),
-            None => std::env::remove_var("NESTGATE_TEST_VAR_UNIQUE_2"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_TEST_VAR_UNIQUE_2", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_TEST_VAR_UNIQUE_2"),
         }
         assert_eq!(current, Some("original".to_string()));
     }
@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn test_isolated_environment_removes_var() {
         let orig = std::env::var("NESTGATE_TEST_VAR_UNIQUE_4").ok();
-        std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_4", "to_remove");
+        nestgate_core::env_process::set_var("NESTGATE_TEST_VAR_UNIQUE_4", "to_remove");
 
         {
             let mut env = IsolatedEnvironment::new("test_isolated_environment_removes_var");
@@ -262,8 +262,8 @@ mod tests {
 
         let current = std::env::var("NESTGATE_TEST_VAR_UNIQUE_4").ok();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_TEST_VAR_UNIQUE_4", v),
-            None => std::env::remove_var("NESTGATE_TEST_VAR_UNIQUE_4"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_TEST_VAR_UNIQUE_4", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_TEST_VAR_UNIQUE_4"),
         }
         assert_eq!(current, Some("to_remove".to_string()));
     }

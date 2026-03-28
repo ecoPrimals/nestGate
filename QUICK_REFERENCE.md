@@ -1,6 +1,6 @@
 # NestGate - Quick Reference
 
-**Version**: 4.5.0-dev  
+**Version**: 4.6.0-dev  
 **Tests**: 12,383 passing, 0 failures, 469 ignored  
 **Coverage**: ~72% line (llvm-cov, target: 90%)  
 **Clippy**: ZERO production warnings (pedantic+nursery)  

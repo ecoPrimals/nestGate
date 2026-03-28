@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Contains all performance-related operations including analytics collection,
 // storage optimization, and tier optimization based on performance metrics.

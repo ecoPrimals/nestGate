@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **EVENTS SYSTEM TESTS**
 //
 // Comprehensive tests for event types, bus, routing, and pubsub functionality

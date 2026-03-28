@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Doctor command - System diagnostics and health checks
 //!
 //! ✅ EVOLVED: Real implementation replacing "not yet implemented" stub

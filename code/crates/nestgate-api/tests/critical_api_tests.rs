@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Critical API tests to boost coverage
 //!
 //! These tests cover the most important API endpoints and error paths.

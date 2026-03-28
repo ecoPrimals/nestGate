@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use nestgate_core::{NestGateError, Result};
 use std::path::{Path, PathBuf};
 

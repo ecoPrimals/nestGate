@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Tests for safe network operations
 //! Validates timeout handling, connection safety, and error paths
 

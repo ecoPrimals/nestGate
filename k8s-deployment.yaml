@@ -5,7 +5,7 @@ metadata:
   name: nestgate
   labels:
     app: nestgate
-    version: v1.0.0
+    version: v4.6.0-dev
     component: storage-management
 spec:
   replicas: 3
@@ -21,7 +21,7 @@ spec:
     metadata:
       labels:
         app: nestgate
-        version: v1.0.0
+        version: v4.6.0-dev
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8083"
@@ -35,7 +35,7 @@ spec:
         fsGroup: 1001
       containers:
       - name: nestgate
-        image: nestgate:v1.0.0-production
+        image: nestgate:v4.6.0-dev-production
         imagePullPolicy: IfNotPresent
         ports:
         - name: api

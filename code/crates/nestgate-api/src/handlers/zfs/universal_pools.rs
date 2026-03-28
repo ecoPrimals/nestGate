@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This handler provides ZFS pool API functionality that works with ANY storage backend,
 // not just ZFS. It uses the Universal Storage Bridge to translate ZFS concepts to

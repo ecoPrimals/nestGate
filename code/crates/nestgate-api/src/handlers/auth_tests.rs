@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for authentication handlers
 //!
 //! This module provides extensive test coverage for the auth module,

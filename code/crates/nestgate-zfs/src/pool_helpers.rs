@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Helper functions for ZFS pool operations
 //!
 //! This module contains utility functions for parsing sizes, getting properties,

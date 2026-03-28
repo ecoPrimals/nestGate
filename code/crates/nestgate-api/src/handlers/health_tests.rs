@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE HEALTH HANDLER TESTS**
 //!
 //! Test coverage for health check data structures - critical for monitoring and operations.

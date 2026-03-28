@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Comprehensive tests for error response module
 /// Tests error creation, builders, factory methods, and serialization
 #[cfg(test)]

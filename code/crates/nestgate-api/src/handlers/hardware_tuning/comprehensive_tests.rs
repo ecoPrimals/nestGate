@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for hardware tuning functionality
 //! Created: November 22, 2025 - P1 Coverage Expansion
 //!
@@ -310,7 +313,7 @@ mod hardware_tuning_tests {
 
     /// Detect Cpu Count
     async fn detect_cpu_count() -> std::result::Result<usize, String> {
-        Ok(num_cpus::get())
+        Ok(nestgate_core::linux_proc::logical_cpu_count())
     }
 
     /// Gets Cpu Topology

@@ -1,7 +1,7 @@
 # NestGate Documentation Index
 
 **Last Updated**: March 28, 2026  
-**Version**: 4.5.0-dev
+**Version**: 4.6.0-dev
 
 ---
 
@@ -81,6 +81,6 @@ nestGate/
 
 ---
 
-**Status**: Documentation cleaned and updated March 27, 2026.  
+**Status**: Documentation cleaned and updated March 28, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: March 27, 2026
+**Last Updated**: March 28, 2026

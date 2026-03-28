@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for safe_operations module functions
 //!
 //! Tests for safe adapter initialization and connection pool operations.

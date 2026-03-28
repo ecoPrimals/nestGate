@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **WORKSPACE TEMPLATES TESTS - EXPANDED**
 //!
 //! Comprehensive tests for workspace template operations including:

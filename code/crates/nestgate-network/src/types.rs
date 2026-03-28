@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **NETWORK TYPES AND CONFIGURATION**
 //!
 //! This module provides all the data structures, enums, and configuration
@@ -358,6 +361,7 @@ impl NetworkConfigBuilder {
         // Safe: 127.0.0.1 is always a valid IP address (IPv4 localhost)
         const DEFAULT_LOCALHOST: IpAddr = IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1));
 
+        // Development default when host parsing fails and bind env vars are unset.
         let localhost_addr = addresses::LOCALHOST_NAME
             .parse()
             .unwrap_or(DEFAULT_LOCALHOST);

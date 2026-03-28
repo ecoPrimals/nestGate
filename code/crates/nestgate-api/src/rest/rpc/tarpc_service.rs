@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // High-performance binary RPC service using tarpc for communication with security.
 // Provides real-time bidirectional streaming for security operations.

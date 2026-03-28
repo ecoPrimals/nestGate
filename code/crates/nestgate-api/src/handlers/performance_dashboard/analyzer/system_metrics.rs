@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Handles collection of system-level performance metrics including CPU, memory, network, and disk.
 
@@ -40,7 +43,7 @@ impl SystemMetricsCollector {
 
         Ok(SystemResourceMetrics {
             timestamp: std::time::SystemTime::now(),
-            cpu_cores: num_cpus::get(),
+            cpu_cores: nestgate_core::linux_proc::logical_cpu_count(),
             cpu_usage_percent: cpu_usage,
             memory_total_gb: (memory_info.total_bytes / (1024 * 1024 * 1024)) as u32,
             memory_used_gb: (memory_info.used_bytes / (1024 * 1024 * 1024)) as u32,

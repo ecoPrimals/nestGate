@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Error types and handling for the NestGate Data API.
 // Provides clean error responses for management and other consumers.

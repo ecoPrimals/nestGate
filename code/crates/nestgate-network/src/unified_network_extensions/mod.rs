@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ADVANCED NETWORK FEATURES**
 //!
 //! Optional advanced networking capabilities for specialized deployments.

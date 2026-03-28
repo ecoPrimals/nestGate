@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Unit tests for metrics collector
 //!
 //! These tests cover metrics data structures and validation logic

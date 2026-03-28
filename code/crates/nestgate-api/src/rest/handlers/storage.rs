@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Pure data layer handlers for storage backend operations.
 // These handlers provide clean data access for storage management

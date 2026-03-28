@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **NESTGATE API LIBRARY**
 //!
 //! Comprehensive API library for `NestGate` storage and system management platform.
@@ -6,35 +9,6 @@
 // Enable documentation warnings for better API documentation
 #![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
-// Temporary allow deprecated during canonical config migration
-#![allow(deprecated)]
-// Pedantic lints - will address incrementally during modernization phase (Phase 6)
-// These don't affect functionality, only code style/documentation
-#![allow(clippy::missing_errors_doc)]
-#![allow(clippy::missing_panics_doc)]
-#![allow(clippy::doc_markdown)]
-#![allow(clippy::too_long_first_doc_paragraph)]
-#![allow(clippy::cast_precision_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::unused_async)] // Many async functions are trait implementations
-#![allow(clippy::must_use_candidate)]
-#![allow(clippy::redundant_pub_crate)]
-#![allow(clippy::needless_pass_by_value)]
-#![allow(clippy::similar_names)]
-#![allow(clippy::module_name_repetitions)]
-#![allow(clippy::unused_self)]
-#![allow(clippy::unnecessary_wraps)]
-#![allow(clippy::used_underscore_binding)]
-#![allow(clippy::significant_drop_tightening)]
-#![allow(clippy::implicit_hasher)]
-#![allow(clippy::redundant_closure_for_method_calls)]
-#![allow(clippy::option_if_let_else)]
-#![allow(clippy::manual_clamp)]
-#![allow(clippy::struct_excessive_bools)]
-#![allow(clippy::pub_underscore_fields)]
-#![allow(clippy::map_unwrap_or)]
-#![allow(clippy::match_same_arms)]
 
 /// **TYPES MODULE**
 ///

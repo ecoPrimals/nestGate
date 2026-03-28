@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module contains all ZFS-specific functionality extracted from the main handlers
 // to maintain the 1000-line file size limit.

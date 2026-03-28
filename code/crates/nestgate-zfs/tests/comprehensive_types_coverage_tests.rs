@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for nestgate-zfs types module
 //! Target: Improve coverage from 4.72% toward 15%+
 //!

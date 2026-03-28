@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // Strategic tests to boost security provider types coverage from 44.55% to 80%+
 // Focus: Validation, error paths, edge cases, and boundary conditions
 

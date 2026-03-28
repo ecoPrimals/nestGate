@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! HTTP Client Implementation
 //!
 //! High-level HTTP client with connection pooling, retry logic,
@@ -10,7 +13,7 @@ use super::config::ClientConfig;
 use super::pool::ConnectionPool;
 use super::request::{Request, Response};
 use super::types::Endpoint;
-use crate::error::{NestGateError, Result};
+use crate::error::Result;
 
 // ==================== HTTP CLIENT ====================
 
@@ -85,23 +88,22 @@ impl HttpClient {
         endpoint: &Endpoint,
         request: &Request<'_>,
     ) -> Result<Response> {
+        let _ = &self.config;
         // Get connection from pool
         let mut connection = self.pool.get_connection(endpoint).await?;
 
-        // Send request with timeout
-        let response = tokio::time::timeout(self.config.timeout, connection.send(request))
-            .await
-            .map_err(|_| NestGateError::timeout_error("HTTP request", self.config.timeout))?;
+        // Send request (external HTTP path deprecated; completes immediately)
+        let result = connection.send(request);
 
         // Return connection to pool
-        self.pool.return_connection(connection).await;
+        self.pool.return_connection(connection);
 
-        response
+        result
     }
 
     /// Get client statistics
-    pub async fn stats(&self) -> ClientStats {
-        let pool_stats = self.pool.stats().await;
+    pub fn stats(&self) -> ClientStats {
+        let pool_stats = self.pool.stats();
 
         ClientStats {
             total_connections: pool_stats.total_connections,
@@ -112,8 +114,8 @@ impl HttpClient {
     }
 
     /// Clean up idle connections
-    pub async fn cleanup(&self) {
-        self.pool.cleanup_idle().await;
+    pub fn cleanup(&self) {
+        self.pool.cleanup_idle();
     }
 }
 
@@ -164,7 +166,7 @@ mod tests {
     #[tokio::test]
     async fn test_client_stats() {
         let client = HttpClient::default();
-        let stats = client.stats().await;
+        let stats = client.stats();
 
         assert_eq!(stats.total_connections, 0);
         assert_eq!(stats.endpoints, 0);

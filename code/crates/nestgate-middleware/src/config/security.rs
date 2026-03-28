@@ -1,6 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// All security-related middleware settings (auth, CORS, rate limiting, etc.)
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 use std::path::PathBuf;
 use std::time::Duration;
 // ==================== SECTION ====================
@@ -416,7 +420,7 @@ impl MiddlewareSecuritySettings {
     ///
     /// # Environment Variables
     ///
-    /// - `NESTGATE_DEV_HOST`: Development host (default: localhost)
+    /// - `NESTGATE_DEV_HOST` / `NESTGATE_DISCOVERY_FALLBACK_HOST`: Development host (**development default**: `localhost` when both unset, with warning)
     /// - `NESTGATE_DEV_FRONTEND_PORT`: Frontend port (default: 3000)
     /// - `NESTGATE_API_PORT`: API port (default: 8080)
     pub fn development() -> Self {
@@ -426,7 +430,14 @@ impl MiddlewareSecuritySettings {
                 allowed_origins: {
                     // ✅ SOVEREIGNTY: Environment-driven CORS configuration
                     let host = env::var("NESTGATE_DEV_HOST")
-                        .unwrap_or_else(|_| "localhost".to_string());
+                        .or_else(|_| env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
+                        .unwrap_or_else(|_| {
+                            tracing::warn!(
+                                "Middleware dev CORS: NESTGATE_DEV_HOST and NESTGATE_DISCOVERY_FALLBACK_HOST unset; using `localhost`. \
+                                 Set one of these for non-local frontends."
+                            );
+                            "localhost".to_string()
+                        });
                     let frontend_port = env::var("NESTGATE_DEV_FRONTEND_PORT")
                         .ok()
                         .and_then(|s| s.parse::<u16>().ok())

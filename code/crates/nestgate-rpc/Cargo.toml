@@ -1,0 +1,37 @@
+[package]
+name = "nestgate-rpc"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+description = "JSON-RPC + tarpc IPC layer for primal-to-primal communication"
+repository = "https://github.com/ecoprimals/nestgate"
+
+[lints]
+workspace = true
+
+[dependencies]
+nestgate-types = { path = "../nestgate-types" }
+nestgate-config = { path = "../nestgate-config" }
+
+anyhow = { workspace = true }
+base64 = { workspace = true }
+chrono = { workspace = true }
+bincode = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true }
+jsonrpsee = { version = "0.26.0", features = ["server"] }
+pin-project = "1.1"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }
+tokio = { workspace = true }
+tokio-serde = { workspace = true, features = ["bincode"] }
+tokio-util = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+uzers = { workspace = true }
+
+[dev-dependencies]
+fastrand = { workspace = true }
+tokio-test = { workspace = true }
+tempfile = { workspace = true }

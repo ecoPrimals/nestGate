@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Handles authentication using any available security primal provider,
 // eliminating hardcoded dependencies on specific security implementations.

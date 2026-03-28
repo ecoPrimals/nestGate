@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **100% SAFE** High-performance memory pool
 //!
 //! This module provides cache-optimized memory pools with **ZERO UNSAFE CODE**.

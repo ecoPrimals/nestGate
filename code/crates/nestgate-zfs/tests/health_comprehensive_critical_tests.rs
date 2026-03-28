@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE CRITICAL HEALTH TESTS**
 //!
 //! Tests for ZFS health monitoring types and basic functionality to achieve >80% coverage.

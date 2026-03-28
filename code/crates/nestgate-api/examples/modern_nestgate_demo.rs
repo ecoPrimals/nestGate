@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **OUTDATED EXAMPLE - NEEDS UPDATE**
 //!
 //! Modern `NestGate` Demo
@@ -138,7 +141,7 @@ fn demo_http_client() -> impl std::future::Future<Output = Result<()>> + Send {
     }
 
     // Get client statistics
-    let stats = client.stats().await;
+    let stats = client.stats();
     println!("📈 **Client Statistics**:");
     println!("   • Total connections: {}", stats.total_connections);
     println!("   • Active requests: {}", stats.active_requests);

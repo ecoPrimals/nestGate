@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// **UNIFIED**: Use the main Result type from parent module
 pub use super::Result;
 /// Safe memory operations

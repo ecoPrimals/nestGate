@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **REST API MODULE**
 //!
 //! This module contains the REST API implementation for NestGate, including

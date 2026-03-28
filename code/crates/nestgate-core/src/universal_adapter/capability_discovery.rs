@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Generic Capability Discovery System
 //!
 //! **ECOSYSTEM SOVEREIGNTY**: This module provides capability-based discovery

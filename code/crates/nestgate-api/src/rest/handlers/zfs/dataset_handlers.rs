@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Dataset data handlers for ZFS operations.
 // GET/POST/PUT/DELETE for datasets, properties, and stats.

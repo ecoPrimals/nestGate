@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Strategic tests for ZFS error types
 //!
 //! Boosts coverage for types/errors.rs from 0% to 95%+

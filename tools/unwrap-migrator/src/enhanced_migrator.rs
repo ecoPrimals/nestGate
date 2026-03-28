@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Enhanced Unwrap Migrator with Batch Processing and Smart Categorization
 //!
 //! This enhanced version can handle the migration of 2,398 unwrap/expect calls

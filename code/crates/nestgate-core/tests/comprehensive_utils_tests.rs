@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive utility tests
 //! Additional tests for standard library utilities to improve coverage
 
@@ -84,10 +87,10 @@ fn test_duration_max() {
 
 #[test]
 fn test_env_var_operations() {
-    std::env::set_var("TEST_VAR", "test_value");
+    nestgate_core::env_process::set_var("TEST_VAR", "test_value");
     assert_eq!(std::env::var("TEST_VAR").unwrap(), "test_value");
 
-    std::env::remove_var("TEST_VAR");
+    nestgate_core::env_process::remove_var("TEST_VAR");
     assert!(std::env::var("TEST_VAR").is_err());
 }
 

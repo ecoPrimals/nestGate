@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **WORKSPACE CRUD TESTS**
 //!
 //! Comprehensive tests for workspace CRUD operations including:
@@ -391,7 +394,7 @@ mod env_tests {
     #[tokio::test]
     async fn test_create_workspace_uses_env_pool_name() {
         // Set custom pool name
-        env::set_var("NESTGATE_WORKSPACE_POOL", "custom-pool");
+        nestgate_core::env_process::set_var("NESTGATE_WORKSPACE_POOL", "custom-pool");
 
         let request = json!({
             "name": "env-test"
@@ -400,7 +403,7 @@ mod env_tests {
         let _ = create_workspace(axum::Json(request)).await;
 
         // Clean up
-        env::remove_var("NESTGATE_WORKSPACE_POOL");
+        nestgate_core::env_process::remove_var("NESTGATE_WORKSPACE_POOL");
 
         // Test passes if no panic occurs
     }
@@ -408,7 +411,7 @@ mod env_tests {
     #[tokio::test]
     async fn test_get_workspace_uses_default_pool_name() {
         // Ensure env var is not set
-        env::remove_var("NESTGATE_WORKSPACE_POOL");
+        nestgate_core::env_process::remove_var("NESTGATE_WORKSPACE_POOL");
 
         let _ = get_workspace(axum::extract::Path("test-id".to_string())).await;
 

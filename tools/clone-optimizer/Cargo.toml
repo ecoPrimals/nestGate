@@ -9,7 +9,7 @@ name = "clone-optimizer"
 version = "0.1.0"
 authors = ["NestGate Team", "Evolved from BearDog foundations"]
 description = "Advanced clone optimization and zero-copy migration tool for Rust codebases"
-edition = "2021"
+edition = "2024"
 license = "AGPL-3.0-only"
 repository = "https://github.com/eastgate/nestgate"
 readme = "README.md"
@@ -32,7 +32,6 @@ syn = { version = "2.0", features = ["full", "parsing", "printing", "visit"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 toml = "0.8"
-num_cpus = "1.0"
 
 [dev-dependencies]
 tempfile = "3.0"

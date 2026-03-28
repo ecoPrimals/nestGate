@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! ZFS module - Pure data layer handlers for ZFS dataset and snapshot operations.
 //!
 //! These handlers focus solely on data operations without authentication,

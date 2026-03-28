@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Migration Before/After Example
 //!
 //! Shows side-by-side comparison of hardcoded vs agnostic patterns.

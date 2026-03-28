@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This benchmark suite validates the performance improvements claimed:
 // - UUID Caching: 5x performance improvement (274,587 ns/iter → <50,000 ns/iter)

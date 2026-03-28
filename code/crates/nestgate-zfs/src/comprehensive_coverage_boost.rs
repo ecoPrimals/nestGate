@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE COVERAGE BOOST - ZFS MODULE**
 //!
 //! High-value tests targeting low-coverage areas to boost overall ZFS coverage.

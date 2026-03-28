@@ -1,0 +1,30 @@
+[package]
+name = "nestgate-storage"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+description = "Universal and temporal storage abstractions for NestGate"
+repository = "https://github.com/ecoprimals/nestgate"
+
+[lints]
+workspace = true
+
+[dependencies]
+nestgate-types = { path = "../nestgate-types" }
+nestgate-config = { path = "../nestgate-config" }
+
+chrono = { workspace = true }
+dashmap = { workspace = true }
+memmap2 = { workspace = true }
+parking_lot = { workspace = true }
+rustix = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sysinfo = "0.30"
+tokio = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio-test = { workspace = true }

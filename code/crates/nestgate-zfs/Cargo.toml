@@ -1,7 +1,7 @@
 [package]
 name = "nestgate-zfs"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["NestGate Development Team <dev@nestgate.io>"]
 description = "ZFS storage management for NestGate with intelligent automation"
 license = "AGPL-3.0-only"
@@ -11,6 +11,9 @@ documentation = "https://docs.rs/nestgate-zfs"
 keywords = [ "zfs", "storage", "nas", "automation",]
 readme = "README.md"
 categories = [ "filesystem", "storage",]
+
+[lints]
+workspace = true
 
 [features]
 default = [ "dev-environment-fallbacks",]
@@ -37,7 +40,6 @@ dashmap = "5.5"
 rand = "0.8"
 url = "2.4"
 bytes = "1.7"
-async-trait = "0.1"
 regex = "1.10"
 hmac = "0.12"
 sha2 = "0.10"
@@ -58,7 +60,6 @@ wiremock = "0.6"
 testcontainers = "0.15"
 assert_matches = "1.5"
 approx = "0.5"
-num_cpus = "1.16"
 
 [dependencies.nestgate-core]
 path = "../nestgate-core"

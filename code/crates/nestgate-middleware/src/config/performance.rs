@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Performance optimization settings and monitoring configuration
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -353,7 +356,7 @@ impl Default for MiddlewarePerformanceSettings {
             connection_pooling: ConnectionPoolingSettings::default(),
             request_optimization: RequestOptimizationSettings::default(),
             response_optimization: ResponseOptimizationSettings::default(),
-            worker_threads: num_cpus::get(),
+            worker_threads: nestgate_core::linux_proc::logical_cpu_count(),
             queue_capacity: 1000,
             memory_optimization: MemoryOptimizationSettings::default(),
          }
@@ -383,7 +386,7 @@ impl MiddlewarePerformanceSettings {
 
     /// Production performance settings
     pub fn production() -> Self { Self {
-            worker_threads: num_cpus::get() * 2,
+            worker_threads: nestgate_core::linux_proc::logical_cpu_count() * 2,
             queue_capacity: 10_000,
             caching: CachingSettings {
                 enabled: true,
@@ -411,7 +414,7 @@ impl Default for ThreadPoolSettings {
     /// Returns the default instance
     fn default() -> Self { Self {
             min_threads: 1,
-            max_threads: num_cpus::get(),
+            max_threads: nestgate_core::linux_proc::logical_cpu_count(),
             idle_timeout: Duration::from_secs(60),
             stack_size: None,
             work_stealing: true,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Service Discovery Trait for Finding and Managing Services
 //!
 //! **MIGRATED FROM**: `traits::service_discovery` (November 7, 2025)

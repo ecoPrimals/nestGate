@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **FINAL 9 TESTS FOR WORKSPACE MANAGEMENT**
 //!
 //! Completing the 100-test goal for Week 1-2 Quick Wins.

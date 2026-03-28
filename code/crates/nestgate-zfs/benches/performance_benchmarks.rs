@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Benchmarks to validate performance characteristics and identify bottlenecks.
 ///
 /// Uses current module paths with proper error handling.

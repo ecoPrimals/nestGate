@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Filtering and pattern matching configuration - extracted from monolithic config
 /// Handles file patterns, type filters, size filters, time filters, and custom filters
 use serde::{Deserialize, Serialize};

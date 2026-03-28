@@ -8,9 +8,9 @@
 //! // ❌ BAD: Pollutes global environment
 //! #[test]
 //! fn test() {
-//!     std::env::set_var("VAR", "value");
+//!     nestgate_core::env_process::set_var("VAR", "value");
 //!     // test code
-//!     std::env::remove_var("VAR"); // May not run if panic!
+//!     nestgate_core::env_process::remove_var("VAR"); // May not run if panic!
 //! }
 //! ```
 //!

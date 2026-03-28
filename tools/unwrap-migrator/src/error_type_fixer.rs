@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Error Type Fixer
 //!
 //! Specialized module for fixing error type mismatches between `NestGateError`

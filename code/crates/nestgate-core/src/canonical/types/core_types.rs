@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use std::collections::HashMap;
 //
 // This module provides the fundamental type definitions used throughout

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module handles the complete lifecycle of datasets including stage
 // transitions, condition evaluation, and automated lifecycle rule application.

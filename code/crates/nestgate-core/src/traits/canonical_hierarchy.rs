@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **CANONICAL TRAIT HIERARCHY**
 //!
 //! This module defines the canonical trait hierarchy for the NestGate ecosystem.

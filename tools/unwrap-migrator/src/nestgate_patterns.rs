@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! NestGate-specific migration patterns
 //!
 //! This module contains migration patterns specifically designed for

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Platform-specific utilities - Safe abstractions over system APIs
 //!
 //! This module provides safe, cross-platform abstractions for system-level
@@ -5,4 +8,4 @@
 
 pub mod uid;
 
-pub use uid::get_current_uid;
+pub use uid::{get_current_gid, get_current_uid};

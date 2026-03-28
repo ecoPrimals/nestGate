@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// External system integration configuration - extracted from monolithic config
 /// Handles webhooks, message queues, databases, APIs, and custom integrations
 use serde::{Deserialize, Serialize};

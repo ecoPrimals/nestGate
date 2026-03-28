@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Consolidated Canonical Universal Adapter
 //!
 //! This is THE single, unified universal adapter implementation that consolidates

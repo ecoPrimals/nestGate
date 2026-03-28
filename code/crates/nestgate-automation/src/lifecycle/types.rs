@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Lifecycle management type definitions for dataset automation.
 
 use nestgate_core::unified_enums::storage_types::StorageTier;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Simple unit tests for ZFS functionality
 //! These tests focus on basic functionality that is actually implemented
 

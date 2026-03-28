@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Zero-cost optimized types for compile-time optimization
 //!
 //! Domain: Performance-optimized variants with reduced allocations

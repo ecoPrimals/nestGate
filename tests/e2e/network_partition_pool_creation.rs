@@ -244,14 +244,14 @@ async fn create_zfs_pool_async(config: &PoolConfig) -> Result<(), Box<dyn std::e
 async fn simulate_network_partition(env: &TestEnvironment) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate network partition (would use iptables/tc in real test)
     // For now, set a flag or use environment variable
-    std::env::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", "true");
+    nestgate_core::env_process::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", "true");
     Ok(())
 }
 
 async fn restore_network(env: &TestEnvironment) -> Result<(), Box<dyn std::error::Error>> {
     match &env.orig_partitioned_var {
-        Some(v) => std::env::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", v),
-        None => std::env::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED"),
     }
     Ok(())
 }
@@ -290,8 +290,8 @@ async fn cleanup_test_environment(env: &TestEnvironment, pool_name: &str) {
     }
     let _ = std::fs::remove_dir_all(&env.temp_dir);
     match &env.orig_partitioned_var {
-        Some(v) => std::env::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", v),
-        None => std::env::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_TEST_NETWORK_PARTITIONED", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_TEST_NETWORK_PARTITIONED"),
     }
 }
 

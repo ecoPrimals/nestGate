@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Integration Scenario Tests
 //!
 //! Auto-generated from smart refactoring of client_tests.rs
@@ -12,7 +15,7 @@ async fn test_client_and_pool_integration() {
     let client = HttpClient::new(config);
 
     // Client should be ready to use
-    let stats = client.stats().await;
+    let stats = client.stats();
     assert_eq!(stats.total_connections, 0);
 }
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for performance analyzer types
 //!
 //! These tests increase coverage by testing data structures, serialization,

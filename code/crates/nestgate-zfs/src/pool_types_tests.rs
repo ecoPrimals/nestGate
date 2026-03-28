@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive Tests for ZFS Pool Types
 //!
 //! Tests for pool information, state, health, and capacity types

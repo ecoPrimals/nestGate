@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Performance and resource management configuration - extracted from monolithic config
 /// Handles buffer sizes, thread pools, memory management, I/O optimization, and monitoring
 use serde::{Deserialize, Serialize};
@@ -103,7 +106,7 @@ impl Default for FsMonitorPerformanceSettings {
             monitoring: PerformanceMonitoringSettings::default(),
             max_events_per_batch: 1000,
             batch_timeout: Duration::from_millis(100),
-            worker_threads: num_cpus::get(),
+            worker_threads: nestgate_core::linux_proc::logical_cpu_count(),
             enable_event_coalescing: true,
         }
     }
@@ -126,7 +129,7 @@ impl Default for ThreadPoolSettings {
     fn default() -> Self {
         Self {
             min_threads: 2,
-            max_threads: num_cpus::get() * 2,
+            max_threads: nestgate_core::linux_proc::logical_cpu_count() * 2,
             idle_timeout: Duration::from_secs(60),
             queue_size: 1000,
         }

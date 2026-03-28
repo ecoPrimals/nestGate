@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Pure data layer handlers for system health and status information.
 // These handlers provide clean access to system data without any
@@ -12,7 +15,6 @@ use std::sync::Arc;
 use tracing::{debug, info};
 
 use crate::rest::{ApiState, DataResponse};
-use nestgate_core::universal_storage::auto_configurator::AutoConfigurator;
 
 // ==================== SECTION ====================
 // SYSTEM DATA HANDLERS
@@ -118,15 +120,14 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
         "busy"
     };
 
-    let _auto_configurator =
-        if let Some(configurator) = state.auto_configurator.lock().await.as_ref() {
-            configurator
-        } else {
+    {
+        let guard = state.auto_configurator.lock().await;
+        if guard.is_none() {
             tracing::warn!("Auto configurator not available - continuing with degraded status");
-            // Continue with degraded status rather than error
-            // auto_configurator_status will be set to "unavailable" below
-            &AutoConfigurator::new(Vec::new()) // Use a minimal configurator for status reporting
-        };
+            // Continue with degraded status rather than error;
+            // auto_configurator_status will be set to "unavailable" below.
+        }
+    }
     let auto_configurator_status = if state.auto_configurator.lock().await.is_some() {
         "online"
     } else {

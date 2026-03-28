@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Core Service Trait for NestGate Ecosystem
 //!
 //! **MIGRATED FROM**: `traits_root::service` (November 7, 2025)

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **UNIFIED STORAGE TRAIT - THE SINGLE SOURCE OF TRUTH**
 //! Trait definitions and implementations.
 // This module provides the definitive, unified storage trait that replaces ALL

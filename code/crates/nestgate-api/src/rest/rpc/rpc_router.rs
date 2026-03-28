@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Intelligent routing system that determines the best RPC method
 // (tarpc, JSON RPC, or WebSocket) based on request characteristics.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Storage Error Path Coverage Tests - December 16, 2025
 //!
 //! Comprehensive error scenarios for storage operations.

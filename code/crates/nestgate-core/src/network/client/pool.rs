@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Connection Pool Management
 //!
 //! Efficient connection pooling with automatic lifecycle management,
@@ -101,7 +104,7 @@ impl ConnectionPool {
     }
 
     /// Return a connection to the pool (lock-free!)
-    pub async fn return_connection(&self, conn: Connection) {
+    pub fn return_connection(&self, conn: Connection) {
         let key = conn.endpoint.to_string();
 
         // DashMap: Lock-free mutation!
@@ -114,7 +117,7 @@ impl ConnectionPool {
     }
 
     /// Clean up idle connections (lock-free!)
-    pub async fn cleanup_idle(&self) {
+    pub fn cleanup_idle(&self) {
         // DashMap: Lock-free concurrent iteration and mutation!
         for mut entry in self.connections.iter_mut() {
             entry
@@ -124,7 +127,7 @@ impl ConnectionPool {
     }
 
     /// Get pool statistics (lock-free!)
-    pub async fn stats(&self) -> PoolStats {
+    pub fn stats(&self) -> PoolStats {
         // DashMap: Lock-free concurrent iteration!
         let total_connections: usize = self
             .connections
@@ -194,7 +197,7 @@ impl Connection {
     }
 
     /// Send a request on this connection
-    pub async fn send(&mut self, request: &Request<'_>) -> Result<Response> {
+    pub fn send(&mut self, request: &Request<'_>) -> Result<Response> {
         self.mark_used();
 
         // Build URL
@@ -332,7 +335,7 @@ mod tests {
         let config = ClientConfig::default();
         let pool = ConnectionPool::new(config);
 
-        let stats = pool.stats().await;
+        let stats = pool.stats();
         assert_eq!(stats.total_connections, 0);
         assert_eq!(stats.endpoints, 0);
     }
@@ -346,7 +349,7 @@ mod tests {
         let conn = pool.get_connection(&endpoint).await.unwrap();
         assert_eq!(conn.endpoint, endpoint);
 
-        let stats = pool.stats().await;
+        let stats = pool.stats();
         assert_eq!(stats.total_connections, 1);
     }
 }

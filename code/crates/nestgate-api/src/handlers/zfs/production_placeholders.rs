@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ZFS PRODUCTION PLACEHOLDERS**
 //!
 //! These are placeholder handlers for production builds where `dev-stubs` is not enabled.

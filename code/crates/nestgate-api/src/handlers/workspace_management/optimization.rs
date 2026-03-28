@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Advanced ZFS optimization including compression, recordsize, cache settings,
 // deduplication, and AI-assisted optimization recommendations.

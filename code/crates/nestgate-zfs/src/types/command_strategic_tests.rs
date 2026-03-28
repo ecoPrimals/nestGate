@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Strategic tests for ZFS command types
 //!
 //! Boosts coverage for types/command.rs from 0% to 90%+

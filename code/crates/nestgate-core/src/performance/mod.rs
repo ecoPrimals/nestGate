@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // Performance Optimization Features
 //! Module definitions and exports.
 // Provides performance enhancements like connection pooling, caching,

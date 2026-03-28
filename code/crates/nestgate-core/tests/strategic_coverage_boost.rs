@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Strategic test coverage expansion for critical error paths and edge cases.
 //!
 //! This module adds targeted tests to improve coverage in high-value areas:

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module provides cross-platform system detection and validation
 // to ensure NestGate can be installed and run properly on the target system.

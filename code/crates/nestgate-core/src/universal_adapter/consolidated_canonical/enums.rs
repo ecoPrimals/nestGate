@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Enum definitions for the consolidated canonical adapter
 //!
 //! This module contains all enum types used throughout the adapter system,

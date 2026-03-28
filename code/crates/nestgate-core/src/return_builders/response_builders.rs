@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use crate::canonical_types::ResponseStatus;
 /// Response builder utilities for service responses
 /// Provides convenient builders for common response patterns using canonical types

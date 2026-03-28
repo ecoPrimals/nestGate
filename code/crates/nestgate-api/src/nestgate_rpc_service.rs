@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! NestGate RPC Service - tarpc + JSON-RPC interface
 //!
 //! Exposes NestGate storage capabilities via high-performance RPC protocols

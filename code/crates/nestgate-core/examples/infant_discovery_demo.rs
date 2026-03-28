@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! # Infant Discovery Pattern Demo
 //!
 //! Demonstrates how a primal starts with **zero knowledge** and discovers its ecosystem.

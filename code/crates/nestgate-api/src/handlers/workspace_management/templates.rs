@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Template creation and application functionality for standardizing
 // workspace configurations. These features require external dependencies.

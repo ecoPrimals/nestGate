@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Sharing and collaboration functionality for workspaces.
 // These features require external dependencies for user management and authentication.

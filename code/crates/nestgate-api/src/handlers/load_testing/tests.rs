@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE LOAD TESTING TESTS**
 //!
 //! Test coverage for load_testing module to increase overall coverage.

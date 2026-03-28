@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! ZFS Error Handling Tests - December 18, 2025
 //!
 //! Comprehensive error handling tests for ZFS operations.

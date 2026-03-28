@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Working Performance Benchmark
 //!
 //! This benchmark uses only standard Rust types to measure baseline performance

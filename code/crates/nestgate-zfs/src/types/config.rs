@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! ZFS configuration types
 //!
 //! Domain: Pool creation, system configuration, re-exports from canonical config

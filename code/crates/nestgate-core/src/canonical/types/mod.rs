@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Canonical type system for NestGate
 //!
 //! This module provides canonical type aliases for complex types used throughout

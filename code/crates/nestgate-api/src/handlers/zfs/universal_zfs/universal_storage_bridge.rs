@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This bridge makes the ZFS API endpoints work with ANY storage backend,
 // not just ZFS. It translates ZFS concepts (pools, datasets, snapshots)

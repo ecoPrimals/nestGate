@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **HEALTH MONITORING**
 //!
 //! Health monitoring and status tracking for system components.
@@ -22,9 +25,9 @@
 //! ```
 
 use crate::error::NestGateError;
-use async_trait::async_trait;
 use std::collections::HashMap;
 use std::future::Future;
+use std::pin::Pin;
 use std::time::{Duration, Instant};
 use tracing::{debug, warn};
 
@@ -110,17 +113,12 @@ pub trait HealthCheckZeroCost: Send + Sync + std::fmt::Debug {
 /// - When types are not known at compile time
 /// - When you need `Box<dyn Trait>` or `Arc<dyn Trait>`
 ///
-/// ## Note
-/// This is the **only** remaining legitimate `async_trait` usage in NestGate.
-/// It's required because trait objects (with `dyn` keyword) cannot use native async yet.
+/// Dyn-compatible health check trait using explicit future boxing.
 ///
-/// ## Performance
-/// Approximately 20-50% slower than `HealthCheckZeroCost` due to heap allocation
-/// and dynamic dispatch overhead. Prefer `HealthCheckZeroCost` when possible.
-#[async_trait]
+/// Prefer `HealthCheckZeroCost` when you don't need dynamic dispatch.
 pub trait HealthCheckDyn: Send + Sync + std::fmt::Debug {
     /// Perform health check
-    async fn check_health(&self) -> Result<HealthStatus, NestGateError>;
+    fn check_health(&self) -> Pin<Box<dyn Future<Output = Result<HealthStatus, NestGateError>> + Send + '_>>;
 
     /// Get component name
     fn component_name(&self) -> &str;

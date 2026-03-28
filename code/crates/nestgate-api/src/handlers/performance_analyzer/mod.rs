@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **REAL PERFORMANCE ANALYZER**
 //!
 //! Live system performance monitoring and analysis that replaces all mock implementations

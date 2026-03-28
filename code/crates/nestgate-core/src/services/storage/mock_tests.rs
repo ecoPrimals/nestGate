@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Mock-based storage tests (no ZFS required)
 //! Added: November 21, 2025 - Storage Testing Sprint
 //!

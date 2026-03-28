@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **UNIVERSAL CAPABILITY SYSTEM**
 //! Capability System functionality and utilities.
 //! This module implements a capability-based discovery and routing system that eliminates

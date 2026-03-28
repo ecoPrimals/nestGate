@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! HTTP Type-Safe Primitives and Core Types
 //!
 //! Type-safe wrappers for HTTP concepts: ports, methods, status codes, endpoints.

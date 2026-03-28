@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **UNIVERSAL TRAITS - CANONICAL MODERNIZED**
 //! Module definitions and exports.
 // This module provides the universal trait system for NestGate ecosystem integration,

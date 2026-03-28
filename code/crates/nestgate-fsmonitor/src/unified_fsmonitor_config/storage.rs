@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Storage and persistence configuration - extracted from monolithic config
 /// Handles storage backends, retention, compression, indexing, and backup settings
 use serde::{Deserialize, Serialize};

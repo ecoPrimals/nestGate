@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Strategic Coverage Tests for Hardware Tuning - December 11, 2025
 //!
 //! These tests target uncovered code paths in hardware_tuning/types.rs

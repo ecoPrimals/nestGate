@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Integration tests for configuration and discovery systems
 //!
 //! Tests the integration between capability-based config and service discovery.
@@ -20,9 +23,9 @@ mod config_discovery_integration_tests {
         let orig_security = std::env::var(security_key).ok();
         let orig_orchestration = std::env::var(orchestration_key).ok();
 
-        std::env::set_var(storage_key, "10.0.0.1:9000");
-        std::env::set_var(security_key, format!("10.0.0.2:{}", DEFAULT_DEV_PORT));
-        std::env::set_var(orchestration_key, format!("10.0.0.3:{}", DEFAULT_API_PORT));
+        nestgate_core::env_process::set_var(storage_key, "10.0.0.1:9000");
+        nestgate_core::env_process::set_var(security_key, format!("10.0.0.2:{}", DEFAULT_DEV_PORT));
+        nestgate_core::env_process::set_var(orchestration_key, format!("10.0.0.3:{}", DEFAULT_API_PORT));
 
         let config = CapabilityConfigBuilder::new()
             .with_discovery_timeout(Duration::from_secs(10))
@@ -37,16 +40,16 @@ mod config_discovery_integration_tests {
 
         // Restore before assertions to minimise race window
         match orig_storage {
-            Some(v) => std::env::set_var(storage_key, v),
-            None => std::env::remove_var(storage_key),
+            Some(v) => nestgate_core::env_process::set_var(storage_key, v),
+            None => nestgate_core::env_process::remove_var(storage_key),
         }
         match orig_security {
-            Some(v) => std::env::set_var(security_key, v),
-            None => std::env::remove_var(security_key),
+            Some(v) => nestgate_core::env_process::set_var(security_key, v),
+            None => nestgate_core::env_process::remove_var(security_key),
         }
         match orig_orchestration {
-            Some(v) => std::env::set_var(orchestration_key, v),
-            None => std::env::remove_var(orchestration_key),
+            Some(v) => nestgate_core::env_process::set_var(orchestration_key, v),
+            None => nestgate_core::env_process::remove_var(orchestration_key),
         }
 
         assert!(storage.is_ok(), "Storage discovery should succeed");
@@ -63,7 +66,7 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_fallback_mode_graceful_degradation() {
-        std::env::remove_var("NESTGATE_CAPABILITY_MONITORING_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_MONITORING_ENDPOINT");
 
         let config = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::GracefulDegradation)
@@ -79,7 +82,7 @@ mod config_discovery_integration_tests {
     #[tokio::test]
     async fn test_fallback_mode_local_fallback() {
         let orig = std::env::var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT").ok();
-        std::env::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");
 
         let config = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::LocalFallback)
@@ -89,7 +92,7 @@ mod config_discovery_integration_tests {
         let result = config.discover(PrimalCapability::Analytics).await;
 
         if let Some(v) = orig {
-            std::env::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v);
+            nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v);
         }
         assert!(result.is_ok());
         let service = result.unwrap();
@@ -99,7 +102,7 @@ mod config_discovery_integration_tests {
     #[tokio::test]
     async fn test_discovery_caching_performance() {
         let orig = std::env::var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT").ok();
-        std::env::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", "192.168.1.100:7000");
+        nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", "192.168.1.100:7000");
 
         let config = CapabilityConfigBuilder::new().build().unwrap();
 
@@ -111,8 +114,8 @@ mod config_discovery_integration_tests {
         let second_duration = start2.elapsed();
 
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v),
-            None => std::env::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT"),
         }
         assert!(result1.is_ok());
         assert!(result2.is_ok());
@@ -124,8 +127,8 @@ mod config_discovery_integration_tests {
     async fn test_concurrent_discovery_requests() {
         let orig_storage = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
         let orig_security = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
-        std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000");
-        std::env::set_var(
+        nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000");
+        nestgate_core::env_process::set_var(
             "NESTGATE_CAPABILITY_SECURITY_ENDPOINT",
             format!("10.0.0.2:{}", DEFAULT_DEV_PORT),
         );
@@ -143,12 +146,12 @@ mod config_discovery_integration_tests {
         let (result1, result2) = tokio::join!(handle1, handle2);
 
         match orig_storage {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
-            None => std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
         }
         match orig_security {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", v),
-            None => std::env::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT"),
         }
         assert!(result1.unwrap().is_ok());
         assert!(result2.unwrap().is_ok());
@@ -157,7 +160,7 @@ mod config_discovery_integration_tests {
     #[tokio::test]
     async fn test_discovery_with_invalid_port() {
         let orig = std::env::var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT").ok();
-        std::env::set_var(
+        nestgate_core::env_process::set_var(
             "NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT",
             "10.0.0.1:99999",
         );
@@ -166,8 +169,8 @@ mod config_discovery_integration_tests {
         let result = config.discover(PrimalCapability::MachineLearning).await;
 
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT", v),
-            None => std::env::remove_var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT"),
         }
         assert!(result.is_err());
     }
@@ -175,7 +178,7 @@ mod config_discovery_integration_tests {
     #[tokio::test]
     async fn test_discovery_retry_mechanism() {
         let orig = std::env::var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT").ok();
-        std::env::remove_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT");
 
         let config = CapabilityConfigBuilder::new()
             .with_retry_attempts(3)
@@ -187,7 +190,7 @@ mod config_discovery_integration_tests {
         let duration = start.elapsed();
 
         if let Some(v) = orig {
-            std::env::set_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT", v);
+            nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT", v);
         }
         assert!(result.is_err());
         assert!(duration >= Duration::from_millis(100));
@@ -214,32 +217,32 @@ mod config_discovery_integration_tests {
         let key = "NESTGATE_CAPABILITY_STORAGE_ENDPOINT";
 
         let orig1 = std::env::var(key).ok();
-        std::env::set_var(key, format!("127.0.0.1:{}", DEFAULT_API_PORT));
+        nestgate_core::env_process::set_var(key, format!("127.0.0.1:{}", DEFAULT_API_PORT));
         let config1 = CapabilityConfigBuilder::new().build().unwrap();
         let result1 = config1.discover(PrimalCapability::Storage).await;
         match orig1 {
-            Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
+            Some(v) => nestgate_core::env_process::set_var(key, v),
+            None => nestgate_core::env_process::remove_var(key),
         }
         assert!(result1.is_ok());
 
         let orig2 = std::env::var(key).ok();
-        std::env::set_var(key, format!("[::1]:{}", DEFAULT_API_PORT));
+        nestgate_core::env_process::set_var(key, format!("[::1]:{}", DEFAULT_API_PORT));
         let config2 = CapabilityConfigBuilder::new().build().unwrap();
         let result2 = config2.discover(PrimalCapability::Storage).await;
         match orig2 {
-            Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
+            Some(v) => nestgate_core::env_process::set_var(key, v),
+            None => nestgate_core::env_process::remove_var(key),
         }
         assert!(result2.is_ok());
 
         let orig3 = std::env::var(key).ok();
-        std::env::set_var(key, "0.0.0.0:9000");
+        nestgate_core::env_process::set_var(key, "0.0.0.0:9000");
         let config3 = CapabilityConfigBuilder::new().build().unwrap();
         let result3 = config3.discover(PrimalCapability::Storage).await;
         match orig3 {
-            Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
+            Some(v) => nestgate_core::env_process::set_var(key, v),
+            None => nestgate_core::env_process::remove_var(key),
         }
         assert!(result3.is_ok());
     }
@@ -252,11 +255,11 @@ mod safe_operations_edge_cases {
     #[test]
     fn test_parse_env_var_whitespace() {
         let orig = std::env::var("TEST_WHITESPACE").ok();
-        std::env::set_var("TEST_WHITESPACE", "  42  ");
+        nestgate_core::env_process::set_var("TEST_WHITESPACE", "  42  ");
         let value = std::env::var("TEST_WHITESPACE");
         match orig {
-            Some(v) => std::env::set_var("TEST_WHITESPACE", v),
-            None => std::env::remove_var("TEST_WHITESPACE"),
+            Some(v) => nestgate_core::env_process::set_var("TEST_WHITESPACE", v),
+            None => nestgate_core::env_process::remove_var("TEST_WHITESPACE"),
         }
         assert!(value.is_ok());
     }
@@ -306,11 +309,11 @@ mod safe_operations_edge_cases {
     #[test]
     fn test_parse_optional_with_empty_string() {
         let orig = std::env::var("EMPTY_VAR").ok();
-        std::env::set_var("EMPTY_VAR", "");
+        nestgate_core::env_process::set_var("EMPTY_VAR", "");
         let value = std::env::var("EMPTY_VAR").ok();
         match orig {
-            Some(v) => std::env::set_var("EMPTY_VAR", v),
-            None => std::env::remove_var("EMPTY_VAR"),
+            Some(v) => nestgate_core::env_process::set_var("EMPTY_VAR", v),
+            None => nestgate_core::env_process::remove_var("EMPTY_VAR"),
         }
         assert_eq!(value, Some(String::new()));
     }

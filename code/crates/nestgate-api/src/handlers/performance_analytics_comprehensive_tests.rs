@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for Performance Analytics
 //!
 //! Tests cover metrics collection, alert generation, and recommendation engine.

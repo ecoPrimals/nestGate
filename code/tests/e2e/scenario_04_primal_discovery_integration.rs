@@ -156,7 +156,7 @@ mod primal_discovery_tests {
         eprintln!("\n🧪 TEST: Environment-Based Primal Discovery");
 
         // Set environment variable for primal discovery
-        std::env::set_var("PRIMAL_SECURITY_ENDPOINT", "http://custom-security:9000");
+        nestgate_core::env_process::set_var("PRIMAL_SECURITY_ENDPOINT", "http://custom-security:9000");
         
         let result = discover_primal_by_capability("security").await;
         
@@ -166,7 +166,7 @@ mod primal_discovery_tests {
             eprintln!("   Endpoint: {:?}", primal.primary_endpoint);
         }
         
-        std::env::remove_var("PRIMAL_SECURITY_ENDPOINT");
+        nestgate_core::env_process::remove_var("PRIMAL_SECURITY_ENDPOINT");
     }
 
     // ==================== TEST 4: CAPABILITY-BASED COMMUNICATION ====================

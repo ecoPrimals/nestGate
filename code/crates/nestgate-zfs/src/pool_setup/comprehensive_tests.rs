@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for pool_setup module
 //!
 //! This test suite aims to boost coverage from 14.18% to 40%+

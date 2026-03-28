@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive Tests for ZFS Command Execution
 //!
 //! Tests for ZfsCommand struct and command execution patterns

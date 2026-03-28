@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Discovery command implementations
 //!
 //! ✅ EVOLVED: Real implementations replacing "Coming soon" stubs
@@ -211,7 +214,7 @@ mod tests {
     fn test_discover_socket_dir_from_biomeos_env() {
         // Temporarily set BIOMEOS_SOCKET_DIR
         let original = std::env::var("BIOMEOS_SOCKET_DIR").ok();
-        std::env::set_var("BIOMEOS_SOCKET_DIR", "/tmp/test-biomeos-sockets");
+        nestgate_core::env_process::set_var("BIOMEOS_SOCKET_DIR", "/tmp/test-biomeos-sockets");
         let result = discover_socket_dir();
         assert_eq!(
             result,
@@ -219,8 +222,8 @@ mod tests {
         );
         // Restore
         match original {
-            Some(val) => std::env::set_var("BIOMEOS_SOCKET_DIR", val),
-            None => std::env::remove_var("BIOMEOS_SOCKET_DIR"),
+            Some(val) => nestgate_core::env_process::set_var("BIOMEOS_SOCKET_DIR", val),
+            None => nestgate_core::env_process::remove_var("BIOMEOS_SOCKET_DIR"),
         }
     }
 

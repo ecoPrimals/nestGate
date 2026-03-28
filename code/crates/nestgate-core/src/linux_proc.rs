@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Linux system metrics via `/proc` and [`rustix::fs::statvfs`].
 //!
 //! ecoBin v3.0 evolution: primary path on Linux; [`sysinfo`] remains the non-Linux / fallback
@@ -56,6 +59,62 @@ pub fn used_memory_bytes() -> Option<u64> {
     let t = total_memory_bytes()?;
     let a = available_memory_bytes()?;
     Some(t.saturating_sub(a))
+}
+
+/// Logical CPU count via [`std::thread::available_parallelism`] (ecoBin v3.0; replaces `num_cpus::get`).
+#[must_use]
+pub fn logical_cpu_count() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get() as usize)
+        .unwrap_or(1)
+}
+
+#[cfg(target_os = "linux")]
+fn physical_cpu_count_from_proc_cpuinfo() -> Option<usize> {
+    use std::collections::HashSet;
+    let data = std::fs::read_to_string("/proc/cpuinfo").ok()?;
+    let mut pairs: HashSet<(u32, u32)> = HashSet::new();
+    let mut physical_id = None::<u32>;
+    let mut core_id = None::<u32>;
+
+    for line in data.lines() {
+        let line = line.trim();
+        if line.starts_with("processor") {
+            if let (Some(p), Some(c)) = (physical_id, core_id) {
+                pairs.insert((p, c));
+            }
+            physical_id = None;
+            core_id = None;
+        } else if let Some(rest) = line.strip_prefix("physical id") {
+            if rest.trim_start().starts_with(':') {
+                physical_id = rest.split(':').nth(1).and_then(|s| s.trim().parse().ok());
+            }
+        } else if let Some(rest) = line.strip_prefix("core id") {
+            if rest.trim_start().starts_with(':') {
+                core_id = rest.split(':').nth(1).and_then(|s| s.trim().parse().ok());
+            }
+        }
+    }
+    if let (Some(p), Some(c)) = (physical_id, core_id) {
+        pairs.insert((p, c));
+    }
+    if pairs.is_empty() {
+        None
+    } else {
+        Some(pairs.len())
+    }
+}
+
+/// Best-effort physical CPU core count: Linux `/proc/cpuinfo` first, then [`sysinfo::System`] (cross-platform fallback).
+#[must_use]
+pub fn physical_cpu_count() -> usize {
+    #[cfg(target_os = "linux")]
+    if let Some(n) = physical_cpu_count_from_proc_cpuinfo() {
+        return n;
+    }
+    let sys = sysinfo::System::new_all();
+    sys.physical_core_count()
+        .unwrap_or_else(|| logical_cpu_count())
 }
 
 /// Memory usage as a percentage (0.0–100.0).

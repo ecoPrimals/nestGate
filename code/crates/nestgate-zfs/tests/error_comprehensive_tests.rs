@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE ERROR HANDLING TESTS**
 //!
 //! Tests for ZFS error creation, formatting, and handling to achieve >80% coverage.

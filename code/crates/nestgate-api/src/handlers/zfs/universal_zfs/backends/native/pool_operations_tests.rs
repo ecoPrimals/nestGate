@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for Native ZFS Pool Operations
 //!
 //! Tests cover pool parsing, state/health detection, and status parsing

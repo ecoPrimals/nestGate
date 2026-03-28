@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **OBJECT STORAGE BACKEND - SOVEREIGNTY COMPLIANT** ✅
 //!
 //! Universal S3-compatible object storage backend that works with ANY provider.

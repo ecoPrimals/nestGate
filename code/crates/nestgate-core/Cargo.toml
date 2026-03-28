@@ -1,7 +1,7 @@
 [package]
 name = "nestgate-core"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["NestGate Development Team <dev@nestgate.io>"]
 description = "Core functionality and canonical patterns for the NestGate storage management system"
 repository = "https://github.com/nestgate/nestgate"
@@ -12,9 +12,16 @@ categories = ["filesystem", "network-programming", "asynchronous", "api-bindings
 homepage = "https://nestgate.io"
 documentation = "https://docs.rs/nestgate-core"
 
+[lints]
+workspace = true
+
 [dependencies]
+nestgate-types = { path = "../nestgate-types" }
+nestgate-config = { path = "../nestgate-config" }
+nestgate-storage = { path = "../nestgate-storage" }
+nestgate-rpc = { path = "../nestgate-rpc" }
+nestgate-discovery = { path = "../nestgate-discovery" }
 anyhow = "1.0"
-async-trait = "0.1"
 axum = { version = "0.7", features = ["json", "tokio"] }
 chrono = { version = "0.4", features = ["serde"] }
 # reqwest REMOVED (BiomeOS Pure Rust Evolution - no external HTTP!)
@@ -59,7 +66,6 @@ rand = "0.8"
 # flate2 removed: unused dependency (only referenced in comments)
 dashmap = "5.5"
 parking_lot = "0.12"
-num_cpus = "1.16"
 md5 = "0.7"
 etcetera = "0.8"
 sha2 = "0.10"
@@ -72,6 +78,7 @@ tempfile = "3.8"
 regex = "1.10"
 fastrand = "2.0"
 # sysinfo: non-Linux + Linux `/proc` failure fallbacks (observability, universal_storage, API).
+# Evolution path (ecoBin v3.0): Linux `/proc` + rustix first; full removal needs optional feature + cfg on all dependents.
 # Making it optional would require a `sysinfo` default feature and `#[cfg(feature = "sysinfo")]`
 # on every call site in nestgate-core, nestgate-api, nestgate-mcp, and dependents.
 sysinfo = "0.30"

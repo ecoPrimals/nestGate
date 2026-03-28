@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! ZFS command types and execution results
 //!
 //! Domain: Command operations, results, status reporting

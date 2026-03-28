@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Core types and data structures for the file system monitor.
 
@@ -171,7 +174,7 @@ impl Default for PerformanceSettings {
             debounce_duration: Duration::from_millis(100),
             max_buffer_size: 10_000,
             batch_size: 100,
-            worker_threads: num_cpus::get().min(8),
+            worker_threads: nestgate_core::linux_proc::logical_cpu_count().min(8),
             high_performance_mode: false,
         }
     }

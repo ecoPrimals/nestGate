@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **AZURE BLOB STORAGE BACKEND**
 //!
 //! Implements `ZeroCostZfsOperations` trait for Azure Blob Storage.
@@ -566,7 +569,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_dataset() {
         let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
-        std::env::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
+        nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
 
         let backend = AzureBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
@@ -575,8 +578,8 @@ mod tests {
             .await;
 
         match orig {
-            Some(v) => std::env::set_var("AZURE_STORAGE_ACCOUNT", v),
-            None => std::env::remove_var("AZURE_STORAGE_ACCOUNT"),
+            Some(v) => nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", v),
+            None => nestgate_core::env_process::remove_var("AZURE_STORAGE_ACCOUNT"),
         }
         assert!(dataset.is_ok(), "Dataset creation should succeed");
         let dataset = dataset.unwrap();
@@ -618,15 +621,15 @@ mod tests {
     #[tokio::test]
     async fn test_get_pool_properties() {
         let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
-        std::env::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
+        nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
         let backend = AzureBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
 
         let props = backend.get_pool_properties(&pool).await;
 
         match orig {
-            Some(v) => std::env::set_var("AZURE_STORAGE_ACCOUNT", v),
-            None => std::env::remove_var("AZURE_STORAGE_ACCOUNT"),
+            Some(v) => nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", v),
+            None => nestgate_core::env_process::remove_var("AZURE_STORAGE_ACCOUNT"),
         }
         assert!(props.is_ok(), "Should get pool properties");
         let props = props.unwrap();

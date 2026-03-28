@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! High-value method tests that exercise business logic
 //!
 //! Focus: Methods that actually DO things, not just hold data

@@ -5,7 +5,7 @@ path = "src/main.rs"
 [package]
 name = "nestgate-installer"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "NestGate Installation and Configuration Tool"
 authors = [ "NestGate Team",]
 license = "AGPL-3.0-only"
@@ -13,6 +13,9 @@ repository = "https://github.com/eastgate/nestgate"
 readme = "README.md"
 keywords = [ "installer", "deployment", "rust", "nestgate",]
 categories = [ "development-tools", "deployment",]
+
+[lints]
+workspace = true
 
 [lib]
 name = "nestgate_installer"
@@ -26,6 +29,7 @@ thiserror = "1.0"
 etcetera = "0.8"
 tempfile = "3.8"
 # tar, flate2, zip, indicatif removed: unused dependencies
+# sysinfo: non-Linux + Linux fallbacks; evolution path is Linux `/proc` + rustix (ecoBin v3.0); full removal needs feature-gating across consumers.
 sysinfo = "0.30"
 console = "0.15"
 tracing = "0.1"

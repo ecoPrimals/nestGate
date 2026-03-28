@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive error handling tests
 //!
 //! Tests for proper error propagation and handling patterns.
@@ -213,10 +216,10 @@ mod safe_operations_integration_tests {
 
     #[test]
     fn test_parse_env_var_integration() {
-        std::env::set_var("TEST_VALUE", "12345");
+        nestgate_core::env_process::set_var("TEST_VALUE", "12345");
         let value: Result<i32> = parse_env_var("TEST_VALUE");
         assert_eq!(value.unwrap(), 12345);
-        std::env::remove_var("TEST_VALUE");
+        nestgate_core::env_process::remove_var("TEST_VALUE");
     }
 
     #[test]

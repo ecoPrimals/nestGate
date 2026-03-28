@@ -12,8 +12,8 @@ mod configuration_management {
     async fn test_config_from_environment() {
         let orig_timeout = std::env::var("NESTGATE_TIMEOUT").ok();
         let orig_connections = std::env::var("NESTGATE_MAX_CONNECTIONS").ok();
-        std::env::set_var("NESTGATE_TIMEOUT", "5000");
-        std::env::set_var("NESTGATE_MAX_CONNECTIONS", "100");
+        nestgate_core::env_process::set_var("NESTGATE_TIMEOUT", "5000");
+        nestgate_core::env_process::set_var("NESTGATE_MAX_CONNECTIONS", "100");
 
         let timeout = std::env::var("NESTGATE_TIMEOUT")
             .ok()
@@ -25,12 +25,12 @@ mod configuration_management {
             .and_then(|s| s.parse::<usize>().ok());
 
         match orig_timeout {
-            Some(v) => std::env::set_var("NESTGATE_TIMEOUT", v),
-            None => std::env::remove_var("NESTGATE_TIMEOUT"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_TIMEOUT", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_TIMEOUT"),
         }
         match orig_connections {
-            Some(v) => std::env::set_var("NESTGATE_MAX_CONNECTIONS", v),
-            None => std::env::remove_var("NESTGATE_MAX_CONNECTIONS"),
+            Some(v) => nestgate_core::env_process::set_var("NESTGATE_MAX_CONNECTIONS", v),
+            None => nestgate_core::env_process::remove_var("NESTGATE_MAX_CONNECTIONS"),
         }
         assert_eq!(timeout, Some(Duration::from_millis(5000)));
         assert_eq!(max_connections, Some(100));

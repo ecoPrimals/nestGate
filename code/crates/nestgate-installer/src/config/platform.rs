@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Platform-specific installation settings, component selection, and system integration
 #![allow(dead_code)] // Reserved serde schema types for future installer features
 use serde::{Deserialize, Serialize};

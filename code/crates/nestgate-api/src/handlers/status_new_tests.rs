@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE STATUS HANDLER TESTS**
 //!
 //! High-value test coverage for status endpoint - critical for monitoring.

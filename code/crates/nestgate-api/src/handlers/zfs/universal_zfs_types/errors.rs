@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Universal ZFS Error Types
 //!
 //! Comprehensive error handling for ZFS operations across all backend implementations.

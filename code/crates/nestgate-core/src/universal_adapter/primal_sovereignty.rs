@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! # Primal Sovereignty Universal Adapter
 //! Primal Sovereignty functionality and utilities.
 //! Implements the core principle: "Each primal only knows itself and discovers
@@ -202,7 +205,7 @@ impl UniversalAdapter {
         capability_type: &CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
         let discovery_result = match method {
-            DiscoveryMethod::Environment => self.discover_from_environment(capability_type).await,
+            DiscoveryMethod::Environment => self.discover_from_environment(capability_type),
             DiscoveryMethod::NetworkScan => self.discover_from_network(capability_type).await,
             DiscoveryMethod::ServiceRegistry => self.discover_from_registry(capability_type).await,
             DiscoveryMethod::CapabilityBroadcast => {
@@ -214,7 +217,7 @@ impl UniversalAdapter {
     }
 
     /// Discover From Environment
-    async fn discover_from_environment(
+    fn discover_from_environment(
         &self,
         capability_type: &CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
@@ -359,7 +362,7 @@ mod tests {
     async fn test_capability_discovery_from_environment() {
         let key = "ORCHESTRATION_DISCOVERY_ENDPOINT";
         let orig = std::env::var(key).ok();
-        std::env::set_var(key, "http://test:8081/capabilities");
+        crate::env_process::set_var(key, "http://test:8081/capabilities");
 
         let mut adapter =
             UniversalAdapter::new().expect("Failed to create UniversalAdapter for test");
@@ -369,8 +372,8 @@ mod tests {
 
         // Restore before asserting
         match orig {
-            Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
+            Some(v) => crate::env_process::set_var(key, v),
+            None => crate::env_process::remove_var(key),
         }
 
         // Tolerate parallel test interference
@@ -389,15 +392,15 @@ mod tests {
     async fn test_capability_discovery_security() {
         let key = "SECURITY_DISCOVERY_ENDPOINT";
         let orig = env::var(key).ok();
-        env::set_var(key, "http://security:9000/auth");
+        crate::env_process::set_var(key, "http://security:9000/auth");
 
         let mut adapter = UniversalAdapter::new().expect("Failed to create adapter");
         let result = adapter.discover_capability(CapabilityType::Security).await;
 
         // Restore before asserting
         match orig {
-            Some(v) => env::set_var(key, v),
-            None => env::remove_var(key),
+            Some(v) => crate::env_process::set_var(key, v),
+            None => crate::env_process::remove_var(key),
         }
 
         // Tolerate parallel test interference
@@ -412,12 +415,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_capability_discovery_not_found() {
-        env::remove_var("STORAGE_DISCOVERY_ENDPOINT");
-        env::remove_var("ORCHESTRATION_DISCOVERY_ENDPOINT");
-        env::remove_var("SECURITY_DISCOVERY_ENDPOINT");
-        env::remove_var("AI_DISCOVERY_ENDPOINT");
-        env::remove_var("COMPUTE_DISCOVERY_ENDPOINT");
-        env::remove_var("MANAGEMENT_DISCOVERY_ENDPOINT");
+        crate::env_process::remove_var("STORAGE_DISCOVERY_ENDPOINT");
+        crate::env_process::remove_var("ORCHESTRATION_DISCOVERY_ENDPOINT");
+        crate::env_process::remove_var("SECURITY_DISCOVERY_ENDPOINT");
+        crate::env_process::remove_var("AI_DISCOVERY_ENDPOINT");
+        crate::env_process::remove_var("COMPUTE_DISCOVERY_ENDPOINT");
+        crate::env_process::remove_var("MANAGEMENT_DISCOVERY_ENDPOINT");
 
         let mut adapter = UniversalAdapter::new().expect("Failed to create adapter");
         let result = adapter.discover_capability(CapabilityType::Storage).await;

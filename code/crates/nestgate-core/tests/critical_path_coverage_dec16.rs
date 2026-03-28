@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Critical Path Coverage Tests - December 16, 2025
 //!
 //! Systematic test expansion targeting critical production paths.
@@ -20,7 +23,7 @@ fn test_config_missing_required_env_vars() {
     let original_port = env::var("NESTGATE_API_PORT").ok();
 
     // Remove env var
-    env::remove_var("NESTGATE_API_PORT");
+    nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
 
     // Should fall back to defaults gracefully
     let result = env::var("NESTGATE_API_PORT");
@@ -31,7 +34,7 @@ fn test_config_missing_required_env_vars() {
 
     // Restore original value
     if let Some(val) = original_port {
-        env::set_var("NESTGATE_API_PORT", val);
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", val);
     }
 }
 
@@ -41,7 +44,7 @@ fn test_config_invalid_port_format() {
     let original = env::var("NESTGATE_API_PORT").ok();
 
     // Set invalid port
-    env::set_var("NESTGATE_API_PORT", "not_a_number");
+    nestgate_core::env_process::set_var("NESTGATE_API_PORT", "not_a_number");
 
     // Parse should fail gracefully
     let result = env::var("NESTGATE_API_PORT")
@@ -52,9 +55,9 @@ fn test_config_invalid_port_format() {
 
     // Restore
     if let Some(val) = original {
-        env::set_var("NESTGATE_API_PORT", val);
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", val);
     } else {
-        env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
     }
 }
 
@@ -64,7 +67,7 @@ fn test_config_port_out_of_range() {
     let original = env::var("NESTGATE_API_PORT").ok();
 
     // Set out-of-range port
-    env::set_var("NESTGATE_API_PORT", "70000"); // > 65535
+    nestgate_core::env_process::set_var("NESTGATE_API_PORT", "70000"); // > 65535
 
     let result = env::var("NESTGATE_API_PORT")
         .ok()
@@ -74,9 +77,9 @@ fn test_config_port_out_of_range() {
 
     // Restore
     if let Some(val) = original {
-        env::set_var("NESTGATE_API_PORT", val);
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", val);
     } else {
-        env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
     }
 }
 
@@ -87,8 +90,8 @@ fn test_config_conflicting_values() {
     let original_ws = env::var("NESTGATE_WS_PORT").ok();
 
     // Set same port for API and WebSocket (should be detected)
-    env::set_var("NESTGATE_API_PORT", "8080");
-    env::set_var("NESTGATE_WS_PORT", "8080");
+    nestgate_core::env_process::set_var("NESTGATE_API_PORT", "8080");
+    nestgate_core::env_process::set_var("NESTGATE_WS_PORT", "8080");
 
     let api_port = env::var("NESTGATE_API_PORT")
         .ok()
@@ -104,14 +107,14 @@ fn test_config_conflicting_values() {
 
     // Restore
     if let Some(val) = original_port {
-        env::set_var("NESTGATE_API_PORT", val);
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", val);
     } else {
-        env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
     }
     if let Some(val) = original_ws {
-        env::set_var("NESTGATE_WS_PORT", val);
+        nestgate_core::env_process::set_var("NESTGATE_WS_PORT", val);
     } else {
-        env::remove_var("NESTGATE_WS_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_WS_PORT");
     }
 }
 
@@ -163,7 +166,7 @@ async fn test_concurrent_config_updates() -> Result<()> {
 
     let writer = tokio::spawn(async move {
         for i in 0..100 {
-            env::set_var("TEST_CONCURRENT_VAR", format!("value_{}", i));
+            nestgate_core::env_process::set_var("TEST_CONCURRENT_VAR", format!("value_{}", i));
             // Removed sleep - polling anti-pattern
             // Real concurrent writes without artificial timing
             tokio::task::yield_now().await; // Cooperative yielding only
@@ -179,9 +182,9 @@ async fn test_concurrent_config_updates() -> Result<()> {
 
     // Cleanup
     if let Some(val) = original {
-        env::set_var("TEST_CONCURRENT_VAR", val);
+        nestgate_core::env_process::set_var("TEST_CONCURRENT_VAR", val);
     } else {
-        env::remove_var("TEST_CONCURRENT_VAR");
+        nestgate_core::env_process::remove_var("TEST_CONCURRENT_VAR");
     }
 
     Ok(())

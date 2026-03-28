@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for ZFS Pool Setup module
 //!
 //! This test module provides extensive coverage for pool setup operations including:

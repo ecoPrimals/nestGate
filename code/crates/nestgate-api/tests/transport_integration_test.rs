@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **TRANSPORT INTEGRATION TESTS**
 //!
 //! Integration tests for TRUE PRIMAL transport layer.
@@ -12,8 +15,8 @@ use tokio::time::timeout;
 
 #[tokio::test]
 async fn test_transport_config_from_env() {
-    std::env::set_var("NESTGATE_FAMILY_ID", "test_family");
-    std::env::set_var("NESTGATE_SOCKET_PATH", "/tmp/nestgate-test.sock");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "test_family");
+    nestgate_core::env_process::set_var("NESTGATE_SOCKET_PATH", "/tmp/nestgate-test.sock");
 
     let config = TransportConfig::from_env().unwrap();
     assert_eq!(config.family_id, "test_family");
@@ -22,8 +25,8 @@ async fn test_transport_config_from_env() {
         "/tmp/nestgate-test.sock"
     );
 
-    std::env::remove_var("NESTGATE_FAMILY_ID");
-    std::env::remove_var("NESTGATE_SOCKET_PATH");
+    nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
+    nestgate_core::env_process::remove_var("NESTGATE_SOCKET_PATH");
 }
 
 #[tokio::test]

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Safety macros for easy migration from `unwrap()` and `expect()` patterns
 /// **SAFE UNWRAP MACRO**
 /// Easy replacement for .`map_err` patterns

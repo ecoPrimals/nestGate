@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Systematic migration framework
 //!
 //! This module provides a systematic approach to migrating unwrap/expect

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Service module
 //!
 //! UniBin service management with daemon mode, status, health, and version commands
@@ -405,7 +408,7 @@ pub async fn run_daemon(
 ) -> BinResult<()> {
     // Set family_id in environment for downstream socket config resolution
     if let Some(fid) = family_id {
-        std::env::set_var("NESTGATE_FAMILY_ID", fid);
+        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", fid);
         info!("👪 Multi-family mode: family_id='{}'", fid);
     }
 

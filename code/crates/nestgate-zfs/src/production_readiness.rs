@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -477,16 +480,16 @@ mod tests {
     #[tokio::test]
     async fn test_mock_detection() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Test mock mode detection
-        std::env::set_var("NESTGATE_MOCK_MODE", "true");
+        nestgate_core::env_process::set_var("NESTGATE_MOCK_MODE", "true");
         let validator = ProductionReadinessValidator::new();
         let mocks = validator.identify_mock_dependencies()?;
         assert!(!mocks.is_empty());
 
-        std::env::set_var("NESTGATE_MOCK_MODE", "false");
+        nestgate_core::env_process::set_var("NESTGATE_MOCK_MODE", "false");
         let mocks = validator.identify_mock_dependencies()?;
         assert!(mocks.is_empty());
 
-        std::env::remove_var("NESTGATE_MOCK_MODE");
+        nestgate_core::env_process::remove_var("NESTGATE_MOCK_MODE");
         let mocks = validator.identify_mock_dependencies()?;
         assert!(mocks.is_empty()); // Should default to false
 

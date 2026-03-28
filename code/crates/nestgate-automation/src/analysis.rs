@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // Clean implementation of file characteristic analysis and access pattern tracking
 
 //! Analysis module

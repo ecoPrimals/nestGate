@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Contains utility functions for parsing ZFS output, capacity calculations,
 // and other helper functions used throughout the ZFS manager.

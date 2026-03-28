@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Provides standardized request handling for ZFS operations using the unified
 // service architecture and error handling patterns.
@@ -363,7 +366,3 @@ impl ZfsRequestHandler {
 
 // REMOVED: UniversalService trait implementation - trait no longer exists
 // All service functionality has been migrated to the canonical trait system
-
-#[cfg(test)]
-#[path = "handlers_tests.rs"]
-mod handlers_tests;

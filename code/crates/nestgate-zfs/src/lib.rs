@@ -1,12 +1,13 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **NESTGATE ZFS CRATE**
 //!
 //! This crate provides ZFS storage management functionality for `NestGate`,
 //! with canonical configuration integration and zero-cost abstractions.
 
-// Temporary allow deprecated during canonical config migration
 #![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
-#![allow(deprecated)]
 
 // Core modules
 pub mod adaptive_backend; // ✅ Adaptive ZFS: system or internal
@@ -40,9 +41,6 @@ pub mod zero_cost_zfs_operations;
 pub mod health;
 #[cfg(test)]
 mod health_tests;
-
-#[cfg(test)]
-mod zfs_edge_cases_tests; // Dec 10, 2025 - Comprehensive edge case tests
 
 /// Metrics collection and reporting for ZFS operations
 pub mod metrics;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Data types and structures for adaptive optimization.
 
 use std::collections::VecDeque;

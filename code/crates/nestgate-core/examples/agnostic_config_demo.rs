@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Agnostic Configuration Demo
 //!
 //! Demonstrates how to use capability-based discovery and agnostic configuration.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive tests for pool creation functionality
 //! Created: November 22, 2025 - P1 Coverage Expansion
 //!

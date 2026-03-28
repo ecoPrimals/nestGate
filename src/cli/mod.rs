@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **CLI Module - UniBin Command Interface**
 //!
 //! This module provides the command-line interface for NestGate's unified binary.
@@ -55,7 +58,9 @@ pub enum Commands {
         #[arg(short, long, default_value = "8080")]
         port: u16,
 
-        /// Bind address (only used when --enable-http is set)
+        /// Bind address (only used when --enable-http is set). This is where **this** process
+        /// listens — not a peer discovery address. Override with `NESTGATE_BIND_ADDRESS` in config
+        /// flows that merge environment.
         #[arg(short, long, default_value = "127.0.0.1")]
         bind: String,
 

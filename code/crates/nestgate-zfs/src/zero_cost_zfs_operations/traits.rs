@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ZERO-COST ZFS OPERATIONS TRAITS**
 //! This module defines the core trait for zero-cost ZFS operations
 //! Replaces `Arc<dyn>` patterns with compile-time dispatch for maximum performance

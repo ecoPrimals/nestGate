@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! This module was split from native_async_zfs.rs to maintain the 2000-line limit
 //! while preserving all functionality and maintaining backward compatibility
 //!

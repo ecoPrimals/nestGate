@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! # Test Function Signature Fixer
 //!
 //! Automatically fixes test function signatures when using SafeUnwrap with ? operator.

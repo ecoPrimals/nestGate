@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **NETWORK COVERAGE EXPANSION TESTS**
 //!
 //! Comprehensive tests to boost nestgate-network coverage from 59.87% to 75%+

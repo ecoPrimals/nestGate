@@ -232,7 +232,7 @@ mod tests {
     async fn example_songbird_discovers_nestgate() {
         // Set up environment-based discovery for testing
         // Uses NESTGATE_CAPABILITY_FILE_STORAGE_ENDPOINT (from Display impl)
-        std::env::set_var(
+        nestgate_core::env_process::set_var(
             "NESTGATE_CAPABILITY_FILE_STORAGE_ENDPOINT",
             "http://nestgate.local:8080",
         );
@@ -248,12 +248,12 @@ mod tests {
         assert_eq!(service.host, "nestgate.local");
         assert_eq!(service.port, 8080);
 
-        std::env::remove_var("NESTGATE_CAPABILITY_FILE_STORAGE_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_FILE_STORAGE_ENDPOINT");
     }
 
     #[tokio::test]
     async fn example_toadstool_discovers_orchestration() {
-        std::env::set_var(
+        nestgate_core::env_process::set_var(
             "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
             "http://songbird.local:9090",
         );
@@ -268,7 +268,7 @@ mod tests {
         assert_eq!(service.host, "songbird.local");
         assert_eq!(service.port, 9090);
 
-        std::env::remove_var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT");
     }
 
     #[tokio::test]
@@ -285,15 +285,15 @@ mod tests {
     #[tokio::test]
     async fn example_multi_primal_workflow() {
         // Set up multiple services
-        std::env::set_var(
+        nestgate_core::env_process::set_var(
             "NESTGATE_CAPABILITY_FILE_STORAGE_ENDPOINT",
             "http://nestgate.local:8080",
         );
-        std::env::set_var(
+        nestgate_core::env_process::set_var(
             "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
             "http://songbird.local:9090",
         );
-        std::env::set_var(
+        nestgate_core::env_process::set_var(
             "NESTGATE_CAPABILITY_TASK_EXECUTION_ENDPOINT",
             "http://toadstool.local:7070",
         );
@@ -310,8 +310,8 @@ mod tests {
         assert!(workflow_result.compute_engine.contains("toadstool.local"));
 
         // Cleanup
-        std::env::remove_var("NESTGATE_CAPABILITY_FILE_STORAGE_ENDPOINT");
-        std::env::remove_var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT");
-        std::env::remove_var("NESTGATE_CAPABILITY_TASK_EXECUTION_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_FILE_STORAGE_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_TASK_EXECUTION_ENDPOINT");
     }
 }

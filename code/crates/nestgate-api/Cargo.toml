@@ -1,7 +1,7 @@
 [package]
 name = "nestgate-api"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["ecoPrimals Collective"]
 description = "API server and interface definitions for NestGate with enhanced streaming capabilities"
 license = "AGPL-3.0-only"
@@ -14,11 +14,11 @@ readme = "README.md"
 [dependencies]
 # hyper removed — no direct usage; axum handles HTTP internally
 futures-util = "0.3"
-num_cpus = "1.16"
 fastrand = "2.0"
 toml = "0.8"
 sha2 = "0.10"
 rand = "0.8"
+# sysinfo: non-Linux + Linux fallbacks; evolution path is Linux `/proc` + rustix (ecoBin v3.0); full removal needs feature-gating across consumers.
 sysinfo = "0.30"
 url = "2.5.7"
 async-stream = "0.3"
@@ -58,9 +58,6 @@ workspace = true
 workspace = true
 
 [dependencies.futures]
-workspace = true
-
-[dependencies.async-trait]
 workspace = true
 
 # reqwest removed (BiomeOS Pure Rust Evolution)

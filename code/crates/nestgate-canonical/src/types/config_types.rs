@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Configuration Type Definitions
 //!
 //! Canonical configuration types for services, networks, storage, security, and performance.
@@ -186,7 +189,11 @@ impl Default for CanonicalConfig {
 
 #[allow(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
 impl Default for NetworkConfig {
-    /// Returns the default instance
+    /// Returns the default instance.
+    ///
+    /// **Development default**: when `NESTGATE_BIND_ADDRESS` is unset, bind endpoint defaults
+    /// to loopback (`127.0.0.1`). Production and non-local deployments must set
+    /// `NESTGATE_BIND_ADDRESS` (or equivalent) explicitly.
     fn default() -> Self {
         Self {
             bind_endpoint: std::env::var("NESTGATE_BIND_ADDRESS")
@@ -236,7 +243,8 @@ impl Default for PerformanceConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            thread_pool_size: u32::try_from(num_cpus::get()).unwrap_or(4),
+            thread_pool_size: u32::try_from(nestgate_core::linux_proc::logical_cpu_count())
+                .unwrap_or(4),
             buffer_size_kb: 1024,
             batch_size: 100,
             enable_metrics: true,

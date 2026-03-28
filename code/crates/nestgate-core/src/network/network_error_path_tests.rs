@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **NETWORK ERROR PATH TESTS** - Nov 23, 2025
 //!
 //! Comprehensive tests for network error handling, timeouts, retries, and edge cases

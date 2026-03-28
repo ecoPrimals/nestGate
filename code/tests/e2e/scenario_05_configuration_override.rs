@@ -57,9 +57,9 @@ mod config_override_tests {
         eprintln!("\n🧪 TEST: Environment Variable Overrides");
 
         // Set environment variables
-        std::env::set_var("NESTGATE_API_HOST", "0.0.0.0");
-        std::env::set_var("NESTGATE_API_PORT", "9090");
-        std::env::set_var("NESTGATE_BIND_ADDRESS", "0.0.0.0");
+        nestgate_core::env_process::set_var("NESTGATE_API_HOST", "0.0.0.0");
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", "9090");
+        nestgate_core::env_process::set_var("NESTGATE_BIND_ADDRESS", "0.0.0.0");
 
         let config = load_configuration().await.unwrap();
 
@@ -69,9 +69,9 @@ mod config_override_tests {
         assert_eq!(config.bind_address, "0.0.0.0");
 
         // Cleanup
-        std::env::remove_var("NESTGATE_API_HOST");
-        std::env::remove_var("NESTGATE_API_PORT");
-        std::env::remove_var("NESTGATE_BIND_ADDRESS");
+        nestgate_core::env_process::remove_var("NESTGATE_API_HOST");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_BIND_ADDRESS");
 
         eprintln!("✅ Environment variables override defaults correctly");
     }
@@ -81,7 +81,7 @@ mod config_override_tests {
         eprintln!("\n🧪 TEST: Partial Environment Overrides");
 
         // Only override one value
-        std::env::set_var("NESTGATE_API_PORT", "7777");
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", "7777");
 
         let config = load_configuration().await.unwrap();
 
@@ -91,7 +91,7 @@ mod config_override_tests {
         // Non-overridden values use defaults
         assert_eq!(config.api_host, "127.0.0.1");
 
-        std::env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
 
         eprintln!("✅ Partial overrides work correctly");
     }
@@ -133,14 +133,14 @@ mod config_override_tests {
         let _temp_config = create_temp_config(config_content).await;
 
         // Environment variable
-        std::env::set_var("NESTGATE_API_PORT", "9999");
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", "9999");
 
         let config = load_configuration().await.unwrap();
 
         // ENV should win over config file
         assert_eq!(config.api_port, 9999);
 
-        std::env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
 
         eprintln!("✅ Precedence: ENV > Config File verified");
     }
@@ -192,12 +192,12 @@ mod config_override_tests {
         eprintln!("\n🧪 TEST: Configuration Hot-Reload");
 
         // Initial config
-        std::env::set_var("NESTGATE_API_PORT", "8080");
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", "8080");
         let initial_config = load_configuration().await.unwrap();
         assert_eq!(initial_config.api_port, 8080);
 
         // Change config
-        std::env::set_var("NESTGATE_API_PORT", "9090");
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", "9090");
 
         // Reload
         let reloaded_config = reload_configuration().await;
@@ -209,7 +209,7 @@ mod config_override_tests {
             eprintln!("ℹ️  Hot-reload not yet implemented (acceptable)");
         }
 
-        std::env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
     }
 
     // ==================== TEST 6: CONFIGURATION VALIDATION ====================
@@ -219,7 +219,7 @@ mod config_override_tests {
         eprintln!("\n🧪 TEST: Invalid Configuration Rejected");
 
         // Invalid port
-        std::env::set_var("NESTGATE_API_PORT", "99999");
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", "99999");
 
         let result = load_configuration().await;
 
@@ -229,7 +229,7 @@ mod config_override_tests {
             "Invalid port should be rejected or clamped"
         );
 
-        std::env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
 
         eprintln!("✅ Invalid configuration properly validated");
     }
@@ -238,7 +238,7 @@ mod config_override_tests {
     async fn test_configuration_validation_errors_clear() {
         eprintln!("\n🧪 TEST: Configuration Validation Errors Are Clear");
 
-        std::env::set_var("NESTGATE_API_PORT", "invalid_port");
+        nestgate_core::env_process::set_var("NESTGATE_API_PORT", "invalid_port");
 
         let result = load_configuration().await;
 
@@ -253,7 +253,7 @@ mod config_override_tests {
             eprintln!("ℹ️  Invalid value handled gracefully with fallback");
         }
 
-        std::env::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
     }
 
     // ==================== TEST 7: CAPABILITY-BASED SERVICE DISCOVERY ====================
@@ -263,7 +263,7 @@ mod config_override_tests {
         eprintln!("\n🧪 TEST: Capability Discovery Respects Environment");
 
         // Set custom endpoint for a capability
-        std::env::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "custom-storage:3000");
+        nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "custom-storage:3000");
 
         let discovered = discover_capability_endpoint("storage").await;
 
@@ -277,7 +277,7 @@ mod config_override_tests {
             eprintln!("ℹ️  Capability discovery not available in test environment");
         }
 
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
     }
 
     // ==================== TEST 8: CONFIGURATION SECURITY ====================
@@ -286,7 +286,7 @@ mod config_override_tests {
     async fn test_sensitive_configuration_not_logged() {
         eprintln!("\n🧪 TEST: Sensitive Configuration Not Logged");
 
-        std::env::set_var("NESTGATE_API_SECRET", "super_secret_value");
+        nestgate_core::env_process::set_var("NESTGATE_API_SECRET", "super_secret_value");
 
         let config = load_configuration().await.unwrap();
         let config_debug = format!("{:?}", config);
@@ -297,7 +297,7 @@ mod config_override_tests {
             "Secrets should not appear in debug output"
         );
 
-        std::env::remove_var("NESTGATE_API_SECRET");
+        nestgate_core::env_process::remove_var("NESTGATE_API_SECRET");
 
         eprintln!("✅ Sensitive configuration properly protected");
     }
@@ -306,9 +306,9 @@ mod config_override_tests {
 
     fn clear_test_environment() {
         // Clear common test environment variables
-        std::env::remove_var("NESTGATE_API_HOST");
-        std::env::remove_var("NESTGATE_API_PORT");
-        std::env::remove_var("NESTGATE_BIND_ADDRESS");
+        nestgate_core::env_process::remove_var("NESTGATE_API_HOST");
+        nestgate_core::env_process::remove_var("NESTGATE_API_PORT");
+        nestgate_core::env_process::remove_var("NESTGATE_BIND_ADDRESS");
     }
 
     async fn load_configuration() -> Result<TestConfig, String> {

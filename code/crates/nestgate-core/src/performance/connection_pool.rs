@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // Universal Connection Pool
 //! Connection Pool functionality and utilities.
 // Provides connection pooling for any data provider to improve performance

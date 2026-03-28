@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use super::api_response::ApiResponse;
 use super::error_response::{LegacyErrorResponse, UnifiedErrorResponse};
 use super::success_response::SuccessResponse;

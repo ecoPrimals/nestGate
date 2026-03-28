@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! REST API Models - Modular Structure
 //!
 //! This module provides a clean, organized structure for all REST API models,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **WORKSPACE OPTIMIZATION TESTS**
 //!
 //! Tests for workspace storage optimization including:
@@ -319,7 +322,7 @@ mod ai_optimization_tests {
     async fn test_optimization_works_without_ai() {
         // Optimization should work even when AI is not available
         // (Which is the common case in testing)
-        std::env::remove_var("NESTGATE_AI_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_AI_ENDPOINT");
 
         let result = optimize_workspace(Path("test-ws".to_string())).await;
         assert!(result.is_ok());
@@ -331,14 +334,14 @@ mod ai_optimization_tests {
     #[tokio::test]
     async fn test_optimization_with_ai_endpoint_set() {
         // Set AI endpoint (even if it doesn't exist)
-        std::env::set_var("NESTGATE_AI_ENDPOINT", "http://localhost:9999");
+        nestgate_core::env_process::set_var("NESTGATE_AI_ENDPOINT", "http://localhost:9999");
 
         let result = optimize_workspace(Path("test-ws".to_string())).await;
 
         // Should still succeed even if AI endpoint is unreachable
         assert!(result.is_ok());
 
-        std::env::remove_var("NESTGATE_AI_ENDPOINT");
+        nestgate_core::env_process::remove_var("NESTGATE_AI_ENDPOINT");
     }
 }
 

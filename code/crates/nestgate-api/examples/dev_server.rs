@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **OUTDATED EXAMPLE - NEEDS UPDATE**
 //!
 //! This example demonstrates how to set up and run the `NestGate` API server

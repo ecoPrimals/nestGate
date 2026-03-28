@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive Unit Tests for NestGate Core
 //!
 //! This test suite provides thorough unit test coverage for core functionality,

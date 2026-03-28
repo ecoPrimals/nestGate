@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Native Async Network Types
 /// Extracted from `native_async_network.rs` to maintain file size compliance
 /// Contains data structures, enums, and configuration types

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Network Configuration Validation Tests - December 18, 2025
 //!
 //! Comprehensive validation tests for network configuration.

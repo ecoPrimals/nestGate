@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Core workspace lifecycle management including creation, reading,
 // updating, and listing workspace resources with real ZFS integration.

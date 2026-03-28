@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Helper functions for ZFS dataset and snapshot operations.
 // Shared utilities used by dataset and snapshot handlers.

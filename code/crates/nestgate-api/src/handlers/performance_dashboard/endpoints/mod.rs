@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module provides modularized HTTP endpoint handlers for the performance dashboard,
 // split from the original 917-line monolithic file for better maintainability.

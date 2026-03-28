@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Context-Aware Error Handling Fixer
 //!
 //! This module provides intelligent context analysis for unwrap/expect

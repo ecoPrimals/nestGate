@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **COMPUTE TRAITS - CANONICAL MODERNIZED**
 //! Compute trait definitions for universal providers
 // Compute and resource management traits for universal primal integration.

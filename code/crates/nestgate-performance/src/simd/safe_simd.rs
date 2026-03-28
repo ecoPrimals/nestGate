@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! # 🚀 **SAFE SIMD DATA PROCESSING**
 //!
 //! **100% SAFE RUST** - Zero unsafe code, maximum performance

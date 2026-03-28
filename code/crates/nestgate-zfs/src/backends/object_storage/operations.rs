@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ZEROCOSTVFSOPERATIONS TRAIT IMPLEMENTATION**
 //!
 //! Implementation of ZeroCostZfsOperations trait for ObjectStorageBackend.
@@ -232,9 +235,9 @@ mod tests {
     #[tokio::test]
     async fn test_create_pool() {
         // Set up test environment
-        std::env::set_var("OBJECT_STORAGE_ENDPOINT", "https://play.min.io");
-        std::env::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
-        std::env::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_ENDPOINT", "https://play.min.io");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
 
         let backend = ObjectStorageBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await;
@@ -248,9 +251,9 @@ mod tests {
     #[tokio::test]
     async fn test_create_dataset() {
         // Set up test environment
-        std::env::set_var("OBJECT_STORAGE_ENDPOINT", "https://play.min.io");
-        std::env::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
-        std::env::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_ENDPOINT", "https://play.min.io");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
 
         let backend = ObjectStorageBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
@@ -267,9 +270,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_tier_handling() {
-        std::env::set_var("OBJECT_STORAGE_ENDPOINT", "https://play.min.io");
-        std::env::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
-        std::env::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_ENDPOINT", "https://play.min.io");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
+        nestgate_core::env_process::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
 
         let backend = ObjectStorageBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();

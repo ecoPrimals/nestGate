@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use std::collections::HashMap;
 // CLEANED: Removed unused Future import as part of canonical modernization
 // use std::future::Future;

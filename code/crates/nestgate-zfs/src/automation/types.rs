@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module contains all the fundamental data structures used throughout
 // the automation system including policies, lifecycle management, events,

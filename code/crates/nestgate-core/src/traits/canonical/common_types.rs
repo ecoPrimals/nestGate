@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Common Types for Canonical Traits
 //!
 //! Shared types used across canonical trait definitions.

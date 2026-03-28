@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **JSON-RPC 2.0 HANDLER**
 //!
 //! JSON-RPC 2.0 protocol implementation for TRUE PRIMAL communication.
@@ -273,7 +276,6 @@ where
 /// **RPC METHOD HANDLER TRAIT**
 ///
 /// Trait for handling RPC method calls.
-#[async_trait::async_trait]
 pub trait RpcMethodHandler {
     /// Handle RPC method
     async fn handle_method(&self, method: &str, params: Value) -> Result<Value>;

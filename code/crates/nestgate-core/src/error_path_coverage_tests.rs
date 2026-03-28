@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **ERROR PATH COVERAGE TESTS - NESTGATE CORE**
 //!
 //! Comprehensive tests for error handling paths, edge cases, and error propagation

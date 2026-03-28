@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Network Configuration Module
 ///
 /// **DEPRECATED MODULE**: This module previously contained a deprecated `NetworkConfig` struct.

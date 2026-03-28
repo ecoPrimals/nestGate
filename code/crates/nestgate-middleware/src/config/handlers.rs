@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Configuration for request processing, response handling, and chain management
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

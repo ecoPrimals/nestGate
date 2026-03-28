@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **STORAGE TRAIT MIGRATION ADAPTERS**
 //!
 //! Adapters that wrap old storage provider traits and implement `CanonicalStorage`.

@@ -1,7 +1,7 @@
 # NestGate - Universal Storage & Discovery Primal
 
-**Version**: 4.5.0-dev  
-**Build**: 13/13 crates compiling, 0 errors  
+**Version**: 4.6.0-dev  
+**Build**: 18/18 crates compiling, 0 errors  
 **Tests**: 12,383 passing, 0 failures, 469 ignored  
 **Coverage**: ~72% line (llvm-cov, target: 90%)  
 **Clippy**: ZERO production warnings (pedantic+nursery)  
@@ -45,8 +45,13 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ## Architecture
 
 ```
-nestGate/ (13 crates)
-├── nestgate-core       Core: IPC, config, crypto, discovery, linux_proc
+nestGate/ (18 crates)
+├── nestgate-types      Foundation: error types, result aliases, unified enums (27s)
+├── nestgate-config     Config, constants, defaults, canonical modernization (220s)
+├── nestgate-storage    Universal + temporal storage abstractions (38s)
+├── nestgate-rpc        JSON-RPC + tarpc IPC layer (106s)
+├── nestgate-discovery  Primal discovery, capabilities, service registry (60s)
+├── nestgate-core       Remaining core: traits, network, services, crypto (254s)
 ├── nestgate-api        REST + JSON-RPC API server
 ├── nestgate-bin        CLI binary (unibin)
 ├── nestgate-zfs        ZFS integration (adaptive)
@@ -60,6 +65,10 @@ nestGate/ (13 crates)
 ├── nestgate-fsmonitor  Filesystem monitoring
 └── nestgate-performance Performance monitoring
 ```
+
+The core was decomposed from a 295K-line monolith (488s check) into 6 focused
+crates that compile in parallel. `nestgate-core` re-exports all extracted modules
+for zero downstream breakage.
 
 ### Key Design Patterns
 
@@ -83,7 +92,7 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 
 | Area | Status |
 |------|--------|
-| Build | 13/13 crates, 0 errors |
+| Build | 18/18 crates, 0 errors |
 | Clippy | Clean (`-D warnings`) |
 | Format | Clean |
 | Tests | 12,383 passing, 0 failures |
@@ -221,4 +230,4 @@ free use rights for personal, educational, and non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: March 27, 2026
+**Latest**: March 28, 2026

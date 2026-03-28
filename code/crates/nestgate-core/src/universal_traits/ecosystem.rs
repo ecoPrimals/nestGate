@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **ECOSYSTEM INTEGRATION - CANONICAL MODERNIZED**
 //! Ecosystem trait definitions for universal providers
 // Ecosystem integration and service discovery traits for universal primal coordination.

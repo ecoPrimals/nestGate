@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Health Monitoring Traits for Universal Primal Architecture
 //!
 //! **MIGRATED FROM**: `traits::health_checks` (November 7, 2025)

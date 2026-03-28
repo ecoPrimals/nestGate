@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use super::types::{CacheConfig, StoragePool, StorageQuota, StorageServiceStats};
 use crate::error::NestGateError;
 use crate::services::storage::config::{StorageServiceConfig, ZfsConfig};
@@ -125,12 +128,12 @@ impl StorageManagerService {
 
         // Initialize cache configurations
         if self.config.enable_caching {
-            self.initialize_cache_management().await?;
+            self.initialize_cache_management()?;
         }
 
         // Start background monitoring tasks
         if self.config.enable_monitoring {
-            self.start_background_tasks().await?;
+            self.start_background_tasks()?;
         }
 
         info!("Storage service initialization complete with real ZFS support");
@@ -256,7 +259,7 @@ impl StorageManagerService {
     }
 
     /// Initialize cache management
-    async fn initialize_cache_management(&self) -> Result<()> {
+    fn initialize_cache_management(&self) -> Result<()> {
         info!("🚀 Initializing cache management");
 
         // Initialize cache management based on configuration
@@ -296,7 +299,7 @@ impl StorageManagerService {
     }
 
     /// Start background monitoring tasks
-    async fn start_background_tasks(&self) -> Result<()> {
+    fn start_background_tasks(&self) -> Result<()> {
         info!("🔄 Starting background monitoring tasks");
 
         // Start health monitoring task

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **FAULT INJECTION TESTS**
 //!
 //! Tests for system behavior under injected faults.
@@ -88,18 +91,18 @@ async fn test_fault_invalid_socket_path() {
 async fn test_fault_conflicting_config() {
     let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
     let orig_port = std::env::var("NESTGATE_HTTP_PORT").ok();
-    std::env::set_var("NESTGATE_FAMILY_ID", "env_family");
-    std::env::set_var("NESTGATE_HTTP_PORT", "not_a_number");
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "env_family");
+    nestgate_core::env_process::set_var("NESTGATE_HTTP_PORT", "not_a_number");
 
     let result = TransportConfig::from_env();
 
     match orig_fid {
-        Some(v) => std::env::set_var("NESTGATE_FAMILY_ID", v),
-        None => std::env::remove_var("NESTGATE_FAMILY_ID"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     match orig_port {
-        Some(v) => std::env::set_var("NESTGATE_HTTP_PORT", v),
-        None => std::env::remove_var("NESTGATE_HTTP_PORT"),
+        Some(v) => nestgate_core::env_process::set_var("NESTGATE_HTTP_PORT", v),
+        None => nestgate_core::env_process::remove_var("NESTGATE_HTTP_PORT"),
     }
     assert!(result.is_ok() || result.is_err());
 }

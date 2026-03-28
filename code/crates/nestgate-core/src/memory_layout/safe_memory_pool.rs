@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **SAFE HIGH-PERFORMANCE MEMORY POOL**
 //!
 //! Zero-allocation memory pool using 100% safe Rust with RAII patterns.

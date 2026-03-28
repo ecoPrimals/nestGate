@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! API module tests for nestgate-network
 //!
 //! Tests for service registration, port allocation, and health status reporting.

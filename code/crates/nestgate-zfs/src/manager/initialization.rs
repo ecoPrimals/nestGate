@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Handles the complex initialization process for the ZFS manager and all its components,
 // including lifecycle management (start/stop) and orchestrator registration.
@@ -263,8 +266,16 @@ impl ZfsManager {
                     );
                     format!("{}:{}", host, port)
                 } else {
+                    // **Development default**: loopback when `NESTGATE_ZFS_BIND_ADDRESS` is unset.
+                    // Override via `NESTGATE_ZFS_ENDPOINT` or bind env vars for real deployments.
                     let bind_addr = std::env::var("NESTGATE_ZFS_BIND_ADDRESS")
-                        .unwrap_or_else(|_| "127.0.0.1".to_string());
+                        .unwrap_or_else(|_| {
+                            tracing::warn!(
+                                "NESTGATE_ZFS_BIND_ADDRESS unset; using 127.0.0.1 as development default. \
+                                 Set NESTGATE_ZFS_ENDPOINT or bind address env vars for production."
+                            );
+                            "127.0.0.1".to_string()
+                        });
                     let bind_port = std::env::var("NESTGATE_ZFS_BIND_PORT")
                         .and_then(|s| s.parse::<u16>().map_err(|_| std::env::VarError::NotPresent))
                         .unwrap_or(8085);

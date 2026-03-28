@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module handles real-time metrics collection for the performance dashboard
 // using actual system and ZFS metrics instead of mock data.

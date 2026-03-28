@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE EDGE CASE TESTS FOR ORCHESTRATOR INTEGRATION**
 //!
 //! Tests covering edge cases, error paths, and boundary conditions for

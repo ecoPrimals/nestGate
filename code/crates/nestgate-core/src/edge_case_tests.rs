@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Edge Case Tests for NestGate Core
 //!
 //! This module contains critical edge case tests focusing on:

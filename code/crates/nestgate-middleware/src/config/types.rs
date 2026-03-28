@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Basic enums and supporting types split from the main config file
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

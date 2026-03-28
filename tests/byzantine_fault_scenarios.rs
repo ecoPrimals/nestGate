@@ -166,7 +166,10 @@ async fn byzantine_test_sybil_attack() {
         *ip_counts.entry(node.ip_address.clone()).or_insert(0) += 1;
     }
 
-    let suspicious_ips: Vec<_> = ip_counts.iter().filter(|(_, &count)| count > 1).collect();
+    let suspicious_ips: Vec<_> = ip_counts
+        .iter()
+        .filter(|&(_, &count)| count > 1)
+        .collect();
 
     assert!(!suspicious_ips.is_empty(), "Should detect Sybil attack");
     println!("  ⚠️  {} suspicious IP(s) detected", suspicious_ips.len());

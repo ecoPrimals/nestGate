@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! ZFS Performance Monitoring System.
 //!
 //! This module provides comprehensive performance monitoring for ZFS storage,

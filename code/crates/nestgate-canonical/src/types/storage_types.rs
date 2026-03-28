@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Storage Type Definitions
 //!
 //! Storage tier classifications, file analysis, and access patterns.

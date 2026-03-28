@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! # Filesystem Backend REST API Routes
 //!
 //! REST API endpoints for the universal filesystem storage backend.

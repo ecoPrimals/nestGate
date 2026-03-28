@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Health and Metrics Type Definitions
 //!
 //! Service health status and performance metrics types.

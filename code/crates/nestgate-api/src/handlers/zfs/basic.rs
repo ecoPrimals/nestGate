@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module provides HTTP API endpoints for ZFS operations using the new
 // canonical zero-cost architecture with compile-time dispatch.

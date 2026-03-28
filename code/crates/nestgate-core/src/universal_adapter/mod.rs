@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **UNIVERSAL ADAPTER - O(1) CAPABILITY CONNECTIONS**
 // This module implements the universal adapter pattern that replaces
 // exponential N² primal connections with linear O(1) capability discovery.

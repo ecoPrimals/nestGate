@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module provides integration between ZFS and MCP (Model Coordination Protocol),
 // enabling ZFS to act as a storage provider for MCP systems with tiered storage

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **DOMAIN-SPECIFIC TRAIT EXTENSIONS**
 //! Domain-specific extensions and traits for the `NestGate` system.
 // This module provides domain-specific extensions to the canonical trait system.

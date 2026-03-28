@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module contains all the shared types, request/response structures,
 // and data models used by the ZFS API handlers.

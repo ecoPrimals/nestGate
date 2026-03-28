@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **UNIX SOCKET LISTENER**
 //!
 //! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0

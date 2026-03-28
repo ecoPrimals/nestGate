@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive API handler tests for improved coverage
 //!
 //! This test suite expands coverage for critical API handlers,

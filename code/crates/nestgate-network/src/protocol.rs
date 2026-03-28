@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module provides common protocol definitions and utilities
 // **CANONICAL MODERNIZATION**: Migrated from async_trait to native async patterns

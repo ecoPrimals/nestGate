@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // HTTP removed - use Songbird via capability discovery for external HTTP
 // use crate::http_client_stub as reqwest;
 use std::collections::HashMap;
@@ -155,7 +158,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
 
         if let Some(service) = target_service {
             // Attempt to communicate with the actual service
-            match self.communicate_with_service(service, &request).await {
+            match self.communicate_with_service(service, &request) {
                 Ok(mut response) => {
                     // Real service communication succeeded
                     response.duration = start_time.elapsed();
@@ -389,7 +392,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
 
 impl ProductionLoadBalancer {
     /// Communicate with an actual service endpoint
-    async fn communicate_with_service(
+    fn communicate_with_service(
         &self,
         service: &ServiceInfo,
         request: &ServiceRequest,
@@ -402,7 +405,7 @@ impl ProductionLoadBalancer {
                 protocol: crate::service_discovery::types::CommunicationProtocol::Http, // Default for compatibility
                 health_check: endpoint.health_check.clone(),
             };
-            match self.try_endpoint(&compat_endpoint, request).await {
+            match self.try_endpoint(&compat_endpoint, request) {
                 Ok(response) => return Ok(response),
                 Err(e) => {
                     // Log the error and try next endpoint
@@ -419,7 +422,7 @@ impl ProductionLoadBalancer {
     }
 
     /// Try to communicate with a specific endpoint
-    async fn try_endpoint(
+    fn try_endpoint(
         &self,
         _endpoint: &crate::service_discovery::types::ServiceEndpoint,
         _request: &ServiceRequest,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Event handling and processing configuration - extracted from monolithic config
 /// Handles all aspects of file system event processing, batching, and queuing
 use serde::{Deserialize, Serialize};
@@ -183,7 +186,7 @@ impl Default for EventPipelineSettings {
             enabled: true,
             stages: Vec::new(),
             parallel_processing: true,
-            worker_threads: num_cpus::get() as u32,
+            worker_threads: nestgate_core::linux_proc::logical_cpu_count() as u32,
         }
     }
 }

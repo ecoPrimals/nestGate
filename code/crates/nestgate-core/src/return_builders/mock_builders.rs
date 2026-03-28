@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Mock Builders for Return Types
 //!
 //! **⚠️ DEVELOPMENT/TEST ONLY**: This module is only available with `dev-stubs` feature

@@ -55,7 +55,9 @@ impl Default for AnalysisConfig {
             enable_ast_analysis: true,
             enable_type_analysis: true,
             enable_frequency_analysis: true,
-            thread_count: num_cpus::get(),
+            thread_count: std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1),
         }
     }
 }

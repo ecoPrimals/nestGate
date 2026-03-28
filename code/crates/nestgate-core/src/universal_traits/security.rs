@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **SECURITY TRAITS - CANONICAL MODERNIZED**
 //! Security trait definitions for universal providers
 // Security-related traits and types for universal primal integration.

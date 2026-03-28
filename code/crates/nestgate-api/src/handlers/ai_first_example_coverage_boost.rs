@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **AI FIRST EXAMPLE - COVERAGE BOOST**
 //!
 //! Comprehensive tests to boost coverage for ai_first_example handlers.

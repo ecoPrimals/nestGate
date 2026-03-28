@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module provides production-ready fallbacks for development environments
 // that don't have dedicated ZFS storage hardware available.

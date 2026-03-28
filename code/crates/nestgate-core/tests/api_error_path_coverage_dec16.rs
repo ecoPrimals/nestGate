@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! API Error Path Coverage Tests - December 16, 2025
 //!
 //! Tests for API layer error handling and edge cases.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE METRICS COLLECTOR TESTS**
 //!
 //! Test coverage for `metrics_collector.rs` - Real-time metrics collection and aggregation.

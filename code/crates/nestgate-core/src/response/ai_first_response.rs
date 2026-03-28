@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// AI-First Response Module
 /// Implements the `EcoPrimals` AI-First Citizen API Standard for `NestGate`
 /// **ECOSYSTEM ALIGNMENT**: Enhances `NestGate` from 70% to 85%+ AI-First compliance

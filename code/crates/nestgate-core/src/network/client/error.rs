@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! HTTP Client Error Types
 //!
 //! Domain-specific errors for HTTP client operations with

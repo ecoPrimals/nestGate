@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Extended tests for Zero-Cost ZFS Manager - Coverage Expansion
 //!
 //! These tests focus on uncovered code paths:

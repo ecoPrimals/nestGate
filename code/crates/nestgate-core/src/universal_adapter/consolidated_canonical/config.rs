@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Configuration types for the consolidated canonical adapter
 //!
 //! This module contains all configuration structures used to customize

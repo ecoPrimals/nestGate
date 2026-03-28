@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **ORCHESTRATION TRAITS - CANONICAL MODERNIZED**
 //! Orchestration trait definitions for universal providers
 // Orchestration and workflow management traits for universal primal integration.

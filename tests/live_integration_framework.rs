@@ -459,7 +459,7 @@ macro_rules! live_integration_test {
 
             // Set environment variables for the test
             for (key, value) in &test_instance.test_environment.environment_variables {
-                std::env::set_var(key, value);
+                nestgate_core::env_process::set_var(key, value);
             }
 
             // Run the actual test

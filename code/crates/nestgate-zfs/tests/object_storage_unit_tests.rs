@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **OBJECT STORAGE UNIT TESTS**
 //!
 //! Comprehensive unit tests for refactored object storage backend.
@@ -166,11 +169,11 @@ fn test_config_precedence_order() {
 #[test]
 fn test_config_validation() {
     let orig = std::env::var("S3_ENDPOINT").ok();
-    std::env::set_var("S3_ENDPOINT", "https://valid.endpoint.com");
+    nestgate_core::env_process::set_var("S3_ENDPOINT", "https://valid.endpoint.com");
     let valid = std::env::var("S3_ENDPOINT").unwrap();
     match orig {
-        Some(v) => std::env::set_var("S3_ENDPOINT", v),
-        None => std::env::remove_var("S3_ENDPOINT"),
+        Some(v) => nestgate_core::env_process::set_var("S3_ENDPOINT", v),
+        None => nestgate_core::env_process::remove_var("S3_ENDPOINT"),
     }
     assert!(valid.starts_with("http"));
 }

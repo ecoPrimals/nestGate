@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **COMPREHENSIVE INTEGRATION TESTS - WEEK 2**
 //!
 //! Advanced integration tests for ZFS modules to achieve >80% coverage.

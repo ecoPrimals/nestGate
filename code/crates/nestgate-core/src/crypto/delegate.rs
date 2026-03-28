@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! # Crypto Delegation — BearDog Integration
 //!
 //! Capability-based delegation to an external crypto provider.

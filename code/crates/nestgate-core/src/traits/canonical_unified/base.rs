@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **BASE CANONICAL TRAITS**
 //!
 //! Core service and provider traits that form the foundation of the canonical trait system.

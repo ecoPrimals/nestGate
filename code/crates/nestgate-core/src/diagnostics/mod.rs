@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // Diagnostics module for NestGate
 // This module provides system diagnostics and monitoring functionality
 //! for the NestGate system. It has been refactored into focused sub-modules:

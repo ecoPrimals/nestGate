@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive type tests for NestGate core types
 //!
 //! This test module provides comprehensive coverage of core types,

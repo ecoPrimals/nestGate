@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Zero-cost provider traits
 //!
 //! This module defines the core traits that enable zero-cost abstractions

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Safe UID retrieval - 100% Pure Rust, Zero unsafe code
 //!
 //! Provides safe abstractions for getting the current user ID across platforms.
@@ -51,6 +54,22 @@ pub fn get_current_uid() -> u32 {
     }
 }
 
+/// Get the current effective group ID (100% safe pure Rust on Unix via `uzers`).
+///
+/// On non-Unix platforms, returns `0` as a placeholder (same rationale as [`get_current_uid`]).
+#[inline]
+pub fn get_current_gid() -> u32 {
+    #[cfg(unix)]
+    {
+        uzers::get_current_gid()
+    }
+
+    #[cfg(not(unix))]
+    {
+        0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -71,5 +90,13 @@ mod tests {
         let uid1 = get_current_uid();
         let uid2 = get_current_uid();
         assert_eq!(uid1, uid2);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn test_gid_consistency() {
+        let gid1 = get_current_gid();
+        let gid2 = get_current_gid();
+        assert_eq!(gid1, gid2);
     }
 }

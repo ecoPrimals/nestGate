@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **COMMON TYPES - CANONICAL MODERNIZED**
 //! Type definitions for universal traits
 // Common types and structures shared across universal traits modules.

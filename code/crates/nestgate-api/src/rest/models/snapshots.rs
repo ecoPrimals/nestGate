@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Snapshot models and data structures for the NestGate REST API
 //!
 //! This module contains all data structures related to snapshot management,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// Certificate Manager
 /// Unified certificate management for the `NestGate` ecosystem
 use std::collections::HashMap;

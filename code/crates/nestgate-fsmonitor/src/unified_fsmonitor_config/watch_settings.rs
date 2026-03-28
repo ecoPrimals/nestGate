@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// File watching configuration and patterns - extracted from monolithic config
 /// Handles all aspects of file system watching behavior
 use serde::{Deserialize, Serialize};

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! RPC Handlers for JSON-RPC and Protocol Discovery
 //!
 //! This module provides HTTP handlers for:

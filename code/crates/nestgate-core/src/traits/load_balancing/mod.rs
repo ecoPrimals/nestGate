@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Load Balancing Module for Service Distribution
 //!
 //! **MIGRATED FROM**: `traits::load_balancing` (November 7, 2025)

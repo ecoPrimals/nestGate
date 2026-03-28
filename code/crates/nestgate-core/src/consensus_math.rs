@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 /// 🧮 **CONSENSUS MATH MODULE** 🧮
 /// Pure arithmetic functions for consensus calculations.
 /// Extracted from complex business logic to enable precise testing

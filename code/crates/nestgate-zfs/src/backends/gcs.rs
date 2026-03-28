@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **GOOGLE CLOUD STORAGE (GCS) BACKEND**
 //!
 //! Implements `ZeroCostZfsOperations` trait for Google Cloud Storage.
@@ -539,9 +542,9 @@ mod tests {
     #[ignore = "Requires GCS credentials configuration"]
     async fn test_gcs_backend_creation() {
         // Set required environment variables for test
-        std::env::set_var("GCS_PROJECT_ID", "test-project");
-        std::env::set_var("GCS_BUCKET_PREFIX", "test-nestgate");
-        std::env::set_var("GCS_LOCATION", "US-WEST1");
+        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
+        nestgate_core::env_process::set_var("GCS_BUCKET_PREFIX", "test-nestgate");
+        nestgate_core::env_process::set_var("GCS_LOCATION", "US-WEST1");
 
         let backend = GcsBackend::new().await;
         assert!(backend.is_ok(), "GCS backend should be created");
@@ -555,7 +558,7 @@ mod tests {
     #[ignore = "Requires GCS credentials configuration"]
     async fn test_bucket_name_generation() {
         // Set required environment variables for test
-        std::env::set_var("GCS_PROJECT_ID", "test-project");
+        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
 
         let backend = GcsBackend::new().await.unwrap();
         let bucket = backend.bucket_name("MyPool_Test");
@@ -629,7 +632,7 @@ mod tests {
     #[ignore = "Requires GCS credentials configuration"]
     async fn test_create_dataset() {
         // Set required environment variables for test
-        std::env::set_var("GCS_PROJECT_ID", "test-project");
+        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
 
         let backend = GcsBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
@@ -695,7 +698,7 @@ mod tests {
     #[ignore = "Requires GCS credentials configuration"]
     async fn test_all_storage_tiers() {
         // Set required environment variables for test
-        std::env::set_var("GCS_PROJECT_ID", "test-project");
+        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
 
         let backend = GcsBackend::new().await.unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
@@ -722,7 +725,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires GCS credentials configuration"]
     async fn test_multi_region_location() {
-        std::env::set_var("GCS_LOCATION", "EU");
+        nestgate_core::env_process::set_var("GCS_LOCATION", "EU");
         let backend = GcsBackend::new().await.unwrap();
 
         let pool = backend.create_pool("eu-pool", &[]).await.unwrap();

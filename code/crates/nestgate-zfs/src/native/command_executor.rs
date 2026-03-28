@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! ZFS Command Executor
 //!
 //! This module provides safe and robust execution of native ZFS commands

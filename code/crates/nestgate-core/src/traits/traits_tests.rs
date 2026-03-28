@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Fresh tests for the canonical traits system
 //!
 //! These tests validate the current trait system with its evolved API.

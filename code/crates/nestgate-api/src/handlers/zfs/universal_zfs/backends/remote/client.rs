@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! NOTE: HTTP removed per Concentrated Gap Architecture
 //! Remote ZFS operations now via Unix sockets through Songbird gateway
 #![allow(dead_code)]

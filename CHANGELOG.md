@@ -7,7 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 4.5.0-dev
+## [Unreleased] - 4.6.0-dev
+
+### Session 4: nestgate-core Crate Decomposition (March 28, 2026)
+
+**Build**: 18/18 crates (0 errors)  
+**Architecture**: nestgate-core monolith (295K lines, 488s check) split into 6 focused crates
+
+#### Decomposition
+
+The 295K-line `nestgate-core` monolith was split into 6 focused crates enabling
+parallel compilation:
+
+| Crate | Lines | Clean Check | Purpose |
+|---|---|---|---|
+| nestgate-types | 6K | 27s | Error types, result aliases, unified enums |
+| nestgate-config | 45K | 220s | Config, constants, canonical_modernization |
+| nestgate-storage | 11K | 38s | Universal + temporal storage |
+| nestgate-rpc | 12K | 106s | JSON-RPC + tarpc IPC |
+| nestgate-discovery | 30K | 60s | Primal discovery, capabilities, service registry |
+| nestgate-core | 74K | 254s | Remaining: traits, network, services, crypto |
+
+- `nestgate-core` re-exports all extracted modules for zero downstream breakage
+- 16/18 crates compile clean; nestgate-api/bin have pre-existing async lifetime issues
+- Zero import resolution errors across the workspace
+- `async-trait` crate fully removed (native async fn in traits)
+
+#### Deep Debt Cleanup (prior sessions, this branch)
+- ~118,000 lines of dead/vestigial code removed across all crates
+- Removed `async-trait` dependency (native Rust 2024 async traits)
+- Eliminated blanket `#![allow(deprecated)]` and `#![allow(clippy::...)]` rules
+- Removed 454 orphaned files from nestgate-core
+- Fixed `env_process.rs` infinite recursion bug
+- Removed empty `impl` for external type alias (`UnifiedSyncConfig`)
+
+#### Debris Cleanup
+- Deleted orphaned `mod.rs`, `ecosystem_integration/`, `capability_config/`, `capability_discovery/` from nestgate-core
+- Removed duplicate `tools/tarpaulin.toml` (keeping root)
+- Removed empty `nestgate-zfs/{data,config}` directories
+- Removed `.disabled` test file variants
 
 ### Session 3: Security Hardening & Stub Elimination (March 28, 2026)
 

@@ -24,11 +24,11 @@ async fn test_environment_overrides() -> Result<(), Box<dyn std::error::Error>> 
     println!("🎯 Testing environment variable overrides...");
 
     let orig = std::env::var("TEST_API_ENDPOINT").ok();
-    std::env::set_var("TEST_API_ENDPOINT", "http://custom-test-api:9090");
+    nestgate_core::env_process::set_var("TEST_API_ENDPOINT", "http://custom-test-api:9090");
     let test_endpoint = std::env::var("TEST_API_ENDPOINT")?;
     match orig {
-        Some(v) => std::env::set_var("TEST_API_ENDPOINT", v),
-        None => std::env::remove_var("TEST_API_ENDPOINT"),
+        Some(v) => nestgate_core::env_process::set_var("TEST_API_ENDPOINT", v),
+        None => nestgate_core::env_process::remove_var("TEST_API_ENDPOINT"),
     }
     assert_eq!(test_endpoint, "http://custom-test-api:9090");
 

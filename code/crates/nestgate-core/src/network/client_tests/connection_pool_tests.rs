@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Connection Pool Tests
 //!
 //! Auto-generated from smart refactoring of client_tests.rs
@@ -42,7 +45,7 @@ async fn test_connection_pool_return_connection() {
         .get_connection(&endpoint)
         .await
         .expect("Network operation failed");
-    pool.return_connection(connection).await;
+    pool.return_connection(connection);
 }
 
 #[tokio::test]
@@ -59,7 +62,7 @@ async fn test_connection_pool_reuse() {
         .get_connection(&endpoint)
         .await
         .expect("Network operation failed");
-    pool.return_connection(conn1).await;
+    pool.return_connection(conn1);
 
     // Get another connection (should potentially reuse)
     let conn2 = pool.get_connection(&endpoint).await;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Modern Configuration Tests
 //!
 //! Comprehensive tests for configuration loading, validation, and environment parsing.
@@ -84,12 +87,12 @@ mod environment_parsing_tests {
     async fn test_env_var_loading() {
         // Test safe environment variable loading pattern
         let var_name = "TEST_CONFIG_VAR";
-        env::set_var(var_name, "test_value");
+        nestgate_core::env_process::set_var(var_name, "test_value");
 
         let value = env::var(var_name).unwrap_or_else(|_| "default".to_string());
         assert_eq!(value, "test_value");
 
-        env::remove_var(var_name);
+        nestgate_core::env_process::remove_var(var_name);
         let value = env::var(var_name).unwrap_or_else(|_| "default".to_string());
         assert_eq!(value, "default");
     }
@@ -97,7 +100,7 @@ mod environment_parsing_tests {
     #[tokio::test]
     async fn test_port_env_parsing() {
         let var_name = "TEST_PORT";
-        env::set_var(var_name, "8080");
+        nestgate_core::env_process::set_var(var_name, "8080");
 
         let port: u16 = env::var(var_name)
             .ok()
@@ -105,7 +108,7 @@ mod environment_parsing_tests {
             .unwrap_or(3000);
         assert_eq!(port, 8080);
 
-        env::remove_var(var_name);
+        nestgate_core::env_process::remove_var(var_name);
         let port: u16 = env::var(var_name)
             .ok()
             .and_then(|s| s.parse().ok())

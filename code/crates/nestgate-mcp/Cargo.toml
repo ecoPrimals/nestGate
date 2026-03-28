@@ -1,7 +1,7 @@
 [package]
 name = "nestgate-mcp"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = [ "NestGate Team",]
 description = "Enhanced MCP protocol integration for NestGate v2 with enhanced NestGate capabilities"
 license = "AGPL-3.0-only"
@@ -9,6 +9,9 @@ repository = "https://github.com/ecoPrimals/NestGateV2"
 readme = "README.md"
 keywords = [ "mcp", "protocol", "messaging", "rust", "nestgate",]
 categories = [ "network-programming", "protocols",]
+
+[lints]
+workspace = true
 
 [dependencies]
 gethostname = "0.4"
@@ -31,9 +34,6 @@ workspace = true
 features = [ "full",]
 
 [dependencies.futures]
-workspace = true
-
-[dependencies.async-trait]
 workspace = true
 
 [dependencies.serde]
@@ -72,6 +72,7 @@ workspace = true
 [dependencies.nestgate-core]
 path = "../nestgate-core"
 
+# sysinfo: non-Linux + Linux fallbacks; evolution path is Linux `/proc` + rustix (ecoBin v3.0); full removal needs feature-gating across consumers.
 [dependencies.sysinfo]
 workspace = true
 

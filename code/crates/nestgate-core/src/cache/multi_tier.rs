@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Multi-tier cache implementation with hot, warm, and cold storage tiers
 //! Provides intelligent data placement and retrieval across performance tiers.
 //!
@@ -5,6 +8,8 @@
 
 use crate::Result;
 use dashmap::DashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 // Type aliases for complex cache types
@@ -15,23 +20,20 @@ pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
 pub type CacheDataMap = Arc<DashMap<String, Vec<u8>>>;
 
 /// Cache provider trait for different storage tiers
-/// **NOTE**: Keeping `async_trait` for dyn compatibility - required for `Box<dyn CacheProvider>`
-/// This demonstrates that not all `async_trait` usage can be modernized when dynamic dispatch is needed
-#[async_trait::async_trait]
 pub trait CacheProvider<K, V>: Send + Sync {
     /// Store a value in the cache
-    async fn set(&self, key: K, value: V) -> Result<()>;
+    fn set(&self, key: K, value: V) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
     /// Retrieve a value from the cache
-    async fn get(&self, key: &str) -> Result<Option<V>>;
+    fn get(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<Option<V>>> + Send + '_>>;
 
     /// Remove a value from the cache
-    async fn remove(&self, key: &str) -> Result<bool>;
+    fn remove(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<bool>> + Send + '_>>;
 
     /// Clear all values from the cache
-    async fn clear(&self) -> Result<()>;
+    fn clear(&self) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 
     /// Get the current cache size
-    async fn size(&self) -> Result<usize>;
+    fn size(&self) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>>;
 }
 
 /// Simple cache configuration
@@ -334,38 +336,58 @@ impl InMemoryCache {
     }
 }
 
-#[async_trait::async_trait]
 impl CacheProvider<String, Vec<u8>> for InMemoryCache {
     /// Set (lock-free!)
-    async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
-        // DashMap: Lock-free insert!
-        self.data.insert(key, value);
-        Ok(())
+    fn set(
+        &self,
+        key: String,
+        value: Vec<u8>,
+    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+        let data = Arc::clone(&self.data);
+        Box::pin(async move {
+            // DashMap: Lock-free insert!
+            data.insert(key, value);
+            Ok(())
+        })
     }
 
     /// Get (lock-free!)
-    async fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
-        // DashMap: Lock-free get!
-        Ok(self.data.get(key).map(|entry| entry.value().clone()))
+    fn get(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<Option<Vec<u8>>>> + Send + '_>> {
+        let data = Arc::clone(&self.data);
+        let key = key.to_string();
+        Box::pin(async move {
+            // DashMap: Lock-free get!
+            Ok(data.get(&key).map(|entry| entry.value().clone()))
+        })
     }
 
     /// Remove (lock-free!)
-    async fn remove(&self, key: &str) -> Result<bool> {
-        // DashMap: Lock-free removal!
-        Ok(self.data.remove(key).is_some())
+    fn remove(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<bool>> + Send + '_>> {
+        let data = Arc::clone(&self.data);
+        let key = key.to_string();
+        Box::pin(async move {
+            // DashMap: Lock-free removal!
+            Ok(data.remove(&key).is_some())
+        })
     }
 
     /// Clear (lock-free!)
-    async fn clear(&self) -> Result<()> {
-        // DashMap: Lock-free clear!
-        self.data.clear();
-        Ok(())
+    fn clear(&self) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+        let data = Arc::clone(&self.data);
+        Box::pin(async move {
+            // DashMap: Lock-free clear!
+            data.clear();
+            Ok(())
+        })
     }
 
     /// Size (lock-free!)
-    async fn size(&self) -> Result<usize> {
-        // DashMap: Lock-free len!
-        Ok(self.data.len())
+    fn size(&self) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
+        let data = Arc::clone(&self.data);
+        Box::pin(async move {
+            // DashMap: Lock-free len!
+            Ok(data.len())
+        })
     }
 }
 

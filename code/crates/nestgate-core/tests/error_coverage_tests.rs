@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Comprehensive error handling coverage tests
 //!
 //! These tests ensure all error variants are properly tested,

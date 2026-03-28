@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Pure Rust JWT Implementation using RustCrypto
 //!
 //! This module provides JWT signing and validation using pure Rust cryptography (RustCrypto).

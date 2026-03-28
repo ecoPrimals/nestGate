@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **FEDERATION TYPES**
 //!
 //! Federation join, leave, sync, and heartbeat payload types.

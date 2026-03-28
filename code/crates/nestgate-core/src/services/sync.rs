@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // use crate::universal_storage::ConflictResolution; // Module doesn't exist
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -242,10 +245,7 @@ impl Default for SyncExtensions {
 // - SyncSessionConfig: Merged into SyncExtensions::session
 // - SyncServiceConfig: Merged into SyncExtensions::service
 
-impl UnifiedSyncConfig {
-    // IMPLEMENTATION NOTE: Uses unified configuration system
-    // Configuration migrated to UnifiedConfig pattern for consistency
-}
+// UnifiedSyncConfig impl removed — type alias for NestGateCanonicalConfig (defined in nestgate-config)
 
 /// Checksum algorithms
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]

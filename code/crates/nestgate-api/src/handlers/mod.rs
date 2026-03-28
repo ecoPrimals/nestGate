@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **OPTIMIZED API HANDLERS MODULE**
 //!
 //! Comprehensive collection of HTTP request handlers for the NestGate REST API.

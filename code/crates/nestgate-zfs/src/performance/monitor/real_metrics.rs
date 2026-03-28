@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // This module provides actual system metrics collection instead of mock data.
 // It interfaces with the operating system to gather real performance data.

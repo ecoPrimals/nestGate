@@ -86,7 +86,7 @@ impl ChaosInjector {
         
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        rng.gen::<f64>() < self.config.fault_rate
+        rng.r#gen::<f64>() < self.config.fault_rate
     }
 
     /// Inject chaos fault

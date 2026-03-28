@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! Modern configuration tests
 //!
 //! Tests for idiomatic error handling, config validation, and network defaults.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //
 // Comprehensive snapshot lifecycle management with automated policies,
 // retention rules, and backup integration for production-ready ZFS systems.

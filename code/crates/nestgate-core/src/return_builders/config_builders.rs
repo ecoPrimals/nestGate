@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 /// **RETURN BUILDERS - CONFIG BUILDERS MODULE**
