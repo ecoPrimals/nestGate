@@ -90,7 +90,6 @@ pub async fn start_load_test(
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode> {
     let results = vec![
         TestResult {
@@ -121,7 +120,6 @@ pub async fn get_load_test_results() -> Result<Json<Vec<TestResult>>, StatusCode
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, StatusCode> {
     let history = vec![LoadTestHistoryEntry {
         test_id: "test_001".to_string(),
@@ -148,7 +146,6 @@ pub async fn get_load_test_history() -> Result<Json<Vec<LoadTestHistoryEntry>>, 
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_performance_baselines() -> Result<Json<Vec<PerformanceBaseline>>, StatusCode> {
     let baselines = vec![
         PerformanceBaseline {

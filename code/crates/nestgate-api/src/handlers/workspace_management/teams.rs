@@ -64,7 +64,6 @@ pub async fn create_team(
 /// **GET TEAMS HANDLER**
 ///
 /// Retrieve all teams.
-#[must_use]
 pub fn get_teams() -> Result<Json<Vec<TeamInfo>>, StatusCode> {
     let teams = vec![
         TeamInfo {

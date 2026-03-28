@@ -186,18 +186,18 @@ pub(crate) fn calculate_file_operations_from_stats(
     }
 }
 
-/// Helper trait to convert backend types to strings for filtering
-impl ToString for StorageBackendType {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Filesystem => "zfs".to_string(),
-            Self::Memory => "memory".to_string(),
-            Self::Local => "local".to_string(),
-            Self::Remote => "remote".to_string(),
-            Self::Cloud => "cloud".to_string(),
-            Self::Network => "network".to_string(),
-            Self::Block => "block".to_string(),
-            Self::File => "file".to_string(),
-        }
+/// Display mapping for backend type filters and logging.
+impl std::fmt::Display for StorageBackendType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Filesystem => "zfs",
+            Self::Memory => "memory",
+            Self::Local => "local",
+            Self::Remote => "remote",
+            Self::Cloud => "cloud",
+            Self::Network => "network",
+            Self::Block => "block",
+            Self::File => "file",
+        })
     }
 }

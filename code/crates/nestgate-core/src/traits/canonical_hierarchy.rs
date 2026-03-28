@@ -13,10 +13,10 @@
 //! **Trait Hierarchy**:
 //! ```text
 //! CanonicalService (base)
-//!   ├─ CanonicalProvider<T> (generic provisioning)
+//!   ├─ CanonicalProvider (generic type `T`)
 //!   ├─ CanonicalStorage (storage operations)
 //!   ├─ CanonicalSecurity (security operations)
-//!   └─ ZeroCostService<T> (performance marker)
+//!   └─ ZeroCostService (generic type `T`, performance marker)
 //! ```
 //!
 //! **Date**: October 1, 2025

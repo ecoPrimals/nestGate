@@ -11,13 +11,14 @@ target-dir = "target"
 
 # ARM64 Linux (musl - static linking, fully portable)
 # Used for: USB LiveSpore, standalone Linux deployments
-# Static linking enabled for maximum portability
+# relocation-model=static prevents static-PIE segfault on musl ≤1.2.2
 # Dependencies: musl-tools, gcc-aarch64-linux-gnu
 [target.aarch64-unknown-linux-musl]
 linker = "aarch64-linux-gnu-gcc"
 rustflags = [
     "-C", "target-feature=+crt-static",
     "-C", "link-arg=-static",
+    "-C", "relocation-model=static",
 ]
 
 # ARM64 Android (via NDK)
@@ -41,11 +42,14 @@ linker = "aarch64-linux-gnu-gcc"
 
 # x86_64 Linux (musl - static linking)
 # Current primary deployment target
+# relocation-model=static prevents static-PIE which segfaults on musl ≤1.2.2
+# (Ubuntu 22.04 ships musl 1.2.2 — _start_c/dlstart.c crash in PIE mode)
 [target.x86_64-unknown-linux-musl]
-linker = "x86_64-linux-musl-gcc"
+linker = "musl-gcc"
 rustflags = [
     "-C", "target-feature=+crt-static",
     "-C", "link-arg=-static",
+    "-C", "relocation-model=static",
 ]
 
 # x86_64 Linux (gnu - for development)
@@ -85,22 +89,8 @@ rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
 # ============================================================================
 # Performance Optimizations (All Targets)
 # ============================================================================
-
-[profile.release]
-opt-level = 3              # Maximum optimization
-lto = true                 # Link-time optimization
-codegen-units = 1          # Single codegen unit for better optimization
-panic = "abort"            # Smaller binaries
-strip = true               # Remove debug symbols
-
-# Size-optimized profile (for embedded/constrained devices)
-[profile.release-small]
-inherits = "release"
-opt-level = "z"            # Optimize for size
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
+# [profile.release] and [profile.release-small] are in workspace Cargo.toml
+# (Cargo requires profiles to be in the manifest, not config.toml)
 
 # ============================================================================
 # Cargo Configuration

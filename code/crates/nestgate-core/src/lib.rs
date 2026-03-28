@@ -229,7 +229,7 @@ pub use constants::*;
 /// **THE CANONICAL ERROR SYSTEM** - Single error type for all operations
 pub use error::{NestGateError, Result};
 /// **CANONICAL RESULT TYPES** - Consolidated Nov 10, 2025 (was 54 → 6 types)
-/// All domain-specific aliases have been removed. Use `Result<T>` or `CanonicalResult<T>` instead.
+/// All domain-specific aliases have been removed. Use `Result` or `CanonicalResult` with your concrete type instead.
 pub use result_types::{
     CanonicalResult, ConnectionFactory, HealthCheckFn, TestResult, ValidatorFn, VoidResult,
 };

@@ -82,7 +82,7 @@ fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> Result<Perfo
         .sum();
 
     let disks = Disks::new_with_refreshed_list();
-    let disk_iops: f64 = disks.iter().map(|_| 1.0).sum();
+    let disk_iops: f64 = disks.len() as f64 * 100.0; // Estimated baseline per-disk IOPS
 
     Ok(PerformanceMetrics {
         timestamp: SystemTime::now(),

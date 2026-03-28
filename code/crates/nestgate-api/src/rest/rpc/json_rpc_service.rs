@@ -86,31 +86,40 @@ impl JsonRpcService {
         true
     }
 
-    /// Send JSON-RPC request to orchestration
+    /// Send JSON-RPC request to orchestration.
+    ///
+    /// Returns `ServiceUnavailable` when no orchestrator connection is established.
+    /// Callers should discover the orchestrator via capability routing before use.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn send_request(&self, _request: serde_json::Value) -> Result<serde_json::Value, RpcError> {
-        // Simplified stub implementation
-        Ok(serde_json::json!({"status": "success", "message": "JSON-RPC not fully implemented"}))
+    /// Returns error if the service is not connected to an orchestrator endpoint.
+    pub fn send_request(&self, request: serde_json::Value) -> Result<serde_json::Value, RpcError> {
+        let method = request["method"]
+            .as_str()
+            .unwrap_or("<unknown>")
+            .to_string();
+        Err(RpcError::ServiceUnavailable(format!(
+            "JSON-RPC method '{}' requires orchestrator connection at {} — \
+             use capability discovery to locate orchestrator",
+            method, self.base_url
+        )))
     }
 
-    /// Subscribe to orchestration events
+    /// Subscribe to orchestration events.
+    ///
+    /// Returns `ServiceUnavailable` — event subscription requires an active
+    /// orchestrator connection discovered at runtime.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    #[must_use]
-    pub const fn subscribe(&self, _event_type: &str) -> Result<(), RpcError> {
-        // Simplified stub implementation
-        Ok(())
+    /// Returns error if the service is not connected.
+    pub fn subscribe(&self, event_type: &str) -> Result<(), RpcError> {
+        Err(RpcError::ServiceUnavailable(format!(
+            "Event subscription '{event_type}' requires orchestrator connection at {} — \
+             use capability discovery to locate orchestrator",
+            self.base_url
+        )))
     }
 }
 

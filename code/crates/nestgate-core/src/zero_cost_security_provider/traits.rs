@@ -28,7 +28,7 @@ use crate::Result;
 /// ```
 ///
 /// **New code**:
-/// ```rust,ignore
+/// ```text
 /// impl SecurityProvider for MyProvider {
 ///     // No Config type needed - passed to methods directly
 ///     // Native async (RPITIT) provides zero-cost abstraction

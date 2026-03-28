@@ -541,10 +541,10 @@ impl NestGateRpc for NestGateRpcServer {
         let dataset_count = datasets_result.as_ref().map_or(0, |d| d.len());
         let snapshot_count = snapshots_result.as_ref().map_or(0, |s| s.len());
 
-        let avg_compression = if !pools.is_empty() {
-            compression_sum / pools.len() as f64
-        } else {
+        let avg_compression = if pools.is_empty() {
             1.0
+        } else {
+            compression_sum / pools.len() as f64
         };
 
         info!(

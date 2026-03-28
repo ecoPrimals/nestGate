@@ -11,7 +11,7 @@ use nestgate_core::universal_traits::Credentials;
 #[test]
 fn test_auth_service_new() {
     let service = AuthService::new();
-    assert!(service.authenticated_users.is_empty());
+    assert!(service._authenticated_users.is_empty());
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn test_auth_service_clone() {
     let service1 = AuthService::new();
     let service2 = service1;
 
-    assert!(service2.authenticated_users.is_empty());
+    assert!(service2._authenticated_users.is_empty());
 }
 
 // ==================== AUTH CREDENTIALS TESTS ====================

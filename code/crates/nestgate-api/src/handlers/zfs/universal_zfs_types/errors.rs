@@ -203,16 +203,33 @@ impl UniversalZfsError {
     /// Convert error to `UniversalZfsErrorData`
     #[must_use]
     pub fn to_error_data(&self) -> UniversalZfsErrorData {
-        match self {
-            Self::ServiceUnavailable { message } => UniversalZfsErrorData {
-                message: message.clone(),
+        #[allow(clippy::missing_const_for_fn)] // `String` parameters are not valid in `const fn`
+        fn base_message(message: String) -> UniversalZfsErrorData {
+            UniversalZfsErrorData {
+                message,
                 b_operation: None,
                 backend: None,
                 path: None,
                 timeout_duration: None,
                 circuit_breaker_open: false,
                 rate_limit_info: None,
-            },
+            }
+        }
+
+        fn with_operation(message: String, op: &'static str) -> UniversalZfsErrorData {
+            UniversalZfsErrorData {
+                message,
+                b_operation: Some(op.to_string()),
+                backend: None,
+                path: None,
+                timeout_duration: None,
+                circuit_breaker_open: false,
+                rate_limit_info: None,
+            }
+        }
+
+        match self {
+            Self::ServiceUnavailable { message } => base_message(message.clone()),
             Self::Timeout {
                 b_operation,
                 duration,
@@ -225,15 +242,7 @@ impl UniversalZfsError {
                 circuit_breaker_open: false,
                 rate_limit_info: None,
             },
-            Self::Configuration { message } => UniversalZfsErrorData {
-                message: message.clone(),
-                b_operation: None,
-                backend: None,
-                path: None,
-                timeout_duration: None,
-                circuit_breaker_open: false,
-                rate_limit_info: None,
-            },
+            Self::Configuration { message } => base_message(message.clone()),
             Self::Backend { backend, message } => UniversalZfsErrorData {
                 message: message.clone(),
                 b_operation: None,
@@ -243,15 +252,7 @@ impl UniversalZfsError {
                 circuit_breaker_open: false,
                 rate_limit_info: None,
             },
-            Self::InvalidInput { message } => UniversalZfsErrorData {
-                message: message.clone(),
-                b_operation: None,
-                backend: None,
-                path: None,
-                timeout_duration: None,
-                circuit_breaker_open: false,
-                rate_limit_info: None,
-            },
+            Self::InvalidInput { message } => base_message(message.clone()),
             Self::NotFound { path } => UniversalZfsErrorData {
                 message: format!("Resource not found: {path}"),
                 b_operation: None,
@@ -282,42 +283,16 @@ impl UniversalZfsError {
                 circuit_breaker_open: false,
                 rate_limit_info: rate_limit_info.clone(),
             },
-            Self::Internal { message } => UniversalZfsErrorData {
-                message: message.clone(),
-                b_operation: None,
-                backend: None,
-                path: None,
-                timeout_duration: None,
-                circuit_breaker_open: false,
-                rate_limit_info: None,
-            },
-            Self::PoolOperationFailed { message } => UniversalZfsErrorData {
-                message: message.clone(),
-                b_operation: Some("pool_operation".to_string()),
-                backend: None,
-                path: None,
-                timeout_duration: None,
-                circuit_breaker_open: false,
-                rate_limit_info: None,
-            },
-            Self::DatasetOperationFailed { message } => UniversalZfsErrorData {
-                message: message.clone(),
-                b_operation: Some("dataset_operation".to_string()),
-                backend: None,
-                path: None,
-                timeout_duration: None,
-                circuit_breaker_open: false,
-                rate_limit_info: None,
-            },
-            Self::SnapshotOperationFailed { message } => UniversalZfsErrorData {
-                message: message.clone(),
-                b_operation: Some("snapshot_operation".to_string()),
-                backend: None,
-                path: None,
-                timeout_duration: None,
-                circuit_breaker_open: false,
-                rate_limit_info: None,
-            },
+            Self::Internal { message } => base_message(message.clone()),
+            Self::PoolOperationFailed { message } => {
+                with_operation(message.clone(), "pool_operation")
+            }
+            Self::DatasetOperationFailed { message } => {
+                with_operation(message.clone(), "dataset_operation")
+            }
+            Self::SnapshotOperationFailed { message } => {
+                with_operation(message.clone(), "snapshot_operation")
+            }
         }
     }
 }

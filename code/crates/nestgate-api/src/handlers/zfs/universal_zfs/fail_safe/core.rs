@@ -41,7 +41,9 @@ impl std::fmt::Debug for FailSafeZfsService {
             .field("graceful_degradation", &self.graceful_degradation)
             .field("start_time", &self.start_time)
             .field("has_fallback", &self.fallback.is_some())
-            .finish()
+            .field("timeout_config", &self.timeout_config)
+            .field("metrics", &self.metrics)
+            .finish_non_exhaustive()
     }
 }
 

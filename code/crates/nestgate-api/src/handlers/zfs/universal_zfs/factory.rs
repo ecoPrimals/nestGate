@@ -264,14 +264,19 @@ impl ZfsServiceFactory {
 /// Helper trait for service configuration
 pub trait ServiceConfigBuilder {
     /// Configure the ZFS backend type (native, remote, mock)
+    #[must_use]
     fn with_backend(self, backend: ZfsBackend) -> Self;
     /// Enable or disable fail-safe mechanisms
+    #[must_use]
     fn with_fail_safe(self, enabled: bool) -> Self;
     /// Enable or disable graceful degradation on failures
+    #[must_use]
     fn with_graceful_degradation(self, enabled: bool) -> Self;
     /// Enable or disable circuit breaker pattern
+    #[must_use]
     fn with_circuit_breaker(self, enabled: bool) -> Self;
     /// Enable or disable retry policy for failed operations
+    #[must_use]
     fn with_retry_policy(self, enabled: bool) -> Self;
 }
 impl ServiceConfigBuilder for ZfsServiceConfig {

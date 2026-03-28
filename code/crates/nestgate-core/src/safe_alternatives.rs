@@ -96,9 +96,10 @@ pub mod pointer_handling {
 }
 
 /// Example 3: FFI-style RAII (demonstration only — not production FFI)
+///
+/// **Teaching example only.** Production FFI uses `extern "C"` and `unsafe` at the boundary;
+/// this module shows the *RAII shape* with pure safe Rust (atomic handle id + `Drop`).
 pub mod ffi_wrapper {
-    //! **Teaching example only.** Production FFI uses `extern "C"` and `unsafe` at the boundary;
-    //! this module shows the *RAII shape* with pure safe Rust (atomic handle id + `Drop`).
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     static NEXT_HANDLE: AtomicUsize = AtomicUsize::new(1);
@@ -217,41 +218,41 @@ pub mod simd_evolution {
     }
 }
 
-/// Migration checklist for unsafe code evolution
+/// Migration checklist for unsafe code evolution.
 ///
-/// This module provides a comprehensive checklist and guidelines for migrating
+/// Provides a comprehensive checklist and guidelines for migrating
 /// unsafe code to safe alternatives while maintaining performance.
 pub mod migration_checklist {
-    //! # Unsafe Code Migration Checklist
-    //!
-    //! ## Before Migration
-    //! - [ ] Document why unsafe is needed
-    //! - [ ] Document safety invariants
-    //! - [ ] Have tests proving correctness
-    //! - [ ] Consider if unsafe is truly necessary
-    //!
-    //! ## During Migration
-    //! - [ ] Use NonNull instead of raw pointers where possible
-    //! - [ ] Use MaybeUninit for uninitialized memory
-    //! - [ ] Wrap FFI in safe RAII types
-    //! - [ ] Provide safe abstractions with fallbacks
-    //! - [ ] Document remaining SAFETY comments
-    //!
-    //! ## After Migration
-    //! - [ ] Verify tests still pass
-    //! - [ ] Benchmark to ensure no regression
-    //! - [ ] Update documentation
-    //! - [ ] Add safety assertions where helpful
-    //!
-    //! ## Safe Alternatives Catalog
-    //!
-    //! | Unsafe Pattern | Safe Alternative |
-    //! |---------------|------------------|
-    //! | `mem::uninitialized()` | `MaybeUninit::uninit()` |
-    //! | `*mut T` | `NonNull<T>` + PhantomData |
-    //! | FFI raw pointers | RAII wrapper struct |
-    //! | Direct SIMD intrinsics | Safe wrapper + scalar fallback |
-    //! | `transmute` | `From`/`Into` traits or safe casts |
+    // # Unsafe Code Migration Checklist
+    //
+    // ## Before Migration
+    // - [ ] Document why unsafe is needed
+    // - [ ] Document safety invariants
+    // - [ ] Have tests proving correctness
+    // - [ ] Consider if unsafe is truly necessary
+    //
+    // ## During Migration
+    // - [ ] Use NonNull instead of raw pointers where possible
+    // - [ ] Use MaybeUninit for uninitialized memory
+    // - [ ] Wrap FFI in safe RAII types
+    // - [ ] Provide safe abstractions with fallbacks
+    // - [ ] Document remaining SAFETY comments
+    //
+    // ## After Migration
+    // - [ ] Verify tests still pass
+    // - [ ] Benchmark to ensure no regression
+    // - [ ] Update documentation
+    // - [ ] Add safety assertions where helpful
+    //
+    // ## Safe Alternatives Catalog
+    //
+    // | Unsafe Pattern | Safe Alternative |
+    // |---------------|------------------|
+    // | `mem::uninitialized()` | `MaybeUninit::uninit()` |
+    // | `*mut T` | `NonNull<T>` + PhantomData |
+    // | FFI raw pointers | RAII wrapper struct |
+    // | Direct SIMD intrinsics | Safe wrapper + scalar fallback |
+    // | `transmute` | `From`/`Into` traits or safe casts |
 }
 
 #[cfg(test)]

@@ -87,9 +87,8 @@ impl ZfsConfig {
             .args(["list", "-H", "-o", "name"])
             .output();
 
-        let output = match output {
-            Ok(o) => o,
-            Err(_) => return Ok(Self::empty()),
+        let Ok(output) = output else {
+            return Ok(Self::empty());
         };
 
         if !output.status.success() {

@@ -127,3 +127,77 @@ impl McpProtocolError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn error_payload_round_trips_json() {
+        let mut details = HashMap::new();
+        details.insert("k".to_string(), "v".to_string());
+        let p = ErrorPayload {
+            error_code: "E".to_string(),
+            error_message: "msg".to_string(),
+            details,
+            timestamp: std::time::SystemTime::UNIX_EPOCH,
+        };
+        let json = serde_json::to_string(&p).unwrap();
+        let back: ErrorPayload = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.error_code, "E");
+        assert_eq!(back.error_message, "msg");
+        assert_eq!(back.details.get("k").map(String::as_str), Some("v"));
+    }
+
+    #[test]
+    fn acknowledgment_payload_round_trips() {
+        let a = AcknowledmentPayload {
+            ack_type: AcknowledmentType::Processed,
+            message: "done".to_string(),
+        };
+        let json = serde_json::to_string(&a).unwrap();
+        let back: AcknowledmentPayload = serde_json::from_str(&json).unwrap();
+        assert!(matches!(back.ack_type, AcknowledmentType::Processed));
+        assert_eq!(back.message, "done");
+    }
+
+    #[test]
+    fn mcp_protocol_error_display_and_constructors() {
+        let e = McpProtocolError::protocol_error("p");
+        assert!(e.to_string().contains("Protocol error"));
+        let e = McpProtocolError::connection_error("c");
+        assert!(e.to_string().contains("Connection error"));
+        let e = McpProtocolError::message_parsing_error("m");
+        assert!(e.to_string().contains("Message parsing"));
+        let e = McpProtocolError::authentication_error("a");
+        assert!(e.to_string().contains("Authentication error"));
+        let e = McpProtocolError::session_error("s");
+        assert!(e.to_string().contains("Session error"));
+    }
+
+    #[test]
+    fn mcp_protocol_error_maps_to_nestgate_error_by_variant() {
+        let cases: Vec<(McpProtocolError, fn(&str) -> bool)> = vec![
+            (McpProtocolError::protocol_error("x"), |s| {
+                s.contains("MCP protocol error")
+            }),
+            (McpProtocolError::connection_error("x"), |s| {
+                s.contains("MCP connection error")
+            }),
+            (McpProtocolError::message_parsing_error("x"), |s| {
+                s.contains("MCP parsing error")
+            }),
+            (McpProtocolError::authentication_error("x"), |s| {
+                s.contains("MCP auth error")
+            }),
+            (McpProtocolError::session_error("x"), |s| {
+                s.contains("MCP session error")
+            }),
+        ];
+        for (err, pred) in cases {
+            let ng: NestGateError = err.into();
+            let msg = ng.to_string();
+            assert!(pred(&msg), "unexpected message: {msg}");
+        }
+    }
+}

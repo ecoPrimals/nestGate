@@ -1,6 +1,7 @@
 [[bin]]
 name = "nestgate"              # UNIBIN - Single binary, multiple modes via subcommands
 path = "src/main.rs"
+doc = false                    # Avoid rustdoc collision with workspace root crate `nestgate`
 
 [package]
 name = "nestgate-bin"

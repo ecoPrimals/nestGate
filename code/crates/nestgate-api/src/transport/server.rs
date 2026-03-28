@@ -49,7 +49,9 @@ use super::{
     jsonrpc::{JsonRpcHandler, RpcMethodHandler},
     unix_socket::UnixSocketListener,
 };
+use axum::{http::StatusCode, routing::get, Router};
 use nestgate_core::error::{NestGateError, Result};
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Notify;
 use tracing::{error, info, warn};
@@ -188,12 +190,41 @@ where
         let shutdown = Arc::clone(&self.shutdown);
 
         let handle = tokio::spawn(async move {
-            // TODO: Implement HTTP fallback in Phase 4
-            warn!("HTTP fallback not yet implemented - use Unix sockets");
-            shutdown.notified().await;
+            let addr = SocketAddr::from(([0, 0, 0, 0], port));
+            let listener = match tokio::net::TcpListener::bind(addr).await {
+                Ok(l) => l,
+                Err(e) => {
+                    error!("HTTP fallback bind failed on {}: {}", addr, e);
+                    return;
+                }
+            };
+
+            let app = Router::new().route(
+                "/",
+                get(|| async {
+                    (
+                        StatusCode::NOT_IMPLEMENTED,
+                        "NestGate JSON-RPC: use Unix sockets (HTTP fallback is diagnostic only)",
+                    )
+                }),
+            );
+
+            warn!(
+                "HTTP fallback listening on {} (diagnostic only — use Unix sockets in production)",
+                addr
+            );
+
+            if let Err(e) = axum::serve(listener, app)
+                .with_graceful_shutdown(async move {
+                    shutdown.notified().await;
+                })
+                .await
+            {
+                error!("HTTP fallback server error: {}", e);
+            }
         });
 
-        info!("📡 HTTP fallback placeholder started on port {}", port);
+        info!("📡 HTTP fallback started on port {}", port);
 
         Ok(handle)
     }

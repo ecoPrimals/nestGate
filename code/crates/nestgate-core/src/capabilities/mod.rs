@@ -26,9 +26,9 @@
 //!
 //! # Example: Complete Flow
 //!
-//! ```rust,ignore
-//! // Full flow requires ServiceDetector with scan_ports; see capabilities::discovery module for
-//! // simpler capability-based lookup examples using CapabilityRegistry::find_providers().
+//! ```text
+//! Full flow requires ServiceDetector with scan_ports; see capabilities::discovery for
+//! simpler capability-based lookup examples using CapabilityRegistry::find_providers().
 //! ```
 //!
 //! # Migration from Hardcoded Names

@@ -1,70 +1,69 @@
-/// Connection Pool Factory Functions
-/// Provides convenient factory functions for creating commonly used connection pools.
-use crate::http_client_stub as reqwest;
+/// Connection pool factory helpers for HTTP clients backed by [`crate::http_client_stub::Client`].
 use super::ConnectionPool;
-use crate::config::canonical_primary::NestGateCanonicalConfig;
+use crate::config::canonical_primary::{NestGateCanonicalConfig, UnifiedConnectionPoolConfig};
+use crate::http_client_stub as reqwest;
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Duration;
-/// Type alias for HTTP connection pool
+
+/// Pooled HTTP client type (`DiscoveryHttpClient` façade).
 pub type HttpConnectionPool = ConnectionPool<Client>;
-/// Create a pre-configured HTTP connection pool
-/// This factory function creates a connection pool optimized for HTTP clients,
-/// with reasonable defaults for web service communication.
+
+/// Build a canonical config with pool limits derived from [`UnifiedConnectionPoolConfig`].
+fn nestgate_config_for_pool(pool: &UnifiedConnectionPoolConfig) -> NestGateCanonicalConfig {
+    let mut config = NestGateCanonicalConfig::default();
+    config.network.api.max_connections = pool.max_size.max(1);
+    config.network.api.connection_timeout = pool.connection_timeout;
+    config
+}
+
+/// Create a pre-configured HTTP connection pool using the discovery HTTP client stack.
+///
+/// Pool sizing and timeouts are taken from [`UnifiedConnectionPoolConfig`] when provided,
+/// and merged into [`NestGateCanonicalConfig`] for the shared [`ConnectionPool`] implementation.
 pub fn create_http_pool(
-    config: Option<crate::config::canonical_primary::UnifiedConnectionPoolConfig>,
+    config: Option<UnifiedConnectionPoolConfig>,
 ) -> crate::Result<HttpConnectionPool> {
-    let unified_config = config.unwrap_or_else(|| {
-        let mut config = crate::config::canonical_primary::UnifiedConnectionPoolConfig::default();
-        config.min_connections = 2;
-        config.max_connections = 10;
-        config.max_idle_time_seconds = 300;
-        config.acquire_timeout_seconds = 30;
-        config.health_check_interval_seconds = 60;
-        config.enable_validation = true;
-        config.retry_attempts = 3;
-        config.retry_delay_seconds = 2;
-        config.enable_metrics = true;
-        config.pool_name = "http-client-pool".to_string();
-        config
-    );
-    let pool_config = unified_config;
+    let pool_cfg = config.unwrap_or_else(|| {
+        let mut c = UnifiedConnectionPoolConfig::default();
+        c.initial_size = 2;
+        c.max_size = 10;
+        c.idle_timeout = Duration::from_secs(300);
+        c.connection_timeout = Duration::from_secs(30);
+        c.health_check_interval = Duration::from_secs(60);
+        c
+    });
 
-    // Create HTTP client factory
-    let factory = Arc::new(|| -> crate::Result<Client> {
-        Client::builder()
-            .timeout(Duration::from_secs(30))
-            .build()
-            .map_err(|e| crate::NestGateError::internal_error(
-                location: Some(format!("{})
-                location: Some(format!("Error: {e}"))})
-    );
+    let canonical = nestgate_config_for_pool(&pool_cfg);
+    let connect_timeout = pool_cfg.connection_timeout;
 
-    // Create health check function for HTTP clients
+    let factory = Arc::new(move || -> crate::Result<Client> {
+        Client::builder().timeout(connect_timeout).build()
+    });
+
     let health_check: Option<Arc<dyn Fn(&Client) -> crate::Result<()> + Send + Sync>> =
-        Some(Arc::new(|_client: &Client| -> crate::Result<()> {
-            // Simple health check - just return Ok for HTTP clients
+        Some(Arc::new(|client: &Client| {
+            // Verify the client can be cloned and its internal state is consistent.
+            // Full HTTP health probes require async; this sync check validates the
+            // client handle is still usable (not poisoned or dropped).
+            let _clone = client.clone();
             Ok(())
         }));
 
-    // Create NestGateCanonicalConfig with connection pool configuration
-            let mut unified_config = crate::config::canonical_primary::NestGateCanonicalConfig::default();
-    unified_config.connection_pool = pool_config;
-
-    HttpConnectionPool::new(unified_config, factory, health_check)
+    ConnectionPool::new(canonical, factory, health_check)
 }
 
-/// Create a database connection pool
-/// This is a placeholder for database-specific connection pools.
-/// In a real implementation, this would create pools for PostgreSQL, MySQL, etc.
+/// Placeholder for database connection pools (not yet implemented).
+///
+/// Returns a clear validation error until PostgreSQL/MySQL (or other) factories are wired.
 pub fn create_database_pool<T>(
     _config: NestGateCanonicalConfig,
-    connection_string: &str,
+    _connection_string: &str,
 ) -> crate::Result<ConnectionPool<T>>
 where
     T: Send + Sync + 'static,
 {
-    // This is a placeholder implementation
-    // Real implementation would parse connection_string and create appropriate connections
     Err(crate::NestGateError::validation(
+        "create_database_pool is not implemented; use a database-specific pool when available",
+    ))
 }

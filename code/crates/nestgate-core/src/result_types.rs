@@ -10,10 +10,10 @@
 //!
 //! ## Usage Guidelines
 //!
-//! - **Prefer**: `Result<T>` for most cases
-//! - **Use**: `CanonicalResult<T>` when disambiguating from `std::result::Result`
+//! - **Prefer**: `Result` with your value type for most cases
+//! - **Use**: `CanonicalResult` when disambiguating from `std::result::Result`
 //! - **Domain-specific**: Use specialized types for different error types
-//! - **Tests**: Use `TestResult<T>` in test code
+//! - **Tests**: Use `TestResult` in test code
 //! - **Functions**: Use `ConnectionFactory`, `HealthCheckFn`, `ValidatorFn`
 //!
 //! ## Migration from Legacy Types
@@ -21,23 +21,23 @@
 //! All domain-specific Result aliases (ApiResult, CacheResult, StorageResult, etc.)
 //! have been deprecated in v0.11.2 and will be removed in v0.12.0 (May 2026).
 //!
-//! Use `Result<T>` directly:
+//! Use `nestgate_core::Result` with your concrete `Ok` type directly:
 //!
 //! ```rust,ignore
 //! // OLD (deprecated):
-//! pub fn fetch_data() -> ApiResult<Data> { ... }
+//! pub fn fetch_data() -> ApiResult<Data> { todo!() }
 //!
 //! // NEW (canonical):
 //! use nestgate_core::Result;
 //!
-//! pub fn fetch_data() -> Result<Data> { ... }
+//! pub fn fetch_data() -> Result<Data> { todo!() }
 //! ```
 //!
 //! ## Consolidation Summary
 //!
 //! **Before**: 54 Result type aliases scattered across codebase  
 //! **After**: 12-14 canonical types with clear ownership  
-//! **Eliminated**: 17 redundant aliases (all resolved to `Result<T, NestGateError>`)  
+//! **Eliminated**: 17 redundant aliases (all resolved to `Result` with `NestGateError`)  
 //! **Benefit**: Single source of truth, reduced confusion, easier maintenance
 
 use crate::error::NestGateError;
@@ -72,8 +72,8 @@ use std::sync::Arc;
 ///
 /// ## When NOT to Use
 ///
-/// - When returning a different error type (use `std::result::Result<T, E>`)
-/// - When Result might be ambiguous (use `CanonicalResult<T>`)
+/// - When returning a different error type (use `std::result::Result` with your `E`)
+/// - When Result might be ambiguous (use `CanonicalResult`)
 pub type Result<T, E = NestGateError> = std::result::Result<T, E>;
 
 /// **CANONICAL RESULT ALIAS**
@@ -103,7 +103,7 @@ pub type CanonicalResult<T> = Result<T>;
 ///
 /// Convenience type for operations that return no value on success.
 ///
-/// Equivalent to `Result<()>` but more expressive of intent.
+/// Equivalent to `Result` with unit (`()`) success type but more expressive of intent.
 ///
 /// ## Usage
 ///
@@ -174,12 +174,15 @@ pub type TestResult<T = ()> = Result<T>;
 ///
 /// ```rust,ignore
 /// use nestgate_core::result_types::ConnectionFactory;
+/// use nestgate_core::Result;
 /// use std::sync::Arc;
 ///
-/// struct DbConnection { /* ... */ }
+/// struct DbConnection;
 ///
 /// impl DbConnection {
-///     fn new(url: &str) -> Result<Self> { /* ... */ }
+///     fn new(_url: &str) -> Result<Self> {
+///         Ok(Self)
+///     }
 /// }
 ///
 /// fn create_factory(url: String) -> ConnectionFactory<DbConnection> {
@@ -193,7 +196,7 @@ pub type TestResult<T = ()> = Result<T>;
 /// - Multiple pool instances can use same factory
 /// - Efficient cloning for distribution
 ///
-/// Type alias for: `Arc<dyn Fn() -> Result<T> + Send + Sync>`
+/// Type alias for `Arc` wrapping a `Fn` that returns `Result` (see `ConnectionFactory` definition).
 pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
 
 /// **HEALTH CHECK FUNCTION**
@@ -223,10 +226,10 @@ pub type ConnectionFactory<T> = Arc<dyn Fn() -> Result<T> + Send + Sync>;
 /// ## Pattern
 ///
 /// - Takes reference to avoid unnecessary cloning
-/// - Returns `Result<()>` - success or error
+/// - Returns unit `Result` — success or error
 /// - Thread-safe for concurrent health checks
 ///
-/// Type alias for: `Arc<dyn Fn(&T) -> Result<()> + Send + Sync>`
+/// Type alias for `Arc` wrapping a `Fn` that takes `&T` and returns unit `Result` (see `HealthCheckFn` definition).
 pub type HealthCheckFn<T> = Arc<dyn Fn(&T) -> Result<()> + Send + Sync>;
 
 /// **VALIDATOR FUNCTION**

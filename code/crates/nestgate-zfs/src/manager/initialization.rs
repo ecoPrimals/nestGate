@@ -263,10 +263,11 @@ impl ZfsManager {
                     );
                     format!("{}:{}", host, port)
                 } else {
-                    // Development: Use ZFS config's actual bind address
-                    // This is self-knowledge - ZFS knows where IT is listening
-                    let bind_addr = &self.config.bind_address;
-                    let bind_port = self.config.port;
+                    let bind_addr = std::env::var("NESTGATE_ZFS_BIND_ADDRESS")
+                        .unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let bind_port = std::env::var("NESTGATE_ZFS_BIND_PORT")
+                        .and_then(|s| s.parse::<u16>().map_err(|_| std::env::VarError::NotPresent))
+                        .unwrap_or(8085);
 
                     tracing::debug!(
                         "ZFS endpoint from self-knowledge: {}:{}",
@@ -274,7 +275,7 @@ impl ZfsManager {
                         bind_port
                     );
 
-                    format!("{}:{}", bind_addr, bind_port)
+                    format!("{bind_addr}:{bind_port}")
                 };
 
                 endpoint

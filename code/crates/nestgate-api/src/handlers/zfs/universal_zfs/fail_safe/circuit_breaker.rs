@@ -83,7 +83,8 @@ impl CircuitBreaker {
             CircuitBreakerState::Closed => true,
             CircuitBreakerState::Open => {
                 // Check if we should transition to half-open
-                if let Some(last_failure) = *self.last_failure_time.read().await {
+                let last_failure_snapshot = *self.last_failure_time.read().await;
+                if let Some(last_failure) = last_failure_snapshot {
                     if SystemTime::now()
                         .duration_since(last_failure)
                         .unwrap_or_default()

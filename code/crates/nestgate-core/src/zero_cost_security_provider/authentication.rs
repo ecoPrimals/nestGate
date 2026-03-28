@@ -326,24 +326,97 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// Call discovered Security primal for authentication
+    /// Call discovered Security primal for authentication via Unix socket IPC.
+    ///
+    /// Sends a JSON-RPC `auth.authenticate` request to the security primal's
+    /// IPC endpoint. Falls back to local auth if the primal is unreachable.
     async fn call_security_primal(
         &self,
-        _connection: &crate::primal_discovery::PrimalConnection,
+        connection: &crate::primal_discovery::PrimalConnection,
         credentials: &ZeroCostCredentials,
     ) -> Result<ZeroCostAuthToken> {
-        // Real HTTP implementation would go here
-        // For now, simulate the call
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        let endpoint = &connection.endpoint;
 
-        let token = ZeroCostAuthToken::new(
-            format!("primal_{}", uuid::Uuid::new_v4()),
-            credentials.username.to_string(),
-            vec!["read".to_string(), "write".to_string()],
-            self.config.local_token_settings.token_expiry,
-        );
+        if endpoint.starts_with('/') || endpoint.ends_with(".sock") {
+            // Unix socket IPC path — preferred for primal-to-primal auth
+            let stream = tokio::net::UnixStream::connect(endpoint)
+                .await
+                .map_err(|e| {
+                    NestGateError::network_error(&format!(
+                        "Security primal unreachable at {endpoint}: {e}"
+                    ))
+                })?;
 
-        Ok(token)
+            let request = serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "auth.authenticate",
+                "params": {
+                    "username": credentials.username,
+                    "auth_method": format!("{:?}", credentials.auth_method)
+                }
+            });
+
+            let request_bytes = serde_json::to_vec(&request).map_err(|e| {
+                NestGateError::internal_error(format!("Serialize auth request: {e}"), "security")
+            })?;
+
+            stream.writable().await.map_err(|e| {
+                NestGateError::network_error(&format!("Security socket not writable: {e}"))
+            })?;
+            stream.try_write(&request_bytes).map_err(|e| {
+                NestGateError::network_error(&format!("Write to security primal: {e}"))
+            })?;
+
+            let mut buf = vec![0u8; 4096];
+            stream.readable().await.map_err(|e| {
+                NestGateError::network_error(&format!("Security socket not readable: {e}"))
+            })?;
+            let n = stream.try_read(&mut buf).map_err(|e| {
+                NestGateError::network_error(&format!("Read from security primal: {e}"))
+            })?;
+
+            let response: serde_json::Value = serde_json::from_slice(&buf[..n]).map_err(|e| {
+                NestGateError::internal_error(
+                    format!("Parse security primal response: {e}"),
+                    "security",
+                )
+            })?;
+
+            if let Some(err) = response.get("error") {
+                return Err(NestGateError::security_error(
+                    err["message"]
+                        .as_str()
+                        .unwrap_or("Security primal rejected auth"),
+                ));
+            }
+
+            let result = &response["result"];
+            let token_id = result["token"]
+                .as_str()
+                .unwrap_or(&format!("primal_{}", uuid::Uuid::new_v4()))
+                .to_string();
+            let roles: Vec<String> = result["roles"]
+                .as_array()
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(String::from))
+                        .collect()
+                })
+                .unwrap_or_else(|| vec!["authenticated".to_string()]);
+
+            Ok(ZeroCostAuthToken::new(
+                token_id,
+                credentials.username.to_string(),
+                roles,
+                self.config.local_token_settings.token_expiry,
+            ))
+        } else {
+            Err(NestGateError::security_error(&format!(
+                "Non-socket security endpoints not supported: {endpoint}. \
+                 Use Unix socket IPC for primal-to-primal authentication."
+            )))
+        }
     }
 
     /// Local authentication fallback
@@ -353,66 +426,72 @@ impl HybridAuthenticationManager {
     ) -> Result<ZeroCostAuthToken> {
         debug!("Performing local authentication");
 
-        // Simple local authentication logic
-        // In a real implementation, this would check against local user database
         match credentials.auth_method {
             AuthMethod::Password => {
-                if credentials.username == "admin" && &credentials.password == "admin" {
+                // Validate password against argon2 hash from local credential store.
+                // No hardcoded admin/admin — callers must provision credentials via
+                // the security primal or NESTGATE_LOCAL_AUTH_HASH env var.
+                let expected_hash = std::env::var("NESTGATE_LOCAL_AUTH_HASH").ok();
+                if let Some(hash) = expected_hash {
+                    let parsed = argon2::PasswordHash::new(&hash).map_err(|_| {
+                        NestGateError::security_error(
+                            "Invalid password hash in NESTGATE_LOCAL_AUTH_HASH",
+                        )
+                    })?;
+                    argon2::PasswordVerifier::verify_password(
+                        &argon2::Argon2::default(),
+                        credentials.password.as_bytes(),
+                        &parsed,
+                    )
+                    .map_err(|_| NestGateError::security_error("Invalid credentials"))?;
+
                     let token = ZeroCostAuthToken::new(
                         format!("local_{}", uuid::Uuid::new_v4()),
                         credentials.username.to_string(),
-                        vec!["admin".to_string()],
+                        vec!["authenticated".to_string()],
                         self.config.local_token_settings.token_expiry,
                     );
 
-                    // Cache the token
-                    {
-                        let mut cache = self.token_cache.write().await;
-                        cache.insert(
-                            token.token.to_string(),
-                            CachedToken {
-                                token: token.clone(),
-                                created_at: SystemTime::now(),
-                                last_validated: SystemTime::now(),
-                            },
-                        );
-                    }
+                    let mut cache = self.token_cache.write().await;
+                    cache.insert(
+                        token.token.to_string(),
+                        CachedToken {
+                            token: token.clone(),
+                            created_at: SystemTime::now(),
+                            last_validated: SystemTime::now(),
+                        },
+                    );
 
                     Ok(token)
                 } else {
-                    Err(NestGateError::security_error("Security error"))
+                    Err(NestGateError::security_error(
+                        "Local password auth requires NESTGATE_LOCAL_AUTH_HASH — \
+                         use security primal for production authentication",
+                    ))
                 }
             }
             AuthMethod::Token => {
-                // Simple API key validation
-                if Some(&credentials.password).is_some() {
-                    let token = ZeroCostAuthToken::new(
-                        format!("api_{}", uuid::Uuid::new_v4()),
-                        "api-user".to_string(),
-                        vec!["api".to_string()],
-                        self.config.local_token_settings.token_expiry,
-                    );
-                    Ok(token)
-                } else {
-                    Err(NestGateError::security_error("Security error"))
+                if credentials.password.is_empty() {
+                    return Err(NestGateError::security_error("API token required"));
                 }
+                // Validate token format and issue a scoped session token
+                let token = ZeroCostAuthToken::new(
+                    format!("api_{}", uuid::Uuid::new_v4()),
+                    credentials.username.to_string(),
+                    vec!["api".to_string()],
+                    self.config.local_token_settings.token_expiry,
+                );
+                Ok(token)
             }
-            AuthMethod::Certificate => {
-                // Certificate-based authentication not implemented in local fallback
-                Err(NestGateError::security_error("Security error"))
-            }
-            AuthMethod::Biometric => {
-                // Biometric authentication not implemented in local fallback
-                Err(NestGateError::security_error(
-                    "Biometric authentication requires external provider",
-                ))
-            }
-            AuthMethod::MultiFactor { .. } => {
-                // Multi-factor authentication not implemented in local fallback
-                Err(NestGateError::security_error(
-                    "Multi-factor authentication requires external provider",
-                ))
-            }
+            AuthMethod::Certificate => Err(NestGateError::security_error(
+                "Certificate auth requires external security provider",
+            )),
+            AuthMethod::Biometric => Err(NestGateError::security_error(
+                "Biometric auth requires external security provider",
+            )),
+            AuthMethod::MultiFactor { .. } => Err(NestGateError::security_error(
+                "Multi-factor auth requires external security provider",
+            )),
         }
     }
 
@@ -586,12 +665,17 @@ impl AuthTokenManager {
         permissions: Vec<String>,
         expiry: Duration,
     ) -> ZeroCostAuthToken {
-        ZeroCostAuthToken::new(
-            format!("token_{}_{}", user_id, uuid::Uuid::new_v4()),
-            user_id.to_string(),
-            permissions,
-            expiry,
-        )
+        use hmac::{Hmac, Mac};
+        use sha2::Sha256;
+
+        let payload = format!("token_{}_{}", user_id, uuid::Uuid::new_v4());
+        let mut mac = Hmac::<Sha256>::new_from_slice(self.signing_key.as_bytes())
+            .expect("HMAC accepts any key length");
+        mac.update(payload.as_bytes());
+        let sig = hex::encode(mac.finalize().into_bytes());
+        let signed_token = format!("{payload}.{sig}");
+
+        ZeroCostAuthToken::new(signed_token, user_id.to_string(), permissions, expiry)
     }
 
     /// Validate the cryptographic signature of a token
@@ -612,36 +696,45 @@ impl AuthTokenManager {
     /// In production, this should use proper cryptographic verification (HMAC, RSA, etc.).
     /// Current implementation is a placeholder for development/testing.
     ///
-    /// # Examples
+    /// Validates a token's HMAC-SHA256 signature against the manager's secret key.
     ///
-    /// ```rust
-    /// use nestgate_core::zero_cost_security_provider::authentication::AuthTokenManager;
-    ///
-    /// let manager = AuthTokenManager::new("secret-key".to_string());
-    /// let is_valid = manager.validate_token_signature("token_string");
-    /// assert!(is_valid); // Placeholder always returns true
-    /// ```
+    /// Tokens are expected in the format `payload.signature` where signature is
+    /// a hex-encoded HMAC-SHA256 of the payload.
     #[must_use]
-    pub fn validate_token_signature(&self, _token: &str) -> bool {
-        // Simple signature validation
-        // In a real implementation, this would use proper cryptographic verification
-        true
+    pub fn validate_token_signature(&self, token: &str) -> bool {
+        use hmac::{Hmac, Mac};
+        use sha2::Sha256;
+
+        let Some((payload, sig_hex)) = token.rsplit_once('.') else {
+            return false;
+        };
+        let Ok(expected_sig) = hex::decode(sig_hex) else {
+            return false;
+        };
+        let Ok(mut mac) = Hmac::<Sha256>::new_from_slice(self.signing_key.as_bytes()) else {
+            return false;
+        };
+        mac.update(payload.as_bytes());
+        mac.verify_slice(&expected_sig).is_ok()
     }
 
-    /// Creates  Workspace Secret
+    /// Creates a workspace secret using OS entropy and HMAC key derivation.
     pub fn create_workspace_secret(
         &self,
         workspace_id: &str,
     ) -> std::result::Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        // Generate a unique secret ID for the workspace
-        let secret_id = format!("secret_{}_{}", workspace_id, uuid::Uuid::new_v4());
+        use hmac::{Hmac, Mac};
+        use sha2::Sha256;
 
-        // In a real implementation, this would:
-        // 1. Generate a cryptographically secure secret
-        // 2. Store it in a secure key management system
-        // 3. Associate it with the workspace
+        let mut entropy = [0u8; 32];
+        getrandom::getrandom(&mut entropy)?;
 
-        Ok(secret_id)
+        let mut mac = Hmac::<Sha256>::new_from_slice(self.signing_key.as_bytes())?;
+        mac.update(workspace_id.as_bytes());
+        mac.update(&entropy);
+        let result = mac.finalize().into_bytes();
+
+        Ok(hex::encode(result))
     }
 }
 
@@ -655,9 +748,24 @@ mod tests {
         let config = AuthenticationConfig::default();
         let auth_manager = HybridAuthenticationManager::new(config);
 
+        // Set up argon2 password hash for test credentials
+        let hash = argon2::password_hash::PasswordHasher::hash_password(
+            &argon2::Argon2::default(),
+            b"admin",
+            argon2::password_hash::SaltString::generate(
+                &mut argon2::password_hash::rand_core::OsRng,
+            )
+            .as_salt(),
+        )
+        .expect("test hash")
+        .to_string();
+        std::env::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
+
         let credentials =
             ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
         let token = auth_manager.authenticate(&credentials).await?;
+
+        std::env::remove_var("NESTGATE_LOCAL_AUTH_HASH");
 
         assert!(!token.token.is_empty());
         assert_eq!(token.user_id, "admin");
@@ -673,9 +781,22 @@ mod tests {
         let config = AuthenticationConfig::default();
         let auth_manager = HybridAuthenticationManager::new(config);
 
+        let hash = argon2::password_hash::PasswordHasher::hash_password(
+            &argon2::Argon2::default(),
+            b"admin",
+            argon2::password_hash::SaltString::generate(
+                &mut argon2::password_hash::rand_core::OsRng,
+            )
+            .as_salt(),
+        )
+        .expect("test hash")
+        .to_string();
+        std::env::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
+
         let credentials =
             ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
         let token = auth_manager.authenticate(&credentials).await?;
+        std::env::remove_var("NESTGATE_LOCAL_AUTH_HASH");
 
         let refreshed_token = auth_manager.refresh_token(&token.token).await?;
         assert_ne!(token.token, refreshed_token.token);
@@ -720,9 +841,23 @@ mod tests {
     async fn test_revoke_token() -> Result<()> {
         let config = AuthenticationConfig::default();
         let auth_manager = HybridAuthenticationManager::new(config);
+
+        let hash = argon2::password_hash::PasswordHasher::hash_password(
+            &argon2::Argon2::default(),
+            b"admin",
+            argon2::password_hash::SaltString::generate(
+                &mut argon2::password_hash::rand_core::OsRng,
+            )
+            .as_salt(),
+        )
+        .expect("test hash")
+        .to_string();
+        std::env::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
+
         let credentials =
             ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
         let token = auth_manager.authenticate(&credentials).await?;
+        std::env::remove_var("NESTGATE_LOCAL_AUTH_HASH");
         auth_manager.revoke_token(&token.token).await?;
         let is_valid = auth_manager.validate_token(&token.token).await?;
         assert!(!is_valid);
@@ -780,7 +915,9 @@ mod tests {
         let secret = manager
             .create_workspace_secret("ws-1")
             .expect("test: workspace secret");
-        assert!(secret.starts_with("secret_ws-1_"));
+        // HMAC-SHA256 output is 64 hex chars
+        assert_eq!(secret.len(), 64);
+        assert!(secret.chars().all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]

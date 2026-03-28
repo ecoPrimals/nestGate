@@ -19,7 +19,6 @@ use tracing::{error, info, warn};
 /// # Errors
 ///
 /// Returns `StatusCode::INTERNAL_SERVER_ERROR` if ZFS command fails or output cannot be parsed.
-#[must_use]
 pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
     info!("📁 Getting all workspaces from ZFS datasets");
     let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
@@ -147,25 +146,22 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
     // Create ZFS dataset
     let mut create_args = vec!["create"];
 
-    // Set properties from request or defaults
     let quota_prop;
+    create_args.push("-o");
     if let Some(quota) = request.get("quota").and_then(|v| v.as_str()) {
-        create_args.push("-o");
         quota_prop = format!("quota={quota}");
         create_args.push(&quota_prop);
     } else {
-        create_args.push("-o");
-        create_args.push("quota=10G"); // Default 10GB quota
+        create_args.push("quota=10G");
     }
 
     let compression_prop;
+    create_args.push("-o");
     if let Some(compression) = request.get("compression").and_then(|v| v.as_str()) {
-        create_args.push("-o");
         compression_prop = format!("compression={compression}");
         create_args.push(&compression_prop);
     } else {
-        create_args.push("-o");
-        create_args.push("compression=lz4"); // Default compression
+        create_args.push("compression=lz4");
     }
 
     // Set recordsize based on expected workload (default: 128K for mixed workloads)
@@ -324,7 +320,97 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
     }
 }
 
-/// Update workspace configuration with real ZFS properties
+async fn workspace_apply_quota(
+    dataset_name: &str,
+    quota: &str,
+    updated_properties: &mut Vec<String>,
+    errors: &mut Vec<String>,
+) {
+    let quota_result = Command::new("zfs")
+        .args(["set", &format!("quota={quota}"), dataset_name])
+        .output()
+        .await;
+
+    match quota_result {
+        Ok(output) if output.status.success() => {
+            updated_properties.push(format!("quota: {quota}"));
+            info!("✅ Updated quota to: {}", quota);
+        }
+        Ok(output) => {
+            errors.push(format!(
+                "Failed to update quota: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        Err(e) => {
+            errors.push(format!("Quota update command failed: {e}"));
+        }
+    }
+}
+
+async fn workspace_apply_compression(
+    dataset_name: &str,
+    compression: &str,
+    updated_properties: &mut Vec<String>,
+    errors: &mut Vec<String>,
+) {
+    let compression_result = Command::new("zfs")
+        .args(["set", &format!("compression={compression}"), dataset_name])
+        .output()
+        .await;
+
+    match compression_result {
+        Ok(output) if output.status.success() => {
+            updated_properties.push(format!("compression: {compression}"));
+            info!("✅ Updated compression to: {}", compression);
+        }
+        Ok(output) => {
+            errors.push(format!(
+                "Failed to update compression: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        Err(_e) => {
+            errors.push("Compression update command failed".to_string());
+        }
+    }
+}
+
+async fn workspace_apply_name(
+    dataset_name: &str,
+    name: &str,
+    updated_properties: &mut Vec<String>,
+    errors: &mut Vec<String>,
+) {
+    let prop = format!("org.nestgate:workspace_name={name}");
+    let name_result = Command::new("zfs")
+        .args(["set", &prop, dataset_name])
+        .output()
+        .await;
+
+    match name_result {
+        Ok(output) if output.status.success() => {
+            updated_properties.push(format!("name: {name}"));
+            info!("✅ Updated workspace name to: {}", name);
+        }
+        Ok(output) => {
+            errors.push(format!(
+                "Failed to update name: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        Err(_e) => {
+            errors.push("Name update command failed".to_string());
+        }
+    }
+}
+
+/// Update workspace configuration with real ZFS properties.
+///
+/// # Errors
+///
+/// Returns [`StatusCode::BAD_REQUEST`] if the workspace ID is invalid or every property update fails.
+/// When some updates succeed, returns HTTP 200 with JSON `status` set to `partial_success` and an `errors` list.
 pub async fn update_workspace_config(
     Path(workspace_id): Path<String>,
     Json(config): Json<Value>,
@@ -345,80 +431,24 @@ pub async fn update_workspace_config(
     let mut updated_properties = Vec::new();
     let mut errors = Vec::new();
 
-    // Update quota if specified
     if let Some(quota) = config.get("quota").and_then(|v| v.as_str()) {
-        let quota_result = Command::new("zfs")
-            .args(["set", &format!("quota={quota}"), &dataset_name])
-            .output()
-            .await;
-
-        match quota_result {
-            Ok(output) if output.status.success() => {
-                updated_properties.push(format!("quota: {quota}"));
-                info!("✅ Updated quota to: {}", quota);
-            }
-            Ok(output) => {
-                let _error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push(format!(
-                    "Failed to update quota: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                ));
-            }
-            Err(e) => {
-                errors.push(format!("Quota update command failed: {e}"));
-            }
-        }
+        workspace_apply_quota(&dataset_name, quota, &mut updated_properties, &mut errors).await;
     }
 
-    // Update compression if specified
     if let Some(compression) = config.get("compression").and_then(|v| v.as_str()) {
-        let compression_result = Command::new("zfs")
-            .args(["set", &format!("compression={compression}"), &dataset_name])
-            .output()
-            .await;
-
-        match compression_result {
-            Ok(output) if output.status.success() => {
-                updated_properties.push("compression: self.base_url".to_string());
-                info!("✅ Updated compression to: {}", compression);
-            }
-            Ok(output) => {
-                let _error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push("Failed to update compression".to_string());
-            }
-            Err(_e) => {
-                errors.push("Compression update command failed".to_string());
-            }
-        }
+        workspace_apply_compression(
+            &dataset_name,
+            compression,
+            &mut updated_properties,
+            &mut errors,
+        )
+        .await;
     }
 
-    // Update workspace name if specified
     if let Some(name) = config.get("name").and_then(|v| v.as_str()) {
-        let name_result = Command::new("zfs")
-            .args([
-                "set",
-                "org.nestgate:workspace_name=self.base_url",
-                &dataset_name,
-            ])
-            .output()
-            .await;
-
-        match name_result {
-            Ok(output) if output.status.success() => {
-                updated_properties.push("name: self.base_url".to_string());
-                info!("✅ Updated workspace name to: {}", name);
-            }
-            Ok(output) => {
-                let _error_msg = String::from_utf8_lossy(&output.stderr);
-                errors.push("Failed to update name: self.base_url".to_string());
-            }
-            Err(_e) => {
-                errors.push("Name update command failed".to_string());
-            }
-        }
+        workspace_apply_name(&dataset_name, name, &mut updated_properties, &mut errors).await;
     }
 
-    // Determine response status
     if errors.is_empty() {
         info!(
             "✅ Workspace configuration updated successfully: {}",

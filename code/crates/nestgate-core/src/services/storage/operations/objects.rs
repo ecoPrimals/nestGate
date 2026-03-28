@@ -16,8 +16,8 @@ use super::super::config::StorageServiceConfig;
 
 /// Store an object in a dataset
 ///
-/// Accepts `impl AsRef<[u8]>` to avoid forcing `.to_vec()` at call sites - allows Bytes,
-/// Vec<u8>, and &[u8] without extra allocation in hot paths.
+/// Accepts `impl AsRef<[u8]>` to avoid forcing `.to_vec()` at call sites - allows `Bytes`,
+/// `Vec<u8>`, and `&[u8]` without extra allocation in hot paths.
 ///
 /// # Errors
 ///
@@ -36,17 +36,17 @@ pub async fn store_object(
         data_ref.len()
     );
 
-    // Get dataset path
     let base_path = PathBuf::from(&config.base_path);
     let dataset_path = base_path.join("datasets").join(dataset);
     let object_path = dataset_path.join(key);
 
-    // Ensure dataset exists
-    tokio::fs::create_dir_all(&dataset_path)
-        .await
-        .map_err(|e| {
-            NestGateError::io_error(format!("Failed to create dataset directory: {}", e))
+    // Ensure all parent directories exist. Keys may contain `/` separators
+    // (e.g. "test/primalspring/hello") which create nested subdirectories.
+    if let Some(parent) = object_path.parent() {
+        tokio::fs::create_dir_all(parent).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to create key path directories: {}", e))
         })?;
+    }
 
     // Write object
     tokio::fs::write(&object_path, data_ref)

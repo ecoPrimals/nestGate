@@ -67,7 +67,15 @@ impl ServiceManager {
         }
     }
 
-    // Start Unix socket mode (ecosystem/atomic architecture)
+    /// Unix socket JSON-RPC server using the legacy in-process implementation.
+    ///
+    /// `JsonRpcUnixServer` is deprecated in favor of routing IPC through the Songbird
+    /// universal layer (see `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md`). NestGate CLI
+    /// still uses this type because it honors `nestgate_core::rpc::SocketConfig` (including
+    /// `NESTGATE_SOCKET` and biomeOS path fallbacks). Migrating to
+    /// `nestgate_core::rpc::IsomorphicIpcServer` will happen once socket path resolution is
+    /// unified with that stack.
+    #[allow(deprecated)]
     async fn start_unix_socket_mode(&self) -> BinResult<()> {
         use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
 
@@ -413,7 +421,11 @@ pub async fn run_daemon(
     }
 }
 
-/// Run NestGate in socket-only mode (TRUE ecoBin default - no HTTP dependencies)
+/// Run NestGate in socket-only mode (TRUE ecoBin default - no HTTP dependencies).
+///
+/// Uses `nestgate_core::rpc::JsonRpcUnixServer` until Songbird IPC SERVICE integration
+/// replaces direct binding; see `start_unix_socket_mode` for migration context.
+#[allow(deprecated)]
 async fn run_socket_only_daemon() -> BinResult<()> {
     use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
 

@@ -198,8 +198,8 @@ impl ServiceRegistry {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
-    /// // Requires PrimalId::from_environment(), BindingInfo; see tests
+    /// ```text
+    /// Requires PrimalId::from_environment(), BindingInfo; see integration tests for a full example.
     /// ```
     pub async fn announce(
         &self,

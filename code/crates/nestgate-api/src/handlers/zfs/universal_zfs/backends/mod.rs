@@ -13,8 +13,7 @@
 pub mod native;
 /// Native real ZFS operations with production implementations
 pub mod native_real;
-/// Remote ZFS service for distributed operations (HTTP removed)
-// NOTE: remote module disabled - HTTP removed per Concentrated Gap Architecture
+// Remote ZFS service disabled - HTTP removed per Concentrated Gap Architecture
 // pub mod remote;
 
 // Re-exports for production use

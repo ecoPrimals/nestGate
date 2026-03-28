@@ -27,11 +27,11 @@
 //! | Variable | Purpose |
 //! |----------|---------|
 //! | `NESTGATE_BIND_ADDRESS`, `NESTGATE_API_PORT`, `NESTGATE_METRICS_PORT`, `NESTGATE_HEALTH_PORT` | Core listen ports |
-//! | `NESTGATE_ORCHESTRATOR_ADDR` | Orchestrator peer when discovery is empty (see [`get_orchestrator_fallback_addr`]) |
+//! | `NESTGATE_ORCHESTRATOR_ADDR` | Orchestrator peer when discovery is empty (see [`crate::constants::hardcoding::get_orchestrator_fallback_addr`]) |
 //! | `NESTGATE_WEBSOCKET_PORT`, `NESTGATE_RPC_PORT`, `NESTGATE_MQ_PORT`, `NESTGATE_ORCHESTRATION_PORT` | Service ports (see getters below) |
-//! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`discovery::get_timeout_ms`]) |
+//! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`crate::constants::hardcoding::discovery::get_timeout_ms`]) |
 //!
-//! Timeouts and limits in [`timeouts`] and [`limits`] remain compile-time defaults; override via
+//! Timeouts and limits in [`crate::constants::hardcoding::timeouts`] and [`crate::constants::hardcoding::limits`] remain compile-time defaults; override via
 //! capability config or future env wiring where those domains expose runtime tuning.
 
 use std::env;

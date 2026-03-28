@@ -2,7 +2,7 @@
 //!
 //! Zero-allocation memory pool using 100% safe Rust with RAII patterns.
 //! This module provides the same performance intent as raw-pointer slabs while
-//! using `Mutex<Option<T>>` per slot (no `UnsafeCell`, no manual `Send`/`Sync`).
+//! using a `Mutex` wrapping `Option` with type parameter `T` per slot (no `UnsafeCell`, no manual `Send`/`Sync`).
 //!
 //! ## Key Innovations
 //!

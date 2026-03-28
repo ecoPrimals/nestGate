@@ -89,3 +89,43 @@ pub fn build_error_context(
         user_id: None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::diagnostics::{ComponentType, DiagnosticLevel};
+
+    #[test]
+    fn build_access_grant_copies_inputs_and_sets_consensus() {
+        let perms = vec!["read".to_string()];
+        let nodes = vec!["n1".to_string()];
+        let grant = build_access_grant(&perms, 1_700_000_000, "proof", &nodes, 0.75);
+        assert_eq!(grant.permissions, perms);
+        assert_eq!(grant.consensus_nodes, nodes);
+        assert!((grant.consensus_percentage - 0.75).abs() < f64::EPSILON);
+        assert!(!grant.grant_id.is_empty());
+        assert_eq!(grant.metadata, HashMap::new());
+    }
+
+    #[test]
+    fn build_diagnostic_preserves_level_component_and_message() {
+        let d = build_diagnostic(
+            DiagnosticLevel::Warning,
+            ComponentType::Storage,
+            "low space".to_string(),
+        );
+        assert_eq!(d.level, DiagnosticLevel::Warning);
+        assert_eq!(d.component, ComponentType::Storage);
+        assert_eq!(d.message, "low space");
+        assert!(!d.id.is_empty());
+        assert!(!d.resolved);
+    }
+
+    #[test]
+    fn build_error_context_records_operation_and_component() {
+        let ctx = build_error_context("snap", "details".to_string(), None);
+        assert_eq!(ctx.operation, "snap");
+        assert_eq!(ctx.component, "config_builder");
+        assert!(ctx.request_id.is_none());
+    }
+}

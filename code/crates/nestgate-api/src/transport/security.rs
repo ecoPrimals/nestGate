@@ -6,6 +6,7 @@ use nestgate_core::capability_discovery::CapabilityDiscovery;
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
+use tokio::fs;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 use tracing::{info, warn};
@@ -87,17 +88,22 @@ impl BearDogClient {
             }
         }
 
-        // 3. Scan for security provider sockets (sensible default)
-        let patterns = vec![
-            format!("/tmp/beardog-{}-*.sock", family_id),
-            format!("/tmp/beardog-{}.sock", family_id),
-            "/tmp/beardog-default-default.sock".to_string(),
-        ];
+        // 3. Scan for security provider sockets via env or XDG runtime
+        let security_slug =
+            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "beardog".to_string());
 
-        for pattern in patterns {
-            if let Ok(socket) = Self::try_socket(&pattern).await {
-                info!("Discovered BearDog at: {}", pattern);
-                return Self::new(socket);
+        let socket_dirs = Self::candidate_socket_dirs();
+        for dir in &socket_dirs {
+            let patterns = vec![
+                format!("{dir}/{security_slug}-{family_id}-*.sock"),
+                format!("{dir}/{security_slug}-{family_id}.sock"),
+                format!("{dir}/{security_slug}-default-default.sock"),
+            ];
+            for pattern in patterns {
+                if let Ok(socket) = Self::try_socket(&pattern).await {
+                    info!("Discovered security provider at: {}", pattern);
+                    return Self::new(socket);
+                }
             }
         }
 
@@ -105,11 +111,61 @@ impl BearDogClient {
         Err(NestGateError::network_error("Security provider not found"))
     }
 
+    /// Candidate directories where primal sockets may live, ordered by preference:
+    /// 1. XDG_RUNTIME_DIR (recommended, per-user, tmpfs)
+    /// 2. /run/user/{uid} (standard XDG fallback)
+    /// 3. /tmp (least secure, universal fallback)
+    fn candidate_socket_dirs() -> Vec<String> {
+        let mut dirs = Vec::with_capacity(3);
+        if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+            dirs.push(xdg);
+            // XDG_RUNTIME_DIR is typically /run/user/{uid} — no need to duplicate
+        } else if let Ok(uid) = std::env::var("UID").or_else(|_| std::env::var("EUID")) {
+            dirs.push(format!("/run/user/{uid}"));
+        }
+        dirs.push("/tmp".to_string());
+        dirs
+    }
+
     async fn try_socket(pattern: &str) -> Result<PathBuf> {
-        // For patterns with *, we need to glob
         if pattern.contains('*') {
-            // TODO: Implement glob scanning
-            return Err(NestGateError::network_error("Glob not yet implemented"));
+            let path = Path::new(pattern);
+            let parent = path.parent().unwrap_or_else(|| Path::new("."));
+            let file_pattern = path.file_name().and_then(|n| n.to_str()).ok_or_else(|| {
+                NestGateError::network_error("Invalid socket glob: missing file name")
+            })?;
+            let star = file_pattern.find('*').ok_or_else(|| {
+                NestGateError::network_error("Invalid socket glob: expected '*' in file name")
+            })?;
+            let prefix = &file_pattern[..star];
+            let suffix = &file_pattern[star + 1..];
+
+            let mut entries = fs::read_dir(parent).await.map_err(|e| {
+                NestGateError::network_error(&format!("Failed to read {}: {e}", parent.display()))
+            })?;
+            loop {
+                let entry = match entries.next_entry().await {
+                    Ok(Some(e)) => e,
+                    Ok(None) => break,
+                    Err(e) => {
+                        return Err(NestGateError::network_error(&format!(
+                            "Failed to read directory entry: {e}"
+                        )));
+                    }
+                };
+                let candidate = entry.path();
+                let name = entry.file_name();
+                let name = name.to_string_lossy();
+                if name.starts_with(prefix)
+                    && name.ends_with(suffix)
+                    && UnixStream::connect(&candidate).await.is_ok()
+                {
+                    return Ok(candidate);
+                }
+            }
+            return Err(NestGateError::network_error(
+                "No matching BearDog socket for glob pattern",
+            ));
         }
 
         let path = PathBuf::from(pattern);

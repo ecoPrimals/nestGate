@@ -53,8 +53,6 @@ pub(super) fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
     let mut pool_name = String::new();
     let mut state = PoolState::Unknown;
     let mut health = PoolHealth::Unknown;
-    let mut _devices = Vec::new();
-    let properties = HashMap::new();
 
     // Parse pool name and state from first line
     if let Some(first_line) = lines.first() {
@@ -85,9 +83,6 @@ pub(super) fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
         }
     }
 
-    // Simple device parsing (would need more sophisticated parsing for real use)
-    _devices.push("device-self.base_url".to_string());
-
     Ok(PoolInfo {
         name: pool_name,
         health,
@@ -98,7 +93,7 @@ pub(super) fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
             available: 0,
         },
         scrub: Some(ScrubStatus::None),
-        properties,
+        properties: HashMap::new(),
     })
 }
 

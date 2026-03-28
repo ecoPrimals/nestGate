@@ -47,6 +47,8 @@ use std::collections::HashMap;
 
 // Submodules
 pub mod builder;
+/// Minimal pure-Rust HTTP client for discovery bootstrap (no external deps)
+pub mod http;
 pub mod mdns;
 pub mod testing;
 

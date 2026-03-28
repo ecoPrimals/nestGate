@@ -51,13 +51,14 @@ where
         factory: ConnectionFactory<T>,
         health_check: Option<HealthCheckFn<T>>,
     ) -> Result<Self>  {
-        config.validate()?;
+        let _: Vec<String> = config.validate()?;
 
         let health_check = health_check.unwrap_or_else(|| {
             Arc::new(|_| Ok(())) // Default health check always passes
         );
 
-        let semaphore = Arc::new(Semaphore::new(config.network.max_connections));
+        let max_conn = (config.network.api.max_connections.max(1)) as usize;
+        let semaphore = Arc::new(Semaphore::new(max_conn));
 
         let pool = Self {
             pool: Arc::new(Mutex::new(VecDeque::new())),
@@ -69,11 +70,13 @@ where
         };
 
         // Initialize minimum connections
+        let min_connections = max_conn.min(10).max(1);
+
         tokio::spawn(Self::initialize_pool(
             Arc::clone(&pool.pool),
             Arc::clone(&pool.factory),
             Arc::clone(&pool.stats),
-            config.min_connections,
+            min_connections,
         ));
 
         // Start health check task
@@ -100,21 +103,17 @@ where
 
         // Wait for available slot with timeout
         let permit = tokio::time::timeout(
-            self.config.network.timeouts.connection_timeout,
+            self.config.network.api.connection_timeout,
             self.semaphore.acquire(),
         )
         .await
-        .map_err(|_| NestGateError::internal_error(
-            "Connection pool timeout",
-            "connection_pool",
-            None,
-        ))?;
+        .map_err(|_| {
+            NestGateError::internal_error("Connection pool timeout", "connection_pool")
+        })?;
 
-        let _permit = permit.map_err(|_| NestGateError::internal_error(
-            "Failed to acquire semaphore permit",
-            "connection_pool",
-            None,
-        ))?;
+        let _permit = permit.map_err(|_| {
+            NestGateError::internal_error("Failed to acquire semaphore permit", "connection_pool")
+        })?;
 
         // Try to get existing connection from pool
         let connection = {

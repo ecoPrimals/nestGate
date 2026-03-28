@@ -1,8 +1,21 @@
-//! Kubernetes-based discovery (orchestrated)
+//! Kubernetes-based discovery (orchestrated environments)
 //!
-//! This module provides Kubernetes service discovery integration.
+//! Provides Kubernetes service discovery via the k8s REST API using the
+//! pure-Rust bootstrap HTTP client.
 //! Requires the `kubernetes` feature flag.
+//!
+//! ## Connectivity
+//!
+//! This module connects to the k8s API server over **HTTP** (not HTTPS).
+//! In production k8s clusters, use one of:
+//! - `kubectl proxy` sidecar (exposes HTTP on localhost)
+//! - Service mesh (Istio/Linkerd) with mTLS handled at the mesh layer
+//! - `KUBERNETES_API_PROXY` env var pointing to an HTTP proxy
+//!
+//! Direct HTTPS to the k8s API server requires TLS, which is outside
+//! the scope of the discovery bootstrap client.
 
+use super::http::DiscoveryHttpClient;
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
 use crate::self_knowledge::SelfKnowledge;
 use crate::Result;
@@ -49,60 +62,57 @@ struct K8sServiceList {
     items: Vec<K8sService>,
 }
 
-/// Kubernetes discovery mechanism (uses k8s REST API via reqwest)
+/// Kubernetes discovery mechanism (pure-Rust HTTP via kubectl proxy or mesh)
 pub struct KubernetesDiscovery {
-    timeout: Duration,
-    cache_duration: Duration,
+    _timeout: Duration,
+    _cache_duration: Duration,
     namespace: String,
-    client: reqwest::Client,
+    client: DiscoveryHttpClient,
     api_server: String,
-    token: Option<String>,
 }
 
 impl KubernetesDiscovery {
-    /// Create new Kubernetes discovery
+    /// Create a new Kubernetes discovery instance.
+    ///
+    /// Prefers `KUBERNETES_API_PROXY` (e.g. `http://localhost:8001` from
+    /// `kubectl proxy`). Falls back to constructing from `KUBERNETES_SERVICE_HOST`
+    /// and `KUBERNETES_SERVICE_PORT` over HTTP.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the client cannot be constructed.
     pub async fn new(builder: DiscoveryBuilder) -> Result<Self> {
         let namespace = std::env::var("NAMESPACE")
             .or_else(|_| std::env::var("POD_NAMESPACE"))
             .unwrap_or_else(|_| "default".to_string());
 
-        // Get k8s API server address
-        let api_server = std::env::var("KUBERNETES_SERVICE_HOST")
-            .map(|host| {
-                let port =
-                    std::env::var("KUBERNETES_SERVICE_PORT").unwrap_or_else(|_| "443".to_string());
-                format!("https://{}:{}", host, port)
-            })
-            .unwrap_or_else(|_| "https://kubernetes.default.svc".to_string());
+        let api_server = std::env::var("KUBERNETES_API_PROXY").unwrap_or_else(|_| {
+            std::env::var("KUBERNETES_SERVICE_HOST")
+                .map(|host| {
+                    let port = std::env::var("KUBERNETES_SERVICE_PORT")
+                        .unwrap_or_else(|_| "8001".to_string());
+                    format!("http://{host}:{port}")
+                })
+                .unwrap_or_else(|_| "http://localhost:8001".to_string())
+        });
 
-        // Get service account token (if running in pod)
         let token =
             std::fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/token").ok();
 
-        let client = reqwest::Client::builder()
-            .timeout(builder.timeout)
-            .danger_accept_invalid_certs(true) // In-cluster certs are self-signed
-            .build()
-            .map_err(|e| {
-                crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e))
-            })?;
+        let mut client = DiscoveryHttpClient::new(builder.timeout);
+        if let Some(t) = token {
+            client = client.with_header("Authorization", format!("Bearer {t}"));
+        }
 
         Ok(Self {
-            timeout: builder.timeout,
-            cache_duration: builder.cache_duration,
+            _timeout: builder.timeout,
+            _cache_duration: builder.cache_duration,
             namespace,
             client,
             api_server,
-            token,
         })
     }
 
-    /// Create authorization header
-    fn auth_header(&self) -> Option<String> {
-        self.token.as_ref().map(|token| format!("Bearer {}", token))
-    }
-
-    /// Convert k8s service to ServiceInfo
     fn service_to_info(&self, svc: K8sService) -> Option<ServiceInfo> {
         let port = svc.spec.ports.first()?.port;
         let ip = svc.spec.cluster_ip.as_ref()?;
@@ -118,7 +128,7 @@ impl KubernetesDiscovery {
             id: format!("{}.{}", svc.metadata.name, svc.metadata.namespace),
             name: svc.metadata.name.clone(),
             capabilities,
-            endpoint: format!("http://{}:{}", ip, port),
+            endpoint: format!("http://{ip}:{port}"),
             metadata: svc.metadata.annotations,
             health_endpoint: None,
         })
@@ -130,17 +140,13 @@ impl DiscoveryMechanism for KubernetesDiscovery {
     async fn announce(&self, self_knowledge: &SelfKnowledge) -> Result<()> {
         tracing::info!("k8s announce: {}", self_knowledge.name);
 
-        // In Kubernetes, services are typically pre-created via manifests
-        // This would update labels/annotations on an existing service
-        // For now, we log that the service should be defined in k8s manifests
-
+        // In Kubernetes, services are defined via manifests.
+        // Announce is informational — the pod's labels/annotations should
+        // already declare its capabilities in the deployment spec.
         tracing::info!(
             "Kubernetes services should be defined via manifests with labels: capabilities={}",
             self_knowledge.capabilities.join(",")
         );
-
-        // In a full implementation, this could update the service's labels
-        // via PATCH /api/v1/namespaces/{namespace}/services/{name}
 
         Ok(())
     }
@@ -153,21 +159,16 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             self.api_server, self.namespace, capability
         );
 
-        let mut req = self.client.get(&url);
-        if let Some(auth) = self.auth_header() {
-            req = req.header("Authorization", auth);
-        }
-
-        let response = req.send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("k8s query failed: {}", e))
+        let response = self.client.get(&url).await.map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("k8s query failed: {e}"))
         })?;
 
-        if !response.status().is_success() {
+        if !response.is_success() {
             return Ok(vec![]);
         }
 
-        let service_list: K8sServiceList = response.json().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e))
+        let service_list: K8sServiceList = response.json().map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {e}"))
         })?;
 
         Ok(service_list
@@ -180,7 +181,6 @@ impl DiscoveryMechanism for KubernetesDiscovery {
     async fn find_by_id(&self, id: &str) -> Result<Option<ServiceInfo>> {
         tracing::debug!("k8s lookup service: {}", id);
 
-        // ID format: service-name.namespace
         let (name, ns) = if let Some((n, ns)) = id.split_once('.') {
             (n, ns.to_string())
         } else {
@@ -192,21 +192,16 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             self.api_server, ns, name
         );
 
-        let mut req = self.client.get(&url);
-        if let Some(auth) = self.auth_header() {
-            req = req.header("Authorization", auth);
-        }
-
-        let response = req.send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("k8s lookup failed: {}", e))
+        let response = self.client.get(&url).await.map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("k8s lookup failed: {e}"))
         })?;
 
-        if !response.status().is_success() {
+        if !response.is_success() {
             return Ok(None);
         }
 
-        let service: K8sService = response.json().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {}", e))
+        let service: K8sService = response.json().map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("Failed to parse k8s response: {e}"))
         })?;
 
         Ok(self.service_to_info(service))
@@ -215,7 +210,6 @@ impl DiscoveryMechanism for KubernetesDiscovery {
     async fn health_check(&self, service_id: &str) -> Result<bool> {
         tracing::debug!("k8s health check: {}", service_id);
 
-        // Check if service exists and has endpoints
         let (name, ns) = if let Some((n, ns)) = service_id.split_once('.') {
             (n, ns.to_string())
         } else {
@@ -227,25 +221,17 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             self.api_server, ns, name
         );
 
-        let mut req = self.client.get(&url);
-        if let Some(auth) = self.auth_header() {
-            req = req.header("Authorization", auth);
-        }
-
-        let response = req.send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("k8s health check failed: {}", e))
+        let response = self.client.get(&url).await.map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("k8s health check failed: {e}"))
         })?;
 
-        Ok(response.status().is_success())
+        Ok(response.is_success())
     }
 
     async fn deregister(&self, service_id: &str) -> Result<()> {
         tracing::info!("k8s deregister: {}", service_id);
-
-        // In Kubernetes, services persist and are managed by k8s
-        // Deregistration typically means the pod terminates and k8s removes it from endpoints
-        // We just log this action
-
+        // In Kubernetes, services are managed by the control plane.
+        // Deregistration happens when the pod terminates.
         tracing::info!("Kubernetes services are managed by k8s control plane");
         Ok(())
     }

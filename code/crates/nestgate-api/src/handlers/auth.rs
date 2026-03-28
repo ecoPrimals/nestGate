@@ -21,18 +21,17 @@ const AUTH_NOT_AVAILABLE_MSG: &str =
     "Authentication service is not available. Use nestgate-core security module for production auth.";
 
 // Simple auth service stub for canonical modernization
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Service implementation for Auth
 pub struct AuthService {
-    authenticated_users: HashMap<String, bool>,
+    _authenticated_users: HashMap<String, bool>,
 }
 
 impl AuthService {
+    /// Creates a new auth service (empty user map; production auth uses nestgate-core).
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            authenticated_users: HashMap::new(),
-        }
+        Self::default()
     }
 
     /// Authenticate - returns Err with feature-not-available (no fake success)

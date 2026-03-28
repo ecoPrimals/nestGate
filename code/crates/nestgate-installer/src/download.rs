@@ -86,7 +86,7 @@ impl DownloadManager {
         let asset = assets
             .iter()
             .find(|a| {
-                a["name"].as_str().map_or(false, |n| {
+                a["name"].as_str().is_some_and(|n| {
                     n.ends_with(".tar.gz") || n.ends_with(".tar.xz") || n.ends_with(".zip")
                 })
             })

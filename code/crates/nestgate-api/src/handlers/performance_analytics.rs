@@ -97,7 +97,6 @@ pub struct PerformanceRecommendation {
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse>, StatusCode> {
     let mut metrics = HashMap::new();
     metrics.insert("cpu_usage".to_string(), 45.2);
@@ -120,7 +119,6 @@ pub async fn get_performance_metrics() -> Result<Json<PerformanceMetricsResponse
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, StatusCode> {
     let alerts = vec![
         PerformanceAlert {

@@ -109,7 +109,6 @@ pub struct StorageMetrics {
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCode> {
     let pools = vec![
         StoragePoolInfo {
@@ -138,7 +137,6 @@ pub async fn get_storage_pools() -> Result<Json<Vec<StoragePoolInfo>>, StatusCod
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, StatusCode> {
     let datasets = vec![
         StorageDatasetInfo {
@@ -167,7 +165,6 @@ pub async fn get_storage_datasets() -> Result<Json<Vec<StorageDatasetInfo>>, Sta
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, StatusCode> {
     let snapshots = vec![
         StorageSnapshotInfo {
@@ -194,7 +191,6 @@ pub async fn get_storage_snapshots() -> Result<Json<Vec<StorageSnapshotInfo>>, S
 /// # Errors
 ///
 /// This function currently always returns `Ok`, but returns `Result` for future error handling.
-#[must_use]
 pub async fn get_storage_metrics() -> Result<Json<StorageMetrics>, StatusCode> {
     let metrics = StorageMetrics {
         total_pools: 2,
@@ -564,14 +560,14 @@ fn parse_bandwidth_unit(value: &str) -> Option<f64> {
     if value == "-" || value.is_empty() {
         return Some(0.0);
     }
-    let (number_part, unit) = if value.ends_with('K') {
-        (value[..value.len() - 1].parse::<f64>().ok()?, 1.0 / 1024.0) // KB to MB
-    } else if value.ends_with('M') {
-        (value[..value.len() - 1].parse::<f64>().ok()?, 1.0) // MB
-    } else if value.ends_with('G') {
-        (value[..value.len() - 1].parse::<f64>().ok()?, 1024.0) // GB to MB
+    let (number_part, unit) = if let Some(stripped) = value.strip_suffix('K') {
+        (stripped.parse::<f64>().ok()?, 1.0 / 1024.0)
+    } else if let Some(stripped) = value.strip_suffix('M') {
+        (stripped.parse::<f64>().ok()?, 1.0)
+    } else if let Some(stripped) = value.strip_suffix('G') {
+        (stripped.parse::<f64>().ok()?, 1024.0)
     } else {
-        (value.parse::<f64>().ok()?, 1.0 / (1024.0 * 1024.0)) // Assume bytes, convert to MB
+        (value.parse::<f64>().ok()?, 1.0 / (1024.0 * 1024.0))
     };
 
     Some(number_part * unit)

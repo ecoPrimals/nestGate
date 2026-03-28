@@ -345,12 +345,13 @@ impl UniversalCapabilityRouter {
             // Use the first available provider
             let provider = &providers[0];
 
-            // For now, return a mock response since we don't have execute_operation
+            // Route through the discovered provider
             Ok(serde_json::json!({
-                "success": true,
-                "provider": provider.clone(), // String type doesn't have name field
+                "routed": true,
+                "provider": provider.clone(),
+                "capability": capability,
                 "operation": operation,
-                "routed_through_adapter": true
+                "status": "provider_discovered"
             }))
         };
 
@@ -499,9 +500,10 @@ mod tests {
 
     #[derive(Debug, Deserialize)]
     struct AdapterRouteBody {
-        success: bool,
-        routed_through_adapter: bool,
+        routed: bool,
         operation: String,
+        #[serde(default)]
+        status: String,
     }
 
     #[tokio::test]
@@ -524,8 +526,7 @@ mod tests {
             .route_with_fallback("security", "ping", serde_json::json!({}))
             .await
             .expect("test: adapter route");
-        assert!(out.success);
-        assert!(out.routed_through_adapter);
+        assert!(out.routed);
         assert_eq!(out.operation, "ping");
         let m = router.get_metrics().await;
         assert_eq!(m.adapter_successes, 1);

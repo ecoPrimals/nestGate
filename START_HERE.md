@@ -4,9 +4,9 @@
 
 ```
 Build:       13/13 crates compiling (0 errors)
-Tests:       12,278 passing, 0 failures, 472 ignored
-Coverage:    69.6% line (target: 90%)
-Clippy:      Clean (-D warnings)
+Tests:       12,383 passing, 0 failures, 469 ignored
+Coverage:    ~72% line (target: 90%)
+Clippy:      ZERO production warnings (pedantic+nursery)
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```
 

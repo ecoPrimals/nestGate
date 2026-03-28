@@ -1,10 +1,10 @@
 # NestGate - Quick Reference
 
-**Version**: 4.1.0-dev  
-**Tests**: 12,278 passing, 0 failures, 472 ignored  
-**Coverage**: 69.6% line (llvm-cov, excluding tools/)  
-**Clippy**: Clean (`-D warnings`)  
-**Last Updated**: March 27, 2026
+**Version**: 4.5.0-dev  
+**Tests**: 12,383 passing, 0 failures, 469 ignored  
+**Coverage**: ~72% line (llvm-cov, target: 90%)  
+**Clippy**: ZERO production warnings (pedantic+nursery)  
+**Last Updated**: March 28, 2026
 
 ---
 

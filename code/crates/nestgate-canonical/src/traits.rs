@@ -196,3 +196,45 @@ impl CanonicalService for UniversalServiceImpl {
 // Note: Traits are already public in this module, no need for re-exports
 // The traits CanonicalServiceProvider, CanonicalStorageProvider, etc. are
 // automatically available when this module is imported
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{CapabilityId, UnifiedServiceType};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn universal_service_impl_health_start_stop() {
+        let initial = ServiceHealth {
+            healthy: true,
+            message: "boot".to_string(),
+            details: HashMap::new(),
+        };
+        let cap = CapabilityId::new("s".to_string(), "c".to_string(), "1".to_string());
+        let mut svc = UniversalServiceImpl::new(UnifiedServiceType::Storage, vec![cap], initial);
+
+        let h = svc.health_check().await.unwrap();
+        assert!(h.healthy);
+        assert_eq!(h.message, "Service is operational");
+
+        svc.start(HashMap::new()).await.unwrap();
+        svc.stop().await.unwrap();
+        assert!(!svc.health_status.healthy);
+        assert_eq!(svc.health_status.message, "Service stopped");
+    }
+
+    #[tokio::test]
+    async fn universal_service_impl_new_clones_health_fields() {
+        let mut details = HashMap::new();
+        details.insert("k".to_string(), "v".to_string());
+        let h = ServiceHealth {
+            healthy: false,
+            message: "m".to_string(),
+            details,
+        };
+        let u = UniversalServiceImpl::new(UnifiedServiceType::Network, vec![], h.clone());
+        assert_eq!(u.health_status.healthy, h.healthy);
+        assert_eq!(u.health_status.message, h.message);
+        assert_eq!(u.health_status.details, h.details);
+    }
+}

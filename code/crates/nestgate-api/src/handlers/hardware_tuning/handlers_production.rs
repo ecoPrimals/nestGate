@@ -78,8 +78,8 @@ pub async fn run_hardware_benchmark() -> Result<Json<BenchmarkResult>> {
     let resources = linux_proc::compute_resources_from_proc()?;
     let metrics = collect_live_metrics(&handler).await?;
     let duration = start_time.elapsed();
-    let score =
-        f64::from(resources.available_cpu) * 10.0 + f64::from(resources.available_memory_gb) * 0.5;
+    let score = f64::from(resources.available_cpu)
+        .mul_add(10.0, f64::from(resources.available_memory_gb) * 0.5);
 
     Ok(Json(BenchmarkResult {
         benchmark_type: "proc_snapshot".to_string(),

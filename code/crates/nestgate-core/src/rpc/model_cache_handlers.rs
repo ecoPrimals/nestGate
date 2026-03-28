@@ -177,8 +177,6 @@ pub(crate) async fn model_locate(
         }));
     }
 
-    // TODO: Future evolution - query Songbird mesh for remote gates
-    // This will use cross-gate replication when implemented
     debug!(
         "🔍 model.locate: model_id='{}', gates={}",
         model_id,

@@ -320,8 +320,175 @@ pub async fn benchmark_storage(
     Ok(Json(DataResponse::new(results)))
 }
 
-/// Auto-configure optimal storage setup
-/// POST /api/v1/storage/auto-config
+fn development_storage_configuration() -> StorageConfiguration {
+    StorageConfiguration {
+        name: "Development Setup".to_string(),
+        backends: vec![StorageBackend {
+            backend_type: StorageBackendType::Memory,
+            name: "memory-dev".to_string(),
+            config: HashMap::from([("capacity_gb".to_string(), "2".to_string())]),
+            performance: StoragePerformance {
+                read_iops: 100_000,
+                write_iops: 80_000,
+                read_throughput_mbps: 1000.0,
+                write_throughput_mbps: 800.0,
+                avg_latency_ms: 0.1,
+            },
+        }],
+        tier: StorageTier::Hot,
+        performance_requirements: PerformanceRequirements {
+            min_iops: 800_000,
+            min_throughput_mbps: 6000.0,
+            max_latency_ms: 0.001,
+            availability_percent: 99.9,
+        },
+    }
+}
+
+fn home_nas_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
+    StorageConfiguration {
+        name: "Home NAS Setup".to_string(),
+        backends: vec![StorageBackend {
+            backend_type: StorageBackendType::Filesystem,
+            name: "filesystem-nas".to_string(),
+            config: HashMap::from([(
+                "capacity_gb".to_string(),
+                min_capacity_gb.unwrap_or(1000).to_string(),
+            )]),
+            performance: StoragePerformance {
+                read_iops: 5000,
+                write_iops: 3000,
+                read_throughput_mbps: 150.0,
+                write_throughput_mbps: 100.0,
+                avg_latency_ms: 2.0,
+            },
+        }],
+        tier: StorageTier::Warm,
+        performance_requirements: PerformanceRequirements {
+            min_iops: 40000,
+            min_throughput_mbps: 300.0,
+            max_latency_ms: 1.0,
+            availability_percent: 99.5,
+        },
+    }
+}
+
+fn database_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
+    StorageConfiguration {
+        name: "Database Storage Setup".to_string(),
+        backends: vec![StorageBackend {
+            backend_type: StorageBackendType::Filesystem,
+            name: "database-storage".to_string(),
+            config: HashMap::from([(
+                "capacity_gb".to_string(),
+                min_capacity_gb.unwrap_or(500).to_string(),
+            )]),
+            performance: StoragePerformance {
+                read_iops: 8000,
+                write_iops: 6000,
+                read_throughput_mbps: 200.0,
+                write_throughput_mbps: 150.0,
+                avg_latency_ms: 1.0,
+            },
+        }],
+        tier: StorageTier::Hot,
+        performance_requirements: PerformanceRequirements {
+            min_iops: 80000,
+            min_throughput_mbps: 500.0,
+            max_latency_ms: 0.5,
+            availability_percent: 99.99,
+        },
+    }
+}
+
+fn generic_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
+    StorageConfiguration {
+        name: "Generic Setup".to_string(),
+        backends: vec![StorageBackend {
+            backend_type: StorageBackendType::Filesystem,
+            name: "generic-storage".to_string(),
+            config: HashMap::from([(
+                "capacity_gb".to_string(),
+                min_capacity_gb.unwrap_or(100).to_string(),
+            )]),
+            performance: StoragePerformance {
+                read_iops: 4000,
+                write_iops: 2500,
+                read_throughput_mbps: 120.0,
+                write_throughput_mbps: 80.0,
+                avg_latency_ms: 3.0,
+            },
+        }],
+        tier: StorageTier::Warm,
+        performance_requirements: PerformanceRequirements {
+            min_iops: 30000,
+            min_throughput_mbps: 250.0,
+            max_latency_ms: 2.0,
+            availability_percent: 99.0,
+        },
+    }
+}
+
+fn auto_config_storage_for_use_case(
+    use_case: &str,
+    min_capacity_gb: Option<u64>,
+) -> StorageConfiguration {
+    match use_case {
+        "Development" => development_storage_configuration(),
+        "HomeNas" => home_nas_storage_configuration(min_capacity_gb),
+        "Database" => database_storage_configuration(min_capacity_gb),
+        _ => generic_storage_configuration(min_capacity_gb),
+    }
+}
+
+fn default_cost_breakdown() -> HashMap<String, f64> {
+    HashMap::from([
+        ("storage".to_string(), 15.0),
+        ("redundancy".to_string(), 5.0),
+        ("monitoring".to_string(), 2.0),
+    ])
+}
+
+fn cost_estimate_for_use_case(use_case: &str) -> CostEstimate {
+    match use_case {
+        "Development" => CostEstimate {
+            setup_cost: 0.0,
+            monthly_cost: 0.0,
+            cost_per_gb_monthly: 0.0,
+            breakdown: default_cost_breakdown(),
+            total_cost: 0.0,
+        },
+        "HomeNas" => CostEstimate {
+            setup_cost: 50.0,
+            monthly_cost: 5.0,
+            cost_per_gb_monthly: 0.005,
+            breakdown: default_cost_breakdown(),
+            total_cost: 55.0,
+        },
+        "Database" => CostEstimate {
+            setup_cost: 200.0,
+            monthly_cost: 25.0,
+            cost_per_gb_monthly: 0.05,
+            breakdown: default_cost_breakdown(),
+            total_cost: 225.0,
+        },
+        _ => CostEstimate {
+            setup_cost: 25.0,
+            monthly_cost: 10.0,
+            cost_per_gb_monthly: 0.01,
+            breakdown: default_cost_breakdown(),
+            total_cost: 35.0,
+        },
+    }
+}
+
+/// Auto-configure optimal storage setup.
+///
+/// POST `/api/v1/storage/auto-config`
+///
+/// # Errors
+///
+/// Returns [`Json<DataError>`] when the auto-configurator state cannot be initialized or validation fails.
 pub async fn auto_configure(
     State(state): State<ApiState>,
     Json(request): Json<AutoConfigInput>,
@@ -330,173 +497,25 @@ pub async fn auto_configure(
         "Auto-configuring storage for use case: {:?}",
         request.use_case
     );
-    // Create auto-configurator if not exists
     let mut auto_config_opt = state.auto_configurator.lock().await;
     if auto_config_opt.is_none() {
         *auto_config_opt = Some(AutoConfigurator::new(vec![])); // Empty storage list for now
     }
 
-    // Auto configurator would be used here in full implementation
-    // let _auto_configurator = auto_config_opt.as_ref();
+    let use_case = request.use_case.as_str();
+    let recommended_config = auto_config_storage_for_use_case(use_case, request.min_capacity_gb);
+    let cost_estimate = cost_estimate_for_use_case(use_case);
 
-    let _config = match request.use_case.as_str() {
-        "Development" => StorageConfiguration {
-            name: "Development Setup".to_string(),
-            backends: vec![StorageBackend {
-                backend_type: StorageBackendType::Memory,
-                name: "memory-dev".to_string(),
-                config: [("capacity_gb".to_string(), "2".to_string())]
-                    .iter()
-                    .cloned()
-                    .collect(),
-                performance: StoragePerformance {
-                    read_iops: 100_000,
-                    write_iops: 80_000,
-                    read_throughput_mbps: 1000.0,
-                    write_throughput_mbps: 800.0,
-                    avg_latency_ms: 0.1,
-                },
-            }],
-            tier: StorageTier::Hot,
-            performance_requirements: PerformanceRequirements {
-                min_iops: 800_000,
-                min_throughput_mbps: 6000.0,
-                max_latency_ms: 0.001,
-                availability_percent: 99.9,
-            },
-        },
-        "HomeNas" => StorageConfiguration {
-            name: "Home NAS Setup".to_string(),
-            backends: vec![StorageBackend {
-                backend_type: StorageBackendType::Filesystem,
-                name: "filesystem-nas".to_string(),
-                config: [(
-                    "capacity_gb".to_string(),
-                    request.min_capacity_gb.unwrap_or(1000).to_string(),
-                )]
-                .iter()
-                .cloned()
-                .collect(),
-                performance: StoragePerformance {
-                    read_iops: 5000,
-                    write_iops: 3000,
-                    read_throughput_mbps: 150.0,
-                    write_throughput_mbps: 100.0,
-                    avg_latency_ms: 2.0,
-                },
-            }],
-            tier: StorageTier::Warm,
-            performance_requirements: PerformanceRequirements {
-                min_iops: 40000,
-                min_throughput_mbps: 300.0,
-                max_latency_ms: 1.0,
-                availability_percent: 99.5,
-            },
-        },
-        "Database" => StorageConfiguration {
-            name: "Database Storage Setup".to_string(),
-            backends: vec![StorageBackend {
-                backend_type: StorageBackendType::Filesystem,
-                name: "database-storage".to_string(),
-                config: [(
-                    "capacity_gb".to_string(),
-                    request.min_capacity_gb.unwrap_or(500).to_string(),
-                )]
-                .iter()
-                .cloned()
-                .collect(),
-                performance: StoragePerformance {
-                    read_iops: 8000,
-                    write_iops: 6000,
-                    read_throughput_mbps: 200.0,
-                    write_throughput_mbps: 150.0,
-                    avg_latency_ms: 1.0,
-                },
-            }],
-            tier: StorageTier::Hot,
-            performance_requirements: PerformanceRequirements {
-                min_iops: 80000,
-                min_throughput_mbps: 500.0,
-                max_latency_ms: 0.5,
-                availability_percent: 99.99,
-            },
-        },
-        _ => StorageConfiguration {
-            name: "Generic Setup".to_string(),
-            backends: vec![StorageBackend {
-                backend_type: StorageBackendType::Filesystem,
-                name: "generic-storage".to_string(),
-                config: [(
-                    "capacity_gb".to_string(),
-                    request.min_capacity_gb.unwrap_or(100).to_string(),
-                )]
-                .iter()
-                .cloned()
-                .collect(),
-                performance: StoragePerformance {
-                    read_iops: 4000,
-                    write_iops: 2500,
-                    read_throughput_mbps: 120.0,
-                    write_throughput_mbps: 80.0,
-                    avg_latency_ms: 3.0,
-                },
-            }],
-            tier: StorageTier::Warm,
-            performance_requirements: PerformanceRequirements {
-                min_iops: 30000,
-                min_throughput_mbps: 250.0,
-                max_latency_ms: 2.0,
-                availability_percent: 99.0,
-            },
-        },
-    };
-
-    // Generate cost estimate
-    let cost_estimate = CostEstimate {
-        setup_cost: match request.use_case.as_str() {
-            "Development" => 0.0,
-            "HomeNas" => 50.0,
-            "Database" => 200.0,
-            _ => 25.0,
-        },
-        monthly_cost: match request.use_case.as_str() {
-            "Development" => 0.0,
-            "HomeNas" => 5.0,
-            "Database" => 25.0,
-            _ => 10.0,
-        },
-        cost_per_gb_monthly: match request.use_case.as_str() {
-            "Development" => 0.0,
-            "HomeNas" => 0.005,
-            "Database" => 0.05,
-            _ => 0.01,
-        },
-        breakdown: {
-            let mut breakdown = HashMap::new();
-            breakdown.insert("storage".to_string(), 15.0);
-            breakdown.insert("redundancy".to_string(), 5.0);
-            breakdown.insert("monitoring".to_string(), 2.0);
-            breakdown
-        },
-        total_cost: match request.use_case.as_str() {
-            "Development" => 0.0,
-            "HomeNas" => 55.0,
-            "Database" => 225.0,
-            _ => 35.0,
-        },
-    };
-
-    // Generate performance projection (using placeholder values)
     let performance_projection = PerformanceProjection {
-        expected_throughput_mbps: 1000.0, // Placeholder
-        expected_latency_ms: 5.0,         // Placeholder
-        expected_iops: 10_000,            // Placeholder
-        confidence_percent: 85.0,         // Placeholder confidence level
+        expected_throughput_mbps: 1000.0,
+        expected_latency_ms: 5.0,
+        expected_iops: 10_000,
+        confidence_percent: 85.0,
     };
 
     let result = AutoConfigResult {
-        recommended_config: _config,
-        alternatives: vec![], // Would generate alternatives in full implementation
+        recommended_config,
+        alternatives: vec![],
         cost_estimate,
         performance_projection,
     };

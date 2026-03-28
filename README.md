@@ -1,11 +1,11 @@
 # NestGate - Universal Storage & Discovery Primal
 
-**Version**: 4.1.0-dev  
+**Version**: 4.5.0-dev  
 **Build**: 13/13 crates compiling, 0 errors  
-**Tests**: 12,278 passing, 0 failures, 472 ignored  
-**Coverage**: 69.6% line (llvm-cov, target: 90%)  
-**Clippy**: Clean under `-D warnings`  
-**Last Updated**: March 27, 2026
+**Tests**: 12,383 passing, 0 failures, 469 ignored  
+**Coverage**: ~72% line (llvm-cov, target: 90%)  
+**Clippy**: ZERO production warnings (pedantic+nursery)  
+**Last Updated**: March 28, 2026
 
 ---
 
@@ -86,8 +86,8 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Build | 13/13 crates, 0 errors |
 | Clippy | Clean (`-D warnings`) |
 | Format | Clean |
-| Tests | 12,278 passing, 0 failures |
-| Coverage | 69.6% line (excluding tools/) |
+| Tests | 12,383 passing, 0 failures |
+| Coverage | ~72% line (target: 90%) |
 | Production unwrap/expect | Zero |
 | Unsafe blocks | Evolved (most replaced with safe alternatives) |
 | File size limit (1000 lines) | All compliant |

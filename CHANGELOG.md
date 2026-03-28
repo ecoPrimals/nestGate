@@ -7,7 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 4.1.0-dev
+## [Unreleased] - 4.5.0-dev
+
+### Session 3: Security Hardening & Stub Elimination (March 28, 2026)
+
+**Tests**: 12,383 passing, 0 failures, 469 ignored  
+**Coverage**: ~72% line (target: 90%)  
+**Clippy**: ZERO production warnings (pedantic+nursery)
+
+#### Security
+- Removed hardcoded `admin/admin` credentials — local auth requires `NESTGATE_LOCAL_AUTH_HASH` (argon2)
+- `call_security_primal()` evolved to real Unix socket IPC (JSON-RPC `auth.authenticate`)
+- `validate_token_signature()` evolved to real HMAC-SHA256 verification
+- `create_workspace_secret()` evolved to HMAC-SHA256 key derivation with OS entropy
+- `create_token()` now produces cryptographically signed tokens
+
+#### Evolved
+- Monitoring `get_metrics()`: all placeholder metrics replaced with real `linux_proc` data
+- MCP `ProtocolHandler` health: real uptime tracking
+- Connection pool health check: validates client handle
+- `sysinfo` disk IOPS fallback improved
+
+#### Fixed
+- Misplaced `#[deprecated]` in `Debug::fmt` chain (syntactically invalid)
+- ZFS dev stub tests expecting hardcoded pool names
+- `parse_bandwidth_unit()` manual strip → `strip_suffix()`
+- Circuit breaker significant drop in scrutinee
+
+#### Reduced
+- `#[allow]` crate-level in nestgate-api: 30 → 26 (removed 4, fixed underlying code)
+
+#### Tests
+- 13 new storage_handlers.rs tests (was 0 — resolve_family_id, round-trip, nested paths)
+- Updated auth tests for argon2 password hashing
 
 ### Comprehensive Audit & Evolution (March 27, 2026)
 

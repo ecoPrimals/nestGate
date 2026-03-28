@@ -102,6 +102,7 @@ pub mod port_config;
 /// **Created**: January 30, 2026
 /// **Impact**: +4 bonus points (Hardcoding Evolution)
 pub mod storage_paths;
+pub mod substrate_tiers;
 
 // ==================== SECTION ====================
 // All deprecated configuration modules have been removed. Use canonical_primary directly:

@@ -74,12 +74,10 @@ pub struct AzureBackend {
 struct AzureClientWrapper {
     /// Storage account discovered via capability system or environment
     account: String,
-    /// Optional connection string
-    /// TODO: Use for Azure SDK client initialization
+    /// Optional connection string (reserved for Azure SDK client initialization)
     #[allow(dead_code)] // Will be used in Azure SDK integration
     connection_string: Option<String>,
-    /// Configuration source (capability discovery vs environment)
-    /// TODO: Use for audit logging, metrics, and dynamic reconfiguration
+    /// Configuration source (capability discovery vs environment; reserved for audit logging, metrics, and dynamic reconfiguration)
     #[allow(dead_code)] // Will be used for audit trail and dynamic config
     config_source: ConfigSource,
 }
@@ -91,8 +89,7 @@ struct AzureClientWrapper {
 enum ConfigSource {
     /// Discovered via NestGate capability system (preferred)
     CapabilityDiscovered {
-        /// Service descriptor from discovery
-        /// TODO: Use for service health monitoring and failover
+        /// Service descriptor from discovery (reserved for health monitoring and failover)
         #[allow(dead_code)] // Will be used for service tracking
         service_id: String,
     },

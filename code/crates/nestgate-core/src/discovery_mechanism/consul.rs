@@ -1,8 +1,10 @@
 //! Consul-based discovery (cloud/datacenter)
 //!
-//! This module provides Consul service discovery integration.
+//! Provides Consul service discovery integration using the pure-Rust
+//! bootstrap HTTP client — zero external HTTP dependencies.
 //! Requires the `consul` feature flag.
 
+use super::http::DiscoveryHttpClient;
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
 use crate::self_knowledge::SelfKnowledge;
 use crate::Result;
@@ -57,45 +59,44 @@ struct ConsulService {
     service_meta: HashMap<String, String>,
 }
 
-/// Consul discovery mechanism (uses Consul HTTP API via reqwest)
+/// Consul discovery mechanism (pure-Rust HTTP, no external deps)
 pub struct ConsulDiscovery {
     timeout: Duration,
-    cache_duration: Duration,
+    _cache_duration: Duration,
     consul_addr: String,
-    client: reqwest::Client,
+    client: DiscoveryHttpClient,
 }
 
 impl ConsulDiscovery {
-    /// Create new Consul discovery
+    /// Create a new Consul discovery instance.
+    ///
+    /// Reads `CONSUL_HTTP_ADDR` from environment (default: `http://localhost:8500`).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the client cannot be constructed.
     pub async fn new(builder: DiscoveryBuilder) -> Result<Self> {
         let consul_addr = std::env::var("CONSUL_HTTP_ADDR")
             .unwrap_or_else(|_| "http://localhost:8500".to_string());
 
-        let client = reqwest::Client::builder()
-            .timeout(builder.timeout)
-            .build()
-            .map_err(|e| {
-                crate::error::NestGateError::config(&format!("Failed to create HTTP client: {}", e))
-            })?;
+        let client = DiscoveryHttpClient::new(builder.timeout);
 
         Ok(Self {
             timeout: builder.timeout,
-            cache_duration: builder.cache_duration,
+            _cache_duration: builder.cache_duration,
             consul_addr,
             client,
         })
     }
 
-    /// Parse endpoint from address string
     fn parse_endpoint(address: &str, port: u16) -> String {
         if address.is_empty() {
-            format!("http://localhost:{}", port)
+            format!("http://localhost:{port}")
         } else {
-            format!("http://{}:{}", address, port)
+            format!("http://{address}:{port}")
         }
     }
 
-    /// Extract address and port from endpoint
     fn extract_address_port(endpoint: &str) -> (String, u16) {
         let without_scheme = endpoint
             .trim_start_matches("http://")
@@ -151,15 +152,10 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
         let url = format!("{}/v1/agent/service/register", self.consul_addr);
         self.client
-            .put(&url)
-            .json(&registration)
-            .send()
+            .put_json(&url, &registration)
             .await
             .map_err(|e| {
-                crate::error::NestGateError::api_error(&format!(
-                    "Consul registration failed: {}",
-                    e
-                ))
+                crate::error::NestGateError::api_error(&format!("Consul registration failed: {e}"))
             })?;
 
         tracing::info!("Successfully registered with Consul");
@@ -170,19 +166,16 @@ impl DiscoveryMechanism for ConsulDiscovery {
         tracing::debug!("Consul query for capability: {:?}", capability);
 
         let url = format!("{}/v1/catalog/service/{}", self.consul_addr, capability);
-        let response = self.client.get(&url).send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("Consul query failed: {}", e))
+        let response = self.client.get(&url).await.map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("Consul query failed: {e}"))
         })?;
 
-        if !response.status().is_success() {
+        if !response.is_success() {
             return Ok(vec![]);
         }
 
-        let services: Vec<ConsulService> = response.json().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!(
-                "Failed to parse Consul response: {}",
-                e
-            ))
+        let services: Vec<ConsulService> = response.json().map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("Failed to parse Consul response: {e}"))
         })?;
 
         Ok(services
@@ -202,19 +195,16 @@ impl DiscoveryMechanism for ConsulDiscovery {
         tracing::debug!("Consul lookup service: {}", id);
 
         let url = format!("{}/v1/agent/service/{}", self.consul_addr, id);
-        let response = self.client.get(&url).send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("Consul lookup failed: {}", e))
+        let response = self.client.get(&url).await.map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("Consul lookup failed: {e}"))
         })?;
 
-        if !response.status().is_success() {
+        if !response.is_success() {
             return Ok(None);
         }
 
-        let service: ConsulService = response.json().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!(
-                "Failed to parse Consul response: {}",
-                e
-            ))
+        let service: ConsulService = response.json().map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("Failed to parse Consul response: {e}"))
         })?;
 
         Ok(Some(ServiceInfo {
@@ -231,11 +221,11 @@ impl DiscoveryMechanism for ConsulDiscovery {
         tracing::debug!("Consul health check: {}", service_id);
 
         let url = format!("{}/v1/health/service/{}", self.consul_addr, service_id);
-        let response = self.client.get(&url).send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("Consul health check failed: {}", e))
+        let response = self.client.get(&url).await.map_err(|e| {
+            crate::error::NestGateError::api_error(&format!("Consul health check failed: {e}"))
         })?;
 
-        Ok(response.status().is_success())
+        Ok(response.is_success())
     }
 
     async fn deregister(&self, service_id: &str) -> Result<()> {
@@ -245,9 +235,14 @@ impl DiscoveryMechanism for ConsulDiscovery {
             "{}/v1/agent/service/deregister/{}",
             self.consul_addr, service_id
         );
-        self.client.put(&url).send().await.map_err(|e| {
-            crate::error::NestGateError::api_error(&format!("Consul deregistration failed: {}", e))
-        })?;
+        self.client
+            .put_json(&url, &serde_json::Value::Null)
+            .await
+            .map_err(|e| {
+                crate::error::NestGateError::api_error(&format!(
+                    "Consul deregistration failed: {e}"
+                ))
+            })?;
 
         tracing::info!("Successfully deregistered from Consul");
         Ok(())

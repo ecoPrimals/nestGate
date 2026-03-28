@@ -64,9 +64,8 @@ impl std::fmt::Debug for UniversalSecurityClient {
         f.debug_struct("UniversalSecurityClient")
             .field("config", &self.config)
             .field("available_nodes", &self.available_nodes)
-    #[deprecated(since = "3.0.0", note = "Use capability-based discovery instead of vendor-specific service discovery")]
-            .field("service_discovery", &"<service_discovery>")
-            .field("http_client", &"<reqwest::Client>")
+            .field("service_discovery", &"<discovery>")
+            .field("http_client", &"<http_client>")
             .finish()
     }
 }

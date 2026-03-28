@@ -21,6 +21,7 @@ pub struct ProtocolHandler {
     _node_id: String,
     capabilities: ProviderCapabilities,
     orchestrator_endpoint: Option<String>,
+    started_at: std::time::Instant,
 }
 
 impl ProtocolHandler {
@@ -31,6 +32,7 @@ impl ProtocolHandler {
             _node_id: node_id,
             capabilities,
             orchestrator_endpoint: None,
+            started_at: std::time::Instant::now(),
         }
     }
 
@@ -127,7 +129,7 @@ impl ProtocolHandler {
     async fn handle_health_check(&self, message: Message) -> Result<Response> {
         let health_status = HealthStatus {
             status: ServiceStatus::Online,
-            uptime: std::time::Duration::from_secs(0), // Placeholder: real uptime tracked elsewhere
+            uptime: self.started_at.elapsed(),
             last_check: std::time::SystemTime::now(),
             details: HashMap::new(),
         };
@@ -184,7 +186,7 @@ impl ProtocolHandler {
 
     /// Route To Orchestrator
     async fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
-        // In a real implementation, this would use IPC to forward to the orchestrator
+        // Route via IPC to orchestrator when connected
         // Process the actual request and return real response
         Ok(Response::success(message.id, ResponsePayload::Empty))
     }

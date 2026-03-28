@@ -130,12 +130,15 @@ struct JsonRpcError {
 #[derive(Clone)]
 pub(crate) struct StorageState {
     /// Persistent storage manager (filesystem-backed)
-    /// **PRODUCTION**: Uses StorageManagerService for persistent storage
     storage_manager: Arc<crate::services::storage::StorageManagerService>,
     /// Template storage for collaborative intelligence
     templates: crate::rpc::template_storage::TemplateStorage,
     /// Audit storage for execution tracking
     audits: crate::rpc::audit_storage::AuditStorage,
+    /// Server's family_id derived from the socket name.
+    /// Storage handlers default to this when callers omit `family_id`,
+    /// eliminating redundant params for family-scoped socket connections.
+    pub(crate) family_id: Option<String>,
 }
 
 impl StorageState {
@@ -165,6 +168,7 @@ impl StorageState {
             storage_manager,
             templates: crate::rpc::template_storage::TemplateStorage::new(),
             audits: crate::rpc::audit_storage::AuditStorage::new(),
+            family_id: None,
         })
     }
 }
@@ -256,7 +260,9 @@ impl JsonRpcUnixServer {
         info!("═══════════════════════════════════════════════════════════");
         info!("💡 Test with: echo '{{\"jsonrpc\":\"2.0\",\"method\":\"storage.list\",\"id\":1}}' | nc -U {}", self.socket_path.display());
 
-        let state = Arc::new(self.state.clone());
+        let mut state = self.state.clone();
+        state.family_id = Some(self.family_id.clone());
+        let state = Arc::new(state);
 
         loop {
             match listener.accept().await {
@@ -370,8 +376,10 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
     }
 
     let result = match request.method.as_str() {
-        // Health & Discovery
-        "health" => Ok(json!({"status": "healthy", "version": env!("CARGO_PKG_VERSION")})),
+        // Health & Discovery — accept both "health" (legacy) and "health.check" (ecosystem standard)
+        "health" | "health.check" | "health.liveness" | "health.readiness" => Ok(
+            json!({"status": "healthy", "version": env!("CARGO_PKG_VERSION"), "primal": "nestgate"}),
+        ),
         "discover_capabilities" => model_cache_handlers::discover_capabilities().await,
         // Storage operations
         "storage.store" => storage_handlers::storage_store(&request.params, state).await,
