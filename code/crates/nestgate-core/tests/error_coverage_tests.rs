@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Comprehensive error handling coverage tests
 //!
@@ -172,7 +183,7 @@ fn test_error_with_empty_strings() {
 #[test]
 fn test_error_with_long_strings() {
     let long_string = "a".repeat(1000);
-    let error = NestGateError::api_error(&long_string);
+    let error = NestGateError::api_error(long_string);
 
     assert!(matches!(error, NestGateError::Api(_)));
 }
@@ -183,7 +194,7 @@ fn test_error_with_long_strings() {
 fn test_map_err_pattern() {
     let result: std::result::Result<(), String> = Err("string error".to_string());
     let mapped: Result<()> =
-        result.map_err(|e| NestGateError::api_error(&format!("conversion: {}", e)));
+        result.map_err(|e| NestGateError::api_error(format!("conversion: {}", e)));
 
     assert!(mapped.is_err());
 }

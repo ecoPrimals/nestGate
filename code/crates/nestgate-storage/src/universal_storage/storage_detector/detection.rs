@@ -108,7 +108,7 @@ impl<'a> DetectionEngine<'a> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub async fn detect_cloud_storage(&self) -> Result<Vec<DetectedStorage>> {
+    pub fn detect_cloud_storage(&self) -> Result<Vec<DetectedStorage>> {
         if !self.config.enable_cloud_detection {
             return Ok(Vec::new());
         }
@@ -116,13 +116,13 @@ impl<'a> DetectionEngine<'a> {
         let mut cloud_storage = Vec::new();
 
         // Detect AWS S3 buckets
-        cloud_storage.extend(self.detect_aws_s3().await?);
+        cloud_storage.extend(self.detect_aws_s3()?);
 
         // Detect Azure Blob Storage
-        cloud_storage.extend(self.detect_azure_blob().await?);
+        cloud_storage.extend(self.detect_azure_blob()?);
 
         // Detect Google Cloud Storage
-        cloud_storage.extend(self.detect_gcs().await?);
+        cloud_storage.extend(self.detect_gcs()?);
 
         Ok(cloud_storage)
     }
@@ -141,7 +141,7 @@ impl<'a> DetectionEngine<'a> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub async fn detect_network_shares(&self) -> Result<Vec<DetectedStorage>> {
+    pub fn detect_network_shares(&self) -> Result<Vec<DetectedStorage>> {
         if !self.config.enable_network_detection {
             return Ok(Vec::new());
         }
@@ -149,13 +149,13 @@ impl<'a> DetectionEngine<'a> {
         let mut network_shares = Vec::new();
 
         // Detect SMB/CIFS shares
-        network_shares.extend(self.detect_smb_shares().await?);
+        network_shares.extend(self.detect_smb_shares()?);
 
         // Detect NFS mounts
-        network_shares.extend(self.detect_nfs_mounts().await?);
+        network_shares.extend(self.detect_nfs_mounts()?);
 
         // Detect iSCSI targets
-        network_shares.extend(self.detect_iscsi_targets().await?);
+        network_shares.extend(self.detect_iscsi_targets()?);
 
         Ok(network_shares)
     }
@@ -227,14 +227,14 @@ impl<'a> DetectionEngine<'a> {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub async fn detect_memory_storage(&self) -> Result<Vec<DetectedStorage>> {
+    pub fn detect_memory_storage(&self) -> Result<Vec<DetectedStorage>> {
         let mut memory_storage = Vec::new();
 
         // Detect tmpfs mounts
-        memory_storage.extend(self.detect_tmpfs().await?);
+        memory_storage.extend(self.detect_tmpfs()?);
 
         // Detect ramdisk
-        memory_storage.extend(self.detect_ramdisk().await?);
+        memory_storage.extend(self.detect_ramdisk()?);
 
         Ok(memory_storage)
     }
@@ -243,50 +243,50 @@ impl<'a> DetectionEngine<'a> {
     // NOTE: Platform-specific methods removed in favor of universal detection
 
     /// Detect Aws S3
-    async fn detect_aws_s3(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_aws_s3(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for AWS S3 detection
         // In a real implementation, this would use AWS SDK
         Ok(Vec::new())
     }
 
     /// Detect Azure Blob
-    async fn detect_azure_blob(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_azure_blob(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for Azure Blob detection
         Ok(Vec::new())
     }
 
     /// Detect Gcs
-    async fn detect_gcs(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_gcs(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for Google Cloud Storage detection
         Ok(Vec::new())
     }
 
     /// Detect Smb Shares
-    async fn detect_smb_shares(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_smb_shares(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for SMB share detection
         Ok(Vec::new())
     }
 
     /// Detect Nfs Mounts
-    async fn detect_nfs_mounts(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_nfs_mounts(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for NFS mount detection
         Ok(Vec::new())
     }
 
     /// Detect Iscsi Targets
-    async fn detect_iscsi_targets(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_iscsi_targets(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for iSCSI target detection
         Ok(Vec::new())
     }
 
     /// Detect Tmpfs
-    async fn detect_tmpfs(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_tmpfs(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for tmpfs detection
         Ok(Vec::new())
     }
 
     /// Detect Ramdisk
-    async fn detect_ramdisk(&self) -> Result<Vec<DetectedStorage>> {
+    fn detect_ramdisk(&self) -> Result<Vec<DetectedStorage>> {
         // Placeholder for ramdisk detection
         Ok(Vec::new())
     }

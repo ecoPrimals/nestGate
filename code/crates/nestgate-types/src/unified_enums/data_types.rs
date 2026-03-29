@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-/// Data Classification Enums
+/// Data classification enums.
+///
 /// This module contains enums related to data types, content types,
 /// and data processing classifications.
 use serde::{Deserialize, Serialize};
@@ -229,11 +230,12 @@ mod tests {
     }
 
     #[test]
-    fn test_unified_content_type_serialization() {
+    fn test_unified_content_type_serialization() -> Result<(), serde_json::Error> {
         let ct = UnifiedContentType::Json;
-        let json = serde_json::to_string(&ct).unwrap();
-        let parsed: UnifiedContentType = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&ct)?;
+        let parsed: UnifiedContentType = serde_json::from_str(&json)?;
         assert_eq!(ct, parsed);
+        Ok(())
     }
 
     #[test]

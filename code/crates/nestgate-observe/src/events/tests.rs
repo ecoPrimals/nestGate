@@ -172,16 +172,19 @@ mod canonical_event_tests {
 
     #[test]
     fn test_event_tags_filtering() {
-        let mut event = Event::default();
-        event.tags = vec![
-            "production".to_string(),
-            "urgent".to_string(),
-            "api".to_string(),
-        ];
+        let event = Event {
+            tags: vec![
+                "production".to_string(),
+                "urgent".to_string(),
+                "api".to_string(),
+            ],
+            ..Default::default()
+        };
 
-        let urgent_tags: Vec<_> = event.tags.iter().filter(|t| t.contains("urgent")).collect();
-
-        assert_eq!(urgent_tags.len(), 1);
+        assert_eq!(
+            event.tags.iter().filter(|t| t.contains("urgent")).count(),
+            1
+        );
     }
 
     // ==================== EVENT SERIALIZATION TESTS ====================
@@ -253,8 +256,16 @@ mod canonical_event_tests {
 mod service_stub_tests {
     use super::super::bus;
     use super::super::config;
+    use super::super::dlq;
+    use super::super::metrics as events_metrics_mod;
     use super::super::pubsub;
+    use super::super::replay;
     use super::super::routing;
+    use super::super::storage;
+    use super::super::streaming;
+    use super::super::traits;
+    use super::super::transform;
+    use super::super::types;
     use crate::traits::Service;
 
     // ==================== BUS SERVICE TESTS ====================
@@ -271,7 +282,7 @@ mod service_stub_tests {
     fn test_bus_service_creation() {
         let config = bus::Config::default();
         let service = bus::DefaultService::new(config);
-        assert!(format!("{:?}", service).contains("DefaultService"));
+        assert!(format!("{service:?}").contains("DefaultService"));
     }
 
     #[tokio::test]
@@ -287,10 +298,10 @@ mod service_stub_tests {
         assert!(shutdown_result.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_bus_validate_config() {
+    #[test]
+    fn test_bus_validate_config() {
         let valid_config = bus::Config::default();
-        assert!(bus::validate_config(&valid_config).await.is_ok());
+        assert!(bus::validate_config(&valid_config).is_ok());
 
         let invalid_config = bus::Config {
             enabled: true,
@@ -298,7 +309,54 @@ mod service_stub_tests {
             max_connections: 0,
             buffer_size: 1024,
         };
-        assert!(bus::validate_config(&invalid_config).await.is_err());
+        assert!(bus::validate_config(&invalid_config).is_err());
+    }
+
+    #[test]
+    fn test_validate_buffer_size_zero_across_stubs() {
+        let mut c = bus::Config::default();
+        c.buffer_size = 0;
+        assert!(bus::validate_config(&c).is_err());
+
+        let mut c = routing::Config::default();
+        c.buffer_size = 0;
+        assert!(routing::validate_config(&c).is_err());
+
+        let mut c = replay::Config::default();
+        c.buffer_size = 0;
+        assert!(replay::validate_config(&c).is_err());
+
+        let mut c = storage::Config::default();
+        c.buffer_size = 0;
+        assert!(storage::validate_config(&c).is_err());
+
+        let mut c = pubsub::Config::default();
+        c.buffer_size = 0;
+        assert!(pubsub::validate_config(&c).is_err());
+
+        let mut c = dlq::Config::default();
+        c.buffer_size = 0;
+        assert!(dlq::validate_config(&c).is_err());
+
+        let mut c = streaming::Config::default();
+        c.buffer_size = 0;
+        assert!(streaming::validate_config(&c).is_err());
+
+        let mut c = transform::Config::default();
+        c.buffer_size = 0;
+        assert!(transform::validate_config(&c).is_err());
+
+        let mut c = events_metrics_mod::Config::default();
+        c.buffer_size = 0;
+        assert!(events_metrics_mod::validate_config(&c).is_err());
+
+        let mut c = traits::Config::default();
+        c.buffer_size = 0;
+        assert!(traits::validate_config(&c).is_err());
+
+        let mut c = types::Config::default();
+        c.buffer_size = 0;
+        assert!(types::validate_config(&c).is_err());
     }
 
     #[tokio::test]
@@ -326,15 +384,15 @@ mod service_stub_tests {
         assert!(service.shutdown().await.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_config_validate_buffer_size() {
+    #[test]
+    fn test_config_validate_buffer_size() {
         let invalid_config = config::Config {
             enabled: true,
             timeout: std::time::Duration::from_secs(1),
             max_connections: 100,
             buffer_size: 0,
         };
-        assert!(config::validate_config(&invalid_config).await.is_err());
+        assert!(config::validate_config(&invalid_config).is_err());
     }
 
     // ==================== PUBSUB SERVICE TESTS ====================
@@ -393,10 +451,10 @@ mod service_stub_tests {
         assert!(service.shutdown().await.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_routing_validate_config() {
+    #[test]
+    fn test_routing_validate_config() {
         let valid_config = routing::Config::default();
-        assert!(routing::validate_config(&valid_config).await.is_ok());
+        assert!(routing::validate_config(&valid_config).is_ok());
     }
 
     // ==================== CROSS-SERVICE TESTS ====================
@@ -428,6 +486,25 @@ mod service_stub_tests {
     }
 
     #[tokio::test]
+    async fn test_stub_services_start_stop_roundtrip() {
+        let bus_service = bus::create_service();
+        assert!(bus_service.start().await.is_ok());
+        assert!(bus_service.stop().await.is_ok());
+
+        let pubsub_service = pubsub::create_service();
+        assert!(pubsub_service.start().await.is_ok());
+        assert!(pubsub_service.stop().await.is_ok());
+
+        let routing_service = routing::create_service();
+        assert!(routing_service.start().await.is_ok());
+        assert!(routing_service.stop().await.is_ok());
+
+        let config_service = config::create_service();
+        assert!(config_service.start().await.is_ok());
+        assert!(config_service.stop().await.is_ok());
+    }
+
+    #[tokio::test]
     async fn test_all_services_healthy_by_default() {
         let services = vec![
             bus::create_service().health_check().await,
@@ -439,5 +516,45 @@ mod service_stub_tests {
         for health in services {
             assert!(health.is_ok());
         }
+    }
+}
+
+#[cfg(test)]
+mod events_main_module_tests {
+    use super::super::{EventsMainConfig, HealthStatus, Metrics, create_service, validate_config};
+    use crate::traits::Service;
+    use serde_json::json;
+
+    #[test]
+    fn validate_config_rejects_zero_buffer_size() {
+        let mut c = EventsMainConfig::default();
+        c.buffer_size = 0;
+        assert!(validate_config(&c).is_err());
+    }
+
+    #[test]
+    fn health_status_and_metrics_serde() {
+        let h = HealthStatus::Degraded;
+        let v = json!(h);
+        let back: HealthStatus = serde_json::from_value(v).unwrap();
+        assert_eq!(h, back);
+        let m = Metrics::default();
+        let s = serde_json::to_string(&m).unwrap();
+        let _: Metrics = serde_json::from_str(&s).unwrap();
+    }
+
+    #[tokio::test]
+    async fn default_service_mod_lifecycle() {
+        let svc = create_service();
+        assert!(svc.initialize().await.is_ok());
+        assert!(svc.start().await.is_ok());
+        assert!(svc.stop().await.is_ok());
+        assert_eq!(svc.name(), "mod");
+    }
+
+    #[tokio::test]
+    async fn default_service_mod_shutdown_distinct() {
+        let svc = create_service();
+        assert!(svc.shutdown().await.is_ok());
     }
 }

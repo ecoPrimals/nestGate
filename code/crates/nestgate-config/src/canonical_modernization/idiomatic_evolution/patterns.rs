@@ -71,13 +71,7 @@ where
 {
     let backup = value.clone();
 
-    match value.evolve_canonically() {
-        Ok(evolved) => Ok(evolved),
-        Err(_) => {
-            // Rollback to original on failure
-            Ok(backup)
-        }
-    }
+    value.evolve_canonically().or(Ok(backup))
 }
 /// Batch evolution pattern for collections
 ///

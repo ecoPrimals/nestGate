@@ -1,3 +1,14 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
 // E2E test framework — many building blocks defined ahead of use
 #![allow(dead_code, unused_imports)]
 

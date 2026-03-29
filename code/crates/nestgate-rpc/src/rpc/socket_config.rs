@@ -78,6 +78,7 @@ impl SocketConfig {
     ///
     /// This resolver currently always returns [`Ok`]; the [`Result`] is reserved for future
     /// validation of socket paths and environment-derived identifiers.
+    #[allow(clippy::needless_pass_by_value)] // Stable public signature; callers pass owned env strings.
     pub fn resolve(
         family_id: String,
         node_id: String,
@@ -215,7 +216,10 @@ impl SocketConfig {
                 std::fs::create_dir_all(parent).map_err(|e| {
                     NestGateError::configuration_error(
                         "socket_directory",
-                        &format!("Failed to create socket directory {parent:?}: {e}"),
+                        format!(
+                            "Failed to create socket directory {}: {e}",
+                            parent.display()
+                        ),
                     )
                 })?;
 
@@ -233,9 +237,9 @@ impl SocketConfig {
             std::fs::remove_file(&self.socket_path).map_err(|e| {
                 NestGateError::configuration_error(
                     "socket_cleanup",
-                    &format!(
-                        "Failed to remove existing socket {:?}: {}",
-                        self.socket_path, e
+                    format!(
+                        "Failed to remove existing socket {}: {e}",
+                        self.socket_path.display()
                     ),
                 )
             })?;
@@ -274,9 +278,11 @@ impl SocketConfig {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use std::fs;
     use std::os::unix::net::UnixListener;
+    use std::path::PathBuf;
 
     // ========================================================================
     // UNIT TESTS - Pure Logic via resolve() (no env var races)
@@ -657,5 +663,70 @@ mod tests {
 
         assert_eq!(config.family_id, "unicode_🍄🐸");
         assert!(config.socket_path.to_str().unwrap().contains("unicode-"));
+    }
+
+    #[test]
+    fn test_resolve_xdg_runtime_uses_biomeos_sock_when_dir_exists() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let config = SocketConfig::resolve(
+            "fam".to_string(),
+            "node".to_string(),
+            None,
+            None,
+            Some(dir.path().to_string_lossy().into_owned()),
+        )
+        .expect("resolve");
+
+        assert_eq!(config.source, SocketConfigSource::XdgRuntime);
+        assert!(config.socket_path.ends_with("biomeos/nestgate.sock"));
+    }
+
+    #[test]
+    fn test_resolve_empty_xdg_skips_tier3_and_uses_tmp() {
+        let config = SocketConfig::resolve(
+            "e".to_string(),
+            "n".to_string(),
+            None,
+            None,
+            Some(String::new()),
+        )
+        .expect("resolve");
+        assert_eq!(config.source, SocketConfigSource::TempDirectory);
+        assert!(
+            config
+                .socket_path
+                .to_string_lossy()
+                .contains("nestgate-e-n.sock")
+        );
+    }
+
+    #[test]
+    fn log_summary_covers_all_sources() {
+        for (source, path) in [
+            (
+                SocketConfigSource::Environment,
+                PathBuf::from("/tmp/a.sock"),
+            ),
+            (
+                SocketConfigSource::BiomeOSDirectory,
+                PathBuf::from("/tmp/biomeos/nestgate.sock"),
+            ),
+            (
+                SocketConfigSource::XdgRuntime,
+                PathBuf::from("/run/user/1/biomeos/nestgate.sock"),
+            ),
+            (
+                SocketConfigSource::TempDirectory,
+                PathBuf::from("/tmp/nestgate-x-y.sock"),
+            ),
+        ] {
+            let c = SocketConfig {
+                socket_path: path,
+                family_id: "f".to_string(),
+                node_id: "n".to_string(),
+                source,
+            };
+            c.log_summary();
+        }
     }
 }

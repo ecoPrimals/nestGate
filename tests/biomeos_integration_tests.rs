@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! # biomeOS Integration Tests
 //!
 //! Integration tests for biomeOS client compatibility.
@@ -9,8 +21,6 @@
 //! ## Test Coverage
 //! - Unix socket server lifecycle
 //! - All 7 storage.* methods
-
-#![allow(dead_code, unused_imports)]
 
 use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 use serde_json::{Value, json};
@@ -24,7 +34,7 @@ use common::sync_utils::wait_for_condition;
 
 /// Configure env + [`SocketConfig`], build isomorphic IPC server (ecosystem JSON-RPC surface).
 fn prepare_ecosystem_ipc(family_id: &str) -> (Arc<IsomorphicIpcServer>, PathBuf) {
-    std::env::set_var("NESTGATE_FAMILY_ID", family_id);
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", family_id);
     let socket_path = SocketConfig::from_environment()
         .expect("socket config")
         .socket_path

@@ -2,10 +2,13 @@
 
 **Version**: 4.7.0-dev  
 **Build**: 25/25 workspace members compiling, 0 errors  
-**Tests**: 7,887 passing (lib), 0 failures  
-**Clippy**: Warnings reduced from 8,227 to 2,972 (13 pedantic categories zeroed; production `-D warnings` clean)  
+**Tests**: 8,177 passing (lib), 0 failures  
+**Coverage**: 77.1% line (workspace `--lib`, llvm-cov)  
+**Clippy**: ZERO errors — full workspace `cargo clippy --workspace --all-targets -- -D warnings` clean  
 **Doctests**: Zero failures  
 **Production TODO/FIXME**: Zero  
+**Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
+**Binary (musl)**: ~4.7MB static (`x86_64-unknown-linux-musl`)  
 **File size**: All files under 1,000 lines (largest: 987)  
 **Last Updated**: March 29, 2026
 
@@ -109,13 +112,14 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Area | Status |
 |------|--------|
 | Build | 25/25 workspace members, 0 errors |
-| Clippy | 2,972 warnings (down from 8,227); 13 pedantic categories zeroed; production `-D warnings` clean |
+| Clippy | ZERO errors; full workspace `-D warnings` clean |
 | Format | Clean |
-| Tests | 7,887 lib tests passing, 0 failures, 64 ignored |
+| Tests | 8,177 lib tests passing, 0 failures, 64 ignored |
+| Coverage | 77.1% line (llvm-cov) |
 | Doctests | Zero failures |
 | Production TODO/FIXME | Zero |
 | Production unwrap/expect | Zero |
-| Unsafe blocks | 1 (edition-2021 env bridge — safe pattern) |
+| Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
 | File size limit (1000 lines) | All compliant (largest: 987) |
 | Env-var race conditions | Fixed (temp-env + serial_test) |
 

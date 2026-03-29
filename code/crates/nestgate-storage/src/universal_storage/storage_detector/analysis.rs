@@ -7,6 +7,13 @@
 
 //! Analysis module
 
+// Byte counts use `f64` only for approximate percentages and human-readable summaries.
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss
+)]
+
 use super::types::{DetectedStorage, StorageAnalysisReport};
 use nestgate_types::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 
@@ -160,7 +167,7 @@ impl StorageAnalyzer {
         let mut best_score = 0.0f64;
 
         for storage in storage_list {
-            let score = self.score_storage_for_use_case(storage, use_case);
+            let score = Self::score_storage_for_use_case(storage, use_case);
             if score > best_score {
                 best_score = score;
                 best_storage = Some(storage);
@@ -171,11 +178,7 @@ impl StorageAnalyzer {
     }
 
     /// Score storage system for specific use case
-    fn score_storage_for_use_case(
-        &self,
-        storage: &DetectedStorage,
-        use_case: StorageUseCase,
-    ) -> f64 {
+    fn score_storage_for_use_case(storage: &DetectedStorage, use_case: StorageUseCase) -> f64 {
         let mut score = 0.0f64;
 
         match use_case {
@@ -235,39 +238,37 @@ impl StorageAnalyzer {
         let mut suggestions = Vec::new();
 
         // Check for storage consolidation opportunities
-        let local_storage: Vec<_> = storage_list
+        let local_count = storage_list
             .iter()
             .filter(|s| matches!(s.storage_type, UnifiedStorageType::Local))
-            .collect();
+            .count();
 
-        if local_storage.len() > 3 {
+        if local_count > 3 {
             suggestions.push(
                 "Consider consolidating multiple local storage devices using software RAID or ZFS pools for better management.".to_string()
             );
         }
 
         // Check for cloud storage optimization
-        let cloud_storage: Vec<_> = storage_list
+        let has_cloud = storage_list
             .iter()
-            .filter(|s| matches!(s.storage_type, UnifiedStorageType::Cloud))
-            .collect();
+            .any(|s| matches!(s.storage_type, UnifiedStorageType::Cloud));
 
-        if !cloud_storage.is_empty() {
+        if has_cloud {
             suggestions.push(
                 "Consider implementing tiered storage: frequently accessed data on fast local storage, archives on cloud storage.".to_string()
             );
         }
 
         // Check for encryption gaps
-        let unencrypted: Vec<_> = storage_list
+        let unencrypted_count = storage_list
             .iter()
             .filter(|s| !s.has_capability(&UnifiedStorageCapability::Encryption))
-            .collect();
+            .count();
 
-        if !unencrypted.is_empty() {
+        if unencrypted_count > 0 {
             suggestions.push(format!(
-                "Enable encryption on {} storage system(s) for better security.",
-                unencrypted.len()
+                "Enable encryption on {unencrypted_count} storage system(s) for better security.",
             ));
         }
 

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 // Note: constants module not needed for this example
 use std::process::Command;
 

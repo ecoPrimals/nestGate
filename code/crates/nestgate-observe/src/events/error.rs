@@ -188,8 +188,12 @@ pub fn create_service() -> DefaultService {
     DefaultService::new(CanonicalNetworkConfig::default())
 }
 
-/// Validate configuration
-pub async fn validate_config(config: &CanonicalNetworkConfig) -> nestgate_types::Result<()> {
+/// Validate configuration.
+///
+/// # Errors
+///
+/// Returns when [`CanonicalNetworkConfig::validate`] fails.
+pub fn validate_config(config: &CanonicalNetworkConfig) -> nestgate_types::Result<()> {
     config.validate()
 }
 
@@ -206,13 +210,13 @@ mod tests {
         assert!(config.api.max_connections > 0);
     }
 
-    #[tokio::test]
-    async fn test_config_validation() {
+    #[test]
+    fn test_config_validation() {
         let mut config = Config::default();
-        assert!(validate_config(&config).await.is_ok());
+        assert!(validate_config(&config).is_ok());
 
         config.api.max_connections = 0;
-        assert!(validate_config(&config).await.is_err());
+        assert!(validate_config(&config).is_err());
     }
 
     #[tokio::test]

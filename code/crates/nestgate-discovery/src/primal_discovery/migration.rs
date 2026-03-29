@@ -146,7 +146,7 @@ impl DiscoveryOrEnv {
             }
             None => Err(NestGateError::configuration_error(
                 "endpoint_resolution",
-                &format!("Could not resolve endpoint for capability: {capability}"),
+                format!("Could not resolve endpoint for capability: {capability}"),
             )),
         }
     }
@@ -161,19 +161,22 @@ impl DiscoveryOrEnv {
     /// Try environment variable
     fn try_environment(&self, env_var: &str) -> Option<(String, EndpointSource)> {
         std::env::var(env_var).ok().and_then(|val| {
-            // Try as port first
-            if let Ok(port) = val.parse::<u16>() {
-                let url = format!("http://localhost:{port}");
-                debug!("Found {} in environment: {}", env_var, url);
-                Some((url, EndpointSource::Environment))
-            } else if val.starts_with("http://") || val.starts_with("https://") {
-                // Full URL in environment
-                debug!("Found full URL in environment: {}", val);
-                Some((val, EndpointSource::Environment))
-            } else {
-                warn!("Invalid value for {}: {}", env_var, val);
-                None
-            }
+            val.parse::<u16>().ok().map_or_else(
+                || {
+                    if val.starts_with("http://") || val.starts_with("https://") {
+                        debug!("Found full URL in environment: {}", val);
+                        Some((val, EndpointSource::Environment))
+                    } else {
+                        warn!("Invalid value for {}: {}", env_var, val);
+                        None
+                    }
+                },
+                |port| {
+                    let url = format!("http://localhost:{port}");
+                    debug!("Found {} in environment: {}", env_var, url);
+                    Some((url, EndpointSource::Environment))
+                },
+            )
         })
     }
 

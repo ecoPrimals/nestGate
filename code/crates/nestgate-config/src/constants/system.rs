@@ -299,7 +299,7 @@ mod tests {
 
         // Test very large values
         let _guard3 = EnvGuard::new("NESTGATE_BUFFER_SIZE", "1048576");
-        assert_eq!(buffer_size(), 1048576);
+        assert_eq!(buffer_size(), 1_048_576);
     }
 
     #[test]

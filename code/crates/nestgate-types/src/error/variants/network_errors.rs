@@ -5,11 +5,13 @@
 //! Network Errors functionality and utilities.
 //! This module provides network-specific error types and helper functions.
 
+use std::borrow::Cow;
+
 use super::core_errors::NetworkErrorDetails;
 
 impl NetworkErrorDetails {
     /// Create a network error with just a message
-    pub fn new(message: impl Into<String>) -> Self {
+    pub fn new(message: impl Into<Cow<'static, str>>) -> Self {
         Self {
             message: message.into(),
             operation: None,
@@ -20,7 +22,10 @@ impl NetworkErrorDetails {
     }
 
     /// Create a network error with operation context
-    pub fn with_operation(message: impl Into<String>, operation: impl Into<String>) -> Self {
+    pub fn with_operation(
+        message: impl Into<Cow<'static, str>>,
+        operation: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self {
             message: message.into(),
             operation: Some(operation.into()),
@@ -31,11 +36,11 @@ impl NetworkErrorDetails {
     }
 
     /// Create a timeout error
-    pub fn timeout(endpoint: impl Into<String>) -> Self {
+    pub fn timeout(endpoint: impl Into<Cow<'static, str>>) -> Self {
         let endpoint_str = endpoint.into();
         Self {
-            message: format!("Network timeout for endpoint: {endpoint_str}"),
-            operation: Some("network_request".to_string()),
+            message: format!("Network timeout for endpoint: {endpoint_str}").into(),
+            operation: Some(Cow::Borrowed("network_request")),
             endpoint: Some(endpoint_str),
             network_data: None,
             context: None,
@@ -51,7 +56,7 @@ mod tests {
     fn test_network_error_new() {
         let error = NetworkErrorDetails::new("Connection failed");
 
-        assert_eq!(error.message, "Connection failed");
+        assert_eq!(error.message.as_ref(), "Connection failed");
         assert_eq!(error.operation, None);
         assert_eq!(error.endpoint, None);
         assert!(error.network_data.is_none());
@@ -62,7 +67,7 @@ mod tests {
     fn test_network_error_new_with_string() {
         let error = NetworkErrorDetails::new("Network error".to_string());
 
-        assert_eq!(error.message, "Network error");
+        assert_eq!(error.message.as_ref(), "Network error");
         assert_eq!(error.operation, None);
         assert_eq!(error.endpoint, None);
         assert!(error.network_data.is_none());
@@ -73,8 +78,11 @@ mod tests {
     fn test_network_error_with_operation() {
         let error = NetworkErrorDetails::with_operation("Request failed", "http_get");
 
-        assert_eq!(error.message, "Request failed");
-        assert_eq!(error.operation, Some("http_get".to_string()));
+        assert_eq!(error.message.as_ref(), "Request failed");
+        assert_eq!(
+            error.operation.as_ref().map(std::borrow::Cow::as_ref),
+            Some("http_get")
+        );
         assert_eq!(error.endpoint, None);
         assert!(error.network_data.is_none());
         assert!(error.context.is_none());
@@ -85,8 +93,11 @@ mod tests {
         let error =
             NetworkErrorDetails::with_operation("POST failed".to_string(), "http_post".to_string());
 
-        assert_eq!(error.message, "POST failed");
-        assert_eq!(error.operation, Some("http_post".to_string()));
+        assert_eq!(error.message.as_ref(), "POST failed");
+        assert_eq!(
+            error.operation.as_ref().map(std::borrow::Cow::as_ref),
+            Some("http_post")
+        );
         assert_eq!(error.endpoint, None);
         assert!(error.network_data.is_none());
         assert!(error.context.is_none());
@@ -97,13 +108,16 @@ mod tests {
         let error = NetworkErrorDetails::timeout("https://api.example.com/v1/data");
 
         assert_eq!(
-            error.message,
+            error.message.as_ref(),
             "Network timeout for endpoint: https://api.example.com/v1/data"
         );
-        assert_eq!(error.operation, Some("network_request".to_string()));
         assert_eq!(
-            error.endpoint,
-            Some("https://api.example.com/v1/data".to_string())
+            error.operation.as_ref().map(std::borrow::Cow::as_ref),
+            Some("network_request")
+        );
+        assert_eq!(
+            error.endpoint.as_ref().map(std::borrow::Cow::as_ref),
+            Some("https://api.example.com/v1/data")
         );
         assert!(error.network_data.is_none());
         assert!(error.context.is_none());
@@ -115,20 +129,32 @@ mod tests {
         let error = NetworkErrorDetails::timeout(endpoint.clone());
 
         assert_eq!(
-            error.message,
+            error.message.as_ref(),
             format!("Network timeout for endpoint: {endpoint}")
         );
-        assert_eq!(error.operation, Some("network_request".to_string()));
-        assert_eq!(error.endpoint, Some(endpoint));
+        assert_eq!(
+            error.operation.as_ref().map(std::borrow::Cow::as_ref),
+            Some("network_request")
+        );
+        assert_eq!(error.endpoint.as_deref(), Some(endpoint.as_str()));
     }
 
     #[test]
     fn test_network_error_timeout_short_endpoint() {
         let error = NetworkErrorDetails::timeout("localhost");
 
-        assert_eq!(error.message, "Network timeout for endpoint: localhost");
-        assert_eq!(error.operation, Some("network_request".to_string()));
-        assert_eq!(error.endpoint, Some("localhost".to_string()));
+        assert_eq!(
+            error.message.as_ref(),
+            "Network timeout for endpoint: localhost"
+        );
+        assert_eq!(
+            error.operation.as_ref().map(std::borrow::Cow::as_ref),
+            Some("network_request")
+        );
+        assert_eq!(
+            error.endpoint.as_ref().map(std::borrow::Cow::as_ref),
+            Some("localhost")
+        );
     }
 
     #[test]
@@ -142,12 +168,21 @@ mod tests {
         assert_ne!(error2.message, error3.message);
 
         assert_eq!(error1.operation, None);
-        assert_eq!(error2.operation, Some("op".to_string()));
-        assert_eq!(error3.operation, Some("network_request".to_string()));
+        assert_eq!(
+            error2.operation.as_ref().map(std::borrow::Cow::as_ref),
+            Some("op")
+        );
+        assert_eq!(
+            error3.operation.as_ref().map(std::borrow::Cow::as_ref),
+            Some("network_request")
+        );
 
         assert_eq!(error1.endpoint, None);
         assert_eq!(error2.endpoint, None);
-        assert_eq!(error3.endpoint, Some("endpoint".to_string()));
+        assert_eq!(
+            error3.endpoint.as_ref().map(std::borrow::Cow::as_ref),
+            Some("endpoint")
+        );
     }
 
     #[test]
@@ -157,9 +192,12 @@ mod tests {
 
         // Verify the message format is correct
         let expected_message = format!("Network timeout for endpoint: {endpoint}");
-        assert_eq!(error.message, expected_message);
+        assert_eq!(error.message.as_ref(), expected_message.as_str());
 
         // Verify the endpoint is stored separately
-        assert_eq!(error.endpoint.expect("Network operation failed"), endpoint);
+        assert_eq!(
+            error.endpoint.as_ref().map(std::borrow::Cow::as_ref),
+            Some(endpoint)
+        );
     }
 }

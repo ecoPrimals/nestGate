@@ -150,3 +150,14 @@ pub mod canonical_types {
         }
     }
 }
+
+#[cfg(test)]
+mod stubs_tests {
+    use super::canonical_types::events::Event;
+
+    #[test]
+    fn event_deserialize_rejects_malformed_payload() {
+        let j = r#"{"id":"x","timestamp":{"secs_since_epoch":0,"nanos_since_epoch":0},"category":5,"severity":"Info","message":"m","source":"s","data":{},"tags":[]}"#;
+        assert!(serde_json::from_str::<Event>(j).is_err());
+    }
+}

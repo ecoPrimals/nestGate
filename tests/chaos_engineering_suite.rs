@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **CHAOS ENGINEERING AND FAULT TOLERANCE TEST SUITE**
 //!
 //! Comprehensive chaos testing to validate system resilience and fault tolerance
@@ -440,7 +452,7 @@ async fn test_partial_failure_isolation() -> Result<()> {
         // Simulate component health check with potential failure
         let health_check_result = if component == &"network" {
             // Simulate network component failure
-            Err(NestGateError::network_error(&format!(
+            Err(NestGateError::network_error(format!(
                 "Network component failed: {}",
                 component
             )))

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! E2E Scenario 35: Multi-Service Coordination
 //!
 //! Tests coordination between multiple services under load

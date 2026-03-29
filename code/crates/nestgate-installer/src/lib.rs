@@ -1,6 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp,
+        clippy::uninlined_format_args,
+        clippy::cast_precision_loss,
+        clippy::items_after_statements,
+    )
+)]
+#![allow(
+    deprecated,
+    missing_docs,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::doc_markdown,
+    clippy::module_name_repetitions,
+    clippy::struct_excessive_bools,
+    clippy::no_effect_underscore_binding,
+    clippy::manual_string_new,
+    clippy::case_sensitive_file_extension_comparisons,
+    clippy::needless_pass_by_value,
+    clippy::unnecessary_debug_formatting,
+    clippy::unused_async,
+    clippy::needless_pass_by_ref_mut,
+    clippy::redundant_clone,
+    clippy::unnecessary_wraps,
+    dead_code,
+    clippy::struct_field_names,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::too_many_lines
+)]
+
 //
 // **Cross-platform installation and configuration system for NestGate**
 //

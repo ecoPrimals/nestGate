@@ -126,18 +126,21 @@ pub mod network {
         note = "Use ServiceRegistry for capability-based discovery or require explicit environment configuration. Hardcoded localhost fallback will be removed."
     )]
     #[must_use]
+    #[allow(deprecated)]
     pub fn build_api_url() -> String {
         safe_env_var_or_default("NESTGATE_API_URL", DEFAULT_API_BASE_URL)
     }
 
     /// Build WebSocket URL from environment or default
     #[must_use]
+    #[allow(deprecated)]
     pub fn build_websocket_url() -> String {
         safe_env_var_or_default("NESTGATE_WS_URL", DEFAULT_WEBSOCKET_URL)
     }
 
     /// Build metrics URL from environment or default
     #[must_use]
+    #[allow(deprecated)]
     pub fn build_metrics_url() -> String {
         safe_env_var_or_default("NESTGATE_METRICS_URL", DEFAULT_METRICS_URL)
     }

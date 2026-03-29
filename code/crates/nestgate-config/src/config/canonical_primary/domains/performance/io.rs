@@ -94,8 +94,8 @@ impl IoPerformanceConfig {
             return Err(NestGateError::configuration_error_detailed(
                 "io.buffering.buffer_size".to_string(),
                 "Buffer size cannot be zero".to_string(),
-                Some("0".to_string()),
-                Some(">0".to_string()),
+                Some("0".into()),
+                Some(">0".into()),
                 true,
             ));
         }

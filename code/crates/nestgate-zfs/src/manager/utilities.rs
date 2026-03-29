@@ -197,3 +197,71 @@ impl ZfsManager {
         Some(f64_to_u64_saturating(number * multiplier as f64))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::manager::ZfsManager;
+
+    #[tokio::test]
+    async fn calculate_system_utilization_empty_pools_returns_zero() {
+        let m = ZfsManager::mock();
+        let u = m
+            ._calculate_system_utilization()
+            .await
+            .expect("utilization");
+        assert_eq!(u, 0.0);
+    }
+
+    #[test]
+    fn parse_capacity_line_extracts_allocated_and_used() {
+        let m = ZfsManager::mock();
+        let line = "1.23T allocated, 456G used, 789G available";
+        let cap = m._parse_capacity_line(line).expect("parsed");
+        assert!(cap.total_bytes > 0);
+        assert!(cap.used_bytes > 0);
+    }
+
+    #[test]
+    fn parse_capacity_line_returns_none_when_no_sizes() {
+        let m = ZfsManager::mock();
+        assert!(
+            m._parse_capacity_line("allocated, used, available")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn parse_capacity_from_status_prefers_combined_line() {
+        let m = ZfsManager::mock();
+        let status = "header\npool: 2.0T allocated, 100G used, 1.9T available\n";
+        let cap = m
+            ._parse_capacity_from_status(status)
+            .expect("some capacity");
+        assert!(cap.total_bytes > 0);
+    }
+
+    #[test]
+    fn parse_capacity_from_status_fallback_size_lines() {
+        let m = ZfsManager::mock();
+        let status = "size: 10M\nallocated: 1000000\n";
+        let cap = m._parse_capacity_from_status(status).expect("fallback");
+        assert_eq!(cap.total_bytes, 10 * 1024 * 1024);
+    }
+
+    #[test]
+    fn parse_sizevalue_reads_suffix_after_colon() {
+        let m = ZfsManager::mock();
+        assert_eq!(m._parse_sizevalue("size: 512K"), Some(512 * 1024));
+    }
+
+    #[test]
+    fn parse_size_from_segment_supports_units() {
+        let m = ZfsManager::mock();
+        assert_eq!(
+            m._parse_size_from_segment("2G extra"),
+            Some(2 * 1024 * 1024 * 1024)
+        );
+        assert_eq!(m._parse_size_from_segment("100"), Some(100));
+        assert_eq!(m._parse_size_from_segment(""), None);
+    }
+}

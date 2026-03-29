@@ -4,6 +4,7 @@
 //! Dynamic Endpoints module
 
 use dashmap::DashMap;
+use nestgate_config::constants::{get_api_port, get_health_port, get_metrics_port};
 use nestgate_types::error::Result;
 use nestgate_types::error::utilities::safe_env_var_or_default;
 
@@ -122,15 +123,15 @@ impl DynamicEndpointResolver {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn resolve_endpoint(&self, service_type: &str) -> Result<String> {
+    pub fn resolve_endpoint(&self, service_type: &str) -> Result<String> {
         // 1. Check cache first
-        if let Some(cached) = self.get_cached_endpoint(service_type).await {
+        if let Some(cached) = self.get_cached_endpoint(service_type) {
             return Ok(cached);
         }
 
         // 2. Check configuration for endpoint override (NO ENV VAR ACCESS!)
         if let Some(endpoint) = self.config.get_endpoint(service_type) {
-            self.cache_endpoint(service_type, endpoint).await;
+            self.cache_endpoint(service_type, endpoint);
             return Ok(endpoint.to_string());
         }
 
@@ -141,26 +142,26 @@ impl DynamicEndpointResolver {
         }
 
         // 4. Dynamic port allocation (no hardcoded ports)
-        let endpoint = self.allocate_dynamic_endpoint(service_type).await?;
-        self.cache_endpoint(service_type, &endpoint).await;
+        let endpoint = self.allocate_dynamic_endpoint(service_type);
+        self.cache_endpoint(service_type, &endpoint);
         Ok(endpoint)
     }
 
     /// Get cached endpoint (lock-free read)
-    async fn get_cached_endpoint(&self, service_type: &str) -> Option<String> {
+    fn get_cached_endpoint(&self, service_type: &str) -> Option<String> {
         self.endpoint_cache
             .get(service_type)
             .map(|entry| entry.value().clone())
     }
 
     /// Cache endpoint for future use (lock-free write)
-    async fn cache_endpoint(&self, service_type: &str, endpoint: &str) {
+    fn cache_endpoint(&self, service_type: &str, endpoint: &str) {
         self.endpoint_cache
             .insert(service_type.to_string(), endpoint.to_string());
     }
 
     /// Allocate dynamic endpoint (no hardcoded localhost)
-    async fn allocate_dynamic_endpoint(&self, service_type: &str) -> Result<String> {
+    fn allocate_dynamic_endpoint(&self, service_type: &str) -> String {
         // Get hostname from environment or use canonical default
         let hostname = safe_env_var_or_default(
             "NESTGATE_HOSTNAME",
@@ -176,7 +177,7 @@ impl DynamicEndpointResolver {
             _ => "http",
         };
 
-        Ok(format!("{protocol}://{hostname}:{port}"))
+        format!("{protocol}://{hostname}:{port}")
     }
 
     /// Get service port (with dynamic allocation)
@@ -203,7 +204,6 @@ impl DynamicEndpointResolver {
 
         // Production port allocation based on service type
         // ✅ MIGRATED: Now uses environment-driven functions instead of constants
-        use nestgate_config::constants::{get_api_port, get_health_port, get_metrics_port};
         let api_port = get_api_port();
         let metrics_port = get_metrics_port();
         let health_port = get_health_port();
@@ -217,18 +217,20 @@ impl DynamicEndpointResolver {
             }
             _ => {
                 // Dynamic port allocation for unknown services
-                api_port + (service_type.len() % 100) as u16
+                api_port
+                    .saturating_add(u16::try_from(service_type.len().rem_euclid(100)).unwrap_or(0))
             }
         }
     }
 
     /// Clear endpoint cache (lock-free clear)
-    pub async fn clear_cache(&self) {
+    pub fn clear_cache(&self) {
         self.endpoint_cache.clear();
     }
 
     /// Get all cached endpoints (for debugging, lock-free iteration)
-    pub async fn get_cached_endpoints(&self) -> HashMap<String, String> {
+    #[must_use]
+    pub fn get_cached_endpoints(&self) -> HashMap<String, String> {
         self.endpoint_cache
             .iter()
             .map(|entry| (entry.key().clone(), entry.value().clone()))
@@ -256,7 +258,7 @@ pub async fn global_resolver() -> &'static DynamicEndpointResolver {
 
 /// Convenience function to resolve service endpoint
 pub async fn resolve_service_endpoint(service_type: &str) -> Result<String> {
-    global_resolver().await.resolve_endpoint(service_type).await
+    global_resolver().await.resolve_endpoint(service_type)
 }
 
 #[cfg(test)]
@@ -268,17 +270,13 @@ mod tests {
         let resolver = DynamicEndpointResolver::new();
 
         // Test API endpoint resolution
-        let api_endpoint = resolver
-            .resolve_endpoint("api")
-            .await
-            .expect("Operation failed");
+        let api_endpoint = resolver.resolve_endpoint("api").expect("Operation failed");
         assert!(api_endpoint.starts_with("http://"));
         assert!(!api_endpoint.contains("hardcoded"));
 
         // Test WebSocket endpoint resolution
         let ws_endpoint = resolver
             .resolve_endpoint("websocket")
-            .await
             .expect("Operation failed");
         assert!(ws_endpoint.starts_with("ws://"));
     }
@@ -293,10 +291,7 @@ mod tests {
         );
 
         let resolver = DynamicEndpointResolver::new();
-        let endpoint = resolver
-            .resolve_endpoint("api")
-            .await
-            .expect("Operation failed");
+        let endpoint = resolver.resolve_endpoint("api").expect("Operation failed");
 
         assert_eq!(endpoint, format!("http://custom-api:{}", test_port));
 
@@ -311,19 +306,17 @@ mod tests {
         // First resolution
         let endpoint1 = resolver
             .resolve_endpoint("test_service")
-            .await
             .expect("Operation failed");
 
         // Second resolution should use cache
         let endpoint2 = resolver
             .resolve_endpoint("test_service")
-            .await
             .expect("Operation failed");
 
         assert_eq!(endpoint1, endpoint2);
 
         // Verify it's in cache
-        let cached = resolver.get_cached_endpoints().await;
+        let cached = resolver.get_cached_endpoints();
         assert!(cached.contains_key("test_service"));
     }
 
@@ -334,7 +327,6 @@ mod tests {
         for service in &["api", "websocket", "metrics", "health", "admin"] {
             let endpoint = resolver
                 .resolve_endpoint(service)
-                .await
                 .expect("Operation failed");
 
             // Should not contain specific hardcoded port numbers

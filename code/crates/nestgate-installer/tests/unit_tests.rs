@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(
+    missing_docs,
+    clippy::unnecessary_wraps,
+    clippy::no_effect_underscore_binding
+)]
+
 //
 // **Comprehensive unit tests for the NestGate installation system**
 //
@@ -53,7 +59,6 @@
 // }
 // ```
 
-#[cfg(test)]
 // Basic installer tests
 #[test]
 fn test_installer_basic() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -89,7 +94,6 @@ fn it_works() {
     // Test that the installer object has valid platform info
     if let Ok(installer) = installer_result {
         // Just verify the installer was created successfully
-        // We can't access private methods, so we'll test public interface once it exists
-        let _installer = installer; // Use the installer variable to avoid warnings
+        std::mem::drop(installer);
     }
 }

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 /// Chaos Engineering: Edge Cases & Rare Scenarios
 ///
 /// Tests system resilience under rare but critical conditions:

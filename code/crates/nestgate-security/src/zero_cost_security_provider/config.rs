@@ -167,6 +167,7 @@ impl ZeroCostSecurityConfig {
 
 /// **Authentication configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(clippy::struct_excessive_bools)]
 /// Configuration for Authentication
 pub struct AuthenticationConfig {
     /// Enable password authentication
@@ -280,7 +281,7 @@ mod tests {
         assert!(config.validate().is_ok());
 
         let invalid_config = ZeroCostSecurityConfig {
-            provider_id: "".to_string(),
+            provider_id: String::new(),
             ..Default::default()
         };
         assert!(invalid_config.validate().is_err());

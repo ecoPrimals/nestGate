@@ -62,7 +62,11 @@ pub struct HealthChecker {
 }
 /// Trait for components that can provide health information
 pub trait HealthCheckProvider {
-    /// Perform health check for this component
+    /// Perform health check for this component.
+    ///
+    /// # Errors
+    ///
+    /// Returns when the check cannot produce a [`ComponentHealth`] snapshot.
     fn check_health(&self) -> Result<ComponentHealth>;
     /// Get component name
     fn component_name(&self) -> &str;
@@ -78,7 +82,7 @@ impl HealthChecker {
     }
 
     /// Register a health check provider (lock-free)
-    pub async fn register_provider(
+    pub fn register_provider(
         &self,
         name: String,
         provider: Box<dyn HealthCheckProvider + Send + Sync>,
@@ -94,7 +98,7 @@ impl HealthChecker {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn run_health_checks(&self) -> Result<SystemHealth> {
+    pub fn run_health_checks(&self) -> Result<SystemHealth> {
         let mut component_health = HashMap::new();
         let mut healthy_count = 0;
         let mut total_count = 0;
@@ -158,8 +162,8 @@ impl HealthChecker {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn get_system_health(&self) -> Result<SystemHealth> {
-        self.run_health_checks().await
+    pub fn get_system_health(&self) -> Result<SystemHealth> {
+        self.run_health_checks()
     }
 }
 
@@ -232,30 +236,26 @@ mod tests {
         let checker = HealthChecker::new();
 
         // Add healthy component
-        checker
-            .register_provider(
-                "test1".to_string(),
-                Box::new(MockHealthProvider {
-                    name: "test1".to_string(),
-                    status: HealthStatus::Healthy,
-                }),
-            )
-            .await;
+        checker.register_provider(
+            "test1".to_string(),
+            Box::new(MockHealthProvider {
+                name: "test1".to_string(),
+                status: HealthStatus::Healthy,
+            }),
+        );
 
         // Add unhealthy component
-        checker
-            .register_provider(
-                "test2".to_string(),
-                Box::new(MockHealthProvider {
-                    name: "test2".to_string(),
-                    status: HealthStatus::Unhealthy,
-                }),
-            )
-            .await;
+        checker.register_provider(
+            "test2".to_string(),
+            Box::new(MockHealthProvider {
+                name: "test2".to_string(),
+                status: HealthStatus::Unhealthy,
+            }),
+        );
 
-        let health = checker.get_system_health().await?;
+        let health = checker.get_system_health()?;
         assert_eq!(health.overall_status, HealthStatus::Warning);
-        assert_eq!(health.health_score, 0.5);
+        assert!((health.health_score - 0.5).abs() < f64::EPSILON);
         assert_eq!(health.components.len(), 2);
         Ok(())
     }

@@ -69,6 +69,7 @@ use crate::zero_cost_security_provider::{ZeroCostCredentials, ZeroCostSignature}
 // Import the trait from the dedicated traits module
 use crate::Result;
 use crate::zero_cost_security_provider::traits::ZeroCostSecurityProvider;
+use std::collections::HashMap;
 // Removed unused import: use std::future::Future;
 
 // ==================== SECURITY PRIMAL ADAPTER ====================
@@ -257,7 +258,7 @@ impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn Sec
         Ok(ProviderHealth {
             status: crate::traits::canonical_provider_unification::HealthStatus::Healthy,
             checked_at: std::time::SystemTime::now(),
-            details: Default::default(),
+            details: HashMap::default(),
             metrics: crate::traits::canonical_provider_unification::ProviderMetrics {
                 requests_total: 0,
                 requests_successful: 0,
@@ -284,7 +285,7 @@ impl<T: SecurityPrimalProvider + 'static> CanonicalUniversalProvider<Box<dyn Sec
             operations: vec!["authenticate".to_string(), "encrypt".to_string()],
             max_concurrent: None,
             protocols: vec![],
-            features: Default::default(),
+            features: HashMap::default(),
         })
     }
 
@@ -510,7 +511,7 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
         Ok(ProviderHealth {
             status: crate::traits::canonical_provider_unification::HealthStatus::Healthy,
             checked_at: std::time::SystemTime::now(),
-            details: Default::default(),
+            details: HashMap::default(),
             metrics: crate::traits::canonical_provider_unification::ProviderMetrics {
                 requests_total: 0,
                 requests_successful: 0,
@@ -541,7 +542,7 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
             ],
             max_concurrent: None,
             protocols: vec![],
-            features: Default::default(),
+            features: HashMap::default(),
         })
     }
 

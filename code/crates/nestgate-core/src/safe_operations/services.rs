@@ -5,6 +5,7 @@
 
 use crate::Result;
 use crate::error::NestGateError;
+use tracing::warn;
 
 /// Safely call a service operation with error handling
 pub fn safe_service_call<T, F>(operation_name: &str, operation: F) -> Result<T>
@@ -14,7 +15,7 @@ where
     match operation() {
         Ok(result) => Ok(result),
         Err(e) => {
-            eprintln!("Service operation '{operation_name}' failed: {e}");
+            warn!(operation = operation_name, "Service operation failed: {e}");
             Err(e)
         }
     }

@@ -249,7 +249,7 @@ mod security_types_coverage_tests {
 
     #[test]
     fn test_signature_very_long_data() {
-        let long_data = "a".repeat(100000);
+        let long_data = "a".repeat(100_000);
         let sig = ZeroCostSignature::new(
             "ECDSA-P256".to_string(),
             long_data.clone(),
@@ -376,7 +376,7 @@ mod security_types_coverage_tests {
 
     #[test]
     fn test_auth_method_default() {
-        let method: AuthMethod = Default::default();
+        let method = AuthMethod::default();
         assert_eq!(method, AuthMethod::Password);
     }
 

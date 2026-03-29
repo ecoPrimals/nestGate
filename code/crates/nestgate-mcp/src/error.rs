@@ -15,9 +15,9 @@ use std::time::SystemTime;
 #[must_use]
 pub fn mcp_connection_error(message: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message: format!("MCP Connection Error: {message}"),
-        component: "nestgate-mcp".to_string(),
-        location: Some("connection".to_string()),
+        message: format!("MCP Connection Error: {message}").into(),
+        component: "nestgate-mcp".into(),
+        location: Some("connection".into()),
         is_bug: false,
         context: None,
     }))
@@ -26,9 +26,9 @@ pub fn mcp_connection_error(message: &str) -> NestGateError {
 /// Protocol Error
 pub fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message: format!("MCP Protocol Error: {message} (method: {method:?})"),
-        component: "nestgate-mcp".to_string(),
-        location: method.map(std::string::ToString::to_string),
+        message: format!("MCP Protocol Error: {message} (method: {method:?})").into(),
+        component: "nestgate-mcp".into(),
+        location: method.map(|m| m.to_string().into()),
         is_bug: false,
         context: None,
     }))
@@ -37,9 +37,9 @@ pub fn protocol_error(message: &str, method: Option<&str>) -> NestGateError {
 #[must_use]
 pub fn method_error(message: &str, method: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message: format!("MCP Method Error: {message} (method: {method})"),
-        component: "nestgate-mcp".to_string(),
-        location: Some(method.to_string()),
+        message: format!("MCP Method Error: {message} (method: {method})").into(),
+        component: "nestgate-mcp".into(),
+        location: Some(method.to_string().into()),
         is_bug: false,
         context: None,
     }))
@@ -48,9 +48,9 @@ pub fn method_error(message: &str, method: &str) -> NestGateError {
 #[must_use]
 pub fn session_error(message: &str, session_id: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message: format!("MCP Session Error: {message} (session: {session_id})"),
-        component: "nestgate-mcp".to_string(),
-        location: Some(session_id.to_string()),
+        message: format!("MCP Session Error: {message} (session: {session_id})").into(),
+        component: "nestgate-mcp".into(),
+        location: Some(session_id.to_string().into()),
         is_bug: false,
         context: None,
     }))
@@ -59,9 +59,9 @@ pub fn session_error(message: &str, session_id: &str) -> NestGateError {
 #[must_use]
 pub fn serialization_error(message: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message: format!("MCP Serialization Error: {message}"),
-        component: "nestgate-mcp".to_string(),
-        location: Some("serialization".to_string()),
+        message: format!("MCP Serialization Error: {message}").into(),
+        component: "nestgate-mcp".into(),
+        location: Some("serialization".into()),
         is_bug: false,
         context: None,
     }))
@@ -70,8 +70,8 @@ pub fn serialization_error(message: &str) -> NestGateError {
 #[must_use]
 pub fn transport_error(message: &str) -> NestGateError {
     NestGateError::External(Box::new(ExternalErrorDetails {
-        message: format!("MCP Transport Error: {message}"),
-        service: "mcp-transport".to_string(),
+        message: format!("MCP Transport Error: {message}").into(),
+        service: "mcp-transport".into(),
         retryable: true,
         context: None,
     }))
@@ -91,10 +91,10 @@ impl McpErrorExt for NestGateError {
     /// Extract Mcp Context
     fn extract_mcp_context(&self) -> Option<String> {
         match self {
-            Self::Internal(details) if details.component == "nestgate-mcp" => {
+            Self::Internal(details) if details.component.as_ref() == "nestgate-mcp" => {
                 Some("MCP operation".to_string())
             }
-            Self::External(details) if details.service == "mcp-transport" => {
+            Self::External(details) if details.service.as_ref() == "mcp-transport" => {
                 Some("MCP transport".to_string())
             }
             _ => None,
@@ -104,7 +104,7 @@ impl McpErrorExt for NestGateError {
     /// Extract Session Id
     fn extract_session_id(&self) -> Option<String> {
         match self {
-            Self::Internal(details) => details.location.clone(),
+            Self::Internal(details) => details.location.as_ref().map(ToString::to_string),
             _ => None,
         }
     }
@@ -112,7 +112,7 @@ impl McpErrorExt for NestGateError {
     /// Extract Method
     fn extract_method(&self) -> Option<String> {
         match self {
-            Self::Internal(details) => details.location.clone(),
+            Self::Internal(details) => details.location.as_ref().map(ToString::to_string),
             _ => None,
         }
     }

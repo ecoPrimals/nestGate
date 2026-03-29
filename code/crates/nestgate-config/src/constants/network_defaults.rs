@@ -119,7 +119,9 @@ pub fn is_production() -> bool {
 )]
 #[must_use]
 pub fn is_development() -> bool {
-    !is_production()
+    std::env::var("NESTGATE_ENVIRONMENT")
+        .map(|v| v != "production")
+        .unwrap_or(true)
 }
 
 // ==================== TESTS ====================

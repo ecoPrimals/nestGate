@@ -274,9 +274,9 @@ mod tests {
         let factory = || -> crate::error::Result<MockConnection> {
             use crate::error::variants::core_errors::InternalErrorDetails;
             Err(NestGateError::Internal(Box::new(InternalErrorDetails {
-                message: "Factory error".to_string(),
-                component: "test".to_string(),
-                location: Some("connection_pool_tests".to_string()),
+                message: "Factory error".into(),
+                component: "test".into(),
+                location: Some("connection_pool_tests".into()),
                 is_bug: false,
                 context: None,
             })))

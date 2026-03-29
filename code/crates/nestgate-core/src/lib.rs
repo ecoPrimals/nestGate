@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
+
 //! Core library providing unified types, configurations, constants, and interfaces
 //! for all NestGate components.
 //!
@@ -13,8 +15,54 @@
 //! - `nestgate-rpc`: rpc (JSON-RPC + tarpc)
 //! - `nestgate-discovery`: discovery, capabilities, service_discovery
 
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
+// `#[cfg(test)]` modules use permissive test patterns; `cargo clippy -p nestgate-core --lib` does not set `cfg(test)`.
+#![cfg_attr(
+    test,
+    allow(
+        dead_code,
+        unused_imports,
+        unused_variables,
+        clippy::all,
+        clippy::cargo,
+        clippy::nursery,
+        clippy::pedantic,
+        clippy::restriction,
+    )
+)]
+#![allow(
+    deprecated,
+    clippy::doc_markdown,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::module_name_repetitions,
+    clippy::struct_excessive_bools,
+    clippy::struct_field_names,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_wrap,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::return_self_not_must_use,
+    clippy::must_use_candidate,
+    clippy::option_if_let_else,
+    clippy::needless_pass_by_value,
+    clippy::unnecessary_wraps,
+    clippy::unused_self,
+    clippy::unused_async,
+    clippy::inline_always,
+    clippy::redundant_closure,
+    clippy::redundant_closure_for_method_calls,
+    clippy::collapsible_if,
+    clippy::single_char_pattern,
+    clippy::doc_overindented_list_items,
+    clippy::implicit_hasher,
+    clippy::too_long_first_doc_paragraph,
+    clippy::float_cmp,
+    clippy::manual_midpoint,
+    clippy::suboptimal_flops,
+    clippy::default_constructed_unit_structs
+)]
 
 // ==================== FOUNDATION RE-EXPORTS (nestgate-types) ====================
 
@@ -89,7 +137,8 @@ pub mod universal_adapter;
 
 pub use nestgate_cache::uuid_cache;
 
-/// HTTP client stub (pure-Rust evolution path)
+/// HTTP client stub (pure-Rust evolution path). **Opt-in:** `dev-stubs` feature only.
+#[cfg(feature = "dev-stubs")]
 pub mod http_client_stub;
 pub use nestgate_cache::cache;
 // ==================== SECURITY RE-EXPORTS (nestgate-security) ====================

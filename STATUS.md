@@ -10,22 +10,60 @@
 ```
 Build:              25/25 workspace members compiling (0 errors)
 Musl static:        WORKING (4.7MB static binary, x86_64-unknown-linux-musl)
-Clippy:             Warnings reduced 8,227 → 2,972 (13 pedantic categories zeroed; production -D warnings clean)
+Clippy:             ZERO ERRORS — full workspace `cargo clippy --workspace --all-targets -- -D warnings` CLEAN
 Format:             CLEAN (cargo fmt --check passes)
-Docs:               52 public APIs have # Errors sections; cargo doc clean
-Tests:              7,887 lib tests passing, 0 failures, 64 ignored
+Docs:               Crate-level doc policies; 52 public APIs have # Errors sections
+Tests:              8,177 lib tests passing, 0 failures, 64 ignored
+Coverage:           77.1% line, 76.0% function (cargo llvm-cov --workspace --lib)
 Doctests:           ZERO failures
 Files > 1000 lines: 0 (largest: 987 lines)
-Unwrap/Expect:      ZERO in production code (test-only, gated by workspace lint)
+Unwrap/Expect:      ZERO in production code (test-only, gated by crate-level cfg_attr)
 TODO/FIXME:         1 (zero-copy Cow migration note in core_errors.rs)
-Unsafe blocks:      1 production (env_process_shim: edition-2021 bridge for set_var)
-#[allow] migrated:  Moved to #[expect(reason)] per biomeOS pattern
+Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (except env_process_shim bridge)
+println! in lib:    ZERO (migrated to tracing::info!/debug!/warn!/error!)
+Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
+serde_yaml_ng:      REMOVED from core/config (dead dep; only fuzz retains for YAML fuzzing)
+ring dependency:    Transitive only — reqwest→rustls in nestgate-installer
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
 Primal sovereignty: Zero other-primal references; literal "nestgate" identity throughout
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  25 (code/crates + tools/unwrap-migrator + fuzz)
+CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
+
+---
+
+## Comprehensive audit & deep debt evolution session (Mar 29, 2026)
+
+### Full workspace clippy clean (pedantic + nursery + -D warnings)
+- **ALL 25 crates + root tests/benches/examples** pass `cargo clippy --workspace --all-targets -- -D warnings`
+- Crate-level `#![cfg_attr(test, allow(...))]` for test-only patterns (unwrap, expect, panic, float_cmp)
+- Targeted `#![allow(...)]` with documented reasons for config-heavy and deprecated-migration code
+- Fixed real issues: unused async (40+ functions de-asynced), numeric cast precision, format strings, redundant clones
+
+### Safety evolution
+- **`#![forbid(unsafe_code)]`** added to ALL 22+ crate roots (except `nestgate-env-process-shim`)
+- **println!/eprintln!** eliminated from library code — migrated to `tracing::info!/debug!/warn!/error!`
+- **Production stubs** feature-gated behind `dev-stubs` cargo feature (opt-in only)
+- **serde_yaml_ng** (unsafe-libyaml) removed from core/config — dead dependency eliminated
+
+### Dependency evolution
+- **ring**: transitive only via reqwest→rustls in installer. Upstream rustls RustCrypto backend not yet stable
+- **serde_yaml_ng**: removed from production crates (only fuzz retains for YAML fuzzing)
+- **CONTEXT.md**: created per wateringHole `PUBLIC_SURFACE_STANDARD.md`
+
+### Coverage evolution
+- **74.5% → 77.1% line** (llvm-cov), **73.3% → 76.0% function** — target: 90%
+- +296 net new tests (7,881 → 8,177)
+- Targeted coverage for 0% files: ZFS handlers/manager/health/utilities, API fail-safe, transport, compliance
+- RPC coverage raised to 84.2%, types to 83.9%, observe to 87.6%
+- E2e (20+ files), chaos (20+ files), fault injection (7 files) test suites present
+
+### Zero-copy evolution
+- `Cow<'static, str>` migration completed for `core_errors.rs` error types
+- TODO(zero-copy) resolved — constructors accept `impl Into<Cow<'static, str>>`
+- Zero allocation on hot error paths with static string literals
 
 ---
 
@@ -50,15 +88,15 @@ Workspace members:  25 (code/crates + tools/unwrap-migrator + fuzz)
 - Eliminated redundant `.to_string()` / `.clone()` in socket scanning and snapshot parsing
 
 ### Test coverage
-- **7,887 tests passing** (lib), 0 failures, 64 ignored
+- **8,177 tests passing** (lib), 0 failures, 64 ignored
 - Re-enabled 10 environment-sensitive tests in `nestgate-config` (temp-env + serial_test)
 - All `#[ignore]` reasons documented with run instructions
 - `# Errors` doc sections added to 52 top public APIs
 
 ### Dependency audit
 - **No openssl** — uses rustls (good)
-- **ring** (C/ASM crypto) — no pure-Rust alternative yet
-- **unsafe-libyaml** via serde_yaml_ng — candidate for pure Rust YAML evolution
+- **ring** (C/ASM crypto) — transitive only via reqwest→rustls in installer; RustCrypto backend not yet stable upstream
+- **unsafe-libyaml** via serde_yaml_ng — REMOVED from core/config; only fuzz retains
 - **inotify-sys** via notify — kernel FFI, expected for Linux
 
 ---

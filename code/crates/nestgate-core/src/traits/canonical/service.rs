@@ -61,6 +61,7 @@ pub trait CanonicalService: Send + Sync + 'static {
     // ==================== ADDITIONAL SERVICE METHODS ====================
 
     /// Get service identifier - PEDANTIC ADDITION
+    #[allow(clippy::unnecessary_literal_bound)] // Default is static; impls may return `&self`-backed ids
     fn service_id(&self) -> &str {
         "unknown"
     }

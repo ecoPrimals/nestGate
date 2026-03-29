@@ -55,8 +55,7 @@ use nestgate_types::error::{NestGateError, Result};
 fn unix_timestamp_secs() -> i64 {
     SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
-        .map(|d| d.as_secs() as i64)
-        .unwrap_or(0)
+        .map_or(0, |d| i64::try_from(d.as_secs()).unwrap_or(i64::MAX))
 }
 
 #[inline]
@@ -64,12 +63,14 @@ fn byte_len_u64(len: usize) -> u64 {
     u64::try_from(len).unwrap_or(u64::MAX)
 }
 
+type StoredObjectPayload = (Vec<u8>, HashMap<String, String>);
+
 /// In-process dataset/object store (replaces `nestgate-core` `StorageManagerService` until wired).
 #[derive(Default)]
-struct InnerStore {
+pub(crate) struct InnerStore {
     datasets: HashMap<String, DatasetInfo>,
     /// (dataset, key) → raw bytes + user metadata
-    objects: HashMap<(String, String), (Vec<u8>, HashMap<String, String>)>,
+    objects: HashMap<(String, String), StoredObjectPayload>,
 }
 
 /// `NestGate` RPC service implementation.
@@ -104,35 +105,6 @@ impl NestGateRpcService {
     /// Get uptime in seconds
     fn uptime_seconds(&self) -> u64 {
         self.start_time.elapsed().unwrap_or_default().as_secs()
-    }
-
-    /// Convert `NestGateError` to `NestGateRpcError`
-    fn convert_error(err: NestGateError) -> NestGateRpcError {
-        // Simple conversion: wrap error message in InternalError
-        // Can enhance later with pattern matching on error types
-        let message = err.to_string();
-
-        // Try to infer specific error types from message
-        if message.contains("not found") || message.contains("Not found") {
-            if message.contains("dataset") {
-                NestGateRpcError::DatasetNotFound {
-                    dataset: "unknown".to_string(),
-                }
-            } else if message.contains("object") {
-                NestGateRpcError::ObjectNotFound {
-                    dataset: "unknown".to_string(),
-                    key: "unknown".to_string(),
-                }
-            } else {
-                NestGateRpcError::InternalError { message }
-            }
-        } else if message.contains("already exists") || message.contains("Already exists") {
-            NestGateRpcError::DatasetAlreadyExists {
-                dataset: "unknown".to_string(),
-            }
-        } else {
-            NestGateRpcError::InternalError { message }
-        }
     }
 
     /// Calculate storage metrics from in-memory store.
@@ -430,9 +402,7 @@ impl NestGateRpc for NestGateRpcService {
             &registration.capability,
             endpoint,
             std::time::Duration::from_secs(60),
-        )
-        .await
-        {
+        ) {
             Ok(()) => {
                 info!(
                     "✅ Capability '{}' registered successfully",
@@ -474,9 +444,7 @@ impl NestGateRpc for NestGateRpcService {
             &capability,
             &env_var,
             &discovery_default,
-        )
-        .await
-        {
+        ) {
             Ok(se) => se,
             Err(e) => {
                 warn!("discover_capability: {}", e);
@@ -607,7 +575,7 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
     let listener =
         tarpc::serde_transport::tcp::listen(addr, tokio_serde::formats::Bincode::default)
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Failed to bind to {addr}: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to bind to {addr}: {e}")))?;
 
     info!("✅ NestGate tarpc server listening on {}", addr);
 
@@ -637,6 +605,7 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     async fn create_test_service() -> Result<NestGateRpcService> {

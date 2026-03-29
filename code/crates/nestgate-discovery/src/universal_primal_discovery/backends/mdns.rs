@@ -411,26 +411,26 @@ impl MdnsDiscoveryBackend {
         if !resolved.is_valid() {
             return None;
         }
-        let id_str = resolved
+        let primal_id_txt = resolved
             .txt_properties
             .get_property_val_str("id")
             .map(std::string::ToString::to_string)?;
-        let id = PrimalId::from_string(id_str);
+        let id = PrimalId::from_string(primal_id_txt);
 
         let port = resolved.port;
         let addr = resolved.addresses.iter().next().and_then(|scoped| {
             let s = scoped.to_string();
             // IPv6 link-local may have scope: "fe80::1%eth0" -> strip after %
-            let ip_str = s.split('%').next().unwrap_or(&s);
-            ip_str.trim().parse::<IpAddr>().ok()
+            let host_literal = s.split('%').next().unwrap_or(&s);
+            host_literal.trim().parse::<IpAddr>().ok()
         })?;
         let socket_addr = SocketAddr::new(addr, port);
 
         let mut capabilities = Vec::new();
         if let Some(cap_str) = resolved.txt_properties.get_property_val_str("cap") {
-            for part in cap_str.split(',') {
-                let part = part.trim();
-                if let Some(cap) = Self::parse_capability_str(part) {
+            for raw_cap in cap_str.split(',') {
+                let cap_token = raw_cap.trim();
+                if let Some(cap) = Self::parse_capability_str(cap_token) {
                     capabilities.push(cap);
                 }
             }

@@ -91,14 +91,12 @@ pub trait UnifiedStorage: Send + Sync + std::fmt::Debug + 'static {
     // ==================== BATCH OPERATIONS ====================
 
     /// Batch read multiple items - native async
-    #[expect(clippy::type_complexity, reason = "complex trait bounds required")]
     fn batch_read(
         &self,
         keys: &[Self::Key],
     ) -> impl Future<Output = Result<Vec<Option<Self::Item>>>> + Send;
 
     /// Batch write multiple items - native async
-    #[expect(clippy::type_complexity, reason = "complex trait bounds required")]
     fn batch_write(
         &self,
         items: Vec<(Self::Key, Self::Item)>,

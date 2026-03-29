@@ -82,11 +82,13 @@ impl StorageState {
     }
 }
 
+/// JSON-RPC handler that serves the isomorphic IPC Unix path with in-memory stub storage.
 pub struct UnixSocketRpcHandler {
     state: Arc<StorageState>,
 }
 
 impl UnixSocketRpcHandler {
+    /// Builds a handler with empty in-memory datasets and stub template/audit backends.
     pub fn new() -> Result<Self> {
         let state = Arc::new(StorageState::new()?);
         Ok(Self { state })
@@ -187,6 +189,7 @@ impl UnixSocketRpcHandler {
         Ok(json!({"status": "stored", "key": key}))
     }
 
+    #[allow(clippy::option_if_let_else)] // Match mirrors JSON success vs empty KV branch clearly.
     async fn handle_storage_retrieve(
         &self,
         request: &JsonRpcRequest,
@@ -318,6 +321,7 @@ impl RpcHandler for UnixSocketRpcHandler {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[tokio::test]

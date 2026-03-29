@@ -10,8 +10,7 @@ use std::time::Duration;
 async fn test_mdns_discovery_creation() {
     let discovery = DiscoveryBuilder::new()
         .with_timeout(Duration::from_secs(10))
-        .build_mdns()
-        .await;
+        .build_mdns();
 
     assert!(discovery.is_ok());
     let discovery = discovery.unwrap();
@@ -30,7 +29,7 @@ async fn test_auto_detect_defaults_to_mdns() {
 
 #[tokio::test]
 async fn test_mdns_announce_and_find() {
-    let discovery = DiscoveryBuilder::new().build_mdns().await.unwrap();
+    let discovery = DiscoveryBuilder::new().build_mdns().unwrap();
 
     // Create and announce a service
     let self_knowledge = SelfKnowledge::builder()

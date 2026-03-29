@@ -68,8 +68,8 @@ mod tests {
     fn test_support_scopes_env_var() {
         with_var("NESTGATE_ENV_PROCESS_TEST_VAR", Some("scoped"), || {
             assert_eq!(
-                std::env::var("NESTGATE_ENV_PROCESS_TEST_VAR").unwrap(),
-                "scoped"
+                std::env::var("NESTGATE_ENV_PROCESS_TEST_VAR"),
+                Ok("scoped".to_owned())
             );
         });
         assert!(std::env::var("NESTGATE_ENV_PROCESS_TEST_VAR").is_err());
@@ -79,7 +79,7 @@ mod tests {
     fn set_var_logs_and_sets() {
         let key = "NESTGATE_ENV_PROCESS_SET_TEST";
         super::set_var(key, "x");
-        assert_eq!(std::env::var(key).unwrap(), "x");
+        assert_eq!(std::env::var(key), Ok("x".to_owned()));
         super::remove_var(key);
         assert!(std::env::var(key).is_err());
     }

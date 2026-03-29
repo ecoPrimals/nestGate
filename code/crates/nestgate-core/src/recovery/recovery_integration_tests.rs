@@ -226,7 +226,7 @@ async fn test_concurrent_health_checks() {
 
     for i in 0..5 {
         #[derive(Debug)]
-        struct NumberedHealthCheck(usize);
+        struct NumberedHealthCheck(#[allow(dead_code)] usize);
 
         impl HealthCheckDyn for NumberedHealthCheck {
             fn check_health(

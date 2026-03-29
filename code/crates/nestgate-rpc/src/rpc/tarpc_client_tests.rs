@@ -267,7 +267,7 @@ fn normalize_to_tarpc_endpoint_ipv6_host_in_brackets() {
 
 #[tokio::test]
 async fn test_discover_by_capability_unknown() {
-    let result = NestGateRpcClient::discover_by_capability("unknown_capability").await;
+    let result = NestGateRpcClient::discover_by_capability("unknown_capability");
     assert!(
         result.is_ok(),
         "unknown capability should still yield a client via default fallback: {:?}",

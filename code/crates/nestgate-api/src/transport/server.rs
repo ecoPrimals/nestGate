@@ -255,6 +255,7 @@ impl<H> Clone for JsonRpcHandler<H> {
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use super::*;
     use serde_json::Value;
@@ -284,5 +285,28 @@ mod tests {
         let handler = TestHandler;
         let server = TransportServer::new(config, handler).unwrap();
         assert_eq!(server.config().family_id, "test");
+    }
+
+    #[test]
+    fn new_rejects_empty_socket_path() {
+        let mut config = TransportConfig::new("fam");
+        config.socket_path = std::path::PathBuf::from("");
+        let handler = TestHandler;
+        assert!(TransportServer::new(config, handler).is_err());
+    }
+
+    #[test]
+    fn new_rejects_http_port_zero() {
+        let config = TransportConfig::new("fam").with_http_fallback(0);
+        let handler = TestHandler;
+        assert!(TransportServer::new(config, handler).is_err());
+    }
+
+    #[test]
+    fn shutdown_notify_does_not_panic() {
+        let config = TransportConfig::new("test");
+        let handler = TestHandler;
+        let server = TransportServer::new(config, handler).unwrap();
+        server.shutdown();
     }
 }

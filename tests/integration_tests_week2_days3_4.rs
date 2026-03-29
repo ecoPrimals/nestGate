@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Integration test scenarios - Week 2 Days 3-4
 //!
 //! Focus: Cross-module integration, async failure paths, service coordination

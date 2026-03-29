@@ -32,7 +32,6 @@ thiserror = { workspace = true }
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
-serde_yaml_ng = { workspace = true }
 
 # HTTP
 axum = { workspace = true }
@@ -110,7 +109,7 @@ harness = false
 [features]
 default = ["sysinfo"]
 # Development stubs - include mock/stub implementations for testing
-dev-stubs = []
+dev-stubs = ["nestgate-rpc/dev-stubs"]
 # Mock metrics for testing without real system metrics
 mock-metrics = []
 # sysinfo fallback for non-Linux / /proc failure paths

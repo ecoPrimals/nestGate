@@ -121,7 +121,8 @@ pub use system_config::{SharedSystemConfig, SystemConfig};
 // Sovereignty helpers configuration - thread-safe config for sovereignty-compliant helpers
 pub use sovereignty_helpers_config::{SharedSovereigntyHelpersConfig, SovereigntyHelpersConfig};
 
-// Network address constants - environment-aware
+// Network address constants - environment-aware (legacy helpers remain for compatibility)
+#[allow(deprecated)]
 pub use network_defaults::{
     BIND_ALL_IPV4, BIND_ALL_IPV6, LOCALHOST_IPV4, LOCALHOST_IPV6, LOCALHOST_NAME, get_api_host,
     get_bind_address, get_db_host, get_redis_host, is_development, is_production,

@@ -4,9 +4,12 @@
 
 ```
 Build:       25/25 workspace members compiling (0 errors)
-Tests:       7,887 lib tests passing, 0 failures, 64 ignored
-Clippy:      Warnings reduced 8,227 → 2,972 (13 pedantic categories zeroed; production -D warnings clean)
+Tests:       8,177 lib tests passing, 0 failures, 64 ignored
+Coverage:    77.1% line (llvm-cov)
+Clippy:      ZERO errors — full workspace -D warnings clean
 Doctests:    Zero failures
+Unsafe:      #![forbid(unsafe_code)] on all crate roots except env-process-shim
+Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```
 
@@ -74,8 +77,10 @@ NEST Atomic = TOWER + nestgate + squirrel
 ## Architecture
 
 ```
-nestGate/ (22 crates)
-├── nestgate-core       Core: IPC, config, crypto, discovery
+nestgate/ (25 workspace members — see README Architecture)
+├── nestgate-types … nestgate-platform … (foundation)
+├── nestgate-config, nestgate-storage, nestgate-rpc, nestgate-discovery, …
+├── nestgate-core       Traits, network, services, adapters
 ├── nestgate-api        REST + JSON-RPC API server
 ├── nestgate-bin        CLI binary (unibin)
 ├── nestgate-zfs        ZFS integration (adaptive)
@@ -87,7 +92,8 @@ nestGate/ (22 crates)
 ├── nestgate-middleware Middleware stack
 ├── nestgate-nas        NAS integration
 ├── nestgate-fsmonitor  Filesystem monitoring
-└── nestgate-performance Performance monitoring
+├── nestgate-performance Performance monitoring
+└── tools/unwrap-migrator, fuzz (workspace)
 ```
 
 ### Key Patterns

@@ -70,7 +70,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         let local_addr_str =
             std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "0.0.0.0:0".to_string());
         let local_addr: SocketAddr = local_addr_str.parse().map_err(|e| {
-            NestGateError::network_error(&format!(
+            NestGateError::network_error(format!(
                 "Failed to parse local endpoint '{}': {}",
                 local_addr_str, e
             ))
@@ -237,7 +237,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         self.connection_registry
             .remove(&connection_id.to_string())
             .ok_or_else(|| {
-                NestGateError::network_error(&format!("Connection {} not found", connection_id))
+                NestGateError::network_error(format!("Connection {} not found", connection_id))
             })?;
 
         tracing::info!("Connection {} disconnected", connection_id);
@@ -249,7 +249,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         self.connection_registry
             .get(&connection_id.to_string())
             .ok_or_else(|| {
-                NestGateError::network_error(&format!("Connection {} not found", connection_id))
+                NestGateError::network_error(format!("Connection {} not found", connection_id))
             })
     }
 

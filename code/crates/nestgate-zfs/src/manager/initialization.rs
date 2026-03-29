@@ -307,3 +307,15 @@ impl ZfsManager {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::manager::ZfsManager;
+
+    #[test]
+    fn mock_manager_start_stop_roundtrip() {
+        let mut m = ZfsManager::mock();
+        assert!(m.start().is_ok());
+        assert!(m.stop().is_ok());
+    }
+}

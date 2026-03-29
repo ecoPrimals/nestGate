@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Configuration Optimization Benchmarks
 //!
 //! Benchmarks to demonstrate the performance improvement from Config → Arc optimization.

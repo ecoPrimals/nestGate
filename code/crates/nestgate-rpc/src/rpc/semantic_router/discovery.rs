@@ -40,3 +40,42 @@ pub(super) fn discovery_capabilities(_router: &SemanticRouter, _params: Value) -
         "capabilities": ["storage", "discovery", "metadata", "health"]
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rpc::NestGateRpcClient;
+    use crate::rpc::semantic_router::SemanticRouter;
+    use serde_json::json;
+    use std::sync::Arc;
+
+    fn router() -> SemanticRouter {
+        let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
+        SemanticRouter::new(Arc::new(client))
+    }
+
+    #[test]
+    fn discovery_announce_query_list_not_implemented() {
+        let r = router();
+        for (label, e) in [
+            (
+                "announce",
+                discovery_announce(&r, json!({})).expect_err("ni"),
+            ),
+            ("query", discovery_query(&r, json!({})).expect_err("ni")),
+            ("list", discovery_list(&r, json!({})).expect_err("ni")),
+        ] {
+            assert!(
+                e.to_string().contains("nestgate-discovery") || e.to_string().contains("wire"),
+                "{label}: {e}"
+            );
+        }
+    }
+
+    #[test]
+    fn discovery_capabilities_returns_json() {
+        let r = router();
+        let v = discovery_capabilities(&r, json!({})).expect("ok");
+        assert!(v["capabilities"].as_array().unwrap().len() >= 4);
+    }
+}

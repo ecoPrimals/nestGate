@@ -62,10 +62,9 @@ impl Announcement {
     /// Check if this announcement has expired
     #[must_use]
     pub fn is_expired(&self) -> bool {
-        match SystemTime::now().duration_since(self.announced_at) {
-            Ok(elapsed) => elapsed.as_secs() > self.ttl_seconds,
-            Err(_) => true, // Clock went backwards, consider expired
-        }
+        SystemTime::now()
+            .duration_since(self.announced_at)
+            .map_or(true, |elapsed| elapsed.as_secs() > self.ttl_seconds)
     }
 
     /// Serialize to JSON

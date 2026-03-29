@@ -63,3 +63,28 @@ pub(super) async fn health_ready(router: &SemanticRouter, _params: Value) -> Res
         "status": health.status
     }))
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use crate::rpc::NestGateRpcClient;
+    use crate::rpc::semantic_router::SemanticRouter;
+    use serde_json::json;
+    use std::sync::Arc;
+
+    fn router() -> SemanticRouter {
+        let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
+        SemanticRouter::new(Arc::new(client))
+    }
+
+    #[tokio::test]
+    async fn health_domain_routes_error_when_tarpc_unreachable() {
+        let r = router();
+        assert!(health_check(&r, json!({})).await.is_err());
+        assert!(health_liveness(&r, json!({})).await.is_err());
+        assert!(health_metrics(&r, json!({})).await.is_err());
+        assert!(health_info(&r, json!({})).await.is_err());
+        assert!(health_ready(&r, json!({})).await.is_err());
+    }
+}

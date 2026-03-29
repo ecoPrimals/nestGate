@@ -161,6 +161,7 @@ pub mod env_helpers {
 }
 
 /// **URL BUILDERS** - ✅ MODERNIZED: Removed const from functions using format!
+#[allow(deprecated)]
 pub mod urls {
     use super::env_helpers;
 

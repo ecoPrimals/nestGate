@@ -171,3 +171,32 @@ pub fn parse_size(size_str: &str) -> Option<u64> {
     let number: f64 = number_part.parse().ok()?;
     Some(f64_to_u64_saturating(number * multiplier as f64))
 }
+
+#[cfg(test)]
+mod parse_tests {
+    use super::*;
+
+    #[test]
+    fn parse_snapshot_line_parses_tab_separated_row() {
+        let line = "tank/fs@snap\t1024K\tJan 1";
+        let info = parse_snapshot_line(line).expect("snapshot");
+        assert_eq!(info.name, "tank/fs@snap");
+        assert_eq!(info.used, 1024 * 1024);
+    }
+
+    #[test]
+    fn parse_snapshot_line_rejects_short_row() {
+        assert!(parse_snapshot_line("only-one").is_none());
+    }
+
+    #[test]
+    fn parse_size_dash_is_zero() {
+        assert_eq!(parse_size("-"), Some(0));
+    }
+
+    #[test]
+    fn parse_size_si_suffixes() {
+        assert_eq!(parse_size("2K"), Some(2048));
+        assert_eq!(parse_size("1M"), Some(1024 * 1024));
+    }
+}

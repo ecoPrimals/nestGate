@@ -1,10 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
+
 //! **MIGRATED FILE SYSTEM MONITOR MODULE**
 //!
 //! This module now uses the canonical configuration system instead of
 //! scattered FSMonitor-specific configuration structures.
+
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp,
+        clippy::uninlined_format_args,
+        clippy::needless_pass_by_value,
+        clippy::cast_precision_loss,
+        clippy::items_after_statements,
+    )
+)]
+#![allow(
+    deprecated,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::doc_markdown,
+    clippy::module_name_repetitions,
+    clippy::struct_excessive_bools
+)]
 
 // Re-export from canonical configuration system
 pub use nestgate_core::config::canonical_primary::{FsMonitorConfig, NestGateCanonicalConfig};
@@ -248,7 +272,7 @@ mod tests {
             }
 
             /// Name
-            fn name(&self) -> &str {
+            fn name(&self) -> &'static str {
                 "test_handler"
             }
 
@@ -311,7 +335,7 @@ mod tests {
             }
 
             /// Name
-            fn name(&self) -> &str {
+            fn name(&self) -> &'static str {
                 "selective"
             }
 
@@ -376,7 +400,7 @@ mod tests {
                 Ok(())
             }
             /// Name
-            fn name(&self) -> &str {
+            fn name(&self) -> &'static str {
                 "handler1"
             }
             /// Handles S Event Type
@@ -391,7 +415,7 @@ mod tests {
                 Ok(())
             }
             /// Name
-            fn name(&self) -> &str {
+            fn name(&self) -> &'static str {
                 "handler2"
             }
             /// Handles S Event Type

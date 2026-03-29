@@ -14,6 +14,9 @@ use super::types::{
 };
 use std::future::Future;
 
+/// Result type for [`CanonicalStorage::batch_read`] to keep RPITIT signatures readable.
+pub type CanonicalBatchReadResult<K, I, E> = std::result::Result<Vec<(K, Option<I>)>, E>;
+
 // ==================== CANONICAL STORAGE TRAIT ====================
 
 /// **THE** canonical storage trait that replaces ALL storage traits
@@ -141,8 +144,7 @@ pub trait CanonicalStorage: CanonicalService {
     fn batch_read(
         &self,
         keys: Vec<Self::Key>,
-    ) -> impl Future<Output = std::result::Result<Vec<(Self::Key, Option<Self::Item>)>, Self::Error>>
-    + Send;
+    ) -> impl Future<Output = CanonicalBatchReadResult<Self::Key, Self::Item, Self::Error>> + Send;
 
     /// Batch write multiple items - native async
     fn batch_write(

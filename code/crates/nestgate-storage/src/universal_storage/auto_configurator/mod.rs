@@ -100,36 +100,27 @@ impl AutoConfigurator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[allow(deprecated)]
-    pub async fn create_optimal_config(
+    pub fn create_optimal_config(
         &self,
         requirements: StorageRequirements,
     ) -> Result<OptimalStorageConfig> {
         // 1. Analyze available storage capabilities
-        let storage_analysis = self.analyze_storage_landscape().await?;
+        let storage_analysis = self.analyze_storage_landscape()?;
 
         // 2. Match requirements to available storage
-        let storage_mapping = self
-            .map_requirements_to_storage(&requirements, &storage_analysis)
-            .await?;
+        let storage_mapping = self.map_requirements_to_storage(&requirements, &storage_analysis)?;
 
         // 3. Create tiered storage architecture
-        let tier_config = self
-            .create_storage_tiers(&requirements, &storage_mapping)
-            .await?;
+        let tier_config = self.create_storage_tiers(&requirements, &storage_mapping)?;
 
         // 4. Configure redundancy
-        let redundancy = self
-            .configure_redundancy(&requirements, &tier_config)
-            .await?;
+        let redundancy = self.configure_redundancy(&requirements, &tier_config)?;
 
         // 5. Optimize configuration
-        let optimized = self
-            .optimize_configuration(tier_config.clone(), redundancy)
-            .await?;
+        let optimized = self.optimize_configuration(tier_config.clone(), redundancy)?;
 
         // 6. Generate implementation plan
-        let implementation_plan = self.generate_implementation_plan(&optimized).await?;
+        let implementation_plan = self.generate_implementation_plan(&optimized)?;
 
         // 7. Build final configuration
         Ok(OptimalStorageConfig {
@@ -147,11 +138,11 @@ impl AutoConfigurator {
 // ==================== INTERNAL METHODS ====================
 
 impl AutoConfigurator {
-    async fn analyze_storage_landscape(&self) -> Result<StorageLandscapeAnalysis> {
+    fn analyze_storage_landscape(&self) -> Result<StorageLandscapeAnalysis> {
         Ok(StorageLandscapeAnalysis::default())
     }
 
-    async fn map_requirements_to_storage(
+    fn map_requirements_to_storage(
         &self,
         _requirements: &StorageRequirements,
         _analysis: &StorageLandscapeAnalysis,
@@ -159,7 +150,7 @@ impl AutoConfigurator {
         Ok(StorageMapping::default())
     }
 
-    async fn create_storage_tiers(
+    fn create_storage_tiers(
         &self,
         _requirements: &StorageRequirements,
         _mapping: &StorageMapping,
@@ -167,7 +158,7 @@ impl AutoConfigurator {
         Ok(TierConfiguration::default())
     }
 
-    async fn configure_redundancy(
+    fn configure_redundancy(
         &self,
         _requirements: &StorageRequirements,
         _tier_config: &TierConfiguration,
@@ -175,7 +166,7 @@ impl AutoConfigurator {
         Ok(RedundancyConfiguration::default())
     }
 
-    async fn optimize_configuration(
+    fn optimize_configuration(
         &self,
         tier_config: TierConfiguration,
         redundancy: RedundancyConfiguration,
@@ -190,7 +181,7 @@ impl AutoConfigurator {
         })
     }
 
-    async fn generate_implementation_plan(
+    fn generate_implementation_plan(
         &self,
         _optimized: &OptimizedConfiguration,
     ) -> Result<ImplementationPlan> {

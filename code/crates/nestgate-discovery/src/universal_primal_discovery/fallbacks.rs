@@ -21,6 +21,6 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
         "ai" => 8084,
         "security" => 8085,
         "auth" => 8086,
-        "api" | _ => 8080, // Default fallback (includes `api`)
+        _ => 8080, // Default fallback (includes `api`)
     }
 }

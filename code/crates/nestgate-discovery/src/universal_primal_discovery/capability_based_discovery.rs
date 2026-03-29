@@ -439,7 +439,7 @@ impl CapabilityDiscoveryManager {
         }
 
         // Remove stale entries
-        self.remove_stale_peers(&mut cache).await;
+        self.remove_stale_peers(&mut cache);
 
         Ok(all_peers)
     }
@@ -484,7 +484,7 @@ impl CapabilityDiscoveryManager {
     }
 
     /// Remove stale peers from cache
-    async fn remove_stale_peers(&self, cache: &mut HashMap<PrimalId, PeerDescriptor>) {
+    fn remove_stale_peers(&self, cache: &mut HashMap<PrimalId, PeerDescriptor>) {
         let now = std::time::SystemTime::now();
         let stale_threshold = self.config.peer_ttl;
 

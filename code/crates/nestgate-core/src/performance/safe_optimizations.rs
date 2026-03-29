@@ -159,7 +159,7 @@ impl SafeSimdOperations {
     #[inline(always)]
     #[must_use]
     pub fn sum_u32_slice(data: &[u32]) -> u64 {
-        data.iter().map(|&x| x as u64).sum() // Auto-vectorized by LLVM
+        data.iter().map(|&x| u64::from(x)).sum() // Auto-vectorized by LLVM
     }
 
     /// Find maximum value in slice - auto-vectorized

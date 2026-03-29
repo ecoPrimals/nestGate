@@ -138,3 +138,56 @@ pub async fn destroy_snapshot(service: &FailSafeZfsService, name: &str) -> Unive
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
+    use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
+    use nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    async fn service_with_open_circuit_no_fallback() -> FailSafeZfsService {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = true;
+        c.failure_threshold = 1;
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let svc = FailSafeZfsService::new(primary, c);
+        svc.circuit_breaker.record_failure().await;
+        svc
+    }
+
+    #[tokio::test]
+    async fn list_snapshots_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = list_snapshots(&svc).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn list_dataset_snapshots_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = list_dataset_snapshots(&svc, "tank/fs").await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn create_snapshot_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let cfg = SnapshotConfig {
+            name: "snap".to_string(),
+            dataset: "tank/fs".to_string(),
+            properties: HashMap::new(),
+        };
+        let r = create_snapshot(&svc, &cfg).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn destroy_snapshot_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = destroy_snapshot(&svc, "tank/fs@snap").await;
+        assert!(r.is_err());
+    }
+}

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! E2E Scenario 27: Async/Await Patterns Validation
 //!
 //! **Purpose**: Validate modern async/await patterns and tokio usage

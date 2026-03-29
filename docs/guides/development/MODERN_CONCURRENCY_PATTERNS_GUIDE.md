@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 19, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🚀 MODERN CONCURRENCY PATTERNS GUIDE - NESTGATE
 **Philosophy**: Test Issues = Production Issues. No sleep(), Real Concurrency Only.
 

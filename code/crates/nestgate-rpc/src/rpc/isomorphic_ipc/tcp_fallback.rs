@@ -265,6 +265,7 @@ impl TcpFallbackServer {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     /// Mock RPC handler for testing
@@ -324,5 +325,50 @@ mod tests {
         let response = rt.block_on(handler.handle_request(serde_json::json!({"id": 1})));
         assert_eq!(response["jsonrpc"], "2.0");
         assert!(response.get("result").is_some());
+    }
+
+    #[test]
+    fn write_tcp_discovery_file_writes_tcp_prefix_line() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        nestgate_platform::env_process::set_var(
+            "XDG_RUNTIME_DIR",
+            dir.path().to_string_lossy().as_ref(),
+        );
+        let handler = Arc::new(MockHandler);
+        let server = TcpFallbackServer::new("ng_tcp_cov".to_string(), handler);
+        let addr: SocketAddr = "127.0.0.1:55055".parse().unwrap();
+        server.write_tcp_discovery_file(&addr).expect("write");
+        let path = dir.path().join("ng_tcp_cov-ipc-port");
+        let contents = std::fs::read_to_string(&path).expect("read discovery");
+        assert!(contents.trim().starts_with("tcp:"));
+        nestgate_platform::env_process::remove_var("XDG_RUNTIME_DIR");
+    }
+
+    #[test]
+    fn write_tcp_discovery_file_falls_back_to_home_local_share() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        // Force the XDG_RUNTIME_DIR attempt to fail (`File::create` needs an existing parent).
+        let bad_xdg = dir.path().join("missing").join("parent");
+        let share = dir.path().join(".local/share");
+        std::fs::create_dir_all(&share).expect("mkdir");
+        let svc = "ng_tcp_home_fb_scoped";
+        temp_env::with_vars(
+            vec![
+                (
+                    "XDG_RUNTIME_DIR",
+                    Some(bad_xdg.to_string_lossy().into_owned()),
+                ),
+                ("HOME", Some(dir.path().to_string_lossy().into_owned())),
+            ],
+            || {
+                let handler = Arc::new(MockHandler);
+                let server = TcpFallbackServer::new(svc.to_string(), handler);
+                let addr: SocketAddr = "127.0.0.1:44044".parse().unwrap();
+                server.write_tcp_discovery_file(&addr).expect("write");
+            },
+        );
+        let path = share.join(format!("{svc}-ipc-port"));
+        let contents = std::fs::read_to_string(&path).expect("read discovery");
+        assert!(contents.trim().starts_with("tcp:"));
     }
 }

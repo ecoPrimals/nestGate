@@ -8,6 +8,7 @@
 //! or any resource that benefits from pooling.
 
 use crate::error::{NestGateError, Result};
+#[cfg(feature = "dev-stubs")]
 use crate::http_client_stub as reqwest;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -176,8 +177,8 @@ where
     pub async fn get_connection(self: &Arc<Self>) -> Result<PooledConnectionGuard<T>> {
         let permit = self.semaphore.clone().acquire_owned().await.map_err(|_| {
             NestGateError::Internal(Box::new(crate::error::InternalErrorDetails {
-                message: "Failed to acquire connection permit".to_string(),
-                component: "connection_pool".to_string(),
+                message: "Failed to acquire connection permit".into(),
+                component: "connection_pool".into(),
                 location: None,
                 is_bug: false,
                 context: None,
@@ -431,8 +432,10 @@ impl Default for ConnectionPoolManager {
     }
 }
 
-/// HTTP client connection pool (example usage)
+/// HTTP client connection pool (example usage). Requires `dev-stubs` (uses [`crate::http_client_stub`]).
+#[cfg(feature = "dev-stubs")]
 pub type HttpConnectionPool = UniversalConnectionPool<reqwest::Client>;
+#[cfg(feature = "dev-stubs")]
 impl HttpConnectionPool {
     /// Create an HTTP client connection pool
     #[must_use]
@@ -443,8 +446,8 @@ impl HttpConnectionPool {
                 .build()
                 .map_err(|e| {
                     NestGateError::Internal(Box::new(crate::error::InternalErrorDetails {
-                        message: format!("HTTP client creation failed: {e}"),
-                        component: "http_connection_pool".to_string(),
+                        message: format!("HTTP client creation failed: {e}").into(),
+                        component: "http_connection_pool".into(),
                         location: None,
                         is_bug: false,
                         context: None,
@@ -545,6 +548,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "dev-stubs")]
     fn http_connection_pool_builds() {
         let _pool = HttpConnectionPool::new_http_pool(ConnectionPoolConfig::default());
     }

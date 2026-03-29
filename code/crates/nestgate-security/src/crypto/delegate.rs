@@ -53,7 +53,7 @@ mod b64 {
     pub fn decode(data: &str) -> nestgate_types::Result<Vec<u8>> {
         base64::engine::general_purpose::STANDARD
             .decode(data)
-            .map_err(|e| nestgate_types::NestGateError::api_error(&format!("base64 decode: {e}")))
+            .map_err(|e| nestgate_types::NestGateError::api_error(format!("base64 decode: {e}")))
     }
 
     #[cfg(test)]
@@ -240,7 +240,7 @@ impl CryptoDelegate {
         )?;
 
         if key.len() != length {
-            return Err(NestGateError::api_error(&format!(
+            return Err(NestGateError::api_error(format!(
                 "Key length mismatch: expected {length}, got {}",
                 key.len()
             )));
@@ -336,9 +336,10 @@ mod tests {
 
     #[test]
     fn encryption_params_chacha_roundtrip_serde() {
-        let mut p = EncryptionParams::default();
-        p.algorithm = EncryptionAlgorithm::ChaCha20Poly1305;
-        p.associated_data = b"ad".to_vec();
+        let p = EncryptionParams {
+            algorithm: EncryptionAlgorithm::ChaCha20Poly1305,
+            associated_data: b"ad".to_vec(),
+        };
         let json = serde_json::to_string(&p).unwrap();
         let back: EncryptionParams = serde_json::from_str(&json).unwrap();
         assert_eq!(back.algorithm, EncryptionAlgorithm::ChaCha20Poly1305);
@@ -405,6 +406,7 @@ mod tests {
 
     #[tokio::test]
     #[cfg(unix)]
+    #[allow(clippy::too_many_lines)]
     async fn crypto_delegate_roundtrip_over_mock_unix_jsonrpc() {
         use base64::Engine;
         use serde_json::{Value, json};
@@ -453,7 +455,8 @@ mod tests {
                         })
                     }
                     "crypto.generate_key" => {
-                        let len = params["length"].as_u64().unwrap_or(16) as usize;
+                        let len_u64 = params["length"].as_u64().unwrap_or(16);
+                        let len = usize::try_from(len_u64).unwrap_or(16);
                         json!({
                             "key": base64::engine::general_purpose::STANDARD.encode(vec![7u8; len]),
                         })

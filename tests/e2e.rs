@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **E2E SCENARIO 3: SERVICE DISCOVERY TIMEOUT**
 //!
 //! **Objective**: Test behavior when primal services (Songbird/Squirrel) don't respond

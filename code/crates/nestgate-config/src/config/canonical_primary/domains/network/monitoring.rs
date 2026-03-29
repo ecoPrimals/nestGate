@@ -60,6 +60,7 @@ impl NetworkMonitoringConfig {
     ///
     /// All fields from `other` will replace the current values.
     #[must_use]
+    #[allow(clippy::needless_pass_by_value)]
     pub const fn merge(mut self, other: Self) -> Self {
         self.metrics_enabled = other.metrics_enabled;
         self.health_check_interval_secs = other.health_check_interval_secs;

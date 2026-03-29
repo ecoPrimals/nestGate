@@ -168,7 +168,7 @@ mod tests {
     #[tokio::test]
     async fn test_service_registry_creation() {
         let registry = create_service_registry();
-        assert_eq!(registry.service_count().await, 0);
+        assert_eq!(registry.service_count(), 0);
     }
 
     #[tokio::test]
@@ -184,7 +184,7 @@ mod tests {
         let handle = registry.register_service(registration).await?;
         // SOVEREIGNTY FIX: Updated to match capability-based naming
         assert_eq!(handle.name, "test-capability");
-        assert_eq!(registry.service_count().await, 1);
+        assert_eq!(registry.service_count(), 1);
         Ok(())
     }
 

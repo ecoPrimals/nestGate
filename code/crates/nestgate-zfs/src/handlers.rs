@@ -370,3 +370,89 @@ impl ZfsRequestHandler {
 
 // REMOVED: UniversalService trait implementation - trait no longer exists
 // All service functionality has been migrated to the canonical trait system
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::ZfsConfig;
+
+    #[test]
+    fn zfs_health_info_round_trips_json() {
+        let t = std::time::SystemTime::UNIX_EPOCH;
+        let h = ZfsHealthInfo {
+            status: "healthy".to_string(),
+            pools_count: 2,
+            datasets_count: 5,
+            snapshots_count: 1,
+            last_check: t,
+        };
+        let json = serde_json::to_string(&h).expect("serialize");
+        let back: ZfsHealthInfo = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.pools_count, 2);
+        assert_eq!(back.status, "healthy");
+    }
+
+    #[test]
+    fn zfs_request_and_response_variants_serialize() {
+        let req = ZfsRequest::PoolCreate {
+            name: "p".to_string(),
+            devices: vec!["/dev/sda".to_string()],
+        };
+        let _ = serde_json::to_string(&req).expect("req json");
+
+        let resp = ZfsResponse::Success {
+            message: "ok".to_string(),
+        };
+        let _ = serde_json::to_string(&resp).expect("resp json");
+    }
+
+    #[tokio::test]
+    async fn handler_returns_health_on_health_check() {
+        let handler = ZfsRequestHandler::new(ZfsConfig::default());
+        let out = handler
+            .handle_zfs_request(ZfsRequest::HealthCheck)
+            .await
+            .expect("health response");
+        match out {
+            ZfsResponse::Health { status, details } => {
+                assert_eq!(status, "healthy");
+                assert_eq!(details.get("pools"), Some(&"1".to_string()));
+            }
+            other => panic!("unexpected response: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handler_stub_operations_return_success() {
+        let handler = ZfsRequestHandler::new(ZfsConfig::default());
+        let out = handler
+            .handle_zfs_request(ZfsRequest::PoolDestroy {
+                name: "gone".to_string(),
+            })
+            .await
+            .expect("stub success");
+        match out {
+            ZfsResponse::Success { message } => {
+                assert!(message.contains("successfully"));
+            }
+            other => panic!("unexpected response: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn handler_exposes_config_and_default_pool_name() {
+        let cfg = ZfsConfig::default();
+        let handler = ZfsRequestHandler::new(cfg.clone());
+        assert_eq!(handler.config().zfs_binary, cfg.zfs_binary);
+        assert_eq!(handler.config().use_sudo, cfg.use_sudo);
+        let name = handler.get_default_pool_name();
+        assert!(!name.is_empty());
+    }
+
+    #[test]
+    fn handler_health_check_interval_is_positive() {
+        let handler = ZfsRequestHandler::new(ZfsConfig::default());
+        let d = handler.get_health_check_interval();
+        assert!(d.as_secs() > 0);
+    }
+}

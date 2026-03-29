@@ -32,6 +32,7 @@
 
 use super::environment::EnvironmentConfig;
 use std::sync::OnceLock;
+use tracing::warn;
 
 /// Global configuration instance
 ///
@@ -53,9 +54,10 @@ fn global_config() -> &'static EnvironmentConfig {
     GLOBAL_CONFIG.get_or_init(|| match EnvironmentConfig::from_env() {
         Ok(config) => config,
         Err(e) => {
-            eprintln!("⚠️  Warning: Failed to load environment config: {e}");
-            eprintln!("   Using default configuration values");
-            eprintln!("   Set environment variables to customize (see CONFIGURATION_GUIDE.md)");
+            warn!(
+                "Failed to load environment config: {e}; using defaults \
+                 (set environment variables to customize; see CONFIGURATION_GUIDE.md)"
+            );
             EnvironmentConfig::default()
         }
     })
@@ -215,8 +217,7 @@ pub fn config() -> &'static EnvironmentConfig {
 pub fn reset_for_testing() {
     // Note: OnceLock doesn't provide a way to reset
     // In practice, tests should use separate config instances
-    eprintln!("Warning: reset_for_testing() cannot actually reset OnceLock");
-    eprintln!("Use EnvironmentConfig::from_env() directly in tests instead");
+    warn!("reset_for_testing() cannot reset OnceLock; use EnvironmentConfig::from_env() in tests");
 }
 
 #[cfg(test)]

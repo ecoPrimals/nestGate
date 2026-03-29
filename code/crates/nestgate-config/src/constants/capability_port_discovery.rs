@@ -59,9 +59,9 @@ use std::env;
 /// # Ok(())
 /// # }
 /// ```
-pub async fn discover_api_port() -> Result<u16> {
+pub fn discover_api_port() -> Result<u16> {
     // 1. Try capability discovery
-    if let Ok(service_url) = try_discover_api_service().await
+    if let Ok(service_url) = try_discover_api_service()
         && let Some(port) = extract_port_from_url(&service_url)
     {
         return Ok(port);
@@ -85,9 +85,9 @@ pub async fn discover_api_port() -> Result<u16> {
 /// 1. Capability discovery (Observability capability)
 /// 2. Environment variable (`NESTGATE_METRICS_PORT`)
 /// 3. Safe default (9090)
-pub async fn discover_metrics_port() -> Result<u16> {
+pub fn discover_metrics_port() -> Result<u16> {
     // 1. Try capability discovery
-    if let Ok(service_url) = try_discover_metrics_service().await
+    if let Ok(service_url) = try_discover_metrics_service()
         && let Some(port) = extract_port_from_url(&service_url)
     {
         return Ok(port);
@@ -111,7 +111,7 @@ pub async fn discover_metrics_port() -> Result<u16> {
 /// 1. Capability discovery
 /// 2. Environment variable (`NESTGATE_HEALTH_PORT`)
 /// 3. Safe default (8082)
-pub async fn discover_health_port() -> Result<u16> {
+pub fn discover_health_port() -> Result<u16> {
     // 1. Environment variable (health checks are often load-balancer specific)
     if let Ok(port_str) = env::var("NESTGATE_HEALTH_PORT")
         && let Ok(port) = port_str.parse::<u16>()
@@ -129,7 +129,7 @@ pub async fn discover_health_port() -> Result<u16> {
 /// # Discovery Order
 /// 1. Environment variable (`NESTGATE_ADMIN_PORT`)
 /// 2. Safe default (8081)
-pub async fn discover_admin_port() -> Result<u16> {
+pub fn discover_admin_port() -> Result<u16> {
     // 1. Environment variable (admin interfaces are sensitive, explicit config preferred)
     if let Ok(port_str) = env::var("NESTGATE_ADMIN_PORT")
         && let Ok(port) = port_str.parse::<u16>()
@@ -148,9 +148,9 @@ pub async fn discover_admin_port() -> Result<u16> {
 /// 1. Capability discovery (`ZfsStorage` capability)
 /// 2. Environment variable (`NESTGATE_STORAGE_PORT`)
 /// 3. Safe default (8083)
-pub async fn discover_storage_port() -> Result<u16> {
+pub fn discover_storage_port() -> Result<u16> {
     // 1. Try capability discovery
-    if let Ok(service_url) = try_discover_storage_service().await
+    if let Ok(service_url) = try_discover_storage_service()
         && let Some(port) = extract_port_from_url(&service_url)
     {
         return Ok(port);
@@ -176,7 +176,7 @@ pub async fn discover_storage_port() -> Result<u16> {
 ///
 /// # Primal Sovereignty
 /// tarpc is Rust-native high-performance RPC - discovered at runtime for flexibility
-pub async fn discover_tarpc_port() -> Result<u16> {
+pub fn discover_tarpc_port() -> Result<u16> {
     // 1. Try environment variable
     if let Ok(port_str) = env::var("NESTGATE_TARPC_PORT")
         && let Ok(port) = port_str.parse::<u16>()
@@ -192,21 +192,21 @@ pub async fn discover_tarpc_port() -> Result<u16> {
 // ==================== HELPER FUNCTIONS ====================
 
 /// Try to discover API service (returns Err if not found, doesn't panic)
-async fn try_discover_api_service() -> Result<String> {
+fn try_discover_api_service() -> Result<String> {
     Err(NestGateError::network_error(
         "Capability-based API discovery unavailable (nestgate-core decoupled)",
     ))
 }
 
 /// Try to discover metrics service (returns Err if not found)
-async fn try_discover_metrics_service() -> Result<String> {
+fn try_discover_metrics_service() -> Result<String> {
     Err(NestGateError::network_error(
         "Capability-based metrics discovery unavailable (nestgate-core decoupled)",
     ))
 }
 
 /// Try to discover storage service (returns Err if not found)
-async fn try_discover_storage_service() -> Result<String> {
+fn try_discover_storage_service() -> Result<String> {
     Err(NestGateError::network_error(
         "Capability-based storage discovery unavailable (nestgate-core decoupled)",
     ))
@@ -237,7 +237,7 @@ fn extract_port_from_url(url: &str) -> Option<u16> {
 /// Synchronous port discovery (for contexts where async is not available)
 ///
 /// Uses only environment variables and defaults (no capability discovery).
-/// Prefer async `discover_api_port()` when possible.
+/// Prefer [`discover_api_port`] when the full discovery chain is needed.
 #[must_use]
 pub fn discover_api_port_sync() -> u16 {
     env::var("NESTGATE_API_PORT")
@@ -292,7 +292,7 @@ pub fn discover_tarpc_port_sync() -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use temp_env::{async_with_vars, with_vars};
+    use temp_env::with_vars;
 
     #[test]
     fn test_extract_port_from_url() {
@@ -354,24 +354,23 @@ mod tests {
         crate::env_process::remove_var("NESTGATE_API_PORT");
     }
 
-    #[tokio::test]
-    async fn test_async_discovery_fallback() {
+    #[test]
+    fn test_async_discovery_fallback() {
         // Clear env vars
         crate::env_process::remove_var("NESTGATE_API_PORT");
 
         // Should fall back to default when capability discovery fails
-        let port = discover_api_port().await.unwrap();
+        let port = discover_api_port().unwrap();
         assert_eq!(port, 8080);
     }
 
-    #[tokio::test]
+    #[test]
     #[serial_test::serial]
-    async fn test_async_discovery_from_env() {
-        async_with_vars(vec![("NESTGATE_API_PORT", Some("9000"))], async {
-            let port = discover_api_port().await.unwrap();
+    fn test_async_discovery_from_env() {
+        with_vars(vec![("NESTGATE_API_PORT", Some("9000"))], || {
+            let port = discover_api_port().unwrap();
             assert_eq!(port, 9000);
-        })
-        .await;
+        });
     }
 
     #[test]
@@ -381,38 +380,38 @@ mod tests {
         assert_eq!(extract_port_from_url("http://host:443/"), Some(443));
     }
 
-    #[tokio::test]
-    async fn test_discover_metrics_port_default() {
+    #[test]
+    fn test_discover_metrics_port_default() {
         crate::env_process::remove_var("NESTGATE_METRICS_PORT");
-        let port = discover_metrics_port().await.unwrap();
+        let port = discover_metrics_port().unwrap();
         assert_eq!(port, 9090);
     }
 
-    #[tokio::test]
-    async fn test_discover_health_port_default() {
+    #[test]
+    fn test_discover_health_port_default() {
         crate::env_process::remove_var("NESTGATE_HEALTH_PORT");
-        let port = discover_health_port().await.unwrap();
+        let port = discover_health_port().unwrap();
         assert_eq!(port, 8082);
     }
 
-    #[tokio::test]
-    async fn test_discover_admin_port_default() {
+    #[test]
+    fn test_discover_admin_port_default() {
         crate::env_process::remove_var("NESTGATE_ADMIN_PORT");
-        let port = discover_admin_port().await.unwrap();
+        let port = discover_admin_port().unwrap();
         assert_eq!(port, 8081);
     }
 
-    #[tokio::test]
-    async fn test_discover_storage_port_default() {
+    #[test]
+    fn test_discover_storage_port_default() {
         crate::env_process::remove_var("NESTGATE_STORAGE_PORT");
-        let port = discover_storage_port().await.unwrap();
+        let port = discover_storage_port().unwrap();
         assert_eq!(port, 8083);
     }
 
-    #[tokio::test]
-    async fn test_discover_tarpc_port_default() {
+    #[test]
+    fn test_discover_tarpc_port_default() {
         crate::env_process::remove_var("NESTGATE_TARPC_PORT");
-        let port = discover_tarpc_port().await.unwrap();
+        let port = discover_tarpc_port().unwrap();
         assert_eq!(port, 8091);
     }
 

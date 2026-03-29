@@ -5,6 +5,10 @@
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
+#![expect(
+    clippy::cast_precision_loss,
+    reason = "Telemetry maps u64/usize OS counters to approximate f64 gauges"
+)]
 
 use std::collections::HashMap;
 //
@@ -141,6 +145,19 @@ impl MetricsRegistry {
             max_history: 100, // Default max history
             custom_metrics: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+
+    /// Test-only: insert arbitrary [`MetricValue`] entries for coverage of aggregation paths.
+    #[cfg(test)]
+    pub(crate) async fn insert_custom_metric_for_test(&self, name: &str, value: MetricValue) {
+        let mut custom = self.custom_metrics.write().await;
+        custom.insert(name.to_string(), value);
+    }
+
+    /// Test-only: lower the in-memory history cap to exercise trimming in `collect_system_metrics`.
+    #[cfg(test)]
+    pub(crate) fn set_max_history_for_test(&mut self, max_history: usize) {
+        self.max_history = max_history;
     }
 
     /// Collect current system metrics
@@ -319,6 +336,27 @@ pub trait MetricsCollector {
 mod tests {
     use super::*;
 
+    struct TestCollector;
+
+    impl MetricsCollector for TestCollector {
+        fn collect_metrics(&self) -> HashMap<String, f64> {
+            let mut m = HashMap::new();
+            m.insert("k".to_string(), 1.0);
+            m
+        }
+
+        fn component_name(&self) -> &str {
+            "test_collector"
+        }
+    }
+
+    #[test]
+    fn metrics_collector_trait_smoke() {
+        let c = TestCollector;
+        assert_eq!(c.component_name(), "test_collector");
+        assert_eq!(c.collect_metrics().get("k"), Some(&1.0));
+    }
+
     #[tokio::test]
     async fn test_metrics_registry() -> nestgate_types::Result<()> {
         let registry = MetricsRegistry::new();
@@ -365,6 +403,54 @@ mod tests {
             .get_metrics_history(Duration::from_secs(60))
             .await?;
         assert!(!history.is_empty());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_metrics_history_trims_when_exceeding_max() -> nestgate_types::Result<()> {
+        let mut registry = MetricsRegistry::new();
+        registry.set_max_history_for_test(2);
+        for _ in 0..5 {
+            registry.collect_system_metrics().await?;
+        }
+        let history = registry
+            .get_metrics_history(Duration::from_secs(3600))
+            .await?;
+        assert_eq!(history.len(), 2);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_custom_metric_value_variants_map_to_snapshot() -> nestgate_types::Result<()> {
+        let registry = MetricsRegistry::new();
+        registry
+            .insert_custom_metric_for_test("g", MetricValue::Gauge(2.0))
+            .await;
+        registry
+            .insert_custom_metric_for_test("c", MetricValue::Counter(10))
+            .await;
+        registry
+            .insert_custom_metric_for_test("h", MetricValue::Histogram(vec![1.0, 3.0]))
+            .await;
+        registry
+            .insert_custom_metric_for_test(
+                "s",
+                MetricValue::Summary {
+                    sum: 10.0,
+                    count: 2,
+                },
+            )
+            .await;
+        registry
+            .insert_custom_metric_for_test("t", MetricValue::String("x".into()))
+            .await;
+
+        let m = registry.get_current_metrics().await?;
+        assert_eq!(m.custom_metrics.get("g"), Some(&2.0));
+        assert_eq!(m.custom_metrics.get("c"), Some(&10.0));
+        assert_eq!(m.custom_metrics.get("h"), Some(&2.0));
+        assert_eq!(m.custom_metrics.get("s"), Some(&10.0));
+        assert_eq!(m.custom_metrics.get("t"), Some(&0.0));
         Ok(())
     }
 }

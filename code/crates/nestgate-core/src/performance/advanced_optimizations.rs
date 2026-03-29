@@ -84,7 +84,7 @@ impl SimdOperations {
     pub fn sum_u32_slice(data: &[u32]) -> u64 {
         // Fallback to scalar implementation
         // In a real implementation, this would use SIMD intrinsics
-        data.iter().map(|&x| x as u64).sum()
+        data.iter().map(|&x| u64::from(x)).sum()
     }
 
     /// Find maximum value in slice using SIMD
@@ -173,10 +173,10 @@ pub struct PoolBlockGuard<'a, const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE> {
     /// Get mutable slice to the allocated block
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.slot_guard
-            .as_mut()
-            .expect("pool slot must hold allocated block")
-            .as_mut()
+        match self.slot_guard.as_mut() {
+            Some(block) => block.as_mut(),
+            None => unreachable!("pool slot must hold allocated block"),
+        }
     }
 }
 

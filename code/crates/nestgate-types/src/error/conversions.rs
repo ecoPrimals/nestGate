@@ -20,7 +20,7 @@ impl From<std::io::Error> for NestGateUnifiedError {
 impl From<serde_json::Error> for NestGateUnifiedError {
     /// From
     fn from(error: serde_json::Error) -> Self {
-        Self::validation_error(&format!("JSON error: {error}"))
+        Self::validation_error(format!("JSON error: {error}"))
     }
 }
 
@@ -36,7 +36,7 @@ impl From<String> for NestGateUnifiedError {
 impl From<&str> for NestGateUnifiedError {
     /// From
     fn from(error: &str) -> Self {
-        Self::internal_error(error, "str_conversion")
+        Self::internal_error(error.to_string(), "str_conversion")
     }
 }
 

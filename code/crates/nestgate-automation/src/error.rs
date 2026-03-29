@@ -56,7 +56,7 @@ pub use nestgate_core::Result;
 /// Helper function to create automation errors with canonical config source
 #[must_use]
 pub fn automation_error(message: String) -> AutomationError {
-    AutomationError::CoreError(NestGateError::automation(&message))
+    AutomationError::CoreError(NestGateError::automation(message))
 }
 
 #[cfg(test)]

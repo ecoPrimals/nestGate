@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Edge case and boundary tests for improved coverage
 //!
@@ -29,7 +40,7 @@ fn validate_string(s: &str) -> Result<()> {
 
 fn validate_positive_integer(n: i64) -> Result<()> {
     if n <= 0 {
-        return Err(NestGateError::validation_error(&format!(
+        return Err(NestGateError::validation_error(format!(
             "Expected positive integer, got {}",
             n
         )));

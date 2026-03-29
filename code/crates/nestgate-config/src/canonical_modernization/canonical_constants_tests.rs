@@ -3,6 +3,9 @@
 
 //! Unit tests for canonical constant modules (values, relationships, `Duration` helpers).
 
+// These tests intentionally assert relationships between `const` values (compile-time invariants).
+#![allow(clippy::assertions_on_constants)]
+
 use std::time::Duration;
 
 #[test]

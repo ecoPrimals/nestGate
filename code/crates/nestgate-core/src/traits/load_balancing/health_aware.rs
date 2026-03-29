@@ -65,9 +65,9 @@ impl<L: LoadBalancer> LoadBalancer for HealthAwareLoadBalancer<L> {
         if healthy_services.is_empty() {
             return Err(NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "No healthy services available".to_string(),
+                    message: "No healthy services available".into(),
                     available_services: Some(0),
-                    algorithm: Some("health_aware".to_string()),
+                    algorithm: Some("health_aware".into()),
                 },
             )));
         }

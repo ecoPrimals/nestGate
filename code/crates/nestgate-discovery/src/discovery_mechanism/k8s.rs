@@ -203,7 +203,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             );
 
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!("k8s query failed: {e}"))
+                nestgate_types::error::NestGateError::api_error(format!("k8s query failed: {e}"))
             })?;
 
             if !response.is_success() {
@@ -211,7 +211,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             }
 
             let service_list: K8sServiceList = response.json().map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "Failed to parse k8s response: {e}"
                 ))
             })?;
@@ -244,7 +244,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             let url = format!("{}/api/v1/namespaces/{}/services/{}", api_server, ns, name);
 
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!("k8s lookup failed: {e}"))
+                nestgate_types::error::NestGateError::api_error(format!("k8s lookup failed: {e}"))
             })?;
 
             if !response.is_success() {
@@ -252,7 +252,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             }
 
             let service: K8sService = response.json().map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "Failed to parse k8s response: {e}"
                 ))
             })?;
@@ -281,7 +281,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             let url = format!("{}/api/v1/namespaces/{}/endpoints/{}", api_server, ns, name);
 
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "k8s health check failed: {e}"
                 ))
             })?;

@@ -354,6 +354,10 @@ impl UniversalFilesystemDetector {
     /// Discover all filesystems
     ///
     /// **GRACEFUL**: Returns empty vec on error (non-fatal in containers)
+    ///
+    /// # Errors
+    ///
+    /// Returns `Ok(Vec::new())` when the underlying detector fails; errors are logged and not propagated.
     pub async fn discover(&self) -> Result<Vec<DiscoveredFilesystem>> {
         debug!("🔍 Discovering filesystems with {}", self.detector.name());
 
@@ -500,13 +504,13 @@ mod tests {
         #[cfg(target_os = "linux")]
         {
             // On Linux, /proc/mounts should exist
-            println!("Linux detector available: {}", available);
+            println!("Linux detector available: {available}");
         }
 
         #[cfg(not(target_os = "linux"))]
         {
             // On non-Linux, may or may not exist
-            println!("Linux detector available (non-Linux OS): {}", available);
+            println!("Linux detector available (non-Linux OS): {available}");
         }
     }
 

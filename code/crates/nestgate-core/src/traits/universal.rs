@@ -122,7 +122,7 @@ impl DefaultService {
 
 impl Service for DefaultService {
     /// Name
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "universal"
     }
 

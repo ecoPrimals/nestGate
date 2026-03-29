@@ -12,6 +12,7 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
@@ -70,18 +71,16 @@ impl Default for SystematicUnwrapMigrator {
     }
 }
 
-impl SystematicUnwrapMigrator {
-    /// Create new systematic migrator with comprehensive unified patterns
-    #[must_use]
-    pub fn new() -> Self {
-        let mut error_patterns = HashMap::new();
-        let mut panic_patterns = HashMap::new();
+fn build_error_patterns() -> HashMap<String, MigrationPattern> {
+    let mut error_patterns = HashMap::new();
+    add_systematic_env_and_lock_patterns(&mut error_patterns);
+    add_systematic_json_and_http_patterns(&mut error_patterns);
+    add_systematic_file_and_general_patterns(&mut error_patterns);
+    error_patterns
+}
 
-        // ===============================================================
-        // ENVIRONMENT & CONFIGURATION PATTERNS
-        // ===============================================================
-
-        error_patterns.insert(
+fn add_systematic_env_and_lock_patterns(error_patterns: &mut HashMap<String, MigrationPattern>) {
+    error_patterns.insert(
             "env::var".to_string(),
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.unwrap\(\)"#.to_string(),
@@ -94,7 +93,7 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        error_patterns.insert(
+    error_patterns.insert(
             "env::var_expect".to_string(),
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.expect\("([^"]+)"\)"#.to_string(),
@@ -107,11 +106,11 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // MUTEX & CONCURRENCY PATTERNS
-        // ===============================================================
+    // ===============================================================
+    // MUTEX & CONCURRENCY PATTERNS
+    // ===============================================================
 
-        error_patterns.insert(
+    error_patterns.insert(
             "lock_unwrap".to_string(),
             MigrationPattern {
                 pattern: r"\.lock\(\)\.unwrap\(\)".to_string(),
@@ -121,39 +120,41 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        error_patterns.insert(
-            "lock_expect".to_string(),
-            MigrationPattern {
-                pattern: r#"\.lock\(\)\.expect\("([^"]+)"\)"#.to_string(),
-                replacement: r#".lock().unwrap_or_else(|poisoned| {
+    error_patterns.insert(
+        "lock_expect".to_string(),
+        MigrationPattern {
+            pattern: r#"\.lock\(\)\.expect\("([^"]+)"\)"#.to_string(),
+            replacement: r#".lock().unwrap_or_else(|poisoned| {
         tracing::warn!("Mutex poisoned ({}), recovering", "$1");
         poisoned.into_inner()
     })"#
-                .to_string(),
-                error_category: ErrorCategory::Lock,
-                context: "Mutex lock acquisition with expect message".to_string(),
-            },
-        );
+            .to_string(),
+            error_category: ErrorCategory::Lock,
+            context: "Mutex lock acquisition with expect message".to_string(),
+        },
+    );
+}
 
-        // ===============================================================
-        // JSON & SERIALIZATION PATTERNS
-        // ===============================================================
+fn add_systematic_json_and_http_patterns(error_patterns: &mut HashMap<String, MigrationPattern>) {
+    // ===============================================================
+    // JSON & SERIALIZATION PATTERNS
+    // ===============================================================
 
-        error_patterns.insert(
-            "json_parse_unwrap".to_string(),
-            MigrationPattern {
-                pattern: r"serde_json::from_str\(([^)]+)\)\.unwrap\(\)".to_string(),
-                replacement: r#"serde_json::from_str($1).map_err(|e| {
+    error_patterns.insert(
+        "json_parse_unwrap".to_string(),
+        MigrationPattern {
+            pattern: r"serde_json::from_str\(([^)]+)\)\.unwrap\(\)".to_string(),
+            replacement: r#"serde_json::from_str($1).map_err(|e| {
     tracing::error!("JSON parsing failed: {}", e);
     std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON parsing error: {}", e))
 })?"#
-                    .to_string(),
-                error_category: ErrorCategory::Validation,
-                context: "JSON deserialization".to_string(),
-            },
-        );
+                .to_string(),
+            error_category: ErrorCategory::Validation,
+            context: "JSON deserialization".to_string(),
+        },
+    );
 
-        error_patterns.insert(
+    error_patterns.insert(
             "json_parse_expect".to_string(),
             MigrationPattern {
                 pattern: r#"serde_json::from_str\(([^)]+)\)\.expect\("([^"]+)"\)"#.to_string(),
@@ -166,39 +167,39 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        error_patterns.insert(
-            "json_to_string_unwrap".to_string(),
-            MigrationPattern {
-                pattern: r"serde_json::to_string\(([^)]+)\)\.unwrap\(\)".to_string(),
-                replacement: r#"serde_json::to_string($1).map_err(|e| {
+    error_patterns.insert(
+        "json_to_string_unwrap".to_string(),
+        MigrationPattern {
+            pattern: r"serde_json::to_string\(([^)]+)\)\.unwrap\(\)".to_string(),
+            replacement: r#"serde_json::to_string($1).map_err(|e| {
     tracing::error!("JSON serialization failed: {}", e);
     std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON serialization error: {}", e))
 })?"#
-                    .to_string(),
-                error_category: ErrorCategory::Validation,
-                context: "JSON serialization".to_string(),
-            },
-        );
+                .to_string(),
+            error_category: ErrorCategory::Validation,
+            context: "JSON serialization".to_string(),
+        },
+    );
 
-        // ===============================================================
-        // HTTP & NETWORK PATTERNS
-        // ===============================================================
+    // ===============================================================
+    // HTTP & NETWORK PATTERNS
+    // ===============================================================
 
-        error_patterns.insert(
-            "http_send_unwrap".to_string(),
-            MigrationPattern {
-                pattern: r"\.send\(\)\.await\.unwrap\(\)".to_string(),
-                replacement: r#".send().await.map_err(|e| {
+    error_patterns.insert(
+        "http_send_unwrap".to_string(),
+        MigrationPattern {
+            pattern: r"\.send\(\)\.await\.unwrap\(\)".to_string(),
+            replacement: r#".send().await.map_err(|e| {
     tracing::error!("HTTP request failed: {}", e);
     std::io::Error::new(std::io::ErrorKind::ConnectionRefused, format!("HTTP error: {}", e))
 })?"#
-                    .to_string(),
-                error_category: ErrorCategory::Network,
-                context: "HTTP request execution".to_string(),
-            },
-        );
+                .to_string(),
+            error_category: ErrorCategory::Network,
+            context: "HTTP request execution".to_string(),
+        },
+    );
 
-        error_patterns.insert(
+    error_patterns.insert(
             "http_send_expect".to_string(),
             MigrationPattern {
                 pattern: r#"\.send\(\)\.await\.expect\("([^"]+)"\)"#.to_string(),
@@ -210,135 +211,169 @@ impl SystematicUnwrapMigrator {
                 context: "HTTP request execution with expect message".to_string(),
             }
         );
+}
 
-        // ===============================================================
-        // FILE I/O PATTERNS
-        // ===============================================================
+fn add_systematic_file_and_general_patterns(
+    error_patterns: &mut HashMap<String, MigrationPattern>,
+) {
+    // ===============================================================
+    // FILE I/O PATTERNS
+    // ===============================================================
 
-        error_patterns.insert(
-            "file_read_unwrap".to_string(),
-            MigrationPattern {
-                pattern: r"fs::read_to_string\(([^)]+)\)\.unwrap\(\)".to_string(),
-                replacement: r#"fs::read_to_string($1).map_err(|e| {
+    error_patterns.insert(
+        "file_read_unwrap".to_string(),
+        MigrationPattern {
+            pattern: r"fs::read_to_string\(([^)]+)\)\.unwrap\(\)".to_string(),
+            replacement: r#"fs::read_to_string($1).map_err(|e| {
     tracing::error!("Failed to read file: {}", e);
     e
 })?"#
-                    .to_string(),
-                error_category: ErrorCategory::IO,
-                context: "File system read operations".to_string(),
-            },
-        );
+                .to_string(),
+            error_category: ErrorCategory::IO,
+            context: "File system read operations".to_string(),
+        },
+    );
 
-        error_patterns.insert(
-            "file_read_expect".to_string(),
-            MigrationPattern {
-                pattern: r#"fs::read_to_string\(([^)]+)\)\.expect\("([^"]+)"\)"#.to_string(),
-                replacement: r#"fs::read_to_string($1).map_err(|e| {
+    error_patterns.insert(
+        "file_read_expect".to_string(),
+        MigrationPattern {
+            pattern: r#"fs::read_to_string\(([^)]+)\)\.expect\("([^"]+)"\)"#.to_string(),
+            replacement: r#"fs::read_to_string($1).map_err(|e| {
     tracing::error!("Failed to read file ({}): {}", "$2", e);
     e
 })?"#
-                    .to_string(),
-                error_category: ErrorCategory::IO,
-                context: "File system read operations with expect message".to_string(),
-            },
-        );
+                .to_string(),
+            error_category: ErrorCategory::IO,
+            context: "File system read operations with expect message".to_string(),
+        },
+    );
 
-        error_patterns.insert(
-            "file_write_unwrap".to_string(),
-            MigrationPattern {
-                pattern: r"fs::write\(([^,]+),\s*([^)]+)\)\.unwrap\(\)".to_string(),
-                replacement: r#"fs::write($1, $2).map_err(|e| {
+    error_patterns.insert(
+        "file_write_unwrap".to_string(),
+        MigrationPattern {
+            pattern: r"fs::write\(([^,]+),\s*([^)]+)\)\.unwrap\(\)".to_string(),
+            replacement: r#"fs::write($1, $2).map_err(|e| {
     tracing::error!("Failed to write file: {}", e);
     e
 })?"#
-                    .to_string(),
-                error_category: ErrorCategory::IO,
-                context: "File system write operations".to_string(),
-            },
-        );
-
-        // ===============================================================
-        // GENERAL PATTERNS - BROADER COVERAGE
-        // ===============================================================
-
-        error_patterns.insert(
-            "general_unwrap".to_string(),
-            MigrationPattern {
-                pattern: r"\.unwrap\(\)".to_string(),
-                replacement: r#".unwrap_or_else(|e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    panic!("Critical error - unable to continue: {:?}", e)
-})"#
                 .to_string(),
-                error_category: ErrorCategory::Resource,
-                context: "General unwrap calls".to_string(),
-            },
-        );
+            error_category: ErrorCategory::IO,
+            context: "File system write operations".to_string(),
+        },
+    );
 
-        error_patterns.insert(
-            "general_expect".to_string(),
-            MigrationPattern {
-                pattern: r#"\.expect\("([^"]+)"\)"#.to_string(),
-                replacement: r#".unwrap_or_else(|e| {
-    tracing::error!("Expect failed ({}): {:?}", "$1", e);
-    panic!("Critical error - {}: {:?}", "$1", e)
+    // ===============================================================
+    // GENERAL PATTERNS - BROADER COVERAGE
+    // ===============================================================
+
+    error_patterns.insert(
+        "general_unwrap".to_string(),
+        MigrationPattern {
+            pattern: r"\.unwrap\(\)".to_string(),
+            replacement: concat!(
+                r#".unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: "#,
+                "{:?}",
+                r#"", e);
+    panic!("Critical error - unable to continue: "#,
+                "{:?}",
+                r#"", e)
 })"#
-                .to_string(),
-                error_category: ErrorCategory::Resource,
-                context: "General expect calls with messages".to_string(),
-            },
-        );
+            )
+            .to_string(),
+            error_category: ErrorCategory::Resource,
+            context: "General unwrap calls".to_string(),
+        },
+    );
 
-        // ===============================================================
-        // PANIC! PATTERNS - REPLACE WITH GRACEFUL ERROR HANDLING
-        // ===============================================================
+    error_patterns.insert(
+        "general_expect".to_string(),
+        MigrationPattern {
+            pattern: r#"\.expect\("([^"]+)"\)"#.to_string(),
+            replacement: concat!(
+                r#".unwrap_or_else(|e| {
+    tracing::error!("Expect failed ({}): "#,
+                "{:?}",
+                r#"", "$1", e);
+    panic!("Critical error - {}: "#,
+                "{:?}",
+                r#"", "$1", e)
+})"#
+            )
+            .to_string(),
+            error_category: ErrorCategory::Resource,
+            context: "General expect calls with messages".to_string(),
+        },
+    );
+}
 
-        panic_patterns.insert(
-            "logged_panic".to_string(),
-            MigrationPattern {
-                pattern: r#"panic!\("Critical error - unable to continue: \{:\?\}", e\)"#
-                    .to_string(),
-                replacement: r#"return Err(std::io::Error::new(
+fn build_panic_patterns() -> HashMap<String, MigrationPattern> {
+    // ===============================================================
+    // PANIC! PATTERNS - REPLACE WITH GRACEFUL ERROR HANDLING
+    // ===============================================================
+
+    let mut panic_patterns = HashMap::new();
+
+    panic_patterns.insert(
+        "logged_panic".to_string(),
+        MigrationPattern {
+            pattern: r#"panic!\("Critical error - unable to continue: \{:\?\}", e\)"#.to_string(),
+            replacement: concat!(
+                r#"return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format!("Operation failed: "#,
+                "{:?}",
+                r#"", e)
 ).into())"#
-                    .to_string(),
-                error_category: ErrorCategory::Resource,
-                context: "Logged panic calls".to_string(),
-            },
-        );
+            )
+            .to_string(),
+            error_category: ErrorCategory::Resource,
+            context: "Logged panic calls".to_string(),
+        },
+    );
 
-        panic_patterns.insert(
-            "message_panic".to_string(),
-            MigrationPattern {
-                pattern: r#"panic!\("Critical error - ([^"]+): \{:\?\}", ([^)]+)\)"#.to_string(),
-                replacement: r#"return Err(std::io::Error::new(
+    panic_patterns.insert(
+        "message_panic".to_string(),
+        MigrationPattern {
+            pattern: r#"panic!\("Critical error - ([^"]+): \{:\?\}", ([^)]+)\)"#.to_string(),
+            replacement: concat!(
+                r#"return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "$1", $2)
+    format!("Operation failed - {}: "#,
+                "{:?}",
+                r#"", "$1", $2)
 ).into())"#
-                    .to_string(),
-                error_category: ErrorCategory::Resource,
-                context: "Message panic calls".to_string(),
-            },
-        );
+            )
+            .to_string(),
+            error_category: ErrorCategory::Resource,
+            context: "Message panic calls".to_string(),
+        },
+    );
 
-        panic_patterns.insert(
-            "simple_panic".to_string(),
-            MigrationPattern {
-                pattern: r#"panic!\("([^"]+)"\)"#.to_string(),
-                replacement: r#"return Err(std::io::Error::new(
+    panic_patterns.insert(
+        "simple_panic".to_string(),
+        MigrationPattern {
+            pattern: r#"panic!\("([^"]+)"\)"#.to_string(),
+            replacement: r#"return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
     "$1".to_string()
 ).into())"#
-                    .to_string(),
-                error_category: ErrorCategory::Resource,
-                context: "Simple panic calls".to_string(),
-            },
-        );
+                .to_string(),
+            error_category: ErrorCategory::Resource,
+            context: "Simple panic calls".to_string(),
+        },
+    );
 
+    panic_patterns
+}
+
+impl SystematicUnwrapMigrator {
+    /// Create new systematic migrator with comprehensive unified patterns
+    #[must_use]
+    pub fn new() -> Self {
         Self {
-            error_patterns,
-            panic_patterns,
+            error_patterns: build_error_patterns(),
+            panic_patterns: build_panic_patterns(),
             files_processed: std::sync::atomic::AtomicU64::new(0),
             migrations_applied: std::sync::atomic::AtomicU64::new(0),
         }
@@ -575,24 +610,19 @@ impl MigrationReport {
         summary.push_str("==================================\n\n");
 
         summary.push_str("📊 Statistics:\n");
-        summary.push_str(&format!("  • Files Processed: {}\n", self.files_processed));
-        summary.push_str(&format!("  • Total Changes: {}\n", self.total_changes));
-        summary.push_str(&format!(
-            "  • Files Modified: {}\n",
-            self.file_changes.len()
-        ));
-        summary.push_str(&format!(
-            "  • Patterns Used: {}\n\n",
-            self.patterns_used.len()
-        ));
+        let _ = writeln!(summary, "  • Files Processed: {}", self.files_processed);
+        let _ = writeln!(summary, "  • Total Changes: {}", self.total_changes);
+        let _ = writeln!(summary, "  • Files Modified: {}", self.file_changes.len());
+        let _ = writeln!(summary, "  • Patterns Used: {}\n", self.patterns_used.len());
 
         if !self.file_changes.is_empty() {
             summary.push_str("📝 Modified Files:\n");
             for (file, changes) in &self.file_changes {
-                summary.push_str(&format!(
-                    "  • {} ({changes} changes)\n",
+                let _ = writeln!(
+                    summary,
+                    "  • {} ({changes} changes)",
                     file.file_name().unwrap_or_default().to_string_lossy()
-                ));
+                );
             }
             summary.push('\n');
         }

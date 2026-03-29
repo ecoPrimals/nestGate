@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(deprecated)] // Builders and adapters intentionally use deprecated configs defined in this crate.
+#![allow(clippy::missing_errors_doc)]
+// Result returns delegate to `CacheManager` / `MultiTierCache`; see those types.
+
 // Cache management module
 //
 // Provides caching infrastructure including multi-tier caching,
@@ -79,9 +83,15 @@ impl CacheSystem {
         cache_config: nestgate_config::config::canonical_primary::CacheConfig,
     ) -> nestgate_types::Result<Self> {
         // Convert to UnifiedCacheConfig
+        let hot = cache_config.hot_tier_size.unwrap_or(1000);
+        let max_size = usize::try_from(hot).map_err(|_| {
+            nestgate_types::NestGateError::validation_error(
+                "cache hot_tier_size exceeds usize::MAX on this platform",
+            )
+        })?;
         #[allow(deprecated)]
         let unified_config = crate::cache::manager::UnifiedCacheConfig {
-            max_size: cache_config.hot_tier_size.unwrap_or(1000) as usize,
+            max_size,
             ttl_seconds: cache_config.ttl_seconds,
             cache_dir: cache_config.cache_dir.clone(),
             eviction_policy: cache_config.policy.unwrap_or_else(|| "lru".to_string()),
@@ -109,7 +119,7 @@ impl CacheSystem {
     /// Put data into cache
     pub async fn put(&mut self, key: &str, data: Vec<u8>) -> nestgate_types::Result<()> {
         match self {
-            Self::SingleTier(cache) => cache.put(key.to_string(), data).await,
+            Self::SingleTier(cache) => cache.put(key, data),
             Self::MultiTier(cache) => cache.put(key, data).await,
         }
     }
@@ -161,9 +171,9 @@ impl CacheSystem {
     }
 
     /// Perform maintenance on cache
-    pub async fn maintenance(&mut self) -> nestgate_types::Result<()> {
+    pub fn maintenance(&mut self) -> nestgate_types::Result<()> {
         match self {
-            Self::SingleTier(cache) => cache.maintenance().await,
+            Self::SingleTier(cache) => cache.maintenance(),
             Self::MultiTier(cache) => cache.maintenance(),
         }
     }
@@ -249,8 +259,7 @@ impl CacheSystemStats {
 ///     .with_policy(CachePolicy::Lru)
 ///     .with_hot_tier_size(1000)
 ///     .with_ttl(Duration::from_secs(300))
-///     .build()
-///     .await?;
+///     .build()?;
 /// ```
 pub struct CacheBuilder {
     config: nestgate_config::config::canonical_primary::CacheConfig,
@@ -335,7 +344,7 @@ impl CacheBuilder {
     }
 
     /// Build the cache system
-    pub async fn build(self) -> nestgate_types::Result<CacheSystem> {
+    pub fn build(self) -> nestgate_types::Result<CacheSystem> {
         if self.multi_tier {
             let config = self.multi_tier_config.unwrap_or_default();
             CacheSystem::multi_tier(config)

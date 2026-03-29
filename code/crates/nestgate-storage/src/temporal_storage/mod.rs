@@ -369,7 +369,7 @@ mod tests {
         };
 
         // Zero dimensions valid for virtual/quantum storage
-        assert_eq!(dimensions.width_mm, 0.0);
+        assert!((dimensions.width_mm - 0.0).abs() < f64::EPSILON);
     }
 
     #[test]
@@ -428,7 +428,7 @@ mod tests {
     fn test_rate_limits_high_value() {
         let limits = RateLimits::per_minute(10000);
         assert_eq!(limits.requests_per_minute, 10000);
-        assert_eq!(limits.requests_per_hour, 600000);
+        assert_eq!(limits.requests_per_hour, 600_000);
     }
 
     #[test]
@@ -442,7 +442,7 @@ mod tests {
 
         assert_eq!(descriptor.size_bytes, 0);
         let size_str = descriptor.size_human_readable();
-        assert!(size_str.contains("0") || size_str.contains("B"));
+        assert!(size_str.contains('0') || size_str.contains('B'));
     }
 
     #[test]

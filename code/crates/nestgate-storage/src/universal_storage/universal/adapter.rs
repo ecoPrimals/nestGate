@@ -46,15 +46,16 @@ impl UniversalStorageAdapter {
     /// Read data from storage
     ///
     /// Adapts to the discovered protocol automatically.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn read(&self, key: &str) -> Result<Vec<u8>> {
         // Implementation will adapt based on protocol.operation_pattern
         // For now, this is a placeholder that demonstrates the concept
 
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => {
-                // HTTP-based read
-                self.http_read(key).await
-            }
+            super::TransportProtocol::Http { .. } => Ok(self.http_read(key)),
             super::TransportProtocol::UnixSocket { .. } => {
                 // Local filesystem read
                 self.fs_read(key).await
@@ -66,11 +67,15 @@ impl UniversalStorageAdapter {
     }
 
     /// Write data to storage
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn write(&self, key: &str, data: &[u8]) -> Result<()> {
         match &self.protocol.transport {
             super::TransportProtocol::Http { .. } => {
-                // HTTP-based write
-                self.http_write(key, data).await
+                self.http_write(key, data);
+                Ok(())
             }
             super::TransportProtocol::UnixSocket { .. } => {
                 // Local filesystem write
@@ -83,11 +88,15 @@ impl UniversalStorageAdapter {
     }
 
     /// Delete data from storage
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn delete(&self, key: &str) -> Result<()> {
         match &self.protocol.transport {
             super::TransportProtocol::Http { .. } => {
-                // HTTP-based delete
-                self.http_delete(key).await
+                self.http_delete(key);
+                Ok(())
             }
             super::TransportProtocol::UnixSocket { .. } => {
                 // Local filesystem delete
@@ -100,12 +109,13 @@ impl UniversalStorageAdapter {
     }
 
     /// List keys/objects
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn list(&self, prefix: &str) -> Result<Vec<String>> {
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => {
-                // HTTP-based list
-                self.http_list(prefix).await
-            }
+            super::TransportProtocol::Http { .. } => Ok(self.http_list(prefix)),
             super::TransportProtocol::UnixSocket { .. } => {
                 // Local filesystem list
                 self.fs_list(prefix).await
@@ -118,7 +128,7 @@ impl UniversalStorageAdapter {
 
     // ==================== HTTP Operations ====================
 
-    async fn http_read(&self, key: &str) -> Result<Vec<u8>> {
+    fn http_read(&self, key: &str) -> Vec<u8> {
         // Build URL based on addressing pattern
         let _url = self.build_url(key);
 
@@ -127,28 +137,26 @@ impl UniversalStorageAdapter {
 
         // Send request and get response
         // For now, placeholder
-        Ok(format!("HTTP read from {} key {}", self.endpoint, key).into_bytes())
+        format!("HTTP read from {} key {key}", self.endpoint).into_bytes()
     }
 
-    async fn http_write(&self, key: &str, _data: &[u8]) -> Result<()> {
+    fn http_write(&self, key: &str, _data: &[u8]) {
         let _url = self.build_url(key);
         // Build authenticated PUT/POST request
         // Send data
-        Ok(())
     }
 
-    async fn http_delete(&self, key: &str) -> Result<()> {
+    fn http_delete(&self, key: &str) {
         let _url = self.build_url(key);
         // Build authenticated DELETE request
         // Send request
-        Ok(())
     }
 
-    async fn http_list(&self, prefix: &str) -> Result<Vec<String>> {
+    fn http_list(&self, prefix: &str) -> Vec<String> {
         let _url = self.build_url(prefix);
         // Build authenticated GET request
         // Parse response for list of keys
-        Ok(vec![])
+        vec![]
     }
 
     fn build_url(&self, key: &str) -> String {

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **LIVE INTEGRATION TESTING FRAMEWORK**
 //!
 //! Modern testing infrastructure that uses real systems, live services, and actual hardware

@@ -1,6 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp,
+        clippy::uninlined_format_args,
+        clippy::needless_pass_by_value,
+        clippy::cast_precision_loss,
+        clippy::items_after_statements,
+        clippy::too_many_lines,
+        clippy::cognitive_complexity,
+    )
+)]
+#![allow(
+    deprecated,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::doc_markdown,
+    clippy::module_name_repetitions,
+    clippy::struct_excessive_bools,
+    clippy::struct_field_names,
+    clippy::must_use_candidate,
+    clippy::return_self_not_must_use,
+    clippy::unnecessary_wraps,
+    clippy::unused_self,
+    clippy::unused_async,
+    clippy::option_if_let_else,
+    missing_docs
+)]
+
 //! **MIGRATED NAS MODULE**
 //!
 //! This module now uses the canonical configuration system instead of
@@ -67,7 +100,7 @@ impl NasService {
 }
 
 /// NAS service status
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NasStatus {
     Running,
     Stopped,
@@ -135,6 +168,8 @@ pub fn create_prod_nas_service() -> NasService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
+    use std::string::ToString;
 
     // ==================== NasService Tests ====================
 
@@ -204,9 +239,10 @@ mod tests {
 
     #[test]
     fn test_nas_status_clone() {
-        let status = NasStatus::Running;
+        let status = NasStatus::Error("e".to_string());
         let cloned = status.clone();
-        assert!(matches!(cloned, NasStatus::Running));
+        assert!(matches!(&cloned, NasStatus::Error(_)));
+        assert_eq!(cloned, status);
     }
 
     #[test]
@@ -300,7 +336,6 @@ mod tests {
     #[test]
     fn test_nas_error_source() {
         let err = NasError::Configuration("test".to_string());
-        use std::error::Error;
         assert!(err.source().is_none());
     }
 
@@ -400,7 +435,7 @@ mod tests {
             NasError::Permission("msg".to_string()),
         ];
 
-        let messages: Vec<String> = errors.iter().map(|e| e.to_string()).collect();
+        let messages: Vec<String> = errors.iter().map(ToString::to_string).collect();
         assert!(messages[0].contains("Configuration"));
         assert!(messages[1].contains("Network"));
         assert!(messages[2].contains("Storage"));

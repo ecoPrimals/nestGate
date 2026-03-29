@@ -68,27 +68,20 @@ impl DiscoveryMethod for DnsServiceDiscovery {
 
             // In a real implementation, this would use a DNS library like trust-dns
             // For now, we'll simulate the discovery
-            match self.query_srv_record(&query).await {
-                Ok(records) => {
-                    for record in records {
-                        let capability_type = self.extract_capability_type(service_type);
-                        let mut metadata = HashMap::new();
-                        metadata.insert("source".to_string(), "dns-srv".to_string());
-                        metadata.insert("service_type".to_string(), service_type.clone());
-                        metadata.insert("priority".to_string(), record.priority.to_string());
-                        metadata.insert("weight".to_string(), record.weight.to_string());
+            for record in self.query_srv_record(&query) {
+                let capability_type = self.extract_capability_type(service_type);
+                let mut metadata = HashMap::new();
+                metadata.insert("source".to_string(), "dns-srv".to_string());
+                metadata.insert("service_type".to_string(), service_type.clone());
+                metadata.insert("priority".to_string(), record.priority.to_string());
+                metadata.insert("weight".to_string(), record.weight.to_string());
 
-                        capabilities.push(CapabilityInfo {
-                            capability_type,
-                            endpoint: format!("http://{}:{}", record.target, record.port),
-                            confidence: 0.85, // High confidence for DNS records
-                            metadata,
-                        });
-                    }
-                }
-                Err(e) => {
-                    warn!("Failed to query SRV record {}: {}", query, e);
-                }
+                capabilities.push(CapabilityInfo {
+                    capability_type,
+                    endpoint: format!("http://{}:{}", record.target, record.port),
+                    confidence: 0.85, // High confidence for DNS records
+                    metadata,
+                });
             }
         }
 
@@ -122,10 +115,10 @@ impl DnsServiceDiscovery {
     }
 
     /// Query SRV record (placeholder implementation)
-    async fn query_srv_record(&self, _query: &str) -> Result<Vec<SrvRecord>, NestGateError> {
+    const fn query_srv_record(&self, _query: &str) -> Vec<SrvRecord> {
         // In a real implementation, this would use a DNS resolver
         // For demonstration, return empty results
-        Ok(Vec::new())
+        Vec::new()
     }
 }
 
@@ -158,6 +151,10 @@ pub struct MulticastDiscovery {
 
 impl MulticastDiscovery {
     /// Create a new multicast discovery
+    ///
+    /// # Panics
+    ///
+    /// Panics only if standard multicast socket literals fail to parse (a bug).
     #[must_use]
     pub fn new() -> Self {
         // SAFETY: These are well-known, standard multicast addresses that will never fail to parse
@@ -241,6 +238,7 @@ impl DiscoveryMethod for MulticastDiscovery {
 
 impl MulticastDiscovery {
     /// Listen for capability announcements
+    #[allow(deprecated)]
     async fn listen_for_announcements(
         &self,
         group: &SocketAddr,
@@ -252,9 +250,9 @@ impl MulticastDiscovery {
         let socket = UdpSocket::bind(&bind_addr).await.map_err(|e| {
             NestGateError::Internal(Box::new(
                 nestgate_types::error::variants::core_errors::InternalErrorDetails {
-                    message: format!("Failed to bind UDP socket: {e}"),
-                    component: "multicast_discovery".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
+                    message: format!("Failed to bind UDP socket: {e}").into(),
+                    component: "multicast_discovery".into(),
+                    location: Some(format!("{}:{}", file!(), line!()).into()),
                     is_bug: false,
                     context: None,
                 },
@@ -334,9 +332,9 @@ impl MulticastDiscovery {
         } else {
             Err(NestGateError::Internal(Box::new(
                 nestgate_types::error::variants::core_errors::InternalErrorDetails {
-                    message: format!("Invalid announcement format: {announcement}"),
-                    component: "multicast_discovery".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
+                    message: format!("Invalid announcement format: {announcement}").into(),
+                    component: "multicast_discovery".into(),
+                    location: Some(format!("{}:{}", file!(), line!()).into()),
                     is_bug: false,
                     context: None,
                 },
@@ -383,7 +381,7 @@ impl PortScanDiscovery {
         let env_config =
             EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 
-        let api_port = env_config.network.port.get();
+        let orchestration_http_port = env_config.network.port.get();
         let metrics_port = env_config.monitoring.metrics_port.get();
 
         // ✅ Environment-driven ports with smart defaults (not hardcoded!)
@@ -413,7 +411,7 @@ impl PortScanDiscovery {
             .and_then(|s| s.parse().ok())
             .unwrap_or(9443);
 
-        let ai_port = std::env::var("NESTGATE_AI_PORT")
+        let ai_service_http_port = std::env::var("NESTGATE_AI_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(7000);
@@ -431,13 +429,16 @@ impl PortScanDiscovery {
         let mut capability_ports = HashMap::new();
         capability_ports.insert(
             "orchestration".to_string(),
-            vec![api_port, https_port, metrics_port],
+            vec![orchestration_http_port, https_port, metrics_port],
         );
         capability_ports.insert(
             "security".to_string(),
             vec![security_port, security_https_port],
         );
-        capability_ports.insert("ai".to_string(), vec![ai_port, ai_https_port, ai_alt_port]);
+        capability_ports.insert(
+            "ai".to_string(),
+            vec![ai_service_http_port, ai_https_port, ai_alt_port],
+        );
         capability_ports.insert("storage".to_string(), vec![health_port, websocket_port]);
 
         Self {
@@ -453,6 +454,10 @@ impl PortScanDiscovery {
     }
 
     /// Add local network ranges (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    ///
+    /// # Panics
+    ///
+    /// Panics only if hardcoded RFC 1918 literals fail to parse (a bug).
     pub fn add_local_networks(&mut self) {
         // SAFETY: These are hardcoded RFC 1918 private IP addresses that will never fail to parse
         #[allow(clippy::expect_used)]
@@ -507,7 +512,7 @@ impl DiscoveryMethod for PortScanDiscovery {
                 for &port in ports {
                     // Scan a subset of IPs in the range (for demonstration)
                     if let Some(found_capabilities) =
-                        self.scan_port(ip_range, capability_type, port).await
+                        self.scan_port(ip_range, capability_type, port)
                     {
                         capabilities.extend(found_capabilities);
                     }
@@ -533,7 +538,7 @@ impl DiscoveryMethod for PortScanDiscovery {
 
 impl PortScanDiscovery {
     /// Scan a specific port on IP range
-    async fn scan_port(
+    fn scan_port(
         &self,
         _ip_range: &IpRange,
         capability_type: &str,

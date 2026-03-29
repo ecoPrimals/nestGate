@@ -108,7 +108,7 @@ mod crypto_tests {
             ciphertext: vec![1, 2, 3, 4, 5],
             nonce: vec![6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
             algorithm: EncryptionAlgorithm::Aes256Gcm,
-            timestamp: 1234567890,
+            timestamp: 1_234_567_890,
         };
 
         let json = serde_json::to_string(&data);
@@ -206,8 +206,7 @@ mod crypto_tests {
         let avg_ms = duration.as_millis() / 100;
         assert!(
             avg_ms < 10,
-            "Encryption should be < 10ms per 1KB, got {}ms",
-            avg_ms
+            "Encryption should be < 10ms per 1KB, got {avg_ms}ms"
         );
     }
 

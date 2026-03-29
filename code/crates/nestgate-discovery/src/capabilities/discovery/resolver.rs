@@ -208,7 +208,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).unwrap();
+        registry.register_service(&service).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Security(SecurityCapability::Authentication))
@@ -262,8 +262,8 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).unwrap();
-        registry.register_service(service2.clone()).unwrap();
+        registry.register_service(&service1).unwrap();
+        registry.register_service(&service2).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Security(SecurityCapability::Authentication))
@@ -308,8 +308,8 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).unwrap();
-        registry.register_service(service2.clone()).unwrap();
+        registry.register_service(&service1).unwrap();
+        registry.register_service(&service2).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Orchestration(
@@ -360,8 +360,8 @@ mod tests {
             health: ServiceHealth::Unhealthy,
         };
 
-        registry.register_service(unhealthy).unwrap();
-        registry.register_service(healthy.clone()).unwrap();
+        registry.register_service(&unhealthy).unwrap();
+        registry.register_service(&healthy).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::AI(AICapability::Inference))
@@ -386,7 +386,7 @@ mod tests {
             health: ServiceHealth::Unhealthy,
         };
 
-        registry.register_service(unhealthy).unwrap();
+        registry.register_service(&unhealthy).unwrap();
 
         let result = resolver.resolve(&Capability::Networking(NetworkingCapability::ServiceMesh));
 
@@ -411,7 +411,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).unwrap();
+        registry.register_service(&service).unwrap();
 
         // Should resolve both capabilities to the same service
         let resolved1 = resolver
@@ -450,8 +450,8 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1.clone()).unwrap();
-        registry.register_service(service2.clone()).unwrap();
+        registry.register_service(&service1).unwrap();
+        registry.register_service(&service2).unwrap();
 
         // Multiple resolutions should cycle through services
         let resolved1 = resolver
@@ -496,8 +496,8 @@ mod tests {
             health: ServiceHealth::Degraded,
         };
 
-        registry.register_service(degraded).unwrap();
-        registry.register_service(healthy.clone()).unwrap();
+        registry.register_service(&degraded).unwrap();
+        registry.register_service(&healthy).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Networking(NetworkingCapability::LoadBalancing))
@@ -539,7 +539,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).unwrap();
+        registry.register_service(&service).unwrap();
 
         // Verify the service can be retrieved with its metadata
         let services = registry.find_providers(&Capability::AI(AICapability::Training));
@@ -578,7 +578,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).unwrap();
+        registry.register_service(&service).unwrap();
 
         // Multiple resolutions (registry is lock-free; resolver is synchronous)
         let cap = Capability::Orchestration(OrchestrationCapability::ServiceScheduling);

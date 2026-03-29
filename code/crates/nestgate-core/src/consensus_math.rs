@@ -55,13 +55,12 @@ pub fn calculate_consensus_expiry(valid_until_times: &[i64], default_duration: i
             + default_duration
     } else {
         // Use minimum expiry from all verifications
-        *valid_until_times.iter().min().unwrap_or(
-            &(std::time::SystemTime::now()
-                .duration_since(std::time::SystemTime::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs() as i64
-                + default_duration),
-        )
+        let fallback = std::time::SystemTime::now()
+            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() as i64
+            + default_duration;
+        *valid_until_times.iter().min().unwrap_or(&fallback)
     }
 }
 #[cfg(test)]

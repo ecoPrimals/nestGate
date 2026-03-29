@@ -55,10 +55,13 @@ pub struct JwtClaims {
 impl JwtClaims {
     /// Create new claims with default values
     pub fn new(subject: String, expiry_seconds: i64) -> Result<Self> {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_err(|e| NestGateError::validation_error(&format!("Time error: {e}")))?
-            .as_secs() as i64;
+        let now = i64::try_from(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_err(|e| NestGateError::validation_error(format!("Time error: {e}")))?
+                .as_secs(),
+        )
+        .unwrap_or(i64::MAX);
 
         Ok(Self {
             sub: subject,
@@ -75,7 +78,7 @@ impl JwtClaims {
     pub fn is_expired(&self) -> bool {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_secs() as i64)
+            .map(|d| i64::try_from(d.as_secs()).unwrap_or(i64::MAX))
             .unwrap_or(0);
 
         self.exp < now
@@ -105,11 +108,10 @@ impl JwtHmac {
         };
 
         // Encode header and payload
-        let header_json = serde_json::to_string(&header).map_err(|e| {
-            NestGateError::validation_error(&format!("Header encoding failed: {e}"))
-        })?;
+        let header_json = serde_json::to_string(&header)
+            .map_err(|e| NestGateError::validation_error(format!("Header encoding failed: {e}")))?;
         let payload_json = serde_json::to_string(claims).map_err(|e| {
-            NestGateError::validation_error(&format!("Payload encoding failed: {e}"))
+            NestGateError::validation_error(format!("Payload encoding failed: {e}"))
         })?;
 
         let header_b64 = URL_SAFE_NO_PAD.encode(header_json.as_bytes());
@@ -120,7 +122,7 @@ impl JwtHmac {
 
         // Sign with HMAC-SHA256
         let mut mac = HmacSha256::new_from_slice(&self.key)
-            .map_err(|e| NestGateError::validation_error(&format!("HMAC key error: {e}")))?;
+            .map_err(|e| NestGateError::validation_error(format!("HMAC key error: {e}")))?;
         mac.update(message.as_bytes());
         let signature = mac.finalize().into_bytes();
 
@@ -144,12 +146,12 @@ impl JwtHmac {
         // Verify signature
         let message = format!("{header_b64}.{payload_b64}");
         let mut mac = HmacSha256::new_from_slice(&self.key)
-            .map_err(|e| NestGateError::validation_error(&format!("HMAC key error: {e}")))?;
+            .map_err(|e| NestGateError::validation_error(format!("HMAC key error: {e}")))?;
         mac.update(message.as_bytes());
 
-        let expected_signature = URL_SAFE_NO_PAD.decode(signature_b64).map_err(|e| {
-            NestGateError::validation_error(&format!("Signature decode error: {e}"))
-        })?;
+        let expected_signature = URL_SAFE_NO_PAD
+            .decode(signature_b64)
+            .map_err(|e| NestGateError::validation_error(format!("Signature decode error: {e}")))?;
 
         mac.verify_slice(&expected_signature)
             .map_err(|_| NestGateError::validation_error("Invalid JWT signature"))?;
@@ -157,10 +159,10 @@ impl JwtHmac {
         // Decode payload
         let payload_bytes = URL_SAFE_NO_PAD
             .decode(payload_b64)
-            .map_err(|e| NestGateError::validation_error(&format!("Payload decode error: {e}")))?;
+            .map_err(|e| NestGateError::validation_error(format!("Payload decode error: {e}")))?;
 
         let claims: JwtClaims = serde_json::from_slice(&payload_bytes)
-            .map_err(|e| NestGateError::validation_error(&format!("Claims parsing error: {e}")))?;
+            .map_err(|e| NestGateError::validation_error(format!("Claims parsing error: {e}")))?;
 
         // Check expiration
         if claims.is_expired() {
@@ -209,11 +211,10 @@ impl JwtEd25519 {
         };
 
         // Encode header and payload
-        let header_json = serde_json::to_string(&header).map_err(|e| {
-            NestGateError::validation_error(&format!("Header encoding failed: {e}"))
-        })?;
+        let header_json = serde_json::to_string(&header)
+            .map_err(|e| NestGateError::validation_error(format!("Header encoding failed: {e}")))?;
         let payload_json = serde_json::to_string(claims).map_err(|e| {
-            NestGateError::validation_error(&format!("Payload encoding failed: {e}"))
+            NestGateError::validation_error(format!("Payload encoding failed: {e}"))
         })?;
 
         let header_b64 = URL_SAFE_NO_PAD.encode(header_json.as_bytes());
@@ -243,9 +244,9 @@ impl JwtEd25519 {
 
         // Verify signature
         let message = format!("{header_b64}.{payload_b64}");
-        let signature_bytes = URL_SAFE_NO_PAD.decode(signature_b64).map_err(|e| {
-            NestGateError::validation_error(&format!("Signature decode error: {e}"))
-        })?;
+        let signature_bytes = URL_SAFE_NO_PAD
+            .decode(signature_b64)
+            .map_err(|e| NestGateError::validation_error(format!("Signature decode error: {e}")))?;
 
         let signature = Signature::from_bytes(
             signature_bytes
@@ -261,10 +262,10 @@ impl JwtEd25519 {
         // Decode payload
         let payload_bytes = URL_SAFE_NO_PAD
             .decode(payload_b64)
-            .map_err(|e| NestGateError::validation_error(&format!("Payload decode error: {e}")))?;
+            .map_err(|e| NestGateError::validation_error(format!("Payload decode error: {e}")))?;
 
         let claims: JwtClaims = serde_json::from_slice(&payload_bytes)
-            .map_err(|e| NestGateError::validation_error(&format!("Claims parsing error: {e}")))?;
+            .map_err(|e| NestGateError::validation_error(format!("Claims parsing error: {e}")))?;
 
         // Check expiration
         if claims.is_expired() {

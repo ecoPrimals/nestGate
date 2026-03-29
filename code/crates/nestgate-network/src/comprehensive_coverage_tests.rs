@@ -327,6 +327,7 @@ mod network_comprehensive_coverage {
     #[test]
     fn test_service_status_healthy_to_unhealthy() {
         let mut status = ServiceStatus::Healthy;
+        assert_eq!(status, ServiceStatus::Healthy);
         status = ServiceStatus::Unhealthy;
         assert_eq!(status, ServiceStatus::Unhealthy);
     }
@@ -334,6 +335,7 @@ mod network_comprehensive_coverage {
     #[test]
     fn test_service_status_starting_to_running() {
         let mut status = ServiceStatus::Starting;
+        assert_eq!(status, ServiceStatus::Starting);
         status = ServiceStatus::Running;
         assert_eq!(status, ServiceStatus::Running);
     }
@@ -341,6 +343,7 @@ mod network_comprehensive_coverage {
     #[test]
     fn test_service_status_unhealthy_to_stopped() {
         let mut status = ServiceStatus::Unhealthy;
+        assert_eq!(status, ServiceStatus::Unhealthy);
         status = ServiceStatus::Stopped;
         assert_eq!(status, ServiceStatus::Stopped);
     }
@@ -348,6 +351,7 @@ mod network_comprehensive_coverage {
     #[test]
     fn test_service_status_stopped_to_running() {
         let mut status = ServiceStatus::Stopped;
+        assert_eq!(status, ServiceStatus::Stopped);
         status = ServiceStatus::Running;
         assert_eq!(status, ServiceStatus::Running);
     }

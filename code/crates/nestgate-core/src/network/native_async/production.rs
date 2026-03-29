@@ -275,7 +275,10 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
     /// Handles  Connection
     async fn handle_connection(&self, connection: Self::Connection) -> Result<()> {
         // Compile-time optimization for connection handling
-        println!("Handling connection: {}", connection.connection_id);
+        tracing::info!(
+            connection_id = %connection.connection_id,
+            "Handling connection"
+        );
         Ok(())
     }
 

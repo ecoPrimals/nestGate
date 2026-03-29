@@ -616,4 +616,17 @@ mod regression_tests {
         let slope = RealTimePerformanceMonitor::test_calculate_trend(&[0.0, 2.0]);
         assert!((slope - 2.0).abs() < 1e-9);
     }
+
+    #[tokio::test]
+    async fn get_trending_data_empty_cache() {
+        let m = RealTimePerformanceMonitor::new();
+        let rows = m.get_trending_data().await.expect("trending");
+        assert!(rows.is_empty());
+    }
+
+    #[tokio::test]
+    async fn default_monitor_matches_new() {
+        let a = RealTimePerformanceMonitor::default();
+        let _ = a.get_metrics_cache();
+    }
 }

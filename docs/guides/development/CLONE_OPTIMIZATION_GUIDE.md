@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 28, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # Clone Optimization Guide for NestGate
 
 **Date**: November 28, 2025  

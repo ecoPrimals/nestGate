@@ -41,7 +41,7 @@ impl CapabilityRegistry {
     }
 
     /// Register a service with its capabilities (lock-free!)
-    pub fn register_service(&self, service: ServiceDescriptor) -> CapabilityResult<()> {
+    pub fn register_service(&self, service: &ServiceDescriptor) -> CapabilityResult<()> {
         // DashMap: Lock-free concurrent registration!
         for capability in &service.capabilities {
             self.capabilities
@@ -133,7 +133,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).unwrap();
+        registry.register_service(&service).unwrap();
 
         let providers =
             registry.find_providers(&Capability::Security(SecurityCapability::Authentication));
@@ -155,7 +155,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).unwrap();
+        registry.register_service(&service).unwrap();
 
         assert!(registry.has_capability(&Capability::Security(SecurityCapability::Encryption)));
 
@@ -176,7 +176,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).unwrap();
+        registry.register_service(&service).unwrap();
         assert!(registry.has_capability(&Capability::Security(SecurityCapability::Authentication)));
 
         registry.unregister_service(&service_id).unwrap();
@@ -210,8 +210,8 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1.clone()).unwrap();
-        registry.register_service(service2.clone()).unwrap();
+        registry.register_service(&service1).unwrap();
+        registry.register_service(&service2).unwrap();
 
         let providers =
             registry.find_providers(&Capability::Storage(StorageCapability::ObjectStorage));
@@ -239,7 +239,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).unwrap();
+        registry.register_service(&service).unwrap();
 
         // Should find service under both capabilities
         let providers1 =
@@ -294,7 +294,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).unwrap();
+        registry.register_service(&service1).unwrap();
 
         // Update service (unregister and re-register)
         registry.unregister_service(&service_id).unwrap();
@@ -308,7 +308,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service2).unwrap();
+        registry.register_service(&service2).unwrap();
 
         // Should have new capability, not old one
         assert!(!registry.has_capability(&Capability::AI(AICapability::Inference)));
@@ -339,8 +339,8 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).unwrap();
-        registry.register_service(service2).unwrap();
+        registry.register_service(&service1).unwrap();
+        registry.register_service(&service2).unwrap();
 
         // Verify both services registered
         assert!(registry.has_capability(&Capability::Storage(StorageCapability::Database)));
@@ -360,7 +360,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).unwrap();
+        registry.register_service(&service).unwrap();
 
         // Query multiple times - should persist
         for _ in 0..3 {
@@ -396,7 +396,7 @@ mod tests {
         let mut handles = vec![];
         for service in services {
             let registry = Arc::clone(&registry);
-            let handle = tokio::spawn(async move { registry.register_service(service) });
+            let handle = tokio::spawn(async move { registry.register_service(&service) });
             handles.push(handle);
         }
 
@@ -428,7 +428,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).unwrap();
+        registry.register_service(&service).unwrap();
 
         // Concurrent reads and writes
         let reg1 = Arc::clone(&registry);
@@ -482,8 +482,8 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1.clone()).unwrap();
-        registry.register_service(service2.clone()).unwrap();
+        registry.register_service(&service1).unwrap();
+        registry.register_service(&service2).unwrap();
 
         let all_services = registry.all_services();
         assert_eq!(all_services.len(), 2);
@@ -510,7 +510,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).unwrap();
+        registry.register_service(&service).unwrap();
 
         // Verify registered
         assert!(registry.has_capability(&Capability::AI(AICapability::ComputerVision)));
@@ -548,7 +548,7 @@ mod tests {
         };
 
         // Register in one
-        registry1.register_service(service.clone()).unwrap();
+        registry1.register_service(&service).unwrap();
 
         // Should be visible in both (shared state)
         assert!(registry1.has_capability(&Capability::Security(SecurityCapability::AuditLogging)));

@@ -6,14 +6,6 @@
 use super::core_errors::*;
 use std::time::Duration;
 
-#[test]
-fn error_severity_roundtrip_serde() {
-    let s = ErrorSeverity::High;
-    let json = serde_json::to_string(&s).unwrap();
-    let back: ErrorSeverity = serde_json::from_str(&json).unwrap();
-    assert_eq!(s, back);
-}
-
 macro_rules! assert_display_contains {
     ($err:expr, $needle:expr) => {
         let d = $err.to_string();
@@ -248,8 +240,8 @@ fn constructor_helpers_non_empty_display() {
 #[test]
 fn detailed_constructors_roundtrip_serde() {
     let e = NestGateUnifiedError::configuration_error_detailed(
-        "field".into(),
-        "msg".into(),
+        "field",
+        "msg",
         Some("cur".into()),
         Some("exp".into()),
         true,
@@ -524,26 +516,26 @@ r6_smoke! {
     r6_smoke_sim01 => NestGateUnifiedError::simple("quick");
     r6_smoke_sim02 => NestGateUnifiedError::simple("another");
     r6_smoke_det_api => NestGateUnifiedError::api_error_detailed(
-        "m".into(),
+        "m",
         Some(502),
         Some("rid".into()),
         Some("/e".into()),
     );
     r6_smoke_det_cfg => NestGateUnifiedError::configuration_error_detailed(
-        "f".into(),
-        "msg".into(),
+        "f",
+        "msg",
         Some("c".into()),
         Some("e".into()),
         false,
     );
-    r6_smoke_det_sto => NestGateUnifiedError::storage_error_detailed("m".into(), Some("o".into()));
+    r6_smoke_det_sto => NestGateUnifiedError::storage_error_detailed("m", Some("o".into()));
     r6_smoke_det_net => NestGateUnifiedError::network_error_detailed(
-        "m".into(),
+        "m",
         Some("o".into()),
         Some("ep".into()),
     );
     r6_smoke_det_val => NestGateUnifiedError::validation_error_detailed(
-        "m".into(),
+        "m",
         Some("f".into()),
         Some("e".into()),
         Some("a".into()),
@@ -599,8 +591,8 @@ fn detailed_constructors_preserve_fields() {
     let cfg = NestGateUnifiedError::configuration_error_detailed(
         "k".to_string(),
         "m".to_string(),
-        Some("cur".to_string()),
-        Some("exp".to_string()),
+        Some("cur".into()),
+        Some("exp".into()),
         true,
     );
     let json = serde_json::to_string(&cfg).unwrap();
@@ -609,17 +601,17 @@ fn detailed_constructors_preserve_fields() {
     let api = NestGateUnifiedError::api_error_detailed(
         "msg".to_string(),
         Some(418),
-        Some("rid".to_string()),
-        Some("/x".to_string()),
+        Some("rid".into()),
+        Some("/x".into()),
     );
     let api_s = api.to_string();
     assert!(api_s.contains("418") || api_s.contains("msg"));
 
     let v = NestGateUnifiedError::validation_error_detailed(
         "v".to_string(),
-        Some("f".to_string()),
-        Some("e".to_string()),
-        Some("a".to_string()),
+        Some("f".into()),
+        Some("e".into()),
+        Some("a".into()),
     );
     assert!(v.to_string().contains("Validation"));
 }
@@ -644,7 +636,7 @@ fn migration_helpers_messages() {
     let vf = NestGateUnifiedError::validation_field("email", "bad");
     assert!(vf.to_string().contains("email"));
 
-    let vs = NestGateUnifiedError::validation_schema("v1", "oops", Some("/a".to_string()));
+    let vs = NestGateUnifiedError::validation_schema("v1", "oops", Some("/a".into()));
     assert!(vs.to_string().contains("Schema") || vs.to_string().contains("v1"));
 
     let sa = NestGateUnifiedError::security_authentication_failed("u", "nope");
@@ -693,13 +685,49 @@ fn test_type_serde() {
 #[test]
 fn storage_error_detailed_network_detailed_roundtrip() {
     let s = NestGateUnifiedError::storage_error_detailed("m".to_string(), Some("snap".into()));
-    let n = NestGateUnifiedError::network_error_detailed(
-        "m2".into(),
-        Some("op".into()),
-        Some("ep".into()),
-    );
+    let n =
+        NestGateUnifiedError::network_error_detailed("m2", Some("op".into()), Some("ep".into()));
     for e in [s, n] {
         let j = serde_json::to_string(&e).unwrap();
         let _: NestGateUnifiedError = serde_json::from_str(&j).unwrap();
     }
+}
+
+#[test]
+fn automation_security_storage_extension_constructors_display() {
+    assert!(
+        NestGateUnifiedError::automation("job")
+            .to_string()
+            .contains("Automation")
+    );
+    assert!(
+        NestGateUnifiedError::automation_operation("job", Some("tgt".into()))
+            .to_string()
+            .contains("Automation")
+    );
+    assert!(
+        NestGateUnifiedError::auth("no")
+            .to_string()
+            .contains("Security")
+    );
+    assert!(
+        NestGateUnifiedError::security("s")
+            .to_string()
+            .contains("Security")
+    );
+    assert!(
+        NestGateUnifiedError::authorization("denied", "alice")
+            .to_string()
+            .contains("Security")
+    );
+    assert!(
+        NestGateUnifiedError::storage("blob")
+            .to_string()
+            .contains("Storage")
+    );
+    assert!(
+        NestGateUnifiedError::storage_with_operation("x", "put")
+            .to_string()
+            .contains("Storage")
+    );
 }

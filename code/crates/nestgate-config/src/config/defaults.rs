@@ -529,7 +529,7 @@ mod tests {
     fn test_timeout_defaults_request_reasonable() {
         let timeout = TimeoutDefaults::request_timeout_ms();
         assert!(timeout > 5000, "Request timeout should be > 5 seconds");
-        assert!(timeout < 120000, "Request timeout should be < 2 minutes");
+        assert!(timeout < 120_000, "Request timeout should be < 2 minutes");
     }
 
     #[test]

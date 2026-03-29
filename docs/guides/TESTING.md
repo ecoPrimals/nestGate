@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 3, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🧪 NestGate Testing Guide
 **Version**: 1.0  
 **Last Updated**: November 3, 2025  

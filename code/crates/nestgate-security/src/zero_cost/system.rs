@@ -196,11 +196,11 @@ mod tests {
         let security = ZeroCostJwtProvider::new([1u8; 32]);
         let storage = ZeroCostFileStorage::new("/tmp".to_string());
 
-        let _system = ZeroCostSystem::<_, _, _, 10, 5000>::new(cache, security, storage);
+        let system = ZeroCostSystem::<_, _, _, 10, 5000>::new(cache, security, storage);
 
         // Verify compile-time constants
-        assert_eq!(_system.max_size(), 10);
-        assert_eq!(_system.timeout_ms(), 5000);
+        assert_eq!(system.max_size(), 10);
+        assert_eq!(system.timeout_ms(), 5000);
     }
 
     #[test]
@@ -215,7 +215,7 @@ mod tests {
             id: 1,
             data: vec![1, 2, 3, 4],
             metadata: ZeroCostMetadata {
-                timestamp: 1234567890,
+                timestamp: 1_234_567_890,
                 priority: RequestPriority::Normal,
                 source: [0u8; 32],
             },
@@ -245,19 +245,19 @@ mod tests {
 
     #[test]
     fn test_zero_cost_system_builder() {
-        let _system = ZeroCostSystemBuilder::<100, 1000>::new().with_memory_cache();
+        let system = ZeroCostSystemBuilder::<100, 1000>::new().with_memory_cache();
 
         // Verify builder configuration
-        assert_eq!(_system.max_size(), 100);
-        assert_eq!(_system.timeout_ms(), 1000);
+        assert_eq!(system.max_size(), 100);
+        assert_eq!(system.timeout_ms(), 1000);
     }
 
     #[test]
     fn test_zero_cost_system_builder_with_memory_cache() {
-        let _system = ZeroCostSystemBuilder::<200, 3000>::new().with_memory_cache();
+        let system = ZeroCostSystemBuilder::<200, 3000>::new().with_memory_cache();
 
         // Verify the system was built with correct configuration
-        assert_eq!(_system.max_size(), 200);
-        assert_eq!(_system.timeout_ms(), 3000);
+        assert_eq!(system.max_size(), 200);
+        assert_eq!(system.timeout_ms(), 3000);
     }
 }

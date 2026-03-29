@@ -239,4 +239,23 @@ mod tests {
         let tier = predict_tier(&svc, "/this/path/should/not/exist/nestgate_test").await;
         assert_eq!(tier.expect("tier"), "warm");
     }
+
+    #[test]
+    fn parse_size_helpers_match_snapshot_module_semantics() {
+        assert_eq!(parse_size("-"), Some(0));
+        assert_eq!(parse_size("100"), Some(100));
+        assert_eq!(parse_size("4g"), Some(4 * 1024 * 1024 * 1024));
+    }
+
+    #[test]
+    fn extract_file_size_reads_size_line() {
+        let out = "  Size: 4096 Blocks: 8";
+        assert_eq!(extract_file_size(out), Some(4096));
+    }
+
+    #[test]
+    fn extract_access_time_finds_access_line() {
+        let out = "Access: 2024-01-01\n";
+        assert_eq!(extract_access_time(out), Some(1));
+    }
 }

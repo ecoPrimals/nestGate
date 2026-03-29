@@ -9,7 +9,7 @@
 use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::env;
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr};
 
 /// Network configuration for API and service endpoints.
 ///
@@ -150,11 +150,9 @@ impl Default for NetworkConfig {
         use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
 
         // Parse with guaranteed fallback
-        let api_host = addresses::LOCALHOST_IPV4.parse().unwrap_or_else(|_| {
-            "127.0.0.1"
-                .parse()
-                .expect("INVARIANT: '127.0.0.1' is a valid IpAddr")
-        });
+        let api_host = addresses::LOCALHOST_IPV4
+            .parse()
+            .unwrap_or_else(|_| Ipv4Addr::LOCALHOST.into());
 
         Self {
             api_host,

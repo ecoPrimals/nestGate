@@ -5,11 +5,13 @@
 //! Storage Errors functionality and utilities.
 //! This module provides storage-specific error types and helper functions.
 
+use std::borrow::Cow;
+
 use super::core_errors::{NestGateUnifiedError, StorageErrorDetails};
 
 impl StorageErrorDetails {
     /// Create a storage error with just a message
-    pub fn new(message: impl Into<String>) -> Self {
+    pub fn new(message: impl Into<Cow<'static, str>>) -> Self {
         Self {
             message: message.into(),
             operation: None,
@@ -20,7 +22,10 @@ impl StorageErrorDetails {
     }
 
     /// Create a storage error with operation context
-    pub fn with_operation(message: impl Into<String>, operation: impl Into<String>) -> Self {
+    pub fn with_operation(
+        message: impl Into<Cow<'static, str>>,
+        operation: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self {
             message: message.into(),
             operation: Some(operation.into()),
@@ -31,10 +36,13 @@ impl StorageErrorDetails {
     }
 
     /// Create a ZFS-specific error
-    pub fn zfs_error(message: impl Into<String>, resource: impl Into<String>) -> Self {
+    pub fn zfs_error(
+        message: impl Into<Cow<'static, str>>,
+        resource: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self {
             message: message.into(),
-            operation: Some("zfs_operation".to_string()),
+            operation: Some(Cow::Borrowed("zfs_operation")),
             resource: Some(resource.into()),
             storage_data: None,
             context: None,
@@ -52,14 +60,14 @@ impl NestGateUnifiedError {
     /// use nestgate_types::error::NestGateError;
     /// let error = NestGateError::storage("Failed to read file");
     /// ```
-    pub fn storage(message: impl Into<String>) -> Self {
+    pub fn storage(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Storage(Box::new(StorageErrorDetails::new(message)))
     }
 
     /// Create a storage error with operation context
     pub fn storage_with_operation(
-        message: impl Into<String>,
-        operation: impl Into<String>,
+        message: impl Into<Cow<'static, str>>,
+        operation: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self::Storage(Box::new(StorageErrorDetails::with_operation(
             message, operation,

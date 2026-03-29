@@ -139,7 +139,7 @@ mod tests {
             "domains": {}
         });
         let options = MigrationOptions::default();
-        let migrator = ConfigMigrator::from_primary_config(config, options).unwrap();
+        let migrator = ConfigMigrator::from_primary_config(&config, options).unwrap();
         assert_eq!(migrator.source_type, "NestGatePrimaryConfig");
     }
 
@@ -150,7 +150,7 @@ mod tests {
             "automation": {}
         });
         let options = MigrationOptions::default();
-        let migrator = ConfigMigrator::from_unified_config(config, options).unwrap();
+        let migrator = ConfigMigrator::from_unified_config(&config, options).unwrap();
         assert_eq!(migrator.source_type, "UnifiedCanonicalExtensions");
     }
 
@@ -160,7 +160,7 @@ mod tests {
             "system": {}
         });
         let options = MigrationOptions::default();
-        let migrator = ConfigMigrator::from_final_config(config, options).unwrap();
+        let migrator = ConfigMigrator::from_final_config(&config, options).unwrap();
         assert_eq!(migrator.source_type, "NestGateFinalConfig");
     }
 
@@ -172,7 +172,7 @@ mod tests {
             validate_after_migration: true,
             ..Default::default()
         };
-        let migrator = ConfigMigrator::from_final_config(config, options).unwrap();
+        let migrator = ConfigMigrator::from_final_config(&config, options).unwrap();
         let result = migrator.migrate();
         assert!(result.is_ok());
     }
@@ -183,7 +183,7 @@ mod tests {
         let mut options = MigrationOptions::default();
         options.dry_run = true;
         options.create_backup = false;
-        let migrator = ConfigMigrator::from_final_config(config, options).unwrap();
+        let migrator = ConfigMigrator::from_final_config(&config, options).unwrap();
         let result = migrator.migrate();
         assert!(result.is_ok());
         let config_result = result.unwrap();

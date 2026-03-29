@@ -197,3 +197,73 @@ pub async fn get_pool_status(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
+    use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
+    use nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    async fn service_with_open_circuit_no_fallback() -> FailSafeZfsService {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = true;
+        c.failure_threshold = 1;
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let svc = FailSafeZfsService::new(primary, c);
+        svc.circuit_breaker.record_failure().await;
+        svc
+    }
+
+    #[tokio::test]
+    async fn list_pools_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = list_pools(&svc).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_pool_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = get_pool(&svc, "tank").await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn create_pool_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let cfg = PoolConfig {
+            name: "test_pool".to_string(),
+            devices: vec![],
+            mountpoint: None,
+            compression: false,
+            deduplication: false,
+            properties: HashMap::new(),
+        };
+        let r = create_pool(&svc, &cfg).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn destroy_pool_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = destroy_pool(&svc, "tank").await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn scrub_pool_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = scrub_pool(&svc, "tank").await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_pool_status_circuit_open_without_fallback_errors() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = get_pool_status(&svc, "tank").await;
+        assert!(r.is_err());
+    }
+}

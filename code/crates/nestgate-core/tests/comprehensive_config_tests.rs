@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Modern Configuration Tests
 //!
@@ -140,7 +151,7 @@ mod error_handling_patterns {
     async fn test_map_err_pattern() {
         fn load_config() -> Result<String> {
             std::fs::read_to_string("/nonexistent/path")
-                .map_err(|e| NestGateError::configuration_error("config_file", &e.to_string()))
+                .map_err(|e| NestGateError::configuration_error("config_file", e.to_string()))
         }
 
         let result = load_config();

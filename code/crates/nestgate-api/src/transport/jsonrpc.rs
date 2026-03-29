@@ -182,7 +182,7 @@ where
             stream
                 .readable()
                 .await
-                .map_err(|e| NestGateError::network_error(&format!("Socket not readable: {e}")))?;
+                .map_err(|e| NestGateError::network_error(format!("Socket not readable: {e}")))?;
 
             let n = match stream.try_read(&mut buffer) {
                 Ok(0) => {
@@ -256,19 +256,19 @@ where
         response: &JsonRpcResponse,
     ) -> Result<()> {
         let response_str = serde_json::to_string(response)
-            .map_err(|e| NestGateError::api_error(&format!("Failed to serialize response: {e}")))?;
+            .map_err(|e| NestGateError::api_error(format!("Failed to serialize response: {e}")))?;
 
         trace!("Sending response: {}", response_str);
 
         stream
             .writable()
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Socket not writable: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Socket not writable: {e}")))?;
 
         stream
             .write_all(response_str.as_bytes())
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Failed to write response: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to write response: {e}")))?;
 
         Ok(())
     }
@@ -289,6 +289,7 @@ pub trait RpcMethodHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_core::error::Result;
 
     #[test]
     fn test_jsonrpc_request_parsing() {
@@ -312,5 +313,78 @@ mod tests {
         assert_eq!(response.jsonrpc, "2.0");
         assert!(response.result.is_none());
         assert!(response.error.is_some());
+    }
+
+    #[test]
+    fn jsonrpc_error_standard_codes() {
+        assert_eq!(JsonRpcError::parse_error().code, -32700);
+        assert_eq!(JsonRpcError::invalid_request().code, -32600);
+        assert_eq!(JsonRpcError::method_not_found().code, -32601);
+        assert_eq!(JsonRpcError::internal_error().code, -32603);
+    }
+
+    #[test]
+    fn jsonrpc_response_error_constructor_roundtrip() {
+        let e = JsonRpcError::method_not_found();
+        let r = JsonRpcResponse::error(Value::from(42), e.clone());
+        assert!(r.result.is_none());
+        assert_eq!(r.error.as_ref().map(|x| x.code), Some(-32601));
+        assert_eq!(r.id, Value::from(42));
+    }
+
+    struct EchoHandler;
+
+    impl RpcMethodHandler for EchoHandler {
+        async fn handle_method(&self, method: &str, params: Value) -> Result<Value> {
+            match method {
+                "echo" => Ok(params),
+                _ => Err(NestGateError::api_error("Unknown method")),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_request_success_and_unknown_method() {
+        let h = JsonRpcHandler::new(EchoHandler);
+        let ok = h
+            .handle_request(JsonRpcRequest {
+                jsonrpc: "2.0".to_string(),
+                method: "echo".to_string(),
+                params: Value::String("hi".to_string()),
+                id: Value::from(1),
+            })
+            .await;
+        assert_eq!(ok.result, Some(Value::String("hi".to_string())));
+
+        let bad = h
+            .handle_request(JsonRpcRequest {
+                jsonrpc: "2.0".to_string(),
+                method: "missing".to_string(),
+                params: Value::Null,
+                id: Value::from(2),
+            })
+            .await;
+        assert!(bad.error.is_some());
+        assert_eq!(bad.error.as_ref().unwrap().code, -32601);
+    }
+
+    #[tokio::test]
+    async fn handle_request_internal_error_when_not_unknown_method() {
+        struct FailHandler;
+        impl RpcMethodHandler for FailHandler {
+            async fn handle_method(&self, _method: &str, _params: Value) -> Result<Value> {
+                Err(NestGateError::api_error("boom"))
+            }
+        }
+        let h = JsonRpcHandler::new(FailHandler);
+        let r = h
+            .handle_request(JsonRpcRequest {
+                jsonrpc: "2.0".to_string(),
+                method: "x".to_string(),
+                params: Value::Null,
+                id: Value::Null,
+            })
+            .await;
+        assert_eq!(r.error.as_ref().unwrap().code, -32603);
     }
 }

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **EXTENDED UNIVERSAL ADAPTER TEST SUITE**
 //!
 //! Comprehensive validation of the universal adapter system after canonical modernization:

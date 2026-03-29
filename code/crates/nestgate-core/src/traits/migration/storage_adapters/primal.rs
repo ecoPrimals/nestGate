@@ -84,7 +84,7 @@ where
     }
 
     /// Version
-    fn version(&self) -> &str {
+    fn version(&self) -> &'static str {
         env!("CARGO_PKG_VERSION")
     }
 }

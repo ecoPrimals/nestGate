@@ -107,8 +107,8 @@ impl BinErrorHelper {
         config_path: Option<String>,
     ) -> NestGateError {
         NestGateError::configuration_error(
-            &config_path.unwrap_or_else(|| "bin_config".to_string()),
-            &message.into(),
+            config_path.unwrap_or_else(|| "bin_config".to_string()),
+            message.into(),
         )
     }
 
@@ -173,7 +173,7 @@ impl From<NestGateBinError> for NestGateError {
                 message,
             } => Self::configuration_error(
                 "config",
-                &format!(
+                format!(
                     "{} - {}",
                     config_path.unwrap_or_else(|| "unknown".to_string()),
                     message

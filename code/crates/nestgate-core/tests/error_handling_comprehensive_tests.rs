@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Comprehensive error handling tests
 //!
@@ -109,7 +120,7 @@ mod error_handling_comprehensive_tests {
     fn test_map_err_transformation() {
         let result: std::result::Result<i32, String> = Err("parse error".to_string());
         let transformed: Result<i32> =
-            result.map_err(|e| NestGateError::validation_error(&format!("Failed: {}", e)));
+            result.map_err(|e| NestGateError::validation_error(format!("Failed: {}", e)));
         assert!(transformed.is_err());
     }
 

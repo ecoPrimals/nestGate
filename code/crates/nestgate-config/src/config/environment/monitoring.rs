@@ -67,6 +67,7 @@ impl MonitoringConfig {
 impl Default for MonitoringConfig {
     fn default() -> Self {
         Self {
+            #[allow(clippy::expect_used)]
             metrics_port: Port::new(9090).expect("Default metrics port"),
             detailed_metrics: true,
             log_level: "info".to_string(),

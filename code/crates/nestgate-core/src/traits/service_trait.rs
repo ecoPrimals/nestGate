@@ -22,7 +22,7 @@
 /// }
 ///
 /// impl Service for MyService {
-///     fn name(&self) -> &str {
+///     fn name(&self) -> &'static str {
 ///         &self.name
 ///     }
 ///     
@@ -56,7 +56,7 @@
 /// ```
 pub trait Service: Send + Sync {
     /// Service name identifier
-    fn name(&self) -> &str;
+    fn name(&self) -> &'static str;
 
     /// Initialize the service
     ///

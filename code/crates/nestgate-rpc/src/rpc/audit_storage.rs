@@ -188,6 +188,10 @@ impl AuditStorage {
     ///
     /// # Returns
     /// - Audit ID on success
+    ///
+    /// # Errors
+    ///
+    /// Returns validation errors when `execution_id`, `family_id`, or `user_id` is empty.
     pub async fn store_audit(&self, mut audit: ExecutionAudit) -> Result<String> {
         // Validate inputs
         if audit.execution_id.is_empty() {
@@ -242,6 +246,10 @@ impl AuditStorage {
     /// # Self-Knowledge Principle
     /// - Only retrieves from specified `family_id`
     /// - No cross-family access possible
+    ///
+    /// # Errors
+    ///
+    /// Returns `not_found` when the family bucket or execution id is missing.
     pub async fn retrieve_audit(
         &self,
         execution_id: &str,
@@ -263,6 +271,10 @@ impl AuditStorage {
     }
 
     /// List audits for a family (with optional filters)
+    ///
+    /// # Errors
+    ///
+    /// Returns `not_found` when no audits exist for the given `family_id`.
     pub async fn list_audits(
         &self,
         family_id: &str,
@@ -306,6 +318,7 @@ impl AuditStorage {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use serde_json::json;
 
@@ -440,5 +453,187 @@ mod tests {
 
         let result = storage.store_audit(audit).await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_list_audits_filters_by_user_and_status() {
+        let storage = AuditStorage::new();
+        let base = ExecutionAudit {
+            id: String::new(),
+            execution_id: "e1".to_string(),
+            graph_id: "g".to_string(),
+            template_id: None,
+            user_id: "alice".to_string(),
+            family_id: "fam_list".to_string(),
+            started_at: Utc::now(),
+            completed_at: None,
+            status: ExecutionStatus::Running,
+            modifications: vec![],
+            outcomes: vec![],
+            metadata: json!({}),
+        };
+        let mut second = base.clone();
+        second.execution_id = "e2".to_string();
+        second.user_id = "bob".to_string();
+        second.status = ExecutionStatus::Completed;
+
+        storage.store_audit(base).await.unwrap();
+        storage.store_audit(second).await.unwrap();
+
+        let alice_only = storage
+            .list_audits("fam_list", Some("alice"), None)
+            .await
+            .unwrap();
+        assert_eq!(alice_only.len(), 1);
+        assert_eq!(alice_only[0].execution_id, "e1");
+
+        let completed = storage
+            .list_audits("fam_list", None, Some(ExecutionStatus::Completed))
+            .await
+            .unwrap();
+        assert_eq!(completed.len(), 1);
+        assert_eq!(completed[0].execution_id, "e2");
+    }
+
+    #[tokio::test]
+    async fn test_list_audits_unknown_family_errors() {
+        let storage = AuditStorage::new();
+        let r = storage.list_audits("missing_fam", None, None).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn list_audits_empty_when_user_filter_excludes_all() {
+        let storage = AuditStorage::new();
+        let audit = ExecutionAudit {
+            id: String::new(),
+            execution_id: "ex_f".into(),
+            graph_id: "g".into(),
+            template_id: None,
+            user_id: "carol".into(),
+            family_id: "fam_filter".into(),
+            started_at: Utc::now(),
+            completed_at: None,
+            status: ExecutionStatus::Running,
+            modifications: vec![],
+            outcomes: vec![],
+            metadata: json!({}),
+        };
+        storage.store_audit(audit).await.unwrap();
+        let empty = storage
+            .list_audits("fam_filter", Some("dave"), None)
+            .await
+            .unwrap();
+        assert!(empty.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_store_rejects_empty_family_id() {
+        let storage = AuditStorage::new();
+        let audit = ExecutionAudit {
+            id: String::new(),
+            execution_id: "e".to_string(),
+            graph_id: "g".to_string(),
+            template_id: None,
+            user_id: "u".to_string(),
+            family_id: String::new(),
+            started_at: Utc::now(),
+            completed_at: None,
+            status: ExecutionStatus::Running,
+            modifications: vec![],
+            outcomes: vec![],
+            metadata: json!({}),
+        };
+        assert!(storage.store_audit(audit).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_store_rejects_empty_user_id() {
+        let storage = AuditStorage::new();
+        let audit = ExecutionAudit {
+            id: String::new(),
+            execution_id: "e".to_string(),
+            graph_id: "g".to_string(),
+            template_id: None,
+            user_id: String::new(),
+            family_id: "fam".to_string(),
+            started_at: Utc::now(),
+            completed_at: None,
+            status: ExecutionStatus::Running,
+            modifications: vec![],
+            outcomes: vec![],
+            metadata: json!({}),
+        };
+        assert!(storage.store_audit(audit).await.is_err());
+    }
+
+    #[test]
+    fn execution_audit_and_node_outcome_serde_roundtrip() {
+        let audit = ExecutionAudit {
+            id: "audit_full".into(),
+            execution_id: "ex".into(),
+            graph_id: "g".into(),
+            template_id: Some("t".into()),
+            user_id: "u".into(),
+            family_id: "f".into(),
+            started_at: Utc::now(),
+            completed_at: None,
+            status: ExecutionStatus::Cancelled,
+            modifications: vec![],
+            outcomes: vec![NodeOutcome {
+                node_id: "n1".into(),
+                status: NodeStatus::Skipped,
+                started_at: Utc::now(),
+                completed_at: None,
+                duration_ms: 0,
+                error: None,
+                metrics: json!({"k": 1}),
+            }],
+            metadata: json!({"x": true}),
+        };
+        let s = serde_json::to_string(&audit).unwrap();
+        let back: ExecutionAudit = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.status, ExecutionStatus::Cancelled);
+        assert_eq!(back.outcomes[0].status, NodeStatus::Skipped);
+    }
+
+    #[test]
+    fn graph_modification_types_serialize() {
+        for mt in [
+            ModificationType::AddNode,
+            ModificationType::RemoveNode,
+            ModificationType::ModifyNode,
+            ModificationType::AddEdge,
+            ModificationType::RemoveEdge,
+        ] {
+            let gm = GraphModification {
+                timestamp: Utc::now(),
+                modification_type: mt.clone(),
+                node_id: None,
+                data: json!({}),
+            };
+            let s = serde_json::to_string(&gm).unwrap();
+            let back: GraphModification = serde_json::from_str(&s).unwrap();
+            assert_eq!(back.modification_type, mt);
+        }
+    }
+
+    #[test]
+    fn execution_status_and_node_status_json_roundtrip() {
+        for s in [
+            ExecutionStatus::Running,
+            ExecutionStatus::Completed,
+            ExecutionStatus::Failed,
+            ExecutionStatus::Cancelled,
+        ] {
+            let j = serde_json::to_string(&s).unwrap();
+            let back: ExecutionStatus = serde_json::from_str(&j).unwrap();
+            assert_eq!(back, s);
+        }
+        for s in [NodeStatus::Success, NodeStatus::Failed, NodeStatus::Skipped] {
+            let j = serde_json::to_string(&s).unwrap();
+            let back: NodeStatus = serde_json::from_str(&j).unwrap();
+            assert_eq!(back, s);
+        }
     }
 }

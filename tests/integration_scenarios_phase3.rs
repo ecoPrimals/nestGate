@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Integration Test Scenarios - BearDog-Inspired Patterns (Phase 3)
 //!
 //! Adding integration test scenarios focusing on component interactions,

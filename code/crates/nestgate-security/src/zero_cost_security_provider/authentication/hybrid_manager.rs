@@ -235,7 +235,7 @@ impl HybridAuthenticationManager {
         debug!("Attempting external authentication via capability discovery");
 
         // Use runtime discovery to find Security capability
-        let discovery_client = RuntimeDiscovery::new().await?;
+        let discovery_client = RuntimeDiscovery::new()?;
 
         // Discover security primals at runtime (no hardcoded endpoints)
         match discovery_client.find_security_primal().await {
@@ -381,12 +381,10 @@ impl HybridAuthenticationManager {
     /// Local token validation
     async fn validate_token_local(&self, token_str: &str) -> Result<bool> {
         let cache = self.token_cache.read().await;
-        if let Some(cached) = cache.get(token_str) {
+        Ok(cache.get(token_str).is_some_and(|cached| {
             let elapsed = cached.created_at.elapsed().unwrap_or(Duration::MAX);
-            Ok(elapsed < self.config.local_token_settings.token_expiry)
-        } else {
-            Ok(false)
-        }
+            elapsed < self.config.local_token_settings.token_expiry
+        }))
     }
 
     /// Local JWT token refresh using `RustCrypto` (100% pure Rust!)
@@ -402,19 +400,21 @@ impl HybridAuthenticationManager {
             .map_err(|_| NestGateError::security_error("Cannot refresh invalid token"))?;
 
         // Create new token with extended expiry
-        let new_expiry_seconds = self.config.local_token_settings.token_expiry.as_secs() as i64;
+        let new_expiry_seconds =
+            i64::try_from(self.config.local_token_settings.token_expiry.as_secs())
+                .unwrap_or(i64::MAX);
+        let iat_secs = i64::try_from(
+            SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        )
+        .unwrap_or(i64::MAX);
         let new_claims = JwtClaims {
             sub: old_claims.sub.clone(),
             // ✅ EVOLVED: unwrap() → unwrap_or_default() for clock safety
-            iat: SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs() as i64,
-            exp: SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs() as i64
-                + new_expiry_seconds,
+            iat: iat_secs,
+            exp: iat_secs.saturating_add(new_expiry_seconds),
             iss: old_claims.iss.clone(),
             aud: old_claims.aud.clone(),
             permissions: old_claims.permissions.clone(),
@@ -435,17 +435,18 @@ impl HybridAuthenticationManager {
     /// Local token refresh
     async fn refresh_token_local(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         let cache = self.token_cache.read().await;
-        if let Some(cached) = cache.get(token_str) {
-            let new_token = ZeroCostAuthToken::new(
-                format!("refresh_{}", uuid::Uuid::new_v4()),
-                cached.token.user_id.clone(),
-                cached.token.permissions.clone(),
-                self.config.local_token_settings.token_expiry,
-            );
-            Ok(new_token)
-        } else {
-            Err(NestGateError::security_error("Token not found for refresh"))
-        }
+        cache.get(token_str).map_or_else(
+            || Err(NestGateError::security_error("Token not found for refresh")),
+            |cached| {
+                let new_token = ZeroCostAuthToken::new(
+                    format!("refresh_{}", uuid::Uuid::new_v4()),
+                    cached.token.user_id.clone(),
+                    cached.token.permissions.clone(),
+                    self.config.local_token_settings.token_expiry,
+                );
+                Ok(new_token)
+            },
+        )
     }
 
     /// Local token revocation (100% pure Rust!)

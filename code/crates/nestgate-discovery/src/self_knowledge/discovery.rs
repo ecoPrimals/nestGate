@@ -253,7 +253,7 @@ impl PrimalDiscovery {
                     self.cache_single(&info).await;
                     return Ok(Some(info));
                 }
-                Ok(Ok(None)) => continue,
+                Ok(Ok(None)) => {}
                 Ok(Err(e)) => {
                     warn!("Backend {} query failed: {}", backend.name(), e);
                 }
@@ -338,10 +338,9 @@ impl PrimalDiscovery {
     }
 
     fn is_cache_valid(&self, cached_at: &SystemTime) -> bool {
-        match SystemTime::now().duration_since(*cached_at) {
-            Ok(elapsed) => elapsed < self.config.cache_ttl,
-            Err(_) => false, // Clock went backwards, invalidate cache
-        }
+        SystemTime::now()
+            .duration_since(*cached_at)
+            .is_ok_and(|elapsed| elapsed < self.config.cache_ttl)
     }
 }
 

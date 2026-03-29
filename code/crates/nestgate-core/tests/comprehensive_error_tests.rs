@@ -9,7 +9,17 @@
 
 #![cfg(test)]
 #![allow(dead_code)]
-#![allow(clippy::all)]
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 use std::error::Error as StdError;
 use std::fmt;

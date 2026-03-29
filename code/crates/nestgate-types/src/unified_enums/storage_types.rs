@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+/// Unified storage type definitions for `NestGate`.
 ///
-/// Unified storage type definitions for consistent storage operations
-/// across all `NestGate` storage backends and services.
+/// Covers consistent storage operations across all storage backends and services.
 use serde::{Deserialize, Serialize};
 /// Unified storage backend types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -123,7 +123,9 @@ impl StorageCapacity {
     pub fn new(total_bytes: u64, used_bytes: u64) -> Self {
         let available_bytes = total_bytes.saturating_sub(used_bytes);
         let utilization_percent = if total_bytes > 0 {
-            (used_bytes as f64 / total_bytes as f64) * 100.0
+            let bps = (u128::from(used_bytes).saturating_mul(10_000) / u128::from(total_bytes))
+                .min(10_000) as u32;
+            f64::from(bps) / 100.0
         } else {
             0.0
         };
@@ -153,6 +155,54 @@ impl Default for StorageCapacity {
     /// Returns the default instance
     fn default() -> Self {
         Self::new(0, 0)
+    }
+}
+
+#[cfg(test)]
+mod storage_types_coverage_tests {
+    use super::*;
+
+    #[test]
+    fn storage_capacity_new_and_flags() {
+        let c = StorageCapacity::new(100, 50);
+        assert_eq!(c.available_bytes, 50);
+        assert!((c.utilization_percent - 50.0).abs() < 0.01);
+        assert!(!c.is_nearly_full());
+        let full = StorageCapacity::new(100, 92);
+        assert!(full.is_nearly_full());
+        assert!(!full.is_critically_full());
+        let crit = StorageCapacity::new(100, 96);
+        assert!(crit.is_critically_full());
+    }
+
+    #[test]
+    fn storage_tier_access_and_cost() {
+        assert_eq!(
+            StorageTier::Hot.access_frequency(),
+            "multiple times per day"
+        );
+        assert_eq!(StorageTier::Frozen.cost_factor(), 0.1);
+    }
+
+    #[test]
+    fn unified_storage_type_roundtrip() {
+        for v in [
+            UnifiedStorageType::Local,
+            UnifiedStorageType::Zfs,
+            UnifiedStorageType::Custom("x".into()),
+        ] {
+            let j = serde_json::to_string(&v).unwrap();
+            let back: UnifiedStorageType = serde_json::from_str(&j).unwrap();
+            assert_eq!(v, back);
+        }
+    }
+
+    #[test]
+    fn storage_operation_serde_roundtrip() {
+        let op = StorageOperation::Sync;
+        let j = serde_json::to_string(&op).unwrap();
+        let back: StorageOperation = serde_json::from_str(&j).unwrap();
+        assert_eq!(op, back);
     }
 }
 

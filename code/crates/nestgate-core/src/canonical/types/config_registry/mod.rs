@@ -16,10 +16,10 @@
 //!
 //! ## Benefits of Modular Structure
 //!
-//! ✅ **Maintained Cohesion** - Related types grouped logically by domain  
-//! ✅ **Better Discoverability** - Clear module boundaries for navigation  
-//! ✅ **Reduced Complexity** - Each file <600 lines, easier to understand  
-//! ✅ **Single Import Point** - Still use `config_registry::*` for all types  
+//! ✅ **Maintained Cohesion** - Related types grouped logically by domain
+//! ✅ **Better Discoverability** - Clear module boundaries for navigation
+//! ✅ **Reduced Complexity** - Each file <600 lines, easier to understand
+//! ✅ **Single Import Point** - Still use `config_registry::*` for all types
 //! ✅ **No Circular Dependencies** - Clean module hierarchy
 //!
 //! ## Usage
@@ -45,8 +45,8 @@
 //! - `MonitoringConfig` (5+ different definitions)
 //! - All other fragmented config structures
 //!
-//! **Refactored**: November 13, 2025 (Technical Debt Elimination)  
-//! **Previous Size**: 1571 lines (single file)  
+//! **Refactored**: November 13, 2025 (Technical Debt Elimination)
+//! **Previous Size**: 1571 lines (single file)
 //! **Current Size**: 4 focused modules (~350 lines each)
 
 use serde::{Deserialize, Serialize};

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-/// Message and Event Classification Enums
+/// Message and event classification enums.
+///
 /// This module contains enums related to messaging, events, operations,
 /// and communication patterns.
 use serde::{Deserialize, Serialize};
@@ -269,11 +270,12 @@ mod tests {
     }
 
     #[test]
-    fn test_unified_operation_type_serialization() {
+    fn test_unified_operation_type_serialization() -> Result<(), serde_json::Error> {
         let op = UnifiedOperationType::Create;
-        let json = serde_json::to_string(&op).unwrap();
-        let parsed: UnifiedOperationType = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&op)?;
+        let parsed: UnifiedOperationType = serde_json::from_str(&json)?;
         assert_eq!(op, parsed);
+        Ok(())
     }
 
     #[test]

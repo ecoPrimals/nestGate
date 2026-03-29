@@ -125,12 +125,15 @@ pub fn physical_cpu_count() -> usize {
 /// Memory usage as a percentage (0.0–100.0).
 #[must_use]
 pub fn memory_usage_percent() -> Option<f64> {
-    let t = total_memory_bytes()? as f64;
-    if t <= 0.0 {
+    let t = total_memory_bytes()?;
+    let u = used_memory_bytes()?;
+    if t == 0 {
         return None;
     }
-    let u = used_memory_bytes()? as f64;
-    Some((u / t) * 100.0)
+    // Percentage with two decimal places via integer math (`u128` avoids overflow on `u * 10_000`).
+    let scaled = (u128::from(u).saturating_mul(10_000)) / u128::from(t);
+    let scaled = u32::try_from(scaled).unwrap_or(10_000);
+    Some(f64::from(scaled) / 100.0)
 }
 
 /// Instantaneous global CPU busy percentage from the aggregate `cpu` line in `/proc/stat`.
@@ -159,7 +162,9 @@ pub fn global_cpu_usage_percent_from_stat() -> Option<f64> {
         if total == 0 {
             return None;
         }
-        Some((total_active as f64 / total as f64) * 100.0)
+        let scaled = (u128::from(total_active).saturating_mul(10_000)) / u128::from(total);
+        let scaled = u32::try_from(scaled).unwrap_or(10_000);
+        Some(f64::from(scaled) / 100.0)
     }
     #[cfg(not(target_os = "linux"))]
     {
@@ -200,8 +205,8 @@ pub fn diskstats_entry_count() -> Option<f64> {
     #[cfg(target_os = "linux")]
     {
         let s = std::fs::read_to_string("/proc/diskstats").ok()?;
-        let n = s.lines().filter(|l| !l.trim().is_empty()).count();
-        Some((n.max(1)) as f64)
+        let n = s.lines().filter(|l| !l.trim().is_empty()).count().max(1);
+        Some(f64::from(u32::try_from(n).unwrap_or(u32::MAX)))
     }
     #[cfg(not(target_os = "linux"))]
     {
@@ -210,6 +215,11 @@ pub fn diskstats_entry_count() -> Option<f64> {
 }
 
 /// Total and available bytes for a mount point via [`rustix::fs::statvfs`].
+///
+/// # Errors
+///
+/// Returns [`io::Error`] if `path` cannot be stated or `statvfs` fails (e.g. permission denied,
+/// not a mount point, or I/O error).
 #[cfg(target_os = "linux")]
 pub fn statvfs_space(path: &std::path::Path) -> io::Result<(u64, u64)> {
     let v = rustix::fs::statvfs(path)?;
@@ -219,6 +229,11 @@ pub fn statvfs_space(path: &std::path::Path) -> io::Result<(u64, u64)> {
     Ok((total, avail))
 }
 
+/// Total and available bytes for a mount point (non-Linux stub; see Linux build for behavior).
+///
+/// # Errors
+///
+/// Always returns [`io::ErrorKind::Unsupported`].
 #[cfg(not(target_os = "linux"))]
 pub fn statvfs_space(_path: &std::path::Path) -> io::Result<(u64, u64)> {
     Err(io::Error::new(
@@ -234,8 +249,8 @@ pub fn uptime_secs() -> Option<u64> {
     {
         let s = std::fs::read_to_string("/proc/uptime").ok()?;
         let first = s.split_whitespace().next()?;
-        let secs = first.parse::<f64>().ok()?;
-        Some(secs.floor() as u64)
+        let end = first.find('.').unwrap_or(first.len());
+        first.get(..end)?.parse().ok()
     }
     #[cfg(not(target_os = "linux"))]
     {

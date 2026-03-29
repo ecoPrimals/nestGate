@@ -6,6 +6,7 @@
 use crate::zero_cost_security_provider::types::{ZeroCostAuthToken, ZeroCostCredentials};
 use nestgate_discovery::primal_discovery::PrimalConnection;
 use nestgate_types::{NestGateError, Result};
+use std::path::Path;
 use std::time::Duration;
 
 /// Call discovered Security primal for authentication via Unix socket IPC.
@@ -19,12 +20,16 @@ pub async fn call_security_primal(
 ) -> Result<ZeroCostAuthToken> {
     let endpoint = &connection.endpoint;
 
-    if endpoint.starts_with('/') || endpoint.ends_with(".sock") {
+    if endpoint.starts_with('/')
+        || Path::new(endpoint)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+    {
         // Unix socket IPC path — preferred for primal-to-primal auth
         let stream = tokio::net::UnixStream::connect(endpoint)
             .await
             .map_err(|e| {
-                NestGateError::network_error(&format!(
+                NestGateError::network_error(format!(
                     "Security primal unreachable at {endpoint}: {e}"
                 ))
             })?;
@@ -44,19 +49,19 @@ pub async fn call_security_primal(
         })?;
 
         stream.writable().await.map_err(|e| {
-            NestGateError::network_error(&format!("Security socket not writable: {e}"))
+            NestGateError::network_error(format!("Security socket not writable: {e}"))
         })?;
         stream
             .try_write(&request_bytes)
-            .map_err(|e| NestGateError::network_error(&format!("Write to security primal: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Write to security primal: {e}")))?;
 
         let mut buf = vec![0u8; 4096];
         stream.readable().await.map_err(|e| {
-            NestGateError::network_error(&format!("Security socket not readable: {e}"))
+            NestGateError::network_error(format!("Security socket not readable: {e}"))
         })?;
-        let n = stream.try_read(&mut buf).map_err(|e| {
-            NestGateError::network_error(&format!("Read from security primal: {e}"))
-        })?;
+        let n = stream
+            .try_read(&mut buf)
+            .map_err(|e| NestGateError::network_error(format!("Read from security primal: {e}")))?;
 
         let response: serde_json::Value = serde_json::from_slice(&buf[..n]).map_err(|e| {
             NestGateError::internal_error(
@@ -66,11 +71,11 @@ pub async fn call_security_primal(
         })?;
 
         if let Some(err) = response.get("error") {
-            return Err(NestGateError::security_error(
-                err["message"]
-                    .as_str()
-                    .unwrap_or("Security primal rejected auth"),
-            ));
+            let msg = err["message"]
+                .as_str()
+                .unwrap_or("Security primal rejected auth")
+                .to_string();
+            return Err(NestGateError::security_error(msg));
         }
 
         let result = &response["result"];
@@ -94,7 +99,7 @@ pub async fn call_security_primal(
             token_expiry,
         ))
     } else {
-        Err(NestGateError::security_error(&format!(
+        Err(NestGateError::security_error(format!(
             "Non-socket security endpoints not supported: {endpoint}. \
              Use Unix socket IPC for primal-to-primal authentication."
         )))

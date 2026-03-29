@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(deprecated)]
+// This module defines deprecated compatibility types; implementations must reference them.
+
 // API Paths Configuration Module
 //! Configuration types and utilities.
 // Centralized management of API endpoints and paths to eliminate hardcoded strings

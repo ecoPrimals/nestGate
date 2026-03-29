@@ -13,6 +13,7 @@ use std::time::{Duration, SystemTime};
 use super::traits::NativeAsyncLoadBalancer;
 use super::types::{LoadBalancerStats, ServiceResponse, ServiceStats};
 use crate::service_discovery::types::ServiceInfo;
+use tracing::debug;
 use uuid::Uuid;
 
 /// Development load balancer for testing
@@ -45,7 +46,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
         // Development service addition - always succeed
         self.service_count
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        println!("DEV: Added service {service:?}");
+        debug!("DEV: Added service {service:?}");
         Ok(())
     }
 
@@ -53,7 +54,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
     async fn remove_service(&self, service_id: &str) -> Result<()> {
         self.service_count
             .fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
-        println!("DEV: Removed service {service_id}");
+        debug!("DEV: Removed service {service_id}");
         Ok(())
     }
 
@@ -120,7 +121,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
 
     /// Updates  Service Weight
     async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
-        println!("DEV: Updated service {service_id} weight to {weight}");
+        debug!("DEV: Updated service {service_id} weight to {weight}");
         Ok(())
     }
 

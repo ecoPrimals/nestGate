@@ -97,7 +97,7 @@ impl RealNetworkService {
             format!("{}:{}", host, config.network.api_port)
         };
         let listener = TcpListener::bind(&addr).await.map_err(|_| {
-            NestGateError::network_error(&format!("Failed to bind to endpoint: {addr}"))
+            NestGateError::network_error(format!("Failed to bind to endpoint: {addr}"))
         })?;
 
         info!("Network service listening on {}", addr);

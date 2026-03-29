@@ -18,7 +18,7 @@
 //! ```rust,ignore
 //! // PrimalConnection exposes endpoint; authenticate/register are application-specific
 //! use nestgate_core::primal_discovery::RuntimeDiscovery;
-//! let discovery = RuntimeDiscovery::new().await?;
+//! let discovery = RuntimeDiscovery::new()?;
 //! let security = discovery.find_security_primal().await?;
 //! let _url = &security.endpoint;
 //! ```
@@ -75,7 +75,7 @@ impl RuntimeDiscovery {
     /// # Errors
     ///
     /// Returns an error if the discovery system cannot be initialized
-    pub async fn new() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let infant_discovery = InfantDiscoverySystem::new();
 
         Ok(Self {
@@ -109,7 +109,7 @@ impl RuntimeDiscovery {
     /// ```rust,ignore
     /// # use nestgate_core::primal_discovery::RuntimeDiscovery;
     /// # async fn example() -> nestgate_core::Result<()> {
-    /// let discovery = RuntimeDiscovery::new().await?;
+    /// let discovery = RuntimeDiscovery::new()?;
     /// let security = discovery.find_security_primal().await?;
     /// // Use security primal for authentication
     /// # Ok(())
@@ -127,7 +127,7 @@ impl RuntimeDiscovery {
 
         // Find best security primal
         self.select_best_primal(&capabilities).map_err(|e| {
-            NestGateError::security_error(&format!("No healthy security primal available: {e}"))
+            NestGateError::security_error(format!("No healthy security primal available: {e}"))
         })
     }
 
@@ -250,7 +250,7 @@ impl RuntimeDiscovery {
     /// Invalidate cache for a capability type
     ///
     /// Forces fresh discovery on next request (lock-free remove).
-    pub async fn invalidate_cache(&self, capability_type: &str) {
+    pub fn invalidate_cache(&self, capability_type: &str) {
         self.cache.remove(capability_type);
         debug!(
             "Invalidated cache for capability: {} (lock-free)",
@@ -261,7 +261,7 @@ impl RuntimeDiscovery {
     /// Clear entire cache (lock-free clear)
     ///
     /// Forces fresh discovery for all capabilities.
-    pub async fn clear_cache(&self) {
+    pub fn clear_cache(&self) {
         self.cache.clear();
         info!("Cleared entire discovery cache (lock-free)");
     }
@@ -444,14 +444,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_runtime_discovery_creation() {
-        let discovery = RuntimeDiscovery::new().await;
+        let discovery = RuntimeDiscovery::new();
         assert!(discovery.is_ok());
     }
 
     #[tokio::test]
     async fn test_cache_ttl_customization() {
         let discovery = RuntimeDiscovery::new()
-            .await
             .unwrap()
             .with_cache_ttl(Duration::from_secs(60));
 
@@ -460,10 +459,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_invalidation() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let discovery = RuntimeDiscovery::new().unwrap();
 
-        discovery.invalidate_cache("test_capability").await;
-        discovery.clear_cache().await;
+        discovery.invalidate_cache("test_capability");
+        discovery.clear_cache();
     }
 
     #[test]
@@ -494,28 +493,28 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_security_primal_no_services() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let discovery = RuntimeDiscovery::new().unwrap();
         let result = discovery.find_security_primal().await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_find_orchestrator_no_services() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let discovery = RuntimeDiscovery::new().unwrap();
         let result = discovery.find_orchestrator().await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_find_ai_primal_no_services() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let discovery = RuntimeDiscovery::new().unwrap();
         let result = discovery.find_ai_primal().await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_find_storage_primal() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let discovery = RuntimeDiscovery::new().unwrap();
         let result = discovery.find_storage_primal().await;
         // InfantDiscoverySystem may return mock Storage capability
         if result.is_ok() {
@@ -527,7 +526,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_capability_compute() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let discovery = RuntimeDiscovery::new().unwrap();
         let result = discovery.find_capability("compute").await;
         // InfantDiscoverySystem may return mock Compute capability
         if result.is_ok() {
@@ -538,7 +537,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_all_capabilities_no_services() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
+        let discovery = RuntimeDiscovery::new().unwrap();
         let result = discovery
             .find_all_capabilities("security_authentication")
             .await;
@@ -549,16 +548,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_invalidate_then_rediscover() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
-        discovery.invalidate_cache("storage").await;
+        let discovery = RuntimeDiscovery::new().unwrap();
+        discovery.invalidate_cache("storage");
         let result = discovery.find_storage_primal().await;
         assert!(result.is_ok() || result.is_err());
     }
 
     #[tokio::test]
     async fn test_clear_cache_then_discover() {
-        let discovery = RuntimeDiscovery::new().await.unwrap();
-        discovery.clear_cache().await;
+        let discovery = RuntimeDiscovery::new().unwrap();
+        discovery.clear_cache();
         let result = discovery.find_orchestrator().await;
         assert!(result.is_err());
     }
@@ -566,7 +565,6 @@ mod tests {
     #[tokio::test]
     async fn test_discovery_with_short_ttl() {
         let discovery = RuntimeDiscovery::new()
-            .await
             .unwrap()
             .with_cache_ttl(Duration::from_millis(1));
         let result = discovery.find_capability("storage").await;

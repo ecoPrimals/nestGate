@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 11, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🎯 **NestGate Role Clarification**
 
 **TL;DR**: NestGate is a **DATA HUB**, not a compute service.

@@ -1,6 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+//! Coarse float/integer conversions are intentional for heuristic capacity scoring.
+
+#![expect(
+    clippy::cast_possible_truncation,
+    reason = "Introspection maps approximate metrics to discrete tuning hints"
+)]
+#![expect(
+    clippy::cast_sign_loss,
+    reason = "Scoring inputs are non-negative capacity values"
+)]
+#![expect(
+    clippy::cast_precision_loss,
+    reason = "Scores are approximate; full precision is not required"
+)]
+#![allow(
+    clippy::unnecessary_wraps,
+    reason = "Introspection helpers use Result for uniform error propagation at call sites"
+)]
+
 use super::introspection_config::{IntrospectionConfig, SharedIntrospectionConfig};
 /// System Introspection Module
 /// Handles system introspection and auto-detection including:
@@ -90,10 +109,10 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_resource_limits(&mut self, resource_type: &str) -> Result<usize> {
+    pub fn discover_resource_limits(&mut self, resource_type: &str) -> Result<usize> {
         // Ensure we have system capabilities
         if self.capabilities.is_none() {
-            self.capabilities = Some(self.detect_system_capabilities().await?);
+            self.capabilities = Some(self.detect_system_capabilities()?);
         }
 
         let capabilities = self.capabilities.as_ref().ok_or_else(|| {
@@ -121,7 +140,7 @@ impl SystemIntrospection {
             }
             "file_handles" => {
                 // File handles based on system limits
-                Ok(self.get_system_file_limit().await.unwrap_or(1024))
+                Ok(self.get_system_file_limit().unwrap_or(1024))
             }
             "queue_size" => {
                 // Queue size based on memory and expected load
@@ -143,15 +162,15 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities> {
+    pub fn detect_system_capabilities(&self) -> Result<SystemCapabilities> {
         let cores = std::thread::available_parallelism().map_or(4usize, std::num::NonZero::get);
         Ok(SystemCapabilities {
             cpu_cores: cores,
             logical_cores: cores,
-            memory_gb: self.estimate_memory_gb().await?,
-            network_interfaces: self.detect_network_interfaces().await?,
-            storage_available: self.check_storage_availability().await?,
-            container_runtime: self.detect_container_runtime().await,
+            memory_gb: self.estimate_memory_gb()?,
+            network_interfaces: self.detect_network_interfaces()?,
+            storage_available: self.check_storage_availability()?,
+            container_runtime: self.detect_container_runtime(),
             os_type: self.detect_os_type(),
         })
     }
@@ -164,10 +183,10 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn create_hardware_profile(&mut self) -> Result<HardwareProfile> {
+    pub fn create_hardware_profile(&mut self) -> Result<HardwareProfile> {
         // Ensure we have capabilities
         if self.capabilities.is_none() {
-            self.capabilities = Some(self.detect_system_capabilities().await?);
+            self.capabilities = Some(self.detect_system_capabilities()?);
         }
 
         let capabilities = self.capabilities.as_ref().ok_or_else(|| {
@@ -178,10 +197,10 @@ impl SystemIntrospection {
         })?;
 
         // Score components (0.0 to 1.0)
-        let cpu_score = self.calculate_cpu_score(capabilities).await?;
-        let memory_score = self.calculate_memory_score(capabilities).await?;
-        let storage_score = self.calculate_storage_score().await?;
-        let network_score = self.calculate_network_score(capabilities).await?;
+        let cpu_score = self.calculate_cpu_score(capabilities)?;
+        let memory_score = self.calculate_memory_score(capabilities)?;
+        let storage_score = self.calculate_storage_score()?;
+        let network_score = self.calculate_network_score(capabilities)?;
 
         let overall_score = (cpu_score + memory_score + storage_score + network_score) / 4.0;
 
@@ -211,7 +230,7 @@ impl SystemIntrospection {
     }
 
     /// **MEMORY ESTIMATION**: Estimate available memory
-    async fn estimate_memory_gb(&self) -> Result<f64> {
+    fn estimate_memory_gb(&self) -> Result<f64> {
         // Simplified estimation - in a real system would use proper system APIs
         if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
             // Parse /proc/meminfo on Linux systems
@@ -230,7 +249,7 @@ impl SystemIntrospection {
     }
 
     /// **NETWORK INTERFACE DETECTION**: Detect available network interfaces
-    async fn detect_network_interfaces(&self) -> Result<Vec<String>> {
+    fn detect_network_interfaces(&self) -> Result<Vec<String>> {
         // Simplified implementation - in a real system would use proper network APIs
         let mut interfaces = vec!["lo".to_string()]; // Always have loopback
 
@@ -245,16 +264,13 @@ impl SystemIntrospection {
     }
 
     /// **STORAGE AVAILABILITY**: Check storage availability
-    async fn check_storage_availability(&self) -> Result<bool> {
+    fn check_storage_availability(&self) -> Result<bool> {
         // Check if we can create temporary files (basic storage test)
-        match std::env::temp_dir().try_exists() {
-            Ok(exists) => Ok(exists),
-            Err(_) => Ok(false),
-        }
+        Ok(matches!(std::env::temp_dir().try_exists(), Ok(true)))
     }
 
     /// **CONTAINER RUNTIME DETECTION**: Detect container runtime using capability-based approach
-    async fn detect_container_runtime(&self) -> Option<String> {
+    fn detect_container_runtime(&self) -> Option<String> {
         // Use config-based detection
         let runtime = self.config.detect_container_runtime();
 
@@ -296,7 +312,7 @@ impl SystemIntrospection {
     }
 
     /// **FILE LIMIT DETECTION**: Get system file descriptor limit
-    async fn get_system_file_limit(&self) -> Result<usize> {
+    fn get_system_file_limit(&self) -> Result<usize> {
         // Try to read from config
         if let Some(limit) = self.config.get_max_file_handles() {
             return Ok(limit);
@@ -307,21 +323,21 @@ impl SystemIntrospection {
     }
 
     /// **CPU SCORING**: Calculate CPU performance score
-    async fn calculate_cpu_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
+    fn calculate_cpu_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
         // Score based on logical cores (0.1 to 1.0)
         let core_score = (capabilities.logical_cores as f64 / 16.0).clamp(0.1, 1.0);
         Ok(core_score)
     }
 
     /// **MEMORY SCORING**: Calculate memory performance score
-    async fn calculate_memory_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
+    fn calculate_memory_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
         // Score based on memory GB (0.1 to 1.0)
         let memory_score = (capabilities.memory_gb / 32.0).clamp(0.1, 1.0);
         Ok(memory_score)
     }
 
     /// **STORAGE SCORING**: Calculate storage performance score
-    async fn calculate_storage_score(&self) -> Result<f64> {
+    fn calculate_storage_score(&self) -> Result<f64> {
         // Simplified storage scoring - in a real system would benchmark I/O
         if std::path::Path::new("/sys/block").exists() {
             // Assume SSD if on modern Linux system
@@ -333,7 +349,7 @@ impl SystemIntrospection {
     }
 
     /// **NETWORK SCORING**: Calculate network performance score
-    async fn calculate_network_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
+    fn calculate_network_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
         // Score based on number of interfaces and environment
         let interface_score = (capabilities.network_interfaces.len() as f64 / 4.0).clamp(0.1, 1.0);
 
@@ -355,11 +371,11 @@ impl SystemIntrospection {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn get_introspection_summary(&mut self) -> Result<HashMap<String, String>> {
+    pub fn get_introspection_summary(&mut self) -> Result<HashMap<String, String>> {
         let capabilities = if let Some(caps) = &self.capabilities {
             caps.clone()
         } else {
-            let caps = self.detect_system_capabilities().await?;
+            let caps = self.detect_system_capabilities()?;
             self.capabilities = Some(caps.clone());
             caps
         };
@@ -414,7 +430,6 @@ mod tests {
         let mut intro = SystemIntrospection::with_config(cfg);
         let n = intro
             .discover_resource_limits("unknown_resource_kind")
-            .await
             .expect("generic limit");
         assert!(n >= 1000);
     }
@@ -423,7 +438,7 @@ mod tests {
     async fn get_introspection_summary_contains_keys() {
         let cfg = Arc::new(IntrospectionConfig::new());
         let mut intro = SystemIntrospection::with_config(cfg);
-        let m = intro.get_introspection_summary().await.expect("summary");
+        let m = intro.get_introspection_summary().expect("summary");
         assert!(m.contains_key("cpu_cores"));
         assert!(m.contains_key("os_type"));
     }

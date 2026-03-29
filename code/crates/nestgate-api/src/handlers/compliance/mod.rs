@@ -22,6 +22,9 @@ pub use manager::{ComplianceManager, ComplianceState, initialize_compliance_mana
 pub use types::*;
 
 #[cfg(test)]
+mod handlers_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use chrono::{Duration as ChronoDuration, Utc};

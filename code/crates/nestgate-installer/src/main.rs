@@ -1,6 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp,
+        clippy::uninlined_format_args,
+        clippy::cast_precision_loss,
+        clippy::items_after_statements,
+    )
+)]
+#![allow(
+    deprecated,
+    missing_docs,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::doc_markdown,
+    clippy::module_name_repetitions,
+    clippy::struct_excessive_bools,
+    clippy::no_effect_underscore_binding,
+    clippy::manual_string_new,
+    clippy::case_sensitive_file_extension_comparisons,
+    clippy::needless_pass_by_value,
+    clippy::unnecessary_debug_formatting,
+    clippy::unused_async,
+    clippy::needless_pass_by_ref_mut,
+    clippy::redundant_clone,
+    clippy::unnecessary_wraps,
+    dead_code,
+    clippy::struct_field_names,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::too_many_lines
+)]
+
 //! Main module
 
 use clap::{Parser, Subcommand};
@@ -114,8 +150,8 @@ async fn main() -> nestgate_core::Result<()> {
 
     let mut installer = NestGateInstaller::new(cli.install_dir.clone()).map_err(|e| {
         NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-            field: "installer".to_string(),
-            message: format!("Failed to create installer: {e}"),
+            field: "installer".into(),
+            message: format!("Failed to create installer: {e}").into(),
             currentvalue: None,
             expected: None,
             user_error: false,
@@ -131,8 +167,8 @@ async fn main() -> nestgate_core::Result<()> {
             let config = crate::config::installer_config_factory::development();
             installer.install(&config).map_err(|e| {
                 NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-                    field: "install".to_string(),
-                    message: format!("Installation failed: {e}"),
+                    field: "install".into(),
+                    message: format!("Installation failed: {e}").into(),
                     currentvalue: None,
                     expected: None,
                     user_error: false,
@@ -148,8 +184,8 @@ async fn main() -> nestgate_core::Result<()> {
                 .uninstall(remove_config, remove_data, cli.yes)
                 .map_err(|e| {
                     NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-                        field: "uninstall".to_string(),
-                        message: format!("Uninstallation failed: {e}"),
+                        field: "uninstall".into(),
+                        message: format!("Uninstallation failed: {e}").into(),
                         currentvalue: None,
                         expected: None,
                         user_error: false,
@@ -160,8 +196,8 @@ async fn main() -> nestgate_core::Result<()> {
         Some(Commands::Update { version }) => {
             installer.update(version, cli.yes).await.map_err(|e| {
                 NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-                    field: "update".to_string(),
-                    message: format!("Update failed: {e}"),
+                    field: "update".into(),
+                    message: format!("Update failed: {e}").into(),
                     currentvalue: None,
                     expected: None,
                     user_error: false,
@@ -173,8 +209,8 @@ async fn main() -> nestgate_core::Result<()> {
             if wizard {
                 installer.run_configuration_wizard().map_err(|e| {
                     NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-                        field: "wizard".to_string(),
-                        message: format!("Configuration wizard failed: {e}"),
+                        field: "wizard".into(),
+                        message: format!("Configuration wizard failed: {e}").into(),
                         currentvalue: None,
                         expected: None,
                         user_error: false,
@@ -183,8 +219,8 @@ async fn main() -> nestgate_core::Result<()> {
             } else {
                 installer.configure(config).map_err(|e| {
                     NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-                        field: "configure".to_string(),
-                        message: format!("Configuration failed: {e}"),
+                        field: "configure".into(),
+                        message: format!("Configuration failed: {e}").into(),
                         currentvalue: None,
                         expected: None,
                         user_error: false,
@@ -196,8 +232,8 @@ async fn main() -> nestgate_core::Result<()> {
         Some(Commands::Doctor) => {
             installer.doctor().await.map_err(|e| {
                 NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-                    field: "doctor".to_string(),
-                    message: format!("Doctor check failed: {e}"),
+                    field: "doctor".into(),
+                    message: format!("Doctor check failed: {e}").into(),
                     currentvalue: None,
                     expected: None,
                     user_error: false,
@@ -212,8 +248,8 @@ async fn main() -> nestgate_core::Result<()> {
             let config = crate::config::installer_config_factory::development();
             installer.install(&config).map_err(|e| {
                 NestGateUnifiedError::Configuration(Box::new(ConfigurationErrorDetails {
-                    field: "default_install".to_string(),
-                    message: format!("Installation failed: {e}"),
+                    field: "default_install".into(),
+                    message: format!("Installation failed: {e}").into(),
                     currentvalue: None,
                     expected: None,
                     user_error: false,

@@ -6,6 +6,8 @@
 //! Comprehensive edge case tests for configuration system including
 //! boundary conditions, invalid inputs, and corner cases.
 
+#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+
 #[cfg(test)]
 mod config_boundary_tests {
     use crate::config::canonical_primary::{
@@ -127,16 +129,21 @@ mod config_serialization_edge_cases {
     #[test]
     fn test_serialize_deserialize_default() {
         let config = StandardConfig::default();
-        let serialized = serde_json::to_string(&config).expect("Config should serialize");
-        let deserialized: StandardConfig =
-            serde_json::from_str(&serialized).expect("Config should deserialize");
+        let Ok(serialized) = serde_json::to_string(&config) else {
+            panic!("Config should serialize");
+        };
+        let Ok(deserialized): Result<StandardConfig, _> = serde_json::from_str(&serialized) else {
+            panic!("Config should deserialize");
+        };
         assert!(deserialized.validate().is_ok());
     }
 
     #[test]
     fn test_serialize_high_performance() {
         let config = HighPerformanceConfig::default();
-        let serialized = serde_json::to_string(&config).unwrap();
+        let Ok(serialized) = serde_json::to_string(&config) else {
+            panic!("serialize");
+        };
         assert!(!serialized.is_empty());
     }
 
@@ -170,7 +177,7 @@ mod config_concurrency_edge_cases {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            assert!(handle.join().is_ok(), "thread join");
         }
     }
 
@@ -192,7 +199,7 @@ mod config_memory_edge_cases {
         use std::mem::size_of;
         let size = size_of::<StandardConfig>();
         // Should be reasonable size (< 10KB)
-        assert!(size < 10240, "Config size too large: {} bytes", size);
+        assert!(size < 10240, "Config size too large: {size} bytes");
     }
 
     #[test]

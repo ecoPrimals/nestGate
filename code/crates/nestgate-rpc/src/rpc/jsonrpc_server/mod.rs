@@ -179,6 +179,7 @@ impl JsonRpcServer {
     }
 
     /// Register storage-related JSON-RPC methods
+    #[allow(clippy::too_many_lines)] // Method table mirrors JSON-RPC surface; split would obscure routing.
     fn register_storage_methods(
         module: &mut RpcModule<JsonRpcState>,
     ) -> Result<(), Box<dyn std::error::Error>> {
@@ -489,9 +490,7 @@ impl JsonRpcServer {
                     &p.capability,
                     &p.endpoint,
                     std::time::Duration::from_secs(60),
-                )
-                .await
-                {
+                ) {
                     Ok(()) => {
                         info!("✅ Capability '{}' registered successfully", p.capability);
                         Ok::<_, ErrorObjectOwned>(serde_json::json!({
@@ -527,9 +526,7 @@ impl JsonRpcServer {
                         &capability,
                         &env_var,
                         &discovery_default,
-                    )
-                    .await
-                    {
+                    ) {
                         Ok(se) => se,
                         Err(e) => {
                             warn!("discovery.capability.query: {}", e);

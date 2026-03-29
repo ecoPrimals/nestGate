@@ -306,7 +306,7 @@ impl CapabilityRegistry {
                 .push(service.service_id);
         }
 
-        self.our_capabilities = service.capabilities.clone();
+        self.our_capabilities.clone_from(&service.capabilities);
         self.services.insert(service.service_id, service.clone());
         self.our_service = Some(service);
     }
@@ -445,7 +445,7 @@ impl CapabilityRouter {
         let capable_services = self.discover_capable_services(&request).await?;
 
         if capable_services.is_empty() {
-            return Err(crate::NestGateError::validation_error(&format!(
+            return Err(crate::NestGateError::validation_error(format!(
                 "No capable services discovered for {:?}::{}",
                 request.category, request.operation
             )));
@@ -503,24 +503,23 @@ impl CapabilityRouter {
         // **EVOLUTION**: Use ServiceRegistry for dynamic discovery (no hardcoded URLs!)
         let endpoint = if let Some(registry) = &self.service_registry {
             // Try capability-based discovery first
-            match registry
+            if let Ok(discovered_service) = registry
                 .find_by_capability(&request.category.to_primal_capability())
                 .await
             {
-                Ok(discovered_service) => discovered_service.url(),
-                Err(_) => {
-                    // Fallback to environment config if discovery fails
-                    let config = CapabilityEndpointsConfig::from_env();
-                    config
-                        .service_endpoint()
-                        .map(|s| s.to_string())
-                        .ok_or_else(|| {
-                            crate::NestGateError::not_found(format!(
-                                "No endpoint found for capability: {:?}",
-                                request.category
-                            ))
-                        })?
-                }
+                discovered_service.url()
+            } else {
+                // Fallback to environment config if discovery fails
+                let config = CapabilityEndpointsConfig::from_env();
+                config
+                    .service_endpoint()
+                    .map(|s| s.to_string())
+                    .ok_or_else(|| {
+                        crate::NestGateError::not_found(format!(
+                            "No endpoint found for capability: {:?}",
+                            request.category
+                        ))
+                    })?
             }
         } else {
             // No registry configured - fall back to environment config only
@@ -536,16 +535,7 @@ impl CapabilityRouter {
         };
 
         // Generic capability request - works with any primal
-        let response = self.send_universal_request(&endpoint, &service.endpoint, request)?;
-
-        Ok(CapabilityResponse {
-            request_id: response.request_id,
-            success: response.success,
-            data: response.data,
-            error: response.error,
-            metadata: response.metadata,
-            execution_time_ms: response.execution_time_ms,
-        })
+        self.send_universal_request(&endpoint, &service.endpoint, request)
     }
 
     /// Handle capability locally (NestGate's own capabilities)
@@ -553,7 +543,7 @@ impl CapabilityRouter {
         // Handle storage capabilities that NestGate provides
         match request.category {
             CapabilityCategory::Storage => self.handle_storage_capability(request),
-            _ => Err(crate::NestGateError::validation_error(&format!(
+            _ => Err(crate::NestGateError::validation_error(format!(
                 "Local capability not implemented: {:?}",
                 request.category
             ))),
@@ -579,7 +569,7 @@ impl CapabilityRouter {
                 response_data.insert("datasets".to_string(), serde_json::Value::Array(vec![]));
             }
             _ => {
-                return Err(crate::NestGateError::validation_error(&format!(
+                return Err(crate::NestGateError::validation_error(format!(
                     "Storage operation not implemented: {}",
                     request.operation
                 )));
@@ -747,8 +737,8 @@ mod tests {
         let mut svc = DiscoveredService::new("a", "t", "http://x");
         svc.healthy = true;
         let cap = ServiceCapability::storage("op", "d");
-        let svc = svc.with_capability(cap.clone());
-        reg.register_service(svc.clone());
+        let svc = svc.with_capability(cap);
+        reg.register_service(svc);
         let found = reg.find_providers(&CapabilityCategory::Storage, "op");
         assert_eq!(found.len(), 1);
         reg.cleanup_unhealthy();

@@ -26,7 +26,6 @@
 //! - Zero-cost abstractions where possible
 //! - Complete ecosystem integration
 
-use crate::http_client_stub as reqwest;
 use dashmap::DashMap;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -35,7 +34,9 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-use crate::{NestGateError, Result};
+#[cfg(feature = "dev-stubs")]
+use crate::NestGateError;
+use crate::Result;
 
 // ==================== MODULE DECLARATIONS ====================
 
@@ -88,10 +89,13 @@ pub struct ConsolidatedCanonicalAdapter {
     /// Active requests being processed (lock-free for concurrent request tracking)
     active_requests: Arc<DashMap<String, CapabilityRequest>>,
 
-    /// HTTP client for network operations
+    /// HTTP client for network operations (`dev-stubs` only; production path is a placeholder).
+    #[cfg(feature = "dev-stubs")]
     #[expect(dead_code, reason = "framework placeholder")]
-    // Framework field - intentionally unused
-    client: reqwest::Client,
+    client: crate::http_client_stub::Client,
+
+    #[cfg(not(feature = "dev-stubs"))]
+    _http_client_placeholder: (),
 
     /// Adapter health and metrics
     health_status: Arc<RwLock<AdapterHealthStatus>>,
@@ -118,12 +122,13 @@ impl ConsolidatedCanonicalAdapter {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn new(config: CanonicalAdapterConfig) -> Result<Self> {
-        let client = reqwest::Client::builder()
+        #[cfg(feature = "dev-stubs")]
+        let client = crate::http_client_stub::Client::builder()
             .timeout(config.requests.timeout)
             // Note: pool_max_idle_per_host not available in http_client_stub
             .build()
             .map_err(|e| {
-                NestGateError::network_error(&format!("Failed to create HTTP client: {e}"))
+                NestGateError::network_error(format!("Failed to create HTTP client: {e}"))
             })?;
 
         Ok(Self {
@@ -132,7 +137,10 @@ impl ConsolidatedCanonicalAdapter {
             our_capabilities: Arc::new(RwLock::new(Vec::new())),
             discovered_capabilities: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
             active_requests: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
+            #[cfg(feature = "dev-stubs")]
             client,
+            #[cfg(not(feature = "dev-stubs"))]
+            _http_client_placeholder: (),
             health_status: Arc::new(RwLock::new(AdapterHealthStatus::default())),
             stats: Arc::new(RwLock::new(AdapterStats::default())),
             service_registry: Arc::new(DashMap::new()),

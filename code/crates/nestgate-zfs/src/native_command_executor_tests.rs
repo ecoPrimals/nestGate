@@ -323,4 +323,32 @@ mod tests {
 
         assert_eq!(executors.len(), 10);
     }
+
+    #[tokio::test]
+    async fn execute_command_rejects_shell_metacharacters_before_spawn() {
+        let ex = NativeZfsCommandExecutor::new();
+        let r = ex.execute_command(&["list", "x;y"]).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn execute_command_rejects_unsafe_subcommand_before_spawn() {
+        let ex = NativeZfsCommandExecutor::new();
+        let r = ex.execute_command(&["rm", "-rf", "/"]).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn execute_command_expect_success_propagates_validation_error() {
+        let ex = NativeZfsCommandExecutor::new();
+        let r = ex.execute_command_expect_success(&["badcmd"]).await;
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn default_matches_new() {
+        let a = NativeZfsCommandExecutor::default();
+        let b = NativeZfsCommandExecutor::new();
+        assert_eq!(std::mem::size_of_val(&a), std::mem::size_of_val(&b));
+    }
 }

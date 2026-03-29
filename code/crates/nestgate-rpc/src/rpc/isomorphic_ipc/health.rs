@@ -94,6 +94,49 @@ pub struct HealthCheckResponse {
     pub metadata: Option<Value>,
 }
 
+/// Parse a JSON-RPC 2.0 response value for `health.check` (result or error object).
+fn parse_health_check_rpc_response(response: &Value) -> Result<HealthCheckResponse> {
+    if let Some(result) = response.get("result") {
+        if let Ok(health_response) = serde_json::from_value::<HealthCheckResponse>(result.clone()) {
+            return Ok(health_response);
+        }
+
+        if let Some(status_str) = result.get("status").and_then(|v| v.as_str()) {
+            let status = match status_str {
+                "healthy" => HealthStatus::Healthy,
+                "degraded" => HealthStatus::Degraded,
+                _ => HealthStatus::Unhealthy,
+            };
+
+            let version = result
+                .get("version")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown")
+                .to_string();
+
+            return Ok(HealthCheckResponse {
+                status,
+                version,
+                uptime_seconds: 0,
+                active_connections: 0,
+                metadata: None,
+            });
+        }
+    }
+
+    if let Some(error) = response.get("error") {
+        return Err(anyhow::anyhow!(
+            "Health check returned error: {}",
+            error
+                .get("message")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown error")
+        ));
+    }
+
+    Err(anyhow::anyhow!("Invalid health check response format"))
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // HEALTH CHECK CLIENT
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -196,49 +239,7 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
     let response: Value =
         serde_json::from_str(&response_line).context("Failed to parse health check response")?;
 
-    // Extract result
-    if let Some(result) = response.get("result") {
-        // Try to parse as HealthCheckResponse
-        if let Ok(health_response) = serde_json::from_value::<HealthCheckResponse>(result.clone()) {
-            return Ok(health_response);
-        }
-
-        // Fallback: Extract basic status
-        if let Some(status_str) = result.get("status").and_then(|v| v.as_str()) {
-            let status = match status_str {
-                "healthy" => HealthStatus::Healthy,
-                "degraded" => HealthStatus::Degraded,
-                "unhealthy" | _ => HealthStatus::Unhealthy,
-            };
-
-            let version = result
-                .get("version")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-
-            return Ok(HealthCheckResponse {
-                status,
-                version,
-                uptime_seconds: 0,
-                active_connections: 0,
-                metadata: None,
-            });
-        }
-    }
-
-    // Check for error
-    if let Some(error) = response.get("error") {
-        return Err(anyhow::anyhow!(
-            "Health check returned error: {}",
-            error
-                .get("message")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown error")
-        ));
-    }
-
-    Err(anyhow::anyhow!("Invalid health check response format"))
+    parse_health_check_rpc_response(&response).context("Failed to interpret health check response")
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -358,7 +359,9 @@ pub async fn wait_for_healthy(timeout: Duration) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn test_health_status_is_operational() {
@@ -385,5 +388,88 @@ mod tests {
         // Should be Unreachable if not running
         // We can't assert this because NestGate might be running in CI
         let _ = status;
+    }
+
+    #[test]
+    fn health_check_response_serde_roundtrip() {
+        let r = HealthCheckResponse {
+            status: HealthStatus::Healthy,
+            version: "0.2.0".to_string(),
+            uptime_seconds: 42,
+            active_connections: 3,
+            metadata: Some(json!({"role": "test"})),
+        };
+        let v = serde_json::to_value(&r).unwrap();
+        let back: HealthCheckResponse = serde_json::from_value(v).unwrap();
+        assert_eq!(back.status, HealthStatus::Healthy);
+        assert_eq!(back.uptime_seconds, 42);
+        assert_eq!(back.metadata.as_ref().unwrap()["role"], "test");
+    }
+
+    #[tokio::test]
+    async fn wait_for_healthy_times_out_when_not_healthy() {
+        let err = wait_for_healthy(Duration::from_millis(120)).await;
+        assert!(err.is_err());
+        let msg = err.unwrap_err().to_string();
+        assert!(msg.contains("Timeout") || msg.contains("healthy"));
+    }
+
+    #[test]
+    fn health_check_response_deserializes_status_strings() {
+        let result = json!({"status": "healthy", "version": "9.9.9"});
+        let parsed: HealthCheckResponse = serde_json::from_value(result).expect("serde");
+        assert_eq!(parsed.status, HealthStatus::Healthy);
+        assert_eq!(parsed.version, "9.9.9");
+    }
+
+    #[test]
+    fn parse_health_rpc_full_result_roundtrips() {
+        let body = json!({
+            "jsonrpc": "2.0",
+            "result": {
+                "status": "healthy",
+                "version": "1.0.0",
+                "uptime_seconds": 10,
+                "active_connections": 2
+            },
+            "id": 1
+        });
+        let r = super::parse_health_check_rpc_response(&body).expect("parse");
+        assert_eq!(r.status, HealthStatus::Healthy);
+        assert_eq!(r.version, "1.0.0");
+        assert_eq!(r.uptime_seconds, 10);
+        assert_eq!(r.active_connections, 2);
+    }
+
+    #[test]
+    fn parse_health_rpc_fallback_degraded_and_unknown_status() {
+        let degraded = json!({"result": {"status": "degraded", "version": "v"}});
+        let r = super::parse_health_check_rpc_response(&degraded).expect("parse");
+        assert_eq!(r.status, HealthStatus::Degraded);
+        assert_eq!(r.version, "v");
+
+        let bad = json!({"result": {"status": "weird", "version": null}});
+        let r2 = super::parse_health_check_rpc_response(&bad).expect("parse");
+        assert_eq!(r2.status, HealthStatus::Unhealthy);
+        assert_eq!(r2.version, "unknown");
+    }
+
+    #[test]
+    fn parse_health_rpc_jsonrpc_error_object() {
+        let err_body = json!({
+            "error": {"code": -32000, "message": "server boom"}
+        });
+        let e = super::parse_health_check_rpc_response(&err_body).expect_err("err");
+        assert!(e.to_string().contains("server boom"));
+
+        let no_msg = json!({"error": {"code": -1}});
+        let e2 = super::parse_health_check_rpc_response(&no_msg).expect_err("err");
+        assert!(e2.to_string().contains("unknown error"));
+    }
+
+    #[test]
+    fn parse_health_rpc_invalid_format() {
+        let e = super::parse_health_check_rpc_response(&json!({"foo": 1})).expect_err("invalid");
+        assert!(e.to_string().contains("Invalid health"));
     }
 }

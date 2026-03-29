@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(
+    deprecated,
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::float_cmp,
+    clippy::uninlined_format_args,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::default_trait_access,
+    clippy::unused_async
+)]
+
 //! Comprehensive cache tests
 //!
 //! Extended test suite for advanced cache functionality including
@@ -519,10 +532,7 @@ mod cache_integration_tests {
         let mut cache = CacheManager::new(config);
 
         // Test hit/miss tracking
-        cache
-            .put("key1".to_string(), b"value1".to_vec())
-            .await
-            .expect("Put failed");
+        cache.put("key1", b"value1".to_vec()).expect("Put failed");
 
         // This should be a hit
         let _result1 = cache.get("key1");
@@ -540,10 +550,7 @@ mod cache_integration_tests {
         let mut cache = CacheManager::new(config);
 
         // Add entry (goes to hot tier)
-        cache
-            .put("key".to_string(), b"value".to_vec())
-            .await
-            .expect("Put failed");
+        cache.put("key", b"value".to_vec()).expect("Put failed");
 
         // Access multiple times
         for _ in 0..5 {
@@ -571,7 +578,7 @@ mod cache_integration_tests {
         for i in 0..100 {
             let key = format!("key_{}", i);
             let value = format!("value_{}", i).into_bytes();
-            cache.put(key, value).await.expect("Put failed");
+            cache.put(&key, value).expect("Put failed");
         }
 
         // Verify some entries are accessible

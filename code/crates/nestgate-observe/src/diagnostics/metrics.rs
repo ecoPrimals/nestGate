@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 /// Systemmetrics
 pub struct SystemMetrics {
     /// CPU usage percentage (0.0 to 100.0)
-    pub _cpu_usage: f64,
+    #[allow(dead_code)]
+    pub cpu_usage: f64,
     /// Memory used in bytes
     pub memory_used: u64,
     /// Total memory in bytes
@@ -42,7 +43,7 @@ impl Default for SystemMetrics {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            _cpu_usage: 0.0,
+            cpu_usage: 0.0,
             memory_used: 0,
             memory_total: 8 * 1024 * 1024 * 1024, // 8GB default
             storage_used: 0,

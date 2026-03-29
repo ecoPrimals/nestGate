@@ -111,7 +111,7 @@ async fn test_enterprise_storage_backend_implementations() -> Result<()> {
     // Create some test data
     let test_file = root_path.join("test_file.txt");
     fs::write(&test_file, "test data").await.map_err(|e| {
-        NestGateError::storage_error(&format!("Failed to write test file: {}", e), Some(&test_file.to_string_lossy()))
+        NestGateError::storage_error(format!("Failed to write test file: {}", e), Some(&test_file.to_string_lossy()))
     })?;
     
     // Test snapshot creation - should actually copy files
@@ -130,7 +130,7 @@ async fn test_enterprise_storage_backend_implementations() -> Result<()> {
             assert!(snapshot_file.exists(), "Test file should be copied to snapshot");
             
             let snapshot_content = fs::read_to_string(&snapshot_file).await.map_err(|e| {
-                NestGateError::storage_error(&format!("Failed to read snapshot file: {}", e), Some(&snapshot_file.to_string_lossy()))
+                NestGateError::storage_error(format!("Failed to read snapshot file: {}", e), Some(&snapshot_file.to_string_lossy()))
             })?;
             assert_eq!(snapshot_content, "test data", "Snapshot should contain original data");
             
@@ -209,7 +209,7 @@ async fn test_configuration_persistence_implementations() -> Result<()> {
             
             // Verify file contains TOML data
             let file_content = fs::read_to_string(&config_path).await.map_err(|e| {
-                NestGateError::storage_error(&format!("Failed to read config file: {}", e), Some(&config_path.to_string_lossy()))
+                NestGateError::storage_error(format!("Failed to read config file: {}", e), Some(&config_path.to_string_lossy()))
             })?;
             
             assert!(file_content.contains("["), "Should contain TOML structure");
@@ -251,7 +251,7 @@ async fn test_configuration_persistence_implementations() -> Result<()> {
             assert!(backup_path.exists(), "Backup file should exist");
             
             let backup_content = fs::read_to_string(&backup_path).await.map_err(|e| {
-                NestGateError::storage_error(&format!("Failed to read backup file: {}", e), Some(&backup_path.to_string_lossy()))
+                NestGateError::storage_error(format!("Failed to read backup file: {}", e), Some(&backup_path.to_string_lossy()))
             })?;
             
             assert!(backup_content.contains("["), "Backup should contain TOML structure");

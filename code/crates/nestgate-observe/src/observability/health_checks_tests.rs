@@ -59,14 +59,14 @@ mod health_checks_tests {
     #[tokio::test]
     async fn test_health_checker_creation() {
         let checker = HealthChecker::new();
-        let health = checker.run_health_checks().await;
+        let health = checker.run_health_checks();
         assert!(health.is_ok());
     }
 
     #[tokio::test]
     async fn test_health_checker_no_providers() {
         let checker = HealthChecker::new();
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert_eq!(health.overall_status, HealthStatus::Healthy);
         assert_eq!(health.components.len(), 0);
     }
@@ -82,11 +82,9 @@ mod health_checks_tests {
             should_fail: false,
         });
 
-        checker
-            .register_provider("test_service".to_string(), provider)
-            .await;
+        checker.register_provider("test_service".to_string(), provider);
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert!(health.components.contains_key("test_service"));
     }
 
@@ -96,16 +94,14 @@ mod health_checks_tests {
 
         for i in 0..5 {
             let provider = Box::new(MockHealthProvider {
-                name: format!("service_{}", i),
+                name: format!("service_{i}"),
                 status: HealthStatus::Healthy,
                 should_fail: false,
             });
-            checker
-                .register_provider(format!("service_{}", i), provider)
-                .await;
+            checker.register_provider(format!("service_{i}"), provider);
         }
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert_eq!(health.components.len(), 5);
     }
 
@@ -125,14 +121,10 @@ mod health_checks_tests {
             should_fail: false,
         });
 
-        checker
-            .register_provider("duplicate".to_string(), provider1)
-            .await;
-        checker
-            .register_provider("duplicate".to_string(), provider2)
-            .await;
+        checker.register_provider("duplicate".to_string(), provider1);
+        checker.register_provider("duplicate".to_string(), provider2);
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         // Should overwrite, so only one entry
         assert_eq!(health.components.len(), 1);
     }
@@ -145,16 +137,14 @@ mod health_checks_tests {
 
         for i in 0..3 {
             let provider = Box::new(MockHealthProvider {
-                name: format!("healthy_{}", i),
+                name: format!("healthy_{i}"),
                 status: HealthStatus::Healthy,
                 should_fail: false,
             });
-            checker
-                .register_provider(format!("healthy_{}", i), provider)
-                .await;
+            checker.register_provider(format!("healthy_{i}"), provider);
         }
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert_eq!(health.overall_status, HealthStatus::Healthy);
         assert!((health.health_score - 1.0).abs() < 0.01);
     }
@@ -163,29 +153,25 @@ mod health_checks_tests {
     async fn test_mixed_health_statuses() {
         let checker = HealthChecker::new();
 
-        checker
-            .register_provider(
-                "healthy".to_string(),
-                Box::new(MockHealthProvider {
-                    name: "healthy".to_string(),
-                    status: HealthStatus::Healthy,
-                    should_fail: false,
-                }),
-            )
-            .await;
+        checker.register_provider(
+            "healthy".to_string(),
+            Box::new(MockHealthProvider {
+                name: "healthy".to_string(),
+                status: HealthStatus::Healthy,
+                should_fail: false,
+            }),
+        );
 
-        checker
-            .register_provider(
-                "warning".to_string(),
-                Box::new(MockHealthProvider {
-                    name: "warning".to_string(),
-                    status: HealthStatus::Warning,
-                    should_fail: false,
-                }),
-            )
-            .await;
+        checker.register_provider(
+            "warning".to_string(),
+            Box::new(MockHealthProvider {
+                name: "warning".to_string(),
+                status: HealthStatus::Warning,
+                should_fail: false,
+            }),
+        );
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert_eq!(health.overall_status, HealthStatus::Warning);
         assert!(health.health_score < 1.0);
         assert!(health.health_score > 0.0);
@@ -195,18 +181,16 @@ mod health_checks_tests {
     async fn test_unhealthy_component() {
         let checker = HealthChecker::new();
 
-        checker
-            .register_provider(
-                "unhealthy".to_string(),
-                Box::new(MockHealthProvider {
-                    name: "unhealthy".to_string(),
-                    status: HealthStatus::Unhealthy,
-                    should_fail: false,
-                }),
-            )
-            .await;
+        checker.register_provider(
+            "unhealthy".to_string(),
+            Box::new(MockHealthProvider {
+                name: "unhealthy".to_string(),
+                status: HealthStatus::Unhealthy,
+                should_fail: false,
+            }),
+        );
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert_eq!(health.overall_status, HealthStatus::Unhealthy);
     }
 
@@ -214,18 +198,16 @@ mod health_checks_tests {
     async fn test_unknown_status_component() {
         let checker = HealthChecker::new();
 
-        checker
-            .register_provider(
-                "unknown".to_string(),
-                Box::new(MockHealthProvider {
-                    name: "unknown".to_string(),
-                    status: HealthStatus::Unknown,
-                    should_fail: false,
-                }),
-            )
-            .await;
+        checker.register_provider(
+            "unknown".to_string(),
+            Box::new(MockHealthProvider {
+                name: "unknown".to_string(),
+                status: HealthStatus::Unknown,
+                should_fail: false,
+            }),
+        );
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert!(health.components.get("unknown").unwrap().status == HealthStatus::Unknown);
     }
 
@@ -236,19 +218,17 @@ mod health_checks_tests {
         let checker = HealthChecker::new();
 
         for i in 0..10 {
-            checker
-                .register_provider(
-                    format!("service_{}", i),
-                    Box::new(MockHealthProvider {
-                        name: format!("service_{}", i),
-                        status: HealthStatus::Healthy,
-                        should_fail: false,
-                    }),
-                )
-                .await;
+            checker.register_provider(
+                format!("service_{i}"),
+                Box::new(MockHealthProvider {
+                    name: format!("service_{i}"),
+                    status: HealthStatus::Healthy,
+                    should_fail: false,
+                }),
+            );
         }
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert!((health.health_score - 1.0).abs() < 0.01);
     }
 
@@ -257,19 +237,17 @@ mod health_checks_tests {
         let checker = HealthChecker::new();
 
         for i in 0..10 {
-            checker
-                .register_provider(
-                    format!("service_{}", i),
-                    Box::new(MockHealthProvider {
-                        name: format!("service_{}", i),
-                        status: HealthStatus::Unhealthy,
-                        should_fail: false,
-                    }),
-                )
-                .await;
+            checker.register_provider(
+                format!("service_{i}"),
+                Box::new(MockHealthProvider {
+                    name: format!("service_{i}"),
+                    status: HealthStatus::Unhealthy,
+                    should_fail: false,
+                }),
+            );
         }
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         assert!(health.health_score < 0.1);
     }
 
@@ -315,18 +293,16 @@ mod health_checks_tests {
     async fn test_provider_failure_handling() {
         let checker = HealthChecker::new();
 
-        checker
-            .register_provider(
-                "failing".to_string(),
-                Box::new(MockHealthProvider {
-                    name: "failing".to_string(),
-                    status: HealthStatus::Healthy,
-                    should_fail: true,
-                }),
-            )
-            .await;
+        checker.register_provider(
+            "failing".to_string(),
+            Box::new(MockHealthProvider {
+                name: "failing".to_string(),
+                status: HealthStatus::Healthy,
+                should_fail: true,
+            }),
+        );
 
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         // Failing provider should result in Unhealthy status
         if let Some(component) = health.components.get("failing") {
             assert_eq!(component.status, HealthStatus::Unhealthy);
@@ -344,22 +320,20 @@ mod health_checks_tests {
         let checker = std::sync::Arc::new(HealthChecker::new());
 
         for i in 0..5 {
-            checker
-                .register_provider(
-                    format!("concurrent_{}", i),
-                    Box::new(MockHealthProvider {
-                        name: format!("concurrent_{}", i),
-                        status: HealthStatus::Healthy,
-                        should_fail: false,
-                    }),
-                )
-                .await;
+            checker.register_provider(
+                format!("concurrent_{i}"),
+                Box::new(MockHealthProvider {
+                    name: format!("concurrent_{i}"),
+                    status: HealthStatus::Healthy,
+                    should_fail: false,
+                }),
+            );
         }
 
         let mut handles = vec![];
         for _ in 0..10 {
             let checker_clone = checker.clone();
-            let handle = tokio::spawn(async move { checker_clone.run_health_checks().await });
+            let handle = tokio::spawn(async move { checker_clone.run_health_checks() });
             handles.push(handle);
         }
 
@@ -375,7 +349,7 @@ mod health_checks_tests {
     async fn test_system_health_timestamp() {
         let checker = HealthChecker::new();
         let before = SystemTime::now();
-        let health = checker.run_health_checks().await.unwrap();
+        let health = checker.run_health_checks().unwrap();
         let after = SystemTime::now();
 
         assert!(health.timestamp >= before);

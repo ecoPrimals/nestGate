@@ -263,7 +263,7 @@ impl NetworkApi {
         if let Some(service) = services.get(service_name) {
             Ok(service.status.clone())
         } else {
-            Err(nestgate_core::NestGateError::network_error(&format!(
+            Err(nestgate_core::NestGateError::network_error(format!(
                 "Service not found: {service_name}"
             )))
         }

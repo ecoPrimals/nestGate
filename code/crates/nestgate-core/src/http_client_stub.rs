@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![cfg(feature = "dev-stubs")]
+
 //! HTTP client façade backed by the pure-Rust discovery HTTP stack.
 //!
 //! NestGate does not depend on `reqwest`. Call sites historically aliased this module as
@@ -146,7 +148,7 @@ impl RequestBuilder {
     /// Returns an error if serialization fails.
     pub fn json<T: serde::Serialize>(mut self, body: &T) -> Result<Self> {
         let json = serde_json::to_vec(body).map_err(|e| {
-            crate::NestGateError::api_error(&format!("http_client_stub: JSON serialize: {e}"))
+            crate::NestGateError::api_error(format!("http_client_stub: JSON serialize: {e}"))
         })?;
         self.json_body = Some(json);
         Ok(self)

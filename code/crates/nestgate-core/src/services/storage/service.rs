@@ -157,8 +157,8 @@ impl StorageManagerService {
                     return Err(NestGateError::configuration_error_detailed(
                         "zfs_module".to_string(),
                         "ZFS kernel module is not loaded".to_string(),
-                        Some("not_loaded".to_string()),
-                        Some("loaded ZFS kernel module".to_string()),
+                        Some("not_loaded".into()),
+                        Some("loaded ZFS kernel module".into()),
                         false,
                     ));
                 }

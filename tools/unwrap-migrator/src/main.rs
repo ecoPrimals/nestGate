@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
+
 //! # `NestGate` Advanced Unwrap Migrator
 //!
 //! Enhanced panic migration tool with advanced pattern detection and team-friendly features.
@@ -15,7 +17,8 @@
 #![allow(dead_code)] // Utility tool with many optional features
 #![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
 
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
+use std::fmt::Write as _;
 use std::path::Path;
 use tracing::{error, info, warn};
 use walkdir::WalkDir;
@@ -31,155 +34,193 @@ mod systematic_migrator;
 use crate::advanced_panic_migrator::AdvancedNestGatePanicMigrator;
 use crate::enhanced_migrator::EnhancedUnwrapMigrator;
 
+fn build_cli() -> Command {
+    register_cli_options(
+        Command::new("unwrap-migrator")
+            .version("0.3.0")
+            .about("🚀 NestGate Advanced Unwrap & Panic Pattern Migrator")
+            .long_about(
+                "Advanced tool for migrating unsafe panic patterns to safe error handling.\n\
+             Designed specifically for NestGate development with team workflow integration.",
+            )
+            .arg(
+                Arg::new("path")
+                    .value_name("PATH")
+                    .help("Path to analyze (directory or file)")
+                    .default_value("./")
+                    .index(1),
+            )
+            .arg(
+                Arg::new("analyze")
+                    .short('a')
+                    .long("analyze")
+                    .help("🔍 Analyze patterns without making changes")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("fix")
+                    .short('f')
+                    .long("fix")
+                    .help("🔧 Apply safe automatic fixes")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("interactive")
+                    .short('i')
+                    .long("interactive")
+                    .help("🎯 Interactive mode - review each fix")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("report")
+                    .short('r')
+                    .long("report")
+                    .help("📊 Generate detailed HTML report")
+                    .action(ArgAction::SetTrue),
+            ),
+    )
+}
+
+fn register_cli_options(cmd: Command) -> Command {
+    cmd.arg(
+        Arg::new("confidence")
+            .short('c')
+            .long("confidence")
+            .value_name("LEVEL")
+            .help("🎯 Minimum confidence level (50-100)")
+            .default_value("80"),
+    )
+    .arg(
+        Arg::new("priority")
+            .short('p')
+            .long("priority")
+            .value_name("LEVEL")
+            .help("⚡ Priority filter: high, medium, low, all")
+            .default_value("medium"),
+    )
+    .arg(
+        Arg::new("include-tests")
+            .long("include-tests")
+            .help("🧪 Include test files in analysis")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
+        Arg::new("exclude-pattern")
+            .long("exclude")
+            .value_name("PATTERN")
+            .help("🚫 Exclude files matching pattern (regex)")
+            .action(ArgAction::Append),
+    )
+    .arg(
+        Arg::new("output")
+            .short('o')
+            .long("output")
+            .value_name("FILE")
+            .help("📁 Output report to file"),
+    )
+    .arg(
+        Arg::new("format")
+            .long("format")
+            .value_name("FORMAT")
+            .help("📋 Output format: json, markdown, html")
+            .default_value("markdown"),
+    )
+    .arg(
+        Arg::new("verbose")
+            .short('v')
+            .long("verbose")
+            .help("📢 Verbose output")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
+        Arg::new("quiet")
+            .short('q')
+            .long("quiet")
+            .help("🔇 Quiet mode - minimal output")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
+        Arg::new("advanced")
+            .long("advanced")
+            .help("🎯 Use advanced pattern detection")
+            .action(ArgAction::SetTrue),
+    )
+    .arg(
+        Arg::new("nestgate-mode")
+            .long("nestgate-mode")
+            .help("🏠 Enable NestGate-specific patterns")
+            .action(ArgAction::SetTrue),
+    )
+}
+
+#[derive(Clone, Copy)]
+enum OperationKind {
+    Analyze,
+    Fix,
+    Interactive,
+    Report,
+}
+
+fn resolve_operation_kind(matches: &ArgMatches) -> OperationKind {
+    match (
+        matches.get_flag("analyze"),
+        matches.get_flag("fix"),
+        matches.get_flag("interactive"),
+        matches.get_flag("report"),
+    ) {
+        (_, _, true, _) => OperationKind::Interactive,
+        (_, true, _, _) => OperationKind::Fix,
+        (_, _, _, true) => OperationKind::Report,
+        (true, _, _, _) | (false, false, false, false) => OperationKind::Analyze,
+    }
+}
+
+const fn operation_kind_label(kind: OperationKind) -> &'static str {
+    match kind {
+        OperationKind::Analyze => "analyze",
+        OperationKind::Fix => "fix",
+        OperationKind::Interactive => "interactive",
+        OperationKind::Report => "report",
+    }
+}
+
 #[tokio::main]
-#[allow(clippy::type_complexity)]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize tracing with better formatting
     tracing_subscriber::fmt()
         .with_target(false)
         .with_level(true)
         .init();
 
-    let matches = Command::new("unwrap-migrator")
-        .version("0.3.0")
-        .about("🚀 NestGate Advanced Unwrap & Panic Pattern Migrator")
-        .long_about(
-            "Advanced tool for migrating unsafe panic patterns to safe error handling.\n\
-             Designed specifically for NestGate development with team workflow integration.",
-        )
-        .arg(
-            Arg::new("path")
-                .value_name("PATH")
-                .help("Path to analyze (directory or file)")
-                .default_value("./")
-                .index(1),
-        )
-        .arg(
-            Arg::new("analyze")
-                .short('a')
-                .long("analyze")
-                .help("🔍 Analyze patterns without making changes")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("fix")
-                .short('f')
-                .long("fix")
-                .help("🔧 Apply safe automatic fixes")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("interactive")
-                .short('i')
-                .long("interactive")
-                .help("🎯 Interactive mode - review each fix")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("report")
-                .short('r')
-                .long("report")
-                .help("📊 Generate detailed HTML report")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("confidence")
-                .short('c')
-                .long("confidence")
-                .value_name("LEVEL")
-                .help("🎯 Minimum confidence level (50-100)")
-                .default_value("80"),
-        )
-        .arg(
-            Arg::new("priority")
-                .short('p')
-                .long("priority")
-                .value_name("LEVEL")
-                .help("⚡ Priority filter: high, medium, low, all")
-                .default_value("medium"),
-        )
-        .arg(
-            Arg::new("include-tests")
-                .long("include-tests")
-                .help("🧪 Include test files in analysis")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("exclude-pattern")
-                .long("exclude")
-                .value_name("PATTERN")
-                .help("🚫 Exclude files matching pattern (regex)")
-                .action(ArgAction::Append),
-        )
-        .arg(
-            Arg::new("output")
-                .short('o')
-                .long("output")
-                .value_name("FILE")
-                .help("📁 Output report to file"),
-        )
-        .arg(
-            Arg::new("format")
-                .long("format")
-                .value_name("FORMAT")
-                .help("📋 Output format: json, markdown, html")
-                .default_value("markdown"),
-        )
-        .arg(
-            Arg::new("verbose")
-                .short('v')
-                .long("verbose")
-                .help("📢 Verbose output")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("quiet")
-                .short('q')
-                .long("quiet")
-                .help("🔇 Quiet mode - minimal output")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("advanced")
-                .long("advanced")
-                .help("🎯 Use advanced pattern detection")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("nestgate-mode")
-                .long("nestgate-mode")
-                .help("🏠 Enable NestGate-specific patterns")
-                .action(ArgAction::SetTrue),
-        )
-        .get_matches();
+    let matches = build_cli().get_matches();
+    run_with_matches(matches).await
+}
 
-    let path = matches.get_one::<String>("path").unwrap();
-    let analyze = matches.get_flag("analyze");
-    let fix = matches.get_flag("fix");
-    let interactive = matches.get_flag("interactive");
-    let report = matches.get_flag("report");
+async fn run_with_matches(matches: ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+    let path = matches
+        .get_one::<String>("path")
+        .ok_or("internal error: path argument missing")?;
     let include_tests = matches.get_flag("include-tests");
     let verbose = matches.get_flag("verbose");
     let quiet = matches.get_flag("quiet");
     let advanced = matches.get_flag("advanced");
-    let nestgate_mode = matches.get_flag("nestgate-mode");
-
-    let confidence = matches
+    let confidence: u8 = matches
         .get_one::<String>("confidence")
-        .unwrap()
-        .parse::<u8>()?;
+        .ok_or("internal error: confidence argument missing")?
+        .parse()?;
 
-    let priority = matches.get_one::<String>("priority").unwrap();
-    let format = matches.get_one::<String>("format").unwrap();
+    let priority = matches
+        .get_one::<String>("priority")
+        .ok_or("internal error: priority argument missing")?;
+    let format = matches
+        .get_one::<String>("format")
+        .ok_or("internal error: format argument missing")?;
     let output_file = matches.get_one::<String>("output");
 
-    // Validate confidence level
     if !(50..=100).contains(&confidence) {
         error!("❌ Confidence level must be between 50 and 100");
         std::process::exit(1);
     }
 
-    // Print banner
     if !quiet {
         print_banner();
         info!("🚀 Starting NestGate Unwrap Migration Tool v0.3.0");
@@ -188,39 +229,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("⚡ Priority filter: {}", priority);
     }
 
-    // Determine operation mode
-    let operation_mode = determine_mode(analyze, fix, interactive, report);
+    let op_kind = resolve_operation_kind(&matches);
 
     if !quiet {
-        info!("🔍 Operation mode: {}", operation_mode);
+        info!("🔍 Operation mode: {}", operation_kind_label(op_kind));
     }
 
-    // Validate path
     let target_path = Path::new(path);
     if !target_path.exists() {
         error!("❌ Path does not exist: {}", path);
         std::process::exit(1);
     }
 
-    // Run the appropriate operation
-    match operation_mode.as_str() {
-        "analyze" => run_analysis(target_path, confidence, include_tests, verbose).await?,
-        "fix" => {
-            run_fixes(
-                target_path,
-                confidence,
-                include_tests,
-                advanced,
-                nestgate_mode,
-                verbose,
-            )
-            .await?;
-        }
-        "interactive" => run_interactive(target_path, confidence, include_tests, verbose).await?,
-        "report" => run_report(target_path, format, output_file, include_tests, verbose).await?,
-        _ => {
-            warn!("⚠️  No specific mode selected, defaulting to analysis");
+    match op_kind {
+        OperationKind::Analyze => {
             run_analysis(target_path, confidence, include_tests, verbose).await?;
+        }
+        OperationKind::Fix => {
+            run_fixes(target_path, confidence, advanced).await?;
+        }
+        OperationKind::Interactive => {
+            run_interactive(target_path, confidence, include_tests, verbose);
+        }
+        OperationKind::Report => {
+            run_report(target_path, format, output_file, include_tests, verbose).await?;
         }
     }
 
@@ -239,15 +271,6 @@ fn print_banner() {
     println!("║  error handling. Built for development teams.                 ║");
     println!("╚═══════════════════════════════════════════════════════════════╝");
     println!();
-}
-
-fn determine_mode(analyze: bool, fix: bool, interactive: bool, report: bool) -> String {
-    match (analyze, fix, interactive, report) {
-        (_, _, true, _) => "interactive".to_string(),
-        (_, true, _, _) => "fix".to_string(),
-        (_, _, _, true) => "report".to_string(),
-        (true, _, _, _) | (false, false, false, false) => "analyze".to_string(),
-    }
 }
 
 async fn run_analysis(
@@ -286,10 +309,7 @@ async fn run_analysis(
 async fn run_fixes(
     path: &Path,
     _confidence: u8,
-    _include_tests: bool,
     advanced: bool,
-    _nestgate_mode: bool,
-    _verbose: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Running automated fixes...");
 
@@ -301,11 +321,9 @@ async fn run_fixes(
         info!("✅ Advanced migration completed:");
         info!("   📁 Files processed: {}", results.files_scanned);
         info!("   🎯 Patterns fixed: {}", results.migrations_applied);
-        info!(
-            "   📊 Success rate: {:.1}%",
-            (results.migrations_applied as f32 / results.panic_patterns_found.max(1) as f32)
-                * 100.0
-        );
+        let denom = results.panic_patterns_found.max(1);
+        let rate_x10 = results.migrations_applied.saturating_mul(1000) / denom;
+        info!("   📊 Success rate: {}.{}%", rate_x10 / 10, rate_x10 % 10);
     } else {
         info!("🎯 Using standard enhanced migrator");
         let migrator = EnhancedUnwrapMigrator::new(false);
@@ -319,16 +337,10 @@ async fn run_fixes(
     Ok(())
 }
 
-async fn run_interactive(
-    _path: &Path,
-    _confidence: u8,
-    _include_tests: bool,
-    _verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn run_interactive(_path: &Path, _confidence: u8, _include_tests: bool, _verbose: bool) {
     warn!("🚧 Interactive mode is under development");
     info!("📋 This feature will allow reviewing each fix before applying");
     info!("💡 For now, use --analyze to review patterns, then --fix to apply");
-    Ok(())
 }
 
 async fn run_report(
@@ -405,13 +417,15 @@ fn is_test_file(path: &Path) -> bool {
 
 fn calculate_risk_level(stats: &PatternStats) -> &'static str {
     let total = stats.total_patterns();
-    let panic_ratio = stats.panic_calls as f32 / total.max(1) as f32;
+    let denom = total.max(1);
+    // Thousandths of `panic_calls / total` (e.g. 100 ≈ 10% panics) without float casts.
+    let panic_share_thousandth = stats.panic_calls.saturating_mul(1000) / denom;
 
-    match (total, panic_ratio) {
+    match (total, panic_share_thousandth) {
         (0..=10, _) => "🟢 LOW",
-        (11..=50, p) if p < 0.1 => "🟡 MEDIUM",
+        (11..=50, p) if p < 100 => "🟡 MEDIUM",
         (11..=50, _) => "🟠 HIGH",
-        (_, p) if p > 0.2 => "🔴 CRITICAL",
+        (_, p) if p > 200 => "🔴 CRITICAL",
         _ => "🟠 HIGH",
     }
 }
@@ -462,50 +476,55 @@ fn generate_markdown_report(stats: &PatternStats, verbose: bool) -> String {
     let mut report = String::new();
 
     report.push_str("# 🚀 NestGate Unwrap Migration Report\n\n");
-    report.push_str(&format!(
-        "**Generated**: {}\n\n",
+    let _ = writeln!(
+        report,
+        "**Generated**: {}\n",
         chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
-    ));
+    );
+    report.push('\n');
 
     report.push_str("## 📊 Summary\n\n");
-    report.push_str(&format!("- **Files Scanned**: {}\n", stats.files_scanned));
-    report.push_str(&format!(
-        "- **Files with Patterns**: {}\n",
+    let _ = writeln!(report, "- **Files Scanned**: {}", stats.files_scanned);
+    let _ = writeln!(
+        report,
+        "- **Files with Patterns**: {}",
         stats.files_with_patterns
-    ));
-    report.push_str(&format!(
-        "- **Total Patterns**: {}\n\n",
-        stats.total_patterns()
-    ));
+    );
+    let _ = writeln!(report, "- **Total Patterns**: {}\n", stats.total_patterns());
 
     report.push_str("## 🎯 Pattern Breakdown\n\n");
     report.push_str("| Pattern Type | Count | Risk Level |\n");
     report.push_str("|--------------|-------|------------|\n");
-    report.push_str(&format!(
-        "| `.unwrap()` | {} | {} |\n",
+    let _ = writeln!(
+        report,
+        "| `.unwrap()` | {} | {} |",
         stats.unwrap_calls,
         pattern_risk(stats.unwrap_calls)
-    ));
-    report.push_str(&format!(
-        "| `.expect()` | {} | {} |\n",
+    );
+    let _ = writeln!(
+        report,
+        "| `.expect()` | {} | {} |",
         stats.expect_calls,
         pattern_risk(stats.expect_calls)
-    ));
-    report.push_str(&format!(
-        "| `panic!()` | {} | {} |\n",
+    );
+    let _ = writeln!(
+        report,
+        "| `panic!()` | {} | {} |",
         stats.panic_calls,
         panic_risk(stats.panic_calls)
-    ));
-    report.push_str(&format!(
-        "| `todo!()` | {} | {} |\n",
+    );
+    let _ = writeln!(
+        report,
+        "| `todo!()` | {} | {} |",
         stats.todo_calls,
         todo_risk(stats.todo_calls)
-    ));
-    report.push_str(&format!(
-        "| `unimplemented!()` | {} | {} |\n\n",
+    );
+    let _ = writeln!(
+        report,
+        "| `unimplemented!()` | {} | {} |\n",
         stats.unimplemented_calls,
         unimpl_risk(stats.unimplemented_calls)
-    ));
+    );
 
     if verbose {
         report.push_str("## 💡 Recommendations\n\n");

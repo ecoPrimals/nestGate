@@ -49,6 +49,7 @@
 
 use anyhow::{Context, Result};
 use std::time::Duration;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tracing::{debug, info, warn};
 
 use super::health::{HealthStatus, check_nestgate_health, wait_for_healthy};
@@ -101,7 +102,6 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
         })?;
 
     // ✅ JSON-RPC 2.0: Send health check request
-    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     let (reader, mut writer) = stream.into_split();
 
     let health_request = serde_json::json!({
@@ -604,6 +604,7 @@ pub async fn get_nestgate_endpoint_for_atomic() -> Result<String> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -693,5 +694,87 @@ mod tests {
         let primals = discover_available_primals();
         // Just verify it returns without panic
         let _ = primals;
+    }
+
+    #[test]
+    fn atomic_type_names() {
+        assert_eq!(AtomicType::Tower.name(), "TOWER");
+        assert_eq!(AtomicType::Node.name(), "NODE");
+        assert_eq!(AtomicType::Nest.name(), "NEST");
+    }
+
+    #[test]
+    fn atomic_status_components_needing_attention_filters() {
+        let s = AtomicStatus {
+            atomic_type: AtomicType::Nest,
+            overall_health: HealthStatus::Healthy,
+            component_statuses: vec![
+                ("ok".to_string(), HealthStatus::Healthy),
+                ("bad".to_string(), HealthStatus::Unhealthy),
+            ],
+        };
+        let names = s.components_needing_attention();
+        assert_eq!(names, vec!["bad"]);
+    }
+
+    #[test]
+    fn gather_socket_search_dirs_includes_uid_run_path() {
+        let dirs = super::gather_socket_search_dirs();
+        let uid = uzers::get_current_uid();
+        assert!(
+            dirs.iter().any(|d| d.contains(&format!("/run/user/{uid}"))),
+            "{dirs:?}"
+        );
+        assert!(dirs.iter().any(|d| d == "/tmp"));
+    }
+
+    #[test]
+    fn discover_primal_socket_biomeos_dir() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("tower.sock");
+        std::fs::write(&sock, b"x").unwrap();
+        nestgate_platform::env_process::set_var(
+            "BIOMEOS_SOCKET_DIR",
+            dir.path().to_string_lossy().as_ref(),
+        );
+        let p = super::discover_primal_socket("tower");
+        nestgate_platform::env_process::remove_var("BIOMEOS_SOCKET_DIR");
+        assert_eq!(p, Some(sock));
+    }
+
+    #[test]
+    fn discover_primal_socket_family_scoped_under_xdg() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let bio = dir.path().join("biomeos");
+        std::fs::create_dir_all(&bio).unwrap();
+        let sock = bio.join("tower-fam9.sock");
+        std::fs::write(&sock, b"x").unwrap();
+        nestgate_platform::env_process::set_var(
+            "XDG_RUNTIME_DIR",
+            dir.path().to_string_lossy().as_ref(),
+        );
+        nestgate_platform::env_process::set_var("NESTGATE_FAMILY_ID", "fam9");
+        let p = super::discover_primal_socket("tower");
+        nestgate_platform::env_process::remove_var("XDG_RUNTIME_DIR");
+        nestgate_platform::env_process::remove_var("NESTGATE_FAMILY_ID");
+        assert_eq!(p, Some(sock));
+    }
+
+    #[test]
+    fn discover_primal_socket_tmp_fallback() {
+        let tmp_sock = std::path::PathBuf::from("/tmp").join("ng_atomic_cov_primal.sock");
+        let _ = std::fs::remove_file(&tmp_sock);
+        std::fs::write(&tmp_sock, b"x").unwrap();
+        let p = super::discover_primal_socket("ng_atomic_cov_primal");
+        let _ = std::fs::remove_file(&tmp_sock);
+        assert_eq!(p, Some(tmp_sock));
+    }
+
+    #[tokio::test]
+    async fn get_nestgate_endpoint_for_atomic_formats_result_or_errors() {
+        let r = get_nestgate_endpoint_for_atomic().await;
+        if let Ok(s) = r {
+            assert!(!s.is_empty());
+        }
     }
 }

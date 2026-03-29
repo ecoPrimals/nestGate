@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 7, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 📖 Constants Usage Guide
 **Last Updated**: November 7, 2025  
 **Purpose**: Definitive guide for using NestGate constants  

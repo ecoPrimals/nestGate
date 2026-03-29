@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn test_secret_string_no_debug_leak() {
         let secret = SecretString::new("super-secret-password".to_string());
-        let debug_output = format!("{:?}", secret);
+        let debug_output = format!("{secret:?}");
 
         // Should not contain the actual secret
         assert!(!debug_output.contains("super-secret-password"));

@@ -46,7 +46,7 @@ pub struct MdnsDiscovery {
 
 impl MdnsDiscovery {
     /// Create new mDNS discovery (lock-free registry)
-    pub fn new(builder: DiscoveryBuilder) -> Result<Self> {
+    pub fn new(builder: &DiscoveryBuilder) -> Result<Self> {
         Ok(Self {
             timeout: builder.timeout,
             cache_duration: builder.cache_duration,

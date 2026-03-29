@@ -155,7 +155,7 @@ async fn test_discover_bind_address_async() {
     let service_name = "test-service";
 
     // Attempt discovery - may fail in test environment but shouldn't panic
-    let result = discovery.discover_bind_address(service_name).await;
+    let result = discovery.discover_bind_address(service_name);
 
     // Result should be Ok or Err, but not panic
     match result {
@@ -290,7 +290,7 @@ async fn test_cache_general_operations() {
     assert!(cache.get_discovery("test-key").is_none());
 
     // Store value
-    cache.store_discovery("test-key", "test-value", None).await;
+    cache.store_discovery("test-key", "test-value", None);
 
     // Retrieve value
     assert_eq!(
@@ -341,7 +341,7 @@ async fn test_comprehensive_discovery_workflow() {
     let discovery = UniversalPrimalDiscovery::new();
 
     // Test multiple discoveries don't interfere
-    let _addr_result = discovery.discover_bind_address("service-a").await;
+    let _addr_result = discovery.discover_bind_address("service-a");
     let _port_result = discovery.discover_available_port("service-b", 9000).await;
     let _timeout_result = discovery
         .discover_optimal_timeout("service-c", "operation")
@@ -360,7 +360,7 @@ async fn test_concurrent_discoveries() {
     let discovery3 = discovery.clone();
 
     let handle1 = tokio::spawn(async move {
-        let _ = discovery1.discover_bind_address("service-1").await;
+        let _ = discovery1.discover_bind_address("service-1");
     });
 
     let handle2 = tokio::spawn(async move {
@@ -390,7 +390,7 @@ async fn test_discovery_with_various_service_names() {
 
     for service_name in service_names {
         // Each should handle gracefully
-        let _ = discovery.discover_bind_address(service_name).await;
+        let _ = discovery.discover_bind_address(service_name);
     }
 }
 
@@ -474,7 +474,7 @@ async fn test_cache_configuration() {
     let mut cache = DiscoveryCache::new();
 
     // Configure cache
-    cache.configure(Duration::from_secs(600), 500).await;
+    cache.configure(Duration::from_secs(600), 500);
 
     // Verify configuration applied
     let stats = cache.get_detailed_stats();
@@ -486,7 +486,7 @@ async fn test_cache_configuration() {
 async fn test_discovery_status() {
     let discovery = UniversalPrimalDiscovery::new();
 
-    let status = discovery.get_discovery_status().await;
+    let status = discovery.get_discovery_status();
 
     assert!(status.is_ok());
     let status_map = status.unwrap();
@@ -529,7 +529,7 @@ mod edge_case_tests {
     #[tokio::test]
     async fn test_empty_service_name() {
         let discovery = UniversalPrimalDiscovery::new();
-        let result = discovery.discover_bind_address("").await;
+        let result = discovery.discover_bind_address("");
 
         // Should handle gracefully (Ok or Err, not panic)
         let _ = result;
@@ -540,7 +540,7 @@ mod edge_case_tests {
     async fn test_long_service_name() {
         let discovery = UniversalPrimalDiscovery::new();
         let long_name = "a".repeat(1000);
-        let result = discovery.discover_bind_address(&long_name).await;
+        let result = discovery.discover_bind_address(&long_name);
 
         // Should handle gracefully
         let _ = result;

@@ -239,3 +239,38 @@ impl ZfsManager {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::manager::ZfsManager;
+
+    #[tokio::test]
+    async fn get_service_status_matches_zfs_availability() {
+        let m = ZfsManager::mock();
+        let out = m.get_service_status().await;
+        if crate::native::is_zfs_available().await {
+            assert!(out.is_ok());
+        } else {
+            assert!(out.is_err());
+        }
+    }
+
+    #[tokio::test]
+    async fn get_zfs_health_matches_service_status() {
+        let m = ZfsManager::mock();
+        let a = m.get_zfs_health().await;
+        let b = m.get_service_status().await;
+        assert_eq!(a.is_ok(), b.is_ok());
+    }
+
+    #[tokio::test]
+    async fn initialize_system_errors_when_zfs_not_available() {
+        let m = ZfsManager::mock();
+        let r = m.initialize_system().await;
+        if crate::native::is_zfs_available().await {
+            assert!(r.is_ok());
+        } else {
+            assert!(r.is_err());
+        }
+    }
+}

@@ -1,7 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
+
 //! Security, cryptography, certificate management, and zero-cost security providers for `NestGate`.
+
+#![allow(deprecated, clippy::missing_errors_doc)]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp,
+    )
+)]
 
 /// Crate-local primal-agnostic adapter handle used by certificate utilities.
 ///

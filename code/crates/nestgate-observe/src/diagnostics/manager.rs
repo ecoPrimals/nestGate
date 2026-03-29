@@ -39,9 +39,14 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn add_diagnostic(&self, _diagnostic: Diagnostic) -> Result<()> {
-        // Implementation would add diagnostic to storage
-        // For now, this is a placeholder
+    pub fn add_diagnostic(&self, diagnostic: Diagnostic) -> Result<()> {
+        let mut diagnostics = self.diagnostics.write().map_err(|_| {
+            NestGateError::internal_error(
+                "Failed to acquire diagnostics write lock",
+                "diagnostics_manager",
+            )
+        })?;
+        diagnostics.push(diagnostic);
         Ok(())
     }
 

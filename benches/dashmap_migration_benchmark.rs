@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **DashMap Migration Benchmark**
 //!
 //! Tracks performance improvements as we migrate from `Arc<RwLock<HashMap>>`

@@ -59,6 +59,7 @@ impl AuthTokenManager {
     /// );
     /// ```
     #[must_use]
+    #[allow(clippy::expect_used, clippy::missing_panics_doc)]
     pub fn create_token(
         &self,
         user_id: &str,

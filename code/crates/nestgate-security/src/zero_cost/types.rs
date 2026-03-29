@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn test_zero_cost_types_creation() {
         let metadata = ZeroCostMetadata {
-            timestamp: 1234567890,
+            timestamp: 1_234_567_890,
             priority: RequestPriority::High,
             source: [0u8; 32],
         };

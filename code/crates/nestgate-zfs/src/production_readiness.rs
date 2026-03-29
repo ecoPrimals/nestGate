@@ -114,7 +114,7 @@ impl RealZfsOperations {
         }
 
         let json_str = String::from_utf8(output.stdout)
-            .map_err(|e| NestGateError::validation_error(&e.to_string()))?;
+            .map_err(|e| NestGateError::validation_error(e.to_string()))?;
 
         // Parse the JSON output and convert to PoolInfo structures
         let json_value: serde_json::Value = serde_json::from_str(&json_str)?;
@@ -190,7 +190,7 @@ impl RealZfsOperations {
         }
 
         let output_str = String::from_utf8(output.stdout)
-            .map_err(|e| NestGateError::validation_error(&e.to_string()))?;
+            .map_err(|e| NestGateError::validation_error(e.to_string()))?;
         let datasets: Vec<crate::handlers::DatasetInfo> = output_str
             .lines()
             .map(|line| {
@@ -242,7 +242,7 @@ impl RealZfsOperations {
         }
 
         let output_str = String::from_utf8(output.stdout)
-            .map_err(|e| NestGateError::validation_error(&e.to_string()))?;
+            .map_err(|e| NestGateError::validation_error(e.to_string()))?;
         let snapshots: Vec<crate::handlers::SnapshotInfo> = output_str
             .lines()
             .map(|line| {

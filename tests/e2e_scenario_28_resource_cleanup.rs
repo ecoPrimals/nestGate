@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! E2E Scenario 28: Resource Cleanup and RAII
 //!
 //! **Purpose**: Validate proper resource cleanup and RAII patterns

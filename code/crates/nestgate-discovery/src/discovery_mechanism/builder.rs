@@ -70,6 +70,10 @@ impl DiscoveryBuilder {
     /// 1. Kubernetes (if `KUBERNETES_SERVICE_HOST` set)
     /// 2. Consul (if `CONSUL_HTTP_ADDR` set)
     /// 3. mDNS (default fallback)
+    #[cfg_attr(
+        not(any(feature = "kubernetes", feature = "consul")),
+        allow(clippy::unused_async)
+    )]
     pub async fn detect(self) -> Result<Box<dyn DiscoveryMechanism>> {
         // Check for kubernetes
         if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
@@ -90,12 +94,12 @@ impl DiscoveryBuilder {
         }
 
         // Default to mDNS
-        Ok(Box::new(mdns::MdnsDiscovery::new(self)?))
+        Ok(Box::new(mdns::MdnsDiscovery::new(&self)?))
     }
 
     /// Build mDNS discovery (default)
-    pub async fn build_mdns(self) -> Result<Box<dyn DiscoveryMechanism>> {
-        Ok(Box::new(mdns::MdnsDiscovery::new(self)?))
+    pub fn build_mdns(self) -> Result<Box<dyn DiscoveryMechanism>> {
+        Ok(Box::new(mdns::MdnsDiscovery::new(&self)?))
     }
 
     /// Build Consul discovery

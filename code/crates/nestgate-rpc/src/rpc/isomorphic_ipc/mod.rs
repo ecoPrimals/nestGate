@@ -184,6 +184,7 @@ pub use launcher::{
 
 #[cfg(test)]
 mod isomorphic_ipc_export_tests {
+
     #[test]
     fn public_types_are_reachable() {
         fn assert_send_sync<T: Send + Sync>() {}

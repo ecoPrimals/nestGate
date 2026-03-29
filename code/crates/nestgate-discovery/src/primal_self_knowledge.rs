@@ -251,10 +251,10 @@ impl PrimalSelfKnowledge {
                 name: "zfs".to_string(),
                 description: "ZFS pool and dataset management".to_string(),
                 endpoint: "/api/v1/zfs".to_string(),
-                metadata: [("backend".to_string(), "native".to_string())]
-                    .iter()
-                    .cloned()
-                    .collect(),
+                metadata: std::collections::HashMap::from([(
+                    "backend".to_string(),
+                    "native".to_string(),
+                )]),
             });
         }
 
@@ -419,7 +419,7 @@ impl PrimalSelfKnowledge {
 
                     return Ok(primal);
                 }
-                Ok(None) => continue,
+                Ok(None) => {}
                 Err(e) => {
                     debug!("Discovery via {:?} failed: {}", mechanism, e);
                 }

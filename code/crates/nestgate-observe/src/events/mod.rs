@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(deprecated)] // Events*Config types deprecated pending CanonicalNetworkConfig migration
+
 //! Events system for `NestGate`
 //!
 //! Provides event bus, routing, pubsub, and related functionality.
@@ -220,8 +222,12 @@ pub fn create_service() -> DefaultService {
     DefaultService::new(EventsMainConfig::default())
 }
 
-/// Validate configuration
-pub async fn validate_config(config: &EventsMainConfig) -> nestgate_types::Result<()> {
+/// Validate configuration.
+///
+/// # Errors
+///
+/// Returns when `max_connections` or `buffer_size` is zero.
+pub fn validate_config(config: &EventsMainConfig) -> nestgate_types::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "events",

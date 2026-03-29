@@ -100,6 +100,8 @@ impl AdapterDiscoveryConfig {
     /// - `NESTGATE_PORT`: Port for fallback endpoints (default: "8080")
     #[must_use]
     pub fn from_env() -> Self {
+        use crate::config::runtime::get_config;
+
         let mut config = Self::new();
 
         // Load discovery endpoints
@@ -134,7 +136,6 @@ impl AdapterDiscoveryConfig {
         }
 
         // ✅ MIGRATED: Load from centralized runtime config
-        use crate::config::runtime::get_config;
         let runtime_config = get_config();
 
         // Load adapter endpoint override

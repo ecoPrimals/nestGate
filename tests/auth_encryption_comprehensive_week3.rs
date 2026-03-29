@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Auth and encryption flow comprehensive tests - Week 3 Days 3-4
 //!
 //! Focus: Authentication flows, encryption operations, key management

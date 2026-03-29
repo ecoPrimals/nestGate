@@ -224,6 +224,10 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 
                 // Capability match quality - 10% weight
                 // IMPLEMENTATION: Enhanced capability matching with preference-based selection
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "Heuristic scoring; exact integer capacity is unnecessary"
+                )]
                 let capability_match_score = requirements.capabilities.len() as f64; // Simple count for now
                 score += (capability_match_score / 5.0).min(10.0); // Cap at 10.0
 
@@ -320,7 +324,8 @@ impl InMemoryServiceRegistry {
     }
 
     /// Get all registered services (for debugging/monitoring) - lock-free!
-    pub async fn get_all_services(&self) -> Vec<ServiceInfo> {
+    #[must_use]
+    pub fn get_all_services(&self) -> Vec<ServiceInfo> {
         // DashMap: Lock-free iteration!
         self.services
             .iter()
@@ -338,7 +343,8 @@ impl InMemoryServiceRegistry {
     }
 
     /// Get service count (for monitoring) - lock-free!
-    pub async fn service_count(&self) -> usize {
+    #[must_use]
+    pub fn service_count(&self) -> usize {
         // DashMap: Lock-free len()!
         self.services.len()
     }
@@ -351,16 +357,13 @@ impl InMemoryServiceRegistry {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn get_services_by_category(
-        &self,
-        category: ServiceCategory,
-    ) -> Result<Vec<ServiceInfo>> {
+    pub fn get_services_by_category(&self, category: &ServiceCategory) -> Result<Vec<ServiceInfo>> {
         // DashMap: Lock-free concurrent iteration and filtering!
         let matching_services: Vec<ServiceInfo> = self
             .services
             .iter()
             .map(|entry| entry.value().clone())
-            .filter(|registration| registration.metadata.category == category)
+            .filter(|registration| &registration.metadata.category == category)
             .map(|registration| ServiceInfo {
                 service_id: registration.service_id,
                 metadata: registration.metadata.clone(),
@@ -547,14 +550,14 @@ mod tests {
         registry.register_service(reg1).await.unwrap();
         registry.register_service(reg2).await.unwrap();
 
-        let all = registry.get_all_services().await;
+        let all = registry.get_all_services();
         assert_eq!(all.len(), 2);
     }
 
     #[tokio::test]
     async fn test_service_count() {
         let registry = InMemoryServiceRegistry::new();
-        assert_eq!(registry.service_count().await, 0);
+        assert_eq!(registry.service_count(), 0);
 
         let reg = make_registration(
             "svc",
@@ -562,7 +565,7 @@ mod tests {
             vec![ServiceCapability::Storage(StorageType::Object)],
         );
         registry.register_service(reg).await.unwrap();
-        assert_eq!(registry.service_count().await, 1);
+        assert_eq!(registry.service_count(), 1);
     }
 
     #[tokio::test]
@@ -576,14 +579,12 @@ mod tests {
         registry.register_service(reg).await.unwrap();
 
         let storage_services = registry
-            .get_services_by_category(ServiceCategory::Storage)
-            .await
+            .get_services_by_category(&ServiceCategory::Storage)
             .unwrap();
         assert_eq!(storage_services.len(), 1);
 
         let ai_services = registry
-            .get_services_by_category(ServiceCategory::AI)
-            .await
+            .get_services_by_category(&ServiceCategory::AI)
             .unwrap();
         assert!(ai_services.is_empty());
     }

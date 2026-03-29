@@ -27,7 +27,7 @@
 //!
 //! # async fn example() -> nestgate_core::Result<()> {
 //! // Discover storage service endpoint
-//! let endpoint = capability_discovery::discover_service("storage").await?;
+//! let endpoint = capability_discovery::discover_service("storage")?;
 //! println!("Found storage at: {}", endpoint.endpoint);
 //!
 //! // With fallback chain
@@ -92,24 +92,24 @@ pub enum DiscoverySource {
 /// # Errors
 ///
 /// Returns error if service cannot be discovered through any method
-pub async fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
+pub fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
     // Try capability registry first (preferred)
-    if let Ok(endpoint) = discover_from_capability_registry(capability).await {
+    if let Ok(endpoint) = discover_from_capability_registry(capability) {
         return Ok(endpoint);
     }
 
     // Try environment variable
-    if let Ok(endpoint) = discover_from_environment(capability).await {
+    if let Ok(endpoint) = discover_from_environment(capability) {
         return Ok(endpoint);
     }
 
     // Try local discovery (mDNS, etc.)
-    if let Ok(endpoint) = discover_from_local(capability).await {
+    if let Ok(endpoint) = discover_from_local(capability) {
         return Ok(endpoint);
     }
 
     // No service found
-    Err(NestGateError::network_error(&format!(
+    Err(NestGateError::network_error(format!(
         "Service '{capability}' not found (tried: capability, environment, local discovery)"
     )))
 }
@@ -129,13 +129,13 @@ pub async fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
 ///
 /// This function currently always returns [`Ok`]; the [`Result`] is reserved for future discovery
 /// backends that may fail instead of falling back.
-pub async fn discover_with_fallback(
+pub fn discover_with_fallback(
     capability: &str,
     env_var: &str,
     default_endpoint: &str,
 ) -> Result<ServiceEndpoint> {
     // Try full discovery chain
-    if let Ok(endpoint) = discover_service(capability).await {
+    if let Ok(endpoint) = discover_service(capability) {
         return Ok(endpoint);
     }
 
@@ -185,7 +185,7 @@ pub async fn discover_with_fallback(
 ///
 /// Returns [`NestGateError`] when the capability cannot be announced to the discovery system
 /// (currently always returns [`Ok`] while integration is stubbed).
-pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> Result<()> {
+pub fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> Result<()> {
     // Integration: `DiscoveryBuilder` / `SelfKnowledge` from nestgate-core apply when those APIs are
     // exposed without pulling the full core graph into nestgate-config.
     tracing::debug!(
@@ -205,7 +205,7 @@ pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration
 // ==================== INTERNAL DISCOVERY METHODS ====================
 
 /// Discover from capability registry (primary method)
-async fn discover_from_capability_registry(capability: &str) -> Result<ServiceEndpoint> {
+fn discover_from_capability_registry(capability: &str) -> Result<ServiceEndpoint> {
     tracing::debug!("feature pending: capability registry via nestgate-core DiscoveryBuilder");
     let _ = capability;
     Err(NestGateError::network_error(
@@ -214,7 +214,7 @@ async fn discover_from_capability_registry(capability: &str) -> Result<ServiceEn
 }
 
 /// Discover from environment variables
-async fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> {
+fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> {
     // Build env var name: NESTGATE_<CAPABILITY>_ENDPOINT
     let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
 
@@ -227,13 +227,13 @@ async fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> 
         });
     }
 
-    Err(NestGateError::network_error(&format!(
+    Err(NestGateError::network_error(format!(
         "Environment variable '{env_var}' not set"
     )))
 }
 
 /// Discover from local network (mDNS, etc.)
-async fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
+fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
     tracing::debug!("feature pending: mDNS/local discovery without nestgate-core DiscoveryBuilder");
     let _ = capability;
     Err(NestGateError::network_error(
@@ -276,14 +276,14 @@ fn parse_hostport_endpoint(hostport: &str) -> Result<(String, u16)> {
     let parts: Vec<&str> = hostport.split(':').collect();
 
     if parts.len() != 2 {
-        return Err(NestGateError::validation_error(&format!(
+        return Err(NestGateError::validation_error(format!(
             "Invalid endpoint format '{hostport}': expected 'host:port'"
         )));
     }
 
     let host = parts[0];
     let port = parts[1].parse::<u16>().map_err(|e| {
-        NestGateError::validation_error(&format!("Invalid port '{}': {}", parts[1], e))
+        NestGateError::validation_error(format!("Invalid port '{}': {}", parts[1], e))
     })?;
 
     if host.is_empty() {
@@ -299,10 +299,10 @@ fn parse_hostport_endpoint(hostport: &str) -> Result<(String, u16)> {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_discover_with_fallback_uses_default() {
+    #[test]
+    fn test_discover_with_fallback_uses_default() {
         let result =
-            discover_with_fallback("test_service", "NONEXISTENT_ENV_VAR", "localhost:9999").await;
+            discover_with_fallback("test_service", "NONEXISTENT_ENV_VAR", "localhost:9999");
 
         assert!(result.is_ok());
         let endpoint = result.unwrap();
@@ -310,13 +310,13 @@ mod tests {
         assert_eq!(endpoint.source, DiscoverySource::Default);
     }
 
-    #[tokio::test]
-    async fn test_discover_with_fallback_uses_env() {
+    #[test]
+    fn test_discover_with_fallback_uses_env() {
         let orig = env::var("TEST_SERVICE_ENDPOINT").ok();
         crate::env_process::set_var("TEST_SERVICE_ENDPOINT", "envhost:8888");
 
         let result =
-            discover_with_fallback("test_service", "TEST_SERVICE_ENDPOINT", "localhost:9999").await;
+            discover_with_fallback("test_service", "TEST_SERVICE_ENDPOINT", "localhost:9999");
 
         match orig {
             Some(v) => crate::env_process::set_var("TEST_SERVICE_ENDPOINT", v),
@@ -356,9 +356,9 @@ mod tests {
         assert!(parse_endpoint("localhost:not_a_port").is_err());
     }
 
-    #[tokio::test]
-    async fn test_announce_capability() {
-        let result = announce_capability("test", "localhost:8080", Duration::from_secs(60)).await;
+    #[test]
+    fn test_announce_capability() {
+        let result = announce_capability("test", "localhost:8080", Duration::from_secs(60));
 
         // Announcement may fail in test environment without mDNS service
         // Just verify it doesn't panic

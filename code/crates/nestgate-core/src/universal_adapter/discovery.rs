@@ -205,7 +205,7 @@ impl CapabilityDiscovery {
         // Check local registry first - avoid clone by using Arc
         if let Some(services) = self.registry.get(capability_type) {
             // Return a new Vec with the same data to maintain API compatibility
-            return Ok(services.to_vec());
+            return Ok(services.clone());
         }
 
         // Query discovery endpoints for dynamic capabilities

@@ -285,20 +285,20 @@ mod tests {
 
     #[test]
     fn test_different_const_generic_configurations() {
-        /// Type alias for SmallConfig
+        // Type alias for SmallConfig
         type SmallConfig = SystemConfig<100, 4096>;
         assert_eq!(SmallConfig::max_connections(), 100);
         assert_eq!(SmallConfig::buffer_size(), 4096);
 
-        /// Type alias for MediumConfig
+        // Type alias for MediumConfig
         type MediumConfig = SystemConfig<1000, 65536>;
         assert_eq!(MediumConfig::max_connections(), 1000);
         assert_eq!(MediumConfig::buffer_size(), 65536);
 
-        /// Type alias for LargeConfig
-        type LargeConfig = SystemConfig<10000, 1048576>;
-        assert_eq!(LargeConfig::max_connections(), 10000);
-        assert_eq!(LargeConfig::buffer_size(), 1048576);
+        // Type alias for LargeConfig
+        type LargeConfig = SystemConfig<10_000, 1_048_576>;
+        assert_eq!(LargeConfig::max_connections(), 10_000);
+        assert_eq!(LargeConfig::buffer_size(), 1_048_576);
     }
 }
 

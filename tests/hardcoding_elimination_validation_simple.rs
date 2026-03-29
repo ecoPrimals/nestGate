@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Simplified hardcoding elimination validation tests
 //! Tests that dynamic endpoint resolution works without hardcoded values
 
@@ -10,7 +22,7 @@ async fn test_dynamic_endpoint_resolution_basic() -> Result<(), Box<dyn std::err
     let resolver = DynamicEndpointResolver::new();
 
     // Test basic endpoint resolution
-    let endpoint = resolver.resolve_endpoint("api").await?;
+    let endpoint = resolver.resolve_endpoint("api")?;
 
     // Should return valid URL format
     assert!(endpoint.starts_with("http://") || endpoint.starts_with("https://"));
@@ -42,8 +54,8 @@ async fn test_multiple_endpoints_unique() -> Result<(), Box<dyn std::error::Erro
 
     let resolver = DynamicEndpointResolver::new();
 
-    let api_ep = resolver.resolve_endpoint("api").await?;
-    let ws_ep = resolver.resolve_endpoint("websocket").await?;
+    let api_ep = resolver.resolve_endpoint("api")?;
+    let ws_ep = resolver.resolve_endpoint("websocket")?;
 
     // Endpoints should be different
     assert_ne!(api_ep, ws_ep, "Endpoints should be unique");

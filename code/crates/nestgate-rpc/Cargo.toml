@@ -32,8 +32,14 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 uzers = { workspace = true }
 
+[features]
+default = []
+# Orchestrator registration stub and related dev-only RPC helpers (opt-in).
+dev-stubs = []
+
 [dev-dependencies]
 nestgate-platform = { path = "../nestgate-platform" }
+temp-env = { workspace = true }
 
 fastrand = { workspace = true }
 tokio-test = { workspace = true }

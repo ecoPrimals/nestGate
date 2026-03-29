@@ -200,3 +200,29 @@ impl ZfsManager {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::manager::ZfsManager;
+
+    #[test]
+    fn shutdown_always_succeeds() {
+        let m = ZfsManager::mock();
+        assert!(m.shutdown().is_ok());
+    }
+
+    #[tokio::test]
+    async fn get_performance_analytics_returns_structure() {
+        let m = ZfsManager::mock();
+        let a = m.get_performance_analytics().await.expect("analytics");
+        assert!(a.tier_analytics.len() <= 3);
+    }
+
+    #[tokio::test]
+    async fn trigger_optimization_completes() {
+        let m = ZfsManager::mock();
+        let r = m.trigger_optimization().await.expect("optimization");
+        assert!(r.success);
+        assert!(!r.results.is_empty());
+    }
+}

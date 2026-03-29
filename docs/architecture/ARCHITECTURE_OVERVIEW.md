@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 8, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🏗️ **NestGate Architecture Overview**
 
 > **✅ UPDATED**: This document now reflects **ACTUAL CURRENT STATE** as of November 8, 2025.  

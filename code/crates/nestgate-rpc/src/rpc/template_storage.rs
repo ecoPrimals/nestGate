@@ -476,6 +476,7 @@ impl TemplateStorage {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[tokio::test]
@@ -644,5 +645,108 @@ mod tests {
         let json = serde_json::to_string(&m).unwrap();
         let back: TemplateMetadata = serde_json::from_str(&json).unwrap();
         assert_eq!(back.niche_type, m.niche_type);
+    }
+
+    #[tokio::test]
+    async fn list_templates_filters_by_tags_and_is_community() {
+        let ts = TemplateStorage::new();
+        let _ = ts
+            .store_template(
+                "t1".into(),
+                "d".into(),
+                serde_json::json!({}),
+                "alice".into(),
+                "fam_f".into(),
+                TemplateMetadata {
+                    tags: vec!["alpha".into()],
+                    niche_type: "n".into(),
+                    is_community: true,
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        let _ = ts
+            .store_template(
+                "t2".into(),
+                "d".into(),
+                serde_json::json!({}),
+                "bob".into(),
+                "fam_f".into(),
+                TemplateMetadata {
+                    tags: vec!["beta".into()],
+                    niche_type: "n".into(),
+                    is_community: false,
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+
+        let tags = vec!["alpha".to_string()];
+        let by_tag = ts
+            .list_templates("fam_f", None, Some(&tags), None, None)
+            .await
+            .unwrap();
+        assert_eq!(by_tag.len(), 1);
+        assert_eq!(by_tag[0].name, "t1");
+
+        let community_only = ts
+            .list_templates("fam_f", None, None, None, Some(true))
+            .await
+            .unwrap();
+        assert_eq!(community_only.len(), 1);
+
+        let bob_only = ts
+            .list_templates("fam_f", Some("bob"), None, None, None)
+            .await
+            .unwrap();
+        assert_eq!(bob_only.len(), 1);
+        assert_eq!(bob_only[0].name, "t2");
+    }
+
+    #[tokio::test]
+    async fn get_community_top_respects_min_usage() {
+        let ts = TemplateStorage::new();
+        let low_meta = TemplateMetadata {
+            niche_type: "q".into(),
+            usage_count: 5,
+            success_rate: 0.5,
+            is_community: true,
+            community_rating: Some(3.0),
+            ..Default::default()
+        };
+        ts.store_template(
+            "low".into(),
+            "".into(),
+            serde_json::json!({}),
+            "u".into(),
+            "fL".into(),
+            low_meta,
+        )
+        .await
+        .unwrap();
+        let high_meta = TemplateMetadata {
+            niche_type: "q".into(),
+            usage_count: 50,
+            success_rate: 0.9,
+            is_community: true,
+            community_rating: Some(5.0),
+            ..Default::default()
+        };
+        ts.store_template(
+            "high".into(),
+            "".into(),
+            serde_json::json!({}),
+            "u".into(),
+            "fH".into(),
+            high_meta,
+        )
+        .await
+        .unwrap();
+
+        let top = ts.get_community_top(Some("q"), 10, 40).await.unwrap();
+        assert!(!top.is_empty());
+        assert!(top.iter().all(|(t, _)| t.name == "high"));
     }
 }

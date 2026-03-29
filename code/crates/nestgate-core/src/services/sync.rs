@@ -38,12 +38,12 @@ impl SyncErrors {
 
     /// Create configuration error
     pub fn config_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::configuration_error("sync_config", &message.into())
+        NestGateError::configuration_error("sync_config", message.into())
     }
 
     /// Create conflict error with resolution guidance
     pub fn conflict_error(message: impl Into<String>) -> NestGateError {
-        NestGateError::validation_error(&format!("Sync conflict: {}", message.into()))
+        NestGateError::validation_error(format!("Sync conflict: {}", message.into()))
     }
 
     /// Create timeout error
@@ -61,7 +61,7 @@ impl SyncErrors {
     /// Create invalid path error
     pub fn invalid_path<P: Into<String>>(path: P) -> NestGateError {
         let path_str = path.into();
-        NestGateError::validation_error(&format!("Invalid sync path: {path_str}"))
+        NestGateError::validation_error(format!("Invalid sync path: {path_str}"))
     }
 
     /// Create service unavailable error

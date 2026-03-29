@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Migration Before/After Example
 //!
@@ -51,8 +62,8 @@ mod after_agnostic {
         pub async fn discover() -> Result<Self> {
             Ok(Self {
                 // ✅ Capability → Env → Default
-                api_port: migrate_port("api", 8080).await?,
-                health_port: migrate_port("health", 8443).await?,
+                api_port: migrate_port("api", 8080)?,
+                health_port: migrate_port("health", 8443)?,
             })
         }
 

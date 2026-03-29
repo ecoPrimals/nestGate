@@ -67,7 +67,6 @@ impl SovereigntyConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     #[test]
     fn test_sovereignty_config() -> std::result::Result<(), Box<dyn std::error::Error>> {

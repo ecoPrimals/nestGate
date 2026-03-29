@@ -62,7 +62,7 @@ impl ConfigMigrator {
 
     /// Migrate from `NestGatePrimaryConfig`
     pub fn from_primary_config(
-        config: serde_json::Value,
+        config: &serde_json::Value,
         options: MigrationOptions,
     ) -> Result<Self> {
         let mut migrator = Self::new("NestGatePrimaryConfig".to_string(), options);
@@ -72,7 +72,7 @@ impl ConfigMigrator {
 
     /// Migrate from `UnifiedCanonicalExtensions`
     pub fn from_unified_config(
-        config: serde_json::Value,
+        config: &serde_json::Value,
         options: MigrationOptions,
     ) -> Result<Self> {
         let mut migrator = Self::new("UnifiedCanonicalExtensions".to_string(), options);
@@ -81,7 +81,10 @@ impl ConfigMigrator {
     }
 
     /// Migrate from `NestGateFinalConfig`
-    pub fn from_final_config(config: serde_json::Value, options: MigrationOptions) -> Result<Self> {
+    pub fn from_final_config(
+        config: &serde_json::Value,
+        options: MigrationOptions,
+    ) -> Result<Self> {
         let mut migrator = Self::new("NestGateFinalConfig".to_string(), options);
         migrator.migrate_from_final_config(config)?;
         Ok(migrator)
@@ -132,7 +135,7 @@ impl ConfigMigrator {
                 "backup".to_string(),
                 "No backup available for rollback".to_string(),
                 None,
-                Some("Valid backup".to_string()),
+                Some("Valid backup".into()),
                 false,
             ))
         }
@@ -153,7 +156,7 @@ impl ConfigMigrator {
         }
     }
 
-    fn migrate_from_primary_config(&mut self, config: serde_json::Value) -> Result<()> {
+    fn migrate_from_primary_config(&mut self, config: &serde_json::Value) -> Result<()> {
         self.add_completed_step("Parsed NestGatePrimaryConfig".to_string());
         if let Some(system) = config.get("system") {
             self.migrate_system_config(system)?;
@@ -167,7 +170,7 @@ impl ConfigMigrator {
         Ok(())
     }
 
-    fn migrate_from_unified_config(&mut self, config: serde_json::Value) -> Result<()> {
+    fn migrate_from_unified_config(&mut self, config: &serde_json::Value) -> Result<()> {
         self.add_completed_step("Parsed UnifiedCanonicalExtensions".to_string());
         if let Some(api) = config.get("api") {
             self.migrate_api_config(api)?;
@@ -178,7 +181,7 @@ impl ConfigMigrator {
         Ok(())
     }
 
-    fn migrate_from_final_config(&mut self, config: serde_json::Value) -> Result<()> {
+    fn migrate_from_final_config(&mut self, config: &serde_json::Value) -> Result<()> {
         self.add_completed_step("Parsed NestGateFinalConfig".to_string());
         if let Some(system) = config.get("system") {
             self.migrate_system_config(system)?;

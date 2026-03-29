@@ -3,6 +3,8 @@
 
 //! Unit tests for `ApiConfig` and related network API types.
 
+#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+
 use super::api::{
     ApiAlertConfig, ApiConfig, ApiMonitoringConfig, ApiPerformanceConfig, ApiSecurityConfig,
     RateLimitingConfig, TlsConfig,
@@ -45,7 +47,9 @@ fn default_matches_development_optimized() {
 fn validate_rejects_zero_port() {
     let mut cfg = sample_valid_api_config();
     cfg.port = 0;
-    let err = cfg.validate().unwrap_err();
+    let Err(err) = cfg.validate() else {
+        panic!("expected validation error");
+    };
     assert!(matches!(err, NestGateError::Validation(_)));
 }
 
@@ -53,7 +57,9 @@ fn validate_rejects_zero_port() {
 fn validate_rejects_zero_max_connections() {
     let mut cfg = sample_valid_api_config();
     cfg.max_connections = 0;
-    let err = cfg.validate().unwrap_err();
+    let Err(err) = cfg.validate() else {
+        panic!("expected validation error");
+    };
     assert!(matches!(err, NestGateError::Validation(_)));
 }
 
@@ -62,7 +68,9 @@ fn validate_rejects_invalid_port_range() {
     let mut cfg = sample_valid_api_config();
     cfg.port_range_start = 5000;
     cfg.port_range_end = 5000;
-    let err = cfg.validate().unwrap_err();
+    let Err(err) = cfg.validate() else {
+        panic!("expected validation error");
+    };
     assert!(matches!(err, NestGateError::Validation(_)));
 }
 
@@ -103,8 +111,12 @@ fn api_alert_production_is_stricter_than_default() {
 #[test]
 fn serde_roundtrip_api_config_minimal() {
     let cfg = sample_valid_api_config();
-    let json = serde_json::to_string(&cfg).expect("serialize");
-    let back: ApiConfig = serde_json::from_str(&json).expect("deserialize");
+    let Ok(json) = serde_json::to_string(&cfg) else {
+        panic!("serialize");
+    };
+    let Ok(back): Result<ApiConfig, _> = serde_json::from_str(&json) else {
+        panic!("deserialize");
+    };
     assert_eq!(back.port, cfg.port);
     assert_eq!(back.bind_address, cfg.bind_address);
     assert_eq!(back.monitoring.metrics_path, cfg.monitoring.metrics_path);

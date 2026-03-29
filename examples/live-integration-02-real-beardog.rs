@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Live Integration Test 2: Real BearDog Communication
 //!
 //! **EVOLVED**: Replaced reqwest with raw TCP for ecoBin compliance.

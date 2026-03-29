@@ -152,10 +152,9 @@ impl SelfKnowledgeBuilder {
         let name = self.name.unwrap_or_else(|| {
             // Titlecase the ID as default name
             let mut chars = id_str.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().chain(chars).collect(),
-            }
+            chars.next().map_or_else(String::new, |first| {
+                first.to_uppercase().chain(chars).collect()
+            })
         });
 
         let version = self.version.unwrap_or_else(|| "0.0.0".to_string());

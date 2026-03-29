@@ -1,9 +1,12 @@
+> **Historical**: This document was written in December 1, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 📋 NestGate Operations Runbook
 
-**Version**: 0.10.0  
+**Version**: 4.7.0-dev  
 **Grade**: A- (92/100)  
 **Status**: ✅ **PRODUCTION-READY**  
-**Last Updated**: December 1, 2025
+**Last Updated**: March 29, 2026
 
 ---
 
@@ -29,11 +32,11 @@
 - **Storage**: Universal adapter (ZFS, S3, GCS, Azure, MinIO)
 
 ### Key Metrics
-- **Tests**: 1,664+ (100% pass rate)
+- **Tests**: 8,177+ lib tests (100% pass rate)
 - **Test Files**: 273 total, 53 comprehensive
-- **Coverage**: Target 90% (expanding)
+- **Coverage**: 77.1% line (target 90%)
 - **Build Time**: ~14s (release)
-- **Binary Size**: 1.6MB (optimized)
+- **Binary Size**: ~4.7MB (musl static, optimized)
 
 ### Dependencies
 - Tokio (async runtime)
@@ -600,10 +603,10 @@ find /var/crash -name "nestgate.*" -mtime -7
 - Document all incidents for future reference
 - Keep contact information current
 
-**Last Review**: December 1, 2025  
+**Last Review**: March 29, 2026  
 **Next Review**: January 1, 2026
 
 ---
 
-*NestGate v0.10.0 - Production-Ready A- (92/100)*
+*NestGate 4.7.0-dev - Production-Ready A- (92/100)*
 

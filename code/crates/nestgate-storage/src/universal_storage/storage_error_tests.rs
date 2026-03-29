@@ -239,7 +239,7 @@ mod storage_edge_cases {
     #[test]
     fn test_path_too_long() {
         let long_path = "/".to_string() + &"a".repeat(5000);
-        let err = NestGateError::storage_error(&format!("Path too long: {}", long_path.len()));
+        let err = NestGateError::storage_error(format!("Path too long: {}", long_path.len()));
         assert!(!format!("{}", err).is_empty());
     }
 
@@ -329,7 +329,7 @@ mod storage_concurrent_tests {
         for i in 0..5 {
             let errors_clone = Arc::clone(&errors);
             let handle = thread::spawn(move || {
-                let err = NestGateError::storage_error(&format!("Storage error {}", i));
+                let err = NestGateError::storage_error(format!("Storage error {}", i));
                 errors_clone.lock().unwrap().push(err);
             });
             handles.push(handle);
@@ -363,7 +363,7 @@ mod storage_performance_tests {
     fn test_error_creation_performance() {
         let start = std::time::Instant::now();
         for i in 0..1000 {
-            let _ = NestGateError::storage_error(&format!("Error {}", i));
+            let _ = NestGateError::storage_error(format!("Error {}", i));
         }
         let duration = start.elapsed();
         // Should create 1000 errors quickly (< 50ms)
@@ -373,7 +373,7 @@ mod storage_performance_tests {
     #[test]
     fn test_error_formatting_performance() {
         let errors: Vec<_> = (0..100)
-            .map(|i| NestGateError::storage_error(&format!("Error {}", i)))
+            .map(|i| NestGateError::storage_error(format!("Error {}", i)))
             .collect();
 
         let start = std::time::Instant::now();

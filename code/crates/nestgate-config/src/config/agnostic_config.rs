@@ -29,8 +29,7 @@
 //!     .with_capability_discovery()
 //!     .with_environment_fallback()
 //!     .with_safe_defaults()
-//!     .build()
-//!     .await?;
+//!     .build()?;
 //!
 //! println!("API endpoint: {:?}", config.api_endpoint());
 //! # Ok(())
@@ -112,7 +111,7 @@ impl ConfigBuilder {
     ///
     /// Returns [`NestGateError`] when capability discovery, environment resolution, or port
     /// discovery fails.
-    pub async fn build(self) -> Result<AgnosticConfig> {
+    pub fn build(self) -> Result<AgnosticConfig> {
         let mut config = AgnosticConfig {
             endpoints: HashMap::new(),
             ports: HashMap::new(),
@@ -120,35 +119,35 @@ impl ConfigBuilder {
         };
 
         // Discover API endpoint
-        if let Ok(endpoint) = self.discover_endpoint("api").await {
+        if let Ok(endpoint) = self.discover_endpoint("api") {
             config.endpoints.insert("api".to_string(), endpoint);
         }
 
         // Discover storage endpoint
-        if let Ok(endpoint) = self.discover_endpoint("storage").await {
+        if let Ok(endpoint) = self.discover_endpoint("storage") {
             config.endpoints.insert("storage".to_string(), endpoint);
         }
 
         // Load ports
         config
             .ports
-            .insert("api".to_string(), self.discover_port("api").await?);
+            .insert("api".to_string(), self.discover_port("api")?);
         config
             .ports
-            .insert("metrics".to_string(), self.discover_port("metrics").await?);
+            .insert("metrics".to_string(), self.discover_port("metrics")?);
         config
             .ports
-            .insert("health".to_string(), self.discover_port("health").await?);
+            .insert("health".to_string(), self.discover_port("health")?);
 
         Ok(config)
     }
 
     // Internal discovery methods
 
-    async fn discover_endpoint(&self, service: &str) -> Result<String> {
+    fn discover_endpoint(&self, service: &str) -> Result<String> {
         // Try capability discovery
         if self.enable_capability_discovery
-            && let Ok(endpoint) = capability_discovery::discover_service(service).await
+            && let Ok(endpoint) = capability_discovery::discover_service(service)
         {
             return Ok(endpoint.endpoint);
         }
@@ -190,15 +189,15 @@ impl ConfigBuilder {
             return Ok(format!("http://{}:{}", host, self.default_port(service)));
         }
 
-        Err(NestGateError::network_error(&format!(
+        Err(NestGateError::network_error(format!(
             "Could not discover endpoint for service '{service}'"
         )))
     }
 
-    async fn discover_port(&self, service: &str) -> Result<u16> {
+    fn discover_port(&self, service: &str) -> Result<u16> {
         // Try capability discovery
         if self.enable_capability_discovery
-            && let Ok(endpoint) = capability_discovery::discover_service(service).await
+            && let Ok(endpoint) = capability_discovery::discover_service(service)
             && let Ok((_, port)) = capability_discovery::parse_endpoint(&endpoint.endpoint)
         {
             return Ok(port);
@@ -227,7 +226,7 @@ impl ConfigBuilder {
             return Ok(self.default_port(service));
         }
 
-        Err(NestGateError::network_error(&format!(
+        Err(NestGateError::network_error(format!(
             "Could not discover port for service '{service}'"
         )))
     }
@@ -363,25 +362,24 @@ impl AgnosticConfig {
 ///
 /// To:
 /// ```rust,ignore
-/// let port = migrate_port("api", 8080).await?; // Agnostic
+/// let port = migrate_port("api", 8080)?; // Agnostic
 /// ```
 ///
 /// # Errors
 ///
 /// Returns [`NestGateError`] when [`ConfigBuilder::build`] fails or the service port is missing
 /// after migration.
-pub async fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16> {
+pub fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16> {
     ConfigBuilder::new()
         .with_capability_discovery()
         .with_environment_fallback()
         .with_default(format!("{service}_port"), hardcoded_fallback.to_string())
-        .build()
-        .await?
+        .build()?
         .ports
         .get(service)
         .copied()
         .ok_or_else(|| {
-            NestGateError::network_error(&format!("Could not migrate port for service '{service}'"))
+            NestGateError::network_error(format!("Could not migrate port for service '{service}'"))
         })
 }
 
@@ -391,7 +389,7 @@ pub async fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16>
 ///
 /// Returns [`NestGateError`] when [`ConfigBuilder::build`] fails or the service endpoint is missing
 /// after migration.
-pub async fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<String> {
+pub fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<String> {
     let config = ConfigBuilder::new()
         .with_capability_discovery()
         .with_environment_fallback()
@@ -399,11 +397,10 @@ pub async fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result
             format!("{service}_endpoint"),
             hardcoded_fallback.to_string(),
         )
-        .build()
-        .await?;
+        .build()?;
 
     config.endpoints.get(service).cloned().ok_or_else(|| {
-        NestGateError::network_error(&format!(
+        NestGateError::network_error(format!(
             "Could not migrate endpoint for service '{service}'"
         ))
     })
@@ -415,12 +412,11 @@ pub async fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_config_builder_with_defaults() {
+    #[test]
+    fn test_config_builder_with_defaults() {
         let config = ConfigBuilder::new()
             .with_safe_defaults()
             .build()
-            .await
             .expect("Should build config with defaults");
 
         assert_eq!(config.api_port(), 8080);
@@ -428,20 +424,19 @@ mod tests {
         assert_eq!(config.health_port(), 8082);
     }
 
-    #[tokio::test]
-    async fn test_config_builder_with_custom_defaults() {
+    #[test]
+    fn test_config_builder_with_custom_defaults() {
         let config = ConfigBuilder::new()
             .with_safe_defaults()
             .with_default("api_port", "3000")
             .build()
-            .await
             .expect("Should build config");
 
         assert_eq!(config.api_port(), 3000);
     }
 
-    #[tokio::test]
-    async fn test_config_builder_with_environment() {
+    #[test]
+    fn test_config_builder_with_environment() {
         let orig = env::var("NESTGATE_API_PORT").ok();
         // SAFETY: single-threaded test context.
         crate::env_process::set_var("NESTGATE_API_PORT", "9999");
@@ -450,7 +445,6 @@ mod tests {
             .with_environment_fallback()
             .with_safe_defaults()
             .build()
-            .await
             .expect("Should build config");
 
         match orig {
@@ -460,28 +454,26 @@ mod tests {
         assert_eq!(config.api_port(), 9999);
     }
 
-    #[tokio::test]
-    async fn test_migrate_port() {
+    #[test]
+    fn test_migrate_port() {
         // With safe defaults enabled, should always get a valid port
         let config = ConfigBuilder::new()
             .with_safe_defaults()
             .with_default("api_port", "8080")
-            .build()
-            .await;
+            .build();
 
         assert!(config.is_ok(), "Should build config with defaults");
         let port = config.unwrap().api_port();
         assert!(port > 0, "Port should be valid (non-zero): {}", port);
     }
 
-    #[tokio::test]
-    async fn test_migrate_endpoint() {
+    #[test]
+    fn test_migrate_endpoint() {
         // With safe defaults, should always get an endpoint
         let config = ConfigBuilder::new()
             .with_safe_defaults()
             .with_default("api_endpoint", "http://localhost:8080")
-            .build()
-            .await;
+            .build();
 
         assert!(config.is_ok(), "Should build config with defaults");
         let endpoint = config.unwrap().api_endpoint();

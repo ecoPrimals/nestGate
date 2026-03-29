@@ -4,11 +4,9 @@
 // **CORE ERROR TYPES**
 //! Core system error types and handling for the `NestGate` system.
 // The main NestGateUnifiedError enum and core error handling.
-//
-// TODO(zero-copy): Several `String` fields below are natural fits for `Cow<'static, str>` where
-// diagnostics are static; switching requires coordinated updates to serde consumers and RPC layers.
 
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::time::Duration;
 use thiserror::Error;
 
@@ -118,13 +116,13 @@ pub enum NestGateUnifiedError {
 /// Configurationerrordetails
 pub struct ConfigurationErrorDetails {
     /// The configuration field that caused the error
-    pub field: String,
+    pub field: Cow<'static, str>,
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Current invalid value
-    pub currentvalue: Option<String>,
+    pub currentvalue: Option<Cow<'static, str>>,
     /// Expected value or format
-    pub expected: Option<String>,
+    pub expected: Option<Cow<'static, str>>,
     /// Whether this is a user configuration error
     pub user_error: bool,
 }
@@ -135,13 +133,13 @@ pub struct ConfigurationErrorDetails {
 /// Apierrordetails
 pub struct ApiErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// HTTP status code
     pub status_code: Option<u16>,
     /// Request ID for tracing
-    pub request_id: Option<String>,
+    pub request_id: Option<Cow<'static, str>>,
     /// API endpoint that failed
-    pub endpoint: Option<String>,
+    pub endpoint: Option<Cow<'static, str>>,
     /// Error context
     pub context: Option<Box<ErrorContext>>,
 }
@@ -152,11 +150,11 @@ pub struct ApiErrorDetails {
 /// Storageerrordetails
 pub struct StorageErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Storage operation that failed
-    pub operation: Option<String>,
+    pub operation: Option<Cow<'static, str>>,
     /// Path or resource involved
-    pub resource: Option<String>,
+    pub resource: Option<Cow<'static, str>>,
     /// Storage-specific error data
     pub storage_data: Option<Box<StorageErrorData>>,
     /// Error context
@@ -169,11 +167,11 @@ pub struct StorageErrorDetails {
 /// Networkerrordetails
 pub struct NetworkErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Network operation that failed
-    pub operation: Option<String>,
+    pub operation: Option<Cow<'static, str>>,
     /// Remote endpoint
-    pub endpoint: Option<String>,
+    pub endpoint: Option<Cow<'static, str>>,
     /// Network-specific error data
     pub network_data: Option<Box<NetworkErrorData>>,
     /// Error context
@@ -186,11 +184,11 @@ pub struct NetworkErrorDetails {
 /// Securityerrordetails
 pub struct SecurityErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Security operation that failed
-    pub operation: Option<String>,
+    pub operation: Option<Cow<'static, str>>,
     /// User or principal involved
-    pub principal: Option<String>,
+    pub principal: Option<Cow<'static, str>>,
     /// Security-specific error data
     pub security_data: Option<Box<SecurityErrorData>>,
     /// Error context
@@ -203,11 +201,11 @@ pub struct SecurityErrorDetails {
 /// Automationerrordetails
 pub struct AutomationErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Automation operation that failed
-    pub operation: Option<String>,
+    pub operation: Option<Cow<'static, str>>,
     /// Target resource
-    pub target: Option<String>,
+    pub target: Option<Cow<'static, str>>,
     /// Automation-specific error data
     pub automation_data: Option<Box<AutomationErrorData>>,
     /// Error context
@@ -220,11 +218,11 @@ pub struct AutomationErrorDetails {
 /// Systemerrordetails
 pub struct SystemErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// System component that failed
-    pub component: String,
+    pub component: Cow<'static, str>,
     /// System operation that failed
-    pub operation: Option<String>,
+    pub operation: Option<Cow<'static, str>>,
     /// Error context
     pub context: Option<Box<ErrorContext>>,
 }
@@ -235,11 +233,11 @@ pub struct SystemErrorDetails {
 /// Internalerrordetails
 pub struct InternalErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Component where error occurred
-    pub component: String,
+    pub component: Cow<'static, str>,
     /// Location in code (<file:line>)
-    pub location: Option<String>,
+    pub location: Option<Cow<'static, str>>,
     /// Whether this indicates a bug
     pub is_bug: bool,
     /// Error context
@@ -252,9 +250,9 @@ pub struct InternalErrorDetails {
 /// Externalerrordetails
 pub struct ExternalErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// External service or dependency
-    pub service: String,
+    pub service: Cow<'static, str>,
     /// Whether the operation is retryable
     pub retryable: bool,
     /// Error context
@@ -267,13 +265,13 @@ pub struct ExternalErrorDetails {
 /// Validationerrordetails
 pub struct ValidationErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Field that failed validation
-    pub field: Option<String>,
+    pub field: Option<Cow<'static, str>>,
     /// Expected value or format
-    pub expected: Option<String>,
+    pub expected: Option<Cow<'static, str>>,
     /// Actual value that failed
-    pub actual: Option<String>,
+    pub actual: Option<Cow<'static, str>>,
     /// Error context
     pub context: Option<Box<ErrorContext>>,
 }
@@ -284,9 +282,9 @@ pub struct ValidationErrorDetails {
 /// Timeouterrordetails
 pub struct TimeoutErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Operation that timed out
-    pub operation: Option<String>,
+    pub operation: Option<Cow<'static, str>>,
     /// Timeout duration
     pub timeout: Duration,
     /// Whether the operation is retryable
@@ -301,11 +299,11 @@ pub struct TimeoutErrorDetails {
 /// Ioerrordetails
 pub struct IoErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Path or resource involved
-    pub path: Option<String>,
+    pub path: Option<Cow<'static, str>>,
     /// I/O operation that failed
-    pub operation: Option<String>,
+    pub operation: Option<Cow<'static, str>>,
     /// Error context
     pub context: Option<Box<ErrorContext>>,
 }
@@ -316,9 +314,9 @@ pub struct IoErrorDetails {
 /// Resourceexhaustederrordetails
 pub struct ResourceExhaustedErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Resource that was exhausted
-    pub resource: String,
+    pub resource: Cow<'static, str>,
     /// Current usage
     pub current: Option<u64>,
     /// Maximum limit
@@ -333,17 +331,17 @@ pub struct ResourceExhaustedErrorDetails {
 /// Testingerrordetails
 pub struct TestingErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Test name that failed
-    pub test_name: Option<String>,
+    pub test_name: Option<Cow<'static, str>>,
     /// Type of test
     pub test_type: Option<TestType>,
     /// Assertion failure details
-    pub assertion_failure: Option<String>,
+    pub assertion_failure: Option<Cow<'static, str>>,
     /// Expected value
-    pub expected: Option<String>,
+    pub expected: Option<Cow<'static, str>>,
     /// Actual value
-    pub actual: Option<String>,
+    pub actual: Option<Cow<'static, str>>,
     /// Test-specific error data
     pub test_data: Option<Box<Self>>,
     /// Error context
@@ -356,17 +354,17 @@ pub struct TestingErrorDetails {
 /// Performanceerrordetails
 pub struct PerformanceErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Performance operation that failed
-    pub operation: String,
+    pub operation: Cow<'static, str>,
     /// Metric that failed
-    pub metric: Option<String>,
+    pub metric: Option<Cow<'static, str>>,
     /// Expected performance value
     pub expected: Option<f64>,
     /// Actual performance value
     pub actual: Option<f64>,
     /// Performance unit (ms, MB/s, etc.)
-    pub unit: Option<String>,
+    pub unit: Option<Cow<'static, str>>,
     /// Performance-specific error data
     pub performance_data: Option<Box<Self>>,
     /// Error context
@@ -379,11 +377,11 @@ pub struct PerformanceErrorDetails {
 /// Handlererrordetails
 pub struct HandlerErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Handler name that failed
-    pub handler_name: String,
+    pub handler_name: Cow<'static, str>,
     /// Request that was being handled
-    pub request_info: Option<String>,
+    pub request_info: Option<Cow<'static, str>>,
     /// Handler-specific error data
     pub handler_data: Option<Box<Self>>,
     /// Error context
@@ -396,11 +394,11 @@ pub struct HandlerErrorDetails {
 /// Loadbalancererrordetails
 pub struct LoadBalancerErrorDetails {
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Number of available services
     pub available_services: Option<usize>,
     /// Algorithm being used
-    pub algorithm: Option<String>,
+    pub algorithm: Option<Cow<'static, str>>,
 }
 
 /// Not implemented error details
@@ -409,11 +407,11 @@ pub struct LoadBalancerErrorDetails {
 /// Notimplementederrordetails
 pub struct NotImplementedErrorDetails {
     /// Feature that is not implemented
-    pub feature: String,
+    pub feature: Cow<'static, str>,
     /// Additional context
-    pub message: Option<String>,
+    pub message: Option<Cow<'static, str>>,
     /// Planned version for implementation
-    pub planned_version: Option<String>,
+    pub planned_version: Option<Cow<'static, str>>,
 }
 
 // ==================== SUPPORTING TYPES ====================
@@ -444,10 +442,13 @@ pub enum TestType {
 impl NestGateUnifiedError {
     /// Create a configuration error
     #[must_use]
-    pub fn configuration_error(field: &str, message: &str) -> Self {
+    pub fn configuration_error(
+        field: impl Into<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self::Configuration(Box::new(ConfigurationErrorDetails {
-            field: field.to_string(),
-            message: message.to_string(),
+            field: field.into(),
+            message: message.into(),
             currentvalue: None,
             expected: None,
             user_error: false,
@@ -456,9 +457,9 @@ impl NestGateUnifiedError {
 
     /// Create an API error
     #[must_use]
-    pub fn api_error(message: &str) -> Self {
+    pub fn api_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Api(Box::new(ApiErrorDetails {
-            message: message.to_string(),
+            message: message.into(),
             status_code: None,
             request_id: None,
             endpoint: None,
@@ -468,9 +469,9 @@ impl NestGateUnifiedError {
 
     /// Create a storage error
     #[must_use]
-    pub fn storage_error(message: &str) -> Self {
+    pub fn storage_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Storage(Box::new(StorageErrorDetails {
-            message: message.to_string(),
+            message: message.into(),
             resource: None,
             storage_data: None,
             operation: None,
@@ -480,9 +481,9 @@ impl NestGateUnifiedError {
 
     /// Create a security error
     #[must_use]
-    pub fn security_error(message: &str) -> Self {
+    pub fn security_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Security(Box::new(SecurityErrorDetails {
-            message: message.to_string(),
+            message: message.into(),
             operation: None,
             principal: None,
             security_data: None,
@@ -492,9 +493,9 @@ impl NestGateUnifiedError {
 
     /// Create a network error
     #[must_use]
-    pub fn network_error(message: &str) -> Self {
+    pub fn network_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Network(Box::new(NetworkErrorDetails {
-            message: message.to_string(),
+            message: message.into(),
             endpoint: None,
             network_data: None,
             operation: None,
@@ -504,9 +505,9 @@ impl NestGateUnifiedError {
 
     /// Create a validation error
     #[must_use]
-    pub fn validation_error(message: &str) -> Self {
+    pub fn validation_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Validation(Box::new(ValidationErrorDetails {
-            message: message.to_string(),
+            message: message.into(),
             field: None,
             expected: None,
             actual: None,
@@ -518,10 +519,14 @@ impl NestGateUnifiedError {
 
     /// Create a timeout error
     #[must_use]
-    pub fn timeout_error(operation: &str, duration: std::time::Duration) -> Self {
+    pub fn timeout_error(
+        operation: impl Into<Cow<'static, str>>,
+        duration: std::time::Duration,
+    ) -> Self {
+        let operation = operation.into();
         Self::Timeout(Box::new(TimeoutErrorDetails {
-            message: format!("Operation '{operation}' timed out after {duration:?}"),
-            operation: Some(operation.to_string()),
+            message: format!("Operation '{operation}' timed out after {duration:?}").into(),
+            operation: Some(operation),
             timeout: duration,
             retryable: true,
             context: None,
@@ -534,15 +539,15 @@ impl NestGateUnifiedError {
     /// Create configuration error with detailed fields (backward compatibility)
     #[must_use]
     pub fn configuration_error_detailed(
-        field: String,
-        message: String,
-        currentvalue: Option<String>,
-        expected: Option<String>,
+        field: impl Into<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
+        currentvalue: Option<Cow<'static, str>>,
+        expected: Option<Cow<'static, str>>,
         user_error: bool,
     ) -> Self {
         Self::Configuration(Box::new(ConfigurationErrorDetails {
-            field,
-            message,
+            field: field.into(),
+            message: message.into(),
             currentvalue,
             expected,
             user_error,
@@ -552,13 +557,13 @@ impl NestGateUnifiedError {
     /// Create API error with detailed fields (backward compatibility)
     #[must_use]
     pub fn api_error_detailed(
-        message: String,
+        message: impl Into<Cow<'static, str>>,
         status_code: Option<u16>,
-        request_id: Option<String>,
-        endpoint: Option<String>,
+        request_id: Option<Cow<'static, str>>,
+        endpoint: Option<Cow<'static, str>>,
     ) -> Self {
         Self::Api(Box::new(ApiErrorDetails {
-            message,
+            message: message.into(),
             status_code,
             request_id,
             endpoint,
@@ -568,9 +573,12 @@ impl NestGateUnifiedError {
 
     /// Create storage error with detailed fields (backward compatibility)
     #[must_use]
-    pub fn storage_error_detailed(message: String, operation: Option<String>) -> Self {
+    pub fn storage_error_detailed(
+        message: impl Into<Cow<'static, str>>,
+        operation: Option<Cow<'static, str>>,
+    ) -> Self {
         Self::Storage(Box::new(StorageErrorDetails {
-            message,
+            message: message.into(),
             operation,
             resource: None,
             storage_data: None,
@@ -581,12 +589,12 @@ impl NestGateUnifiedError {
     /// Create network error with detailed fields (backward compatibility)
     #[must_use]
     pub fn network_error_detailed(
-        message: String,
-        operation: Option<String>,
-        endpoint: Option<String>,
+        message: impl Into<Cow<'static, str>>,
+        operation: Option<Cow<'static, str>>,
+        endpoint: Option<Cow<'static, str>>,
     ) -> Self {
         Self::Network(Box::new(NetworkErrorDetails {
-            message,
+            message: message.into(),
             operation,
             endpoint,
             network_data: None,
@@ -597,13 +605,13 @@ impl NestGateUnifiedError {
     /// Create validation error with detailed fields (backward compatibility)
     #[must_use]
     pub fn validation_error_detailed(
-        message: String,
-        field: Option<String>,
-        expected: Option<String>,
-        actual: Option<String>,
+        message: impl Into<Cow<'static, str>>,
+        field: Option<Cow<'static, str>>,
+        expected: Option<Cow<'static, str>>,
+        actual: Option<Cow<'static, str>>,
     ) -> Self {
         Self::Validation(Box::new(ValidationErrorDetails {
-            message,
+            message: message.into(),
             field,
             expected,
             actual,
@@ -620,16 +628,16 @@ impl NestGateUnifiedError {
     /// Replaces: `NetworkError::ConnectionFailed { address, port, error, timeout }`
     #[must_use]
     pub fn network_connection_failed(
-        address: impl Into<String>,
+        address: impl Into<Cow<'static, str>>,
         port: u16,
-        reason: impl Into<String>,
+        reason: impl Into<Cow<'static, str>>,
     ) -> Self {
         let address = address.into();
         let reason = reason.into();
         Self::Network(Box::new(NetworkErrorDetails {
-            message: format!("Connection failed: {address}:{port} - {reason}"),
-            endpoint: Some(format!("{address}:{port}")),
-            operation: Some("connect".to_string()),
+            message: format!("Connection failed: {address}:{port} - {reason}").into(),
+            endpoint: Some(format!("{address}:{port}").into()),
+            operation: Some(Cow::Borrowed("connect")),
             network_data: None,
             context: None,
         }))
@@ -639,11 +647,11 @@ impl NestGateUnifiedError {
     ///
     /// Replaces: `NetworkError::Timeout { url, timeout, method }`
     #[must_use]
-    pub fn network_timeout(url: impl Into<String>, duration: Duration) -> Self {
+    pub fn network_timeout(url: impl Into<Cow<'static, str>>, duration: Duration) -> Self {
         let url = url.into();
         Self::Timeout(Box::new(TimeoutErrorDetails {
-            message: format!("Request timeout: {url} after {duration:?}"),
-            operation: Some("network_request".to_string()),
+            message: format!("Request timeout: {url} after {duration:?}").into(),
+            operation: Some(Cow::Borrowed("network_request")),
             timeout: duration,
             retryable: true,
             context: None,
@@ -654,12 +662,12 @@ impl NestGateUnifiedError {
     ///
     /// Replaces: `StorageError::FileNotFound { path, operation }`
     #[must_use]
-    pub fn storage_not_found(path: impl Into<String>) -> Self {
+    pub fn storage_not_found(path: impl Into<Cow<'static, str>>) -> Self {
         let path = path.into();
         Self::Storage(Box::new(StorageErrorDetails {
-            message: format!("File not found: {path}"),
-            resource: Some(path),
-            operation: Some("read".to_string()),
+            message: format!("File not found: {path}").into(),
+            resource: Some(path.clone()),
+            operation: Some(Cow::Borrowed("read")),
             storage_data: None,
             context: None,
         }))
@@ -670,13 +678,13 @@ impl NestGateUnifiedError {
     /// Replaces: `StorageError::PermissionDenied { path, operation, required_permissions }`
     #[must_use]
     pub fn storage_permission_denied(
-        path: impl Into<String>,
-        operation: impl Into<String>,
+        path: impl Into<Cow<'static, str>>,
+        operation: impl Into<Cow<'static, str>>,
     ) -> Self {
         let path = path.into();
         let operation = operation.into();
         Self::Storage(Box::new(StorageErrorDetails {
-            message: format!("Permission denied: {path} for operation '{operation}'"),
+            message: format!("Permission denied: {path} for operation '{operation}'").into(),
             resource: Some(path),
             operation: Some(operation),
             storage_data: None,
@@ -689,7 +697,7 @@ impl NestGateUnifiedError {
     /// Replaces: `StorageError::DiskFull { path, available, required }`
     #[must_use]
     pub fn storage_disk_full(
-        path: impl Into<String>,
+        path: impl Into<Cow<'static, str>>,
         required_bytes: u64,
         available_bytes: u64,
     ) -> Self {
@@ -697,8 +705,9 @@ impl NestGateUnifiedError {
         Self::ResourceExhausted(Box::new(ResourceExhaustedErrorDetails {
             message: format!(
                 "Disk full: {path} (required: {required_bytes} bytes, available: {available_bytes} bytes)"
-            ),
-            resource: "disk_space".to_string(),
+            )
+            .into(),
+            resource: Cow::Borrowed("disk_space"),
             limit: Some(required_bytes),
             current: Some(available_bytes),
             context: None,
@@ -709,11 +718,14 @@ impl NestGateUnifiedError {
     ///
     /// Replaces: `ValidationError::FieldValidation { field, message, constraint }`
     #[must_use]
-    pub fn validation_field(field: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn validation_field(
+        field: impl Into<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
+    ) -> Self {
         let field_str = field.into();
         let message_str = message.into();
         Self::Validation(Box::new(ValidationErrorDetails {
-            message: format!("Field '{field_str}': {message_str}"),
+            message: format!("Field '{field_str}': {message_str}").into(),
             field: Some(field_str),
             expected: None,
             actual: None,
@@ -726,14 +738,14 @@ impl NestGateUnifiedError {
     /// Replaces: `ValidationError::SchemaValidation { schema, message, path }`
     #[must_use]
     pub fn validation_schema(
-        schema: impl Into<String>,
-        message: impl Into<String>,
-        path: Option<String>,
+        schema: impl Into<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
+        path: Option<Cow<'static, str>>,
     ) -> Self {
         let schema = schema.into();
         let message = message.into();
         Self::Validation(Box::new(ValidationErrorDetails {
-            message: format!("Schema validation failed ({schema}): {message}"),
+            message: format!("Schema validation failed ({schema}): {message}").into(),
             field: path,
             expected: Some(schema),
             actual: None,
@@ -746,14 +758,14 @@ impl NestGateUnifiedError {
     /// Replaces: `SecurityError::AuthenticationFailed { principal, reason }`
     #[must_use]
     pub fn security_authentication_failed(
-        principal: impl Into<String>,
-        reason: impl Into<String>,
+        principal: impl Into<Cow<'static, str>>,
+        reason: impl Into<Cow<'static, str>>,
     ) -> Self {
         let principal = principal.into();
         let reason = reason.into();
         Self::Security(Box::new(SecurityErrorDetails {
-            message: format!("Authentication failed for '{principal}': {reason}"),
-            operation: Some("authenticate".to_string()),
+            message: format!("Authentication failed for '{principal}': {reason}").into(),
+            operation: Some(Cow::Borrowed("authenticate")),
             principal: Some(principal),
             security_data: None,
             context: None,
@@ -765,9 +777,9 @@ impl NestGateUnifiedError {
     /// Replaces: `SecurityError::AuthorizationFailed { principal, action, resource }`
     #[must_use]
     pub fn security_authorization_failed(
-        principal: impl Into<String>,
-        action: impl Into<String>,
-        resource: impl Into<String>,
+        principal: impl Into<Cow<'static, str>>,
+        action: impl Into<Cow<'static, str>>,
+        resource: impl Into<Cow<'static, str>>,
     ) -> Self {
         let principal = principal.into();
         let action = action.into();
@@ -775,7 +787,8 @@ impl NestGateUnifiedError {
         Self::Security(Box::new(SecurityErrorDetails {
             message: format!(
                 "Authorization failed: '{principal}' cannot '{action}' on '{resource}'"
-            ),
+            )
+            .into(),
             operation: Some(action),
             principal: Some(principal),
             security_data: None,
@@ -788,14 +801,14 @@ impl NestGateUnifiedError {
     /// Replaces: `SecurityError::EncryptionFailed { algorithm, reason }`
     #[must_use]
     pub fn security_encryption_failed(
-        algorithm: impl Into<String>,
-        reason: impl Into<String>,
+        algorithm: impl Into<Cow<'static, str>>,
+        reason: impl Into<Cow<'static, str>>,
     ) -> Self {
         let algorithm = algorithm.into();
         let reason = reason.into();
         Self::Security(Box::new(SecurityErrorDetails {
-            message: format!("Encryption failed ({algorithm}): {reason}"),
-            operation: Some("encrypt".to_string()),
+            message: format!("Encryption failed ({algorithm}): {reason}").into(),
+            operation: Some(Cow::Borrowed("encrypt")),
             principal: None,
             security_data: None,
             context: None,
@@ -806,10 +819,10 @@ impl NestGateUnifiedError {
     ///
     /// Replaces: `ApiError::NotFound { endpoint }`
     #[must_use]
-    pub fn api_not_found(endpoint: impl Into<String>) -> Self {
+    pub fn api_not_found(endpoint: impl Into<Cow<'static, str>>) -> Self {
         let endpoint = endpoint.into();
         Self::Api(Box::new(ApiErrorDetails {
-            message: format!("Endpoint not found: {endpoint}"),
+            message: format!("Endpoint not found: {endpoint}").into(),
             status_code: Some(404),
             request_id: None,
             endpoint: Some(endpoint),
@@ -821,9 +834,9 @@ impl NestGateUnifiedError {
     ///
     /// Replaces: `ApiError::BadRequest { reason }`
     #[must_use]
-    pub fn api_bad_request(reason: impl Into<String>) -> Self {
+    pub fn api_bad_request(reason: impl Into<Cow<'static, str>>) -> Self {
         Self::Api(Box::new(ApiErrorDetails {
-            message: format!("Bad request: {}", reason.into()),
+            message: format!("Bad request: {}", reason.into()).into(),
             status_code: Some(400),
             request_id: None,
             endpoint: None,
@@ -835,9 +848,9 @@ impl NestGateUnifiedError {
     ///
     /// Replaces: `ApiError::InternalError { message }`
     #[must_use]
-    pub fn api_internal_error(message: impl Into<String>) -> Self {
+    pub fn api_internal_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Api(Box::new(ApiErrorDetails {
-            message: format!("Internal server error: {}", message.into()),
+            message: format!("Internal server error: {}", message.into()).into(),
             status_code: Some(500),
             request_id: None,
             endpoint: None,
@@ -850,16 +863,17 @@ impl NestGateUnifiedError {
     /// Replaces: `ConfigurationError::InvalidValue { field, value, expected }`
     #[must_use]
     pub fn configuration_invalid_value(
-        field: impl Into<String>,
-        value: impl Into<String>,
-        expected: impl Into<String>,
+        field: impl Into<Cow<'static, str>>,
+        value: impl Into<Cow<'static, str>>,
+        expected: impl Into<Cow<'static, str>>,
     ) -> Self {
         let field = field.into();
         let value = value.into();
         let expected = expected.into();
         Self::Configuration(Box::new(ConfigurationErrorDetails {
             field: field.clone(),
-            message: format!("Invalid value for '{field}': got '{value}', expected '{expected}'"),
+            message: format!("Invalid value for '{field}': got '{value}', expected '{expected}'")
+                .into(),
             currentvalue: Some(value),
             expected: Some(expected),
             user_error: true,
@@ -870,13 +884,13 @@ impl NestGateUnifiedError {
     ///
     /// Replaces: `ConfigurationError::MissingRequired { field }`
     #[must_use]
-    pub fn configuration_missing_required(field: impl Into<String>) -> Self {
+    pub fn configuration_missing_required(field: impl Into<Cow<'static, str>>) -> Self {
         let field = field.into();
         Self::Configuration(Box::new(ConfigurationErrorDetails {
             field: field.clone(),
-            message: format!("Missing required configuration field: '{field}'"),
+            message: format!("Missing required configuration field: '{field}'").into(),
             currentvalue: None,
-            expected: Some("required value".to_string()),
+            expected: Some(Cow::Borrowed("required value")),
             user_error: true,
         }))
     }
@@ -885,7 +899,10 @@ impl NestGateUnifiedError {
     ///
     /// Used when optional features are accessed but not enabled
     #[must_use]
-    pub fn feature_not_enabled(feature: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn feature_not_enabled(
+        feature: impl Into<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self::NotImplemented(Box::new(NotImplementedErrorDetails {
             feature: feature.into(),
             message: Some(message.into()),
@@ -895,10 +912,10 @@ impl NestGateUnifiedError {
 
     /// Create a storage operation error with operation name
     #[must_use]
-    pub fn storage_operation(message: impl Into<String>, _recoverable: bool) -> Self {
+    pub fn storage_operation(message: impl Into<Cow<'static, str>>, _recoverable: bool) -> Self {
         Self::Storage(Box::new(StorageErrorDetails {
             message: message.into(),
-            operation: Some("storage_operation".to_string()),
+            operation: Some(Cow::Borrowed("storage_operation")),
             resource: None,
             storage_data: None,
             context: None,
@@ -912,10 +929,10 @@ impl NestGateUnifiedError {
     /// (`configuration_error`, `network_error`, etc.) when the error category
     /// is known; use `simple` for quick prototyping and macro-generated errors.
     #[must_use]
-    pub fn simple(message: impl Into<String>) -> Self {
+    pub fn simple(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Internal(Box::new(InternalErrorDetails {
             message: message.into(),
-            component: "simple".to_string(),
+            component: Cow::Borrowed("simple"),
             location: None,
             is_bug: false,
             context: None,

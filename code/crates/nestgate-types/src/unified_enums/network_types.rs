@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-/// Network and Protocol Classification Enums
+/// Network and protocol classification enums.
+///
 /// This module contains enums related to network protocols, integration types,
 /// and networking infrastructure.
 use serde::{Deserialize, Serialize};
@@ -178,11 +179,12 @@ mod tests {
     }
 
     #[test]
-    fn test_unified_protocol_type_serialization() {
+    fn test_unified_protocol_type_serialization() -> Result<(), serde_json::Error> {
         let pt = UnifiedProtocolType::WebSocket;
-        let json = serde_json::to_string(&pt).unwrap();
-        let parsed: UnifiedProtocolType = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&pt)?;
+        let parsed: UnifiedProtocolType = serde_json::from_str(&json)?;
         assert_eq!(pt, parsed);
+        Ok(())
     }
 
     #[test]

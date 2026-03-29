@@ -175,7 +175,7 @@ mod edge_cases {
     #[test]
     fn test_edge_very_long_error_message() {
         let long_msg = "x".repeat(10000);
-        let err = NestGateError::internal_error(&long_msg, "test");
+        let err = NestGateError::internal_error(long_msg, "test");
         let err_str = format!("{}", err);
         assert!(!err_str.is_empty());
     }

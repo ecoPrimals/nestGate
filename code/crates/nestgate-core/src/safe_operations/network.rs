@@ -8,7 +8,7 @@ pub use super::Result;
 use crate::error::NestGateError;
 use std::net::{IpAddr, SocketAddr};
 /// **SAFE IP ADDRESS PARSING**
-/// Replaces "`ip".parse().map_err(|e`| `crate::safe_operations::validation_error(&format!("Parse` failed: {e:?}"), "parsing"))? with proper error handling
+/// Replaces "`ip".parse().map_err(|e`| `crate::safe_operations::validation_error(format!("Parse` failed: {e:?}"), "parsing"))? with proper error handling
 pub fn safe_parse_ip(ip_str: &str, _context: &str) -> Result<IpAddr> {
     ip_str.parse().map_err(|e| {
         NestGateError::internal_error(

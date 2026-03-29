@@ -230,7 +230,7 @@ impl NativeAsyncNetworkService {
         let service_id = self.service_id.clone();
         // Use config values from environment
         let _host = self.config.host.clone();
-        let _port = self.config.port;
+        let _ = self.config.port;
 
         async move {
             // CANONICAL MODERNIZATION: Use canonical service registration structure

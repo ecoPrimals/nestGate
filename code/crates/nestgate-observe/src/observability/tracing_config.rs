@@ -35,19 +35,24 @@ impl Default for TracingConfig {
     }
 }
 
-/// Initialize tracing with the given configuration
+/// Initialize tracing with the given configuration.
 ///
 /// This function can be called multiple times safely - if tracing is already
 /// initialized, it will return Ok without error. This makes it safe to use
 /// in test environments where multiple tests may attempt initialization.
-pub fn init_tracing(config: TracingConfig) -> Result<()> {
+///
+/// # Errors
+///
+/// Returns when tracing subscriber initialization fails for a reason other than
+/// "already initialized".
+pub fn init_tracing(config: &TracingConfig) -> Result<()> {
     use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
     let level = match config.level.as_str() {
         "trace" => tracing::Level::TRACE,
         "debug" => tracing::Level::DEBUG,
         "warn" => tracing::Level::WARN,
         "error" => tracing::Level::ERROR,
-        "info" | _ => tracing::Level::INFO,
+        _ => tracing::Level::INFO,
     };
 
     let result = if config.json_format {
@@ -87,7 +92,7 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
                 // Some other error occurred
                 Err(NestGateError::configuration_error(
                     "tracing",
-                    &format!("Failed to initialize tracing: {e}"),
+                    format!("Failed to initialize tracing: {e}"),
                 ))
             }
         }
@@ -104,5 +109,18 @@ mod tests {
         assert_eq!(config.level, "info");
         assert!(!config.json_format);
         assert_eq!(config.service_name, "nestgate");
+    }
+
+    #[test]
+    fn init_tracing_levels_and_json_branch() {
+        for level in ["trace", "debug", "info", "warn", "error", "other"] {
+            let mut c = TracingConfig::default();
+            c.level = level.to_string();
+            let _ = init_tracing(&c);
+        }
+        let mut json_cfg = TracingConfig::default();
+        json_cfg.json_format = true;
+        json_cfg.level = "debug".to_string();
+        let _ = init_tracing(&json_cfg);
     }
 }

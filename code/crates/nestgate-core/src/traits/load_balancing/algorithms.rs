@@ -50,9 +50,9 @@ impl LoadBalancer for RoundRobinLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "No services available".to_string(),
+                    message: "No services available".into(),
                     available_services: Some(0),
-                    algorithm: Some("round_robin".to_string()),
+                    algorithm: Some("round_robin".into()),
                 },
             )));
         }
@@ -84,8 +84,8 @@ impl LoadBalancer for RoundRobinLoadBalancer {
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
-                feature: "update_weights".to_string(),
-                message: Some("Round-robin does not support weights".to_string()),
+                feature: "update_weights".into(),
+                message: Some("Round-robin does not support weights".into()),
                 planned_version: None,
             },
         )))
@@ -141,9 +141,9 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "No services available".to_string(),
+                    message: "No services available".into(),
                     available_services: Some(0),
-                    algorithm: Some("least_connections".to_string()),
+                    algorithm: Some("least_connections".into()),
                 },
             )));
         }
@@ -167,9 +167,9 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
         selected_service.ok_or_else(|| {
             NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "Failed to select service with least connections".to_string(),
+                    message: "Failed to select service with least connections".into(),
                     available_services: Some(services.len()),
-                    algorithm: Some("least_connections".to_string()),
+                    algorithm: Some("least_connections".into()),
                 },
             ))
         })
@@ -200,8 +200,8 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
-                feature: "update_weights".to_string(),
-                message: Some("Least connections does not support weights".to_string()),
+                feature: "update_weights".into(),
+                message: Some("Least connections does not support weights".into()),
                 planned_version: None,
             },
         )))
@@ -257,9 +257,9 @@ impl LoadBalancer for RandomLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "No services available".to_string(),
+                    message: "No services available".into(),
                     available_services: Some(0),
-                    algorithm: Some("random".to_string()),
+                    algorithm: Some("random".into()),
                 },
             )));
         }
@@ -267,9 +267,9 @@ impl LoadBalancer for RandomLoadBalancer {
         let mut rng = self.rng.lock().map_err(|_| {
             NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "Random number generator lock poisoned".to_string(),
+                    message: "Random number generator lock poisoned".into(),
                     available_services: Some(services.len()),
-                    algorithm: Some("random".to_string()),
+                    algorithm: Some("random".into()),
                 },
             ))
         })?;
@@ -307,8 +307,8 @@ impl LoadBalancer for RandomLoadBalancer {
     async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
-                feature: "update_weights".to_string(),
-                message: Some("Random load balancer does not support weights".to_string()),
+                feature: "update_weights".into(),
+                message: Some("Random load balancer does not support weights".into()),
                 planned_version: None,
             },
         )))

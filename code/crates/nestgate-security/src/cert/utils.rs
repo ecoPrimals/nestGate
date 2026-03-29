@@ -15,19 +15,21 @@ use std::time::{Duration, SystemTime};
 /// Convert `SystemTime` to a string representation
 #[must_use]
 pub fn format_system_time(time: SystemTime) -> String {
-    match time.duration_since(SystemTime::UNIX_EPOCH) {
-        Ok(duration) => duration.as_secs().to_string(),
-        Err(_) => "0".to_string(), // fallback for times before Unix epoch
-    }
+    time.duration_since(SystemTime::UNIX_EPOCH).map_or_else(
+        |_| "0".to_string(), // fallback for times before Unix epoch
+        |duration| duration.as_secs().to_string(),
+    )
 }
 /// Parse a string back into `SystemTime`
 pub fn parse_system_time(s: &str) -> Result<SystemTime> {
-    match s.parse::<u64>() {
-        Ok(secs) => Ok(SystemTime::UNIX_EPOCH + Duration::from_secs(secs)),
-        Err(_) => Err(NestGateError::validation_error(&format!(
-            "Invalid timestamp format: {s}"
-        ))),
-    }
+    s.parse::<u64>().map_or_else(
+        |_| {
+            Err(NestGateError::validation_error(format!(
+                "Invalid timestamp format: {s}"
+            )))
+        },
+        |secs| Ok(SystemTime::UNIX_EPOCH + Duration::from_secs(secs)),
+    )
 }
 /// Certificate utility functions
 pub struct CertUtils;
@@ -222,7 +224,9 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
             now.duration_since(SystemTime::UNIX_EPOCH),
             not_after.duration_since(SystemTime::UNIX_EPOCH),
         ) {
-            let diff = expiry_duration.as_secs() as i64 - now_duration.as_secs() as i64;
+            let expiry_secs = i64::try_from(expiry_duration.as_secs()).unwrap_or(i64::MAX);
+            let now_secs = i64::try_from(now_duration.as_secs()).unwrap_or(i64::MAX);
+            let diff = expiry_secs - now_secs;
             Some(diff / (24 * 3600))
         } else {
             None
@@ -482,9 +486,9 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
         let errors = CertUtils::validate_certificate_format(&valid_cert);
         assert!(errors.is_empty());
 
-        let mut invalid_cert = valid_cert.clone();
-        invalid_cert.principal = "".to_string();
-        invalid_cert.issuer = "".to_string();
+        let mut invalid_cert = valid_cert;
+        invalid_cert.principal = String::new();
+        invalid_cert.issuer = String::new();
 
         let errors = CertUtils::validate_certificate_format(&invalid_cert);
         assert!(errors.len() >= 2); // Should have errors for empty subject and issuer

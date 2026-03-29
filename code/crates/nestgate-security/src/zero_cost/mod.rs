@@ -55,7 +55,7 @@ mod integration_tests {
             id: 42,
             data: vec![1, 2, 3, 4, 5],
             metadata: ZeroCostMetadata {
-                timestamp: 1234567890,
+                timestamp: 1_234_567_890,
                 priority: RequestPriority::High,
                 source: [0u8; 32],
             },

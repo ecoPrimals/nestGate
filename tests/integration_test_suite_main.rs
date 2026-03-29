@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **COMPREHENSIVE INTEGRATION TEST SUITE - MODULARIZED**
 //!
 //! This file has been refactored from a large monolithic test implementation (874 lines)

@@ -102,21 +102,17 @@ impl StorageDetector {
         // Use the detection module for parallel detection
         let detection_engine = detection::DetectionEngine::new(&self.config);
 
-        // Run detection methods in parallel for speed
-        let (local_fs, cloud_storage, network_shares, block_devices, memory_storage) = tokio::join!(
+        // Run I/O-heavy discovery in parallel; cloud/network/memory paths are synchronous stubs today.
+        let (local_fs, block_devices) = tokio::join!(
             detection_engine.detect_local_filesystems(),
-            detection_engine.detect_cloud_storage(),
-            detection_engine.detect_network_shares(),
             detection_engine.detect_block_devices(),
-            detection_engine.detect_memory_storage()
         );
 
-        // Collect results
         detected_storage.extend(local_fs?);
-        detected_storage.extend(cloud_storage?);
-        detected_storage.extend(network_shares?);
         detected_storage.extend(block_devices?);
-        detected_storage.extend(memory_storage?);
+        detected_storage.extend(detection_engine.detect_cloud_storage()?);
+        detected_storage.extend(detection_engine.detect_network_shares()?);
+        detected_storage.extend(detection_engine.detect_memory_storage()?);
 
         // Profile performance for each detected storage using profiling module
         if self.config.enable_performance_profiling {

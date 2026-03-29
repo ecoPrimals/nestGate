@@ -88,7 +88,7 @@ where
     }
 
     /// Version
-    fn version(&self) -> &str {
+    fn version(&self) -> &'static str {
         env!("CARGO_PKG_VERSION")
     }
 }
@@ -121,7 +121,7 @@ where
         self.inner
             .store(key, value)
             .await
-            .map_err(|e| NestGateError::storage_error(&format!("Write failed: {e}")))
+            .map_err(|e| NestGateError::storage_error(format!("Write failed: {e}")))
     }
 
     /// Deletes resource

@@ -191,3 +191,63 @@ impl CircuitBreaker {
         *self.half_open_calls.write().await = 0;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::handlers::zfs::universal_zfs::config::CircuitBreakerConfig;
+    use std::time::Duration;
+
+    fn cb_enabled(threshold: u32) -> CircuitBreaker {
+        CircuitBreaker::new(CircuitBreakerConfig {
+            enabled: true,
+            failure_threshold: threshold,
+            recovery_timeout: Duration::from_secs(3600),
+            half_open_max_calls: 3,
+        })
+    }
+
+    #[tokio::test]
+    async fn disabled_breaker_always_allows_and_skips_accounting() {
+        let cb = CircuitBreaker::new(CircuitBreakerConfig {
+            enabled: false,
+            failure_threshold: 1,
+            recovery_timeout: Duration::from_secs(1),
+            half_open_max_calls: 1,
+        });
+        assert!(!cb.is_open().await);
+        assert!(cb.can_execute().await);
+        cb.record_failure().await;
+        cb.record_success().await;
+        assert!(!cb.is_open().await);
+        assert_eq!(cb.get_state().await, CircuitBreakerState::Closed);
+    }
+
+    #[tokio::test]
+    async fn failures_reach_threshold_opens_circuit() {
+        let cb = cb_enabled(3);
+        cb.record_failure().await;
+        cb.record_failure().await;
+        assert!(!cb.is_open().await);
+        cb.record_failure().await;
+        assert!(cb.is_open().await);
+        assert_eq!(cb.get_state().await, CircuitBreakerState::Open);
+    }
+
+    #[tokio::test]
+    async fn success_in_closed_resets_failure_streak() {
+        let cb = cb_enabled(2);
+        cb.record_failure().await;
+        cb.record_success().await;
+        cb.record_failure().await;
+        assert!(!cb.is_open().await);
+        cb.record_failure().await;
+        assert!(cb.is_open().await);
+    }
+
+    #[tokio::test]
+    async fn circuit_breaker_state_eq_derives() {
+        assert_eq!(CircuitBreakerState::Closed, CircuitBreakerState::Closed);
+        assert_ne!(CircuitBreakerState::Closed, CircuitBreakerState::Open);
+    }
+}

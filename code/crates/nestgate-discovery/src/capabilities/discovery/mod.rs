@@ -86,7 +86,8 @@ pub use taxonomy::{AICapability, Capability, NetworkingCapability, SecurityCapab
 /// Result type for capability operations
 pub type CapabilityResult<T> = Result<T, CapabilityError>;
 
-/// Alias for backward compatibility during migration phase
+/// Alias for backward compatibility during migration phase.
+///
 /// NOTE: This type alias maintains compatibility with existing code that uses
 /// `DiscoveryManager` while the codebase transitions to the capability-based model.
 /// Can be removed once all references are updated (estimated: Phase 2 completion).

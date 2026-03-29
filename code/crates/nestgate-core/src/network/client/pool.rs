@@ -27,7 +27,7 @@ use crate::error::{NestGateError, Result};
 /// Connection pool for managing reusable HTTP connections (LOCK-FREE!)
 ///
 /// **CONCURRENT SAFETY**: Lock-free with `DashMap` for maximum throughput
-/// **RESOURCE MANAGEMENT**: Bounded by `Semaphore` to prevent exhaustion  
+/// **RESOURCE MANAGEMENT**: Bounded by `Semaphore` to prevent exhaustion
 /// **ZERO-COPY**: Arc-based sharing minimizes allocations
 /// **PERFORMANCE**: 5-15x faster than RwLock under high concurrency
 ///
@@ -48,7 +48,7 @@ use crate::error::{NestGateError, Result};
 pub struct ConnectionPool {
     /// Lock-free connection storage - DashMap for concurrent access!
     connections: Arc<DashMap<String, Vec<Connection>>>,
-    /// Resource limiter - prevents connection exhaustion  
+    /// Resource limiter - prevents connection exhaustion
     semaphore: Arc<Semaphore>,
     /// Pool configuration
     config: ClientConfig,
@@ -68,7 +68,7 @@ impl ConnectionPool {
     /// Get or create a connection for an endpoint (LOCK-FREE!)
     ///
     /// **CONCURRENCY**: Lock-free concurrent access with DashMap!
-    /// **RESOURCE SAFETY**: Semaphore prevents exhaustion  
+    /// **RESOURCE SAFETY**: Semaphore prevents exhaustion
     /// **ERROR HANDLING**: Proper Result propagation, no panics
     /// **PERFORMANCE**: 5-15x faster than RwLock version
     ///
@@ -253,7 +253,7 @@ impl Connection {
         let resp = req_builder
             .send()
             .await
-            .map_err(|e| NestGateError::network_error(&format!("HTTP request failed: {}", e)))?;
+            .map_err(|e| NestGateError::network_error(format!("HTTP request failed: {}", e)))?;
 
         // Convert response
         let status = super::types::StatusCode::new(resp.status().as_u16());
@@ -268,7 +268,7 @@ impl Connection {
 
         // Get body
         let body = resp.bytes().await.map_err(|e| {
-            NestGateError::network_error(&format!("Failed to read response body: {}", e))
+            NestGateError::network_error(format!("Failed to read response body: {}", e))
         })?;
 
         Ok(Response::new(status, headers, body.to_vec()))

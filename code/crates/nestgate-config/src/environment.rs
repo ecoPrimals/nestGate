@@ -96,12 +96,13 @@ impl Environment {
         let mut metadata = std::collections::HashMap::new();
         metadata.insert("environment".to_string(), config.environment());
 
-        let mut service = ServiceConfig::default();
-        service.name = config.service_name();
-        service.service_name = config.service_name();
-        service.service_type = ServiceType::Api;
-        service.metadata = metadata;
-        service
+        ServiceConfig {
+            name: config.service_name(),
+            service_name: config.service_name(),
+            service_type: ServiceType::Api,
+            metadata,
+            ..Default::default()
+        }
     }
 
     /// Detect network settings based on mode

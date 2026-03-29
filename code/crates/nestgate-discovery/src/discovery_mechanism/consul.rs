@@ -213,7 +213,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let url = format!("{}/v1/agent/service/register", consul_addr);
             client.put_json(&url, &registration).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "Consul registration failed: {e}"
                 ))
             })?;
@@ -234,9 +234,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let url = format!("{}/v1/catalog/service/{}", consul_addr, capability);
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
-                    "Consul query failed: {e}"
-                ))
+                nestgate_types::error::NestGateError::api_error(format!("Consul query failed: {e}"))
             })?;
 
             if !response.is_success() {
@@ -244,7 +242,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
             }
 
             let services: Vec<ConsulService> = response.json().map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "Failed to parse Consul response: {e}"
                 ))
             })?;
@@ -275,7 +273,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let url = format!("{}/v1/agent/service/{}", consul_addr, id);
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "Consul lookup failed: {e}"
                 ))
             })?;
@@ -285,7 +283,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
             }
 
             let service: ConsulService = response.json().map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "Failed to parse Consul response: {e}"
                 ))
             })?;
@@ -313,7 +311,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let url = format!("{}/v1/health/service/{}", consul_addr, service_id);
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!(
+                nestgate_types::error::NestGateError::api_error(format!(
                     "Consul health check failed: {e}"
                 ))
             })?;
@@ -337,7 +335,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
                 .put_json(&url, &serde_json::Value::Null)
                 .await
                 .map_err(|e| {
-                    nestgate_types::error::NestGateError::api_error(&format!(
+                    nestgate_types::error::NestGateError::api_error(format!(
                         "Consul deregistration failed: {e}"
                     ))
                 })?;

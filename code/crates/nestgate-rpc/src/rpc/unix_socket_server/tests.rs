@@ -9,6 +9,8 @@
 
 use super::*;
 
+use crate::rpc::isomorphic_ipc::RpcHandler;
+
 #[tokio::test]
 #[ignore = "storage handlers require nestgate-core StorageManagerService wiring"]
 async fn test_storage_store_retrieve() {
@@ -544,4 +546,74 @@ async fn handle_connection_rejects_invalid_json_line() {
     assert_eq!(v["error"]["code"], -32700);
     drop(c_write);
     let _ = h.await;
+}
+
+#[tokio::test]
+async fn legacy_ecosystem_rpc_handler_dispatches_health_check() {
+    let handler = legacy_ecosystem_rpc_handler("cov-family").expect("handler");
+    let v = handler
+        .handle_request(json!({
+            "jsonrpc": "2.0",
+            "method": "health.check",
+            "params": {},
+            "id": 1
+        }))
+        .await;
+    assert_eq!(v["result"]["status"], "healthy");
+}
+
+#[tokio::test]
+async fn handle_request_storage_stats_dispatch() {
+    let state = StorageState::new().expect("storage state");
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "storage.stats".into(),
+        params: Some(json!({"family_id": "fam-stats"})),
+        id: Some(json!(77)),
+    };
+    let resp = handle_request(req, &state).await;
+    assert!(resp.error.is_none());
+    assert_eq!(
+        resp.result.as_ref().and_then(|v| v.get("family_id")),
+        Some(&json!("fam-stats"))
+    );
+}
+
+#[tokio::test]
+async fn handle_request_storage_store_blob_returns_internal_error() {
+    let state = StorageState::new().expect("storage state");
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "storage.store_blob".into(),
+        params: Some(json!({
+            "key": "k",
+            "blob": "YQ==",
+            "family_id": "fam-blob"
+        })),
+        id: Some(json!(1)),
+    };
+    let resp = handle_request(req, &state).await;
+    assert_eq!(resp.error.as_ref().map(|e| e.code), Some(-32603));
+}
+
+#[tokio::test]
+async fn handle_request_storage_retrieve_blob_returns_internal_error() {
+    let state = StorageState::new().expect("storage state");
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "storage.retrieve_blob".into(),
+        params: Some(json!({"key": "k", "family_id": "fam-blob2"})),
+        id: Some(json!(2)),
+    };
+    let resp = handle_request(req, &state).await;
+    assert_eq!(resp.error.as_ref().map(|e| e.code), Some(-32603));
+}
+
+#[tokio::test]
+async fn legacy_unix_json_rpc_handler_parse_error_returns_jsonrpc_error() {
+    let mut state = StorageState::new().expect("storage state");
+    state.family_id = Some("f".to_string());
+    let handler = LegacyUnixJsonRpcHandler::new(Arc::new(state));
+    let v = handler.handle_request(json!("not an object")).await;
+    assert_eq!(v["error"]["code"], -32700);
 }

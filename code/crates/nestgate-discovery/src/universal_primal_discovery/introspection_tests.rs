@@ -241,7 +241,7 @@ async fn test_discover_resource_limits_connections() {
     let mut introspection = SystemIntrospection::new();
 
     // Test connection limit discovery
-    let result = introspection.discover_resource_limits("connections").await;
+    let result = introspection.discover_resource_limits("connections");
 
     // Should succeed and return a reasonable limit
     if let Ok(limit) = result {
@@ -255,7 +255,7 @@ async fn test_discover_resource_limits_threads() {
     let mut introspection = SystemIntrospection::new();
 
     // Test thread limit discovery
-    let result = introspection.discover_resource_limits("threads").await;
+    let result = introspection.discover_resource_limits("threads");
 
     // Should succeed and return a reasonable limit
     if let Ok(limit) = result {
@@ -269,9 +269,7 @@ async fn test_discover_resource_limits_memory_buffer() {
     let mut introspection = SystemIntrospection::new();
 
     // Test memory buffer limit discovery
-    let result = introspection
-        .discover_resource_limits("memory_buffer")
-        .await;
+    let result = introspection.discover_resource_limits("memory_buffer");
 
     // Should succeed and return a reasonable limit
     if let Ok(limit) = result {
@@ -285,7 +283,7 @@ async fn test_discover_resource_limits_unknown_type() {
     let mut introspection = SystemIntrospection::new();
 
     // Test with unknown resource type
-    let result = introspection.discover_resource_limits("unknown_type").await;
+    let result = introspection.discover_resource_limits("unknown_type");
 
     // Should still succeed with fallback behavior
     assert!(result.is_ok() || result.is_err()); // Either way is acceptable
@@ -295,7 +293,7 @@ async fn test_discover_resource_limits_unknown_type() {
 async fn test_detect_system_capabilities() {
     let introspection = SystemIntrospection::new();
 
-    let result = introspection.detect_system_capabilities().await;
+    let result = introspection.detect_system_capabilities();
 
     // Should detect basic capabilities
     if let Ok(capabilities) = result {
@@ -338,8 +336,8 @@ async fn test_multiple_resource_limit_discoveries() {
     let mut introspection = SystemIntrospection::new();
 
     // Multiple discoveries should be consistent
-    let result1 = introspection.discover_resource_limits("connections").await;
-    let result2 = introspection.discover_resource_limits("connections").await;
+    let result1 = introspection.discover_resource_limits("connections");
+    let result2 = introspection.discover_resource_limits("connections");
 
     if let (Ok(limit1), Ok(limit2)) = (result1, result2) {
         assert_eq!(
@@ -353,8 +351,8 @@ async fn test_multiple_resource_limit_discoveries() {
 async fn test_multiple_capability_detections() {
     let introspection = SystemIntrospection::new();
 
-    let result1 = introspection.detect_system_capabilities().await;
-    let result2 = introspection.detect_system_capabilities().await;
+    let result1 = introspection.detect_system_capabilities();
+    let result2 = introspection.detect_system_capabilities();
 
     if let (Ok(cap1), Ok(cap2)) = (result1, result2) {
         assert_eq!(cap1.cpu_cores, cap2.cpu_cores);
@@ -394,7 +392,7 @@ async fn test_discover_all_resource_types() {
     let resource_types = vec!["connections", "threads", "memory_buffer"];
 
     for resource_type in resource_types {
-        let result = introspection.discover_resource_limits(resource_type).await;
+        let result = introspection.discover_resource_limits(resource_type);
         // Each resource type should either succeed or fail gracefully
         match result {
             Ok(limit) => assert!(limit > 0, "Limit should be positive for {resource_type}"),
@@ -463,7 +461,7 @@ async fn test_concurrent_introspection_instances() {
         .map(|_| {
             task::spawn(async {
                 let introspection = SystemIntrospection::new();
-                introspection.detect_system_capabilities().await
+                introspection.detect_system_capabilities()
             })
         })
         .collect();
@@ -483,7 +481,7 @@ async fn test_concurrent_resource_limit_discovery() {
         .map(|resource_type| {
             task::spawn(async move {
                 let mut intro = SystemIntrospection::new();
-                intro.discover_resource_limits(resource_type).await
+                intro.discover_resource_limits(resource_type)
             })
         })
         .collect();

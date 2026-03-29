@@ -17,6 +17,9 @@ pub mod security_errors;
 pub mod storage_errors;
 pub mod system_errors;
 
+#[cfg(test)]
+mod core_errors_tests;
+
 // Re-export the main unified error type
 pub use core_errors::NestGateUnifiedError;
 

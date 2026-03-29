@@ -95,22 +95,22 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn initialize(&self) -> Result<()> {
+    pub fn initialize(&self) -> Result<()> {
         tracing::info!("🔍 Initializing observability systems");
 
         if self.config.tracing_enabled {
             let tracing_config = TracingConfig::default();
-            init_tracing(tracing_config)?;
+            init_tracing(&tracing_config)?;
             tracing::info!("✅ Distributed tracing initialized");
         }
 
         if self.config.metrics_enabled {
-            self.start_metrics_collection().await?;
+            self.start_metrics_collection();
             tracing::info!("✅ Metrics collection started");
         }
 
         if self.config.health_checks_enabled {
-            self.start_health_monitoring().await?;
+            self.start_health_monitoring();
             tracing::info!("✅ Health monitoring started");
         }
 
@@ -119,7 +119,7 @@ impl ObservabilityManager {
     }
 
     /// Start metrics collection background task
-    async fn start_metrics_collection(&self) -> Result<()> {
+    fn start_metrics_collection(&self) {
         let metrics = Arc::clone(&self.metrics);
         let interval = self.config.metrics_interval;
 
@@ -134,12 +134,10 @@ impl ObservabilityManager {
                 }
             }
         });
-
-        Ok(())
     }
 
     /// Start health monitoring background task
-    async fn start_health_monitoring(&self) -> Result<()> {
+    fn start_health_monitoring(&self) {
         let health_checker = Arc::clone(&self.health_checker);
         let interval = self.config.health_check_interval;
 
@@ -149,13 +147,11 @@ impl ObservabilityManager {
             loop {
                 interval_timer.tick().await;
 
-                if let Err(e) = health_checker.run_health_checks().await {
+                if let Err(e) = health_checker.run_health_checks() {
                     tracing::warn!("Health check failed: {}", e);
                 }
             }
         });
-
-        Ok(())
     }
 
     /// Get current system metrics
@@ -178,8 +174,8 @@ impl ObservabilityManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn get_health(&self) -> Result<SystemHealth> {
-        self.health_checker.get_system_health().await
+    pub fn get_health(&self) -> Result<SystemHealth> {
+        self.health_checker.get_system_health()
     }
 
     /// Record a custom metric
@@ -232,7 +228,7 @@ pub fn init_observability(config: ObservabilityConfig) -> Result<()> {
     // Initialize in background
     let init_manager = Arc::clone(&manager);
     tokio::spawn(async move {
-        if let Err(e) = init_manager.initialize().await {
+        if let Err(e) = init_manager.initialize() {
             tracing::error!("Failed to initialize observability: {}", e);
         }
     });
@@ -276,15 +272,16 @@ pub async fn record_metric(name: &str, value: f64) -> Result<()> {
 /// # Errors
 ///
 /// Returns an error if health status cannot be retrieved from the system.
-pub async fn get_system_health() -> Result<SystemHealth> {
-    if let Some(obs) = get_observability() {
-        obs.get_health().await
-    } else {
-        Err(NestGateError::configuration_error(
-            "health_check",
-            "Observability not initialized",
-        ))
-    }
+pub fn get_system_health() -> Result<SystemHealth> {
+    get_observability().map_or_else(
+        || {
+            Err(NestGateError::configuration_error(
+                "health_check",
+                "Observability not initialized",
+            ))
+        },
+        |obs| obs.get_health(),
+    )
 }
 #[cfg(test)]
 mod tests {
@@ -297,7 +294,7 @@ mod tests {
 
         // Should be able to get metrics and health
         assert!(manager.get_metrics().await.is_ok());
-        assert!(manager.get_health().await.is_ok());
+        assert!(manager.get_health().is_ok());
     }
 
     #[tokio::test]

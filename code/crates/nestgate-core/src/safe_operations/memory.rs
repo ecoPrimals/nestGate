@@ -58,7 +58,7 @@ pub fn safe_buffer_reserve<T>(buffer: &mut Vec<T>, additional: usize, context: &
 /// Safely truncate buffer to specified length
 pub fn safe_buffer_truncate<T>(buffer: &mut Vec<T>, len: usize, context: &str) -> Result<()> {
     if len > buffer.len() {
-        return Err(NestGateError::validation_error(&format!(
+        return Err(NestGateError::validation_error(format!(
             "Truncation length {} exceeds buffer size {} in {}",
             len,
             buffer.len(),

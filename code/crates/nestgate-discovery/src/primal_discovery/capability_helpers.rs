@@ -207,7 +207,7 @@ pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> 
     }
 
     // No fallback for arbitrary capabilities
-    Err(NestGateError::network_error(&format!(
+    Err(NestGateError::network_error(format!(
         "Capability '{capability}' not found via discovery or environment. Set {env_var} or use service discovery."
     )))
 }
@@ -273,19 +273,22 @@ async fn try_discovery(capability: &str) -> Result<DiscoveredService> {
     let services = discovery.find_by_capability(capability.to_string()).await?;
 
     // Return first service found
-    if let Some(service) = services.first() {
-        tracing::info!(
-            "Discovered '{}' capability via discovery: {} at {}",
-            capability,
-            service.name,
-            service.endpoint
-        );
-        Ok(DiscoveredService::from_service_info(service.clone()))
-    } else {
-        Err(NestGateError::network_error(&format!(
-            "No service found providing '{capability}' capability"
-        )))
-    }
+    services.first().map_or_else(
+        || {
+            Err(NestGateError::network_error(format!(
+                "No service found providing '{capability}' capability"
+            )))
+        },
+        |service| {
+            tracing::info!(
+                "Discovered '{}' capability via discovery: {} at {}",
+                capability,
+                service.name,
+                service.endpoint
+            );
+            Ok(DiscoveredService::from_service_info(service.clone()))
+        },
+    )
 }
 
 // ==================== UTILITY FUNCTIONS ====================

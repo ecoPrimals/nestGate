@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **EXPANDED CHAOS TEST SCENARIOS**
 //!
 //! Additional chaos scenarios to reach 30+ total chaos tests

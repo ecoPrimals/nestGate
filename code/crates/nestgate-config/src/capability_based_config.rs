@@ -265,13 +265,16 @@ impl CapabilityConfig {
 
     /// Resolve port from environment with fallback
     fn resolve_port_from_env(env_var: &str, fallback: u16) -> Result<u16> {
-        if let Ok(val) = std::env::var(env_var) {
-            val.parse()
-                .with_context(|| format!("Invalid port in {env_var}: {val}"))
-        } else {
-            debug!("Port {} not set, using fallback: {}", env_var, fallback);
-            Ok(fallback)
-        }
+        std::env::var(env_var).map_or_else(
+            |_| {
+                debug!("Port {} not set, using fallback: {}", env_var, fallback);
+                Ok(fallback)
+            },
+            |val| {
+                val.parse()
+                    .with_context(|| format!("Invalid port in {env_var}: {val}"))
+            },
+        )
     }
 
     /// Resolve address from environment with fallback
@@ -323,7 +326,7 @@ impl CapabilityConfig {
                             .await;
                         return Ok(endpoint);
                     }
-                    Ok(None) => continue,
+                    Ok(None) => {}
                     Err(e) => {
                         debug!(
                             "Discovery via {:?} failed for {}: {}",

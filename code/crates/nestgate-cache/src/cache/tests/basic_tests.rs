@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(
+    deprecated,
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::float_cmp,
+    clippy::uninlined_format_args,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::default_trait_access,
+    clippy::unused_async
+)]
+
 //! Basic cache tests
 //!
 //! Core test suite for basic cache functionality including
@@ -251,8 +264,7 @@ mod cache_comprehensive_tests {
 
         // Test put and get
         cache
-            .put("test_key".to_string(), b"test_value".to_vec())
-            .await
+            .put("test_key", b"test_value".to_vec())
             .expect("Cache operation failed");
         let result = cache.get("test_key");
         assert!(result.is_some());
@@ -276,12 +288,10 @@ mod cache_comprehensive_tests {
         let mut cache = CacheManager::new(config);
 
         cache
-            .put("key".to_string(), b"value1".to_vec())
-            .await
+            .put("key", b"value1".to_vec())
             .expect("Cache operation failed");
         cache
-            .put("key".to_string(), b"value2".to_vec())
-            .await
+            .put("key", b"value2".to_vec())
             .expect("Cache operation failed");
 
         let result = cache.get("key").expect("Cache operation failed");
@@ -302,7 +312,7 @@ mod cache_comprehensive_tests {
         for i in 0..10 {
             let key = format!("key_{}", i);
             let value = format!("value_{}", i).into_bytes();
-            cache.put(key, value).await.expect("Cache operation failed");
+            cache.put(&key, value).expect("Cache operation failed");
         }
 
         // Verify all entries
@@ -328,12 +338,10 @@ mod cache_comprehensive_tests {
 
         // Add entries
         cache
-            .put("key1".to_string(), b"value1".to_vec())
-            .await
+            .put("key1", b"value1".to_vec())
             .expect("Cache operation failed");
         cache
-            .put("key2".to_string(), b"value2".to_vec())
-            .await
+            .put("key2", b"value2".to_vec())
             .expect("Cache operation failed");
 
         // Clear

@@ -130,30 +130,27 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
             let slot = current.trailing_zeros() as usize;
             let new_bitmap = current & !(1u64 << slot);
 
-            match self.inner.free_bitmap.compare_exchange(
-                current,
-                new_bitmap,
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            ) {
-                Ok(_) => {
-                    *self.inner.slots[slot].lock() = Some(value);
+            if self
+                .inner
+                .free_bitmap
+                .compare_exchange(current, new_bitmap, Ordering::AcqRel, Ordering::Acquire)
+                .is_ok()
+            {
+                *self.inner.slots[slot].lock() = Some(value);
 
-                    self.inner.stats.allocated.fetch_add(1, Ordering::Relaxed);
-                    let usage = self.inner.stats.allocated.load(Ordering::Relaxed)
-                        - self.inner.stats.deallocated.load(Ordering::Relaxed);
-                    let peak = self.inner.stats.peak_usage.load(Ordering::Relaxed);
-                    if usage > peak {
-                        self.inner.stats.peak_usage.store(usage, Ordering::Relaxed);
-                    }
-
-                    return Some(PoolHandle {
-                        slot,
-                        pool: Arc::clone(&self.inner),
-                        _phantom: PhantomData,
-                    });
+                self.inner.stats.allocated.fetch_add(1, Ordering::Relaxed);
+                let usage = self.inner.stats.allocated.load(Ordering::Relaxed)
+                    - self.inner.stats.deallocated.load(Ordering::Relaxed);
+                let peak = self.inner.stats.peak_usage.load(Ordering::Relaxed);
+                if usage > peak {
+                    self.inner.stats.peak_usage.store(usage, Ordering::Relaxed);
                 }
-                Err(_) => continue,
+
+                return Some(PoolHandle {
+                    slot,
+                    pool: Arc::clone(&self.inner),
+                    _phantom: PhantomData,
+                });
             }
         }
     }
@@ -197,27 +194,37 @@ impl<T, const CAPACITY: usize> Clone for SafeMemoryPool<T, CAPACITY> {
 impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
     /// Get immutable reference to value (locks the slot for the duration of the guard)
     pub fn value(&self) -> MappedMutexGuard<'_, T> {
-        MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
-            opt.as_mut()
-                .expect("Pool handle points to empty slot - this is a bug")
-        })
+        MutexGuard::map(
+            self.pool.slots[self.slot].lock(),
+            |opt: &mut Option<T>| match opt.as_mut() {
+                Some(v) => v,
+                None => unreachable!("Pool handle points to empty slot - this is a bug"),
+            },
+        )
     }
 
     /// Get mutable reference to value
     pub fn value_mut(&mut self) -> MappedMutexGuard<'_, T> {
-        MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
-            opt.as_mut()
-                .expect("Pool handle points to empty slot - this is a bug")
-        })
+        MutexGuard::map(
+            self.pool.slots[self.slot].lock(),
+            |opt: &mut Option<T>| match opt.as_mut() {
+                Some(v) => v,
+                None => unreachable!("Pool handle points to empty slot - this is a bug"),
+            },
+        )
     }
 
     /// Take ownership of value, consuming the handle
     #[must_use]
     pub fn into_inner(self) -> T {
-        let value = self.pool.slots[self.slot]
-            .lock()
-            .take()
-            .expect("Pool handle points to empty slot - this is a bug");
+        let value = {
+            let mut guard = self.pool.slots[self.slot].lock();
+            let taken = guard.take();
+            match taken {
+                Some(v) => v,
+                None => unreachable!("Pool handle points to empty slot - this is a bug"),
+            }
+        };
 
         let mask = 1u64 << self.slot;
         self.pool.free_bitmap.fetch_or(mask, Ordering::Release);

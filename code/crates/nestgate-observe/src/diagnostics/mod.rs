@@ -17,6 +17,10 @@ pub mod manager;
 pub mod metrics;
 /// Core diagnostic types including severity levels and diagnostic categories.
 pub mod types;
+
+#[cfg(test)]
+mod coverage_tests;
+
 pub use diagnostic::*;
 pub use manager::*;
 #[allow(ambiguous_glob_reexports)]

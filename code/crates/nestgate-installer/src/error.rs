@@ -30,8 +30,8 @@ impl InstallerError {
     /// Create configuration error using unified system
     pub fn configuration(message: impl Into<String>) -> NestGateError {
         NestGateError::Configuration(Box::new(ConfigurationErrorDetails {
-            field: "field".to_string(),
-            message: message.into(),
+            field: "field".into(),
+            message: message.into().into(),
             currentvalue: None,
             expected: None,
             user_error: true,
@@ -41,9 +41,9 @@ impl InstallerError {
     /// Create installation failure error using unified system
     pub fn installation_error(message: impl Into<String>) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
-            message: message.into(),
-            component: "nestgate-installer".to_string(),
-            location: Some("installation".to_string()),
+            message: message.into().into(),
+            component: "nestgate-installer".into(),
+            location: Some("installation".into()),
             is_bug: false,
             context: None,
         }))
@@ -52,9 +52,9 @@ impl InstallerError {
     /// Create system requirement error using unified system
     pub fn system_requirement(message: impl Into<String>) -> NestGateError {
         NestGateError::System(Box::new(SystemErrorDetails {
-            message: message.into(),
-            component: "system-requirements".to_string(),
-            operation: Some("validation".to_string()),
+            message: message.into().into(),
+            component: "system-requirements".into(),
+            operation: Some("validation".into()),
             context: None,
         }))
     }
@@ -62,9 +62,9 @@ impl InstallerError {
     /// Create permission error using unified system
     pub fn permission_error(message: impl Into<String>) -> NestGateError {
         NestGateError::System(Box::new(SystemErrorDetails {
-            message: message.into(),
-            component: "permissions".to_string(),
-            operation: Some("access".to_string()),
+            message: message.into().into(),
+            component: "permissions".into(),
+            operation: Some("access".into()),
             context: None,
         }))
     }

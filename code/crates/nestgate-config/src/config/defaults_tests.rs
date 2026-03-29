@@ -8,6 +8,11 @@
 
 #[cfg(test)]
 mod config_defaults_tests {
+    // Tests exercise deprecated `InfantDiscoveryConfig` for backward-compat coverage until
+    // callers migrate to `CanonicalNetworkConfig`.
+    #![allow(deprecated)]
+    #![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+
     use crate::config::*;
 
     // ==================== InfantDiscoveryConfig Tests ====================
@@ -54,13 +59,17 @@ mod config_defaults_tests {
         let config = InfantDiscoveryConfig::default();
 
         // Test serialization
-        let serialized = serde_json::to_string(&config).expect("Should serialize successfully");
+        let Ok(serialized) = serde_json::to_string(&config) else {
+            panic!("Should serialize successfully");
+        };
         assert!(serialized.contains("enabled"));
         assert!(serialized.contains("discovery_timeout_seconds"));
 
         // Test deserialization
-        let deserialized: InfantDiscoveryConfig =
-            serde_json::from_str(&serialized).expect("Should deserialize successfully");
+        let Ok(deserialized): Result<InfantDiscoveryConfig, _> = serde_json::from_str(&serialized)
+        else {
+            panic!("Should deserialize successfully");
+        };
         assert_eq!(deserialized.enabled, config.enabled);
         assert_eq!(
             deserialized.discovery_timeout_seconds,
@@ -83,7 +92,7 @@ mod config_defaults_tests {
     #[test]
     fn test_infant_discovery_config_debug() {
         let config = InfantDiscoveryConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("InfantDiscoveryConfig"));
         assert!(debug_str.contains("enabled"));
@@ -151,9 +160,12 @@ mod config_defaults_tests {
             fallback_to_environment: true,
         };
 
-        let json = serde_json::to_string(&original).expect("Serialization should succeed");
-        let recovered: InfantDiscoveryConfig =
-            serde_json::from_str(&json).expect("Deserialization should succeed");
+        let Ok(json) = serde_json::to_string(&original) else {
+            panic!("Serialization should succeed");
+        };
+        let Ok(recovered): Result<InfantDiscoveryConfig, _> = serde_json::from_str(&json) else {
+            panic!("Deserialization should succeed");
+        };
 
         assert_eq!(recovered.enabled, original.enabled);
         assert_eq!(
@@ -181,8 +193,9 @@ mod config_defaults_tests {
             "unknown_field": "should_be_ignored"
         }"#;
 
-        let config: InfantDiscoveryConfig =
-            serde_json::from_str(json).expect("Should deserialize with extra fields");
+        let Ok(config): Result<InfantDiscoveryConfig, _> = serde_json::from_str(json) else {
+            panic!("Should deserialize with extra fields");
+        };
         assert!(config.enabled);
     }
 
@@ -192,10 +205,6 @@ mod config_defaults_tests {
     fn test_infant_discovery_configs_with_same_values_are_equal() {
         let config1 = InfantDiscoveryConfig::default();
         let config2 = InfantDiscoveryConfig::default();
-
-        // Clone to ensure they're separate instances
-        let config1 = config1.clone();
-        let config2 = config2.clone();
 
         assert_eq!(config1.enabled, config2.enabled);
         assert_eq!(

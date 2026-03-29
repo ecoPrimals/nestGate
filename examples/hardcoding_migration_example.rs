@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Example: Migrating from Hardcoded Values to Capability-Based Discovery
 //!
 //! This example demonstrates how to evolve from hardcoded constants

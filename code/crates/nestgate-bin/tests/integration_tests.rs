@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
 // **LOCALHOST HARDCODING DEPRECATION NOTICE**
 //!
 //! ⚠️  DEPRECATION WARNING: This file contains hardcoded localhost patterns

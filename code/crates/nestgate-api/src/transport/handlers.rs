@@ -80,7 +80,7 @@ impl RpcMethodHandler for NestGateRpcHandler {
             "system.info" => self.handle_system_info(params),
 
             // Unknown method
-            _ => Err(NestGateError::api_error(&format!(
+            _ => Err(NestGateError::api_error(format!(
                 "Unknown method: {method}"
             ))),
         }
@@ -91,7 +91,7 @@ impl NestGateRpcHandler {
     /// Handle storage.store request
     async fn handle_store(&self, params: Value) -> Result<Value> {
         let request: StoreRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {e}")))?;
+            .map_err(|e| NestGateError::api_error(format!("Invalid params: {e}")))?;
 
         if let Some(storage) = &self.storage {
             storage.store(&request.key, &request.value).await?;
@@ -104,7 +104,7 @@ impl NestGateRpcHandler {
     /// Handle storage.retrieve request
     async fn handle_retrieve(&self, params: Value) -> Result<Value> {
         let request: RetrieveRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {e}")))?;
+            .map_err(|e| NestGateError::api_error(format!("Invalid params: {e}")))?;
 
         if let Some(storage) = &self.storage {
             let value = storage.retrieve(&request.key).await?;
@@ -117,7 +117,7 @@ impl NestGateRpcHandler {
     /// Handle storage.delete request
     async fn handle_delete(&self, params: Value) -> Result<Value> {
         let request: DeleteRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {e}")))?;
+            .map_err(|e| NestGateError::api_error(format!("Invalid params: {e}")))?;
 
         if let Some(storage) = &self.storage {
             storage.delete(&request.key).await?;
@@ -130,7 +130,7 @@ impl NestGateRpcHandler {
     /// Handle storage.list request
     async fn handle_list(&self, params: Value) -> Result<Value> {
         let request: ListRequest = serde_json::from_value(params)
-            .map_err(|e| NestGateError::api_error(&format!("Invalid params: {e}")))?;
+            .map_err(|e| NestGateError::api_error(format!("Invalid params: {e}")))?;
 
         if let Some(storage) = &self.storage {
             let keys = storage.list(&request.prefix).await?;

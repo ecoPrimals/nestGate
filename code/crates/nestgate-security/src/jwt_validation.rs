@@ -8,6 +8,8 @@
 
 use std::env;
 
+use tracing::{debug, error, warn};
+
 /// Default JWT secret that must NOT be used in production
 const INSECURE_DEFAULT_SECRET: &str = "CHANGE_ME_IN_PRODUCTION";
 /// Insecure Alternate 1
@@ -106,10 +108,9 @@ fn validate_jwt_secret_value(jwt_secret: &str) -> Result<(), JwtSecretError> {
         || jwt_secret.chars().all(|c| c.is_ascii_lowercase())
         || jwt_secret.chars().all(|c| c.is_ascii_uppercase())
     {
-        eprintln!(
-            "⚠️  WARNING: JWT secret appears to be weak (only digits, only lowercase, or only uppercase).\n\
-             Consider using a randomly generated secret for better security:\n\
-             export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)\n"
+        warn!(
+            "JWT secret appears weak (only digits, only lowercase, or only uppercase); \
+             consider: export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)"
         );
     }
 
@@ -141,16 +142,17 @@ pub fn validate_jwt_secret_or_exit() {
     match validate_jwt_secret() {
         Ok(()) => {
             #[cfg(debug_assertions)]
-            eprintln!("✅ JWT secret validation passed");
+            debug!("JWT secret validation passed");
         }
         Err(e) => {
-            eprintln!("\n{}\n", "=".repeat(80));
-            eprintln!("🚨 NESTGATE STARTUP BLOCKED - SECURITY VALIDATION FAILED");
-            eprintln!("{}", "=".repeat(80));
-            eprintln!("\n{e}\n");
-            eprintln!("{}", "=".repeat(80));
-            eprintln!("\nNestGate will not start with insecure JWT configuration.");
-            eprintln!("Fix the security issue above and try again.\n");
+            let line = "=".repeat(80);
+            error!("\n{line}\n");
+            error!("NESTGATE STARTUP BLOCKED - SECURITY VALIDATION FAILED");
+            error!("{line}");
+            error!("\n{e}\n");
+            error!("{line}");
+            error!("NestGate will not start with insecure JWT configuration.");
+            error!("Fix the security issue above and try again.");
 
             std::process::exit(1);
         }
@@ -177,7 +179,7 @@ mod tests {
 
         for value in insecure_values {
             let result = validate_jwt_secret_value(value);
-            assert!(result.is_err(), "Should reject insecure value: {}", value);
+            assert!(result.is_err(), "Should reject insecure value: {value}");
         }
     }
 

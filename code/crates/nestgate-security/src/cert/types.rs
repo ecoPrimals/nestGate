@@ -183,14 +183,17 @@ impl Certificate {
         }
 
         // Check if not_after timestamp is in the past
-        if let Ok(timestamp) = self.not_after.parse::<u64>() {
-            let cert_time =
-                std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(timestamp);
-            cert_time < std::time::SystemTime::now()
-        } else {
-            // Fallback: check for "1970" in the string (very early dates)
-            self.not_after.contains("1970") || self.not_after == "0" || self.not_after == "1"
-        }
+        self.not_after.parse::<u64>().map_or_else(
+            |_| {
+                // Fallback: check for "1970" in the string (very early dates)
+                self.not_after.contains("1970") || self.not_after == "0" || self.not_after == "1"
+            },
+            |timestamp| {
+                let cert_time =
+                    std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(timestamp);
+                cert_time < std::time::SystemTime::now()
+            },
+        )
     }
 
     /// Check if certificate is currently valid (not expired)

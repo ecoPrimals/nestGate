@@ -280,3 +280,106 @@ impl Default for ZfsService {
         Self::new(ZfsServiceConfig::default())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::types::ZfsServiceConfig;
+    use super::*;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    fn sample_config() -> ZfsServiceConfig {
+        ZfsServiceConfig {
+            service_name: "test-zfs".to_string(),
+            bind_address: "127.0.0.1".to_string(),
+            port: 9000,
+            orchestrator_endpoints: vec!["http://127.0.0.1:1".to_string()],
+            health_check_interval: 10,
+            capabilities: vec!["pool".to_string()],
+            metadata: HashMap::from([("k".to_string(), "v".to_string())]),
+        }
+    }
+
+    #[test]
+    fn new_sets_node_id_and_service_id() {
+        let s = ZfsService::new(sample_config());
+        assert_eq!(s.service_id(), "test-zfs");
+        assert!(!s.node_id().is_empty());
+    }
+
+    #[test]
+    fn from_arc_shares_config() {
+        let cfg = Arc::new(sample_config());
+        let s = ZfsService::from_arc(Arc::clone(&cfg));
+        assert_eq!(Arc::strong_count(&cfg), 2);
+        assert_eq!(s.config().service_name, "test-zfs");
+    }
+
+    #[test]
+    fn endpoints_and_capabilities_and_registration() {
+        let s = ZfsService::new(sample_config());
+        assert_eq!(s.endpoints(), vec!["127.0.0.1:9000"]);
+        assert_eq!(s.capabilities(), &["pool".to_string()]);
+        let reg = s.create_registration();
+        assert_eq!(reg.service_type, "zfs-storage");
+        assert_eq!(reg.capabilities, vec!["pool".to_string()]);
+        assert!(reg.endpoints.iter().any(|e| e.contains(':')));
+    }
+
+    #[test]
+    fn register_and_report_health_and_unregister() {
+        let mut s = ZfsService::new(sample_config());
+        assert!(!s.is_registered());
+        assert!(s.register_with_orchestrator("http://x").is_ok());
+        assert!(s.is_registered());
+        assert!(s.report_health().is_ok());
+        assert!(s.unregister().is_ok());
+        assert!(!s.is_registered());
+    }
+
+    #[test]
+    fn register_fails_without_orchestrator_endpoints() {
+        let mut cfg = sample_config();
+        cfg.orchestrator_endpoints.clear();
+        let mut s = ZfsService::new(cfg);
+        assert!(s.register_with_orchestrator("http://x").is_err());
+    }
+
+    #[test]
+    fn report_health_fails_when_not_registered() {
+        let mut s = ZfsService::new(sample_config());
+        assert!(s.report_health().is_err());
+    }
+
+    #[test]
+    fn unregister_noop_when_not_registered() {
+        let mut s = ZfsService::new(sample_config());
+        assert!(s.unregister().is_ok());
+    }
+
+    #[test]
+    fn health_check_updates_last_check() {
+        let mut s = ZfsService::new(sample_config());
+        assert!(s.last_health_check().is_none());
+        let h = s.health_check().expect("health");
+        assert_eq!(h.status, "healthy");
+        assert!(s.last_health_check().is_some());
+    }
+
+    #[test]
+    fn get_service_info_includes_metadata() {
+        let mut s = ZfsService::new(sample_config());
+        let _ = s.health_check();
+        let info = s.get_service_info();
+        assert_eq!(info.service_type, "zfs-storage");
+        assert_eq!(info.metadata.get("k"), Some(&"v".to_string()));
+        assert!(info.last_heartbeat.is_some());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn default_service_builds() {
+        let s = ZfsService::default();
+        assert!(!s.node_id().is_empty());
+    }
+}

@@ -70,11 +70,9 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
+    pub fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
         // Delegate to network discovery subsystem
-        self.network_discovery
-            .discover_bind_address(service_name)
-            .await
+        self.network_discovery.discover_bind_address(service_name)
     }
 
     /// **PRIMAL DISCOVERY**: Find available port through port scanning
@@ -125,11 +123,10 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_system_limits(&mut self, resource_type: &str) -> Result<usize> {
+    pub fn discover_system_limits(&mut self, resource_type: &str) -> Result<usize> {
         // Delegate to system introspection
         self.system_introspection
             .discover_resource_limits(resource_type)
-            .await
     }
 
     /// **ECOSYSTEM INTEGRATION**: Query external service registry
@@ -140,19 +137,13 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn query_service_registry(
-        &self,
-        service_name: &str,
-        query_type: &str,
-    ) -> Result<String> {
+    pub fn query_service_registry(&self, service_name: &str, query_type: &str) -> Result<String> {
         // Delegate to registry client
-        self.registry_client
-            .query_service(service_name, query_type)
-            .await
+        self.registry_client.query_service(service_name, query_type)
     }
 
     /// Cache Discovered Port (lock-free)
-    pub async fn cache_discovered_port(&mut self, service_name: &str, port: u16) {
+    pub fn cache_discovered_port(&mut self, service_name: &str, port: u16) {
         self.discovered_ports.insert(service_name.to_string(), port);
 
         // Also cache in new system
@@ -160,7 +151,7 @@ impl UniversalPrimalDiscovery {
     }
 
     /// Cache Discovered Endpoint (lock-free)
-    pub async fn cache_discovered_endpoint(&mut self, service_name: &str, endpoint: &str) {
+    pub fn cache_discovered_endpoint(&mut self, service_name: &str, endpoint: &str) {
         self.discovered_endpoints
             .insert(service_name.to_string(), endpoint.to_string());
 
@@ -169,7 +160,7 @@ impl UniversalPrimalDiscovery {
     }
 
     /// Cache Discovered Timeout (lock-free)
-    pub async fn cache_discovered_timeout(&mut self, service_name: &str, timeout: Duration) {
+    pub fn cache_discovered_timeout(&mut self, service_name: &str, timeout: Duration) {
         self.discovered_timeouts
             .insert(service_name.to_string(), timeout);
 
@@ -178,7 +169,7 @@ impl UniversalPrimalDiscovery {
     }
 
     /// Cache discovered limit (lock-free)
-    pub async fn cache_discovered_limit(&mut self, resource_type: &str, limit: usize) {
+    pub fn cache_discovered_limit(&mut self, resource_type: &str, limit: usize) {
         self.discovered_limits
             .insert(resource_type.to_string(), limit);
     }
@@ -197,7 +188,7 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn get_discovery_status(&self) -> Result<HashMap<String, String>> {
+    pub fn get_discovery_status(&self) -> Result<HashMap<String, String>> {
         let mut status = HashMap::new();
 
         // Network discovery status

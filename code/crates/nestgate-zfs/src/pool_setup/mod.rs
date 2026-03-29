@@ -449,6 +449,22 @@ impl ZfsPoolSetup {
     }
 }
 
+#[cfg(test)]
+impl ZfsPoolSetup {
+    /// Construct a pool setup instance without scanning disks (tests only).
+    pub(crate) fn test_fixture(devices: Vec<StorageDevice>, existing_pools: Vec<String>) -> Self {
+        let config = PoolSetupConfig::default();
+        Self {
+            devices,
+            existing_pools,
+            config: config.clone(),
+            scanner: DeviceScanner::new(config.device_detection.clone()),
+            validator: PoolSetupValidator::new(config),
+            creator: PoolCreator::new(),
+        }
+    }
+}
+
 /// System report structure
 #[derive(Debug, Clone)]
 /// Systemreport
@@ -475,4 +491,75 @@ pub async fn setup_production_zfs() -> CoreResult<PoolSetupResult> {
     info!("Recommended configuration: {:?}", config);
 
     setup.create_pool_safe(&config).await
+}
+
+#[cfg(test)]
+mod pool_setup_unit_tests {
+    use super::{
+        DetectionDeviceType, PoolSetupError, PoolSetupResult, PoolTopology, SpeedClass,
+        StorageDevice, ZfsPoolSetup,
+    };
+
+    fn sample_nvme(path: &str) -> StorageDevice {
+        StorageDevice {
+            device_path: path.to_string(),
+            model: "test-model".to_string(),
+            size_bytes: 2 * 1024 * 1024 * 1024,
+            device_type: DetectionDeviceType::NvmeSsd,
+            speed_class: SpeedClass::UltraFast,
+            in_use: false,
+            current_use: None,
+        }
+    }
+
+    #[test]
+    fn recommend_pool_config_rejects_empty_name() {
+        let setup = ZfsPoolSetup::test_fixture(vec![sample_nvme("/dev/nvme0n1")], vec![]);
+        assert!(setup.recommend_pool_config("").is_err());
+    }
+
+    #[test]
+    fn recommend_pool_config_with_one_device() {
+        let setup = ZfsPoolSetup::test_fixture(vec![sample_nvme("/dev/nvme0n1")], vec![]);
+        let cfg = setup
+            .recommend_pool_config("tank")
+            .expect("recommended config");
+        assert_eq!(cfg.pool_name, "tank");
+        assert_eq!(cfg.topology, PoolTopology::Single);
+        assert_eq!(cfg.devices.len(), 1);
+    }
+
+    #[test]
+    fn get_system_report_without_devices() {
+        let setup = ZfsPoolSetup::test_fixture(vec![], vec![]);
+        let report = setup.get_system_report();
+        assert_eq!(report.total_devices, 0);
+        assert!(
+            report
+                .recommendations
+                .iter()
+                .any(|r| r.contains("No available devices"))
+        );
+    }
+
+    #[test]
+    fn pool_setup_error_display_contains_message() {
+        let e = PoolSetupError::Configuration("bad".to_string());
+        assert!(e.to_string().contains("Configuration"));
+    }
+
+    #[test]
+    fn pool_setup_result_json_roundtrip() {
+        let r = PoolSetupResult {
+            pool_name: "p".to_string(),
+            success: true,
+            message: "done".to_string(),
+            devices_used: vec!["/dev/sda".to_string()],
+            topology: PoolTopology::Mirror,
+        };
+        let json = serde_json::to_string(&r).expect("serialize");
+        let back: PoolSetupResult = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.pool_name, "p");
+        assert_eq!(back.topology, PoolTopology::Mirror);
+    }
 }

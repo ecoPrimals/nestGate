@@ -290,7 +290,8 @@ impl PrimalDiscovery {
     }
 
     /// Get all discovered primals (lock-free iteration)
-    pub async fn list_discovered(&self) -> Vec<PrimalInfo> {
+    #[must_use]
+    pub fn list_discovered(&self) -> Vec<PrimalInfo> {
         self.discovered
             .iter()
             .map(|entry| entry.value().clone())
@@ -298,7 +299,7 @@ impl PrimalDiscovery {
     }
 
     /// Clear stale discoveries (lock-free)
-    pub async fn prune_stale(&self, threshold: Duration) {
+    pub fn prune_stale(&self, threshold: Duration) {
         self.discovered.retain(|_, info| !info.is_stale(threshold));
     }
 }
@@ -439,7 +440,7 @@ impl DiscoveryBackend for ProductionBackend {
                     return Ok(Self::convert_service_info(service.clone()));
                 }
 
-                Err(NestGateError::network_error(&format!(
+                Err(NestGateError::network_error(format!(
                     "No primal found providing capability: {capability}"
                 )))
             } else {
@@ -461,7 +462,7 @@ impl DiscoveryBackend for ProductionBackend {
                     });
                 }
 
-                Err(NestGateError::network_error(&format!(
+                Err(NestGateError::network_error(format!(
                     "No discovery mechanism available and no environment fallback for capability: {capability}"
                 )))
             }
@@ -556,7 +557,7 @@ mod tests {
             .insert("test".into(), test_info.clone());
 
         // Should retrieve from cache
-        let list = discovery.list_discovered().await;
+        let list = discovery.list_discovered();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].name, "test-primal");
     }

@@ -143,7 +143,7 @@ impl CapabilityConfig {
         // Check cache first (lock-free)
         if let Some(service) = self.discovered_services.get(&capability) {
             // Validate cached service is still alive (respects primal sovereignty)
-            if self.is_service_healthy(&service).await {
+            if self.is_service_healthy(&service) {
                 return Ok(service.clone());
             }
             // Service is stale - evict from cache and rediscover
@@ -151,7 +151,7 @@ impl CapabilityConfig {
 
         // Perform discovery with retries
         for attempt in 0..self.retry_attempts {
-            match self.try_discover(capability.clone()).await {
+            match self.try_discover(capability.clone()) {
                 Ok(service) => {
                     // Cache the discovered service (lock-free)
                     self.discovered_services.insert(capability, service.clone());
@@ -159,7 +159,7 @@ impl CapabilityConfig {
                 }
                 Err(e) if attempt == self.retry_attempts - 1 => {
                     // Last attempt failed
-                    return self.handle_discovery_failure(capability, e).await;
+                    return self.handle_discovery_failure(capability, e);
                 }
                 Err(_) => {
                     // Retry after delay
@@ -171,12 +171,12 @@ impl CapabilityConfig {
 
         Err(NestGateError::configuration_error(
             "capability_discovery",
-            &format!("Failed to discover service for capability: {capability:?}"),
+            format!("Failed to discover service for capability: {capability:?}"),
         ))
     }
 
     /// Try to discover a service once
-    async fn try_discover(&self, capability: PrimalCapability) -> Result<DiscoveredService> {
+    fn try_discover(&self, capability: PrimalCapability) -> Result<DiscoveredService> {
         // Implementation: Use mDNS, consul, etcd, or custom discovery
         // For now, check environment variables as interim solution
         let env_key = format!("NESTGATE_CAPABILITY_{capability:?}_ENDPOINT")
@@ -189,12 +189,12 @@ impl CapabilityConfig {
                 capability_name(&capability),
                 env_key
             );
-            NestGateError::configuration_error(&env_key, &msg)
+            NestGateError::configuration_error(env_key.clone(), msg)
         })?;
 
         let endpoint: SocketAddr = endpoint_str.parse().map_err(|e| {
             let msg = format!("Invalid endpoint '{endpoint_str}': {e}");
-            NestGateError::configuration_error(&env_key, &msg)
+            NestGateError::configuration_error(env_key.clone(), msg)
         })?;
 
         Ok(DiscoveredService {
@@ -209,7 +209,7 @@ impl CapabilityConfig {
     ///
     /// Performs lightweight health validation without blocking operations.
     /// Respects primal sovereignty - services declare their own health.
-    async fn is_service_healthy(&self, service: &DiscoveredService) -> bool {
+    fn is_service_healthy(&self, service: &DiscoveredService) -> bool {
         // Simple time-based staleness check
         // For v0.1.0: Consider cached services valid for 60 seconds
         // Future: Implement actual health endpoint checking
@@ -230,7 +230,7 @@ impl CapabilityConfig {
     }
 
     /// Handle discovery failure based on fallback mode
-    async fn handle_discovery_failure(
+    fn handle_discovery_failure(
         &self,
         capability: PrimalCapability,
         error: NestGateError,
@@ -262,7 +262,7 @@ impl CapabilityConfig {
                 let endpoint = endpoint_str.parse().map_err(|e| {
                     NestGateError::configuration_error(
                         "fallback_endpoint",
-                        &format!("Invalid fallback endpoint {endpoint_str}: {e}"),
+                        format!("Invalid fallback endpoint {endpoint_str}: {e}"),
                     )
                 })?;
 

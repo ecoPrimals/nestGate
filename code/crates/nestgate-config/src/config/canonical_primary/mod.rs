@@ -200,7 +200,7 @@ impl<
             config.environment = match env_str.as_str() {
                 "production" => Environment::Production,
                 "staging" => Environment::Staging,
-                "development" | _ => Environment::Development,
+                _ => Environment::Development,
             };
         }
 
@@ -288,8 +288,8 @@ impl<
                 nestgate_types::error::NestGateError::configuration_error_detailed(
                     "network.port".to_string(),
                     "Port 8080 not allowed in production".to_string(),
-                    Some("8080".to_string()),
-                    Some("443 or custom secure port".to_string()),
+                    Some("8080".into()),
+                    Some("443 or custom secure port".into()),
                     true,
                 ),
             );

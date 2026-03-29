@@ -75,7 +75,7 @@ pub async fn scan_file(
     let mut all_fixes = Vec::new();
 
     // Scan for unwrap patterns
-    all_fixes.extend(scan_unwrap_patterns(&content, file_path, include_tests)?);
+    all_fixes.extend(scan_unwrap_patterns(&content, file_path, include_tests));
 
     // Scan for expect patterns
     all_fixes.extend(scan_expect_patterns(&content, file_path, include_tests)?);
@@ -86,11 +86,7 @@ pub async fn scan_file(
     Ok(all_fixes)
 }
 
-fn scan_unwrap_patterns(
-    content: &str,
-    file_path: &Path,
-    include_tests: bool,
-) -> Result<Vec<UnwrapFix>, MigrationError> {
+fn scan_unwrap_patterns(content: &str, file_path: &Path, include_tests: bool) -> Vec<UnwrapFix> {
     let mut fixes = Vec::new();
 
     for (line_num, line) in content.lines().enumerate() {
@@ -110,7 +106,7 @@ fn scan_unwrap_patterns(
         }
     }
 
-    Ok(fixes)
+    fixes
 }
 
 fn scan_expect_patterns(

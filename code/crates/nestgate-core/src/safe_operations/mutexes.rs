@@ -3,7 +3,7 @@
 
 /// **UNIFIED**: Use the main Result type from parent module
 pub use super::Result;
-/// Safe mutex operations  
+/// Safe mutex operations
 /// Provides safe alternatives to `lock().unwrap()` patterns
 use crate::error::NestGateError;
 use std::sync::{Mutex, MutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};

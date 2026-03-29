@@ -63,7 +63,7 @@ pub(super) async fn beacon_list(_params: Option<&Value>, _state: &StorageState) 
 
     if dataset_path.exists() {
         let mut entries = tokio::fs::read_dir(&dataset_path).await.map_err(|e| {
-            NestGateError::storage_error(&format!("Failed to read beacon dataset: {e}"))
+            NestGateError::storage_error(format!("Failed to read beacon dataset: {e}"))
         })?;
 
         while let Ok(Some(entry)) = entries.next_entry().await {

@@ -8,6 +8,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::net::{IpAddr, SocketAddr};
 use std::path::Path;
 use std::time::Duration;
@@ -81,7 +82,7 @@ impl ValidationResult {
     /// # Errors
     ///
     /// Returns [`NestGateError`] when [`Self::is_valid`] is false, aggregating validation messages.
-    pub async fn into_result(self) -> nestgate_types::error::Result<()> {
+    pub fn into_result(self) -> nestgate_types::error::Result<()> {
         if self.is_valid {
             Ok(())
         } else {
@@ -91,7 +92,7 @@ impl ValidationResult {
                 .map(|e| format!("{}: {}", e.field, e.message))
                 .collect();
 
-            Err(NestGateError::validation_error(&format!(
+            Err(NestGateError::validation_error(format!(
                 "Configuration validation failed: {}",
                 error_messages.join(", ")
             )))
@@ -581,10 +582,8 @@ impl ConfigValidator {
     /// # Errors
     ///
     /// Returns [`NestGateError`] when [`ValidationResult::into_result`] reports validation errors.
-    pub async fn validate_strict<T: ConfigValidation + Sync>(
-        config: &T,
-    ) -> nestgate_types::error::Result<()> {
-        config.validate().into_result().await
+    pub fn validate_strict<T: ConfigValidation>(config: &T) -> nestgate_types::error::Result<()> {
+        config.validate().into_result()
     }
 
     /// Generate validation report as formatted string
@@ -593,24 +592,25 @@ impl ConfigValidator {
         let mut report = String::new();
 
         report.push_str("Configuration Validation Report\n");
-        report.push_str(&format!(
-            "Status: {}\n\n",
+        let _ = writeln!(
+            report,
+            "Status: {}\n",
             if result.is_valid {
                 "✅ VALID"
             } else {
                 "❌ INVALID"
             }
-        ));
+        );
 
         if !result.errors.is_empty() {
             report.push_str("Errors:\n");
             for error in &result.errors {
-                report.push_str(&format!("  ❌ {}: {}\n", error.field, error.message));
+                let _ = writeln!(report, "  ❌ {}: {}", error.field, error.message);
                 if let Some(current) = &error.current_value {
-                    report.push_str(&format!("     Current: {current}\n"));
+                    let _ = writeln!(report, "     Current: {current}");
                 }
                 if let Some(expected) = &error.expected_format {
-                    report.push_str(&format!("     Expected: {expected}\n"));
+                    let _ = writeln!(report, "     Expected: {expected}");
                 }
             }
             report.push('\n');
@@ -624,10 +624,7 @@ impl ConfigValidator {
                     WarningSeverity::Medium => "🔸",
                     WarningSeverity::Low => "🔹",
                 };
-                report.push_str(&format!(
-                    "  {} {}: {}\n",
-                    icon, warning.field, warning.message
-                ));
+                let _ = writeln!(report, "  {icon} {}: {}", warning.field, warning.message);
             }
             report.push('\n');
         }
@@ -635,12 +632,9 @@ impl ConfigValidator {
         if !result.suggestions.is_empty() {
             report.push_str("Suggestions:\n");
             for suggestion in &result.suggestions {
-                report.push_str(&format!(
-                    "  💡 {}: {}\n",
-                    suggestion.field, suggestion.message
-                ));
+                let _ = writeln!(report, "  💡 {}: {}", suggestion.field, suggestion.message);
                 if let Some(suggested) = &suggestion.suggested_value {
-                    report.push_str(&format!("     Suggested: {suggested}\n"));
+                    let _ = writeln!(report, "     Suggested: {suggested}");
                 }
             }
         }
@@ -751,13 +745,13 @@ mod tests {
     #[tokio::test]
     async fn test_validation_result_conversion() {
         let result = ValidationResult::success();
-        assert!(result.into_result().await.is_ok());
+        assert!(result.into_result().is_ok());
 
         let result = ValidationResult::with_errors(vec![
             ValidationErrorBuilder::new("test", "test error", ValidationErrorType::Required)
                 .build(),
         ]);
-        assert!(result.into_result().await.is_err());
+        assert!(result.into_result().is_err());
     }
 
     #[test]
@@ -891,20 +885,18 @@ mod tests {
         assert_eq!(a.errors.len(), b.errors.len());
     }
 
-    #[tokio::test]
-    async fn test_config_validator_validate_strict_ok() {
+    #[test]
+    fn test_config_validator_validate_strict_ok() {
         let config = NetworkConfig::development_optimized();
         ConfigValidator::validate_strict(&config)
-            .await
             .expect("test: valid config should pass strict validation");
     }
 
-    #[tokio::test]
-    async fn test_config_validator_validate_strict_err() {
+    #[test]
+    fn test_config_validator_validate_strict_err() {
         let mut config = NetworkConfig::development_optimized();
         config.api.port = 0;
         let err = ConfigValidator::validate_strict(&config)
-            .await
             .expect_err("test: invalid port should fail strict validation");
         assert!(!err.to_string().is_empty());
     }

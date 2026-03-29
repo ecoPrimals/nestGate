@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Network resilience advanced scenarios - Week 3 Days 3-4
 //!
 //! Focus: Network failures, resilience patterns, recovery strategies

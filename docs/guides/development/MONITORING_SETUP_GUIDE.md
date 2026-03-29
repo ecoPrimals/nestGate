@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 20, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 📊 MONITORING & OBSERVABILITY SETUP GUIDE
 
 **Version**: 2.0.0  

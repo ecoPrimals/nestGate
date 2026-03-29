@@ -119,7 +119,7 @@ pub struct CapabilityProvider {
     pub endpoint: String,
 
     /// Capabilities this provider offers
-    /// Example: ["networking", "load-balancing", "circuit-breaking"]
+    /// Example: `networking`, `load-balancing`, `circuit-breaking`
     pub capabilities: Vec<CapabilityType>,
 
     /// Optional metadata (version, features, etc.)

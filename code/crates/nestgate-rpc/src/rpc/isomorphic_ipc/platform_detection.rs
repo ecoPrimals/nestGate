@@ -55,6 +55,7 @@ use tracing::debug;
 ///
 /// * `true` - Error is a platform constraint (should adapt)
 /// * `false` - Error is a real failure (should report)
+#[allow(clippy::option_if_let_else)] // Readable IO-kind ladder; `map_or_else` obscures match flow.
 pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
     if let Some(io_err) = error.downcast_ref::<std::io::Error>() {
         match io_err.kind() {
@@ -138,6 +139,7 @@ fn is_selinux_enforcing() -> bool {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use std::io::Error as IoError;
 

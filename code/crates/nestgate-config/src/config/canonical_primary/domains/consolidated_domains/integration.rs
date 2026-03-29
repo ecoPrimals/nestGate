@@ -73,6 +73,7 @@ pub struct ExternalHealthCheckConfig {}
 
 /// Container for all protocol-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[allow(clippy::zero_sized_map_values)]
 pub struct ProtocolConfigs {
     /// HTTP/HTTPS configuration
     pub http: HttpProtocolConfig,

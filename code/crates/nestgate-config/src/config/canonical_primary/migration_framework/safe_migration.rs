@@ -69,7 +69,7 @@ impl SafeConfigMigration {
                 "backup".to_string(),
                 "No backup available for rollback".to_string(),
                 None,
-                Some("Valid backup".to_string()),
+                Some("Valid backup".into()),
                 false,
             ))
         }

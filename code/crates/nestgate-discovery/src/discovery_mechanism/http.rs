@@ -18,6 +18,7 @@
 use nestgate_types::error::NestGateError;
 use nestgate_types::error::Result;
 use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -80,9 +81,8 @@ impl HttpResponse {
     ///
     /// Returns an error if the body is not valid JSON for type `T`.
     pub fn json<T: serde::de::DeserializeOwned>(&self) -> Result<T> {
-        serde_json::from_slice(&self.body).map_err(|e| {
-            NestGateError::api_error(&format!("Discovery HTTP: JSON parse error: {e}"))
-        })
+        serde_json::from_slice(&self.body)
+            .map_err(|e| NestGateError::api_error(format!("Discovery HTTP: JSON parse error: {e}")))
     }
 }
 
@@ -131,7 +131,7 @@ impl DiscoveryHttpClient {
         body: &T,
     ) -> Result<HttpResponse> {
         let json = serde_json::to_vec(body).map_err(|e| {
-            NestGateError::api_error(&format!("Discovery HTTP: JSON serialize error: {e}"))
+            NestGateError::api_error(format!("Discovery HTTP: JSON serialize error: {e}"))
         })?;
         self.request("PUT", url, Some(&json)).await
     }
@@ -147,7 +147,7 @@ impl DiscoveryHttpClient {
         body: &T,
     ) -> Result<HttpResponse> {
         let json = serde_json::to_vec(body).map_err(|e| {
-            NestGateError::api_error(&format!("Discovery HTTP: JSON serialize error: {e}"))
+            NestGateError::api_error(format!("Discovery HTTP: JSON serialize error: {e}"))
         })?;
         self.request("POST", url, Some(&json)).await
     }
@@ -171,10 +171,10 @@ impl DiscoveryHttpClient {
         let stream = tokio::time::timeout(self.timeout, TcpStream::connect(&addr))
             .await
             .map_err(|_| {
-                NestGateError::api_error(&format!("Discovery HTTP: connection timeout to {addr}"))
+                NestGateError::api_error(format!("Discovery HTTP: connection timeout to {addr}"))
             })?
             .map_err(|e| {
-                NestGateError::api_error(&format!(
+                NestGateError::api_error(format!(
                     "Discovery HTTP: connection failed to {addr}: {e}"
                 ))
             })?;
@@ -196,34 +196,34 @@ impl DiscoveryHttpClient {
         );
 
         for (key, value) in &self.headers {
-            request.push_str(&format!("{key}: {value}\r\n"));
+            let _ = write!(request, "{key}: {value}\r\n");
         }
 
         if let Some(b) = body {
             request.push_str("Content-Type: application/json\r\n");
-            request.push_str(&format!("Content-Length: {}\r\n", b.len()));
+            let _ = write!(request, "Content-Length: {}\r\n", b.len());
         }
 
         request.push_str("\r\n");
 
         tokio::time::timeout(self.timeout, async {
             stream.write_all(request.as_bytes()).await.map_err(|e| {
-                NestGateError::api_error(&format!("Discovery HTTP: write failed: {e}"))
+                NestGateError::api_error(format!("Discovery HTTP: write failed: {e}"))
             })?;
 
             if let Some(b) = body {
                 stream.write_all(b).await.map_err(|e| {
-                    NestGateError::api_error(&format!("Discovery HTTP: body write failed: {e}"))
+                    NestGateError::api_error(format!("Discovery HTTP: body write failed: {e}"))
                 })?;
             }
 
             stream.flush().await.map_err(|e| {
-                NestGateError::api_error(&format!("Discovery HTTP: flush failed: {e}"))
+                NestGateError::api_error(format!("Discovery HTTP: flush failed: {e}"))
             })?;
 
             let mut buf = Vec::with_capacity(8192);
             stream.read_to_end(&mut buf).await.map_err(|e| {
-                NestGateError::api_error(&format!("Discovery HTTP: read failed: {e}"))
+                NestGateError::api_error(format!("Discovery HTTP: read failed: {e}"))
             })?;
 
             parse_http_response(&buf)
@@ -242,7 +242,7 @@ fn parse_http_response(raw: &[u8]) -> Result<HttpResponse> {
         })?;
 
     let header_str = std::str::from_utf8(&raw[..header_end]).map_err(|e| {
-        NestGateError::api_error(&format!("Discovery HTTP: invalid header encoding: {e}"))
+        NestGateError::api_error(format!("Discovery HTTP: invalid header encoding: {e}"))
     })?;
 
     let status_line = header_str
@@ -255,7 +255,7 @@ fn parse_http_response(raw: &[u8]) -> Result<HttpResponse> {
         .nth(1)
         .and_then(|s| s.parse::<u16>().ok())
         .ok_or_else(|| {
-            NestGateError::api_error(&format!(
+            NestGateError::api_error(format!(
                 "Discovery HTTP: invalid status line: {status_line}"
             ))
         })?;

@@ -9,7 +9,6 @@
 #![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
 #![allow(clippy::excessive_nesting)] // Complex migration logic requires nesting
 #![allow(clippy::if_same_then_else)] // Intentional pattern matching
-#![allow(clippy::only_used_in_recursion)] // Recursive file discovery pattern
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -58,6 +57,14 @@ pub struct BatchMigrationResults {
     /// Performance metrics
     pub execution_time_ms: u64,
 }
+
+/// Batch size for `migrate_crate` (module-level so `migrate_crate` has no `const` after statements).
+const MIGRATE_CRATE_BATCH_SIZE: usize = 10;
+
+const UNWRAP_OR_ELSE_PANIC_BLOCK: &str = r#".unwrap_or_else(|e| {
+    tracing::error!("Unwrap failed: {:?}", e);
+    panic!("Critical error - unable to continue: {:?}", e)
+})"#;
 
 impl EnhancedUnwrapMigrator {
     /// Create a new enhanced migrator
@@ -151,7 +158,7 @@ impl EnhancedUnwrapMigrator {
         );
 
         // Discover all Rust files in the crate
-        let rust_files = self.discover_rust_files(crate_path).await?;
+        let rust_files = self.discover_rust_files(crate_path)?;
         let total_files = rust_files.len();
 
         info!("📁 Found {} Rust files to process", total_files);
@@ -165,13 +172,11 @@ impl EnhancedUnwrapMigrator {
         };
 
         // Process files in batches to avoid overwhelming the system
-        const BATCH_SIZE: usize = 10;
-
-        for (batch_idx, file_batch) in rust_files.chunks(BATCH_SIZE).enumerate() {
+        for (batch_idx, file_batch) in rust_files.chunks(MIGRATE_CRATE_BATCH_SIZE).enumerate() {
             info!(
                 "🔄 Processing batch {} of {}",
                 batch_idx + 1,
-                total_files.div_ceil(BATCH_SIZE)
+                total_files.div_ceil(MIGRATE_CRATE_BATCH_SIZE)
             );
 
             for file_path in file_batch {
@@ -203,7 +208,8 @@ impl EnhancedUnwrapMigrator {
             tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         }
 
-        results.execution_time_ms = start_time.elapsed().as_millis() as u64;
+        results.execution_time_ms =
+            u64::try_from(start_time.elapsed().as_millis()).unwrap_or(u64::MAX);
 
         info!("✅ Batch migration completed:");
         info!("   📊 Files processed: {}", results.files_processed);
@@ -384,19 +390,8 @@ impl EnhancedUnwrapMigrator {
         let line_content = lines[fix.line - 1]; // Convert to 0-based index
 
         // Replace unwrap() or expect() patterns
-        let new_line = if line_content.contains(
-            ".unwrap_or_else(|e| {
-    tracing::error!(\"Unwrap failed: {:?}\", e);
-    panic!(\"Critical error - unable to continue: {:?}\", e)
-})",
-        ) {
-            line_content.replace(
-                ".unwrap_or_else(|e| {
-    tracing::error!(\"Unwrap failed: {:?}\", e);
-    panic!(\"Critical error - unable to continue: {:?}\", e)
-})",
-                replacement,
-            )
+        let new_line = if line_content.contains(UNWRAP_OR_ELSE_PANIC_BLOCK) {
+            line_content.replace(UNWRAP_OR_ELSE_PANIC_BLOCK, replacement)
         } else if line_content.contains(".expect(") {
             // More complex replacement for expect calls
             self.replace_expect_call(line_content, replacement)
@@ -446,46 +441,10 @@ impl EnhancedUnwrapMigrator {
     }
 
     /// Discover all Rust files in a directory recursively
-    async fn discover_rust_files(&self, path: &Path) -> Result<Vec<PathBuf>, MigrationError> {
+    fn discover_rust_files(&self, path: &Path) -> Result<Vec<PathBuf>, MigrationError> {
         let mut rust_files = Vec::new();
-        self.discover_rust_files_sync(path, &mut rust_files)?;
+        discover_rust_files_sync(path, &mut rust_files)?;
         Ok(rust_files)
-    }
-
-    /// Synchronous recursive helper for file discovery
-    fn discover_rust_files_sync(
-        &self,
-        path: &Path,
-        files: &mut Vec<PathBuf>,
-    ) -> Result<(), MigrationError> {
-        let entries = std::fs::read_dir(path).map_err(|e| {
-            MigrationError::IoError(format!("Failed to read directory {}: {e}", path.display()))
-        })?;
-
-        for entry in entries {
-            let entry = entry.map_err(|e| {
-                MigrationError::IoError(format!("Failed to read directory entry: {e}"))
-            })?;
-            let path = entry.path();
-
-            if path.is_dir() {
-                // Skip common directories that don't contain source code
-                let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-
-                if !["target", "build", ".git", "node_modules"].contains(&dir_name) {
-                    self.discover_rust_files_sync(&path, files)?;
-                }
-            } else if path.extension().and_then(|s| s.to_str()) == Some("rs") {
-                // Skip test files for production migration
-                let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-
-                if !file_name.contains("test") && !file_name.starts_with("bench") {
-                    files.push(path);
-                }
-            }
-        }
-
-        Ok(())
     }
 
     /// Generate a detailed migration report
@@ -503,7 +462,7 @@ impl EnhancedUnwrapMigrator {
         };
 
         let mut entries = Vec::new();
-        self.collect_rust_files(root_path, &mut entries).await?;
+        collect_rust_files(root_path, &mut entries).await?;
 
         for file_path in entries {
             if let Ok(fixes) = crate::scanner::scan_file(&file_path, self.include_tests).await {
@@ -592,19 +551,10 @@ impl EnhancedUnwrapMigrator {
 
     /// Apply a single fix to a line of code
     fn apply_fix_to_line(&self, line: &str, fix: &UnwrapFix) -> String {
-        // Check if this is in a test context by looking for test attributes or function patterns
-        let is_test_context = self.is_test_context(line, fix);
-
         match &fix.fix_type {
             FixType::ReplaceUnwrap => {
                 if line.contains(".unwrap()") {
-                    if is_test_context {
-                        // For tests, suggest changing function signature to return Result
-                        line.replace(".unwrap()", "?")
-                    } else {
-                        // For production, use ? operator
-                        line.replace(".unwrap()", "?")
-                    }
+                    line.replace(".unwrap()", "?")
                 } else {
                     line.to_string()
                 }
@@ -612,20 +562,18 @@ impl EnhancedUnwrapMigrator {
             FixType::ReplaceExpected {
                 original_message: _,
             } => {
-                let expect_regex = match regex::Regex::new(r#"\.expect\("[^"]*"\)"#) {
-                    Ok(regex) => regex,
-                    Err(_) => return line.to_string(), // Return original line if regex fails
+                let Ok(expect_regex) = regex::Regex::new(r#"\.expect\("[^"]*"\)"#) else {
+                    return line.to_string();
                 };
-                if is_test_context {
-                    expect_regex.replace(line, "?").to_string()
-                } else {
-                    expect_regex.replace(line, "?").to_string()
-                }
+                expect_regex.replace(line, "?").to_string()
             }
             FixType::ReplacePanic {
                 original_message: _,
             } => {
-                let panic_regex = regex::Regex::new(r#"panic!\("[^"]*"\)"#).unwrap();
+                let is_test_context = self.is_test_context(line, fix);
+                let Ok(panic_regex) = regex::Regex::new(r#"panic!\("[^"]*"\)"#) else {
+                    return line.to_string();
+                };
                 if is_test_context {
                     panic_regex.replace(line, "return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, \"Test assertion failed\")))").to_string()
                 } else {
@@ -649,40 +597,67 @@ impl EnhancedUnwrapMigrator {
             || line.contains("fn test_")
             || line.contains("mod tests")
     }
+}
 
-    /// Recursively collect all Rust files from a directory
-    async fn collect_rust_files(
-        &self,
-        root_path: &Path,
-        entries: &mut Vec<PathBuf>,
-    ) -> Result<(), MigrationError> {
-        let mut dir_entries = tokio::fs::read_dir(root_path).await.map_err(|e| {
-            MigrationError::IoError(format!(
-                "Failed to read directory {}: {e}",
-                root_path.display()
-            ))
-        })?;
+/// Synchronous recursive helper for file discovery (used by batch migration).
+fn discover_rust_files_sync(path: &Path, files: &mut Vec<PathBuf>) -> Result<(), MigrationError> {
+    let entries = std::fs::read_dir(path).map_err(|e| {
+        MigrationError::IoError(format!("Failed to read directory {}: {e}", path.display()))
+    })?;
 
-        while let Ok(Some(entry)) = dir_entries.next_entry().await {
-            let path = entry.path();
+    for entry in entries {
+        let entry = entry
+            .map_err(|e| MigrationError::IoError(format!("Failed to read directory entry: {e}")))?;
+        let path = entry.path();
 
-            if path.is_dir() {
-                // Skip certain directories
-                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
-                    && (dir_name == "target" || dir_name == ".git" || dir_name == "node_modules")
-                {
-                    continue;
-                }
+        if path.is_dir() {
+            let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
-                // Recursively process subdirectories
-                Box::pin(self.collect_rust_files(&path, entries)).await?;
-            } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
-                entries.push(path);
+            if !["target", "build", ".git", "node_modules"].contains(&dir_name) {
+                discover_rust_files_sync(&path, files)?;
+            }
+        } else if path.extension().and_then(|s| s.to_str()) == Some("rs") {
+            let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+            if !file_name.contains("test") && !file_name.starts_with("bench") {
+                files.push(path);
             }
         }
-
-        Ok(())
     }
+
+    Ok(())
+}
+
+/// Recursively collect all Rust files from a directory
+async fn collect_rust_files(
+    root_path: &Path,
+    entries: &mut Vec<PathBuf>,
+) -> Result<(), MigrationError> {
+    let mut dir_entries = tokio::fs::read_dir(root_path).await.map_err(|e| {
+        MigrationError::IoError(format!(
+            "Failed to read directory {}: {e}",
+            root_path.display()
+        ))
+    })?;
+
+    while let Ok(Some(entry)) = dir_entries.next_entry().await {
+        let path = entry.path();
+
+        if path.is_dir() {
+            // Skip certain directories
+            if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
+                && (dir_name == "target" || dir_name == ".git" || dir_name == "node_modules")
+            {
+                continue;
+            }
+
+            Box::pin(collect_rust_files(&path, entries)).await?;
+        } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+            entries.push(path);
+        }
+    }
+
+    Ok(())
 }
 
 /// Results for a single file migration
@@ -707,11 +682,6 @@ mod tests {
     async fn test_context_categorization() {
         let migrator = EnhancedUnwrapMigrator::new(true);
 
-        // Test environment variable categorization
-        let _env_context = "let port = std::env::var(\"PORT\").map_err(|e| {
-    tracing::error!(\"Environment variable access failed: {:?}\", e);
-    std::io::Error::new(std::io::ErrorKind::NotFound, format!(\"Environment variable error: {}\", e))
-})?;";
         assert!(
             migrator
                 .category_mappings
@@ -719,11 +689,6 @@ mod tests {
                 .is_some_and(|cat| cat.contains("Configuration"))
         );
 
-        // Test JSON parsing categorization
-        let _json_context = "let data = serde_json::from_str(&input).map_err(|e| {
-    tracing::error!(\"JSON parsing failed: {}\", e);
-    std::io::Error::new(std::io::ErrorKind::InvalidData, format!(\"JSON parsing error: {}\", e))
-})?;";
         assert!(
             migrator
                 .category_mappings
@@ -745,7 +710,7 @@ mod tests {
         tokio::fs::write(temp_path.join("readme.txt"), "Not rust").await?;
 
         let migrator = EnhancedUnwrapMigrator::new(true);
-        let rust_files = migrator.discover_rust_files(temp_path).await?;
+        let rust_files = migrator.discover_rust_files(temp_path)?;
 
         assert_eq!(rust_files.len(), 2);
         assert!(

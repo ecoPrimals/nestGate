@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-/// 💾 **CACHE MATH MODULE** 💾
-/// Pure arithmetic functions for cache calculations.
-/// Extracted from complex cache logic to enable precise testing
-/// and catch arithmetic mutations (+= vs -=, + vs -, > vs >=).
-/// **MUTATION TESTING TARGET**: This module specifically addresses:
-/// - `stats.current_size += size` mutations in `CacheManager`
-/// - `current_size + size > max_size` comparison mutations
-/// - `hits as f64 / total_requests as f64` division mutations
-/// - Pool size and eviction threshold calculations
+/// Pure arithmetic for cache sizing, eviction, and hit ratios.
+///
+/// Extracted for unit tests and mutation testing (e.g. `+=` vs `-=`, comparison operators).
+/// Targets include `CacheManager` size updates, eviction thresholds, and hit-ratio division.
 ///
 /// Calculate if cache needs eviction based on current and new sizes
 ///
@@ -54,6 +49,10 @@ pub const fn calculate_eviction_size(current_size: u64, new_item_size: u64, max_
 /// **PURE FUNCTION**: Safe division with zero handling and extreme value logic
 /// **TESTABLE**: Can verify exact floating point precision
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Hit ratio metric from u64 hit/miss counters"
+)]
 pub fn calculate_hit_ratio(hits: u64, misses: u64) -> f64 {
     // Handle extreme cases where both values are near max 🛡️
     if hits == u64::MAX && misses == u64::MAX {
@@ -97,6 +96,10 @@ pub const fn is_at_max_size(current_size: u64, max_size: u64) -> bool {
 /// **PURE FUNCTION**: Percentage-based threshold calculation
 /// **TESTABLE**: Can verify threshold arithmetic with precision
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Compares current size to a fractional threshold of max_size"
+)]
 pub fn calculate_pool_expansion_threshold(
     current_size: usize,
     max_size: usize,
@@ -113,6 +116,12 @@ pub fn calculate_pool_expansion_threshold(
 /// **PURE FUNCTION**: Strategy-based eviction calculation
 /// **TESTABLE**: Can verify eviction count with different strategies
 #[must_use]
+#[expect(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "Percentage of item count; result clamped with min(total_items)"
+)]
 pub fn calculate_optimal_eviction_count(total_items: usize, target_free_percent: f64) -> usize {
     if total_items == 0 {
         return 0;
@@ -123,6 +132,8 @@ pub fn calculate_optimal_eviction_count(total_items: usize, target_free_percent:
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
+
     use super::*;
 
     /// 🎯 **CACHE ARITHMETIC MUTATION DETECTION TESTS**

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 // Example demonstrating native async patterns for zero-cost abstractions
 // Native Async Patterns Examples
 // Demonstrates the performance benefits of native async over async_trait

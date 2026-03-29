@@ -364,7 +364,7 @@ mod tests {
         assert_eq!(config.storage_port(), 3000); // Uses DEV_PORT (3000)
         assert_eq!(config.connect_timeout_ms(), 5000);
         assert_eq!(config.request_timeout_ms(), 30000);
-        assert_eq!(config.long_operation_timeout_ms(), 300000);
+        assert_eq!(config.long_operation_timeout_ms(), 300_000);
     }
 
     #[test]
@@ -378,7 +378,7 @@ mod tests {
             .with_storage_port(9094)
             .with_connect_timeout_ms(10000)
             .with_request_timeout_ms(60000)
-            .with_long_operation_timeout_ms(600000);
+            .with_long_operation_timeout_ms(600_000);
 
         assert_eq!(config.api_host(), "0.0.0.0");
         assert_eq!(config.api_port(), 9000);
@@ -390,7 +390,7 @@ mod tests {
         assert_eq!(config.storage_port(), 9094);
         assert_eq!(config.connect_timeout_ms(), 10000);
         assert_eq!(config.request_timeout_ms(), 60000);
-        assert_eq!(config.long_operation_timeout_ms(), 600000);
+        assert_eq!(config.long_operation_timeout_ms(), 600_000);
     }
 
     #[test]

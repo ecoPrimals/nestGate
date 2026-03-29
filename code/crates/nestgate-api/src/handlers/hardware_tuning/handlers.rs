@@ -268,14 +268,14 @@ impl RealHardwareTuningHandler {
         let available_resources = self.get_system_resources().await?;
 
         if available_resources.available_cpu < request.cpu_cores {
-            return Err(NestGateError::storage_error(&format!(
+            return Err(NestGateError::storage_error(format!(
                 "Insufficient CPU cores: requested {}, available {}",
                 request.cpu_cores, available_resources.available_cpu
             )));
         }
 
         if available_resources.available_memory_gb < request.memory_gb {
-            return Err(NestGateError::storage_error(&format!(
+            return Err(NestGateError::storage_error(format!(
                 "Insufficient memory: requested {} GB, available {} GB",
                 request.memory_gb, available_resources.available_memory_gb
             )));

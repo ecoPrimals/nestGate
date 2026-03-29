@@ -91,20 +91,18 @@ mod protocol_tests {
         /// Default Port
         fn default_port(&self) -> u16 {
             match self {
-                Protocol::Nfs => 2049,
-                Protocol::Smb => 445,
-                Protocol::Http => 80,
-                Protocol::Ftp => 21,
+                Self::Nfs => 2049,
+                Self::Smb => 445,
+                Self::Http => 80,
+                Self::Ftp => 21,
             }
         }
 
         /// Supports Encryption
         fn supports_encryption(&self) -> bool {
             match self {
-                Protocol::Nfs => true,
-                Protocol::Smb => true,
-                Protocol::Http => false,
-                Protocol::Ftp => false,
+                Self::Nfs | Self::Smb => true,
+                Self::Http | Self::Ftp => false,
             }
         }
 
@@ -114,7 +112,7 @@ mod protocol_tests {
         }
 
         /// Checks if Compatible With
-        fn is_compatible_with(&self, _other: &Protocol) -> bool {
+        fn is_compatible_with(&self, _other: &Self) -> bool {
             true // Most protocols can coexist
         }
     }
@@ -167,8 +165,8 @@ mod protocol_tests {
                 let deserialized: Result<Protocol, _> = serde_json::from_str(&json_str);
                 assert!(deserialized.is_ok());
                 let deserialized_protocol = deserialized.map_err(|e| {
-                    tracing::error!("Deserialization failed: {:?}", e);
-                    format!("Deserialization failed: {:?}", e)
+                    tracing::error!("Deserialization failed: {e:?}");
+                    format!("Deserialization failed: {e:?}")
                 })?;
                 assert_eq!(deserialized_protocol, protocol);
             }
@@ -195,22 +193,22 @@ mod access_mode_tests {
 
         /// Can Read
         fn can_read(&self) -> bool {
-            matches!(self, AccessMode::ReadOnly | AccessMode::ReadWrite)
+            matches!(self, Self::ReadOnly | Self::ReadWrite)
         }
 
         /// Can Write
         fn can_write(&self) -> bool {
-            matches!(self, AccessMode::ReadWrite | AccessMode::WriteOnly)
+            matches!(self, Self::ReadWrite | Self::WriteOnly)
         }
 
         /// Upgrade To Readwrite
         fn upgrade_to_readwrite(self) -> Self {
-            AccessMode::ReadWrite
+            Self::ReadWrite
         }
 
         /// Downgrade To Readonly
         fn downgrade_to_readonly(self) -> Self {
-            AccessMode::ReadOnly
+            Self::ReadOnly
         }
     }
 
@@ -271,8 +269,8 @@ mod access_mode_tests {
                 let deserialized: Result<AccessMode, _> = serde_json::from_str(&json_str);
                 assert!(deserialized.is_ok());
                 let deserialized_mode = deserialized.map_err(|e| {
-                    tracing::error!("Deserialization failed: {:?}", e);
-                    format!("Deserialization failed: {:?}", e)
+                    tracing::error!("Deserialization failed: {e:?}");
+                    format!("Deserialization failed: {e:?}")
                 })?;
                 assert_eq!(deserialized_mode, mode);
             }
@@ -298,7 +296,7 @@ mod share_config_tests {
     impl ShareConfig {
         /// Creates a new instance
         fn new(name: String, path: PathBuf) -> Self {
-            ShareConfig {
+            Self {
                 name,
                 path,
                 protocol: "NFS".to_string(),
@@ -341,7 +339,7 @@ mod share_config_tests {
         assert!(config.is_valid());
 
         // Test invalid configurations
-        config.name = "".to_string();
+        config.name = String::new();
         assert!(!config.is_valid());
 
         config.name = "valid_again".to_string();
@@ -403,7 +401,7 @@ mod permission_tests {
     impl Permission {
         /// Creates a new instance
         fn new(user: String, share: String, access_level: String) -> Self {
-            Permission {
+            Self {
                 user,
                 share,
                 access_level,
@@ -488,7 +486,7 @@ mod permission_tests {
         assert!(valid_permission.is_valid());
 
         let invalid_permission = Permission::new(
-            "".to_string(), // Empty user
+            String::new(), // Empty user
             "valid_share".to_string(),
             "ReadWrite".to_string(),
         );

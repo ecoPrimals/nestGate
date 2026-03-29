@@ -122,16 +122,11 @@ impl RetryStrategy for ExponentialBackoff {
             return false;
         }
 
-        // Determine if error is retryable
-        match error {
-            NestGateError::Network(_) | NestGateError::Timeout(_) | NestGateError::Internal(_) => {
-                true
-            }
-            NestGateError::Validation(_)
-            | NestGateError::Security(_)
-            | NestGateError::Api(_)
-            | _ => false, // Don't retry validation/security/API; conservative for other errors
-        }
+        // Determine if error is retryable (don't retry validation/security/API; conservative otherwise)
+        matches!(
+            error,
+            NestGateError::Network(_) | NestGateError::Timeout(_) | NestGateError::Internal(_)
+        )
     }
 }
 
@@ -212,7 +207,6 @@ impl<S: RetryStrategy> RetryExecutor<S> {
         Fut: std::future::Future<Output = Result<T, NestGateError>>,
     {
         let mut attempt = 0;
-        let mut _last_error = None;
 
         loop {
             debug!(
@@ -252,7 +246,6 @@ impl<S: RetryStrategy> RetryExecutor<S> {
                         error
                     );
 
-                    _last_error = Some(error);
                     sleep(delay).await;
                     attempt += 1;
                 }
@@ -317,7 +310,7 @@ mod tests {
                     if count < 2 {
                         Err(NestGateError::Network(Box::new(
                             crate::error::variants::core_errors::NetworkErrorDetails {
-                                message: "Network error".to_string(),
+                                message: "Network error".into(),
                                 operation: None,
                                 endpoint: None,
                                 network_data: None,
@@ -358,7 +351,7 @@ mod tests {
                 async move {
                     Err(NestGateError::Network(Box::new(
                         crate::error::variants::core_errors::NetworkErrorDetails {
-                            message: "Network error".to_string(),
+                            message: "Network error".into(),
                             operation: None,
                             endpoint: None,
                             network_data: None,
@@ -389,8 +382,8 @@ mod tests {
                 async move {
                     Err(NestGateError::Validation(Box::new(
                         crate::error::variants::core_errors::ValidationErrorDetails {
-                            message: "Invalid input".to_string(),
-                            field: Some("test_field".to_string()),
+                            message: "Invalid input".into(),
+                            field: Some("test_field".into()),
                             expected: None,
                             actual: None,
                             context: None,

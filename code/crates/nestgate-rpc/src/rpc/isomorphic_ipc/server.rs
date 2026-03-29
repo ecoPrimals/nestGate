@@ -332,8 +332,10 @@ impl IsomorphicIpcServer {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use serde_json::Value;
+    use std::future::Future;
     use std::pin::Pin;
 
     /// Mock RPC handler for testing
@@ -386,5 +388,29 @@ mod tests {
         let rt = tokio::runtime::Runtime::new().unwrap();
         let response = rt.block_on(handler.handle_request(request));
         assert!(response.get("jsonrpc").is_some());
+    }
+
+    #[test]
+    fn get_socket_path_ends_with_service_sock() {
+        let handler = Arc::new(MockHandler);
+        let server = IsomorphicIpcServer::new("svc-name-test".to_string(), handler);
+        let p = server.get_socket_path().expect("path");
+        assert!(
+            p.to_string_lossy().ends_with("svc-name-test.sock"),
+            "got {p:?}"
+        );
+    }
+
+    #[test]
+    fn prepare_socket_path_creates_parent_and_removes_stale_socket() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("nested").join("test.sock");
+        let handler = Arc::new(MockHandler);
+        let server = IsomorphicIpcServer::new("x".to_string(), handler);
+        server.prepare_socket_path(&sock).expect("prepare");
+        assert!(sock.parent().expect("parent").is_dir());
+        std::fs::write(&sock, b"x").unwrap();
+        server.prepare_socket_path(&sock).expect("prepare again");
+        assert!(!sock.exists());
     }
 }

@@ -84,7 +84,7 @@ impl FileAnalyzer {
 
         let path = std::path::Path::new(file_path);
         let metadata = tokio::fs::metadata(path).await.map_err(|e| {
-            NestGateError::storage_error(&format!("Failed to get metadata for {file_path}: {e}"))
+            NestGateError::storage_error(format!("Failed to get metadata for {file_path}: {e}"))
         })?;
 
         let size = metadata.len();
@@ -249,7 +249,7 @@ impl FileAnalyzer {
     ) -> Result<FileCharacteristics> {
         // Analyze file for compression and deduplication potential
         let metadata = tokio::fs::metadata(file_path).await.map_err(|e| {
-            NestGateError::storage_error(&format!("Failed to read file metadata: {e}"))
+            NestGateError::storage_error(format!("Failed to read file metadata: {e}"))
         })?;
 
         // Simple heuristics for file characteristics

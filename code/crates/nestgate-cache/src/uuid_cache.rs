@@ -101,6 +101,10 @@ impl UuidCache {
 
     /// Get cache performance statistics (lock-free!)
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Hit ratio from diagnostic counters; acceptable float conversion"
+    )]
     pub fn statistics(&self) -> CacheStatistics {
         let generations = self.generation_counter.load(Ordering::Relaxed);
         let hits = self.hit_counter.load(Ordering::Relaxed);
@@ -234,7 +238,7 @@ impl UuidManager {
     /// Generate optimized workspace ID with format "ws-{uuid}"
     #[must_use]
     pub fn workspace_id(&self) -> String {
-        format!("ws-{}", uuid::Uuid::new_v4().simple())
+        format!("ws-{simple}", simple = uuid::Uuid::new_v4().simple())
     }
 
     /// Generate optimized service ID  
@@ -259,13 +263,13 @@ impl UuidManager {
     #[must_use]
     pub fn benchmark_id(&self) -> String {
         let uuid_str = uuid::Uuid::new_v4().simple().to_string();
-        format!("bench-{}", &uuid_str[..8])
+        format!("bench-{short}", short = &uuid_str[..8])
     }
 
     /// Generate prefixed UUID (optimized)
     #[must_use]
     pub fn generate_prefixed(&self, _key: &str, prefix: &str) -> String {
-        format!("{}-{}", prefix, uuid::Uuid::new_v4().simple())
+        format!("{prefix}-{id}", id = uuid::Uuid::new_v4().simple())
     }
 }
 
@@ -278,6 +282,14 @@ impl Default for UuidManager {
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp,
+        clippy::uninlined_format_args
+    )]
+
     use super::*;
     use std::thread;
 
@@ -328,15 +340,13 @@ mod tests {
             handles.push(handle);
         }
 
-        // Collect results
-        let mut results = vec![];
         for handle in handles {
-            results.push(handle.join().map_err(|e| {
+            handle.join().map_err(|e| {
                 nestgate_types::error::NestGateError::internal_error(
                     format!("Expected Internal operation but failed: {e:?}"),
                     "uuid_cache_test".to_string(),
                 )
-            })?);
+            })?;
         }
 
         // Should have at most 3 different UUIDs (since we used i % 3)

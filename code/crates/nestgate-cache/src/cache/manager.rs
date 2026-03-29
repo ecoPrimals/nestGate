@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(deprecated)] // Implements and tests the deprecated `UnifiedCacheConfig` compatibility layer.
 #![expect(
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
@@ -118,6 +119,10 @@ pub struct CacheStats {
 impl CacheStats {
     /// Calculate the cache hit rate as a percentage (0.0 to 1.0)
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Hit rate metric; u64 counters are within practical precision for f64 ratios"
+    )]
     pub fn hit_rate(&self) -> f64 {
         if self.hits + self.misses == 0 {
             0.0
@@ -197,17 +202,17 @@ impl CacheManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn put(&mut self, key: String, data: Vec<u8>) -> Result<()> {
+    pub fn put(&mut self, key: &str, data: Vec<u8>) -> Result<()> {
         let entry = CacheEntry::new(data);
 
         // Always insert into hot tier
-        self.hot_tier.insert(key.clone(), entry);
+        self.hot_tier.insert(key.to_string(), entry);
         self.stats.size += 1;
 
         // Check if we need to evict
-        self.evict_if_needed().await?;
+        self.evict_if_needed()?;
 
-        debug!("Cached entry for key: {}", key);
+        debug!("Cached entry for key: {key}");
         Ok(())
     }
 
@@ -248,9 +253,9 @@ impl CacheManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn maintenance(&mut self) -> Result<()> {
+    pub fn maintenance(&mut self) -> Result<()> {
         self.expire_entries()?;
-        self.evict_if_needed().await?;
+        self.evict_if_needed()?;
         debug!("Cache maintenance completed");
         Ok(())
     }
@@ -320,7 +325,7 @@ impl CacheManager {
     }
 
     /// Evict entries if cache is over capacity
-    async fn evict_if_needed(&mut self) -> Result<()> {
+    fn evict_if_needed(&mut self) -> Result<()> {
         while self.total_size() > self.config.max_size {
             self.evict_one_entry()?;
         }
@@ -417,6 +422,10 @@ impl CacheManager {
     }
 
     /// Flush all cache data
+    ///
+    /// # Errors
+    ///
+    /// Returns `Ok(())` when tiers are cleared; the `Result` matches the multi-tier API shape.
     pub fn flush(&mut self) -> nestgate_types::Result<()> {
         self.hot_tier.clear();
         self.warm_tier.clear();
@@ -460,6 +469,13 @@ pub type UnifiedCacheConfigCanonical =
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp
+    )]
+
     use super::*;
 
     #[tokio::test]
@@ -468,8 +484,7 @@ mod tests {
 
         // Test put and get
         cache
-            .put("test".to_string(), b"data".to_vec())
-            .await
+            .put("test", b"data".to_vec())
             .expect("Cache operation failed");
         let result = cache.get("test");
         assert_eq!(result, Some(b"data".to_vec()));
@@ -500,16 +515,13 @@ mod tests {
 
         // Fill cache beyond capacity
         cache
-            .put("key1".to_string(), b"data1".to_vec())
-            .await
+            .put("key1", b"data1".to_vec())
             .expect("Cache operation failed");
         cache
-            .put("key2".to_string(), b"data2".to_vec())
-            .await
+            .put("key2", b"data2".to_vec())
             .expect("Cache operation failed");
         cache
-            .put("key3".to_string(), b"data3".to_vec())
-            .await
+            .put("key3", b"data3".to_vec())
             .expect("Cache operation failed");
 
         // Should have evicted oldest entry
@@ -528,13 +540,11 @@ mod tests {
 
         let mut cache = CacheManager::new(config);
         cache
-            .put("test".to_string(), b"data".to_vec())
-            .await
+            .put("test", b"data".to_vec())
             .expect("Cache operation failed");
 
         cache
             .maintenance()
-            .await
             .expect("test: maintenance with zero TTL should succeed");
 
         assert_eq!(cache.get("test"), None);
@@ -543,14 +553,8 @@ mod tests {
     #[tokio::test]
     async fn test_cache_remove_and_clear() {
         let mut cache = CacheManager::default();
-        cache
-            .put("a".to_string(), vec![1])
-            .await
-            .expect("test: put a");
-        cache
-            .put("b".to_string(), vec![2])
-            .await
-            .expect("test: put b");
+        cache.put("a", vec![1]).expect("test: put a");
+        cache.put("b", vec![2]).expect("test: put b");
         assert!(cache.remove("a"));
         assert!(!cache.remove("a"));
         cache.clear();
@@ -561,17 +565,11 @@ mod tests {
     #[tokio::test]
     async fn test_cache_flush_and_reset_stats() {
         let mut cache = CacheManager::default();
-        cache
-            .put("k".to_string(), vec![9])
-            .await
-            .expect("test: put");
+        cache.put("k", vec![9]).expect("test: put");
         let _ = cache.get("k");
         cache.flush().expect("test: flush");
         assert_eq!(cache.stats().hits, 0);
-        cache
-            .put("k2".to_string(), vec![1])
-            .await
-            .expect("test: put after flush");
+        cache.put("k2", vec![1]).expect("test: put after flush");
         let _ = cache.get("k2");
         assert_eq!(cache.stats().hits, 1);
         cache.reset_stats();
@@ -607,8 +605,7 @@ mod tests {
         };
         let mut cache = CacheManager::new(config);
         cache
-            .put("warm_key".to_string(), b"payload".to_vec())
-            .await
+            .put("warm_key", b"payload".to_vec())
             .expect("test: put");
         let warm_entry = cache.hot_tier.remove("warm_key").expect("test: take hot");
         cache.warm_tier.insert("warm_key".to_string(), warm_entry);
@@ -625,10 +622,7 @@ mod tests {
             eviction_policy: "lru".to_string(),
         };
         let mut cache = CacheManager::new(config);
-        cache
-            .put("cold_key".to_string(), b"c".to_vec())
-            .await
-            .expect("test: put");
+        cache.put("cold_key", b"c".to_vec()).expect("test: put");
         let entry = cache.hot_tier.remove("cold_key").expect("test: take hot");
         cache.cold_tier.insert("cold_key".to_string(), entry);
         let data = cache.get("cold_key").expect("test: cold to warm");

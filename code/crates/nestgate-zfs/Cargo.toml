@@ -25,6 +25,9 @@ dev-environment-fallbacks = []
 hardware-detection = []
 container = []
 dev-verbose-logging = []
+# Declared for `check-cfg` / clippy; bench sources reference these feature gates.
+benchmark = []
+benchmark_broken_needs_fix = []
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }

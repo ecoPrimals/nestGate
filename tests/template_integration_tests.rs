@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! # Template Storage Integration Tests
 //!
 //! Integration tests for template storage via Unix socket.
@@ -13,7 +25,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 fn prepare_ecosystem_ipc(family_id: &str) -> (Arc<IsomorphicIpcServer>, PathBuf) {
-    std::env::set_var("NESTGATE_FAMILY_ID", family_id);
+    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", family_id);
     let socket_path = SocketConfig::from_environment()
         .expect("socket config")
         .socket_path

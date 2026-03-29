@@ -7,8 +7,13 @@
 //! Focus: Configuration defaults, serialization, environment overrides
 //! Goal: Expand coverage from 48.28% toward 90%
 
+#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+
 #[cfg(test)]
 mod infant_discovery_comprehensive_tests {
+    // Backward-compat tests for deprecated `InfantDiscoveryConfig` (see `defaults_tests`).
+    #![allow(deprecated)]
+
     use crate::config::InfantDiscoveryConfig;
 
     #[test]
@@ -56,11 +61,14 @@ mod infant_discovery_comprehensive_tests {
         let original = InfantDiscoveryConfig::default();
 
         // Serialize to JSON
-        let json = serde_json::to_string(&original).expect("Should serialize to JSON");
+        let Ok(json) = serde_json::to_string(&original) else {
+            panic!("Should serialize to JSON");
+        };
 
         // Deserialize back
-        let deserialized: InfantDiscoveryConfig =
-            serde_json::from_str(&json).expect("Should deserialize from JSON");
+        let Ok(deserialized): Result<InfantDiscoveryConfig, _> = serde_json::from_str(&json) else {
+            panic!("Should deserialize from JSON");
+        };
 
         // Verify fields match
         assert_eq!(original.enabled, deserialized.enabled);
@@ -77,7 +85,7 @@ mod infant_discovery_comprehensive_tests {
     #[test]
     fn test_infant_discovery_debug_format() {
         let config = InfantDiscoveryConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         // Debug output should contain key fields
         assert!(debug_str.contains("InfantDiscoveryConfig") || !debug_str.is_empty());
@@ -161,9 +169,11 @@ mod network_config_comprehensive_tests {
     #[test]
     fn test_port_numbers_in_valid_range() {
         // Verify ports are defined (compile-time constants, so just verify they exist)
-        let _http = network_hardcoded::ports::HTTP_DEFAULT;
-        let _https = network_hardcoded::ports::HTTPS_DEFAULT;
-        let _api = network_hardcoded::ports::API_DEFAULT;
+        std::hint::black_box((
+            network_hardcoded::ports::HTTP_DEFAULT,
+            network_hardcoded::ports::HTTPS_DEFAULT,
+            network_hardcoded::ports::API_DEFAULT,
+        ));
         // Ports are u16, so automatically in valid range (1-65535)
     }
 
@@ -271,7 +281,7 @@ mod constants_validation_tests {
         {
             assert!(DEFAULT_TIMEOUT_MS > 0);
             assert!(
-                DEFAULT_TIMEOUT_MS <= 300000,
+                DEFAULT_TIMEOUT_MS <= 300_000,
                 "Timeout unreasonably long (>5 min)"
             );
         }
@@ -280,6 +290,8 @@ mod constants_validation_tests {
 
 #[cfg(test)]
 mod default_trait_tests {
+    #![allow(deprecated)]
+
     use crate::config::InfantDiscoveryConfig;
 
     #[test]

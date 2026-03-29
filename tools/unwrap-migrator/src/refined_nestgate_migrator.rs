@@ -100,14 +100,14 @@ pub enum SafetyLevel {
 
 #[derive(Debug)]
 pub struct NestGateContextAnalyzer {
-    /// Function signature patterns
-    function_patterns: HashMap<String, Regex>,
-    /// Import detection patterns
-    import_patterns: HashMap<String, Regex>,
-    /// Type detection patterns
-    type_patterns: HashMap<String, Regex>,
-    /// Error handling patterns
-    error_patterns: HashMap<String, Regex>,
+    /// Function signature regexes
+    functions: HashMap<String, Regex>,
+    /// Import detection regexes
+    imports: HashMap<String, Regex>,
+    /// Type detection regexes
+    types: HashMap<String, Regex>,
+    /// Error handling regexes
+    errors: HashMap<String, Regex>,
 }
 
 #[derive(Debug, Clone)]
@@ -125,6 +125,16 @@ pub struct MigrationCandidate {
     pub reasoning: String,
 }
 
+/// Classifies the source file for migration heuristics (replaces multiple `bool` flags).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SourceFileKind {
+    Test,
+    Example,
+    Benchmark,
+    /// Library, binary, or other non-test, non-example paths
+    Other,
+}
+
 #[derive(Debug, Clone)]
 pub struct ContextAnalysis {
     pub function_name: Option<String>,
@@ -132,9 +142,7 @@ pub struct ContextAnalysis {
     pub has_nestgate_imports: bool,
     pub has_error_handling: bool,
     pub has_logging: bool,
-    pub is_test_code: bool,
-    pub is_example_code: bool,
-    pub is_benchmark_code: bool,
+    pub file_kind: SourceFileKind,
     pub surrounding_context: String,
 }
 
@@ -160,16 +168,19 @@ pub struct MigrationStats {
     pub confidence_distribution: HashMap<String, usize>,
 }
 
+/// Which artifact kinds the migrator may touch (keeps [`MigratorConfig`] under clippy bool limits).
+#[derive(Debug, Clone)]
+pub struct MigrationTargets {
+    pub tests: bool,
+    pub examples: bool,
+    pub benchmarks: bool,
+}
+
 #[derive(Debug, Clone)]
 pub struct MigratorConfig {
     /// Minimum confidence threshold for auto-migration
     pub min_confidence: f32,
-    /// Whether to migrate test code
-    pub migrate_tests: bool,
-    /// Whether to migrate example code
-    pub migrate_examples: bool,
-    /// Whether to migrate benchmark code
-    pub migrate_benchmarks: bool,
+    pub targets: MigrationTargets,
     /// Maximum safety level for automatic migration
     pub max_auto_safety_level: SafetyLevel,
     /// Require `NestGateResult` return type
@@ -180,9 +191,11 @@ impl Default for MigratorConfig {
     fn default() -> Self {
         Self {
             min_confidence: 0.8,
-            migrate_tests: false,
-            migrate_examples: true,
-            migrate_benchmarks: true,
+            targets: MigrationTargets {
+                tests: false,
+                examples: true,
+                benchmarks: true,
+            },
             max_auto_safety_level: SafetyLevel::SafeWithReview,
             require_nestgate_result: true,
         }
@@ -191,46 +204,46 @@ impl Default for MigratorConfig {
 
 impl NestGateContextAnalyzer {
     pub fn new() -> RefinedResult<Self> {
-        let mut function_patterns = HashMap::new();
-        let mut import_patterns = HashMap::new();
-        let mut type_patterns = HashMap::new();
-        let mut error_patterns = HashMap::new();
+        let mut functions = HashMap::new();
+        let mut imports = HashMap::new();
+        let mut types = HashMap::new();
+        let mut errors = HashMap::new();
 
         // Function signature patterns
-        function_patterns.insert(
+        functions.insert(
             "nestgate_result".to_string(),
             Regex::new(r"-> (?:Result<[^,>]+,\s*)?NestGateError>|NestGateResult<")?,
         );
-        function_patterns.insert("async_fn".to_string(), Regex::new(r"async\s+fn\s+(\w+)")?);
+        functions.insert("async_fn".to_string(), Regex::new(r"async\s+fn\s+(\w+)")?);
 
         // Import patterns
-        import_patterns.insert(
+        imports.insert(
             "nestgate_error".to_string(),
             Regex::new(r"use.*NestGateError|use.*NestGateResult")?,
         );
-        import_patterns.insert(
+        imports.insert(
             "tracing".to_string(),
             Regex::new(r"use\s+tracing::|use.*tracing")?,
         );
 
         // Type patterns
-        type_patterns.insert(
+        types.insert(
             "result_type".to_string(),
             Regex::new(r"Result<[^>]+>|NestGateResult<")?,
         );
 
         // Error handling patterns
-        error_patterns.insert("question_mark".to_string(), Regex::new(r"\?\s*;")?);
-        error_patterns.insert(
+        errors.insert("question_mark".to_string(), Regex::new(r"\?\s*;")?);
+        errors.insert(
             "match_error".to_string(),
             Regex::new(r"match.*\{\s*Ok\([^}]+\}\s*Err\([^}]+\}")?,
         );
 
         Ok(Self {
-            function_patterns,
-            import_patterns,
-            type_patterns,
-            error_patterns,
+            functions,
+            imports,
+            types,
+            errors,
         })
     }
 
@@ -252,21 +265,24 @@ impl NestGateContextAnalyzer {
         let function_return_type = self.extract_return_type(&surrounding_context);
 
         // Check for imports
-        let has_nestgate_imports = self.import_patterns["nestgate_error"].is_match(&content);
-        let has_logging = self.import_patterns["tracing"].is_match(&content);
+        let has_nestgate_imports = self.imports["nestgate_error"].is_match(&content);
+        let has_logging = self.imports["tracing"].is_match(&content);
 
         // Check for error handling patterns
-        let has_error_handling = self.error_patterns["question_mark"]
-            .is_match(&surrounding_context)
-            || self.error_patterns["match_error"].is_match(&surrounding_context);
+        let has_error_handling = self.errors["question_mark"].is_match(&surrounding_context)
+            || self.errors["match_error"].is_match(&surrounding_context);
 
         // Determine code type
         let file_path_str = file_path.to_string_lossy();
-        let is_test_code = file_path_str.contains("/tests/") || file_path_str.contains("test.rs");
-        let is_example_code =
-            file_path_str.contains("/examples/") || file_path_str.contains("example.rs");
-        let is_benchmark_code =
-            file_path_str.contains("/benches/") || file_path_str.contains("bench.rs");
+        let file_kind = if file_path_str.contains("/tests/") || file_path_str.contains("test.rs") {
+            SourceFileKind::Test
+        } else if file_path_str.contains("/examples/") || file_path_str.contains("example.rs") {
+            SourceFileKind::Example
+        } else if file_path_str.contains("/benches/") || file_path_str.contains("bench.rs") {
+            SourceFileKind::Benchmark
+        } else {
+            SourceFileKind::Other
+        };
 
         Ok(ContextAnalysis {
             function_name,
@@ -274,31 +290,24 @@ impl NestGateContextAnalyzer {
             has_nestgate_imports,
             has_error_handling,
             has_logging,
-            is_test_code,
-            is_example_code,
-            is_benchmark_code,
+            file_kind,
             surrounding_context,
         })
     }
 
     fn extract_function_name(&self, context: &str) -> Option<String> {
-        if let Some(captures) = self.function_patterns["async_fn"].captures(context) {
-            captures.get(1).map(|m| m.as_str().to_string())
-        } else {
-            None
-        }
+        self.functions["async_fn"]
+            .captures(context)
+            .and_then(|captures| captures.get(1).map(|m| m.as_str().to_string()))
     }
 
     fn extract_return_type(&self, context: &str) -> Option<String> {
-        // Look for function return type
-        if let Some(captures) = Regex::new(r"fn\s+\w+[^{]*->\s*([^{]+)")
-            .ok()?
-            .captures(context)
-        {
-            captures.get(1).map(|m| m.as_str().trim().to_string())
-        } else {
-            None
-        }
+        Regex::new(r"fn\s+\w+[^{]*->\s*([^{]+)")
+            .ok()
+            .and_then(|re| {
+                re.captures(context)
+                    .and_then(|captures| captures.get(1).map(|m| m.as_str().trim().to_string()))
+            })
     }
 }
 
@@ -463,7 +472,7 @@ impl RefinedNestGateMigrator {
         pattern: &NestGateMigrationPattern,
         context: &ContextAnalysis,
     ) -> f32 {
-        let mut confidence = 0.5; // Base confidence
+        let mut confidence: f64 = 0.5;
 
         // Boost confidence for context requirements
         for requirement in &pattern.context_requirements {
@@ -487,14 +496,17 @@ impl RefinedNestGateMigrator {
                     }
                 }
                 ContextRequirement::NotInTests => {
-                    if context.is_test_code {
+                    if context.file_kind == SourceFileKind::Test {
                         confidence -= 0.4;
                     } else {
                         confidence += 0.1;
                     }
                 }
                 ContextRequirement::ProductionCode => {
-                    if !context.is_test_code && !context.is_example_code {
+                    if !matches!(
+                        context.file_kind,
+                        SourceFileKind::Test | SourceFileKind::Example
+                    ) {
                         confidence += 0.1;
                     }
                 }
@@ -511,10 +523,14 @@ impl RefinedNestGateMigrator {
             }
         }
 
-        // Pattern priority affects confidence
-        confidence += (pattern.priority as f32) / 1000.0;
+        confidence += f64::from(pattern.priority) / 1000.0;
 
-        confidence.clamp(0.0, 1.0)
+        let clamped = confidence.clamp(0.0, 1.0);
+        // API uses `f32`; values are within [0,1] after clamp.
+        #[expect(clippy::cast_possible_truncation)]
+        {
+            clamped as f32
+        }
     }
 
     fn generate_replacement(
@@ -557,53 +573,51 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[tokio::test]
-    async fn test_context_analyzer() {
-        let analyzer = NestGateContextAnalyzer::new().unwrap();
+    async fn test_context_analyzer() -> RefinedResult<()> {
+        let analyzer = NestGateContextAnalyzer::new()?;
 
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "use nestgate_core::NestGateResult;").unwrap();
-        writeln!(temp_file).unwrap();
+        let mut temp_file = NamedTempFile::new()?;
+        writeln!(temp_file, "use nestgate_core::NestGateResult;")?;
+        writeln!(temp_file)?;
         writeln!(
             temp_file,
             "async fn test_function() -> NestGateResult<String> {{"
-        )
-        .unwrap();
-        writeln!(temp_file, "    let value = some_operation().unwrap();").unwrap();
-        writeln!(temp_file, "    Ok(value)").unwrap();
-        writeln!(temp_file, "}}").unwrap();
+        )?;
+        writeln!(temp_file, "    let value = some_operation().unwrap();")?;
+        writeln!(temp_file, "    Ok(value)")?;
+        writeln!(temp_file, "}}")?;
 
-        let context = analyzer.analyze_context(temp_file.path(), 3).await.unwrap();
+        let context = analyzer.analyze_context(temp_file.path(), 3).await?;
 
         assert!(context.has_nestgate_imports);
         assert_eq!(context.function_name.as_deref(), Some("test_function"));
-        assert!(!context.is_test_code);
+        assert_eq!(context.file_kind, SourceFileKind::Other);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_migration_patterns() {
-        let migrator = RefinedNestGateMigrator::new().unwrap();
+    async fn test_migration_patterns() -> RefinedResult<()> {
+        let mut migrator = RefinedNestGateMigrator::new()?;
 
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new()?;
         writeln!(
             temp_file,
             "use nestgate_core::{{NestGateResult, NestGateError}};"
-        )
-        .unwrap();
-        writeln!(temp_file).unwrap();
-        writeln!(temp_file, "fn load_config() -> NestGateResult<Config> {{").unwrap();
+        )?;
+        writeln!(temp_file)?;
+        writeln!(temp_file, "fn load_config() -> NestGateResult<Config> {{")?;
         writeln!(
             temp_file,
             "    let config = fs::read_to_string(\"config.toml\").unwrap(); // config"
-        )
-        .unwrap();
-        writeln!(temp_file, "    Ok(parse_config(config)?)").unwrap();
-        writeln!(temp_file, "}}").unwrap();
+        )?;
+        writeln!(temp_file, "    Ok(parse_config(config)?)")?;
+        writeln!(temp_file, "}}")?;
 
-        let mut migrator = migrator;
-        let candidates = migrator.analyze_file(temp_file.path()).await.unwrap();
+        let candidates = migrator.analyze_file(temp_file.path()).await?;
 
         assert!(!candidates.is_empty());
         assert!(candidates[0].confidence > 0.8);
         assert_eq!(candidates[0].pattern_name, "config_unwrap");
+        Ok(())
     }
 }

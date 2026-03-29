@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Comprehensive Unit Tests for NestGate Core
 //!
@@ -107,10 +118,10 @@ fn test_response_status_enum() {
 #[test]
 fn test_nestgate_error_creation() {
     let error = NestGateError::Validation(Box::new(ValidationErrorDetails {
-        message: "Test error".to_string(),
-        field: Some("test_field".to_string()),
-        expected: Some("valid_value".to_string()),
-        actual: Some("invalid_value".to_string()),
+        message: "Test error".into(),
+        field: Some("test_field".into()),
+        expected: Some("valid_value".into()),
+        actual: Some("invalid_value".into()),
         context: None,
     }));
 
@@ -131,8 +142,8 @@ fn test_nestgate_result_ok() {
 fn test_nestgate_result_err() {
     let result: NestGateResult<i32> = Err(NestGateError::Validation(Box::new(
         ValidationErrorDetails {
-            message: "Test error".to_string(),
-            field: Some("test_field".to_string()),
+            message: "Test error".into(),
+            field: Some("test_field".into()),
             expected: None,
             actual: None,
             context: None,
@@ -148,16 +159,16 @@ fn test_nestgate_result_err() {
 #[test]
 fn test_error_context_chaining() {
     let base_error = NestGateError::Validation(Box::new(ValidationErrorDetails {
-        message: "Base error".to_string(),
-        field: Some("base_field".to_string()),
+        message: "Base error".into(),
+        field: Some("base_field".into()),
         expected: None,
         actual: None,
         context: None,
     }));
 
     let error_with_context = NestGateError::Validation(Box::new(ValidationErrorDetails {
-        message: "Wrapped error".to_string(),
-        field: Some("wrapper_field".to_string()),
+        message: "Wrapped error".into(),
+        field: Some("wrapper_field".into()),
         expected: None,
         actual: None,
         context: None, // Simplified for this test

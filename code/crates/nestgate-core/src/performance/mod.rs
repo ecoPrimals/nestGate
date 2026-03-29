@@ -19,9 +19,10 @@ pub mod safe_optimizations;
 pub mod safe_ring_buffer;
 
 // Re-export key performance features
+#[cfg(feature = "dev-stubs")]
+pub use connection_pool::HttpConnectionPool;
 pub use connection_pool::{
-    ConnectionPoolConfig, ConnectionPoolManager, HttpConnectionPool, PoolStats,
-    UniversalConnectionPool,
+    ConnectionPoolConfig, ConnectionPoolManager, PoolStats, UniversalConnectionPool,
 };
 
 // Re-export advanced optimizations (selective to avoid ambiguous re-exports)

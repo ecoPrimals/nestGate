@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 10, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🏗️ **NESTGATE ARCHITECTURE CLARIFICATION**
 
 **Date**: November 10, 2025  

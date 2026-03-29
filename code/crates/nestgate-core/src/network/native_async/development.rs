@@ -7,6 +7,7 @@ use crate::diagnostics::types::ServiceInfo;
 /// Extracted from `native_async_network.rs` to maintain file size compliance
 /// Contains development/testing implementations of native async traits
 use std::collections::HashMap;
+use tracing::debug;
 
 use super::traits::NativeAsyncServiceDiscovery;
 use super::types::{ServiceEvent, ServiceQuery};
@@ -41,7 +42,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         // Development registration - always succeed
         self.service_count
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        println!("DEV: Registered service {}", service.name);
+        debug!("DEV: Registered service {}", service.name);
         Ok(())
     }
 
@@ -49,7 +50,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
     async fn deregister(&self, service_id: &str) -> Result<()> {
         self.service_count
             .fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
-        println!("DEV: Deregistered service {service_id}");
+        debug!("DEV: Deregistered service {service_id}");
         Ok(())
     }
 
@@ -81,7 +82,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
 
     /// Health Update
     async fn health_update(&self, service_id: &str, _status: Self::HealthStatus) -> Result<()> {
-        println!("DEV: Health updated for {service_id}");
+        debug!("DEV: Health updated for {service_id}");
         Ok(())
     }
 
@@ -126,7 +127,7 @@ impl NativeAsyncServiceDiscovery<1000, 60, 100, 120> for DevelopmentServiceDisco
         service_id: &str,
         _metadata: HashMap<String, String>,
     ) -> Result<()> {
-        println!("DEV: Updated service {service_id}");
+        debug!("DEV: Updated service {service_id}");
         Ok(())
     }
 }

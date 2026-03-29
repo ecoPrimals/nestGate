@@ -1,3 +1,6 @@
+> **Historical**: This document was written in November 23, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🛡️ NestGate Error Handling Patterns
 **Version**: 1.0  
 **Date**: November 23, 2025  

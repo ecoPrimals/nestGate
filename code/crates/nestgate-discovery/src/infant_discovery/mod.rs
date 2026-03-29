@@ -15,6 +15,15 @@
 //! - **Vendor Independence**: No vendor-specific implementations
 //! - **Sovereignty Layer**: Human dignity and sovereignty compliance
 
+#![expect(
+    clippy::cast_possible_truncation,
+    reason = "Discovery timing stats use coarse nanosecond aggregates"
+)]
+#![expect(
+    clippy::cast_precision_loss,
+    reason = "Complexity deviation uses approximate floating averages"
+)]
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -166,7 +175,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         engine.discovery_stats.discovery_attempts += 1;
 
         // Perform runtime capability discovery (implementation would scan environment)
-        let discovered = self.perform_runtime_discovery().await?;
+        let discovered = self.perform_runtime_discovery();
 
         // Validate sovereignty compliance for each capability
         let compliant_capabilities: Vec<CapabilityDescriptor> = discovered
@@ -232,9 +241,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     // Private implementation methods
 
     /// Perform Runtime Discovery
-    async fn perform_runtime_discovery(
-        &self,
-    ) -> Result<Vec<CapabilityDescriptor>, InfantDiscoveryError> {
+    fn perform_runtime_discovery(&self) -> Vec<CapabilityDescriptor> {
         // In a real implementation, this would:
         // 1. Scan the network environment
         // 2. Detect available services without hardcoded knowledge
@@ -242,7 +249,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         // 4. Build capability descriptors dynamically
 
         // For demonstration, return discovered capabilities
-        Ok(vec![
+        vec![
             CapabilityDescriptor {
                 id: "dynamic_storage_001".to_string(),
                 capability_type: CapabilityType::Storage,
@@ -266,7 +273,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
                 ]),
                 sovereignty_compliant: true,
             },
-        ])
+        ]
     }
 
     /// Creates  O1 Connection
@@ -277,16 +284,17 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         // O(1) connection establishment
         let engine = self.discovery_engine.read().await;
 
-        if let Some(capability) = engine.discovered_capabilities.get(capability_id) {
-            Ok(Connection {
-                id: capability_id.to_string(),
-                endpoint: capability.endpoint.clone(),
-                established_at: std::time::SystemTime::now(),
-                complexity_order: 1, // O(1) guaranteed
-            })
-        } else {
-            Err(InfantDiscoveryError::InvalidRequest)
-        }
+        engine.discovered_capabilities.get(capability_id).map_or(
+            Err(InfantDiscoveryError::InvalidRequest),
+            |capability| {
+                Ok(Connection {
+                    id: capability_id.to_string(),
+                    endpoint: capability.endpoint.clone(),
+                    established_at: std::time::SystemTime::now(),
+                    complexity_order: 1, // O(1) guaranteed
+                })
+            },
+        )
     }
 
     /// Verify Connection Complexity

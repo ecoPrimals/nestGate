@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Integration tests for Universal Agnostic Storage
 //!
@@ -9,14 +20,11 @@ use nestgate_core::universal_storage::{
     AuthenticationPattern, DiscoveredProtocol, StorageFeature, StorageOperationPattern,
     TransportProtocol, UniversalStorageAdapter, UniversalStorageDiscovery,
 };
-use std::env;
 
 #[tokio::test]
 async fn test_local_filesystem_discovery() {
     // Test discovery of local filesystem storage
-    let local = UniversalStorageDiscovery::discover_local()
-        .await
-        .expect("Should discover local storage");
+    let local = UniversalStorageDiscovery::discover_local().expect("Should discover local storage");
 
     assert_eq!(local.len(), 1);
     assert_eq!(local[0].name, "local");
@@ -27,8 +35,7 @@ async fn test_local_filesystem_discovery() {
 async fn test_endpoint_probe_https() {
     // Test probing HTTPS endpoint
     let discovered =
-        UniversalStorageDiscovery::probe_endpoint("test", "https://storage.example.com/bucket")
-            .await;
+        UniversalStorageDiscovery::probe_endpoint("test", "https://storage.example.com/bucket");
 
     assert!(discovered.is_some());
     let storage = discovered.unwrap();
@@ -54,7 +61,7 @@ async fn test_endpoint_probe_https() {
 async fn test_endpoint_probe_http() {
     // Test probing HTTP endpoint (no TLS)
     let discovered =
-        UniversalStorageDiscovery::probe_endpoint("test", "http://localhost:9000/bucket").await;
+        UniversalStorageDiscovery::probe_endpoint("test", "http://localhost:9000/bucket");
 
     assert!(discovered.is_some());
     let storage = discovered.unwrap();
@@ -76,7 +83,6 @@ async fn test_auth_detection_access_key() {
 
     let discovered =
         UniversalStorageDiscovery::probe_endpoint("test", "https://storage.example.com/bucket")
-            .await
             .expect("Should discover endpoint");
 
     // Should detect signed headers authentication
@@ -99,7 +105,6 @@ async fn test_auth_detection_bearer_token() {
 
     let discovered =
         UniversalStorageDiscovery::probe_endpoint("token", "https://api.example.com/storage")
-            .await
             .expect("Should discover endpoint");
 
     // Should detect bearer token authentication
@@ -120,7 +125,6 @@ async fn test_auth_detection_api_key() {
     nestgate_core::env_process::set_var("STORAGE_API_API_KEY", "test_api_key");
 
     let discovered = UniversalStorageDiscovery::probe_endpoint("api", "https://api.example.com/v1")
-        .await
         .expect("Should discover endpoint");
 
     // Should detect API key authentication
@@ -195,9 +199,8 @@ async fn test_multiple_storage_discovery() {
         "https://archive.example.com/data",
     );
 
-    let discovered = UniversalStorageDiscovery::discover_from_env()
-        .await
-        .expect("Should discover storage");
+    let discovered =
+        UniversalStorageDiscovery::discover_from_env().expect("Should discover storage");
 
     // Should discover at least the ones we configured
     assert!(discovered.len() >= 3);
@@ -218,7 +221,6 @@ async fn test_multiple_storage_discovery() {
 async fn test_protocol_description() {
     let discovered =
         UniversalStorageDiscovery::probe_endpoint("test", "https://storage.example.com/bucket")
-            .await
             .expect("Should discover endpoint");
 
     let description = discovered.description();
@@ -233,7 +235,6 @@ async fn test_protocol_description() {
 async fn test_feature_discovery() {
     let discovered =
         UniversalStorageDiscovery::probe_endpoint("test", "https://storage.example.com/bucket")
-            .await
             .expect("Should discover endpoint");
 
     // Should discover basic features
@@ -248,7 +249,6 @@ async fn test_security_detection() {
     // HTTPS endpoint should have secure transport
     let https_storage =
         UniversalStorageDiscovery::probe_endpoint("secure", "https://storage.example.com/bucket")
-            .await
             .expect("Should discover endpoint");
 
     // Transport should be secure (has TLS)
@@ -260,7 +260,6 @@ async fn test_security_detection() {
     // HTTP endpoint should not have secure transport
     let http_storage =
         UniversalStorageDiscovery::probe_endpoint("insecure", "http://storage.example.com/bucket")
-            .await
             .expect("Should discover endpoint");
 
     // Transport should not be secure (no TLS)

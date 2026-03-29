@@ -93,7 +93,7 @@ impl CapabilityAwareDiscovery {
     /// ```
     pub async fn initialize(config: &NestGateCanonicalConfig) -> Result<Self> {
         // Detect capabilities this primal provides
-        let capabilities = Self::detect_own_capabilities(config).await?;
+        let capabilities = Self::detect_own_capabilities(config);
 
         info!(
             "Initializing capability-aware discovery with {:?}",
@@ -104,7 +104,7 @@ impl CapabilityAwareDiscovery {
         let mut manager = CapabilityDiscoveryManager::initialize(capabilities).await?;
 
         // Add backends based on environment
-        Self::setup_backends(&mut manager, config).await?;
+        Self::setup_backends(&mut manager, config);
 
         // Announce self to network
         manager.start_announcing().await?;
@@ -118,9 +118,7 @@ impl CapabilityAwareDiscovery {
     /// Detect what capabilities this primal provides
     ///
     /// Inspects configuration and environment to determine capabilities.
-    async fn detect_own_capabilities(
-        config: &NestGateCanonicalConfig,
-    ) -> Result<Vec<PrimalCapability>> {
+    fn detect_own_capabilities(config: &NestGateCanonicalConfig) -> Vec<PrimalCapability> {
         let mut capabilities = Vec::new();
 
         // Check for API capability
@@ -156,7 +154,7 @@ impl CapabilityAwareDiscovery {
             warn!("No capabilities detected, defaulting to service discovery only");
         }
 
-        Ok(capabilities)
+        capabilities
     }
 
     /// Check if API capability is available
@@ -194,10 +192,7 @@ impl CapabilityAwareDiscovery {
     }
 
     /// Setup discovery backends based on environment
-    async fn setup_backends(
-        manager: &mut CapabilityDiscoveryManager,
-        _config: &NestGateCanonicalConfig,
-    ) -> Result<()> {
+    fn setup_backends(manager: &mut CapabilityDiscoveryManager, _config: &NestGateCanonicalConfig) {
         // Always add in-memory backend for local testing/fallback
         manager.add_backend(Arc::new(InMemoryDiscoveryBackend::new()));
         info!("Added in-memory discovery backend");
@@ -220,8 +215,6 @@ impl CapabilityAwareDiscovery {
         // if let Ok(consul_addr) = std::env::var("CONSUL_HTTP_ADDR") {
         //     manager.add_backend(Arc::new(ConsulBackend::new(&consul_addr)?));
         // }
-
-        Ok(())
     }
 
     /// Find services by name (capability-based)
@@ -427,9 +420,7 @@ mod tests {
     #[tokio::test]
     async fn test_capability_detection() {
         let config = test_config();
-        let capabilities = CapabilityAwareDiscovery::detect_own_capabilities(&config)
-            .await
-            .unwrap();
+        let capabilities = CapabilityAwareDiscovery::detect_own_capabilities(&config);
 
         // Should at least have ServiceDiscovery
         assert!(!capabilities.is_empty());
@@ -452,8 +443,7 @@ mod tests {
             .await
             .unwrap();
 
-        let result = CapabilityAwareDiscovery::setup_backends(&mut manager, &config).await;
-        assert!(result.is_ok());
+        CapabilityAwareDiscovery::setup_backends(&mut manager, &config);
     }
 
     #[tokio::test]

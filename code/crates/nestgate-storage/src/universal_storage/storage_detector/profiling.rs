@@ -7,6 +7,9 @@
 
 //! Profiling module
 
+// Simulated benchmark outputs use `f64` for throughput and latency aggregates.
+#![allow(clippy::cast_precision_loss, clippy::cast_sign_loss)]
+
 use super::types::{DetectedStorage, PerformanceProfile};
 use nestgate_types::error::Result;
 use nestgate_types::unified_enums::storage_types::UnifiedStorageType;
@@ -70,7 +73,7 @@ impl PerformanceProfiler {
             read_latency_us: self.benchmark_read_latency(storage).await?,
             write_latency_us: self.benchmark_write_latency(storage).await?,
             iops: self.benchmark_iops(storage).await?,
-            supports_parallel_io: self.test_parallel_io(storage).await?,
+            supports_parallel_io: self.test_parallel_io(storage),
             optimal_block_size: self.find_optimal_block_size(storage).await?,
         };
 
@@ -124,7 +127,7 @@ impl PerformanceProfiler {
             total_latency += start.elapsed();
         }
 
-        let avg_latency_us = total_latency.as_micros() as f64 / 100.0; // 100 iterations
+        let avg_latency_us = total_latency.as_micros() as f64 / f64::from(self.iterations.max(1));
         Ok(avg_latency_us)
     }
 
@@ -154,22 +157,23 @@ impl PerformanceProfiler {
         }
 
         let elapsed = start.elapsed();
+        #[allow(clippy::cast_possible_truncation)] // Mock IOPS fits in u32 for simulation
         let iops = (f64::from(operations) / elapsed.as_secs_f64()) as u32;
 
         Ok(iops)
     }
 
     /// Test if storage supports parallel I/O operations
-    async fn test_parallel_io(&self, _storage: &DetectedStorage) -> Result<bool> {
+    fn test_parallel_io(&self, _storage: &DetectedStorage) -> bool {
         // Most modern storage systems support parallel I/O
         // In a real implementation, this would test concurrent operations
-        Ok(true)
+        true
     }
 
     /// Find optimal block size for this storage system
     async fn find_optimal_block_size(&self, storage: &DetectedStorage) -> Result<u32> {
         // Test different block sizes and find the best performing one
-        let test_sizes = vec![1024, 4096, 8192, 16384, 65536]; // 1KB to 64KB
+        let test_sizes: [usize; 5] = [1024, 4096, 8192, 16384, 65536]; // 1KB to 64KB
         let mut best_throughput = 0.0f64;
         let mut optimal_size = 4096u32;
 
@@ -180,7 +184,7 @@ impl PerformanceProfiler {
 
             if throughput > best_throughput {
                 best_throughput = throughput;
-                optimal_size = size as u32;
+                optimal_size = u32::try_from(size).unwrap_or(4096);
             }
         }
 

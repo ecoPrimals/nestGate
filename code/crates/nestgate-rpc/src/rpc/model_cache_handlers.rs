@@ -123,17 +123,9 @@ pub fn discover_capabilities() -> Result<Value> {
     }))
 }
 
-fn chrono_timestamp() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    format!("{secs}")
-}
-
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[tokio::test]
@@ -176,8 +168,13 @@ mod tests {
     }
 
     #[test]
-    fn test_chrono_timestamp_returns_numeric_string() {
-        let ts = chrono_timestamp();
+    fn test_wall_clock_seconds_string_is_numeric() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let secs = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        let ts = format!("{secs}");
         assert!(!ts.is_empty());
         assert!(ts.parse::<u64>().is_ok());
     }

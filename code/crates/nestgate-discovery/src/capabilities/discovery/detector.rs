@@ -70,7 +70,7 @@ impl ServiceDetector {
             let task = tokio::spawn(async move {
                 loop {
                     if let Ok(service) = Self::probe_port(port).await {
-                        let _ = registry.register_service(service);
+                        let _ = registry.register_service(&service);
                     }
                     tokio::time::sleep(interval).await;
                 }
@@ -91,11 +91,11 @@ impl ServiceDetector {
 
         for host in hosts {
             // Try HTTP well-known endpoint for capability discovery
-            let http_url = format!("http://{host}:{port}/.well-known/capabilities");
-            let https_url = format!("https://{host}:{port}/.well-known/capabilities");
+            let well_known_http = format!("http://{host}:{port}/.well-known/capabilities");
+            let well_known_https = format!("https://{host}:{port}/.well-known/capabilities");
 
             // Try HTTPS first (more secure)
-            for (_url, tls) in [(https_url, true), (http_url, false)] {
+            for (_url, tls) in [(well_known_https, true), (well_known_http, false)] {
                 // Attempt basic TCP connection first
                 if let Ok(_stream) = tokio::net::TcpStream::connect(format!("{host}:{port}")).await
                 {

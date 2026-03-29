@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! # 🧪 Socket Configuration Integration Tests
 //!
 //! Comprehensive E2E, chaos, and fault injection tests for socket configuration.

@@ -1,3 +1,6 @@
+> **Historical**: This document was written in December 9, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # ✅ PRIMAL SOVEREIGNTY - VERIFIED & EXEMPLARY!
 
 **Date**: December 9, 2025  

@@ -36,8 +36,7 @@ mod storage_path_edge_cases {
     #[test]
     fn test_path_components() {
         let path = PathBuf::from("/home/user/documents/file.txt");
-        let components: Vec<_> = path.components().collect();
-        assert!(!components.is_empty());
+        assert!(path.components().next().is_some());
     }
 
     #[test]
@@ -158,8 +157,7 @@ mod storage_operation_edge_cases {
 
     #[test]
     fn test_buffer_reserve() {
-        let mut data: Vec<u8> = Vec::new();
-        data.reserve(1000);
+        let data: Vec<u8> = Vec::with_capacity(1000);
         assert!(data.capacity() >= 1000);
     }
 }
@@ -213,15 +211,23 @@ mod storage_concurrent_operations {
 mod storage_performance_tests {
     #[test]
     fn test_rapid_buffer_creation() {
-        let buffers: Vec<_> = (0..1000).map(|i| vec![0u8; i % 100]).collect();
-        assert_eq!(buffers.len(), 1000);
+        let mut n = 0;
+        for i in 0..1000 {
+            let _buffer = vec![0u8; i % 100];
+            n += 1;
+        }
+        assert_eq!(n, 1000);
     }
 
     #[test]
     fn test_buffer_copy_performance() {
         let data = vec![1u8; 1000];
-        let copies: Vec<_> = (0..1000).map(|_| data.clone()).collect();
-        assert_eq!(copies.len(), 1000);
+        let mut n = 0;
+        for _ in 0..1000 {
+            let _copy = data.clone();
+            n += 1;
+        }
+        assert_eq!(n, 1000);
     }
 
     #[test]

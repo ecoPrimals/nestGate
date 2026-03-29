@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! ZFS operations deep coverage - Week 3 Days 1-2
 //!
 //! Focus: Pool management, dataset operations, snapshot handling

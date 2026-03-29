@@ -94,7 +94,7 @@ pub struct ServiceEndpoint {
 
 impl ServiceEndpoint {
     /// Create from JSON-RPC response
-    pub fn from_response(value: Value, capability: &str) -> Result<Self> {
+    pub fn from_response(value: &Value, capability: &str) -> Result<Self> {
         let name = value["name"]
             .as_str()
             .ok_or_else(|| NestGateError::api_error("Missing service name in response"))?
@@ -228,8 +228,7 @@ impl CapabilityDiscovery {
         }
 
         // Take first service (FUTURE: load balancing across multiple providers in v0.12+)
-        let service_value = &services[0];
-        let endpoint = ServiceEndpoint::from_response(service_value.clone(), capability)?;
+        let endpoint = ServiceEndpoint::from_response(&services[0], capability)?;
 
         tracing::info!(
             capability = capability,
@@ -395,7 +394,7 @@ mod tests {
             "endpoint": "/tmp/sock",
             "version": "2.0.0"
         });
-        let ep = ServiceEndpoint::from_response(v, "crypto").expect("parse");
+        let ep = ServiceEndpoint::from_response(&v, "crypto").expect("parse");
         assert_eq!(ep.capability, "crypto");
         assert_eq!(ep.name, "alpha");
         assert_eq!(ep.endpoint, "/tmp/sock");
@@ -408,20 +407,20 @@ mod tests {
             "name": "beta",
             "endpoint": "tcp://127.0.0.1:1"
         });
-        let ep = ServiceEndpoint::from_response(v, "http").expect("parse");
+        let ep = ServiceEndpoint::from_response(&v, "http").expect("parse");
         assert_eq!(ep.version, "unknown");
     }
 
     #[test]
     fn service_endpoint_from_response_missing_name_errors() {
         let v = json!({ "endpoint": "e" });
-        assert!(ServiceEndpoint::from_response(v, "x").is_err());
+        assert!(ServiceEndpoint::from_response(&v, "x").is_err());
     }
 
     #[test]
     fn service_endpoint_from_response_missing_endpoint_errors() {
         let v = json!({ "name": "n" });
-        assert!(ServiceEndpoint::from_response(v, "x").is_err());
+        assert!(ServiceEndpoint::from_response(&v, "x").is_err());
     }
 
     #[test]

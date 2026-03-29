@@ -23,7 +23,7 @@ mod observability_comprehensive_tests {
         let manager = ObservabilityManager::new(config);
 
         assert!(manager.get_metrics().await.is_ok(), "Should get metrics");
-        assert!(manager.get_health().await.is_ok(), "Should get health");
+        assert!(manager.get_health().is_ok(), "Should get health");
     }
 
     #[tokio::test]
@@ -62,8 +62,22 @@ mod observability_comprehensive_tests {
         let config = ObservabilityConfig::default();
         let manager = ObservabilityManager::new(config);
 
-        let result = manager.initialize().await;
+        let result = manager.initialize();
         assert!(result.is_ok(), "Initialization should succeed");
+    }
+
+    #[tokio::test]
+    async fn test_manager_initialization_all_features_disabled() {
+        let config = ObservabilityConfig {
+            metrics_enabled: false,
+            health_checks_enabled: false,
+            tracing_enabled: false,
+            ..Default::default()
+        };
+        let manager = ObservabilityManager::new(config);
+        assert!(manager.initialize().is_ok());
+        assert!(manager.get_metrics().await.is_ok());
+        assert!(manager.get_health().is_ok());
     }
 
     #[tokio::test]
@@ -71,8 +85,8 @@ mod observability_comprehensive_tests {
         let config = ObservabilityConfig::default();
         let manager = ObservabilityManager::new(config);
 
-        let first = manager.initialize().await;
-        let second = manager.initialize().await;
+        let first = manager.initialize();
+        let second = manager.initialize();
 
         assert!(first.is_ok(), "First initialization should succeed");
         assert!(second.is_ok(), "Second initialization should not fail");
@@ -85,7 +99,7 @@ mod observability_comprehensive_tests {
 
         // Should be usable even before explicit init
         assert!(manager.get_metrics().await.is_ok());
-        assert!(manager.get_health().await.is_ok());
+        assert!(manager.get_health().is_ok());
     }
 
     // ==================== Metrics Recording Tests ====================
@@ -108,9 +122,9 @@ mod observability_comprehensive_tests {
 
         for i in 0..10 {
             let result = manager
-                .record_metric("counter", i as f64, HashMap::new())
+                .record_metric("counter", f64::from(i), HashMap::new())
                 .await;
-            assert!(result.is_ok(), "Should record metric {}", i);
+            assert!(result.is_ok(), "Should record metric {i}");
         }
     }
 
@@ -205,7 +219,7 @@ mod observability_comprehensive_tests {
         // Record metrics over time
         for i in 0..5 {
             manager
-                .record_metric("historical", i as f64, HashMap::new())
+                .record_metric("historical", f64::from(i), HashMap::new())
                 .await
                 .expect("Failed to record metric");
             tokio::time::sleep(Duration::from_millis(10)).await;
@@ -240,7 +254,7 @@ mod observability_comprehensive_tests {
         let config = ObservabilityConfig::default();
         let manager = ObservabilityManager::new(config);
 
-        let health = manager.get_health().await;
+        let health = manager.get_health();
         assert!(health.is_ok(), "Should retrieve health status");
     }
 
@@ -249,9 +263,9 @@ mod observability_comprehensive_tests {
         let config = ObservabilityConfig::default();
         let manager = ObservabilityManager::new(config);
 
-        manager.initialize().await.expect("Initialization failed");
+        manager.initialize().expect("Initialization failed");
 
-        let health = manager.get_health().await;
+        let health = manager.get_health();
         assert!(health.is_ok(), "Should retrieve health after init");
     }
 
@@ -260,7 +274,7 @@ mod observability_comprehensive_tests {
         let config = ObservabilityConfig::default();
         let manager = ObservabilityManager::new(config);
 
-        let _health = manager.get_health().await.expect("Failed to get health");
+        let _health = manager.get_health().expect("Failed to get health");
         // Health should have some structure
         // Depending on SystemHealth implementation, verify fields exist
     }
@@ -277,7 +291,7 @@ mod observability_comprehensive_tests {
     #[tokio::test]
     async fn test_global_record_metric_multiple() {
         for i in 0..5 {
-            let result = record_metric(&format!("metric_{}", i), i as f64).await;
+            let result = record_metric(&format!("metric_{i}"), f64::from(i)).await;
             assert!(result.is_ok());
         }
     }
@@ -285,7 +299,7 @@ mod observability_comprehensive_tests {
     #[tokio::test]
     async fn test_global_get_system_health_when_not_initialized() {
         // This might fail if not initialized
-        let _result = get_system_health().await;
+        let _result = get_system_health();
         // Depending on implementation, might succeed with warning or fail
     }
 
@@ -357,7 +371,7 @@ mod observability_comprehensive_tests {
             let manager_clone = manager.clone();
             let handle = tokio::spawn(async move {
                 manager_clone
-                    .record_metric(&format!("concurrent_{}", i), i as f64, HashMap::new())
+                    .record_metric(&format!("concurrent_{i}"), f64::from(i), HashMap::new())
                     .await
             });
             handles.push(handle);
@@ -377,7 +391,7 @@ mod observability_comprehensive_tests {
         let mut handles = vec![];
         for _ in 0..5 {
             let manager_clone = manager.clone();
-            let handle = tokio::spawn(async move { manager_clone.get_health().await });
+            let handle = tokio::spawn(async move { manager_clone.get_health() });
             handles.push(handle);
         }
 
@@ -431,7 +445,7 @@ mod observability_comprehensive_tests {
         };
         let manager = ObservabilityManager::new(config);
 
-        let result = manager.get_health().await;
+        let result = manager.get_health();
         // Should handle gracefully
         assert!(result.is_ok());
     }
@@ -444,7 +458,7 @@ mod observability_comprehensive_tests {
         let manager = ObservabilityManager::new(config);
 
         // Initialize
-        manager.initialize().await.expect("Init failed");
+        manager.initialize().expect("Init failed");
 
         // Record metrics
         manager
@@ -456,7 +470,7 @@ mod observability_comprehensive_tests {
         let _metrics = manager.get_metrics().await.expect("Get metrics failed");
 
         // Get health
-        let _health = manager.get_health().await.expect("Get health failed");
+        let _health = manager.get_health().expect("Get health failed");
 
         // Get history
         let _history = manager
@@ -473,11 +487,11 @@ mod observability_comprehensive_tests {
         // Use manager multiple times
         for i in 0..5 {
             manager
-                .record_metric("reuse", i as f64, HashMap::new())
+                .record_metric("reuse", f64::from(i), HashMap::new())
                 .await
                 .expect("Failed to record");
             let _ = manager.get_metrics().await.expect("Failed to get metrics");
-            let _ = manager.get_health().await.expect("Failed to get health");
+            let _ = manager.get_health().expect("Failed to get health");
         }
     }
 }

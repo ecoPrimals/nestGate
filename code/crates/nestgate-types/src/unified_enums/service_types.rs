@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-/// Service Classification Enums
+/// Service classification enums.
+///
 /// This module contains enums related to service types, health status,
 /// and service lifecycle management.
 use serde::{Deserialize, Serialize};
@@ -129,7 +130,8 @@ impl fmt::Display for UnifiedHealthStatus {
 
 // ==================== SECTION ====================
 
-/// **THE** `ServiceState` - unified across all modules\
+/// **THE** `ServiceState` - unified across all modules
+///
 /// Replaces 6+ fragmented `ServiceStatus` enum definitions across diagnostics, network, etc.
 /// Note: This is different from `UnifiedServiceStatus` struct which contains metadata
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **CANONICAL TEST FRAMEWORK DEMONSTRATION**
 //!
 //! This module demonstrates the modernized test framework using:

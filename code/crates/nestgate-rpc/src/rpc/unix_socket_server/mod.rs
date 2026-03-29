@@ -5,6 +5,7 @@
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
+#![allow(deprecated)] // `JsonRpcUnixServer` retained for legacy re-exports until Songbird IPC migration completes.
 
 //! # 🔌 JSON-RPC Unix Socket Server
 //!
@@ -247,7 +248,7 @@ impl JsonRpcUnixServer {
         let listener = UnixListener::bind(&self.socket_path).map_err(|e| {
             NestGateError::configuration_error(
                 "socket_bind",
-                &format!("Failed to bind Unix socket: {e}"),
+                format!("Failed to bind Unix socket: {e}"),
             )
         })?;
 
@@ -364,6 +365,7 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
 }
 
 /// Handle JSON-RPC request
+#[allow(clippy::too_many_lines)] // Large method dispatch table mirrors supported JSON-RPC surface.
 async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRpcResponse {
     if request.jsonrpc.as_ref() != "2.0" {
         return JsonRpcResponse {
@@ -499,7 +501,7 @@ pub struct LegacyUnixJsonRpcHandler {
 impl LegacyUnixJsonRpcHandler {
     /// Create a handler backed by the given storage/template/audit state.
     #[must_use]
-    pub const fn new(state: Arc<StorageState>) -> Self {
+    pub(crate) const fn new(state: Arc<StorageState>) -> Self {
         Self { state }
     }
 }
@@ -533,8 +535,10 @@ impl crate::rpc::isomorphic_ipc::RpcHandler for LegacyUnixJsonRpcHandler {
     }
 }
 
-/// Build the same JSON-RPC handler surface as [`JsonRpcUnixServer`] for use with
-/// [`crate::rpc::isomorphic_ipc::IsomorphicIpcServer`] (ecosystem socket layout via [`crate::rpc::socket_config::SocketConfig`]).
+/// Build the same JSON-RPC handler surface as [`JsonRpcUnixServer`].
+///
+/// Intended for [`crate::rpc::isomorphic_ipc::IsomorphicIpcServer`] using ecosystem paths from
+/// [`crate::rpc::socket_config::SocketConfig`].
 ///
 /// # Errors
 ///

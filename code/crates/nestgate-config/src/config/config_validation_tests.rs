@@ -5,6 +5,8 @@
 //!
 //! Comprehensive tests for configuration validation, edge cases, and error handling
 
+#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+
 #[cfg(test)]
 mod config_creation_tests {
     use crate::config::{
@@ -66,7 +68,7 @@ mod config_creation_tests {
     #[test]
     fn test_config_debug_format() {
         let config = create_default_config();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("NestGateCanonicalConfig"));
     }
@@ -88,7 +90,7 @@ mod config_field_validation_tests {
         ];
 
         for env in envs {
-            let debug_str = format!("{:?}", env);
+            let debug_str = format!("{env:?}");
             assert!(!debug_str.is_empty());
         }
     }
@@ -122,7 +124,7 @@ mod config_field_validation_tests {
         ];
 
         for level in levels {
-            let debug_str = format!("{:?}", level);
+            let debug_str = format!("{level:?}");
             assert!(!debug_str.is_empty());
         }
     }
@@ -197,7 +199,7 @@ mod config_serialization_tests {
     fn test_config_serialization() {
         let config = create_default_config();
         // Test that config can be serialized (Debug format as proxy)
-        let serialized = format!("{:?}", config);
+        let serialized = format!("{config:?}");
         assert!(!serialized.is_empty());
         assert!(serialized.len() > 100); // Should have substantial content
     }
@@ -231,7 +233,7 @@ mod config_edge_cases {
     fn test_very_long_instance_name() {
         let mut config = create_default_config();
         let long_name = "x".repeat(1000);
-        config.system.instance_name = long_name.clone();
+        config.system.instance_name = long_name;
         assert_eq!(config.system.instance_name.len(), 1000);
     }
 
@@ -245,9 +247,9 @@ mod config_edge_cases {
     #[test]
     fn test_special_characters_in_name() {
         let mut config = create_default_config();
-        config.system.instance_name = r#"test-instance_123.test"#.to_string();
-        assert!(config.system.instance_name.contains("_"));
-        assert!(config.system.instance_name.contains("."));
+        config.system.instance_name = r"test-instance_123.test".to_string();
+        assert!(config.system.instance_name.contains('_'));
+        assert!(config.system.instance_name.contains('.'));
     }
 
     #[test]
@@ -274,7 +276,7 @@ mod config_edge_cases {
             config
                 .features
                 .custom_flags
-                .insert(format!("flag_{}", i), i % 2 == 0);
+                .insert(format!("flag_{i}"), i % 2 == 0);
         }
         assert_eq!(config.features.custom_flags.len(), 100);
     }
@@ -286,14 +288,10 @@ mod config_integration_tests {
 
     #[test]
     fn test_config_in_result() {
-        /// Gets Config
-        fn get_config()
-        -> std::result::Result<crate::config::canonical_primary::NestGateCanonicalConfig, String>
-        {
-            Ok(create_default_config())
-        }
-
-        let result = get_config();
+        let result: std::result::Result<
+            crate::config::canonical_primary::NestGateCanonicalConfig,
+            String,
+        > = Ok(create_default_config());
         assert!(result.is_ok());
     }
 
@@ -347,7 +345,9 @@ mod config_concurrency_tests {
 
         let handle = thread::spawn(move || config_clone.system.instance_name.clone());
 
-        let name = handle.join().unwrap();
+        let Ok(name) = handle.join() else {
+            panic!("thread join");
+        };
         assert_eq!(name, "nestgate-default");
     }
 
@@ -365,7 +365,7 @@ mod config_concurrency_tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            assert!(handle.join().is_ok(), "thread should not panic");
         }
     }
 }
@@ -397,12 +397,11 @@ mod config_performance_tests {
         // Config creation should be reasonable relative to baseline
         // Allow up to 100x slower than baseline (accounts for actual work)
         // This is machine-independent and robust
+        #[allow(clippy::cast_precision_loss)]
+        let ratio = actual.as_micros() as f64 / baseline.as_micros().max(1) as f64;
         assert!(
             actual <= baseline.saturating_mul(100) || actual.as_millis() < 100,
-            "Config creation too slow: {:?} (baseline: {:?}, ratio: {:.1}x)",
-            actual,
-            baseline,
-            actual.as_micros() as f64 / baseline.as_micros().max(1) as f64
+            "Config creation too slow: {actual:?} (baseline: {baseline:?}, ratio: {ratio:.1}x)",
         );
     }
 
@@ -431,9 +430,7 @@ mod config_performance_tests {
         // Cloning should be efficient (zero-cost or minimal cost)
         assert!(
             actual <= baseline.saturating_mul(50) || actual.as_millis() < 100,
-            "Config cloning too slow: {:?} (baseline: {:?})",
-            actual,
-            baseline
+            "Config cloning too slow: {actual:?} (baseline: {baseline:?})",
         );
     }
 
@@ -454,7 +451,7 @@ mod config_performance_tests {
         let actual = {
             let start = std::time::Instant::now();
             for _ in 0..100 {
-                let _ = std::hint::black_box(format!("{:?}", config));
+                let _ = std::hint::black_box(format!("{config:?}"));
             }
             start.elapsed()
         };
@@ -462,9 +459,7 @@ mod config_performance_tests {
         // Debug formatting involves allocation and string building
         assert!(
             actual <= baseline.saturating_mul(200) || actual.as_millis() < 200,
-            "Config debug formatting too slow: {:?} (baseline: {:?})",
-            actual,
-            baseline
+            "Config debug formatting too slow: {actual:?} (baseline: {baseline:?})",
         );
     }
 }

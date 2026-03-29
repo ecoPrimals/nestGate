@@ -75,3 +75,26 @@ impl Default for RetryInfo {
         }
     }
 }
+
+#[cfg(test)]
+mod context_tests {
+    use super::*;
+
+    #[test]
+    fn error_context_default_serde_roundtrip() {
+        let ctx = ErrorContext::default();
+        let json = serde_json::to_string(&ctx).expect("serialize");
+        let back: ErrorContext = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(ctx.operation, back.operation);
+        assert_eq!(ctx.component, back.component);
+    }
+
+    #[test]
+    fn retry_info_default_serde_roundtrip() {
+        let r = RetryInfo::default();
+        let json = serde_json::to_string(&r).expect("serialize");
+        let back: RetryInfo = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(r.attempt, back.attempt);
+        assert_eq!(r.max_attempts, back.max_attempts);
+    }
+}

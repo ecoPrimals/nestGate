@@ -81,7 +81,7 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn query_service(&self, service_name: &str, query_type: &str) -> Result<String> {
+    pub fn query_service(&self, service_name: &str, query_type: &str) -> Result<String> {
         // Check cache first
         let cache_key = format!("{service_name}:{query_type}");
         if let Some(cachedvalue) = self.registry_cache.get(&cache_key) {
@@ -105,6 +105,7 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[allow(deprecated)]
     pub fn query_service_mesh(&self, service_name: &str) -> Result<String> {
         // Check for service mesh configuration (from injected config)
         if let Some(mesh_endpoint) = self.config.get_service_mesh_endpoint() {
@@ -187,21 +188,25 @@ impl ServiceRegistryClient {
         // Try adapter-based discovery through config (captured from environment at initialization)
         let adapter_key = format!("{service_name}_{port_type}");
 
-        if let Some(port) = self.config.get_adapter_port(&adapter_key) {
-            Ok(port)
-        } else {
-            Err(NestGateError::configuration_error_detailed(
-                "adapter_configuration".to_string(),
-                format!("No adapter configuration found for {service_name}:{port_type}"),
-                None,
-                Some(format!(
-                    "environment variable NESTGATE_ADAPTER_{}_{}_PORT",
-                    service_name.to_uppercase(),
-                    port_type.to_uppercase()
-                )),
-                true,
-            ))
-        }
+        self.config.get_adapter_port(&adapter_key).map_or_else(
+            || {
+                Err(NestGateError::configuration_error_detailed(
+                    "adapter_configuration".to_string(),
+                    format!("No adapter configuration found for {service_name}:{port_type}"),
+                    None,
+                    Some(
+                        format!(
+                            "environment variable NESTGATE_ADAPTER_{}_{}_PORT",
+                            service_name.to_uppercase(),
+                            port_type.to_uppercase()
+                        )
+                        .into(),
+                    ),
+                    true,
+                ))
+            },
+            Ok,
+        )
     }
 
     /// **REGISTRY HEALTH CHECK**: Check registry connectivity
@@ -291,9 +296,8 @@ impl ServiceRegistryClient {
         config.insert(
             "registry_url".to_string(),
             self.base_url
-                .as_ref()
-                .unwrap_or(&"not_configured".to_string())
-                .clone(),
+                .clone()
+                .unwrap_or_else(|| "not_configured".to_string()),
         );
         config.insert("timeout".to_string(), format!("{:?}", self.timeout));
         config.insert(
@@ -363,7 +367,7 @@ mod tests {
         let client = ServiceRegistryClient::with_config(config);
 
         // Without any configuration, should fallback to localhost
-        let result = client.query_service("test_service", "endpoint").await;
+        let result = client.query_service("test_service", "endpoint");
         assert!(result.is_ok());
     }
 
@@ -557,11 +561,9 @@ mod tests {
         let client1 = Arc::clone(&client);
         let client2 = Arc::clone(&client);
 
-        let handle1 =
-            tokio::spawn(async move { client1.query_service("service1", "endpoint").await });
+        let handle1 = tokio::spawn(async move { client1.query_service("service1", "endpoint") });
 
-        let handle2 =
-            tokio::spawn(async move { client2.query_service("service2", "endpoint").await });
+        let handle2 = tokio::spawn(async move { client2.query_service("service2", "endpoint") });
 
         let result1 = handle1.await.unwrap();
         let result2 = handle2.await.unwrap();

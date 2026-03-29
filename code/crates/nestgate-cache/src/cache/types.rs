@@ -137,6 +137,10 @@ impl Default for CacheStats {
 impl CacheStats {
     /// Calculate hit ratio (0.0 to 1.0)
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Hit ratio metric; tier hit/miss counts are within practical f64 precision"
+    )]
     pub fn hit_ratio(&self) -> f64 {
         let total = self.hits + self.misses;
         if total == 0 {
@@ -177,6 +181,10 @@ impl CacheStats {
     }
 
     /// Record access time for a tier
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Midpoint of chrono/std nanosecond durations for running average"
+    )]
     pub fn record_access_time(&mut self, tier: StorageTier, access_time: Duration) {
         // Update running average
         if let Some(current_avg) = self.tier_access_times.get(&tier) {
@@ -243,6 +251,10 @@ impl EfficiencyMetrics {
     }
 
     /// Recalculate Metrics
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Efficiency metrics use floating ratios over bounded operation windows"
+    )]
     fn recalculate_metrics(&mut self) {
         if self.last_operations.is_empty() {
             return;
@@ -278,6 +290,10 @@ impl EfficiencyMetrics {
     }
 
     /// Calculate Variance
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Variance of hit ratios over bounded sliding windows"
+    )]
     fn calculate_variance(&self) -> f64 {
         if self.last_operations.len() < 10 {
             return 1.0; // High variance for small samples
@@ -351,12 +367,10 @@ impl CacheEntry {
     /// Check if entry has expired
     #[must_use]
     pub fn is_expired(&self) -> bool {
-        if let Some(ttl) = self.ttl {
+        self.ttl.is_some_and(|ttl| {
             let expiry_time = self.created_at + chrono::Duration::from_std(ttl).unwrap_or_default();
             chrono::Utc::now() > expiry_time
-        } else {
-            false
-        }
+        })
     }
 
     /// Update access timestamp and count
@@ -374,6 +388,13 @@ impl CacheEntry {
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp
+    )]
+
     use super::*;
 
     // ==================== StorageTier Tests ====================

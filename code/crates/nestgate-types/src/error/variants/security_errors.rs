@@ -5,11 +5,13 @@
 //! Security Errors functionality and utilities.
 //! This module provides security-specific error types and helper functions.
 
+use std::borrow::Cow;
+
 use super::core_errors::{NestGateUnifiedError, SecurityErrorDetails};
 
 impl SecurityErrorDetails {
     /// Create a security error with just a message
-    pub fn new(message: impl Into<String>) -> Self {
+    pub fn new(message: impl Into<Cow<'static, str>>) -> Self {
         Self {
             message: message.into(),
             operation: None,
@@ -20,10 +22,10 @@ impl SecurityErrorDetails {
     }
 
     /// Create an authentication error
-    pub fn authentication_error(message: impl Into<String>) -> Self {
+    pub fn authentication_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self {
             message: message.into(),
-            operation: Some("authentication".to_string()),
+            operation: Some(Cow::Borrowed("authentication")),
             principal: None,
             security_data: None,
             context: None,
@@ -31,10 +33,13 @@ impl SecurityErrorDetails {
     }
 
     /// Create an authorization error
-    pub fn authorization_error(message: impl Into<String>, principal: impl Into<String>) -> Self {
+    pub fn authorization_error(
+        message: impl Into<Cow<'static, str>>,
+        principal: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self {
             message: message.into(),
-            operation: Some("authorization".to_string()),
+            operation: Some(Cow::Borrowed("authorization")),
             principal: Some(principal.into()),
             security_data: None,
             context: None,
@@ -52,19 +57,22 @@ impl NestGateUnifiedError {
     /// use nestgate_types::error::NestGateError;
     /// let error = NestGateError::auth("Invalid credentials");
     /// ```
-    pub fn auth(message: impl Into<String>) -> Self {
+    pub fn auth(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Security(Box::new(SecurityErrorDetails::authentication_error(
             message,
         )))
     }
 
     /// Create a security error (full form)
-    pub fn security(message: impl Into<String>) -> Self {
+    pub fn security(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Security(Box::new(SecurityErrorDetails::new(message)))
     }
 
     /// Create an authorization error with principal
-    pub fn authorization(message: impl Into<String>, principal: impl Into<String>) -> Self {
+    pub fn authorization(
+        message: impl Into<Cow<'static, str>>,
+        principal: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self::Security(Box::new(SecurityErrorDetails::authorization_error(
             message, principal,
         )))

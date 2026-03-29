@@ -35,9 +35,11 @@ mod instant_serde {
     where
         D: Deserializer<'de>,
     {
-        // For deserialization, just use current time minus the duration
+        // For deserialization, approximate the prior instant from elapsed duration
         let duration = Duration::deserialize(deserializer)?;
-        Ok(Instant::now() - duration)
+        Ok(Instant::now()
+            .checked_sub(duration)
+            .unwrap_or_else(Instant::now))
     }
 }
 

@@ -149,14 +149,14 @@ impl ZfsPoolManager {
             .output()
             .await
             .map_err(|_e| {
-                NestGateError::storage_error(&format!(
+                NestGateError::storage_error(format!(
                     "Failed to execute zpool command: {}",
                     "actual_error_details"
                 ))
             })?;
 
         if !output.status.success() {
-            return Err(NestGateError::storage_error(&format!(
+            return Err(NestGateError::storage_error(format!(
                 "zpool command failed: {}",
                 String::from_utf8_lossy(&output.stderr)
             )));

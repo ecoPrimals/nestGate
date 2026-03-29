@@ -44,7 +44,10 @@ pub fn safe_to_string<T: std::fmt::Display>(value: T) -> String {
 /// ```
 pub fn safe_env_var(key: &str) -> Result<String, NestGateError> {
     std::env::var(key).map_err(|e| {
-        NestGateError::configuration_error(key, &format!("Environment variable not found: {e}"))
+        NestGateError::configuration_error(
+            key.to_string(),
+            format!("Environment variable not found: {e}"),
+        )
     })
 }
 
@@ -105,7 +108,7 @@ pub fn safe_read_to_string(path: &std::path::Path) -> Result<String, NestGateErr
 /// ```
 pub fn safe_json_parse<T: serde::de::DeserializeOwned>(content: &str) -> Result<T, NestGateError> {
     serde_json::from_str(content)
-        .map_err(|e| NestGateError::validation_error(&format!("JSON parsing failed: {e}")))
+        .map_err(|e| NestGateError::validation_error(format!("JSON parsing failed: {e}")))
 }
 
 /// Safe mutex lock (returns error instead of poisoning)
@@ -168,7 +171,7 @@ pub fn safe_send<T>(sender: &std::sync::mpsc::Sender<T>, value: T) -> Result<(),
 /// ```
 #[must_use]
 pub fn storage_error(message: impl Into<String>) -> NestGateUnifiedError {
-    NestGateUnifiedError::storage_error(&message.into())
+    NestGateUnifiedError::storage_error(message.into())
 }
 
 /// Create a configuration error with modern pattern
@@ -181,7 +184,7 @@ pub fn storage_error(message: impl Into<String>) -> NestGateUnifiedError {
 /// ```
 #[must_use]
 pub fn configuration_error(message: impl Into<String>) -> NestGateUnifiedError {
-    NestGateUnifiedError::configuration_error("config", &message.into())
+    NestGateUnifiedError::configuration_error("config", message.into())
 }
 
 /// Create a validation error with modern pattern
@@ -233,15 +236,43 @@ mod tests {
     #[test]
     fn test_error_constructors() {
         let err = storage_error("test");
-        assert!(format!("{:?}", err).contains("Storage"));
+        assert!(format!("{err:?}").contains("Storage"));
 
         let err = configuration_error("test");
-        assert!(format!("{:?}", err).contains("Configuration"));
+        assert!(format!("{err:?}").contains("Configuration"));
 
         let err = validation_error("test");
-        assert!(format!("{:?}", err).contains("Validation"));
+        assert!(format!("{err:?}").contains("Validation"));
 
         let err = internal("test", "component");
-        assert!(format!("{:?}", err).contains("Internal"));
+        assert!(format!("{err:?}").contains("Internal"));
+    }
+
+    #[test]
+    fn safe_json_parse_ok_and_err() {
+        let v: serde_json::Value = safe_json_parse(r#"{"a":1}"#).expect("parse");
+        assert_eq!(v["a"], 1);
+        let err = safe_json_parse::<serde_json::Value>("not json").expect_err("bad json");
+        assert!(err.to_string().contains("JSON") || err.to_string().contains("parsing"));
+    }
+
+    #[test]
+    fn safe_lock_ok_and_poisoned() {
+        let m = std::sync::Mutex::new(0i32);
+        assert!(safe_lock(&m).is_ok());
+        let m2 = std::sync::Mutex::new(());
+        let _ = std::panic::catch_unwind(|| {
+            let _g = m2.lock().unwrap();
+            panic!("poison");
+        });
+        assert!(safe_lock(&m2).is_err());
+    }
+
+    #[test]
+    fn safe_send_ok_and_disconnected() {
+        let (tx, rx) = std::sync::mpsc::channel::<i32>();
+        assert!(safe_send(&tx, 7).is_ok());
+        drop(rx);
+        assert!(safe_send(&tx, 1).is_err());
     }
 }

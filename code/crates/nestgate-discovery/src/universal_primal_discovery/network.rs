@@ -92,11 +92,12 @@ pub struct InterfaceInfo {
 #[derive(Debug)]
 /// Networkdiscovery
 pub struct NetworkDiscovery {
-    _config: NestGateCanonicalConfig,
+    #[allow(dead_code)]
+    canonical_primary: NestGateCanonicalConfig,
     #[allow(deprecated)]
-    discovery_config: NetworkDiscoveryConfig,
+    legacy_discovery: NetworkDiscoveryConfig,
     /// Runtime configuration (immutable, thread-safe)
-    runtime_config: SharedNetworkRuntimeConfig,
+    network_runtime: SharedNetworkRuntimeConfig,
 }
 impl Default for NetworkDiscovery {
     /// Returns the default instance
@@ -114,9 +115,9 @@ impl NetworkDiscovery {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            _config: NestGateCanonicalConfig::default(),
-            discovery_config: NetworkDiscoveryConfig::default(),
-            runtime_config: Arc::new(NetworkRuntimeConfig::from_env()),
+            canonical_primary: NestGateCanonicalConfig::default(),
+            legacy_discovery: NetworkDiscoveryConfig::default(),
+            network_runtime: Arc::new(NetworkRuntimeConfig::from_env()),
         }
     }
 
@@ -124,9 +125,9 @@ impl NetworkDiscovery {
     #[must_use]
     pub fn with_config(config: NestGateCanonicalConfig) -> Self {
         Self {
-            _config: config,
-            discovery_config: NetworkDiscoveryConfig::default(),
-            runtime_config: Arc::new(NetworkRuntimeConfig::from_env()),
+            canonical_primary: config,
+            legacy_discovery: NetworkDiscoveryConfig::default(),
+            network_runtime: Arc::new(NetworkRuntimeConfig::from_env()),
         }
     }
 
@@ -137,9 +138,9 @@ impl NetworkDiscovery {
     #[must_use]
     pub fn with_runtime_config(runtime_config: SharedNetworkRuntimeConfig) -> Self {
         Self {
-            _config: NestGateCanonicalConfig::default(),
-            discovery_config: NetworkDiscoveryConfig::default(),
-            runtime_config,
+            canonical_primary: NestGateCanonicalConfig::default(),
+            legacy_discovery: NetworkDiscoveryConfig::default(),
+            network_runtime: runtime_config,
         }
     }
 
@@ -151,14 +152,14 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
+    pub fn discover_bind_address(&self, service_name: &str) -> Result<IpAddr> {
         // Try runtime config first (immutable, thread-safe)
-        if let Some(addr) = self.runtime_config.get_bind_address(service_name) {
+        if let Some(addr) = self.network_runtime.get_bind_address(service_name) {
             return Ok(addr);
         }
 
         // Network introspection - detect best interface
-        self.detect_optimal_bind_interface().await
+        self.detect_optimal_bind_interface()
     }
 
     /// **PRIMAL DISCOVERY**: Find available port through port scanning
@@ -175,7 +176,7 @@ impl NetworkDiscovery {
         start_range: u16,
     ) -> Result<u16> {
         // Check runtime configuration (immutable, thread-safe)
-        if let Some(port) = self.runtime_config.get_bind_port(service_name)
+        if let Some(port) = self.network_runtime.get_bind_port(service_name)
             && self.port_is_available(port).await?
         {
             return Ok(port);
@@ -190,9 +191,9 @@ impl NetworkDiscovery {
 
         Err(NestGateError::System(Box::new(
             nestgate_types::error::variants::core_errors::SystemErrorDetails {
-                message: "No available ports found".to_string(),
-                component: "network_discovery".to_string(),
-                operation: Some("find_available_port".to_string()),
+                message: "No available ports found".into(),
+                component: "network_discovery".into(),
+                operation: Some("find_available_port".into()),
                 context: None,
             },
         )))
@@ -206,7 +207,7 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn detect_optimal_bind_interface(&self) -> Result<IpAddr> {
+    pub fn detect_optimal_bind_interface(&self) -> Result<IpAddr> {
         // Get all available interfaces
         let interfaces = self.get_available_interfaces()?;
 
@@ -222,9 +223,9 @@ impl NetworkDiscovery {
             .ok_or_else(|| {
                 NestGateError::System(Box::new(
                     nestgate_types::error::variants::core_errors::SystemErrorDetails {
-                        message: "No suitable network interface found".to_string(),
-                        component: "network_discovery".to_string(),
-                        operation: Some("find_optimal_interface".to_string()),
+                        message: "No suitable network interface found".into(),
+                        component: "network_discovery".into(),
+                        operation: Some("find_optimal_interface".into()),
                         context: None,
                     },
                 ))
@@ -279,7 +280,7 @@ impl NetworkDiscovery {
 
         // Add common interface patterns with reasonable defaults
         for (idx, interface_name) in self
-            .discovery_config
+            .legacy_discovery
             .preferred_interfaces
             .iter()
             .enumerate()
@@ -289,7 +290,7 @@ impl NetworkDiscovery {
                 ip_endpoint: IpAddr::V4(std::net::Ipv4Addr::new(192, 168, 1, 100)),
                 is_up: true,
                 is_loopback: false,
-                priority_score: 50 - idx as i32,
+                priority_score: 50 - i32::try_from(idx).unwrap_or(0),
             });
         }
 
@@ -306,7 +307,7 @@ impl NetworkDiscovery {
     /// - Network or I/O errors occur
     pub async fn discover_service_endpoint(&self, service_name: &str) -> Result<String> {
         // Runtime config override (immutable, thread-safe)
-        if let Some(endpoint) = self.runtime_config.get_service_endpoint(service_name) {
+        if let Some(endpoint) = self.network_runtime.get_service_endpoint(service_name) {
             return Ok(endpoint.to_string());
         }
 
@@ -324,9 +325,9 @@ impl NetworkDiscovery {
     /// - Network or I/O errors occur
     pub async fn scan_network_for_service(&self, service_name: &str) -> Result<String> {
         // Simplified implementation - in a real system this would do actual network discovery
-        let bind_address = self.detect_optimal_bind_interface().await?;
+        let bind_address = self.detect_optimal_bind_interface()?;
         // Use the port range from discovery config
-        let (start_port, _end_port) = self.discovery_config.port_scan_range; // PEDANTIC: Fixed unused variable
+        let (start_port, _end_port) = self.legacy_discovery.port_scan_range; // PEDANTIC: Fixed unused variable
         // start_port is already available from the tuple above
         let port = self
             .discover_available_port(service_name, start_port)
@@ -343,19 +344,20 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_capability_endpoint(&self, capability: &str) -> Result<String> {
+    pub fn discover_capability_endpoint(&self, capability: &str) -> Result<String> {
         // Runtime config-based discovery (immutable, thread-safe)
-        if let Some(endpoint) = self.runtime_config.get_capability_endpoint(capability) {
+        if let Some(endpoint) = self.network_runtime.get_capability_endpoint(capability) {
             return Ok(endpoint.to_string());
         }
 
         // Default capability endpoint generation
-        let bind_address = self.detect_optimal_bind_interface().await?;
-        let base_port = std::env::var("NESTGATE_CAPABILITY_BASE_PORT")
+        let bind_address = self.detect_optimal_bind_interface()?;
+        let base_port: u16 = std::env::var("NESTGATE_CAPABILITY_BASE_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(9090); // Default admin/capability port
-        let capability_port = base_port + (capability.len() % 100) as u16;
+        let offset = u16::try_from(capability.len().rem_euclid(100)).unwrap_or(0);
+        let capability_port = base_port.saturating_add(offset);
 
         Ok(format!("http://{bind_address}:{capability_port}"))
     }
@@ -368,20 +370,20 @@ impl NetworkDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn get_network_config(&self) -> Result<HashMap<String, String>> {
+    pub fn get_network_config(&self) -> Result<HashMap<String, String>> {
         let mut config = HashMap::new();
 
         config.insert(
             "scan_timeout".to_string(),
-            format!("{:?}", self.discovery_config.scan_timeout),
+            format!("{:?}", self.legacy_discovery.scan_timeout),
         );
         config.insert(
             "port_range".to_string(),
-            format!("{:?}", self.discovery_config.port_scan_range),
+            format!("{:?}", self.legacy_discovery.port_scan_range),
         );
         config.insert(
             "preferred_interfaces".to_string(),
-            self.discovery_config.preferred_interfaces.join(","),
+            self.legacy_discovery.preferred_interfaces.join(","),
         );
 
         Ok(config)
@@ -500,7 +502,7 @@ mod tests {
         let runtime_config = create_test_runtime_config();
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
-        let result = discovery.discover_bind_address("test_service").await;
+        let result = discovery.discover_bind_address("test_service");
         // Should return an IP address (either from config or detected)
         assert!(result.is_ok());
     }
@@ -526,7 +528,7 @@ mod tests {
         let runtime_config = create_test_runtime_config();
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
-        let result = discovery.detect_optimal_bind_interface().await;
+        let result = discovery.detect_optimal_bind_interface();
         // Should return an IP (might be localhost if no interfaces)
         assert!(result.is_ok());
     }
@@ -586,7 +588,7 @@ mod tests {
         let runtime_config = create_test_runtime_config();
         let discovery = NetworkDiscovery::with_runtime_config(runtime_config);
 
-        let result = discovery.get_network_config().await;
+        let result = discovery.get_network_config();
         assert!(result.is_ok());
 
         let config = result.unwrap();
@@ -603,9 +605,9 @@ mod tests {
         let d1 = Arc::clone(&discovery);
         let d2 = Arc::clone(&discovery);
 
-        let handle1 = tokio::spawn(async move { d1.discover_bind_address("service1").await });
+        let handle1 = tokio::task::spawn_blocking(move || d1.discover_bind_address("service1"));
 
-        let handle2 = tokio::spawn(async move { d2.discover_bind_address("service2").await });
+        let handle2 = tokio::task::spawn_blocking(move || d2.discover_bind_address("service2"));
 
         let result1 = handle1.await.unwrap();
         let result2 = handle2.await.unwrap();

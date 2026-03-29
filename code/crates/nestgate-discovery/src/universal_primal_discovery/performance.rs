@@ -141,12 +141,26 @@ impl PerformanceTestRunner {
         // Sort latencies for percentile calculation
         latencies.sort();
 
-        // Calculate target percentile timeout
-        let percentile_index = (((latencies.len() as f64) * self.config.testing.percentile_target
-            / 100.0)
-            .ceil() as usize
-            - 1)
-        .min(latencies.len() - 1);
+        // Calculate target percentile timeout (integer ceil: ⌈n·p/100⌉ − 1, clamped)
+        let len = latencies.len();
+        let percentile_index = if len <= 1 {
+            0
+        } else {
+            let n = u128::try_from(len).unwrap_or(u128::MAX);
+            let pct = self.config.testing.percentile_target.clamp(0.0, 100.0);
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "percentile_target is clamped to 0..=100 before converting to rank"
+            )]
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "percentile is non-negative after clamp to 0..=100"
+            )]
+            let p = u128::from(pct as u64).max(1);
+            let rank = (n * p).div_ceil(100).max(1);
+            let idx = usize::try_from(rank.saturating_sub(1)).unwrap_or(len - 1);
+            idx.min(len - 1)
+        };
 
         let optimal_timeout = latencies[percentile_index];
 

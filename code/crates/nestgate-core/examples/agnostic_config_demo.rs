@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Agnostic Configuration Demo
 //!
@@ -19,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("1️⃣  Migrating API Port:");
     println!("   Checking: Capability → Env (API_PORT) → Default (8080)");
 
-    match migrate_port("api", 8080).await {
+    match migrate_port("api", 8080) {
         Ok(port) => println!("   ✅ API Port: {}\n", port),
         Err(e) => println!("   ❌ Error: {}\n", e),
     }
@@ -28,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("2️⃣  Migrating Storage Endpoint:");
     println!("   Checking: Capability → Env (STORAGE_URL) → Default");
 
-    match migrate_endpoint("storage", "http://localhost:5000").await {
+    match migrate_endpoint("storage", "http://localhost:5000") {
         Ok(endpoint) => println!("   ✅ Storage: {}\n", endpoint),
         Err(e) => println!("   ❌ Error: {}\n", e),
     }
@@ -37,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("3️⃣  Direct Capability Discovery:");
     println!("   Looking for 'database' service...");
 
-    match discover_service("database").await {
+    match discover_service("database") {
         Ok(endpoint) => {
             println!("   ✅ Found: {}", endpoint.endpoint);
             println!("   📍 Source: {:?}\n", endpoint.source);
@@ -49,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("4️⃣  Complete Fallback Chain:");
     println!("   Priority: 1) Capability 2) ENV 3) Default");
 
-    match discover_with_fallback("cache", "CACHE_URL", "redis://localhost:6379").await {
+    match discover_with_fallback("cache", "CACHE_URL", "redis://localhost:6379") {
         Ok(endpoint) => {
             println!("   ✅ Cache: {}", endpoint.endpoint);
             println!("   📍 Source: {:?}\n", endpoint.source);

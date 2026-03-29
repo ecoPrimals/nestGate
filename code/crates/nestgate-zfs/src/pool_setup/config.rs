@@ -29,7 +29,7 @@ pub struct PoolSetupConfig {
 }
 
 /// ZFS pool topology options
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Pooltopology
 pub enum PoolTopology {
     /// Single
@@ -380,3 +380,47 @@ impl Default for ZfsConfig {
 /// [`PoolSetupConfig`] adds runtime setup fields (topology, tiers, device scan) used by this crate.
 pub type CanonicalZfsPoolConfig =
     nestgate_core::config::canonical_primary::domains::storage_canonical::ZfsPoolConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pool_setup_config_default_has_pool_name() {
+        let c = PoolSetupConfig::default();
+        assert_eq!(c.pool_name, "rpool");
+        assert!(!c.create_tiers);
+    }
+
+    #[test]
+    fn pool_topology_and_storage_tier_serialize() {
+        let t = PoolTopology::RaidZ2;
+        let json = serde_json::to_string(&t).expect("topology json");
+        let back: PoolTopology = serde_json::from_str(&json).expect("topology de");
+        assert_eq!(back, PoolTopology::RaidZ2);
+
+        let tier = StorageTier::Cold;
+        let j2 = serde_json::to_string(&tier).expect("tier json");
+        let back_t: StorageTier = serde_json::from_str(&j2).expect("tier de");
+        assert_eq!(back_t, StorageTier::Cold);
+    }
+
+    #[test]
+    fn zfs_config_default_populates_tier_properties() {
+        let z = ZfsConfig::default();
+        assert!(z.tier_properties.contains_key(&StorageTier::Hot));
+        assert_eq!(z.pool_properties.compression, "lz4");
+    }
+
+    #[test]
+    fn safety_and_threshold_defaults() {
+        let s = SafetyConfig::default();
+        assert!(s.dry_run_first);
+        let c = CacheThresholds::default();
+        assert!(c.l1arc_max > 0);
+        let io = IoThresholds::default();
+        assert_eq!(io.retry_count, 3);
+        let m = MemoryLimits::default();
+        assert!(m.arc_max > m.arc_min);
+    }
+}

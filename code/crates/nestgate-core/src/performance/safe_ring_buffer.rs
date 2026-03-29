@@ -108,7 +108,7 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
         // Store value in current head slot - safe Mutex access
         *self.inner.slots[head]
             .lock()
-            .expect("Ring buffer slot mutex poisoned") = Some(value);
+            .unwrap_or_else(|e| e.into_inner()) = Some(value);
 
         // Update head (Release ensures write is visible to consumer)
         self.inner.head.store(next_head, Ordering::Release);
@@ -132,7 +132,7 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
         // Take value from current tail slot - safe Mutex access
         let value = self.inner.slots[tail]
             .lock()
-            .expect("Ring buffer slot mutex poisoned")
+            .unwrap_or_else(|e| e.into_inner())
             .take();
 
         // Calculate next tail position

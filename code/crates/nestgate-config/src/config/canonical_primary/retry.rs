@@ -49,6 +49,12 @@ impl Default for RetryConfig {
 impl RetryConfig {
     /// Get retry delay for a specific attempt number
     #[must_use]
+    #[allow(
+        clippy::cast_precision_loss,
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_possible_wrap
+    )]
     pub fn delay_for_attempt(&self, attempt: u32) -> Duration {
         if attempt == 0 {
             return Duration::from_millis(0);

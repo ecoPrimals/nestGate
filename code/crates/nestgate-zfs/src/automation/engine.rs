@@ -347,7 +347,7 @@ impl DatasetAutomation {
         let policies = self.policies.read().await;
         tier_evaluation::evaluate_tier_by_intelligent_rules(dataset_name, metadata, &policies)
             .map_err(|e| {
-                NestGateUnifiedError::storage_error(&format!("Tier evaluation failed: {e}"))
+                NestGateUnifiedError::storage_error(format!("Tier evaluation failed: {e}"))
             })
     }
 }

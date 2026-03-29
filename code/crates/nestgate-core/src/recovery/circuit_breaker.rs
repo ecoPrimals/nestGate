@@ -101,9 +101,10 @@ impl CircuitBreaker {
         if !self.can_execute().await {
             return Err(NestGateError::Internal(Box::new(
                 crate::error::variants::core_errors::InternalErrorDetails {
-                    message: format!("Circuit breaker open for service: {}", self.service_name),
-                    component: "circuit_breaker".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
+                    message: format!("Circuit breaker open for service: {}", self.service_name)
+                        .into(),
+                    component: "circuit_breaker".into(),
+                    location: Some(format!("{}:{}", file!(), line!()).into()),
                     is_bug: false,
                     context: None,
                 },
@@ -341,8 +342,8 @@ mod tests {
             .execute(|| async {
                 Err(NestGateError::Internal(Box::new(
                     crate::error::variants::core_errors::InternalErrorDetails {
-                        message: "Test error".to_string(),
-                        component: "test".to_string(),
+                        message: "Test error".into(),
+                        component: "test".into(),
                         location: None,
                         is_bug: false,
                         context: None,
@@ -358,8 +359,8 @@ mod tests {
             .execute(|| async {
                 Err(NestGateError::Internal(Box::new(
                     crate::error::variants::core_errors::InternalErrorDetails {
-                        message: "Test error".to_string(),
-                        component: "test".to_string(),
+                        message: "Test error".into(),
+                        component: "test".into(),
                         location: None,
                         is_bug: false,
                         context: None,
@@ -397,8 +398,8 @@ mod tests {
             .execute(|| async {
                 Err(NestGateError::Internal(Box::new(
                     crate::error::variants::core_errors::InternalErrorDetails {
-                        message: "Test error".to_string(),
-                        component: "test".to_string(),
+                        message: "Test error".into(),
+                        component: "test".into(),
                         location: None,
                         is_bug: false,
                         context: None,

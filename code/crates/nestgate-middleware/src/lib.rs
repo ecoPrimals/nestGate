@@ -1,10 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![forbid(unsafe_code)]
 // Clean, debt-free middleware system with unified configuration
 
 // Core modules (canonical implementation)
 //! Lib module
+
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::float_cmp,
+        clippy::uninlined_format_args,
+        clippy::needless_pass_by_value,
+        clippy::cast_precision_loss,
+        clippy::items_after_statements,
+    )
+)]
+#![allow(
+    deprecated,
+    missing_docs,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::doc_markdown,
+    clippy::module_name_repetitions,
+    clippy::struct_excessive_bools
+)]
 
 pub mod config;
 
@@ -49,7 +73,7 @@ mod additional_tests {
         assert!(error_result.is_err());
 
         let recovery_result = handle_middleware_error(error_result);
-        assert!(recovery_result.is_ok());
+        assert_eq!(recovery_result, "Recovered");
     }
 
     // Helper functions for testing
@@ -86,10 +110,10 @@ mod additional_tests {
     }
 
     /// Handles  Middleware Error
-    fn handle_middleware_error(error: Result<(), String>) -> Result<String, String> {
+    fn handle_middleware_error(error: Result<(), String>) -> String {
         match error {
-            Ok(()) => Ok("Success".to_string()),
-            Err(_) => Ok("Recovered".to_string()),
+            Ok(()) => "Success".to_string(),
+            Err(_) => "Recovered".to_string(),
         }
     }
 

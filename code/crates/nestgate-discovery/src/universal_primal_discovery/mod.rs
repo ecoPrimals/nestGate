@@ -102,6 +102,7 @@ pub use introspection_config::{IntrospectionConfig, SharedIntrospectionConfig};
 pub use network::{InterfaceInfo, NetworkDiscoveryConfig};
 pub use network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntimeConfig};
 pub use performance::{OptimalTimeout, PerformanceTestConfig};
+#[allow(deprecated)]
 pub use production_discovery::{ProductionServiceDiscovery, ServiceDiscoveryConfig};
 pub use production_discovery_config::{ProductionDiscoveryConfig, SharedProductionDiscoveryConfig};
 pub use registry::{DiscoveryQuery, ServiceRegistryClient};

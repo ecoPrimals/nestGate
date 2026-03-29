@@ -2,6 +2,7 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 //! **NESTGATE UNIFIED ERROR SYSTEM**
+//!
 //! Module definitions and exports.
 //! Revolutionary error handling with 90% memory efficiency improvement.
 //! This module provides the core error types and utilities for the entire `NestGate` system.
@@ -52,11 +53,19 @@ pub type TestResult<T = ()> = Result<T>;
 /// Extension trait for `Result` types to provide additional utility methods.
 pub trait ResultExt<T, E> {
     /// Convert to a canonical result with `NestGateError`
+    ///
+    /// # Errors
+    ///
+    /// Returns the original `Err` value, converted into [`NestGateError`].
     fn to_canonical(self) -> Result<T>
     where
         E: Into<NestGateError>;
 
     /// Add context to the error
+    ///
+    /// # Errors
+    ///
+    /// Returns the original `Err` value, converted into [`NestGateError`].
     fn with_context<F>(self, f: F) -> Result<T>
     where
         E: Into<NestGateError>,
@@ -119,7 +128,7 @@ macro_rules! validation_error {
     ($field:expr, $msg:expr) => {
         $crate::error::NestGateError::validation_error_detailed(
             $msg.to_string(),
-            Some($field.to_string()),
+            Some($field.to_string().into()),
             None,
             None,
         )
@@ -145,12 +154,20 @@ pub enum ErrorSeverity {
 }
 
 /// Convert legacy `Result<T>` to canonical `Result<T>`
+///
+/// # Errors
+///
+/// Returns `Err` when `legacy_result` is `Err`.
 pub const fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
     // Pass through the legacy result as-is
     legacy_result
 }
 
 /// Convert domain-specific errors to canonical errors
+///
+/// # Errors
+///
+/// Returns `Err` when `result` is `Err`, after converting the error with [`Into::into`].
 pub fn to_canonical<T, E>(result: std::result::Result<T, E>) -> Result<T>
 where
     E: Into<NestGateError>,
@@ -265,16 +282,19 @@ pub mod test_utils {
     use super::*;
 
     /// Create a test configuration error
+    #[must_use]
     pub fn test_config_error() -> NestGateError {
         config_error!("Test configuration error", "test_field")
     }
 
     /// Create a test validation error
+    #[must_use]
     pub fn test_validation_error() -> NestGateError {
         validation_error!("test_field", "Test validation failed")
     }
 
     /// Create a test internal error
+    #[must_use]
     pub fn test_internal() -> NestGateError {
         internal_error!("Test internal error")
     }
@@ -442,6 +462,28 @@ mod error_path_tests {
         assert!(patterns.is_empty());
     }
 
+    #[test]
+    fn test_analyze_error_patterns_load_balancer_and_not_implemented() {
+        use crate::error::variants::core_errors::{
+            LoadBalancerErrorDetails, NotImplementedErrorDetails,
+        };
+        let errors = vec![
+            NestGateError::LoadBalancer(Box::new(LoadBalancerErrorDetails {
+                message: "m".into(),
+                available_services: None,
+                algorithm: None,
+            })),
+            NestGateError::NotImplemented(Box::new(NotImplementedErrorDetails {
+                feature: "f".into(),
+                message: None,
+                planned_version: None,
+            })),
+        ];
+        let patterns = analyze_error_patterns(&errors);
+        assert_eq!(patterns.get("LoadBalancer"), Some(&1));
+        assert_eq!(patterns.get("NotImplemented"), Some(&1));
+    }
+
     // ==================== Error Conversion Tests (3 tests) ====================
 
     #[test]
@@ -454,11 +496,14 @@ mod error_path_tests {
     }
 
     #[test]
-    fn test_json_error_conversion() {
-        let json_err = serde_json::from_str::<serde_json::Value>("invalid json").unwrap_err();
+    fn test_json_error_conversion() -> std::result::Result<(), &'static str> {
+        let Err(json_err) = serde_json::from_str::<serde_json::Value>("invalid json") else {
+            return Err("expected JSON parse failure");
+        };
         let nest_error = NestGateError::from(json_err);
 
         assert!(matches!(nest_error, NestGateError::Validation(_)));
+        Ok(())
     }
 
     #[test]
@@ -467,7 +512,7 @@ mod error_path_tests {
         let canonical_result = migrate_result(legacy_result);
 
         assert!(canonical_result.is_ok());
-        assert_eq!(canonical_result.expect("Operation failed"), 42);
+        assert_eq!(canonical_result.ok(), Some(42));
     }
 
     // ==================== Error Utility Tests (2 tests) ====================
@@ -478,7 +523,7 @@ mod error_path_tests {
         let canonical: Result<String> = to_canonical(result.map_err(|_| internal_error!("Failed")));
 
         assert!(canonical.is_ok());
-        assert_eq!(canonical.expect("Operation failed"), "success");
+        assert_eq!(canonical.ok(), Some("success".to_string()));
     }
 
     #[test]

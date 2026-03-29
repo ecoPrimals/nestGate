@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Example: Ecosystem Integration with Capability Discovery
 //!
 //! This example demonstrates how NestGate integrates with other ecoPrimals

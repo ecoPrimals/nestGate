@@ -156,7 +156,7 @@ pub(super) async fn templates_community_top(
     let limit = params
         .get("limit")
         .and_then(serde_json::Value::as_u64)
-        .unwrap_or(10) as usize;
+        .map_or(10, |n| usize::try_from(n).unwrap_or(usize::MAX));
     let min_usage = params
         .get("min_usage")
         .and_then(serde_json::Value::as_u64)
@@ -200,6 +200,7 @@ pub(super) async fn templates_community_top(
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use crate::rpc::template_storage::TemplateMetadata;
     use serde_json::json;
@@ -268,5 +269,51 @@ mod tests {
         let got = templates_retrieve(Some(&retrieve_p), &state).await.unwrap();
         let meta: TemplateMetadata = serde_json::from_value(got["metadata"].clone()).unwrap();
         assert!(meta.tags.is_empty());
+    }
+
+    #[tokio::test]
+    async fn templates_list_with_optional_filters() {
+        let state = test_state();
+        let params = json!({
+            "name": "tf",
+            "description": "d",
+            "graph_data": {},
+            "user_id": "user_a",
+            "family_id": "fam_f",
+            "metadata": {"tags": ["rust"], "niche_type": "sys", "is_community": true}
+        });
+        templates_store(Some(&params), &state).await.unwrap();
+
+        let list_p = json!({
+            "family_id": "fam_f",
+            "user_id": "user_a",
+            "niche_type": "sys",
+            "is_community": true,
+            "tags": ["rust"]
+        });
+        let listed = templates_list(Some(&list_p), &state).await.unwrap();
+        assert!(listed["total"].as_u64().unwrap() >= 1);
+    }
+
+    #[tokio::test]
+    async fn templates_store_invalid_metadata_errors() {
+        let state = test_state();
+        let params = json!({
+            "name": "n",
+            "description": "d",
+            "graph_data": {},
+            "user_id": "u",
+            "family_id": "f",
+            "metadata": "not-an-object"
+        });
+        assert!(templates_store(Some(&params), &state).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn templates_community_top_with_niche_and_min_usage() {
+        let state = test_state();
+        let top_p = json!({"niche_type": "web", "limit": 3, "min_usage": 0});
+        let out = templates_community_top(Some(&top_p), &state).await.unwrap();
+        assert!(out["templates"].as_array().is_some());
     }
 }

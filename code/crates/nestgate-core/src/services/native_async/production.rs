@@ -4,6 +4,7 @@
 // HTTP removed — use orchestration capability discovery for external HTTP
 // use crate::http_client_stub as reqwest;
 use std::collections::HashMap;
+use tracing::info;
 
 /// Production Service Implementations
 /// Extracted from `native_async_final_services.rs` to maintain file size compliance
@@ -208,8 +209,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
                 request
                     .parameters
                     .get("service_name")
-                    .map(|v| v.as_str().unwrap_or("default"))
-                    .unwrap_or("default")
+                    .map_or("default", |v| v.as_str().unwrap_or("default"))
             )))
         }
     }
@@ -259,7 +259,7 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
     /// Updates  Service Weight
     async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<()> {
         // No Future boxing weight update
-        println!("Updating service {service_id} weight to {weight}");
+        info!("Updating service {service_id} weight to {weight}");
         Ok(())
     }
 
@@ -309,9 +309,11 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
     /// Send Message
     async fn send_message(&self, endpoint: Self::Address, message: Self::Message) -> Result<()> {
         // Native async message sending - no Future boxing overhead
-        println!(
-            "Sending message {} to {}:{}",
-            message.message_id, endpoint.host, endpoint.port
+        info!(
+            message_id = %message.message_id,
+            host = %endpoint.host,
+            port = endpoint.port,
+            "Sending message"
         );
         Ok(())
     }
@@ -368,9 +370,10 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         // Direct async method for broadcasting
         let connections = self.connections.read().await;
         let connection_count = connections.len() as u32;
-        println!(
-            "Broadcasting message {} to {} connections",
-            message.message_id, connection_count
+        info!(
+            message_id = %message.message_id,
+            connection_count,
+            "Broadcasting message"
         );
         Ok(connection_count)
     }
@@ -385,7 +388,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
     /// Ping
     async fn ping(&self, connection: &Self::ConnectionInfo) -> Result<Duration> {
         // No Future boxing ping
-        println!("Pinging connection {}", connection.connection_id);
+        info!(connection_id = %connection.connection_id, "Pinging connection");
         Ok(Duration::from_millis(5))
     }
 }
@@ -446,18 +449,14 @@ impl ProductionLoadBalancer {
 
 impl ProductionCommunicationProvider {
     #[expect(dead_code, reason = "framework placeholder")] // Framework method - intentionally unused
-    fn list_active_connections(
-        &self,
-    ) -> impl std::future::Future<Output = Result<Vec<(String, bool)>>> + Send {
-        async move {
-            // Production connection listing
-            let connections = vec![
-                ("connection_1".to_string(), true),
-                ("connection_2".to_string(), false),
-                ("connection_3".to_string(), true),
-            ];
-            Ok(connections)
-        }
+    async fn list_active_connections(&self) -> Result<Vec<(String, bool)>> {
+        // Production connection listing
+        let connections = vec![
+            ("connection_1".to_string(), true),
+            ("connection_2".to_string(), false),
+            ("connection_3".to_string(), true),
+        ];
+        Ok(connections)
     }
 }
 

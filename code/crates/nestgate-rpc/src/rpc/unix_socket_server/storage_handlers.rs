@@ -7,6 +7,7 @@
 //! Handles: storage.store, storage.retrieve, storage.exists, storage.delete,
 //! storage.list, storage.stats, `storage.store_blob`, `storage.retrieve_blob`
 
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
@@ -189,12 +190,9 @@ pub(super) fn storage_store_blob(params: Option<&Value>, state: &StorageState) -
     resolve_family_id(params, state)?;
 
     // Decode base64
-    use base64::Engine;
-    let blob_data = base64::engine::general_purpose::STANDARD
-        .decode(blob_base64)
-        .map_err(|e| {
-            NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {e}"))
-        })?;
+    let blob_data = STANDARD.decode(blob_base64).map_err(|e| {
+        NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {e}"))
+    })?;
 
     let _ = (state, blob_data);
     Err(NestGateError::not_implemented(
@@ -253,6 +251,7 @@ fn list_keys_recursive<'a>(
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use nestgate_types::error::NestGateError;
     use serde_json::json;

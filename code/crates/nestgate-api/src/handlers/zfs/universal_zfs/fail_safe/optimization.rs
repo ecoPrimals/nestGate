@@ -192,3 +192,83 @@ pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
+    use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
+    use crate::handlers::zfs::universal_zfs_types::UniversalZfsError;
+    use nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig;
+    use std::sync::Arc;
+
+    async fn service_with_open_circuit_no_fallback() -> FailSafeZfsService {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = true;
+        c.failure_threshold = 1;
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let svc = FailSafeZfsService::new(primary, c);
+        svc.circuit_breaker.record_failure().await;
+        svc
+    }
+
+    #[tokio::test]
+    async fn optimize_circuit_open_returns_breaker_error() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = optimize(&svc).await;
+        assert!(matches!(
+            r,
+            Err(UniversalZfsError::CircuitBreakerOpen { .. })
+        ));
+    }
+
+    #[tokio::test]
+    async fn get_optimization_analytics_circuit_open_returns_breaker_error() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = get_optimization_analytics(&svc).await;
+        assert!(matches!(
+            r,
+            Err(UniversalZfsError::CircuitBreakerOpen { .. })
+        ));
+    }
+
+    #[tokio::test]
+    async fn predict_tier_circuit_open_returns_breaker_error() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = predict_tier(&svc, "/tmp/x").await;
+        assert!(matches!(
+            r,
+            Err(UniversalZfsError::CircuitBreakerOpen { .. })
+        ));
+    }
+
+    #[tokio::test]
+    async fn get_configuration_circuit_open_returns_breaker_error() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = get_configuration(&svc).await;
+        assert!(matches!(
+            r,
+            Err(UniversalZfsError::CircuitBreakerOpen { .. })
+        ));
+    }
+
+    #[tokio::test]
+    async fn update_configuration_circuit_open_returns_breaker_error() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = update_configuration(&svc, serde_json::json!({})).await;
+        assert!(matches!(
+            r,
+            Err(UniversalZfsError::CircuitBreakerOpen { .. })
+        ));
+    }
+
+    #[tokio::test]
+    async fn shutdown_circuit_open_returns_breaker_error() {
+        let svc = service_with_open_circuit_no_fallback().await;
+        let r = shutdown(&svc).await;
+        assert!(matches!(
+            r,
+            Err(UniversalZfsError::CircuitBreakerOpen { .. })
+        ));
+    }
+}

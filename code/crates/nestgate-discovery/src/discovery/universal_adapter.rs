@@ -330,7 +330,7 @@ impl UniversalAdapter {
         };
 
         if let Some(capability) = capability {
-            let connection = self.create_connection(capability).await?;
+            let connection = self.create_connection(capability)?;
 
             // Cache connection for future use
             let mut pool = self.connection_pool.lock().await;
@@ -346,9 +346,9 @@ impl UniversalAdapter {
             warn!("Capability {} not found in registry", capability_type);
             Err(NestGateError::Internal(Box::new(
                 nestgate_types::error::variants::core_errors::InternalErrorDetails {
-                    message: format!("Capability {capability_type} not discovered"),
-                    component: "universal_adapter".to_string(),
-                    location: Some(format!("{}:{}", file!(), line!())),
+                    message: format!("Capability {capability_type} not discovered").into(),
+                    component: "universal_adapter".into(),
+                    location: Some(format!("{}:{}", file!(), line!()).into()),
                     is_bug: false,
                     context: None,
                 },
@@ -357,7 +357,7 @@ impl UniversalAdapter {
     }
 
     /// Create a connection for a capability
-    async fn create_connection(
+    fn create_connection(
         &self,
         capability: CapabilityInfo,
     ) -> Result<Arc<ConnectionImpl>, NestGateError> {

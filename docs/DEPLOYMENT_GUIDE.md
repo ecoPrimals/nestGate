@@ -1,8 +1,8 @@
 # 🚀 NestGate Production Deployment Guide
 
-> **Status**: Production Ready | **Version**: 2.0.0 | **Date**: September 10, 2025
+> **Status**: Production Ready | **Version**: 4.7.0-dev | **Date**: March 29, 2026
 
-This guide provides comprehensive instructions for deploying NestGate v2.0.0 in production environments.
+This guide provides comprehensive instructions for deploying NestGate 4.7.0-dev in production environments.
 
 ## 📋 Table of Contents
 
@@ -20,7 +20,7 @@ This guide provides comprehensive instructions for deploying NestGate v2.0.0 in 
 
 ## 🎯 Overview
 
-NestGate v2.0.0 features a completely modernized architecture designed for production deployment:
+NestGate 4.7.0-dev features a completely modernized architecture designed for production deployment:
 
 ### ✨ Deployment Features
 
@@ -183,7 +183,7 @@ docker-compose -f deploy/production.yml down
 
 ```bash
 # Build image
-docker build -t nestgate:2.0.0 .
+docker build -t nestgate:4.7.0-dev .
 
 # Run container
 docker run -d \
@@ -547,4 +547,4 @@ curl -s http://localhost:8080/health/ecosystem
 
 ---
 
-**🏆 NestGate v2.0.0 - Production Ready** | **Built with ❤️ by the ecoPrimals team** 
+**🏆 NestGate 4.7.0-dev - Production Ready** | **Built with ❤️ by the ecoPrimals team** 

@@ -319,7 +319,6 @@ pub trait SecurityProvider: CanonicalUniversalProvider<Box<dyn SecurityService>>
     /// * `Ok(Some((algorithm, key_id)))` - Signature valid, returns algorithm and key ID
     /// * `Ok(None)` - Signature invalid
     /// * `Err(NestGateError)` - Verification error
-    #[expect(clippy::type_complexity, reason = "complex trait bounds required")]
     fn verify(
         &self,
         data: &[u8],

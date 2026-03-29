@@ -346,20 +346,22 @@ impl From<UniversalZfsError> for NestGateError {
             UniversalZfsError::Timeout {
                 b_operation,
                 duration,
-            } => Self::timeout_error(&b_operation, duration),
+            } => Self::timeout_error(b_operation, duration),
             UniversalZfsError::Configuration { .. } => {
-                Self::configuration_error("zfs", &error_data.message)
+                Self::configuration_error("zfs", error_data.message.clone())
             }
             UniversalZfsError::Backend { backend, .. } => {
                 Self::external_service_unavailable(backend, error_data.message)
             }
-            UniversalZfsError::InvalidInput { .. } => Self::validation_error(&error_data.message),
+            UniversalZfsError::InvalidInput { .. } => {
+                Self::validation_error(error_data.message.clone())
+            }
             UniversalZfsError::NotFound { .. } => Self::not_found(error_data.message),
             UniversalZfsError::Internal { .. } => Self::internal(error_data.message),
             UniversalZfsError::PoolOperationFailed { .. }
             | UniversalZfsError::DatasetOperationFailed { .. }
             | UniversalZfsError::SnapshotOperationFailed { .. } => {
-                Self::storage_error(&error_data.message)
+                Self::storage_error(error_data.message.clone())
             }
         }
     }

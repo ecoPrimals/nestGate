@@ -513,7 +513,7 @@ mod tests {
         let err = NestGateError::configuration("Error: <test> & \"quote\"");
         let msg = err.to_string();
         assert!(msg.contains("<test>"));
-        assert!(msg.contains("&"));
+        assert!(msg.contains('&'));
     }
 
     #[test]
@@ -537,14 +537,12 @@ mod tests {
 
     #[test]
     fn test_result_ok_value() {
-        /// Returns Ok
-        fn returns_ok() -> Result<String> {
-            Ok("success".to_string())
-        }
-
-        let result = returns_ok();
+        let result: Result<String> = Ok("success".to_string());
         assert!(result.is_ok());
-        assert_eq!(result.expect("Operation failed"), "success");
+        let Ok(value) = result else {
+            panic!("expected Ok");
+        };
+        assert_eq!(value, "success");
     }
 
     #[test]

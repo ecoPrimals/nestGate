@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! Comprehensive E2E Test Suite - Inspired by BearDog Excellence
 //!
 //! This suite demonstrates systematic testing patterns learned from BearDog

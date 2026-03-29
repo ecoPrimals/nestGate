@@ -137,7 +137,7 @@ pub fn assert_true(condition: bool, context: &str) -> Result<()> {
     if condition {
         Ok(())
     } else {
-        Err(NestGateError::validation_error(&format!(
+        Err(NestGateError::validation_error(format!(
             "Assertion failed: {}",
             context
         )))

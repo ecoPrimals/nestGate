@@ -1,3 +1,6 @@
+> **Historical**: This document was written in December 15, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🛡️ SAFE PATTERNS GUIDE
 ## Modern Idiomatic Rust Patterns in NestGate
 ### December 15, 2025

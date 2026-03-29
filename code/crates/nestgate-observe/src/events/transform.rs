@@ -184,8 +184,12 @@ pub fn create_service() -> DefaultService {
     DefaultService::new(EventsTransformConfig::default())
 }
 
-/// Validate configuration
-pub async fn validate_config(config: &EventsTransformConfig) -> nestgate_types::Result<()> {
+/// Validate configuration.
+///
+/// # Errors
+///
+/// Returns when `max_connections` or `buffer_size` is zero.
+pub fn validate_config(config: &EventsTransformConfig) -> nestgate_types::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
             "events_transform",
@@ -234,13 +238,13 @@ mod tests {
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
     }
 
-    #[tokio::test]
-    async fn test_config_validation() {
+    #[test]
+    fn test_config_validation() {
         let mut config = Config::default();
-        assert!(validate_config(&config).await.is_ok());
+        assert!(validate_config(&config).is_ok());
 
         config.max_connections = 0;
-        assert!(validate_config(&config).await.is_err());
+        assert!(validate_config(&config).is_err());
     }
 
     #[tokio::test]

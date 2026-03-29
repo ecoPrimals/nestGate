@@ -95,10 +95,13 @@ fn from_io_error_branch() {
 }
 
 #[test]
-fn from_serde_json_error_branch() {
-    let err = serde_json::from_str::<serde_json::Value>("not json").unwrap_err();
+fn from_serde_json_error_branch() -> std::result::Result<(), &'static str> {
+    let Err(err) = serde_json::from_str::<serde_json::Value>("not json") else {
+        return Err("expected JSON parse failure");
+    };
     let e: NestGateError = err.into();
     assert!(e.to_string().contains("JSON") || e.to_string().contains("Validation"));
+    Ok(())
 }
 
 #[test]
@@ -116,21 +119,20 @@ fn from_str_slice_branch() {
 #[test]
 fn result_ext_to_canonical_ok() {
     let r: std::result::Result<i32, std::io::Error> = Ok(3);
-    assert_eq!(r.to_canonical().unwrap(), 3);
+    assert_eq!(r.to_canonical().ok(), Some(3));
 }
 
 #[test]
 fn result_ext_to_canonical_err_io() {
-    let r: std::result::Result<(), std::io::Error> =
-        Err(std::io::Error::new(std::io::ErrorKind::Other, "x"));
+    let r: std::result::Result<(), std::io::Error> = Err(std::io::Error::other("x"));
     assert!(r.to_canonical().is_err());
 }
 
 #[test]
 fn configuration_error_detailed_branch() {
     let e = NestGateError::configuration_error_detailed(
-        "f".into(),
-        "m".into(),
+        "f",
+        "m",
         Some("c".into()),
         Some("e".into()),
         true,
@@ -140,31 +142,27 @@ fn configuration_error_detailed_branch() {
 
 #[test]
 fn api_error_detailed_branch() {
-    let e = NestGateError::api_error_detailed(
-        "m".into(),
-        Some(500),
-        Some("rid".into()),
-        Some("/a".into()),
-    );
+    let e =
+        NestGateError::api_error_detailed("m", Some(500), Some("rid".into()), Some("/a".into()));
     assert!(e.to_string().contains("API"));
 }
 
 #[test]
 fn storage_error_detailed_branch() {
-    let e = NestGateError::storage_error_detailed("m".into(), Some("read".into()));
+    let e = NestGateError::storage_error_detailed("m", Some("read".into()));
     assert!(e.to_string().contains("Storage"));
 }
 
 #[test]
 fn network_error_detailed_branch() {
-    let e = NestGateError::network_error_detailed("m".into(), Some("op".into()), Some("e".into()));
+    let e = NestGateError::network_error_detailed("m", Some("op".into()), Some("e".into()));
     assert!(e.to_string().contains("Network"));
 }
 
 #[test]
 fn validation_error_detailed_branch() {
     let e = NestGateError::validation_error_detailed(
-        "m".into(),
+        "m",
         Some("f".into()),
         Some("e".into()),
         Some("a".into()),
@@ -199,19 +197,26 @@ fn storage_permission_denied_exercise() {
 #[test]
 fn migrate_result_passthrough() {
     let r: nestgate_types::error::Result<i32> = Ok(1);
-    assert_eq!(nestgate_types::error::migrate_result(r).unwrap(), 1);
+    assert_eq!(nestgate_types::error::migrate_result(r).ok(), Some(1));
 }
 
 #[test]
 fn system_internal_external_validation_aliases() {
-    let a = NestGateError::system("m", "c");
-    let b = NestGateError::internal("i");
-    let c = NestGateError::internal_with_component("i", "comp");
-    let d = NestGateError::internal_error("i", "comp");
-    let e = NestGateError::external_service_unavailable("svc", "down");
-    let f = NestGateError::validation("v");
-    for x in [a, b, c, d, e, f] {
-        assert!(!x.to_string().is_empty());
+    let system_err = NestGateError::system("m", "c");
+    let internal_err = NestGateError::internal("i");
+    let internal_comp = NestGateError::internal_with_component("i", "comp");
+    let internal_det = NestGateError::internal_error("i", "comp");
+    let external_err = NestGateError::external_service_unavailable("svc", "down");
+    let validation_err = NestGateError::validation("v");
+    for err in [
+        system_err,
+        internal_err,
+        internal_comp,
+        internal_det,
+        external_err,
+        validation_err,
+    ] {
+        assert!(!err.to_string().is_empty());
     }
 }
 

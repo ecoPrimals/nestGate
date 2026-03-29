@@ -147,7 +147,7 @@ impl JsonRpcClient {
         debug!("Connecting to JSON-RPC service at: {}", path);
 
         let stream = UnixStream::connect(path).await.map_err(|e| {
-            NestGateError::network_error(&format!(
+            NestGateError::network_error(format!(
                 "Failed to connect to JSON-RPC service at {path}: {e}"
             ))
         })?;
@@ -239,12 +239,12 @@ impl JsonRpcClient {
         tokio::time::timeout(self.timeout, stream.write_all(request_line.as_bytes()))
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC request", self.timeout))?
-            .map_err(|e| NestGateError::network_error(&format!("Failed to send request: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to send request: {e}")))?;
 
         tokio::time::timeout(self.timeout, stream.flush())
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC flush", self.timeout))?
-            .map_err(|e| NestGateError::network_error(&format!("Failed to flush request: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to flush request: {e}")))?;
 
         // Read response (newline-delimited JSON)
         let mut reader = BufReader::new(stream);
@@ -253,7 +253,7 @@ impl JsonRpcClient {
         tokio::time::timeout(self.timeout, reader.read_line(&mut response_line))
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC response", self.timeout))?
-            .map_err(|e| NestGateError::network_error(&format!("Failed to read response: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to read response: {e}")))?;
 
         // Parse response
         let response: JsonRpcResponse = serde_json::from_str(&response_line).map_err(|e| {
@@ -269,7 +269,7 @@ impl JsonRpcClient {
 
         // Check for errors
         if let Some(error) = response.error {
-            return Err(NestGateError::api_error(&format!(
+            return Err(NestGateError::api_error(format!(
                 "JSON-RPC error {}: {}",
                 error.code, error.message
             )));
@@ -334,7 +334,7 @@ impl JsonRpcClient {
     pub async fn close(&mut self) -> Result<()> {
         if let Some(mut stream) = self.stream.take() {
             stream.shutdown().await.map_err(|e| {
-                NestGateError::network_error(&format!("Failed to close connection: {e}"))
+                NestGateError::network_error(format!("Failed to close connection: {e}"))
             })?;
         }
         Ok(())
@@ -342,8 +342,25 @@ impl JsonRpcClient {
 }
 
 #[cfg(test)]
+impl JsonRpcClient {
+    /// Construct a client around an existing Unix stream (in-process pair testing).
+    pub(crate) fn from_unix_stream_for_test(stream: UnixStream) -> Self {
+        Self {
+            stream: Some(stream),
+            next_id: 1,
+            timeout: Duration::from_secs(5),
+        }
+    }
+}
+
+#[cfg(test)]
 mod tests {
+
     use super::*;
+    use serde::Deserialize;
+    use serde_json::json;
+    use std::borrow::Cow;
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
     #[test]
     fn test_request_serialization() {
@@ -387,5 +404,119 @@ mod tests {
         let error = response.error.unwrap();
         assert_eq!(error.code, -32601);
         assert_eq!(error.message.as_ref(), "Method not found");
+    }
+
+    #[test]
+    fn jsonrpc_error_roundtrips_optional_data() {
+        let err = JsonRpcError {
+            code: -32000,
+            message: Cow::Borrowed("oops"),
+            data: Some(json!({"hint": "x"})),
+        };
+        let s = serde_json::to_string(&err).unwrap();
+        let back: JsonRpcError = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.code, -32000);
+        assert_eq!(back.data.as_ref().unwrap()["hint"], "x");
+    }
+
+    #[tokio::test]
+    async fn connect_unix_missing_socket_errors() {
+        let r = JsonRpcClient::connect_unix(
+            "/nonexistent/nestgate/jsonrpc_test_socket_please_ignore.sock",
+        )
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn call_roundtrip_over_unix_pair() {
+        let (server, client_sock) = UnixStream::pair().unwrap();
+        let (rh, mut wh) = server.into_split();
+        let server_task = tokio::spawn(async move {
+            let mut buf = String::new();
+            let mut br = BufReader::new(rh);
+            br.read_line(&mut buf).await.unwrap();
+            let response = r#"{"jsonrpc":"2.0","result":{"ping":true},"id":1}"#;
+            wh.write_all(format!("{response}\n").as_bytes())
+                .await
+                .unwrap();
+            wh.flush().await.unwrap();
+        });
+
+        let mut client = JsonRpcClient::from_unix_stream_for_test(client_sock);
+        let v = client.call("demo.method", json!({"a": 1})).await.unwrap();
+        assert_eq!(v["ping"], true);
+        server_task.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn call_propagates_jsonrpc_error_object() {
+        let (server, client_sock) = UnixStream::pair().unwrap();
+        let (rh, mut wh) = server.into_split();
+        tokio::spawn(async move {
+            let mut line = String::new();
+            let mut br = BufReader::new(rh);
+            br.read_line(&mut line).await.unwrap();
+            let response = r#"{"jsonrpc":"2.0","error":{"code":-32601,"message":"nope"},"id":1}"#;
+            wh.write_all(format!("{response}\n").as_bytes())
+                .await
+                .unwrap();
+        });
+
+        let mut client = JsonRpcClient::from_unix_stream_for_test(client_sock);
+        let e = client.call("x", json!({})).await.unwrap_err();
+        assert!(e.to_string().contains("JSON-RPC error") || e.to_string().contains("-32601"));
+    }
+
+    #[tokio::test]
+    async fn call_typed_ok_and_bad_shape() {
+        let (server, client_sock) = UnixStream::pair().unwrap();
+        let (rh, mut wh) = server.into_split();
+        tokio::spawn(async move {
+            let mut line = String::new();
+            let mut br = BufReader::new(rh);
+            br.read_line(&mut line).await.unwrap();
+            let response = r#"{"jsonrpc":"2.0","result":{"k":42},"id":1}"#;
+            wh.write_all(format!("{response}\n").as_bytes())
+                .await
+                .unwrap();
+        });
+
+        #[derive(Debug, Deserialize, PartialEq, Eq)]
+        struct R {
+            k: i32,
+        }
+
+        let mut client = JsonRpcClient::from_unix_stream_for_test(client_sock);
+        let ok: R = client.call_typed("m", json!({})).await.unwrap();
+        assert_eq!(ok, R { k: 42 });
+
+        let (server2, client_sock2) = UnixStream::pair().unwrap();
+        let (rh2, mut wh2) = server2.into_split();
+        tokio::spawn(async move {
+            let mut line = String::new();
+            let mut br = BufReader::new(rh2);
+            br.read_line(&mut line).await.unwrap();
+            let response = r#"{"jsonrpc":"2.0","result":"not-an-object","id":1}"#;
+            wh2.write_all(format!("{response}\n").as_bytes())
+                .await
+                .unwrap();
+        });
+        let mut client2 = JsonRpcClient::from_unix_stream_for_test(client_sock2);
+        let err = client2
+            .call_typed::<R>("m", json!({}))
+            .await
+            .expect_err("wrong shape");
+        assert!(err.to_string().contains("deserialize") || err.to_string().contains("JSON-RPC"));
+    }
+
+    #[tokio::test]
+    async fn set_timeout_and_close_then_call_fails() {
+        let (_s, client_sock) = UnixStream::pair().unwrap();
+        let mut client = JsonRpcClient::from_unix_stream_for_test(client_sock);
+        client.set_timeout(Duration::from_secs(60));
+        client.close().await.unwrap();
+        let e = client.call("m", json!({})).await.unwrap_err();
+        assert!(e.to_string().contains("not connected"));
     }
 }

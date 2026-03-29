@@ -340,7 +340,32 @@ pub fn get_nestgate_tcp_discovery_path() -> Result<PathBuf> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
+
+    #[test]
+    fn get_tcp_discovery_path_uses_tmp_when_xdg_and_home_missing() {
+        temp_env::with_vars(
+            vec![("XDG_RUNTIME_DIR", None::<&str>), ("HOME", None::<&str>)],
+            || {
+                let p = get_nestgate_tcp_discovery_path().expect("path");
+                assert!(p.starts_with("/tmp/nestgate-ipc-port"));
+            },
+        );
+    }
+
+    #[test]
+    fn get_socket_path_prefers_xdg_runtime_when_set() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        temp_env::with_var(
+            "XDG_RUNTIME_DIR",
+            Some(dir.path().to_string_lossy().as_ref()),
+            || {
+                let p = get_nestgate_socket_path().expect("path");
+                assert_eq!(p, dir.path().join("nestgate.sock"));
+            },
+        );
+    }
 
     #[test]
     fn test_get_socket_path() {

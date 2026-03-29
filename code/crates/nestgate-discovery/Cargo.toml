@@ -34,3 +34,6 @@ tempfile = { workspace = true }
 [features]
 default = []
 dev-stubs = []
+# Optional discovery backends (referenced by `cfg(feature = "...")` in discovery_mechanism)
+consul = []
+kubernetes = []

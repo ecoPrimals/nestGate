@@ -1,3 +1,6 @@
+> **Historical**: This document was written in December 21, 2025. Current architecture
+> and patterns may differ. See root-level docs and `specs/` for current specifications.
+
 # 🌍 ECOSYSTEM INTEGRATION - QUICK REFERENCE
 
 **Status**: ✅ **LIVE INTEGRATION OPERATIONAL**  

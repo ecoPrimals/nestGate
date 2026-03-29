@@ -324,7 +324,7 @@ mod network_concurrent_errors {
         for i in 0..5 {
             let errors_clone = Arc::clone(&errors);
             let handle = thread::spawn(move || {
-                let err = NestGateError::network_error(&format!("Error from thread {}", i));
+                let err = NestGateError::network_error(format!("Error from thread {}", i));
                 errors_clone.lock().unwrap().push(err);
             });
             handles.push(handle);
@@ -358,7 +358,7 @@ mod network_performance_tests {
     fn test_network_error_creation_performance() {
         let start = std::time::Instant::now();
         for i in 0..1000 {
-            let _ = NestGateError::network_error(&format!("Error {}", i));
+            let _ = NestGateError::network_error(format!("Error {}", i));
         }
         let duration = start.elapsed();
         // Should create 1000 errors quickly (< 50ms)
@@ -368,7 +368,7 @@ mod network_performance_tests {
     #[test]
     fn test_error_formatting_performance() {
         let errors: Vec<_> = (0..100)
-            .map(|i| NestGateError::network_error(&format!("Error {}", i)))
+            .map(|i| NestGateError::network_error(format!("Error {}", i)))
             .collect();
 
         let start = std::time::Instant::now();

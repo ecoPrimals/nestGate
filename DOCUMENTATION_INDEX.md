@@ -3,6 +3,8 @@
 **Last Updated**: March 29, 2026  
 **Version**: 4.7.0-dev
 
+Paths linked below (root files, `config/production.env.example`, `docs/guides/*.md`, `docs/api/`, `docs/architecture/`, `docs/operations/`, top-level `tests/`) exist in this repository as of March 29, 2026.
+
 ---
 
 ## Quick Navigation

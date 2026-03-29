@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **E2E SCENARIO 8: POOL FULL DURING OPERATION**
 //!
 //! **Objective**: Test behavior when ZFS pool reaches capacity

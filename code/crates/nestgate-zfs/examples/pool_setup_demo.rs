@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(
+    missing_docs,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
 //
 // Demonstrates the pure Rust ZFS pool setup functionality with hardware detection
 // and intelligent configuration recommendations.

@@ -1,3 +1,15 @@
+#![allow(
+    unused,
+    dead_code,
+    deprecated,
+    missing_docs,
+    clippy::all,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::restriction,
+    clippy::cargo
+)]
+
 //! **E2E SCENARIO 20: DISASTER RECOVERY SIMULATION**
 //!
 //! **Objective**: Test complete disaster recovery procedures

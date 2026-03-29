@@ -226,10 +226,10 @@ impl EndpointConfig {
             .ok_or_else(|| {
                 nestgate_types::error::NestGateUnifiedError::Configuration(Box::new(
                     nestgate_types::error::ConfigurationErrorDetails {
-                        field: format!("{prefix}_HOST"),
-                        message: "Environment variable not set".to_string(),
+                        field: format!("{prefix}_HOST").into(),
+                        message: "Environment variable not set".into(),
                         currentvalue: None,
-                        expected: Some("Valid hostname or IP address".to_string()),
+                        expected: Some("Valid hostname or IP address".into()),
                         user_error: true,
                     },
                 ))
@@ -238,10 +238,10 @@ impl EndpointConfig {
         let port = config.get_port(prefix).ok_or_else(|| {
             nestgate_types::error::NestGateUnifiedError::Configuration(Box::new(
                 nestgate_types::error::ConfigurationErrorDetails {
-                    field: format!("{prefix}_PORT"),
-                    message: "Environment variable not set or invalid port number".to_string(),
+                    field: format!("{prefix}_PORT").into(),
+                    message: "Environment variable not set or invalid port number".into(),
                     currentvalue: None,
-                    expected: Some("Valid port number (1-65535)".to_string()),
+                    expected: Some("Valid port number (1-65535)".into()),
                     user_error: true,
                 },
             ))

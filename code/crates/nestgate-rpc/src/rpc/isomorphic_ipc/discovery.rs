@@ -239,6 +239,7 @@ fn get_tcp_discovery_file_candidates(service_name: &str) -> Vec<PathBuf> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -288,5 +289,68 @@ mod tests {
         let tcp_ep = IpcEndpoint::TcpLocal("127.0.0.1:12345".parse().unwrap());
         assert!(tcp_ep.is_tcp());
         assert!(!tcp_ep.is_unix_socket());
+    }
+
+    #[test]
+    fn discover_ipc_endpoint_prefers_existing_unix_socket() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock = dir.path().join("disc_mysvc.sock");
+        std::fs::write(&sock, b"x").unwrap();
+        temp_env::with_var(
+            "XDG_RUNTIME_DIR",
+            Some(dir.path().to_string_lossy().as_ref()),
+            || {
+                let ep = discover_ipc_endpoint("disc_mysvc").expect("discover");
+                assert!(matches!(ep, IpcEndpoint::UnixSocket(ref p) if p == &sock));
+            },
+        );
+    }
+
+    #[test]
+    fn discover_ipc_endpoint_falls_back_to_tcp_discovery_file() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let disc = dir.path().join("disc_tcp_svc-ipc-port");
+        std::fs::write(&disc, "tcp:127.0.0.1:54321\n").unwrap();
+        temp_env::with_var(
+            "XDG_RUNTIME_DIR",
+            Some(dir.path().to_string_lossy().as_ref()),
+            || {
+                let ep = discover_ipc_endpoint("disc_tcp_svc").expect("discover");
+                match ep {
+                    IpcEndpoint::TcpLocal(a) => assert_eq!(a.port(), 54321),
+                    _ => panic!("expected TCP"),
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn discover_tcp_endpoint_skips_malformed_discovery_files() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let disc = dir.path().join("bad_tcp-ipc-port");
+        std::fs::write(&disc, "not-tcp-prefix\n").unwrap();
+        temp_env::with_var(
+            "XDG_RUNTIME_DIR",
+            Some(dir.path().to_string_lossy().as_ref()),
+            || {
+                let r = discover_tcp_endpoint("bad_tcp");
+                assert!(r.is_err());
+            },
+        );
+    }
+
+    #[test]
+    fn discover_tcp_endpoint_skips_unparseable_address() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let disc = dir.path().join("bad_addr-ipc-port");
+        std::fs::write(&disc, "tcp:not_a_socket_addr\n").unwrap();
+        temp_env::with_var(
+            "XDG_RUNTIME_DIR",
+            Some(dir.path().to_string_lossy().as_ref()),
+            || {
+                let r = discover_tcp_endpoint("bad_addr");
+                assert!(r.is_err());
+            },
+        );
     }
 }

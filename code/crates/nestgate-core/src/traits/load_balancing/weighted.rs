@@ -55,9 +55,9 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "No services available".to_string(),
+                    message: "No services available".into(),
                     available_services: Some(0),
-                    algorithm: Some("weighted_round_robin".to_string()),
+                    algorithm: Some("weighted_round_robin".into()),
                 },
             )));
         }
@@ -116,9 +116,9 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
         selected_service.ok_or_else(|| {
             NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "Failed to select service with weighted round-robin".to_string(),
+                    message: "Failed to select service with weighted round-robin".into(),
                     available_services: Some(services.len()),
-                    algorithm: Some("weighted_round_robin".to_string()),
+                    algorithm: Some("weighted_round_robin".into()),
                 },
             ))
         })
@@ -197,9 +197,9 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         if services.is_empty() {
             return Err(NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "No services available".to_string(),
+                    message: "No services available".into(),
                     available_services: Some(0),
-                    algorithm: Some("weighted_random".to_string()),
+                    algorithm: Some("weighted_random".into()),
                 },
             )));
         }
@@ -218,9 +218,9 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
             let mut rng = self.rng.lock().map_err(|_| {
                 NestGateError::LoadBalancer(Box::new(
                     crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                        message: "Random number generator lock poisoned".to_string(),
+                        message: "Random number generator lock poisoned".into(),
                         available_services: Some(services.len()),
-                        algorithm: Some("weighted_random".to_string()),
+                        algorithm: Some("weighted_random".into()),
                     },
                 ))
             })?;
@@ -232,9 +232,9 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         let mut rng = self.rng.lock().map_err(|_| {
             NestGateError::LoadBalancer(Box::new(
                 crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "Random number generator lock poisoned".to_string(),
+                    message: "Random number generator lock poisoned".into(),
                     available_services: Some(services.len()),
-                    algorithm: Some("weighted_random".to_string()),
+                    algorithm: Some("weighted_random".into()),
                 },
             ))
         })?;

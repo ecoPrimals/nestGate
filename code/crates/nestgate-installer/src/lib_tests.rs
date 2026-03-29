@@ -5,12 +5,7 @@
 //!
 //! Extracted from lib.rs to keep production code under the line limit.
 
-use crate::config::InstallerConfig;
-use crate::installer::{InstallationInfo, NestGateInstaller};
-use tempfile::TempDir;
-
 mod basic_tests {
-    use super::*;
     use crate::config::InstallerConfig;
     use tempfile::TempDir;
 
@@ -75,7 +70,6 @@ mod basic_tests {
 }
 
 mod comprehensive_tests {
-    use super::*;
     use crate::config::InstallerConfig;
     use crate::installer::{InstallationInfo, NestGateInstaller};
 

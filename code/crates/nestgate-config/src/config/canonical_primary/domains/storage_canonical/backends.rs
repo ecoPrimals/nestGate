@@ -734,7 +734,7 @@ impl StorageBackendConfig {
         for rule in &self.routing.rules {
             if !self.backends.contains_key(&rule.backend) {
                 return Err(nestgate_types::error::NestGateError::validation_error(
-                    &format!(
+                    format!(
                         "Routing rule '{}' references non-existent backend '{}'",
                         rule.name, rule.backend
                     ),

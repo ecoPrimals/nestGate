@@ -144,14 +144,14 @@ impl BearDogClient {
             let suffix = &file_pattern[star + 1..];
 
             let mut entries = fs::read_dir(parent).await.map_err(|e| {
-                NestGateError::network_error(&format!("Failed to read {}: {e}", parent.display()))
+                NestGateError::network_error(format!("Failed to read {}: {e}", parent.display()))
             })?;
             loop {
                 let entry = match entries.next_entry().await {
                     Ok(Some(e)) => e,
                     Ok(None) => break,
                     Err(e) => {
-                        return Err(NestGateError::network_error(&format!(
+                        return Err(NestGateError::network_error(format!(
                             "Failed to read directory entry: {e}"
                         )));
                     }
@@ -176,7 +176,7 @@ impl BearDogClient {
             // Try to connect
             UnixStream::connect(&path)
                 .await
-                .map_err(|e| NestGateError::network_error(&format!("Failed to connect: {e}")))?;
+                .map_err(|e| NestGateError::network_error(format!("Failed to connect: {e}")))?;
             Ok(path)
         } else {
             Err(NestGateError::network_error("Socket does not exist"))
@@ -190,7 +190,7 @@ impl BearDogClient {
     /// Returns error if connection fails
     pub async fn connect(&mut self) -> Result<()> {
         if !self.socket_path.exists() {
-            return Err(NestGateError::network_error(&format!(
+            return Err(NestGateError::network_error(format!(
                 "BearDog socket not found: {}",
                 self.socket_path.display()
             )));
@@ -198,7 +198,7 @@ impl BearDogClient {
 
         // Test connection
         let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
-            NestGateError::network_error(&format!("Failed to connect to BearDog: {e}"))
+            NestGateError::network_error(format!("Failed to connect to BearDog: {e}"))
         })?;
 
         self.connected = true;
@@ -261,7 +261,7 @@ impl BearDogClient {
 
         let response = self.send_request(&request).await?;
         String::from_utf8(response.data)
-            .map_err(|e| NestGateError::security_error(&format!("Invalid token: {e}")))
+            .map_err(|e| NestGateError::security_error(format!("Invalid token: {e}")))
     }
 
     /// Validate authentication token
@@ -286,31 +286,31 @@ impl BearDogClient {
     async fn send_request(&self, request: &BearDogRequest) -> Result<BearDogResponse> {
         let mut stream = UnixStream::connect(&self.socket_path)
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Failed to connect: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to connect: {e}")))?;
 
         // Serialize and send request
         let request_json = serde_json::to_vec(request)
-            .map_err(|e| NestGateError::api_error(&format!("Failed to serialize request: {e}")))?;
+            .map_err(|e| NestGateError::api_error(format!("Failed to serialize request: {e}")))?;
 
         stream
             .write_all(&request_json)
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Failed to send request: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to send request: {e}")))?;
 
         // Read response
         let mut buffer = vec![0u8; 65536];
         let n = stream
             .read(&mut buffer)
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Failed to read response: {e}")))?;
+            .map_err(|e| NestGateError::network_error(format!("Failed to read response: {e}")))?;
 
         // Deserialize response
         let response: BearDogResponse = serde_json::from_slice(&buffer[..n]).map_err(|e| {
-            NestGateError::api_error(&format!("Failed to deserialize response: {e}"))
+            NestGateError::api_error(format!("Failed to deserialize response: {e}"))
         })?;
 
         if !response.success {
-            return Err(NestGateError::security_error(&format!(
+            return Err(NestGateError::security_error(format!(
                 "BearDog error: {}",
                 response
                     .error

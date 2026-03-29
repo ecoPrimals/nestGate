@@ -144,3 +144,48 @@ impl ZfsMetrics {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn record_operation_updates_snapshot_fields() {
+        let m = ZfsMetrics::new();
+        m.record_operation(1024, 2.5);
+        m.record_operation(2048, 3.0);
+        let s = m.get_current_metrics();
+        assert_eq!(s.total_operations, 2);
+        assert_eq!(s.total_bytes, 3072);
+        assert!(s.average_latency_ms >= 0.0);
+    }
+
+    #[test]
+    fn record_error_affects_error_rate() {
+        let m = ZfsMetrics::new();
+        m.record_operation(1, 1.0);
+        m.record_error();
+        let s = m.get_current_metrics();
+        assert!(s.error_rate > 0.0);
+    }
+
+    #[test]
+    fn reset_clears_counters() {
+        let m = ZfsMetrics::new();
+        m.record_operation(100, 1.0);
+        m.reset();
+        let s = m.get_current_metrics();
+        assert_eq!(s.total_operations, 0);
+        assert_eq!(s.total_bytes, 0);
+    }
+
+    #[test]
+    fn metrics_snapshot_round_trips_json() {
+        let m = ZfsMetrics::new();
+        m.record_operation(10, 0.5);
+        let s = m.get_current_metrics();
+        let json = serde_json::to_string(&s).expect("serialize snapshot");
+        let back: MetricsSnapshot = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.total_operations, s.total_operations);
+    }
+}

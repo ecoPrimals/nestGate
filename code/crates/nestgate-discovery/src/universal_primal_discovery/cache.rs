@@ -186,7 +186,7 @@ impl DiscoveryCache {
     }
 
     /// **GENERAL CACHING**: Store general discovery result
-    pub async fn store_discovery(&mut self, key: &str, value: &str, ttl: Option<Duration>) {
+    pub fn store_discovery(&mut self, key: &str, value: &str, ttl: Option<Duration>) {
         let entry = CacheEntry::new(value.to_string(), ttl.unwrap_or(self.default_ttl));
 
         self.general_cache.insert(key.to_string(), entry);
@@ -307,7 +307,7 @@ impl DiscoveryCache {
     }
 
     /// **CACHE CONFIGURATION**: Update cache configuration
-    pub async fn configure(&mut self, default_ttl: Duration, max_size: usize) {
+    pub fn configure(&mut self, default_ttl: Duration, max_size: usize) {
         self.default_ttl = default_ttl;
         self.max_cache_size = max_size;
 

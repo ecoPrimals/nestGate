@@ -605,6 +605,7 @@ pub struct DiscoveredService {
 }
 impl Default for DiscoveredService {
     /// Returns the default instance
+    #[allow(deprecated)]
     fn default() -> Self {
         use nestgate_config::constants::hardcoding::{addresses, ports};
         Self {

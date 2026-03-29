@@ -127,8 +127,10 @@ async fn test_revoke_token() -> Result<()> {
 
 #[tokio::test]
 async fn test_rate_limit_exceeded() -> Result<()> {
-    let mut config = AuthenticationConfig::default();
-    config.max_auth_attempts = 1;
+    let config = AuthenticationConfig {
+        max_auth_attempts: 1,
+        ..Default::default()
+    };
     let auth_manager = HybridAuthenticationManager::new(config);
     let credentials = ZeroCostCredentials::new_password("wrong".to_string(), "wrong".to_string());
     let _ = auth_manager.authenticate(&credentials).await;
@@ -245,8 +247,10 @@ async fn test_multifactor_requires_external() -> Result<()> {
 
 #[tokio::test]
 async fn test_rate_limit_blocks_after_max_attempts() -> Result<()> {
-    let mut config = AuthenticationConfig::default();
-    config.max_auth_attempts = 2;
+    let config = AuthenticationConfig {
+        max_auth_attempts: 2,
+        ..Default::default()
+    };
     let mgr = HybridAuthenticationManager::new(config);
     let w1 = ZeroCostCredentials::new_password("alice".to_string(), "x".to_string());
     let _ = mgr.authenticate(&w1).await;

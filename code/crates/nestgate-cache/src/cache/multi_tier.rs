@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(deprecated)] // Defines and implements the deprecated `MultiTierCacheConfig` compatibility layer.
+
 //! Multi-tier cache implementation with hot, warm, and cold storage tiers
 //! Provides intelligent data placement and retrieval across performance tiers.
 //!
@@ -189,18 +191,9 @@ impl MultiTierCache {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn remove(&self, key: &str) -> Result<bool> {
-        let mut removed = false;
-
-        // Remove from all tiers
-        if self.hot_tier.remove(key).await.unwrap_or(false) {
-            removed = true;
-        }
-        if self.warm_tier.remove(key).await.unwrap_or(false) {
-            removed = true;
-        }
-        if self.cold_tier.remove(key).await.unwrap_or(false) {
-            removed = true;
-        }
+        let removed = self.hot_tier.remove(key).await.unwrap_or(false)
+            || self.warm_tier.remove(key).await.unwrap_or(false)
+            || self.cold_tier.remove(key).await.unwrap_or(false);
 
         Ok(removed)
     }
@@ -313,6 +306,10 @@ pub struct MultiTierCacheStats {
 impl MultiTierCacheStats {
     /// Calculate overall hit ratio
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Aggregate hit ratio metric; counter magnitudes are within f64 precision for ops stats"
+    )]
     pub fn overall_hit_ratio(&self) -> f64 {
         let total_operations = self.total_hits + self.total_misses;
         if total_operations == 0 {
@@ -435,6 +432,13 @@ pub type MultiTierCacheConfigCanonical =
 
 #[cfg(test)]
 mod tests {
+    #![allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::uninlined_format_args
+    )]
+
     use super::*;
 
     #[tokio::test]

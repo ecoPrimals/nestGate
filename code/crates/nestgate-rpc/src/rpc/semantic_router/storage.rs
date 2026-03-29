@@ -7,6 +7,7 @@
 
 use super::SemanticRouter;
 use crate::rpc::tarpc_types::DatasetParams;
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
@@ -23,7 +24,6 @@ pub(super) async fn storage_put(router: &SemanticRouter, params: Value) -> Resul
         .ok_or_else(|| NestGateError::invalid_input_with_field("data", "base64 string required"))?;
 
     // Decode base64
-    use base64::{Engine as _, engine::general_purpose::STANDARD};
     let data = STANDARD.decode(data_b64).map_err(|e| {
         NestGateError::invalid_input_with_field("data", format!("Invalid base64: {e}"))
     })?;
@@ -51,7 +51,6 @@ pub(super) async fn storage_get(router: &SemanticRouter, params: Value) -> Resul
     let data = router.client.retrieve_object(dataset, key).await?;
 
     // Encode to base64 for transport
-    use base64::{Engine as _, engine::general_purpose::STANDARD};
     let data_b64 = STANDARD.encode(&data);
 
     Ok(json!({
@@ -194,6 +193,7 @@ pub(super) async fn dataset_delete(router: &SemanticRouter, params: Value) -> Re
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use crate::rpc::NestGateRpcClient;
     use crate::rpc::semantic_router::SemanticRouter;
@@ -239,6 +239,58 @@ mod tests {
     async fn dataset_create_missing_name_errors() {
         let r = router();
         let e = dataset_create(&r, json!({"description": "x"}))
+            .await
+            .expect_err("missing name");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn storage_delete_missing_key_errors() {
+        let r = router();
+        let e = storage_delete(&r, json!({"dataset": "d"}))
+            .await
+            .expect_err("missing key");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn storage_list_missing_dataset_errors() {
+        let r = router();
+        let e = storage_list(&r, json!({"prefix": "p"}))
+            .await
+            .expect_err("missing dataset");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn storage_exists_missing_dataset_errors() {
+        let r = router();
+        let e = storage_exists(&r, json!({"key": "k"}))
+            .await
+            .expect_err("missing dataset");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn storage_metadata_missing_key_errors() {
+        let r = router();
+        let e = storage_metadata(&r, json!({"dataset": "d"}))
+            .await
+            .expect_err("missing key");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn dataset_get_missing_name_errors() {
+        let r = router();
+        let e = dataset_get(&r, json!({})).await.expect_err("missing name");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn dataset_delete_missing_name_errors() {
+        let r = router();
+        let e = dataset_delete(&r, json!({}))
             .await
             .expect_err("missing name");
         assert!(!e.to_string().is_empty());

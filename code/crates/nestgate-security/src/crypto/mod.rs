@@ -158,7 +158,7 @@ impl SecureCrypto {
         if key.len() != 32 {
             return Err(NestGateError::configuration_error(
                 "crypto",
-                &format!(
+                format!(
                     "AES-256-GCM requires a 32-byte key, got {} bytes",
                     key.len()
                 ),
@@ -205,7 +205,7 @@ impl SecureCrypto {
             )
         }
         .map_err(|e| {
-            NestGateError::configuration_error("crypto", &format!("Encryption failed: {e}"))
+            NestGateError::configuration_error("crypto", format!("Encryption failed: {e}"))
         })?;
 
         let timestamp = SystemTime::now()
@@ -242,7 +242,7 @@ impl SecureCrypto {
             .map_err(|e| {
                 NestGateError::configuration_error(
                     "crypto",
-                    &format!("Decryption failed (data may be tampered): {e}"),
+                    format!("Decryption failed (data may be tampered): {e}"),
                 )
             })
     }

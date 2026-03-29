@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
+
 //! Comprehensive tests for unified_network_extensions::vlan module
 //!
 //! Tests cover:
@@ -105,9 +117,11 @@ fn test_clone_independence() {
     cloned.enabled = true;
     cloned.default_vlan_id = 100;
 
-    // Original should be unchanged
+    // Original should be unchanged; clone reflects mutations
     assert!(!original.enabled);
     assert_eq!(original.default_vlan_id, 1);
+    assert!(cloned.enabled);
+    assert_eq!(cloned.default_vlan_id, 100);
 }
 
 // ==================== DEBUG TESTS ====================

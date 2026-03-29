@@ -15,6 +15,7 @@
 //! **PHILOSOPHY**: One interface to rule them all - capability-based discovery
 //! regardless of underlying implementation.
 
+use crate::service_discovery::registry::UniversalServiceRegistry;
 use crate::unified_capabilities::{CapabilityMapper, UnifiedCapability};
 use nestgate_types::error::{NestGateError, Result};
 use std::future::Future;
@@ -190,7 +191,6 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
             // Convert to ServiceCapability for InMemoryServiceRegistry
             let service_cap = self.unified_to_service_capability(&capability);
 
-            use crate::service_discovery::registry::UniversalServiceRegistry;
             let services = self
                 .registry
                 .discover_by_capabilities(vec![service_cap])
@@ -219,7 +219,7 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
                 .ok_or_else(|| {
                     NestGateError::configuration_error(
                         "endpoint_host",
-                        &format!("Service endpoint URL missing host: {}", endpoint.url),
+                        format!("Service endpoint URL missing host: {}", endpoint.url),
                     )
                 })?
                 .to_string();
@@ -236,7 +236,7 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
                 .ok_or_else(|| {
                     NestGateError::configuration_error(
                         "endpoint_port",
-                        &format!(
+                        format!(
                             "Service endpoint URL missing port and no default for protocol: {}",
                             endpoint.url
                         ),
@@ -254,9 +254,7 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
                     crate::service_discovery::types::CommunicationProtocol::WebSocket => {
                         Arc::from("ws")
                     }
-                    crate::service_discovery::types::CommunicationProtocol::Http | _ => {
-                        Arc::from("http")
-                    }
+                    _ => Arc::from("http"),
                 },
                 capabilities: vec![capability.clone()],
                 is_healthy: true, // InMemoryRegistry doesn't track health separately
@@ -271,7 +269,6 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
         let capability = capability.clone();
         Box::pin(async move {
             let service_cap = self.unified_to_service_capability(&capability);
-            use crate::service_discovery::registry::UniversalServiceRegistry;
             let services = self
                 .registry
                 .discover_by_capabilities(vec![service_cap])
@@ -309,8 +306,7 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
                                     crate::service_discovery::types::CommunicationProtocol::WebSocket => {
                                         Arc::from("ws")
                                     }
-                                    crate::service_discovery::types::CommunicationProtocol::Http
-                                    | _ => Arc::from("http"),
+                                    _ => Arc::from("http"),
                                 },
                                 capabilities: vec![capability.clone()],
                                 is_healthy: true,
@@ -329,7 +325,6 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
         let capability = capability.clone();
         Box::pin(async move {
             let service_cap = self.unified_to_service_capability(&capability);
-            use crate::service_discovery::registry::UniversalServiceRegistry;
             self.registry
                 .discover_by_capabilities(vec![service_cap])
                 .await
@@ -442,9 +437,7 @@ impl CapabilityResolver for EnvironmentResolver {
                     .ok_or_else(|| {
                         NestGateError::configuration_error(
                             "capability_endpoint_host",
-                            &format!(
-                                "Environment variable {env_var} has URL without host: {value}"
-                            ),
+                            format!("Environment variable {env_var} has URL without host: {value}"),
                         )
                     })?
                     .to_string();
@@ -460,7 +453,7 @@ impl CapabilityResolver for EnvironmentResolver {
                     }
                 }).ok_or_else(|| NestGateError::configuration_error(
                     "capability_endpoint_port",
-                    &format!("Environment variable {} has URL without port and no default for scheme: {}", env_var, url.scheme())
+                    format!("Environment variable {} has URL without port and no default for scheme: {}", env_var, url.scheme())
                 ))?;
 
                 Ok(ResolvedService {

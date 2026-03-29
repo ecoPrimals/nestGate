@@ -19,21 +19,21 @@ impl ZfsErrorBuilder {
     #[allow(clippy::new_ret_no_self)]
     #[must_use]
     pub fn new(message: &str) -> NestGateError {
-        NestGateError::internal_error(message, "zfs-generic")
+        NestGateError::internal_error(message.to_string(), "zfs-generic")
     }
 
     /// Create a ZFS error with operation context (for backward compatibility)
     pub fn new_with_operation(message: &str, _operation: impl std::fmt::Debug) -> NestGateError {
-        NestGateError::internal_error(message, "zfs-operation")
+        NestGateError::internal_error(message.to_string(), "zfs-operation")
     }
 
     /// Create a canonical ZFS pool error
     #[must_use]
     pub fn pool_error(message: &str, pool: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
-            message: format!("Pool error: {message}"),
-            component: "zfs-pool".to_string(),
-            location: Some(format!("pool:{pool}")),
+            message: format!("Pool error: {message}").into(),
+            component: "zfs-pool".into(),
+            location: Some(format!("pool:{pool}").into()),
             context: None,
             is_bug: false,
         }))
@@ -43,9 +43,9 @@ impl ZfsErrorBuilder {
     #[must_use]
     pub fn dataset_error(message: &str, dataset: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
-            message: format!("Dataset error: {message}"),
-            component: "zfs-dataset".to_string(),
-            location: Some(format!("dataset:{dataset}")),
+            message: format!("Dataset error: {message}").into(),
+            component: "zfs-dataset".into(),
+            location: Some(format!("dataset:{dataset}").into()),
             context: None,
             is_bug: false,
         }))
@@ -55,9 +55,9 @@ impl ZfsErrorBuilder {
     #[must_use]
     pub fn snapshot_error(message: &str, snapshot: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
-            message: format!("Snapshot error: {message}"),
-            component: "zfs-snapshot".to_string(),
-            location: Some(format!("snapshot:{snapshot}")),
+            message: format!("Snapshot error: {message}").into(),
+            component: "zfs-snapshot".into(),
+            location: Some(format!("snapshot:{snapshot}").into()),
             context: None,
             is_bug: false,
         }))
@@ -67,9 +67,9 @@ impl ZfsErrorBuilder {
     #[must_use]
     pub fn command_error(command: &str, details: &str) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
-            message: format!("Command '{command}' failed: {details}"),
-            component: "zfs-command".to_string(),
-            location: Some("zfs_command_execution".to_string()),
+            message: format!("Command '{command}' failed: {details}").into(),
+            component: "zfs-command".into(),
+            location: Some("zfs_command_execution".into()),
             context: None,
             is_bug: false,
         }))
@@ -78,22 +78,22 @@ impl ZfsErrorBuilder {
     /// Create a simple ZFS error
     #[must_use]
     pub fn zfs_error(message: &str) -> NestGateError {
-        NestGateError::internal_error(message, "zfs-core")
+        NestGateError::internal_error(message.to_string(), "zfs-core")
     }
 
     /// Create a ZFS error with operation context
     #[must_use]
     pub fn zfs_operation_error(message: &str) -> NestGateError {
-        NestGateError::internal_error(message, "zfs-operation")
+        NestGateError::internal_error(message.to_string(), "zfs-operation")
     }
 
     /// Create a generic internal error with component and location (migration helper)
     #[must_use]
     pub fn internal(message: String, component: String, location: Option<String>) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
-            message,
-            component,
-            location,
+            message: message.into(),
+            component: component.into(),
+            location: location.map(Into::into),
             context: None,
             is_bug: false,
         }))
@@ -127,9 +127,9 @@ pub fn zfs_command_error(command: &str, output: &str) -> NestGateError {
 #[must_use]
 pub fn zfs_operation_error(operation: &str, details: &str) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message: format!("ZFS operation failed: {operation} - {details}"),
-        component: "zfs-operation".to_string(),
-        location: Some(format!("zfs_{operation}_operation")),
+        message: format!("ZFS operation failed: {operation} - {details}").into(),
+        component: "zfs-operation".into(),
+        location: Some(format!("zfs_{operation}_operation").into()),
         context: None,
         is_bug: false,
     }))
@@ -139,9 +139,9 @@ pub fn zfs_operation_error(operation: &str, details: &str) -> NestGateError {
 #[must_use]
 pub fn create_zfs_error(message: String, operation: ZfsOperation) -> NestGateError {
     NestGateError::Internal(Box::new(InternalErrorDetails {
-        message,
-        component: "zfs-core".to_string(),
-        location: Some(format!("{operation:?}").to_lowercase()),
+        message: message.into(),
+        component: "zfs-core".into(),
+        location: Some(format!("{operation:?}").to_lowercase().into()),
         context: None,
         is_bug: false,
     }))

@@ -5,11 +5,16 @@
 //! System-level error types and handling for the `NestGate` system.
 // System and internal error handling utilities.
 
+use std::borrow::Cow;
+
 use super::core_errors::NestGateUnifiedError;
 
 impl NestGateUnifiedError {
     /// Create a new system error
-    pub fn system(message: impl Into<String>, component: impl Into<String>) -> Self {
+    pub fn system(
+        message: impl Into<Cow<'static, str>>,
+        component: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self::System(Box::new(
             crate::error::variants::core_errors::SystemErrorDetails {
                 message: message.into(),
@@ -21,11 +26,11 @@ impl NestGateUnifiedError {
     }
 
     /// Create an internal error
-    pub fn internal(message: impl Into<String>) -> Self {
+    pub fn internal(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Internal(Box::new(
             crate::error::variants::core_errors::InternalErrorDetails {
                 message: message.into(),
-                component: "unknown".to_string(),
+                component: Cow::Borrowed("unknown"),
                 location: None,
                 context: None,
                 is_bug: false,
@@ -35,8 +40,8 @@ impl NestGateUnifiedError {
 
     /// Create an internal error with component context
     pub fn internal_with_component(
-        message: impl Into<String>,
-        component: impl Into<String>,
+        message: impl Into<Cow<'static, str>>,
+        component: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self::Internal(Box::new(
             crate::error::variants::core_errors::InternalErrorDetails {
@@ -51,14 +56,17 @@ impl NestGateUnifiedError {
 
     /// Legacy compatibility method for `internal_error` calls
     /// This method provides backward compatibility for the old `internal_error` signature
-    pub fn internal_error(message: impl Into<String>, component: impl Into<String>) -> Self {
+    pub fn internal_error(
+        message: impl Into<Cow<'static, str>>,
+        component: impl Into<Cow<'static, str>>,
+    ) -> Self {
         Self::internal_with_component(message, component)
     }
 
     /// Create an external service error
     pub fn external_service_unavailable(
-        service: impl Into<String>,
-        message: impl Into<String>,
+        service: impl Into<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self::External(Box::new(
             crate::error::variants::core_errors::ExternalErrorDetails {
@@ -71,7 +79,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create a validation error
-    pub fn validation(message: impl Into<String>) -> Self {
+    pub fn validation(message: impl Into<Cow<'static, str>>) -> Self {
         Self::Validation(Box::new(
             crate::error::variants::core_errors::ValidationErrorDetails {
                 message: message.into(),
@@ -84,12 +92,12 @@ impl NestGateUnifiedError {
     }
 
     /// Create an I/O error
-    pub fn io_error(message: impl Into<String>) -> Self {
+    pub fn io_error(message: impl Into<Cow<'static, str>>) -> Self {
         Self::System(Box::new(
             crate::error::variants::core_errors::SystemErrorDetails {
                 message: message.into(),
-                component: "io".to_string(),
-                operation: Some("io".to_string()),
+                component: Cow::Borrowed("io"),
+                operation: Some(Cow::Borrowed("io")),
                 context: None,
             },
         ))
@@ -97,13 +105,13 @@ impl NestGateUnifiedError {
 
     /// Create an internal error with debug context
     pub fn internal_error_with_debug_context(
-        message: impl Into<String>,
-        debug_info: impl Into<String>,
+        message: impl Into<Cow<'static, str>>,
+        debug_info: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self::Internal(Box::new(
             crate::error::variants::core_errors::InternalErrorDetails {
-                message: format!("{} (debug: {})", message.into(), debug_info.into()),
-                component: "debug".to_string(),
+                message: format!("{} (debug: {})", message.into(), debug_info.into()).into(),
+                component: Cow::Borrowed("debug"),
                 location: None,
                 context: None,
                 is_bug: false,
@@ -112,7 +120,7 @@ impl NestGateUnifiedError {
     }
 
     /// Create a not implemented error
-    pub fn not_implemented(message: impl Into<String>) -> Self {
+    pub fn not_implemented(message: impl Into<Cow<'static, str>>) -> Self {
         Self::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
                 feature: message.into(),

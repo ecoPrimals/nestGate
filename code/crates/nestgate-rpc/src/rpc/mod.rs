@@ -65,6 +65,7 @@
 pub mod audit_storage;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
+#[cfg(any(feature = "dev-stubs", test))]
 pub mod orchestrator_registration;
 pub mod semantic_router;
 pub mod socket_config;
@@ -93,6 +94,7 @@ pub use audit_storage::{
     NodeOutcome, NodeStatus,
 };
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
+#[cfg(any(feature = "dev-stubs", test))]
 pub use orchestrator_registration::OrchestratorRegistration;
 pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
@@ -100,6 +102,7 @@ pub use socket_config::{SocketConfig, SocketConfigSource};
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
+#[allow(deprecated)] // Re-export legacy Unix JSON-RPC surface until callers use Songbird IPC.
 pub use unix_socket_server::{
     JsonRpcUnixServer, LegacyUnixJsonRpcHandler, legacy_ecosystem_rpc_handler,
 };
@@ -112,13 +115,23 @@ pub use isomorphic_ipc::{
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
     fn test_module_exports() {
-        // Verify key types are exported
         let _ = DatasetParams::default();
-        // Test removed - new() is now async
         let _ = JsonRpcConfig::default();
+        let _ = TemplateStorage::new();
+        let _ = AuditStorage::new();
+        let cfg = SocketConfig::resolve(
+            "export_test".into(),
+            "node".into(),
+            Some("/tmp/nestgate_rpc_export_probe.sock".into()),
+            None,
+            None,
+        )
+        .expect("resolve");
+        assert_eq!(cfg.source, SocketConfigSource::Environment);
     }
 }

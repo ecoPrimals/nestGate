@@ -234,15 +234,17 @@ mod tests {
     fn test_handler_type_variants() {
         let api = HandlerType::Api;
         let middleware = HandlerType::Middleware;
-        let _event = HandlerType::Event;
+        let event = HandlerType::Event;
 
         // Test Debug formatting
         assert!(format!("{api:?}").contains("Api"));
         assert!(format!("{middleware:?}").contains("Middleware"));
+        assert!(matches!(event, HandlerType::Event));
 
         // Test Clone
         let cloned = api.clone();
-        assert!(format!("{cloned:?}").contains("Api"));
+        assert!(matches!(cloned, HandlerType::Api));
+        assert!(format!("{api:?}").contains("Api"));
     }
 
     // Handler Phase tests
@@ -325,8 +327,8 @@ mod tests {
             ..Default::default()
         };
 
-        let cloned = data.clone();
-        assert_eq!(cloned.pool_name, Some("test-pool".to_string()));
+        let copy = data.clone();
+        assert_eq!(copy.pool_name, data.pool_name);
     }
 
     // Network Error Data tests
@@ -372,8 +374,8 @@ mod tests {
             ..Default::default()
         };
 
-        let cloned = data.clone();
-        assert_eq!(cloned.endpoint, Some("http://test.com".to_string()));
+        let copy = data.clone();
+        assert_eq!(copy.endpoint, data.endpoint);
     }
 
     // Security Error Data tests
@@ -417,8 +419,8 @@ mod tests {
             ..Default::default()
         };
 
-        let cloned = data.clone();
-        assert_eq!(cloned.principal, Some("test@example.com".to_string()));
+        let copy = data.clone();
+        assert_eq!(copy.principal, data.principal);
     }
 
     // Security Severity tests
@@ -491,8 +493,8 @@ mod tests {
             ..Default::default()
         };
 
-        let cloned = data.clone();
-        assert_eq!(cloned.workflow_id, Some("test-workflow".to_string()));
+        let copy = data.clone();
+        assert_eq!(copy.workflow_id, data.workflow_id);
     }
 
     #[test]

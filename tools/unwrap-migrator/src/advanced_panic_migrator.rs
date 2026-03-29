@@ -8,15 +8,10 @@
 
 use regex::Regex;
 use std::collections::HashMap;
-use std::future::Future;
 use std::path::{Path, PathBuf};
-use std::pin::Pin;
 use thiserror::Error;
 use tokio::fs;
 use tracing::{debug, error, info};
-
-// Type alias for complex async return type
-type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 #[derive(Error, Debug)]
 pub enum AdvancedPanicMigratorError {
@@ -31,6 +26,33 @@ pub enum AdvancedPanicMigratorError {
 }
 
 pub type AdvancedPanicResult<T> = Result<T, AdvancedPanicMigratorError>;
+
+async fn collect_rust_sources(
+    root_path: &Path,
+    files: &mut Vec<PathBuf>,
+) -> AdvancedPanicResult<()> {
+    let mut directories_to_process = vec![root_path.to_path_buf()];
+
+    while let Some(current_dir) = directories_to_process.pop() {
+        let mut entries = fs::read_dir(&current_dir).await?;
+
+        while let Some(entry) = entries.next_entry().await? {
+            let path = entry.path();
+
+            if path.is_dir() {
+                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
+                    && !["target", "backup", ".git"].contains(&dir_name)
+                {
+                    directories_to_process.push(path);
+                }
+            } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+                files.push(path);
+            }
+        }
+    }
+
+    Ok(())
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PanicPattern {
@@ -117,11 +139,18 @@ pub enum ContextRequirement {
     InConfigOperation,
 }
 
+/// Where the match sits in the repo (replaces multiple boolean flags on [`PanicContext`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CodeArtifactKind {
+    Test,
+    Example,
+    Benchmark,
+    Production,
+}
+
 #[derive(Debug, Clone)]
 pub struct PanicContext {
-    pub is_test: bool,
-    pub is_example: bool,
-    pub is_benchmark: bool,
+    pub artifact_kind: CodeArtifactKind,
     pub function_name: Option<String>,
     pub return_type: Option<String>,
     pub has_nestgate_result: bool,
@@ -243,7 +272,7 @@ impl AdvancedNestGatePanicMigrator {
         );
 
         let mut rust_files = Vec::new();
-        self.collect_rust_files(path, &mut rust_files).await?;
+        collect_rust_sources(path, &mut rust_files).await?;
 
         info!("📁 Found {} Rust files to analyze", rust_files.len());
 
@@ -255,33 +284,6 @@ impl AdvancedNestGatePanicMigrator {
 
         self.print_migration_summary();
         Ok(self.stats.clone())
-    }
-
-    #[allow(clippy::only_used_in_recursion)]
-    fn collect_rust_files<'a>(
-        &'a self,
-        path: &'a Path,
-        files: &'a mut Vec<PathBuf>,
-    ) -> BoxFuture<'a, AdvancedPanicResult<()>> {
-        Box::pin(async move {
-            let mut entries = fs::read_dir(path).await?;
-
-            while let Some(entry) = entries.next_entry().await? {
-                let path = entry.path();
-                if path.is_dir() {
-                    // Skip target and backup directories
-                    if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
-                        && !["target", "backup", ".git"].contains(&dir_name)
-                    {
-                        self.collect_rust_files(&path, files).await?;
-                    }
-                } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
-                    files.push(path);
-                }
-            }
-
-            Ok(())
-        })
     }
 
     async fn migrate_file(&mut self, file_path: &Path) -> AdvancedPanicResult<()> {
@@ -367,6 +369,15 @@ impl AdvancedNestGatePanicMigrator {
 
         let is_example = file_path.to_string_lossy().contains("example");
         let is_benchmark = file_path.to_string_lossy().contains("bench");
+        let artifact_kind = if is_test {
+            CodeArtifactKind::Test
+        } else if is_example {
+            CodeArtifactKind::Example
+        } else if is_benchmark {
+            CodeArtifactKind::Benchmark
+        } else {
+            CodeArtifactKind::Production
+        };
 
         // Analyze surrounding context
         let start = line_number.saturating_sub(5);
@@ -404,9 +415,7 @@ impl AdvancedNestGatePanicMigrator {
         let error_category = self.determine_error_category(file_path, &surrounding_lines);
 
         PanicContext {
-            is_test,
-            is_example,
-            is_benchmark,
+            artifact_kind,
             function_name,
             return_type,
             has_nestgate_result,
@@ -479,12 +488,12 @@ impl AdvancedNestGatePanicMigrator {
                     }
                 }
                 ContextRequirement::InTestFunction => {
-                    if !context.is_test {
+                    if context.artifact_kind != CodeArtifactKind::Test {
                         return false;
                     }
                 }
                 ContextRequirement::InProductionCode => {
-                    if context.is_test || context.is_example || context.is_benchmark {
+                    if !matches!(context.artifact_kind, CodeArtifactKind::Production) {
                         return false;
                     }
                 }
@@ -575,6 +584,139 @@ impl AdvancedNestGatePanicMigrator {
 //
 // Fixes all the API evolution errors systematically
 
+fn apply_comprehensive_api_fixes_early(
+    modified: &mut String,
+) -> Result<bool, Box<dyn std::error::Error>> {
+    let mut file_modified = false;
+
+    let validation_regex = Regex::new(r"NestGateError::validation\(\s*([^,)]+),\s*[^)]+\)")?;
+    if validation_regex.is_match(modified.as_str()) {
+        *modified = validation_regex
+            .replace_all(modified.as_str(), "NestGateError::validation($1)")
+            .to_string();
+        file_modified = true;
+    }
+
+    let internal_regex = Regex::new(r"NestGateError::internal\(\s*([^,)]+),\s*[^)]+\)")?;
+    if internal_regex.is_match(modified.as_str()) {
+        *modified = internal_regex
+            .replace_all(modified.as_str(), "NestGateError::internal($1)")
+            .to_string();
+        file_modified = true;
+    }
+
+    let subject_field_regex = Regex::new(r"\bsubject:")?;
+    if subject_field_regex.is_match(modified.as_str()) {
+        *modified = subject_field_regex
+            .replace_all(modified.as_str(), "principal:")
+            .to_string();
+        file_modified = true;
+    }
+
+    let subject_access_regex = Regex::new(r"\.subject\b")?;
+    if subject_access_regex.is_match(modified.as_str()) {
+        *modified = subject_access_regex
+            .replace_all(modified.as_str(), ".principal")
+            .to_string();
+        file_modified = true;
+    }
+
+    if modified.contains("{resource}") {
+        *modified = modified.replace("{resource}", "resource");
+        file_modified = true;
+    }
+
+    let operation_some_regex = Regex::new(r#"operation:\s*Some\(("([^"]+)"\.to_string\(\))\)"#)?;
+    if operation_some_regex.is_match(modified.as_str()) {
+        *modified = operation_some_regex
+            .replace_all(modified.as_str(), "operation: $1")
+            .to_string();
+        file_modified = true;
+    }
+
+    let pool_interface_stats_regex =
+        Regex::new(r"(PoolInterfaceStats\s*\{\s*[^}]*buffer_size:\s*[^,}]+),(\s*\})")?;
+    if pool_interface_stats_regex.is_match(modified.as_str()) {
+        *modified = pool_interface_stats_regex
+            .replace_all(modified.as_str(), "$1,\n            utilization: 0.0$2")
+            .to_string();
+        file_modified = true;
+    }
+
+    Ok(file_modified)
+}
+
+fn apply_comprehensive_api_fixes_late(
+    modified: &mut String,
+) -> Result<bool, Box<dyn std::error::Error>> {
+    let mut file_modified = false;
+
+    let pool_stats_regex = Regex::new(r"(PoolStats\s*\{\s*[^}]*total_capacity:\s*[^,}]+),(\s*\})")?;
+    if pool_stats_regex.is_match(modified.as_str()) {
+        *modified = pool_stats_regex
+            .replace_all(modified.as_str(), "$1,\n            utilization: 0.0$2")
+            .to_string();
+        file_modified = true;
+    }
+
+    let timeout_regex =
+        Regex::new(r"(NestGateError::Timeout\s*\{\s*[^}]*context:\s*[^,}]+),(\s*\})")?;
+    if timeout_regex.is_match(modified.as_str()) {
+        *modified = timeout_regex
+            .replace_all(modified.as_str(), "$1,\n            retryable: true$2")
+            .to_string();
+        file_modified = true;
+    }
+
+    let external_regex =
+        Regex::new(r"(NestGateError::External\s*\{\s*[^}]*context:\s*[^,}]+),(\s*\})")?;
+    if external_regex.is_match(modified.as_str()) {
+        *modified = external_regex
+            .replace_all(modified.as_str(), "$1,\n            retryable: false$2")
+            .to_string();
+        file_modified = true;
+    }
+
+    let system_path_regex =
+        Regex::new(r"(NestGateError::System\s*\{[^}]*)\bpath:\s*Some\(([^)]+)\)")?;
+    if system_path_regex.is_match(modified.as_str()) {
+        *modified = system_path_regex
+            .replace_all(modified.as_str(), "${1}component: $2")
+            .to_string();
+        file_modified = true;
+    }
+
+    let diagnostic_resource_regex = Regex::new(r"\.resource\s*=\s*[^;]+;")?;
+    if diagnostic_resource_regex.is_match(modified.as_str()) {
+        *modified = diagnostic_resource_regex
+            .replace_all(modified.as_str(), "; // resource field removed")
+            .to_string();
+        file_modified = true;
+    }
+
+    let debug_context_regex =
+        Regex::new(r"internal_error_with_debug_context\(\s*([^,]+),\s*Some\(([^)]+)\)\s*\)")?;
+    if debug_context_regex.is_match(modified.as_str()) {
+        *modified = debug_context_regex
+            .replace_all(
+                modified.as_str(),
+                "internal_error_with_debug_context($1, $2)",
+            )
+            .to_string();
+        file_modified = true;
+    }
+
+    let format_fix_regex = Regex::new(r#"format!\("([^"]*)\{[^}]*\}([^"]*)"(?:,\s*[^)]+)?\)"#)?;
+    if format_fix_regex.is_match(modified.as_str()) {
+        *modified = format_fix_regex
+            .replace_all(modified.as_str(), r#"format!("$1{}$2", "placeholder")"#)
+            .to_string();
+        file_modified = true;
+    }
+
+    Ok(file_modified)
+}
+
 pub struct ComprehensiveApiFixer {
     dry_run: bool,
     fixes_applied: u32,
@@ -594,7 +736,9 @@ impl ComprehensiveApiFixer {
         root_path: &Path,
     ) -> Result<u32, Box<dyn std::error::Error>> {
         let mut rust_files = Vec::new();
-        self.collect_rust_files(root_path, &mut rust_files).await?;
+        collect_rust_sources(root_path, &mut rust_files)
+            .await
+            .map_err(|e| -> Box<dyn std::error::Error> { e.into() })?;
 
         println!(
             "🔧 Found {} Rust files to process for comprehensive API fixes",
@@ -608,170 +752,14 @@ impl ComprehensiveApiFixer {
         Ok(self.fixes_applied)
     }
 
-    async fn collect_rust_files(
-        &self,
-        path: &Path,
-        files: &mut Vec<PathBuf>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        let mut entries = fs::read_dir(path).await?;
-
-        while let Some(entry) = entries.next_entry().await? {
-            let path = entry.path();
-
-            if path.is_dir() {
-                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
-                    && !["target", "backup", ".git"].contains(&dir_name)
-                {
-                    Box::pin(self.collect_rust_files(&path, files)).await?;
-                }
-            } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
-                files.push(path);
-            }
-        }
-
-        Ok(())
-    }
-
     async fn fix_comprehensive_api_errors(
         &mut self,
         file_path: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let content = fs::read_to_string(file_path).await?;
-        let mut modified_content = content.clone();
-        let mut file_modified = false;
-
-        // Fix 1: validation() function calls - remove second parameter
-        let validation_regex = Regex::new(r"NestGateError::validation\(\s*([^,)]+),\s*[^)]+\)")?;
-        if validation_regex.is_match(&modified_content) {
-            modified_content = validation_regex
-                .replace_all(&modified_content, "NestGateError::validation($1)")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 2: internal() function calls - remove second parameter
-        let internal_regex = Regex::new(r"NestGateError::internal\(\s*([^,)]+),\s*[^)]+\)")?;
-        if internal_regex.is_match(&modified_content) {
-            modified_content = internal_regex
-                .replace_all(&modified_content, "NestGateError::internal($1)")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 3: subject -> principal field changes
-        let subject_field_regex = Regex::new(r"\bsubject:")?;
-        if subject_field_regex.is_match(&modified_content) {
-            modified_content = subject_field_regex
-                .replace_all(&modified_content, "principal:")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 4: .subject -> .principal property access
-        let subject_access_regex = Regex::new(r"\.subject\b")?;
-        if subject_access_regex.is_match(&modified_content) {
-            modified_content = subject_access_regex
-                .replace_all(&modified_content, ".principal")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 5: Remove resource variables that don't exist
-        if modified_content.contains("{resource}") {
-            modified_content = modified_content.replace("{resource}", "resource");
-            file_modified = true;
-        }
-
-        // Fix 6: Fix operation field wrapping - Some("string".to_string()) -> "string".to_string()
-        let operation_some_regex =
-            Regex::new(r#"operation:\s*Some\(("([^"]+)"\.to_string\(\))\)"#)?;
-        if operation_some_regex.is_match(&modified_content) {
-            modified_content = operation_some_regex
-                .replace_all(&modified_content, "operation: $1")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 7: Add missing utilization field to PoolInterfaceStats
-        let pool_interface_stats_regex =
-            Regex::new(r"(PoolInterfaceStats\s*\{\s*[^}]*buffer_size:\s*[^,}]+),(\s*\})")?;
-        if pool_interface_stats_regex.is_match(&modified_content) {
-            modified_content = pool_interface_stats_regex
-                .replace_all(&modified_content, "$1,\n            utilization: 0.0$2")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 8: Add missing utilization field to PoolStats
-        let pool_stats_regex =
-            Regex::new(r"(PoolStats\s*\{\s*[^}]*total_capacity:\s*[^,}]+),(\s*\})")?;
-        if pool_stats_regex.is_match(&modified_content) {
-            modified_content = pool_stats_regex
-                .replace_all(&modified_content, "$1,\n            utilization: 0.0$2")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 9: Add missing retryable field to Timeout errors
-        let timeout_regex =
-            Regex::new(r"(NestGateError::Timeout\s*\{\s*[^}]*context:\s*[^,}]+),(\s*\})")?;
-        if timeout_regex.is_match(&modified_content) {
-            modified_content = timeout_regex
-                .replace_all(&modified_content, "$1,\n            retryable: true$2")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 10: Add missing retryable field to External errors
-        let external_regex =
-            Regex::new(r"(NestGateError::External\s*\{\s*[^}]*context:\s*[^,}]+),(\s*\})")?;
-        if external_regex.is_match(&modified_content) {
-            modified_content = external_regex
-                .replace_all(&modified_content, "$1,\n            retryable: false$2")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 11: Fix System error field names - path -> component for System variants
-        let system_path_regex =
-            Regex::new(r"(NestGateError::System\s*\{[^}]*)\bpath:\s*Some\(([^)]+)\)")?;
-        if system_path_regex.is_match(&modified_content) {
-            modified_content = system_path_regex
-                .replace_all(&modified_content, "${1}component: $2")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 12: Remove resource field from Diagnostic
-        let diagnostic_resource_regex = Regex::new(r"\.resource\s*=\s*[^;]+;")?;
-        if diagnostic_resource_regex.is_match(&modified_content) {
-            modified_content = diagnostic_resource_regex
-                .replace_all(&modified_content, "; // resource field removed")
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 13: Fix internal_error_with_debug_context calls
-        let debug_context_regex =
-            Regex::new(r"internal_error_with_debug_context\(\s*([^,]+),\s*Some\(([^)]+)\)\s*\)")?;
-        if debug_context_regex.is_match(&modified_content) {
-            modified_content = debug_context_regex
-                .replace_all(
-                    &modified_content,
-                    "internal_error_with_debug_context($1, $2)",
-                )
-                .to_string();
-            file_modified = true;
-        }
-
-        // Fix 14: Fix format strings with missing variables
-        let format_fix_regex = Regex::new(r#"format!\("([^"]*)\{[^}]*\}([^"]*)"(?:,\s*[^)]+)?\)"#)?;
-        if format_fix_regex.is_match(&modified_content) {
-            modified_content = format_fix_regex
-                .replace_all(&modified_content, r#"format!("$1{}$2", "placeholder")"#)
-                .to_string();
-            file_modified = true;
-        }
+        let mut modified_content = content;
+        let mut file_modified = apply_comprehensive_api_fixes_early(&mut modified_content)?;
+        file_modified |= apply_comprehensive_api_fixes_late(&mut modified_content)?;
 
         if file_modified {
             if !self.dry_run {

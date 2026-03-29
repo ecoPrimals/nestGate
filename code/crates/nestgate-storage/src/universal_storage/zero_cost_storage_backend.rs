@@ -356,7 +356,7 @@ mod tests {
 
     #[test]
     fn test_compile_time_constants() {
-        /// Type alias for TestBackend
+        /// Type alias for `TestBackend`
         type TestBackend = ZeroCostFilesystemBackend<500, 256, 15>;
 
         assert_eq!(TestBackend::max_concurrent_operations(), 500);

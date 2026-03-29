@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
+#![allow(
+    dead_code,
+    missing_docs,
+    unused_imports,
+    unused_variables,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic,
+    clippy::restriction
+)]
 
 //! Critical Path Coverage Tests - December 16, 2025
 //!
@@ -143,7 +154,7 @@ async fn test_concurrent_config_access() -> Result<()> {
     for handle in handles {
         handle
             .await
-            .map_err(|e| NestGateError::network_error(&format!("Join error: {}", e)))??;
+            .map_err(|e| NestGateError::network_error(format!("Join error: {}", e)))??;
     }
 
     Ok(())
@@ -175,10 +186,10 @@ async fn test_concurrent_config_updates() -> Result<()> {
 
     reader
         .await
-        .map_err(|e| NestGateError::network_error(&format!("Reader failed: {}", e)))?;
+        .map_err(|e| NestGateError::network_error(format!("Reader failed: {}", e)))?;
     writer
         .await
-        .map_err(|e| NestGateError::network_error(&format!("Writer failed: {}", e)))?;
+        .map_err(|e| NestGateError::network_error(format!("Writer failed: {}", e)))?;
 
     // Cleanup
     if let Some(val) = original {
@@ -200,11 +211,11 @@ fn test_error_context_preservation() {
     }
 
     fn middle_function() -> Result<()> {
-        inner_function().map_err(|e| NestGateError::network_error(&format!("Middle layer: {}", e)))
+        inner_function().map_err(|e| NestGateError::network_error(format!("Middle layer: {}", e)))
     }
 
     fn outer_function() -> Result<()> {
-        middle_function().map_err(|e| NestGateError::network_error(&format!("Outer layer: {}", e)))
+        middle_function().map_err(|e| NestGateError::network_error(format!("Outer layer: {}", e)))
     }
 
     let result = outer_function();

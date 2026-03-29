@@ -189,6 +189,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use tokio::net::TcpListener;
 

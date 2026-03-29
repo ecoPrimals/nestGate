@@ -360,7 +360,7 @@ mod general_cache_tests {
     async fn test_store_and_get_general() {
         let mut cache = DiscoveryCache::new();
 
-        cache.store_discovery("key1", "value1", None).await;
+        cache.store_discovery("key1", "value1", None);
         let result = cache.get_discovery("key1");
 
         assert_eq!(result, Some("value1".to_string()));
@@ -370,9 +370,7 @@ mod general_cache_tests {
     async fn test_store_with_custom_ttl() {
         let mut cache = DiscoveryCache::new();
 
-        cache
-            .store_discovery("key1", "value1", Some(Duration::from_secs(60)))
-            .await;
+        cache.store_discovery("key1", "value1", Some(Duration::from_secs(60)));
         let result = cache.get_discovery("key1");
 
         assert_eq!(result, Some("value1".to_string()));
@@ -388,9 +386,9 @@ mod general_cache_tests {
     async fn test_store_multiple_general() {
         let mut cache = DiscoveryCache::new();
 
-        cache.store_discovery("config1", "value1", None).await;
-        cache.store_discovery("config2", "value2", None).await;
-        cache.store_discovery("config3", "value3", None).await;
+        cache.store_discovery("config1", "value1", None);
+        cache.store_discovery("config2", "value2", None);
+        cache.store_discovery("config3", "value3", None);
 
         assert_eq!(cache.get_discovery("config1"), Some("value1".to_string()));
         assert_eq!(cache.get_discovery("config2"), Some("value2".to_string()));
@@ -528,7 +526,7 @@ mod cache_config_tests {
     async fn test_configure_cache() {
         let mut cache = DiscoveryCache::new();
 
-        cache.configure(Duration::from_secs(60), 500).await;
+        cache.configure(Duration::from_secs(60), 500);
 
         let stats = cache.get_detailed_stats();
         assert_eq!(stats["max_cache_size"], 500);
@@ -537,7 +535,7 @@ mod cache_config_tests {
     #[tokio::test]
     async fn test_configure_with_large_ttl() {
         let mut cache = DiscoveryCache::new();
-        cache.configure(Duration::from_secs(3600), 1000).await;
+        cache.configure(Duration::from_secs(3600), 1000);
 
         // Configuration should be applied
         let stats = cache.get_detailed_stats();
@@ -558,7 +556,7 @@ mod cache_limit_tests {
         let mut cache = DiscoveryCache::new();
 
         // Set small limit
-        cache.configure(Duration::from_secs(300), 10).await;
+        cache.configure(Duration::from_secs(300), 10);
 
         // Add many entries
         for i in 0..20 {
@@ -601,7 +599,7 @@ mod cache_integration_tests {
         cache.store_port_discovery("api", 8080);
         cache.store_endpoint_discovery("web", "http://web.com");
         cache.store_timeout_discovery("connect", Duration::from_secs(5));
-        cache.store_discovery("custom", "value", None).await;
+        cache.store_discovery("custom", "value", None);
 
         // Retrieve all
         assert_eq!(cache.get_port_discovery("api"), Some(8080));

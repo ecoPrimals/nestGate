@@ -5,6 +5,8 @@
 //!
 //! Tests error handling, edge cases, and failure scenarios in environment-driven config
 
+#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+
 use crate::config::environment::{EnvironmentConfig, Port};
 use std::str::FromStr;
 
@@ -45,11 +47,17 @@ fn test_port_exactly_at_boundaries() {
     // Test exact boundary values
     let result = Port::new(1024);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap().get(), 1024);
+    let Ok(p) = result else {
+        panic!("port 1024");
+    };
+    assert_eq!(p.get(), 1024);
 
     let result = Port::new(65535);
     assert!(result.is_ok());
-    assert_eq!(result.unwrap().get(), 65535);
+    let Ok(p) = result else {
+        panic!("port 65535");
+    };
+    assert_eq!(p.get(), 65535);
 }
 
 #[test]
@@ -93,16 +101,19 @@ fn test_port_from_string_with_whitespace() {
 #[test]
 #[serial_test::serial]
 fn test_missing_required_env_var() {
-    temp_env::with_var_unset("NESTGATE_CRITICAL_REQUIRED_VAR", || {
-        let config = EnvironmentConfig::from_env();
-        if let Err(e) = &config {
-            eprintln!("Config error: {:?}", e);
-        }
-        assert!(
-            config.is_ok(),
-            "Config should work with defaults: {:?}",
-            config.err()
-        );
+    // Isolate from a polluted host env (e.g. invalid `NESTGATE_PORT`).
+    temp_env::with_vars(vec![("NESTGATE_PORT", None::<&str>)], || {
+        temp_env::with_var_unset("NESTGATE_CRITICAL_REQUIRED_VAR", || {
+            let config = EnvironmentConfig::from_env();
+            if let Err(e) = &config {
+                eprintln!("Config error: {e:?}");
+            }
+            assert!(
+                config.is_ok(),
+                "Config should work with defaults: {:?}",
+                config.err()
+            );
+        });
     });
 }
 
@@ -119,14 +130,9 @@ async fn test_malformed_port_in_environment() {
             let config = EnvironmentConfig::from_env();
             // Config might error or fall back to default - both are acceptable
             // The key is it doesn't panic
-            match config {
-                Ok(cfg) => {
-                    // If it succeeds, should use default port, not invalid value
-                    assert!(cfg.network.port.get() >= 1024);
-                }
-                Err(_) => {
-                    // Erroring is also acceptable for invalid input
-                }
+            if let Ok(cfg) = config {
+                // If it succeeds, should use default port, not invalid value
+                assert!(cfg.network.port.get() >= 1024);
             }
         })
         .await;
@@ -166,7 +172,9 @@ fn test_concurrent_config_access() {
     use std::sync::Arc;
     use std::thread;
 
-    let config = EnvironmentConfig::from_env().expect("Config should load");
+    let Ok(config) = EnvironmentConfig::from_env() else {
+        panic!("Config should load");
+    };
     let config = Arc::new(config);
     let mut handles = vec![];
 
@@ -182,7 +190,7 @@ fn test_concurrent_config_access() {
 
     // All should complete without panic
     for handle in handles {
-        handle.join().expect("Thread should not panic");
+        assert!(handle.join().is_ok(), "Thread should not panic");
     }
 }
 
@@ -214,9 +222,13 @@ fn test_config_has_sensible_defaults() {
 
 #[test]
 fn test_port_serialization_roundtrip() {
-    let port = Port::new(8080).unwrap();
+    let Ok(port) = Port::new(8080) else {
+        panic!("port");
+    };
     let serialized = format!("{}", port.get());
-    let deserialized = Port::from_str(&serialized).unwrap();
+    let Ok(deserialized) = Port::from_str(&serialized) else {
+        panic!("from_str");
+    };
 
     assert_eq!(port.get(), deserialized.get());
 }
@@ -227,7 +239,9 @@ fn test_config_clone_independence() {
     // SAFETY: single-threaded test context.
     crate::env_process::set_var("NESTGATE_PORT", "8080");
 
-    let config1 = EnvironmentConfig::from_env().expect("Config should load");
+    let Ok(config1) = EnvironmentConfig::from_env() else {
+        panic!("Config should load");
+    };
     let config2 = config1.clone();
 
     // Clones should have same values
@@ -242,8 +256,10 @@ fn test_config_clone_independence() {
 
 #[test]
 fn test_config_debug_output_doesnt_expose_secrets() {
-    let config = EnvironmentConfig::from_env().expect("Config should load");
-    let debug_output = format!("{:?}", config);
+    let Ok(config) = EnvironmentConfig::from_env() else {
+        panic!("Config should load");
+    };
+    let debug_output = format!("{config:?}");
 
     // Debug output should exist
     assert!(!debug_output.is_empty());
@@ -287,15 +303,7 @@ fn test_config_survives_corrupted_environment() {
 
     // Config should handle corrupted environment
     // It might error (which is fine) or use defaults
-    let config = EnvironmentConfig::from_env();
-    match config {
-        Ok(_) => {
-            // Success means it fell back to defaults
-        }
-        Err(_) => {
-            // Error is also acceptable for corrupted environment
-        }
-    }
+    let _ = EnvironmentConfig::from_env();
 
     // Restore
     for (var, original) in original_vars {
@@ -311,19 +319,22 @@ fn test_port_range_validation() {
     // Test a range of valid ports
     for port in [1024u16, 2000, 8080, 30000, 50000, 65535] {
         let result = Port::new(port);
-        assert!(result.is_ok(), "Port {} should be valid", port);
-        assert_eq!(result.unwrap().get(), port);
+        assert!(result.is_ok(), "Port {port} should be valid");
+        let Ok(p) = result else {
+            panic!("Port {port}");
+        };
+        assert_eq!(p.get(), port);
     }
 
     // Test invalid range
     for port in [0u16, 1, 80, 443, 1023] {
         let result = Port::new(port);
-        assert!(result.is_err(), "Port {} should be invalid", port);
+        assert!(result.is_err(), "Port {port} should be invalid");
     }
 
     // Test string parsing for out-of-range values
     for port_str in ["65536", "70000", "100000"] {
         let result = Port::from_str(port_str);
-        assert!(result.is_err(), "Port {} should be invalid", port_str);
+        assert!(result.is_err(), "Port {port_str} should be invalid");
     }
 }
