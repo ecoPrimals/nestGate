@@ -1,9 +1,8 @@
 # NestGate - Quick Reference
 
 **Version**: 4.7.0-dev  
-**Tests**: 11,707 passing, 0 failures  
-**Coverage**: 74.3% line (llvm-cov, target: 90%)  
-**Clippy**: Warnings down from 8,227 to 4,642; production `-D warnings` clean  
+**Tests**: 7,887 lib tests passing, 0 failures  
+**Clippy**: Warnings down from 8,227 to 2,972 (13 pedantic categories zeroed); production `-D warnings` clean  
 **Last Updated**: March 29, 2026
 
 ---

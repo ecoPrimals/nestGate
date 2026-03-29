@@ -159,7 +159,7 @@ pub use domain_extensions::{StorageServiceExtension, ZfsServiceExtension};
 
 /// Validate that a service implements the canonical interface
 /// Returns true if the service passes validation checks
-pub fn validate_canonical_service<S>(_service: &S) -> bool
+pub const fn validate_canonical_service<S>(_service: &S) -> bool
 where
     S: CanonicalService,
 {
@@ -169,7 +169,7 @@ where
 
 /// Validate that a provider implements the canonical interface
 /// Returns true if the provider passes validation checks
-pub fn validate_canonical_provider<T, P>(_provider: &P) -> bool
+pub const fn validate_canonical_provider<T, P>(_provider: &P) -> bool
 where
     P: CanonicalProvider<T>,
 {

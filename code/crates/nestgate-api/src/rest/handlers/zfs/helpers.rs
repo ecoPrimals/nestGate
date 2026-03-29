@@ -12,13 +12,8 @@ use crate::rest::models::{
     ChecksumType, CompressionType, CreateDatasetRequest, Dataset, DatasetProperties, DatasetStats,
     DatasetStatus, DatasetType, StorageBackendType,
 };
-use nestgate_core::error::Result;
-
 /// Convert ZFS _engine to API Dataset model
-pub async fn convert_engine_to_placeholder_dataset(
-    name: &str,
-    _engine: &String,
-) -> std::result::Result<Dataset, Box<dyn std::error::Error + Send + Sync>> {
+pub fn convert_engine_to_placeholder_dataset(name: &str, _engine: &String) -> Dataset {
     let properties = DatasetProperties {
         name: name.to_string(),
         mountpoint: Some(format!("/mnt/{name}")),
@@ -54,7 +49,7 @@ pub async fn convert_engine_to_placeholder_dataset(
         avg_latency_ms: 2.5,
     };
 
-    Ok(Dataset {
+    Dataset {
         name: name.to_string(),
         path: format!("/{name}"),
         mountpoint: Some(format!("/mnt/{name}")),
@@ -68,24 +63,24 @@ pub async fn convert_engine_to_placeholder_dataset(
         created: chrono::Utc::now() - chrono::Duration::hours(1),
         modified: chrono::Utc::now(),
         status: DatasetStatus::Online,
-        snapshot_count: get_snapshot_count_from_engine_impl().unwrap_or(0) as u32,
-    })
+        snapshot_count: get_snapshot_count_from_engine_impl() as u32,
+    }
 }
 
 /// Create storage backend from request
-pub async fn create_storage_backend(
-    _request: &CreateDatasetRequest,
+pub fn create_storage_backend(
+    request: &CreateDatasetRequest,
 ) -> std::result::Result<Arc<serde_json::Value>, Box<dyn std::error::Error + Send + Sync>> {
-    match _request.backend {
+    match request.backend {
         StorageBackendType::Filesystem => {
-            let default_path = format!("/mnt/{}", _request.name);
-            let path = _request.description.as_deref().unwrap_or(&default_path);
+            let default_path = format!("/mnt/{}", request.name);
+            let path = request.description.as_deref().unwrap_or(&default_path);
             Ok(Arc::new(
                 serde_json::json!({"backend": "filesystem", "path": path}),
             ))
         }
         _ => Err(nestgate_core::error::NestGateUnifiedError::api_with_status(
-            format!("Storage backend not supported: {:?}", _request.backend),
+            format!("Storage backend not supported: {:?}", request.backend),
             501,
         )
         .into()),
@@ -93,19 +88,22 @@ pub async fn create_storage_backend(
 }
 
 /// Get snapshot count from ZFS _engine
-pub fn get_snapshot_count_from_engine_impl() -> Result<u64> {
+pub fn get_snapshot_count_from_engine_impl() -> u64 {
     let snapshot_dir = Path::new("/tmp/nestgate/snapshots");
     if snapshot_dir.exists()
         && let Ok(entries) = fs::read_dir(snapshot_dir)
     {
-        return Ok(entries.count() as u64);
+        return entries.count() as u64;
     }
-    Ok(0)
+    0
 }
 
 /// Convert real ZFS stats to API format, with sensible defaults if unavailable
 #[cfg(feature = "dev-stubs")]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "Dev-stubs ZFS stats conversion; not wired in all builds"
+)]
 pub fn convert_zfs_stats_to_api(
     zfs_stats: Option<crate::handlers::zfs_stub::ZeroCostDatasetInfo>,
     default_name: &str,
@@ -153,7 +151,7 @@ pub fn convert_zfs_stats_to_api(
 }
 
 /// Convert _engine statistics to API format
-#[allow(dead_code)]
+#[expect(dead_code, reason = "Engine stats bridge reserved for ZFS integration")]
 pub fn convert_engine_stats_to_api(_stats: &serde_json::Value) -> DatasetStats {
     DatasetStats {
         name: "placeholder".to_string(),
@@ -177,7 +175,10 @@ pub fn convert_engine_stats_to_api(_stats: &serde_json::Value) -> DatasetStats {
 }
 
 /// Calculate file operations from ZFS _engine statistics
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "File op estimation reserved for ZFS engine integration"
+)]
 pub fn calculate_file_operations_from_stats(_stats: &serde_json::Value, operation: &str) -> u64 {
     match operation {
         "write" => 50,

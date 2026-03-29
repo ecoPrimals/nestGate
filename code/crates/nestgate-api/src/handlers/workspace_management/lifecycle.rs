@@ -9,28 +9,31 @@
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use tokio::process::Command;
 use tracing::{debug, error, info, warn};
 
 /// Backup configuration for workspace operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
 /// **Migration Path**:
 /// ```rust
 /// // OLD (deprecated):
 /// use crate::config::BackupConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::config::BackupConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 /// Configuration for Backup
 pub struct BackupConfig {
     /// Backup name/identifier
@@ -47,21 +50,24 @@ pub struct BackupConfig {
 
 /// Restore configuration for workspace operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
 /// **Migration Path**:
 /// ```rust,ignore
 /// // OLD (deprecated):
 /// use crate::network::config::RestoreConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::network::config::RestoreConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 /// Configuration for Restore
 pub struct RestoreConfig {
     /// Backup to restore from
@@ -76,21 +82,24 @@ pub struct RestoreConfig {
 
 /// Migration configuration for workspace operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-/// 
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+///
 /// **Migration Path**:
 /// ```rust
 /// // OLD (deprecated):
 /// use crate::config::MigrationConfig;
-/// 
+///
 /// // NEW (canonical):
 /// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 /// // Or use type alias for compatibility:
 /// use crate::config::MigrationConfig; // Now aliases to CanonicalNetworkConfig
 /// ```
-/// 
+///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(since = "0.11.0", note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead")]
+#[deprecated(
+    since = "0.11.0",
+    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
+)]
 /// Configuration for Migration
 pub struct MigrationConfig {
     /// Target pool for migration
@@ -104,7 +113,7 @@ pub struct MigrationConfig {
 }
 
 /// Migration strategy options
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Migrationstrategy
 pub enum MigrationStrategy {
     /// Copy data to new location, keep original
@@ -116,7 +125,7 @@ pub enum MigrationStrategy {
 }
 
 /// Backup workspace with ZFS snapshots
-pub fn backup_workspace(
+pub async fn backup_workspace(
     Path(workspace_id): Path<String>,
     Json(config): Json<BackupConfig>,
 ) -> Result<Json<Value>, StatusCode> {
@@ -260,7 +269,7 @@ pub fn backup_workspace(
 }
 
 /// Restore workspace from backup
-pub fn restore_workspace(
+pub async fn restore_workspace(
     Path(workspace_id): Path<String>,
     Json(config): Json<RestoreConfig>,
 ) -> Result<Json<Value>, StatusCode> {
@@ -302,15 +311,15 @@ pub fn restore_workspace(
             .output()
             .await;
 
-        if let Ok(output) = check_result {
-            if output.status.success() {
-                warn!("⚠️ Target workspace already exists: {}", dataset_name);
-                return Ok(Json(json!({
-                    "status": "error",
-                    "message": format!("Target workspace already exists. Use force=true to overwrite."),
-                    "workspace_id": target_workspace
-                })));
-            }
+        if let Ok(output) = check_result
+            && output.status.success()
+        {
+            warn!("⚠️ Target workspace already exists: {}", dataset_name);
+            return Ok(Json(json!({
+                "status": "error",
+                "message": format!("Target workspace already exists. Use force=true to overwrite."),
+                "workspace_id": target_workspace
+            })));
         }
     }
 
@@ -321,10 +330,10 @@ pub fn restore_workspace(
             .output()
             .await;
 
-        if let Ok(output) = destroy_result {
-            if output.status.success() {
-                info!("🗑️ Destroyed existing workspace: {}", dataset_name);
-            }
+        if let Ok(output) = destroy_result
+            && output.status.success()
+        {
+            info!("🗑️ Destroyed existing workspace: {}", dataset_name);
         }
     }
 
@@ -399,7 +408,7 @@ pub fn restore_workspace(
 }
 
 /// Migrate workspace to different pool or host
-pub fn migrate_workspace(
+pub async fn migrate_workspace(
     Path(workspace_id): Path<String>,
     Json(config): Json<MigrationConfig>,
 ) -> Result<Json<Value>, StatusCode> {
@@ -443,17 +452,15 @@ pub fn migrate_workspace(
     // Modern: Proper error handling for system time
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or_else(|_| {
-            warn!("⚠️ System time before UNIX epoch, using current timestamp");
-            0
-        });
-    
-    let migration_snapshot = format!(
-        "{}@migrate_{}",
-        source_dataset,
-        timestamp
-    );
+        .map_or_else(
+            |_| {
+                warn!("⚠️ System time before UNIX epoch, using current timestamp");
+                0
+            },
+            |d| d.as_secs(),
+        );
+
+    let migration_snapshot = format!("{source_dataset}@migrate_{timestamp}");
 
     let snapshot_result = Command::new("zfs")
         .args(["snapshot", &migration_snapshot])
@@ -507,7 +514,7 @@ pub fn migrate_workspace(
 }
 
 /// List available backups for a workspace
-pub fn list_workspace_backups(
+pub async fn list_workspace_backups(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("📋 Listing backups for workspace: {}", workspace_id);
@@ -521,26 +528,26 @@ pub fn list_workspace_backups(
     match tokio::fs::read_dir(&backup_dir).await {
         Ok(mut entries) => {
             while let Ok(Some(entry)) = entries.next_entry().await {
-                if let Some(file_name) = entry.file_name().to_str() {
-                    if file_name.starts_with(&backup_pattern) && file_name.ends_with(".zfs") {
-                        // Extract backup name from filename
-                        let backup_name = file_name
-                            .strip_prefix(&backup_pattern)
-                            .and_then(|s| s.strip_suffix(".zfs"))
-                            .unwrap_or("unknown");
+                if let Some(file_name) = entry.file_name().to_str()
+                    && file_name.starts_with(&backup_pattern)
+                    && file_name.ends_with(".zfs")
+                {
+                    // Extract backup name from filename
+                    let backup_name = file_name
+                        .strip_prefix(&backup_pattern)
+                        .and_then(|s| s.strip_suffix(".zfs"))
+                        .unwrap_or("unknown");
 
-                        if let Ok(_metadata) = entry.metadata().await {
-                            backups.push(json!({
-                                "backup_name": backup_name,
-                                "file_name": file_name,
-                                "size_bytes": _metadata.len(),
-                                "created": _metadata.created()
-                                    .ok()
-                                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                                    .map(|d| d.as_secs())
-                                    .unwrap_or(0)
-                            }));
-                        }
+                    if let Ok(metadata) = entry.metadata().await {
+                        backups.push(json!({
+                            "backup_name": backup_name,
+                            "file_name": file_name,
+                            "size_bytes": metadata.len(),
+                            "created": metadata.created()
+                                .ok()
+                                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                                .map_or(0, |d| d.as_secs())
+                        }));
                     }
                 }
             }
@@ -608,7 +615,7 @@ async fn perform_copy_migration(
     let mut send_args = vec!["send"];
     if let Some(host) = &config.target_host {
         // Remote migration
-        let ssh_command = format!("ssh {} zfs receive -F {}", host, target_dataset);
+        let ssh_command = format!("ssh {host} zfs receive -F {target_dataset}");
         let send_result = Command::new("zfs")
             .args(&send_args)
             .arg(snapshot)
@@ -658,12 +665,12 @@ async fn perform_copy_migration(
         send_args.extend([snapshot, "|", "zfs", "receive", "-F", target_dataset]);
         let migration_command = send_args.join(" ");
 
-        let _result = Command::new("sh")
+        let result = Command::new("sh")
             .args(["-c", &migration_command])
             .output()
             .await;
 
-        match _result {
+        match result {
             Ok(output) if output.status.success() => {
                 info!("✅ Local copy migration completed successfully");
                 Ok(json!({
@@ -782,48 +789,45 @@ async fn perform_replicate_migration(
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Restoreconfigcanonical
-pub type RestoreConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type RestoreConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using RestoreConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Backupconfigcanonical
-pub type BackupConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type BackupConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using BackupConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
 
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
 
 /// Type alias to canonical network configuration
-/// 
+///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Migrationconfigcanonical
-pub type MigrationConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+pub type MigrationConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using MigrationConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
-

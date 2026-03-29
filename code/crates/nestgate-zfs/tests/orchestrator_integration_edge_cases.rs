@@ -283,7 +283,7 @@ async fn test_register_with_empty_url() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
-    let result = service.register_with_orchestrator("").await;
+    let result = service.register_with_orchestrator("");
     assert!(result.is_err());
 }
 
@@ -292,7 +292,7 @@ async fn test_register_with_invalid_url() {
     let config = ZfsServiceConfig::default();
     let mut service = ZfsService::new(config);
 
-    let result = service.register_with_orchestrator("not a url").await;
+    let result = service.register_with_orchestrator("not a url");
     assert!(result.is_err());
 }
 
@@ -302,9 +302,7 @@ async fn test_register_with_localhost() {
     config.orchestrator_endpoints = vec!["http://localhost:3000".to_string()];
     let mut service = ZfsService::new(config);
 
-    let result = service
-        .register_with_orchestrator("http://localhost:3000")
-        .await;
+    let result = service.register_with_orchestrator("http://localhost:3000");
     assert!(result.is_ok());
 }
 
@@ -314,9 +312,7 @@ async fn test_register_with_ipv4() {
     config.orchestrator_endpoints = vec!["http://192.168.1.1:8080".to_string()];
     let mut service = ZfsService::new(config);
 
-    let result = service
-        .register_with_orchestrator("http://192.168.1.1:8080")
-        .await;
+    let result = service.register_with_orchestrator("http://192.168.1.1:8080");
     assert!(result.is_ok());
 }
 
@@ -327,7 +323,7 @@ async fn test_register_with_very_long_url() {
     config.orchestrator_endpoints = vec![long_url.clone()];
     let mut service = ZfsService::new(config);
 
-    let result = service.register_with_orchestrator(&long_url).await;
+    let result = service.register_with_orchestrator(&long_url);
     assert!(result.is_ok());
 }
 
@@ -337,14 +333,10 @@ async fn test_register_multiple_times() {
     config.orchestrator_endpoints = vec!["http://example.com".to_string()];
     let mut service = ZfsService::new(config);
 
-    let result1 = service
-        .register_with_orchestrator("http://example.com")
-        .await;
+    let result1 = service.register_with_orchestrator("http://example.com");
     assert!(result1.is_ok());
 
-    let result2 = service
-        .register_with_orchestrator("http://example.com")
-        .await;
+    let result2 = service.register_with_orchestrator("http://example.com");
     assert!(result2.is_ok());
 }
 

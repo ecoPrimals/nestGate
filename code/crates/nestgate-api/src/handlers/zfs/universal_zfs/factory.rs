@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // Creates the appropriate ZFS service implementation based on configuration
 // with automatic backend detection and fail-safe wrapping.
@@ -78,7 +82,7 @@ impl ZfsServiceFactory {
             debug!("Wrapping service with fail-safe mechanisms");
             // Create the enum wrapper for the service
             let enum_service = Arc::new(
-                crate::handlers::zfs::universal_zfs::traits::UniversalZfsServiceEnum::Native(
+                crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::Native(
                     crate::handlers::zfs::universal_zfs::backends::native::NativeZfsService::new(),
                 ),
             );
@@ -89,7 +93,7 @@ impl ZfsServiceFactory {
                 debug!("Adding fallback service");
                 let _fallback_service = Self::create_fallback_service(&config.backend)?;
                 // Wrap fallback service in enum for compatibility
-                let fallback_enum = Arc::new(crate::handlers::zfs::universal_zfs::traits::UniversalZfsServiceEnum::Native(
+                let fallback_enum = Arc::new(crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::Native(
                         crate::handlers::zfs::universal_zfs::backends::native::NativeZfsService::new()
                     ));
                 fail_safe_service.with_fallback(fallback_enum)
@@ -136,7 +140,7 @@ impl ZfsServiceFactory {
         }
 
         // Check for remote ZFS services
-        if let Some(remote_service) = Self::detect_remote_services().await {
+        if let Some(remote_service) = Self::detect_remote_services() {
             info!("Remote ZFS service detected, using remote backend");
             return Ok(remote_service);
         }
@@ -183,7 +187,10 @@ impl ZfsServiceFactory {
     }
 
     /// Create remote ZFS service (HTTP removed)
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Remote backend retained for error path; not called after HTTP removal"
+    )]
     fn create_remote_service(
         config: &crate::handlers::zfs::universal_zfs::config::RemoteConfig,
     ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
@@ -223,7 +230,7 @@ impl ZfsServiceFactory {
     }
 
     /// Detect remote ZFS services (HTTP removed)
-    async fn detect_remote_services() -> Option<Arc<dyn UniversalZfsService>> {
+    fn detect_remote_services() -> Option<Arc<dyn UniversalZfsService>> {
         // HTTP removed per Concentrated Gap Architecture
         warn!("Remote ZFS service detection removed - HTTP removed");
         None
@@ -254,7 +261,7 @@ impl ZfsServiceFactory {
         health_status.push(("native".to_string(), native_available));
 
         // Check remote services
-        let remote_available = Self::detect_remote_services().await.is_some();
+        let remote_available = Self::detect_remote_services().is_some();
         health_status.push(("remote".to_string(), remote_available));
 
         // Note: Mock backend eliminated in canonical modernization

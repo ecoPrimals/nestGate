@@ -292,6 +292,7 @@ pub fn discover_tarpc_port_sync() -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use temp_env::{async_with_vars, with_vars};
 
     #[test]
     fn test_extract_port_from_url() {
@@ -308,33 +309,37 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Flaky due to global env state - needs serial execution or proper isolation"]
+    #[serial_test::serial]
     fn test_sync_discovery_defaults() {
-        // Clear any env vars
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-        crate::env_process::remove_var("NESTGATE_METRICS_PORT");
-
-        // Should return defaults
-        assert_eq!(discover_api_port_sync(), 8080);
-        assert_eq!(discover_metrics_port_sync(), 9090);
-        assert_eq!(discover_health_port_sync(), 8082);
-        assert_eq!(discover_admin_port_sync(), 8081);
+        with_vars(
+            vec![
+                ("NESTGATE_API_PORT", None::<&str>),
+                ("NESTGATE_METRICS_PORT", None::<&str>),
+                ("NESTGATE_HEALTH_PORT", None::<&str>),
+                ("NESTGATE_ADMIN_PORT", None::<&str>),
+            ],
+            || {
+                assert_eq!(discover_api_port_sync(), 8080);
+                assert_eq!(discover_metrics_port_sync(), 9090);
+                assert_eq!(discover_health_port_sync(), 8082);
+                assert_eq!(discover_admin_port_sync(), 8081);
+            },
+        );
     }
 
     #[test]
-    #[ignore = "Flaky due to global env state - needs serial execution or proper isolation"]
+    #[serial_test::serial]
     fn test_sync_discovery_from_env() {
-        // Set env vars
-        crate::env_process::set_var("NESTGATE_API_PORT", "9000");
-        crate::env_process::set_var("NESTGATE_METRICS_PORT", "9999");
-
-        // Should use env vars
-        assert_eq!(discover_api_port_sync(), 9000);
-        assert_eq!(discover_metrics_port_sync(), 9999);
-
-        // Cleanup
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-        crate::env_process::remove_var("NESTGATE_METRICS_PORT");
+        with_vars(
+            vec![
+                ("NESTGATE_API_PORT", Some("9000")),
+                ("NESTGATE_METRICS_PORT", Some("9999")),
+            ],
+            || {
+                assert_eq!(discover_api_port_sync(), 9000);
+                assert_eq!(discover_metrics_port_sync(), 9999);
+            },
+        );
     }
 
     #[test]
@@ -360,17 +365,13 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "Flaky due to environment variable state - needs isolation"]
+    #[serial_test::serial]
     async fn test_async_discovery_from_env() {
-        // Set env var
-        crate::env_process::set_var("NESTGATE_API_PORT", "9000");
-
-        // Should use env var
-        let port = discover_api_port().await.unwrap();
-        assert_eq!(port, 9000);
-
-        // Cleanup
-        crate::env_process::remove_var("NESTGATE_API_PORT");
+        async_with_vars(vec![("NESTGATE_API_PORT", Some("9000"))], async {
+            let port = discover_api_port().await.unwrap();
+            assert_eq!(port, 9000);
+        })
+        .await;
     }
 
     #[test]

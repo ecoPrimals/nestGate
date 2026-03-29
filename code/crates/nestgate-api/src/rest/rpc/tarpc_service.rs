@@ -13,14 +13,17 @@ use uuid::Uuid;
 ///
 /// TarPC-based RPC service implementation for high-performance communication.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Endpoint field used for service configuration
+#[expect(dead_code, reason = "Endpoint field used for service configuration")]
 /// Service implementation for `TarpcRpc`
 pub struct TarpcRpcService {
     /// Connection address
     endpoint: String,
 }
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development stream handle - fields used conditionally
+#[expect(
+    dead_code,
+    reason = "Development stream handle; fields used conditionally"
+)]
 struct StreamHandle {
     stream_id: Uuid,
     sender: mpsc::Sender<super::RpcStreamEvent>,
@@ -40,7 +43,6 @@ impl TarpcRpcService {
     }
 
     /// Execute a unified RPC request
-    #[allow(dead_code)] // Development method
     /// Function description
     ///
     /// # Errors
@@ -65,7 +67,6 @@ impl TarpcRpcService {
     }
 
     /// Start a bidirectional stream
-    #[allow(dead_code)] // Development method
     /// Function description
     ///
     /// # Errors
@@ -96,14 +97,12 @@ impl TarpcRpcService {
     }
 
     /// Get connection type
-    #[allow(dead_code)] // Development method
     #[must_use]
     pub const fn connection_type(&self) -> super::RpcConnectionType {
         super::RpcConnectionType::Tarpc
     }
 
     /// Health check
-    #[allow(dead_code)] // Development method
     /// Function description
     ///
     /// # Errors

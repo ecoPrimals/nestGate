@@ -66,7 +66,7 @@ impl Default for DiscoveryConfig {
 }
 
 /// Discovery methods
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variable discovery
@@ -159,14 +159,9 @@ pub fn discover_by_capability(
         .collect())
 }
 /// Health check a discovered service
-pub fn health_check_service(service: &DiscoveredService) -> Result<bool> {
+pub const fn health_check_service(service: &DiscoveredService) -> bool {
     // Basic health check implementation - would be expanded with real health check logic
-    match service.state {
-        ServiceState::Running => Ok(true),
-        ServiceState::Starting => Ok(false),
-        ServiceState::Stopping | ServiceState::Stopped | ServiceState::Failed => Ok(false),
-        _ => Ok(false),
-    }
+    matches!(service.state, ServiceState::Running)
 }
 
 /// Capability discovery service for universal adapter
@@ -215,10 +210,9 @@ impl CapabilityDiscovery {
 
         // Query discovery endpoints for dynamic capabilities
         for endpoint in &self.discovery_endpoints {
-            if let Ok(services) = self.query_discovery_endpoint(endpoint, capability_type) {
-                if !services.is_empty() {
-                    return Ok(services);
-                }
+            let services = self.query_discovery_endpoint(endpoint, capability_type);
+            if !services.is_empty() {
+                return Ok(services);
             }
         }
 
@@ -264,11 +258,7 @@ impl CapabilityDiscovery {
     }
 
     /// Query a discovery endpoint for capabilities
-    fn query_discovery_endpoint(
-        &self,
-        endpoint: &str,
-        capability_type: &str,
-    ) -> crate::Result<Vec<String>> {
+    fn query_discovery_endpoint(&self, endpoint: &str, capability_type: &str) -> Vec<String> {
         debug!(
             "Querying discovery endpoint: {} for {}",
             endpoint, capability_type
@@ -277,12 +267,12 @@ impl CapabilityDiscovery {
         // Mock implementation - in practice this would make HTTP requests
         // to actual discovery services
         match capability_type {
-            "security" => Ok(vec![format!("{endpoint}/security")]),
-            "ai" => Ok(vec![format!("{endpoint}/ai")]),
-            "orchestration" => Ok(vec![format!("{endpoint}/orchestration")]),
-            "storage" => Ok(vec![format!("{endpoint}/storage")]),
-            "compute" => Ok(vec![format!("{endpoint}/compute")]),
-            _ => Ok(Vec::new()),
+            "security" => vec![format!("{endpoint}/security")],
+            "ai" => vec![format!("{endpoint}/ai")],
+            "orchestration" => vec![format!("{endpoint}/orchestration")],
+            "storage" => vec![format!("{endpoint}/storage")],
+            "compute" => vec![format!("{endpoint}/compute")],
+            _ => Vec::new(),
         }
     }
 
@@ -454,7 +444,7 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).expect("Operation failed");
+        let healthy = health_check_service(&service);
         assert!(healthy);
     }
 
@@ -472,7 +462,7 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).expect("Operation failed");
+        let healthy = health_check_service(&service);
         assert!(!healthy);
     }
 
@@ -490,7 +480,7 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).expect("Operation failed");
+        let healthy = health_check_service(&service);
         assert!(!healthy);
     }
 
@@ -508,7 +498,7 @@ mod tests {
             last_health_check: None,
         };
 
-        let healthy = health_check_service(&service).expect("Operation failed");
+        let healthy = health_check_service(&service);
         assert!(!healthy);
     }
 

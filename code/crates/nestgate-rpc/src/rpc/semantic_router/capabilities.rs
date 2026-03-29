@@ -8,7 +8,11 @@ use nestgate_types::error::Result;
 use serde_json::{Value, json};
 
 /// Route `capabilities.list` → supported semantic RPC method identifiers.
-pub(super) async fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+#[expect(
+    clippy::unnecessary_wraps,
+    reason = "JSON-RPC semantic handlers use Result for uniform router dispatch"
+)]
+pub(super) fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     Ok(json!({
         "methods": [
             "storage.put",

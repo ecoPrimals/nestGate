@@ -93,7 +93,7 @@ impl<T> PooledConnection<T> {
     }
 
     /// Mark Idle
-    pub fn mark_idle(&mut self) {
+    pub const fn mark_idle(&mut self) {
         self.in_use = false;
     }
 
@@ -291,6 +291,7 @@ where
     }
 
     /// Start background cleanup task
+    #[must_use]
     pub fn start_cleanup_task(&self) -> tokio::task::JoinHandle<()> {
         let pool = self.connections.clone();
         let stats = self.stats.clone();
@@ -336,7 +337,7 @@ pub struct PooledConnectionGuard<T> {
 }
 impl<T> PooledConnectionGuard<T> {
     /// Creates a new instance
-    fn new(
+    const fn new(
         connection: T,
         pool: Arc<UniversalConnectionPool<T>>,
         permit: tokio::sync::OwnedSemaphorePermit,
@@ -349,12 +350,12 @@ impl<T> PooledConnectionGuard<T> {
     }
 
     /// Get a reference to the underlying connection
-    pub fn connection(&self) -> &T {
+    pub const fn connection(&self) -> &T {
         &self.connection
     }
 
     /// Get a mutable reference to the underlying connection
-    pub fn connection_mut(&mut self) -> &mut T {
+    pub const fn connection_mut(&mut self) -> &mut T {
         &mut self.connection
     }
 }
@@ -413,7 +414,7 @@ impl ConnectionPoolManager {
     }
 
     /// Get a connection pool for a provider
-    pub fn get_pool<T>(&self, _provider_name: &str) -> Option<Arc<UniversalConnectionPool<T>>>
+    pub const fn get_pool<T>(&self, _provider_name: &str) -> Option<Arc<UniversalConnectionPool<T>>>
     where
         T: Send + Sync + 'static,
     {
@@ -434,6 +435,7 @@ impl Default for ConnectionPoolManager {
 pub type HttpConnectionPool = UniversalConnectionPool<reqwest::Client>;
 impl HttpConnectionPool {
     /// Create an HTTP client connection pool
+    #[must_use]
     pub fn new_http_pool(config: ConnectionPoolConfig) -> Self {
         Self::new(config, || {
             reqwest::Client::builder()
@@ -441,7 +443,7 @@ impl HttpConnectionPool {
                 .build()
                 .map_err(|e| {
                     NestGateError::Internal(Box::new(crate::error::InternalErrorDetails {
-                        message: format!("HTTP client creation failed: {}", e),
+                        message: format!("HTTP client creation failed: {e}"),
                         component: "http_connection_pool".to_string(),
                         location: None,
                         is_bug: false,

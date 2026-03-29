@@ -2,6 +2,7 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 use axum::{http::StatusCode, response::Json};
+use nestgate_zfs::numeric::f64_to_u64_saturating;
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 
@@ -267,9 +268,9 @@ pub struct StorageSnapshotInfo {
 /// These functions are kept for future storage integration and testing purposes.
 ///
 /// Collect real storage pools from system
-#[allow(dead_code)] // Reserved for future real storage integration
-async fn collect_real_storage_pools()
--> Result<Vec<StoragePool>, Box<dyn std::error::Error + Send + Sync>> {
+#[expect(dead_code, reason = "Reserved for future real storage integration")]
+fn collect_real_storage_pools() -> Result<Vec<StoragePool>, Box<dyn std::error::Error + Send + Sync>>
+{
     use std::process::Command;
     use std::str;
     let mut pools = Vec::new();
@@ -396,16 +397,15 @@ fn parse_size_string(size_str: &str) -> Option<u64> {
             "P" | "PB" => 1024_u64.pow(5),
             _ => 1,
         };
-        Some((number * multiplier as f64) as u64)
+        Some(f64_to_u64_saturating(number * multiplier as f64))
     } else {
         None
     }
 }
 
 /// Collect real storage datasets (important directories) from system
-#[allow(dead_code)] // Reserved for future real storage integration
-async fn collect_real_storage_datasets()
--> Result<Vec<StorageDataset>, Box<dyn std::error::Error + Send + Sync>> {
+#[expect(dead_code, reason = "Reserved for future real storage integration")]
+fn collect_real_storage_datasets() -> Vec<StorageDataset> {
     // Mock implementation for datasets
     let mut datasets = Vec::new();
     // Important directories to monitor as "datasets"
@@ -445,14 +445,13 @@ async fn collect_real_storage_datasets()
     }
 
     if datasets.is_empty() {
-        datasets.push(create_fallback_home_dataset().await);
+        datasets.push(create_fallback_home_dataset());
     }
 
-    Ok(datasets)
+    datasets
 }
 
 /// Get directory usage statistics
-#[allow(dead_code)] // Utility function for future storage monitoring
 fn get_directory_usage(
     dir: &str,
 ) -> Result<(u64, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
@@ -474,8 +473,7 @@ fn get_directory_usage(
 }
 
 /// Create fallback dataset for user home directory
-#[allow(dead_code)] // Reserved for fallback storage implementation
-async fn create_fallback_home_dataset() -> StorageDataset {
+fn create_fallback_home_dataset() -> StorageDataset {
     use nestgate_core::error::utilities::safe_env_var_or_default;
     let home_dir = safe_env_var_or_default("HOME", "/home");
     let (size, used, available) = get_directory_usage(&home_dir).unwrap_or((0, 0, 0));
@@ -491,7 +489,7 @@ async fn create_fallback_home_dataset() -> StorageDataset {
 }
 
 /// Collect real ZFS snapshots from system
-#[allow(dead_code)] // Reserved for future ZFS integration
+#[expect(dead_code, reason = "Reserved for future ZFS integration")]
 async fn collect_real_zfs_snapshots()
 -> Result<Vec<StorageSnapshot>, Box<dyn std::error::Error + Send + Sync>> {
     let output = tokio::process::Command::new("zfs")
@@ -517,17 +515,17 @@ async fn collect_real_zfs_snapshots()
         // Limit to 100 most recent snapshots
         let parts: Vec<&str> = line.split('\t').collect();
         if parts.len() >= 4 {
-            let full_name = parts[0].to_string();
+            let full_name_str = parts[0];
             let size: u64 = parts[1].parse().unwrap_or(0);
             let referenced: u64 = parts[2].parse().unwrap_or(0);
             let creation_timestamp: u64 = parts[3].parse().unwrap_or(0);
 
-            // Extract dataset name from full name (remove @snapshot part)
-            let dataset = if let Some(at_pos) = full_name.find('@') {
-                full_name[..at_pos].to_string()
-            } else {
-                full_name.clone()
-            };
+            // Dataset path is the snapshot name prefix before `@` (single parse pass).
+            let dataset = full_name_str
+                .split_once('@')
+                .map_or(full_name_str, |(ds, _)| ds)
+                .to_string();
+            let full_name = full_name_str.to_string();
 
             // Convert Unix timestamp to ISO8601 string
             let created = if creation_timestamp > 0 {
@@ -558,7 +556,7 @@ async fn collect_real_zfs_snapshots()
 }
 
 /// Parse bandwidth unit values
-#[allow(dead_code)] // Utility function for bandwidth calculations
+#[expect(dead_code, reason = "Utility function for bandwidth calculations")]
 fn parse_bandwidth_unit(value: &str) -> Option<f64> {
     if value == "-" || value.is_empty() {
         return Some(0.0);
@@ -577,7 +575,7 @@ fn parse_bandwidth_unit(value: &str) -> Option<f64> {
 }
 
 /// Collect fallback storage metrics
-#[allow(dead_code)] // Reserved for fallback metrics implementation
+#[expect(dead_code, reason = "Reserved for fallback metrics implementation")]
 async fn collect_fallback_storage_metrics() -> StorageMetrics {
     // Get basic disk space information from system
     let (total_storage, used_storage, available_storage) = match tokio::process::Command::new("df")

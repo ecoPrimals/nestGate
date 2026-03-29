@@ -228,7 +228,7 @@ pub async fn set_dataset_properties(
 mod tests {
     use super::*;
     use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
-    use crate::handlers::zfs::universal_zfs::traits::UniversalZfsServiceEnum;
+    use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
     use nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig;
     use std::sync::Arc;
 

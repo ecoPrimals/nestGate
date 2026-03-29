@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **AZURE BLOB STORAGE BACKEND**
 //!
 //! Implements `ZeroCostZfsOperations` trait for Azure Blob Storage.
@@ -34,7 +39,7 @@
 //! use nestgate_zfs::backends::azure::AzureBackend;
 //!
 //! // Create backend
-//! let backend = AzureBackend::new().await?;
+//! let backend = AzureBackend::new()?;
 //!
 //! // Create "pool" (Azure container)
 //! let pool = backend.create_pool("tank", &[]).await?;
@@ -200,26 +205,26 @@ impl AzureBackend {
     /// Configuration discovery order:
     /// 1. Capability discovery (preferred) - discovers Azure service at runtime
     /// 2. Environment variables (fallback) - for standalone/testing
-    pub async fn new() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         // Try capability discovery first
-        if let Ok(config) = Self::discover_azure_capability().await {
+        if let Ok(config) = Self::discover_azure_capability() {
             info!(
                 "✅ Azure backend initialized via capability discovery: service_id={}",
                 config.service_id
             );
-            return Self::from_discovered_capability(config).await;
+            return Self::from_discovered_capability(config);
         }
 
         // Fallback to environment configuration
         info!("ℹ️ Capability discovery unavailable, using environment config");
-        Self::from_environment().await
+        Self::from_environment()
     }
 
     /// Discover Azure capability via `NestGate` capability system
     ///
     /// **RUNTIME DISCOVERY**: No hardcoded service locations.
     /// Backend discovers Azure-compatible storage services at startup.
-    async fn discover_azure_capability() -> Result<DiscoveredAzureConfig> {
+    fn discover_azure_capability() -> Result<DiscoveredAzureConfig> {
         // Integration point for NestGate capability discovery
         // When capability system is available, it will return discovered Azure config
         // For now, return error to trigger environment fallback
@@ -229,7 +234,7 @@ impl AzureBackend {
     }
 
     /// Create backend from discovered capability (zero-hardcoding approach)
-    async fn from_discovered_capability(config: DiscoveredAzureConfig) -> Result<Self> {
+    fn from_discovered_capability(config: DiscoveredAzureConfig) -> Result<Self> {
         info!(
             "☁️  Initializing Azure backend from capability: account={}, prefix={}",
             config.account, config.container_prefix
@@ -256,7 +261,7 @@ impl AzureBackend {
     ///
     /// **FALLBACK ONLY**: Used when capability discovery is unavailable.
     /// Validates configuration to fail fast on misconfiguration.
-    async fn from_environment() -> Result<Self> {
+    fn from_environment() -> Result<Self> {
         let account = std::env::var("AZURE_STORAGE_ACCOUNT").map_err(|_| {
             config_error!(
                 "AZURE_STORAGE_ACCOUNT required when using environment config",
@@ -522,7 +527,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires Azure storage account configuration"]
     async fn test_container_name_generation() {
-        let backend = AzureBackend::new().await.unwrap();
+        let backend = AzureBackend::new().unwrap();
         let container = backend.container_name("MyPool_Test");
 
         // Azure containers must be lowercase and no underscores
@@ -557,7 +562,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires Azure storage account configuration"]
     async fn test_create_pool() {
-        let backend = AzureBackend::new().await.unwrap();
+        let backend = AzureBackend::new().unwrap();
         let pool = backend.create_pool("test-pool", &[]).await;
 
         assert!(pool.is_ok(), "Pool creation should succeed");
@@ -571,7 +576,7 @@ mod tests {
         let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
         nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
 
-        let backend = AzureBackend::new().await.unwrap();
+        let backend = AzureBackend::new().unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
         let dataset = backend
             .create_dataset(&pool, "data", StorageTier::Warm)
@@ -592,7 +597,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires Azure storage account configuration"]
     async fn test_create_snapshot() {
-        let backend = AzureBackend::new().await.unwrap();
+        let backend = AzureBackend::new().unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
         let dataset = backend
             .create_dataset(&pool, "data", StorageTier::Hot)
@@ -610,7 +615,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires Azure storage account configuration"]
     async fn test_list_pools() {
-        let backend = AzureBackend::new().await.unwrap();
+        let backend = AzureBackend::new().unwrap();
         backend.create_pool("pool1", &[]).await.unwrap();
         backend.create_pool("pool2", &[]).await.unwrap();
 
@@ -622,7 +627,7 @@ mod tests {
     async fn test_get_pool_properties() {
         let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
         nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
-        let backend = AzureBackend::new().await.unwrap();
+        let backend = AzureBackend::new().unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
 
         let props = backend.get_pool_properties(&pool).await;

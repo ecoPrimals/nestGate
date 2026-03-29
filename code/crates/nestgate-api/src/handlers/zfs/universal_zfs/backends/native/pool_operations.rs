@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // Contains all pool-related operations for the native ZFS backend.
 
@@ -64,9 +68,7 @@ pub fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
     for line in &lines {
         if let Some(state_str) = line.strip_prefix(" state: ") {
             state = match state_str.trim() {
-                "ONLINE" => PoolState::Active,
-                "DEGRADED" => PoolState::Active,
-                "FAULTED" => PoolState::Active,
+                "ONLINE" | "DEGRADED" | "FAULTED" => PoolState::Active,
                 "OFFLINE" => PoolState::Suspended,
                 "EXPORTED" => PoolState::Exported,
                 _ => PoolState::Unknown,
@@ -190,7 +192,7 @@ pub async fn create_pool(
     cmd.arg(pool_name);
 
     // Add _devices
-    for device in &config._devices {
+    for device in &config.devices {
         cmd.arg(device);
     }
 

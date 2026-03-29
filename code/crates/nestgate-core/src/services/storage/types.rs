@@ -42,27 +42,9 @@ pub enum EvictionPolicy {
     Random,
 }
 
-/// Storage service configuration
+/// High-level storage service metadata configuration (distinct from
+/// [`crate::services::storage::config::StorageServiceConfig`]).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::config::StorageServiceConfig;
-///
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::StorageServiceConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for StorageService
 pub struct StorageServiceConfig {
     /// Service identifier
     pub service_id: String,
@@ -112,7 +94,7 @@ pub struct StoragePool {
     /// Last Updated
     pub last_updated: SystemTime,
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Types of StoragePool
 pub enum StoragePoolType {
     /// Zfs
@@ -125,7 +107,7 @@ pub enum StoragePoolType {
     Object,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Poolhealth
 pub enum PoolHealth {
     /// Online
@@ -159,7 +141,7 @@ pub struct StorageQuota {
     /// Enforcement
     pub enforcement: QuotaEnforcement,
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Quotaenforcement
 pub enum QuotaEnforcement {
     /// None
@@ -230,7 +212,7 @@ pub struct StorageOperationResult {
     /// Timestamp
     pub timestamp: SystemTime,
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Types of StorageOperation
 pub enum StorageOperationType {
     /// Read
@@ -274,7 +256,7 @@ impl StoragePool {
 
     /// Check if pool is healthy
     #[must_use]
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.health, PoolHealth::Online)
     }
 
@@ -313,7 +295,7 @@ impl StorageQuota {
 
     /// Check if quota is exceeded
     #[must_use]
-    pub fn is_exceeded(&self) -> bool {
+    pub const fn is_exceeded(&self) -> bool {
         if let Some(hard_limit) = self.hard_limit {
             self.current_usage >= hard_limit
         } else {
@@ -323,7 +305,7 @@ impl StorageQuota {
 
     /// Check if soft limit is exceeded
     #[must_use]
-    pub fn is_soft_limit_exceeded(&self) -> bool {
+    pub const fn is_soft_limit_exceeded(&self) -> bool {
         if let Some(soft_limit) = self.soft_limit {
             self.current_usage >= soft_limit
         } else {
@@ -384,11 +366,7 @@ impl StorageOperationResult {
 /// The original struct is marked as deprecated but still functional.
 /// Type alias for Storageserviceconfigcanonical
 pub type StorageServiceConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageServiceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+    crate::config::canonical_primary::domains::storage_canonical::CanonicalStorageConfig;
 
 #[cfg(test)]
 mod tests {

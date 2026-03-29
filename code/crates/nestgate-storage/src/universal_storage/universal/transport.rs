@@ -70,8 +70,7 @@ impl TransportProtocol {
     pub const fn is_secure(&self) -> bool {
         match self {
             Self::Http { tls, .. } => tls.is_some(),
-            Self::Quic { .. } => true, // QUIC has built-in encryption
-            Self::UnixSocket { .. } => true, // Local socket is inherently secure
+            Self::Quic { .. } | Self::UnixSocket { .. } => true, // QUIC encrypts; local socket is trusted
             Self::Tcp { .. } | Self::Custom { .. } => false,
         }
     }

@@ -208,8 +208,7 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
             let status = match status_str {
                 "healthy" => HealthStatus::Healthy,
                 "degraded" => HealthStatus::Degraded,
-                "unhealthy" => HealthStatus::Unhealthy,
-                _ => HealthStatus::Unhealthy,
+                "unhealthy" | _ => HealthStatus::Unhealthy,
             };
 
             let version = result

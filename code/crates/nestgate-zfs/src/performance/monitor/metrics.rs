@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
+use crate::numeric::f64_to_u64_saturating;
 use crate::types::StorageTier;
 use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::{NestGateError, Result as CoreResult};
@@ -454,7 +460,7 @@ impl ZfsPerformanceMonitor {
         };
 
         let number: f64 = number.parse()?;
-        Ok((number * multiplier as f64) as u64)
+        Ok(f64_to_u64_saturating(number * multiplier as f64))
     }
 
     /// Collect tier-specific metrics

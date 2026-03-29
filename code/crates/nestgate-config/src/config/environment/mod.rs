@@ -168,10 +168,9 @@ impl EnvironmentConfig {
             return Ok(addr);
         }
 
-        // Fallback: invalid/unresolvable host -> 127.0.0.1
-        // SAFETY: "127.0.0.1" is a constant valid IPv4 address; parse() cannot fail
+        // Fallback: invalid/unresolvable host -> IPv4 loopback (no fallible parse)
         Ok(SocketAddr::new(
-            "127.0.0.1".parse().expect("hardcoded IP is valid"),
+            IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
             port,
         ))
     }

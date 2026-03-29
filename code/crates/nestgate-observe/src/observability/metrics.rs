@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 use std::collections::HashMap;
 //
 // Provides comprehensive system metrics collection and analysis.
@@ -74,7 +79,7 @@ fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> Result<Perfo
     let mut sys = System::new_all();
     sys.refresh_all();
 
-    let cpu_usage = sys.global_cpu_info().cpu_usage() as f64;
+    let cpu_usage = f64::from(sys.global_cpu_info().cpu_usage());
     let memory_usage = sys.used_memory();
     let memory_available = sys.available_memory();
 
@@ -261,7 +266,7 @@ impl MetricsRegistry {
             // Non-Linux, or Linux when `/proc` parsing failed: `sysinfo` fallback.
             #[cfg(feature = "sysinfo")]
             {
-                return gather_performance_metrics_sysinfo(&custom);
+                gather_performance_metrics_sysinfo(&custom)
             }
             #[cfg(not(feature = "sysinfo"))]
             {

@@ -34,9 +34,8 @@ pub fn resolve_family_id<'a>(params: &'a Value, state: &'a StorageState) -> Resu
 }
 
 /// storage.store - Store key-value data
-pub(super) async fn storage_store(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+pub(super) fn storage_store(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let key = params["key"]
@@ -72,12 +71,8 @@ pub(super) async fn storage_store(params: &Option<Value>, state: &StorageState) 
 }
 
 /// storage.retrieve - Retrieve data by key
-pub(super) async fn storage_retrieve(
-    params: &Option<Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub(super) fn storage_retrieve(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let key = params["key"]
@@ -100,15 +95,14 @@ pub(super) async fn storage_retrieve(
 ///
 /// Modern idiomatic Rust: Efficient existence check without data transfer
 /// Deep Debt Principle #1: Standard API pattern, no unnecessary data retrieval
-pub(super) async fn storage_exists(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+pub(super) fn storage_exists(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let _key = params["key"]
+    params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    let _family_id = resolve_family_id(params, state)?;
+    resolve_family_id(params, state)?;
     let _ = state;
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core storage (storage.exists)",
@@ -116,15 +110,14 @@ pub(super) async fn storage_exists(params: &Option<Value>, state: &StorageState)
 }
 
 /// storage.delete - Delete data by key
-pub(super) async fn storage_delete(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+pub(super) fn storage_delete(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let _key = params["key"]
+    params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    let _family_id = resolve_family_id(params, state)?;
+    resolve_family_id(params, state)?;
     let _ = state;
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core storage (storage.delete)",
@@ -132,12 +125,11 @@ pub(super) async fn storage_delete(params: &Option<Value>, state: &StorageState)
 }
 
 /// storage.list - List all keys with optional prefix
-pub(super) async fn storage_list(params: &Option<Value>, _state: &StorageState) -> Result<Value> {
+pub(super) async fn storage_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let family_id = resolve_family_id(params, _state)?;
+    let family_id = resolve_family_id(params, state)?;
     let prefix = params["prefix"].as_str();
 
     let dataset = family_id;
@@ -161,12 +153,11 @@ pub(super) async fn storage_list(params: &Option<Value>, _state: &StorageState) 
 }
 
 /// storage.stats - Get storage statistics
-pub(super) async fn storage_stats(params: &Option<Value>, _state: &StorageState) -> Result<Value> {
+pub(super) async fn storage_stats(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let family_id = resolve_family_id(params, _state)?;
+    let family_id = resolve_family_id(params, state)?;
 
     let dataset = family_id;
 
@@ -185,21 +176,17 @@ pub(super) async fn storage_stats(params: &Option<Value>, _state: &StorageState)
 }
 
 /// `storage.store_blob` - Store binary blob (base64 encoded)
-pub(super) async fn storage_store_blob(
-    params: &Option<Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub(super) fn storage_store_blob(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let _key = params["key"]
+    params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let blob_base64 = params["blob"].as_str().ok_or_else(|| {
         NestGateError::invalid_input_with_field("blob", "blob (base64 string) required")
     })?;
-    let _family_id = resolve_family_id(params, state)?;
+    resolve_family_id(params, state)?;
 
     // Decode base64
     use base64::Engine;
@@ -216,18 +203,14 @@ pub(super) async fn storage_store_blob(
 }
 
 /// `storage.retrieve_blob` - Retrieve binary blob (base64 encoded)
-pub(super) async fn storage_retrieve_blob(
-    params: &Option<Value>,
-    state: &StorageState,
-) -> Result<Value> {
+pub(super) fn storage_retrieve_blob(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    let _key = params["key"]
+    params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    let _family_id = resolve_family_id(params, state)?;
+    resolve_family_id(params, state)?;
     let _ = state;
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core storage (storage.retrieve_blob)",
@@ -318,7 +301,7 @@ mod tests {
     #[tokio::test]
     async fn storage_store_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_store(&None, &state).await;
+        let result = storage_store(None, &state);
         assert!(result.is_err());
     }
 
@@ -326,35 +309,35 @@ mod tests {
     async fn storage_store_requires_key() {
         let state = mock_state(Some("test")).await;
         let params = Some(json!({"family_id": "test", "dataset": "ds"}));
-        let result = storage_store(&params, &state).await;
+        let result = storage_store(params.as_ref(), &state);
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn storage_retrieve_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_retrieve(&None, &state).await;
+        let result = storage_retrieve(None, &state);
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn storage_exists_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_exists(&None, &state).await;
+        let result = storage_exists(None, &state);
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn storage_delete_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_delete(&None, &state).await;
+        let result = storage_delete(None, &state);
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn storage_list_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_list(&None, &state).await;
+        let result = storage_list(None, &state).await;
         assert!(result.is_err());
     }
 
@@ -368,7 +351,7 @@ mod tests {
             "key": "hello",
             "value": "world"
         }));
-        let store_result = storage_store(&store_params, &state).await;
+        let store_result = storage_store(store_params.as_ref(), &state);
         assert!(
             matches!(store_result, Err(NestGateError::NotImplemented(_))),
             "expected NotImplemented for storage.store: {:?}",
@@ -379,18 +362,15 @@ mod tests {
             "family_id": &family_id,
             "key": "hello"
         }));
-        let retrieve_result = storage_retrieve(&retrieve_params, &state).await;
+        let retrieve_result = storage_retrieve(retrieve_params.as_ref(), &state);
         assert!(
             matches!(retrieve_result, Err(NestGateError::NotImplemented(_))),
             "expected NotImplemented for storage.retrieve: {:?}",
             retrieve_result
         );
 
-        let delete_result = storage_delete(
-            &Some(json!({"family_id": &family_id, "key": "hello"})),
-            &state,
-        )
-        .await;
+        let delete_params = json!({"family_id": &family_id, "key": "hello"});
+        let delete_result = storage_delete(Some(&delete_params), &state);
         assert!(
             matches!(delete_result, Err(NestGateError::NotImplemented(_))),
             "expected NotImplemented for storage.delete: {:?}",
@@ -403,21 +383,16 @@ mod tests {
         let state = mock_state(Some("test-list")).await;
         let family_id = format!("test-list-{}", uuid::Uuid::new_v4());
 
-        let s1 = storage_store(
-            &Some(json!({"family_id": &family_id, "key": "a", "value": "1"})),
-            &state,
-        )
-        .await;
+        let p1 = json!({"family_id": &family_id, "key": "a", "value": "1"});
+        let s1 = storage_store(Some(&p1), &state);
         assert!(matches!(s1, Err(NestGateError::NotImplemented(_))));
-        let s2 = storage_store(
-            &Some(json!({"family_id": &family_id, "key": "b", "value": "2"})),
-            &state,
-        )
-        .await;
+        let p2 = json!({"family_id": &family_id, "key": "b", "value": "2"});
+        let s2 = storage_store(Some(&p2), &state);
         assert!(matches!(s2, Err(NestGateError::NotImplemented(_))));
 
         // listing still walks the filesystem under datasets/{family_id} (no core wiring yet)
-        let list_result = storage_list(&Some(json!({"family_id": &family_id})), &state).await;
+        let list_params = json!({"family_id": &family_id});
+        let list_result = storage_list(Some(&list_params), &state).await;
         assert!(list_result.is_ok());
         let keys = list_result.unwrap();
         let key_arr = keys["keys"].as_array().expect("keys array");
@@ -433,22 +408,16 @@ mod tests {
         let state = mock_state(Some("test-nested")).await;
         let family_id = format!("test-nested-{}", uuid::Uuid::new_v4());
 
-        let store_result = storage_store(
-            &Some(json!({"family_id": &family_id, "key": "deep/path/key", "value": "nested"})),
-            &state,
-        )
-        .await;
+        let store_p = json!({"family_id": &family_id, "key": "deep/path/key", "value": "nested"});
+        let store_result = storage_store(Some(&store_p), &state);
         assert!(
             matches!(store_result, Err(NestGateError::NotImplemented(_))),
             "nested store: {:?}",
             store_result
         );
 
-        let retrieve_result = storage_retrieve(
-            &Some(json!({"family_id": &family_id, "key": "deep/path/key"})),
-            &state,
-        )
-        .await;
+        let retrieve_p = json!({"family_id": &family_id, "key": "deep/path/key"});
+        let retrieve_result = storage_retrieve(Some(&retrieve_p), &state);
         assert!(matches!(
             retrieve_result,
             Err(NestGateError::NotImplemented(_))

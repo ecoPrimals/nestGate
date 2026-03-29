@@ -71,11 +71,11 @@ mod tests {
             data: serde_json::json!({"test": "data"}),
             request_id: Arc::new("req-12345".to_string()),
             timestamp: std::time::SystemTime::now(),
-            _metadata: Arc::new(HashMap::new()),
+            metadata: Arc::new(HashMap::new()),
         };
 
         assert_eq!(request.request_id.as_ref(), "req-12345");
-        assert!(request._metadata.is_empty());
+        assert!(request.metadata.is_empty());
     }
 
     #[test]
@@ -88,11 +88,11 @@ mod tests {
             data: serde_json::json!({"action": "test"}),
             request_id: Arc::new("req-67890".to_string()),
             timestamp: std::time::SystemTime::now(),
-            _metadata: Arc::new(metadata),
+            metadata: Arc::new(metadata),
         };
 
-        assert_eq!(request._metadata.len(), 2);
-        assert_eq!(request._metadata.get("client"), Some(&"web".to_string()));
+        assert_eq!(request.metadata.len(), 2);
+        assert_eq!(request.metadata.get("client"), Some(&"web".to_string()));
     }
 
     #[test]
@@ -101,7 +101,7 @@ mod tests {
             data: serde_json::json!({"key": "value"}),
             request_id: Arc::new("test-req".to_string()),
             timestamp: std::time::UNIX_EPOCH,
-            _metadata: Arc::new(HashMap::new()),
+            metadata: Arc::new(HashMap::new()),
         };
 
         let serialized = serde_json::to_string(&request);
@@ -133,7 +133,7 @@ mod tests {
             data: serde_json::json!({"test": "data"}),
             request_id: Arc::new("req-1".to_string()),
             timestamp: std::time::SystemTime::now(),
-            _metadata: Arc::new(HashMap::new()),
+            metadata: Arc::new(HashMap::new()),
         };
 
         let request2 = request1.clone();
@@ -149,7 +149,7 @@ mod tests {
             request_id: Arc::new("req-123".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 42,
-            _metadata: HashMap::new(),
+            metadata: HashMap::new(),
         };
 
         assert_eq!(response.request_id.as_ref(), "req-123");
@@ -166,7 +166,7 @@ mod tests {
                 message: "Some items failed".to_string(),
             },
             processing_time_ms: 100,
-            _metadata: HashMap::new(),
+            metadata: HashMap::new(),
         };
 
         assert_eq!(response.processing_time_ms, 100);
@@ -188,7 +188,7 @@ mod tests {
                 message: "Invalid request".to_string(),
             },
             processing_time_ms: 5,
-            _metadata: HashMap::new(),
+            metadata: HashMap::new(),
         };
 
         match response.status {
@@ -207,7 +207,7 @@ mod tests {
             request_id: Arc::new("test".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 10,
-            _metadata: HashMap::new(),
+            metadata: HashMap::new(),
         };
 
         let serialized = serde_json::to_string(&response);
@@ -225,7 +225,7 @@ mod tests {
             request_id: Arc::new("req-1".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 50,
-            _metadata: HashMap::new(),
+            metadata: HashMap::new(),
         };
 
         let response2 = response1.clone();
@@ -301,11 +301,11 @@ mod tests {
             data: serde_json::json!(null),
             request_id: Arc::new(String::new()),
             timestamp: std::time::SystemTime::now(),
-            _metadata: Arc::new(HashMap::new()),
+            metadata: Arc::new(HashMap::new()),
         };
 
         assert!(request.request_id.as_ref().is_empty());
-        assert!(request._metadata.is_empty());
+        assert!(request.metadata.is_empty());
     }
 
     #[test]
@@ -315,7 +315,7 @@ mod tests {
             request_id: Arc::new("fast-req".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: 0,
-            _metadata: HashMap::new(),
+            metadata: HashMap::new(),
         };
 
         assert_eq!(response.processing_time_ms, 0);
@@ -328,7 +328,7 @@ mod tests {
             request_id: Arc::new("slow-req".to_string()),
             status: ApiStatus::Success,
             processing_time_ms: u64::MAX,
-            _metadata: HashMap::new(),
+            metadata: HashMap::new(),
         };
 
         assert_eq!(response.processing_time_ms, u64::MAX);

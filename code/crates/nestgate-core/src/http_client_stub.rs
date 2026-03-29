@@ -97,7 +97,7 @@ pub struct Response {
 impl Response {
     /// HTTP status.
     #[must_use]
-    pub fn status(&self) -> StatusCode {
+    pub const fn status(&self) -> StatusCode {
         StatusCode(self.inner.status)
     }
 
@@ -112,7 +112,7 @@ impl Response {
     /// # Errors
     ///
     /// Returns an error if the body is not valid JSON for `T`.
-    pub async fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
+    pub fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
         self.inner.json()
     }
 }
@@ -323,6 +323,90 @@ impl std::fmt::Display for Method {
             Self::Patch => write!(f, "PATCH"),
             Self::Head => write!(f, "HEAD"),
             Self::Options => write!(f, "OPTIONS"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::header::{HeaderMap, HeaderName, HeaderValue};
+    use super::{Client, Method, StatusCode};
+    use std::str::FromStr;
+    use std::time::Duration;
+
+    #[test]
+    fn status_code_success_boundary() {
+        assert!(!StatusCode(199).is_success());
+        assert!(StatusCode(200).is_success());
+        assert!(StatusCode(299).is_success());
+        assert!(!StatusCode(300).is_success());
+        assert_eq!(StatusCode(404).as_u16(), 404);
+        assert_eq!(StatusCode(404).to_string(), "404");
+    }
+
+    #[test]
+    fn header_map_insert_and_roundtrip_names() {
+        let mut map = HeaderMap::new();
+        assert!(
+            map.insert(
+                HeaderName::from_str("X-Test").expect("infallible"),
+                HeaderValue::from_str("a").expect("infallible"),
+            )
+            .is_none()
+        );
+        assert_eq!(
+            map.insert(
+                HeaderName::from_str("X-Test").expect("infallible"),
+                HeaderValue::from_str("b").expect("infallible"),
+            ),
+            Some("a".to_string())
+        );
+    }
+
+    #[test]
+    fn method_display_covers_all_variants() {
+        let methods = [
+            (Method::Get, "GET"),
+            (Method::Post, "POST"),
+            (Method::Put, "PUT"),
+            (Method::Delete, "DELETE"),
+            (Method::Patch, "PATCH"),
+            (Method::Head, "HEAD"),
+            (Method::Options, "OPTIONS"),
+        ];
+        for (m, s) in methods {
+            assert_eq!(m.to_string(), s);
+        }
+        assert_eq!(Method::GET, Method::Get);
+    }
+
+    #[test]
+    fn client_builder_applies_timeout_and_headers() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_str("X-Default").expect("infallible"),
+            HeaderValue::from_str("1").expect("infallible"),
+        );
+        let client = Client::builder()
+            .timeout(Duration::from_millis(500))
+            .default_headers(headers)
+            .build()
+            .expect("client build");
+        let _ = client;
+    }
+
+    #[tokio::test]
+    async fn post_without_json_errors_before_io() {
+        let client = Client::new();
+        match client.post("http://127.0.0.1:9").send().await {
+            Err(e) => {
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("json") || msg.contains("POST"),
+                    "unexpected error: {msg}"
+                );
+            }
+            Ok(_) => panic!("POST without `.json()` should not succeed"),
         }
     }
 }

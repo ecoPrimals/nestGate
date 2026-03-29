@@ -324,7 +324,7 @@ pub struct CapabilityRegistration {
     /// Service ID (UUID)
     pub service_id: Arc<str>,
 
-    /// Service name ("nestgate")
+    /// Service name (`NestGate` primal identity: `"nestgate"`, not the compiling crate name)
     pub service_name: Arc<str>,
 
     /// Primary capability ("storage")

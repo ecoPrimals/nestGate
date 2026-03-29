@@ -788,7 +788,7 @@ pub mod benchmarks {
     use super::{ZeroCopyBufferPool, ZeroCopyNetworkInterface};
     use std::time::Instant;
     /// Benchmark zero-copy vs traditional networking
-    pub async fn benchmark_zero_copy_networking() -> (u64, u64, f64) {
+    pub fn benchmark_zero_copy_networking() -> (u64, u64, f64) {
         let interface = ZeroCopyNetworkInterface::<65_536>::new();
         let test_data = vec![0x42u8; 1_048_576]; // 1MB test data
         /// Iterations

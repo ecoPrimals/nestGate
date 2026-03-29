@@ -18,7 +18,7 @@ use std::sync::Arc;
 #[tokio::test]
 async fn test_isomorphic_server_creation() {
     // Create handler
-    let handler = Arc::new(UnixSocketRpcHandler::new().await.unwrap());
+    let handler = Arc::new(UnixSocketRpcHandler::new().unwrap());
 
     // Create isomorphic server
     let _server = Arc::new(IsomorphicIpcServer::new(
@@ -32,7 +32,7 @@ async fn test_isomorphic_server_creation() {
 /// Test handler processes health requests correctly
 #[tokio::test]
 async fn test_handler_health_check() {
-    let handler = UnixSocketRpcHandler::new().await.unwrap();
+    let handler = UnixSocketRpcHandler::new().unwrap();
 
     let request = json!({
         "jsonrpc": "2.0",
@@ -51,7 +51,7 @@ async fn test_handler_health_check() {
 /// Test handler processes version requests correctly
 #[tokio::test]
 async fn test_handler_version_check() {
-    let handler = UnixSocketRpcHandler::new().await.unwrap();
+    let handler = UnixSocketRpcHandler::new().unwrap();
 
     let request = json!({
         "jsonrpc": "2.0",
@@ -70,7 +70,7 @@ async fn test_handler_version_check() {
 /// Test handler rejects unknown methods
 #[tokio::test]
 async fn test_handler_unknown_method() {
-    let handler = UnixSocketRpcHandler::new().await.unwrap();
+    let handler = UnixSocketRpcHandler::new().unwrap();
 
     let request = json!({
         "jsonrpc": "2.0",
@@ -89,7 +89,7 @@ async fn test_handler_unknown_method() {
 /// Test handler handles invalid JSON requests
 #[tokio::test]
 async fn test_handler_invalid_json() {
-    let handler = UnixSocketRpcHandler::new().await.unwrap();
+    let handler = UnixSocketRpcHandler::new().unwrap();
 
     let request = json!({
         "not": "valid",
@@ -128,7 +128,7 @@ async fn test_endpoint_discovery_unix() {
 /// Test multiple concurrent requests
 #[tokio::test]
 async fn test_concurrent_requests() {
-    let handler = Arc::new(UnixSocketRpcHandler::new().await.unwrap());
+    let handler = Arc::new(UnixSocketRpcHandler::new().unwrap());
 
     let mut handles = vec![];
 
@@ -156,9 +156,9 @@ async fn test_concurrent_requests() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Integration: requires live NestGate / storage RPC; run with --ignored when server available"]
 async fn test_storage_methods() {
-    let handler = UnixSocketRpcHandler::new().await.unwrap();
+    let handler = UnixSocketRpcHandler::new().unwrap();
 
     // Test storage.store
     let store_request = json!({
@@ -184,9 +184,9 @@ async fn test_storage_methods() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Integration: requires live NestGate / template RPC; run with --ignored when server available"]
 async fn test_template_methods() {
-    let handler = UnixSocketRpcHandler::new().await.unwrap();
+    let handler = UnixSocketRpcHandler::new().unwrap();
 
     // Test template.store
     let store_request = json!({
@@ -212,9 +212,9 @@ async fn test_template_methods() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Integration: requires live NestGate / audit RPC; run with --ignored when server available"]
 async fn test_audit_methods() {
-    let handler = UnixSocketRpcHandler::new().await.unwrap();
+    let handler = UnixSocketRpcHandler::new().unwrap();
 
     // Test audit.record
     let record_request = json!({

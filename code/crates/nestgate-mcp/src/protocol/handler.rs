@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **PROTOCOL HANDLER**
 //!
 //! Enhanced protocol handler with v2 orchestrator integration.
@@ -51,19 +56,17 @@ impl ProtocolHandler {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub async fn handle_message(&self, message: Message) -> Result<Response> {
+    pub fn handle_message(&self, message: Message) -> Result<Response> {
         match message.message_type {
-            MessageType::CapabilityRegistration => {
-                self.handle_capability_registration(message).await
-            }
-            MessageType::CapabilityQuery => self.handle_capability_query(message).await,
-            MessageType::VolumeCreate => self.handle_volume_create(message).await,
-            MessageType::VolumeMount => self.handle_volume_mount(message).await,
-            MessageType::MetricsReport => self.handle_metrics_report(message).await,
-            MessageType::HealthCheck => self.handle_health_check(message).await,
-            MessageType::FederationJoin => self.handle_federation_join(message).await,
-            MessageType::OrchestratorRoute => self.handle_orchestrator_route(message).await,
-            MessageType::ServiceRegistration => self.handle_service_registration(message).await,
+            MessageType::CapabilityRegistration => self.handle_capability_registration(message),
+            MessageType::CapabilityQuery => self.handle_capability_query(message),
+            MessageType::VolumeCreate => self.handle_volume_create(message),
+            MessageType::VolumeMount => self.handle_volume_mount(message),
+            MessageType::MetricsReport => self.handle_metrics_report(message),
+            MessageType::HealthCheck => self.handle_health_check(message),
+            MessageType::FederationJoin => self.handle_federation_join(message),
+            MessageType::OrchestratorRoute => self.handle_orchestrator_route(message),
+            MessageType::ServiceRegistration => self.handle_service_registration(message),
             _ => Err(unsupported_error(format!(
                 "Message type {:?} not supported",
                 message.message_type
@@ -72,11 +75,11 @@ impl ProtocolHandler {
     }
 
     /// Handles Capability Registration
-    async fn handle_capability_registration(&self, message: Message) -> Result<Response> {
+    fn handle_capability_registration(&self, message: Message) -> Result<Response> {
         // Route through orchestrator if available
         if let Some(_orchestrator_endpoint) = &self.orchestrator_endpoint {
             // Forward to orchestrator for centralized capability management
-            return self.route_to_orchestrator(message).await;
+            return self.route_to_orchestrator(message);
         }
 
         // Direct handling for standalone mode
@@ -87,7 +90,7 @@ impl ProtocolHandler {
     }
 
     /// Handles Capability Query
-    async fn handle_capability_query(&self, message: Message) -> Result<Response> {
+    fn handle_capability_query(&self, message: Message) -> Result<Response> {
         // Return our capabilities
         Ok(Response::success(
             message.id,
@@ -96,10 +99,10 @@ impl ProtocolHandler {
     }
 
     /// Handles Volume Create
-    async fn handle_volume_create(&self, message: Message) -> Result<Response> {
+    fn handle_volume_create(&self, message: Message) -> Result<Response> {
         // Route volume operations through orchestrator
         if let Some(_orchestrator_endpoint) = &self.orchestrator_endpoint {
-            return self.route_to_orchestrator(message).await;
+            return self.route_to_orchestrator(message);
         }
 
         // Direct handling for standalone mode
@@ -107,10 +110,10 @@ impl ProtocolHandler {
     }
 
     /// Handles Volume Mount
-    async fn handle_volume_mount(&self, message: Message) -> Result<Response> {
+    fn handle_volume_mount(&self, message: Message) -> Result<Response> {
         // Route mount operations through orchestrator
         if let Some(_orchestrator_endpoint) = &self.orchestrator_endpoint {
-            return self.route_to_orchestrator(message).await;
+            return self.route_to_orchestrator(message);
         }
 
         // Direct handling for standalone mode
@@ -118,10 +121,10 @@ impl ProtocolHandler {
     }
 
     /// Handles Metrics Report
-    async fn handle_metrics_report(&self, message: Message) -> Result<Response> {
+    fn handle_metrics_report(&self, message: Message) -> Result<Response> {
         // Route metrics through orchestrator for centralized monitoring
         if let Some(_orchestrator_endpoint) = &self.orchestrator_endpoint {
-            return self.route_to_orchestrator(message).await;
+            return self.route_to_orchestrator(message);
         }
 
         // Acknowledge metrics in standalone mode
@@ -129,7 +132,7 @@ impl ProtocolHandler {
     }
 
     /// Handles Health Check
-    async fn handle_health_check(&self, message: Message) -> Result<Response> {
+    fn handle_health_check(&self, message: Message) -> Result<Response> {
         let health_status = HealthStatus {
             status: ServiceStatus::Online,
             uptime: self.started_at.elapsed(),
@@ -144,10 +147,10 @@ impl ProtocolHandler {
     }
 
     /// Handles Federation Join
-    async fn handle_federation_join(&self, message: Message) -> Result<Response> {
+    fn handle_federation_join(&self, message: Message) -> Result<Response> {
         // Route federation operations through orchestrator
         if let Some(_orchestrator_endpoint) = &self.orchestrator_endpoint {
-            return self.route_to_orchestrator(message).await;
+            return self.route_to_orchestrator(message);
         }
 
         // Standalone mode doesn't support federation
@@ -155,7 +158,7 @@ impl ProtocolHandler {
     }
 
     /// Handle orchestrator routing
-    async fn handle_orchestrator_route(&self, message: Message) -> Result<Response> {
+    fn handle_orchestrator_route(&self, message: Message) -> Result<Response> {
         // Forward to orchestrator instead of recursing
         match &message.payload {
             MessagePayload::OrchestratorRoute(_payload) => {
@@ -175,10 +178,10 @@ impl ProtocolHandler {
     }
 
     /// Handles Service Registration
-    async fn handle_service_registration(&self, message: Message) -> Result<Response> {
+    fn handle_service_registration(&self, message: Message) -> Result<Response> {
         // Route service registration through orchestrator
         if let Some(_orchestrator_endpoint) = &self.orchestrator_endpoint {
-            return self.route_to_orchestrator(message).await;
+            return self.route_to_orchestrator(message);
         }
 
         // Standalone mode doesn't support service registration
@@ -188,7 +191,7 @@ impl ProtocolHandler {
     }
 
     /// Route To Orchestrator
-    async fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
+    fn route_to_orchestrator(&self, message: Message) -> Result<Response> {
         // Route via IPC to orchestrator when connected
         // Process the actual request and return real response
         Ok(Response::success(message.id, ResponsePayload::Empty))
@@ -229,7 +232,7 @@ mod tests {
                 query_type: CapabilityQueryType::All,
             }),
         );
-        let resp = handler.handle_message(msg).await.unwrap();
+        let resp = handler.handle_message(msg).unwrap();
         assert!(matches!(
             resp.status,
             crate::protocol::responses::ResponseStatus::Success
@@ -246,7 +249,7 @@ mod tests {
                 check_type: HealthCheckType::Shallow,
             }),
         );
-        let resp = handler.handle_message(msg).await.unwrap();
+        let resp = handler.handle_message(msg).unwrap();
         assert!(matches!(
             resp.status,
             crate::protocol::responses::ResponseStatus::Success

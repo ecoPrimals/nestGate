@@ -179,11 +179,15 @@ impl CapabilityMapper {
             | UnifiedCapability::Websocket
             | UnifiedCapability::Mqtt => PrimalCapability::ApiGateway,
 
-            // Compute/Orchestration mappings (using ServiceDiscovery as closest match)
+            // Compute/orchestration/ecosystem → service discovery (closest primal match)
             UnifiedCapability::Compute
             | UnifiedCapability::TaskExecution
             | UnifiedCapability::Orchestration
-            | UnifiedCapability::Scheduling => PrimalCapability::ServiceDiscovery,
+            | UnifiedCapability::Scheduling
+            | UnifiedCapability::ServiceDiscovery
+            | UnifiedCapability::HealthCheck
+            | UnifiedCapability::Configuration
+            | UnifiedCapability::StateManagement => PrimalCapability::ServiceDiscovery,
 
             // Security mappings
             UnifiedCapability::Security
@@ -204,12 +208,6 @@ impl CapabilityMapper {
             | UnifiedCapability::Tracing
             | UnifiedCapability::Logging
             | UnifiedCapability::Alerting => PrimalCapability::Observability,
-
-            // Ecosystem mappings
-            UnifiedCapability::ServiceDiscovery
-            | UnifiedCapability::HealthCheck
-            | UnifiedCapability::Configuration
-            | UnifiedCapability::StateManagement => PrimalCapability::ServiceDiscovery,
 
             // Custom capabilities
             UnifiedCapability::Custom(name) => PrimalCapability::Custom(name.clone()),

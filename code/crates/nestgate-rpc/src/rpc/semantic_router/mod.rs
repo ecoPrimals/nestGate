@@ -64,12 +64,8 @@
 //! - `metadata.search` → search services by capability
 //!
 //! ### Crypto Domain (`crypto.*`)
-//! - `crypto.encrypt` → delegate to `BearDog` (capability discovery!)
-//! - `crypto.decrypt` → delegate to `BearDog`
-//! - `crypto.generate_key` → delegate to `BearDog`
-//! - `crypto.generate_nonce` → delegate to `BearDog`
-//! - `crypto.hash` → delegate to `BearDog`
-//! - `crypto.verify_hash` → delegate to `BearDog`
+//! - `crypto.*` → delegate to whichever primal advertises `crypto` / security capabilities
+//!   (resolved at runtime via capability discovery, not by name)
 //!
 //! ### Health Domain (`health.*`)
 //! - `health.check` → `health_check`
@@ -184,10 +180,10 @@ impl SemanticRouter {
             "storage.dataset.delete" => storage::dataset_delete(self, params).await,
 
             // ==================== DISCOVERY DOMAIN ====================
-            "discovery.announce" => discovery::discovery_announce(self, params).await,
-            "discovery.query" => discovery::discovery_query(self, params).await,
-            "discovery.list" => discovery::discovery_list(self, params).await,
-            "discovery.capabilities" => discovery::discovery_capabilities(self, params).await,
+            "discovery.announce" => discovery::discovery_announce(self, params),
+            "discovery.query" => discovery::discovery_query(self, params),
+            "discovery.list" => discovery::discovery_list(self, params),
+            "discovery.capabilities" => discovery::discovery_capabilities(self, params),
 
             // ==================== HEALTH DOMAIN ====================
             "health.check" => health::health_check(self, params).await,
@@ -197,20 +193,20 @@ impl SemanticRouter {
             "health.info" => health::health_info(self, params).await,
 
             // ==================== CAPABILITIES DOMAIN ====================
-            "capabilities.list" => capabilities::capabilities_list(self, params).await,
+            "capabilities.list" => capabilities::capabilities_list(self, params),
 
             // ==================== METADATA DOMAIN ====================
-            "metadata.store" => metadata::metadata_store(self, params).await,
-            "metadata.retrieve" => metadata::metadata_retrieve(self, params).await,
-            "metadata.search" => metadata::metadata_search(self, params).await,
+            "metadata.store" => metadata::metadata_store(self, params),
+            "metadata.retrieve" => metadata::metadata_retrieve(self, params),
+            "metadata.search" => metadata::metadata_search(self, params),
 
             // ==================== CRYPTO DOMAIN ====================
-            "crypto.encrypt" => crypto::crypto_encrypt(self, params).await,
-            "crypto.decrypt" => crypto::crypto_decrypt(self, params).await,
-            "crypto.generate_key" => crypto::crypto_generate_key(self, params).await,
-            "crypto.generate_nonce" => crypto::crypto_generate_nonce(self, params).await,
-            "crypto.hash" => crypto::crypto_hash(self, params).await,
-            "crypto.verify_hash" => crypto::crypto_verify_hash(self, params).await,
+            "crypto.encrypt" => crypto::crypto_encrypt(self, params),
+            "crypto.decrypt" => crypto::crypto_decrypt(self, params),
+            "crypto.generate_key" => crypto::crypto_generate_key(self, params),
+            "crypto.generate_nonce" => crypto::crypto_generate_nonce(self, params),
+            "crypto.hash" => crypto::crypto_hash(self, params),
+            "crypto.verify_hash" => crypto::crypto_verify_hash(self, params),
 
             // Unknown method
             _ => {

@@ -71,19 +71,19 @@ impl ServiceResolver {
     /// Resolve a capability to a service
     ///
     /// Returns the best available service providing the requested capability.
-    pub async fn resolve(&self, capability: &Capability) -> CapabilityResult<ServiceDescriptor> {
-        let providers = self.registry.find_providers(capability).await;
+    pub fn resolve(&self, capability: &Capability) -> CapabilityResult<ServiceDescriptor> {
+        let providers = self.registry.find_providers(capability);
 
         if providers.is_empty() {
             return Err(CapabilityError::NoProvider(capability.clone()));
         }
 
         // Apply load balancing strategy
-        self.select_provider(&providers).await
+        self.select_provider(&providers)
     }
 
     /// Select best provider using load balancing strategy
-    async fn select_provider(
+    fn select_provider(
         &self,
         providers: &[ServiceDescriptor],
     ) -> CapabilityResult<ServiceDescriptor> {
@@ -167,8 +167,8 @@ impl ServiceResolver {
     }
 
     /// Find all healthy providers for a capability
-    pub async fn find_healthy_providers(&self, capability: &Capability) -> Vec<ServiceDescriptor> {
-        let providers = self.registry.find_providers(capability).await;
+    pub fn find_healthy_providers(&self, capability: &Capability) -> Vec<ServiceDescriptor> {
+        let providers = self.registry.find_providers(capability);
         providers
             .into_iter()
             .filter(super::service_descriptor::ServiceDescriptor::is_healthy)
@@ -208,11 +208,10 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).await.unwrap();
+        registry.register_service(service.clone()).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Security(SecurityCapability::Authentication))
-            .await
             .unwrap();
 
         assert_eq!(resolved.id, service.id);
@@ -223,9 +222,7 @@ mod tests {
         let registry = Arc::new(CapabilityRegistry::new());
         let resolver = ServiceResolver::new(registry);
 
-        let result = resolver
-            .resolve(&Capability::Security(SecurityCapability::Authentication))
-            .await;
+        let result = resolver.resolve(&Capability::Security(SecurityCapability::Authentication));
 
         assert!(result.is_err());
         assert!(matches!(
@@ -265,12 +262,11 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).await.unwrap();
-        registry.register_service(service2.clone()).await.unwrap();
+        registry.register_service(service1).unwrap();
+        registry.register_service(service2.clone()).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Security(SecurityCapability::Authentication))
-            .await
             .unwrap();
 
         // Should select the low-load service
@@ -312,14 +308,13 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).await.unwrap();
-        registry.register_service(service2.clone()).await.unwrap();
+        registry.register_service(service1).unwrap();
+        registry.register_service(service2.clone()).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Orchestration(
                 OrchestrationCapability::ServiceDiscovery,
             ))
-            .await
             .unwrap();
 
         // Should select the low-latency service
@@ -365,12 +360,11 @@ mod tests {
             health: ServiceHealth::Unhealthy,
         };
 
-        registry.register_service(unhealthy).await.unwrap();
-        registry.register_service(healthy.clone()).await.unwrap();
+        registry.register_service(unhealthy).unwrap();
+        registry.register_service(healthy.clone()).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::AI(AICapability::Inference))
-            .await
             .unwrap();
 
         // Should select the healthy service
@@ -392,11 +386,9 @@ mod tests {
             health: ServiceHealth::Unhealthy,
         };
 
-        registry.register_service(unhealthy).await.unwrap();
+        registry.register_service(unhealthy).unwrap();
 
-        let result = resolver
-            .resolve(&Capability::Networking(NetworkingCapability::ServiceMesh))
-            .await;
+        let result = resolver.resolve(&Capability::Networking(NetworkingCapability::ServiceMesh));
 
         assert!(result.is_err());
     }
@@ -419,16 +411,14 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).await.unwrap();
+        registry.register_service(service.clone()).unwrap();
 
         // Should resolve both capabilities to the same service
         let resolved1 = resolver
             .resolve(&Capability::Storage(StorageCapability::ObjectStorage))
-            .await
             .unwrap();
         let resolved2 = resolver
             .resolve(&Capability::Storage(StorageCapability::BlockStorage))
-            .await
             .unwrap();
 
         assert_eq!(resolved1.id, service.id);
@@ -460,17 +450,15 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1.clone()).await.unwrap();
-        registry.register_service(service2.clone()).await.unwrap();
+        registry.register_service(service1.clone()).unwrap();
+        registry.register_service(service2.clone()).unwrap();
 
         // Multiple resolutions should cycle through services
         let resolved1 = resolver
             .resolve(&Capability::Security(SecurityCapability::Encryption))
-            .await
             .unwrap();
         let resolved2 = resolver
             .resolve(&Capability::Security(SecurityCapability::Encryption))
-            .await
             .unwrap();
 
         // With round-robin, we should get both services
@@ -508,12 +496,11 @@ mod tests {
             health: ServiceHealth::Degraded,
         };
 
-        registry.register_service(degraded).await.unwrap();
-        registry.register_service(healthy.clone()).await.unwrap();
+        registry.register_service(degraded).unwrap();
+        registry.register_service(healthy.clone()).unwrap();
 
         let resolved = resolver
             .resolve(&Capability::Networking(NetworkingCapability::LoadBalancing))
-            .await
             .unwrap();
 
         // Should select the healthy service (lower load)
@@ -552,12 +539,10 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).await.unwrap();
+        registry.register_service(service.clone()).unwrap();
 
         // Verify the service can be retrieved with its metadata
-        let services = registry
-            .find_providers(&Capability::AI(AICapability::Training))
-            .await;
+        let services = registry.find_providers(&Capability::AI(AICapability::Training));
         assert_eq!(services.len(), 1);
         assert_eq!(services[0].metadata.load, 0.5);
         assert_eq!(services[0].metadata.latency_ms, Some(25.0));
@@ -568,9 +553,7 @@ mod tests {
         let registry = Arc::new(CapabilityRegistry::new());
         let resolver = ServiceResolver::new(registry);
 
-        let result = resolver
-            .resolve(&Capability::Storage(StorageCapability::Database))
-            .await;
+        let result = resolver.resolve(&Capability::Storage(StorageCapability::Database));
 
         assert!(result.is_err());
         assert!(matches!(
@@ -595,20 +578,13 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).await.unwrap();
+        registry.register_service(service.clone()).unwrap();
 
-        // Multiple concurrent resolutions
-        let (r1, r2, r3) = tokio::join!(
-            resolver.resolve(&Capability::Orchestration(
-                OrchestrationCapability::ServiceScheduling
-            )),
-            resolver.resolve(&Capability::Orchestration(
-                OrchestrationCapability::ServiceScheduling
-            )),
-            resolver.resolve(&Capability::Orchestration(
-                OrchestrationCapability::ServiceScheduling
-            ))
-        );
+        // Multiple resolutions (registry is lock-free; resolver is synchronous)
+        let cap = Capability::Orchestration(OrchestrationCapability::ServiceScheduling);
+        let r1 = resolver.resolve(&cap);
+        let r2 = resolver.resolve(&cap);
+        let r3 = resolver.resolve(&cap);
 
         assert!(r1.is_ok());
         assert!(r2.is_ok());

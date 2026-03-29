@@ -333,7 +333,7 @@ impl<T> AIFirstResponse<T> {
 
     /// Set confidence score
     #[must_use]
-    pub fn with_confidence(mut self, confidence: f64) -> Self {
+    pub const fn with_confidence(mut self, confidence: f64) -> Self {
         self.confidence_score = confidence.clamp(0.0, 1.0);
         self
     }

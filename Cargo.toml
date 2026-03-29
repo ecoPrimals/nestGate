@@ -228,9 +228,12 @@ unused_must_use = "warn"
 missing_docs = "warn"
 
 [workspace.lints.clippy]
-all = "warn"
-pedantic = "warn"
-nursery = "warn"
+# Groups use lower priority so specific `allow`s below override members of `pedantic` / `nursery`.
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+significant_drop_tightening = "allow"
+unused_self = "allow"
 unwrap_used = "warn"
 expect_used = "warn"
 panic = "warn"

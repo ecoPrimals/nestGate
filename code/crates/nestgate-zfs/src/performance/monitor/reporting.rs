@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 use crate::types::StorageTier;
 use nestgate_core::Result as CoreResult;
 /// Alert management, notifications, and public metrics access API
@@ -18,7 +23,7 @@ use super::super::types::{ActiveAlertsVec, AlertConditionsVec};
 
 impl ZfsPerformanceMonitor {
     /// Start alert task
-    pub(super) async fn start_alert_task(&mut self) -> CoreResult<()> {
+    pub(super) fn start_alert_task(&mut self) -> CoreResult<()> {
         let current_metrics = Arc::clone(&self.current_metrics);
         let alert_conditions = Arc::clone(&self.alert_conditions);
         let active_alerts = Arc::clone(&self.active_alerts);

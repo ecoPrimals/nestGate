@@ -120,6 +120,7 @@ impl<T, const POOL_SIZE: usize> SafeMemoryPool<T, POOL_SIZE> {
     }
 
     /// Get pool statistics
+    #[allow(clippy::missing_const_for_fn)] // `Cell::get` is not const
     pub fn stats(&self) -> &PoolStats {
         self.stats.get()
     }

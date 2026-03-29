@@ -104,6 +104,7 @@ impl DiscoveryHttpClient {
     }
 
     /// Add a default header to all requests.
+    #[must_use]
     pub fn with_header(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.headers.insert(key.into(), value.into());
         self

@@ -105,7 +105,7 @@ impl NetworkDefaultsV2Config {
         let api_port = std::env::var("NESTGATE_API_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(crate::constants::hardcoding::ports::HTTP_DEFAULT);
+            .unwrap_or_else(crate::constants::get_api_port);
 
         Self {
             api_host,
@@ -116,27 +116,27 @@ impl NetworkDefaultsV2Config {
             metrics_port: std::env::var("NESTGATE_METRICS_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::ports::METRICS_DEFAULT),
+                .unwrap_or_else(crate::constants::get_metrics_port),
             metrics_bind: std::env::var("NESTGATE_METRICS_BIND").ok(),
 
             ws_port: std::env::var("NESTGATE_WS_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::ports::WEBSOCKET_DEFAULT),
+                .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::WEBSOCKET),
             ws_bind: std::env::var("NESTGATE_WS_BIND").ok(),
             ws_url: std::env::var("NESTGATE_WS_URL").ok(),
 
             health_port: std::env::var("NESTGATE_HEALTH_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::ports::HEALTH_CHECK),
+                .unwrap_or_else(crate::constants::get_health_port),
             health_bind: std::env::var("NESTGATE_HEALTH_BIND").ok(),
             health_url: std::env::var("NESTGATE_HEALTH_URL").ok(),
 
             storage_port: std::env::var("NESTGATE_STORAGE_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::ports::STORAGE_DEFAULT),
+                .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::STORAGE),
             storage_bind: std::env::var("NESTGATE_STORAGE_BIND").ok(),
 
             connect_timeout_ms: std::env::var("NESTGATE_CONNECT_TIMEOUT_MS")

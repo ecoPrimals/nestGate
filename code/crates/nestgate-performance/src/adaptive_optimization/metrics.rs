@@ -67,7 +67,7 @@ impl MetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn create_snapshot(&self) -> Result<PerformanceSnapshot> {
+    pub fn create_snapshot(&self) -> Result<PerformanceSnapshot> {
         let metrics = self.collect_current_metrics()?;
 
         Ok(PerformanceSnapshot {
@@ -187,7 +187,7 @@ mod tests {
     async fn test_create_snapshot() {
         let collector = MetricsCollector::new();
         collector.update_cpu_utilization(50.0);
-        let snapshot = collector.create_snapshot().await.unwrap();
+        let snapshot = collector.create_snapshot().unwrap();
         assert!((snapshot.cpu_utilization - 50.0).abs() < 0.01);
     }
 }

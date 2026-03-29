@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! # 🔌 Isomorphic IPC Server
 //!
 //! **UNIVERSAL**: Automatically adapts to platform constraints\
@@ -186,11 +191,24 @@ impl IsomorphicIpcServer {
     async fn try_unix_server(&self) -> Result<()> {
         use tokio::net::UnixListener;
 
-        // Get socket path (XDG-compliant)
-        let socket_path = self.get_socket_path()?;
-
-        // Prepare socket path (create dirs, remove old socket)
-        self.prepare_socket_path(&socket_path)?;
+        // Prefer production [`SocketConfig`] (NESTGATE_SOCKET / biomeOS / XDG / tmp) so behavior
+        // matches [`crate::rpc::unix_socket_server::JsonRpcUnixServer`] and ecosystem clients.
+        let socket_path = match crate::rpc::socket_config::SocketConfig::from_environment() {
+            Ok(cfg) => {
+                cfg.prepare_socket_path()
+                    .map_err(|e| anyhow::anyhow!("Failed to prepare socket path: {e}"))?;
+                cfg.socket_path
+            }
+            Err(e) => {
+                warn!(
+                    "SocketConfig unavailable ({}), using legacy service-name path layout",
+                    e
+                );
+                let socket_path = self.get_socket_path()?;
+                self.prepare_socket_path(&socket_path)?;
+                socket_path
+            }
+        };
 
         // Bind to Unix socket
         let listener = UnixListener::bind(&socket_path)
@@ -226,31 +244,36 @@ impl IsomorphicIpcServer {
 
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
-        let mut line = String::new();
+        let mut line = Vec::new();
 
         loop {
             line.clear();
 
-            match reader.read_line(&mut line).await {
-                Ok(0) => break, // Connection closed
-                Ok(_) => {
-                    // Parse and handle request
-                    match serde_json::from_str::<Value>(&line) {
-                        Ok(request) => {
-                            let response = handler.handle_request(request).await;
-                            let response_str = serde_json::to_string(&response)?;
-
-                            writer.write_all(response_str.as_bytes()).await?;
-                            writer.write_all(b"\n").await?;
-                        }
-                        Err(e) => {
-                            warn!("Invalid JSON-RPC request: {}", e);
-                        }
-                    }
-                }
+            let n = match reader.read_until(b'\n', &mut line).await {
+                Ok(n) => n,
                 Err(e) => {
                     error!("Unix socket read error: {}", e);
                     break;
+                }
+            };
+            if n == 0 && line.is_empty() {
+                break; // EOF
+            }
+            let trimmed = line.as_slice().trim_ascii();
+            if trimmed.is_empty() {
+                continue;
+            }
+            // Parse from byte slice: avoids allocating a UTF-8 `String` for the line buffer.
+            match serde_json::from_slice::<Value>(trimmed) {
+                Ok(request) => {
+                    let response = handler.handle_request(request).await;
+                    let response_str = serde_json::to_string(&response)?;
+
+                    writer.write_all(response_str.as_bytes()).await?;
+                    writer.write_all(b"\n").await?;
+                }
+                Err(e) => {
+                    warn!("Invalid JSON-RPC request: {}", e);
                 }
             }
         }

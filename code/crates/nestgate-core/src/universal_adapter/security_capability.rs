@@ -21,7 +21,8 @@ pub struct SecurityCapability {
 
 impl SecurityCapability {
     /// Create new security capability adapter
-    pub fn new(discovery: Arc<CapabilityDiscovery>) -> Self {
+    #[must_use]
+    pub const fn new(discovery: Arc<CapabilityDiscovery>) -> Self {
         Self { discovery }
     }
 

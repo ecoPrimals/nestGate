@@ -150,7 +150,7 @@ impl ZfsSnapshotManager {
         });
 
         // Start cache updater
-        self.start_cache_updater().await?;
+        self.start_cache_updater()?;
 
         info!("ZFS snapshot manager started successfully");
         Ok(())
@@ -354,7 +354,7 @@ impl ZfsSnapshotManager {
     }
 
     /// Start cache updater
-    pub async fn start_cache_updater(&self) -> CoreResult<()> {
+    pub fn start_cache_updater(&self) -> CoreResult<()> {
         let snapshot_cache = Arc::clone(&self.snapshot_cache);
         let statistics = Arc::clone(&self.statistics);
         let dataset_manager = Arc::clone(&self.dataset_manager);

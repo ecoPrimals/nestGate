@@ -21,6 +21,11 @@ use super::helpers;
 
 /// List all ZFS datasets
 /// GET /api/v1/zfs/datasets
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when listing or serializing
+/// datasets fails.
 pub async fn list_datasets(
     State(state): State<ApiState>,
     Query(query): Query<ListQuery>,
@@ -33,16 +38,11 @@ pub async fn list_datasets(
         .collect();
     let mut datasets = Vec::new();
 
-    for (dataset_name, _engine) in pairs {
-        match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
-            Ok(dataset) => datasets.push(dataset),
-            Err(e) => {
-                error!(
-                    "Failed to convert _engine to dataset for {}: {}",
-                    dataset_name, e
-                );
-            }
-        }
+    for (dataset_name, engine) in pairs {
+        datasets.push(helpers::convert_engine_to_placeholder_dataset(
+            &dataset_name,
+            &engine,
+        ));
     }
 
     if let Some(filter) = &query.filter {
@@ -84,6 +84,11 @@ pub async fn list_datasets(
 
 /// Create a new ZFS dataset
 /// POST /api/v1/zfs/datasets
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when validation fails or the
+/// dataset already exists.
 pub async fn create_dataset(
     State(state): State<ApiState>,
     Json(request): Json<CreateDatasetRequest>,
@@ -103,7 +108,7 @@ pub async fn create_dataset(
         )));
     }
 
-    let _storage_backend = match helpers::create_storage_backend(&request).await {
+    let _storage_backend = match helpers::create_storage_backend(&request) {
         Ok(backend) => backend,
         Err(e) => {
             error!("Failed to create storage backend: {}", e);
@@ -149,21 +154,8 @@ pub async fn create_dataset(
         debug!("Created welcome file for dataset {}", request.name);
     }
 
-    let dataset = match helpers::convert_engine_to_placeholder_dataset(
-        &request.name,
-        &"placeholder".to_string(),
-    )
-    .await
-    {
-        Ok(dataset) => dataset,
-        Err(e) => {
-            error!("Failed to convert _engine to dataset: {}", e);
-            return Err(Json(DataError::new(
-                "Failed to create dataset response".to_string(),
-                "CONVERSION_ERROR".to_string(),
-            )));
-        }
-    };
+    let dataset =
+        helpers::convert_engine_to_placeholder_dataset(&request.name, &"placeholder".to_string());
 
     info!("Successfully created ZFS dataset: {}", request.name);
     Ok(Json(DataResponse::new(dataset)))
@@ -182,18 +174,9 @@ pub async fn get_dataset(
         .map(|r| r.value().clone());
 
     match engine_opt {
-        Some(_engine) => {
-            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
-                Ok(dataset) => Ok(Json(DataResponse::new(dataset))),
-                Err(e) => {
-                    error!("Failed to convert _engine to dataset: {}", e);
-                    Err(Json(DataError::new(
-                        "Failed to get dataset data".to_string(),
-                        "CONVERSION_ERROR".to_string(),
-                    )))
-                }
-            }
-        }
+        Some(engine) => Ok(Json(DataResponse::new(
+            helpers::convert_engine_to_placeholder_dataset(&dataset_name, &engine),
+        ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
             "DATASET_NOT_FOUND".to_string(),
@@ -215,20 +198,10 @@ pub async fn update_dataset(
         .map(|r| r.value().clone());
 
     match engine_opt {
-        Some(_engine) => {
-            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
-                Ok(dataset) => {
-                    info!("Dataset properties updated for: {}", dataset_name);
-                    Ok(Json(DataResponse::new(dataset)))
-                }
-                Err(e) => {
-                    error!("Failed to convert _engine to dataset: {}", e);
-                    Err(Json(DataError::new(
-                        "Failed to update dataset".to_string(),
-                        "UPDATE_ERROR".to_string(),
-                    )))
-                }
-            }
+        Some(engine) => {
+            let dataset = helpers::convert_engine_to_placeholder_dataset(&dataset_name, &engine);
+            info!("Dataset properties updated for: {}", dataset_name);
+            Ok(Json(DataResponse::new(dataset)))
         }
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
@@ -274,18 +247,9 @@ pub async fn get_dataset_properties(
         .map(|r| r.value().clone());
 
     match engine_opt {
-        Some(_engine) => {
-            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
-                Ok(dataset) => Ok(Json(DataResponse::new(dataset.properties))),
-                Err(e) => {
-                    error!("Failed to get dataset properties: {}", e);
-                    Err(Json(DataError::new(
-                        "Failed to get dataset properties".to_string(),
-                        "PROPERTIES_ERROR".to_string(),
-                    )))
-                }
-            }
-        }
+        Some(engine) => Ok(Json(DataResponse::new(
+            helpers::convert_engine_to_placeholder_dataset(&dataset_name, &engine).properties,
+        ))),
         None => Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
             "DATASET_NOT_FOUND".to_string(),

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **NETWORK HANDLERS AND PROTOCOLS**
 //!
 //! This module provides protocol handlers and network management functionality,
@@ -202,18 +207,15 @@ impl HttpProtocolHandler {
     }
 
     /// Handle HTTP request
-    pub async fn handle_request(
-        &self,
-        request: HttpRequest,
-    ) -> nestgate_core::Result<HttpResponse> {
+    pub fn handle_request(&self, request: HttpRequest) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling HTTP request: {} {}", request.method, request.path);
 
         // Basic request handling logic
         match request.method.as_str() {
-            "GET" => self.handle_get_request(&request).await,
-            "POST" => self.handle_post_request(&request).await,
-            "PUT" => self.handle_put_request(&request).await,
-            "DELETE" => self.handle_delete_request(&request).await,
+            "GET" => self.handle_get_request(&request),
+            "POST" => self.handle_post_request(&request),
+            "PUT" => self.handle_put_request(&request),
+            "DELETE" => self.handle_delete_request(&request),
             _ => {
                 warn!("Unsupported HTTP method: {}", request.method);
                 Ok(HttpResponse {
@@ -226,10 +228,7 @@ impl HttpProtocolHandler {
     }
 
     /// Handles  Get Request
-    async fn handle_get_request(
-        &self,
-        request: &HttpRequest,
-    ) -> nestgate_core::Result<HttpResponse> {
+    fn handle_get_request(&self, request: &HttpRequest) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling GET request for path: {}", request.path);
 
         Ok(HttpResponse {
@@ -240,10 +239,7 @@ impl HttpProtocolHandler {
     }
 
     /// Handles  Post Request
-    async fn handle_post_request(
-        &self,
-        request: &HttpRequest,
-    ) -> nestgate_core::Result<HttpResponse> {
+    fn handle_post_request(&self, request: &HttpRequest) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling POST request for path: {}", request.path);
 
         Ok(HttpResponse {
@@ -254,10 +250,7 @@ impl HttpProtocolHandler {
     }
 
     /// Handles  Put Request
-    async fn handle_put_request(
-        &self,
-        request: &HttpRequest,
-    ) -> nestgate_core::Result<HttpResponse> {
+    fn handle_put_request(&self, request: &HttpRequest) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling PUT request for path: {}", request.path);
 
         Ok(HttpResponse {
@@ -268,10 +261,7 @@ impl HttpProtocolHandler {
     }
 
     /// Handles  Delete Request
-    async fn handle_delete_request(
-        &self,
-        request: &HttpRequest,
-    ) -> nestgate_core::Result<HttpResponse> {
+    fn handle_delete_request(&self, request: &HttpRequest) -> nestgate_core::Result<HttpResponse> {
         debug!("Handling DELETE request for path: {}", request.path);
 
         Ok(HttpResponse {
@@ -447,10 +437,13 @@ mod tests {
     /// Helper to create test connection info
     fn create_test_connection(id: &str, _active: bool) -> ConnectionInfo {
         // Note: active state is set automatically by ConnectionInfo::new
-        use nestgate_core::constants::hardcoding::ports;
+        use nestgate_core::constants::hardcoding::runtime_fallback_ports;
         ConnectionInfo::new(
             id.to_string(),
-            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT),
+            SocketAddr::new(
+                IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                runtime_fallback_ports::HTTP,
+            ),
         )
     }
 
@@ -670,7 +663,7 @@ mod tests {
             body: Vec::new(),
         };
 
-        let response = handler.handle_request(request).await;
+        let response = handler.handle_request(request);
         assert!(response.is_ok());
 
         let response = response.expect("GET request should succeed");
@@ -689,7 +682,7 @@ mod tests {
             body: Vec::new(),
         };
 
-        let response = handler.handle_request(request).await;
+        let response = handler.handle_request(request);
         assert!(response.is_ok());
 
         let response = response.expect("POST request should succeed");
@@ -708,7 +701,7 @@ mod tests {
             body: Vec::new(),
         };
 
-        let response = handler.handle_request(request).await;
+        let response = handler.handle_request(request);
         assert!(response.is_ok());
 
         let response = response.expect("PUT request should succeed");
@@ -727,7 +720,7 @@ mod tests {
             body: Vec::new(),
         };
 
-        let response = handler.handle_request(request).await;
+        let response = handler.handle_request(request);
         assert!(response.is_ok());
 
         let response = response.expect("DELETE request should succeed");
@@ -747,7 +740,7 @@ mod tests {
             body: Vec::new(),
         };
 
-        let response = handler.handle_request(request).await;
+        let response = handler.handle_request(request);
         assert!(response.is_ok());
 
         let response = response.expect("PATCH request should return response");

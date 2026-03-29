@@ -3,7 +3,7 @@
 
 //! NOTE: HTTP removed per Concentrated Gap Architecture
 //! Remote ZFS operations now via Unix sockets through Songbird gateway
-#![allow(dead_code)]
+#![expect(dead_code, reason = "Remote HTTP client stub retained after HTTP removal; reference for Unix migration")]
 
 use serde_json::Value;
 use std::time::Duration;
@@ -39,7 +39,7 @@ impl HttpClient {
         ));
 
         // Dead code below: original HTTP implementation preserved as reference
-        #[allow(unreachable_code)]
+        #[expect(unreachable_code, reason = "Unreachable after early return; kept as migration reference")]
         let health_url = format!("{}/health", self.endpoint);
 
         // Try with exponential backoff

@@ -10,10 +10,10 @@
 //!
 //! ## Atomic Compositions
 //!
-//! **NEST** = TOWER + nestgate + squirrel
-//! - **TOWER** = beardog (device) + songbird (network)
-//! - **nestgate** = Universal storage + discovery
-//! - **squirrel** = AI/MCP integration
+//! **NEST** = TOWER + storage gateway + AI integration (roles; peers resolved at runtime)
+//! - **TOWER** = device + network capability layers (which primal hosts them is discovered)
+//! - **Storage gateway** = universal storage + discovery (this stack)
+//! - **AI integration** = MCP / model orchestration (discovered by capability)
 //!
 //! Combined: Complete storage + compute + AI + networking stack
 //!
@@ -25,14 +25,14 @@
 //! ├─────────────────────────────────────────────────────────────┤
 //! │                                                              │
 //! │  TOWER (foundational device + networking)                   │
-//! │    ├─ beardog  → Device abstraction & capabilities          │
-//! │    └─ songbird → Network discovery & federation             │
+//! │    ├─ Device / security capabilities (discovered)          │
+//! │    └─ Network federation (discovered)                      │
 //! │                                                              │
-//! │  nestgate (storage + discovery)                             │
+//! │  Storage gateway (this primal’s role)                        │
 //! │    ├─ Universal storage (ZFS, ext4, tmpfs)                  │
 //! │    └─ Primal discovery & service metadata                   │
 //! │                                                              │
-//! │  squirrel (AI integration)                                  │
+//! │  AI / MCP integration (discovered peers)                     │
 //! │    ├─ MCP (Model Context Protocol)                          │
 //! │    └─ AI model orchestration                                │
 //! │                                                              │
@@ -67,7 +67,7 @@ use super::launcher::{discover_nestgate_endpoint, is_nestgate_running};
 /// - Returns error if primal not available (caller decides fallback)
 ///
 /// # Arguments
-/// * `primal_name` - Name of primal to check ("beardog", "songbird", "squirrel")
+/// * `primal_name` - Socket stem / instance id discovered on disk (not a fixed peer catalog)
 ///
 /// # Returns
 /// * `Ok(HealthStatus)` - Health status if primal discovered and responsive
@@ -396,18 +396,13 @@ pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
 
 /// Verify NEST atomic composition health
 ///
-/// Checks health of all NEST components:
-/// - beardog (via its isomorphic IPC if available)
-/// - songbird (via its isomorphic IPC if available)
-/// - nestgate (via isomorphic IPC - implemented here)
-/// - squirrel (via its isomorphic IPC if available)
+/// Checks health of NEST components by **discovering socket endpoints** on disk and
+/// probing JSON-RPC health — no fixed catalog of peer primal names.
 ///
 /// ## Note
 ///
-/// This function currently only verifies `NestGate`'s health directly.
-/// Full NEST atomic health verification requires coordination with
-/// biomeOS atomic-deploy crate or integration with beardog/songbird/squirrel
-/// health check implementations.
+/// Self-health uses this crate’s IPC; other roles are contacted only when their
+/// sockets appear under the standard runtime search paths.
 ///
 /// ## Example
 ///
@@ -456,10 +451,11 @@ pub async fn verify_composition_health(composition: &AtomicType) -> Result<Atomi
     component_statuses.push(("nestgate (self)".to_string(), nestgate_status));
 
     // Discover and check all other primals via socket scanning
-    let discovered_primals = discover_available_primals().await;
+    let discovered_primals = discover_available_primals();
+    let self_pkg = "nestgate";
 
     for primal_name in &discovered_primals {
-        if primal_name == "nestgate" {
+        if primal_name == self_pkg {
             continue; // Already checked via self-knowledge
         }
 
@@ -516,7 +512,7 @@ pub async fn verify_nest_health() -> Result<AtomicStatus> {
 /// Scans `BIOMEOS_SOCKET_DIR`, `XDG_RUNTIME_DIR/biomeos`, and /tmp for
 /// primal sockets. Returns discovered primal names (without assuming
 /// which primals should exist).
-async fn discover_available_primals() -> Vec<String> {
+fn discover_available_primals() -> Vec<String> {
     let mut primals = Vec::new();
     let socket_dirs = gather_socket_search_dirs();
 
@@ -540,7 +536,9 @@ async fn discover_available_primals() -> Vec<String> {
             if path.extension().and_then(|e| e.to_str()) == Some("sock") {
                 // Extract base primal name (strip family suffix if present)
                 let primal_name = name.split('-').next().unwrap_or(name);
-                if !primal_name.is_empty() && !primals.contains(&primal_name.to_string()) {
+                if !primal_name.is_empty()
+                    && !primals.iter().any(|p: &String| p.as_str() == primal_name)
+                {
                     primals.push(primal_name.to_string());
                 }
             }
@@ -692,7 +690,7 @@ mod tests {
     #[tokio::test]
     async fn test_discover_available_primals_does_not_panic() {
         // Should gracefully handle missing socket directories
-        let primals = discover_available_primals().await;
+        let primals = discover_available_primals();
         // Just verify it returns without panic
         let _ = primals;
     }

@@ -19,7 +19,7 @@ use tracing::{info, warn};
 #[derive(Debug, Clone)]
 /// Handler for ProductionStorage requests
 pub struct ProductionStorageHandler {
-    #[allow(dead_code)] // Used in future storage detection features
+    #[expect(dead_code, reason = "StorageDetector reserved for future storage detection features")]
     detector: StorageDetector,
 }
 
@@ -41,7 +41,7 @@ impl ProductionStorageHandler {
     }
 
     /// Get storage detector for scanning available storage
-    #[allow(dead_code)] // Planned for future storage scanning features
+    #[expect(dead_code, reason = "Planned for future storage scanning features")]
     async fn get_detector(&mut self) -> Result<&mut StorageDetector> {
         Ok(&mut self.detector)
     }

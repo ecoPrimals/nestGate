@@ -82,7 +82,7 @@ impl CapabilityBasedHardwareTuningService {
         .with_parameter("scope", serde_json::json!("system-wide"))
         .with_timeout(120); // Hardware tuning may take time
 
-        match self.adapter.request_capability(optimization_request).await {
+        match self.adapter.request_capability(optimization_request) {
             Ok(response) => {
                 if response.success {
                     info!("✅ Hardware optimization completed successfully");
@@ -117,7 +117,7 @@ impl CapabilityBasedHardwareTuningService {
         .with_parameter("hardware_type", serde_json::json!("general"))
         .with_timeout(30);
 
-        match self.adapter.request_capability(profile_request).await {
+        match self.adapter.request_capability(profile_request) {
             Ok(response) => {
                 if response.success {
                     self.parse_tuning_profiles(response.data)
@@ -148,7 +148,7 @@ impl CapabilityBasedHardwareTuningService {
         .with_parameter("duration", serde_json::json!(60))
         .with_timeout(180); // Benchmarks take time
 
-        match self.adapter.request_capability(benchmark_request).await {
+        match self.adapter.request_capability(benchmark_request) {
             Ok(response) => {
                 if response.success {
                     self.parse_benchmark_result(response.data)
@@ -180,7 +180,7 @@ impl CapabilityBasedHardwareTuningService {
         .with_parameter("access_level", serde_json::json!("commercial"))
         .with_timeout(30);
 
-        match self.adapter.request_capability(security_request).await {
+        match self.adapter.request_capability(security_request) {
             Ok(response) => {
                 if response.success {
                     if let Some(lock_id) = response.data.get("lock_id").and_then(|v| v.as_str()) {
@@ -214,7 +214,7 @@ impl CapabilityBasedHardwareTuningService {
         .with_parameter("lock_id", serde_json::json!(lock_id))
         .with_timeout(15);
 
-        match self.adapter.request_capability(verification_request).await {
+        match self.adapter.request_capability(verification_request) {
             Ok(response) => {
                 if response.success {
                     Ok(response.data.get("valid").and_then(|v| v.as_bool()).unwrap_or(false))

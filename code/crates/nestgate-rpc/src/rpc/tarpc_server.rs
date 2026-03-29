@@ -48,8 +48,8 @@ use crate::rpc::tarpc_types::{
     NestGateRpcError, ObjectInfo, OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo,
     StorageMetrics, VersionInfo,
 };
-use nestgate_config::config::capability_discovery;
-use nestgate_config::constants::ports;
+use nestgate_config::config::capability_discovery::{self, DiscoverySource};
+use nestgate_config::constants::ports::{self, default_tarpc_client_endpoint};
 use nestgate_types::error::{NestGateError, Result};
 
 fn unix_timestamp_secs() -> i64 {
@@ -57,6 +57,11 @@ fn unix_timestamp_secs() -> i64 {
         .duration_since(SystemTime::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0)
+}
+
+#[inline]
+fn byte_len_u64(len: usize) -> u64 {
+    u64::try_from(len).unwrap_or(u64::MAX)
 }
 
 /// In-process dataset/object store (replaces `nestgate-core` `StorageManagerService` until wired).
@@ -79,7 +84,12 @@ pub struct NestGateRpcService {
 
 impl NestGateRpcService {
     /// Create new RPC service (in-memory storage until cross-crate wiring).
-    pub async fn new() -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] when the service cannot be constructed; the current
+    /// implementation always succeeds and reserves this for future persistence initialization.
+    pub fn new() -> Result<Self> {
         info!(
             "🚀 Creating NestGate RPC service (in-memory storage; nestgate-core persistence optional)"
         );
@@ -243,7 +253,7 @@ impl NestGateRpc for NestGateRpcService {
             return Err(NestGateRpcError::DatasetNotFound { dataset });
         }
         let ts = unix_timestamp_secs();
-        let size = data.len() as u64;
+        let size = byte_len_u64(data.len());
         let meta = metadata.unwrap_or_default();
         let object_info = ObjectInfo {
             key: key.clone(),
@@ -259,12 +269,12 @@ impl NestGateRpc for NestGateRpcService {
         };
         g.objects.insert((dataset.clone(), key), (data, meta));
 
-        let object_count = g.objects.keys().filter(|(d, _)| d == &dataset).count() as u64;
+        let object_count = byte_len_u64(g.objects.keys().filter(|(d, _)| d == &dataset).count());
         let used_bytes: u64 = g
             .objects
             .iter()
             .filter(|((d, _), _)| d == &dataset)
-            .map(|(_, (b, _))| b.len() as u64)
+            .map(|(_, (b, _))| byte_len_u64(b.len()))
             .sum();
         if let Some(ds) = g.datasets.get_mut(&dataset) {
             ds.object_count = object_count;
@@ -311,7 +321,7 @@ impl NestGateRpc for NestGateRpcService {
             .map(|(data, meta)| ObjectInfo {
                 key: key.clone(),
                 dataset: dataset.clone(),
-                size_bytes: data.len() as u64,
+                size_bytes: byte_len_u64(data.len()),
                 created_at: unix_timestamp_secs(),
                 modified_at: unix_timestamp_secs(),
                 content_type: None,
@@ -349,7 +359,7 @@ impl NestGateRpc for NestGateRpcService {
             results.push(ObjectInfo {
                 key: key.clone(),
                 dataset: dataset.clone(),
-                size_bytes: data.len() as u64,
+                size_bytes: byte_len_u64(data.len()),
                 created_at: unix_timestamp_secs(),
                 modified_at: unix_timestamp_secs(),
                 content_type: None,
@@ -380,12 +390,12 @@ impl NestGateRpc for NestGateRpcService {
         if !removed {
             return Err(NestGateRpcError::ObjectNotFound { dataset, key });
         }
-        let object_count = g.objects.keys().filter(|(d, _)| d == &dataset).count() as u64;
+        let object_count = byte_len_u64(g.objects.keys().filter(|(d, _)| d == &dataset).count());
         let used_bytes: u64 = g
             .objects
             .iter()
             .filter(|((d, _), _)| d == &dataset)
-            .map(|(_, (b, _))| b.len() as u64)
+            .map(|(_, (b, _))| byte_len_u64(b.len()))
             .sum();
         if let Some(ds) = g.datasets.get_mut(&dataset) {
             ds.object_count = object_count;
@@ -459,10 +469,11 @@ impl NestGateRpc for NestGateRpcService {
             "NESTGATE_{}_ENDPOINT",
             capability.to_uppercase().replace('-', "_")
         );
+        let discovery_default = default_tarpc_client_endpoint();
         let se = match capability_discovery::discover_with_fallback(
             &capability,
             &env_var,
-            "tarpc://127.0.0.1:8091",
+            &discovery_default,
         )
         .await
         {
@@ -472,6 +483,14 @@ impl NestGateRpc for NestGateRpcService {
                 return Ok(Vec::new());
             }
         };
+        if se.source == DiscoverySource::Default {
+            warn!(
+                capability = %capability,
+                endpoint = %se.endpoint,
+                env_var = %env_var,
+                "discover_capability using env-derived default tarpc endpoint"
+            );
+        }
         let raw = se.endpoint.trim();
         let tarpc_ep = if raw.starts_with("tarpc://") {
             raw.to_string()
@@ -621,7 +640,7 @@ mod tests {
     use super::*;
 
     async fn create_test_service() -> Result<NestGateRpcService> {
-        NestGateRpcService::new().await
+        NestGateRpcService::new()
     }
 
     #[tokio::test]

@@ -49,6 +49,12 @@ pub mod universal_pools;
 /// Uses conditional compilation for dev/prod.
 pub mod zero_cost_factory;
 
+/// **NATIVE ASYNC ZFS ADAPTER** (Development Only)
+///
+/// Async trait + production/dev implementations; production path uses `nestgate_zfs` when ZFS is present.
+#[cfg(feature = "dev-stubs")]
+pub mod native_async;
+
 /// **PRODUCTION PLACEHOLDERS**
 ///
 /// Placeholder handlers for production builds without dev-stubs.

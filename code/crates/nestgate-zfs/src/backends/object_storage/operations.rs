@@ -94,11 +94,10 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
 
         // Map tier to S3-compatible storage class
         let storage_class = match &tier {
-            StorageTier::Hot => "STANDARD",
             StorageTier::Warm => "INTELLIGENT_TIERING",
             StorageTier::Cold => "GLACIER_IR", // Instant Retrieval
             StorageTier::Archive => "DEEP_ARCHIVE",
-            _ => "STANDARD", // Default for cache/unknown
+            StorageTier::Hot | _ => "STANDARD", // Hot, cache, unknown
         };
 
         debug!("Dataset storage class: {}", storage_class);
@@ -239,7 +238,7 @@ mod tests {
         nestgate_core::env_process::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
         nestgate_core::env_process::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
 
-        let backend = ObjectStorageBackend::new().await.unwrap();
+        let backend = ObjectStorageBackend::new().unwrap();
         let pool = backend.create_pool("test-pool", &[]).await;
 
         assert!(pool.is_ok(), "Pool creation should succeed");
@@ -255,7 +254,7 @@ mod tests {
         nestgate_core::env_process::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
         nestgate_core::env_process::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
 
-        let backend = ObjectStorageBackend::new().await.unwrap();
+        let backend = ObjectStorageBackend::new().unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
 
         let dataset = backend
@@ -274,7 +273,7 @@ mod tests {
         nestgate_core::env_process::set_var("OBJECT_STORAGE_ACCESS_KEY", "test");
         nestgate_core::env_process::set_var("OBJECT_STORAGE_SECRET_KEY", "test");
 
-        let backend = ObjectStorageBackend::new().await.unwrap();
+        let backend = ObjectStorageBackend::new().unwrap();
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
 
         // Test all storage tiers work

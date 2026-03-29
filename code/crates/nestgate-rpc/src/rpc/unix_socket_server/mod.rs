@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! # 🔌 JSON-RPC Unix Socket Server
 //!
 //! **⚠️ DEPRECATED**: This module is deprecated as of v2.3.0
@@ -95,7 +100,9 @@ use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::borrow::Cow;
+use std::future::Future;
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
@@ -149,7 +156,7 @@ pub(crate) struct StorageState {
 
 impl StorageState {
     /// Create new storage state (templates/audit; core storage via integration when available).
-    pub(crate) async fn new() -> Result<Self> {
+    pub(crate) fn new() -> Result<Self> {
         tracing::debug!("feature pending: StorageManagerService wiring for Unix JSON-RPC storage");
         Ok(Self {
             templates: crate::rpc::template_storage::TemplateStorage::new(),
@@ -200,7 +207,7 @@ impl JsonRpcUnixServer {
     /// # Errors
     /// - Returns error if socket path cannot be prepared
     /// - Returns error if socket binding fails
-    pub async fn new(family_id: &str) -> Result<Self> {
+    pub fn new(family_id: &str) -> Result<Self> {
         // Use standardized socket configuration
         let socket_config = crate::rpc::socket_config::SocketConfig::from_environment()?;
 
@@ -217,7 +224,7 @@ impl JsonRpcUnixServer {
 
         // Initialize persistent storage backend
         info!("📦 Initializing persistent storage backend...");
-        let state = StorageState::new().await?;
+        let state = StorageState::new()?;
         info!("✅ Storage backend initialized");
 
         Ok(Self {
@@ -231,6 +238,11 @@ impl JsonRpcUnixServer {
     ///
     /// Binds to Unix socket and processes JSON-RPC 2.0 requests
     /// indefinitely. Each connection is handled concurrently.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] if binding the Unix listener fails. Accept-loop errors are logged
+    /// and do not stop the server.
     pub async fn serve(&self) -> Result<()> {
         let listener = UnixListener::bind(&self.socket_path).map_err(|e| {
             NestGateError::configuration_error(
@@ -293,29 +305,29 @@ impl Drop for JsonRpcUnixServer {
 async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Result<()> {
     let (reader, mut writer) = stream.into_split();
     let mut reader = BufReader::new(reader);
-    let mut line = String::new();
+    let mut line = Vec::new();
 
     loop {
         line.clear();
-        let bytes_read = reader
-            .read_line(&mut line)
+        let n = reader
+            .read_until(b'\n', &mut line)
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to read request: {e}")))?;
 
-        if bytes_read == 0 {
+        if n == 0 && line.is_empty() {
             // Connection closed
             break;
         }
 
-        let trimmed = line.trim();
+        let trimmed = line.as_slice().trim_ascii();
         if trimmed.is_empty() {
             continue;
         }
 
-        debug!("Received request: {}", trimmed);
+        debug!("Received request: {}", String::from_utf8_lossy(trimmed));
 
-        // Parse and handle request
-        let response = match serde_json::from_str::<JsonRpcRequest>(trimmed) {
+        // Parse and handle request (from bytes: no UTF-8 `String` buffer for the line)
+        let response = match serde_json::from_slice::<JsonRpcRequest>(trimmed) {
             Ok(request) => handle_request(request, &state).await,
             Err(e) => {
                 error!("Failed to parse JSON-RPC request: {}", e);
@@ -388,55 +400,62 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "health" | "health.check" => Ok(
             json!({"status": "healthy", "version": env!("CARGO_PKG_VERSION"), "primal": "nestgate"}),
         ),
-        "capabilities.list" => model_cache_handlers::capabilities_list().await,
+        "capabilities.list" => model_cache_handlers::capabilities_list(),
         "discover_capabilities" | "discover.capabilities" => {
-            model_cache_handlers::discover_capabilities().await
+            model_cache_handlers::discover_capabilities()
         }
         // Storage operations
         "storage.store" | "storage.put" => {
-            storage_handlers::storage_store(&request.params, state).await
+            storage_handlers::storage_store(request.params.as_ref(), state)
         }
         "storage.retrieve" | "storage.get" => {
-            storage_handlers::storage_retrieve(&request.params, state).await
+            storage_handlers::storage_retrieve(request.params.as_ref(), state)
         }
-        "storage.exists" => storage_handlers::storage_exists(&request.params, state).await,
-        "storage.delete" => storage_handlers::storage_delete(&request.params, state).await,
-        "storage.list" => storage_handlers::storage_list(&request.params, state).await,
-        "storage.stats" => storage_handlers::storage_stats(&request.params, state).await,
-        "storage.store_blob" => storage_handlers::storage_store_blob(&request.params, state).await,
+        "storage.exists" => storage_handlers::storage_exists(request.params.as_ref(), state),
+        "storage.delete" => storage_handlers::storage_delete(request.params.as_ref(), state),
+        "storage.list" => storage_handlers::storage_list(request.params.as_ref(), state).await,
+        "storage.stats" => storage_handlers::storage_stats(request.params.as_ref(), state).await,
+        "storage.store_blob" => {
+            storage_handlers::storage_store_blob(request.params.as_ref(), state)
+        }
         "storage.retrieve_blob" => {
-            storage_handlers::storage_retrieve_blob(&request.params, state).await
+            storage_handlers::storage_retrieve_blob(request.params.as_ref(), state)
         }
         // Model cache operations (extracted to model_cache_handlers.rs)
-        "model.register" => model_cache_handlers::model_register(&request.params).await,
-        "model.exists" => model_cache_handlers::model_exists(&request.params).await,
-        "model.locate" => model_cache_handlers::model_locate(&request.params).await,
-        "model.metadata" => model_cache_handlers::model_metadata(&request.params).await,
+        "model.register" => model_cache_handlers::model_register(request.params.as_ref()),
+        "model.exists" => model_cache_handlers::model_exists(request.params.as_ref()),
+        "model.locate" => model_cache_handlers::model_locate(request.params.as_ref()),
+        "model.metadata" => model_cache_handlers::model_metadata(request.params.as_ref()),
         // Template operations
-        "templates.store" => template_handlers::templates_store(&request.params, state).await,
-        "templates.retrieve" => template_handlers::templates_retrieve(&request.params, state).await,
-        "templates.list" => template_handlers::templates_list(&request.params, state).await,
+        "templates.store" => {
+            template_handlers::templates_store(request.params.as_ref(), state).await
+        }
+        "templates.retrieve" => {
+            template_handlers::templates_retrieve(request.params.as_ref(), state).await
+        }
+        "templates.list" => template_handlers::templates_list(request.params.as_ref(), state).await,
         "templates.community_top" => {
-            template_handlers::templates_community_top(&request.params, state).await
+            template_handlers::templates_community_top(request.params.as_ref(), state).await
         }
         // Audit operations
         "audit.store_execution" => {
-            audit_handlers::audit_store_execution(&request.params, state).await
+            audit_handlers::audit_store_execution(request.params.as_ref(), state).await
         }
         // NAT traversal persistence (relay-assisted coordinated punch protocol)
         "nat.store_traversal_info" => {
-            nat_handlers::nat_store_traversal_info(&request.params, state).await
+            nat_handlers::nat_store_traversal_info(request.params.as_ref(), state)
         }
         "nat.retrieve_traversal_info" => {
-            nat_handlers::nat_retrieve_traversal_info(&request.params, state).await
+            nat_handlers::nat_retrieve_traversal_info(request.params.as_ref(), state)
         }
         // Known beacon persistence
-        "beacon.store" => nat_handlers::beacon_store(&request.params, state).await,
-        "beacon.retrieve" => nat_handlers::beacon_retrieve(&request.params, state).await,
-        "beacon.list" => nat_handlers::beacon_list(&request.params, state).await,
-        "beacon.delete" => nat_handlers::beacon_delete(&request.params, state).await,
-        // Alias: NAT beacon discovery (same payload shape as `beacon.list`)
-        "nat.beacon" => nat_handlers::beacon_list(&request.params, state).await,
+        "beacon.store" => nat_handlers::beacon_store(request.params.as_ref(), state),
+        "beacon.retrieve" => nat_handlers::beacon_retrieve(request.params.as_ref(), state),
+        // Alias `nat.beacon` uses the same payload shape as `beacon.list`
+        "beacon.list" | "nat.beacon" => {
+            nat_handlers::beacon_list(request.params.as_ref(), state).await
+        }
+        "beacon.delete" => nat_handlers::beacon_delete(request.params.as_ref(), state),
         _ => {
             return JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),
@@ -471,581 +490,62 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Bridges the full ecosystem JSON-RPC dispatch table to [`crate::rpc::isomorphic_ipc::RpcHandler`]
+/// for [`crate::rpc::isomorphic_ipc::IsomorphicIpcServer`] (same methods as [`JsonRpcUnixServer`]).
+pub struct LegacyUnixJsonRpcHandler {
+    state: Arc<StorageState>,
+}
 
-    #[tokio::test]
-    #[ignore = "storage handlers require nestgate-core StorageManagerService wiring"]
-    async fn test_storage_store_retrieve() {
-        let state = StorageState::new()
-            .await
-            .expect("Failed to create test storage state");
-
-        // Store
-        let store_params = json!({
-            "key": "test_key",
-            "data": {"value": "test_data"},
-            "family_id": "test_family"
-        });
-        let result = storage_handlers::storage_store(&Some(store_params), &state)
-            .await
-            .unwrap();
-        assert_eq!(result["success"], true);
-
-        // Retrieve
-        let retrieve_params = json!({
-            "key": "test_key",
-            "family_id": "test_family"
-        });
-        let result = storage_handlers::storage_retrieve(&Some(retrieve_params), &state)
-            .await
-            .unwrap();
-        assert_eq!(result["data"]["value"], "test_data");
-    }
-
-    #[tokio::test]
-    #[ignore = "storage handlers require nestgate-core StorageManagerService wiring"]
-    async fn test_storage_delete() {
-        let state = StorageState::new()
-            .await
-            .expect("Failed to create test storage state");
-
-        // Store
-        let store_params = json!({
-            "key": "delete_key",
-            "data": {"value": "delete_me"},
-            "family_id": "test_family"
-        });
-        storage_handlers::storage_store(&Some(store_params), &state)
-            .await
-            .unwrap();
-
-        // Delete
-        let delete_params = json!({
-            "key": "delete_key",
-            "family_id": "test_family"
-        });
-        let result = storage_handlers::storage_delete(&Some(delete_params), &state)
-            .await
-            .unwrap();
-        assert_eq!(result["success"], true);
-
-        // Verify deleted
-        let retrieve_params = json!({
-            "key": "delete_key",
-            "family_id": "test_family"
-        });
-        let result = storage_handlers::storage_retrieve(&Some(retrieve_params), &state).await;
-        assert!(result.is_err());
-    }
-
-    #[tokio::test]
-    #[ignore = "list keys count does not match development storage backend (assertions fail)"]
-    async fn test_storage_list() {
-        let state = StorageState::new()
-            .await
-            .expect("Failed to create test storage state");
-
-        // Store multiple keys
-        for i in 0..5 {
-            let params = json!({
-                "key": format!("key_{}", i),
-                "data": {"index": i},
-                "family_id": "test_family"
-            });
-            storage_handlers::storage_store(&Some(params), &state)
-                .await
-                .unwrap();
-        }
-
-        // List all
-        let list_params = json!({"family_id": "test_family"});
-        let result = storage_handlers::storage_list(&Some(list_params), &state)
-            .await
-            .unwrap();
-        assert_eq!(result["keys"].as_array().unwrap().len(), 5);
-    }
-
-    #[tokio::test]
-    #[ignore = "key_count does not match development storage backend (assertions fail)"]
-    async fn test_storage_stats() {
-        let state = StorageState::new()
-            .await
-            .expect("Failed to create test storage state");
-
-        // Store some data
-        let store_params = json!({
-            "key": "stats_key",
-            "data": {"value": "stats"},
-            "family_id": "test_family"
-        });
-        storage_handlers::storage_store(&Some(store_params), &state)
-            .await
-            .unwrap();
-
-        // Get stats
-        let stats_params = json!({"family_id": "test_family"});
-        let result = storage_handlers::storage_stats(&Some(stats_params), &state)
-            .await
-            .unwrap();
-        assert_eq!(result["key_count"], 1);
-        assert_eq!(result["blob_count"], 0);
-    }
-
-    #[tokio::test]
-    #[ignore = "storage handlers require nestgate-core StorageManagerService wiring"]
-    async fn test_blob_storage() {
-        let state = StorageState::new()
-            .await
-            .expect("Failed to create test storage state");
-
-        // Store blob
-        let test_data = b"Hello, World!";
-        use base64::Engine;
-        let blob_base64 = base64::engine::general_purpose::STANDARD.encode(test_data);
-
-        let store_params = json!({
-            "key": "test_blob",
-            "blob": blob_base64,
-            "family_id": "test_family"
-        });
-        let result = storage_handlers::storage_store_blob(&Some(store_params), &state)
-            .await
-            .unwrap();
-        assert_eq!(result["success"], true);
-        assert_eq!(result["size"], test_data.len());
-
-        // Retrieve blob
-        let retrieve_params = json!({
-            "key": "test_blob",
-            "family_id": "test_family"
-        });
-        let result = storage_handlers::storage_retrieve_blob(&Some(retrieve_params), &state)
-            .await
-            .unwrap();
-        let retrieved_blob = base64::engine::general_purpose::STANDARD
-            .decode(result["blob"].as_str().unwrap())
-            .unwrap();
-        assert_eq!(retrieved_blob, test_data);
-    }
-
-    #[tokio::test]
-    async fn handle_request_health_liveness() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "health.liveness".into(),
-            params: None,
-            id: Some(json!(1)),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert_eq!(
-            resp.result.as_ref().and_then(|v| v.get("status")),
-            Some(&json!("alive"))
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_health_readiness_initialized() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "health.readiness".into(),
-            params: None,
-            id: None,
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        let st = resp.result.as_ref().and_then(|v| v.get("status"));
-        assert_eq!(st, Some(&json!("ready")));
-    }
-
-    #[tokio::test]
-    async fn handle_request_invalid_jsonrpc_version() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "1.0".into(),
-            method: "health".into(),
-            params: None,
-            id: Some(json!("a")),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.result.is_none());
-        let err = resp.error.expect("error");
-        assert_eq!(err.code, -32600);
-    }
-
-    #[tokio::test]
-    async fn handle_request_method_not_found() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "no.such.method".into(),
-            params: None,
-            id: Some(json!(99)),
-        };
-        let resp = handle_request(req, &state).await;
-        let err = resp.error.expect("error");
-        assert_eq!(err.code, -32601);
-    }
-
-    #[tokio::test]
-    async fn handle_request_health_alias() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "health".into(),
-            params: None,
-            id: Some(json!(0)),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert_eq!(
-            resp.result.as_ref().and_then(|v| v.get("status")),
-            Some(&json!("healthy"))
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_health_check_alias() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "health.check".into(),
-            params: None,
-            id: Some(json!("chk")),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert_eq!(
-            resp.result.as_ref().and_then(|v| v.get("status")),
-            Some(&json!("healthy"))
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_readiness_not_initialized() {
-        let mut state = StorageState::new().await.expect("storage state");
-        state.storage_initialized = false;
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "health.readiness".into(),
-            params: None,
-            id: None,
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert_eq!(
-            resp.result.as_ref().and_then(|v| v.get("status")),
-            Some(&json!("not_ready"))
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_capabilities_list() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "capabilities.list".into(),
-            params: None,
-            id: Some(json!(2)),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert!(
-            resp.result
-                .as_ref()
-                .and_then(|v| v.get("methods"))
-                .is_some()
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_discover_capabilities() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "discover_capabilities".into(),
-            params: None,
-            id: Some(json!(3)),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert!(
-            resp.result
-                .as_ref()
-                .and_then(|v| v.get("capabilities"))
-                .is_some()
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_model_register_returns_internal_jsonrpc_error() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "model.register".into(),
-            params: Some(json!({})),
-            id: Some(json!(4)),
-        };
-        let resp = handle_request(req, &state).await;
-        let err = resp.error.expect("expected JSON-RPC error");
-        assert_eq!(err.code, -32603);
-        assert_eq!(err.message, "Internal error");
-    }
-
-    #[tokio::test]
-    async fn handle_request_model_exists_locate_metadata_not_implemented() {
-        let state = StorageState::new().await.expect("storage state");
-        for method in ["model.exists", "model.locate", "model.metadata"] {
-            let req = JsonRpcRequest {
-                jsonrpc: "2.0".into(),
-                method: method.into(),
-                params: Some(json!({"model_id": "m1"})),
-                id: Some(json!(method)),
-            };
-            let resp = handle_request(req, &state).await;
-            let err = resp.error.expect("jsonrpc error");
-            assert_eq!(err.code, -32603, "{method}");
-        }
-    }
-
-    #[tokio::test]
-    async fn handle_request_nat_and_beacon_stubs_not_implemented() {
-        let state = StorageState::new().await.expect("storage state");
-        for method in [
-            "nat.store_traversal_info",
-            "nat.retrieve_traversal_info",
-            "beacon.store",
-            "beacon.retrieve",
-            "beacon.delete",
-        ] {
-            let req = JsonRpcRequest {
-                jsonrpc: "2.0".into(),
-                method: method.into(),
-                params: Some(json!({})),
-                id: Some(json!(method)),
-            };
-            let resp = handle_request(req, &state).await;
-            let err = resp.error.expect("jsonrpc error");
-            assert_eq!(err.code, -32603, "{method}");
-        }
-    }
-
-    #[tokio::test]
-    async fn handle_request_beacon_list_ok() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "beacon.list".into(),
-            params: Some(json!({})),
-            id: Some(json!(1)),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        let arr = resp.result.as_ref().and_then(|v| v.get("peer_ids"));
-        assert!(arr.is_some());
-    }
-
-    #[tokio::test]
-    async fn handle_request_templates_store_and_list_dispatch() {
-        let state = StorageState::new().await.expect("storage state");
-        let store = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "templates.store".into(),
-            params: Some(json!({
-                "name": "n",
-                "description": "d",
-                "graph_data": {},
-                "user_id": "u",
-                "family_id": "fam-dispatch"
-            })),
-            id: Some(json!(1)),
-        };
-        let resp = handle_request(store, &state).await;
-        assert!(resp.error.is_none());
-        let list = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "templates.list".into(),
-            params: Some(json!({"family_id": "fam-dispatch"})),
-            id: Some(json!(2)),
-        };
-        let resp = handle_request(list, &state).await;
-        assert!(resp.error.is_none());
-        assert_eq!(
-            resp.result
-                .as_ref()
-                .and_then(|v| v.get("total"))
-                .and_then(|v| v.as_u64()),
-            Some(1)
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_templates_community_top_dispatch() {
-        let state = StorageState::new().await.expect("storage state");
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "templates.community_top".into(),
-            params: Some(json!({"limit": 3})),
-            id: Some(json!(1)),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert_eq!(
-            resp.result
-                .as_ref()
-                .and_then(|v| v.get("templates"))
-                .and_then(|v| v.as_array())
-                .map(|a| a.len()),
-            Some(0)
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_audit_store_execution_dispatch() {
-        let state = StorageState::new().await.expect("storage state");
-        let params = json!({
-            "id": "audit-1",
-            "execution_id": "ex-1",
-            "graph_id": "g-1",
-            "user_id": "user",
-            "family_id": "fam-audit",
-            "started_at": "2025-06-01T12:00:00Z",
-            "status": "running",
-            "modifications": [],
-            "outcomes": [],
-            "metadata": {}
-        });
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "audit.store_execution".into(),
-            params: Some(params),
-            id: Some(json!(42)),
-        };
-        let resp = handle_request(req, &state).await;
-        assert!(resp.error.is_none());
-        assert_eq!(
-            resp.result.as_ref().and_then(|v| v.get("success")),
-            Some(&json!(true))
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_discover_capabilities_dot_alias_matches_discover_capabilities() {
-        let state = StorageState::new().await.expect("storage state");
-        let a = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "discover_capabilities".into(),
-            params: None,
-            id: Some(json!(1)),
-        };
-        let b = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "discover.capabilities".into(),
-            params: None,
-            id: Some(json!(2)),
-        };
-        let ra = handle_request(a, &state).await;
-        let rb = handle_request(b, &state).await;
-        assert_eq!(
-            ra.error.as_ref().map(|e| (e.code, &*e.message)),
-            rb.error.as_ref().map(|e| (e.code, &*e.message))
-        );
-        assert_eq!(ra.result, rb.result);
-    }
-
-    #[tokio::test]
-    async fn handle_request_storage_get_put_aliases_match_retrieve_store_errors() {
-        let state = StorageState::new().await.expect("storage state");
-        let get_alias = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "storage.get".into(),
-            params: Some(json!({"key": "k", "family_id": "f"})),
-            id: Some(json!(1)),
-        };
-        let retrieve = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "storage.retrieve".into(),
-            params: Some(json!({"key": "k", "family_id": "f"})),
-            id: Some(json!(2)),
-        };
-        let rg = handle_request(get_alias, &state).await;
-        let rr = handle_request(retrieve, &state).await;
-        assert_eq!(
-            rg.error.as_ref().map(|e| e.code),
-            rr.error.as_ref().map(|e| e.code)
-        );
-
-        let put_alias = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "storage.put".into(),
-            params: Some(json!({"key": "k", "data": {}, "family_id": "f"})),
-            id: Some(json!(3)),
-        };
-        let store = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "storage.store".into(),
-            params: Some(json!({"key": "k", "data": {}, "family_id": "f"})),
-            id: Some(json!(4)),
-        };
-        let rp = handle_request(put_alias, &state).await;
-        let rs = handle_request(store, &state).await;
-        assert_eq!(
-            rp.error.as_ref().map(|e| e.code),
-            rs.error.as_ref().map(|e| e.code)
-        );
-    }
-
-    #[tokio::test]
-    async fn handle_request_nat_beacon_alias_matches_beacon_list() {
-        let state = StorageState::new().await.expect("storage state");
-        let a = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "beacon.list".into(),
-            params: Some(json!({})),
-            id: Some(json!(1)),
-        };
-        let b = JsonRpcRequest {
-            jsonrpc: "2.0".into(),
-            method: "nat.beacon".into(),
-            params: Some(json!({})),
-            id: Some(json!(2)),
-        };
-        let ra = handle_request(a, &state).await;
-        let rb = handle_request(b, &state).await;
-        assert_eq!(
-            ra.error.as_ref().map(|e| (e.code, &*e.message)),
-            rb.error.as_ref().map(|e| (e.code, &*e.message))
-        );
-        assert_eq!(ra.result, rb.result);
-    }
-
-    #[tokio::test]
-    #[cfg(unix)]
-    async fn handle_connection_rejects_invalid_json_line() {
-        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-        use tokio::net::UnixStream;
-
-        let state = StorageState::new().await.expect("storage state");
-        let state = Arc::new(state);
-        let (client, server) = UnixStream::pair().expect("unix pair");
-        let h = tokio::spawn(handle_connection(server, Arc::clone(&state)));
-        let (mut c_read, mut c_write) = client.into_split();
-        c_write
-            .write_all(b"{not valid json}\n")
-            .await
-            .expect("write");
-        let mut line = String::new();
-        BufReader::new(&mut c_read)
-            .read_line(&mut line)
-            .await
-            .expect("read");
-        let v: serde_json::Value = serde_json::from_str(line.trim()).expect("resp json");
-        assert_eq!(v["error"]["code"], -32700);
-        drop(c_write);
-        let _ = h.await;
+impl LegacyUnixJsonRpcHandler {
+    /// Create a handler backed by the given storage/template/audit state.
+    #[must_use]
+    pub const fn new(state: Arc<StorageState>) -> Self {
+        Self { state }
     }
 }
+
+impl crate::rpc::isomorphic_ipc::RpcHandler for LegacyUnixJsonRpcHandler {
+    fn handle_request(&self, request: Value) -> Pin<Box<dyn Future<Output = Value> + Send + '_>> {
+        let state = Arc::clone(&self.state);
+        Box::pin(async move {
+            match serde_json::from_value::<JsonRpcRequest>(request) {
+                Ok(req) => {
+                    let resp = handle_request(req, &state).await;
+                    serde_json::to_value(resp).unwrap_or_else(|_| {
+                        json!({
+                            "jsonrpc": "2.0",
+                            "error": { "code": -32603, "message": "Internal error" },
+                            "id": null
+                        })
+                    })
+                }
+                Err(e) => json!({
+                    "jsonrpc": "2.0",
+                    "error": {
+                        "code": -32700,
+                        "message": "Parse error",
+                        "data": { "error": e.to_string() }
+                    },
+                    "id": null
+                }),
+            }
+        })
+    }
+}
+
+/// Build the same JSON-RPC handler surface as [`JsonRpcUnixServer`] for use with
+/// [`crate::rpc::isomorphic_ipc::IsomorphicIpcServer`] (ecosystem socket layout via [`crate::rpc::socket_config::SocketConfig`]).
+///
+/// # Errors
+///
+/// Returns [`NestGateError`] if the storage backend used by the handler cannot be initialized.
+pub fn legacy_ecosystem_rpc_handler(
+    family_id: impl Into<String>,
+) -> Result<Arc<dyn crate::rpc::isomorphic_ipc::RpcHandler>> {
+    let mut state = StorageState::new()?;
+    state.family_id = Some(family_id.into());
+    Ok(Arc::new(LegacyUnixJsonRpcHandler::new(Arc::new(state))))
+}
+
+#[cfg(test)]
+mod tests;

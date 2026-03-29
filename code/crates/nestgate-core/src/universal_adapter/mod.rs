@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 // **UNIVERSAL ADAPTER - O(1) CAPABILITY CONNECTIONS**
 // This module implements the universal adapter pattern that replaces
 // exponential N² primal connections with linear O(1) capability discovery.
@@ -320,17 +324,21 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unused_async,
+        reason = "cfg(test) awaits discover_capabilities; discovery steps are synchronous placeholders"
+    )]
     pub async fn discover_capabilities(&mut self) -> Result<Vec<CapabilityInfo>, String> {
         // Clear existing capabilities for fresh discovery
         self.capabilities.clear();
 
         // Discover capabilities from all primals without hardcoding their names
-        self.discover_orchestration_capabilities().await?;
-        self.discover_compute_capabilities().await?;
-        self.discover_security_capabilities().await?;
-        self.discover_ai_capabilities().await?;
-        self.discover_storage_capabilities().await?;
-        self.discover_ecosystem_capabilities().await?;
+        self.discover_orchestration_capabilities()?;
+        self.discover_compute_capabilities()?;
+        self.discover_security_capabilities()?;
+        self.discover_ai_capabilities()?;
+        self.discover_storage_capabilities()?;
+        self.discover_ecosystem_capabilities()?;
 
         Ok(self.capabilities.values().cloned().collect())
     }
@@ -368,7 +376,7 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn request_capability(
+    pub fn request_capability(
         &self,
         capability: &str,
         request: CapabilityRequest,
@@ -395,7 +403,7 @@ impl UniversalAdapter {
     }
 
     /// Discover orchestration capabilities through dynamic discovery
-    async fn discover_orchestration_capabilities(&mut self) -> Result<(), String> {
+    fn discover_orchestration_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self
             .discovery_config
             .get_discovery_endpoint("orchestration")
@@ -416,7 +424,7 @@ impl UniversalAdapter {
     }
 
     /// Discover compute capabilities through dynamic discovery
-    async fn discover_compute_capabilities(&mut self) -> Result<(), String> {
+    fn discover_compute_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("compute") {
             let capability = CapabilityInfo {
                 category: "compute".to_string(),
@@ -433,7 +441,7 @@ impl UniversalAdapter {
     }
 
     /// Discover security capabilities through dynamic discovery
-    async fn discover_security_capabilities(&mut self) -> Result<(), String> {
+    fn discover_security_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("security") {
             let capability = CapabilityInfo {
                 category: "security".to_string(),
@@ -450,7 +458,7 @@ impl UniversalAdapter {
     }
 
     /// Discover AI capabilities through dynamic discovery
-    async fn discover_ai_capabilities(&mut self) -> Result<(), String> {
+    fn discover_ai_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self
             .discovery_config
             .get_discovery_endpoint("artificial_intelligence")
@@ -471,7 +479,7 @@ impl UniversalAdapter {
     }
 
     /// Discover storage capabilities (`NestGate`'s self-knowledge)
-    async fn discover_storage_capabilities(&mut self) -> Result<(), String> {
+    fn discover_storage_capabilities(&mut self) -> Result<(), String> {
         // NestGate knows its own storage capabilities
         let capability = CapabilityInfo {
             category: "storage".to_string(),
@@ -487,7 +495,7 @@ impl UniversalAdapter {
     }
 
     /// Discover ecosystem capabilities through dynamic discovery
-    async fn discover_ecosystem_capabilities(&mut self) -> Result<(), String> {
+    fn discover_ecosystem_capabilities(&mut self) -> Result<(), String> {
         if let Some(endpoint) = self.discovery_config.get_discovery_endpoint("ecosystem") {
             let capability = CapabilityInfo {
                 category: "ecosystem".to_string(),
@@ -506,6 +514,11 @@ impl UniversalAdapter {
 
     /// Query capability using the universal adapter pattern
     /// COMPATIBILITY: For modules expecting `PrimalAgnosticAdapter` interface
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::error::NestGateError`] if capability lookup fails (currently always returns
+    /// [`Ok`]; reserved for future strict validation).
     pub fn query_capability(&self, query: &types::CapabilityQuery) -> crate::Result<Vec<String>> {
         // Convert CapabilityQuery to our internal format and find matching capabilities
         let matching_capabilities: Vec<String> = self
@@ -520,6 +533,11 @@ impl UniversalAdapter {
 
     /// Route capability request to appropriate service
     /// COMPATIBILITY: For modules expecting `PrimalAgnosticAdapter` interface
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::error::NestGateError`] when no matching capability is registered for the
+    /// request.
     pub fn route_capability_request(
         &self,
         request: &canonical::CanonicalCapabilityRequest,
@@ -557,7 +575,11 @@ impl Default for UniversalAdapterConfig {
 
 /// Primal sovereignty validation
 /// Ensures no hardcoded primal-to-primal connections exist
-pub fn validate_primal_sovereignty() -> Result<(), String> {
+///
+/// # Errors
+///
+/// Returns `Err` with a message when sovereignty checks fail (currently always returns [`Ok`]).
+pub const fn validate_primal_sovereignty() -> Result<(), String> {
     // This function would scan the codebase to ensure no hardcoded primal names
     // are used for direct connections - all must go through the universal adapter
     Ok(())

@@ -327,6 +327,10 @@ impl JsonRpcClient {
     }
 
     /// Close the connection
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] if shutting down the underlying Unix stream fails.
     pub async fn close(&mut self) -> Result<()> {
         if let Some(mut stream) = self.stream.take() {
             stream.shutdown().await.map_err(|e| {

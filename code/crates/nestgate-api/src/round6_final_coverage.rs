@@ -55,7 +55,7 @@ mod round6_tests {
         let long = "p".repeat(2048);
         let r = CreatePoolRequest {
             name: long.clone(),
-            _devices: vec![],
+            devices: vec![],
         };
         let v = serde_json::to_string(&r).unwrap();
         let back: CreatePoolRequest = serde_json::from_str(&v).unwrap();

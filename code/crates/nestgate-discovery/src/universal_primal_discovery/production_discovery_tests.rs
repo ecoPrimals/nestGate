@@ -380,7 +380,7 @@ fn test_discover_ipv4_address() {
 }
 
 #[test]
-#[ignore] // IPv6 support is system-dependent
+#[ignore = "IPv6 bind discovery is system-dependent; run manually with --ignored"]
 fn test_discover_ipv6_address() {
     let orig = env::var("NESTGATE_IPV6_HOST").ok();
     // SAFETY: single-threaded test context.
@@ -777,4 +777,34 @@ fn test_default_bind_for_various_services() {
 
     let internal_bind = ServiceDiscoveryConfig::default_bind_for_service("health");
     assert!(matches!(internal_bind, IpAddr::V4(_)));
+}
+
+#[test]
+fn discover_limit_memory_mb_branch() {
+    let config = NestGateCanonicalConfig::default();
+    let discovery = ProductionServiceDiscovery::new(&config).expect("discovery");
+    let limit = discovery.discover_limit("memory_mb").expect("limit");
+    assert_eq!(limit, 512);
+}
+
+#[test]
+fn discover_timeout_falls_back_for_unknown_operation() {
+    let config = NestGateCanonicalConfig::default();
+    let discovery = ProductionServiceDiscovery::new(&config).expect("discovery");
+    let t = discovery
+        .discover_timeout("nonexistent_operation_xyz")
+        .expect("timeout");
+    assert_eq!(
+        t,
+        discovery.config().defaults.default_timeout,
+        "unknown operations should use configured default timeout"
+    );
+}
+
+#[test]
+fn service_discovery_config_default_includes_api_and_limits() {
+    let cfg = ServiceDiscoveryConfig::default();
+    assert!(cfg.services.contains_key("api"));
+    assert!(cfg.resource_limits.contains_key("max_connections"));
+    assert_eq!(cfg.resource_limits.get("max_retries"), Some(&3));
 }

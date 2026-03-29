@@ -87,7 +87,7 @@ where
     Provider: ZeroCostSecurityProvider,
 {
     /// Create new zero-cost security wrapper - compile-time optimized
-    pub fn new(
+    pub const fn new(
         provider_name: String,
         endpoint: String,
         capabilities: Vec<String>,

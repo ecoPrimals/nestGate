@@ -17,8 +17,8 @@ use super::StorageState;
 const BEACON_DATASET: &str = "_known_beacons";
 
 /// `nat.store_traversal_info` — stub until nestgate-core + storage wiring.
-pub(super) async fn nat_store_traversal_info(
-    _params: &Option<Value>,
+pub(super) fn nat_store_traversal_info(
+    _params: Option<&Value>,
     _state: &StorageState,
 ) -> Result<Value> {
     Err(NestGateError::not_implemented(
@@ -27,8 +27,8 @@ pub(super) async fn nat_store_traversal_info(
 }
 
 /// `nat.retrieve_traversal_info` — stub.
-pub(super) async fn nat_retrieve_traversal_info(
-    _params: &Option<Value>,
+pub(super) fn nat_retrieve_traversal_info(
+    _params: Option<&Value>,
     _state: &StorageState,
 ) -> Result<Value> {
     Err(NestGateError::not_implemented(
@@ -37,24 +37,21 @@ pub(super) async fn nat_retrieve_traversal_info(
 }
 
 /// `beacon.store` — stub.
-pub(super) async fn beacon_store(_params: &Option<Value>, _state: &StorageState) -> Result<Value> {
+pub(super) fn beacon_store(_params: Option<&Value>, _state: &StorageState) -> Result<Value> {
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core nat_traversal + storage",
     ))
 }
 
 /// `beacon.retrieve` — stub.
-pub(super) async fn beacon_retrieve(
-    _params: &Option<Value>,
-    _state: &StorageState,
-) -> Result<Value> {
+pub(super) fn beacon_retrieve(_params: Option<&Value>, _state: &StorageState) -> Result<Value> {
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core nat_traversal + storage",
     ))
 }
 
 /// `beacon.list` — lists beacon dataset directory keys (filesystem only).
-pub(super) async fn beacon_list(_params: &Option<Value>, _state: &StorageState) -> Result<Value> {
+pub(super) async fn beacon_list(_params: Option<&Value>, _state: &StorageState) -> Result<Value> {
     debug!("feature pending: NAT/beacon persistence via nestgate-core nat_traversal");
     debug!("beacon.list: listing known beacons");
 
@@ -88,7 +85,7 @@ pub(super) async fn beacon_list(_params: &Option<Value>, _state: &StorageState) 
 }
 
 /// `beacon.delete` — stub.
-pub(super) async fn beacon_delete(_params: &Option<Value>, _state: &StorageState) -> Result<Value> {
+pub(super) fn beacon_delete(_params: Option<&Value>, _state: &StorageState) -> Result<Value> {
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core nat_traversal + storage",
     ))

@@ -20,6 +20,8 @@ pub mod config;
 pub mod factory;
 /// Fail-safe wrappers with circuit breakers and retry logic
 pub mod fail_safe;
+/// Concrete enum dispatch for ZFS service implementations
+pub mod service_enum;
 /// Core traits for ZFS service abstraction
 pub mod traits;
 /// Bridge between Universal ZFS and Universal Storage
@@ -31,6 +33,7 @@ pub use backends::NativeZfsService;
 pub use config::{CircuitBreakerConfig, RetryPolicy, ZfsBackend, ZfsServiceConfig};
 pub use factory::ZfsServiceFactory;
 pub use fail_safe::FailSafeZfsService;
+pub use service_enum::UniversalZfsServiceEnum;
 pub use traits::{DynZfsService, UniversalZfsService};
 pub use universal_storage_bridge::UniversalStorageBridge;
 

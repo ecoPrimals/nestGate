@@ -13,9 +13,8 @@ use tracing::debug;
 use super::StorageState;
 
 /// templates.store - Store graph template
-pub(super) async fn templates_store(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+pub(super) async fn templates_store(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let name = params["name"]
@@ -71,11 +70,10 @@ pub(super) async fn templates_store(params: &Option<Value>, state: &StorageState
 
 /// templates.retrieve - Retrieve graph template by ID
 pub(super) async fn templates_retrieve(
-    params: &Option<Value>,
+    params: Option<&Value>,
     state: &StorageState,
 ) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let template_id = params["template_id"].as_str().ok_or_else(|| {
@@ -100,9 +98,8 @@ pub(super) async fn templates_retrieve(
 }
 
 /// templates.list - List templates with filtering
-pub(super) async fn templates_list(params: &Option<Value>, state: &StorageState) -> Result<Value> {
+pub(super) async fn templates_list(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let family_id = params["family_id"].as_str().ok_or_else(|| {
@@ -149,11 +146,10 @@ pub(super) async fn templates_list(params: &Option<Value>, state: &StorageState)
 
 /// `templates.community_top` - Get top community templates
 pub(super) async fn templates_community_top(
-    params: &Option<Value>,
+    params: Option<&Value>,
     state: &StorageState,
 ) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     let niche_type = params.get("niche_type").and_then(|v| v.as_str());
@@ -220,7 +216,7 @@ mod tests {
     #[tokio::test]
     async fn templates_store_missing_params_errors() {
         let state = test_state();
-        let r = templates_store(&None, &state).await;
+        let r = templates_store(None, &state).await;
         assert!(r.is_err());
     }
 
@@ -235,30 +231,24 @@ mod tests {
             "family_id": "fam1",
             "metadata": {"tags": ["a"], "niche_type": "web", "is_community": false}
         });
-        let out = templates_store(&Some(params), &state).await.unwrap();
+        let out = templates_store(Some(&params), &state).await.unwrap();
         assert_eq!(out["success"], true);
         let tid = out["template_id"].as_str().unwrap();
 
-        let got = templates_retrieve(
-            &Some(json!({"template_id": tid, "family_id": "fam1"})),
-            &state,
-        )
-        .await
-        .unwrap();
+        let retrieve_p = json!({"template_id": tid, "family_id": "fam1"});
+        let got = templates_retrieve(Some(&retrieve_p), &state).await.unwrap();
         assert_eq!(got["name"], "tpl1");
 
-        let listed = templates_list(&Some(json!({"family_id": "fam1"})), &state)
-            .await
-            .unwrap();
+        let list_p = json!({"family_id": "fam1"});
+        let listed = templates_list(Some(&list_p), &state).await.unwrap();
         assert_eq!(listed["total"], 1);
     }
 
     #[tokio::test]
     async fn templates_community_top_empty() {
         let state = test_state();
-        let out = templates_community_top(&Some(json!({"limit": 5})), &state)
-            .await
-            .unwrap();
+        let top_p = json!({"limit": 5});
+        let out = templates_community_top(Some(&top_p), &state).await.unwrap();
         assert_eq!(out["templates"].as_array().unwrap().len(), 0);
     }
 
@@ -272,11 +262,10 @@ mod tests {
             "user_id": "u",
             "family_id": "f"
         });
-        let out = templates_store(&Some(params), &state).await.unwrap();
+        let out = templates_store(Some(&params), &state).await.unwrap();
         let tid = out["template_id"].as_str().unwrap();
-        let got = templates_retrieve(&Some(json!({"template_id": tid, "family_id": "f"})), &state)
-            .await
-            .unwrap();
+        let retrieve_p = json!({"template_id": tid, "family_id": "f"});
+        let got = templates_retrieve(Some(&retrieve_p), &state).await.unwrap();
         let meta: TemplateMetadata = serde_json::from_value(got["metadata"].clone()).unwrap();
         assert!(meta.tags.is_empty());
     }

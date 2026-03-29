@@ -30,9 +30,11 @@ fn test_api_host_custom() {
 
 #[test]
 fn test_api_port_default() {
-    use crate::constants::hardcoding::ports;
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.api_port(), ports::HTTP_DEFAULT);
+    assert_eq!(
+        config.api_port(),
+        crate::constants::hardcoding::runtime_fallback_ports::HTTP
+    );
 }
 
 #[test]
@@ -43,9 +45,13 @@ fn test_api_port_custom() {
 
 #[test]
 fn test_api_bind_address_default() {
-    use crate::constants::hardcoding::{addresses, ports};
+    use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = NetworkDefaultsV2Config::new();
-    let expected = format!("{}:{}", addresses::LOCALHOST_IPV4, ports::HTTP_DEFAULT);
+    let expected = format!(
+        "{}:{}",
+        addresses::LOCALHOST_IPV4,
+        runtime_fallback_ports::HTTP
+    );
     assert_eq!(config.api_bind_address(), expected);
 }
 
@@ -65,9 +71,11 @@ fn test_api_bind_address_custom() {
 
 #[test]
 fn test_metrics_port_default() {
-    use crate::constants::hardcoding::ports;
     let config = NetworkDefaultsV2Config::new();
-    assert_eq!(config.metrics_port(), ports::METRICS_DEFAULT);
+    assert_eq!(
+        config.metrics_port(),
+        crate::constants::hardcoding::runtime_fallback_ports::METRICS
+    );
 }
 
 #[test]
@@ -78,9 +86,13 @@ fn test_metrics_port_custom() {
 
 #[test]
 fn test_metrics_bind_address() {
-    use crate::constants::hardcoding::{addresses, ports};
+    use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = NetworkDefaultsV2Config::new();
-    let expected = format!("{}:{}", addresses::LOCALHOST_IPV4, ports::METRICS_DEFAULT);
+    let expected = format!(
+        "{}:{}",
+        addresses::LOCALHOST_IPV4,
+        runtime_fallback_ports::METRICS
+    );
     assert_eq!(config.metrics_bind_address(), expected);
 }
 

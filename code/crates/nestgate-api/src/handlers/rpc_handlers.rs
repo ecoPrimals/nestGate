@@ -101,6 +101,12 @@ pub struct ProtocolCapabilities {
 /// This endpoint provides HTTP-based RPC access for inter-primal communication.
 /// Songbird and other primals can use this for initial discovery before
 /// escalating to tarpc for performance.
+///
+/// # Errors
+///
+/// Returns `Err` with `BAD_REQUEST` and a JSON-RPC error payload when the request is not valid
+/// JSON-RPC 2.0, or `INTERNAL_SERVER_ERROR` when method execution fails; protocol-level RPC errors
+/// are returned in the JSON body with HTTP 200.
 pub async fn handle_jsonrpc(
     Json(request): Json<JsonRpcRequest>,
 ) -> Result<Json<JsonRpcResponse>, (StatusCode, Json<JsonRpcResponse>)> {
@@ -126,7 +132,7 @@ pub async fn handle_jsonrpc(
     let handler = NestGateJsonRpcHandler::new();
 
     // Execute method
-    match handler.handle(&*request.method, request.params).await {
+    match handler.handle(&request.method, request.params).await {
         Ok(result) => {
             let response = JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),
@@ -225,14 +231,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
         service: "nestgate".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         protocols,
-        capabilities: vec![
-            "storage".to_string(),
-            "zfs".to_string(),
-            "snapshots".to_string(),
-            "replication".to_string(),
-            "compression".to_string(),
-            "deduplication".to_string(),
-        ],
+        capabilities: crate::nestgate_rpc_service::nestgate_capabilities_vec(),
     })
 }
 

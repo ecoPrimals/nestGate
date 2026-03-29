@@ -4,9 +4,8 @@
 
 ```
 Build:       25/25 workspace members compiling (0 errors)
-Tests:       11,707 passing, 0 failures
-Coverage:    74.3% line (target: 90%)
-Clippy:      Warnings down from 8,227 to 4,642 (production -D warnings clean)
+Tests:       7,887 lib tests passing, 0 failures, 64 ignored
+Clippy:      Warnings reduced 8,227 → 2,972 (13 pedantic categories zeroed; production -D warnings clean)
 Doctests:    Zero failures
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```

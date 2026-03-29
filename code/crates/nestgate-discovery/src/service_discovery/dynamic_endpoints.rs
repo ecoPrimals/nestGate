@@ -209,14 +209,12 @@ impl DynamicEndpointResolver {
         let health_port = get_health_port();
 
         match service_type {
-            "api" => api_port,
-            "websocket" => api_port, // WebSocket on same port as API
+            "api" | "websocket" | "static" => api_port, // WebSocket/static on same port as API
             "metrics" => metrics_port,
             "health" => health_port,
             "admin" => {
                 nestgate_config::constants::canonical_defaults::network::DEFAULT_INTERNAL_PORT
             }
-            "static" => api_port,
             _ => {
                 // Dynamic port allocation for unknown services
                 api_port + (service_type.len() % 100) as u16

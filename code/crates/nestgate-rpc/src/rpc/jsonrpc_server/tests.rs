@@ -7,7 +7,7 @@ use nestgate_types::error::Result as NgResult;
 
 /// Helper: Create test service (in-memory via `NestGateRpcService::new`).
 async fn create_test_service() -> NgResult<NestGateRpcService> {
-    NestGateRpcService::new().await
+    NestGateRpcService::new()
 }
 
 /// Helper: Build RPC module for testing (no server required)

@@ -108,7 +108,9 @@ impl RealNetworkService {
                 match listener.accept().await {
                     Ok((stream, peer_addr)) => {
                         debug!("Accepted connection from {}", peer_addr);
-                        tokio::spawn(Self::handle_connection(stream, peer_addr));
+                        tokio::spawn(async move {
+                            Self::handle_connection(stream, peer_addr);
+                        });
                     }
                     Err(e) => {
                         error!("Failed to accept connection: {}", e);
@@ -121,7 +123,7 @@ impl RealNetworkService {
     }
 
     /// Stop the network service
-    pub async fn stop(&self) -> nestgate_core::Result<()> {
+    pub fn stop(&self) -> nestgate_core::Result<()> {
         info!("Stopping network service");
 
         // Close all active connections (lock-free!)
@@ -135,7 +137,7 @@ impl RealNetworkService {
     }
 
     /// Handle individual connection
-    async fn handle_connection(_stream: TcpStream, peer_addr: SocketAddr) {
+    fn handle_connection(_stream: TcpStream, peer_addr: SocketAddr) {
         debug!("Handling connection from {}", peer_addr);
 
         // Connection handling logic would go here
@@ -211,7 +213,7 @@ impl RealNetworkService {
     }
 
     /// Health check for the network service
-    pub async fn health_check(&self) -> nestgate_core::Result<bool> {
+    pub fn health_check(&self) -> nestgate_core::Result<bool> {
         // Basic health check - could be expanded
         let stats = self.get_network_statistics()?;
 

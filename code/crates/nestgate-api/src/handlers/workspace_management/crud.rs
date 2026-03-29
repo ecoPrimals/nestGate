@@ -12,6 +12,7 @@ use axum::{
     http::StatusCode,
 };
 use nestgate_core::error::utilities::safe_env_var_or_default;
+use nestgate_zfs::numeric::f64_to_u64_saturating;
 use serde_json::{Value, json};
 use tokio::process::Command;
 use tracing::{error, info, warn};
@@ -100,8 +101,8 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
             })))
         }
         Ok(output) => {
-            let _error_msg = String::from_utf8_lossy(&output.stderr);
-            warn!("⚠️ ZFS list command failed: {}", _error_msg);
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            warn!("⚠️ ZFS list command failed: {}", error_msg);
 
             // Return empty list if workspaces dataset doesn't exist yet
             Ok(Json(json!({
@@ -204,8 +205,8 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
             })))
         }
         Ok(output) => {
-            let _error_msg = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to create ZFS dataset: {}", _error_msg);
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            error!("❌ Failed to create ZFS dataset: {}", error_msg);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
         Err(e) => {
@@ -316,10 +317,10 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
             })))
         }
         Ok(output) => {
-            let _error_msg = String::from_utf8_lossy(&output.stderr);
+            let error_msg = String::from_utf8_lossy(&output.stderr);
             warn!(
                 "⚠️ Workspace not found or inaccessible: {} - {}",
-                workspace_id, _error_msg
+                workspace_id, error_msg
             );
             Err(StatusCode::NOT_FOUND)
         }
@@ -674,7 +675,7 @@ pub(crate) fn parse_size(size_str: &str) -> u64 {
             _ => 1,
         };
 
-        (number * multiplier as f64) as u64
+        f64_to_u64_saturating(number * multiplier as f64)
     } else {
         0
     }

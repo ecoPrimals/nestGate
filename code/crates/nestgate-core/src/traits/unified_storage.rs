@@ -256,7 +256,7 @@ impl Default for StorageMetadata {
 impl StorageStream {
     /// Create a new storage stream
     #[must_use]
-    pub fn new(stream_id: String) -> Self {
+    pub const fn new(stream_id: String) -> Self {
         Self {
             stream_id,
             total_size: None,
@@ -267,14 +267,14 @@ impl StorageStream {
 
     /// Set the total size of the stream
     #[must_use]
-    pub fn with_size(mut self, size: u64) -> Self {
+    pub const fn with_size(mut self, size: u64) -> Self {
         self.total_size = Some(size);
         self
     }
 
     /// Set the chunk size for the stream
     #[must_use]
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
+    pub const fn with_chunk_size(mut self, chunk_size: usize) -> Self {
         self.chunk_size = chunk_size;
         self
     }
@@ -293,7 +293,7 @@ impl StorageTransaction {
 
     /// Set the transaction timeout
     #[must_use]
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }

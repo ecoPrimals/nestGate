@@ -37,13 +37,16 @@ fn hardware_tuning_disabled() -> (StatusCode, Json<serde_json::Value>) {
 
 /// Placeholder hardware tuning handler for production builds
 #[derive(Debug, Clone)]
-/// Handler for RealHardwareTuning requests
+/// Handler for `RealHardwareTuning` requests
 pub struct RealHardwareTuningHandler {
-    #[allow(dead_code)] // Reserved for future hardware tuning implementation
+    #[expect(
+        dead_code,
+        reason = "Reserved for future hardware tuning implementation"
+    )]
     config: HardwareTuningConfig,
-    #[allow(dead_code)] // Reserved for future metrics collection
+    #[expect(dead_code, reason = "Reserved for future metrics collection")]
     metrics_collector: SystemMetricsCollector,
-    #[allow(dead_code)] // Reserved for future hardware monitoring
+    #[expect(dead_code, reason = "Reserved for future hardware monitoring")]
     monitors: HardwareMonitors,
 }
 

@@ -109,7 +109,7 @@ pub trait SecurityPrimalProvider: Send + Sync {
 }
 
 /// Security decision enumeration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Securitydecision
 pub enum SecurityDecision {
     /// Allow

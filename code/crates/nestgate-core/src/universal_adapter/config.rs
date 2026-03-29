@@ -41,7 +41,7 @@ impl Default for UniversalAdapterConfig {
 }
 
 /// Fallback behavior when no primal is available
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Fallbackbehavior
 pub enum FallbackBehavior {
     /// Return an error
@@ -52,7 +52,7 @@ pub enum FallbackBehavior {
     Local,
 }
 /// Discovery methods for finding primal providers
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Discoverymethod
 pub enum DiscoveryMethod {
     /// Environment variables
@@ -124,14 +124,14 @@ impl AdapterConfig {
 
     /// Set discovery timeout
     #[must_use]
-    pub fn with_discovery_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn with_discovery_timeout(mut self, timeout: Duration) -> Self {
         self.discovery_timeout = timeout;
         self
     }
 
     /// Set retry attempts
     #[must_use]
-    pub fn with_retry_attempts(mut self, attempts: u32) -> Self {
+    pub const fn with_retry_attempts(mut self, attempts: u32) -> Self {
         self.retry_attempts = attempts;
         self
     }
@@ -145,7 +145,7 @@ impl AdapterConfig {
 
     /// Enable or disable fallback providers
     #[must_use]
-    pub fn with_fallback(mut self, enabled: bool) -> Self {
+    pub const fn with_fallback(mut self, enabled: bool) -> Self {
         self.fallback_enabled = enabled;
         self
     }

@@ -174,7 +174,6 @@ pub async fn get_performance_recommendations()
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Analysisconfigcanonical
 pub type AnalysisConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

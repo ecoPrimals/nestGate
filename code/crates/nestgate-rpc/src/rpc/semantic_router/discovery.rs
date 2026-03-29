@@ -10,31 +10,32 @@ use super::SemanticRouter;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
-pub(super) async fn discovery_announce(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn discovery_announce(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     tracing::debug!("feature pending: discovery.announce (nestgate-discovery / service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-discovery / service_metadata",
     ))
 }
 
-pub(super) async fn discovery_query(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn discovery_query(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     tracing::debug!("feature pending: discovery.query (nestgate-discovery / service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-discovery / service_metadata",
     ))
 }
 
-pub(super) async fn discovery_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn discovery_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     tracing::debug!("feature pending: discovery.list (nestgate-discovery / service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-discovery / service_metadata",
     ))
 }
 
-pub(super) async fn discovery_capabilities(
-    _router: &SemanticRouter,
-    _params: Value,
-) -> Result<Value> {
+#[expect(
+    clippy::unnecessary_wraps,
+    reason = "JSON-RPC semantic handlers use Result for uniform router dispatch"
+)]
+pub(super) fn discovery_capabilities(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     Ok(json!({
         "capabilities": ["storage", "discovery", "metadata", "health"]
     }))

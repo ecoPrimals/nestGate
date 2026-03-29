@@ -1,231 +1,89 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! This module was split from native_async_zfs.rs to maintain the 2000-line limit
-//! while preserving all functionality and maintaining backward compatibility
-//!
-//! ⚠️ **DEVELOPMENT STUBS - ONLY WITH `dev-stubs` FEATURE** ⚠️
+//! Async ZFS adapter behind the `dev-stubs` feature (`ProductionZfsService` uses real
+//! [`nestgate_zfs::command::ZfsOperations`] when ZFS is present).
 
-#![cfg(feature = "dev-stubs")]
-
-// Sub-module declarations
-pub mod traits;
 pub mod implementations;
+pub mod traits;
 
-// Re-export all public types and traits for backward compatibility
+pub use implementations::{DevelopmentZfsService, ProductionZfsService};
 pub use traits::*;
-pub use implementations::*;
 
-// Convenience re-exports for common usage patterns
-pub use implementations::{ProductionZfsService, DevelopmentZfsService};
-
-//! Convenience function to create a production ZFS service
+/// Builds a production async ZFS service (queries real pools when ZFS is available).
+#[must_use]
 pub fn create_production_zfs_service() -> ProductionZfsService {
     ProductionZfsService::new()
-    }
-//! Convenience function to create a development ZFS service
+}
+
+/// Builds a fast mock ZFS service for local development.
+#[must_use]
 pub fn create_development_zfs_service() -> DevelopmentZfsService {
     DevelopmentZfsService::default()
-    }
-    #[cfg(test)]
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::universal_zfs::types::*;
+    use crate::handlers::zfs::universal_zfs_types::{ServiceStatus, SnapshotConfig};
+
     #[tokio::test]
-    async fn test_production_service_creation() {
+    async fn production_service_meta() {
         let service = create_production_zfs_service();
         assert_eq!(service.service_name(), "ProductionZfsService");
         assert_eq!(service.service_version(), "1.0.0");
     }
+
     #[tokio::test]
-    async fn test_production_health_check() {
+    async fn production_health_reports_status() {
         let service = create_production_zfs_service();
-        let health = service.health_check().await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert!(matches!(health, HealthStatus::Healthy));
+        let health = service.health_check().await.expect("health");
+        assert!(
+            matches!(
+                health.status,
+                ServiceStatus::Healthy | ServiceStatus::Unhealthy
+            ),
+            "expected concrete health status"
+        );
     }
 
     #[tokio::test]
-    async fn test_production_service_availability() {
-        let service = create_production_zfs_service();
-        let available = service.is_available().await;
-        assert!(available);
-    }
-
-    #[tokio::test]
-    async fn test_production_pool_operations() {
-        let service = create_production_zfs_service();
-        
-        // Test pool listing
-        let pools = service.list_pools().await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert_eq!(pools.len(), 1);
-        assert_eq!(pools[0].name, "production-pool");
-        
-        // Test pool retrieval
-        let pool = service.get_pool("production-pool").await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert!(pool.is_some());
-        assert_eq!(pool.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-}).name, "production-pool");
-    }
-
-    #[tokio::test]
-    async fn test_development_service_creation() {
+    async fn development_pool_roundtrip() {
         let service = create_development_zfs_service();
-        assert_eq!(service.service_name(), "DevelopmentZfsService");
-        assert_eq!(service.service_version(), "dev-1.0.0");
-    }
-
-    #[tokio::test]
-    async fn test_development_pool_operations() {
-        let service = create_development_zfs_service();
-        
-        // Test pool listing
-        let pools = service.list_pools().await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
+        let pools = service.list_pools().await.expect("pools");
         assert_eq!(pools.len(), 1);
         assert_eq!(pools[0].name, "dev-pool");
-        
-        // Test pool retrieval
-        let pool = service.get_pool("dev-pool").await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert!(pool.is_some());
-        assert_eq!(pool.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-}).name, "dev-pool");
+        let p = service.get_pool("dev-pool").await.expect("get");
+        assert!(p.is_some());
     }
 
     #[tokio::test]
-    async fn test_dataset_operations() {
-        let service = create_production_zfs_service();
-        
-        // Test dataset listing
-        let datasets = service.list_datasets(Some("production-pool")).await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert_eq!(datasets.len(), 1);
-        assert_eq!(datasets[0].name, "production-pool/data");
-        
-        // Test dataset retrieval
-        let dataset = service.get_dataset("production-pool/data").await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert!(dataset.is_some());
-        assert_eq!(dataset.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-}).name, "production-pool/data");
-    }
-
-    #[tokio::test]
-    async fn test_snapshot_operations() {
-        let service = create_production_zfs_service();
-        
-        // Test snapshot listing
-        let snapshots = service.list_snapshots(Some("production-pool/data")).await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert_eq!(snapshots.len(), 1);
-        assert!(snapshots[0].name.contains("production-pool/data@backup-"));
-        
-        // Test snapshot creation
-        let snapshot_config = SnapshotConfig {
-            name: "production-pool/data@test-snapshot".to_string(),
-            dataset_name: "production-pool/data".to_string(),
-            recursive: false,
+    async fn development_snapshot_config_roundtrip() {
+        let service = create_development_zfs_service();
+        let cfg = SnapshotConfig {
+            name: "snap1".to_string(),
+            dataset: "dev-pool/test".to_string(),
             properties: std::collections::HashMap::new(),
         };
-        
-        let snapshot = service.create_snapshot(&snapshot_config).await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert_eq!(snapshot.name, "production-pool/data@test-snapshot");
-        assert_eq!(snapshot.dataset_name, "production-pool/data");
+        let s = service.create_snapshot(&cfg).await.expect("snap");
+        assert_eq!(s.name, "dev-pool/test@snap1");
     }
 
     #[tokio::test]
-    async fn test_bulk_operations() {
+    async fn production_metrics_follow_zfs_or_unavailable() {
         let service = create_production_zfs_service();
-        
-        // Test bulk snapshot creation
-        let configs = vec![
-            SnapshotConfig {
-                name: "production-pool/data@bulk-1".to_string(),
-                dataset_name: "production-pool/data".to_string(),
-                recursive: false,
-                properties: std::collections::HashMap::new(),
+        let m = service.get_metrics().await;
+        match m {
+            Ok(metrics) => {
+                assert!(metrics.custom_metrics.contains_key("pool_count"));
             }
-            SnapshotConfig {
-                name: "production-pool/data@bulk-2".to_string(),
-                dataset_name: "production-pool/data".to_string(),
-                recursive: false,
-                properties: std::collections::HashMap::new(),
+            Err(e) => {
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("not available") || msg.contains("ZFS"),
+                    "unexpected error: {msg}"
+                );
             }
-        ];
-        
-        let snapshots = service.bulk_create_snapshots(&configs).await.unwrap_or_else(|_e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format!("Operation failed: self.base_url")
-).into())
-});
-        assert_eq!(snapshots.len(), 2);
-        assert_eq!(snapshots[0].name, "production-pool/data@bulk-1");
-        assert_eq!(snapshots[1].name, "production-pool/data@bulk-2");
+        }
     }
-} 
+}

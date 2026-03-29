@@ -26,13 +26,13 @@ impl NetworkOrchestrationConfig {
     /// Uses localhost coordinator for local testing.
     #[must_use]
     pub fn development_optimized() -> Self {
-        use crate::constants::hardcoding::{addresses, ports};
+        use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
         Self {
             enabled: false,
             coordinator_address: format!(
                 "{}:{}",
                 addresses::LOCALHOST_IPV4,
-                ports::METRICS_DEFAULT
+                runtime_fallback_ports::METRICS
             ),
             heartbeat_interval_secs: 30,
         }
@@ -43,10 +43,13 @@ impl NetworkOrchestrationConfig {
     /// Enables distributed coordination with frequent heartbeats.
     #[must_use]
     pub fn production_hardened() -> Self {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         Self {
             enabled: true,
-            coordinator_address: format!("coordinator.nestgate.local:{}", ports::METRICS_DEFAULT),
+            coordinator_address: format!(
+                "coordinator.nestgate.local:{}",
+                runtime_fallback_ports::METRICS
+            ),
             heartbeat_interval_secs: 10,
         }
     }

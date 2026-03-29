@@ -445,8 +445,11 @@ mod tests {
 
     #[test]
     fn test_connection_info_creation() {
-        use nestgate_core::constants::hardcoding::ports;
-        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT);
+        use nestgate_core::constants::hardcoding::runtime_fallback_ports;
+        let addr = SocketAddr::new(
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            runtime_fallback_ports::HTTP,
+        );
         let conn = ConnectionInfo::new("conn-123".to_string(), addr);
 
         assert_eq!(conn.id(), "conn-123");
@@ -458,8 +461,11 @@ mod tests {
 
     #[test]
     fn test_connection_info_byte_tracking() {
-        use nestgate_core::constants::hardcoding::ports;
-        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT);
+        use nestgate_core::constants::hardcoding::runtime_fallback_ports;
+        let addr = SocketAddr::new(
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            runtime_fallback_ports::HTTP,
+        );
         let mut conn = ConnectionInfo::new("conn-123".to_string(), addr);
 
         conn.add_bytes_sent(1024);
@@ -478,8 +484,11 @@ mod tests {
 
     #[test]
     fn test_connection_status_transitions() {
-        use nestgate_core::constants::hardcoding::ports;
-        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), ports::HTTP_DEFAULT);
+        use nestgate_core::constants::hardcoding::runtime_fallback_ports;
+        let addr = SocketAddr::new(
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            runtime_fallback_ports::HTTP,
+        );
         let mut conn = ConnectionInfo::new("conn-123".to_string(), addr);
 
         assert!(conn.is_active());

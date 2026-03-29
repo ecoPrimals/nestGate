@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // This module contains the main performance optimization engine that coordinates
 // all ZFS performance monitoring and optimization activities.
@@ -99,13 +103,13 @@ impl PerformanceOptimizationEngine {
         info!("🚀 Starting Real-time Performance Optimization Engine");
 
         // Start performance monitoring
-        self.start_performance_monitoring().await?;
+        self.start_performance_monitoring()?;
 
         // Start optimization loop
-        self.start_optimization_loop().await?;
+        self.start_optimization_loop()?;
 
         // Start bottleneck detection
-        self.start_bottleneck_detection().await?;
+        self.start_bottleneck_detection()?;
 
         info!("✅ Performance optimization engine started successfully");
         Ok(())
@@ -241,7 +245,7 @@ impl PerformanceOptimizationEngine {
     // Performance Monitoring Infrastructure
 
     /// Start Performance Monitoring
-    async fn start_performance_monitoring(&self) -> Result<()> {
+    fn start_performance_monitoring(&self) -> Result<()> {
         let monitor = self.performance_monitor.clone();
         let pool_manager = self.pool_manager.clone();
         let dataset_manager = self.dataset_manager.clone();
@@ -269,7 +273,7 @@ impl PerformanceOptimizationEngine {
     }
 
     /// Start Optimization Loop
-    async fn start_optimization_loop(&self) -> Result<()> {
+    fn start_optimization_loop(&self) -> Result<()> {
         let engine = Arc::new(self.clone());
 
         tokio::spawn(async move {
@@ -292,10 +296,10 @@ impl PerformanceOptimizationEngine {
     }
 
     /// Start Bottleneck Detection
-    async fn start_bottleneck_detection(&self) -> Result<()> {
-        let _performance_monitor = self.performance_monitor.clone();
-        let _pool_manager = self.pool_manager.clone();
-        let _dataset_manager = self.dataset_manager.clone();
+    fn start_bottleneck_detection(&self) -> Result<()> {
+        let performance_monitor = self.performance_monitor.clone();
+        let pool_manager = self.pool_manager.clone();
+        let dataset_manager = self.dataset_manager.clone();
 
         tokio::spawn(async move {
             let mut interval = interval(Duration::from_secs(
@@ -310,9 +314,9 @@ impl PerformanceOptimizationEngine {
 
                 // Comprehensive bottleneck detection
                 if let Err(e) = Self::detect_and_analyze_bottlenecks(
-                    &_performance_monitor,
-                    &_pool_manager,
-                    &_dataset_manager,
+                    &performance_monitor,
+                    &pool_manager,
+                    &dataset_manager,
                 )
                 .await
                 {

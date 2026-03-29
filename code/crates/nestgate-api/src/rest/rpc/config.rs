@@ -428,7 +428,6 @@ impl CanonicalRpcConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Connectionpoolconfigcanonical
 pub type ConnectionPoolConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -445,7 +444,6 @@ pub type ConnectionPoolConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Rpcsecurityconfigcanonical
 pub type RpcSecurityConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -462,7 +460,6 @@ pub type RpcSecurityConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Loadbalancingconfigcanonical
 pub type LoadBalancingConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -479,7 +476,6 @@ pub type LoadBalancingConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Circuitbreakerconfigcanonical
 pub type CircuitBreakerConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -496,7 +492,6 @@ pub type CircuitBreakerConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Healthmonitoringconfigcanonical
 pub type HealthMonitoringConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -513,7 +508,6 @@ pub type HealthMonitoringConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Streamconfigcanonical
 pub type StreamConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -530,7 +524,6 @@ pub type StreamConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Canonicalrpcconfigcanonical
 pub type CanonicalRpcConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -547,7 +540,6 @@ pub type CanonicalRpcConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Nestgaterpcconfigcanonical
 pub type NestGateRpcConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

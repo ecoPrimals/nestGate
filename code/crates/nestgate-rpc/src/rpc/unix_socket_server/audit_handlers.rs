@@ -14,11 +14,10 @@ use super::StorageState;
 
 /// `audit.store_execution` - Store execution audit trail
 pub(super) async fn audit_store_execution(
-    params: &Option<Value>,
+    params: Option<&Value>,
     state: &StorageState,
 ) -> Result<Value> {
     let params = params
-        .as_ref()
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
     // Deserialize the entire audit structure from params

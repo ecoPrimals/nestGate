@@ -169,7 +169,7 @@ impl UniversalZfsService for RemoteZfsService {
 
         let request_body = json!({
             "name": config.name,
-            "_devices": config._devices,
+            "_devices": config.devices,
             "properties": config.properties,
         });
 
@@ -710,4 +710,38 @@ impl UniversalZfsService for RemoteZfsService {
         }
     })}
 
+}
+
+#[cfg(test)]
+mod implementation_tests {
+    use super::super::service::RemoteZfsService;
+    use crate::handlers::zfs::universal_zfs::config::RemoteConfig;
+    use std::time::Duration;
+
+    #[test]
+    #[allow(deprecated)]
+    fn remote_zfs_service_exposes_metadata() {
+        let cfg = RemoteConfig {
+            endpoint: "http://127.0.0.1:65530".to_string(),
+            timeout: Duration::from_millis(500),
+            auth: Some("token".into()),
+        };
+        let s = RemoteZfsService::new(cfg);
+        assert_eq!(s.service_name(), "remote-zfs");
+        assert_eq!(s.service_version(), "1.0.0");
+        assert_eq!(s.config().endpoint, "http://127.0.0.1:65530");
+        assert!(s.config().auth.is_some());
+    }
+
+    #[test]
+    fn remote_config_serde_roundtrip() {
+        let cfg = RemoteConfig {
+            endpoint: "https://zfs.example/api".into(),
+            timeout: Duration::from_secs(30),
+            auth: None,
+        };
+        let j = serde_json::to_string(&cfg).expect("serde");
+        let back: RemoteConfig = serde_json::from_str(&j).expect("de");
+        assert_eq!(back.endpoint, cfg.endpoint);
+    }
 }

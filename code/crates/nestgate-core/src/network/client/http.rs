@@ -36,18 +36,29 @@ pub struct HttpClient {
 
 impl HttpClient {
     /// Create a new HTTP client with custom configuration
+    #[must_use]
     pub fn new(config: ClientConfig) -> Self {
         let pool = ConnectionPool::new(config.clone());
         Self { pool, config }
     }
 
     /// Send a GET request
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::error::NestGateError`] when the pooled connection cannot be obtained or
+    /// the request fails after retries.
     pub async fn get(&self, endpoint: &Endpoint, path: &str) -> Result<Response> {
         let request = Request::get(path);
         self.send_request(endpoint, &request).await
     }
 
     /// Send a POST request with JSON body
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::error::NestGateError`] when the pooled connection cannot be obtained or
+    /// the request fails after retries.
     pub async fn post_json(&self, endpoint: &Endpoint, path: &str, body: &str) -> Result<Response> {
         let request = Request::post_json(path, body);
         self.send_request(endpoint, &request).await
@@ -59,6 +70,11 @@ impl HttpClient {
     /// - Attempt 1: immediate
     /// - Attempt 2: 100ms delay
     /// - Attempt 3: 200ms delay
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::error::NestGateError`] when all retry attempts fail or the underlying
+    /// transport returns an error.
     pub async fn send_request(
         &self,
         endpoint: &Endpoint,
@@ -102,6 +118,7 @@ impl HttpClient {
     }
 
     /// Get client statistics
+    #[must_use]
     pub fn stats(&self) -> ClientStats {
         let pool_stats = self.pool.stats();
 

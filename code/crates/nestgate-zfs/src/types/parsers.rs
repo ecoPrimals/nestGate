@@ -6,6 +6,7 @@
 //! Production-ready parsers for ZFS command output.
 //! Handles real-world ZFS output formats with robust error handling.
 
+use crate::numeric::f64_to_u64_saturating;
 use crate::types::{
     DatasetInfo, PoolCapacity, PoolHealth, PoolInfo, PoolState, ZfsError, ZfsResult,
 };
@@ -64,14 +65,19 @@ pub fn pool_info_from_zfs_output(pool_name: &str, output: &str) -> ZfsResult<Poo
         "ONLINE" => PoolState::Online,
         "DEGRADED" => PoolState::Degraded,
         "FAULTED" => PoolState::Faulted,
-        "OFFLINE" => PoolState::Offline,
         "REMOVED" => PoolState::Removed,
         "UNAVAIL" => PoolState::Unavailable,
-        _ => PoolState::Offline,
+        "OFFLINE" | _ => PoolState::Offline,
     };
 
     let utilization_percent = if size > 0 {
-        (allocated as f64 / size as f64) * 100.0
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "utilization ratio; operands are byte counts, approximate percentage is acceptable"
+        )]
+        {
+            (allocated as f64 / size as f64) * 100.0
+        }
     } else {
         0.0
     };
@@ -233,7 +239,7 @@ pub fn parse_size_with_units(size_str: &str) -> ZfsResult<u64> {
         }
     };
 
-    Ok((base_value * multiplier as f64) as u64)
+    Ok(f64_to_u64_saturating(base_value * multiplier as f64))
 }
 
 #[cfg(test)]

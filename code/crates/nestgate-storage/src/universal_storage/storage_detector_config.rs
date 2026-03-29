@@ -44,6 +44,7 @@ impl StorageDetectorConfig {
     }
 
     /// Set AWS credentials explicitly (for testing)
+    #[must_use]
     pub fn with_aws_credentials(
         mut self,
         access_key: impl Into<String>,

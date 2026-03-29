@@ -46,7 +46,10 @@ pub type ZfsResult<T> = Result<T, ZfsError>;
 /// Information about a ZFS snapshot.
 ///
 /// **Note**: Currently unused in dev stubs, reserved for future snapshot operations.
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "Reserved for future snapshot operations in dev stubs"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Snapshotinfo
 pub struct SnapshotInfo {
@@ -263,7 +266,10 @@ impl ZeroCostZfsOperations {
 /// ZFS performance optimization service.
 ///
 /// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "Dev-stub optimizer type retained for ZFS stub API surface"
+)]
 #[derive(Debug, Clone)]
 /// Performanceoptimizer
 pub struct PerformanceOptimizer;
@@ -290,7 +296,10 @@ impl PerformanceOptimizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Stub method exercised only in tests; kept for API completeness"
+    )]
     pub fn optimize_performance(&self) -> Result<(), ZfsError> {
         info!("Running ZFS performance optimization");
         Ok(())
@@ -302,7 +311,10 @@ impl PerformanceOptimizer {
 /// Calculates confidence scores for ZFS operations and predictions.
 ///
 /// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "Dev-stub calculator type retained for ZFS stub API surface"
+)]
 #[derive(Debug, Clone)]
 /// Confidencecalculator
 pub struct ConfidenceCalculator;
@@ -323,7 +335,10 @@ impl ConfidenceCalculator {
 
     /// Calculate confidence score based on provided metrics
     #[must_use]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Stub helper used from tests; reserved for metrics integration"
+    )]
     pub const fn calculate_confidence(&self, _metrics: &HashMap<String, f64>) -> f64 {
         0.85 // Placeholder confidence score
     }
@@ -388,7 +403,10 @@ pub struct ZeroCostSnapshotInfo {
 /// Extended dataset information with additional metadata.
 ///
 /// ⚠️ **UNUSED**: Reserved for future use. Consider removing if not needed.
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "Extended dataset metadata reserved for future dev-stub features"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Zerocostdatasetinfoextended
 pub struct ZeroCostDatasetInfoExtended {

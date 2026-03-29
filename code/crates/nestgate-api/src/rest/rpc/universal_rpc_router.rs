@@ -316,9 +316,9 @@ impl UniversalRpcRouter {
         let capability_request = self.create_capability_request(request, route).await?;
         
         // Execute via universal adapter
-        let response = self.adapter
+        let response = self
+            .adapter
             .request_capability(&route.provider_info.service_id, capability_request)
-            .await
             .map_err(|e| RpcError::ServiceUnavailable(format!("Capability request failed: {e}")))?;
 
         // Convert capability response to RPC response

@@ -382,3 +382,54 @@ pub struct CacheStats {
     /// Cache TTL in seconds
     pub ttl_seconds: u64,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn service_endpoint_from_response_ok() {
+        let v = json!({
+            "name": "alpha",
+            "endpoint": "/tmp/sock",
+            "version": "2.0.0"
+        });
+        let ep = ServiceEndpoint::from_response(v, "crypto").expect("parse");
+        assert_eq!(ep.capability, "crypto");
+        assert_eq!(ep.name, "alpha");
+        assert_eq!(ep.endpoint, "/tmp/sock");
+        assert_eq!(ep.version, "2.0.0");
+    }
+
+    #[test]
+    fn service_endpoint_from_response_default_version() {
+        let v = json!({
+            "name": "beta",
+            "endpoint": "tcp://127.0.0.1:1"
+        });
+        let ep = ServiceEndpoint::from_response(v, "http").expect("parse");
+        assert_eq!(ep.version, "unknown");
+    }
+
+    #[test]
+    fn service_endpoint_from_response_missing_name_errors() {
+        let v = json!({ "endpoint": "e" });
+        assert!(ServiceEndpoint::from_response(v, "x").is_err());
+    }
+
+    #[test]
+    fn service_endpoint_from_response_missing_endpoint_errors() {
+        let v = json!({ "name": "n" });
+        assert!(ServiceEndpoint::from_response(v, "x").is_err());
+    }
+
+    #[test]
+    fn cache_stats_clone() {
+        let s = CacheStats {
+            size: 3,
+            ttl_seconds: 120,
+        };
+        assert_eq!(s.clone().size, 3);
+    }
+}

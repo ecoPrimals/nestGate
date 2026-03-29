@@ -42,6 +42,11 @@ pub struct MetricsHistoryQuery {
 }
 /// Get current system metrics
 /// GET /api/v1/monitoring/metrics
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when metrics aggregation or
+/// serialization fails (reserved for future wired collectors).
 pub async fn get_metrics(
     State(state): State<ApiState>,
 ) -> Result<Json<DataResponse<SystemMetrics>>, Json<DataError>> {
@@ -150,6 +155,11 @@ pub async fn get_metrics(
 
 /// Get historical metrics data
 /// GET /api/v1/monitoring/metrics/history
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the time-series query
+/// fails (reserved for future TSDB-backed history).
 pub async fn get_metrics_history(
     State(state): State<ApiState>,
     Query(query): Query<MetricsHistoryQuery>,
@@ -174,11 +184,10 @@ pub async fn get_metrics_history(
     // Parse interval
     let interval_minutes = match query.interval.as_deref() {
         Some("1m") => 1,
-        Some("5m") => 5,
         Some("15m") => 15,
         Some("1h") => 60,
         Some("1d") => 1440,
-        _ => 5, // Default to 5 minutes
+        _ => 5, // Default to 5 minutes (includes `5m` and unknown)
     };
 
     // Generate historical data points

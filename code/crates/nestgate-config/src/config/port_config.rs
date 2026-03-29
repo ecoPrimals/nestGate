@@ -71,8 +71,7 @@ impl PortConfiguration {
     /// Create configuration with all defaults (for testing)
     #[must_use]
     pub const fn with_defaults() -> Self {
-        #[allow(deprecated)]
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports as p;
         use crate::constants::port_defaults::{
             DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT,
             DEFAULT_POSTGRES_PORT, DEFAULT_RABBITMQ_PORT, DEFAULT_REDIS_PORT,
@@ -83,12 +82,12 @@ impl PortConfiguration {
             health_port: DEFAULT_HEALTH_PORT,
             metrics_port: DEFAULT_METRICS_PORT,
             admin_port: DEFAULT_ADMIN_PORT,
-            websocket_port: ports::WEBSOCKET_DEFAULT,
-            rpc_port: ports::GRPC_DEFAULT,
+            websocket_port: p::WEBSOCKET,
+            rpc_port: p::GRPC,
             database_port: DEFAULT_POSTGRES_PORT,
             redis_port: DEFAULT_REDIS_PORT,
             message_queue_port: DEFAULT_RABBITMQ_PORT,
-            orchestration_port: ports::ORCHESTRATION_DEFAULT,
+            orchestration_port: p::ORCHESTRATION,
         }
     }
 

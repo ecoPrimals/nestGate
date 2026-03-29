@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // Advanced ZFS optimization including compression, recordsize, cache settings,
 // deduplication, and AI-assisted optimization recommendations.
@@ -236,10 +240,10 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
         .or_else(|| capability_url("orchestration")) // Fallback to orchestration
         .unwrap_or_else(|| get_config().network.api_base_url());
 
-    let mut _adapter = nestgate_core::universal_adapter::UniversalAdapter::new(endpoint);
+    let mut adapter = nestgate_core::universal_adapter::UniversalAdapter::new(endpoint);
 
     // Discover available AI capabilities
-    let _capabilities = _adapter.discover_capabilities().await.unwrap_or_default();
+    let _ = adapter.discover_capabilities().await;
 
     // Use universal adapter to request AI optimization
     if let Ok(_ai_endpoint) = std::env::var("NESTGATE_AI_ENDPOINT") {

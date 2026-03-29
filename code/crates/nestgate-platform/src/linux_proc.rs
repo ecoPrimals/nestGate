@@ -65,7 +65,7 @@ pub fn used_memory_bytes() -> Option<u64> {
 #[must_use]
 pub fn logical_cpu_count() -> usize {
     std::thread::available_parallelism()
-        .map(|n| n.get())
+        .map(std::num::NonZero::get)
         .unwrap_or(1)
 }
 

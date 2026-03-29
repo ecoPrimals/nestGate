@@ -71,6 +71,10 @@ impl SelfKnowledgeBuilder {
         self.capabilities.push(c.to_string());
         self
     }
+    /// # Errors
+    ///
+    /// Returns `NestGateError` if required builder fields cannot be satisfied (currently always
+    /// returns `Ok`).
     pub fn build(self) -> Result<SelfKnowledge> {
         Ok(SelfKnowledge {
             id: self.id.unwrap_or_else(|| "nestgate".to_string()),
@@ -114,7 +118,11 @@ pub struct OrchestratorRegistration {
 }
 
 impl OrchestratorRegistration {
-    pub async fn new(self_knowledge: SelfKnowledge) -> Result<Self> {
+    /// # Errors
+    ///
+    /// Returns `NestGateError` if the registration context cannot be constructed (currently always
+    /// returns `Ok`).
+    pub fn new(self_knowledge: SelfKnowledge) -> Result<Self> {
         let enabled = std::env::var("NESTGATE_DISABLE_ORCHESTRATOR")
             .map(|v| v != "1" && v.to_lowercase() != "true")
             .unwrap_or(true);
@@ -131,23 +139,17 @@ impl OrchestratorRegistration {
         })
     }
 
-    pub async fn register(&self) -> Result<()> {
+    pub fn register(&self) {
         if !self.enabled {
-            return Ok(());
+            return;
         }
         warn!(
             "orchestrator register: stub (wire nestgate-discovery + nestgate-core); service={}",
             self.self_knowledge.name
         );
-        Ok(())
     }
 
-    pub async fn report_health(&self) -> Result<()> {
-        if !self.enabled {
-            return Ok(());
-        }
-        Ok(())
-    }
+    pub const fn report_health(&self) {}
 
     pub fn start_health_reporting(&self) {
         if !self.enabled {
@@ -183,7 +185,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let registration = OrchestratorRegistration::new(self_knowledge).await.unwrap();
+        let registration = OrchestratorRegistration::new(self_knowledge).unwrap();
         assert!(!registration.enabled);
 
         // SAFETY: single-threaded test — no concurrent env readers.

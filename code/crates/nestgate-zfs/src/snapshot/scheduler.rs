@@ -124,7 +124,7 @@ impl PolicyScheduler {
             }
 
             // Generate snapshot name
-            let snapshot_name = self.generate_snapshot_name(policy, &dataset).await;
+            let snapshot_name = self.generate_snapshot_name(policy, &dataset);
 
             // Create snapshot operation
             let operation = SnapshotOperation {
@@ -195,7 +195,7 @@ impl PolicyScheduler {
     }
 
     /// Generate snapshot name for policy
-    async fn generate_snapshot_name(&self, policy: &SnapshotPolicy, dataset: &str) -> String {
+    fn generate_snapshot_name(&self, policy: &SnapshotPolicy, dataset: &str) -> String {
         let now = SystemTime::now();
         let timestamp = now
             .duration_since(UNIX_EPOCH)
@@ -203,7 +203,7 @@ impl PolicyScheduler {
             .as_secs();
 
         match &policy.frequency {
-            ScheduleFrequency::Minutes(_) => {
+            ScheduleFrequency::Minutes(_) | ScheduleFrequency::Custom(_) => {
                 format!(
                     "{}_{}_{}",
                     policy.name_prefix,
@@ -247,14 +247,6 @@ impl PolicyScheduler {
                     policy.name_prefix,
                     dataset.replace('/', "_"),
                     datetime.format("%Y%m")
-                )
-            }
-            ScheduleFrequency::Custom(_) => {
-                format!(
-                    "{}_{}_{}",
-                    policy.name_prefix,
-                    dataset.replace('/', "_"),
-                    timestamp
                 )
             }
         }
@@ -478,28 +470,28 @@ mod tests {
             ..SnapshotPolicy::default()
         };
         p.frequency = ScheduleFrequency::Minutes(5);
-        let n1 = s.generate_snapshot_name(&p, "z/a").await;
+        let n1 = s.generate_snapshot_name(&p, "z/a");
         assert!(n1.contains("pre"));
         assert!(n1.contains("z_a"));
 
         p.frequency = ScheduleFrequency::Hours(1);
-        let n2 = s.generate_snapshot_name(&p, "z/a").await;
+        let n2 = s.generate_snapshot_name(&p, "z/a");
         assert!(n2.starts_with("pre_z_a_"));
 
         p.frequency = ScheduleFrequency::Daily(0);
-        let n3 = s.generate_snapshot_name(&p, "z/a").await;
+        let n3 = s.generate_snapshot_name(&p, "z/a");
         assert!(n3.contains("_daily_"));
 
         p.frequency = ScheduleFrequency::Weekly { day: 0, hour: 0 };
-        let n4 = s.generate_snapshot_name(&p, "z/a").await;
+        let n4 = s.generate_snapshot_name(&p, "z/a");
         assert!(n4.contains("_weekly_"));
 
         p.frequency = ScheduleFrequency::Monthly { day: 1, hour: 0 };
-        let n5 = s.generate_snapshot_name(&p, "z/a").await;
+        let n5 = s.generate_snapshot_name(&p, "z/a");
         assert!(n5.contains("_monthly_"));
 
         p.frequency = ScheduleFrequency::Custom("x".into());
-        let n6 = s.generate_snapshot_name(&p, "z/a").await;
+        let n6 = s.generate_snapshot_name(&p, "z/a");
         assert!(n6.contains("pre"));
     }
 

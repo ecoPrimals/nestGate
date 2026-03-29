@@ -12,6 +12,9 @@
 
 /// Canonical constants system providing unified constant definitions across the system
 pub mod canonical_constants;
+
+#[cfg(test)]
+mod canonical_constants_tests;
 // Constants consolidation system - disabled for compilation compatibility
 // pub mod constants_consolidation;
 /// Builder patterns for canonical configurations

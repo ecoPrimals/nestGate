@@ -48,6 +48,7 @@ impl SelfKnowledgeBuilder {
     /// **Required**: This must be set before calling [`build()`](Self::build).
     ///
     /// **Convention**: Use lowercase primal name (e.g., "nestgate", "orchestrator", "beardog")
+    #[must_use]
     pub fn with_id(mut self, id: impl Into<String>) -> Self {
         self.id = Some(id.into());
         self
@@ -56,6 +57,7 @@ impl SelfKnowledgeBuilder {
     /// Set the primal's human-readable name
     ///
     /// **Optional**: Defaults to titlecase of ID if not set.
+    #[must_use]
     pub fn with_name(mut self, name: impl Into<String>) -> Self {
         self.name = Some(name.into());
         self
@@ -66,6 +68,7 @@ impl SelfKnowledgeBuilder {
     /// **Optional**: Defaults to "0.0.0" if not set.
     ///
     /// **Tip**: Use `env!("CARGO_PKG_VERSION")` to automatically use Cargo.toml version
+    #[must_use]
     pub fn with_version(mut self, version: impl Into<String>) -> Self {
         self.version = Some(version.into());
         self
@@ -76,12 +79,14 @@ impl SelfKnowledgeBuilder {
     /// Can be called multiple times to add multiple capabilities.
     ///
     /// **Examples**: "storage", "orchestration", "ai", "security", "zfs"
+    #[must_use]
     pub fn with_capability(mut self, capability: impl Into<String>) -> Self {
         self.capabilities.push(capability.into());
         self
     }
 
     /// Add multiple capabilities at once
+    #[must_use]
     pub fn with_capabilities(
         mut self,
         capabilities: impl IntoIterator<Item = impl Into<String>>,
@@ -98,6 +103,7 @@ impl SelfKnowledgeBuilder {
     /// - `addr`: Socket address where the endpoint listens
     ///
     /// Can be called multiple times to add multiple endpoints.
+    #[must_use]
     pub fn with_endpoint(mut self, name: impl Into<String>, addr: SocketAddr) -> Self {
         self.endpoints.insert(name.into(), addr);
         self

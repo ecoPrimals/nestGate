@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **RPC METHOD HANDLERS**
 //!
 //! JSON-RPC method implementations for `NestGate` storage and system operations.
@@ -64,15 +69,15 @@ impl RpcMethodHandler for NestGateRpcHandler {
             "storage.list" => self.handle_list(params).await,
 
             // Health methods
-            "health.ping" => self.handle_ping(params).await,
-            "health.status" => self.handle_status(params).await,
+            "health.ping" => self.handle_ping(params),
+            "health.status" => self.handle_status(params),
 
             // Identity methods
-            "identity.get" => self.handle_identity(params).await,
-            "identity.capabilities" => self.handle_capabilities(params).await,
+            "identity.get" => self.handle_identity(params),
+            "identity.capabilities" => self.handle_capabilities(params),
 
             // System methods
-            "system.info" => self.handle_system_info(params).await,
+            "system.info" => self.handle_system_info(params),
 
             // Unknown method
             _ => Err(NestGateError::api_error(&format!(
@@ -136,12 +141,12 @@ impl NestGateRpcHandler {
     }
 
     /// Handle health.ping request
-    async fn handle_ping(&self, _params: Value) -> Result<Value> {
+    fn handle_ping(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({"status": "pong", "timestamp": chrono::Utc::now().timestamp()}))
     }
 
     /// Handle health.status request
-    async fn handle_status(&self, _params: Value) -> Result<Value> {
+    fn handle_status(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({
             "status": "healthy",
             "primal": "nestgate",
@@ -152,7 +157,7 @@ impl NestGateRpcHandler {
     }
 
     /// Handle identity.get request
-    async fn handle_identity(&self, _params: Value) -> Result<Value> {
+    fn handle_identity(&self, _params: Value) -> Result<Value> {
         let family_id =
             std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
 
@@ -165,7 +170,7 @@ impl NestGateRpcHandler {
     }
 
     /// Handle identity.capabilities request
-    async fn handle_capabilities(&self, _params: Value) -> Result<Value> {
+    fn handle_capabilities(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({
             "storage": self.storage.is_some(),
             "zfs": true,
@@ -173,12 +178,12 @@ impl NestGateRpcHandler {
             "hardware_tuning": true,
             "transport": ["unix-socket", "http"],
             "protocol": ["jsonrpc-2.0"],
-            "security": ["beardog"]
+            "security": ["genetic_key_validation"]
         }))
     }
 
     /// Handle system.info request
-    async fn handle_system_info(&self, _params: Value) -> Result<Value> {
+    fn handle_system_info(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({
             "primal": "nestgate",
             "version": env!("CARGO_PKG_VERSION"),
@@ -285,26 +290,26 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_ping() {
+    #[test]
+    fn test_ping() {
         let handler = NestGateRpcHandler::new();
-        let result = handler.handle_ping(Value::Null).await;
+        let result = handler.handle_ping(Value::Null);
         assert!(result.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_identity() {
+    #[test]
+    fn test_identity() {
         let handler = NestGateRpcHandler::new();
-        let result = handler.handle_identity(Value::Null).await;
+        let result = handler.handle_identity(Value::Null);
         assert!(result.is_ok());
         let identity = result.unwrap();
         assert_eq!(identity["primal"], "nestgate");
     }
 
-    #[tokio::test]
-    async fn test_capabilities() {
+    #[test]
+    fn test_capabilities() {
         let handler = NestGateRpcHandler::new();
-        let result = handler.handle_capabilities(Value::Null).await;
+        let result = handler.handle_capabilities(Value::Null);
         assert!(result.is_ok());
     }
 
@@ -413,10 +418,10 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn test_system_info_ok() {
+    #[test]
+    fn test_system_info_ok() {
         let handler = NestGateRpcHandler::new();
-        let v = handler.handle_system_info(serde_json::Value::Null).await;
+        let v = handler.handle_system_info(serde_json::Value::Null);
         assert!(v.is_ok());
     }
 

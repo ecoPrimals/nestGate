@@ -41,18 +41,30 @@ impl SystemMetricsCollector {
     }
 
     /// Gets Cpu Usage
+    #[expect(
+        clippy::unused_async,
+        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+    )]
     async fn get_cpu_usage(&self) -> Result<f64, MetricsError> {
         // ecoBin v3.0: implement via `/proc/stat` or `nestgate_core::linux_proc` (avoid `sysinfo` here).
         Ok(25.5) // Placeholder value
     }
 
     /// Gets Memory Usage
+    #[expect(
+        clippy::unused_async,
+        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+    )]
     async fn get_memory_usage(&self) -> Result<u64, MetricsError> {
         // Implementation would read from /proc/meminfo
         Ok(1024 * 1024 * 1024) // 1GB placeholder
     }
 
     /// Gets Disk Io Metrics
+    #[expect(
+        clippy::unused_async,
+        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+    )]
     async fn get_disk_io_metrics(&self) -> Result<DiskIOMetrics, MetricsError> {
         Ok(DiskIOMetrics {
             read_bytes_per_sec: 1024 * 1024, // 1MB/s
@@ -63,6 +75,10 @@ impl SystemMetricsCollector {
     }
 
     /// Gets Network Metrics
+    #[expect(
+        clippy::unused_async,
+        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+    )]
     async fn get_network_metrics(&self) -> Result<NetworkMetrics, MetricsError> {
         Ok(NetworkMetrics {
             rx_bytes_per_sec: 1024 * 1024, // 1MB/s

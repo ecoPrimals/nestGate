@@ -605,3 +605,105 @@ impl Default for HandlerSecurityConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn canonical_handler_configs_default_roundtrip_json() {
+        let c = CanonicalHandlerConfigs::default();
+        let json = serde_json::to_string(&c).expect("serialize");
+        let back: CanonicalHandlerConfigs = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.global.default_timeout, c.global.default_timeout);
+        assert_eq!(back.zfs.service_name, c.zfs.service_name);
+    }
+
+    #[test]
+    fn zfs_handler_validate_empty_name_errors() {
+        let mut z = ZfsHandlerConfig::default();
+        z.service_name.clear();
+        assert_eq!(
+            z.validate(),
+            Err("Service name cannot be empty".to_string())
+        );
+    }
+
+    #[test]
+    fn zfs_handler_validate_ok() {
+        assert!(ZfsHandlerConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn zfs_backend_config_remote_roundtrip() {
+        let b = ZfsBackendConfig::Remote {
+            endpoint: "https://zfs.example/tarpc".to_string(),
+            timeout: Duration::from_secs(12),
+        };
+        let json = serde_json::to_string(&b).unwrap();
+        let back: ZfsBackendConfig = serde_json::from_str(&json).unwrap();
+        match (back, b) {
+            (
+                ZfsBackendConfig::Remote {
+                    endpoint: e1,
+                    timeout: t1,
+                },
+                ZfsBackendConfig::Remote {
+                    endpoint: e2,
+                    timeout: t2,
+                },
+            ) => {
+                assert_eq!(e1, e2);
+                assert_eq!(t1, t2);
+            }
+            _ => panic!("expected Remote variant"),
+        }
+    }
+
+    #[test]
+    fn workspace_cleanup_policy_automatic_roundtrip() {
+        let p = WorkspaceCleanupPolicy::Automatic { retention_days: 14 };
+        let json = serde_json::to_string(&p).unwrap();
+        let back: WorkspaceCleanupPolicy = serde_json::from_str(&json).unwrap();
+        match (back, p) {
+            (
+                WorkspaceCleanupPolicy::Automatic { retention_days: a },
+                WorkspaceCleanupPolicy::Automatic { retention_days: b },
+            ) => assert_eq!(a, b),
+            _ => panic!("expected Automatic variant"),
+        }
+    }
+
+    #[test]
+    fn custom_handler_config_roundtrip() {
+        let mut settings = HashMap::new();
+        settings.insert("k".to_string(), serde_json::json!({"x": 1}));
+        let c = CustomHandlerConfig {
+            name: "plugin".to_string(),
+            settings,
+            timeout: Duration::from_millis(500),
+            enable_metrics: false,
+        };
+        let json = serde_json::to_string(&c).unwrap();
+        let back: CustomHandlerConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.name, c.name);
+        assert_eq!(back.enable_metrics, false);
+    }
+
+    #[test]
+    fn global_handler_config_default_has_sensible_limits() {
+        let g = GlobalHandlerConfig::default();
+        assert!(g.max_request_size > 0);
+        assert!(g.enable_logging);
+        assert_eq!(g.default_content_type, "application/json");
+    }
+
+    #[test]
+    fn rate_limit_and_security_defaults() {
+        let r = RateLimitConfig::default();
+        assert!(r.enabled);
+        let s = HandlerSecurityConfig::default();
+        assert!(s.require_auth);
+        assert!(s.security_headers.contains_key("X-Frame-Options"));
+    }
+}

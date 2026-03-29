@@ -345,7 +345,7 @@ mod tests {
 
     #[test]
     fn test_network_error_data_with_values() {
-        /// Default HTTP port (mirrors `nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT`).
+        /// Default HTTP port for this test (conventional HTTP; not NestGate’s API default).
         const HTTP_DEFAULT: u16 = 80;
         let data = NetworkErrorData {
             endpoint: Some("http://example.com".to_string()),

@@ -28,6 +28,7 @@
 
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 /// NestGate - Sovereign Infrastructure Platform
 ///
@@ -237,7 +238,7 @@ pub mod commands {
         }
 
         async fn run_socket_only() -> Result<()> {
-            use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
+            use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 
             println!("\n╔══════════════════════════════════════════════════════════════════════╗");
             println!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
@@ -257,9 +258,9 @@ pub mod commands {
             // Log socket configuration
             socket_config.log_summary();
 
-            // Create Unix socket server with persistent storage backend
             println!("📦 Initializing persistent storage backend...");
-            let server = JsonRpcUnixServer::new(&family_id).await?;
+            let handler = legacy_ecosystem_rpc_handler(&family_id)?;
+            let server = Arc::new(IsomorphicIpcServer::new(family_id, handler));
             println!("✅ Storage backend initialized");
             println!();
 
@@ -280,8 +281,7 @@ pub mod commands {
             println!();
             println!("Press Ctrl+C to stop\n");
 
-            // Start server (blocking)
-            server.serve().await?;
+            server.start().await?;
 
             Ok(())
         }

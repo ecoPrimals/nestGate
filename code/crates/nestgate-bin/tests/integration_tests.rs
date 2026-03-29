@@ -341,7 +341,7 @@ mod integration_mode_tests {
             format!(
                 "http://{}:{}",
                 nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::ports::ORCHESTRATION_DEFAULT
+                nestgate_core::constants::hardcoding::runtime_fallback_ports::ORCHESTRATION
             ),
         );
         nestgate_core::env_process::set_var(
@@ -349,7 +349,7 @@ mod integration_mode_tests {
             format!(
                 "http://{}:{}",
                 nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT
+                nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP
             ),
         );
 
@@ -389,7 +389,7 @@ mod integration_mode_tests {
             format!(
                 "http://{}:{}",
                 nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::ports::ORCHESTRATION_DEFAULT
+                nestgate_core::constants::hardcoding::runtime_fallback_ports::ORCHESTRATION
             )
         );
         assert_eq!(
@@ -397,7 +397,7 @@ mod integration_mode_tests {
             format!(
                 "http://{}:{}",
                 nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT
+                nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP
             )
         );
         Ok(())

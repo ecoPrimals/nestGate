@@ -19,8 +19,8 @@
 //! use nestgate_core::crypto::{SecureCrypto, EncryptionParams};
 //!
 //! let crypto = SecureCrypto::new()?;
-//! let encrypted = crypto.encrypt(b"sensitive data", &params).await?;
-//! let decrypted = crypto.decrypt(&encrypted, &params).await?;
+//! let encrypted = crypto.encrypt(b"sensitive data", &params)?;
+//! let decrypted = crypto.decrypt(&encrypted)?;
 //! ```
 //!
 //! # Replacements
@@ -57,7 +57,7 @@ use rand::RngCore;
 /// ```rust,ignore
 /// let crypto = SecureCrypto::new()?;
 /// let params = EncryptionParams::default();
-/// let ciphertext = crypto.encrypt(b"secret", &params).await?;
+/// let ciphertext = crypto.encrypt(b"secret", &params)?;
 /// ```
 ///
 /// ✅ EVOLVED: Real Pure Rust implementation using `RustCrypto` (audited, FIPS-compatible)
@@ -182,11 +182,7 @@ impl SecureCrypto {
     /// - Provides AEAD (Authenticated Encryption with Associated Data)
     /// - Prevents tampering and forgery via GCM authentication tag
     /// - Hardware-accelerated AES-NI when available
-    pub async fn encrypt(
-        &self,
-        plaintext: &[u8],
-        params: &EncryptionParams,
-    ) -> Result<EncryptedData> {
+    pub fn encrypt(&self, plaintext: &[u8], params: &EncryptionParams) -> Result<EncryptedData> {
         let cipher = self.cipher.as_ref().ok_or_else(|| {
             NestGateError::configuration_error("crypto", "Cipher not initialized")
         })?;
@@ -234,7 +230,7 @@ impl SecureCrypto {
     /// - Verifies GCM authentication tag before returning plaintext
     /// - Constant-time tag comparison (prevents timing attacks)
     /// - Rejects tampered ciphertext
-    pub async fn decrypt(&self, encrypted: &EncryptedData) -> Result<Vec<u8>> {
+    pub fn decrypt(&self, encrypted: &EncryptedData) -> Result<Vec<u8>> {
         let cipher = self.cipher.as_ref().ok_or_else(|| {
             NestGateError::configuration_error("crypto", "Cipher not initialized")
         })?;

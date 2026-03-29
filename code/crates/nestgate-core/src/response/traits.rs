@@ -237,11 +237,14 @@ impl ResponseMetadata for UnifiedErrorResponse {
 /// Helper trait for chain-style response building
 pub trait ResponseChaining {
     /// Add context to response (chainable)
+    #[must_use]
     fn with_context_chain(self, key: &str, value: serde_json::Value) -> Self;
     /// Add metadata to response (chainable)
+    #[must_use]
     fn with_metadata_chain(self, key: &str, value: &str) -> Self;
 
     /// Set timestamp (chainable)
+    #[must_use]
     fn with_timestamp_chain(self, timestamp: chrono::DateTime<chrono::Utc>) -> Self;
 }
 

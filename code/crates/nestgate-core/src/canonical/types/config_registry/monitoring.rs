@@ -198,25 +198,25 @@ pub struct CanonicalConfigTypeRegistry;
 impl CanonicalConfigTypeRegistry {
     /// Get the canonical storage configuration type
     #[must_use]
-    pub fn storage_config() -> &'static str {
+    pub const fn storage_config() -> &'static str {
         "CanonicalStorageConfig"
     }
 
     /// Get the canonical network configuration type
     #[must_use]
-    pub fn network_config() -> &'static str {
+    pub const fn network_config() -> &'static str {
         "CanonicalNetworkConfig"
     }
 
     /// Get the canonical security configuration type
     #[must_use]
-    pub fn security_config() -> &'static str {
+    pub const fn security_config() -> &'static str {
         "CanonicalSecurityConfig"
     }
 
     /// Get the canonical monitoring configuration type
     #[must_use]
-    pub fn monitoring_config() -> &'static str {
+    pub const fn monitoring_config() -> &'static str {
         "CanonicalMonitoringConfig"
     }
 

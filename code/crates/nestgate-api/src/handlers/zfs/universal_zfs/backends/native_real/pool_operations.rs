@@ -116,14 +116,14 @@ pub async fn create_pool(
     config: &PoolConfig,
 ) -> UniversalZfsResult<PoolInfo> {
     info!("🔧 Creating ZFS pool: {}", config.name);
-    if config._devices.is_empty() {
+    if config.devices.is_empty() {
         return Err(UniversalZfsError::InvalidInput {
             message: "Pool creation requires at least one device".to_string(),
         });
     }
 
     let mut args = vec!["create", &config.name];
-    args.extend(config._devices.iter().map(std::string::String::as_str));
+    args.extend(config.devices.iter().map(std::string::String::as_str));
 
     service.execute_zfs_command("zpool", &args).await?;
 

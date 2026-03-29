@@ -156,6 +156,10 @@ pub struct ServiceMetadataStore {
     capability_index: Arc<DashMap<String, Vec<String>>>,
 }
 
+#[expect(
+    clippy::unused_async,
+    reason = "store API is async-shaped for future persistence; in-memory operations are synchronous"
+)]
 impl ServiceMetadataStore {
     /// Create a new in-memory metadata store
     ///
@@ -200,7 +204,7 @@ impl ServiceMetadataStore {
         self.services
             .get(name)
             .map(|entry| entry.value().clone())
-            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {}", name)))
+            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {name}")))
     }
 
     /// Find services by capability (capability-based discovery!)
@@ -237,7 +241,7 @@ impl ServiceMetadataStore {
     pub async fn update_heartbeat(&self, name: &str) -> Result<()> {
         self.services
             .get_mut(name)
-            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {}", name)))?
+            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {name}")))?
             .last_seen = SystemTime::now();
 
         Ok(())
@@ -248,7 +252,7 @@ impl ServiceMetadataStore {
         let meta = self
             .services
             .remove(name)
-            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {}", name)))?
+            .ok_or_else(|| NestGateError::not_found(format!("Service not found: {name}")))?
             .1;
 
         for capability in &meta.capabilities {

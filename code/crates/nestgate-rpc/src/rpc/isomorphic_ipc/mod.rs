@@ -181,3 +181,14 @@ pub use launcher::{
     connect_to_nestgate, connect_to_nestgate_with_retry, discover_nestgate_endpoint,
     discover_nestgate_with_retry, is_nestgate_running,
 };
+
+#[cfg(test)]
+mod isomorphic_ipc_export_tests {
+    #[test]
+    fn public_types_are_reachable() {
+        fn assert_send_sync<T: Send + Sync>() {}
+        assert_send_sync::<super::AtomicStatus>();
+        assert_send_sync::<super::HealthStatus>();
+        assert_send_sync::<super::IpcEndpoint>();
+    }
+}

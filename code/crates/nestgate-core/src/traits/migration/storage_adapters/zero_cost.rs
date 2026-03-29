@@ -93,6 +93,10 @@ where
     }
 }
 
+#[expect(
+    deprecated,
+    reason = "Migration adapter targets hierarchy CanonicalStorage until full parity with traits::canonical::CanonicalStorage"
+)]
 impl<T, K, V> CanonicalStorage for ZeroCostStorageAdapter<T, K, V>
 where
     T: ZeroCostStorageProvider<K, V> + Send + Sync + 'static,
@@ -117,7 +121,7 @@ where
         self.inner
             .store(key, value)
             .await
-            .map_err(|e| NestGateError::storage_error(&format!("Write failed: {}", e)))
+            .map_err(|e| NestGateError::storage_error(&format!("Write failed: {e}")))
     }
 
     /// Deletes resource

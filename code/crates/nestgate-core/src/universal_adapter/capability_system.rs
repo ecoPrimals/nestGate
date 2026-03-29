@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **UNIVERSAL CAPABILITY SYSTEM**
 //! Capability System functionality and utilities.
 //! This module implements a capability-based discovery and routing system that eliminates
@@ -45,6 +50,7 @@ pub enum CapabilityCategory {
 
 impl CapabilityCategory {
     /// Convert to PrimalCapability for service registry discovery
+    #[must_use]
     pub fn to_primal_capability(
         &self,
     ) -> crate::universal_primal_discovery::capability_based_discovery::PrimalCapability {
@@ -101,6 +107,7 @@ impl ServiceCapability {
     }
 
     /// Create a storage capability (NestGate's domain)
+    #[must_use]
     pub fn storage(operation: &str, description: &str) -> Self {
         Self::new(CapabilityCategory::Storage, operation, description)
     }
@@ -149,14 +156,14 @@ impl CapabilityRequest {
 
     /// Make this request optional
     #[must_use]
-    pub fn optional(mut self) -> Self {
+    pub const fn optional(mut self) -> Self {
         self.required = false;
         self
     }
 
     /// Set timeout for this request
     #[must_use]
-    pub fn with_timeout(mut self, timeout_seconds: u64) -> Self {
+    pub const fn with_timeout(mut self, timeout_seconds: u64) -> Self {
         self.timeout_seconds = timeout_seconds;
         self
     }
@@ -258,6 +265,7 @@ impl DiscoveredService {
     }
 
     /// Check if this service provides a specific capability
+    #[must_use]
     pub fn provides_capability(&self, category: &CapabilityCategory, operation: &str) -> bool {
         self.capabilities
             .iter()
@@ -283,6 +291,7 @@ pub struct CapabilityRegistry {
 
 impl CapabilityRegistry {
     /// Create a new capability registry
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -316,6 +325,7 @@ impl CapabilityRegistry {
     }
 
     /// Find services that provide a specific capability
+    #[must_use]
     pub fn find_providers(
         &self,
         category: &CapabilityCategory,
@@ -337,11 +347,13 @@ impl CapabilityRegistry {
     }
 
     /// Get our own advertised capabilities
+    #[must_use]
     pub fn our_capabilities(&self) -> &[ServiceCapability] {
         &self.our_capabilities
     }
 
     /// Get all discovered services
+    #[must_use]
     pub fn all_services(&self) -> Vec<&DiscoveredService> {
         self.services.values().collect()
     }
@@ -390,6 +402,7 @@ pub struct CapabilityRouter {
 
 impl CapabilityRouter {
     /// Create a new capability router with self-knowledge only
+    #[must_use]
     pub fn new() -> Self {
         Self {
             registry: Arc::new(RwLock::new(CapabilityRegistry::new())),
@@ -402,6 +415,7 @@ impl CapabilityRouter {
     ///
     /// This enables the router to discover services dynamically instead of
     /// using hardcoded endpoints.
+    #[must_use]
     pub fn with_service_registry(mut self, registry: Arc<ServiceRegistry>) -> Self {
         self.service_registry = Some(registry);
         self
@@ -424,7 +438,7 @@ impl CapabilityRouter {
             .self_identity
             .can_handle_capability(&request.category, &request.operation)
         {
-            return self.handle_locally(request).await;
+            return self.handle_locally(request);
         }
 
         // 2. Discover capable services through universal adapter
@@ -522,9 +536,7 @@ impl CapabilityRouter {
         };
 
         // Generic capability request - works with any primal
-        let response = self
-            .send_universal_request(&endpoint, &service.endpoint, request)
-            .await?;
+        let response = self.send_universal_request(&endpoint, &service.endpoint, request)?;
 
         Ok(CapabilityResponse {
             request_id: response.request_id,
@@ -537,10 +549,10 @@ impl CapabilityRouter {
     }
 
     /// Handle capability locally (NestGate's own capabilities)
-    async fn handle_locally(&self, request: CapabilityRequest) -> Result<CapabilityResponse> {
+    fn handle_locally(&self, request: CapabilityRequest) -> Result<CapabilityResponse> {
         // Handle storage capabilities that NestGate provides
         match request.category {
-            CapabilityCategory::Storage => self.handle_storage_capability(request).await,
+            CapabilityCategory::Storage => self.handle_storage_capability(request),
             _ => Err(crate::NestGateError::validation_error(&format!(
                 "Local capability not implemented: {:?}",
                 request.category
@@ -549,10 +561,7 @@ impl CapabilityRouter {
     }
 
     /// Handle storage capabilities (NestGate's domain)
-    async fn handle_storage_capability(
-        &self,
-        request: CapabilityRequest,
-    ) -> Result<CapabilityResponse> {
+    fn handle_storage_capability(&self, request: CapabilityRequest) -> Result<CapabilityResponse> {
         let mut response_data = serde_json::Map::new();
 
         match request.operation.as_str() {
@@ -588,7 +597,7 @@ impl CapabilityRouter {
     }
 
     /// Send universal capability request (works with any primal)
-    async fn send_universal_request(
+    fn send_universal_request(
         &self,
         _endpoint: &str,
         _capability_endpoint: &str,
@@ -658,6 +667,7 @@ impl NestGateSelfKnowledge {
     }
 
     /// Check if we can handle a capability locally
+    #[must_use]
     pub fn can_handle_capability(&self, category: &CapabilityCategory, operation: &str) -> bool {
         self.our_capabilities
             .iter()
@@ -665,6 +675,7 @@ impl NestGateSelfKnowledge {
     }
 
     /// Get our advertised capabilities (for discovery by other primals)
+    #[must_use]
     pub fn get_advertised_capabilities(&self) -> &[ServiceCapability] {
         &self.our_capabilities
     }

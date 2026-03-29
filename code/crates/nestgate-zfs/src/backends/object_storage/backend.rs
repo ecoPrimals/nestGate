@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **BACKEND IMPLEMENTATION**
 //!
 //! Main `ObjectStorageBackend` struct with capability discovery and initialization.
@@ -42,19 +47,19 @@ impl ObjectStorageBackend {
     /// Configuration discovery order:
     /// 1. Capability discovery (preferred) - zero hardcoding
     /// 2. Environment variables (fallback) - for testing/standalone
-    pub async fn new() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         // Try capability discovery first
-        if let Ok(config) = Self::discover_object_storage_capability().await {
+        if let Ok(config) = Self::discover_object_storage_capability() {
             info!(
                 "✅ Object storage initialized via capability discovery: service={}",
                 config.service_id
             );
-            return Self::from_discovered_capability(config).await;
+            return Self::from_discovered_capability(config);
         }
 
         // Fallback to environment configuration
         info!("ℹ️  Capability discovery unavailable, using environment configuration");
-        Self::from_environment().await
+        Self::from_environment()
     }
 
     /// Discover object storage via capability system
@@ -74,7 +79,7 @@ impl ObjectStorageBackend {
     /// 4. Return first available configuration
     ///
     /// **No Hardcoding** - discovers endpoints, credentials, regions dynamically.
-    async fn discover_object_storage_capability() -> Result<DiscoveredStorageConfig> {
+    fn discover_object_storage_capability() -> Result<DiscoveredStorageConfig> {
         debug!("🔍 Discovering object storage capabilities...");
 
         // Step 1: Try environment-based discovery (most explicit)
@@ -116,7 +121,7 @@ impl ObjectStorageBackend {
     }
 
     /// Create backend from discovered capability
-    async fn from_discovered_capability(config: DiscoveredStorageConfig) -> Result<Self> {
+    fn from_discovered_capability(config: DiscoveredStorageConfig) -> Result<Self> {
         info!(
             "🪣 Initializing object storage from capability: endpoint={}, region={}",
             config.endpoint, config.region
@@ -141,7 +146,7 @@ impl ObjectStorageBackend {
     ///
     /// **FALLBACK MODE**: Used when capability discovery unavailable.
     /// Still maintains sovereignty by accepting ANY S3-compatible endpoint.
-    pub async fn from_environment() -> Result<Self> {
+    pub fn from_environment() -> Result<Self> {
         let endpoint = std::env::var("OBJECT_STORAGE_ENDPOINT").map_err(|_| {
             config_error!(
                 "OBJECT_STORAGE_ENDPOINT required (e.g., https://s3.amazonaws.com or https://play.min.io)",

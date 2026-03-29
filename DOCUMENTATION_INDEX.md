@@ -50,8 +50,8 @@ Git history retains the full record of all files that were in this tree.
 ## Project Structure
 
 ```
-nestGate/
-├── code/crates/                    # Library crates (22+; see workspace Cargo.toml)
+nestgate/
+├── code/crates/                    # 25 workspace members (see Cargo.toml)
 │   ├── nestgate-core/              # Core functionality
 │   │   ├── src/rpc/                # JSON-RPC 2.0 + Isomorphic IPC
 │   │   ├── src/crypto/             # AES-256-GCM encryption

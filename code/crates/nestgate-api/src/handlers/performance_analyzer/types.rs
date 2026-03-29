@@ -339,7 +339,6 @@ pub struct PerformanceAnalyzerState {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Performanceanalysisconfigcanonical
 pub type PerformanceAnalysisConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

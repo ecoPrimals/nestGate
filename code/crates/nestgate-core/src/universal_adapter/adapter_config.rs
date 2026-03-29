@@ -69,6 +69,7 @@ impl AdapterDiscoveryConfig {
     ///
     /// ✅ MIGRATED: Now uses centralized runtime configuration
     /// Typically used for testing or when building configuration programmatically.
+    #[must_use]
     pub fn new() -> Self {
         use crate::config::runtime::get_config;
         let config = get_config();
@@ -97,6 +98,7 @@ impl AdapterDiscoveryConfig {
     /// - `UNIVERSAL_ADAPTER_ENDPOINT`: Adapter endpoint override
     /// - `NESTGATE_HOST`: Host for fallback endpoints (default: "localhost")
     /// - `NESTGATE_PORT`: Port for fallback endpoints (default: "8080")
+    #[must_use]
     pub fn from_env() -> Self {
         let mut config = Self::new();
 
@@ -152,6 +154,7 @@ impl AdapterDiscoveryConfig {
     }
 
     /// Get a discovery endpoint for a specific capability category
+    #[must_use]
     pub fn get_discovery_endpoint(&self, category: &str) -> Option<&str> {
         self.discovery_endpoints.get(category).map(|s| s.as_str())
     }
@@ -162,16 +165,19 @@ impl AdapterDiscoveryConfig {
     }
 
     /// Get the adapter endpoint override
+    #[must_use]
     pub fn get_adapter_endpoint(&self) -> Option<&str> {
         self.adapter_endpoint.as_deref()
     }
 
     /// Get the default adapter endpoint constructed from host and port
+    #[must_use]
     pub fn get_default_adapter_endpoint(&self) -> String {
         format!("http://{}:{}/adapter", self.host, self.port)
     }
 
     /// Get the adapter endpoint (override or default)
+    #[must_use]
     pub fn get_effective_adapter_endpoint(&self) -> String {
         self.adapter_endpoint
             .clone()
@@ -184,6 +190,7 @@ impl AdapterDiscoveryConfig {
     }
 
     /// Get host
+    #[must_use]
     pub fn get_host(&self) -> &str {
         &self.host
     }
@@ -194,6 +201,7 @@ impl AdapterDiscoveryConfig {
     }
 
     /// Get port
+    #[must_use]
     pub fn get_port(&self) -> &str {
         &self.port
     }
@@ -207,12 +215,14 @@ impl AdapterDiscoveryConfig {
     }
 
     /// Get metadata for a specific category
+    #[must_use]
     pub fn get_metadata(&self, category: &str) -> Option<&HashMap<String, String>> {
         self.metadata.get(category)
     }
 
     /// Get all configured discovery endpoints
-    pub fn get_all_discovery_endpoints(&self) -> &HashMap<String, String> {
+    #[must_use]
+    pub const fn get_all_discovery_endpoints(&self) -> &HashMap<String, String> {
         &self.discovery_endpoints
     }
 }
@@ -230,23 +240,26 @@ mod tests {
 
     #[test]
     fn test_config_new() {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         let config = AdapterDiscoveryConfig::new();
         // Runtime config uses 127.0.0.1 (IpAddr format) instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
-        assert_eq!(config.get_port(), &ports::HTTP_DEFAULT.to_string());
+        assert_eq!(config.get_port(), &runtime_fallback_ports::HTTP.to_string());
         assert!(config.get_adapter_endpoint().is_none());
         assert!(config.get_all_discovery_endpoints().is_empty());
     }
 
     #[test]
     fn test_config_set_get_discovery_endpoint() {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         let mut config = AdapterDiscoveryConfig::new();
 
-        let orch_endpoint = format!("http://orch:{}", ports::HTTP_DEFAULT);
+        let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::HTTP);
         config.set_discovery_endpoint("orchestration", &orch_endpoint);
-        config.set_discovery_endpoint("compute", format!("http://compute:{}", ports::PROMETHEUS));
+        config.set_discovery_endpoint(
+            "compute",
+            format!("http://compute:{}", runtime_fallback_ports::PROMETHEUS),
+        );
 
         assert_eq!(
             config.get_discovery_endpoint("orchestration"),
@@ -254,24 +267,24 @@ mod tests {
         );
         assert_eq!(
             config.get_discovery_endpoint("compute"),
-            Some(format!("http://compute:{}", ports::PROMETHEUS).as_str())
+            Some(format!("http://compute:{}", runtime_fallback_ports::PROMETHEUS).as_str())
         );
         assert_eq!(config.get_discovery_endpoint("security"), None);
     }
 
     #[test]
     fn test_config_adapter_endpoint() {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         let mut config = AdapterDiscoveryConfig::new();
 
         // Runtime config uses 127.0.0.1 instead of "localhost"
-        let default_endpoint = format!("http://127.0.0.1:{}/adapter", ports::HTTP_DEFAULT);
+        let default_endpoint = format!("http://127.0.0.1:{}/adapter", runtime_fallback_ports::HTTP);
         // Default endpoint
         assert_eq!(config.get_default_adapter_endpoint(), default_endpoint);
         assert_eq!(config.get_effective_adapter_endpoint(), default_endpoint);
 
         // Set override
-        let custom_endpoint = format!("http://custom:{}/adapter", ports::API_DEFAULT);
+        let custom_endpoint = format!("http://custom:{}/adapter", runtime_fallback_ports::API);
         config.set_adapter_endpoint(&custom_endpoint);
         assert_eq!(
             config.get_adapter_endpoint(),
@@ -322,10 +335,10 @@ mod tests {
         // This test runs without setting env vars, should get defaults
         let config = AdapterDiscoveryConfig::from_env();
 
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         // Runtime config uses 127.0.0.1 instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
-        assert_eq!(config.get_port(), &ports::HTTP_DEFAULT.to_string());
+        assert_eq!(config.get_port(), &runtime_fallback_ports::HTTP.to_string());
         // discovery_endpoints might be empty if no env vars are set
     }
 
@@ -341,12 +354,15 @@ mod tests {
 
     #[test]
     fn test_config_all_discovery_endpoints() {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         let mut config = AdapterDiscoveryConfig::new();
 
-        let orch_endpoint = format!("http://orch:{}", ports::HTTP_DEFAULT);
+        let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::HTTP);
         config.set_discovery_endpoint("orchestration", &orch_endpoint);
-        config.set_discovery_endpoint("compute", format!("http://compute:{}", ports::PROMETHEUS));
+        config.set_discovery_endpoint(
+            "compute",
+            format!("http://compute:{}", runtime_fallback_ports::PROMETHEUS),
+        );
         let sec_endpoint = "http://sec:7070".to_string();
         config.set_discovery_endpoint("security", &sec_endpoint);
 
@@ -355,7 +371,10 @@ mod tests {
         assert_eq!(endpoints.get("orchestration"), Some(&orch_endpoint));
         assert_eq!(
             endpoints.get("compute"),
-            Some(&format!("http://compute:{}", ports::PROMETHEUS))
+            Some(&format!(
+                "http://compute:{}",
+                runtime_fallback_ports::PROMETHEUS
+            ))
         );
         assert_eq!(
             endpoints.get("security"),

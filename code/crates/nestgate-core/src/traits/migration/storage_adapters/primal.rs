@@ -91,6 +91,10 @@ where
 
 // For StoragePrimalAdapter, we implement CanonicalStorage with String keys and Vec<u8> values
 // since the primal interface is more generic
+#[expect(
+    deprecated,
+    reason = "Migration adapter targets hierarchy CanonicalStorage until full parity with traits::canonical::CanonicalStorage"
+)]
 impl<T> CanonicalStorage for StoragePrimalAdapter<T>
 where
     T: StoragePrimalProvider + Send + Sync + 'static,

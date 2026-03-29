@@ -13,15 +13,15 @@
 //! **For new code**: Use `EnvironmentConfig::from_env()` directly
 //! **For existing code**: Continue using `env_helpers` (will show deprecation warnings)
 
-use crate::constants::hardcoding::{addresses, ports};
+use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
 use std::time::Duration;
 
 /// **NETWORK DEFAULTS**
 pub mod network {
-    use super::{addresses, ports};
+    use super::{addresses, runtime_fallback_ports};
 
     /// Default API port - can be overridden with `NESTGATE_API_PORT`
-    pub const DEFAULT_API_PORT: u16 = ports::HTTP_DEFAULT;
+    pub const DEFAULT_API_PORT: u16 = runtime_fallback_ports::HTTP;
 
     /// Default bind address - can be overridden with `NESTGATE_BIND_ADDRESS`  
     pub const DEFAULT_BIND_ADDRESS: &str = addresses::BIND_ALL_IPV4;
@@ -30,27 +30,27 @@ pub mod network {
     pub const DEFAULT_HOSTNAME: &str = addresses::LOCALHOST_NAME;
 
     /// Default WebSocket port - can be overridden with `NESTGATE_WS_PORT`
-    pub const DEFAULT_WS_PORT: u16 = ports::WEBSOCKET_DEFAULT;
+    pub const DEFAULT_WS_PORT: u16 = runtime_fallback_ports::WEBSOCKET;
 
     /// Default health check port - can be overridden with `NESTGATE_HEALTH_PORT`
-    pub const DEFAULT_HEALTH_PORT: u16 = ports::HEALTH_CHECK;
+    pub const DEFAULT_HEALTH_PORT: u16 = runtime_fallback_ports::HEALTH;
 }
 
 /// **DATABASE DEFAULTS**
 pub mod database {
-    use super::{addresses, ports};
+    use super::{addresses, runtime_fallback_ports};
 
     /// Default `PostgreSQL` port - can be overridden with `NESTGATE_DB_PORT`
-    pub const DEFAULT_POSTGRES_PORT: u16 = ports::POSTGRES_DEFAULT;
+    pub const DEFAULT_POSTGRES_PORT: u16 = runtime_fallback_ports::POSTGRES;
 
     /// Default Redis port - can be overridden with `NESTGATE_REDIS_PORT`
-    pub const DEFAULT_REDIS_PORT: u16 = ports::REDIS_DEFAULT;
+    pub const DEFAULT_REDIS_PORT: u16 = runtime_fallback_ports::REDIS;
 
     /// Default `MongoDB` port - can be overridden with `NESTGATE_MONGODB_PORT`
-    pub const DEFAULT_MONGODB_PORT: u16 = ports::MONGODB_DEFAULT;
+    pub const DEFAULT_MONGODB_PORT: u16 = runtime_fallback_ports::MONGODB;
 
     /// Default `MySQL` port - can be overridden with `NESTGATE_MYSQL_PORT`
-    pub const DEFAULT_MYSQL_PORT: u16 = ports::MYSQL_DEFAULT;
+    pub const DEFAULT_MYSQL_PORT: u16 = runtime_fallback_ports::MYSQL;
 
     /// Default database host - can be overridden with `NESTGATE_DB_HOST`
     pub const DEFAULT_DB_HOST: &str = addresses::LOCALHOST_NAME;
@@ -58,13 +58,13 @@ pub mod database {
 
 /// **MONITORING DEFAULTS**
 pub mod monitoring {
-    use super::ports;
+    use super::runtime_fallback_ports;
 
     /// Default Prometheus port - can be overridden with `NESTGATE_METRICS_PORT`
-    pub const DEFAULT_METRICS_PORT: u16 = ports::METRICS_DEFAULT;
+    pub const DEFAULT_METRICS_PORT: u16 = runtime_fallback_ports::METRICS;
 
     /// Default Grafana port - can be overridden with `NESTGATE_GRAFANA_PORT`
-    pub const DEFAULT_GRAFANA_PORT: u16 = ports::API_DEFAULT;
+    pub const DEFAULT_GRAFANA_PORT: u16 = runtime_fallback_ports::API;
 }
 
 /// **TIMEOUT DEFAULTS**
@@ -240,30 +240,38 @@ pub mod security {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::environment::EnvironmentConfig;
+    use crate::constants::hardcoding::runtime_fallback_ports;
     use std::env;
-    use std::sync::Mutex;
-
-    // Mutex to serialize env var tests (prevent parallel test interference)
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
+    use temp_env::{with_var, with_var_unset};
 
     // Existing tests
     #[test]
     fn test_default_constants() {
-        assert_eq!(network::DEFAULT_API_PORT, ports::HTTP_DEFAULT);
+        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::HTTP);
         assert_eq!(network::DEFAULT_BIND_ADDRESS, addresses::BIND_ALL_IPV4);
         assert_eq!(database::DEFAULT_POSTGRES_PORT, 5432);
     }
 
+    /// `env_helpers::api_port` uses a cached global config; this test uses fresh
+    /// [`EnvironmentConfig::from_env`] reads with scoped env (`temp-env` save/restore).
+    /// Raw `set_var`/`remove_var` elsewhere in tests go through `crate::env_process`
+    /// (`nestgate-platform` → `nestgate-env-process-shim`).
     #[test]
-    #[ignore] // Disabled: Environment variable pollution in parallel test execution
+    #[serial_test::serial]
     fn test_environment_override() {
-        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_API_PORT", "9999");
-        assert_eq!(env_helpers::api_port(), 9999);
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-        assert_eq!(env_helpers::api_port(), ports::HTTP_DEFAULT);
+        with_var_unset("NESTGATE_API_PORT", || {
+            with_var_unset("NESTGATE_HTTP_PORT", || {
+                with_var_unset("NESTGATE_PORT", || {
+                    with_var("NESTGATE_API_PORT", Some("9999"), || {
+                        let cfg = EnvironmentConfig::from_env().expect("config");
+                        assert_eq!(cfg.network.port.get(), 9999);
+                    });
+                    let cfg = EnvironmentConfig::from_env().expect("config");
+                    assert_eq!(cfg.network.port.get(), runtime_fallback_ports::HTTP);
+                });
+            });
+        });
     }
 
     #[test]
@@ -282,11 +290,11 @@ mod tests {
 
     #[test]
     fn test_network_defaults() {
-        assert_eq!(network::DEFAULT_API_PORT, ports::HTTP_DEFAULT);
+        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::HTTP);
         assert_eq!(network::DEFAULT_BIND_ADDRESS, addresses::BIND_ALL_IPV4);
         assert_eq!(network::DEFAULT_HOSTNAME, addresses::LOCALHOST_NAME);
-        assert_eq!(network::DEFAULT_WS_PORT, ports::WEBSOCKET_DEFAULT);
-        assert_eq!(network::DEFAULT_HEALTH_PORT, ports::HEALTH_CHECK)
+        assert_eq!(network::DEFAULT_WS_PORT, runtime_fallback_ports::WEBSOCKET);
+        assert_eq!(network::DEFAULT_HEALTH_PORT, runtime_fallback_ports::HEALTH);
     }
 
     #[test]
@@ -325,29 +333,38 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Disabled: Conflicts with other tests setting NESTGATE_API_PORT
+    #[serial_test::serial]
     fn test_env_helpers_api_port() {
-        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        // Clear any existing env var
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-
-        // Test default
-        assert_eq!(env_helpers::api_port(), 8080);
-
-        // Test override
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_API_PORT", "3000");
-        assert_eq!(env_helpers::api_port(), 3000);
-
-        // Test invalid value falls back to default
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_API_PORT", "invalid");
-        assert_eq!(env_helpers::api_port(), 8080);
-
-        // Cleanup
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
+        with_var_unset("NESTGATE_API_PORT", || {
+            with_var_unset("NESTGATE_HTTP_PORT", || {
+                with_var_unset("NESTGATE_PORT", || {
+                    assert_eq!(
+                        EnvironmentConfig::from_env()
+                            .expect("config")
+                            .network
+                            .port
+                            .get(),
+                        8080
+                    );
+                    with_var("NESTGATE_API_PORT", Some("3000"), || {
+                        assert_eq!(
+                            EnvironmentConfig::from_env()
+                                .expect("config")
+                                .network
+                                .port
+                                .get(),
+                            3000
+                        );
+                    });
+                    with_var("NESTGATE_API_PORT", Some("invalid"), || {
+                        assert!(
+                            EnvironmentConfig::from_env().is_err(),
+                            "invalid NESTGATE_API_PORT should fail to parse"
+                        );
+                    });
+                });
+            });
+        });
     }
 
     #[test]
@@ -543,25 +560,37 @@ mod tests {
     #[test]
     fn test_database_port_references() {
         // Verify database ports use centralized constants
-        assert_eq!(database::DEFAULT_POSTGRES_PORT, ports::POSTGRES_DEFAULT);
-        assert_eq!(database::DEFAULT_REDIS_PORT, ports::REDIS_DEFAULT);
-        assert_eq!(database::DEFAULT_MONGODB_PORT, ports::MONGODB_DEFAULT);
-        assert_eq!(database::DEFAULT_MYSQL_PORT, ports::MYSQL_DEFAULT);
+        assert_eq!(
+            database::DEFAULT_POSTGRES_PORT,
+            runtime_fallback_ports::POSTGRES
+        );
+        assert_eq!(database::DEFAULT_REDIS_PORT, runtime_fallback_ports::REDIS);
+        assert_eq!(
+            database::DEFAULT_MONGODB_PORT,
+            runtime_fallback_ports::MONGODB
+        );
+        assert_eq!(database::DEFAULT_MYSQL_PORT, runtime_fallback_ports::MYSQL);
     }
 
     #[test]
     fn test_monitoring_port_references() {
         // Verify monitoring ports use centralized constants
-        assert_eq!(monitoring::DEFAULT_METRICS_PORT, ports::METRICS_DEFAULT);
-        assert_eq!(monitoring::DEFAULT_GRAFANA_PORT, ports::API_DEFAULT);
+        assert_eq!(
+            monitoring::DEFAULT_METRICS_PORT,
+            runtime_fallback_ports::METRICS
+        );
+        assert_eq!(
+            monitoring::DEFAULT_GRAFANA_PORT,
+            runtime_fallback_ports::API
+        );
     }
 
     #[test]
     fn test_network_port_references() {
         // Verify network ports use centralized constants
-        assert_eq!(network::DEFAULT_API_PORT, ports::HTTP_DEFAULT);
-        assert_eq!(network::DEFAULT_WS_PORT, ports::WEBSOCKET_DEFAULT);
-        assert_eq!(network::DEFAULT_HEALTH_PORT, ports::HEALTH_CHECK);
+        assert_eq!(network::DEFAULT_API_PORT, runtime_fallback_ports::HTTP);
+        assert_eq!(network::DEFAULT_WS_PORT, runtime_fallback_ports::WEBSOCKET);
+        assert_eq!(network::DEFAULT_HEALTH_PORT, runtime_fallback_ports::HEALTH);
     }
 
     #[test]

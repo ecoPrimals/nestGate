@@ -292,6 +292,40 @@ pub fn get_rpc_server_addr() -> String {
     format!("{host}:{port}")
 }
 
+/// Default **outbound** tarpc URL when capability discovery and `NESTGATE_<CAP>_ENDPOINT` are unset.
+///
+/// Use this for tarpc **clients** connecting to a peer. Bind addresses for servers remain
+/// [`get_rpc_server_addr`] (often `0.0.0.0`).
+///
+/// **Environment variables** (precedence):
+/// 1. `NESTGATE_RPC_ENDPOINT` — full URL or `host:port` (optional `tarpc://` prefix added when missing)
+/// 2. `NESTGATE_RPC_CONNECT_HOST` (default `127.0.0.1`) and `NESTGATE_RPC_PORT` (default `8091`)
+#[must_use]
+pub fn default_tarpc_client_endpoint() -> String {
+    if let Ok(raw) = std::env::var("NESTGATE_RPC_ENDPOINT") {
+        let s = raw.trim();
+        if !s.is_empty() {
+            if s.starts_with("tarpc://") {
+                return s.to_string();
+            }
+            if let Some(rest) = s.strip_prefix("http://") {
+                return format!("tarpc://{rest}");
+            }
+            if let Some(rest) = s.strip_prefix("https://") {
+                return format!("tarpc://{rest}");
+            }
+            return format!("tarpc://{s}");
+        }
+    }
+    let host =
+        std::env::var("NESTGATE_RPC_CONNECT_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let port = std::env::var("NESTGATE_RPC_PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(8091);
+    format!("tarpc://{host}:{port}")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -304,6 +338,16 @@ mod tests {
         assert_eq!(REDIS_DEFAULT, 6379);
         assert_eq!(MONGODB_DEFAULT, 27017);
         assert_eq!(PRIMAL_DISCOVERY_DEFAULT, 5000);
+    }
+
+    #[test]
+    fn default_tarpc_client_endpoint_format() {
+        let ep = default_tarpc_client_endpoint();
+        assert!(ep.starts_with("tarpc://"));
+        let hostport = ep.strip_prefix("tarpc://").expect("tarpc URL");
+        assert!(hostport.contains(':'));
+        let port_str = hostport.rsplit_once(':').expect("host:port").1;
+        assert!(port_str.parse::<u16>().is_ok());
     }
 
     #[test]

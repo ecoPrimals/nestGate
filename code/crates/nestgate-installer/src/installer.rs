@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // **Complete installation and deployment system for NestGate**
 //
@@ -378,7 +382,7 @@ impl NestGateInstaller {
         }
 
         // Check system requirements
-        let requirements_ok = self.check_system_requirements_silent().await;
+        let requirements_ok = self.check_system_requirements_silent();
         if requirements_ok {
             println!("{} System requirements met", green.apply_to("✓"));
         } else {
@@ -387,7 +391,7 @@ impl NestGateInstaller {
         }
 
         // Check ZFS availability
-        if self.check_zfs_availability().await {
+        if self.check_zfs_availability() {
             println!("{} ZFS available", green.apply_to("✓"));
         } else {
             println!("{} ZFS not available", yellow.apply_to("⚠"));
@@ -410,7 +414,7 @@ impl NestGateInstaller {
     }
 
     /// Check System Requirements
-    async fn check_system_requirements(&self) -> Result<()> {
+    fn check_system_requirements(&self) -> Result<()> {
         // Check disk space (at least 100MB)
         // Check memory (at least 512MB)
         // Check OS compatibility
@@ -420,12 +424,12 @@ impl NestGateInstaller {
     }
 
     /// Check System Requirements Silent
-    async fn check_system_requirements_silent(&self) -> bool {
-        self.check_system_requirements().await.is_ok()
+    fn check_system_requirements_silent(&self) -> bool {
+        self.check_system_requirements().is_ok()
     }
 
     /// Check Zfs Availability
-    async fn check_zfs_availability(&self) -> bool {
+    fn check_zfs_availability(&self) -> bool {
         // Check if ZFS is available on the system
         std::process::Command::new("zfs")
             .arg("version")

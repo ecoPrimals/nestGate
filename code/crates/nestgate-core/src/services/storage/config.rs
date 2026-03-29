@@ -68,7 +68,7 @@ impl Default for CachePolicies {
 }
 
 /// Cache eviction policies
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Evictionpolicy
 pub enum EvictionPolicy {
     /// Least Recently Used eviction policy
@@ -80,27 +80,9 @@ pub enum EvictionPolicy {
     /// Random eviction policy
     Random,
 }
-/// Storage service configuration
+/// Runtime configuration for [`crate::services::storage::StorageManagerService`]
+/// (ZFS paths, discovery intervals, quotas, caching).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::config::StorageServiceConfig;
-///
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::StorageServiceConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for StorageService
 pub struct StorageServiceConfig {
     /// Base path for storage (filesystem backend)
     pub base_path: String,
@@ -315,44 +297,35 @@ impl StorageServiceConfig {
 
     /// Get discovery interval as Duration
     #[must_use]
-    pub fn discovery_interval_duration(&self) -> Duration {
+    pub const fn discovery_interval_duration(&self) -> Duration {
         Duration::from_secs(self.discovery_interval)
     }
 
     /// Get quota check interval as Duration
     #[must_use]
-    pub fn quota_check_interval_duration(&self) -> Duration {
+    pub const fn quota_check_interval_duration(&self) -> Duration {
         Duration::from_secs(self.quota_check_interval)
     }
 
     /// Get monitoring interval as Duration
     #[must_use]
-    pub fn monitoring_interval_duration(&self) -> Duration {
+    pub const fn monitoring_interval_duration(&self) -> Duration {
         Duration::from_secs(self.monitoring_interval)
     }
 
     /// Get operation timeout as Duration
     #[must_use]
-    pub fn operation_timeout_duration(&self) -> Duration {
+    pub const fn operation_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.operation_timeout)
     }
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
+/// Domain-level consolidated storage settings (`nestgate-config` canonical primary).
 ///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Storageserviceconfigcanonical
+/// [`StorageServiceConfig`] remains the focused runtime type for the core storage service;
+/// use this alias when integrating with full domain configuration.
 pub type StorageServiceConfigCanonical =
-    crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageServiceConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+    crate::config::canonical_primary::domains::storage_canonical::CanonicalStorageConfig;
 
 #[cfg(test)]
 mod tests {

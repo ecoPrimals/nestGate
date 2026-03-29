@@ -228,9 +228,9 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
             let port = url
                 .port()
                 .or(match endpoint.protocol {
-                    crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
+                    crate::service_discovery::types::CommunicationProtocol::Http
+                    | crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
                     crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
-                    crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
                     _ => None,
                 })
                 .ok_or_else(|| {
@@ -248,16 +248,15 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
                 host,
                 port,
                 protocol: match endpoint.protocol {
-                    crate::service_discovery::types::CommunicationProtocol::Http => {
-                        Arc::from("http")
-                    }
                     crate::service_discovery::types::CommunicationProtocol::Grpc => {
                         Arc::from("grpc")
                     }
                     crate::service_discovery::types::CommunicationProtocol::WebSocket => {
                         Arc::from("ws")
                     }
-                    _ => Arc::from("http"),
+                    crate::service_discovery::types::CommunicationProtocol::Http | _ => {
+                        Arc::from("http")
+                    }
                 },
                 capabilities: vec![capability.clone()],
                 is_healthy: true, // InMemoryRegistry doesn't track health separately
@@ -289,9 +288,13 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
 
                             // Extract port with protocol-based defaults
                             let port = url.port().or(match endpoint.protocol {
-                                crate::service_discovery::types::CommunicationProtocol::Http => Some(80),
-                                crate::service_discovery::types::CommunicationProtocol::Grpc => Some(9090),
-                                crate::service_discovery::types::CommunicationProtocol::WebSocket => Some(80),
+                                crate::service_discovery::types::CommunicationProtocol::Http
+                                | crate::service_discovery::types::CommunicationProtocol::WebSocket => {
+                                    Some(80)
+                                }
+                                crate::service_discovery::types::CommunicationProtocol::Grpc => {
+                                    Some(9090)
+                                }
                                 _ => None,
                             })?; // Skip service if no port and no default
 
@@ -300,10 +303,14 @@ impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
                                 host,
                                 port,
                                 protocol: match endpoint.protocol {
-                                    crate::service_discovery::types::CommunicationProtocol::Http => Arc::from("http"),
-                                    crate::service_discovery::types::CommunicationProtocol::Grpc => Arc::from("grpc"),
-                                    crate::service_discovery::types::CommunicationProtocol::WebSocket => Arc::from("ws"),
-                                    _ => Arc::from("http"),
+                                    crate::service_discovery::types::CommunicationProtocol::Grpc => {
+                                        Arc::from("grpc")
+                                    }
+                                    crate::service_discovery::types::CommunicationProtocol::WebSocket => {
+                                        Arc::from("ws")
+                                    }
+                                    crate::service_discovery::types::CommunicationProtocol::Http
+                                    | _ => Arc::from("http"),
                                 },
                                 capabilities: vec![capability.clone()],
                                 is_healthy: true,
@@ -447,9 +454,8 @@ impl CapabilityResolver for EnvironmentResolver {
                     // Use default port for protocol if not specified
                     match url.scheme() {
                         "https" => Some(443),
-                        "http" => Some(80),
+                        "http" | "ws" | "wss" => Some(80),
                         "grpc" => Some(9090),
-                        "ws" | "wss" => Some(80),
                         _ => None,
                     }
                 }).ok_or_else(|| NestGateError::configuration_error(

@@ -332,7 +332,7 @@ fn test_request_clone() {
         data: serde_json::json!({"test": "data"}),
         request_id: Arc::new("clone-test".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: Arc::new(HashMap::new()),
+        metadata: Arc::new(HashMap::new()),
     };
 
     let cloned = request.clone();
@@ -346,7 +346,7 @@ fn test_response_clone() {
         request_id: Arc::new("resp-clone".to_string()),
         status: ApiStatus::Success,
         processing_time_ms: 10,
-        _metadata: HashMap::new(),
+        metadata: HashMap::new(),
     };
 
     let cloned = response.clone();

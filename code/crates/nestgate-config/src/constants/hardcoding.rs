@@ -44,6 +44,33 @@
 //! | `NESTGATE_WEBSOCKET_PORT`, `NESTGATE_RPC_PORT`, `NESTGATE_MQ_PORT`, `NESTGATE_ORCHESTRATION_PORT` | Service ports (see getters below) |
 //! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`crate::constants::hardcoding::discovery::get_timeout_ms`]) |
 //!
+//! **Deprecated [`ports`] constants → env overrides (document every fallback; wire via config/discovery in production):**
+//!
+//! | Constant | `NESTGATE_*` override |
+//! |----------|------------------------|
+//! | `HTTP_DEFAULT` | `NESTGATE_HTTP_PORT` (also influences orchestrator fallback with `NESTGATE_ORCHESTRATOR_ADDR` / `NESTGATE_ORCHESTRATOR_URL`) |
+//! | `HTTPS_DEFAULT` | `NESTGATE_HTTPS_PORT` |
+//! | `API_DEFAULT`, `API_ALT` | `NESTGATE_API_PORT` (see [`RuntimeDefaults::api_port`]); alt: `NESTGATE_API_ALT_PORT` |
+//! | `METRICS_DEFAULT`, `PROMETHEUS`, `METRICS_ALT`, `METRICS_PROMETHEUS` | `NESTGATE_METRICS_PORT` |
+//! | `HEALTH_CHECK`, `HEALTH_DEFAULT`, `SECURITY_SERVICE_DEFAULT` | `NESTGATE_HEALTH_PORT` |
+//! | `GRPC_DEFAULT` | `NESTGATE_RPC_PORT` (see [`RuntimeDefaults::grpc_port`]) |
+//! | `WEBSOCKET_DEFAULT`, `NETWORKING_SERVICE_DEFAULT` | `NESTGATE_WEBSOCKET_PORT` |
+//! | `ADMIN_DEFAULT` | `NESTGATE_ADMIN_PORT` |
+//! | `STORAGE_DEFAULT` | `NESTGATE_STORAGE_PORT` |
+//! | `ORCHESTRATION_DEFAULT` | `NESTGATE_ORCHESTRATION_PORT` |
+//! | `STORAGE_DISCOVERY_DEFAULT` | `NESTGATE_STORAGE_DISCOVERY_PORT` |
+//! | `COMPUTE_DEFAULT` | `NESTGATE_COMPUTE_PORT` |
+//! | `EXTENDED_SERVICES` | `NESTGATE_EXTENDED_SERVICES_PORT` |
+//! | `DISCOVERY_SERVICE` | `NESTGATE_DISCOVERY_SERVICE_PORT` |
+//! | `ORCHESTRATOR_DEFAULT` | `NESTGATE_ORCHESTRATOR_PORT` |
+//! | `STREAMING_RPC_DEFAULT` | `NESTGATE_STREAMING_RPC_PORT` |
+//! | `POSTGRES_DEFAULT` | `NESTGATE_POSTGRES_PORT` |
+//! | `REDIS_DEFAULT` | `NESTGATE_REDIS_PORT` |
+//! | `MONGODB_DEFAULT` | `NESTGATE_MONGODB_PORT` |
+//! | `MYSQL_DEFAULT` | `NESTGATE_MYSQL_PORT` |
+//! | `discovery::SCAN_PORT_START` / `SCAN_PORT_END` | `NESTGATE_DISCOVERY_SCAN_PORT_START` / `NESTGATE_DISCOVERY_SCAN_PORT_END` |
+//! | `timeouts::*`, `limits::*` | `NESTGATE_CONNECT_TIMEOUT_MS`, `NESTGATE_REQUEST_TIMEOUT_MS`, `NESTGATE_LONG_OPERATION_TIMEOUT_MS`, `NESTGATE_BUFFER_SIZE`, `NESTGATE_MAX_CONNECTIONS` (when wired) |
+//!
 //! Timeouts and limits in [`crate::constants::hardcoding::timeouts`] and [`crate::constants::hardcoding::limits`] remain compile-time defaults; override via
 //! capability config or future env wiring where those domains expose runtime tuning.
 
@@ -358,6 +385,45 @@ pub mod ports {
         note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
     )]
     pub const STREAMING_RPC_DEFAULT: u16 = 8001;
+}
+
+// ============================================================================
+// Non-deprecated compile-time fallbacks (same numerics as legacy [`ports`])
+// ============================================================================
+
+/// Compile-time port fallbacks when environment variables are unset.
+///
+/// These mirror the numeric defaults used by [`RuntimeDefaults`] and the deprecated [`ports`]
+/// module. **Prefer** [`RuntimeDefaults`], [`get_api_port`], [`get_metrics_port`], or capability
+/// discovery at runtime instead of importing this module for new code.
+pub mod runtime_fallback_ports {
+    pub const HTTP: u16 = 8080;
+    pub const HTTPS: u16 = 8443;
+    pub const API: u16 = 3000;
+    pub const API_ALT: u16 = 3001;
+    pub const METRICS: u16 = 9090;
+    pub const PROMETHEUS: u16 = 9090;
+    pub const HEALTH: u16 = 8081;
+    pub const GRPC: u16 = 50051;
+    pub const WEBSOCKET: u16 = 8082;
+    pub const ADMIN: u16 = 9000;
+    pub const STORAGE: u16 = 5000;
+    pub const ORCHESTRATION: u16 = 8083;
+    pub const STORAGE_DISCOVERY: u16 = 8084;
+    pub const COMPUTE: u16 = 8085;
+    pub const EXTENDED_SERVICES: u16 = 3002;
+    pub const DISCOVERY_SERVICE: u16 = 3010;
+    pub const METRICS_ALT: u16 = 9001;
+    pub const METRICS_PROMETHEUS: u16 = 9090;
+    pub const HEALTH_DEFAULT: u16 = 8081;
+    pub const ORCHESTRATOR: u16 = 8090;
+    pub const SECURITY_SERVICE: u16 = 8081;
+    pub const NETWORKING_SERVICE: u16 = 8082;
+    pub const POSTGRES: u16 = 5432;
+    pub const REDIS: u16 = 6379;
+    pub const MONGODB: u16 = 27017;
+    pub const MYSQL: u16 = 3306;
+    pub const STREAMING_RPC: u16 = 8001;
 }
 
 // ============================================================================

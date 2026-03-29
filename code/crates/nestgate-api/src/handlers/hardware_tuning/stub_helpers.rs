@@ -82,7 +82,7 @@ pub fn create_stub_tuning_result() -> TuningResult {
 }
 
 /// Create stub benchmark result
-#[allow(clippy::too_many_arguments)] // Stub function needs all parameters for flexibility
+#[expect(clippy::too_many_arguments, reason = "Stub function needs all parameters for flexibility")]
 pub fn create_stub_benchmark_result(
     benchmark_type: &str,
     score: f64,

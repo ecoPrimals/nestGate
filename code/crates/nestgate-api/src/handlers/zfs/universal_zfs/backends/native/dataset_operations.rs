@@ -9,6 +9,8 @@
 use std::collections::HashMap;
 // Removed unused tracing import
 
+use nestgate_zfs::numeric::f64_to_u64_saturating;
+
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, DatasetType, UniversalZfsError, UniversalZfsResult,
 };
@@ -202,16 +204,14 @@ pub(super) fn parse_size(size_str: &str) -> Option<u64> {
     };
 
     let number: f64 = number_part.parse().ok()?;
-    Some((number * multiplier as f64) as u64)
+    Some(f64_to_u64_saturating(number * multiplier as f64))
 }
 
 /// Helper function to parse dataset type from string (zero-copy optimized)
 pub(super) fn parse_dataset_type(type_str: &str) -> DatasetType {
     match type_str {
-        "filesystem" => DatasetType::Filesystem,
         "volume" => DatasetType::Volume,
-        "snapshot" => DatasetType::Snapshot,
-        "bookmark" => DatasetType::Snapshot, // Treat bookmarks as snapshots
-        _ => DatasetType::Filesystem,        // Default to filesystem
+        "snapshot" | "bookmark" => DatasetType::Snapshot, // Bookmarks treated as snapshots
+        "filesystem" | _ => DatasetType::Filesystem,
     }
 }

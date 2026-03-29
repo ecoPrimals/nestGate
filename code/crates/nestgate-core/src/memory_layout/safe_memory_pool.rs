@@ -159,6 +159,7 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
     }
 
     /// Get current pool utilization (0.0 to 1.0)
+    #[must_use]
     pub fn utilization(&self) -> f64 {
         let allocated = self.inner.stats.allocated.load(Ordering::Relaxed);
         let deallocated = self.inner.stats.deallocated.load(Ordering::Relaxed);
@@ -167,11 +168,13 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
     }
 
     /// Get pool statistics
+    #[must_use]
     pub fn stats(&self) -> &PoolStats {
         &self.inner.stats
     }
 
     /// Get available slots
+    #[must_use]
     pub fn available(&self) -> usize {
         self.inner.free_bitmap.load(Ordering::Relaxed).count_ones() as usize
     }
@@ -209,6 +212,7 @@ impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
     }
 
     /// Take ownership of value, consuming the handle
+    #[must_use]
     pub fn into_inner(self) -> T {
         let value = self.pool.slots[self.slot]
             .lock()

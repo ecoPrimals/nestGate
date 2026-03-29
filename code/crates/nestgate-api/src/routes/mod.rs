@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! API Routes Module
 //!
 //! Defines all HTTP routes and endpoints for the NestGate REST API.
@@ -160,8 +165,8 @@ impl AppState {
     }
 
     /// Initialize ZFS manager with graceful fallback
-    #[allow(dead_code)] // Method used for ZFS initialization in production
-    async fn try_init_zfs_manager(
+    #[expect(dead_code, reason = "ZFS init hook reserved for production wiring")]
+    fn try_init_zfs_manager(
         &self,
     ) -> Result<Option<ZfsManager>, Box<dyn std::error::Error + Send + Sync>> {
         // Check if ZFS is available first
@@ -549,6 +554,10 @@ async fn handle_websocket_connection(mut socket: axum::extract::ws::WebSocket, s
 /// Process WebSocket message and generate response
 ///
 /// Routes messages based on type and returns appropriate responses.
+#[expect(
+    clippy::unused_async,
+    reason = "cfg(test) callers await this helper; body is synchronous"
+)]
 async fn handle_websocket_message(msg: serde_json::Value, state: &AppState) -> String {
     let msg_type = msg
         .get("type")

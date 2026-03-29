@@ -31,6 +31,7 @@ pub type SharedCapabilityEndpointsConfig = Arc<CapabilityEndpointsConfig>;
 
 impl CapabilityEndpointsConfig {
     /// Creates a new `CapabilityEndpointsConfig` by loading values from environment variables.
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             orchestration_endpoint: env::var("ORCHESTRATION_DISCOVERY_ENDPOINT").ok(),
@@ -47,41 +48,49 @@ impl CapabilityEndpointsConfig {
     // Getter methods
 
     /// Orchestration Endpoint
+    #[must_use]
     pub fn orchestration_endpoint(&self) -> Option<&str> {
         self.orchestration_endpoint.as_deref()
     }
 
     /// Security Endpoint
+    #[must_use]
     pub fn security_endpoint(&self) -> Option<&str> {
         self.security_endpoint.as_deref()
     }
 
     /// Ai Endpoint
+    #[must_use]
     pub fn ai_endpoint(&self) -> Option<&str> {
         self.ai_endpoint.as_deref()
     }
 
     /// Compute Endpoint
+    #[must_use]
     pub fn compute_endpoint(&self) -> Option<&str> {
         self.compute_endpoint.as_deref()
     }
 
     /// Management Endpoint
+    #[must_use]
     pub fn management_endpoint(&self) -> Option<&str> {
         self.management_endpoint.as_deref()
     }
 
     /// Storage Endpoint
+    #[must_use]
     pub fn storage_endpoint(&self) -> Option<&str> {
         self.storage_endpoint.as_deref()
     }
 
     /// Networking Endpoint
+    #[must_use]
     pub fn networking_endpoint(&self) -> Option<&str> {
         self.networking_endpoint.as_deref()
     }
 
     /// Service Endpoint
+    #[must_use]
     pub fn service_endpoint(&self) -> Option<&str> {
         self.service_endpoint.as_deref()
     }
@@ -89,48 +98,56 @@ impl CapabilityEndpointsConfig {
     // Builder methods for testing
 
     /// Builder method to set Orchestration Endpoint
+    #[must_use]
     pub fn with_orchestration_endpoint(mut self, endpoint: String) -> Self {
         self.orchestration_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Security Endpoint
+    #[must_use]
     pub fn with_security_endpoint(mut self, endpoint: String) -> Self {
         self.security_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Ai Endpoint
+    #[must_use]
     pub fn with_ai_endpoint(mut self, endpoint: String) -> Self {
         self.ai_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Compute Endpoint
+    #[must_use]
     pub fn with_compute_endpoint(mut self, endpoint: String) -> Self {
         self.compute_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Management Endpoint
+    #[must_use]
     pub fn with_management_endpoint(mut self, endpoint: String) -> Self {
         self.management_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Storage Endpoint
+    #[must_use]
     pub fn with_storage_endpoint(mut self, endpoint: String) -> Self {
         self.storage_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Networking Endpoint
+    #[must_use]
     pub fn with_networking_endpoint(mut self, endpoint: String) -> Self {
         self.networking_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Service Endpoint
+    #[must_use]
     pub fn with_service_endpoint(mut self, endpoint: String) -> Self {
         self.service_endpoint = Some(endpoint);
         self

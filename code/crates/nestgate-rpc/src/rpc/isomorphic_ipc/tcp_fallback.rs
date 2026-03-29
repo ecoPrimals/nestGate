@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! # 🌐 TCP IPC Fallback Server
 //!
 //! **ISOMORPHIC**: Automatic fallback when Unix sockets unavailable\
@@ -151,52 +156,57 @@ impl TcpFallbackServer {
     async fn handle_tcp_connection(&self, stream: TcpStream) -> Result<()> {
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
-        let mut line = String::new();
+        let mut line = Vec::new();
 
         loop {
             line.clear();
 
-            match reader.read_line(&mut line).await {
-                Ok(0) => {
-                    debug!("📤 TCP client disconnected (EOF)");
-                    break;
-                }
-                Ok(n) => {
-                    debug!("📥 Received {} bytes", n);
-
-                    // Parse JSON-RPC request
-                    match serde_json::from_str::<Value>(&line) {
-                        Ok(request) => {
-                            debug!("🔍 Parsed JSON-RPC request");
-
-                            // Handle request (same as Unix socket)
-                            let response = self.handler.handle_request(request).await;
-
-                            // Send response (line-delimited JSON)
-                            let response_str = serde_json::to_string(&response)
-                                .context("Failed to serialize JSON-RPC response")?;
-
-                            writer
-                                .write_all(response_str.as_bytes())
-                                .await
-                                .context("Failed to write response")?;
-
-                            writer
-                                .write_all(b"\n")
-                                .await
-                                .context("Failed to write newline")?;
-
-                            debug!("📤 Sent response ({} bytes)", response_str.len());
-                        }
-                        Err(e) => {
-                            warn!("⚠️  Invalid JSON-RPC request: {}", e);
-                            // Continue to next request (don't break connection)
-                        }
-                    }
-                }
+            let n = match reader.read_until(b'\n', &mut line).await {
+                Ok(n) => n,
                 Err(e) => {
                     error!("❌ TCP read error: {}", e);
                     break;
+                }
+            };
+            if n == 0 && line.is_empty() {
+                debug!("📤 TCP client disconnected (EOF)");
+                break;
+            }
+
+            debug!("📥 Received {} bytes", n);
+
+            let trimmed = line.as_slice().trim_ascii();
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            // Parse JSON from bytes (no intermediate `String` for the line buffer).
+            match serde_json::from_slice::<Value>(trimmed) {
+                Ok(request) => {
+                    debug!("🔍 Parsed JSON-RPC request");
+
+                    // Handle request (same as Unix socket)
+                    let response = self.handler.handle_request(request).await;
+
+                    // Send response (line-delimited JSON)
+                    let response_str = serde_json::to_string(&response)
+                        .context("Failed to serialize JSON-RPC response")?;
+
+                    writer
+                        .write_all(response_str.as_bytes())
+                        .await
+                        .context("Failed to write response")?;
+
+                    writer
+                        .write_all(b"\n")
+                        .await
+                        .context("Failed to write newline")?;
+
+                    debug!("📤 Sent response ({} bytes)", response_str.len());
+                }
+                Err(e) => {
+                    warn!("⚠️  Invalid JSON-RPC request: {}", e);
+                    // Continue to next request (don't break connection)
                 }
             }
         }

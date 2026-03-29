@@ -44,7 +44,7 @@
 //! // ).await?;
 //!
 //! // Perform health check
-//! let health = service.health_check().await?;
+//! let health = service.health_check()?;
 //! println!("Service health: {:?}", health);
 //! ```
 //!

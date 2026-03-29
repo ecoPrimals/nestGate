@@ -84,7 +84,7 @@ impl ApiState {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn init_rpc_connections(&self) -> Result<()> {
+    pub fn init_rpc_connections(&self) -> Result<()> {
         self.rpc_manager.get_or_init(|| {
             let rpc_manager = UnifiedRpcManager::new();
 

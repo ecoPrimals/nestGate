@@ -34,9 +34,7 @@ pub async fn create_dataset(
 
     tokio::fs::create_dir_all(&dataset_path)
         .await
-        .map_err(|e| {
-            NestGateError::io_error(format!("Failed to create dataset directory: {}", e))
-        })?;
+        .map_err(|e| NestGateError::io_error(format!("Failed to create dataset directory: {e}")))?;
 
     // Create dataset info
     let now = current_timestamp();
@@ -73,29 +71,29 @@ pub async fn list_datasets(
     tokio::fs::create_dir_all(&datasets_path)
         .await
         .map_err(|e| {
-            NestGateError::io_error(format!("Failed to create datasets directory: {}", e))
+            NestGateError::io_error(format!("Failed to create datasets directory: {e}"))
         })?;
 
     let mut datasets = Vec::new();
-    let mut entries = tokio::fs::read_dir(&datasets_path).await.map_err(|e| {
-        NestGateError::io_error(format!("Failed to read datasets directory: {}", e))
-    })?;
+    let mut entries = tokio::fs::read_dir(&datasets_path)
+        .await
+        .map_err(|e| NestGateError::io_error(format!("Failed to read datasets directory: {e}")))?;
 
     while let Some(entry) = entries
         .next_entry()
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to read directory entry: {}", e)))?
+        .map_err(|e| NestGateError::io_error(format!("Failed to read directory entry: {e}")))?
     {
         let path = entry.path();
         if path.is_dir() {
             if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
                 // Get directory metadata
                 let metadata = tokio::fs::metadata(&path).await.map_err(|e| {
-                    NestGateError::io_error(format!("Failed to read metadata: {}", e))
+                    NestGateError::io_error(format!("Failed to read metadata: {e}"))
                 })?;
 
                 let modified = metadata.modified().map_err(|e| {
-                    NestGateError::io_error(format!("Failed to get modification time: {}", e))
+                    NestGateError::io_error(format!("Failed to get modification time: {e}"))
                 })?;
                 let modified_at = modified
                     .duration_since(SystemTime::UNIX_EPOCH)
@@ -137,9 +135,9 @@ pub async fn delete_dataset(config: &StorageServiceConfig, name: &str) -> Result
         .await
         .map_err(|e| {
             if e.kind() == std::io::ErrorKind::NotFound {
-                NestGateError::not_found(format!("dataset {}", name))
+                NestGateError::not_found(format!("dataset {name}"))
             } else {
-                NestGateError::io_error(format!("Failed to delete dataset {}: {}", name, e))
+                NestGateError::io_error(format!("Failed to delete dataset {name}: {e}"))
             }
         })?;
 

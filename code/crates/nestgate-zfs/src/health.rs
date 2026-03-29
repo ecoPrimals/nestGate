@@ -161,7 +161,7 @@ impl ZfsHealthMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn start(&mut self) -> Result<()> {
+    pub fn start(&mut self) -> Result<()> {
         info!("🏥 Starting ZFS health monitoring...");
 
         // Initialize monitoring tasks

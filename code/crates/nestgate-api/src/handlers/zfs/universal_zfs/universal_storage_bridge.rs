@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // This bridge makes the ZFS API endpoints work with ANY storage backend,
 // not just ZFS. It translates ZFS concepts (pools, datasets, snapshots)
 // to universal storage operations that work on filesystems, object storage, etc.
 
 //! Universal Storage Bridge module
+
+use nestgate_zfs::numeric::f64_to_u64_saturating;
 
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, DatasetType, PoolCapacity, PoolHealth, PoolInfo, PoolState,
@@ -33,7 +39,7 @@ impl UniversalStorageBridge {
         info!("🔍 Detecting best available storage backend");
 
         // Try backends in order of preference: ZFS -> Filesystem -> Others
-        if self.is_zfs_available().await {
+        if self.is_zfs_available() {
             info!("✅ Selected storage backend: zfs");
             self.preferred_backend = Some("zfs".to_string());
             return Ok("zfs".to_string());
@@ -46,7 +52,7 @@ impl UniversalStorageBridge {
     }
 
     /// Check if ZFS is available
-    async fn is_zfs_available(&self) -> bool {
+    fn is_zfs_available(&self) -> bool {
         std::process::Command::new("zfs")
             .args(["list"])
             .output()
@@ -253,7 +259,7 @@ impl UniversalStorageBridge {
             }
         };
 
-        Ok((number * multiplier as f64) as u64)
+        Ok(f64_to_u64_saturating(number * multiplier as f64))
     }
 
     /// Determine if we should include this filesystem as a "pool"
@@ -284,8 +290,8 @@ impl UniversalStorageBridge {
         let backend = self.get_active_backend().await?;
 
         match backend.as_str() {
-            "zfs" => self.create_zfs_dataset(config).await,
-            "filesystem" => self.create_filesystem_dataset(config).await,
+            "zfs" => self.create_zfs_dataset(config),
+            "filesystem" => self.create_filesystem_dataset(config),
             _ => Err(UniversalZfsError::internal(
                 "No suitable backend for dataset creation",
             )),
@@ -293,7 +299,7 @@ impl UniversalStorageBridge {
     }
 
     /// Create ZFS dataset
-    async fn create_zfs_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+    fn create_zfs_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         let output = std::process::Command::new("zfs")
             .args(["create", &config.name])
             .output()
@@ -319,10 +325,7 @@ impl UniversalStorageBridge {
     }
 
     /// Create filesystem dataset (directory)
-    async fn create_filesystem_dataset(
-        &self,
-        config: &DatasetConfig,
-    ) -> UniversalZfsResult<DatasetInfo> {
+    fn create_filesystem_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         let path = std::path::Path::new(&config.name);
 
         std::fs::create_dir_all(path)

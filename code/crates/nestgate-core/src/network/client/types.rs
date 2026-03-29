@@ -47,7 +47,8 @@ impl Port {
     }
 
     /// Get the raw port value
-    pub fn get(self) -> u16 {
+    #[must_use]
+    pub const fn get(self) -> u16 {
         self.0
     }
 }
@@ -60,22 +61,26 @@ pub struct TimeoutMs(u64);
 
 impl TimeoutMs {
     /// Create a new timeout
-    pub fn new(ms: u64) -> Self {
+    #[must_use]
+    pub const fn new(ms: u64) -> Self {
         Self(ms)
     }
 
     /// Convert to Duration
-    pub fn as_duration(self) -> Duration {
+    #[must_use]
+    pub const fn as_duration(self) -> Duration {
         Duration::from_millis(self.0)
     }
 
     /// Get milliseconds value
-    pub fn as_millis(self) -> u64 {
+    #[must_use]
+    pub const fn as_millis(self) -> u64 {
         self.0
     }
 
     /// Get inner value (alias for as_millis)
-    pub fn get(self) -> u64 {
+    #[must_use]
+    pub const fn get(self) -> u64 {
         self.0
     }
 }
@@ -107,14 +112,16 @@ impl Method {
     /// Check if this method is safe (no side effects)
     ///
     /// Safe methods: GET, HEAD, OPTIONS (read-only)
-    pub fn is_safe(self) -> bool {
+    #[must_use]
+    pub const fn is_safe(self) -> bool {
         matches!(self, Self::Get | Self::Head | Self::Options)
     }
 
     /// Check if this method can have a request body
     ///
     /// Methods with bodies: POST, PUT, PATCH
-    pub fn can_have_body(self) -> bool {
+    #[must_use]
+    pub const fn can_have_body(self) -> bool {
         matches!(self, Self::Post | Self::Put | Self::Patch)
     }
 }
@@ -155,32 +162,38 @@ impl StatusCode {
     pub const SERVICE_UNAVAILABLE: Self = Self(503);
 
     /// Create a new status code
-    pub fn new(code: u16) -> Self {
+    #[must_use]
+    pub const fn new(code: u16) -> Self {
         Self(code)
     }
 
     /// Get the raw status code
-    pub fn as_u16(self) -> u16 {
+    #[must_use]
+    pub const fn as_u16(self) -> u16 {
         self.0
     }
 
     /// Check if this is a success status (2xx)
-    pub fn is_success(self) -> bool {
+    #[must_use]
+    pub const fn is_success(self) -> bool {
         self.0 >= 200 && self.0 < 300
     }
 
     /// Check if this is a client error (4xx)
-    pub fn is_client_error(self) -> bool {
+    #[must_use]
+    pub const fn is_client_error(self) -> bool {
         self.0 >= 400 && self.0 < 500
     }
 
     /// Check if this is a server error (5xx)
-    pub fn is_server_error(self) -> bool {
+    #[must_use]
+    pub const fn is_server_error(self) -> bool {
         self.0 >= 500 && self.0 < 600
     }
 
     /// Check if this is any error status (4xx or 5xx)
-    pub fn is_error(self) -> bool {
+    #[must_use]
+    pub const fn is_error(self) -> bool {
         self.0 >= 400
     }
 }
@@ -202,7 +215,8 @@ pub struct Endpoint {
 
 impl Endpoint {
     /// Create HTTP endpoint
-    pub fn http(host: String, port: Port) -> Self {
+    #[must_use]
+    pub const fn http(host: String, port: Port) -> Self {
         Self {
             host,
             port,
@@ -211,7 +225,8 @@ impl Endpoint {
     }
 
     /// Create HTTPS endpoint
-    pub fn https(host: String, port: Port) -> Self {
+    #[must_use]
+    pub const fn https(host: String, port: Port) -> Self {
         Self {
             host,
             port,
@@ -236,10 +251,8 @@ impl Endpoint {
             .ok_or_else(|| NestGateError::validation_error("Invalid URL: missing scheme"))?;
 
         let scheme = match scheme_str.to_lowercase().as_str() {
-            "http" => Scheme::Http,
-            "https" => Scheme::Https,
-            "ws" => Scheme::Http,   // WebSocket over HTTP
-            "wss" => Scheme::Https, // WebSocket over HTTPS
+            "http" | "ws" => Scheme::Http, // WebSocket over HTTP uses HTTP scheme
+            "https" | "wss" => Scheme::Https,
             _ => return Err(NestGateError::validation_error("Unsupported scheme")),
         };
 
@@ -275,6 +288,7 @@ impl Endpoint {
     }
 
     /// Get full URL for this endpoint with path
+    #[must_use]
     pub fn url(&self, path: &str) -> String {
         format!(
             "{}://{}:{}{}",
@@ -286,6 +300,7 @@ impl Endpoint {
     }
 
     /// Get base URL without path
+    #[must_use]
     pub fn base_url(&self) -> String {
         format!("{}://{}:{}", self.scheme, self.host, self.port.get())
     }
@@ -338,7 +353,7 @@ impl<'de> Deserialize<'de> for Endpoint {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        Endpoint::from_url(&s).map_err(serde::de::Error::custom)
+        Self::from_url(&s).map_err(serde::de::Error::custom)
     }
 }
 

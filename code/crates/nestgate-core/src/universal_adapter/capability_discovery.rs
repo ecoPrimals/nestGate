@@ -38,6 +38,7 @@ impl CapabilityType {
     }
 
     /// Returns as Str
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -46,51 +47,61 @@ impl CapabilityType {
 /// Standard capability types (not primal names!)
 impl CapabilityType {
     /// Networking capabilities (load balancing, routing, etc.)
+    #[must_use]
     pub fn networking() -> Self {
         Self::new("networking")
     }
 
     /// Security capabilities (auth, encryption, rate limiting, etc.)
+    #[must_use]
     pub fn security() -> Self {
         Self::new("security")
     }
 
     /// Storage capabilities (datasets, snapshots, etc.)
+    #[must_use]
     pub fn storage() -> Self {
         Self::new("storage")
     }
 
     /// Orchestration capabilities (service coordination, workflows)
+    #[must_use]
     pub fn orchestration() -> Self {
         Self::new("orchestration")
     }
 
     /// Load balancing capability (can be part of networking or standalone)
+    #[must_use]
     pub fn load_balancing() -> Self {
         Self::new("load-balancing")
     }
 
     /// Circuit breaking capability
+    #[must_use]
     pub fn circuit_breaking() -> Self {
         Self::new("circuit-breaking")
     }
 
     /// Rate limiting capability
+    #[must_use]
     pub fn rate_limiting() -> Self {
         Self::new("rate-limiting")
     }
 
     /// Authentication capability
+    #[must_use]
     pub fn authentication() -> Self {
         Self::new("authentication")
     }
 
     /// Intrusion detection capability
+    #[must_use]
     pub fn intrusion_detection() -> Self {
         Self::new("intrusion-detection")
     }
 
     /// Input validation capability
+    #[must_use]
     pub fn input_validation() -> Self {
         Self::new("input-validation")
     }
@@ -120,6 +131,7 @@ pub struct CapabilityProvider {
 
 impl CapabilityProvider {
     /// Check if this provider supports a capability
+    #[must_use]
     pub fn supports(&self, capability: &CapabilityType) -> bool {
         self.capabilities.contains(capability)
     }
@@ -137,6 +149,7 @@ pub struct CapabilityDiscovery {
 
 impl CapabilityDiscovery {
     /// Create new capability discovery system
+    #[must_use]
     pub fn new() -> Self {
         Self {
             providers: Arc::new(tokio::sync::RwLock::new(HashMap::new())),

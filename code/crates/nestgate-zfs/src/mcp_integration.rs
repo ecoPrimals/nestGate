@@ -310,7 +310,11 @@ impl ZfsMcpStorageProvider {
     pub async fn remove_mount(&self, mount_id: &str) -> Result<()> {
         info!("Removing ZFS mount: {}", mount_id);
 
-        if let Some(mount_info) = self.active_mounts.write().await.remove(mount_id) {
+        let mount_info = {
+            let mut mounts = self.active_mounts.write().await;
+            mounts.remove(mount_id)
+        };
+        if let Some(mount_info) = mount_info {
             match self
                 .zfs_manager
                 .dataset_manager
@@ -412,7 +416,11 @@ impl ZfsMcpStorageProvider {
     pub async fn remove_volume(&self, volume_id: &str) -> Result<()> {
         info!("Removing ZFS volume: {}", volume_id);
 
-        if let Some(volume_info) = self.active_volumes.write().await.remove(volume_id) {
+        let volume_info = {
+            let mut volumes = self.active_volumes.write().await;
+            volumes.remove(volume_id)
+        };
+        if let Some(volume_info) = volume_info {
             match self
                 .zfs_manager
                 .dataset_manager

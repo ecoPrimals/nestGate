@@ -118,11 +118,11 @@ where
         }
 
         // Start Unix socket listener
-        let unix_handle = self.start_unix_socket().await?;
+        let unix_handle = self.start_unix_socket()?;
 
         // Start HTTP fallback if configured
         let http_handle = if self.config.http_port.is_some() {
-            Some(self.start_http_fallback().await?)
+            Some(self.start_http_fallback()?)
         } else {
             None
         };
@@ -143,7 +143,7 @@ where
     }
 
     /// Start Unix socket listener
-    async fn start_unix_socket(&self) -> Result<tokio::task::JoinHandle<()>> {
+    fn start_unix_socket(&self) -> Result<tokio::task::JoinHandle<()>> {
         let mut listener = UnixSocketListener::new(&self.config.socket_path)?;
         listener.bind()?;
 
@@ -184,7 +184,7 @@ where
     }
 
     /// Start HTTP fallback server
-    async fn start_http_fallback(&self) -> Result<tokio::task::JoinHandle<()>> {
+    fn start_http_fallback(&self) -> Result<tokio::task::JoinHandle<()>> {
         let port = self
             .config
             .http_port

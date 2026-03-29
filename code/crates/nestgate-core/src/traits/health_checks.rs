@@ -16,7 +16,7 @@ use std::time::Duration;
 use std::time::SystemTime;
 
 /// Health status levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Status values for Health
 pub enum HealthStatus {
     /// Healthy
@@ -117,6 +117,7 @@ pub struct HealthStateBuilder {
 
 impl HealthStateBuilder {
     /// Creates a new instance
+    #[must_use]
     pub fn new(status: HealthStatus) -> Self {
         Self {
             state: HealthState {
@@ -128,24 +129,28 @@ impl HealthStateBuilder {
     }
 
     /// Message
+    #[must_use]
     pub fn message<S: Into<String>>(mut self, message: S) -> Self {
         self.state.message = Some(message.into());
         self
     }
 
     /// Detail
+    #[must_use]
     pub fn detail<K: Into<String>, V: Into<String>>(mut self, key: K, value: V) -> Self {
         self.state.details.insert(key.into(), value.into());
         self
     }
 
     /// Metric
+    #[must_use]
     pub fn metric<K: Into<String>>(mut self, key: K, value: f64) -> Self {
         self.state.metrics.insert(key.into(), value);
         self
     }
 
     /// Builds the final instance
+    #[must_use]
     pub fn build(self) -> HealthState {
         self.state
     }
@@ -153,32 +158,38 @@ impl HealthStateBuilder {
 
 impl HealthState {
     /// Create a new healthy state
+    #[must_use]
     pub fn healthy() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Healthy)
     }
 
     /// Create a new degraded state
+    #[must_use]
     pub fn degraded() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Degraded)
     }
 
     /// Create a new unhealthy state
+    #[must_use]
     pub fn unhealthy() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Unhealthy)
     }
 
     /// Create a new unknown state
+    #[must_use]
     pub fn unknown() -> HealthStateBuilder {
         HealthStateBuilder::new(HealthStatus::Unknown)
     }
 
     /// Check if this state is considered healthy
-    pub fn is_healthy(&self) -> bool {
+    #[must_use]
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.status, HealthStatus::Healthy)
     }
 
     /// Check if this state indicates problems
-    pub fn has_issues(&self) -> bool {
+    #[must_use]
+    pub const fn has_issues(&self) -> bool {
         matches!(
             self.status,
             HealthStatus::Degraded | HealthStatus::Unhealthy

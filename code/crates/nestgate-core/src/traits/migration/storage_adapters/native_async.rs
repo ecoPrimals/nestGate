@@ -109,6 +109,10 @@ where
 }
 
 // Implement CanonicalStorage by delegating to old trait methods
+#[expect(
+    deprecated,
+    reason = "Migration adapter targets hierarchy CanonicalStorage until full parity with traits::canonical::CanonicalStorage"
+)]
 impl<T, ObjectId, ObjectData, ObjectMetadata> CanonicalStorage for NativeAsyncStorageAdapter<T>
 where
     T: NativeAsyncStorageProvider<
@@ -135,7 +139,7 @@ where
             .retrieve_object(key)
             .await
             .map(Some)
-            .map_err(|e| NestGateError::storage_error(&format!("Read failed: {}", e)))
+            .map_err(|e| NestGateError::storage_error(&format!("Read failed: {e}")))
     }
 
     /// Write
@@ -154,7 +158,7 @@ where
                 .store_object(value, metadata)
                 .await
                 .map(|_id| ())
-                .map_err(|e| NestGateError::storage_error(&format!("Write failed: {}", e)))
+                .map_err(|e| NestGateError::storage_error(&format!("Write failed: {e}")))
         }
     }
 
@@ -163,7 +167,7 @@ where
         self.inner
             .delete_object(key)
             .await
-            .map_err(|e| NestGateError::storage_error(&format!("Delete failed: {}", e)))
+            .map_err(|e| NestGateError::storage_error(&format!("Delete failed: {e}")))
     }
 
     /// Exists
@@ -180,7 +184,7 @@ where
         self.inner
             .get_metadata(key)
             .await
-            .map_err(|e| NestGateError::storage_error(&format!("Metadata read failed: {}", e)))
+            .map_err(|e| NestGateError::storage_error(&format!("Metadata read failed: {e}")))
     }
 
     /// List
@@ -188,6 +192,6 @@ where
         self.inner
             .list_objects()
             .await
-            .map_err(|e| NestGateError::storage_error(&format!("List failed: {}", e)))
+            .map_err(|e| NestGateError::storage_error(&format!("List failed: {e}")))
     }
 }

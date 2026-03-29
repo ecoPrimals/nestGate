@@ -58,6 +58,7 @@ impl DiscoveryBuilder {
     }
 
     /// Prefer a specific mechanism
+    #[must_use]
     pub fn prefer_mechanism(mut self, mechanism: impl Into<String>) -> Self {
         self.preferred_mechanism = Some(mechanism.into());
         self

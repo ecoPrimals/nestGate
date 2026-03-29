@@ -6,27 +6,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Load testing configuration
+/// Load testing configuration for API handler–level load tests.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::LoadTestConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::LoadTestConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for `LoadTest`
 pub struct LoadTestConfig {
     /// Test duration in seconds
     pub duration_seconds: u64,
@@ -99,27 +80,8 @@ pub struct LoadTestParameters {
     pub test_id: String,
 }
 
-/// Test data configuration
+/// Test data configuration for load tests.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::TestDataConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::TestDataConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for `TestData`
 pub struct TestDataConfig {
     /// Request payload size in bytes
     pub payload_size_bytes: usize,
@@ -198,46 +160,17 @@ impl Default for PerformanceThresholds {
     }
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
+/// Canonical name for [`LoadTestConfig`] in the handlers load-testing module.
+pub type LoadTestConfigCanonical = LoadTestConfig;
 
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Loadtestconfigcanonical
-pub type LoadTestConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using LoadTestConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Testdataconfigcanonical
-pub type TestDataConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using TestDataConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+/// Canonical name for [`TestDataConfig`] in the handlers load-testing module.
+pub type TestDataConfigCanonical = TestDataConfig;
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
     fn test_load_test_config_default() {
         let config = LoadTestConfig::default();
         assert_eq!(config.duration_seconds, 60);
@@ -248,7 +181,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_test_data_config_default() {
         let config = TestDataConfig::default();
         assert_eq!(config.payload_size_bytes, 1024);
@@ -267,7 +199,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_load_test_config_serialization() {
         let config = LoadTestConfig::default();
         let json = serde_json::to_string(&config);
@@ -315,7 +246,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_load_test_execution() {
         let execution = LoadTestExecution {
             config: LoadTestConfig::default(),

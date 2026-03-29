@@ -9,21 +9,21 @@ use super::SemanticRouter;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
 
-pub(super) async fn metadata_store(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn metadata_store(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     tracing::debug!("feature pending: metadata.store (nestgate-core service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core service_metadata",
     ))
 }
 
-pub(super) async fn metadata_retrieve(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn metadata_retrieve(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     tracing::debug!("feature pending: metadata.retrieve (nestgate-core service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core service_metadata",
     ))
 }
 
-pub(super) async fn metadata_search(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn metadata_search(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     tracing::debug!("feature pending: metadata.search (nestgate-core service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core service_metadata",

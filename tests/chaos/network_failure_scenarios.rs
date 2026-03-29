@@ -17,7 +17,7 @@ use tokio::time::timeout;
 use tracing::{debug, info, warn};
 
 #[tokio::test]
-#[ignore] // Chaos tests should be run explicitly
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_connection_timeout() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: Connection timeout handling");
 
@@ -69,7 +69,7 @@ async fn test_chaos_connection_timeout() -> Result<(), Box<dyn std::error::Error
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_intermittent_connectivity() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: Intermittent connectivity");
 
@@ -121,7 +121,7 @@ async fn test_chaos_intermittent_connectivity() -> Result<(), Box<dyn std::error
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_packet_loss() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: Packet loss scenarios");
 
@@ -193,7 +193,7 @@ async fn test_chaos_packet_loss() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_network_partition() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: Network partition and recovery");
 
@@ -251,7 +251,7 @@ async fn test_chaos_network_partition() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_dns_failure() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: DNS resolution failure");
 
@@ -313,7 +313,7 @@ async fn test_chaos_dns_failure() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_connection_pool_exhaustion() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: Connection pool exhaustion");
 
@@ -373,7 +373,7 @@ async fn test_chaos_connection_pool_exhaustion() -> Result<(), Box<dyn std::erro
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_cascading_failures() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: Cascading failure scenario");
 
@@ -449,7 +449,7 @@ async fn test_chaos_cascading_failures() -> Result<(), Box<dyn std::error::Error
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Chaos test — run explicitly: cargo test --test network_failure_scenarios -- --ignored"]
 async fn test_chaos_slow_network_response() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔥 Chaos Test: Slow network responses");
 

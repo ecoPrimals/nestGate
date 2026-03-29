@@ -91,24 +91,19 @@ fn test_port_from_string_with_whitespace() {
 // ==================== ENVIRONMENT VARIABLE ERROR TESTS ====================
 
 #[test]
-#[ignore = "Sensitive to environment pollution from other tests; run in isolation"]
+#[serial_test::serial]
 fn test_missing_required_env_var() {
-    // Ensure critical env vars don't exist
-    // SAFETY: single-threaded test context.
-    crate::env_process::remove_var("NESTGATE_CRITICAL_REQUIRED_VAR");
-
-    // If config requires it, should handle gracefully
-    // (Most of our config uses sensible defaults, which is good!)
-    let config = EnvironmentConfig::from_env();
-    if let Err(e) = &config {
-        // Print error for debugging
-        eprintln!("Config error: {:?}", e);
-    }
-    assert!(
-        config.is_ok(),
-        "Config should work with defaults: {:?}",
-        config.err()
-    );
+    temp_env::with_var_unset("NESTGATE_CRITICAL_REQUIRED_VAR", || {
+        let config = EnvironmentConfig::from_env();
+        if let Err(e) = &config {
+            eprintln!("Config error: {:?}", e);
+        }
+        assert!(
+            config.is_ok(),
+            "Config should work with defaults: {:?}",
+            config.err()
+        );
+    });
 }
 
 #[tokio::test]
@@ -194,42 +189,25 @@ fn test_concurrent_config_access() {
 // ==================== DEFAULT VALUE TESTS ====================
 
 #[test]
-#[ignore = "Sensitive to environment pollution from other tests; run in isolation"]
+#[serial_test::serial]
 fn test_config_has_sensible_defaults() {
-    // Clear all relevant env vars
-    let vars_to_clear = vec![
-        "NESTGATE_PORT",
-        "NESTGATE_HOST",
-        "NESTGATE_TIMEOUT",
-        "NESTGATE_MAX_CONNECTIONS",
-    ];
-
-    let originals: Vec<_> = vars_to_clear
-        .iter()
-        .map(|var| (*var, std::env::var(var).ok()))
-        .collect();
-
-    for var in &vars_to_clear {
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var(var);
-    }
-
-    // Config should work with all defaults
-    let config = EnvironmentConfig::from_env();
-    assert!(config.is_ok(), "Should work with defaults");
-
-    if let Ok(cfg) = config {
-        // Defaults should be sensible
-        assert!(cfg.network.port.get() >= 1024);
-    }
-
-    // Restore originals
-    for (var, original) in originals {
-        match original {
-            Some(val) => crate::env_process::set_var(var, val),
-            None => crate::env_process::remove_var(var),
-        }
-    }
+    temp_env::with_vars(
+        vec![
+            ("NESTGATE_PORT", None::<&str>),
+            ("NESTGATE_HOST", None::<&str>),
+            ("NESTGATE_TIMEOUT", None::<&str>),
+            ("NESTGATE_MAX_CONNECTIONS", None::<&str>),
+            ("NESTGATE_API_PORT", None::<&str>),
+            ("NESTGATE_HTTP_PORT", None::<&str>),
+        ],
+        || {
+            let config = EnvironmentConfig::from_env();
+            assert!(config.is_ok(), "Should work with defaults");
+            if let Ok(cfg) = config {
+                assert!(cfg.network.port.get() >= 1024);
+            }
+        },
+    );
 }
 
 // ==================== EDGE CASE TESTS ====================

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // Manages bidirectional WebSocket streams for real-time communication.
 // Provides stream lifecycle management and event routing.
@@ -84,23 +88,19 @@ impl BidirectionalStreamManager {
         // Start stream based on method
         match request.method.as_str() {
             "stream_realtime_metrics" => {
-                self.start_realtime_metrics_stream(stream_id, response_tx)
-                    .await?;
+                self.start_realtime_metrics_stream(stream_id, response_tx)?;
             }
             "stream_zfs_events" => {
-                self.start_zfs_events_stream(stream_id, response_tx).await?;
+                self.start_zfs_events_stream(stream_id, response_tx)?;
             }
             "stream_storage_events" => {
-                self.start_storage_events_stream(stream_id, response_tx)
-                    .await?;
+                self.start_storage_events_stream(stream_id, response_tx)?;
             }
             "stream_system_logs" => {
-                self.start_system_logs_stream(stream_id, response_tx)
-                    .await?;
+                self.start_system_logs_stream(stream_id, response_tx)?;
             }
             "stream_performance_data" => {
-                self.start_performance_data_stream(stream_id, response_tx)
-                    .await?;
+                self.start_performance_data_stream(stream_id, response_tx)?;
             }
             _ => {
                 // Remove the stream since we couldn't start it
@@ -198,7 +198,7 @@ impl BidirectionalStreamManager {
     }
 
     /// Start real-time metrics stream
-    async fn start_realtime_metrics_stream(
+    fn start_realtime_metrics_stream(
         &self,
         stream_id: Uuid,
         tx: mpsc::Sender<RpcStreamEvent>,
@@ -241,7 +241,7 @@ impl BidirectionalStreamManager {
     }
 
     /// Start ZFS events stream
-    async fn start_zfs_events_stream(
+    fn start_zfs_events_stream(
         &self,
         stream_id: Uuid,
         tx: mpsc::Sender<RpcStreamEvent>,
@@ -290,7 +290,7 @@ impl BidirectionalStreamManager {
     }
 
     /// Start storage events stream
-    async fn start_storage_events_stream(
+    fn start_storage_events_stream(
         &self,
         stream_id: Uuid,
         tx: mpsc::Sender<RpcStreamEvent>,
@@ -341,7 +341,7 @@ impl BidirectionalStreamManager {
     }
 
     /// Start system logs stream
-    async fn start_system_logs_stream(
+    fn start_system_logs_stream(
         &self,
         stream_id: Uuid,
         tx: mpsc::Sender<RpcStreamEvent>,
@@ -397,7 +397,7 @@ impl BidirectionalStreamManager {
     }
 
     /// Start performance data stream
-    async fn start_performance_data_stream(
+    fn start_performance_data_stream(
         &self,
         stream_id: Uuid,
         tx: mpsc::Sender<RpcStreamEvent>,

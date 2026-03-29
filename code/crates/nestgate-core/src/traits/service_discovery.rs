@@ -33,7 +33,7 @@ impl ServiceQuery {
     /// By default, queries return only healthy services without filtering
     /// by name, tags, or namespace.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             service_name: None,
             tags: Vec::new(),
@@ -43,18 +43,21 @@ impl ServiceQuery {
     }
 
     /// Builder method to set Name
+    #[must_use]
     pub fn with_name<S: Into<String>>(mut self, name: S) -> Self {
         self.service_name = Some(name.into());
         self
     }
 
     /// Builder method to set Tag
+    #[must_use]
     pub fn with_tag<S: Into<String>>(mut self, tag: S) -> Self {
         self.tags.push(tag.into());
         self
     }
 
     /// In Namespace
+    #[must_use]
     pub fn in_namespace<S: Into<String>>(mut self, namespace: S) -> Self {
         self.namespace = Some(namespace.into());
         self
@@ -65,7 +68,7 @@ impl ServiceQuery {
     /// By default, only healthy services are returned. Use this method
     /// to include services in any health state.
     #[must_use]
-    pub fn include_unhealthy(mut self) -> Self {
+    pub const fn include_unhealthy(mut self) -> Self {
         self.healthy_only = false;
         self
     }

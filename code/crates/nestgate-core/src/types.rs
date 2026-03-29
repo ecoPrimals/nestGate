@@ -53,18 +53,19 @@ impl Display for StorageTier {
     /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StorageTier::Hot => write!(f, "Hot"),
-            StorageTier::Warm => write!(f, "Warm"),
-            StorageTier::Cold => write!(f, "Cold"),
-            StorageTier::Cache => write!(f, "Cache"),
-            StorageTier::Archive => write!(f, "Archive"),
+            Self::Hot => write!(f, "Hot"),
+            Self::Warm => write!(f, "Warm"),
+            Self::Cold => write!(f, "Cold"),
+            Self::Cache => write!(f, "Cache"),
+            Self::Archive => write!(f, "Archive"),
         }
     }
 }
 
 impl StorageTier {
     /// Get all available storage tiers
-    pub fn all() -> Vec<StorageTier> {
+    #[must_use]
+    pub fn all() -> Vec<Self> {
         vec![
             Self::Hot,
             Self::Warm,
@@ -75,24 +76,26 @@ impl StorageTier {
     }
 
     /// Get the priority order of tiers (Hot = highest priority)
-    pub fn priority(&self) -> u8 {
+    #[must_use]
+    pub const fn priority(&self) -> u8 {
         match self {
-            StorageTier::Hot => 0,
-            StorageTier::Warm => 1,
-            StorageTier::Cold => 2,
-            StorageTier::Cache => 3,
-            StorageTier::Archive => 4,
+            Self::Hot => 0,
+            Self::Warm => 1,
+            Self::Cold => 2,
+            Self::Cache => 3,
+            Self::Archive => 4,
         }
     }
 
     /// Get string representation
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            StorageTier::Hot => "hot",
-            StorageTier::Warm => "warm",
-            StorageTier::Cold => "cold",
-            StorageTier::Cache => "cache",
-            StorageTier::Archive => "archive",
+            Self::Hot => "hot",
+            Self::Warm => "warm",
+            Self::Cold => "cold",
+            Self::Cache => "cache",
+            Self::Archive => "archive",
         }
     }
 }
@@ -128,10 +131,10 @@ impl Display for HealthStatus {
     /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            HealthStatus::Healthy => write!(f, "Healthy"),
-            HealthStatus::Degraded => write!(f, "Degraded"),
-            HealthStatus::Unhealthy => write!(f, "Unhealthy"),
-            HealthStatus::Unknown => write!(f, "Unknown"),
+            Self::Healthy => write!(f, "Healthy"),
+            Self::Degraded => write!(f, "Degraded"),
+            Self::Unhealthy => write!(f, "Unhealthy"),
+            Self::Unknown => write!(f, "Unknown"),
         }
     }
 }
@@ -164,12 +167,12 @@ impl Display for ServiceState {
     /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ServiceState::Running => write!(f, "Running"),
-            ServiceState::Stopped => write!(f, "Stopped"),
-            ServiceState::Starting => write!(f, "Starting"),
-            ServiceState::Stopping => write!(f, "Stopping"),
-            ServiceState::Error => write!(f, "Error"),
-            ServiceState::Unknown => write!(f, "Unknown"),
+            Self::Running => write!(f, "Running"),
+            Self::Stopped => write!(f, "Stopped"),
+            Self::Starting => write!(f, "Starting"),
+            Self::Stopping => write!(f, "Stopping"),
+            Self::Error => write!(f, "Error"),
+            Self::Unknown => write!(f, "Unknown"),
         }
     }
 }
@@ -198,10 +201,10 @@ impl Display for PerformanceTier {
     /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PerformanceTier::Ultra => write!(f, "Ultra"),
-            PerformanceTier::High => write!(f, "High"),
-            PerformanceTier::Standard => write!(f, "Standard"),
-            PerformanceTier::Economy => write!(f, "Economy"),
+            Self::Ultra => write!(f, "Ultra"),
+            Self::High => write!(f, "High"),
+            Self::Standard => write!(f, "Standard"),
+            Self::Economy => write!(f, "Economy"),
         }
     }
 }

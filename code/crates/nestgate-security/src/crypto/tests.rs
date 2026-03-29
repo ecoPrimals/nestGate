@@ -43,7 +43,7 @@ mod crypto_tests {
         let plaintext = b"sensitive data that must be protected";
         let params = EncryptionParams::default();
 
-        let encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
+        let encrypted = crypto.encrypt(plaintext, &params).unwrap();
         assert!(
             !encrypted.ciphertext.is_empty(),
             "Ciphertext should not be empty"
@@ -55,7 +55,7 @@ mod crypto_tests {
         );
         assert!(encrypted.timestamp > 0, "Timestamp should be set");
 
-        let decrypted = crypto.decrypt(&encrypted).await.unwrap();
+        let decrypted = crypto.decrypt(&encrypted).unwrap();
         assert_eq!(plaintext, &decrypted[..]);
     }
 
@@ -65,7 +65,7 @@ mod crypto_tests {
         let plaintext = b"important data";
         let params = EncryptionParams::default();
 
-        let mut encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
+        let mut encrypted = crypto.encrypt(plaintext, &params).unwrap();
 
         // Tamper with ciphertext
         if !encrypted.ciphertext.is_empty() {
@@ -73,7 +73,7 @@ mod crypto_tests {
         }
 
         // Should fail authentication
-        let result = crypto.decrypt(&encrypted).await;
+        let result = crypto.decrypt(&encrypted);
         assert!(result.is_err(), "Decryption should fail for tampered data");
     }
 
@@ -82,8 +82,8 @@ mod crypto_tests {
         let crypto = SecureCrypto::new().unwrap();
         let params = EncryptionParams::default();
 
-        let encrypted1 = crypto.encrypt(b"data", &params).await.unwrap();
-        let encrypted2 = crypto.encrypt(b"data", &params).await.unwrap();
+        let encrypted1 = crypto.encrypt(b"data", &params).unwrap();
+        let encrypted2 = crypto.encrypt(b"data", &params).unwrap();
 
         // Nonces should be different even for same plaintext
         assert_ne!(encrypted1.nonce, encrypted2.nonce);
@@ -165,11 +165,11 @@ mod crypto_tests {
 
         let plaintext = b"data encrypted with specific key";
         let params = EncryptionParams::default();
-        let encrypted = crypto.encrypt(plaintext, &params).await.unwrap();
+        let encrypted = crypto.encrypt(plaintext, &params).unwrap();
 
         // Same key should decrypt
         let crypto2 = SecureCrypto::from_key(&key).unwrap();
-        let decrypted = crypto2.decrypt(&encrypted).await.unwrap();
+        let decrypted = crypto2.decrypt(&encrypted).unwrap();
         assert_eq!(plaintext, &decrypted[..]);
     }
 
@@ -180,11 +180,11 @@ mod crypto_tests {
 
         let crypto1 = SecureCrypto::from_key(&key1).unwrap();
         let params = EncryptionParams::default();
-        let encrypted = crypto1.encrypt(b"secret", &params).await.unwrap();
+        let encrypted = crypto1.encrypt(b"secret", &params).unwrap();
 
         // Different key should fail to decrypt
         let crypto2 = SecureCrypto::from_key(&key2).unwrap();
-        let result = crypto2.decrypt(&encrypted).await;
+        let result = crypto2.decrypt(&encrypted);
         assert!(result.is_err(), "Wrong key should fail decryption");
     }
 
@@ -198,7 +198,7 @@ mod crypto_tests {
 
         let start = Instant::now();
         for _ in 0..100 {
-            let _ = crypto.encrypt(&data, &params).await.unwrap();
+            let _ = crypto.encrypt(&data, &params).unwrap();
         }
         let duration = start.elapsed();
 
@@ -217,8 +217,8 @@ mod crypto_tests {
         let params = EncryptionParams::default();
         let large_data = vec![0u8; 1024 * 1024]; // 1MB
 
-        let encrypted = crypto.encrypt(&large_data, &params).await.unwrap();
-        let decrypted = crypto.decrypt(&encrypted).await.unwrap();
+        let encrypted = crypto.encrypt(&large_data, &params).unwrap();
+        let decrypted = crypto.decrypt(&encrypted).unwrap();
 
         assert_eq!(large_data, decrypted);
     }
@@ -228,8 +228,8 @@ mod crypto_tests {
         let crypto = SecureCrypto::new().unwrap();
         let params = EncryptionParams::default();
 
-        let encrypted = crypto.encrypt(b"", &params).await.unwrap();
-        let decrypted = crypto.decrypt(&encrypted).await.unwrap();
+        let encrypted = crypto.encrypt(b"", &params).unwrap();
+        let decrypted = crypto.decrypt(&encrypted).unwrap();
         assert!(decrypted.is_empty());
     }
 

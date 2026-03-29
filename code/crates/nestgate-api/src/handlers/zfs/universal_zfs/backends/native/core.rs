@@ -13,6 +13,8 @@ use std::time::SystemTime;
 use tokio::process::Command;
 // Removed unused tracing import
 
+use nestgate_zfs::numeric::f64_to_u64_saturating;
+
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{
     HealthCheck, HealthStatus, ServiceMetrics, ServiceStatus, UniversalZfsError, UniversalZfsResult,
@@ -25,7 +27,10 @@ use tracing::debug;
 pub struct NativeZfsService {
     pub(crate) service_name: &'static str,
     pub(crate) service_version: &'static str,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Service start time retained for future uptime metrics"
+    )]
     pub(crate) start_time: SystemTime,
 }
 impl NativeZfsService {
@@ -115,7 +120,7 @@ impl NativeZfsService {
         number_part
             .parse::<f64>()
             .ok()
-            .map(|n| (n * multiplier as f64) as u64)
+            .map(|n| f64_to_u64_saturating(n * multiplier as f64))
     }
 }
 

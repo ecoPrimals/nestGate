@@ -14,11 +14,11 @@ fn test_zero_cost_api_request_creation() {
         data: json!({"key": "value"}),
         request_id: Arc::new("req-001".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: Arc::new(HashMap::new()),
+        metadata: Arc::new(HashMap::new()),
     };
 
     assert_eq!(request.request_id.as_str(), "req-001");
-    assert!(request._metadata.is_empty());
+    assert!(request.metadata.is_empty());
 }
 
 #[test]
@@ -28,7 +28,7 @@ fn test_zero_cost_api_response_creation() {
         request_id: Arc::new("req-001".to_string()),
         status: ApiStatus::Success,
         processing_time_ms: 42,
-        _metadata: HashMap::new(),
+        metadata: HashMap::new(),
     };
 
     assert_eq!(response.request_id.as_str(), "req-001");
@@ -234,7 +234,7 @@ async fn test_process_request_success() {
         data: json!({"test": "data"}),
         request_id: Arc::new("req-001".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: Arc::new(HashMap::new()),
+        metadata: Arc::new(HashMap::new()),
     };
 
     let result = handler.process_request(request).await;
@@ -257,7 +257,7 @@ async fn test_process_request_caching() {
             data: json!({"iteration": i}),
             request_id: Arc::new(format!("req-{i:03}")),
             timestamp: std::time::SystemTime::now(),
-            _metadata: Arc::new(HashMap::new()),
+            metadata: Arc::new(HashMap::new()),
         };
 
         let result = handler.process_request(request).await;
@@ -269,7 +269,7 @@ async fn test_process_request_caching() {
 }
 
 #[tokio::test]
-async fn test_process_request_with_metadata() {
+async fn test_process_request_withmetadata() {
     let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
     let mut metadata = HashMap::new();
     metadata.insert("user_id".to_string(), "user-123".to_string());
@@ -279,7 +279,7 @@ async fn test_process_request_with_metadata() {
         data: json!({"test": "data"}),
         request_id: Arc::new("req-001".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: Arc::new(metadata),
+        metadata: Arc::new(metadata),
     };
 
     let result = handler.process_request(request).await;
@@ -306,7 +306,7 @@ fn test_zero_cost_request_with_different_types() {
         data: "test string".to_string(),
         request_id: Arc::new("req-001".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: Arc::new(HashMap::new()),
+        metadata: Arc::new(HashMap::new()),
     };
     assert_eq!(string_request.data, "test string");
 
@@ -315,7 +315,7 @@ fn test_zero_cost_request_with_different_types() {
         data: 42,
         request_id: Arc::new("req-002".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: Arc::new(HashMap::new()),
+        metadata: Arc::new(HashMap::new()),
     };
     assert_eq!(numeric_request.data, 42);
 
@@ -324,13 +324,13 @@ fn test_zero_cost_request_with_different_types() {
         data: json!({"nested": {"key": "value"}}),
         request_id: Arc::new("req-003".to_string()),
         timestamp: std::time::SystemTime::now(),
-        _metadata: Arc::new(HashMap::new()),
+        metadata: Arc::new(HashMap::new()),
     };
     assert_eq!(json_request.data["nested"]["key"], "value");
 }
 
 #[test]
-fn test_zero_cost_response_with_metadata() {
+fn test_zero_cost_response_withmetadata() {
     let mut metadata = HashMap::new();
     metadata.insert("cache_hit".to_string(), "true".to_string());
     metadata.insert("processing_node".to_string(), "node-1".to_string());
@@ -340,11 +340,11 @@ fn test_zero_cost_response_with_metadata() {
         request_id: Arc::new("req-001".to_string()),
         status: ApiStatus::Success,
         processing_time_ms: 15,
-        _metadata: metadata,
+        metadata,
     };
 
-    assert_eq!(response._metadata.get("cache_hit").unwrap(), "true");
-    assert_eq!(response._metadata.get("processing_node").unwrap(), "node-1");
+    assert_eq!(response.metadata.get("cache_hit").unwrap(), "true");
+    assert_eq!(response.metadata.get("processing_node").unwrap(), "node-1");
 }
 
 #[test]
@@ -376,7 +376,7 @@ async fn test_concurrent_request_processing() {
                 data: json!({"id": i}),
                 request_id: Arc::new(format!("req-{i:03}")),
                 timestamp: std::time::SystemTime::now(),
-                _metadata: Arc::new(HashMap::new()),
+                metadata: Arc::new(HashMap::new()),
             };
             handler_clone.process_request(request).await
         });

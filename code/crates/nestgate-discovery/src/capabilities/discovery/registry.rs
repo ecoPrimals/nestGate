@@ -41,7 +41,7 @@ impl CapabilityRegistry {
     }
 
     /// Register a service with its capabilities (lock-free!)
-    pub async fn register_service(&self, service: ServiceDescriptor) -> CapabilityResult<()> {
+    pub fn register_service(&self, service: ServiceDescriptor) -> CapabilityResult<()> {
         // DashMap: Lock-free concurrent registration!
         for capability in &service.capabilities {
             self.capabilities
@@ -54,7 +54,8 @@ impl CapabilityRegistry {
     }
 
     /// Find all services providing a capability (lock-free!)
-    pub async fn find_providers(&self, capability: &Capability) -> Vec<ServiceDescriptor> {
+    #[must_use]
+    pub fn find_providers(&self, capability: &Capability) -> Vec<ServiceDescriptor> {
         // DashMap: Lock-free concurrent read!
         self.capabilities
             .get(capability)
@@ -63,13 +64,14 @@ impl CapabilityRegistry {
     }
 
     /// Check if any service provides a capability (lock-free!)
-    pub async fn has_capability(&self, capability: &Capability) -> bool {
+    #[must_use]
+    pub fn has_capability(&self, capability: &Capability) -> bool {
         // DashMap: Lock-free concurrent check!
         self.capabilities.contains_key(capability)
     }
 
     /// Remove a service from the registry (lock-free!)
-    pub async fn unregister_service(&self, service_id: &uuid::Uuid) -> CapabilityResult<()> {
+    pub fn unregister_service(&self, service_id: &uuid::Uuid) -> CapabilityResult<()> {
         // DashMap: Lock-free concurrent iteration and mutation!
         for mut entry in self.capabilities.iter_mut() {
             entry.value_mut().retain(|s| &s.id != service_id);
@@ -83,7 +85,8 @@ impl CapabilityRegistry {
     }
 
     /// Get all registered services (lock-free!)
-    pub async fn all_services(&self) -> Vec<ServiceDescriptor> {
+    #[must_use]
+    pub fn all_services(&self) -> Vec<ServiceDescriptor> {
         // DashMap: Lock-free concurrent iteration!
         let mut services = Vec::new();
         let mut seen = std::collections::HashSet::new();
@@ -130,11 +133,10 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).await.unwrap();
+        registry.register_service(service.clone()).unwrap();
 
-        let providers = registry
-            .find_providers(&Capability::Security(SecurityCapability::Authentication))
-            .await;
+        let providers =
+            registry.find_providers(&Capability::Security(SecurityCapability::Authentication));
 
         assert_eq!(providers.len(), 1);
         assert_eq!(providers[0].id, service.id);
@@ -153,19 +155,11 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).await.unwrap();
+        registry.register_service(service).unwrap();
 
-        assert!(
-            registry
-                .has_capability(&Capability::Security(SecurityCapability::Encryption))
-                .await
-        );
+        assert!(registry.has_capability(&Capability::Security(SecurityCapability::Encryption)));
 
-        assert!(
-            !registry
-                .has_capability(&Capability::Security(SecurityCapability::KeyManagement))
-                .await
-        );
+        assert!(!registry.has_capability(&Capability::Security(SecurityCapability::KeyManagement)));
     }
 
     #[tokio::test]
@@ -182,18 +176,12 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).await.unwrap();
-        assert!(
-            registry
-                .has_capability(&Capability::Security(SecurityCapability::Authentication))
-                .await
-        );
+        registry.register_service(service).unwrap();
+        assert!(registry.has_capability(&Capability::Security(SecurityCapability::Authentication)));
 
-        registry.unregister_service(&service_id).await.unwrap();
+        registry.unregister_service(&service_id).unwrap();
         assert!(
-            !registry
-                .has_capability(&Capability::Security(SecurityCapability::Authentication))
-                .await
+            !registry.has_capability(&Capability::Security(SecurityCapability::Authentication))
         );
     }
 
@@ -222,12 +210,11 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1.clone()).await.unwrap();
-        registry.register_service(service2.clone()).await.unwrap();
+        registry.register_service(service1.clone()).unwrap();
+        registry.register_service(service2.clone()).unwrap();
 
-        let providers = registry
-            .find_providers(&Capability::Storage(StorageCapability::ObjectStorage))
-            .await;
+        let providers =
+            registry.find_providers(&Capability::Storage(StorageCapability::ObjectStorage));
 
         assert_eq!(providers.len(), 2);
         assert!(providers.iter().any(|s| s.id == service1.id));
@@ -252,20 +239,17 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).await.unwrap();
+        registry.register_service(service.clone()).unwrap();
 
         // Should find service under both capabilities
-        let providers1 = registry
-            .find_providers(&Capability::Networking(NetworkingCapability::LoadBalancing))
-            .await;
+        let providers1 =
+            registry.find_providers(&Capability::Networking(NetworkingCapability::LoadBalancing));
         assert_eq!(providers1.len(), 1);
         assert_eq!(providers1[0].id, service.id);
 
-        let providers2 = registry
-            .find_providers(&Capability::Orchestration(
-                OrchestrationCapability::ServiceScheduling,
-            ))
-            .await;
+        let providers2 = registry.find_providers(&Capability::Orchestration(
+            OrchestrationCapability::ServiceScheduling,
+        ));
         assert_eq!(providers2.len(), 1);
         assert_eq!(providers2[0].id, service.id);
     }
@@ -274,15 +258,12 @@ mod tests {
     async fn test_empty_registry() {
         let registry = CapabilityRegistry::new();
 
-        let providers = registry
-            .find_providers(&Capability::Security(SecurityCapability::Authentication))
-            .await;
+        let providers =
+            registry.find_providers(&Capability::Security(SecurityCapability::Authentication));
 
         assert_eq!(providers.len(), 0);
         assert!(
-            !registry
-                .has_capability(&Capability::Security(SecurityCapability::Authentication))
-                .await
+            !registry.has_capability(&Capability::Security(SecurityCapability::Authentication))
         );
     }
 
@@ -291,7 +272,7 @@ mod tests {
         let registry = CapabilityRegistry::new();
 
         // Should not error when unregistering non-existent service
-        let result = registry.unregister_service(&uuid::Uuid::new_v4()).await;
+        let result = registry.unregister_service(&uuid::Uuid::new_v4());
         assert!(result.is_ok());
     }
 
@@ -313,10 +294,10 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).await.unwrap();
+        registry.register_service(service1).unwrap();
 
         // Update service (unregister and re-register)
-        registry.unregister_service(&service_id).await.unwrap();
+        registry.unregister_service(&service_id).unwrap();
 
         let service2 = ServiceDescriptor {
             id: service_id,
@@ -327,19 +308,11 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service2).await.unwrap();
+        registry.register_service(service2).unwrap();
 
         // Should have new capability, not old one
-        assert!(
-            !registry
-                .has_capability(&Capability::AI(AICapability::Inference))
-                .await
-        );
-        assert!(
-            registry
-                .has_capability(&Capability::AI(AICapability::Training))
-                .await
-        );
+        assert!(!registry.has_capability(&Capability::AI(AICapability::Inference)));
+        assert!(registry.has_capability(&Capability::AI(AICapability::Training)));
     }
 
     #[tokio::test]
@@ -366,20 +339,12 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1).await.unwrap();
-        registry.register_service(service2).await.unwrap();
+        registry.register_service(service1).unwrap();
+        registry.register_service(service2).unwrap();
 
         // Verify both services registered
-        assert!(
-            registry
-                .has_capability(&Capability::Storage(StorageCapability::Database))
-                .await
-        );
-        assert!(
-            registry
-                .has_capability(&Capability::AI(AICapability::ModelServing))
-                .await
-        );
+        assert!(registry.has_capability(&Capability::Storage(StorageCapability::Database)));
+        assert!(registry.has_capability(&Capability::AI(AICapability::ModelServing)));
     }
 
     #[tokio::test]
@@ -395,18 +360,15 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service.clone()).await.unwrap();
+        registry.register_service(service.clone()).unwrap();
 
         // Query multiple times - should persist
         for _ in 0..3 {
             assert!(
-                registry
-                    .has_capability(&Capability::Security(SecurityCapability::Authentication))
-                    .await
+                registry.has_capability(&Capability::Security(SecurityCapability::Authentication))
             );
-            let providers = registry
-                .find_providers(&Capability::Security(SecurityCapability::Authentication))
-                .await;
+            let providers =
+                registry.find_providers(&Capability::Security(SecurityCapability::Authentication));
             assert_eq!(providers.len(), 1);
             assert_eq!(providers[0].id, service.id);
         }
@@ -434,7 +396,7 @@ mod tests {
         let mut handles = vec![];
         for service in services {
             let registry = Arc::clone(&registry);
-            let handle = tokio::spawn(async move { registry.register_service(service).await });
+            let handle = tokio::spawn(async move { registry.register_service(service) });
             handles.push(handle);
         }
 
@@ -444,9 +406,8 @@ mod tests {
         }
 
         // Should have all 5 services
-        let providers = registry
-            .find_providers(&Capability::Networking(NetworkingCapability::HTTP))
-            .await;
+        let providers =
+            registry.find_providers(&Capability::Networking(NetworkingCapability::HTTP));
         assert_eq!(providers.len(), 5);
     }
 
@@ -467,7 +428,7 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).await.unwrap();
+        registry.register_service(service).unwrap();
 
         // Concurrent reads and writes
         let reg1 = Arc::clone(&registry);
@@ -479,19 +440,16 @@ mod tests {
                 reg1.find_providers(&Capability::Orchestration(
                     OrchestrationCapability::HealthMonitoring,
                 ))
-                .await
             },
             async move {
                 reg2.find_providers(&Capability::Orchestration(
                     OrchestrationCapability::HealthMonitoring,
                 ))
-                .await
             },
             async move {
                 reg3.has_capability(&Capability::Orchestration(
                     OrchestrationCapability::HealthMonitoring,
                 ))
-                .await
             }
         );
 
@@ -524,10 +482,10 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service1.clone()).await.unwrap();
-        registry.register_service(service2.clone()).await.unwrap();
+        registry.register_service(service1.clone()).unwrap();
+        registry.register_service(service2.clone()).unwrap();
 
-        let all_services = registry.all_services().await;
+        let all_services = registry.all_services();
         assert_eq!(all_services.len(), 2);
         assert!(all_services.iter().any(|s| s.id == service1.id));
         assert!(all_services.iter().any(|s| s.id == service2.id));
@@ -552,34 +510,18 @@ mod tests {
             health: ServiceHealth::Healthy,
         };
 
-        registry.register_service(service).await.unwrap();
+        registry.register_service(service).unwrap();
 
         // Verify registered
-        assert!(
-            registry
-                .has_capability(&Capability::AI(AICapability::ComputerVision))
-                .await
-        );
-        assert!(
-            registry
-                .has_capability(&Capability::Networking(NetworkingCapability::WebSocket))
-                .await
-        );
+        assert!(registry.has_capability(&Capability::AI(AICapability::ComputerVision)));
+        assert!(registry.has_capability(&Capability::Networking(NetworkingCapability::WebSocket)));
 
         // Unregister
-        registry.unregister_service(&service_id).await.unwrap();
+        registry.unregister_service(&service_id).unwrap();
 
         // Should be removed from all capabilities
-        assert!(
-            !registry
-                .has_capability(&Capability::AI(AICapability::ComputerVision))
-                .await
-        );
-        assert!(
-            !registry
-                .has_capability(&Capability::Networking(NetworkingCapability::WebSocket))
-                .await
-        );
+        assert!(!registry.has_capability(&Capability::AI(AICapability::ComputerVision)));
+        assert!(!registry.has_capability(&Capability::Networking(NetworkingCapability::WebSocket)));
     }
 
     #[tokio::test]
@@ -587,7 +529,7 @@ mod tests {
         let registry = CapabilityRegistry::default();
 
         // Should be empty
-        let all_services = registry.all_services().await;
+        let all_services = registry.all_services();
         assert_eq!(all_services.len(), 0);
     }
 
@@ -606,19 +548,11 @@ mod tests {
         };
 
         // Register in one
-        registry1.register_service(service.clone()).await.unwrap();
+        registry1.register_service(service.clone()).unwrap();
 
         // Should be visible in both (shared state)
-        assert!(
-            registry1
-                .has_capability(&Capability::Security(SecurityCapability::AuditLogging))
-                .await
-        );
-        assert!(
-            registry2
-                .has_capability(&Capability::Security(SecurityCapability::AuditLogging))
-                .await
-        );
+        assert!(registry1.has_capability(&Capability::Security(SecurityCapability::AuditLogging)));
+        assert!(registry2.has_capability(&Capability::Security(SecurityCapability::AuditLogging)));
     }
 
     #[test]
@@ -632,9 +566,7 @@ mod tests {
         let registry = CapabilityRegistry::new();
 
         // Query non-existent custom capability
-        let providers = registry
-            .find_providers(&Capability::Custom("NonExistent".to_string()))
-            .await;
+        let providers = registry.find_providers(&Capability::Custom("NonExistent".to_string()));
         assert_eq!(providers.len(), 0);
     }
 }

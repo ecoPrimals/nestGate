@@ -140,7 +140,7 @@ impl ZfsService {
     /// - Network communication fails
     /// - Orchestrator rejects the registration
     /// - Authentication fails
-    pub async fn register_with_orchestrator(&mut self, _orchestrator_url: &str) -> Result<()> {
+    pub fn register_with_orchestrator(&mut self, _orchestrator_url: &str) -> Result<()> {
         info!("Registering service {} with orchestrator", self.node_id);
 
         // NOTE: Full implementation requires reqwest or similar HTTP client
@@ -163,14 +163,14 @@ impl ZfsService {
     ///
     /// ```rust,ignore
     /// let service = ZfsService::new(config);
-    /// let health = service.health_check().await?;
+    /// let health = service.health_check()?;
     /// println!("Service health: {:?}", health);
     /// ```
     ///
     /// # Errors
     ///
     /// Returns an error if health check operations fail
-    pub async fn health_check(&mut self) -> Result<ZfsHealthStatus> {
+    pub fn health_check(&mut self) -> Result<ZfsHealthStatus> {
         debug!("Performing health check for node {}", self.node_id);
 
         self.last_health_check = Some(SystemTime::now());
@@ -199,12 +199,12 @@ impl ZfsService {
     /// - Network communication fails
     /// - Health check fails
     /// - Orchestrator is unreachable
-    pub async fn report_health(&mut self) -> Result<()> {
+    pub fn report_health(&mut self) -> Result<()> {
         if !self.registered_with_orchestrator {
             bail!("Service not registered with orchestrator");
         }
 
-        let health_status = self.health_check().await?;
+        let health_status = self.health_check()?;
         debug!("Reporting health status: {:?}", health_status);
 
         // NOTE: Would send health_status to orchestrator via HTTP
@@ -218,7 +218,7 @@ impl ZfsService {
     /// # Errors
     ///
     /// Returns an error if deregistration fails
-    pub async fn unregister(&mut self) -> Result<()> {
+    pub fn unregister(&mut self) -> Result<()> {
         if !self.registered_with_orchestrator {
             warn!("Service not registered, skipping unregister");
             return Ok(());

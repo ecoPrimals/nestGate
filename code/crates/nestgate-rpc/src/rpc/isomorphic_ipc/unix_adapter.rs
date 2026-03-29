@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! Unix Socket RPC Handler Adapter for isomorphic IPC.
 //!
 //! Uses an in-memory KV for `storage.*` JSON-RPC methods until nestgate-core storage is wired.
@@ -20,7 +25,10 @@ use super::tcp_fallback::RpcHandler;
 
 #[derive(Debug, Deserialize)]
 struct JsonRpcRequest {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "jsonrpc field required by JSON-RPC wire format for deserialization"
+    )]
     jsonrpc: Arc<str>,
     method: Arc<str>,
     params: Option<Value>,
@@ -52,14 +60,20 @@ const BEACON_DATASET: &str = "_known_beacons";
 struct StorageState {
     /// `default` dataset: key → JSON bytes
     kv: Arc<tokio::sync::RwLock<HashMap<String, Vec<u8>>>>,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Template storage wired when template RPC handlers are enabled"
+    )]
     templates: crate::rpc::template_storage::TemplateStorage,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Audit storage wired when audit RPC handlers are enabled"
+    )]
     audits: crate::rpc::audit_storage::AuditStorage,
 }
 
 impl StorageState {
-    async fn new() -> Result<Self> {
+    fn new() -> Result<Self> {
         Ok(Self {
             kv: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
             templates: crate::rpc::template_storage::TemplateStorage::new(),
@@ -73,8 +87,8 @@ pub struct UnixSocketRpcHandler {
 }
 
 impl UnixSocketRpcHandler {
-    pub async fn new() -> Result<Self> {
-        let state = Arc::new(StorageState::new().await?);
+    pub fn new() -> Result<Self> {
+        let state = Arc::new(StorageState::new()?);
         Ok(Self { state })
     }
 
@@ -85,7 +99,7 @@ impl UnixSocketRpcHandler {
         let result = match &*request.method {
             "storage.store" => self.handle_storage_store(&request).await,
             "storage.retrieve" => self.handle_storage_retrieve(&request).await,
-            "storage.list" => self.handle_storage_list(&request).await,
+            "storage.list" => self.handle_storage_list(&request),
             "storage.delete" => self.handle_storage_delete(&request).await,
             "storage.exists" => self.handle_storage_exists(&request).await,
 
@@ -197,7 +211,7 @@ impl UnixSocketRpcHandler {
         }
     }
 
-    async fn handle_storage_list(
+    fn handle_storage_list(
         &self,
         _request: &JsonRpcRequest,
     ) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
@@ -308,13 +322,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_handler_creation() {
-        let handler = UnixSocketRpcHandler::new().await;
+        let handler = UnixSocketRpcHandler::new();
         assert!(handler.is_ok());
     }
 
     #[tokio::test]
     async fn test_health_request() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -330,7 +344,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_version_request() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -346,7 +360,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_unknown_method() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -362,7 +376,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_invalid_request() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "not": "valid"
@@ -376,7 +390,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_capabilities_request() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -392,7 +406,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_store_request() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -409,7 +423,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_store_missing_params() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -425,7 +439,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_retrieve_missing_key() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -441,7 +455,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_list_request() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -456,7 +470,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_exists_request() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
 
         let request = json!({
             "jsonrpc": "2.0",
@@ -472,7 +486,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_store_retrieve_roundtrip() {
-        let handler = UnixSocketRpcHandler::new().await.unwrap();
+        let handler = UnixSocketRpcHandler::new().unwrap();
         let key = format!("roundtrip-{}", uuid::Uuid::new_v4());
 
         let store_request = json!({

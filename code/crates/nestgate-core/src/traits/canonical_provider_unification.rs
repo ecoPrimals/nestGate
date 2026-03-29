@@ -654,3 +654,146 @@ impl Default for ProviderMetrics {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{Duration, SystemTime};
+
+    #[test]
+    fn provider_health_default_fields() {
+        let h = ProviderHealth::default();
+        assert_eq!(h.status, HealthStatus::Unknown);
+        assert!(h.details.is_empty());
+        let d = ProviderMetrics::default();
+        assert_eq!(h.metrics.requests_total, d.requests_total);
+        assert_eq!(h.metrics.avg_response_time_ms, d.avg_response_time_ms);
+    }
+
+    #[test]
+    fn provider_capabilities_default_and_custom() {
+        let d = ProviderCapabilities::default();
+        assert_eq!(d.max_concurrent, Some(100));
+        assert!(d.operations.is_empty());
+        let c = ProviderCapabilities {
+            operations: vec!["read".to_string()],
+            max_concurrent: None,
+            protocols: vec!["tarpc".to_string()],
+            features: [("x".to_string(), true)].into_iter().collect(),
+        };
+        assert_eq!(c.operations.len(), 1);
+        assert!(c.features.get("x").copied().unwrap_or(false));
+    }
+
+    #[test]
+    fn provider_metrics_default_nonzero_after_manual_update() {
+        let mut m = ProviderMetrics::default();
+        m.requests_total = 10;
+        m.avg_response_time_ms = 1.5;
+        assert_eq!(m.requests_total, 10);
+        assert!((m.avg_response_time_ms - 1.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn health_status_all_variants_distinct() {
+        let v = [
+            HealthStatus::Healthy,
+            HealthStatus::Degraded,
+            HealthStatus::Unhealthy,
+            HealthStatus::Unknown,
+        ];
+        for (i, a) in v.iter().enumerate() {
+            for (j, b) in v.iter().enumerate() {
+                assert_eq!(i == j, a == b);
+            }
+        }
+    }
+
+    #[test]
+    fn serde_roundtrip_health_status() {
+        let s = serde_json::to_string(&HealthStatus::Degraded).unwrap();
+        let back: HealthStatus = serde_json::from_str(&s).unwrap();
+        assert_eq!(back, HealthStatus::Degraded);
+    }
+
+    #[test]
+    fn serde_roundtrip_provider_capabilities() {
+        let p = ProviderCapabilities {
+            operations: vec!["a".to_string()],
+            max_concurrent: Some(7),
+            protocols: vec![],
+            features: HashMap::new(),
+        };
+        let s = serde_json::to_string(&p).unwrap();
+        let back: ProviderCapabilities = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.operations, p.operations);
+        assert_eq!(back.max_concurrent, p.max_concurrent);
+    }
+
+    #[test]
+    fn serde_roundtrip_provider_metrics() {
+        let m = ProviderMetrics {
+            requests_total: 1,
+            requests_successful: 1,
+            requests_failed: 0,
+            avg_response_time_ms: 2.25,
+            active_connections: 3,
+        };
+        let s = serde_json::to_string(&m).unwrap();
+        let back: ProviderMetrics = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.requests_total, m.requests_total);
+        assert_eq!(back.avg_response_time_ms, m.avg_response_time_ms);
+    }
+
+    #[test]
+    fn serde_roundtrip_auth_token() {
+        let t = AuthToken {
+            token: "tok".to_string(),
+            expires_at: SystemTime::UNIX_EPOCH + Duration::from_secs(3600),
+            permissions: vec!["read".to_string()],
+        };
+        let s = serde_json::to_string(&t).unwrap();
+        let back: AuthToken = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.token, t.token);
+        assert_eq!(back.permissions, t.permissions);
+    }
+
+    #[test]
+    fn serde_roundtrip_connection_handle_and_status() {
+        let h = ConnectionHandle {
+            id: "id1".to_string(),
+            endpoint: "e".to_string(),
+            status: ConnectionStatus::Connected,
+        };
+        let js = serde_json::to_string(&h).unwrap();
+        let back: ConnectionHandle = serde_json::from_str(&js).unwrap();
+        assert_eq!(back.id, h.id);
+        assert!(matches!(back.status, ConnectionStatus::Connected));
+
+        let err = ConnectionStatus::Error("oops".to_string());
+        let s = serde_json::to_string(&err).unwrap();
+        let e2: ConnectionStatus = serde_json::from_str(&s).unwrap();
+        match (&err, &e2) {
+            (ConnectionStatus::Error(a), ConnectionStatus::Error(b)) => assert_eq!(a, b),
+            _ => panic!("expected Error variant"),
+        }
+    }
+
+    #[test]
+    fn provider_health_clone_and_serde_roundtrip() {
+        let mut details = HashMap::new();
+        details.insert("k".to_string(), "v".to_string());
+        let h = ProviderHealth {
+            status: HealthStatus::Healthy,
+            checked_at: SystemTime::UNIX_EPOCH,
+            details,
+            metrics: ProviderMetrics::default(),
+        };
+        let h2 = h.clone();
+        assert_eq!(h2.status, HealthStatus::Healthy);
+        let s = serde_json::to_string(&h).unwrap();
+        let back: ProviderHealth = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.status, h.status);
+        assert_eq!(back.details.get("k").map(String::as_str), Some("v"));
+    }
+}

@@ -13,6 +13,8 @@
 use std::collections::HashMap;
 // Removed unused tracing import
 
+use nestgate_zfs::numeric::f64_to_u64_saturating;
+
 use crate::handlers::zfs::universal_zfs_types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
@@ -167,5 +169,5 @@ pub fn parse_size(size_str: &str) -> Option<u64> {
     };
 
     let number: f64 = number_part.parse().ok()?;
-    Some((number * multiplier as f64) as u64)
+    Some(f64_to_u64_saturating(number * multiplier as f64))
 }

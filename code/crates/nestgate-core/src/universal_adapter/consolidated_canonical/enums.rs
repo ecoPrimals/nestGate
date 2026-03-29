@@ -11,7 +11,7 @@ use std::time::Duration;
 
 // ==================== CAPABILITY ENUMS ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Capability category classification
 pub enum CapabilityCategory {
     /// Storage
@@ -30,7 +30,7 @@ pub enum CapabilityCategory {
     Custom(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Types of data that can be handled
 pub enum DataType {
     /// JSON data
@@ -47,7 +47,7 @@ pub enum DataType {
     Stream,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Scalability rating for a capability
 pub enum ScalabilityRating {
     /// Low scalability
@@ -62,7 +62,7 @@ pub enum ScalabilityRating {
 
 // ==================== DISCOVERY ENUMS ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Method for discovering services
 pub enum DiscoveryMethod {
     /// Environment variables
@@ -103,7 +103,7 @@ pub enum RetryBackoff {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Priority level for requests
 pub enum RequestPriority {
     /// Low priority
@@ -118,7 +118,7 @@ pub enum RequestPriority {
 
 // ==================== RESPONSE ENUMS ====================
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Status values for responses
 pub enum ResponseStatus {
     /// Successful operation

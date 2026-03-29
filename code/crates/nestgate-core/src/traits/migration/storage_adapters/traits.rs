@@ -61,6 +61,10 @@ pub trait NativeAsyncStorageProvider {
 ///     // ... implementation
 /// }
 /// ```
+#[expect(
+    deprecated,
+    reason = "Legacy re-export name for hierarchy CanonicalStorage during provider migration"
+)]
 pub use crate::traits::canonical_hierarchy::CanonicalStorage as StoragePrimalProvider;
 
 /// Trait bound helper for simple ZeroCostStorageProvider

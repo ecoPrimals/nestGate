@@ -102,7 +102,10 @@ pub struct NativeZfsService {
     /// Whether ZFS commands are available on this system
     zfs_available: bool,
     /// Service start time for uptime calculation
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Service start time retained for future uptime metrics"
+    )]
     start_time: SystemTime,
     /// Request tracking for metrics
     request_counter: Arc<AtomicU64>,

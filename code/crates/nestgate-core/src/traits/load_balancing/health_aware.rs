@@ -37,7 +37,7 @@ impl<L: LoadBalancer> HealthAwareLoadBalancer<L> {
     /// Check if a service is healthy
     /// Note: This is a simplified implementation. In a real system,
     /// you would integrate with your health check system.
-    fn is_service_healthy(&self, _service: &ServiceInfo) -> bool {
+    const fn is_service_healthy(&self, _service: &ServiceInfo) -> bool {
         // For now, assume all services are healthy
         // In a real implementation, this would check:
         // - Recent health check results

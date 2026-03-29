@@ -465,3 +465,130 @@ pub struct ServiceMetrics {
 
 // Include monitoring config type - using canonical from supporting_types
 use crate::config::canonical_primary::MonitoringConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::migration::{generate_migration_suggestions, has_async_trait_usage};
+    use super::*;
+
+    #[test]
+    fn migration_detects_async_trait_attribute() {
+        assert!(has_async_trait_usage(
+            r#"#[async_trait] impl Foo for Bar { async fn x() {} }"#
+        ));
+        assert!(has_async_trait_usage("use async_trait::async_trait;"));
+        assert!(!has_async_trait_usage("fn plain() {}"));
+    }
+
+    #[test]
+    fn migration_suggestions_include_trait_name() {
+        let s = generate_migration_suggestions("MyTrait");
+        assert!(s.iter().any(|l| l.contains("MyTrait")));
+        assert!(s.iter().any(|l| l.contains("native async")));
+    }
+
+    #[test]
+    fn storage_metadata_clone_and_fields() {
+        let mut m = HashMap::new();
+        m.insert("a".to_string(), "b".to_string());
+        let sm = StorageMetadata {
+            size: 42,
+            created: std::time::SystemTime::UNIX_EPOCH,
+            modified: std::time::SystemTime::UNIX_EPOCH,
+            content_type: "application/octet-stream".to_string(),
+            checksum: "abc".to_string(),
+            metadata: m,
+        };
+        let sm2 = sm.clone();
+        assert_eq!(sm2.size, 42);
+        assert_eq!(sm2.metadata.get("a").map(String::as_str), Some("b"));
+    }
+
+    #[test]
+    fn network_statistics_defaults() {
+        let n = NetworkStatistics {
+            active_connections: 0,
+            total_requests: 0,
+            bytes_sent: 0,
+            bytes_received: 0,
+            errors: 0,
+        };
+        assert_eq!(n.errors, 0);
+    }
+
+    #[test]
+    fn handler_metrics_and_automation_status() {
+        let hm = HandlerMetrics {
+            requests_handled: 1,
+            average_response_time: std::time::Duration::from_millis(10),
+            error_rate: 0.01,
+            last_request_time: None,
+        };
+        assert!((hm.error_rate - 0.01).abs() < f64::EPSILON);
+
+        let st = AutomationStatus {
+            active_workflows: 0,
+            scheduled_tasks: 0,
+            completed_workflows: 1,
+            failed_workflows: 0,
+        };
+        assert_eq!(st.completed_workflows, 1);
+    }
+
+    #[test]
+    fn alert_and_dashboard_data_shapes() {
+        let a = Alert {
+            severity: AlertSeverity::Critical,
+            message: "m".to_string(),
+            component: "c".to_string(),
+            timestamp: std::time::SystemTime::UNIX_EPOCH,
+            metadata: HashMap::new(),
+        };
+        assert!(matches!(a.severity, AlertSeverity::Critical));
+
+        let mut metrics = HashMap::new();
+        metrics.insert("cpu".to_string(), 0.5);
+        let d = DashboardData {
+            metrics,
+            status: ServiceStatus::Healthy,
+            alerts: vec![],
+            last_updated: std::time::SystemTime::UNIX_EPOCH,
+        };
+        assert_eq!(d.metrics.len(), 1);
+    }
+
+    #[test]
+    fn service_health_and_metrics_clone() {
+        let h = ServiceHealth {
+            status: ServiceStatus::Degraded,
+            uptime: std::time::Duration::from_secs(1),
+            last_check: std::time::SystemTime::UNIX_EPOCH,
+        };
+        let h2 = h.clone();
+        assert!(matches!(h2.status, ServiceStatus::Degraded));
+
+        let m = ServiceMetrics {
+            requests_handled: 9,
+            average_response_time: std::time::Duration::from_nanos(1),
+            error_count: 0,
+            uptime: std::time::Duration::ZERO,
+        };
+        assert_eq!(m.requests_handled, 9);
+    }
+
+    #[tokio::test]
+    async fn example_native_service_trait_methods() {
+        let svc = ExampleNativeService {
+            config: NestGateCanonicalConfig::default(),
+            initialized: false,
+        };
+        svc.initialize(NestGateCanonicalConfig::default())
+            .await
+            .expect("init");
+        let health = svc.health_check().await.expect("health");
+        assert!(matches!(health.status, ServiceStatus::Healthy));
+        let metrics = svc.get_metrics().await.expect("metrics");
+        assert_eq!(metrics.requests_handled, 1000);
+        svc.shutdown().await.expect("shutdown");
+    }
+}

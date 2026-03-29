@@ -254,13 +254,13 @@ impl ApiConfig {
     /// and production-grade monitoring suitable for production deployments.
     #[must_use]
     pub fn production_hardened() -> Self {
-        use crate::constants::hardcoding::{addresses, ports};
+        use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
         Self {
             // Network settings
             bind_address: addresses::BIND_ALL_IPV4
                 .parse()
                 .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED)),
-            port: ports::HTTPS_DEFAULT,
+            port: runtime_fallback_ports::HTTPS,
             max_connections: 1000,
             request_timeout: Duration::from_secs(60),
             connection_timeout: Duration::from_secs(30),

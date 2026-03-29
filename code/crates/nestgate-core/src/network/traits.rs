@@ -138,6 +138,7 @@ pub struct DefaultService {
 
 impl DefaultService {
     /// Create a new service instance
+    #[must_use]
     pub fn new(config: NetworkTraitsConfig) -> Self {
         Self {
             _config: config,
@@ -173,6 +174,7 @@ impl Service for DefaultService {
 // ==================== UTILITY FUNCTIONS ====================
 
 /// Create a default service instance
+#[must_use]
 pub fn create_service() -> DefaultService {
     DefaultService::new(NetworkTraitsConfig::default())
 }

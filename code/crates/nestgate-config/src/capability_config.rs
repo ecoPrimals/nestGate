@@ -195,6 +195,11 @@ impl CapabilityConfig {
     /// export NESTGATE_METRICS_ENDPOINT=0.0.0.0:9090
     /// export NESTGATE_DISCOVERY_BACKENDS=dns-srv,mdns
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns `NestGateError` when environment-derived configuration cannot be parsed or
+    /// normalized (currently always returns [`Ok`]).
     pub fn from_env() -> Result<Self> {
         let mut capabilities = HashMap::new();
 
@@ -262,6 +267,11 @@ impl CapabilityConfig {
     }
 
     /// Add fallback defaults (for development only)
+    ///
+    /// # Errors
+    ///
+    /// Returns `NestGateError` when fallback defaults cannot be applied (currently always returns
+    /// [`Ok`]).
     pub fn with_fallback(mut self, fallbacks: CapabilityDefaults) -> Result<Self> {
         self.fallbacks = Some(fallbacks);
         Ok(self)
@@ -297,6 +307,10 @@ impl CapabilityConfig {
     }
 
     /// Get capability URL (http://host:port format)
+    ///
+    /// # Errors
+    ///
+    /// Returns `NestGateError` when [`Self::get_endpoint`] fails.
     pub fn get_capability_url(&self, capability_id: &str) -> Result<String> {
         let endpoint = self.get_endpoint(capability_id)?;
         Ok(format!("http://{endpoint}"))
@@ -315,6 +329,10 @@ impl CapabilityConfig {
     }
 
     /// Get all endpoints for a capability (primary + additional)
+    ///
+    /// # Errors
+    ///
+    /// Returns `NestGateError` when [`Self::resolve_capability`] fails.
     pub fn get_all_endpoints(&self, capability_id: &str) -> Result<Vec<SocketAddr>> {
         let info = self.resolve_capability(capability_id)?;
         Ok(info.all_endpoints())
@@ -379,6 +397,10 @@ impl CapabilityDefaults {
 
 impl CapabilityInfo {
     /// Get primary endpoint, with fallback to additional endpoints
+    ///
+    /// # Errors
+    ///
+    /// Returns `NestGateError` when no primary or additional endpoint is configured.
     pub fn primary_endpoint(&self) -> Result<SocketAddr> {
         self.primary_endpoint
             .or_else(|| self.additional_endpoints.first().copied())

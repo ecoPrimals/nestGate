@@ -170,7 +170,7 @@ async fn test_resource_cleanup() -> CoreResult<()> {
 
     // Test cleanup
     for dataset in &temp_datasets {
-        let result = zfs_manager.destroy_dataset(dataset).await;
+        let result = zfs_manager.destroy_dataset(dataset);
         // Should handle cleanup gracefully (success or proper error)
         match result {
             Ok(_) => info!("Dataset {} cleaned up successfully", dataset),

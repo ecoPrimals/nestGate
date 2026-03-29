@@ -26,7 +26,7 @@ use nestgate_core::{NestGateError, Result};
 ///
 /// Uses `/proc` and optional `nvidia-smi` for resource discovery; benchmarks remain lightweight stubs.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Fields used for configuration and monitoring
+#[expect(dead_code, reason = "Fields used for configuration and monitoring")]
 /// Handler for `RealHardwareTuning` requests
 pub struct RealHardwareTuningHandler {
     /// Hardware tuning configuration

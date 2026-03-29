@@ -732,6 +732,7 @@ pub fn all_constants() -> (
 #[cfg(test)]
 mod tests {
     use super::*;
+    use temp_env::with_vars;
 
     #[test]
     fn test_network_constants_default() {
@@ -755,12 +756,23 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Disabled: URL assertions depend on env vars that may be modified by parallel tests
+    #[serial_test::serial]
     fn test_network_constants_urls() {
-        let nc = NetworkConstants::default();
-        assert_eq!(nc.api_url(), "http://127.0.0.1:8080");
-        assert_eq!(nc.health_url(), "http://127.0.0.1:8081");
-        assert_eq!(nc.websocket_url(), "ws://127.0.0.1:8082/ws");
+        with_vars(
+            vec![
+                ("NESTGATE_API_HOST", Some("127.0.0.1")),
+                ("NESTGATE_HEALTH_HOST", Some("127.0.0.1")),
+                ("NESTGATE_API_PORT", Some("8080")),
+                ("NESTGATE_HEALTH_PORT", Some("8081")),
+                ("NESTGATE_WS_PORT", Some("8082")),
+            ],
+            || {
+                let nc = NetworkConstants::default();
+                assert_eq!(nc.api_url(), "http://127.0.0.1:8080");
+                assert_eq!(nc.health_url(), "http://127.0.0.1:8081");
+                assert_eq!(nc.websocket_url(), "ws://127.0.0.1:8082/ws");
+            },
+        );
     }
 
     #[test]

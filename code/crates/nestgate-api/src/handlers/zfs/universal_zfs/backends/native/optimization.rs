@@ -9,6 +9,7 @@
 //! Optimization module
 
 use crate::handlers::zfs::universal_zfs_types::UniversalZfsResult;
+use nestgate_zfs::numeric::f64_to_u64_saturating;
 
 use super::core::NativeZfsService;
 use tracing::info;
@@ -200,7 +201,7 @@ fn parse_size(size_str: &str) -> Option<u64> {
     };
 
     let number: f64 = number_part.parse().ok()?;
-    Some((number * multiplier as f64) as u64)
+    Some(f64_to_u64_saturating(number * multiplier as f64))
 }
 
 /// Extract file size from stat output (zero-copy optimized)

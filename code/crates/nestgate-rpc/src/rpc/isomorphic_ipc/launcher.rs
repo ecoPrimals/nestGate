@@ -45,7 +45,7 @@ use tracing::{debug, info};
 use super::discovery::{IpcEndpoint, discover_ipc_endpoint};
 use super::streams::{IpcStream, connect_endpoint};
 
-/// Default service name for `NestGate` IPC discovery
+/// Default service name for IPC discovery (`NestGate` primal identity).
 pub const NESTGATE_SERVICE_NAME: &str = "nestgate";
 
 /// Maximum retry attempts for endpoint discovery
@@ -357,7 +357,7 @@ mod tests {
         let path = get_nestgate_tcp_discovery_path().expect("Should get discovery path");
         assert!(
             path.to_string_lossy().contains("nestgate"),
-            "Discovery path should contain 'nestgate': {:?}",
+            "Discovery path should contain primal identity 'nestgate': {:?}",
             path
         );
         assert!(

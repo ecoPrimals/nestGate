@@ -21,17 +21,17 @@ pub struct CacheAligned<T> {
 
 impl<T> CacheAligned<T> {
     /// Create new cache-aligned data
-    pub fn new(data: T) -> Self {
+    pub const fn new(data: T) -> Self {
         Self { data }
     }
 
     /// Get reference to aligned data
-    pub fn get(&self) -> &T {
+    pub const fn get(&self) -> &T {
         &self.data
     }
 
     /// Get mutable reference to aligned data
-    pub fn get_mut(&mut self) -> &mut T {
+    pub const fn get_mut(&mut self) -> &mut T {
         &mut self.data
     }
 
@@ -55,7 +55,7 @@ pub struct CachePadded<T> {
 
 impl<T> CachePadded<T> {
     /// Create new cache-padded data
-    pub fn new(data: T) -> Self {
+    pub const fn new(data: T) -> Self {
         Self {
             data,
             _padding: [0; 64],
@@ -63,12 +63,12 @@ impl<T> CachePadded<T> {
     }
 
     /// Get reference to padded data
-    pub fn get(&self) -> &T {
+    pub const fn get(&self) -> &T {
         &self.data
     }
 
     /// Get mutable reference to padded data
-    pub fn get_mut(&mut self) -> &mut T {
+    pub const fn get_mut(&mut self) -> &mut T {
         &mut self.data
     }
 

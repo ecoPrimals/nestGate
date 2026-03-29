@@ -10,6 +10,31 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, warn};
 
+#[inline]
+fn duration_millis_clamped(d: Duration) -> u64 {
+    u64::try_from(d.as_millis().min(u128::from(u64::MAX))).unwrap_or(u64::MAX)
+}
+
+#[inline]
+fn f64_to_delay_ms(x: f64) -> u64 {
+    if !x.is_finite() || x <= 0.0 {
+        return 0;
+    }
+    if x >= u64::MAX as f64 {
+        return u64::MAX;
+    }
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "delay milliseconds clamped to u64 range"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "non-finite and non-positive delays mapped to 0 above"
+    )]
+    let v: u64 = x as u64;
+    v
+}
+
 /// Retry configuration
 #[derive(Debug, Clone)]
 /// Configuration for Retry
@@ -58,7 +83,7 @@ pub struct ExponentialBackoff {
 impl ExponentialBackoff {
     /// Create a new exponential backoff strategy
     #[must_use]
-    pub fn new(config: RetryConfig) -> Self {
+    pub const fn new(config: RetryConfig) -> Self {
         Self { config }
     }
 
@@ -72,18 +97,20 @@ impl ExponentialBackoff {
 impl RetryStrategy for ExponentialBackoff {
     /// Delay
     fn delay(&self, attempt: u32) -> Duration {
-        let base_delay = self.config.initial_delay.as_millis() as f64;
+        let base_delay_ms = self.config.initial_delay.as_secs_f64() * 1000.0;
         let multiplier = self.config.backoff_multiplier.powi(attempt as i32);
-        let delay_ms = (base_delay * multiplier) as u64;
+        let delay_ms = f64_to_delay_ms(base_delay_ms * multiplier);
 
-        let delay = Duration::from_millis(delay_ms.min(self.config.max_delay.as_millis() as u64));
+        let max_ms = duration_millis_clamped(self.config.max_delay);
+        let delay = Duration::from_millis(delay_ms.min(max_ms));
 
         if self.config.jitter {
             // Add ±25% jitter
-            let jitter_range = delay.as_millis() as f64 * 0.25;
+            let delay_ms_f = delay.as_secs_f64() * 1000.0;
+            let jitter_range = delay_ms_f * 0.25;
             let jitter = (fastrand::f64() - 0.5) * 2.0 * jitter_range;
-            let jittered_delay = (delay.as_millis() as f64 + jitter).max(0.0) as u64;
-            Duration::from_millis(jittered_delay)
+            let jittered_delay = f64_to_delay_ms((delay_ms_f + jitter).max(0.0));
+            Duration::from_millis(jittered_delay.min(max_ms))
         } else {
             delay
         }
@@ -97,13 +124,13 @@ impl RetryStrategy for ExponentialBackoff {
 
         // Determine if error is retryable
         match error {
-            NestGateError::Network(_) => true,
-            NestGateError::Timeout(_) => true,
-            NestGateError::Internal(_) => true,
-            NestGateError::Validation(_) => false, // Don't retry validation errors
-            NestGateError::Security(_) => false,   // Don't retry security errors (auth/authz)
-            NestGateError::Api(_) => false,        // Don't retry API errors (not found, etc.)
-            _ => false,                            // Conservative approach for other errors
+            NestGateError::Network(_) | NestGateError::Timeout(_) | NestGateError::Internal(_) => {
+                true
+            }
+            NestGateError::Validation(_)
+            | NestGateError::Security(_)
+            | NestGateError::Api(_)
+            | _ => false, // Don't retry validation/security/API; conservative for other errors
         }
     }
 }
@@ -118,7 +145,7 @@ pub struct LinearBackoff {
 impl LinearBackoff {
     /// Create a new linear backoff strategy
     #[must_use]
-    pub fn new(config: RetryConfig) -> Self {
+    pub const fn new(config: RetryConfig) -> Self {
         Self { config }
     }
 }
@@ -126,14 +153,17 @@ impl LinearBackoff {
 impl RetryStrategy for LinearBackoff {
     /// Delay
     fn delay(&self, attempt: u32) -> Duration {
-        let delay_ms = self.config.initial_delay.as_millis() as u64 * u64::from(attempt + 1);
-        let delay = Duration::from_millis(delay_ms.min(self.config.max_delay.as_millis() as u64));
+        let base_ms = duration_millis_clamped(self.config.initial_delay);
+        let delay_ms = base_ms.saturating_mul(u64::from(attempt + 1));
+        let max_ms = duration_millis_clamped(self.config.max_delay);
+        let delay = Duration::from_millis(delay_ms.min(max_ms));
 
         if self.config.jitter {
-            let jitter_range = delay.as_millis() as f64 * 0.1;
+            let delay_ms_f = delay.as_secs_f64() * 1000.0;
+            let jitter_range = delay_ms_f * 0.1;
             let jitter = (fastrand::f64() - 0.5) * 2.0 * jitter_range;
-            let jittered_delay = (delay.as_millis() as f64 + jitter).max(0.0) as u64;
-            Duration::from_millis(jittered_delay)
+            let jittered_delay = f64_to_delay_ms((delay_ms_f + jitter).max(0.0));
+            Duration::from_millis(jittered_delay.min(max_ms))
         } else {
             delay
         }
@@ -161,7 +191,7 @@ pub struct RetryExecutor<S: RetryStrategy> {
 
 impl<S: RetryStrategy> RetryExecutor<S> {
     /// Create a new retry executor
-    pub fn new(strategy: S, operation_name: String) -> Self {
+    pub const fn new(strategy: S, operation_name: String) -> Self {
         Self {
             strategy,
             operation_name,

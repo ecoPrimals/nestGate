@@ -213,12 +213,14 @@ impl TestServiceBuilder {
     }
 
     /// Set the service name
+    #[must_use]
     pub fn name(mut self, name: impl Into<String>) -> Self {
         self.name = name.into();
         self
     }
 
     /// Add a capability
+    #[must_use]
     pub fn capability(mut self, cap: impl Into<String>) -> Self {
         self.capabilities.push(cap.into());
         self
@@ -232,12 +234,14 @@ impl TestServiceBuilder {
     }
 
     /// Set the endpoint
+    #[must_use]
     pub fn endpoint(mut self, endpoint: impl Into<String>) -> Self {
         self.endpoint = endpoint.into();
         self
     }
 
     /// Add metadata
+    #[must_use]
     pub fn metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.metadata.insert(key.into(), value.into());
         self

@@ -200,8 +200,7 @@ impl<
             config.environment = match env_str.as_str() {
                 "production" => Environment::Production,
                 "staging" => Environment::Staging,
-                "development" => Environment::Development,
-                _ => Environment::Development,
+                "development" | _ => Environment::Development,
             };
         }
 
@@ -247,11 +246,11 @@ impl<
                 // Stricter validation for production
                 #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
                 {
-                    use crate::constants::hardcoding::ports;
-                    if self.network.api.port == ports::HTTP_DEFAULT {
+                    use crate::constants::hardcoding::runtime_fallback_ports;
+                    if self.network.api.port == runtime_fallback_ports::HTTP {
                         warnings.push(format!(
                             "Port {} not recommended for production",
-                            ports::HTTP_DEFAULT
+                            runtime_fallback_ports::HTTP
                         ));
                     }
 
@@ -277,6 +276,11 @@ impl<
     }
 
     /// **PHASE 2C**: Validate for specific environment
+    ///
+    /// # Errors
+    ///
+    /// Returns [`nestgate_types::error::NestGateError`] when the configuration is incompatible
+    /// with the given [`Environment`], such as insecure defaults in production.
     #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
     pub fn validate_for_environment(&self, env: Environment) -> nestgate_types::error::Result<()> {
         if env == Environment::Production && self.network.api.port == 8080 {

@@ -299,10 +299,8 @@ fn get_resource_usage() -> ResourceUsage {
 }
 
 /// Get snapshot count from a ZFS _engine
-#[allow(dead_code)] // Utility function for snapshot monitoring
-fn get_engine_snapshot_count(
-    _engine: &Arc<dyn std::any::Any + Send + Sync>,
-) -> Result<u64, Box<dyn std::error::Error + Send + Sync>> {
+#[expect(dead_code, reason = "Utility function for snapshot monitoring")]
+fn get_engine_snapshot_count(_engine: &Arc<dyn std::any::Any + Send + Sync>) -> u64 {
     // In a real implementation, this would query the _engine's snapshot manager
     // For now, we'll estimate based on available snapshot _metadata
     use std::fs;
@@ -311,12 +309,10 @@ fn get_engine_snapshot_count(
     if snapshot_dir.exists()
         && let Ok(entries) = fs::read_dir(snapshot_dir)
     {
-        let count = entries.filter_map(std::result::Result::ok).count() as u64;
-        return Ok(count);
+        return entries.filter_map(std::result::Result::ok).count() as u64;
     }
 
-    // Default to 0 if no snapshots found
-    Ok(0)
+    0
 }
 
 #[cfg(test)]

@@ -105,8 +105,7 @@ impl AuthenticationPattern {
     #[must_use]
     pub const fn is_secure(&self) -> bool {
         match self {
-            Self::None => false,
-            Self::HttpBasic { .. } => false, // Only secure over TLS
+            Self::None | Self::HttpBasic { .. } => false, // Basic auth only secure over TLS
             _ => true,
         }
     }

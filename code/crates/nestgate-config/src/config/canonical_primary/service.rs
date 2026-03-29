@@ -105,10 +105,10 @@ pub struct ServiceEndpointConfig {
 impl Default for ServiceEndpointConfig {
     /// Returns the default instance
     fn default() -> Self {
-        use crate::constants::hardcoding::{addresses, ports};
+        use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
         Self {
             bind_endpoint: addresses::LOCALHOST_IPV4.to_string(),
-            port: ports::HTTP_DEFAULT,
+            port: runtime_fallback_ports::HTTP,
             tls_enabled: false,
             max_connections: 10000,
             keep_alive_timeout: Duration::from_secs(30),

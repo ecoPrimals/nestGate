@@ -23,12 +23,6 @@
 //! - Each module under 400 lines
 //! - Backward-compatible re-exports
 //!
-//! ## Deprecated Types
-//!
-//! ⚠️ **Note**: `DatasetConfig` and `SnapshotConfig` are deprecated but still functional.
-//! They are used in 120+ references across 31 files. Plan a coordinated migration
-//! sprint when ready to transition to canonical configuration types.
-//!
 //! ## Code Quality
 //!
 //! - **Unwraps**: 1 in test code (acceptable)
@@ -119,7 +113,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_dataset_config_creation() {
         let config = DatasetConfig {
             name: "tank/data".to_string(),
@@ -134,7 +127,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_snapshot_config_creation() {
         let config = SnapshotConfig {
             name: "tank/data@snap1".to_string(),

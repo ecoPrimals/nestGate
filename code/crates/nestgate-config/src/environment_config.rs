@@ -50,8 +50,9 @@ impl EnvironmentConfig {
     pub const DEFAULT_BIND_STANDALONE: &'static str = "127.0.0.1";
     /// Default bind interface for orchestration mode
     pub const DEFAULT_BIND_ORCHESTRATION: &'static str = "0.0.0.0";
-    /// Default port
-    pub const DEFAULT_PORT: u16 = crate::constants::hardcoding::ports::HTTP_DEFAULT;
+    /// Default port (matches [`crate::constants::hardcoding::RuntimeDefaults::api_port`] fallback
+    /// when `NESTGATE_API_PORT` is unset; see also [`crate::constants::hardcoding::get_api_port`].)
+    pub const DEFAULT_PORT: u16 = crate::constants::hardcoding::runtime_fallback_ports::HTTP;
     /// Default service name
     pub const DEFAULT_SERVICE_NAME: &'static str = "nestgate";
     /// Default environment
@@ -337,10 +338,12 @@ mod tests {
         assert!(!config.is_orchestration_mode());
         assert_eq!(config.environment(), "development");
         assert_eq!(config.service_name(), "nestgate");
-        use crate::constants::hardcoding::ports;
         assert_eq!(config.bind_interface_standalone(), "127.0.0.1");
         assert_eq!(config.bind_interface_orchestration(), "0.0.0.0");
-        assert_eq!(config.port(), ports::HTTP_DEFAULT);
+        assert_eq!(
+            config.port(),
+            crate::constants::hardcoding::runtime_fallback_ports::HTTP
+        );
         assert!(!config.discovery_enabled_standalone());
         assert!(config.discovery_enabled_orchestration());
     }
@@ -356,10 +359,16 @@ mod tests {
 
     #[test]
     fn test_orchestration_mode() {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         let config = EnvironmentConfig::new()
-            .with_orchestration_url(Some(format!("http://orch:{}", ports::HTTP_DEFAULT)))
-            .with_security_url(Some(format!("http://sec:{}", ports::HEALTH_CHECK)));
+            .with_orchestration_url(Some(format!(
+                "http://orch:{}",
+                runtime_fallback_ports::HTTP
+            )))
+            .with_security_url(Some(format!(
+                "http://sec:{}",
+                runtime_fallback_ports::HEALTH
+            )));
 
         assert!(config.is_orchestration_mode());
         assert_eq!(config.bind_interface(true), "0.0.0.0");
@@ -369,23 +378,26 @@ mod tests {
         assert_eq!(services.len(), 2);
         assert_eq!(
             services.get("orchestration").unwrap(),
-            &format!("http://orch:{}", ports::HTTP_DEFAULT)
+            &format!("http://orch:{}", runtime_fallback_ports::HTTP)
         );
         assert_eq!(
             services.get("security").unwrap(),
-            &format!("http://sec:{}", ports::HEALTH_CHECK)
+            &format!("http://sec:{}", runtime_fallback_ports::HEALTH)
         );
     }
 
     #[test]
     fn test_config_builders() {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports;
         let config = EnvironmentConfig::new()
             .with_environment("production".to_string())
             .with_service_name("my-service".to_string())
             .with_port(9000)
             .with_discovery_standalone(true)
-            .with_ai_url(Some(format!("http://ai:{}", ports::WEBSOCKET_DEFAULT)));
+            .with_ai_url(Some(format!(
+                "http://ai:{}",
+                runtime_fallback_ports::WEBSOCKET
+            )));
 
         assert_eq!(config.environment(), "production");
         assert_eq!(config.service_name(), "my-service");
@@ -393,16 +405,18 @@ mod tests {
         assert!(config.discovery_enabled_standalone());
         assert_eq!(
             config.ai_url().unwrap(),
-            format!("http://ai:{}", ports::WEBSOCKET_DEFAULT)
+            format!("http://ai:{}", runtime_fallback_ports::WEBSOCKET)
         );
     }
 
     #[test]
     fn test_config_arc() {
-        use crate::constants::hardcoding::ports;
         let config = Arc::new(EnvironmentConfig::new());
         assert_eq!(config.environment(), "development");
-        assert_eq!(config.port(), ports::HTTP_DEFAULT);
+        assert_eq!(
+            config.port(),
+            crate::constants::hardcoding::runtime_fallback_ports::HTTP
+        );
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]

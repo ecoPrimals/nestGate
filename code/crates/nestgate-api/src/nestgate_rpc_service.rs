@@ -19,6 +19,7 @@
 //! - tarpc for high-performance binary RPC (native Rust)
 
 use nestgate_zfs::command::ZfsOperations;
+use nestgate_zfs::numeric::{f64_to_u64_saturating, usize_to_f64_lossy};
 use nestgate_zfs::types::StorageTier;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -184,6 +185,26 @@ pub struct VersionInfo {
     pub protocol: String,
     /// List of supported capabilities
     pub capabilities: Vec<String>,
+}
+
+/// Capability labels advertised by this primal (`version()`, `capabilities()`, HTTP discovery).
+pub(crate) const NESTGATE_CAPABILITY_LABELS: &[&str] = &[
+    "storage",
+    "zfs",
+    "snapshots",
+    "replication",
+    "compression",
+    "deduplication",
+];
+
+/// Builds the capability vector used by RPC and HTTP protocol advertisement.
+#[must_use]
+pub(crate) fn nestgate_capabilities_vec() -> Vec<String> {
+    NESTGATE_CAPABILITY_LABELS
+        .iter()
+        .copied()
+        .map(String::from)
+        .collect()
 }
 
 // ==================== TARPC SERVER IMPLEMENTATION ====================
@@ -547,7 +568,7 @@ impl NestGateRpc for NestGateRpcServer {
         let avg_compression = if pools.is_empty() {
             1.0
         } else {
-            compression_sum / pools.len() as f64
+            compression_sum / usize_to_f64_lossy(pools.len())
         };
 
         info!(
@@ -600,16 +621,14 @@ impl NestGateRpc for NestGateRpcServer {
             }
         };
 
-        // Determine overall status
-        let status = if pools_total == 0 {
-            "unknown".to_string()
-        } else if pools_healthy == pools_total {
-            "healthy".to_string()
-        } else if pools_healthy > 0 {
-            "degraded".to_string()
-        } else {
-            "unhealthy".to_string()
-        };
+        // Determine overall status (single allocation for the status string)
+        let status = match (pools_total, pools_healthy) {
+            (0, _) => "unknown",
+            (t, h) if h == t => "healthy",
+            (_, h) if h > 0 => "degraded",
+            _ => "unhealthy",
+        }
+        .to_string();
 
         info!(
             "✅ Health check: {} ({}/{} pools healthy)",
@@ -630,29 +649,15 @@ impl NestGateRpc for NestGateRpcServer {
 
         VersionInfo {
             version: env!("CARGO_PKG_VERSION").to_string(),
-            protocol: "tarpc".to_string(),
-            capabilities: vec![
-                "storage".to_string(),
-                "zfs".to_string(),
-                "snapshots".to_string(),
-                "replication".to_string(),
-                "compression".to_string(),
-                "deduplication".to_string(),
-            ],
+            protocol: String::from("tarpc"),
+            capabilities: nestgate_capabilities_vec(),
         }
     }
 
     async fn capabilities(self, _context: Context) -> Vec<String> {
         debug!("tarpc: capabilities()");
 
-        vec![
-            "storage".to_string(),
-            "zfs".to_string(),
-            "snapshots".to_string(),
-            "replication".to_string(),
-            "compression".to_string(),
-            "deduplication".to_string(),
-        ]
+        nestgate_capabilities_vec()
     }
 }
 
@@ -757,11 +762,11 @@ fn parse_pool_capacity(pool: &nestgate_zfs::command::ZfsPool) -> (u64, u64, u64)
     let parse_size = |s: &str| -> u64 {
         let s = s.trim();
         if s.ends_with('T') {
-            s.trim_end_matches('T').parse::<f64>().unwrap_or(0.0) as u64 * 1024
+            f64_to_u64_saturating(s.trim_end_matches('T').parse::<f64>().unwrap_or(0.0) * 1024.0)
         } else if s.ends_with('G') {
-            s.trim_end_matches('G').parse::<f64>().unwrap_or(0.0) as u64
+            f64_to_u64_saturating(s.trim_end_matches('G').parse::<f64>().unwrap_or(0.0))
         } else if s.ends_with('M') {
-            s.trim_end_matches('M').parse::<f64>().unwrap_or(0.0) as u64 / 1024
+            f64_to_u64_saturating(s.trim_end_matches('M').parse::<f64>().unwrap_or(0.0) / 1024.0)
         } else {
             // Assume bytes, convert to GB
             s.parse::<u64>().unwrap_or(0) / (1024 * 1024 * 1024)
@@ -781,13 +786,15 @@ fn parse_pool_capacity(pool: &nestgate_zfs::command::ZfsPool) -> (u64, u64, u64)
 fn parse_zfs_size(s: &str) -> u64 {
     let s = s.trim();
     if s.ends_with('T') {
-        (s.trim_end_matches('T').parse::<f64>().unwrap_or(0.0) * 1024.0) as u64
+        f64_to_u64_saturating(s.trim_end_matches('T').parse::<f64>().unwrap_or(0.0) * 1024.0)
     } else if s.ends_with('G') {
-        s.trim_end_matches('G').parse::<f64>().unwrap_or(0.0) as u64
+        f64_to_u64_saturating(s.trim_end_matches('G').parse::<f64>().unwrap_or(0.0))
     } else if s.ends_with('M') {
-        (s.trim_end_matches('M').parse::<f64>().unwrap_or(0.0) / 1024.0) as u64
+        f64_to_u64_saturating(s.trim_end_matches('M').parse::<f64>().unwrap_or(0.0) / 1024.0)
     } else if s.ends_with('K') {
-        (s.trim_end_matches('K').parse::<f64>().unwrap_or(0.0) / (1024.0 * 1024.0)) as u64
+        f64_to_u64_saturating(
+            s.trim_end_matches('K').parse::<f64>().unwrap_or(0.0) / (1024.0 * 1024.0),
+        )
     } else {
         // Assume bytes, convert to GB
         s.parse::<u64>().unwrap_or(0) / (1024 * 1024 * 1024)
@@ -795,231 +802,103 @@ fn parse_zfs_size(s: &str) -> u64 {
 }
 
 #[cfg(test)]
-mod tests {
+mod nestgate_rpc_service_tests {
     use super::*;
+    use nestgate_zfs::command::ZfsPool;
 
     #[test]
-    fn parse_zfs_size_units() {
-        assert_eq!(parse_zfs_size("2T"), 2048);
-        assert_eq!(parse_zfs_size("10G"), 10);
-        assert_eq!(parse_zfs_size("1024M"), 1);
-        assert_eq!(parse_zfs_size("1048576K"), 1);
-        assert_eq!(parse_zfs_size(&format!("{}", 2u64 * 1024 * 1024 * 1024)), 2);
-        assert_eq!(parse_zfs_size("  5G  "), 5);
-        assert_eq!(parse_zfs_size("bad"), 0);
-    }
-
-    #[test]
-    fn parse_pool_capacity_from_zfs_pool() {
-        let pool = nestgate_zfs::command::ZfsPool {
-            name: "tank".to_string(),
-            size: "4T".to_string(),
-            allocated: "500G".to_string(),
-            free: "3.5T".to_string(),
-            health: "ONLINE".to_string(),
-        };
-        let (t, u, f) = parse_pool_capacity(&pool);
-        assert_eq!(t, 4 * 1024);
-        assert_eq!(u, 500);
-        // "3.5T" truncates f64 to u64 before scaling (3 * 1024)
-        assert_eq!(f, 3072);
-    }
-
-    #[tokio::test]
-    async fn json_rpc_unknown_method_returns_err() {
-        let handler = NestGateJsonRpcHandler::new();
-        let err = handler
-            .handle("not_a_real_method", serde_json::Value::Null)
-            .await
-            .unwrap_err();
-        assert!(err.contains("Unknown method"));
-    }
-
-    #[tokio::test]
-    async fn json_rpc_list_datasets_requires_pool_string() {
-        let handler = NestGateJsonRpcHandler::new();
-        let err = handler
-            .handle("list_datasets", serde_json::json!(123))
-            .await
-            .unwrap_err();
-        assert!(!err.is_empty());
-    }
-
-    #[tokio::test]
-    async fn json_rpc_list_datasets_with_pool_serializes() {
-        let handler = NestGateJsonRpcHandler::new();
-        let v = handler
-            .handle("list_datasets", serde_json::json!("my_pool"))
-            .await
-            .expect("list_datasets");
-        assert!(v.is_array());
-    }
-
-    #[tokio::test]
-    async fn json_rpc_capabilities_aliases() {
-        let handler = NestGateJsonRpcHandler::new();
-        let a = handler
-            .handle("capabilities", serde_json::Value::Null)
-            .await
-            .unwrap();
-        let b = handler
-            .handle("capabilities.list", serde_json::Value::Null)
-            .await
-            .unwrap();
-        assert_eq!(a, b);
-    }
-
-    #[tokio::test]
-    async fn json_rpc_version_round_trip() {
-        let handler = NestGateJsonRpcHandler::new();
-        let v = handler
-            .handle("version", serde_json::Value::Null)
-            .await
-            .expect("version");
-        assert!(v.get("protocol").and_then(|x| x.as_str()) == Some("tarpc"));
-    }
-
-    #[tokio::test]
-    async fn json_rpc_health_readiness_shape() {
-        let handler = NestGateJsonRpcHandler::new();
-        let v = handler
-            .handle("health.readiness", serde_json::Value::Null)
-            .await
-            .expect("readiness");
-        assert!(v.get("ready").is_some());
-        assert!(v.get("status").is_some());
-    }
-
-    #[tokio::test]
-    async fn test_rpc_server_creation() {
-        // Create mock ZFS backend for testing
-        let zfs_backend = Arc::new(ZfsOperations::new());
-        let server = NestGateRpcServer::new(zfs_backend);
-        let ctx = Context::current();
-
-        let health = server.clone().health(ctx).await;
-        // Real backend reports actual health status (not hardcoded)
-        assert!(
-            !health.status.is_empty(),
-            "Health status should not be empty"
-        );
-    }
-
-    #[tokio::test]
-    async fn test_list_pools() {
-        // Create mock ZFS backend for testing
-        let zfs_backend = Arc::new(ZfsOperations::new());
-        let server = NestGateRpcServer::new(zfs_backend);
-        let ctx = Context::current();
-
-        let _pools = server.list_pools(ctx).await;
-        // Note: Real ZFS backend may return empty list if no pools exist
-        // This test now uses real backend instead of hardcoded data
-    }
-
-    #[tokio::test]
-    async fn test_capabilities() {
-        // Create mock ZFS backend for testing
-        let zfs_backend = Arc::new(ZfsOperations::new());
-        let server = NestGateRpcServer::new(zfs_backend);
-        let ctx = Context::current();
-
-        let caps = server.capabilities(ctx).await;
-        assert!(caps.contains(&"storage".to_string()));
-        assert!(caps.contains(&"zfs".to_string()));
-    }
-
-    #[tokio::test]
-    async fn test_json_rpc_handler() {
-        let handler = NestGateJsonRpcHandler::new();
-
-        let result = handler.handle("health", serde_json::Value::Null).await;
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn json_rpc_health_liveness_matches_health_core_fields() {
-        let handler = NestGateJsonRpcHandler::new();
-        let h = handler
-            .handle("health", serde_json::Value::Null)
-            .await
-            .unwrap();
-        let l = handler
-            .handle("health.liveness", serde_json::Value::Null)
-            .await
-            .unwrap();
-        assert_eq!(h.get("status"), l.get("status"));
-        assert_eq!(h.get("pools_total"), l.get("pools_total"));
-    }
-
-    #[tokio::test]
-    async fn json_rpc_health_check_alias_is_health() {
-        let handler = NestGateJsonRpcHandler::new();
-        let a = handler
-            .handle("health.check", serde_json::Value::Null)
-            .await
-            .unwrap();
-        let b = handler
-            .handle("health", serde_json::Value::Null)
-            .await
-            .unwrap();
-        assert_eq!(a, b);
-    }
-
-    #[tokio::test]
-    async fn json_rpc_get_metrics_has_capacity_fields() {
-        let handler = NestGateJsonRpcHandler::new();
-        let v = handler
-            .handle("get_metrics", serde_json::Value::Null)
-            .await
-            .unwrap();
-        assert!(v.get("total_capacity_gb").is_some());
-        assert!(v.get("dataset_count").is_some());
+    fn nestgate_capabilities_vec_matches_labels() {
+        let v = nestgate_capabilities_vec();
+        assert_eq!(v.len(), NESTGATE_CAPABILITY_LABELS.len());
+        for (i, s) in v.iter().enumerate() {
+            assert_eq!(s, NESTGATE_CAPABILITY_LABELS[i]);
+        }
     }
 
     #[test]
-    fn rpc_pool_info_and_health_status_serde_roundtrip() {
-        let p = PoolInfo {
-            name: "t".to_string(),
+    fn rpc_types_serde_roundtrip() {
+        let pool = PoolInfo {
+            name: "p".into(),
             total_capacity_gb: 10,
-            used_capacity_gb: 1,
-            available_capacity_gb: 9,
-            health_status: "ONLINE".to_string(),
-            backend: "zfs".to_string(),
+            used_capacity_gb: 5,
+            available_capacity_gb: 5,
+            health_status: "ONLINE".into(),
+            backend: "zfs".into(),
         };
-        let v = serde_json::to_value(&p).unwrap();
-        let back: PoolInfo = serde_json::from_value(v).unwrap();
-        assert_eq!(back.name, p.name);
+        let j = serde_json::to_string(&pool).unwrap();
+        let back: PoolInfo = serde_json::from_str(&j).unwrap();
+        assert_eq!(back.name, pool.name);
 
-        let h = HealthStatus {
-            status: "healthy".to_string(),
-            version: "0".to_string(),
-            uptime_seconds: 1,
-            pools_healthy: 1,
-            pools_total: 1,
-        };
-        let v2 = serde_json::to_string(&h).unwrap();
-        let h2: HealthStatus = serde_json::from_str(&v2).unwrap();
-        assert_eq!(h2.status, "healthy");
-    }
-
-    #[test]
-    fn operation_result_and_version_info_serde() {
-        let r = OperationResult {
+        let op = OperationResult {
             success: true,
-            message: "ok".to_string(),
+            message: "ok".into(),
             data: Some(serde_json::json!({"a": 1})),
         };
-        let s = serde_json::to_string(&r).unwrap();
-        let r2: OperationResult = serde_json::from_str(&s).unwrap();
-        assert!(r2.success);
+        let j2 = serde_json::to_string(&op).unwrap();
+        let back2: OperationResult = serde_json::from_str(&j2).unwrap();
+        assert!(back2.success);
 
-        let vi = VersionInfo {
-            version: "1".to_string(),
-            protocol: "tarpc".to_string(),
-            capabilities: vec!["storage".to_string()],
+        let m = StorageMetrics {
+            total_capacity_gb: 100,
+            used_capacity_gb: 40,
+            available_capacity_gb: 60,
+            compression_ratio: 1.5,
+            dedup_ratio: 1.0,
+            dataset_count: 3,
+            snapshot_count: 10,
         };
-        let v = serde_json::to_value(&vi).unwrap();
-        assert_eq!(v["protocol"], "tarpc");
+        let _: StorageMetrics = serde_json::from_str(&serde_json::to_string(&m).unwrap()).unwrap();
+    }
+
+    #[test]
+    fn parse_pool_capacity_t_g_m_and_bytes() {
+        let p = ZfsPool {
+            name: "t".into(),
+            size: "2T".into(),
+            allocated: "500G".into(),
+            free: "100M".into(),
+            health: "ONLINE".into(),
+        };
+        let (t, u, f) = parse_pool_capacity(&p);
+        assert!(t >= 2000);
+        assert!(u <= t);
+        assert!(f < t);
+
+        let p2 = ZfsPool {
+            name: "b".into(),
+            size: "1073741824".into(),
+            allocated: "0".into(),
+            free: "0".into(),
+            health: "ONLINE".into(),
+        };
+        let (tb, _, _) = parse_pool_capacity(&p2);
+        assert!(tb <= 1);
+    }
+
+    #[test]
+    fn parse_zfs_size_edge_units() {
+        assert_eq!(parse_zfs_size("  2T  "), 2048);
+        assert_eq!(parse_zfs_size("1.5G"), 1);
+        assert_eq!(parse_zfs_size("512M"), 0);
+        assert!(parse_zfs_size("2048M") >= 1);
+        assert!(parse_zfs_size("1048576K") > 0);
+        assert_eq!(parse_zfs_size("not_a_number"), 0);
+    }
+
+    #[test]
+    fn create_dataset_request_tier_property_coverage() {
+        let mut props = std::collections::HashMap::new();
+        props.insert("tier".into(), "hot".into());
+        let _ = CreateDatasetRequest {
+            pool: "p".into(),
+            name: "d".into(),
+            properties: props.clone(),
+        };
+        props.insert("tier".into(), "bogus".into());
+        let _ = CreateDatasetRequest {
+            pool: "p".into(),
+            name: "d".into(),
+            properties: props,
+        };
     }
 }

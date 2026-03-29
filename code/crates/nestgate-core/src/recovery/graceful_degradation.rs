@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use tracing::{info, warn};
 
 /// Degradation levels
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Degradationlevel
 pub enum DegradationLevel {
     /// Full functionality
@@ -72,7 +72,7 @@ impl GracefulDegradation {
 
     /// Get current degradation level
     #[must_use]
-    pub fn level(&self) -> DegradationLevel {
+    pub const fn level(&self) -> DegradationLevel {
         self.level
     }
 

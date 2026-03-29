@@ -10,6 +10,7 @@
 use crate::handlers::metrics_collector::{DiskIOMetrics, NetworkIOMetrics, PoolMetrics};
 use crate::handlers::performance_dashboard::types::{RealTimeMetrics, SystemMetrics};
 use nestgate_core::Result;
+use nestgate_zfs::numeric::f64_to_u64_saturating;
 use serde_json;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -28,7 +29,7 @@ pub struct RealTimeMetricsCollector {
     /// Metrics cache for performance
     metrics_cache: Arc<tokio::sync::RwLock<HashMap<String, RealTimeMetrics>>>,
     /// Background collection task handle
-    #[allow(dead_code)] // Reserved for future task management
+    #[expect(dead_code, reason = "Reserved for future task management")]
     collection_task: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
 }
 impl RealTimeMetricsCollector {
@@ -575,7 +576,7 @@ impl RealTimeMetricsCollector {
                 _ => return size_str.parse().ok(),
             };
 
-            Some((number * multiplier as f64) as u64)
+            Some(f64_to_u64_saturating(number * multiplier as f64))
         } else {
             size_str.parse().ok()
         }

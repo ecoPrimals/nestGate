@@ -51,7 +51,7 @@ pub const fn check_zfs_ecosystem_availability() -> bool {
 #[cfg(not(feature = "network-integration"))]
 /// Checks if ZFS ecosystem is available (stub for non-network builds).
 #[must_use]
-pub fn check_zfs_ecosystem_availability() -> bool {
+pub const fn check_zfs_ecosystem_availability() -> bool {
     false
 }
 

@@ -192,15 +192,15 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
                     nestgate_types::unified_enums::UnifiedHealthStatus::Healthy => 40.0,
                     nestgate_types::unified_enums::UnifiedHealthStatus::Degraded => 30.0,
                     nestgate_types::unified_enums::UnifiedHealthStatus::Unhealthy => 20.0,
-                    nestgate_types::unified_enums::UnifiedHealthStatus::Offline => 5.0,
-                    nestgate_types::unified_enums::UnifiedHealthStatus::Starting => 15.0,
-                    nestgate_types::unified_enums::UnifiedHealthStatus::Stopping => 10.0,
+                    nestgate_types::unified_enums::UnifiedHealthStatus::Offline
+                    | nestgate_types::unified_enums::UnifiedHealthStatus::Error => 5.0,
+                    nestgate_types::unified_enums::UnifiedHealthStatus::Starting
+                    | nestgate_types::unified_enums::UnifiedHealthStatus::Custom(_) => 15.0,
+                    nestgate_types::unified_enums::UnifiedHealthStatus::Stopping
+                    | nestgate_types::unified_enums::UnifiedHealthStatus::Unknown => 10.0,
                     nestgate_types::unified_enums::UnifiedHealthStatus::Maintenance => 25.0,
-                    nestgate_types::unified_enums::UnifiedHealthStatus::Unknown => 10.0,
                     nestgate_types::unified_enums::UnifiedHealthStatus::Critical => 0.0,
                     nestgate_types::unified_enums::UnifiedHealthStatus::Warning => 35.0,
-                    nestgate_types::unified_enums::UnifiedHealthStatus::Error => 5.0,
-                    nestgate_types::unified_enums::UnifiedHealthStatus::Custom(_) => 15.0,
                 };
 
                 // Service state score - 30% weight
@@ -208,14 +208,14 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
                 let state = nestgate_types::unified_enums::UnifiedServiceState::Running;
                 score += match state {
                     nestgate_types::unified_enums::UnifiedServiceState::Running => 30.0,
-                    nestgate_types::unified_enums::UnifiedServiceState::Stopped => 20.0,
-                    nestgate_types::unified_enums::UnifiedServiceState::Error => 10.0,
+                    nestgate_types::unified_enums::UnifiedServiceState::Stopped
+                    | nestgate_types::unified_enums::UnifiedServiceState::Paused => 20.0,
+                    nestgate_types::unified_enums::UnifiedServiceState::Error
+                    | nestgate_types::unified_enums::UnifiedServiceState::Custom(_) => 10.0,
                     nestgate_types::unified_enums::UnifiedServiceState::Starting => 25.0,
-                    nestgate_types::unified_enums::UnifiedServiceState::Stopping => 15.0,
-                    nestgate_types::unified_enums::UnifiedServiceState::Paused => 20.0,
-                    nestgate_types::unified_enums::UnifiedServiceState::Maintenance => 15.0,
+                    nestgate_types::unified_enums::UnifiedServiceState::Stopping
+                    | nestgate_types::unified_enums::UnifiedServiceState::Maintenance => 15.0,
                     nestgate_types::unified_enums::UnifiedServiceState::Unknown => 5.0,
-                    nestgate_types::unified_enums::UnifiedServiceState::Custom(_) => 10.0,
                 };
 
                 // Recency score (prefer recently seen services) - 20% weight

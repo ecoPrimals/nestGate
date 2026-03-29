@@ -574,3 +574,29 @@ pub use super::port_defaults::{
 
 /// Constants consolidation complete marker
 pub const CONSTANTS_CONSOLIDATION_COMPLETE: bool = true;
+
+#[cfg(test)]
+mod tests {
+    use super::timeouts;
+    use super::validation;
+
+    #[test]
+    fn default_timeout_ms_matches_seconds() {
+        assert_eq!(
+            timeouts::DEFAULT_TIMEOUT_MS,
+            timeouts::DEFAULT_TIMEOUT_SECS * 1000
+        );
+    }
+
+    #[test]
+    fn validation_helpers_are_true() {
+        assert!(validation::validate_performance_constants());
+        assert!(validation::validate_timeout_constants());
+        assert!(validation::validate_network_constants());
+    }
+
+    #[test]
+    fn consolidation_marker_is_set() {
+        assert!(super::CONSTANTS_CONSOLIDATION_COMPLETE);
+    }
+}

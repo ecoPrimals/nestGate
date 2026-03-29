@@ -483,19 +483,18 @@ mod tests {
 
     #[test]
     fn test_all_defaults_when_no_env_vars() {
-        // Test defaults via config (no env pollution)
+        // Test defaults via `NetworkDefaultsV2Config::new()` (no env pollution).
         let config = NetworkDefaultsV2Config::new();
 
-        // Verify all defaults
         assert_eq!(config.api_host(), "127.0.0.1");
         assert_eq!(config.api_port(), 8080);
-        assert_eq!(metrics_port(), 9090);
-        assert_eq!(websocket_port(), 8082); // WEBSOCKET_DEFAULT = 8082
-        assert_eq!(health_port(), 8081); // HEALTH_CHECK = 8081
-        assert_eq!(storage_port(), 5000);
-        assert_eq!(connect_timeout_ms(), 5_000);
-        assert_eq!(request_timeout_ms(), 30_000);
-        assert_eq!(long_operation_timeout_ms(), 300_000);
+        assert_eq!(config.metrics_port(), 9090);
+        assert_eq!(config.websocket_port(), 8081); // `get_admin_port()` in `new()`
+        assert_eq!(config.health_port(), 8082);
+        assert_eq!(config.storage_port(), 3000); // `get_dev_port()` in `new()`
+        assert_eq!(config.connect_timeout_ms(), 5_000);
+        assert_eq!(config.request_timeout_ms(), 30_000);
+        assert_eq!(config.long_operation_timeout_ms(), 300_000);
     }
 
     #[test]

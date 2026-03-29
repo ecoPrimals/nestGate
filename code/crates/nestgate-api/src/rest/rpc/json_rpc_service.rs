@@ -19,7 +19,7 @@ use tracing::{debug, info};
 use uuid::Uuid;
 
 /// JSON RPC request format for orchestration
-#[allow(dead_code)] // Reserved for future JSON RPC implementation
+#[expect(dead_code, reason = "Reserved for future JSON RPC implementation")]
 #[derive(Debug, serde::Serialize)]
 struct JsonRpcRequest {
     jsonrpc: String,
@@ -28,7 +28,7 @@ struct JsonRpcRequest {
     _params: serde_json::Value,
 }
 #[derive(Debug, Serialize, Deserialize)]
-#[allow(dead_code)] // Development JSON RPC response - fields used conditionally
+#[expect(dead_code, reason = "JSON-RPC response types used as wire format")]
 struct JsonRpcResponse {
     jsonrpc: String,
     id: Uuid,
@@ -38,7 +38,6 @@ struct JsonRpcResponse {
     error: Option<JsonRpcError>,
 }
 #[derive(Debug, Serialize, Deserialize)]
-#[allow(dead_code)] // Development JSON RPC error - fields used conditionally
 struct JsonRpcError {
     code: i32,
     message: String,
@@ -46,7 +45,10 @@ struct JsonRpcError {
     data: Option<serde_json::Value>,
 }
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development stream handle - fields used conditionally
+#[expect(
+    dead_code,
+    reason = "Development stream handle; fields used conditionally"
+)]
 struct StreamHandle {
     stream_id: Uuid,
     sender: mpsc::Sender<RpcStreamEvent>,
@@ -55,7 +57,6 @@ struct StreamHandle {
 ///
 /// JSON-RPC service implementation for remote procedure calls.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Base URL field used for service configuration
 /// Service implementation for `JsonRpc`
 pub struct JsonRpcService {
     /// Service base URL for RPC endpoints

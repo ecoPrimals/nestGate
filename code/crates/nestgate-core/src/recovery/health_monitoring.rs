@@ -32,7 +32,7 @@ use std::time::{Duration, Instant};
 use tracing::{debug, warn};
 
 /// Health status
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Status values for Health
 pub enum HealthStatus {
     /// Component is healthy
@@ -180,7 +180,7 @@ impl HealthMonitor {
 
     /// Get the configured check interval
     #[must_use]
-    pub fn get_check_interval(&self) -> Duration {
+    pub const fn get_check_interval(&self) -> Duration {
         self.check_interval
     }
 
@@ -231,8 +231,7 @@ impl HealthMonitor {
         for health in self.health_status.values() {
             match health.status {
                 HealthStatus::Unhealthy => return HealthStatus::Unhealthy,
-                HealthStatus::Warning => has_warning = true,
-                HealthStatus::Unknown => has_warning = true,
+                HealthStatus::Warning | HealthStatus::Unknown => has_warning = true,
                 HealthStatus::Healthy => {}
             }
         }

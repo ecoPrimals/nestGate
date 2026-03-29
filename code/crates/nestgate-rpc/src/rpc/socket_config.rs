@@ -73,6 +73,11 @@ impl SocketConfig {
     /// 2. `biomeos_socket_dir` (if `Some`, use `{dir}/nestgate.sock`)
     /// 3. XDG runtime: `{xdg_runtime_dir}/biomeos/nestgate.sock` when `xdg_runtime_dir` is set and exists
     /// 4. Temp fallback: `/tmp/nestgate-{family}-{node}.sock`
+    ///
+    /// # Errors
+    ///
+    /// This resolver currently always returns [`Ok`]; the [`Result`] is reserved for future
+    /// validation of socket paths and environment-derived identifiers.
     pub fn resolve(
         family_id: String,
         node_id: String,
@@ -160,6 +165,11 @@ impl SocketConfig {
     /// - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional)
     /// - `NESTGATE_FAMILY_ID`: Family identifier (defaults to `standalone` per wateringHole)
     /// - `NESTGATE_NODE_ID`: Node identifier (defaults to system hostname)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] if resolving or normalizing the socket configuration fails
+    /// (delegates to [`Self::resolve`]).
     pub fn from_environment() -> Result<Self> {
         let family_id = std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| {
             warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");
@@ -193,6 +203,11 @@ impl SocketConfig {
     /// # Returns
     ///
     /// Ok if socket path is ready to bind
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] when creating the parent directory, removing a stale socket
+    /// file, or checking writability fails.
     pub fn prepare_socket_path(&self) -> Result<()> {
         // Create parent directories if needed
         if let Some(parent) = self.socket_path.parent() {

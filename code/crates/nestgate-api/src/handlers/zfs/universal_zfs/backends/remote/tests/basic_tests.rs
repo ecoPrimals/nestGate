@@ -18,7 +18,7 @@ async fn test_remote_service_creation() -> std::result::Result<(), Box<dyn std::
             nestgate_core::constants::hardcoding::addresses::LOCALHOST_NAME.to_string()
         }),
         env::var("NESTGATE_API_PORT").unwrap_or_else(|_| {
-            nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT.to_string()
+            nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP.to_string()
         })
     );
     // Note: This would require a mock server in a real test environment
@@ -47,7 +47,7 @@ async fn test_connection_management() -> std::result::Result<(), Box<dyn std::er
             nestgate_core::constants::hardcoding::addresses::LOCALHOST_NAME.to_string()
         }),
         std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| {
-            nestgate_core::constants::hardcoding::ports::HTTP_DEFAULT.to_string()
+            nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP.to_string()
         })
     );
     let config = RemoteConfig {

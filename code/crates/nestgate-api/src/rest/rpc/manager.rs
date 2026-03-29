@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // Core management implementation for the unified RPC system.
 
@@ -577,7 +581,6 @@ impl Default for MetricsConfig {
 
 // ==================== CANONICAL TYPE ALIAS ====================
 // Backward-compatible alias to `CanonicalNetworkConfig` while migrating from deprecated structs.
-#[allow(deprecated, missing_docs)]
 mod deprecated_canonical_aliases {
     pub type MetricsConfigCanonical =
         nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

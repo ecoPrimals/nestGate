@@ -4,26 +4,10 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Pool configuration for ZFS setup
+/// Pool configuration for ZFS setup (operational pool-creation parameters in `nestgate-zfs`).
+///
+/// For unified high-level ZFS pool records in configuration files, see [`CanonicalZfsPoolConfig`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::PoolSetupConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::PoolSetupConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `PoolSetup`
 pub struct PoolSetupConfig {
     /// Pool name
@@ -102,26 +86,8 @@ pub enum RedundancyLevel {
     Triple,
 }
 
-/// Pool property configuration
+/// Pool property configuration for setup workflows.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::PoolPropertyConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::PoolPropertyConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `PoolProperty`
 pub struct PoolPropertyConfig {
     /// Ashift
@@ -149,26 +115,8 @@ impl Default for PoolPropertyConfig {
     }
 }
 
-/// Device detection configuration
+/// Device detection configuration for local scanning heuristics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::DeviceDetectionConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::DeviceDetectionConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `DeviceDetection`
 pub struct DeviceDetectionConfig {
     /// Scan Paths
@@ -221,26 +169,8 @@ impl Default for PoolSetupConfig {
     }
 }
 
-/// Safety configuration for pool operations
+/// Safety configuration for pool operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::SafetyConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::SafetyConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Safety
 pub struct SafetyConfig {
     /// Require Confirmation
@@ -445,70 +375,8 @@ impl Default for ZfsConfig {
     }
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Devicedetectionconfigcanonical
-pub type DeviceDetectionConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using DeviceDetectionConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Poolpropertyconfigcanonical
-pub type PoolPropertyConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using PoolPropertyConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Poolsetupconfigcanonical
-pub type PoolSetupConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using PoolSetupConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Safetyconfigcanonical
-pub type SafetyConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using SafetyConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+// ==================== CANONICAL CROSS-REFERENCE ====================
+/// Canonical ZFS pool record from unified `nestgate-config` (`name`, `devices`, `redundancy`, …).
+/// [`PoolSetupConfig`] adds runtime setup fields (topology, tiers, device scan) used by this crate.
+pub type CanonicalZfsPoolConfig =
+    nestgate_core::config::canonical_primary::domains::storage_canonical::ZfsPoolConfig;

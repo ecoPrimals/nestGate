@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! Consolidated Canonical Universal Adapter
 //!
 //! This is THE single, unified universal adapter implementation that consolidates
@@ -150,12 +155,12 @@ impl ConsolidatedCanonicalAdapter {
 
         // Start discovery
         if self.config.discovery.auto_discovery {
-            self.start_discovery().await?;
+            self.start_discovery()?;
         }
 
         // Start health monitoring
         if self.config.monitoring.health_checks_enabled {
-            self.start_health_monitoring().await?;
+            self.start_health_monitoring()?;
         }
 
         info!("Consolidated Canonical Universal Adapter initialized successfully");
@@ -207,14 +212,14 @@ impl ConsolidatedCanonicalAdapter {
     }
 
     /// Start capability discovery
-    async fn start_discovery(&self) -> Result<()> {
+    fn start_discovery(&self) -> Result<()> {
         debug!("Starting capability discovery");
         // Implementation would start background discovery tasks
         Ok(())
     }
 
     /// Start health monitoring
-    async fn start_health_monitoring(&self) -> Result<()> {
+    fn start_health_monitoring(&self) -> Result<()> {
         debug!("Starting health monitoring");
         // Implementation would start background health check tasks
         Ok(())
@@ -260,7 +265,7 @@ impl ConsolidatedCanonicalAdapter {
             .insert(request.id.clone(), request.clone());
 
         // Execute the request (simplified implementation)
-        let result = self.process_request(&request).await;
+        let result = self.process_request(&request);
 
         // Remove from active requests (lock-free)
         self.active_requests.remove(&request.id);
@@ -273,7 +278,7 @@ impl ConsolidatedCanonicalAdapter {
     }
 
     /// Process a capability request
-    async fn process_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
+    fn process_request(&self, request: &CapabilityRequest) -> Result<CapabilityResponse> {
         // Simplified processing - in real implementation would route to appropriate provider
         Ok(CapabilityResponse {
             request_id: request.id.clone(),
@@ -322,6 +327,10 @@ impl ConsolidatedCanonicalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unused_async,
+        reason = "consolidated_canonical/tests.rs awaits shutdown; synchronous teardown for now"
+    )]
     pub async fn shutdown(&self) -> Result<()> {
         info!("Shutting down Consolidated Canonical Universal Adapter");
 

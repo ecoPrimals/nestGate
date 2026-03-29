@@ -91,7 +91,7 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
         };
 
         // Send metrics as JSON
-        let _message = match serde_json::to_string(&metrics) {
+        let message = match serde_json::to_string(&metrics) {
             Ok(json) => Message::Text(json),
             Err(e) => {
                 error!("Failed to serialize metrics: {}", e);
@@ -99,7 +99,7 @@ async fn handle_metrics_websocket(mut socket: WebSocket, state: ApiState, query:
             }
         };
 
-        if socket.send(_message).await.is_err() {
+        if socket.send(message).await.is_err() {
             debug!("Metrics WebSocket connection closed");
             break;
         }
@@ -121,7 +121,7 @@ async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: W
         // Generate sample log entries (in production, would stream real logs)
         let log_entry = generate_sample_log_entry(&level_filter);
 
-        let _message = match serde_json::to_string(&log_entry) {
+        let message = match serde_json::to_string(&log_entry) {
             Ok(json) => Message::Text(json),
             Err(e) => {
                 error!("Failed to serialize log entry: {}", e);
@@ -129,7 +129,7 @@ async fn handle_logs_websocket(mut socket: WebSocket, _state: ApiState, query: W
             }
         };
 
-        if socket.send(_message).await.is_err() {
+        if socket.send(message).await.is_err() {
             debug!("Logs WebSocket connection closed");
             break;
         }
@@ -172,6 +172,10 @@ async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: 
 // ==================== SECTION ====================
 
 /// Get current system metrics
+#[expect(
+    clippy::unused_async,
+    reason = "cfg(test) awaits this helper; metrics assembly is synchronous"
+)]
 async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> {
     // Get ZFS metrics from engines
     let mut total_datasets = 0;
@@ -274,7 +278,7 @@ pub(crate) fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
 
     let level = levels[(seed % levels.len() as u64) as usize];
 
-    let _messages = [
+    let messages = [
         "ZFS dataset operation completed successfully",
         "Storage backend health check passed",
         "Snapshot created for dataset tank/data",
@@ -298,7 +302,7 @@ pub(crate) fn generate_sample_log_entry(level_filter: &str) -> LogEntry {
     LogEntry {
         timestamp: chrono::Utc::now(),
         level: level.to_string(),
-        message: _messages[(seed % _messages.len() as u64) as usize].to_string(),
+        message: messages[(seed % messages.len() as u64) as usize].to_string(),
         module: modules[((seed >> 8) % modules.len() as u64) as usize].to_string(),
         thread: format!("worker-{}", ((seed >> 16) % 8) + 1),
     }
@@ -322,6 +326,10 @@ pub struct SystemEvent {
     pub severity: String,
 }
 /// Generate sample system event
+#[expect(
+    clippy::unused_async,
+    reason = "cfg(test) awaits this helper; event construction is synchronous"
+)]
 async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);

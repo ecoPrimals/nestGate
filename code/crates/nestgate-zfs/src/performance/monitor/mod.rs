@@ -117,10 +117,10 @@ impl ZfsPerformanceMonitor {
 
         // Start background tasks
         self.start_collection_task().await?;
-        self.start_analysis_task().await?;
+        self.start_analysis_task()?;
 
         // Always enable alerting by default since config was removed
-        self.start_alert_task().await?;
+        self.start_alert_task()?;
         Ok(())
     }
 

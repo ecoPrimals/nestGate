@@ -144,7 +144,7 @@ pub struct UniversalServiceImpl {
 }
 impl UniversalServiceImpl {
     #[must_use]
-    pub fn new(
+    pub const fn new(
         service_type: crate::types::UnifiedServiceType,
         capabilities: Vec<crate::types::CapabilityId>,
         health_status: ServiceHealth,

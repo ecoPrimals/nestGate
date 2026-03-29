@@ -33,53 +33,48 @@ impl NetworkPortDefaults {
     /// Default streaming RPC port - configurable via `NESTGATE_STREAMING_RPC_PORT`
     #[must_use]
     pub const fn streaming_rpc_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::API_ALT
+        crate::constants::hardcoding::runtime_fallback_ports::API_ALT
     }
 
     /// Default NAS HTTP port - configurable via `NESTGATE_NAS_HTTP_PORT`
     #[must_use]
     pub const fn nas_http_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::HTTP_DEFAULT
+        crate::constants::hardcoding::runtime_fallback_ports::HTTP
     }
 
     /// Default development server port - configurable via `NESTGATE_DEV_SERVER_PORT`
     #[must_use]
     pub const fn dev_server_port() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::API_DEFAULT
+        crate::constants::hardcoding::runtime_fallback_ports::API
     }
 
     /// Port range for auto-discovery - start
     #[must_use]
     pub const fn discovery_port_start() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::HTTP_DEFAULT
+        crate::constants::hardcoding::runtime_fallback_ports::HTTP
     }
 
     /// Port range for auto-discovery - end
     #[must_use]
     pub const fn discovery_port_end() -> u16 {
-        use crate::constants::hardcoding::ports;
-        ports::ADMIN_DEFAULT
+        crate::constants::hardcoding::runtime_fallback_ports::ADMIN
     }
 
     /// Common service discovery ports
     #[must_use]
     pub fn common_ports() -> Vec<u16> {
-        use crate::constants::hardcoding::ports;
+        use crate::constants::hardcoding::runtime_fallback_ports as p;
         vec![
-            ports::HTTP_DEFAULT,
-            ports::HEALTH_CHECK,
-            ports::WEBSOCKET_DEFAULT,
-            ports::METRICS_DEFAULT,
-            ports::API_DEFAULT,
-            ports::API_ALT,
-            ports::EXTENDED_SERVICES,
-            ports::DISCOVERY_SERVICE,
-            ports::ADMIN_DEFAULT,
-            ports::METRICS_ALT,
+            p::HTTP,
+            p::HEALTH,
+            p::WEBSOCKET,
+            p::METRICS,
+            p::API,
+            p::API_ALT,
+            p::EXTENDED_SERVICES,
+            p::DISCOVERY_SERVICE,
+            p::ADMIN,
+            p::METRICS_ALT,
         ]
     }
 

@@ -194,7 +194,7 @@ impl ResponseBuilder {
 
     /// Helper method to create error JSON
     #[expect(dead_code, reason = "framework placeholder")] // Framework method - intentionally unused
-    fn error_json(message: String) -> Json<ErrorMessage> {
+    const fn error_json(message: String) -> Json<ErrorMessage> {
         Json(ErrorMessage { error: message })
     }
 }

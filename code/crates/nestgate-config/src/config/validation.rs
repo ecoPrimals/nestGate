@@ -77,6 +77,10 @@ impl ValidationResult {
     }
 
     /// Convert to a Result type
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] when [`Self::is_valid`] is false, aggregating validation messages.
     pub async fn into_result(self) -> nestgate_types::error::Result<()> {
         if self.is_valid {
             Ok(())
@@ -573,6 +577,10 @@ impl ConfigValidator {
     }
 
     /// Validate and return a Result type
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] when [`ValidationResult::into_result`] reports validation errors.
     pub async fn validate_strict<T: ConfigValidation + Sync>(
         config: &T,
     ) -> nestgate_types::error::Result<()> {

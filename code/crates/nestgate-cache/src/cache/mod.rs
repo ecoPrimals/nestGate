@@ -208,7 +208,7 @@ impl CacheSystemStats {
 
     /// Get total items across all tiers
     #[must_use]
-    pub fn total_items(&self) -> usize {
+    pub const fn total_items(&self) -> usize {
         match self {
             Self::SingleTier(stats) => stats.total_items(),
             Self::MultiTier(stats) => stats.total_items,
@@ -217,7 +217,7 @@ impl CacheSystemStats {
 
     /// Get total size across all tiers
     #[must_use]
-    pub fn total_size_bytes(&self) -> u64 {
+    pub const fn total_size_bytes(&self) -> u64 {
         match self {
             Self::SingleTier(stats) => stats.total_size_bytes(),
             Self::MultiTier(stats) => stats.total_size_bytes,
@@ -277,6 +277,7 @@ impl CacheBuilder {
     }
 
     /// Set cache directory
+    #[must_use]
     pub fn with_cache_dir<P: Into<std::path::PathBuf>>(mut self, path: P) -> Self {
         self.config.cache_dir = Some(path.into());
         self

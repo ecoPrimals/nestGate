@@ -6,7 +6,8 @@
 //! This module provides core functionality using modern Rust patterns
 //! and zero-cost abstractions.
 
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
@@ -56,6 +57,10 @@ pub struct EventsErrorConfig {
     pub buffer_size: usize,
 }
 
+#[expect(
+    deprecated,
+    reason = "Default impl for retained deprecated EventsErrorConfig (public migration shim)"
+)]
 impl Default for EventsErrorConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -69,7 +74,7 @@ impl Default for EventsErrorConfig {
 }
 
 /// Type alias for convenience in tests
-pub type Config = EventsErrorConfig;
+pub type Config = CanonicalNetworkConfig;
 
 /// Service interface re-exported from canonical source
 /// See: `crate::traits::Service` for the unified implementation
@@ -120,14 +125,14 @@ impl Default for Metrics {
 /// Service implementation for Default
 pub struct DefaultService {
     #[allow(dead_code)] // Stored for future use
-    config: EventsErrorConfig,
+    config: CanonicalNetworkConfig,
     metrics: Arc<tokio::sync::RwLock<Metrics>>,
 }
 
 impl DefaultService {
     /// Create a new service instance
     #[must_use]
-    pub fn new(config: EventsErrorConfig) -> Self {
+    pub fn new(config: CanonicalNetworkConfig) -> Self {
         Self {
             config,
             metrics: Arc::new(tokio::sync::RwLock::new(Metrics::default())),
@@ -180,57 +185,25 @@ impl Service for DefaultService {
 /// Create a default service instance
 #[must_use]
 pub fn create_service() -> DefaultService {
-    DefaultService::new(EventsErrorConfig::default())
+    DefaultService::new(CanonicalNetworkConfig::default())
 }
 
 /// Validate configuration
-pub async fn validate_config(config: &EventsErrorConfig) -> nestgate_types::Result<()> {
-    if config.max_connections == 0 {
-        return Err(NestGateError::configuration_error(
-            "events_error",
-            "max_connections must be greater than 0",
-        ));
-    }
-
-    if config.buffer_size == 0 {
-        return Err(NestGateError::configuration_error(
-            "events_error",
-            "buffer_size must be greater than 0",
-        ));
-    }
-
-    Ok(())
+pub async fn validate_config(config: &CanonicalNetworkConfig) -> nestgate_types::Result<()> {
+    config.validate()
 }
 
 // ==================== TESTS ====================
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Eventserrorconfigcanonical
-pub type EventsErrorConfigCanonical =
-    nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using EventsErrorConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_config::constants::DEFAULT_MAX_CONNECTIONS;
 
     #[test]
     fn test_config_default() {
-        let config = EventsErrorConfig::default();
-        assert!(config.enabled);
-        assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
+        let config = Config::default();
+        assert!(config.api.enabled);
+        assert!(config.api.max_connections > 0);
     }
 
     #[tokio::test]
@@ -238,7 +211,7 @@ mod tests {
         let mut config = Config::default();
         assert!(validate_config(&config).await.is_ok());
 
-        config.max_connections = 0;
+        config.api.max_connections = 0;
         assert!(validate_config(&config).await.is_err());
     }
 

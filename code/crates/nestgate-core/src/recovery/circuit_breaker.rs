@@ -12,7 +12,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
 /// Circuit breaker states
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Circuitstate
 pub enum CircuitState {
     /// Circuit is closed - requests pass through
@@ -127,10 +127,14 @@ impl CircuitBreaker {
     async fn can_execute(&self) -> bool {
         let state = self.state.read().await;
         match *state {
-            CircuitState::Closed => true,
+            CircuitState::Closed | CircuitState::HalfOpen => true,
             CircuitState::Open => {
-                // Check if timeout has elapsed
-                if let Some(last_failure) = *self.last_failure_time.read().await {
+                // Check if timeout has elapsed (avoid holding `RwLockReadGuard` across `if let` body)
+                let last_failure_opt = {
+                    let lf = self.last_failure_time.read().await;
+                    *lf
+                };
+                if let Some(last_failure) = last_failure_opt {
                     if last_failure.elapsed() >= self.config.timeout {
                         drop(state);
                         self.transition_to_half_open().await;
@@ -142,7 +146,6 @@ impl CircuitBreaker {
                     false
                 }
             }
-            CircuitState::HalfOpen => true,
         }
     }
 

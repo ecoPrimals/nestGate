@@ -61,7 +61,7 @@ impl ServiceDetector {
     }
 
     /// Start continuous service detection
-    pub async fn start(&mut self) -> CapabilityResult<()> {
+    pub fn start(&mut self) -> CapabilityResult<()> {
         for port in &self.scan_ports {
             let port = *port;
             let registry = Arc::clone(&self.registry);
@@ -70,7 +70,7 @@ impl ServiceDetector {
             let task = tokio::spawn(async move {
                 loop {
                     if let Ok(service) = Self::probe_port(port).await {
-                        let _ = registry.register_service(service).await;
+                        let _ = registry.register_service(service);
                     }
                     tokio::time::sleep(interval).await;
                 }
@@ -124,7 +124,7 @@ impl ServiceDetector {
     }
 
     /// Stop all detection tasks
-    pub async fn stop(&mut self) {
+    pub fn stop(&mut self) {
         for task in self.tasks.drain(..) {
             task.abort();
         }
@@ -195,7 +195,7 @@ mod tests {
         let mut detector = ServiceDetector::new(registry);
 
         // Should not panic when stopping before starting
-        detector.stop().await;
+        detector.stop();
         assert_eq!(detector.tasks.len(), 0);
     }
 
@@ -205,9 +205,9 @@ mod tests {
         let mut detector = ServiceDetector::new(registry);
 
         // Multiple stops should be safe
-        detector.stop().await;
-        detector.stop().await;
-        detector.stop().await;
+        detector.stop();
+        detector.stop();
+        detector.stop();
 
         assert_eq!(detector.tasks.len(), 0);
     }

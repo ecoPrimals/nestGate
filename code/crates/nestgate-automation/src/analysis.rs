@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 // Clean implementation of file characteristic analysis and access pattern tracking
 
 //! Analysis module
@@ -194,8 +198,7 @@ impl FileAnalyzer {
         // Determine compressibility based on file type and extension
         let _is_compressible = match file_type {
             FileType::Log | FileType::Database | FileType::Document => true,
-            FileType::Archive | FileType::Backup => false, // Already compressed
-            FileType::Image => false,                      // Already compressed
+            FileType::Archive | FileType::Backup | FileType::Image => false, // Already compressed
             _ => !matches!(
                 extension.as_str(),
                 "jpg" | "jpeg" | "png" | "gif" | "mp3" | "mp4" | "avi" | "mkv"
@@ -334,9 +337,8 @@ impl PatternAnalyzer {
 
         match extension {
             "log" | "tmp" | "bak" => StorageTier::Cold,
-            "doc" | "pdf" | "txt" => StorageTier::Warm,
             "mp4" | "mkv" | "avi" => StorageTier::Hot,
-            _ => StorageTier::Warm,
+            "doc" | "pdf" | "txt" | _ => StorageTier::Warm,
         }
     }
 }
@@ -395,12 +397,10 @@ impl DatasetAnalyzer {
 
         let (file_analyses, total_files, total_size) = self.scan_dataset_directory(path).await?;
 
-        let _access_patterns = self
-            .aggregate_patterns(
-                &file_analyses.iter().collect::<Vec<_>>(),
-                &AccessPattern::default(),
-            )
-            .await?;
+        let _access_patterns = self.aggregate_patterns(
+            &file_analyses.iter().collect::<Vec<_>>(),
+            &AccessPattern::default(),
+        )?;
         // Temporarily disabled recommendations generation due to signature mismatch
         let _recommendations: Vec<String> = vec![];
 
@@ -490,7 +490,7 @@ impl DatasetAnalyzer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn aggregate_patterns(
+    pub fn aggregate_patterns(
         &self,
         file_analyses: &[&FileAnalysis],
         _patterns: &AccessPattern, // Use singular AccessPattern from prediction module
@@ -887,9 +887,7 @@ mod tests {
     #[tokio::test]
     async fn test_dataset_analyzer_aggregate_patterns_empty() {
         let analyzer = DatasetAnalyzer::new();
-        let result = analyzer
-            .aggregate_patterns(&[], &AccessPattern::default())
-            .await;
+        let result = analyzer.aggregate_patterns(&[], &AccessPattern::default());
         assert!(result.is_ok());
         let pattern = result.unwrap();
         assert_eq!(pattern.total_accesses, 0);
@@ -941,7 +939,6 @@ mod tests {
         };
         let out = analyzer
             .aggregate_patterns(&[&fa], &AccessPattern::default())
-            .await
             .expect("aggregate");
         assert_eq!(out.total_accesses, 10);
         assert_eq!(out.accesses_last_24h, 10);

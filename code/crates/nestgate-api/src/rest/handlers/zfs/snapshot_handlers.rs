@@ -17,6 +17,11 @@ use crate::rest::{ApiState, DataError, DataResponse, ListQuery};
 
 /// List snapshots for a dataset
 /// GET /api/v1/zfs/datasets/:dataset/snapshots
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the dataset is missing,
+/// snapshot listing fails, or the response cannot be built.
 pub async fn list_snapshots(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -31,10 +36,10 @@ pub async fn list_snapshots(
         ) {
             Ok(snapshot_metadata) => {
                 let mut snapshots = Vec::new();
-                for (i, _metadata) in snapshot_metadata.iter().enumerate() {
+                for (i, metadata) in snapshot_metadata.iter().enumerate() {
                     snapshots.push(Snapshot {
                         id: format!("{dataset_name}_{i}"),
-                        name: _metadata.name.clone(),
+                        name: metadata.name.clone(),
                         dataset: dataset_name.clone(),
                         created: chrono::Utc::now(),
                         size_bytes: 0,
@@ -88,6 +93,11 @@ pub async fn list_snapshots(
 
 /// Create a new snapshot
 /// POST /api/v1/zfs/datasets/:dataset/snapshots
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the dataset is missing,
+/// validation fails, or creation fails.
 pub async fn create_snapshot(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -150,8 +160,8 @@ pub async fn get_snapshot(
             placeholder_snapshots,
         ) {
             Ok(snapshots) => {
-                for _metadata in &snapshots {
-                    if _metadata.name == snapshot_name {
+                for metadata in &snapshots {
+                    if metadata.name == snapshot_name {
                         let snapshot = Snapshot {
                             id: format!("{dataset_name}_{snapshot_name}"),
                             name: snapshot_name,

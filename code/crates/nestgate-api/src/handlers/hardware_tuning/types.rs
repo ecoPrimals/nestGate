@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **HARDWARE TUNING TYPES**
 //!
 //! Data structures and type definitions for hardware tuning operations.
@@ -408,7 +413,6 @@ pub struct TuningSession {
 ///
 /// Collection of hardware monitoring services.
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 /// Hardwaremonitors
 pub struct HardwareMonitors {
     /// CPU performance monitor
@@ -423,7 +427,6 @@ pub struct HardwareMonitors {
 ///
 /// Collects and aggregates system performance metrics.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Monitor fields used for system integration
 /// Systemmetricscollector
 pub struct SystemMetricsCollector {
     /// CPU monitoring
@@ -475,7 +478,7 @@ impl SystemMetricsCollector {
             memory_usage,
             gpu_usage,
             disk_usage: self.get_disk_usage().unwrap_or(0.0),
-            network_usage: self.get_network_usage().await.unwrap_or(0.0),
+            network_usage: self.get_network_usage().unwrap_or(0.0),
             disk_io: 0.0,
             network_io: 0.0,
             power_consumption: 0.0,
@@ -589,7 +592,7 @@ impl SystemMetricsCollector {
     }
 
     /// Gets Network Usage
-    async fn get_network_usage(&self) -> Result<f64> {
+    fn get_network_usage(&self) -> Result<f64> {
         // Read network statistics from /proc/net/dev
         match std::fs::read_to_string("/proc/net/dev") {
             Ok(content) => {

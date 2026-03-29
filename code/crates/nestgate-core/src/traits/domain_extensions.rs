@@ -200,7 +200,7 @@ pub trait NetworkServiceExtension: CanonicalService {
 }
 
 /// Generic service extension with type parameter
-pub fn extend_service<T>(service: T) -> Result<T>
+pub const fn extend_service<T>(service: T) -> Result<T>
 where
     T: CanonicalService,
 {

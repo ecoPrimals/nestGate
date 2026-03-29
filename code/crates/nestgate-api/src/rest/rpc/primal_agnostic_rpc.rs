@@ -91,7 +91,7 @@ impl PrimalAgnosticRpcService {
             .with_timeout(request.timeout_seconds.unwrap_or(30));
 
         // Route via capability system (no primal hardcoding)
-        match self.adapter.request_capability(capability_request).await {
+        match self.adapter.request_capability(capability_request) {
             Ok(capability_response) => {
                 let execution_time = start_time.elapsed().as_millis() as u64;
                 

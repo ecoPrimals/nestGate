@@ -26,6 +26,9 @@ pub mod error;
 pub mod pool;
 pub mod pool_helpers;
 
+/// Saturating `f64`/`u64` helpers for size parsing and metrics.
+pub mod numeric;
+
 /// Core type definitions for ZFS operations
 pub mod types;
 

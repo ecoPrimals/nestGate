@@ -369,18 +369,31 @@ impl TemplateStorage {
             .collect();
 
         // Calculate max usage for normalization
-        let max_usage = community_templates
-            .iter()
-            .map(|t| t.metadata.usage_count)
-            .max()
-            .unwrap_or(1) as f64;
+        let max_usage = {
+            let m = community_templates
+                .iter()
+                .map(|t| t.metadata.usage_count)
+                .max()
+                .unwrap_or(1);
+            // Template ranking denominator: usage counts normalized to float.
+            #[allow(clippy::cast_precision_loss)]
+            {
+                m as f64
+            }
+        };
 
         // Calculate scores and sort
         let mut scored_templates: Vec<(GraphTemplate, f64)> = community_templates
             .into_iter()
             .map(|t| {
                 let normalized_usage = if max_usage > 0.0 {
-                    (t.metadata.usage_count as f64) / max_usage
+                    let uc = t.metadata.usage_count;
+                    #[expect(
+                        clippy::cast_precision_loss,
+                        reason = "template usage ratio for community ranking score"
+                    )]
+                    let ucf: f64 = uc as f64;
+                    ucf / max_usage
                 } else {
                     0.0
                 };

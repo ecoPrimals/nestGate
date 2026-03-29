@@ -3,16 +3,25 @@
 //! Integration tests for template storage via Unix socket.
 //! Tests the `template.*` JSON-RPC methods through the Unix socket server.
 //!
-//! **Note**: Uses the legacy `JsonRpcUnixServer` API pending migration to
-//! Songbird IPC service-based patterns.
+//! Uses [`nestgate_core::rpc::IsomorphicIpcServer`] with the ecosystem JSON-RPC handler.
 
-#![allow(deprecated)]
-
-use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
+use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 use serde_json::{Value, json};
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
+
+fn prepare_ecosystem_ipc(family_id: &str) -> (Arc<IsomorphicIpcServer>, PathBuf) {
+    std::env::set_var("NESTGATE_FAMILY_ID", family_id);
+    let socket_path = SocketConfig::from_environment()
+        .expect("socket config")
+        .socket_path
+        .clone();
+    let handler = legacy_ecosystem_rpc_handler(family_id).expect("rpc handler");
+    let server = Arc::new(IsomorphicIpcServer::new(family_id.to_string(), handler));
+    (server, socket_path)
+}
 
 /// Test helper: Send JSON-RPC request and get response
 async fn send_jsonrpc_request(
@@ -57,14 +66,13 @@ async fn send_jsonrpc_request(
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_template_store_retrieve_workflow() {
     let family_id = format!("test_template_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
@@ -125,14 +133,13 @@ async fn test_template_store_retrieve_workflow() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_template_list_filtering() {
     let family_id = format!("test_list_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
@@ -203,14 +210,13 @@ async fn test_template_list_filtering() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_community_top_ranking() {
     let family_id = format!("test_community_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
@@ -278,16 +284,15 @@ async fn test_community_top_ranking() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_template_family_isolation() {
     let family_id_1 = format!("test_family_1_{}", uuid::Uuid::new_v4());
     let family_id_2 = format!("test_family_2_{}", uuid::Uuid::new_v4());
 
-    let server = JsonRpcUnixServer::new(&family_id_1).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id_1);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;

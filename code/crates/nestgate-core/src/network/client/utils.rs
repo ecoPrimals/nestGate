@@ -19,6 +19,7 @@ use crate::Result;
 /// ```ignore
 /// let client = create_client();
 /// ```
+#[must_use]
 pub fn create_client() -> HttpClient {
     HttpClient::default()
 }

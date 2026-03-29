@@ -10,23 +10,56 @@
 ```
 Build:              25/25 workspace members compiling (0 errors)
 Musl static:        WORKING (4.7MB static binary, x86_64-unknown-linux-musl)
-Clippy:             Warnings reduced 8,227 → 4,642 (production targets -D warnings clean)
+Clippy:             Warnings reduced 8,227 → 2,972 (13 pedantic categories zeroed; production -D warnings clean)
 Format:             CLEAN (cargo fmt --check passes)
-Docs:               CLEAN (cargo doc --no-deps, 0 warnings)
-Tests:              11,707 passing, 0 failures
-Doctests:           ZERO failures (65 fixed across 7 crates)
-Coverage:           74.3% line (up from 68.4%; target: 90%)
-Files > 1000 lines: 0 (largest: 813 lines, test file)
+Docs:               52 public APIs have # Errors sections; cargo doc clean
+Tests:              7,887 lib tests passing, 0 failures, 64 ignored
+Doctests:           ZERO failures
+Files > 1000 lines: 0 (largest: 987 lines)
 Unwrap/Expect:      ZERO in production code (test-only, gated by workspace lint)
-TODO/FIXME:         ZERO in production code (per wateringHole §13)
-Unsafe blocks:      1 production (env_process.rs, Rust 2024 set_var safety)
+TODO/FIXME:         1 (zero-copy Cow migration note in core_errors.rs)
+Unsafe blocks:      1 production (env_process_shim: edition-2021 bridge for set_var)
 #[allow] migrated:  Moved to #[expect(reason)] per biomeOS pattern
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
-Primal sovereignty: Zero other-primal references (beardog/songbird/biomeOS removed)
+Primal sovereignty: Zero other-primal references; literal "nestgate" identity throughout
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
-Workspace members:  25 (code/crates + tools/unwrap-migrator + fuzz); includes nestgate-env-process-shim
+Workspace members:  25 (code/crates + tools/unwrap-migrator + fuzz)
 ```
+
+---
+
+## Deep debt evolution & idiomatic Rust session (Mar 29, 2026)
+
+### Clippy pedantic zero-warning pass
+- **13 pedantic lint categories zeroed**: `const_fn`, `must_use`, `Self` pattern, `match_same_arms`, `unnecessary_wraps`, `significant_drop_tightening`, `unused_self`, `uninlined_format_args`, `derive_partial_eq_without_eq`, `ref_option_ref`, `used_underscore_binding`, `missing_const_for_fn`, `return_self_not_must_use`
+- **Warnings**: 4,642 → 2,972 (remaining: docs linting, numeric casts on non-hot paths)
+- **unused_async**: 229 → 122 (hot paths de-asynced, trait-required kept with `#[expect]`)
+- **Cast precision**: Hot paths use `f64_to_u64_saturating` / `u64_to_f64_approximate` (nestgate-zfs numeric module)
+
+### API evolution
+- **Deprecated `JsonRpcUnixServer`** migrated to `IsomorphicIpcServer` in all production entry points
+- **`EventsErrorConfig`** migrated to `CanonicalNetworkConfig`
+- **ZFS config types** (`DatasetConfig`, `SnapshotConfig`, etc.) un-deprecated (they are the real types, not network types)
+- **`hardcoding::ports`** → 15 call sites migrated to `runtime_fallback_ports`
+- **`env!("CARGO_PKG_NAME")`** → literal `"nestgate"` for primal identity throughout all crates
+
+### Zero-copy evolution
+- Reused `Vec<u8>` buffers + `serde_json::from_slice` in IPC line readers
+- `Cow::Borrowed` for tarpc endpoint strings
+- Eliminated redundant `.to_string()` / `.clone()` in socket scanning and snapshot parsing
+
+### Test coverage
+- **7,887 tests passing** (lib), 0 failures, 64 ignored
+- Re-enabled 10 environment-sensitive tests in `nestgate-config` (temp-env + serial_test)
+- All `#[ignore]` reasons documented with run instructions
+- `# Errors` doc sections added to 52 top public APIs
+
+### Dependency audit
+- **No openssl** — uses rustls (good)
+- **ring** (C/ASM crypto) — no pure-Rust alternative yet
+- **unsafe-libyaml** via serde_yaml_ng — candidate for pure Rust YAML evolution
+- **inotify-sys** via notify — kernel FFI, expected for Linux
 
 ---
 

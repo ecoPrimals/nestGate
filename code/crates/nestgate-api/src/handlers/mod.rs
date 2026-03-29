@@ -751,7 +751,6 @@ impl WorkspaceManagerWrapper {
 ///
 /// Manager for ZFS operations and pool management.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Handler field used for ZFS operations
 /// Manager for Zfs operations
 pub struct ZfsManager {
     /// ZFS handler implementation

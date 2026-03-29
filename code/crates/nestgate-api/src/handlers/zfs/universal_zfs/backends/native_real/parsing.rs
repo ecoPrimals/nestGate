@@ -35,15 +35,12 @@ pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
                 "ONLINE" => PoolHealth::Online,
                 "DEGRADED" => PoolHealth::Degraded,
                 "FAULTED" => PoolHealth::Faulted,
-                "OFFLINE" => PoolHealth::Offline,
-                "UNAVAIL" => PoolHealth::Offline,
-                "REMOVED" => PoolHealth::Offline,
+                "OFFLINE" | "UNAVAIL" | "REMOVED" => PoolHealth::Offline,
                 _ => PoolHealth::Unknown,
             };
 
             let state = match health {
-                PoolHealth::Online => PoolState::Active,
-                PoolHealth::Degraded => PoolState::Active,
+                PoolHealth::Online | PoolHealth::Degraded => PoolState::Active,
                 _ => PoolState::Unknown,
             };
 
@@ -162,10 +159,9 @@ pub fn parse_dataset_list(output: &str) -> UniversalZfsResult<Vec<DatasetInfo>> 
             let dataset_type_str = fields[3];
 
             let dataset_type = match dataset_type_str {
-                "filesystem" => DatasetType::Filesystem,
                 "volume" => DatasetType::Volume,
                 "snapshot" => DatasetType::Snapshot,
-                _ => DatasetType::Filesystem, // Default fallback
+                "filesystem" | _ => DatasetType::Filesystem,
             };
 
             datasets.push(DatasetInfo {

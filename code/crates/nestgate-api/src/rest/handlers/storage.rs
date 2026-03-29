@@ -30,6 +30,11 @@ use nestgate_core::universal_storage::AutoConfigurator;
 
 /// List available storage backends
 /// GET /api/v1/storage/backends
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the response cannot be
+/// built (reserved for future storage-detector failures).
 pub async fn list_backends(
     State(state): State<ApiState>,
     Query(query): Query<ListQuery>,
@@ -147,6 +152,11 @@ pub async fn list_backends(
 
 /// Scan for available storage systems
 /// POST /api/v1/storage/scan
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the response cannot be
+/// built (reserved for future scan failures).
 pub async fn scan_storage(
     State(state): State<ApiState>,
     Json(request): Json<ScanStorageRequest>,
@@ -254,6 +264,11 @@ pub async fn scan_storage(
 
 /// Benchmark storage performance
 /// POST /api/v1/storage/benchmark
+///
+/// # Errors
+///
+/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the requested backend
+/// type does not support benchmarking or when the response cannot be built.
 pub async fn benchmark_storage(
     State(_state): State<ApiState>,
     Json(request): Json<BenchmarkStorageRequest>,
@@ -492,7 +507,7 @@ fn cost_estimate_for_use_case(use_case: &str) -> CostEstimate {
 /// # Errors
 ///
 /// Returns [`Json<DataError>`] when the auto-configurator state cannot be initialized or validation fails.
-pub async fn auto_configure(
+pub fn auto_configure(
     State(state): State<ApiState>,
     Json(request): Json<AutoConfigInput>,
 ) -> Result<Json<DataResponse<AutoConfigResult>>, Json<DataError>> {
@@ -534,7 +549,7 @@ pub async fn auto_configure(
 // ==================== SECTION ====================
 
 /// Get available filesystem space (simplified)
-#[allow(dead_code)] // Utility function for filesystem monitoring
+#[expect(dead_code, reason = "Utility function for filesystem monitoring")]
 fn get_filesystem_space(path: &str) -> Option<u64> {
     use std::fs;
     match fs::metadata(path) {

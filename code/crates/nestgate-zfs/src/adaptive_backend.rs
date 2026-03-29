@@ -284,12 +284,12 @@ impl GracefulZfsOperations {
             "🔄 Using internal ZFS implementation for: {} {:?}",
             command, args
         );
-        let result = Self::execute_internal(command, args).await;
+        let result = Self::execute_internal(command, args);
         (result.0, result.1, false)
     }
 
     /// Execute using `NestGate`'s internal ZFS implementation
-    async fn execute_internal(command: &str, args: &[&str]) -> (bool, String) {
+    fn execute_internal(command: &str, args: &[&str]) -> (bool, String) {
         // This would call into NestGate's internal ZFS implementation
         // For now, return a placeholder that indicates we're using internal impl
         debug!("📦 Internal ZFS implementation: {} {:?}", command, args);

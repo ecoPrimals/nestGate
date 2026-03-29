@@ -12,12 +12,18 @@
 /// Create, Read, Update, Delete operations for workspace entities.
 pub mod crud;
 
+/// **WORKSPACE LIFECYCLE** (backup, restore, migration)
+pub mod lifecycle;
+
 /// **WORKSPACE OPTIMIZATION**
 ///
 /// Performance optimization and resource management for workspaces.
 pub mod optimization;
 #[cfg(test)]
 mod optimization_tests;
+
+#[cfg(test)]
+mod lifecycle_tests;
 
 /// **WORKSPACE STORAGE**
 ///

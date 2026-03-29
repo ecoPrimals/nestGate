@@ -6,6 +6,7 @@
 //! `UniBin` service management with daemon mode, status, health, and version commands
 
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use tracing::info;
 
@@ -113,17 +114,10 @@ impl ServiceManager {
         }
     }
 
-    /// Unix socket JSON-RPC server using the legacy in-process implementation.
-    ///
-    /// `JsonRpcUnixServer` is deprecated in favor of routing IPC through the Songbird
-    /// universal layer (see `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md`). `NestGate` CLI
-    /// still uses this type because it honors `nestgate_core::rpc::SocketConfig` (including
-    /// `NESTGATE_SOCKET` and biomeOS path fallbacks). Migrating to
-    /// `nestgate_core::rpc::IsomorphicIpcServer` will happen once socket path resolution is
-    /// unified with that stack.
-    #[allow(deprecated)]
+    /// Unix socket JSON-RPC server via [`nestgate_core::rpc::IsomorphicIpcServer`] and the
+    /// full ecosystem [`nestgate_core::rpc::legacy_ecosystem_rpc_handler`] dispatch table.
     async fn start_unix_socket_mode(&self) -> BinResult<()> {
-        use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
+        use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 
         info!("🔌 Starting in ECOSYSTEM MODE (Unix socket)");
 
@@ -153,17 +147,18 @@ impl ServiceManager {
             }
         );
 
-        // Create Unix socket server
-        let server = JsonRpcUnixServer::new(&socket_config.family_id)
-            .await
-            .map_err(|e| {
-                crate::error::NestGateBinError::service_init_error(
-                    format!("Failed to create Unix socket server: {e}"),
-                    Some("unix-socket".to_string()),
-                )
-            })?;
+        let handler = legacy_ecosystem_rpc_handler(&socket_config.family_id).map_err(|e| {
+            crate::error::NestGateBinError::service_init_error(
+                format!("Failed to create JSON-RPC handler: {e}"),
+                Some("unix-socket-handler".to_string()),
+            )
+        })?;
+        let server = Arc::new(IsomorphicIpcServer::new(
+            socket_config.family_id.clone(),
+            handler,
+        ));
 
-        println!("\n✅ JSON-RPC Unix Socket Server ready");
+        println!("\n✅ JSON-RPC Unix Socket Server ready (isomorphic IPC)");
         println!("\n📊 Available RPC Methods:");
         println!("  Health & Discovery:");
         println!("    • health");
@@ -192,8 +187,7 @@ impl ServiceManager {
         println!("🎯 Mode: Ecosystem (atomic architecture)");
         println!("\nPress Ctrl+C to stop\n");
 
-        // Start server (blocking)
-        server.serve().await.map_err(|e| {
+        server.start().await.map_err(|e| {
             crate::error::NestGateBinError::runtime_error(
                 format!("Unix socket server error: {e}"),
                 Some("unix-socket-serve".to_string()),
@@ -265,7 +259,7 @@ impl ServiceManager {
 
             // Spawn tarpc server alongside HTTP server
             tokio::spawn(async move {
-                let service = match nestgate_core::rpc::NestGateRpcService::new().await {
+                let service = match nestgate_core::rpc::NestGateRpcService::new() {
                     Ok(s) => s,
                     Err(e) => {
                         tracing::error!("Failed to create tarpc service: {}", e);
@@ -467,11 +461,10 @@ pub async fn run_daemon(
 
 /// Run `NestGate` in socket-only mode (TRUE ecoBin default - no HTTP dependencies).
 ///
-/// Uses `nestgate_core::rpc::JsonRpcUnixServer` until Songbird IPC SERVICE integration
-/// replaces direct binding; see `start_unix_socket_mode` for migration context.
-#[allow(deprecated)]
+/// Uses [`nestgate_core::rpc::IsomorphicIpcServer`] with the ecosystem JSON-RPC handler
+/// (same surface as the legacy Unix server; TCP fallback when Unix is unavailable).
 async fn run_socket_only_daemon() -> BinResult<()> {
-    use nestgate_core::rpc::{JsonRpcUnixServer, SocketConfig};
+    use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 
     println!("\n╔══════════════════════════════════════════════════════════════════════╗");
     println!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
@@ -495,16 +488,17 @@ async fn run_socket_only_daemon() -> BinResult<()> {
     // Log socket configuration
     socket_config.log_summary();
 
-    // Create Unix socket server with persistent storage backend
     println!("📦 Initializing persistent storage backend...");
-    let server = JsonRpcUnixServer::new(&socket_config.family_id)
-        .await
-        .map_err(|e| {
-            crate::error::NestGateBinError::service_init_error(
-                format!("Failed to create Unix socket server: {e}"),
-                Some("unix-socket".to_string()),
-            )
-        })?;
+    let handler = legacy_ecosystem_rpc_handler(&socket_config.family_id).map_err(|e| {
+        crate::error::NestGateBinError::service_init_error(
+            format!("Failed to create JSON-RPC handler: {e}"),
+            Some("unix-socket-handler".to_string()),
+        )
+    })?;
+    let server = Arc::new(IsomorphicIpcServer::new(
+        socket_config.family_id.clone(),
+        handler,
+    ));
     println!("✅ Storage backend initialized");
     println!();
 
@@ -533,8 +527,7 @@ async fn run_socket_only_daemon() -> BinResult<()> {
     println!();
     println!("Press Ctrl+C to stop\n");
 
-    // Start server (blocking)
-    server.serve().await.map_err(|e| {
+    server.start().await.map_err(|e| {
         crate::error::NestGateBinError::runtime_error(
             format!("Unix socket server error: {e}"),
             Some("unix-socket-serve".to_string()),

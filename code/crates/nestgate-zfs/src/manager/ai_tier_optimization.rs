@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -150,7 +155,7 @@ impl AiTierOptimizer {
             .sum::<u64>();
 
         let access_pattern = self.determine_access_pattern(metrics);
-        let current_tier = self.determine_current_tier(dataset).await?;
+        let current_tier = self.determine_current_tier(dataset)?;
 
         let recommended_tier = match (avg_latency, total_ops, access_pattern) {
             (latency, ops, AccessPattern::Sequential) if latency < 100.0 && ops > 1000 => {
@@ -200,7 +205,7 @@ impl AiTierOptimizer {
     }
 
     /// Determine the current tier of a dataset
-    async fn determine_current_tier(&self, _dataset: &str) -> Result<TierType> {
+    const fn determine_current_tier(&self, _dataset: &str) -> Result<TierType> {
         // This would integrate with actual ZFS tier information
         // For now, return a default
         Ok(TierType::Warm)
@@ -594,10 +599,7 @@ mod tests {
         let config = create_test_config();
         let optimizer = AiTierOptimizer::new(config);
 
-        let tier = optimizer
-            .determine_current_tier("any_dataset")
-            .await
-            .unwrap();
+        let tier = optimizer.determine_current_tier("any_dataset").unwrap();
         assert_eq!(tier, TierType::Warm); // Default implementation returns Warm
     }
 

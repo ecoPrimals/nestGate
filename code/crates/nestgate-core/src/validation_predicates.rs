@@ -67,7 +67,7 @@ pub fn is_valid_consensus_threshold(threshold: f64) -> bool {
 ///
 /// **TESTABLE**: Can verify port boundary conditions
 #[must_use]
-pub fn is_valid_port_number(port: u16) -> bool {
+pub const fn is_valid_port_number(port: u16) -> bool {
     port > 0 // u16 max is 65535, so no need to check upper bound
 }
 
@@ -75,7 +75,7 @@ pub fn is_valid_port_number(port: u16) -> bool {
 /// **PURE FUNCTION**: Simple string validation
 /// **TESTABLE**: Can verify empty string handling
 #[must_use]
-pub fn is_non_empty_string(value: &str) -> bool {
+pub const fn is_non_empty_string(value: &str) -> bool {
     !value.is_empty()
 }
 
@@ -109,7 +109,7 @@ pub fn is_valid_file_path(path: &str) -> bool {
 /// **PURE FUNCTION**: Positivity check with zero exclusion
 /// **TESTABLE**: Can verify boundary condition at zero
 #[must_use]
-pub fn is_positive_number(value: u64) -> bool {
+pub const fn is_positive_number(value: u64) -> bool {
     value > 0
 }
 
@@ -117,7 +117,7 @@ pub fn is_positive_number(value: u64) -> bool {
 /// **PURE FUNCTION**: File path validation predicate
 /// **TESTABLE**: Can verify both conditions must be true (&&)
 #[must_use]
-pub fn has_required_tls_files(cert_file: &str, key_file: &str) -> bool {
+pub const fn has_required_tls_files(cert_file: &str, key_file: &str) -> bool {
     is_non_empty_string(cert_file) && is_non_empty_string(key_file)
 }
 
@@ -125,7 +125,7 @@ pub fn has_required_tls_files(cert_file: &str, key_file: &str) -> bool {
 /// **PURE FUNCTION**: Optional field checking with OR logic
 /// **TESTABLE**: Can verify || mutation detection (any method present)
 #[must_use]
-pub fn has_notification_methods(has_email: bool, has_slack: bool, has_webhook: bool) -> bool {
+pub const fn has_notification_methods(has_email: bool, has_slack: bool, has_webhook: bool) -> bool {
     has_email || has_slack || has_webhook
 }
 
@@ -133,7 +133,7 @@ pub fn has_notification_methods(has_email: bool, has_slack: bool, has_webhook: b
 /// **PURE FUNCTION**: Multi-condition validation with AND logic
 /// **TESTABLE**: Can verify all conditions must be true
 #[must_use]
-pub fn is_prometheus_config_valid(enabled: bool, _port: u16, path: &str) -> bool {
+pub const fn is_prometheus_config_valid(enabled: bool, _port: u16, path: &str) -> bool {
     if !enabled {
         return true; // Disabled config is always valid
     }
@@ -226,7 +226,7 @@ pub fn has_any_required_permission(
 /// **PURE FUNCTION**: Resource limit validation with multiple conditions
 /// **TESTABLE**: Can verify all resource limits are valid
 #[must_use]
-pub fn are_system_resources_valid(
+pub const fn are_system_resources_valid(
     worker_threads: usize,
     request_timeout: u64,
     connection_timeout: u64,
@@ -244,7 +244,7 @@ pub fn are_system_resources_valid(
 /// **PURE FUNCTION**: Environment-based security validation
 /// **TESTABLE**: Can verify production security requirements
 #[must_use]
-pub fn requires_security_capabilities_in_production(
+pub const fn requires_security_capabilities_in_production(
     is_production: bool,
     capabilities_count: usize,
 ) -> bool {
@@ -258,7 +258,7 @@ pub fn requires_security_capabilities_in_production(
 /// **PURE FUNCTION**: Conditional validation based on enabled state
 /// **TESTABLE**: Can verify enabled implies valid configuration
 #[must_use]
-pub fn is_monitoring_config_complete(
+pub const fn is_monitoring_config_complete(
     alerts_enabled: bool,
     has_notifications: bool,
     prometheus_enabled: bool,

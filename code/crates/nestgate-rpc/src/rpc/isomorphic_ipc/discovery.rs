@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! # 🔍 IPC Endpoint Discovery
 //!
 //! **UNIVERSAL**: Discovers Unix socket OR TCP endpoints automatically\

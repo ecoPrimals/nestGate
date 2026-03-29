@@ -472,12 +472,12 @@ pub async fn demo_suggested_actions() -> Json<AIFirstResponse<Vec<AutomationCapa
             description: "Enable comprehensive monitoring dashboard".to_string(),
             confidence: 0.95,
             parameters: {
-                let mut _params = HashMap::new();
-                _params.insert(
+                let mut params = HashMap::new();
+                params.insert(
                     "dashboard_type".to_string(),
                     serde_json::Value::String("comprehensive".to_string()),
                 );
-                _params
+                params
             },
             priority: 1, // High priority
             dependencies: Vec::new(),

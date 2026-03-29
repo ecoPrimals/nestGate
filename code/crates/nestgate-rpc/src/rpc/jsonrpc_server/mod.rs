@@ -43,6 +43,7 @@
 //! Capabilities (1):
 //! - `capabilities.list` - Supported JSON-RPC method names
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 
@@ -54,8 +55,33 @@ use jsonrpsee::{
 };
 use tracing::{debug, info, warn};
 
+use nestgate_config::config::capability_discovery::DiscoverySource;
+use nestgate_config::constants::ports::default_tarpc_client_endpoint;
+
 use super::tarpc_server::NestGateRpcService;
 use super::tarpc_types::{DatasetParams, NestGateRpc};
+
+/// Registered JSON-RPC method names for `capabilities.list` (static slice avoids per-request `Vec` allocation).
+const JSON_RPC_CAPABILITIES_METHODS: &[&str] = &[
+    "storage.dataset.create",
+    "storage.dataset.list",
+    "storage.dataset.get",
+    "storage.dataset.delete",
+    "storage.object.store",
+    "storage.object.retrieve",
+    "storage.object.metadata",
+    "storage.object.list",
+    "storage.object.delete",
+    "discovery.capability.register",
+    "discovery.capability.query",
+    "health.check",
+    "health.liveness",
+    "health.readiness",
+    "health.metrics",
+    "health.info",
+    "health.protocols",
+    "capabilities.list",
+];
 
 /// JSON-RPC server configuration
 #[derive(Debug, Clone)]
@@ -111,7 +137,6 @@ impl JsonRpcServer {
     }
 
     /// Build RPC module with all methods registered (used by `start()` and tests)
-    #[allow(dead_code)] // Used by tests
     pub(crate) fn build_module(
         state: JsonRpcState,
     ) -> Result<RpcModule<JsonRpcState>, Box<dyn std::error::Error>> {
@@ -123,6 +148,11 @@ impl JsonRpcServer {
     }
 
     /// Build and start the JSON-RPC server
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the HTTP server fails to bind, the listening address cannot be read,
+    /// or JSON-RPC method registration fails.
     pub async fn start(self) -> Result<(ServerHandle, SocketAddr), Box<dyn std::error::Error>> {
         info!(
             "🚀 Starting NestGate JSON-RPC 2.0 server on {}",
@@ -443,7 +473,7 @@ impl JsonRpcServer {
             "discovery.capability.register",
             |params, _ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
-                #[allow(dead_code)]
+                #[expect(dead_code, reason = "JSON-RPC params struct; metadata optional for discovery announce")]
                 struct Params {
                     capability: String,
                     endpoint: String,
@@ -491,11 +521,12 @@ impl JsonRpcServer {
                     "NESTGATE_{}_ENDPOINT",
                     capability.to_uppercase().replace('-', "_")
                 );
+                let discovery_default = default_tarpc_client_endpoint();
                 let se =
                     match nestgate_config::config::capability_discovery::discover_with_fallback(
                         &capability,
                         &env_var,
-                        "tarpc://127.0.0.1:8091",
+                        &discovery_default,
                     )
                     .await
                     {
@@ -505,15 +536,23 @@ impl JsonRpcServer {
                             return Ok::<_, ErrorObjectOwned>(serde_json::json!([]));
                         }
                     };
+                if se.source == DiscoverySource::Default {
+                    warn!(
+                        capability = %capability,
+                        endpoint = %se.endpoint,
+                        env_var = %env_var,
+                        "discovery.capability.query using env-derived default tarpc endpoint"
+                    );
+                }
                 let raw = se.endpoint.trim();
-                let tarpc_ep = if raw.starts_with("tarpc://") {
-                    raw.to_string()
+                let tarpc_ep: Cow<'_, str> = if raw.starts_with("tarpc://") {
+                    Cow::Borrowed(raw)
                 } else if let Some(r) = raw.strip_prefix("http://") {
-                    format!("tarpc://{r}")
+                    Cow::Owned(format!("tarpc://{r}"))
                 } else if let Some(r) = raw.strip_prefix("https://") {
-                    format!("tarpc://{r}")
+                    Cow::Owned(format!("tarpc://{r}"))
                 } else {
-                    format!("tarpc://{raw}")
+                    Cow::Owned(format!("tarpc://{raw}"))
                 };
                 Ok::<_, ErrorObjectOwned>(serde_json::json!([{
                     "id": format!("discovered-{}", capability),
@@ -528,27 +567,9 @@ impl JsonRpcServer {
         // capabilities.list — semantic surface discovery
         module.register_async_method("capabilities.list", |_params, _ctx, _ext| async move {
             debug!("JSON-RPC: capabilities.list()");
-            let methods = vec![
-                "storage.dataset.create",
-                "storage.dataset.list",
-                "storage.dataset.get",
-                "storage.dataset.delete",
-                "storage.object.store",
-                "storage.object.retrieve",
-                "storage.object.metadata",
-                "storage.object.list",
-                "storage.object.delete",
-                "discovery.capability.register",
-                "discovery.capability.query",
-                "health.check",
-                "health.liveness",
-                "health.readiness",
-                "health.metrics",
-                "health.info",
-                "health.protocols",
-                "capabilities.list",
-            ];
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({ "methods": methods }))
+            Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                "methods": JSON_RPC_CAPABILITIES_METHODS
+            }))
         })?;
 
         Ok(())

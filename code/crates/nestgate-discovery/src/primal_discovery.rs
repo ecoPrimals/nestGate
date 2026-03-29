@@ -130,12 +130,14 @@ pub struct SelfKnowledgeBuilder {
 
 impl SelfKnowledgeBuilder {
     /// Set primal name
+    #[must_use]
     pub fn name(mut self, name: impl Into<String>) -> Self {
         self.name = Some(name.into());
         self
     }
 
     /// Add a capability
+    #[must_use]
     pub fn capability(mut self, capability: impl Into<String>) -> Self {
         self.capabilities.push(capability.into());
         self
@@ -149,6 +151,7 @@ impl SelfKnowledgeBuilder {
     }
 
     /// Add metadata
+    #[must_use]
     pub fn metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.metadata.insert(key.into(), value.into());
         self

@@ -148,7 +148,7 @@ impl ServiceDiscoveryConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
+    use temp_env::with_vars;
 
     // NOTE: Some tests manipulate environment variables and may interfere
     // with each other when run in parallel. Run with `--test-threads=1` for
@@ -178,32 +178,20 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Run with --ignored due to env var manipulation
+    #[serial_test::serial]
     fn test_discovery_config_from_env_host_and_port() {
-        // Save original values
-        let original_host = env::var("NESTGATE_DISCOVERY_HOST").ok();
-        let original_port = env::var("NESTGATE_DISCOVERY_BASE_PORT").ok();
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_DISCOVERY_HOST", "192.168.1.100");
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_DISCOVERY_BASE_PORT", "9000");
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_DISCOVERY_ENDPOINTS");
-
-        let config = ServiceDiscoveryConfig::default();
-        assert_eq!(config.discovery_host, "192.168.1.100");
-        assert_eq!(config.discovery_base_port, 9000);
-
-        // Restore original values
-        match original_host {
-            Some(val) => crate::env_process::set_var("NESTGATE_DISCOVERY_HOST", val),
-            None => crate::env_process::remove_var("NESTGATE_DISCOVERY_HOST"),
-        }
-        match original_port {
-            Some(val) => crate::env_process::set_var("NESTGATE_DISCOVERY_BASE_PORT", val),
-            None => crate::env_process::remove_var("NESTGATE_DISCOVERY_BASE_PORT"),
-        }
+        with_vars(
+            vec![
+                ("NESTGATE_DISCOVERY_HOST", Some("192.168.1.100")),
+                ("NESTGATE_DISCOVERY_BASE_PORT", Some("9000")),
+                ("NESTGATE_DISCOVERY_ENDPOINTS", None),
+            ],
+            || {
+                let config = ServiceDiscoveryConfig::default();
+                assert_eq!(config.discovery_host, "192.168.1.100");
+                assert_eq!(config.discovery_base_port, 9000);
+            },
+        );
     }
 
     #[test]
@@ -239,39 +227,33 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Run with --ignored due to env var manipulation
+    #[serial_test::serial]
     fn test_endpoints_from_env() {
-        let original = env::var("NESTGATE_DISCOVERY_ENDPOINTS").ok();
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var(
-            "NESTGATE_DISCOVERY_ENDPOINTS",
-            "http://server1:8080,http://server2:8081,http://server3:8082",
+        with_vars(
+            vec![(
+                "NESTGATE_DISCOVERY_ENDPOINTS",
+                Some("http://server1:8080,http://server2:8081,http://server3:8082"),
+            )],
+            || {
+                let config = ServiceDiscoveryConfig::default();
+                assert_eq!(config.endpoints.len(), 3);
+                assert!(
+                    config
+                        .endpoints
+                        .contains(&"http://server1:8080".to_string())
+                );
+                assert!(
+                    config
+                        .endpoints
+                        .contains(&"http://server2:8081".to_string())
+                );
+                assert!(
+                    config
+                        .endpoints
+                        .contains(&"http://server3:8082".to_string())
+                );
+            },
         );
-
-        let config = ServiceDiscoveryConfig::default();
-        assert_eq!(config.endpoints.len(), 3);
-        assert!(
-            config
-                .endpoints
-                .contains(&"http://server1:8080".to_string())
-        );
-        assert!(
-            config
-                .endpoints
-                .contains(&"http://server2:8081".to_string())
-        );
-        assert!(
-            config
-                .endpoints
-                .contains(&"http://server3:8082".to_string())
-        );
-
-        // Restore original value
-        match original {
-            Some(val) => crate::env_process::set_var("NESTGATE_DISCOVERY_ENDPOINTS", val),
-            None => crate::env_process::remove_var("NESTGATE_DISCOVERY_ENDPOINTS"),
-        }
     }
 
     #[test]

@@ -279,7 +279,7 @@ impl ProtocolManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn get_status(&self, protocol: Protocol, _mount_id: &str) -> Result<MountStatus> {
+    pub fn get_status(&self, protocol: Protocol, mount_id: &str) -> Result<MountStatus> {
         if !self.supported_protocols.contains(&protocol) {
             return Err(NestGateError::validation(format!(
                 "Protocol not supported: {protocol}"
@@ -289,7 +289,7 @@ impl ProtocolManager {
         // Simplified status implementation
         use nestgate_core::constants::hardcoding::addresses;
         Ok(MountStatus {
-            mount_id: _mount_id.to_string(),
+            mount_id: mount_id.to_string(),
             mounted: true,
             mount_point: std::path::PathBuf::from("/tmp/mount"),
             protocol,

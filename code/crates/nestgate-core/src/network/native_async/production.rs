@@ -55,11 +55,14 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
     /// Register
     async fn register(&self, service: Self::ServiceInfo) -> Result<()> {
         // Native async service registration - no Future boxing overhead
-        let mut services = self.services.write().await;
-        let service_id = service.name.clone();
-        services.insert(service_id.clone(), service);
+        let service_id = {
+            let mut services = self.services.write().await;
+            let service_id = service.name.clone();
+            services.insert(service_id.clone(), service);
+            service_id
+        };
 
-        // Add registration event
+        // Add registration event (release `services` before locking `events`)
         let mut events = self.events.write().await;
         events.push(ServiceEvent {
             event_type: ServiceEventType::Registered,
@@ -73,11 +76,11 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
 
     /// Deregister
     async fn deregister(&self, service_id: &str) -> Result<()> {
-        // Direct async method - no Future boxing
-        let mut services = self.services.write().await;
-        let service = services.remove(service_id);
+        let service = {
+            let mut services = self.services.write().await;
+            services.remove(service_id)
+        };
 
-        // Add deregistration event
         let mut events = self.events.write().await;
         events.push(ServiceEvent {
             event_type: ServiceEventType::Deregistered,
@@ -111,14 +114,15 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
 
     /// Health Update
     async fn health_update(&self, service_id: &str, status: Self::HealthStatus) -> Result<()> {
-        // Native async health update
-        let mut services = self.services.write().await;
-        if let Some(_service) = services.get_mut(service_id) {
-            // Update service health (assuming ServiceInfo has health field)
-            // service.health = status.clone();
+        {
+            let mut services = self.services.write().await;
+            if let Some(_service) = services.get_mut(service_id) {
+                // Update service health (assuming ServiceInfo has health field)
+                // service.health = status.clone();
+            }
         }
 
-        // Add health change event
+        // Add health change event (release `services` before locking `events`)
         let mut events = self.events.write().await;
         events.push(ServiceEvent {
             event_type: ServiceEventType::HealthChanged,

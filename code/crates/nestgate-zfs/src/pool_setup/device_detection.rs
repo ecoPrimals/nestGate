@@ -8,6 +8,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::numeric::f64_to_u64_saturating;
 use tokio::process::Command;
 // Removed unused tracing import
 
@@ -237,7 +238,7 @@ impl DeviceScanner {
             }
         };
 
-        Ok((number * multiplier as f64) as u64)
+        Ok(f64_to_u64_saturating(number * multiplier as f64))
     }
 
     /// Detect device type based on device path and model

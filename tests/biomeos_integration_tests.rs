@@ -4,23 +4,35 @@
 //! Tests the JSON-RPC Unix socket server with patterns matching
 //! the biomeOS `NestGateClient` expectations.
 //!
-//! **Note**: Uses the legacy `JsonRpcUnixServer` API pending migration to
-//! Songbird IPC service-based patterns.
+//! Uses [`nestgate_core::rpc::IsomorphicIpcServer`] with the ecosystem JSON-RPC handler.
 //!
 //! ## Test Coverage
 //! - Unix socket server lifecycle
 //! - All 7 storage.* methods
 
-#![allow(deprecated, dead_code, unused_imports)]
+#![allow(dead_code, unused_imports)]
 
-use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
+use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 mod common;
 use common::sync_utils::wait_for_condition;
+
+/// Configure env + [`SocketConfig`], build isomorphic IPC server (ecosystem JSON-RPC surface).
+fn prepare_ecosystem_ipc(family_id: &str) -> (Arc<IsomorphicIpcServer>, PathBuf) {
+    std::env::set_var("NESTGATE_FAMILY_ID", family_id);
+    let socket_path = SocketConfig::from_environment()
+        .expect("socket config")
+        .socket_path
+        .clone();
+    let handler = legacy_ecosystem_rpc_handler(family_id).expect("rpc handler");
+    let server = Arc::new(IsomorphicIpcServer::new(family_id.to_string(), handler));
+    (server, socket_path)
+}
 
 /// Helper: Wait for socket to be ready with retries
 async fn wait_for_socket_ready(socket_path: &Path) {
@@ -72,15 +84,14 @@ async fn send_jsonrpc_request(
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_store_retrieve() {
     let family_id = format!("test_biomeos_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     // Start server in background
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     // Wait for server to start
@@ -118,14 +129,13 @@ async fn test_biomeos_pattern_store_retrieve() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_list_keys() {
     let family_id = format!("test_list_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -168,14 +178,13 @@ async fn test_biomeos_pattern_list_keys() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_stats() {
     let family_id = format!("test_stats_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -205,14 +214,13 @@ async fn test_biomeos_pattern_stats() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_blob_storage() {
     let family_id = format!("test_blob_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -255,14 +263,13 @@ async fn test_biomeos_pattern_blob_storage() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_delete() {
     let family_id = format!("test_delete_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -304,16 +311,15 @@ async fn test_biomeos_pattern_delete() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_family_isolation() {
     let family_id_1 = format!("test_family_1_{}", uuid::Uuid::new_v4());
     let family_id_2 = format!("test_family_2_{}", uuid::Uuid::new_v4());
 
-    let server = JsonRpcUnixServer::new(&family_id_1).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id_1);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -363,14 +369,13 @@ async fn test_biomeos_pattern_family_isolation() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_concurrent_operations() {
     let family_id = format!("test_concurrent_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -411,14 +416,13 @@ async fn test_biomeos_pattern_concurrent_operations() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_error_handling() {
     let family_id = format!("test_errors_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -454,14 +458,13 @@ async fn test_biomeos_pattern_error_handling() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_json_rpc_compliance() {
     let family_id = format!("test_jsonrpc_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;
@@ -486,14 +489,13 @@ async fn test_biomeos_pattern_json_rpc_compliance() {
 
 /// Requires running NestGate server
 #[tokio::test]
-#[ignore]
+#[ignore = "Requires running NestGate ecosystem IPC server; run with --ignored when available"]
 async fn test_biomeos_pattern_large_data() {
     let family_id = format!("test_large_{}", uuid::Uuid::new_v4());
-    let server = JsonRpcUnixServer::new(&family_id).await.unwrap();
-    let socket_path = server.socket_path().clone();
+    let (server, socket_path) = prepare_ecosystem_ipc(&family_id);
 
     tokio::spawn(async move {
-        server.serve().await.ok();
+        server.start().await.ok();
     });
 
     wait_for_socket_ready(&socket_path).await;

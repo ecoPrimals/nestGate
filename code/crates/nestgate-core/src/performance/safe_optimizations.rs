@@ -24,6 +24,7 @@ pub struct SafeCacheAlignedCounter {
 
 impl SafeCacheAlignedCounter {
     /// Create new cache-aligned counter
+    #[must_use]
     pub const fn new(initial: u64) -> Self {
         Self {
             value: AtomicU64::new(initial),
@@ -69,6 +70,7 @@ pub struct SafeRingBuffer<T, const SIZE: usize> {
 
 impl<T, const SIZE: usize> SafeRingBuffer<T, SIZE> {
     /// Create new safe ring buffer
+    #[must_use]
     pub fn new() -> Self {
         assert!(SIZE.is_power_of_two(), "SIZE must be a power of 2");
 
@@ -155,12 +157,14 @@ pub struct SafeSimdOperations;
 impl SafeSimdOperations {
     /// Sum array of u32 values - LLVM auto-vectorizes this!
     #[inline(always)]
+    #[must_use]
     pub fn sum_u32_slice(data: &[u32]) -> u64 {
         data.iter().map(|&x| x as u64).sum() // Auto-vectorized by LLVM
     }
 
     /// Find maximum value in slice - auto-vectorized
     #[inline(always)]
+    #[must_use]
     pub fn max_u32_slice(data: &[u32]) -> Option<u32> {
         data.iter().max().copied() // Auto-vectorized by LLVM
     }
@@ -169,7 +173,7 @@ impl SafeSimdOperations {
     ///
     /// 100% SAFE - Compiler optimizes to memcpy/SIMD automatically
     #[inline(always)]
-    pub fn optimized_copy(dst: &mut [u8], src: &[u8]) {
+    pub const fn optimized_copy(dst: &mut [u8], src: &[u8]) {
         dst.copy_from_slice(src); // As fast as unsafe, 100% safe
     }
 }
@@ -186,6 +190,7 @@ pub struct SafeMemoryPool<const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
 
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> SafeMemoryPool<BLOCK_SIZE, POOL_SIZE> {
     /// Create new safe memory pool
+    #[must_use]
     pub fn new() -> Self {
         let mut pool = Vec::with_capacity(POOL_SIZE);
         let mut free_list = Vec::with_capacity(POOL_SIZE);
@@ -277,7 +282,8 @@ pub struct SafeMemoryArena {
 
 impl SafeMemoryArena {
     /// Create new safe memory arena
-    pub fn new(chunk_size: usize) -> Self {
+    #[must_use]
+    pub const fn new(chunk_size: usize) -> Self {
         Self {
             chunks: Vec::new(),
             current_chunk: None,
@@ -345,9 +351,10 @@ pub struct SafeBranchOptimized;
 impl SafeBranchOptimized {
     /// Likely branch hint for hot path optimization
     #[inline(always)]
-    pub fn likely(condition: bool) -> bool {
+    #[must_use]
+    pub const fn likely(condition: bool) -> bool {
         #[cold]
-        fn cold() {}
+        const fn cold() {}
 
         if !condition {
             cold();
@@ -357,9 +364,10 @@ impl SafeBranchOptimized {
 
     /// Unlikely branch hint for error path optimization
     #[inline(always)]
-    pub fn unlikely(condition: bool) -> bool {
+    #[must_use]
+    pub const fn unlikely(condition: bool) -> bool {
         #[cold]
-        fn cold() {}
+        const fn cold() {}
 
         if condition {
             cold();
@@ -377,6 +385,7 @@ pub struct SafePerformanceProfiler {
 
 impl SafePerformanceProfiler {
     /// Create new performance profiler with N metrics
+    #[must_use]
     pub fn new(metric_count: usize) -> Self {
         let mut counters = Vec::with_capacity(metric_count);
         for _ in 0..metric_count {
@@ -396,6 +405,7 @@ impl SafePerformanceProfiler {
 
     /// Get metric value
     #[inline(always)]
+    #[must_use]
     pub fn get_metric(&self, metric_id: usize) -> Option<u64> {
         self.counters.get(metric_id).map(|c| c.get())
     }
@@ -408,6 +418,7 @@ impl SafePerformanceProfiler {
     }
 
     /// Get all metrics as Vec
+    #[must_use]
     pub fn get_all_metrics(&self) -> Vec<u64> {
         self.counters.iter().map(|c| c.get()).collect()
     }

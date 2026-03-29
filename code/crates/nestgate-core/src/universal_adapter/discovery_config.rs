@@ -28,6 +28,7 @@ pub type SharedDiscoveryRuntimeConfig = Arc<DiscoveryRuntimeConfig>;
 
 impl DiscoveryRuntimeConfig {
     /// Create a new empty configuration (all values None, will use centralized defaults)
+    #[must_use]
     pub fn new() -> Self {
         Self {
             service_discovery: ServiceDiscoveryConfig::default(),
@@ -41,6 +42,7 @@ impl DiscoveryRuntimeConfig {
 
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             service_discovery: ServiceDiscoveryConfig::default(),
@@ -56,12 +58,14 @@ impl DiscoveryRuntimeConfig {
 
     /// Get discovery endpoints from centralized configuration
     /// ✅ MIGRATED: Now uses `ServiceDiscoveryConfig` instead of hardcoded fallbacks
+    #[must_use]
     pub fn get_discovery_endpoints(&self) -> Vec<String> {
         self.service_discovery.get_endpoints().to_vec()
     }
 
     /// Get base endpoint from service discovery configuration
     /// ✅ MIGRATED: Uses configured discovery host instead of hardcoded localhost
+    #[must_use]
     pub fn get_base_endpoint(&self) -> String {
         format!(
             "http://{}:{}",
@@ -70,93 +74,105 @@ impl DiscoveryRuntimeConfig {
     }
 
     /// Get security endpoint (custom override or derived from base)
+    #[must_use]
     pub fn get_security_endpoint(&self, base_endpoint: &str) -> Vec<String> {
         let custom = self
             .security_endpoint
             .clone()
-            .unwrap_or_else(|| format!("{}/auth", base_endpoint));
+            .unwrap_or_else(|| format!("{base_endpoint}/auth"));
 
         vec![format!("{base_endpoint}/security"), custom]
     }
 
     /// Get AI endpoint (custom override or derived from base)
+    #[must_use]
     pub fn get_ai_endpoint(&self, base_endpoint: &str) -> Vec<String> {
         let custom = self
             .ai_endpoint
             .clone()
-            .unwrap_or_else(|| format!("{}/ml", base_endpoint));
+            .unwrap_or_else(|| format!("{base_endpoint}/ml"));
 
         vec![format!("{base_endpoint}/ai"), custom]
     }
 
     /// Get orchestration endpoint (custom override or derived from base)
+    #[must_use]
     pub fn get_orchestration_endpoint(&self, base_endpoint: &str) -> Vec<String> {
         let custom = self
             .orchestration_endpoint
             .clone()
-            .unwrap_or_else(|| format!("{}/workflow", base_endpoint));
+            .unwrap_or_else(|| format!("{base_endpoint}/workflow"));
 
         vec![format!("{base_endpoint}/orchestration"), custom]
     }
 
     /// Get storage endpoint (custom override or derived from base)
+    #[must_use]
     pub fn get_storage_endpoint(&self, base_endpoint: &str) -> Vec<String> {
         let custom = self
             .storage_endpoint
             .clone()
-            .unwrap_or_else(|| format!("{}/zfs", base_endpoint));
+            .unwrap_or_else(|| format!("{base_endpoint}/zfs"));
 
         vec![format!("{base_endpoint}/storage"), custom]
     }
 
     /// Get compute endpoint (custom override or derived from base)
+    #[must_use]
     pub fn get_compute_endpoint(&self, base_endpoint: &str) -> Vec<String> {
         let custom = self
             .compute_endpoint
             .clone()
-            .unwrap_or_else(|| format!("{}/processing", base_endpoint));
+            .unwrap_or_else(|| format!("{base_endpoint}/processing"));
 
         vec![format!("{base_endpoint}/compute"), custom]
     }
 
     /// Get access to the underlying ServiceDiscoveryConfig
-    pub fn service_discovery(&self) -> &ServiceDiscoveryConfig {
+    #[must_use]
+    pub const fn service_discovery(&self) -> &ServiceDiscoveryConfig {
         &self.service_discovery
     }
 
     // Builder methods for tests
 
     /// Builder method for custom service discovery config (for testing)
+    #[must_use]
     pub fn with_service_discovery(mut self, config: ServiceDiscoveryConfig) -> Self {
         self.service_discovery = config;
         self
     }
 
     /// Builder method to set Security Endpoint
+    #[must_use]
     pub fn with_security_endpoint(mut self, endpoint: String) -> Self {
         self.security_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Ai Endpoint
+    #[must_use]
     pub fn with_ai_endpoint(mut self, endpoint: String) -> Self {
         self.ai_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Orchestration Endpoint
+    #[must_use]
     pub fn with_orchestration_endpoint(mut self, endpoint: String) -> Self {
         self.orchestration_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Storage Endpoint
+    #[must_use]
     pub fn with_storage_endpoint(mut self, endpoint: String) -> Self {
         self.storage_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Compute Endpoint
+    #[must_use]
     pub fn with_compute_endpoint(mut self, endpoint: String) -> Self {
         self.compute_endpoint = Some(endpoint);
         self

@@ -47,7 +47,7 @@ pub async fn store_object(
     // (e.g. "test/primalspring/hello") which create nested subdirectories.
     if let Some(parent) = object_path.parent() {
         tokio::fs::create_dir_all(parent).await.map_err(|e| {
-            NestGateError::io_error(format!("Failed to create key path directories: {}", e))
+            NestGateError::io_error(format!("Failed to create key path directories: {e}"))
         })?;
     }
 
@@ -55,7 +55,7 @@ pub async fn store_object(
     tokio::fs::write(&object_path, data_ref)
         .await
         .map_err(|e| {
-            NestGateError::io_error(format!("Failed to write object {}/{}: {}", dataset, key, e))
+            NestGateError::io_error(format!("Failed to write object {dataset}/{key}: {e}"))
         })?;
 
     let now = current_timestamp();
@@ -98,20 +98,20 @@ pub async fn retrieve_object(
     // Read object
     let data = tokio::fs::read(&object_path).await.map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
-            NestGateError::not_found(format!("object {}/{}", dataset, key))
+            NestGateError::not_found(format!("object {dataset}/{key}"))
         } else {
-            NestGateError::io_error(format!("Failed to read object {}/{}: {}", dataset, key, e))
+            NestGateError::io_error(format!("Failed to read object {dataset}/{key}: {e}"))
         }
     })?;
 
     // Get metadata
     let metadata = tokio::fs::metadata(&object_path)
         .await
-        .map_err(|e| NestGateError::io_error(format!("Failed to get metadata: {}", e)))?;
+        .map_err(|e| NestGateError::io_error(format!("Failed to get metadata: {e}")))?;
 
     let modified = metadata
         .modified()
-        .map_err(|e| NestGateError::io_error(format!("Failed to get modification time: {}", e)))?;
+        .map_err(|e| NestGateError::io_error(format!("Failed to get modification time: {e}")))?;
     let modified_at = modified
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap_or_default()
@@ -154,12 +154,9 @@ pub async fn delete_object(config: &StorageServiceConfig, dataset: &str, key: &s
 
     tokio::fs::remove_file(&object_path).await.map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
-            NestGateError::not_found(format!("object {}/{}", dataset, key))
+            NestGateError::not_found(format!("object {dataset}/{key}"))
         } else {
-            NestGateError::io_error(format!(
-                "Failed to delete object {}/{}: {}",
-                dataset, key, e
-            ))
+            NestGateError::io_error(format!("Failed to delete object {dataset}/{key}: {e}"))
         }
     })?;
 

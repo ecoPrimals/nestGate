@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -271,7 +276,7 @@ impl ProductionReadinessValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn assess_production_readiness(&self) -> Result<ProductionReadinessReport> {
+    pub fn assess_production_readiness(&self) -> Result<ProductionReadinessReport> {
         info!("🔍 Starting comprehensive production readiness assessment...");
         let mut report = ProductionReadinessReport {
             ready_for_production: false,
@@ -449,9 +454,9 @@ impl Default for ProductionReadinessValidator {
 }
 
 /// Convenience function to run production readiness check
-pub async fn check_production_readiness() -> Result<ProductionReadinessReport> {
+pub fn check_production_readiness() -> Result<ProductionReadinessReport> {
     let validator = ProductionReadinessValidator::new();
-    validator.assess_production_readiness().await
+    validator.assess_production_readiness()
 }
 #[cfg(test)]
 mod tests {
@@ -461,7 +466,7 @@ mod tests {
     async fn test_production_readiness_assessment()
     -> std::result::Result<(), Box<dyn std::error::Error>> {
         let validator = ProductionReadinessValidator::new();
-        let result = validator.assess_production_readiness().await;
+        let result = validator.assess_production_readiness();
 
         // Should always produce a report
         assert!(result.is_ok());

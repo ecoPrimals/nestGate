@@ -119,6 +119,7 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
     /// Pop item from buffer
     ///
     /// Returns `Some(value)` if successful, `None` if buffer is empty.
+    #[must_use]
     pub fn pop(&self) -> Option<T> {
         let tail = self.inner.tail.load(Ordering::Relaxed);
         let head = self.inner.head.load(Ordering::Acquire);
@@ -144,6 +145,7 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
     }
 
     /// Get current buffer length
+    #[must_use]
     pub fn len(&self) -> usize {
         let head = self.inner.head.load(Ordering::Relaxed);
         let tail = self.inner.tail.load(Ordering::Relaxed);
@@ -153,6 +155,7 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
     }
 
     /// Check if buffer is empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         let head = self.inner.head.load(Ordering::Relaxed);
         let tail = self.inner.tail.load(Ordering::Relaxed);
@@ -160,6 +163,7 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
     }
 
     /// Check if buffer is full
+    #[must_use]
     pub fn is_full(&self) -> bool {
         let head = self.inner.head.load(Ordering::Relaxed);
         let tail = self.inner.tail.load(Ordering::Acquire);
@@ -168,11 +172,13 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
     }
 
     /// Get buffer capacity
+    #[must_use]
     pub const fn capacity(&self) -> usize {
         CAPACITY
     }
 
     /// Get remaining space
+    #[must_use]
     pub fn remaining(&self) -> usize {
         CAPACITY - self.len() - 1 // -1 because we can't use last slot
     }

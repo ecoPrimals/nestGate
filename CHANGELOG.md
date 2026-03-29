@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 7: Deep debt evolution & idiomatic Rust (March 29, 2026)
+
+**Tests**: 7,887 lib tests passing, 0 failures, 64 ignored  
+**Clippy**: Warnings reduced from 4,642 to 2,972 (13 pedantic categories zeroed)
+
+#### Added
+- **`f64_to_u64_saturating` / `u64_to_f64_approximate`** safe numeric cast helpers in `nestgate-zfs::numeric`
+- **`runtime_fallback_ports`** module replacing deprecated `hardcoding::ports`
+- **`LegacyUnixJsonRpcHandler`** adapter for `IsomorphicIpcServer` migration
+- **52 `# Errors` doc sections** on top public APIs
+- **+328 new tests** across 5 coverage waves
+
+#### Changed
+- **13 clippy pedantic categories zeroed**: `const_fn`, `must_use`, `Self` pattern, `match_same_arms`, `unnecessary_wraps`, `significant_drop_tightening`, `unused_self`, `uninlined_format_args`, `derive_partial_eq_without_eq`, `ref_option_ref`, `used_underscore_binding`, `missing_const_for_fn`, `return_self_not_must_use`
+- **`JsonRpcUnixServer`** → `IsomorphicIpcServer` in all production entry points
+- **`EventsErrorConfig`** → `CanonicalNetworkConfig` migration
+- **Primal identity**: `env!("CARGO_PKG_NAME")` → literal `"nestgate"` throughout all crates
+- **Zero-copy**: reused IPC buffers, `from_slice` parsing, `Cow::Borrowed` for endpoints
+- **`unused_async`**: 229 → 122 (functions de-asynced or `#[expect]`-annotated)
+- **10 env-sensitive tests** re-enabled via `temp-env` + `serial_test`
+- **All `#[ignore]` reasons** documented with run instructions
+
+#### Removed
+- Stale deprecated aliases pointing to wrong canonical types
+- `libtest_unsafe.rlib` build artifact from repo root
+
 ### Session 6: Doctests, coverage, Clippy, and wire-type hygiene (March 29, 2026)
 
 **Tests**: 11,707 passing, 0 failures  

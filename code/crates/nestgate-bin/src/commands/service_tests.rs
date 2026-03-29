@@ -82,7 +82,7 @@ async fn test_execute_logs_action() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "Starts actual server - use for manual testing only"]
+#[ignore = "Starts actual server (not CI); run: cargo test -p nestgate-bin --lib -- --ignored"]
 async fn test_start_service_with_default_port() {
     let manager = ServiceManager::new();
     // This starts an actual server that runs forever
@@ -96,7 +96,7 @@ async fn test_start_service_with_default_port() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "Starts actual server - use for manual testing only"]
+#[ignore = "Starts actual server (not CI); run: cargo test -p nestgate-bin --lib -- --ignored"]
 async fn test_start_service_with_custom_port() {
     let manager = ServiceManager::new();
     // This starts an actual server that runs forever
@@ -109,7 +109,7 @@ async fn test_start_service_with_custom_port() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "Starts actual server - use for manual testing only"]
+#[ignore = "Starts actual server (not CI); run: cargo test -p nestgate-bin --lib -- --ignored"]
 async fn test_start_service_with_config() {
     let manager = ServiceManager::new();
     // This starts an actual server that runs forever
@@ -138,7 +138,7 @@ async fn test_restart_service_default() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "Lifecycle sequence test - starts actual server"]
+#[ignore = "Lifecycle sequence test starts actual server (not CI); run: cargo test -p nestgate-bin --lib -- --ignored"]
 async fn test_restart_service_with_port() {
     // ✅ DEEP DEBT: restart calls start_service which runs forever
     // Need proper shutdown mechanism for testing
@@ -158,7 +158,7 @@ async fn test_show_status() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "Lifecycle test - starts actual servers"]
+#[ignore = "Lifecycle test starts actual servers (not CI); run: cargo test -p nestgate-bin --lib -- --ignored"]
 async fn test_multiple_start_stop_cycles() {
     // ✅ DEEP DEBT: This test was hanging because start_service() runs forever
     // Real fix: Need injectable shutdown mechanism for testing
@@ -184,7 +184,7 @@ async fn test_multiple_start_stop_cycles() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "Lifecycle sequence test - would start actual server"]
+#[ignore = "Would start actual server (not CI); run: cargo test -p nestgate-bin --lib -- --ignored"]
 async fn test_service_lifecycle_sequence() {
     // ✅ DEEP DEBT: This test starts an actual server that runs forever
     // The execute(Start) call blocks indefinitely
@@ -198,7 +198,7 @@ async fn test_service_lifecycle_sequence() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "Multiple instances test - starts actual servers"]
+#[ignore = "Multiple instances / servers (not CI); run: cargo test -p nestgate-bin --lib -- --ignored"]
 async fn test_service_manager_multiple_instances() {
     // ✅ DEEP DEBT: Cannot actually start multiple servers simultaneously in tests
     // Each would bind to a port and run forever

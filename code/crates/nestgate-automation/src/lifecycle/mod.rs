@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! Automated dataset lifecycle management and optimization scheduling.
 
 pub mod types;
@@ -71,7 +76,11 @@ impl DatasetLifecycleManager {
     /// Returns an error if the shutdown sequence fails.
     pub async fn shutdown(&self) -> Result<()> {
         info!("Shutting down dataset lifecycle manager");
-        if let Some(sender) = self.scheduler.write().await.take() {
+        let sender = {
+            let mut sched = self.scheduler.write().await;
+            sched.take()
+        };
+        if let Some(sender) = sender {
             drop(sender);
         }
         info!("Dataset lifecycle manager shut down successfully");
@@ -143,7 +152,7 @@ impl DatasetLifecycleManager {
 
         let policies = self.get_applicable_policies(&current_state).await;
         let (recommended_stage, recommended_actions) =
-            self.evaluate_transitions(&current_state, &policies).await?;
+            self.evaluate_transitions(&current_state, &policies)?;
 
         if let Some(new_stage) = &recommended_stage
             && *new_stage != current_state.current_stage
@@ -387,7 +396,7 @@ impl DatasetLifecycleManager {
             .collect()
     }
 
-    async fn evaluate_transitions(
+    fn evaluate_transitions(
         &self,
         state: &DatasetLifecycleState,
         policies: &[LifecyclePolicy],
@@ -406,10 +415,7 @@ impl DatasetLifecycleManager {
                 if stage_duration < transition.min_stage_duration {
                     continue;
                 }
-                if self
-                    .evaluate_conditions(&transition.conditions, state)
-                    .await
-                {
+                if self.evaluate_conditions(&transition.conditions, state) {
                     recommended_stage = Some(transition.to_stage.clone());
                     if let Some(actions) = policy.stage_actions.get(&transition.to_stage) {
                         recommended_actions.extend(actions.clone());
@@ -422,7 +428,7 @@ impl DatasetLifecycleManager {
         Ok((recommended_stage, recommended_actions))
     }
 
-    async fn evaluate_conditions(
+    fn evaluate_conditions(
         &self,
         conditions: &[TransitionCondition],
         state: &DatasetLifecycleState,

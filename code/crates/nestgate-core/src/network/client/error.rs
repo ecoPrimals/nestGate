@@ -71,22 +71,20 @@ pub enum HttpClientError {
 impl From<HttpClientError> for NestGateError {
     fn from(err: HttpClientError) -> Self {
         match err {
-            HttpClientError::ConnectionFailed { message } => NestGateError::network_error(&message),
-            HttpClientError::Timeout { timeout } => {
-                NestGateError::timeout_error("HTTP request", timeout)
-            }
+            HttpClientError::ConnectionFailed { message } => Self::network_error(&message),
+            HttpClientError::Timeout { timeout } => Self::timeout_error("HTTP request", timeout),
             HttpClientError::InvalidResponse { message } => {
-                NestGateError::validation_error(&format!("Invalid HTTP response: {}", message))
+                Self::validation_error(&format!("Invalid HTTP response: {message}"))
             }
             HttpClientError::TooManyRedirects { count } => {
-                NestGateError::network_error(&format!("Too many redirects: {}", count))
+                Self::network_error(&format!("Too many redirects: {count}"))
             }
-            HttpClientError::Cancelled => NestGateError::network_error("HTTP request cancelled"),
+            HttpClientError::Cancelled => Self::network_error("HTTP request cancelled"),
             HttpClientError::InvalidUrl { url } => {
-                NestGateError::validation_error(&format!("Invalid URL: {}", url))
+                Self::validation_error(&format!("Invalid URL: {url}"))
             }
             HttpClientError::TlsError { message } => {
-                NestGateError::network_error(&format!("TLS error: {}", message))
+                Self::network_error(&format!("TLS error: {message}"))
             }
         }
     }

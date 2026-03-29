@@ -79,8 +79,8 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
             })))
         }
         Ok(output) => {
-            let _error_msg = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to delete ZFS dataset: {}", _error_msg);
+            let error_msg = String::from_utf8_lossy(&output.stderr);
+            error!("❌ Failed to delete ZFS dataset: {}", error_msg);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
         Err(e) => {

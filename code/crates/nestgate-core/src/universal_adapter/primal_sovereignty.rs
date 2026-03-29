@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! # Primal Sovereignty Universal Adapter
 //! Primal Sovereignty functionality and utilities.
 //! Implements the core principle: "Each primal only knows itself and discovers
@@ -116,20 +121,24 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unused_async,
+        reason = "cfg(test) in this module awaits discover_capability; discovery is synchronous"
+    )]
     pub async fn discover_capability(
         &mut self,
         capability_type: CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
         // Check cache first
         if let Some(cached) = self.capability_cache.get(&capability_type) {
-            if self.is_capability_healthy(cached).await? {
+            if self.is_capability_healthy(cached)? {
                 return Ok(cached.clone());
             }
         }
 
         // Try discovery methods in order
         for method in &self.discovery_methods {
-            if let Ok(capability) = self.try_discovery_method(method, &capability_type).await {
+            if let Ok(capability) = self.try_discovery_method(method, &capability_type) {
                 self.capability_cache
                     .insert(capability_type.clone(), capability.clone());
                 return Ok(capability);
@@ -150,6 +159,10 @@ impl UniversalAdapter {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[expect(
+        clippy::unused_async,
+        reason = "cfg(test) in this module awaits request_capability; execution is synchronous"
+    )]
     pub async fn request_capability(
         &self,
         capability_id: &str,
@@ -165,7 +178,7 @@ impl UniversalAdapter {
             })?;
 
         // Make the request through the universal adapter
-        self.execute_capability_request(capability, request).await
+        self.execute_capability_request(capability, request)
     }
 
     /// Chain multiple capabilities for network effects
@@ -184,15 +197,13 @@ impl UniversalAdapter {
 
         for request in workflow {
             // Discover the required capability
-            let mut adapter = UniversalAdapter::new()?;
+            let mut adapter = Self::new()?;
             let capability = adapter
                 .discover_capability(request.capability_type.clone())
                 .await?;
 
             // Execute the request
-            let response = self
-                .execute_capability_request(&capability, request)
-                .await?;
+            let response = self.execute_capability_request(&capability, request)?;
             responses.push(response);
         }
 
@@ -200,21 +211,17 @@ impl UniversalAdapter {
     }
 
     // Private implementation methods
-    async fn try_discovery_method(
+    fn try_discovery_method(
         &self,
         method: &DiscoveryMethod,
         capability_type: &CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
-        let discovery_result = match method {
+        match method {
             DiscoveryMethod::Environment => self.discover_from_environment(capability_type),
-            DiscoveryMethod::NetworkScan => self.discover_from_network(capability_type).await,
-            DiscoveryMethod::ServiceRegistry => self.discover_from_registry(capability_type).await,
-            DiscoveryMethod::CapabilityBroadcast => {
-                self.discover_from_broadcast(capability_type).await
-            }
-        };
-
-        discovery_result
+            DiscoveryMethod::NetworkScan => self.discover_from_network(capability_type),
+            DiscoveryMethod::ServiceRegistry => self.discover_from_registry(capability_type),
+            DiscoveryMethod::CapabilityBroadcast => self.discover_from_broadcast(capability_type),
+        }
     }
 
     /// Discover From Environment
@@ -259,7 +266,7 @@ impl UniversalAdapter {
     }
 
     /// Discover From Network
-    async fn discover_from_network(
+    fn discover_from_network(
         &self,
         _capability_type: &CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
@@ -270,7 +277,7 @@ impl UniversalAdapter {
     }
 
     /// Discover From Registry
-    async fn discover_from_registry(
+    fn discover_from_registry(
         &self,
         _capability_type: &CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
@@ -281,7 +288,7 @@ impl UniversalAdapter {
     }
 
     /// Discover From Broadcast
-    async fn discover_from_broadcast(
+    fn discover_from_broadcast(
         &self,
         _capability_type: &CapabilityType,
     ) -> Result<DiscoveredCapability, NestGateError> {
@@ -292,7 +299,7 @@ impl UniversalAdapter {
     }
 
     /// Checks if Capability Healthy
-    async fn is_capability_healthy(
+    const fn is_capability_healthy(
         &self,
         _capability: &DiscoveredCapability,
     ) -> Result<bool, NestGateError> {
@@ -301,7 +308,7 @@ impl UniversalAdapter {
     }
 
     /// Execute Capability Request
-    async fn execute_capability_request(
+    fn execute_capability_request(
         &self,
         _capability: &DiscoveredCapability,
         _request: CapabilityRequest,
@@ -337,7 +344,7 @@ pub struct CapabilityResponse {
 }
 
 /// Capability Type Name
-fn capability_type_name(capability_type: &CapabilityType) -> &'static str {
+const fn capability_type_name(capability_type: &CapabilityType) -> &'static str {
     match capability_type {
         CapabilityType::Storage => "storage",
         CapabilityType::Orchestration => "orchestration",

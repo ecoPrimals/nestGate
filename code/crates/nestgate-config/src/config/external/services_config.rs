@@ -396,6 +396,7 @@ impl ServicesConfig {
     ///     .with_capability("orchestration", "http://orchestration:8080")
     ///     .with_capability("security", "http://security:9000");
     /// ```
+    #[must_use]
     pub fn with_capability(
         mut self,
         capability: impl Into<String>,

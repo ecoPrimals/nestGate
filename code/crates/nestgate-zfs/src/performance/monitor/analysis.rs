@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 use nestgate_core::Result as CoreResult;
 /// Trend analysis, performance evaluation, and predictive monitoring
 use std::collections::VecDeque;
@@ -58,7 +63,7 @@ pub struct AnalysisReport {
 }
 impl ZfsPerformanceMonitor {
     /// Start analysis task
-    pub(super) async fn start_analysis_task(&mut self) -> CoreResult<()> {
+    pub(super) fn start_analysis_task(&mut self) -> CoreResult<()> {
         let metrics_history = Arc::clone(&self.metrics_history);
         let current_metrics = Arc::clone(&self.current_metrics);
         // Use default analysis interval since config was removed

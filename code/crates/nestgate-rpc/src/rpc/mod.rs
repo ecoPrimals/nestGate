@@ -100,7 +100,9 @@ pub use socket_config::{SocketConfig, SocketConfigSource};
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
-pub use unix_socket_server::JsonRpcUnixServer;
+pub use unix_socket_server::{
+    JsonRpcUnixServer, LegacyUnixJsonRpcHandler, legacy_ecosystem_rpc_handler,
+};
 
 // NEW: Isomorphic IPC exports (v0.3.0)
 pub use isomorphic_ipc::{

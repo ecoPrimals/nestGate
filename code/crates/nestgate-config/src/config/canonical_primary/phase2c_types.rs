@@ -372,8 +372,7 @@ impl Environment {
         match self {
             Self::Production => OptimizationLevel::Performance,
             Self::Staging => OptimizationLevel::Balanced,
-            Self::Development => OptimizationLevel::Debug,
-            Self::Testing => OptimizationLevel::Debug,
+            Self::Development | Self::Testing => OptimizationLevel::Debug,
         }
     }
 }

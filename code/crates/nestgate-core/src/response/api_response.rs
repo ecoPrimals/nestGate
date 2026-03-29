@@ -165,12 +165,12 @@ impl<T> ApiResponse<T> {
     }
 
     /// Check if the response is successful
-    pub fn is_success(&self) -> bool {
+    pub const fn is_success(&self) -> bool {
         self.success
     }
 
     /// Check if the response is an error
-    pub fn is_error(&self) -> bool {
+    pub const fn is_error(&self) -> bool {
         !self.success
     }
 
@@ -185,7 +185,7 @@ impl<T> ApiResponse<T> {
     }
 
     /// Convert to JSON for HTTP responses
-    pub fn to_json(self) -> Json<Self> {
+    pub const fn to_json(self) -> Json<Self> {
         Json(self)
     }
 }

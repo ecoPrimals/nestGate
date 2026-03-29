@@ -161,6 +161,10 @@ impl crate::traits::canonical_hierarchy::CanonicalService for MockStoragePrimal 
     }
 }
 
+#[expect(
+    deprecated,
+    reason = "Test mock for hierarchy CanonicalStorage migration adapters"
+)]
 impl crate::traits::canonical_hierarchy::CanonicalStorage for MockStoragePrimal {
     type Key = String;
     type Value = Vec<u8>;

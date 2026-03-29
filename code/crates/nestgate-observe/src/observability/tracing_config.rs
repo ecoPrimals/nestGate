@@ -45,10 +45,9 @@ pub fn init_tracing(config: TracingConfig) -> Result<()> {
     let level = match config.level.as_str() {
         "trace" => tracing::Level::TRACE,
         "debug" => tracing::Level::DEBUG,
-        "info" => tracing::Level::INFO,
         "warn" => tracing::Level::WARN,
         "error" => tracing::Level::ERROR,
-        _ => tracing::Level::INFO,
+        "info" | _ => tracing::Level::INFO,
     };
 
     let result = if config.json_format {

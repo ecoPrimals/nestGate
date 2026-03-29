@@ -85,7 +85,7 @@ impl OrchestrationCapability {
     /// ✅ EVOLVED: Returns error instead of panicking via unimplemented!()
     /// HTTP removed per Concentrated Gap Architecture - use Unix sockets via Songbird
     #[allow(dead_code)]
-    pub async fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
+    pub fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
         let _ = service;
         Err(NestGateError::network_error(
             "HTTP removed - use Unix sockets via Songbird gateway for service registration",
@@ -96,7 +96,7 @@ impl OrchestrationCapability {
     ///
     /// ✅ EVOLVED: Returns error instead of panicking
     #[allow(dead_code)]
-    pub async fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
+    pub fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
         let _ = (service_name, port_type);
         Err(NestGateError::network_error(
             "HTTP removed - use Unix sockets via Songbird gateway for port allocation",
@@ -107,7 +107,7 @@ impl OrchestrationCapability {
     ///
     /// ✅ EVOLVED: Returns error instead of panicking
     #[allow(dead_code)]
-    pub async fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
+    pub fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
         let _ = (service_name, port);
         Err(NestGateError::network_error(
             "HTTP removed - use Unix sockets via Songbird gateway for port release",
@@ -118,7 +118,7 @@ impl OrchestrationCapability {
     ///
     /// ✅ EVOLVED: Returns error instead of panicking
     #[allow(dead_code)]
-    pub async fn send_health_status(
+    pub fn send_health_status(
         &self,
         service_name: &str,
         status: ServiceStatus,
@@ -198,9 +198,9 @@ impl NetworkApi {
     /// Initialize with orchestration capability
     pub fn initialize_with_orchestration(
         &mut self,
-        _orchestration_endpoint: String,
+        orchestration_endpoint: String,
     ) -> NestGateResult<()> {
-        self.orchestration_client = Some(OrchestrationCapability::new(_orchestration_endpoint));
+        self.orchestration_client = Some(OrchestrationCapability::new(orchestration_endpoint));
         info!("🌐 NetworkApi initialized with orchestration capability");
         Ok(())
     }
@@ -209,7 +209,7 @@ impl NetworkApi {
     pub async fn register_service(&self, service: ServiceInstance) -> NestGateResult<()> {
         // Register with Orchestration if available
         if let Some(orchestration) = &self.orchestration_client {
-            orchestration.register_service(&service).await?;
+            orchestration.register_service(&service)?;
         }
 
         // Store locally - log before moving service
@@ -227,9 +227,7 @@ impl NetworkApi {
                 "Orchestration capability is required for port allocation. Initialize with initialize_with_orchestration() first."
             ))?;
 
-        let port = orchestration_client
-            .allocate_port(service_name, port_type)
-            .await?;
+        let port = orchestration_client.allocate_port(service_name, port_type)?;
 
         // Store allocation
         let mut allocated = self.allocated_ports.write().await;
@@ -253,7 +251,7 @@ impl NetworkApi {
                 )
             })?;
 
-            orchestrator.release_port(service_name, port).await?;
+            orchestrator.release_port(service_name, port)?;
         }
         Ok(())
     }
@@ -368,7 +366,7 @@ mod tests {
             created_at: chrono::Utc::now(),
             updated_at: chrono::Utc::now(),
         };
-        let result = cap.register_service(&instance).await;
+        let result = cap.register_service(&instance);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Unix sockets"));
     }
@@ -376,23 +374,21 @@ mod tests {
     #[tokio::test]
     async fn test_orchestration_capability_allocate_port_returns_error() {
         let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
-        let result = cap.allocate_port("mysvc", "api").await;
+        let result = cap.allocate_port("mysvc", "api");
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_orchestration_capability_release_port_returns_error() {
         let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
-        let result = cap.release_port("mysvc", 8080).await;
+        let result = cap.release_port("mysvc", 8080);
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_orchestration_capability_send_health_status_returns_error() {
         let cap = OrchestrationCapability::new("http://localhost:9000".to_string());
-        let result = cap
-            .send_health_status("mysvc", ServiceStatus::Running)
-            .await;
+        let result = cap.send_health_status("mysvc", ServiceStatus::Running);
         assert!(result.is_err());
     }
 

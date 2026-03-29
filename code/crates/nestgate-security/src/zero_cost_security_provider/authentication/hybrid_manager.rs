@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! Hybrid external + local authentication orchestration.
 
 //
@@ -117,7 +122,7 @@ impl HybridAuthenticationManager {
 
         // Try external validation if configured
         if self.config.use_external_auth {
-            match self.validate_token_external(token_str).await {
+            match self.validate_token_external(token_str) {
                 Ok(valid) => return Ok(valid),
                 Err(e) => {
                     warn!(
@@ -149,7 +154,7 @@ impl HybridAuthenticationManager {
 
         // Try external refresh first if configured
         if self.config.use_external_auth {
-            match self.refresh_token_external(token_str).await {
+            match self.refresh_token_external(token_str) {
                 Ok(token) => return Ok(token),
                 Err(e) => {
                     warn!(
@@ -355,7 +360,7 @@ impl HybridAuthenticationManager {
     /// **Local-first**: no external HTTP calls; validates tokens locally.
     /// **Security**: Uses audited `RustCrypto` HMAC-SHA256 for signature verification.
     /// **Performance**: No network round-trip, instant validation.
-    async fn validate_token_external(&self, token_str: &str) -> Result<bool> {
+    fn validate_token_external(&self, token_str: &str) -> Result<bool> {
         // Use local JWT validation with RustCrypto
         let jwt = JwtHmac::new(&self.config.local_token_settings.signing_key);
 
@@ -389,7 +394,7 @@ impl HybridAuthenticationManager {
     /// **Local-first**: no external HTTP calls; refreshes tokens locally.
     /// **Security**: Verifies old token, generates new token with extended expiry.
     /// **Performance**: No network round-trip, instant refresh.
-    async fn refresh_token_external(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
+    fn refresh_token_external(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         // Verify the existing token first
         let jwt = JwtHmac::new(&self.config.local_token_settings.signing_key);
         let old_claims = jwt

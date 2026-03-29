@@ -67,7 +67,10 @@ mod arc_hashmap_serde {
 /// **ZERO-COST API HANDLER TRAIT**
 ///
 /// High-performance API handler trait with zero-cost abstractions.
-#[allow(async_fn_in_trait)] // Acceptable for internal trait usage
+#[expect(
+    async_fn_in_trait,
+    reason = "Internal API trait; async methods are intentional"
+)]
 pub trait ZeroCostApiHandler<T> {
     /// Error type for handler failures
     type Error: std::error::Error + Send + Sync + 'static;
@@ -93,9 +96,9 @@ pub struct ZeroCostApiRequest<T> {
     /// Request timestamp
     pub timestamp: std::time::SystemTime,
     /// Request metadata for extensibility (Arc for zero-copy sharing)
-    #[serde(with = "arc_hashmap_serde")]
-    ///  Metadata
-    pub _metadata: Arc<HashMap<String, String>>,
+    #[serde(with = "arc_hashmap_serde", rename = "_metadata", alias = "metadata")]
+    /// Metadata
+    pub metadata: Arc<HashMap<String, String>>,
 }
 
 /// **ZERO-COST API RESPONSE**
@@ -115,7 +118,8 @@ pub struct ZeroCostApiResponse<T> {
     /// Processing time in milliseconds
     pub processing_time_ms: u64,
     /// Response metadata for extensibility
-    pub _metadata: HashMap<String, String>,
+    #[serde(rename = "_metadata", alias = "metadata")]
+    pub metadata: HashMap<String, String>,
 }
 
 /// **API STATUS**
@@ -340,7 +344,7 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
                     Arc::clone(&request.request_id), // Arc clone is cheap
                     CachedRequest {
                         timestamp: request.timestamp,
-                        _metadata: Arc::clone(&request._metadata), // Arc clone is cheap
+                        metadata: Arc::clone(&request.metadata), // Arc clone is cheap
                     },
                 );
             }
@@ -358,7 +362,7 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
                 request_id: request.request_id, // Move Arc (no clone needed)
                 status: ApiStatus::Success,
                 processing_time_ms: processing_time,
-                _metadata: HashMap::new(),
+                metadata: HashMap::new(),
             }),
             Ok(Err(_)) => Err(ApiError::ProcessingFailed),
             Err(_) => Err(ApiError::Timeout),
@@ -371,13 +375,16 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
 #[derive(Debug, Clone)]
 struct CachedRequest {
     timestamp: std::time::SystemTime,
-    _metadata: Arc<HashMap<String, String>>,
+    metadata: Arc<HashMap<String, String>>,
 }
 /// **ZERO-COST DATASET HANDLER**
 ///
 /// High-performance dataset handler with zero-cost abstractions.
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Manager and cache fields used for dataset operations
+#[expect(
+    dead_code,
+    reason = "Manager and cache fields used for dataset operations"
+)]
 /// Handler for `ZeroCostDataset` requests
 pub struct ZeroCostDatasetHandler<
     T: Send + Sync + Clone + 'static,
@@ -396,7 +403,10 @@ pub struct ZeroCostDatasetHandler<
 /// **ZERO-COST DATASET MANAGER TRAIT**
 ///
 /// High-performance dataset management trait.
-#[allow(async_fn_in_trait)] // Acceptable for internal trait usage
+#[expect(
+    async_fn_in_trait,
+    reason = "Internal dataset trait; async methods are intentional"
+)]
 pub trait ZeroCostDatasetManager {
     /// Dataset type managed by this implementation
     type Dataset: Send + Sync + Clone;
@@ -693,5 +703,87 @@ impl ApiHandlerBenchmark {
             * 100.0;
 
         (old_duration, new_duration, improvement)
+    }
+}
+
+#[cfg(test)]
+mod zero_cost_api_handlers_unit_tests {
+    use super::*;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    #[test]
+    fn zero_cost_pool_handler_default_and_consts() {
+        type H = ZeroCostPoolHandler<64, 1000>;
+        let h = H::default();
+        assert_eq!(H::max_requests(), 64);
+        assert_eq!(H::timeout_ms(), 1000);
+        let _ = &h;
+    }
+
+    #[test]
+    fn zero_cost_request_response_serde_roundtrip() {
+        let req = ZeroCostApiRequest {
+            data: serde_json::json!({"k": 1}),
+            request_id: Arc::new("rid-1".into()),
+            timestamp: std::time::SystemTime::UNIX_EPOCH,
+            metadata: Arc::new(HashMap::from([("a".into(), "b".into())])),
+        };
+        let j = serde_json::to_string(&req).unwrap();
+        let back: ZeroCostApiRequest<serde_json::Value> = serde_json::from_str(&j).unwrap();
+        assert_eq!(*back.request_id, "rid-1");
+
+        let resp = ZeroCostApiResponse {
+            data: serde_json::json!(null),
+            request_id: Arc::new("r".into()),
+            status: ApiStatus::Warning {
+                message: "w".into(),
+            },
+            processing_time_ms: 0,
+            metadata: HashMap::new(),
+        };
+        let j2 = serde_json::to_string(&resp).unwrap();
+        let _: ZeroCostApiResponse<serde_json::Value> = serde_json::from_str(&j2).unwrap();
+    }
+
+    #[test]
+    fn api_status_error_roundtrip() {
+        let e = ApiStatus::Error {
+            code: "E1".into(),
+            message: "m".into(),
+        };
+        let s = serde_json::to_string(&e).unwrap();
+        let back: ApiStatus = serde_json::from_str(&s).unwrap();
+        match back {
+            ApiStatus::Error { code, message } => {
+                assert_eq!(code, "E1");
+                assert_eq!(message, "m");
+            }
+            _ => panic!("expected error variant"),
+        }
+    }
+
+    #[test]
+    fn zero_cost_router_builder_bounds() {
+        let b = ZeroCostRouterBuilder::<3, 2>::default();
+        assert_eq!(ZeroCostRouterBuilder::<3, 2>::max_routes(), 3);
+        assert_eq!(ZeroCostRouterBuilder::<3, 2>::max_middleware(), 2);
+        assert!(b.can_add_route());
+        assert!(b.can_add_middleware());
+    }
+
+    #[test]
+    fn migration_guide_and_benchmark_helpers() {
+        assert!(!ApiHandlerMigrationGuide::migration_steps().is_empty());
+        let (a, b, p) = ApiHandlerBenchmark::performance_comparison();
+        assert!(p > 0.0);
+        assert!(a > b);
+    }
+
+    #[test]
+    fn dataset_type_and_info_serde() {
+        let dt = DatasetType::Volume { size: 1024 };
+        let j = serde_json::to_string(&dt).unwrap();
+        let _: DatasetType = serde_json::from_str(&j).unwrap();
     }
 }

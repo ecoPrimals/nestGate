@@ -2,11 +2,11 @@
 
 **Version**: 4.7.0-dev  
 **Build**: 25/25 workspace members compiling, 0 errors  
-**Tests**: 11,707 passing, 0 failures  
-**Coverage**: 74.3% line (llvm-cov, up from 68.4%; target: 90%)  
-**Clippy**: Warnings reduced from 8,227 to 4,642 (ongoing cleanup; production targets `-D warnings` clean)  
+**Tests**: 7,887 passing (lib), 0 failures  
+**Clippy**: Warnings reduced from 8,227 to 2,972 (13 pedantic categories zeroed; production `-D warnings` clean)  
 **Doctests**: Zero failures  
 **Production TODO/FIXME**: Zero  
+**File size**: All files under 1,000 lines (largest: 987)  
 **Last Updated**: March 29, 2026
 
 ---
@@ -47,7 +47,7 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ## Architecture
 
 ```
-nestGate/ (25 workspace members, 22+ library crates)
+nestgate/ (25 workspace members)
 │
 │  Foundation Layer (zero internal deps, compiles first)
 ├── nestgate-types       Error types, result aliases, unified enums
@@ -109,16 +109,15 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Area | Status |
 |------|--------|
 | Build | 25/25 workspace members, 0 errors |
-| Clippy | 4,642 warnings (down from 8,227); production `-D warnings` clean |
+| Clippy | 2,972 warnings (down from 8,227); 13 pedantic categories zeroed; production `-D warnings` clean |
 | Format | Clean |
-| Tests | 11,707 passing, 0 failures |
-| Coverage | 74.3% line (target: 90%) |
+| Tests | 7,887 lib tests passing, 0 failures, 64 ignored |
 | Doctests | Zero failures |
 | Production TODO/FIXME | Zero |
 | Production unwrap/expect | Zero |
-| Unsafe blocks | Evolved (most replaced with safe alternatives) |
-| File size limit (1000 lines) | All compliant |
-| Env-var race conditions | Fixed (80+ tests with save/restore) |
+| Unsafe blocks | 1 (edition-2021 env bridge — safe pattern) |
+| File size limit (1000 lines) | All compliant (largest: 987) |
+| Env-var race conditions | Fixed (temp-env + serial_test) |
 
 ### Compliance (wateringHole)
 
@@ -228,10 +227,11 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 1. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 2. Warm/cold tier data cycling (NVMe SSD warm, HDD cold)
-3. Push test coverage toward 90% target (currently 74.3%)
+3. Push test coverage toward 90% target
 4. Wire `data.*` and `nat.*` semantic router routes
 5. Evolve remaining dev stubs to full implementations
 6. Cross-gate replication (multi-node data orchestration)
+7. Evolve `unsafe-libyaml` dep to pure Rust YAML parser
 
 For details: See [STATUS.md](./STATUS.md).
 

@@ -189,7 +189,7 @@ mod analysis_tests {
     async fn test_start_analysis_task() {
         let mut monitor = ZfsPerformanceMonitor::new_for_testing();
 
-        let result = monitor.start_analysis_task().await;
+        let result = monitor.start_analysis_task();
 
         // Should start task successfully
         assert!(result.is_ok());
@@ -200,11 +200,11 @@ mod analysis_tests {
     async fn test_start_analysis_task_multiple_times() {
         let mut monitor = ZfsPerformanceMonitor::new_for_testing();
 
-        let result1 = monitor.start_analysis_task().await;
+        let result1 = monitor.start_analysis_task();
         assert!(result1.is_ok());
 
         // Starting again should replace the task
-        let result2 = monitor.start_analysis_task().await;
+        let result2 = monitor.start_analysis_task();
         assert!(result2.is_ok());
         assert!(monitor.analysis_task.is_some());
     }

@@ -59,6 +59,9 @@ pub mod network;
 pub mod security;
 pub mod storage;
 
+#[cfg(test)]
+mod storage_tests;
+
 // Re-export all types for convenience
 pub use monitoring::*;
 pub use network::*;

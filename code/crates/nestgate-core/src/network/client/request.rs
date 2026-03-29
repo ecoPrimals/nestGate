@@ -30,6 +30,7 @@ pub struct Request<'a> {
 
 impl<'a> Request<'a> {
     /// Create a GET request
+    #[must_use]
     pub fn get(path: &'a str) -> Self {
         Self {
             method: Method::Get,
@@ -40,6 +41,7 @@ impl<'a> Request<'a> {
     }
 
     /// Create a POST request with JSON body
+    #[must_use]
     pub fn post_json(path: &'a str, json: &'a str) -> Self {
         let mut headers = HeaderMap::new();
         // Use lowercase header names per HTTP/2 spec (RFC 7540)
@@ -54,6 +56,7 @@ impl<'a> Request<'a> {
     }
 
     /// Create a POST request with form data
+    #[must_use]
     pub fn post_form(path: &'a str, data: &'a [(String, String)]) -> Self {
         let mut headers = HeaderMap::new();
         // Use lowercase header names per HTTP/2 spec (RFC 7540)
@@ -71,6 +74,7 @@ impl<'a> Request<'a> {
     }
 
     /// Add a header to this request
+    #[must_use]
     pub fn with_header(mut self, key: String, value: String) -> Self {
         self.headers.insert(key, value);
         self
@@ -107,7 +111,8 @@ pub struct Response {
 
 impl Response {
     /// Create a new response
-    pub fn new(status: StatusCode, headers: HeaderMap, body: Vec<u8>) -> Self {
+    #[must_use]
+    pub const fn new(status: StatusCode, headers: HeaderMap, body: Vec<u8>) -> Self {
         Self {
             status,
             headers,
@@ -116,26 +121,37 @@ impl Response {
     }
 
     /// Get response body as string
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FromUtf8Error`](std::string::FromUtf8Error) if the body is not valid UTF-8.
     pub fn text(&self) -> Result<String, std::string::FromUtf8Error> {
         String::from_utf8(self.body.clone())
     }
 
     /// Get response body as JSON
+    ///
+    /// # Errors
+    ///
+    /// Returns [`serde_json::Error`] if deserialization fails.
     pub fn json<T: for<'de> Deserialize<'de>>(&self) -> Result<T, serde_json::Error> {
         serde_json::from_slice(&self.body)
     }
 
     /// Check if response was successful (2xx)
-    pub fn is_success(&self) -> bool {
+    #[must_use]
+    pub const fn is_success(&self) -> bool {
         self.status.is_success()
     }
 
     /// Check if response was an error (4xx or 5xx)
-    pub fn is_error(&self) -> bool {
+    #[must_use]
+    pub const fn is_error(&self) -> bool {
         self.status.is_error()
     }
 
     /// Get a header value
+    #[must_use]
     pub fn header(&self, key: &str) -> Option<&String> {
         self.headers.get(key)
     }

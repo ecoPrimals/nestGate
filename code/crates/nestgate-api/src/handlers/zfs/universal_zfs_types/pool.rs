@@ -91,9 +91,9 @@ pub struct PoolConfig {
     /// Pool name
     pub name: String,
     /// Devices for the pool (disk paths)
-    #[serde(default)]
-    ///  Devices
-    pub _devices: Vec<String>,
+    #[serde(default, rename = "_devices")]
+    /// Devices
+    pub devices: Vec<String>,
     /// Mount point
     pub mountpoint: Option<String>,
     /// Compression enabled

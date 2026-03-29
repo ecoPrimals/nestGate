@@ -515,7 +515,6 @@ pub struct ScanStorageRequest {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Alternativeconfigurationcanonical
 pub type AlternativeConfigurationCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -532,7 +531,6 @@ pub type AlternativeConfigurationCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Autoconfiginputcanonical
 pub type AutoConfigInputCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -549,7 +547,6 @@ pub type AutoConfigInputCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Autoconfigrequestcanonical
 pub type AutoConfigRequestCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -566,7 +563,6 @@ pub type AutoConfigRequestCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Autoconfigresultcanonical
 pub type AutoConfigResultCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -583,7 +579,6 @@ pub type AutoConfigResultCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Benchmarkconfigcanonical
 pub type BenchmarkConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -600,7 +595,6 @@ pub type BenchmarkConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Storageconfigurationcanonical
 pub type StorageConfigurationCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

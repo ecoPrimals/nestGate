@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
 //
 // Contains the main service structure and core functionality.
 
@@ -15,7 +19,8 @@ use tokio::sync::RwLock;
 // Removed unused tracing import
 
 use crate::handlers::zfs::universal_zfs::config::TimeoutConfig;
-use crate::handlers::zfs::universal_zfs::traits::{UniversalZfsService, UniversalZfsServiceEnum};
+use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
+use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
@@ -377,7 +382,7 @@ pub async fn health_check(service: &FailSafeZfsService) -> UniversalZfsResult<He
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::handlers::zfs::universal_zfs::traits::UniversalZfsServiceEnum;
+    use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
     use nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig;
     use std::sync::Arc;
 

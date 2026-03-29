@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! Model Cache JSON-RPC Handlers
 //!
 //! **Integration:** Persistent model metadata belongs in `nestgate-core` `services::storage` when
@@ -16,7 +21,7 @@ const MODEL_KEY_PREFIX: &str = "model:";
 const MODEL_META_PREFIX: &str = "model_meta:";
 
 /// model.register — not implemented until nestgate-core storage is wired.
-pub async fn model_register(params: &Option<Value>) -> Result<Value> {
+pub fn model_register(params: Option<&Value>) -> Result<Value> {
     tracing::debug!("feature pending: model.register via nestgate-core storage");
     let _ = (MODEL_KEY_PREFIX, MODEL_META_PREFIX, params);
     Err(NestGateError::not_implemented(
@@ -25,7 +30,7 @@ pub async fn model_register(params: &Option<Value>) -> Result<Value> {
 }
 
 /// model.exists — not implemented until nestgate-core storage is wired.
-pub async fn model_exists(params: &Option<Value>) -> Result<Value> {
+pub fn model_exists(params: Option<&Value>) -> Result<Value> {
     tracing::debug!("feature pending: model.exists via nestgate-core storage");
     let _ = params;
     Err(NestGateError::not_implemented(
@@ -34,7 +39,7 @@ pub async fn model_exists(params: &Option<Value>) -> Result<Value> {
 }
 
 /// model.locate — not implemented until nestgate-core storage is wired.
-pub async fn model_locate(params: &Option<Value>) -> Result<Value> {
+pub fn model_locate(params: Option<&Value>) -> Result<Value> {
     tracing::debug!("feature pending: model.locate via nestgate-core storage");
     let _ = params;
     Err(NestGateError::not_implemented(
@@ -43,7 +48,7 @@ pub async fn model_locate(params: &Option<Value>) -> Result<Value> {
 }
 
 /// model.metadata — not implemented until nestgate-core storage is wired.
-pub async fn model_metadata(params: &Option<Value>) -> Result<Value> {
+pub fn model_metadata(params: Option<&Value>) -> Result<Value> {
     tracing::debug!("feature pending: model.metadata via nestgate-core storage");
     let _ = params;
     Err(NestGateError::not_implemented(
@@ -86,7 +91,7 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
 ];
 
 /// capabilities.list — wateringHole semantic naming; lists all supported method names.
-pub async fn capabilities_list() -> Result<Value> {
+pub fn capabilities_list() -> Result<Value> {
     info!("🔍 capabilities.list called");
     Ok(json!({
         "methods": UNIX_SOCKET_SUPPORTED_METHODS,
@@ -96,7 +101,7 @@ pub async fn capabilities_list() -> Result<Value> {
 }
 
 /// `discover_capabilities` - Return all available JSON-RPC methods
-pub async fn discover_capabilities() -> Result<Value> {
+pub fn discover_capabilities() -> Result<Value> {
     info!("🔍 discover_capabilities called");
 
     Ok(json!({
@@ -133,7 +138,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_capabilities_list_matches_supported_methods() {
-        let value = capabilities_list().await.unwrap();
+        let value = capabilities_list().unwrap();
         assert_eq!(value["primal"], "nestgate");
         assert_eq!(value["version"], env!("CARGO_PKG_VERSION"));
         let methods = value["methods"].as_array().unwrap();
@@ -143,7 +148,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_capabilities_returns_valid_json() {
-        let result = discover_capabilities().await;
+        let result = discover_capabilities();
         assert!(result.is_ok());
         let value = result.unwrap();
 
@@ -163,7 +168,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_capabilities_has_backend_info() {
-        let result = discover_capabilities().await.unwrap();
+        let result = discover_capabilities().unwrap();
         let backend = &result["backend"];
 
         assert_eq!(backend["type"], "filesystem");
@@ -185,14 +190,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_model_register_missing_params() {
-        let result = model_register(&None).await;
+        let result = model_register(None);
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_model_register_and_exists_roundtrip() {
         let params = Some(json!({"model_id": "x"}));
-        assert!(model_register(&params).await.is_err());
-        assert!(model_exists(&params).await.is_err());
+        assert!(model_register(params.as_ref()).is_err());
+        assert!(model_exists(params.as_ref()).is_err());
     }
 }

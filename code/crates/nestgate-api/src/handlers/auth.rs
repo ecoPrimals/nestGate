@@ -31,6 +31,11 @@ impl AuthService {
     }
 
     /// Authenticate - returns Err with feature-not-available (no fake success)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`nestgate_core::NestGateError`] because decentralized authentication is not
+    /// implemented in this stub; production callers must use the nestgate-core security module.
     pub fn authenticate(
         &self,
         _credentials: &nestgate_core::universal_traits::Credentials,
@@ -313,16 +318,14 @@ pub fn authenticate_user(
     }
 }
 /// Get authentication status
-pub async fn get_auth_status(
-    State(_app_state): State<crate::routes::AppState>,
-) -> impl IntoResponse {
+#[must_use]
+pub fn get_auth_status(State(_app_state): State<crate::routes::AppState>) -> impl IntoResponse {
     let auth_service = AuthService::new();
     Json(auth_service.get_auth_status())
 }
 /// Get system security status
-pub async fn get_security_status(
-    State(_app_state): State<crate::routes::AppState>,
-) -> impl IntoResponse {
+#[must_use]
+pub fn get_security_status(State(_app_state): State<crate::routes::AppState>) -> impl IntoResponse {
     let auth_service = AuthService::new();
     Json(serde_json::json!({
         "security_primal_available": auth_service.security_primal_available(),

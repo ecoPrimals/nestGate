@@ -248,10 +248,7 @@ impl From<StorageTier> for TierType {
         match tier {
             StorageTier::Hot => Self::Hot,
             StorageTier::Warm => Self::Warm,
-            StorageTier::Cold => Self::Cold,
-            StorageTier::Cool => Self::Cold,   // Map cool to cold
-            StorageTier::Frozen => Self::Cold, // Map frozen to cold
-            _ => Self::Cold,                   // Default for any other variants
+            StorageTier::Cold | StorageTier::Cool | StorageTier::Frozen | _ => Self::Cold,
         }
     }
 }
@@ -271,11 +268,8 @@ impl From<StorageTier> for TierClassification {
     fn from(tier: StorageTier) -> Self {
         match tier {
             StorageTier::Hot => Self::Performance,
-            StorageTier::Warm => Self::Balanced,
-            StorageTier::Cold => Self::Archive,
-            StorageTier::Cool => Self::Archive, // Map cool to archive
-            StorageTier::Frozen => Self::Archive, // Map frozen to archive
-            _ => Self::Balanced,                // Default for any other variants
+            StorageTier::Cold | StorageTier::Cool | StorageTier::Frozen => Self::Archive,
+            StorageTier::Warm | _ => Self::Balanced,
         }
     }
 }

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 use super::types::{CacheConfig, StoragePool, StorageQuota, StorageServiceStats};
 use crate::error::NestGateError;
 use crate::services::storage::config::{StorageServiceConfig, ZfsConfig};
@@ -276,11 +281,13 @@ impl StorageManagerService {
                         if parts.len() >= 3 {
                             let arc_size = parts[2].parse::<u64>().unwrap_or(0);
                             if arc_size > 0 {
-                                info!(
-                                    "📊 Current ARC size: {} bytes ({:.2} MB)",
-                                    arc_size,
-                                    arc_size as f64 / 1024.0 / 1024.0
-                                );
+                                #[expect(
+                                    clippy::cast_precision_loss,
+                                    reason = "ARC byte size formatted as MB for logs only"
+                                )]
+                                let arc_size_f: f64 = arc_size as f64;
+                                let arc_mb = arc_size_f / 1024.0 / 1024.0;
+                                info!("📊 Current ARC size: {} bytes ({arc_mb:.2} MB)", arc_size);
                             }
                         }
                         break;
@@ -357,7 +364,12 @@ impl StorageManagerService {
                     }
 
                     if hits + misses > 0 {
-                        let hit_rate = hits as f64 / (hits + misses) as f64 * 100.0;
+                        let total = hits + misses;
+                        #[expect(
+                            clippy::cast_precision_loss,
+                            reason = "ARC hit/miss counters; percentage for debug log only"
+                        )]
+                        let hit_rate = hits as f64 / total as f64 * 100.0;
                         debug!("📊 ZFS ARC hit rate: {:.2}%", hit_rate);
                     }
                 }
@@ -370,19 +382,19 @@ impl StorageManagerService {
 
     /// Get service ID
     #[must_use]
-    pub fn service_id(&self) -> Uuid {
+    pub const fn service_id(&self) -> Uuid {
         self.service_id
     }
 
     /// Get service start time
     #[must_use]
-    pub fn start_time(&self) -> SystemTime {
+    pub const fn start_time(&self) -> SystemTime {
         self.start_time
     }
 
     /// Get service configuration
     #[must_use]
-    pub fn config(&self) -> &StorageServiceConfig {
+    pub const fn config(&self) -> &StorageServiceConfig {
         &self.config
     }
 
@@ -409,13 +421,13 @@ impl StorageManagerService {
     /// Get storage manager reference
     /// Get ZFS configuration
     #[must_use]
-    pub fn zfs_config(&self) -> &ZfsConfig {
+    pub const fn zfs_config(&self) -> &ZfsConfig {
         &self.zfs_config
     }
 
     /// Check if ZFS is enabled
     #[must_use]
-    pub fn is_zfs_enabled(&self) -> bool {
+    pub const fn is_zfs_enabled(&self) -> bool {
         // Check if ZFS binary is configured (indicating ZFS is intended to be used)
         !self.zfs_config.zfs_binary.is_empty()
     }
@@ -424,7 +436,8 @@ impl StorageManagerService {
     ///
     /// Adaptive storage is accessed through the universal storage interface.
     /// Returns `false` until the universal storage backend is configured.
-    pub fn is_adaptive_storage_available(&self) -> bool {
+    #[must_use]
+    pub const fn is_adaptive_storage_available(&self) -> bool {
         false
     }
 

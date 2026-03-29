@@ -124,6 +124,11 @@ pub async fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
 /// * `capability` - Service capability type to discover
 /// * `env_var` - Environment variable name to check
 /// * `default_endpoint` - Safe default if all discovery methods fail
+///
+/// # Errors
+///
+/// This function currently always returns [`Ok`]; the [`Result`] is reserved for future discovery
+/// backends that may fail instead of falling back.
 pub async fn discover_with_fallback(
     capability: &str,
     env_var: &str,
@@ -175,6 +180,11 @@ pub async fn discover_with_fallback(
 /// # Ok(())
 /// # }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`NestGateError`] when the capability cannot be announced to the discovery system
+/// (currently always returns [`Ok`] while integration is stubbed).
 pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> Result<()> {
     // Integration: `DiscoveryBuilder` / `SelfKnowledge` from nestgate-core apply when those APIs are
     // exposed without pulling the full core graph into nestgate-config.
@@ -239,6 +249,10 @@ async fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
 /// - `http://localhost:8080`
 /// - `localhost:8080`
 /// - `192.168.1.100:9090`
+///
+/// # Errors
+///
+/// Returns [`NestGateError`] when the endpoint string is not a valid URL or `host:port` pair.
 pub fn parse_endpoint(endpoint: &str) -> Result<(String, u16)> {
     // Handle full URLs
     if endpoint.starts_with("http://") || endpoint.starts_with("https://") {

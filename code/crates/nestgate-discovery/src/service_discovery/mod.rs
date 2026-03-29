@@ -16,6 +16,9 @@ pub mod registry;
 pub mod types;
 
 #[cfg(test)]
+mod types_tests;
+
+#[cfg(test)]
 mod discovery_error_tests; // Nov 23, 2025 - P1 test expansion
 #[cfg(test)]
 mod service_discovery_edge_cases; // Nov 23, 2025 - P1-5 edge case tests // ✅ NEW: Dynamic endpoint resolution system

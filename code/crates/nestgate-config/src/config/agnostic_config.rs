@@ -100,12 +100,18 @@ impl ConfigBuilder {
     }
 
     /// Set custom default for a configuration key
+    #[must_use]
     pub fn with_default(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.custom_defaults.insert(key.into(), value.into());
         self
     }
 
     /// Build the configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] when capability discovery, environment resolution, or port
+    /// discovery fails.
     pub async fn build(self) -> Result<AgnosticConfig> {
         let mut config = AgnosticConfig {
             endpoints: HashMap::new(),
@@ -359,6 +365,11 @@ impl AgnosticConfig {
 /// ```rust,ignore
 /// let port = migrate_port("api", 8080).await?; // Agnostic
 /// ```
+///
+/// # Errors
+///
+/// Returns [`NestGateError`] when [`ConfigBuilder::build`] fails or the service port is missing
+/// after migration.
 pub async fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16> {
     ConfigBuilder::new()
         .with_capability_discovery()
@@ -375,6 +386,11 @@ pub async fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16>
 }
 
 /// Migration helper: Convert hardcoded endpoint to agnostic config
+///
+/// # Errors
+///
+/// Returns [`NestGateError`] when [`ConfigBuilder::build`] fails or the service endpoint is missing
+/// after migration.
 pub async fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<String> {
     let config = ConfigBuilder::new()
         .with_capability_discovery()

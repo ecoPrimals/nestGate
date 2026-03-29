@@ -89,7 +89,7 @@ impl DiscoveredProtocol {
 
     /// Is this protocol secure?
     #[must_use]
-    pub fn is_secure(&self) -> bool {
+    pub const fn is_secure(&self) -> bool {
         self.transport.is_secure() && self.authentication.is_secure()
     }
 }
@@ -126,6 +126,7 @@ impl ApiInfo {
     }
 
     /// Add metadata
+    #[must_use]
     pub fn with_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.metadata.insert(key.into(), value.into());
         self

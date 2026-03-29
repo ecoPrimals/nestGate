@@ -17,8 +17,8 @@ pub mod validation;
 
 // Re-export main types for convenience
 pub use config::{
-    DeviceDetectionConfig, DeviceType as ConfigDeviceType, PoolSetupConfig, PoolTopology,
-    RedundancyLevel, StorageTier as ConfigStorageTier,
+    CanonicalZfsPoolConfig, DeviceDetectionConfig, DeviceType as ConfigDeviceType, PoolSetupConfig,
+    PoolTopology, RedundancyLevel, StorageTier as ConfigStorageTier,
 };
 pub use creation::PoolCreator;
 pub use device_detection::{
@@ -55,9 +55,8 @@ const fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDevi
     match detection_type {
         DetectionDeviceType::NvmeSsd => ConfigDeviceType::NvmeSsd,
         DetectionDeviceType::SataSsd => ConfigDeviceType::SataSsd,
-        DetectionDeviceType::Hdd => ConfigDeviceType::SpinningDisk,
         DetectionDeviceType::OptaneMemory => ConfigDeviceType::OptaneMemory,
-        DetectionDeviceType::Unknown => ConfigDeviceType::SpinningDisk, // Default fallback
+        DetectionDeviceType::Hdd | DetectionDeviceType::Unknown => ConfigDeviceType::SpinningDisk,
     }
 }
 

@@ -56,6 +56,7 @@ pub struct ConnectionPool {
 
 impl ConnectionPool {
     /// Create a new connection pool with lock-free concurrent access
+    #[must_use]
     pub fn new(config: ClientConfig) -> Self {
         Self {
             connections: Arc::new(DashMap::new()),
@@ -75,6 +76,11 @@ impl ConnectionPool {
     ///
     /// - `Ok(Connection)`: Reused or newly created connection
     /// - `Err`: If semaphore acquisition fails (resource exhaustion)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] when the connection permit cannot be acquired or a new connection
+    /// cannot be stored in the pool.
     pub async fn get_connection(&self, endpoint: &Endpoint) -> Result<Connection> {
         let key = endpoint.to_string();
 
@@ -127,6 +133,7 @@ impl ConnectionPool {
     }
 
     /// Get pool statistics (lock-free!)
+    #[must_use]
     pub fn stats(&self) -> PoolStats {
         // DashMap: Lock-free concurrent iteration!
         let total_connections: usize = self
@@ -175,6 +182,7 @@ pub struct Connection {
 
 impl Connection {
     /// Create a new connection
+    #[must_use]
     pub fn new(endpoint: Endpoint) -> Self {
         Self {
             id: uuid::Uuid::new_v4(),
@@ -186,6 +194,7 @@ impl Connection {
     }
 
     /// Check if connection is idle
+    #[must_use]
     pub fn is_idle(&self) -> bool {
         self.last_used.elapsed() > Duration::from_secs(1)
     }
@@ -197,6 +206,11 @@ impl Connection {
     }
 
     /// Send a request on this connection
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] because external HTTP through this pool is deprecated in favor of
+    /// orchestration RPC (`discover_orchestration`).
     pub fn send(&mut self, request: &Request<'_>) -> Result<Response> {
         self.mark_used();
 
@@ -262,6 +276,7 @@ impl Connection {
     }
 
     /// Get connection statistics
+    #[must_use]
     pub fn stats(&self) -> ConnectionStats {
         ConnectionStats {
             endpoint: self.endpoint.clone(),

@@ -206,7 +206,10 @@ impl UniversalZfsError {
     /// Convert error to `UniversalZfsErrorData`
     #[must_use]
     pub fn to_error_data(&self) -> UniversalZfsErrorData {
-        #[allow(clippy::missing_const_for_fn)] // `String` parameters are not valid in `const fn`
+        #[expect(
+            clippy::missing_const_for_fn,
+            reason = "String parameters are not valid in const fn"
+        )]
         fn base_message(message: String) -> UniversalZfsErrorData {
             UniversalZfsErrorData {
                 message,
@@ -232,7 +235,10 @@ impl UniversalZfsError {
         }
 
         match self {
-            Self::ServiceUnavailable { message } => base_message(message.clone()),
+            Self::ServiceUnavailable { message }
+            | Self::Configuration { message }
+            | Self::InvalidInput { message }
+            | Self::Internal { message } => base_message(message.clone()),
             Self::Timeout {
                 b_operation,
                 duration,
@@ -245,7 +251,6 @@ impl UniversalZfsError {
                 circuit_breaker_open: false,
                 rate_limit_info: None,
             },
-            Self::Configuration { message } => base_message(message.clone()),
             Self::Backend { backend, message } => UniversalZfsErrorData {
                 message: message.clone(),
                 b_operation: None,
@@ -255,7 +260,6 @@ impl UniversalZfsError {
                 circuit_breaker_open: false,
                 rate_limit_info: None,
             },
-            Self::InvalidInput { message } => base_message(message.clone()),
             Self::NotFound { path } => UniversalZfsErrorData {
                 message: format!("Resource not found: {path}"),
                 b_operation: None,
@@ -286,7 +290,6 @@ impl UniversalZfsError {
                 circuit_breaker_open: false,
                 rate_limit_info: rate_limit_info.clone(),
             },
-            Self::Internal { message } => base_message(message.clone()),
             Self::PoolOperationFailed { message } => {
                 with_operation(message.clone(), "pool_operation")
             }
@@ -335,7 +338,9 @@ impl From<UniversalZfsError> for NestGateError {
         ]);
 
         match error {
-            UniversalZfsError::ServiceUnavailable { .. } => {
+            UniversalZfsError::ServiceUnavailable { .. }
+            | UniversalZfsError::CircuitBreakerOpen { .. }
+            | UniversalZfsError::RateLimitExceeded { .. } => {
                 Self::service_unavailable(error_data.message)
             }
             UniversalZfsError::Timeout {
@@ -350,20 +355,10 @@ impl From<UniversalZfsError> for NestGateError {
             }
             UniversalZfsError::InvalidInput { .. } => Self::validation_error(&error_data.message),
             UniversalZfsError::NotFound { .. } => Self::not_found(error_data.message),
-            UniversalZfsError::CircuitBreakerOpen { .. } => {
-                Self::service_unavailable(error_data.message)
-            }
-            UniversalZfsError::RateLimitExceeded { .. } => {
-                Self::service_unavailable(error_data.message)
-            }
             UniversalZfsError::Internal { .. } => Self::internal(error_data.message),
-            UniversalZfsError::PoolOperationFailed { .. } => {
-                Self::storage_error(&error_data.message)
-            }
-            UniversalZfsError::DatasetOperationFailed { .. } => {
-                Self::storage_error(&error_data.message)
-            }
-            UniversalZfsError::SnapshotOperationFailed { .. } => {
+            UniversalZfsError::PoolOperationFailed { .. }
+            | UniversalZfsError::DatasetOperationFailed { .. }
+            | UniversalZfsError::SnapshotOperationFailed { .. } => {
                 Self::storage_error(&error_data.message)
             }
         }

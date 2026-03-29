@@ -147,7 +147,7 @@ impl NetworkConfig {
 
 impl Default for NetworkConfig {
     fn default() -> Self {
-        use crate::constants::hardcoding::{addresses, ports};
+        use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
 
         // Parse with guaranteed fallback
         let api_host = addresses::LOCALHOST_IPV4.parse().unwrap_or_else(|_| {
@@ -158,10 +158,10 @@ impl Default for NetworkConfig {
 
         Self {
             api_host,
-            api_port: ports::HTTP_DEFAULT,
-            https_port: ports::HTTPS_DEFAULT,
+            api_port: runtime_fallback_ports::HTTP,
+            https_port: runtime_fallback_ports::HTTPS,
             tarpc_port: 8091, // tarpc default port
-            internal_port: ports::API_DEFAULT,
+            internal_port: runtime_fallback_ports::API,
             bind_all: false,
             timeout_seconds: 30,
             connection_pool_size: 10,

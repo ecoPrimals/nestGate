@@ -461,14 +461,10 @@ impl ZeroCostSecurityMetadata {
         match (self.compliance_level.as_str(), required_level) {
             // Government compliance requires explicit government level
             (level, "government") => level == "government",
-            // Enterprise can satisfy enterprise, professional, and basic
-            ("enterprise", "enterprise" | "professional" | "basic") => true,
-            // Professional can satisfy professional and basic
-            ("professional", "professional" | "basic") => true,
-            // Basic can only satisfy basic
-            ("basic", "basic") => true,
-            // Government can satisfy any level including government
-            ("government", _) => true,
+            ("enterprise", "enterprise" | "professional" | "basic")
+            | ("government", _)
+            | ("professional", "professional" | "basic")
+            | ("basic", "basic") => true,
             _ => false,
         }
     }

@@ -46,7 +46,8 @@ pub struct ClientConfig<const DEFAULT_TIMEOUT_MS: u64 = 30000> {
 
 impl<const DEFAULT_TIMEOUT_MS: u64> ClientConfig<DEFAULT_TIMEOUT_MS> {
     /// Create a new configuration
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
             max_connections_per_host: 10,
@@ -60,31 +61,36 @@ impl<const DEFAULT_TIMEOUT_MS: u64> ClientConfig<DEFAULT_TIMEOUT_MS> {
     }
 
     /// Set request timeout
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+    #[must_use]
+    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }
 
     /// Set maximum connections per host
-    pub fn with_max_connections(mut self, max: usize) -> Self {
+    #[must_use]
+    pub const fn with_max_connections(mut self, max: usize) -> Self {
         self.max_connections_per_host = max;
         self
     }
 
     /// Set maximum retries
-    pub fn with_max_retries(mut self, max: usize) -> Self {
+    #[must_use]
+    pub const fn with_max_retries(mut self, max: usize) -> Self {
         self.max_retries = max;
         self
     }
 
     /// Enable or disable compression
-    pub fn with_compression(mut self, enabled: bool) -> Self {
+    #[must_use]
+    pub const fn with_compression(mut self, enabled: bool) -> Self {
         self.enable_compression = enabled;
         self
     }
 
     /// Enable or disable automatic redirects
-    pub fn with_redirects(mut self, enabled: bool) -> Self {
+    #[must_use]
+    pub const fn with_redirects(mut self, enabled: bool) -> Self {
         self.follow_redirects = enabled;
         self
     }

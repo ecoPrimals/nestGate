@@ -43,7 +43,8 @@ pub struct AutomationConfig {
     /// Minimum confidence threshold for predictions
     pub min_confidence_threshold: f64,
     /// Orchestration endpoint
-    pub _orchestration_endpoint: Option<String>,
+    #[serde(rename = "_orchestration_endpoint")]
+    pub orchestration_endpoint: Option<String>,
 }
 impl Default for AutomationConfig {
     /// Returns the default instance
@@ -57,7 +58,7 @@ impl Default for AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.7,
-            _orchestration_endpoint: None,
+            orchestration_endpoint: None,
         }
     }
 }
@@ -75,7 +76,7 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: true,
             min_confidence_threshold: 0.8, // Higher confidence for production
-            _orchestration_endpoint: Some({
+            orchestration_endpoint: Some({
                 // ✅ MIGRATED: Now uses centralized runtime configuration
                 use nestgate_core::config::runtime::get_config;
                 get_config().network.api_base_url()
@@ -95,7 +96,7 @@ impl AutomationConfig {
             enable_intelligent_tier_assignment: true,
             enable_automatic_optimization: false, // Disable auto-optimization in dev
             min_confidence_threshold: 0.5,        // Lower confidence for development
-            _orchestration_endpoint: Some({
+            orchestration_endpoint: Some({
                 // ✅ MIGRATED: Now uses centralized runtime configuration
                 use nestgate_core::config::runtime::get_config;
                 get_config().network.api_base_url()
@@ -200,7 +201,7 @@ impl Default for LifecycleConfig {
 /// Configuration for Discovery
 pub struct DiscoveryConfig {
     /// Known Orchestration Endpoints
-    pub known_orchestration_endpoints: Vec<String>,
+    pub knownorchestration_endpoints: Vec<String>,
     /// Discovery Timeout Ms
     pub discovery_timeout_ms: u64,
     /// Health Check Interval Ms
@@ -215,9 +216,9 @@ impl DiscoveryConfig {
     #[must_use]
     pub fn from_automation_config(config: &AutomationConfig) -> Self {
         Self {
-            known_orchestration_endpoints: vec![
+            knownorchestration_endpoints: vec![
                 // ✅ MIGRATED: Now uses capability-based discovery (not primal names!)
-                config._orchestration_endpoint.clone().unwrap_or_else(|| {
+                config.orchestration_endpoint.clone().unwrap_or_else(|| {
                     use nestgate_core::config::runtime::{capability_url, get_config};
                     // Use capability-based discovery, not primal names
                     capability_url("orchestration")
@@ -293,7 +294,7 @@ mod tests {
         assert_eq!(config.optimization_interval_hours, 6);
         assert_eq!(config.prediction_cache_ttl_hours, 24);
         assert_eq!(config.min_confidence_threshold, 0.8);
-        assert!(config._orchestration_endpoint.is_some());
+        assert!(config.orchestration_endpoint.is_some());
     }
 
     #[test]

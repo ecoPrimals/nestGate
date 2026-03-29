@@ -48,7 +48,7 @@ impl NetworkConfig {
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
         Ok(Self {
             port: Self::env_port_with_alternatives(prefix)?,
-            host: Self::env_host_with_alternatives(prefix)?,
+            host: Self::env_host_with_alternatives(prefix),
             timeout_secs: Self::env_var_or(prefix, "TIMEOUT_SECS", 30)?,
             max_connections: Self::env_var_or(prefix, "MAX_CONNECTIONS", 1000)?,
             read_timeout_secs: Self::env_var_or(prefix, "READ_TIMEOUT_SECS", 10)?,
@@ -64,27 +64,26 @@ impl NetworkConfig {
     /// 2. `NESTGATE_BIND_ADDRESS` (alternative)
     /// 3. `NESTGATE_HOST` (original)
     /// 4. Default (127.0.0.1)
-    fn env_host_with_alternatives(prefix: &str) -> Result<String, ConfigError> {
+    fn env_host_with_alternatives(prefix: &str) -> String {
         // Try BIND first (common name)
         let bind_var = format!("{prefix}_BIND");
         if let Ok(val) = env::var(&bind_var) {
-            return Ok(val);
+            return val;
         }
 
         // Try BIND_ADDRESS (alternative)
         let bind_address_var = format!("{prefix}_BIND_ADDRESS");
         if let Ok(val) = env::var(&bind_address_var) {
-            return Ok(val);
+            return val;
         }
 
         // Try HOST (original)
         let host_var = format!("{prefix}_HOST");
         if let Ok(val) = env::var(&host_var) {
-            return Ok(val);
+            return val;
         }
 
-        // Default
-        Ok(std::net::Ipv4Addr::LOCALHOST.to_string())
+        std::net::Ipv4Addr::LOCALHOST.to_string()
     }
 
     /// Get port from environment with alternative names for compatibility

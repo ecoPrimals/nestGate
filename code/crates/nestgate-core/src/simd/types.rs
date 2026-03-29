@@ -86,7 +86,7 @@ impl SimdCapabilities {
 
     /// Get the best available SIMD instruction set
     #[must_use]
-    pub fn best_instruction_set(&self) -> &'static str {
+    pub const fn best_instruction_set(&self) -> &'static str {
         if self.has_avx512 {
             "AVX-512"
         } else if self.has_avx2 {
@@ -104,7 +104,7 @@ impl SimdCapabilities {
 
     /// Get expected performance multiplier for the best instruction set
     #[must_use]
-    pub fn performance_multiplier(&self) -> f64 {
+    pub const fn performance_multiplier(&self) -> f64 {
         if self.has_avx512 {
             16.0 // AVX-512 can process 16 f32s or 8 f64s
         } else if self.has_avx2 || self.has_avx {

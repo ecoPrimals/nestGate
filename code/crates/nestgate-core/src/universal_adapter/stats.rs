@@ -153,17 +153,17 @@ impl AdapterStats {
     }
 
     /// Increment total requests (simplified for compatibility)
-    pub fn increment_requests(&mut self) {
+    pub const fn increment_requests(&mut self) {
         self.total_requests += 1;
     }
 
     /// Increment successful requests
-    pub fn increment_successful(&mut self) {
+    pub const fn increment_successful(&mut self) {
         self.successful_requests += 1;
     }
 
     /// Increment failed requests
-    pub fn increment_failed(&mut self) {
+    pub const fn increment_failed(&mut self) {
         self.failed_requests += 1;
     }
 
@@ -178,7 +178,7 @@ impl AdapterStats {
 
     /// Get current statistics as a summary
     #[must_use]
-    pub fn summary(&self) -> StatsSummary {
+    pub const fn summary(&self) -> StatsSummary {
         StatsSummary {
             requests_total: self.total_requests,
             requests_successful: self.successful_requests,

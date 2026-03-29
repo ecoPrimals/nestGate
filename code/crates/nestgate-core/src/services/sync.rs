@@ -248,7 +248,7 @@ impl Default for SyncExtensions {
 // UnifiedSyncConfig impl removed — type alias for NestGateCanonicalConfig (defined in nestgate-config)
 
 /// Checksum algorithms
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 /// Checksumalgorithm
 pub enum ChecksumAlgorithm {
     /// Md5

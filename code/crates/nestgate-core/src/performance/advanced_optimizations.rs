@@ -35,7 +35,8 @@ pub struct CacheAlignedCounter {
 }
 impl CacheAlignedCounter {
     /// Create new cache-aligned counter
-    pub fn new(initial: u64) -> Self {
+    #[must_use]
+    pub const fn new(initial: u64) -> Self {
         Self {
             value: AtomicU64::new(initial),
             _padding: [0; 64 - size_of::<AtomicU64>()],
@@ -79,6 +80,7 @@ pub struct SimdOperations;
 impl SimdOperations {
     /// Sum array of u32 values using SIMD when available
     #[inline(always)]
+    #[must_use]
     pub fn sum_u32_slice(data: &[u32]) -> u64 {
         // Fallback to scalar implementation
         // In a real implementation, this would use SIMD intrinsics
@@ -87,6 +89,7 @@ impl SimdOperations {
 
     /// Find maximum value in slice using SIMD
     #[inline(always)]
+    #[must_use]
     pub fn max_u32_slice(data: &[u32]) -> Option<u32> {
         if data.is_empty() {
             return None;
@@ -121,9 +124,10 @@ pub struct BranchOptimized;
 impl BranchOptimized {
     /// Likely branch hint for hot path optimization
     #[inline(always)]
-    pub fn likely(condition: bool) -> bool {
+    #[must_use]
+    pub const fn likely(condition: bool) -> bool {
         #[cold]
-        fn cold() {}
+        const fn cold() {}
 
         if !condition {
             cold();
@@ -133,9 +137,10 @@ impl BranchOptimized {
 
     /// Unlikely branch hint for error path optimization
     #[inline(always)]
-    pub fn unlikely(condition: bool) -> bool {
+    #[must_use]
+    pub const fn unlikely(condition: bool) -> bool {
         #[cold]
-        fn cold() {}
+        const fn cold() {}
 
         if condition {
             cold();
@@ -278,6 +283,7 @@ impl Default for PerformanceProfiler {
 
 impl PerformanceProfiler {
     /// Create new performance profiler
+    #[must_use]
     pub fn new() -> Self {
         Self {
             counters: std::array::from_fn(|_| CacheAlignedCounter::new(0)),

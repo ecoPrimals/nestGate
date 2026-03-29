@@ -626,11 +626,11 @@ impl RealTimeMetricsCollector {
     /// Returns an error if metric retrieval fails.
     pub fn get_historical_data(
         &self,
-        _pool_name: &str,
+        pool_name: &str,
         _time_range: &DashboardTimeRange,
     ) -> Result<Vec<PoolMetrics>> {
         // Implementation for getting historical data
-        debug!("Getting historical data for pool: {}", _pool_name);
+        debug!("Getting historical data for pool: {}", pool_name);
         Ok(vec![])
     }
 

@@ -257,3 +257,55 @@ impl IntoResponse for LegacyErrorResponse {
         (StatusCode::INTERNAL_SERVER_ERROR, Json(self)).into_response()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{ErrorResponseFactory, UnifiedErrorResponse};
+    use axum::http::StatusCode;
+
+    #[test]
+    fn unified_error_simple_and_status() {
+        let e = UnifiedErrorResponse::simple("m", "C", "comp");
+        assert_eq!(e.status, 500);
+        assert_eq!(e.code, "C");
+        let e2 = UnifiedErrorResponse::with_status("m", "C", "comp", 418);
+        assert_eq!(e2.status, 418);
+    }
+
+    #[test]
+    fn to_status_code_clamps_invalid() {
+        let e = UnifiedErrorResponse::with_status("x", "y", "z", 9999);
+        assert_eq!(e.to_status_code(), StatusCode::INTERNAL_SERVER_ERROR);
+        let ok = UnifiedErrorResponse::with_status("x", "y", "z", 200);
+        assert_eq!(ok.to_status_code(), StatusCode::OK);
+    }
+
+    #[test]
+    fn factory_common_errors_have_expected_codes() {
+        assert_eq!(ErrorResponseFactory::bad_request("x").status, 400);
+        assert_eq!(ErrorResponseFactory::internal("x").status, 500);
+        assert_eq!(ErrorResponseFactory::not_found("/p").status, 404);
+        assert_eq!(ErrorResponseFactory::unauthorized("op").status, 401);
+        assert_eq!(ErrorResponseFactory::forbidden("r").status, 403);
+        assert_eq!(ErrorResponseFactory::conflict("r").status, 409);
+        assert_eq!(ErrorResponseFactory::rate_limited(Some(5)).status, 429);
+        assert_eq!(ErrorResponseFactory::service_unavailable("s").status, 503);
+        assert_eq!(ErrorResponseFactory::timeout("t").status, 408);
+    }
+
+    #[test]
+    fn validation_error_carries_field_detail() {
+        let e = ErrorResponseFactory::validation_error("f", "bad");
+        assert_eq!(e.status, 400);
+        let details = e.details.expect("details");
+        assert_eq!(details.get("field"), Some(&serde_json::json!("f")));
+    }
+
+    #[test]
+    fn legacy_from_unified_preserves_message() {
+        let u = UnifiedErrorResponse::simple("msg", "CODE", "c");
+        let leg = super::LegacyErrorResponse::from(u.clone());
+        assert_eq!(leg.error, u.message);
+        assert_eq!(leg.code, Some(u.code));
+    }
+}

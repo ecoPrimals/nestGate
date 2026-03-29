@@ -11,6 +11,7 @@ use tokio::process::Command as TokioCommand;
 use tracing::info;
 
 use crate::error::{Result, ZfsOperation, create_zfs_error};
+use crate::numeric::f64_to_u64_saturating;
 
 /// Parse size string with units (simplified implementation)
 ///
@@ -56,7 +57,7 @@ pub fn parse_size_with_units(size_str: &str) -> Option<u64> {
         _ => return None,
     };
 
-    Some((number * multiplier as f64) as u64)
+    Some(f64_to_u64_saturating(number * multiplier as f64))
 }
 
 /// Get pool properties using zpool command
@@ -104,7 +105,7 @@ pub async fn get_pool_properties(pool_name: &str) -> Result<HashMap<String, Stri
 /// This is a development helper that ensures at least one pool exists.
 /// Not intended for production use.
 #[allow(dead_code)]
-pub async fn ensure_default_pool() -> Result<()> {
+pub fn ensure_default_pool() -> Result<()> {
     info!("Checking for default pool (development mode)");
     // This is a stub for development - in production, pools are managed externally
     Ok(())

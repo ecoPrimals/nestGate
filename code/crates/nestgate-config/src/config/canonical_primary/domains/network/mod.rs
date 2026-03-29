@@ -17,6 +17,10 @@
 
 /// Core API server configuration
 pub mod api;
+
+#[cfg(test)]
+mod api_tests;
+
 /// Service discovery configuration
 pub mod discovery;
 /// Environment-specific overrides

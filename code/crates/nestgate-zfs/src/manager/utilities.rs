@@ -9,6 +9,7 @@
 
 use super::types::CapacityInfo;
 use crate::error::{ZfsOperation, create_zfs_error};
+use crate::numeric::f64_to_u64_saturating;
 use nestgate_core::Result;
 // Removed unused tracing import
 
@@ -185,15 +186,14 @@ impl ZfsManager {
         let number: f64 = number_str.parse().ok()?;
 
         let multiplier = match unit.to_ascii_uppercase() {
-            'B' => 1,
             'K' => 1024,
             'M' => 1024 * 1024,
             'G' => 1024 * 1024 * 1024,
             'T' => 1024u64 * 1024 * 1024 * 1024,
             'P' => 1024u64 * 1024 * 1024 * 1024 * 1024,
-            _ => 1, // Default to bytes for unknown units
+            'B' | _ => 1, // Bytes or unknown unit → treat as multiplier 1
         };
 
-        Some((number * multiplier as f64) as u64)
+        Some(f64_to_u64_saturating(number * multiplier as f64))
     }
 }

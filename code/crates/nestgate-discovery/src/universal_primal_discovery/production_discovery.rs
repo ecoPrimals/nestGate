@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    clippy::unnecessary_wraps,
+    reason = "Stub APIs use Result for forward-compatible error propagation"
+)]
+
 //! **PRODUCTION DISCOVERY IMPLEMENTATION** - Legacy/Compatibility Module
 //!
 //! ⚠️ **DEPRECATED**: This module provides backward compatibility.
@@ -319,11 +324,10 @@ impl ServiceDiscoveryConfig {
     pub fn default_port_for_service(service_name: &str) -> u16 {
         use nestgate_config::constants::canonical_defaults::network;
         match service_name {
-            "api" | "web" => network::DEFAULT_API_PORT,
             "metrics" => network::DEFAULT_METRICS_PORT,
             "health" | "admin" | "websocket" | "network" | "storage" | "zfs" | "mcp"
             | "automation" => network::DEFAULT_INTERNAL_PORT,
-            _ => network::DEFAULT_API_PORT,
+            "api" | "web" | _ => network::DEFAULT_API_PORT,
         }
     }
 

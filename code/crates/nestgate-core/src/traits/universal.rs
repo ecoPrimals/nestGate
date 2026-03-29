@@ -106,6 +106,7 @@ pub struct DefaultService {
 
 impl DefaultService {
     /// Create a new service instance
+    #[must_use]
     pub fn new(config: TraitsUniversalConfig) -> Self {
         Self {
             _config: config,
@@ -158,11 +159,16 @@ impl Service for DefaultService {
 // ==================== UTILITY FUNCTIONS ====================
 
 /// Create a default service instance
+#[must_use]
 pub fn create_service() -> DefaultService {
     DefaultService::new(TraitsUniversalConfig::default())
 }
 
 /// Validate configuration
+#[expect(
+    clippy::unused_async,
+    reason = "cfg(test) awaits validate_config; synchronous validation only"
+)]
 pub async fn validate_config(config: &TraitsUniversalConfig) -> crate::Result<()> {
     if config.max_connections == 0 {
         return Err(NestGateError::configuration_error(
