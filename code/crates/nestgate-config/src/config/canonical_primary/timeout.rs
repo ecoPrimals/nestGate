@@ -52,7 +52,7 @@ impl Default for TimeoutConfig {
 impl TimeoutConfig {
     /// Create a production-optimized timeout configuration
     #[must_use]
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         Self {
             default_timeout: Duration::from_secs(60),
             connection_timeout: Duration::from_secs(15),
@@ -67,7 +67,7 @@ impl TimeoutConfig {
 
     /// Create a development-optimized timeout configuration
     #[must_use]
-    pub fn development() -> Self {
+    pub const fn development() -> Self {
         Self {
             default_timeout: Duration::from_secs(10),
             connection_timeout: Duration::from_secs(5),
@@ -83,5 +83,5 @@ impl TimeoutConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for UnifiedTimeoutConfig
+/// Backward compatibility alias for `UnifiedTimeoutConfig`
 pub type UnifiedTimeoutConfig = TimeoutConfig;

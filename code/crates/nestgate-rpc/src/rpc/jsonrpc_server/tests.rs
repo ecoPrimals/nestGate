@@ -2,8 +2,8 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 use super::*;
-use nestgate_types::error::Result as NgResult;
 use jsonrpsee::core::params::{ArrayParams, ObjectParams};
+use nestgate_types::error::Result as NgResult;
 
 /// Helper: Create test service (in-memory via `NestGateRpcService::new`).
 async fn create_test_service() -> NgResult<NestGateRpcService> {
@@ -344,9 +344,11 @@ async fn test_handler_capabilities_list() {
         .expect("capabilities.list");
     let methods = result["methods"].as_array().expect("methods array");
     assert!(methods.iter().any(|m| m.as_str() == Some("health.check")));
-    assert!(methods
-        .iter()
-        .any(|m| m.as_str() == Some("capabilities.list")));
+    assert!(
+        methods
+            .iter()
+            .any(|m| m.as_str() == Some("capabilities.list"))
+    );
 }
 
 #[tokio::test]
@@ -396,4 +398,113 @@ async fn test_module_method_names() {
     assert!(names.contains(&"health.check"));
     assert!(names.contains(&"capabilities.list"));
     assert!(names.len() >= 18);
+}
+
+// ========== Round 5: error / branch coverage ==========
+
+#[tokio::test]
+async fn test_call_unknown_method_fails() {
+    let module = build_test_module().await;
+    let err = module
+        .call::<_, serde_json::Value>("method.does.not.exist", ArrayParams::new())
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_dataset_create_missing_name_fails() {
+    let module = build_test_module().await;
+    let params = ObjectParams::new();
+    let err = module
+        .call::<_, serde_json::Value>("storage.dataset.create", params)
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_discovery_capability_register_missing_fields_fails() {
+    let module = build_test_module().await;
+    let params = ObjectParams::new();
+    let err = module
+        .call::<_, serde_json::Value>("discovery.capability.register", params)
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_discovery_capability_query_empty_params_array() {
+    let module = build_test_module().await;
+    let err = module
+        .call::<_, serde_json::Value>("discovery.capability.query", ArrayParams::new())
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_object_retrieve_missing_keys_fails() {
+    let module = build_test_module().await;
+    let params = ObjectParams::new();
+    let err = module
+        .call::<_, serde_json::Value>("storage.object.retrieve", params)
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_object_delete_missing_keys_fails() {
+    let module = build_test_module().await;
+    let params = ObjectParams::new();
+    let err = module
+        .call::<_, serde_json::Value>("storage.object.delete", params)
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_object_list_missing_dataset_fails() {
+    let module = build_test_module().await;
+    let params = ObjectParams::new();
+    let err = module
+        .call::<_, serde_json::Value>("storage.object.list", params)
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_object_metadata_missing_keys_fails() {
+    let module = build_test_module().await;
+    let params = ObjectParams::new();
+    let err = module
+        .call::<_, serde_json::Value>("storage.object.metadata", params)
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_object_store_missing_fields_fails() {
+    let module = build_test_module().await;
+    let mut params = ObjectParams::new();
+    params.insert("dataset", "d").expect("insert");
+    let err = module
+        .call::<_, serde_json::Value>("storage.object.store", params)
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_dataset_delete_empty_array_fails() {
+    let module = build_test_module().await;
+    let err = module
+        .call::<_, serde_json::Value>("storage.dataset.delete", ArrayParams::new())
+        .await;
+    assert!(err.is_err());
+}
+
+#[tokio::test]
+async fn test_storage_dataset_get_empty_array_fails() {
+    let module = build_test_module().await;
+    let err = module
+        .call::<_, serde_json::Value>("storage.dataset.get", ArrayParams::new())
+        .await;
+    assert!(err.is_err());
 }

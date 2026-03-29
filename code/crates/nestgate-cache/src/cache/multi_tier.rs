@@ -4,10 +4,10 @@
 //! Multi-tier cache implementation with hot, warm, and cold storage tiers
 //! Provides intelligent data placement and retrieval across performance tiers.
 //!
-//! **MODERNIZED**: Lock-free concurrent access using DashMap for in-memory tiers
+//! **MODERNIZED**: Lock-free concurrent access using `DashMap` for in-memory tiers
 
-use nestgate_types::Result;
 use dashmap::DashMap;
+use nestgate_types::Result;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -16,7 +16,7 @@ use std::sync::Arc;
 /// Type-erased cache provider for dynamic dispatch across multiple cache implementations.
 /// Enables runtime polymorphism for cache backends while maintaining async trait compatibility.
 pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
-/// Type alias for lock-free cache data (DashMap!)
+/// Type alias for lock-free cache data (`DashMap`!)
 pub type CacheDataMap = Arc<DashMap<String, Vec<u8>>>;
 
 /// Cache provider trait for different storage tiers
@@ -38,7 +38,7 @@ pub trait CacheProvider<K, V>: Send + Sync {
 
 /// Simple cache configuration
 #[derive(Debug, Clone)]
-/// Configuration for SimpleCache
+/// Configuration for `SimpleCache`
 pub struct SimpleCacheConfig {
     /// Maximum cache size in bytes
     pub max_size: usize,
@@ -49,7 +49,7 @@ pub struct SimpleCacheConfig {
 }
 /// Configuration for multi-tier cache
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -67,7 +67,7 @@ pub struct SimpleCacheConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for MultiTierCache
+/// Configuration for `MultiTierCache`
 pub struct MultiTierCacheConfig {
     /// Hot tier configuration (fastest access)
     pub hot_tier_config: SimpleCacheConfig,
@@ -228,7 +228,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn maintenance(&mut self) -> Result<()> {
+    pub const fn maintenance(&mut self) -> Result<()> {
         // Implementation would perform maintenance tasks
         // For now, this is a placeholder
         Ok(())
@@ -242,7 +242,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn flush(&mut self) -> Result<()> {
+    pub const fn flush(&mut self) -> Result<()> {
         // Implementation would flush pending writes
         // For now, this is a placeholder
         Ok(())
@@ -271,7 +271,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn stats(&self) -> Result<MultiTierCacheStats> {
+    pub const fn stats(&self) -> Result<MultiTierCacheStats> {
         // In a real implementation, we would collect stats from each tier
         Ok(MultiTierCacheStats {
             hot_tier_hits: 0,

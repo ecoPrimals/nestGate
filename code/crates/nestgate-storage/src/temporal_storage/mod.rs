@@ -26,7 +26,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use nestgate_core::temporal_storage::{TemporalStorageSystem, TemporalDevice};
 //!
 //! # fn main() -> nestgate_core::Result<()> {

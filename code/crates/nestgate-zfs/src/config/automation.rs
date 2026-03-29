@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Dataset automation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for DatasetAutomation
+/// Configuration for `DatasetAutomation`
 pub struct DatasetAutomationConfig {
     /// Enable dataset automation
     pub enabled: bool,

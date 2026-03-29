@@ -67,7 +67,8 @@ pub enum ServiceManager {
 
 impl ServiceManager {
     /// Get human-readable name
-    pub fn name(&self) -> &str {
+    #[must_use]
+    pub const fn name(&self) -> &str {
         match self {
             Self::Systemd => "systemd",
             Self::Launchd => "launchd",
@@ -77,7 +78,8 @@ impl ServiceManager {
     }
 
     /// Check if this service manager supports automatic startup
-    pub fn supports_auto_start(&self) -> bool {
+    #[must_use]
+    pub const fn supports_auto_start(&self) -> bool {
         !matches!(self, Self::Manual)
     }
 }
@@ -131,7 +133,7 @@ impl ServiceDetector for SystemdDetector {
         ServiceManager::Systemd
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "systemd-detector"
     }
 }
@@ -168,7 +170,7 @@ impl ServiceDetector for LaunchdDetector {
         ServiceManager::Launchd
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "launchd-detector"
     }
 }
@@ -202,7 +204,7 @@ impl ServiceDetector for WindowsServiceDetector {
         ServiceManager::WindowsService
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "windows-service-detector"
     }
 }
@@ -257,11 +259,13 @@ impl UniversalServiceDetector {
     }
 
     /// Check if any service manager is available
+    #[must_use]
     pub fn has_service_manager(&self) -> bool {
         !matches!(self.detect(), ServiceManager::Manual)
     }
 
     /// Get detailed detection info for diagnostics
+    #[must_use]
     pub fn detect_with_info(&self) -> (ServiceManager, Vec<String>) {
         let mut messages = Vec::new();
 

@@ -12,15 +12,16 @@
 //!
 //! 1. **`NESTGATE_SOCKET`** env var (explicit override, highest priority)
 //! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate.sock` (biomeOS standard)
-//! 3. **XDG Runtime Directory**: `/run/user/{uid}/biomeos/nestgate.sock` (recommended)
+//! 3. **`$XDG_RUNTIME_DIR/biomeos/nestgate.sock`** (preferred; reads the actual `XDG_RUNTIME_DIR` env var)
 //! 4. **Temp Directory**: `/tmp/nestgate-{family}-{node}.sock` (fallback, least secure)
 //!
 //! ## Environment Variables
 //!
 //! - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
-//! - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional, e.g., `/run/user/1000/biomeos`)
-//! - `NESTGATE_FAMILY_ID`: Family identifier (required)
-//! - `NESTGATE_NODE_ID`: Node identifier for multi-instance (optional, default: "default")
+//! - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional, e.g., `$XDG_RUNTIME_DIR/biomeos`)
+//! - `XDG_RUNTIME_DIR`: Base runtime path (optional; tier 3 uses `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`)
+//! - `NESTGATE_FAMILY_ID`: Family identifier (optional; default: `standalone` per wateringHole)
+//! - `NESTGATE_NODE_ID`: Node identifier for multi-instance (optional; default: system hostname)
 //!
 //! ## Philosophy
 //!
@@ -31,7 +32,6 @@
 //! - **Atomic-Ready**: Supports multiple instances with unique paths
 
 use nestgate_types::error::{NestGateError, Result};
-use uzers::get_current_uid;
 use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
 
@@ -49,13 +49,13 @@ pub struct SocketConfig {
 }
 
 /// Source of socket configuration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SocketConfigSource {
-    /// Explicit environment variable (NESTGATE_SOCKET)
+    /// Explicit environment variable (`NESTGATE_SOCKET`)
     Environment,
-    /// biomeOS shared socket directory (BIOMEOS_SOCKET_DIR)
+    /// biomeOS shared socket directory (`BIOMEOS_SOCKET_DIR`)
     BiomeOSDirectory,
-    /// XDG runtime directory (/run/user/{uid}/biomeos)
+    /// `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`
     XdgRuntime,
     /// Temporary directory fallback (/tmp)
     TempDirectory,
@@ -71,13 +71,14 @@ impl SocketConfig {
     ///
     /// 1. `socket_override` (if `Some`, use as-is)
     /// 2. `biomeos_socket_dir` (if `Some`, use `{dir}/nestgate.sock`)
-    /// 3. XDG runtime: `/run/user/{uid}/biomeos/nestgate.sock`
+    /// 3. XDG runtime: `{xdg_runtime_dir}/biomeos/nestgate.sock` when `xdg_runtime_dir` is set and exists
     /// 4. Temp fallback: `/tmp/nestgate-{family}-{node}.sock`
     pub fn resolve(
         family_id: String,
         node_id: String,
         socket_override: Option<String>,
         biomeos_socket_dir: Option<String>,
+        xdg_runtime_dir: Option<String>,
     ) -> Result<Self> {
         // Tier 1: Explicit socket path override (highest priority)
         if let Some(socket_path) = socket_override {
@@ -90,16 +91,9 @@ impl SocketConfig {
             });
         }
 
-        // Socket filename: family-scoped when family_id is set and not "default"
-        let socket_filename = if family_id != "default" {
-            format!("nestgate-{}.sock", family_id)
-        } else {
-            "nestgate.sock".to_string()
-        };
-
         // Tier 2: biomeOS shared directory (biomeOS standard)
         if let Some(biomeos_dir) = biomeos_socket_dir {
-            let socket_path = PathBuf::from(biomeos_dir).join(&socket_filename);
+            let socket_path = PathBuf::from(biomeos_dir).join("nestgate.sock");
 
             info!(
                 "🔌 Using biomeOS socket directory: {} (family: {}, node: {})",
@@ -116,14 +110,12 @@ impl SocketConfig {
             });
         }
 
-        // Get UID for XDG path
-        // TODO: wire to nestgate-core `platform::get_current_uid`
-        let uid = get_current_uid();
-
-        // Tier 3: XDG runtime directory with biomeOS subdirectory (preferred, more secure)
-        let xdg_runtime_dir = format!("/run/user/{}/biomeos", uid);
-        if Path::new(&format!("/run/user/{}", uid)).exists() {
-            let socket_path = PathBuf::from(&xdg_runtime_dir).join(&socket_filename);
+        // Tier 3: `$XDG_RUNTIME_DIR/biomeos/nestgate.sock` (preferred)
+        if let Some(ref dir) = xdg_runtime_dir
+            && !dir.is_empty()
+            && Path::new(dir).exists()
+        {
+            let socket_path = PathBuf::from(dir).join("biomeos").join("nestgate.sock");
 
             info!(
                 "🔌 Using XDG runtime directory with biomeOS standard: {} (family: {}, node: {})",
@@ -141,16 +133,13 @@ impl SocketConfig {
         }
 
         // Tier 4: Fallback to /tmp (least secure, but always available)
-        let socket_path = PathBuf::from(format!("/tmp/nestgate-{}-{}.sock", family_id, node_id));
+        let socket_path = PathBuf::from(format!("/tmp/nestgate-{family_id}-{node_id}.sock"));
 
         warn!(
-            "⚠️  XDG runtime directory not available, falling back to /tmp: {}",
+            "⚠️  XDG runtime directory unavailable or not set, falling back to /tmp: {}",
             socket_path.display()
         );
-        warn!(
-            "Note: /tmp is less secure than XDG runtime directory. Consider creating /run/user/{}",
-            uid
-        );
+        warn!("Note: /tmp is less secure than $XDG_RUNTIME_DIR/biomeos/nestgate.sock");
 
         Ok(Self {
             socket_path,
@@ -163,26 +152,34 @@ impl SocketConfig {
     /// Get socket configuration from environment variables
     ///
     /// Reads `NESTGATE_SOCKET`, `NESTGATE_FAMILY_ID`, `NESTGATE_NODE_ID`,
-    /// and `BIOMEOS_SOCKET_DIR` from the environment and delegates to `resolve()`.
+    /// `BIOMEOS_SOCKET_DIR`, and `XDG_RUNTIME_DIR` from the environment and delegates to `resolve()`.
     ///
     /// # Environment Variables
     ///
     /// - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
     /// - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional)
-    /// - `NESTGATE_FAMILY_ID`: Family identifier (defaults to "default")
-    /// - `NESTGATE_NODE_ID`: Node identifier (defaults to "default")
+    /// - `NESTGATE_FAMILY_ID`: Family identifier (defaults to `standalone` per wateringHole)
+    /// - `NESTGATE_NODE_ID`: Node identifier (defaults to system hostname)
     pub fn from_environment() -> Result<Self> {
         let family_id = std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| {
-            warn!("NESTGATE_FAMILY_ID not set, using 'default'");
-            "default".to_string()
+            warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");
+            "standalone".to_string()
         });
 
-        let node_id = std::env::var("NESTGATE_NODE_ID").unwrap_or_else(|_| "default".to_string());
+        let node_id = std::env::var("NESTGATE_NODE_ID")
+            .unwrap_or_else(|_| gethostname::gethostname().to_string_lossy().into_owned());
 
         let socket_override = std::env::var("NESTGATE_SOCKET").ok();
         let biomeos_socket_dir = std::env::var("BIOMEOS_SOCKET_DIR").ok();
+        let xdg_runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok();
 
-        Self::resolve(family_id, node_id, socket_override, biomeos_socket_dir)
+        Self::resolve(
+            family_id,
+            node_id,
+            socket_override,
+            biomeos_socket_dir,
+            xdg_runtime_dir,
+        )
     }
 
     /// Prepare socket path for binding
@@ -203,7 +200,7 @@ impl SocketConfig {
                 std::fs::create_dir_all(parent).map_err(|e| {
                     NestGateError::configuration_error(
                         "socket_directory",
-                        &format!("Failed to create socket directory {:?}: {}", parent, e),
+                        &format!("Failed to create socket directory {parent:?}: {e}"),
                     )
                 })?;
 
@@ -235,6 +232,7 @@ impl SocketConfig {
     }
 
     /// Get socket path as string
+    #[must_use]
     pub fn socket_path_str(&self) -> &str {
         self.socket_path.to_str().unwrap_or("")
     }
@@ -251,7 +249,7 @@ impl SocketConfig {
             match self.source {
                 SocketConfigSource::Environment => "NESTGATE_SOCKET env var (explicit)",
                 SocketConfigSource::BiomeOSDirectory => "BIOMEOS_SOCKET_DIR (biomeOS standard)",
-                SocketConfigSource::XdgRuntime => "XDG runtime directory (/run/user/{uid}/biomeos)",
+                SocketConfigSource::XdgRuntime => "$XDG_RUNTIME_DIR/biomeos/nestgate.sock",
                 SocketConfigSource::TempDirectory => "/tmp fallback (insecure)",
             }
         );
@@ -277,6 +275,7 @@ mod tests {
             "default".to_string(),
             Some("/tmp/explicit.sock".to_string()),
             None,
+            None,
         )
         .unwrap();
 
@@ -292,12 +291,13 @@ mod tests {
             "default".to_string(),
             None,
             Some("/tmp/biomeos-test-dir".to_string()),
+            None,
         )
         .unwrap();
 
         assert_eq!(
             config.socket_path,
-            PathBuf::from("/tmp/biomeos-test-dir/nestgate-biotest.sock")
+            PathBuf::from("/tmp/biomeos-test-dir/nestgate.sock")
         );
         assert_eq!(config.source, SocketConfigSource::BiomeOSDirectory);
     }
@@ -305,9 +305,14 @@ mod tests {
     #[test]
     fn test_fallback_without_overrides() {
         // No socket override, no biomeOS dir -> falls through to XDG or /tmp
-        let config =
-            SocketConfig::resolve("fallback".to_string(), "node42".to_string(), None, None)
-                .unwrap();
+        let config = SocketConfig::resolve(
+            "fallback".to_string(),
+            "node42".to_string(),
+            None,
+            None,
+            None,
+        )
+        .unwrap();
 
         let path_str = config.socket_path.to_str().unwrap();
         assert!(
@@ -326,6 +331,7 @@ mod tests {
             "default".to_string(),
             Some("/tmp/override.sock".to_string()),
             Some("/tmp/biomeos-dir".to_string()),
+            None,
         )
         .unwrap();
 
@@ -336,13 +342,23 @@ mod tests {
     #[test]
     fn test_multi_instance_unique_sockets() {
         // Pure logic test - no env vars
-        let config1 =
-            SocketConfig::resolve("multi".to_string(), "instance1".to_string(), None, None)
-                .unwrap();
+        let config1 = SocketConfig::resolve(
+            "multi".to_string(),
+            "instance1".to_string(),
+            None,
+            None,
+            None,
+        )
+        .unwrap();
 
-        let config2 =
-            SocketConfig::resolve("multi".to_string(), "instance2".to_string(), None, None)
-                .unwrap();
+        let config2 = SocketConfig::resolve(
+            "multi".to_string(),
+            "instance2".to_string(),
+            None,
+            None,
+            None,
+        )
+        .unwrap();
 
         assert_eq!(config1.node_id, "instance1");
         assert_eq!(config2.node_id, "instance2");
@@ -439,6 +455,7 @@ mod tests {
             "default".to_string(),
             Some(test_socket.to_string()),
             None,
+            None,
         )
         .unwrap();
         assert!(config.prepare_socket_path().is_ok());
@@ -461,6 +478,7 @@ mod tests {
             "rebind".to_string(),
             "default".to_string(),
             Some(test_socket.to_string()),
+            None,
             None,
         )
         .unwrap();
@@ -497,7 +515,7 @@ mod tests {
 
                     // resolve() is pure - no env var races
                     let config =
-                        SocketConfig::resolve(family_id.clone(), node_id.clone(), None, None);
+                        SocketConfig::resolve(family_id.clone(), node_id.clone(), None, None, None);
                     assert!(config.is_ok(), "Config creation should succeed");
                     let config = config.unwrap();
 
@@ -617,6 +635,7 @@ mod tests {
             "unicode_🍄🐸".to_string(),
             "default".to_string(),
             Some("/tmp/nestgate-unicode-🦀.sock".to_string()),
+            None,
             None,
         )
         .unwrap();

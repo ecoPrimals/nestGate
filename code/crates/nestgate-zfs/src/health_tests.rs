@@ -225,4 +225,36 @@ mod tests {
             assert_eq!(alert.id, format!("alert-{}", i));
         }
     }
+
+    #[test]
+    fn health_report_serde_roundtrip() {
+        let report = HealthReport {
+            component_type: "pool".into(),
+            component_name: "tank".into(),
+            status: HealthStatus::Healthy,
+            last_check: SystemTime::UNIX_EPOCH,
+            details: "ok".into(),
+        };
+        let json = serde_json::to_string(&report).expect("serialize HealthReport");
+        let back: HealthReport = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.component_name, report.component_name);
+        assert_eq!(back.status, report.status);
+    }
+
+    #[test]
+    fn degradation_detection_via_status_ordering() {
+        let worst = [
+            HealthStatus::Healthy,
+            HealthStatus::Warning,
+            HealthStatus::Critical,
+        ]
+        .into_iter()
+        .max_by_key(|s| match s {
+            HealthStatus::Critical => 3,
+            HealthStatus::Warning => 2,
+            HealthStatus::Healthy => 1,
+            HealthStatus::Unknown => 0,
+        });
+        assert_eq!(worst, Some(HealthStatus::Critical));
+    }
 }

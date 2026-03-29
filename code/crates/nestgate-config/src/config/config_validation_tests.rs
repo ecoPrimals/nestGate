@@ -23,14 +23,18 @@ mod config_creation_tests {
     fn test_production_config_creation() {
         let config = create_production_config();
         assert!(!config.system.debug_mode);
-        assert!(config
-            .features
-            .custom_flags
-            .contains_key("enable_auto_scaling"));
-        assert!(config
-            .features
-            .custom_flags
-            .contains_key("enable_load_balancing"));
+        assert!(
+            config
+                .features
+                .custom_flags
+                .contains_key("enable_auto_scaling")
+        );
+        assert!(
+            config
+                .features
+                .custom_flags
+                .contains_key("enable_load_balancing")
+        );
     }
 
     #[test]
@@ -42,12 +46,14 @@ mod config_creation_tests {
     #[test]
     fn test_testing_config_creation() {
         let config = create_testing_config();
-        assert!(!config
-            .features
-            .custom_flags
-            .get("enable_metrics")
-            .copied()
-            .unwrap_or(true));
+        assert!(
+            !config
+                .features
+                .custom_flags
+                .get("enable_metrics")
+                .copied()
+                .unwrap_or(true)
+        );
     }
 
     #[test]
@@ -281,8 +287,8 @@ mod config_integration_tests {
     #[test]
     fn test_config_in_result() {
         /// Gets Config
-        fn get_config(
-        ) -> std::result::Result<crate::config::canonical_primary::NestGateCanonicalConfig, String>
+        fn get_config()
+        -> std::result::Result<crate::config::canonical_primary::NestGateCanonicalConfig, String>
         {
             Ok(create_default_config())
         }

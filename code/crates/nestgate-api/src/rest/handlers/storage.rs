@@ -16,10 +16,10 @@ use std::collections::HashMap;
 use tracing::{debug, info};
 
 use crate::rest::models::{
-    costs::CostEstimate, performance::PerformanceMetrics, AutoConfigInput, AutoConfigResult,
-    BenchmarkResults, BenchmarkScenario, BenchmarkStorageRequest, PerformanceProjection,
-    PerformanceRequirements, ScanStorageRequest, StorageBackend, StorageBackendType,
-    StorageConfiguration, StoragePerformance, StorageTier,
+    AutoConfigInput, AutoConfigResult, BenchmarkResults, BenchmarkScenario,
+    BenchmarkStorageRequest, PerformanceProjection, PerformanceRequirements, ScanStorageRequest,
+    StorageBackend, StorageBackendType, StorageConfiguration, StoragePerformance, StorageTier,
+    costs::CostEstimate, performance::PerformanceMetrics,
 };
 use crate::rest::{ApiState, DataError, DataResponse, ListQuery};
 use nestgate_core::universal_storage::AutoConfigurator;
@@ -35,7 +35,7 @@ pub async fn list_backends(
     Query(query): Query<ListQuery>,
 ) -> Result<Json<DataResponse<Vec<StorageBackend>>>, Json<DataError>> {
     debug!("Listing available storage backends");
-    let _detector = state.storage_detector.lock().await;
+    let _detector = state.storage_detector.read().await;
 
     // Get detected storage backends
     let mut backends = Vec::new();
@@ -152,7 +152,7 @@ pub async fn scan_storage(
     Json(request): Json<ScanStorageRequest>,
 ) -> Result<Json<DataResponse<Vec<StorageBackend>>>, Json<DataError>> {
     info!("Scanning for available storage systems");
-    let _detector = state.storage_detector.lock().await;
+    let _detector = state.storage_detector.read().await;
 
     // Configure scan parameters
     // StorageDetectorConfig doesn't exist - using placeholder
@@ -191,32 +191,32 @@ pub async fn scan_storage(
         },
     });
 
-    if let Some(path) = &request.path {
-        if std::path::Path::new(path).exists() {
-            discovered_backends.push(StorageBackend {
-                backend_type: StorageBackendType::Filesystem,
-                name: format!("Filesystem at {path}"),
-                config: [
-                    (
-                        "description".to_string(),
-                        format!("Discovered filesystem storage at {path}"),
-                    ),
-                    ("available_gb".to_string(), "5".to_string()),
-                    ("capabilities".to_string(), "durable,snapshots".to_string()),
-                    ("path".to_string(), path.clone()),
-                ]
-                .iter()
-                .cloned()
-                .collect(),
-                performance: StoragePerformance {
-                    read_iops: 5000,
-                    write_iops: 3000,
-                    read_throughput_mbps: 150.0,
-                    write_throughput_mbps: 100.0,
-                    avg_latency_ms: 2.0,
-                },
-            });
-        }
+    if let Some(path) = &request.path
+        && std::path::Path::new(path).exists()
+    {
+        discovered_backends.push(StorageBackend {
+            backend_type: StorageBackendType::Filesystem,
+            name: format!("Filesystem at {path}"),
+            config: [
+                (
+                    "description".to_string(),
+                    format!("Discovered filesystem storage at {path}"),
+                ),
+                ("available_gb".to_string(), "5".to_string()),
+                ("capabilities".to_string(), "durable,snapshots".to_string()),
+                ("path".to_string(), path.clone()),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
+            performance: StoragePerformance {
+                read_iops: 5000,
+                write_iops: 3000,
+                read_throughput_mbps: 150.0,
+                write_throughput_mbps: 100.0,
+                avg_latency_ms: 2.0,
+            },
+        });
     }
 
     // Mock cloud storage if requested (using request parameters directly)
@@ -500,10 +500,9 @@ pub async fn auto_configure(
         "Auto-configuring storage for use case: {:?}",
         request.use_case
     );
-    let mut auto_config_opt = state.auto_configurator.lock().await;
-    if auto_config_opt.is_none() {
-        *auto_config_opt = Some(AutoConfigurator::new(vec![])); // Empty storage list for now
-    }
+    let _auto = state
+        .auto_configurator
+        .get_or_init(|| AutoConfigurator::new(vec![]));
 
     let use_case = request.use_case.as_str();
     let recommended_config = auto_config_storage_for_use_case(use_case, request.min_capacity_gb);
@@ -550,3 +549,51 @@ fn get_filesystem_space(path: &str) -> Option<u64> {
 
 // Helper trait for converting storage backend types to strings
 // Removed duplicate ToString implementation - already exists in zfs.rs
+
+#[cfg(test)]
+mod round4_storage_helper_tests {
+    use super::*;
+
+    #[test]
+    fn auto_config_storage_development_is_memory_hot_tier() {
+        let c = super::auto_config_storage_for_use_case("Development", None);
+        assert_eq!(c.name, "Development Setup");
+        assert!(matches!(c.tier, StorageTier::Hot));
+        assert_eq!(c.backends.len(), 1);
+    }
+
+    #[test]
+    fn auto_config_storage_home_nas_and_database_use_expected_names() {
+        let h = super::auto_config_storage_for_use_case("HomeNas", Some(2000));
+        assert!(h.name.contains("NAS"));
+        let d = super::auto_config_storage_for_use_case("Database", None);
+        assert!(d.name.contains("Database"));
+        let g = super::auto_config_storage_for_use_case("UnknownProfile", None);
+        assert_eq!(g.name, "Generic Setup");
+    }
+
+    #[test]
+    fn cost_estimate_for_use_case_matches_tiered_defaults() {
+        let dev = super::cost_estimate_for_use_case("Development");
+        assert_eq!(dev.monthly_cost, 0.0);
+        let home = super::cost_estimate_for_use_case("HomeNas");
+        assert!(home.setup_cost > 0.0);
+        let db = super::cost_estimate_for_use_case("Database");
+        assert!(db.total_cost > home.total_cost);
+    }
+
+    #[test]
+    fn get_filesystem_space_some_for_existing_path() {
+        if std::path::Path::new("/tmp").exists() {
+            assert_eq!(
+                super::get_filesystem_space("/tmp"),
+                Some(10 * 1024 * 1024 * 1024)
+            );
+        }
+    }
+
+    #[test]
+    fn get_filesystem_space_none_for_nonexistent() {
+        assert!(super::get_filesystem_space("/no/such/path/nestgate_round4").is_none());
+    }
+}

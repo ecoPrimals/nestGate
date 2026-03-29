@@ -75,6 +75,7 @@ members = [
     "code/crates/nestgate-cache",
     "code/crates/nestgate-config",
     "code/crates/nestgate-discovery",
+    "code/crates/nestgate-env-process-shim",
     "code/crates/nestgate-core",
     "code/crates/nestgate-fsmonitor",
     "code/crates/nestgate-installer",
@@ -112,7 +113,7 @@ anyhow = "1.0"
 thiserror = "1.0"
 
 # Serialization
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
 serde_yaml_ng = "0.10"
 

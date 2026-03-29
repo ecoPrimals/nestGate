@@ -7,16 +7,6 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::info;
-// Removed unused tracing import
-
-#[cfg(test)]
-#[path = "status_comprehensive_tests.rs"]
-mod status_comprehensive_tests;
-
-#[cfg(test)]
-#[path = "status_extended_tests.rs"]
-mod status_extended_tests;
-
 #[derive(Debug, Serialize, Deserialize)]
 /// System status information
 pub struct SystemStatus {

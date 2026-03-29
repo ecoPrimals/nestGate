@@ -183,7 +183,7 @@ impl Default for SecurityProviderHealth {
 }
 
 /// **Health status enumeration**
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Status values for Health
 pub enum HealthStatus {
     /// Provider is healthy and operational
@@ -200,35 +200,32 @@ pub enum HealthStatus {
 impl HealthStatus {
     /// Check if the status indicates a healthy provider
     #[must_use]
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         matches!(self, Self::Healthy)
     }
 
     /// Check if the status indicates an operational provider
     #[must_use]
-    pub fn is_operational(&self) -> bool {
-        matches!(
-            self,
-            HealthStatus::Healthy | HealthStatus::Warning | HealthStatus::Degraded
-        )
+    pub const fn is_operational(&self) -> bool {
+        matches!(self, Self::Healthy | Self::Warning | Self::Degraded)
     }
 
     /// Get status as string
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
-            HealthStatus::Healthy => "healthy",
-            HealthStatus::Warning => "warning",
-            HealthStatus::Degraded => "degraded",
-            HealthStatus::Unhealthy => "unhealthy",
-            HealthStatus::Unknown => "unknown",
+            Self::Healthy => "healthy",
+            Self::Warning => "warning",
+            Self::Degraded => "degraded",
+            Self::Unhealthy => "unhealthy",
+            Self::Unknown => "unknown",
         }
     }
 }
 
 /// **Key rotation status**
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Status values for KeyRotation
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for `KeyRotation`
 pub enum KeyRotationStatus {
     /// Keys are current and valid
     Current,
@@ -244,14 +241,14 @@ pub enum KeyRotationStatus {
 impl KeyRotationStatus {
     /// Check if keys are valid for use
     #[must_use]
-    pub fn is_valid(&self) -> bool {
+    pub const fn is_valid(&self) -> bool {
         matches!(self, Self::Current | Self::Expiring | Self::Rotating)
     }
 
     /// Check if immediate action is required
     #[must_use]
-    pub fn requires_action(&self) -> bool {
-        matches!(self, KeyRotationStatus::Expired | KeyRotationStatus::Failed)
+    pub const fn requires_action(&self) -> bool {
+        matches!(self, Self::Expired | Self::Failed)
     }
 }
 

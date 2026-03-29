@@ -5,7 +5,7 @@
 
 #[cfg(test)]
 mod async_patterns {
-    use tokio::time::{timeout, Duration};
+    use tokio::time::{Duration, timeout};
 
     #[tokio::test]
     async fn test_async_timeout() {

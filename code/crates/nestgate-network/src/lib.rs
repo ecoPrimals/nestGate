@@ -116,6 +116,7 @@ pub mod constants {
     /// # Environment Variables
     ///
     /// - `NESTGATE_API_PORT`: API server port
+    #[must_use]
     pub fn api_port() -> u16 {
         env::var("NESTGATE_API_PORT")
             .ok()
@@ -128,6 +129,7 @@ pub mod constants {
     /// # Environment Variables
     ///
     /// - `NESTGATE_HEALTH_PORT`: Health check port
+    #[must_use]
     pub fn internal_port() -> u16 {
         env::var("NESTGATE_HEALTH_PORT")
             .ok()

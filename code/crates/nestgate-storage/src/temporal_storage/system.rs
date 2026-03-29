@@ -47,6 +47,7 @@ impl TemporalStorageSystem {
     /// # Returns
     ///
     /// Empty temporal storage system
+    #[must_use]
     pub fn new() -> Self {
         Self {
             devices: Vec::new(),
@@ -140,6 +141,7 @@ impl TemporalStorageSystem {
     /// # Returns
     ///
     /// Vector of devices in the specified era
+    #[must_use]
     pub fn devices_for_era(&self, era: &StorageEra) -> Vec<&TemporalDevice> {
         self.devices.iter().filter(|d| &d.era == era).collect()
     }
@@ -149,6 +151,7 @@ impl TemporalStorageSystem {
     /// # Returns
     ///
     /// Total capacity in megabytes across all devices
+    #[must_use]
     pub fn total_capacity_mb(&self) -> u64 {
         self.devices.iter().map(|d| d.capacity_mb).sum()
     }
@@ -158,7 +161,8 @@ impl TemporalStorageSystem {
     /// # Returns
     ///
     /// Number of registered devices
-    pub fn device_count(&self) -> usize {
+    #[must_use]
+    pub const fn device_count(&self) -> usize {
         self.devices.len()
     }
 
@@ -171,6 +175,7 @@ impl TemporalStorageSystem {
     /// # Returns
     ///
     /// Optional era mapping
+    #[must_use]
     pub fn get_era_mapping(&self, data_type: &str) -> Option<&EraMapping> {
         self.era_mappings.get(data_type)
     }
@@ -192,7 +197,8 @@ impl EraMapping {
     /// # Returns
     ///
     /// New era mapping with no fallbacks
-    pub fn new(preferred_era: StorageEra) -> Self {
+    #[must_use]
+    pub const fn new(preferred_era: StorageEra) -> Self {
         Self {
             preferred_era,
             fallback_eras: Vec::new(),
@@ -210,7 +216,7 @@ impl EraMapping {
     }
 
     /// Enable cross-era replication
-    pub fn enable_cross_era_replication(&mut self) {
+    pub const fn enable_cross_era_replication(&mut self) {
         self.cross_era_replication = true;
     }
 
@@ -223,6 +229,7 @@ impl EraMapping {
     /// # Returns
     ///
     /// `true` if era is acceptable
+    #[must_use]
     pub fn accepts_era(&self, era: &StorageEra) -> bool {
         &self.preferred_era == era || self.fallback_eras.contains(era)
     }

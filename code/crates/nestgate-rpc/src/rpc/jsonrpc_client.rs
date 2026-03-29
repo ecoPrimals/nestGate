@@ -12,7 +12,7 @@
 //!
 //! - **Service-Based**: Call Songbird as a SERVICE (not a library!)
 //! - **Platform-Agnostic**: Works over Unix sockets, Named Pipes, etc.
-//! - **Zero Dependencies**: Just tokio + serde_json
+//! - **Zero Dependencies**: Just tokio + `serde_json`
 //! - **Modern Async**: Native async/await
 //! - **Type-Safe**: Strong Result<T, E> patterns
 //!
@@ -20,7 +20,7 @@
 //!
 //! ### Call Songbird for IPC Discovery
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::JsonRpcClient;
 //! use serde_json::json;
 //!
@@ -41,7 +41,7 @@
 //!
 //! ### Register With Songbird
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::JsonRpcClient;
 //! use serde_json::json;
 //!
@@ -62,6 +62,8 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::borrow::Cow;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
@@ -73,9 +75,9 @@ use nestgate_types::error::{NestGateError, Result};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
     /// JSON-RPC version (always "2.0")
-    pub jsonrpc: String,
+    pub jsonrpc: Arc<str>,
     /// Method name (e.g., "ipc.resolve")
-    pub method: String,
+    pub method: Arc<str>,
     /// Method parameters
     pub params: Value,
     /// Request ID (for matching responses)
@@ -86,7 +88,7 @@ pub struct JsonRpcRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcResponse {
     /// JSON-RPC version (always "2.0")
-    pub jsonrpc: String,
+    pub jsonrpc: Arc<str>,
     /// Result (if successful)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result: Option<Value>,
@@ -103,7 +105,7 @@ pub struct JsonRpcError {
     /// Error code
     pub code: i64,
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Optional additional data
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<Value>,
@@ -133,7 +135,7 @@ impl JsonRpcClient {
     /// Returns error if connection fails
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::JsonRpcClient;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -146,8 +148,7 @@ impl JsonRpcClient {
 
         let stream = UnixStream::connect(path).await.map_err(|e| {
             NestGateError::network_error(&format!(
-                "Failed to connect to JSON-RPC service at {}: {}",
-                path, e
+                "Failed to connect to JSON-RPC service at {path}: {e}"
             ))
         })?;
 
@@ -164,7 +165,7 @@ impl JsonRpcClient {
     /// * `timeout` - Timeout duration
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::JsonRpcClient;
     /// use std::time::Duration;
     ///
@@ -174,7 +175,7 @@ impl JsonRpcClient {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn set_timeout(&mut self, timeout: Duration) {
+    pub const fn set_timeout(&mut self, timeout: Duration) {
         self.timeout = timeout;
     }
 
@@ -195,7 +196,7 @@ impl JsonRpcClient {
     /// - Server returns an error
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::JsonRpcClient;
     /// use serde_json::json;
     ///
@@ -218,8 +219,8 @@ impl JsonRpcClient {
 
         // Create request
         let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
-            method: method.to_string(),
+            jsonrpc: Arc::from("2.0"),
+            method: Arc::from(method),
             params,
             id: self.next_id,
         };
@@ -229,23 +230,21 @@ impl JsonRpcClient {
 
         // Serialize request
         let request_json = serde_json::to_string(&request).map_err(|e| {
-            NestGateError::api_internal_error(format!("Failed to serialize request: {}", e))
+            NestGateError::api_internal_error(format!("Failed to serialize request: {e}"))
         })?;
 
         // Send request (JSON-RPC over newline-delimited JSON)
-        let request_line = format!("{}\n", request_json);
+        let request_line = format!("{request_json}\n");
 
         tokio::time::timeout(self.timeout, stream.write_all(request_line.as_bytes()))
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC request", self.timeout))?
-            .map_err(|e| NestGateError::network_error(&format!("Failed to send request: {}", e)))?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to send request: {e}")))?;
 
         tokio::time::timeout(self.timeout, stream.flush())
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC flush", self.timeout))?
-            .map_err(|e| {
-                NestGateError::network_error(&format!("Failed to flush request: {}", e))
-            })?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to flush request: {e}")))?;
 
         // Read response (newline-delimited JSON)
         let mut reader = BufReader::new(stream);
@@ -254,14 +253,12 @@ impl JsonRpcClient {
         tokio::time::timeout(self.timeout, reader.read_line(&mut response_line))
             .await
             .map_err(|_| NestGateError::timeout_error("JSON-RPC response", self.timeout))?
-            .map_err(|e| {
-                NestGateError::network_error(&format!("Failed to read response: {}", e))
-            })?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to read response: {e}")))?;
 
         // Parse response
         let response: JsonRpcResponse = serde_json::from_str(&response_line).map_err(|e| {
             warn!("Invalid JSON-RPC response: {}", response_line);
-            NestGateError::api_internal_error(format!("Failed to parse response: {}", e))
+            NestGateError::api_internal_error(format!("Failed to parse response: {e}"))
         })?;
 
         debug!(
@@ -297,7 +294,7 @@ impl JsonRpcClient {
     /// Returns error if call fails or deserialization fails
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::JsonRpcClient;
     /// use serde::{Deserialize, Serialize};
     /// use serde_json::json;
@@ -325,10 +322,7 @@ impl JsonRpcClient {
     {
         let result = self.call(method, params).await?;
         serde_json::from_value(result).map_err(|e| {
-            NestGateError::api_internal_error(format!(
-                "Failed to deserialize JSON-RPC result: {}",
-                e
-            ))
+            NestGateError::api_internal_error(format!("Failed to deserialize JSON-RPC result: {e}"))
         })
     }
 
@@ -336,7 +330,7 @@ impl JsonRpcClient {
     pub async fn close(&mut self) -> Result<()> {
         if let Some(mut stream) = self.stream.take() {
             stream.shutdown().await.map_err(|e| {
-                NestGateError::network_error(&format!("Failed to close connection: {}", e))
+                NestGateError::network_error(&format!("Failed to close connection: {e}"))
             })?;
         }
         Ok(())
@@ -352,8 +346,8 @@ mod tests {
         use serde_json::json;
 
         let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
-            method: "ipc.resolve".to_string(),
+            jsonrpc: Arc::from("2.0"),
+            method: Arc::from("ipc.resolve"),
             params: json!({"primal": "beardog"}),
             id: 1,
         };
@@ -369,7 +363,7 @@ mod tests {
         let json = r#"{"jsonrpc":"2.0","result":{"endpoint":"/primal/beardog"},"id":1}"#;
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
 
-        assert_eq!(response.jsonrpc, "2.0");
+        assert_eq!(response.jsonrpc.as_ref(), "2.0");
         assert_eq!(response.id, 1);
         assert!(response.result.is_some());
         assert!(response.error.is_none());
@@ -381,13 +375,13 @@ mod tests {
             r#"{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":1}"#;
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
 
-        assert_eq!(response.jsonrpc, "2.0");
+        assert_eq!(response.jsonrpc.as_ref(), "2.0");
         assert_eq!(response.id, 1);
         assert!(response.result.is_none());
         assert!(response.error.is_some());
 
         let error = response.error.unwrap();
         assert_eq!(error.code, -32601);
-        assert_eq!(error.message, "Method not found");
+        assert_eq!(error.message.as_ref(), "Method not found");
     }
 }

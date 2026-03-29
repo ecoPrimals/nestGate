@@ -9,8 +9,8 @@
 use super::RetryExecutor;
 use crate::handlers::zfs::universal_zfs::config::RetryPolicy;
 use crate::handlers::zfs::universal_zfs_types::UniversalZfsError;
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 
 // ==================== BASIC INSTANTIATION TESTS ====================

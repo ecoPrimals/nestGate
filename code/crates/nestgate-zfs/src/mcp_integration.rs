@@ -24,7 +24,7 @@ use tracing::warn;
 
 /// MCP mount request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for McpMount operation
+/// Request parameters for `McpMount` operation
 pub struct McpMountRequest {
     /// Mount identifier
     pub mount_id: String,
@@ -37,7 +37,7 @@ pub struct McpMountRequest {
 }
 /// MCP volume request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for McpVolume operation
+/// Request parameters for `McpVolume` operation
 pub struct McpVolumeRequest {
     /// Volume identifier
     pub volume_id: String,
@@ -104,7 +104,7 @@ pub struct ZfsVolumeInfo {
 }
 /// ZFS MCP configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -122,7 +122,7 @@ pub struct ZfsVolumeInfo {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for ZfsMcp
+/// Configuration for `ZfsMcp`
 pub struct ZfsMcpConfig {
     /// Enable AI optimization
     pub enable_ai_optimization: bool,
@@ -168,7 +168,7 @@ impl ZfsMcpConfig {
 
     /// Get tier configuration for a specific tier
     #[must_use]
-    pub fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
+    pub const fn get_tier_config(&self, tier: &StorageTier) -> TierConfig {
         match tier {
             StorageTier::Hot => TierConfig {
                 priority: 1,
@@ -316,7 +316,7 @@ impl ZfsMcpStorageProvider {
                 .dataset_manager
                 .delete_dataset(&mount_info.dataset_path)
             {
-                Ok(_) => {
+                Ok(()) => {
                     info!("Successfully removed ZFS mount: {}", mount_id);
                     Ok(())
                 }
@@ -418,7 +418,7 @@ impl ZfsMcpStorageProvider {
                 .dataset_manager
                 .delete_dataset(&volume_info.dataset_path)
             {
-                Ok(_) => {
+                Ok(()) => {
                     info!("Successfully removed ZFS volume: {}", volume_id);
                     Ok(())
                 }
@@ -809,6 +809,42 @@ mod tests {
         for config in configs {
             assert!(config.priority > 0);
             assert!(config.replication > 0);
+        }
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn zfs_mcp_config_validate_rejects_zero_concurrency() {
+        let config = ZfsMcpConfig {
+            max_concurrent_operations: 0,
+            ..Default::default()
+        };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn zfs_mcp_config_validate_rejects_too_high_concurrency() {
+        let config = ZfsMcpConfig {
+            max_concurrent_operations: 1001,
+            ..Default::default()
+        };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn get_tier_config_all_tiers() {
+        let config = ZfsMcpConfig::default();
+        for tier in [
+            StorageTier::Hot,
+            StorageTier::Warm,
+            StorageTier::Cold,
+            StorageTier::Cache,
+            StorageTier::Archive,
+        ] {
+            let tc = config.get_tier_config(&tier);
+            assert!(tc.replication > 0);
         }
     }
 }

@@ -119,7 +119,7 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
 {
     /// Create new filesystem backend
     #[must_use]
-    pub fn new(base_path: PathBuf) -> Self {
+    pub const fn new(base_path: PathBuf) -> Self {
         Self {
             config: FilesystemConfig {
                 base_path,
@@ -304,7 +304,7 @@ impl StorageBackendMigration {
 
     /// Get migration benefits
     #[must_use]
-    pub fn get_migration_benefits() -> Vec<String> {
+    pub const fn get_migration_benefits() -> Vec<String> {
         vec![]
     }
 }

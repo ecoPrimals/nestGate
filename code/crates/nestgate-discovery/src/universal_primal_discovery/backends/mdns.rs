@@ -45,8 +45,8 @@ use crate::universal_primal_discovery::capability_based_discovery::{
     DiscoveryBackend, DiscoveryQuery, HealthStatus, PeerDescriptor, PrimalCapability, PrimalId,
     PrimalSelfKnowledge, Protocol, ServiceEndpoint,
 };
-use nestgate_types::error::Result;
 use mdns_sd::{ServiceDaemon, ServiceEvent, ServiceInfo};
+use nestgate_types::error::Result;
 use std::collections::HashMap;
 use std::future::Future;
 use std::net::{IpAddr, SocketAddr};
@@ -117,11 +117,13 @@ struct CachedPeer {
 
 impl MdnsDiscoveryBackend {
     /// Create a new mDNS backend with default configuration
+    #[must_use]
     pub fn new() -> Self {
         Self::with_config(MdnsConfig::default())
     }
 
     /// Create a new mDNS backend with custom configuration
+    #[must_use]
     pub fn with_config(config: MdnsConfig) -> Self {
         let hostname = std::env::var("HOSTNAME")
             .or_else(|_| std::env::var("HOST"))
@@ -137,7 +139,7 @@ impl MdnsDiscoveryBackend {
             .to_string();
 
         Self {
-            service_name: format!("nestgate-{}-{}", hostname, unique_id),
+            service_name: format!("nestgate-{hostname}-{unique_id}"),
             peer_cache: Arc::new(RwLock::new(HashMap::new())),
             config,
             announced_services: Arc::new(RwLock::new(Vec::new())),
@@ -149,7 +151,7 @@ impl MdnsDiscoveryBackend {
     /// Returns Some(daemon) when real mDNS is available, None for cache-only fallback.
     ///
     /// **ARCHITECTURE**: Lazy creation avoids fallible constructors. If
-    /// ServiceDaemon::new() fails (multicast unavailable, port 5353 in use),
+    /// `ServiceDaemon::new()` fails (multicast unavailable, port 5353 in use),
     /// we return None and the caller uses cache-only path.
     fn ensure_daemon(&self) -> Option<mdns_sd::ServiceDaemon> {
         let mut daemon_guard = self.daemon.try_write().ok()?;
@@ -177,14 +179,14 @@ impl MdnsDiscoveryBackend {
         format!("{}.{}.", self.config.service_type, self.config.domain)
     }
 
-    /// Build hostname for ServiceInfo (host in DNS context).
+    /// Build hostname for `ServiceInfo` (host in DNS context).
     /// Uses binding address so resolvers get correct IP.
     fn hostname_from_binding(address: IpAddr) -> String {
-        format!("{}.local.", address)
+        format!("{address}.local.")
     }
 
-    /// Convert binding info to TXT properties for mdns-sd ServiceInfo.
-    /// Returns key-value pairs; mdns-sd accepts &[(K, V)] via IntoTxtProperties.
+    /// Convert binding info to TXT properties for mdns-sd `ServiceInfo`.
+    /// Returns key-value pairs; mdns-sd accepts &[(K, V)] via `IntoTxtProperties`.
     fn binding_to_txt_properties(&self, knowledge: &PrimalSelfKnowledge) -> Vec<(String, String)> {
         let mut props = vec![
             ("id".to_string(), knowledge.id.as_str().to_string()),
@@ -199,7 +201,7 @@ impl MdnsDiscoveryBackend {
         let caps: Vec<String> = knowledge
             .capabilities
             .iter()
-            .map(|c| format!("{:?}", c))
+            .map(|c| format!("{c:?}"))
             .collect();
         props.push(("cap".to_string(), caps.join(",")));
 
@@ -209,10 +211,10 @@ impl MdnsDiscoveryBackend {
                 props.push(("health".to_string(), "healthy".to_string()));
             }
             HealthStatus::Degraded { reason } => {
-                props.push(("health".to_string(), format!("degraded:{}", reason)));
+                props.push(("health".to_string(), format!("degraded:{reason}")));
             }
             HealthStatus::Unhealthy { reason } => {
-                props.push(("health".to_string(), format!("unhealthy:{}", reason)));
+                props.push(("health".to_string(), format!("unhealthy:{reason}")));
             }
         }
 
@@ -221,7 +223,7 @@ impl MdnsDiscoveryBackend {
 
     /// Announce using real mDNS protocol
     ///
-    /// **COMPLETE IMPLEMENTATION** - Uses mdns-sd ServiceDaemon to register.
+    /// **COMPLETE IMPLEMENTATION** - Uses mdns-sd `ServiceDaemon` to register.
     ///
     /// 1. Always update local cache (fallback for when mDNS unavailable)
     /// 2. Try real mDNS registration if daemon available
@@ -378,8 +380,8 @@ impl MdnsDiscoveryBackend {
         Ok(peers)
     }
 
-    /// Collect PeerDescriptors from ServiceEvent stream until timeout or channel close.
-    /// On channel disconnect (RecvError), returns collected peers - no Err to avoid
+    /// Collect `PeerDescriptors` from `ServiceEvent` stream until timeout or channel close.
+    /// On channel disconnect (`RecvError`), returns collected peers - no Err to avoid
     /// conflating "done" with "failure".
     async fn collect_resolved_peers(
         receiver: mdns_sd::Receiver<ServiceEvent>,
@@ -393,7 +395,7 @@ impl MdnsDiscoveryBackend {
                         peers.push(desc);
                     }
                 }
-                Ok(ServiceEvent::ServiceRemoved(_, _)) | Ok(ServiceEvent::SearchStopped(_)) => {
+                Ok(ServiceEvent::ServiceRemoved(_, _) | ServiceEvent::SearchStopped(_)) => {
                     break;
                 }
                 Ok(_) => {}
@@ -403,7 +405,7 @@ impl MdnsDiscoveryBackend {
         peers
     }
 
-    /// Build PeerDescriptor from ResolvedService.
+    /// Build `PeerDescriptor` from `ResolvedService`.
     /// Returns None if TXT records don't match capability or parse fails.
     fn descriptor_from_resolved(resolved: &mdns_sd::ResolvedService) -> Option<PeerDescriptor> {
         if !resolved.is_valid() {
@@ -412,7 +414,7 @@ impl MdnsDiscoveryBackend {
         let id_str = resolved
             .txt_properties
             .get_property_val_str("id")
-            .map(|s| s.to_string())?;
+            .map(std::string::ToString::to_string)?;
         let id = PrimalId::from_string(id_str);
 
         let port = resolved.port;
@@ -437,7 +439,7 @@ impl MdnsDiscoveryBackend {
         let health = resolved
             .txt_properties
             .get_property_val_str("health")
-            .map(|s| {
+            .map_or(HealthStatus::Healthy, |s| {
                 if s == "healthy" {
                     HealthStatus::Healthy
                 } else if s.starts_with("degraded:") {
@@ -451,13 +453,12 @@ impl MdnsDiscoveryBackend {
                 } else {
                     HealthStatus::Healthy
                 }
-            })
-            .unwrap_or(HealthStatus::Healthy);
+            });
 
         let protocol = resolved
             .txt_properties
             .get_property_val_str("protocol")
-            .map(|s| {
+            .map_or(Protocol::Tcp, |s| {
                 if s.contains("Http") {
                     Protocol::Http
                 } else if s.contains("Https") {
@@ -467,8 +468,7 @@ impl MdnsDiscoveryBackend {
                 } else {
                     Protocol::Tcp
                 }
-            })
-            .unwrap_or(Protocol::Tcp);
+            });
 
         Some(PeerDescriptor {
             id,
@@ -484,7 +484,7 @@ impl MdnsDiscoveryBackend {
         })
     }
 
-    /// Parse capability string from TXT record to PrimalCapability
+    /// Parse capability string from TXT record to `PrimalCapability`
     fn parse_capability_str(s: &str) -> Option<PrimalCapability> {
         let s = s.trim();
         Some(match s {
@@ -636,10 +636,7 @@ impl DiscoveryBackend for MdnsDiscoveryBackend {
         })
     }
 
-    fn unannounce(
-        &self,
-        id: &PrimalId,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+    fn unannounce(&self, id: &PrimalId) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
         let id = id.clone();
         Box::pin(async move {
             info!("mDNS: Unannouncing primal '{}'", id.as_str());

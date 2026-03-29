@@ -51,7 +51,7 @@ use nestgate_core::{NestGateError, Result as CoreResult};
 use serde::{Deserialize, Serialize};
 
 /// Convert detection `DeviceType` to config `DeviceType`
-fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType {
+const fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType {
     match detection_type {
         DetectionDeviceType::NvmeSsd => ConfigDeviceType::NvmeSsd,
         DetectionDeviceType::SataSsd => ConfigDeviceType::SataSsd,
@@ -63,7 +63,7 @@ fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType
 
 /// Pool setup specific errors
 #[derive(Debug, thiserror::Error)]
-/// Errors that can occur during PoolSetup operations
+/// Errors that can occur during `PoolSetup` operations
 pub enum PoolSetupError {
     /// Device validation failed
     #[error("Device validation failed: {0}")]
@@ -89,7 +89,7 @@ pub enum PoolSetupError {
     ZfsCommand(String),
 
     #[error("Core error: {0}")]
-    /// Core NestGate error
+    /// Core `NestGate` error
     Core(#[from] NestGateError),
 }
 

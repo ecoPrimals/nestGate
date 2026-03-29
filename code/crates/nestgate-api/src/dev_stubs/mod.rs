@@ -59,7 +59,7 @@ pub use hardware::{
     create_stub_system_profile, create_stub_tuning_result, create_zero_hardware_metrics,
 };
 pub use testing::{
-    build_mock_resource_allocation, build_mock_workload_result, MockingConfig, ResourceAllocation,
-    WorkloadResult,
+    MockingConfig, ResourceAllocation, WorkloadResult, build_mock_resource_allocation,
+    build_mock_workload_result,
 };
 pub use zfs::{ProductionZfsManager, ZfsConfig};

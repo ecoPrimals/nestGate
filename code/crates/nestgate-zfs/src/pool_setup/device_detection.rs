@@ -56,9 +56,9 @@ pub enum DeviceType {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 /// Speedclass
 pub enum SpeedClass {
-    /// Ultra-fast devices (NVMe Gen4, Optane)
+    /// Ultra-fast devices (`NVMe` Gen4, Optane)
     UltraFast, // NVMe Gen4, Optane
-    /// Fast devices (NVMe Gen3, High-end SATA SSD)
+    /// Fast devices (`NVMe` Gen3, High-end SATA SSD)
     Fast, // NVMe Gen3, High-end SATA SSD
     /// Medium speed devices (Standard SATA SSD)
     Medium, // Standard SATA SSD
@@ -72,7 +72,7 @@ pub struct DeviceScanner {
 impl DeviceScanner {
     /// Creates a new device scanner with the given configuration.
     #[must_use]
-    pub fn new(config: DeviceDetectionConfig) -> Self {
+    pub const fn new(config: DeviceDetectionConfig) -> Self {
         Self { config }
     }
 
@@ -168,22 +168,22 @@ impl DeviceScanner {
         };
 
         // Skip devices with excluded mount points
-        if let Some(mp) = mountpoint {
-            if self.config.skip_mountpoints.contains(&mp.to_string()) {
-                debug!(
-                    "Skipping device {} (excluded mountpoint: {})",
-                    device_path, mp
-                );
-                return Ok(None);
-            }
+        if let Some(mp) = mountpoint
+            && self.config.skip_mountpoints.contains(&mp.to_string())
+        {
+            debug!(
+                "Skipping device {} (excluded mountpoint: {})",
+                device_path, mp
+            );
+            return Ok(None);
         }
 
         // Skip devices with excluded filesystem types
-        if let Some(fs) = fstype {
-            if self.config.skip_fstypes.contains(&fs.to_string()) {
-                debug!("Skipping device {} (excluded fstype: {})", device_path, fs);
-                return Ok(None);
-            }
+        if let Some(fs) = fstype
+            && self.config.skip_fstypes.contains(&fs.to_string())
+        {
+            debug!("Skipping device {} (excluded fstype: {})", device_path, fs);
+            return Ok(None);
         }
 
         let device_type = self.detect_device_type(&device_path, &model).await?;
@@ -233,7 +233,7 @@ impl DeviceScanner {
                 return Err(NestGateError::internal_error(
                     format!("Unknown size unit: {unit}"),
                     "parse_size",
-                ))
+                ));
             }
         };
 
@@ -370,5 +370,85 @@ impl Default for DeviceScanner {
     /// Returns the default instance
     fn default() -> Self {
         Self::new(DeviceDetectionConfig::default())
+    }
+}
+
+#[cfg(test)]
+impl DeviceScanner {
+    pub(crate) fn test_parse_size_string(&self, size_str: &str) -> CoreResult<u64> {
+        self.parse_size_string(size_str)
+    }
+
+    pub(crate) fn test_classify_device_speed(
+        &self,
+        device_type: &DeviceType,
+        model: &str,
+    ) -> SpeedClass {
+        self.classify_device_speed(device_type, model)
+    }
+}
+
+#[cfg(test)]
+mod device_detection_unit_tests {
+    use super::{DeviceScanner, DeviceType, SpeedClass, StorageDevice};
+    use crate::pool_setup::config::DeviceDetectionConfig;
+
+    #[test]
+    fn parse_size_string_units() {
+        let s = DeviceScanner::new(DeviceDetectionConfig::default());
+        assert_eq!(s.test_parse_size_string("1B").expect("B"), 1);
+        assert_eq!(s.test_parse_size_string("2K").expect("K"), 2048);
+        assert_eq!(s.test_parse_size_string("1M").expect("M"), 1024 * 1024);
+        assert_eq!(s.test_parse_size_string("1G").expect("G"), 1024_u64.pow(3));
+        assert_eq!(s.test_parse_size_string("1T").expect("T"), 1024_u64.pow(4));
+    }
+
+    #[test]
+    fn classify_speed_nvme_gen4_and_hdd() {
+        let s = DeviceScanner::new(DeviceDetectionConfig::default());
+        assert_eq!(
+            s.test_classify_device_speed(&DeviceType::NvmeSsd, "PCIe Gen4 NVMe"),
+            SpeedClass::UltraFast
+        );
+        assert_eq!(
+            s.test_classify_device_speed(&DeviceType::Hdd, "any"),
+            SpeedClass::Slow
+        );
+        assert_eq!(
+            s.test_classify_device_speed(&DeviceType::Unknown, "x"),
+            SpeedClass::Medium
+        );
+    }
+
+    #[test]
+    fn filter_by_type_and_speed_helpers() {
+        let d1 = StorageDevice {
+            device_path: "/dev/nvme0n1".into(),
+            model: "x".into(),
+            size_bytes: 1,
+            device_type: DeviceType::NvmeSsd,
+            speed_class: SpeedClass::Fast,
+            in_use: false,
+            current_use: None,
+        };
+        let d2 = StorageDevice {
+            device_path: "/dev/sda".into(),
+            model: "y".into(),
+            size_bytes: 1,
+            device_type: DeviceType::Hdd,
+            speed_class: SpeedClass::Slow,
+            in_use: true,
+            current_use: None,
+        };
+        let all = vec![d1, d2];
+        assert_eq!(
+            DeviceScanner::filter_by_type(&all, DeviceType::Hdd).len(),
+            1
+        );
+        assert_eq!(
+            DeviceScanner::filter_by_speed(&all, SpeedClass::Fast).len(),
+            1
+        );
+        assert_eq!(DeviceScanner::filter_available(&all).len(), 1);
     }
 }

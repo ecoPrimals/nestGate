@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SecurityHandler
+/// Configuration for `SecurityHandler`
 pub struct SecurityHandlerConfig {
     /// Authentication
     pub authentication: AuthenticationHandlerConfig,
@@ -19,28 +19,28 @@ pub struct SecurityHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AuthenticationHandler
+/// Configuration for `AuthenticationHandler`
 pub struct AuthenticationHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AuthorizationHandler
+/// Configuration for `AuthorizationHandler`
 pub struct AuthorizationHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ThreatDetection
+/// Configuration for `ThreatDetection`
 pub struct ThreatDetectionConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AuditHandler
+/// Configuration for `AuditHandler`
 pub struct AuditHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl SecurityHandlerConfig {
 
     /// Merges this configuration with another, returning the merged result
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

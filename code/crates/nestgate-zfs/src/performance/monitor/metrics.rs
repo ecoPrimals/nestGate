@@ -19,6 +19,35 @@ use super::super::types::{
     TierPerformanceTargets, ZfsPerformanceMonitor,
 };
 
+/// Parse tab-separated lines from `zpool get all <pool>` (property name in column 2, value in 3).
+fn parse_zpool_get_pool_properties(output: &str) -> PoolProperties {
+    let mut properties = PoolProperties::default();
+    for line in output.lines() {
+        let fields: Vec<&str> = line.split('\t').collect();
+        if fields.len() >= 3 {
+            match fields[1] {
+                "fragmentation" => {
+                    if let Ok(frag) = fields[2].trim_end_matches('%').parse::<f64>() {
+                        properties.fragmentation = frag;
+                    }
+                }
+                "compressratio" => {
+                    if let Ok(ratio) = fields[2].trim_end_matches('x').parse::<f64>() {
+                        properties.compression_ratio = ratio;
+                    }
+                }
+                "dedupratio" => {
+                    if let Ok(ratio) = fields[2].trim_end_matches('x').parse::<f64>() {
+                        properties.dedup_ratio = ratio;
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    properties
+}
+
 impl ZfsPerformanceMonitor {
     /// Collect performance metrics
     pub(super) async fn collect_metrics(
@@ -52,14 +81,8 @@ impl ZfsPerformanceMonitor {
             io_statistics: IoStatistics {
                 total_reads: 100000_u64,
                 total_writes: 50000_u64,
-                total_bytes_read: disk_stats
-                    .first()
-                    .map(|s| s.read_ops * 1024 * 1024)
-                    .unwrap_or(0),
-                total_bytes_written: disk_stats
-                    .first()
-                    .map(|s| s.write_ops * 1024 * 1024)
-                    .unwrap_or(0),
+                total_bytes_read: disk_stats.first().map_or(0, |s| s.read_ops * 1024 * 1024),
+                total_bytes_written: disk_stats.first().map_or(0, |s| s.write_ops * 1024 * 1024),
                 avg_io_size_bytes: 65536_u64,
                 read_write_ratio: 2.0,
             },
@@ -150,8 +173,10 @@ impl ZfsPerformanceMonitor {
             total_iops: parsed_metrics.read_ops as f64 + parsed_metrics.write_ops as f64,
             total_throughput_mbs: parsed_metrics.read_throughput_mbs
                 + parsed_metrics.write_throughput_mbs,
-            avg_latency_ms: (parsed_metrics.read_latency_ms + parsed_metrics.write_latency_ms)
-                / 2.0,
+            avg_latency_ms: f64::midpoint(
+                parsed_metrics.read_latency_ms,
+                parsed_metrics.write_latency_ms,
+            ),
             utilization_percent,
             fragmentation_percent: if pool_count > 0.0 {
                 fragmentation_sum / pool_count
@@ -224,33 +249,7 @@ impl ZfsPerformanceMonitor {
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
-        let mut properties = PoolProperties::default();
-
-        for line in output_str.lines() {
-            let fields: Vec<&str> = line.split('\t').collect();
-            if fields.len() >= 3 {
-                match fields[1] {
-                    "fragmentation" => {
-                        if let Ok(frag) = fields[2].trim_end_matches('%').parse::<f64>() {
-                            properties.fragmentation = frag;
-                        }
-                    }
-                    "compressratio" => {
-                        if let Ok(ratio) = fields[2].trim_end_matches('x').parse::<f64>() {
-                            properties.compression_ratio = ratio;
-                        }
-                    }
-                    "dedupratio" => {
-                        if let Ok(ratio) = fields[2].trim_end_matches('x').parse::<f64>() {
-                            properties.dedup_ratio = ratio;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        Ok(properties)
+        Ok(parse_zpool_get_pool_properties(&output_str))
     }
 
     /// Collect system performance metrics
@@ -311,26 +310,25 @@ impl ZfsPerformanceMonitor {
 
     /// Get CPU usage percentage
     pub(super) async fn get_cpu_usage() -> f64 {
-        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await {
-            if let Some(line) = content.lines().next() {
-                if line.starts_with("cpu ") {
-                    let fields: Vec<&str> = line.split_whitespace().collect();
-                    if fields.len() >= 8 {
-                        let user: u64 = fields[1].parse().unwrap_or(0);
-                        let nice: u64 = fields[2].parse().unwrap_or(0);
-                        let system: u64 = fields[3].parse().unwrap_or(0);
-                        let idle: u64 = fields[4].parse().unwrap_or(0);
-                        let iowait: u64 = fields[5].parse().unwrap_or(0);
-                        let irq: u64 = fields[6].parse().unwrap_or(0);
-                        let softirq: u64 = fields[7].parse().unwrap_or(0);
+        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await
+            && let Some(line) = content.lines().next()
+            && line.starts_with("cpu ")
+        {
+            let fields: Vec<&str> = line.split_whitespace().collect();
+            if fields.len() >= 8 {
+                let user: u64 = fields[1].parse().unwrap_or(0);
+                let nice: u64 = fields[2].parse().unwrap_or(0);
+                let system: u64 = fields[3].parse().unwrap_or(0);
+                let idle: u64 = fields[4].parse().unwrap_or(0);
+                let iowait: u64 = fields[5].parse().unwrap_or(0);
+                let irq: u64 = fields[6].parse().unwrap_or(0);
+                let softirq: u64 = fields[7].parse().unwrap_or(0);
 
-                        let total = user + nice + system + idle + iowait + irq + softirq;
-                        let non_idle = user + nice + system + irq + softirq;
+                let total = user + nice + system + idle + iowait + irq + softirq;
+                let non_idle = user + nice + system + irq + softirq;
 
-                        if total > 0 {
-                            return (non_idle as f64 / total as f64) * 100.0;
-                        }
-                    }
+                if total > 0 {
+                    return (non_idle as f64 / total as f64) * 100.0;
                 }
             }
         }
@@ -559,56 +557,53 @@ impl ZfsPerformanceMonitor {
             .args(["get", "-H", "-p", "used,compressratio,dedup", dataset_name])
             .output()
             .await
+            && output.status.success()
         {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                for line in stdout.lines() {
-                    let fields: Vec<&str> = line.split('\t').collect();
-                    if fields.len() >= 4 {
-                        match fields[1] {
-                            "compressratio" => {
-                                if let Ok(ratio) = fields[2].trim_end_matches('x').parse::<f64>() {
-                                    stats.compression_effectiveness = ratio;
-                                }
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            for line in stdout.lines() {
+                let fields: Vec<&str> = line.split('\t').collect();
+                if fields.len() >= 4 {
+                    match fields[1] {
+                        "compressratio" => {
+                            if let Ok(ratio) = fields[2].trim_end_matches('x').parse::<f64>() {
+                                stats.compression_effectiveness = ratio;
                             }
-                            "dedup" => {
-                                if fields[2] == "on" {
-                                    stats.deduplication_effectiveness = 1.2;
-                                }
-                            }
-                            _ => {}
                         }
+                        "dedup" => {
+                            if fields[2] == "on" {
+                                stats.deduplication_effectiveness = 1.2;
+                            }
+                        }
+                        _ => {}
                     }
                 }
             }
         }
 
         // Get I/O statistics
-        if let Some(pool_name) = dataset_name.split('/').next() {
-            if let Ok(output) = tokio::process::Command::new("zpool")
+        if let Some(pool_name) = dataset_name.split('/').next()
+            && let Ok(output) = tokio::process::Command::new("zpool")
                 .args(["iostat", "-v", pool_name, "1", "1"])
                 .output()
                 .await
-            {
-                if output.status.success() {
-                    let stdout = String::from_utf8_lossy(&output.stdout);
-                    for line in stdout.lines() {
-                        if line.contains(dataset_name) {
-                            let fields: Vec<&str> = line.split_whitespace().collect();
-                            if fields.len() >= 7 {
-                                if let Ok(read_ops) = fields[1].parse::<f64>() {
-                                    stats.read_iops = read_ops;
-                                }
-                                if let Ok(write_ops) = fields[2].parse::<f64>() {
-                                    stats.write_iops = write_ops;
-                                }
-                                if let Ok(read_bw) = fields[3].parse::<f64>() {
-                                    stats.read_throughput_mbs = read_bw / (1024.0 * 1024.0);
-                                }
-                                if let Ok(write_bw) = fields[4].parse::<f64>() {
-                                    stats.write_throughput_mbs = write_bw / (1024.0 * 1024.0);
-                                }
-                            }
+            && output.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            for line in stdout.lines() {
+                if line.contains(dataset_name) {
+                    let fields: Vec<&str> = line.split_whitespace().collect();
+                    if fields.len() >= 7 {
+                        if let Ok(read_ops) = fields[1].parse::<f64>() {
+                            stats.read_iops = read_ops;
+                        }
+                        if let Ok(write_ops) = fields[2].parse::<f64>() {
+                            stats.write_iops = write_ops;
+                        }
+                        if let Ok(read_bw) = fields[3].parse::<f64>() {
+                            stats.read_throughput_mbs = read_bw / (1024.0 * 1024.0);
+                        }
+                        if let Ok(write_bw) = fields[4].parse::<f64>() {
+                            stats.write_throughput_mbs = write_bw / (1024.0 * 1024.0);
                         }
                     }
                 }
@@ -665,7 +660,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get real queue depth for a tier
-    pub(super) fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
+    pub(super) const fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
         // This would typically read from system statistics
         // For now, return tier-appropriate defaults
         Ok(match tier {
@@ -675,5 +670,120 @@ impl ZfsPerformanceMonitor {
             StorageTier::Cache => 64.0,
             StorageTier::Archive => 4.0,
         })
+    }
+}
+
+#[cfg(test)]
+impl ZfsPerformanceMonitor {
+    pub(crate) fn test_parse_iostat_bandwidth(
+        value: &str,
+    ) -> std::result::Result<u64, std::num::ParseFloatError> {
+        Self::parse_iostat_bandwidth(value)
+    }
+
+    pub(crate) fn test_get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
+        Self::get_real_queue_depth(tier)
+    }
+
+    pub(crate) fn test_parse_zpool_iostat(output: &str) -> CoreResult<IoStatsSummary> {
+        Self::parse_zpool_iostat(output)
+    }
+
+    pub(crate) fn test_parse_zpool_get_pool_properties(output: &str) -> PoolProperties {
+        parse_zpool_get_pool_properties(output)
+    }
+}
+
+#[cfg(test)]
+mod iostat_and_queue_tests {
+    use super::ZfsPerformanceMonitor;
+    use crate::types::StorageTier;
+
+    #[test]
+    fn parse_iostat_bandwidth_units_and_edge_cases() {
+        assert_eq!(
+            ZfsPerformanceMonitor::test_parse_iostat_bandwidth("").unwrap(),
+            0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_parse_iostat_bandwidth("-").unwrap(),
+            0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_parse_iostat_bandwidth("  42  ").unwrap(),
+            42
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_parse_iostat_bandwidth("2K").unwrap(),
+            2048
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_parse_iostat_bandwidth("1.5M").unwrap(),
+            (1.5 * (1024.0 * 1024.0)) as u64
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_parse_iostat_bandwidth("3G").unwrap(),
+            3 * 1024 * 1024 * 1024
+        );
+    }
+
+    #[test]
+    fn get_real_queue_depth_all_tiers() {
+        assert_eq!(
+            ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Hot).unwrap(),
+            32.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Warm).unwrap(),
+            16.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Cold).unwrap(),
+            8.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Cache).unwrap(),
+            64.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::test_get_real_queue_depth(&StorageTier::Archive).unwrap(),
+            4.0
+        );
+    }
+
+    #[test]
+    fn parse_zpool_iostat_skips_short_lines() {
+        let out = "only three fields here\n";
+        let s = ZfsPerformanceMonitor::test_parse_zpool_iostat(out).expect("parse");
+        assert_eq!(s.read_ops, 0);
+        assert_eq!(s.write_ops, 0);
+    }
+
+    #[test]
+    fn parse_zpool_iostat_sums_multiple_data_rows() {
+        let out = "a 0 0 1 2 3 4\nb 0 0 10 20 5 6\n";
+        let s = ZfsPerformanceMonitor::test_parse_zpool_iostat(out).expect("parse");
+        assert_eq!(s.read_ops, 11);
+        assert_eq!(s.write_ops, 22);
+    }
+
+    #[test]
+    fn parse_zpool_get_pool_properties_tab_lines() {
+        let out = "tank\tfragmentation\t12%\t-\n\
+                   tank\tcompressratio\t1.50x\t-\n\
+                   tank\tdedupratio\t1.00x\t-\n";
+        let p = ZfsPerformanceMonitor::test_parse_zpool_get_pool_properties(out);
+        assert!((p.fragmentation - 12.0).abs() < f64::EPSILON);
+        assert!((p.compression_ratio - 1.5).abs() < f64::EPSILON);
+        assert!((p.dedup_ratio - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn parse_zpool_get_pool_properties_malformed_skipped() {
+        let out = "not enough fields\n";
+        let p = ZfsPerformanceMonitor::test_parse_zpool_get_pool_properties(out);
+        assert_eq!(p.fragmentation, 0.0);
+        assert_eq!(p.compression_ratio, 1.0);
+        assert_eq!(p.dedup_ratio, 1.0);
     }
 }

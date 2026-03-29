@@ -11,7 +11,7 @@ use std::fmt;
 /// **THE** `SystemStatus` - unified across all modules
 /// Replaces `SystemStatus` definitions across system monitoring modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Status values for UnifiedSystem
+/// Status values for `UnifiedSystem`
 pub enum UnifiedSystemStatus {
     /// System is operational
     Operational,
@@ -58,7 +58,7 @@ impl fmt::Display for UnifiedSystemStatus {
 /// **THE** `TestType` - unified across all modules
 /// Replaces `TestType` definitions in test frameworks and automation
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedTest
+/// Types of `UnifiedTest`
 pub enum UnifiedTestType {
     /// Unit test
     Unit,
@@ -117,7 +117,7 @@ impl fmt::Display for UnifiedTestType {
 /// **THE** `MonitoringStatus` - unified across all modules
 /// Replaces `MonitoringStatus` definitions in observability modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Status values for UnifiedMonitoring
+/// Status values for `UnifiedMonitoring`
 pub enum UnifiedMonitoringStatus {
     /// Monitoring is active
     Active,

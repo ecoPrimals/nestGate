@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: March 28, 2026  
+**Last Updated**: March 29, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,13 +8,14 @@
 ## Quick Metrics
 
 ```
-Build:              22/22 crates compiling (0 errors)
+Build:              25/25 workspace members compiling (0 errors)
 Musl static:        WORKING (4.7MB static binary, x86_64-unknown-linux-musl)
-Clippy:             ZERO production warnings (pedantic+nursery+cast lints)
+Clippy:             Warnings reduced 8,227 → 4,642 (production targets -D warnings clean)
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               CLEAN (cargo doc --no-deps, 0 warnings)
-Tests:              12,383 passing, 0 failures (469 ignored - ZFS/infra-dependent)
-Coverage:           ~72% line (target: 90%)
+Tests:              11,707 passing, 0 failures
+Doctests:           ZERO failures (65 fixed across 7 crates)
+Coverage:           74.3% line (up from 68.4%; target: 90%)
 Files > 1000 lines: 0 (largest: 813 lines, test file)
 Unwrap/Expect:      ZERO in production code (test-only, gated by workspace lint)
 TODO/FIXME:         ZERO in production code (per wateringHole §13)
@@ -24,7 +25,22 @@ Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
 Primal sovereignty: Zero other-primal references (beardog/songbird/biomeOS removed)
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
+Workspace members:  25 (code/crates + tools/unwrap-migrator + fuzz); includes nestgate-env-process-shim
 ```
+
+---
+
+## Documentation & quality session (Mar 29, 2026)
+
+### Ground-truth refresh
+
+- **Doctests**: Fixed 65 failing doctests across 7 crates; `cargo test --doc` clean
+- **Tests**: +704 net new tests (11,003 → 11,707), all passing
+- **Coverage**: 68.4% → 74.3% line (llvm-cov)
+- **Clippy**: Cleanup pass — unnecessary `unsafe`, `Send` issues, trivial regex, bulk auto-fixes; warnings 8,227 → 4,642
+- **Types**: `Arc<str>` adoption for discovery/RPC identifiers; `Cow<'static, str>` for JSON-RPC wire types
+- **New crate**: `nestgate-env-process-shim` — safe env mutation for parallel tests (Rust 2024 `set_var` rules)
+- **Root docs**: README, DOCUMENTATION_INDEX, QUICK_REFERENCE, QUICK_START, STATUS, CHANGELOG aligned to 4.7.0-dev and paths under `code/crates/`, `docs/`, `config/`
 
 ---
 
@@ -293,7 +309,7 @@ Workspace deps:     100% hoisted to workspace = true (zero version drift)
 | IMPLEMENTATION STUBs | EVOLVED (http_client, connection_pool, download, hardware, ZFS) |
 | `#[allow]` suppression | 30 in nestgate-api (reduced from 52), targeting further reduction |
 | Ignored tests | 468 (ZFS, E2E, cloud, chaos requiring real infrastructure) |
-| Coverage gap to 90% | ~18.6 pp remaining |
+| Coverage gap to 90% | ~15.7 pp remaining (74.3% current) |
 | `sysinfo` removal | EVOLVED (Linux uses /proc first; sysinfo = cross-platform fallback) |
 | Semantic router | COMPILED & WIRED (`data.*`, `nat.*` routes pending) |
 | tarpc RPC manager | Placeholder (`dead_code`); needs completion or removal |
@@ -303,11 +319,10 @@ Workspace deps:     100% hoisted to workspace = true (zero version drift)
 ### Coverage
 
 ```
-Current:  71.4% line coverage (llvm-cov, Mar 28 2026)
-          70.1% function coverage
-          70.1% region coverage
+Current:  74.3% line coverage (llvm-cov, Mar 29 2026)
+          (prior snapshot: 71.4% Mar 28; baseline evolution 68.4%)
 Target:   90% line coverage
-Gap:      ~18.6 percentage points
+Gap:      ~15.7 percentage points
 High-ROI targets:
   - tools/unwrap-migrator (~900 lines at 0%)
   - nestgate-zfs large modules (dataset, pool_setup, performance)
@@ -331,9 +346,15 @@ New:           rustix for /proc filesystem access
 
 ## Architecture
 
+High-level layout; full member list is `[workspace].members` in root `Cargo.toml` (25 packages).
+
 ```
-nestGate/ (18 crates)
-├── nestgate-core       Core: IPC, config, crypto, discovery, linux_proc
+nestGate/ (25 workspace members)
+├── nestgate-types / nestgate-platform / nestgate-env-process-shim  Foundation
+├── nestgate-config / nestgate-storage / nestgate-rpc / nestgate-discovery
+├── nestgate-security / nestgate-observe / nestgate-cache
+├── nestgate-core       Traits, network, services, adapters (re-exports)
+├── nestgate-canonical  Canonical modernization
 ├── nestgate-api        REST + JSON-RPC API server
 ├── nestgate-bin        CLI binary (unibin)
 ├── nestgate-zfs        ZFS integration (adaptive)
@@ -341,11 +362,12 @@ nestGate/ (18 crates)
 ├── nestgate-network    Network storage
 ├── nestgate-automation Automation engine (lifecycle/, analysis, types)
 ├── nestgate-installer  Platform installer (real GitHub releases download)
-├── nestgate-canonical  Canonical types
 ├── nestgate-middleware Middleware stack
 ├── nestgate-nas        NAS integration
 ├── nestgate-fsmonitor  Filesystem monitoring
-└── nestgate-performance Performance monitoring
+├── nestgate-performance Performance monitoring
+├── tools/unwrap-migrator  Helper CLI
+└── fuzz/               Fuzz targets
 ```
 
 ---
@@ -403,4 +425,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: March 27, 2026
+**Latest**: March 29, 2026

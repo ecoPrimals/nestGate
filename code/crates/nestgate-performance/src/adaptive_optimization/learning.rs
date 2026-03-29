@@ -13,7 +13,7 @@ pub struct SimpleLearningModel {
 
 impl SimpleLearningModel {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             // Initialize fields
         }
@@ -24,7 +24,7 @@ impl SimpleLearningModel {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn predict_optimization(
+    pub const fn predict_optimization(
         &self,
         _metrics: &CurrentMetrics,
     ) -> Result<OptimizationPrediction> {
@@ -43,7 +43,7 @@ pub struct TrendAnalyzer {
 
 impl TrendAnalyzer {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             // Initialize fields
         }
@@ -54,7 +54,7 @@ impl TrendAnalyzer {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn analyze_trends(&self, _history: &PerformanceHistory) -> Result<TrendAnalysis> {
+    pub const fn analyze_trends(&self, _history: &PerformanceHistory) -> Result<TrendAnalysis> {
         // Implementation would go here
         Ok(TrendAnalysis {
             cpu_trend: 0.0,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Primal discovery, capability resolution, and service registry for NestGate.
+//! Primal discovery, capability resolution, and service registry for `NestGate`.
 //!
 //! Extracted from nestgate-core to enable parallel compilation.
 
@@ -19,3 +19,6 @@ pub mod self_knowledge;
 pub mod service_discovery;
 pub mod unified_capabilities;
 pub mod universal_primal_discovery;
+
+#[cfg(test)]
+mod round6_discovery_coverage;

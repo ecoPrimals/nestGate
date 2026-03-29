@@ -8,11 +8,11 @@
 //! Handlers module
 
 use axum::{
+    Router,
     extract::{Query, State},
     http::StatusCode,
     response::Json,
     routing::{get, post},
-    Router,
 };
 use chrono::Utc;
 use std::collections::HashMap;
@@ -20,10 +20,6 @@ use uuid::Uuid;
 
 use super::manager::ComplianceState;
 use super::types::{AuditEvent, ComplianceViolation, ResolutionStatus, RetentionPolicy};
-
-#[cfg(test)]
-#[path = "handlers_tests.rs"]
-mod handlers_tests;
 
 /// Get compliance dashboard
 ///

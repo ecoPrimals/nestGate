@@ -4,8 +4,8 @@
 //
 // ZFS pool creation, tier setup, and management operations
 
-use super::config::{PoolSetupConfig, PoolTopology};
 use super::PoolSetupResult;
+use super::config::{PoolSetupConfig, PoolTopology};
 use nestgate_core::{NestGateError, Result as CoreResult};
 use tokio::process::Command as AsyncCommand;
 use tracing::{error, info, warn};
@@ -18,13 +18,13 @@ pub struct PoolCreator {
 impl PoolCreator {
     /// Create a new pool creator
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { dry_run: false }
     }
 
     /// Create a new pool creator in dry-run mode
     #[must_use]
-    pub fn new_dry_run() -> Self {
+    pub const fn new_dry_run() -> Self {
         Self { dry_run: true }
     }
 
@@ -374,5 +374,64 @@ mod tests {
 
         let result = creator.create_pool_safe(&config).await;
         assert!(result.is_err());
+    }
+}
+
+#[cfg(test)]
+mod round3_validation_tests {
+    use crate::pool_setup::config::{PoolSetupConfig, PoolTopology, RedundancyLevel};
+    use std::collections::HashMap;
+
+    /// Mirrors `create_pool_internal` topology + property checks without shelling out to `zpool`.
+    fn validate_zfs_create_args(config: &PoolSetupConfig) -> bool {
+        if config.pool_name.is_empty() || config.devices.is_empty() {
+            return false;
+        }
+        for (key, value) in &config.properties {
+            if key.is_empty() || value.is_empty() {
+                return false;
+            }
+        }
+        match config.topology {
+            PoolTopology::Single => config.devices.len() == 1,
+            PoolTopology::Mirror
+            | PoolTopology::RaidZ1
+            | PoolTopology::RaidZ2
+            | PoolTopology::RaidZ3 => !config.devices.is_empty(),
+        }
+    }
+
+    #[test]
+    fn single_topology_requires_exactly_one_device() {
+        let mut c = PoolSetupConfig {
+            pool_name: "p".into(),
+            devices: vec!["/dev/a".into(), "/dev/b".into()],
+            topology: PoolTopology::Single,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+        assert!(!validate_zfs_create_args(&c));
+        c.devices = vec!["/dev/a".into()];
+        assert!(validate_zfs_create_args(&c));
+    }
+
+    #[test]
+    fn empty_pool_property_pair_invalid() {
+        let mut c = PoolSetupConfig {
+            pool_name: "p".into(),
+            devices: vec!["/dev/a".into()],
+            topology: PoolTopology::Single,
+            properties: HashMap::from([("".into(), "v".into())]),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+        assert!(!validate_zfs_create_args(&c));
+        c.properties = HashMap::from([("k".into(), "".into())]);
+        assert!(!validate_zfs_create_args(&c));
     }
 }

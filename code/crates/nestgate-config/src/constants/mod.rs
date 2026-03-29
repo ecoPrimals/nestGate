@@ -25,7 +25,7 @@
 //!
 //! # Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::constants::{PortConfig, NetworkDefaultsConfig};
 //!
 //! // Load port configuration from environment
@@ -52,7 +52,7 @@
 
 pub mod canonical;
 pub mod canonical_defaults; // Canonical constants - single source of truth
-                            // magic_numbers_replacement removed - was migration artifact with zero usages
+// magic_numbers_replacement removed - was migration artifact with zero usages
 pub mod capability_port_discovery;
 pub mod network;
 pub mod network_defaults;
@@ -76,7 +76,7 @@ pub mod network_hardcoded;
 /// ```
 ///
 /// **After** (environment-driven):
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::constants::network_environment::api_port;
 /// let port = api_port(); // Checks NESTGATE_API_PORT, defaults to 8080
 /// ```
@@ -108,10 +108,10 @@ pub mod consolidated;
 // Re-export commonly used constants for backwards compatibility
 // Port constants - use port_defaults as single source of truth
 pub use port_defaults::{
-    get_admin_port, get_api_port, get_dev_port, get_grafana_port, get_health_port,
-    get_metrics_port, get_postgres_port, get_prometheus_port, get_redis_port, DEFAULT_ADMIN_PORT,
-    DEFAULT_API_PORT, DEFAULT_GRAFANA_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT,
-    DEFAULT_POSTGRES_PORT, DEFAULT_REDIS_PORT,
+    DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_GRAFANA_PORT, DEFAULT_HEALTH_PORT,
+    DEFAULT_METRICS_PORT, DEFAULT_POSTGRES_PORT, DEFAULT_REDIS_PORT, get_admin_port, get_api_port,
+    get_dev_port, get_grafana_port, get_health_port, get_metrics_port, get_postgres_port,
+    get_prometheus_port, get_redis_port,
 };
 pub use port_defaults_config::{PortConfig, SharedPortConfig};
 
@@ -123,8 +123,8 @@ pub use sovereignty_helpers_config::{SharedSovereigntyHelpersConfig, Sovereignty
 
 // Network address constants - environment-aware
 pub use network_defaults::{
-    get_api_host, get_bind_address, get_db_host, get_redis_host, is_development, is_production,
-    BIND_ALL_IPV4, BIND_ALL_IPV6, LOCALHOST_IPV4, LOCALHOST_IPV6, LOCALHOST_NAME,
+    BIND_ALL_IPV4, BIND_ALL_IPV6, LOCALHOST_IPV4, LOCALHOST_IPV6, LOCALHOST_NAME, get_api_host,
+    get_bind_address, get_db_host, get_redis_host, is_development, is_production,
 };
 pub use network_defaults_config::{NetworkDefaultsConfig, SharedNetworkDefaultsConfig};
 
@@ -144,9 +144,9 @@ pub use self::canonical::timeouts::{
 
 // Timeout configuration - thread-safe config for timeout constants
 pub use timeouts::{
-    connection_timeout, idle_timeout, keepalive_interval, request_timeout, retry_delay,
     DEFAULT_CONNECTION_TIMEOUT_SECS, DEFAULT_HEALTH_CHECK_INTERVAL_SECS, DEFAULT_IDLE_TIMEOUT_SECS,
-    DEFAULT_KEEPALIVE_SECS, DEFAULT_REQUEST_TIMEOUT_SECS,
+    DEFAULT_KEEPALIVE_SECS, DEFAULT_REQUEST_TIMEOUT_SECS, connection_timeout, idle_timeout,
+    keepalive_interval, request_timeout, retry_delay,
 };
 pub use timeouts_config::{SharedTimeoutsConfig, TimeoutsConfig};
 

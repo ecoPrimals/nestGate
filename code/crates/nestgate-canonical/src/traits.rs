@@ -52,7 +52,7 @@ pub trait CanonicalService: Send + Sync + 'static {
 pub trait CanonicalStorage: Send + Sync + 'static {
     /// Read data - native async
     fn read(&self, path: &str)
-        -> impl std::future::Future<Output = NestGateResult<Vec<u8>>> + Send;
+    -> impl std::future::Future<Output = NestGateResult<Vec<u8>>> + Send;
     /// Write data - native async
     fn write(
         &self,
@@ -152,11 +152,7 @@ impl UniversalServiceImpl {
         Self {
             service_type,
             capabilities,
-            health_status: ServiceHealth {
-                healthy: health_status.healthy,
-                message: health_status.message,
-                details: health_status.details,
-            },
+            health_status,
         }
     }
 }

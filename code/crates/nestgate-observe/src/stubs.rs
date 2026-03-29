@@ -7,7 +7,7 @@
 pub mod traits {
     use nestgate_types::Result;
 
-    /// Core service trait for NestGate services — native async (RPITIT).
+    /// Core service trait for `NestGate` services — native async (RPITIT).
     pub trait Service: Send + Sync {
         /// Service name identifier
         fn name(&self) -> &str;
@@ -41,7 +41,9 @@ pub mod canonical_types {
         use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
         mod system_time_serde {
-            use super::*;
+            use super::{
+                Deserialize, Deserializer, Duration, Serialize, Serializer, SystemTime, UNIX_EPOCH,
+            };
 
             #[derive(Serialize, Deserialize)]
             struct SystemTimeWire {
@@ -53,7 +55,9 @@ pub mod canonical_types {
             where
                 S: Serializer,
             {
-                let dur = t.duration_since(UNIX_EPOCH).map_err(serde::ser::Error::custom)?;
+                let dur = t
+                    .duration_since(UNIX_EPOCH)
+                    .map_err(serde::ser::Error::custom)?;
                 SystemTimeWire {
                     secs_since_epoch: dur.as_secs(),
                     nanos_since_epoch: dur.subsec_nanos(),

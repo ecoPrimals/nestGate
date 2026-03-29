@@ -57,17 +57,20 @@ impl PortManager {
     }
 
     /// Check if a port is allocated
+    #[must_use]
     pub fn is_allocated(&self, port: u16) -> bool {
         self.allocated_ports.contains_key(&port)
     }
 
     /// Get service name for a port
+    #[must_use]
     pub fn get_service(&self, port: u16) -> Option<&String> {
         self.allocated_ports.get(&port)
     }
 
     /// Get all allocated ports
-    pub fn get_allocated_ports(&self) -> &HashMap<u16, String> {
+    #[must_use]
+    pub const fn get_allocated_ports(&self) -> &HashMap<u16, String> {
         &self.allocated_ports
     }
 }

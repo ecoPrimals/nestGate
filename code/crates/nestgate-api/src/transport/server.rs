@@ -9,12 +9,12 @@
 //!
 //! **Connection logic has moved to Songbird** (Universal IPC Layer)
 //!
-//! NestGate now focuses on **metadata storage** and **capability-based discovery**.
+//! `NestGate` now focuses on **metadata storage** and **capability-based discovery**.
 //! All connection handling (Unix sockets, named pipes, etc.) is managed by Songbird.
 //!
 //! ### Migration Path
 //!
-//! **Before (NestGate Transport Server)**:
+//! **Before (`NestGate` Transport Server)**:
 //! ```rust,ignore
 //! use nestgate_api::transport::TransportServer;
 //!
@@ -52,7 +52,7 @@ use super::{
     jsonrpc::{JsonRpcHandler, RpcMethodHandler},
     unix_socket::UnixSocketListener,
 };
-use axum::{http::StatusCode, routing::get, Router};
+use axum::{Router, http::StatusCode, routing::get};
 use nestgate_core::error::{NestGateError, Result};
 use std::net::SocketAddr;
 use std::sync::Arc;

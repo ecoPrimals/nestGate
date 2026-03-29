@@ -497,8 +497,8 @@ async fn test_async_operation_sequencing() -> Result<()> {
 
 #[tokio::test]
 async fn test_concurrent_operations_isolation() -> Result<()> {
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     let counter = Arc::new(AtomicUsize::new(0));
 

@@ -55,21 +55,18 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
     let storage_path = std::path::PathBuf::from(&storage_base);
 
     if storage_path.exists() {
-        println!("   Path: {}", storage_base);
+        println!("   Path: {storage_base}");
         match tokio::fs::metadata(&storage_path).await {
             Ok(metadata) => {
                 if metadata.is_dir() {
                     // Check if writable
                     let test_file = storage_path.join(".doctor_check");
-                    match tokio::fs::write(&test_file, b"ok").await {
-                        Ok(()) => {
-                            let _ = tokio::fs::remove_file(&test_file).await;
-                            println!("   ✅ Writable");
-                        }
-                        Err(_) => {
-                            println!("   ⚠️  Not writable (may need permissions)");
-                            warnings += 1;
-                        }
+                    if matches!(tokio::fs::write(&test_file, b"ok").await, Ok(())) {
+                        let _ = tokio::fs::remove_file(&test_file).await;
+                        println!("   ✅ Writable");
+                    } else {
+                        println!("   ⚠️  Not writable (may need permissions)");
+                        warnings += 1;
                     }
                 } else {
                     println!("   ❌ Path exists but is not a directory");
@@ -77,15 +74,12 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                 }
             }
             Err(e) => {
-                println!("   ⚠️  Cannot stat: {}", e);
+                println!("   ⚠️  Cannot stat: {e}");
                 warnings += 1;
             }
         }
     } else {
-        println!(
-            "   Path: {} (does not exist yet - will be created on first use)",
-            storage_base
-        );
+        println!("   Path: {storage_base} (does not exist yet - will be created on first use)");
         println!("   ℹ️  Normal for first run");
     }
     println!();
@@ -101,7 +95,7 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
             println!("   ✅ Configuration valid");
         }
         Err(e) => {
-            println!("   ⚠️  Socket config: {}", e);
+            println!("   ⚠️  Socket config: {e}");
             println!("   ℹ️  Set NESTGATE_FAMILY_ID or NESTGATE_SOCKET");
             warnings += 1;
         }
@@ -121,13 +115,13 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
         match std::env::var(var) {
             Ok(val) => {
                 if sensitive {
-                    println!("   ✅ {} = ****", var);
+                    println!("   ✅ {var} = ****");
                 } else {
-                    println!("   ✅ {} = {}", var, val);
+                    println!("   ✅ {var} = {val}");
                 }
             }
             Err(_) => {
-                println!("   ℹ️  {} (not set, using default)", var);
+                println!("   ℹ️  {var} (not set, using default)");
             }
         }
     }
@@ -150,7 +144,7 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                     } else {
                         println!("   ⚠️  ZFS pool issues detected:");
                         for line in stdout.lines().take(5) {
-                            println!("      {}", line);
+                            println!("      {line}");
                         }
                         warnings += 1;
                     }
@@ -160,7 +154,7 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                     warnings += 1;
                 }
                 Err(e) => {
-                    println!("   ℹ️  ZFS not available: {}", e);
+                    println!("   ℹ️  ZFS not available: {e}");
                 }
             }
 
@@ -170,13 +164,10 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                     for line in arcstats.lines() {
                         if line.starts_with("size") {
                             let parts: Vec<&str> = line.split_whitespace().collect();
-                            if parts.len() >= 3 {
-                                if let Ok(size) = parts[2].parse::<u64>() {
-                                    println!(
-                                        "   📊 ARC size: {:.2} MB",
-                                        size as f64 / 1024.0 / 1024.0
-                                    );
-                                }
+                            if parts.len() >= 3
+                                && let Ok(size) = parts[2].parse::<u64>()
+                            {
+                                println!("   📊 ARC size: {:.2} MB", size as f64 / 1024.0 / 1024.0);
                             }
                             break;
                         }
@@ -205,15 +196,9 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
     if issues == 0 && warnings == 0 {
         println!("✅ All checks passed! NestGate is healthy.");
     } else if issues == 0 {
-        println!(
-            "⚠️  {} warning(s), 0 issues. NestGate is operational.",
-            warnings
-        );
+        println!("⚠️  {warnings} warning(s), 0 issues. NestGate is operational.");
     } else {
-        println!(
-            "❌ {} issue(s), {} warning(s). Review above.",
-            issues, warnings
-        );
+        println!("❌ {issues} issue(s), {warnings} warning(s). Review above.");
     }
     println!();
 

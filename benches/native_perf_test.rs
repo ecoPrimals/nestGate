@@ -3,7 +3,7 @@
 //! Using Criterion benchmarking framework for stable performance testing
 //! of key operations in the NestGate codebase.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::sync::Arc;
 

@@ -46,7 +46,7 @@ use crate::Result;
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
 #[expect(deprecated, reason = "migration in progress")]
 use crate::config::canonical_primary::{
-    domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig, NestGateCanonicalConfig,
+    NestGateCanonicalConfig, domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig,
 };
 use crate::universal_adapter::stats::AdapterStats;
 use nestgate_config::LOCALHOST_IPV4;
@@ -282,16 +282,5 @@ impl StandaloneNetworkAdapter {
     #[must_use]
     pub fn is_standalone(&self) -> bool {
         true
-    }
-}
-
-/// **DEPRECATED**: Use `UnifiedNetworkConfig` from `crate::config::canonical_primary` instead
-/// `UnifiedNetworkConfig` helper methods
-#[expect(deprecated, reason = "migration in progress")] // Helper methods for deprecated type during migration
-impl UnifiedNetworkConfig {
-    /// Convert to unified config (identity function now)
-    #[must_use]
-    pub fn to_unified(&self) -> Self {
-        self.clone()
     }
 }

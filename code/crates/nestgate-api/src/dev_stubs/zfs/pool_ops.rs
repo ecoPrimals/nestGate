@@ -5,7 +5,7 @@
 //!
 //! Mock implementations for ZFS pool operations.
 //!
-//! **Extracted**: November 19, 2025 - From dev_stubs/zfs.rs\
+//! **Extracted**: November 19, 2025 - From `dev_stubs/zfs.rs`\
 //! **Lines**: ~350 (from original 1,015-line file)
 
 #![cfg(feature = "dev-stubs")]
@@ -13,7 +13,7 @@
 use super::config::ProductionZfsManager;
 use super::types::{ZeroCostPoolInfo, ZfsError};
 
-/// PoolOperations trait
+/// `PoolOperations` trait
 pub trait PoolOperations {
     /// List Pools
     fn list_pools(&self) -> Result<Vec<ZeroCostPoolInfo>, ZfsError>;

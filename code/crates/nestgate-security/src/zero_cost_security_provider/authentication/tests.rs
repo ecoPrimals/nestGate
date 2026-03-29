@@ -17,20 +17,19 @@ async fn test_hybrid_authentication_manager() -> Result<()> {
     let hash = argon2::password_hash::PasswordHasher::hash_password(
         &argon2::Argon2::default(),
         b"admin",
-        argon2::password_hash::SaltString::generate(
-            &mut argon2::password_hash::rand_core::OsRng,
-        )
-        .as_salt(),
+        argon2::password_hash::SaltString::generate(&mut argon2::password_hash::rand_core::OsRng)
+            .as_salt(),
     )
     .expect("test hash")
     .to_string();
-    std::env::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
 
-    let credentials =
-        ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
+    let credentials = ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
     let token = auth_manager.authenticate(&credentials).await?;
 
-    std::env::remove_var("NESTGATE_LOCAL_AUTH_HASH");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::remove_var("NESTGATE_LOCAL_AUTH_HASH");
 
     assert!(!token.token.is_empty());
     assert_eq!(token.user_id, "admin");
@@ -49,19 +48,18 @@ async fn test_token_refresh() -> Result<()> {
     let hash = argon2::password_hash::PasswordHasher::hash_password(
         &argon2::Argon2::default(),
         b"admin",
-        argon2::password_hash::SaltString::generate(
-            &mut argon2::password_hash::rand_core::OsRng,
-        )
-        .as_salt(),
+        argon2::password_hash::SaltString::generate(&mut argon2::password_hash::rand_core::OsRng)
+            .as_salt(),
     )
     .expect("test hash")
     .to_string();
-    std::env::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
 
-    let credentials =
-        ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
+    let credentials = ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
     let token = auth_manager.authenticate(&credentials).await?;
-    std::env::remove_var("NESTGATE_LOCAL_AUTH_HASH");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::remove_var("NESTGATE_LOCAL_AUTH_HASH");
 
     let refreshed_token = auth_manager.refresh_token(&token.token).await?;
     assert_ne!(token.token, refreshed_token.token);
@@ -86,8 +84,7 @@ fn test_auth_token_manager() {
 async fn test_authenticate_invalid_credentials() -> Result<()> {
     let config = AuthenticationConfig::default();
     let auth_manager = HybridAuthenticationManager::new(config);
-    let credentials =
-        ZeroCostCredentials::new_password("wrong".to_string(), "wrong".to_string());
+    let credentials = ZeroCostCredentials::new_password("wrong".to_string(), "wrong".to_string());
     let result = auth_manager.authenticate(&credentials).await;
     assert!(result.is_err());
     Ok(())
@@ -110,19 +107,18 @@ async fn test_revoke_token() -> Result<()> {
     let hash = argon2::password_hash::PasswordHasher::hash_password(
         &argon2::Argon2::default(),
         b"admin",
-        argon2::password_hash::SaltString::generate(
-            &mut argon2::password_hash::rand_core::OsRng,
-        )
-        .as_salt(),
+        argon2::password_hash::SaltString::generate(&mut argon2::password_hash::rand_core::OsRng)
+            .as_salt(),
     )
     .expect("test hash")
     .to_string();
-    std::env::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_LOCAL_AUTH_HASH", &hash);
 
-    let credentials =
-        ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
+    let credentials = ZeroCostCredentials::new_password("admin".to_string(), "admin".to_string());
     let token = auth_manager.authenticate(&credentials).await?;
-    std::env::remove_var("NESTGATE_LOCAL_AUTH_HASH");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::remove_var("NESTGATE_LOCAL_AUTH_HASH");
     auth_manager.revoke_token(&token.token).await?;
     let is_valid = auth_manager.validate_token(&token.token).await?;
     assert!(!is_valid);
@@ -134,8 +130,7 @@ async fn test_rate_limit_exceeded() -> Result<()> {
     let mut config = AuthenticationConfig::default();
     config.max_auth_attempts = 1;
     let auth_manager = HybridAuthenticationManager::new(config);
-    let credentials =
-        ZeroCostCredentials::new_password("wrong".to_string(), "wrong".to_string());
+    let credentials = ZeroCostCredentials::new_password("wrong".to_string(), "wrong".to_string());
     let _ = auth_manager.authenticate(&credentials).await;
     let result = auth_manager.authenticate(&credentials).await;
     assert!(result.is_err());
@@ -167,8 +162,7 @@ async fn test_auth_token_method_certificate() -> Result<()> {
 async fn test_auth_token_method_token() -> Result<()> {
     let config = AuthenticationConfig::default();
     let auth_manager = HybridAuthenticationManager::new(config);
-    let credentials =
-        ZeroCostCredentials::new_token("api-user".to_string(), "api-key".to_string());
+    let credentials = ZeroCostCredentials::new_token("api-user".to_string(), "api-key".to_string());
     let token = auth_manager.authenticate(&credentials).await?;
     assert!(token.token.starts_with("api_"));
     Ok(())

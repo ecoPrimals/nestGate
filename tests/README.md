@@ -1,18 +1,18 @@
 # 🧪 **NestGate Testing Guide**
 
-**Last Updated**: October 29, 2025  
-**Coverage**: 16.61% (2,755/16,588 lines)  
-**Goal**: 90%+ coverage with clean, maintainable tests
+**Last Updated**: March 29, 2026  
+**Coverage**: 74.3% (workspace, all features)  
+**Goal**: Maintain high coverage with clean, maintainable tests
 
 ---
 
 ## 📊 **Quick Stats**
 
 ```
-Total Test Functions:   ~5,000
-Passing Tests:          1,180/1,181 (99.8%)
-Test Files:             149+
-Crates with Tests:      All major crates
+Tests passing:          11,707
+Failures:               0
+Ignored:                563 (mostly e2e/chaos; see tests/DISABLED_TESTS_REFERENCE.md)
+Crates with tests:      Workspace-wide
 ```
 
 ---
@@ -21,89 +21,67 @@ Crates with Tests:      All major crates
 
 ### **Running Tests**
 
+Primary command for the full suite (all crates, all features):
+
 ```bash
-# All library tests (fastest, recommended for dev)
-cargo test --workspace --lib
+cargo test --workspace --all-features
+```
 
-# All tests including integration
-cargo test --workspace
+Other useful invocations:
 
-# Specific test
-cargo test --workspace test_name
+```bash
+# Library tests only (often faster during development)
+cargo test --workspace --all-features --lib
 
-# E2E tests (requires setup, slower)
-cargo test --workspace --test '*' --ignored
+# Specific test name filter
+cargo test --workspace --all-features test_name
 
-# Chaos tests (manual execution)
-cargo test --workspace --test 'chaos*' --ignored
+# Run ignored tests (e2e, chaos, etc.—needs environment/setup)
+cargo test --workspace --all-features -- --ignored
 
 # With verbose output
-cargo test --workspace -- --nocapture
+cargo test --workspace --all-features -- --nocapture
 
 # Single-threaded (for debugging)
-cargo test --workspace -- --test-threads=1
+cargo test --workspace --all-features -- --test-threads=1
 ```
+
+For focused suites (e2e, chaos, fault, performance), use the test framework and module layout under `tests/` (see **Test Organization** below).
 
 ### **Coverage Reports**
 
 ```bash
-# Generate HTML coverage report
-cargo tarpaulin --workspace --lib --out Html --output-dir coverage-reports
+# Workspace coverage (requires cargo-llvm-cov)
+cargo llvm-cov --workspace --all-features
 
-# Quick coverage check
-cargo tarpaulin --workspace --lib --out Stdout --skip-clean
-
-# Per-crate coverage
-scripts/check-coverage.sh  # (if exists)
+# HTML report (typical llvm-cov options)
+cargo llvm-cov --workspace --all-features --html
 ```
 
 ---
 
 ## 📁 **Test Organization**
 
+Top-level `tests/` is organized by category. Many scenarios also live as `*.rs` integration targets at the root of `tests/`; shared helpers live under `tests/common/`.
+
 ```
 tests/
-├── common/                # Shared test utilities
-│   ├── mod.rs             # Re-exports all helpers
-│   ├── mocks.rs           # Mock implementations
-│   ├── test_config.rs     # Test configuration
-│   ├── test_environment.rs # Test environment setup
-│   ├── test_helpers.rs    # Generic test helpers
-│   └── test_doubles/      # Test doubles for services
-│
-├── unit/                  # Pure unit tests
-│   ├── config_system_tests.rs
-│   ├── core_error_system_tests.rs
-│   ├── traits_system_tests.rs
-│   └── ... (add tests here by module)
-│
-├── integration/           # Service integration tests
-│   ├── api_integration.rs
-│   ├── storage_integration.rs
-│   ├── security/          # Security integration
-│   └── ... (tests that use multiple components)
-│
-├── e2e/                   # End-to-end workflows
-│   ├── framework/         # E2E test framework
-│   ├── workflows/         # User workflow tests
-│   └── mod.rs
-│
-├── chaos/                 # Chaos engineering
-│   ├── chaos_testing_framework.rs
-│   └── mod.rs
-│
-├── penetration_testing/   # Security penetration tests
-│   ├── attacks.rs
-│   ├── scanner.rs
-│   └── tests.rs
-│
-├── performance/           # Performance tests
-│   └── mod.rs
-│
-└── archive/               # Deprecated tests (reference only)
-    ├── demos/             # Demo/example tests
-    └── duplicates/        # Consolidated duplicates
+├── common/                # Shared utilities (sync, config, mocks, test doubles, …)
+├── unit/                  # Focused unit-style tests
+├── integration/           # Multi-component / API integration
+├── e2e/                   # End-to-end workflows and framework
+├── chaos/                 # Chaos / resilience scenarios
+├── fault/                 # Fault-injection suites
+├── penetration_testing/   # Security-oriented tests
+├── performance/           # Performance and load-oriented tests
+├── ecosystem/             # Cross-component / live-style integration
+├── templates/             # Spec / doc templates for tests
+├── specs/                 # Contract and integration spec docs
+├── dashmap/               # Concurrent collection / stress coverage
+└── unibin/                # CLI / binary-level scenarios
 ```
+
+Crate-local tests remain under `code/crates/<crate>/tests/` and `#[cfg(test)]` modules inside each crate.
 
 ---
 
@@ -257,13 +235,7 @@ let value = result.expect("Should return value");
 
 ### **By Crate**
 
-| Crate | Current | Target | Priority |
-|-------|---------|--------|----------|
-| nestgate-core | ~19% | 90% | 🔴 High |
-| nestgate-api | ~15% | 90% | 🔴 High |
-| nestgate-zfs | ~17% | 85% | 🔴 High |
-| nestgate-network | ~20% | 85% | 🟡 Medium |
-| nestgate-mcp | ~18% | 80% | 🟡 Medium |
+Per-crate percentages change with `cargo llvm-cov --workspace --all-features`. Treat **~74% workspace coverage** as the current baseline; raise or maintain bars per crate as features land.
 
 ### **By Module Type**
 
@@ -281,13 +253,13 @@ let value = result.expect("Should return value");
 
 ```bash
 # Run single test with full output
-cargo test --workspace test_name -- --nocapture
+cargo test --workspace --all-features test_name -- --nocapture
 
 # Run with logging
-RUST_LOG=debug cargo test --workspace test_name
+RUST_LOG=debug cargo test --workspace --all-features test_name
 
 # Run in single thread (avoids concurrency issues)
-cargo test --workspace -- --test-threads=1
+cargo test --workspace --all-features -- --test-threads=1
 ```
 
 ### **Common Issues**
@@ -369,13 +341,13 @@ cargo test --workspace -- --test-threads=1
 
 ```bash
 # Remove unused test code
-cargo test --workspace -- --list | wc -l  # Count tests
+cargo test --workspace --all-features -- --list | wc -l  # Count tests
 
 # Check for duplicate test names
-cargo test --workspace -- --list | sort | uniq -d
+cargo test --workspace --all-features -- --list | sort | uniq -d
 
 # Find slow tests
-cargo test --workspace -- --show-output | grep "test result"
+cargo test --workspace --all-features -- --show-output | grep "test result"
 ```
 
 ---
@@ -383,39 +355,15 @@ cargo test --workspace -- --show-output | grep "test result"
 ## 📖 **Resources**
 
 ### **Internal**
-- [Test Modernization Plan](../TEST_MODERNIZATION_PLAN.md)
-- [Comprehensive Audit](../COMPREHENSIVE_AUDIT_OCT_29_2025.md)
-- Coverage Reports: `coverage-reports/`
+- [Disabled / ignored tests](DISABLED_TESTS_REFERENCE.md)
+- [Sleep migration patterns](SLEEP_MIGRATION_GUIDE.md)
+- Coverage output: use `cargo llvm-cov` (HTML or lcov as needed)
 
 ### **External**
 - [Rust Testing Book](https://doc.rust-lang.org/book/ch11-00-testing.html)
 - [Tokio Testing Guide](https://tokio.rs/tokio/topics/testing)
 - [proptest](https://docs.rs/proptest/) - Property-based testing
 - [rstest](https://docs.rs/rstest/) - Parameterized testing
-
----
-
-## 🎯 **Next Steps**
-
-### **Immediate (This Week)**
-1. Add tests to uncovered modules
-2. Consolidate duplicate test files
-3. Standardize test naming
-
-### **Short Term (This Month)**
-1. Reach 25% coverage
-2. Create standard test templates
-3. Document all test patterns
-
-### **Medium Term (3 Months)**
-1. Reach 75% coverage
-2. Add comprehensive chaos tests
-3. Automate coverage tracking
-
-### **Long Term (4 Months)**
-1. Achieve 90%+ coverage
-2. < 1% test flakiness
-3. < 5min full test suite
 
 ---
 
@@ -428,9 +376,8 @@ cargo test --workspace -- --show-output | grep "test result"
 
 ---
 
-**Status**: Test infrastructure modernization in progress  
-**Coverage Goal**: 90%+ by Week 16  
-**Priority**: 🔴 HIGH - Foundation for quality
+**Status**: Workspace test suite green; ignored tests documented separately  
+**Coverage**: ~74.3% workspace (all features); re-measure after large changes
 
 ---
 

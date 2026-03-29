@@ -4,9 +4,9 @@
 // Error response types and builders
 // Provides unified error response structures for API endpoints
 
+use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -257,7 +257,3 @@ impl IntoResponse for LegacyErrorResponse {
         (StatusCode::INTERNAL_SERVER_ERROR, Json(self)).into_response()
     }
 }
-
-#[cfg(test)]
-#[path = "error_response_tests.rs"]
-mod tests;

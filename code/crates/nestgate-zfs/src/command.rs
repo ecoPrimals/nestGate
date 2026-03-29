@@ -68,7 +68,7 @@ impl ZfsCommand {
     /// let cmd = ZfsCommand::new().with_dry_run(true);
     /// ```
     #[must_use]
-    pub fn with_dry_run(mut self, dry_run: bool) -> Self {
+    pub const fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.dry_run = dry_run;
         self
     }
@@ -86,7 +86,7 @@ impl ZfsCommand {
     /// let cmd = ZfsCommand::new().with_timeout(60);
     /// ```
     #[must_use]
-    pub fn with_timeout(mut self, timeout_seconds: u64) -> Self {
+    pub const fn with_timeout(mut self, timeout_seconds: u64) -> Self {
         self.timeout_seconds = timeout_seconds;
         self
     }
@@ -105,16 +105,15 @@ impl ZfsCommand {
     pub fn check_zfs_available() -> ZfsCommandResult<bool> {
         let result = Command::new("which").arg("zfs").output();
 
-        match result {
-            Ok(output) => Ok(output.status.success()),
-            Err(_) => {
-                // Try direct execution
-                let result = Command::new("zfs").arg("version").output();
+        if let Ok(output) = result {
+            Ok(output.status.success())
+        } else {
+            // Try direct execution
+            let result = Command::new("zfs").arg("version").output();
 
-                match result {
-                    Ok(output) => Ok(output.status.success()),
-                    Err(_) => Ok(false),
-                }
+            match result {
+                Ok(output) => Ok(output.status.success()),
+                Err(_) => Ok(false),
             }
         }
     }
@@ -200,7 +199,7 @@ pub struct CommandResult {
 impl CommandResult {
     /// Check if the command was successful
     #[must_use]
-    pub fn is_success(&self) -> bool {
+    pub const fn is_success(&self) -> bool {
         self.success
     }
 
@@ -287,7 +286,7 @@ impl ZfsOperations {
     /// # Arguments
     /// * `dry_run` - If `true`, operations will be simulated without actual execution.
     #[must_use]
-    pub fn with_dry_run(mut self, dry_run: bool) -> Self {
+    pub const fn with_dry_run(mut self, dry_run: bool) -> Self {
         self.command = self.command.with_dry_run(dry_run);
         self
     }

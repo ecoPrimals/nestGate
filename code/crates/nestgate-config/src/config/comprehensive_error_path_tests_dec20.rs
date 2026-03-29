@@ -89,7 +89,8 @@ mod config_error_path_comprehensive_tests {
     #[test]
     fn test_missing_env_var_returns_none() {
         let nonexistent_var = "NESTGATE_NONEXISTENT_VAR_12345";
-        std::env::remove_var(nonexistent_var);
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var(nonexistent_var);
 
         let result = env::var(nonexistent_var).ok();
         assert!(result.is_none(), "Missing env var should return None");
@@ -214,7 +215,8 @@ mod config_error_path_comprehensive_tests {
     #[test]
     fn test_port_discovery_with_invalid_env_uses_default() {
         // Simulate invalid environment variable
-        std::env::set_var("NESTGATE_TEST_PORT_INVALID", "invalid");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_TEST_PORT_INVALID", "invalid");
 
         let port = env::var("NESTGATE_TEST_PORT_INVALID")
             .ok()
@@ -225,12 +227,14 @@ mod config_error_path_comprehensive_tests {
         assert_eq!(port, 8080, "Should fall back to default on parse error");
 
         // Cleanup
-        std::env::remove_var("NESTGATE_TEST_PORT_INVALID");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TEST_PORT_INVALID");
     }
 
     #[test]
     fn test_port_discovery_with_zero_uses_default() {
-        std::env::set_var("NESTGATE_TEST_PORT_ZERO", "0");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_TEST_PORT_ZERO", "0");
 
         let port = env::var("NESTGATE_TEST_PORT_ZERO")
             .ok()
@@ -241,7 +245,8 @@ mod config_error_path_comprehensive_tests {
         assert_eq!(port, 8080, "Port 0 should be filtered to default");
 
         // Cleanup
-        std::env::remove_var("NESTGATE_TEST_PORT_ZERO");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TEST_PORT_ZERO");
     }
 
     // ==================== FAULT INJECTION TESTS ====================
@@ -274,9 +279,12 @@ mod config_error_path_comprehensive_tests {
     #[test]
     fn test_multiple_invalid_env_vars_chain() {
         // Test that multiple invalid env vars all fall back to defaults
-        std::env::set_var("NESTGATE_TEST_PORT_1", "invalid1");
-        std::env::set_var("NESTGATE_TEST_PORT_2", "invalid2");
-        std::env::set_var("NESTGATE_TEST_PORT_3", "invalid3");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_TEST_PORT_1", "invalid1");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_TEST_PORT_2", "invalid2");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_TEST_PORT_3", "invalid3");
 
         let ports: Vec<u16> = vec![
             "NESTGATE_TEST_PORT_1",
@@ -300,9 +308,12 @@ mod config_error_path_comprehensive_tests {
         );
 
         // Cleanup
-        std::env::remove_var("NESTGATE_TEST_PORT_1");
-        std::env::remove_var("NESTGATE_TEST_PORT_2");
-        std::env::remove_var("NESTGATE_TEST_PORT_3");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TEST_PORT_1");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TEST_PORT_2");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TEST_PORT_3");
     }
 
     // ==================== SAFETY INVARIANT TESTS ====================
@@ -423,7 +434,8 @@ mod config_capability_discovery_error_tests {
         assert!(default_port > 0);
 
         // Layer 2: Environment can override
-        std::env::set_var("NESTGATE_TEST_RUNTIME_PORT", "9000");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_TEST_RUNTIME_PORT", "9000");
         let env_port = env::var("NESTGATE_TEST_RUNTIME_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -431,6 +443,7 @@ mod config_capability_discovery_error_tests {
         assert_eq!(env_port, 9000);
 
         // Cleanup
-        std::env::remove_var("NESTGATE_TEST_RUNTIME_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TEST_RUNTIME_PORT");
     }
 }

@@ -260,10 +260,12 @@ fn test_error_response_workflow() {
     let connection_error = mcp_connection_error("Failed to connect to MCP server");
     let response = create_error_response(connection_error, "Connection attempt failed");
 
-    assert!(response["error"]["message"]
-        .as_str()
-        .unwrap()
-        .contains("Connection attempt failed"));
+    assert!(
+        response["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("Connection attempt failed")
+    );
 
     // Verify timestamp is recent (within last hour)
     let timestamp = response["error"]["timestamp"].as_u64().unwrap();

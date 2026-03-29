@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! JSON-RPC 2.0 Server for NestGate Storage
+//! JSON-RPC 2.0 Server for `NestGate` Storage
 //!
-//! Provides universal, language-agnostic RPC access to NestGate storage
+//! Provides universal, language-agnostic RPC access to `NestGate` storage
 //! capabilities over HTTP. Works with any client supporting JSON-RPC 2.0.
 //!
 //! ## Philosophy
@@ -48,9 +48,9 @@ use std::net::SocketAddr;
 
 use base64::Engine;
 use jsonrpsee::{
+    RpcModule,
     server::{Server, ServerHandle},
     types::ErrorObjectOwned,
-    RpcModule,
 };
 use tracing::{debug, info, warn};
 
@@ -91,7 +91,7 @@ pub struct JsonRpcState {
     pub start_time: std::time::Instant,
 }
 
-/// JSON-RPC 2.0 server for NestGate storage
+/// JSON-RPC 2.0 server for `NestGate` storage
 pub struct JsonRpcServer {
     config: JsonRpcConfig,
     state: JsonRpcState,
@@ -99,6 +99,7 @@ pub struct JsonRpcServer {
 
 impl JsonRpcServer {
     /// Create a new JSON-RPC server
+    #[must_use]
     pub fn new(service: NestGateRpcService, config: JsonRpcConfig) -> Self {
         Self {
             config,
@@ -109,7 +110,7 @@ impl JsonRpcServer {
         }
     }
 
-    /// Build RPC module with all methods registered (used by start() and tests)
+    /// Build RPC module with all methods registered (used by `start()` and tests)
     #[allow(dead_code)] // Used by tests
     pub(crate) fn build_module(
         state: JsonRpcState,
@@ -280,11 +281,7 @@ impl JsonRpcServer {
             // Decode base64 data
             let data = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &p.data)
                 .map_err(|e| {
-                    ErrorObjectOwned::owned(
-                        -32602,
-                        format!("Invalid base64 data: {}", e),
-                        None::<()>,
-                    )
+                    ErrorObjectOwned::owned(-32602, format!("Invalid base64 data: {e}"), None::<()>)
                 })?;
 
             let state = ctx.as_ref();
@@ -490,12 +487,41 @@ impl JsonRpcServer {
                 let capability: String = params.one()?;
                 debug!("JSON-RPC: discoverCapability({})", capability);
 
-                // Use capability-based discovery
-                {
-                    // TODO: wire to nestgate-discovery — `primal_discovery::discover_capability`
-                    let _ = capability;
-                    Ok::<_, ErrorObjectOwned>(Vec::<serde_json::Value>::new())
-                }
+                let env_var = format!(
+                    "NESTGATE_{}_ENDPOINT",
+                    capability.to_uppercase().replace('-', "_")
+                );
+                let se =
+                    match nestgate_config::config::capability_discovery::discover_with_fallback(
+                        &capability,
+                        &env_var,
+                        "tarpc://127.0.0.1:8091",
+                    )
+                    .await
+                    {
+                        Ok(se) => se,
+                        Err(e) => {
+                            warn!("discovery.capability.query: {}", e);
+                            return Ok::<_, ErrorObjectOwned>(serde_json::json!([]));
+                        }
+                    };
+                let raw = se.endpoint.trim();
+                let tarpc_ep = if raw.starts_with("tarpc://") {
+                    raw.to_string()
+                } else if let Some(r) = raw.strip_prefix("http://") {
+                    format!("tarpc://{r}")
+                } else if let Some(r) = raw.strip_prefix("https://") {
+                    format!("tarpc://{r}")
+                } else {
+                    format!("tarpc://{raw}")
+                };
+                Ok::<_, ErrorObjectOwned>(serde_json::json!([{
+                    "id": format!("discovered-{}", capability),
+                    "capability": capability,
+                    "endpoints": { "tarpc": tarpc_ep },
+                    "status": "discovered",
+                    "metadata": null
+                }]))
             },
         )?;
 

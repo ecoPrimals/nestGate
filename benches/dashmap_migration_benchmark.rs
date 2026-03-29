@@ -22,7 +22,7 @@
 //! - Expected: 10-25x improvement in contended scenarios
 //! - Expected: 50-100K ops/sec throughput
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
 use dashmap::DashMap;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};

@@ -63,7 +63,7 @@ pub struct ResponseTimeThresholds {
 }
 /// Test data configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestData
+/// Configuration for `TestData`
 pub struct TestDataConfig {
     /// Use Random Data
     pub use_random_data: bool,
@@ -110,7 +110,9 @@ pub struct PerformanceTestRunner {
 impl PerformanceTestRunner {
     /// Create new performance test runner
     #[must_use]
-    pub fn new(config: nestgate_config::config::canonical_primary::PerformanceConfig) -> Self {
+    pub const fn new(
+        config: nestgate_config::config::canonical_primary::PerformanceConfig,
+    ) -> Self {
         Self { config }
     }
 
@@ -210,7 +212,7 @@ impl Default for PerformanceDiscovery {
 impl PerformanceDiscovery {
     /// Create new performance discovery service
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 

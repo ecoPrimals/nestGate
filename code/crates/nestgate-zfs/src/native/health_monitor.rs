@@ -42,7 +42,7 @@ impl NativeZfsHealthMonitor {
     ///
     /// A new `NativeZfsHealthMonitor` instance
     #[must_use]
-    pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
+    pub const fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 

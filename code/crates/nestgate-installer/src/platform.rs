@@ -74,13 +74,13 @@ impl PlatformInfo {
     ///
     /// **RUNTIME CHECK**: Based on actual service manager detection
     #[must_use]
-    pub fn service_install_supported(&self) -> bool {
+    pub const fn service_install_supported(&self) -> bool {
         self.service_manager.supports_auto_start()
     }
 
     /// Get service manager name
     #[must_use]
-    pub fn service_manager_name(&self) -> &str {
+    pub const fn service_manager_name(&self) -> &str {
         self.service_manager.name()
     }
 
@@ -142,8 +142,8 @@ fn add_to_path_unix(install_path: &Path) -> Result<()> {
 
 #[cfg(windows)]
 fn add_to_path_windows(install_path: &Path) -> Result<()> {
-    use winreg::enums::*;
     use winreg::RegKey;
+    use winreg::enums::*;
 
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let env = hkcu.open_subkey_with_flags("Environment", KEY_READ | KEY_WRITE)?;

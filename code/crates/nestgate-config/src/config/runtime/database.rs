@@ -50,7 +50,7 @@ impl DatabaseConfig {
     ///
     /// # Errors
     ///
-    /// Returns an error if NESTGATE_DB_HOST is not set. Database is an external service
+    /// Returns an error if `NESTGATE_DB_HOST` is not set. Database is an external service
     /// and must be explicitly configured - no hardcoded localhost assumption.
     ///
     /// # Philosophy

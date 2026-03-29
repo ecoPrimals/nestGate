@@ -21,14 +21,14 @@ pub struct MockingConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MockService
+/// Configuration for `MockService`
 pub struct MockServiceConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestDouble
+/// Configuration for `TestDouble`
 pub struct TestDoubleConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -75,7 +75,7 @@ impl MockingConfig {
     }
     /// Merges this configuration with another, taking precedence
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 }

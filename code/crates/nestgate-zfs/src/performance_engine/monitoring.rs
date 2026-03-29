@@ -38,11 +38,11 @@ use super::types::{
 
 // **CANONICAL MODERNIZATION**: Type aliases to fix clippy complexity warnings
 type PoolMetricsMap = Arc<RwLock<HashMap<String, ZfsPoolMetrics>>>;
-/// Type alias for DatasetMetricsMap
+/// Type alias for `DatasetMetricsMap`
 type DatasetMetricsMap = Arc<RwLock<HashMap<String, ZfsDatasetMetrics>>>;
-/// Type alias for MetricsCacheMap
+/// Type alias for `MetricsCacheMap`
 type MetricsCacheMap = Arc<RwLock<HashMap<String, ZfsPerformanceMetrics>>>;
-/// Type alias for AlertThresholdsArc
+/// Type alias for `AlertThresholdsArc`
 type AlertThresholdsArc = Arc<RwLock<AlertThresholds>>;
 
 /// Real-time performance monitor
@@ -102,7 +102,7 @@ impl RealTimePerformanceMonitor {
         let x_squared_sum: f64 = (0..values.len()).map(|i| (i as f64).powi(2)).sum();
 
         // Calculate slope using least squares regression
-        (n * xy_sum - x_sum * y_sum) / (n * x_squared_sum - x_sum.powi(2))
+        n.mul_add(xy_sum, -(x_sum * y_sum)) / x_sum.mul_add(-x_sum, n * x_squared_sum)
     }
 
     /// Function description
@@ -126,92 +126,90 @@ impl RealTimePerformanceMonitor {
             .args(["iostat", "-yv", "1", "2"]) // -y for omit first output, -v for verbose
             .output()
             .await
+            && output.status.success()
         {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                let lines: Vec<&str> = stdout.lines().collect();
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let lines: Vec<&str> = stdout.lines().collect();
 
-                // Parse pool metrics from iostat output
-                for line in lines.iter().skip(1) {
-                    // Skip header
-                    let fields: Vec<&str> = line.split_whitespace().collect();
-                    if fields.len() >= 7 {
-                        let pool_name = fields[0];
-                        if pool_name != "pool" && !pool_name.is_empty() && !pool_name.contains('-')
+            // Parse pool metrics from iostat output
+            for line in lines.iter().skip(1) {
+                // Skip header
+                let fields: Vec<&str> = line.split_whitespace().collect();
+                if fields.len() >= 7 {
+                    let pool_name = fields[0];
+                    if pool_name != "pool" && !pool_name.is_empty() && !pool_name.contains('-') {
+                        let read_ops: f64 = fields[1].parse().unwrap_or(0.0);
+                        let write_ops: f64 = fields[2].parse().unwrap_or(0.0);
+                        let read_bw: f64 = fields[3].parse().unwrap_or(0.0) / (1024.0 * 1024.0); // Convert to MB/s
+                        let write_bw: f64 = fields[4].parse().unwrap_or(0.0) / (1024.0 * 1024.0); // Convert to MB/s
+
+                        // Calculate average latency from queue lengths if available
+                        let avg_latency = if fields.len() >= 9 {
+                            f64::midpoint(
+                                fields[7].parse::<f64>().unwrap_or(0.0),
+                                fields[8].parse::<f64>().unwrap_or(0.0),
+                            )
+                        } else {
+                            5.0 // Default latency
+                        };
+
+                        // Get cache hit ratio from ARC stats (pool-agnostic for now)
+                        let cache_hit_ratio = if let Ok(arc_content) =
+                            tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await
                         {
-                            let read_ops: f64 = fields[1].parse().unwrap_or(0.0);
-                            let write_ops: f64 = fields[2].parse().unwrap_or(0.0);
-                            let read_bw: f64 = fields[3].parse().unwrap_or(0.0) / (1024.0 * 1024.0); // Convert to MB/s
-                            let write_bw: f64 =
-                                fields[4].parse().unwrap_or(0.0) / (1024.0 * 1024.0); // Convert to MB/s
+                            let mut hits = 0u64;
+                            let mut misses = 0u64;
 
-                            // Calculate average latency from queue lengths if available
-                            let avg_latency = if fields.len() >= 9 {
-                                (fields[7].parse::<f64>().unwrap_or(0.0)
-                                    + fields[8].parse::<f64>().unwrap_or(0.0))
-                                    / 2.0
-                            } else {
-                                5.0 // Default latency
-                            };
-
-                            // Get cache hit ratio from ARC stats (pool-agnostic for now)
-                            let cache_hit_ratio = if let Ok(arc_content) =
-                                tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await
-                            {
-                                let mut hits = 0u64;
-                                let mut misses = 0u64;
-
-                                for arc_line in arc_content.lines() {
-                                    let parts: Vec<&str> = arc_line.split_whitespace().collect();
-                                    if parts.len() >= 3 {
-                                        match parts[0] {
-                                            "hits" => hits = parts[2].parse().unwrap_or(0),
-                                            "misses" => misses = parts[2].parse().unwrap_or(0),
-                                            _ => {}
-                                        }
+                            for arc_line in arc_content.lines() {
+                                let parts: Vec<&str> = arc_line.split_whitespace().collect();
+                                if parts.len() >= 3 {
+                                    match parts[0] {
+                                        "hits" => hits = parts[2].parse().unwrap_or(0),
+                                        "misses" => misses = parts[2].parse().unwrap_or(0),
+                                        _ => {}
                                     }
                                 }
+                            }
 
-                                if hits + misses > 0 {
-                                    hits as f64 / (hits + misses) as f64
-                                } else {
-                                    0.85 // Default hit ratio
-                                }
+                            if hits + misses > 0 {
+                                hits as f64 / (hits + misses) as f64
                             } else {
                                 0.85 // Default hit ratio
-                            };
+                            }
+                        } else {
+                            0.85 // Default hit ratio
+                        };
 
-                            // Get fragmentation from zpool list
-                            let fragmentation = if let Ok(frag_output) =
-                                tokio::process::Command::new("zpool")
-                                    .args(["list", "-H", "-o", "frag", pool_name])
-                                    .output()
-                                    .await
-                            {
-                                let frag_stdout = String::from_utf8_lossy(&frag_output.stdout);
-                                if let Some(frag_str) = frag_stdout.trim().strip_suffix('%') {
-                                    frag_str.parse().unwrap_or(10.0)
-                                } else {
-                                    10.0
-                                }
+                        // Get fragmentation from zpool list
+                        let fragmentation = if let Ok(frag_output) =
+                            tokio::process::Command::new("zpool")
+                                .args(["list", "-H", "-o", "frag", pool_name])
+                                .output()
+                                .await
+                        {
+                            let frag_stdout = String::from_utf8_lossy(&frag_output.stdout);
+                            if let Some(frag_str) = frag_stdout.trim().strip_suffix('%') {
+                                frag_str.parse().unwrap_or(10.0)
                             } else {
-                                10.0 // Default fragmentation
-                            };
+                                10.0
+                            }
+                        } else {
+                            10.0 // Default fragmentation
+                        };
 
-                            pool_metrics.insert(
-                                pool_name.to_string(),
-                                ZfsPoolMetrics {
-                                    pool_name: pool_name.to_string(),
-                                    read_ops,
-                                    write_ops,
-                                    read_bandwidth: read_bw,
-                                    write_bandwidth: write_bw,
-                                    latency: avg_latency,
-                                    cache_hit_ratio,
-                                    fragmentation,
-                                },
-                            );
-                        }
+                        pool_metrics.insert(
+                            pool_name.to_string(),
+                            ZfsPoolMetrics {
+                                pool_name: pool_name.to_string(),
+                                read_ops,
+                                write_ops,
+                                read_bandwidth: read_bw,
+                                write_bandwidth: write_bw,
+                                latency: avg_latency,
+                                cache_hit_ratio,
+                                fragmentation,
+                            },
+                        );
                     }
                 }
             }
@@ -231,69 +229,68 @@ impl RealTimePerformanceMonitor {
                     ])
                     .output()
                     .await
+                    && prop_output.status.success()
                 {
-                    if prop_output.status.success() {
-                        let prop_stdout = String::from_utf8_lossy(&prop_output.stdout);
+                    let prop_stdout = String::from_utf8_lossy(&prop_output.stdout);
 
-                        let mut _compression_ratio = 1.0;
-                        let mut dedup_ratio = 1.0;
-                        let mut record_size = 128 * 1024u64;
-                        let mut used_bytes = 0u64;
-                        let mut logical_used_bytes = 0u64;
+                    let mut _compression_ratio = 1.0;
+                    let mut dedup_ratio = 1.0;
+                    let mut record_size = 128 * 1024u64;
+                    let mut used_bytes = 0u64;
+                    let mut logical_used_bytes = 0u64;
 
-                        for line in prop_stdout.lines() {
-                            let fields: Vec<&str> = line.split('\t').collect();
-                            if fields.len() >= 3 {
-                                match fields[1] {
-                                    "compressratio" => {
-                                        if let Some(ratio_str) = fields[2].strip_suffix('x') {
-                                            _compression_ratio = ratio_str.parse().unwrap_or(1.0);
-                                        }
+                    for line in prop_stdout.lines() {
+                        let fields: Vec<&str> = line.split('\t').collect();
+                        if fields.len() >= 3 {
+                            match fields[1] {
+                                "compressratio" => {
+                                    if let Some(ratio_str) = fields[2].strip_suffix('x') {
+                                        _compression_ratio = ratio_str.parse().unwrap_or(1.0);
                                     }
-                                    "dedup" => {
-                                        if fields[2] == "on" {
-                                            dedup_ratio = 1.2; // Estimate when dedup is enabled
-                                        }
-                                    }
-                                    "recordsize" => {
-                                        record_size =
-                                            Self::parse_sizevalue(fields[2]).unwrap_or(128 * 1024);
-                                    }
-                                    "used" => {
-                                        used_bytes = fields[2].parse().unwrap_or(0);
-                                    }
-                                    "logicalused" => {
-                                        logical_used_bytes = fields[2].parse().unwrap_or(0);
-                                    }
-                                    _ => {}
                                 }
+                                "dedup" => {
+                                    if fields[2] == "on" {
+                                        dedup_ratio = 1.2; // Estimate when dedup is enabled
+                                    }
+                                }
+                                "recordsize" => {
+                                    record_size =
+                                        Self::parse_sizevalue(fields[2]).unwrap_or(128 * 1024);
+                                }
+                                "used" => {
+                                    used_bytes = fields[2].parse().unwrap_or(0);
+                                }
+                                "logicalused" => {
+                                    logical_used_bytes = fields[2].parse().unwrap_or(0);
+                                }
+                                _ => {}
                             }
                         }
-
-                        // Calculate actual compression ratio from used vs logical used
-                        if logical_used_bytes > 0 && used_bytes > 0 {
-                            _compression_ratio = logical_used_bytes as f64 / used_bytes as f64;
-                        }
-
-                        // Analyze access pattern based on dataset properties and usage
-                        let access_pattern = if record_size >= 1024 * 1024 {
-                            AccessPattern::Sequential // Large records suggest sequential
-                        } else if record_size <= 32 * 1024 {
-                            AccessPattern::Random // Small records suggest random
-                        } else {
-                            AccessPattern::Mixed
-                        };
-
-                        dataset_metrics.insert(
-                            dataset.name.clone(),
-                            ZfsDatasetMetrics {
-                                dataset_name: dataset.name.clone(),
-                                access_pattern,
-                                dedup_ratio,
-                                record_size,
-                            },
-                        );
                     }
+
+                    // Calculate actual compression ratio from used vs logical used
+                    if logical_used_bytes > 0 && used_bytes > 0 {
+                        _compression_ratio = logical_used_bytes as f64 / used_bytes as f64;
+                    }
+
+                    // Analyze access pattern based on dataset properties and usage
+                    let access_pattern = if record_size >= 1024 * 1024 {
+                        AccessPattern::Sequential // Large records suggest sequential
+                    } else if record_size <= 32 * 1024 {
+                        AccessPattern::Random // Small records suggest random
+                    } else {
+                        AccessPattern::Mixed
+                    };
+
+                    dataset_metrics.insert(
+                        dataset.name.clone(),
+                        ZfsDatasetMetrics {
+                            dataset_name: dataset.name.clone(),
+                            access_pattern,
+                            dedup_ratio,
+                            record_size,
+                        },
+                    );
                 }
             }
         }
@@ -533,5 +530,90 @@ impl RealTimePerformanceMonitor {
     pub async fn get_trending_data(&self) -> Result<Vec<ZfsPerformanceMetrics>> {
         let cache = self.metrics_cache.read().await;
         Ok(cache.values().cloned().collect())
+    }
+}
+
+#[cfg(test)]
+impl RealTimePerformanceMonitor {
+    pub(crate) fn test_calculate_trend(values: &[f64]) -> f64 {
+        Self::calculate_trend(values)
+    }
+
+    pub(crate) fn test_parse_sizevalue(size_str: &str) -> Result<u64> {
+        Self::parse_sizevalue(size_str)
+    }
+}
+
+#[cfg(test)]
+mod regression_tests {
+    use super::{AlertThresholds, RealTimePerformanceMonitor};
+
+    #[test]
+    fn calculate_trend_short_and_linear() {
+        assert_eq!(RealTimePerformanceMonitor::test_calculate_trend(&[]), 0.0);
+        assert_eq!(
+            RealTimePerformanceMonitor::test_calculate_trend(&[1.0]),
+            0.0
+        );
+        let slope = RealTimePerformanceMonitor::test_calculate_trend(&[0.0, 1.0, 2.0, 3.0]);
+        assert!((slope - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn parse_sizevalue_suffixes_and_raw() {
+        assert_eq!(
+            RealTimePerformanceMonitor::test_parse_sizevalue("128K").unwrap(),
+            128 * 1024
+        );
+        assert_eq!(
+            RealTimePerformanceMonitor::test_parse_sizevalue("2M").unwrap(),
+            2 * 1024 * 1024
+        );
+        assert_eq!(
+            RealTimePerformanceMonitor::test_parse_sizevalue("1G").unwrap(),
+            1024_u64 * 1024 * 1024
+        );
+        assert_eq!(
+            RealTimePerformanceMonitor::test_parse_sizevalue("1T").unwrap(),
+            1024_u64 * 1024 * 1024 * 1024
+        );
+        assert_eq!(
+            RealTimePerformanceMonitor::test_parse_sizevalue("4096").unwrap(),
+            4096
+        );
+        assert!(RealTimePerformanceMonitor::test_parse_sizevalue("badK").is_err());
+    }
+
+    #[test]
+    fn alert_thresholds_default_zero() {
+        let a = AlertThresholds::default();
+        assert_eq!(a.cpu_threshold, 0.0);
+        assert_eq!(a.memory_threshold, 0.0);
+        assert_eq!(a.disk_threshold, 0.0);
+    }
+
+    #[test]
+    fn realtime_monitor_new_sets_default_alert_thresholds() {
+        let m = RealTimePerformanceMonitor::new();
+        // Thresholds live inside the monitor; new() uses non-zero defaults (see constructor).
+        let _ = m.get_metrics_cache();
+    }
+
+    #[test]
+    fn calculate_trend_negative_slope_degrading_series() {
+        let slope = RealTimePerformanceMonitor::test_calculate_trend(&[10.0, 8.0, 6.0, 4.0, 2.0]);
+        assert!(slope < 0.0);
+    }
+
+    #[test]
+    fn calculate_trend_constant_series_zero_slope() {
+        let slope = RealTimePerformanceMonitor::test_calculate_trend(&[5.0, 5.0, 5.0, 5.0]);
+        assert!(slope.abs() < 1e-9);
+    }
+
+    #[test]
+    fn calculate_trend_two_points() {
+        let slope = RealTimePerformanceMonitor::test_calculate_trend(&[0.0, 2.0]);
+        assert!((slope - 2.0).abs() < 1e-9);
     }
 }

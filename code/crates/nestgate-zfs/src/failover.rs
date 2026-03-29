@@ -39,7 +39,7 @@ pub struct PoolMetadata {
 }
 
 /// State of a pool in the failover system
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Poolfailoverstate
 pub enum PoolFailoverState {
     /// Pool is currently imported and active
@@ -83,7 +83,7 @@ pub enum PoolState {
 /// Modern replacement for the deprecated `FailoverConfig`.
 /// Integrated into the canonical ZFS configuration system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CanonicalFailover
+/// Configuration for `CanonicalFailover`
 pub struct CanonicalFailoverConfig {
     /// Auto Takeover Enabled
     pub auto_takeover_enabled: bool,
@@ -123,7 +123,7 @@ impl Default for CanonicalFailoverConfig {
 
 /// Notification configuration for failover events
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -141,7 +141,7 @@ impl Default for CanonicalFailoverConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for FailoverNotification
+/// Configuration for `FailoverNotification`
 pub struct FailoverNotificationConfig {
     /// Email Enabled
     pub email_enabled: bool,
@@ -159,7 +159,7 @@ pub struct FailoverNotificationConfig {
 
 /// Manages ZFS pool takeover operations
 #[allow(dead_code)] // Configuration fields used in advanced failover scenarios
-/// Manager for PoolTakeover operations
+/// Manager for `PoolTakeover` operations
 pub struct PoolTakeoverManager {
     config: ZfsConfig,
     failover_config: CanonicalFailoverConfig,
@@ -219,7 +219,7 @@ impl PoolTakeoverManager {
             match self.force_import_pool(pool_name).await {
                 Ok(()) => {
                     info!("Successfully imported pool: {}", pool_name);
-                    imported_pools.push(pool_name.to_string());
+                    imported_pools.push(pool_name.clone());
 
                     // Update pool metadata
                     self.update_pool_metadata(pool_name, PoolFailoverState::Active)
@@ -300,11 +300,11 @@ impl PoolTakeoverManager {
         let mut pools = Vec::new();
 
         for line in stdout.lines() {
-            if line.trim_start().starts_with("pool:") {
-                if let Some(pool_name) = line.split("pool:").nth(1) {
-                    let pool_name = pool_name.trim().to_string();
-                    pools.push(pool_name);
-                }
+            if line.trim_start().starts_with("pool:")
+                && let Some(pool_name) = line.split("pool:").nth(1)
+            {
+                let pool_name = pool_name.trim().to_string();
+                pools.push(pool_name);
             }
         }
 
@@ -598,5 +598,54 @@ mod tests {
         assert_eq!(status.len(), 1);
         assert_eq!(status["testpool"].name, "testpool");
         assert_eq!(status["testpool"].state, PoolFailoverState::Active);
+    }
+
+    #[test]
+    fn canonical_failover_config_default_fields() {
+        let c = CanonicalFailoverConfig::default();
+        assert!(c.auto_takeover_enabled);
+        assert_eq!(c.health_check_interval_secs, 30);
+        assert!(c.failback_enabled);
+    }
+
+    #[test]
+    fn pool_metadata_serde_roundtrip() {
+        let m = PoolMetadata {
+            name: "p".into(),
+            original_owner: "n1".into(),
+            last_seen: SystemTime::UNIX_EPOCH,
+            import_guid: Some("g".into()),
+            state: PoolFailoverState::Orphaned,
+        };
+        let j = serde_json::to_string(&m).unwrap();
+        let back: PoolMetadata = serde_json::from_str(&j).unwrap();
+        assert_eq!(back.name, m.name);
+        assert_eq!(back.state, PoolFailoverState::Orphaned);
+    }
+
+    #[test]
+    fn pool_failover_state_variants_distinct() {
+        assert_ne!(PoolFailoverState::Active, PoolFailoverState::Failed);
+        assert_ne!(PoolFailoverState::Orphaned, PoolFailoverState::Unknown);
+    }
+
+    #[test]
+    fn pool_state_enum_covers_zfs_like_labels() {
+        assert_eq!(PoolState::Online, PoolState::Online);
+        assert_ne!(PoolState::Online, PoolState::Offline);
+        assert_ne!(PoolState::Degraded, PoolState::Faulted);
+    }
+
+    #[test]
+    fn canonical_failover_config_timeouts_and_attempts() {
+        let c = CanonicalFailoverConfig::default();
+        assert_eq!(c.takeover_timeout_secs, 300);
+        assert_eq!(
+            c.node_failure_timeout_secs,
+            crate::constants::NODE_FAILURE_TIMEOUT_SECS
+        );
+        assert_eq!(c.max_takeover_attempts, 3);
+        assert_eq!(c.failback_delay_secs, 60);
+        assert!(c.notification_config.is_none());
     }
 }

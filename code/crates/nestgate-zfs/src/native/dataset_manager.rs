@@ -39,9 +39,9 @@
 
 use super::command_executor::NativeZfsCommandExecutor;
 use crate::types::DatasetInfo;
+use nestgate_core::Result;
 use nestgate_core::canonical_modernization::canonical_constants::storage;
 use nestgate_core::canonical_types::StorageTier;
-use nestgate_core::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -143,7 +143,7 @@ impl NativeZfsDatasetManager {
     /// let manager = NativeZfsDatasetManager::new(executor);
     /// ```
     #[must_use]
-    pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
+    pub const fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 
@@ -221,7 +221,7 @@ impl NativeZfsDatasetManager {
             referenced: used_bytes,    // Approximation
             compression_ratio: compression_ratio.unwrap_or(1.0),
             tier: nestgate_core::canonical_types::StorageTier::Warm, // Default tier
-            properties: properties.clone(),
+            properties,
             created_at: std::time::SystemTime::now(),
         })
     }

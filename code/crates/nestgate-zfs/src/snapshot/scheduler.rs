@@ -38,7 +38,7 @@ pub struct PolicyScheduler {
 }
 impl PolicyScheduler {
     /// Create a new policy scheduler
-    pub fn new(
+    pub const fn new(
         dataset_manager: Arc<ZfsDatasetManager>,
         policies: SnapshotPolicyMap,
         operation_queue: Arc<RwLock<Vec<SnapshotOperation>>>,
@@ -76,27 +76,27 @@ impl PolicyScheduler {
 
         match &policy.frequency {
             ScheduleFrequency::Minutes(minutes) => {
-                let interval = Duration::from_secs(*minutes as u64 * 60);
+                let interval = Duration::from_secs(u64::from(*minutes) * 60);
                 now_duration.as_secs() % interval.as_secs() < 60 // Within 1 minute of schedule
             }
             ScheduleFrequency::Hours(hours) => {
-                let interval = Duration::from_secs(*hours as u64 * 3600);
+                let interval = Duration::from_secs(u64::from(*hours) * 3600);
                 now_duration.as_secs() % interval.as_secs() < 300 // Within 5 minutes of schedule
             }
             ScheduleFrequency::Daily(hour) => {
                 let datetime = chrono::DateTime::<chrono::Utc>::from(now);
-                datetime.hour() == *hour as u32 && datetime.minute() < 5
+                datetime.hour() == u32::from(*hour) && datetime.minute() < 5
             }
             ScheduleFrequency::Weekly { day, hour } => {
                 let datetime = chrono::DateTime::<chrono::Utc>::from(now);
-                datetime.weekday().num_days_from_monday() == *day as u32
-                    && datetime.hour() == *hour as u32
+                datetime.weekday().num_days_from_monday() == u32::from(*day)
+                    && datetime.hour() == u32::from(*hour)
                     && datetime.minute() < 5
             }
             ScheduleFrequency::Monthly { day, hour } => {
                 let datetime = chrono::DateTime::<chrono::Utc>::from(now);
-                datetime.day() == *day as u32
-                    && datetime.hour() == *hour as u32
+                datetime.day() == u32::from(*day)
+                    && datetime.hour() == u32::from(*hour)
                     && datetime.minute() < 5
             }
             ScheduleFrequency::Custom(_) => {
@@ -366,11 +366,11 @@ impl PolicyScheduler {
         // and keep only the required number from each category
 
         let now = SystemTime::now();
-        let _hour_cutoff = now - Duration::from_secs(hourly_hours as u64 * 3600);
-        let _day_cutoff = now - Duration::from_secs(daily_days as u64 * 86400);
-        let _week_cutoff = now - Duration::from_secs(weekly_weeks as u64 * 604800);
-        let _month_cutoff = now - Duration::from_secs(monthly_months as u64 * 2629746); // ~30.44 days
-        let year_cutoff = now - Duration::from_secs(yearly_years as u64 * 31556952); // ~365.25 days
+        let _hour_cutoff = now - Duration::from_secs(u64::from(hourly_hours) * 3600);
+        let _day_cutoff = now - Duration::from_secs(u64::from(daily_days) * 86400);
+        let _week_cutoff = now - Duration::from_secs(u64::from(weekly_weeks) * 604800);
+        let _month_cutoff = now - Duration::from_secs(u64::from(monthly_months) * 2629746); // ~30.44 days
+        let year_cutoff = now - Duration::from_secs(u64::from(yearly_years) * 31556952); // ~365.25 days
 
         snapshots
             .into_iter()
@@ -381,8 +381,10 @@ impl PolicyScheduler {
     /// Parse schedule frequency to duration for next execution
     pub fn parse_schedule(&self, schedule: &ScheduleFrequency) -> CoreResult<Duration> {
         match schedule {
-            ScheduleFrequency::Minutes(minutes) => Ok(Duration::from_secs(*minutes as u64 * 60)),
-            ScheduleFrequency::Hours(hours) => Ok(Duration::from_secs(*hours as u64 * 3600)),
+            ScheduleFrequency::Minutes(minutes) => {
+                Ok(Duration::from_secs(u64::from(*minutes) * 60))
+            }
+            ScheduleFrequency::Hours(hours) => Ok(Duration::from_secs(u64::from(*hours) * 3600)),
             ScheduleFrequency::Daily(_) => Ok(Duration::from_secs(86400)), // 24 hours
             ScheduleFrequency::Weekly { .. } => Ok(Duration::from_secs(604800)), // 7 days
             ScheduleFrequency::Monthly { .. } => Ok(Duration::from_secs(2629746)), // ~30.44 days
@@ -399,11 +401,11 @@ mod tests {
     use super::*;
     use crate::dataset::ZfsDatasetManager;
     use crate::performance::types::SnapshotPolicyMap;
-    use crate::snapshot::policy::{ScheduleFrequency, SnapshotPolicy};
+    use crate::snapshot::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
     use crate::snapshot::types::SnapshotInfo;
     use crate::types::StorageTier;
     use std::collections::HashMap;
-    use std::time::UNIX_EPOCH;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     fn test_scheduler() -> PolicyScheduler {
         let dm = Arc::new(ZfsDatasetManager::new_for_testing());
@@ -419,6 +421,12 @@ mod tests {
         assert!(PolicyScheduler::matches_pattern("xsuffix", "*suffix"));
         assert!(PolicyScheduler::matches_pattern("exact", "exact"));
         assert!(!PolicyScheduler::matches_pattern("no", "yes"));
+    }
+
+    #[test]
+    fn matches_pattern_literal_no_glob() {
+        assert!(PolicyScheduler::matches_pattern("tank/data", "tank/data"));
+        assert!(!PolicyScheduler::matches_pattern("tank/data2", "tank/data"));
     }
 
     #[test]
@@ -525,5 +533,104 @@ mod tests {
         let s = test_scheduler();
         let out = s.apply_custom_retention(Vec::new(), 1, 1, 1, 1, 1);
         assert!(out.is_empty());
+    }
+
+    #[test]
+    fn retention_count_keeps_newest_only() {
+        use std::time::{Duration, UNIX_EPOCH};
+        let _s = test_scheduler();
+        let mut snaps = vec![
+            SnapshotInfo {
+                name: "a".into(),
+                full_name: "ds@a".into(),
+                dataset: "ds".into(),
+                created_at: UNIX_EPOCH + Duration::from_secs(10),
+                size: 1,
+                referenced_size: 1,
+                written_size: 1,
+                compression_ratio: 1.0,
+                properties: HashMap::new(),
+                policy: None,
+                tier: StorageTier::Warm,
+                protected: false,
+                tags: Vec::new(),
+            },
+            SnapshotInfo {
+                name: "b".into(),
+                full_name: "ds@b".into(),
+                dataset: "ds".into(),
+                created_at: UNIX_EPOCH + Duration::from_secs(20),
+                size: 1,
+                referenced_size: 1,
+                written_size: 1,
+                compression_ratio: 1.0,
+                properties: HashMap::new(),
+                policy: None,
+                tier: StorageTier::Warm,
+                protected: false,
+                tags: Vec::new(),
+            },
+        ];
+        snaps.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        let retention = RetentionPolicy::Count(1);
+        let to_delete = match &retention {
+            RetentionPolicy::Count(c) => {
+                if snaps.len() > *c as usize {
+                    let mut sorted = snaps;
+                    sorted.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+                    sorted.into_iter().skip(*c as usize).collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                }
+            }
+            _ => panic!("expected count"),
+        };
+        assert_eq!(to_delete.len(), 1);
+        assert_eq!(to_delete[0].name, "a");
+    }
+
+    #[test]
+    fn retention_duration_selects_snapshots_older_than_cutoff() {
+        use std::time::Duration;
+        let s = test_scheduler();
+        let recent = SnapshotInfo {
+            name: "new".into(),
+            full_name: "ds@new".into(),
+            dataset: "ds".into(),
+            created_at: SystemTime::now(),
+            size: 1,
+            referenced_size: 1,
+            written_size: 1,
+            compression_ratio: 1.0,
+            properties: HashMap::new(),
+            policy: None,
+            tier: StorageTier::Warm,
+            protected: false,
+            tags: Vec::new(),
+        };
+        let old = SnapshotInfo {
+            name: "old".into(),
+            full_name: "ds@old".into(),
+            dataset: "ds".into(),
+            created_at: UNIX_EPOCH,
+            size: 1,
+            referenced_size: 1,
+            written_size: 1,
+            compression_ratio: 1.0,
+            properties: HashMap::new(),
+            policy: None,
+            tier: StorageTier::Warm,
+            protected: false,
+            tags: Vec::new(),
+        };
+        let retention = RetentionPolicy::Duration(Duration::from_secs(3600));
+        let cutoff = SystemTime::now() - Duration::from_secs(3600);
+        let to_delete: Vec<_> = vec![recent.clone(), old.clone()]
+            .into_iter()
+            .filter(|sn| sn.created_at < cutoff)
+            .collect();
+        assert_eq!(to_delete.len(), 1);
+        assert_eq!(to_delete[0].name, "old");
+        let _ = (s, retention); // policy shape documented alongside dataset retention matcher
     }
 }

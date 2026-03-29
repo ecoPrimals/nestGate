@@ -79,16 +79,16 @@ pub mod ports {
     /// where health checks use service-specific mechanisms (k8s probes, ALB targets, etc.)
     pub const HEALTH_CHECK_DEFAULT: u16 = 8081;
 
-    /// Alternate health check port (used by network_defaults)
+    /// Alternate health check port (used by `network_defaults`)
     pub const HEALTH_CHECK: u16 = 8082;
 
     /// Development server port / Storage metrics port
     pub const DEV_SERVER: u16 = 5000;
 
-    /// Storage metrics port (alias for DEV_SERVER)
+    /// Storage metrics port (alias for `DEV_SERVER`)
     pub const STORAGE_DEFAULT: u16 = 5000;
 
-    /// WebSocket port (used by network_defaults)
+    /// WebSocket port (used by `network_defaults`)
     pub const WEBSOCKET_DEFAULT: u16 = 8081;
 
     /// Admin interface port
@@ -165,6 +165,7 @@ pub mod env_keys {
 ///
 /// Environment variable: `NESTGATE_BIND_ADDRESS`
 /// Default: 0.0.0.0 (bind all interfaces)
+#[must_use]
 pub fn get_api_bind_address() -> String {
     env::var(env_keys::BIND_ADDRESS).unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string())
 }
@@ -173,6 +174,7 @@ pub fn get_api_bind_address() -> String {
 ///
 /// Environment variable: `NESTGATE_API_PORT`
 /// Default: 8080
+#[must_use]
 pub fn get_api_port() -> u16 {
     env::var(env_keys::API_PORT)
         .ok()
@@ -184,6 +186,7 @@ pub fn get_api_port() -> u16 {
 ///
 /// Environment variable: `NESTGATE_METRICS_PORT`
 /// Default: 9090
+#[must_use]
 pub fn get_metrics_port() -> u16 {
     env::var(env_keys::METRICS_PORT)
         .ok()
@@ -195,6 +198,7 @@ pub fn get_metrics_port() -> u16 {
 ///
 /// Environment variable: `NESTGATE_HEALTH_PORT`
 /// Default: 8081
+#[must_use]
 pub fn get_health_port() -> u16 {
     env::var(env_keys::HEALTH_PORT)
         .ok()
@@ -206,6 +210,7 @@ pub fn get_health_port() -> u16 {
 ///
 /// Environment variable: `NESTGATE_WEBSOCKET_PORT`
 /// Default: 9000
+#[must_use]
 pub fn get_websocket_port() -> u16 {
     env::var(env_keys::WEBSOCKET_PORT)
         .ok()

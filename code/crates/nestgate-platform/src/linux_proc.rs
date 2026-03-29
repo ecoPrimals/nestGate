@@ -65,7 +65,7 @@ pub fn used_memory_bytes() -> Option<u64> {
 #[must_use]
 pub fn logical_cpu_count() -> usize {
     std::thread::available_parallelism()
-        .map(|n| n.get() as usize)
+        .map(|n| n.get())
         .unwrap_or(1)
 }
 
@@ -89,10 +89,10 @@ fn physical_cpu_count_from_proc_cpuinfo() -> Option<usize> {
             if rest.trim_start().starts_with(':') {
                 physical_id = rest.split(':').nth(1).and_then(|s| s.trim().parse().ok());
             }
-        } else if let Some(rest) = line.strip_prefix("core id") {
-            if rest.trim_start().starts_with(':') {
-                core_id = rest.split(':').nth(1).and_then(|s| s.trim().parse().ok());
-            }
+        } else if let Some(rest) = line.strip_prefix("core id")
+            && rest.trim_start().starts_with(':')
+        {
+            core_id = rest.split(':').nth(1).and_then(|s| s.trim().parse().ok());
         }
     }
     if let (Some(p), Some(c)) = (physical_id, core_id) {

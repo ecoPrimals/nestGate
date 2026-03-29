@@ -36,6 +36,7 @@ pub mod network {
     /// Uses `NESTGATE_API_PORT` for the port when set, otherwise defaults to 8080.
     /// Hostname comes from `NESTGATE_DEV_HOST` / `NESTGATE_DISCOVERY_FALLBACK_HOST` before
     /// falling back to `localhost` (with warning).
+    #[must_use]
     pub fn default_api_base_url() -> String {
         let port = safe_env_var_or_default("NESTGATE_API_PORT", "8080");
         format!("http://{}:{}", discovery_default_host(), port)
@@ -50,6 +51,7 @@ pub mod network {
     /// Default WebSocket URL (environment-driven)
     ///
     /// Uses `NESTGATE_WEBSOCKET_PORT` when set. Hostname follows [`default_api_base_url`].
+    #[must_use]
     pub fn default_websocket_url() -> String {
         let port = safe_env_var_or_default("NESTGATE_WEBSOCKET_PORT", "8080");
         format!("ws://{}:{}/ws", discovery_default_host(), port)
@@ -64,6 +66,7 @@ pub mod network {
     /// Default metrics URL (environment-driven)
     ///
     /// Uses `NESTGATE_METRICS_PORT` when set. Hostname follows [`default_api_base_url`].
+    #[must_use]
     pub fn default_metrics_url() -> String {
         let port = safe_env_var_or_default("NESTGATE_METRICS_PORT", "9090");
         format!("http://{}:{}", discovery_default_host(), port)
@@ -76,6 +79,7 @@ pub mod network {
     pub const DEFAULT_METRICS_URL: &str = "http://localhost:9090";
 
     /// Default web UI URL (environment-driven)
+    #[must_use]
     pub fn default_web_ui_url() -> String {
         let port = safe_env_var_or_default("NESTGATE_WEB_UI_PORT", "3000");
         format!("http://{}:{}", discovery_default_host(), port)
@@ -123,19 +127,19 @@ pub mod network {
     )]
     #[must_use]
     pub fn build_api_url() -> String {
-        safe_env_var_or_default("NESTGATE_API_URL", DEFAULT_API_BASE_URL).to_string()
+        safe_env_var_or_default("NESTGATE_API_URL", DEFAULT_API_BASE_URL)
     }
 
     /// Build WebSocket URL from environment or default
     #[must_use]
     pub fn build_websocket_url() -> String {
-        safe_env_var_or_default("NESTGATE_WS_URL", DEFAULT_WEBSOCKET_URL).to_string()
+        safe_env_var_or_default("NESTGATE_WS_URL", DEFAULT_WEBSOCKET_URL)
     }
 
     /// Build metrics URL from environment or default
     #[must_use]
     pub fn build_metrics_url() -> String {
-        safe_env_var_or_default("NESTGATE_METRICS_URL", DEFAULT_METRICS_URL).to_string()
+        safe_env_var_or_default("NESTGATE_METRICS_URL", DEFAULT_METRICS_URL)
     }
 
     /// Build generic endpoint from environment
@@ -201,7 +205,7 @@ pub mod performance {
     //! ## Network Buffer (8192 bytes)
     //! Optimized for network I/O operations:
     //! - Balances memory usage vs system call overhead
-    //! - Smaller than canonical::performance::NETWORK_BUFFER_SIZE (64KB) for memory efficiency
+    //! - Smaller than `canonical::performance::NETWORK_BUFFER_SIZE` (64KB) for memory efficiency
     //! - Good for moderate throughput scenarios
     //!
     //! ## Default Buffer (4096 bytes)
@@ -320,16 +324,16 @@ pub mod concurrency {
 
 pub mod sizes {
     //! Size and capacity defaults
-    //! **CONSOLIDATED**: Buffer sizes now reference hardcoding::limits
+    //! **CONSOLIDATED**: Buffer sizes now reference `hardcoding::limits`
 
-    /// Default buffer size - **CONSOLIDATED** to hardcoding::limits
+    /// Default buffer size - **CONSOLIDATED** to `hardcoding::limits`
     pub const DEFAULT_BUFFER_SIZE: usize =
         crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
 
     /// Default cache size (128MB in bytes)
     pub const DEFAULT_CACHE_SIZE: u64 = 128 * 1024 * 1024;
 
-    /// Default page size (4KB) - **CONSOLIDATED** to hardcoding::limits
+    /// Default page size (4KB) - **CONSOLIDATED** to `hardcoding::limits`
     pub const DEFAULT_PAGE_SIZE: usize = crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
 
     /// Default record size

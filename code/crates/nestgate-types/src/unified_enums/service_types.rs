@@ -11,7 +11,7 @@ use std::fmt;
 /// **THE** `ServiceType` - unified across all modules
 /// Replaces 2+ fragmented `ServiceType` definitions
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedService
+/// Types of `UnifiedService`
 pub enum UnifiedServiceType {
     /// AI and machine learning services
     AI,
@@ -73,7 +73,7 @@ impl fmt::Display for UnifiedServiceType {
 /// **THE** `HealthStatus` - unified across all modules
 /// Replaces 4+ fragmented `HealthStatus` definitions across health checks, monitoring, etc.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Status values for UnifiedHealth
+/// Status values for `UnifiedHealth`
 pub enum UnifiedHealthStatus {
     /// Service is healthy and operational
     Healthy,
@@ -129,7 +129,7 @@ impl fmt::Display for UnifiedHealthStatus {
 
 // ==================== SECTION ====================
 
-/// **THE** `ServiceState` - unified across all modules  
+/// **THE** `ServiceState` - unified across all modules\
 /// Replaces 6+ fragmented `ServiceStatus` enum definitions across diagnostics, network, etc.
 /// Note: This is different from `UnifiedServiceStatus` struct which contains metadata
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -183,7 +183,7 @@ impl fmt::Display for UnifiedServiceState {
 /// **THE** `ConnectionStatus` - unified across all modules
 /// Replaces `ConnectionStatus` definitions across network and service modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Status values for UnifiedConnection
+/// Status values for `UnifiedConnection`
 pub enum UnifiedConnectionStatus {
     /// Connection is active and operational
     Connected,

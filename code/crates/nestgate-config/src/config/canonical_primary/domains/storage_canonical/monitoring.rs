@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive monitoring including metrics collection, alerting,
 /// logging, health checks, and diagnostics for storage operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageMonitoring
+/// Configuration for `StorageMonitoring`
 pub struct StorageMonitoringConfig {
     /// Metrics collection configuration.
     pub metrics: MetricsStorageConfig,
@@ -28,7 +28,7 @@ pub struct StorageMonitoringConfig {
 ///
 /// Controls whether storage metrics are collected and exposed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MetricsStorage
+/// Configuration for `MetricsStorage`
 pub struct MetricsStorageConfig {
     /// Whether metrics collection is enabled (default: true).
     pub enabled: bool,
@@ -38,7 +38,7 @@ pub struct MetricsStorageConfig {
 ///
 /// Controls whether alerts are generated for storage issues.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AlertingStorage
+/// Configuration for `AlertingStorage`
 pub struct AlertingStorageConfig {
     /// Whether alerting is enabled (default: false for development).
     pub enabled: bool,
@@ -48,7 +48,7 @@ pub struct AlertingStorageConfig {
 ///
 /// Controls logging of storage access and operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for LoggingStorage
+/// Configuration for `LoggingStorage`
 pub struct LoggingStorageConfig {
     /// Whether storage logging is enabled (default: true).
     pub enabled: bool,
@@ -58,7 +58,7 @@ pub struct LoggingStorageConfig {
 ///
 /// Controls periodic health checks of storage systems.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for HealthCheckStorage
+/// Configuration for `HealthCheckStorage`
 pub struct HealthCheckStorageConfig {
     /// Whether health checks are enabled (default: true).
     pub enabled: bool,
@@ -122,7 +122,7 @@ impl StorageMonitoringConfig {
 
     /// Merge this configuration with another, preferring values from `other`.
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 
@@ -131,7 +131,7 @@ impl StorageMonitoringConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

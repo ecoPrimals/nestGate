@@ -8,7 +8,7 @@
 //! This module handles:
 //! - Storage device abstraction (from punch cards to quantum storage)
 //! - Era classification (Prehistoric → Quantum)
-//! - Technology types (PunchCard → Quantum)
+//! - Technology types (`PunchCard` → Quantum)
 //! - Performance tiers and physical dimensions
 //! - Device detection and discovery
 
@@ -50,7 +50,7 @@ pub enum StorageEra {
     Magnetic,
     /// 1990s-2010s: Digital era (HDD/SSD)
     Digital,
-    /// 2010s-present: Modern NVMe era
+    /// 2010s-present: Modern `NVMe` era
     Modern,
     /// 2020s+: Biological/DNA storage era
     Biological,
@@ -73,7 +73,7 @@ pub enum StorageTechnology {
     HardDisk,
     /// Solid state drive technology (2000s-present)
     SolidState,
-    /// NVMe technology (2010s-present)
+    /// `NVMe` technology (2010s-present)
     NVMe,
     /// DNA storage technology (experimental/future)
     Dna,
@@ -92,7 +92,7 @@ pub enum PerformanceTier {
     Medium,
     /// High performance (hot storage, databases)
     High,
-    /// Ultra performance (NVMe, in-memory)
+    /// Ultra performance (`NVMe`, in-memory)
     Ultra,
 }
 
@@ -123,7 +123,7 @@ impl TemporalDevice {
     /// Returns error if:
     /// - System resources are unavailable
     /// - Detection fails due to permissions
-    pub fn auto_detect_any_storage() -> Result<Vec<TemporalDevice>> {
+    pub fn auto_detect_any_storage() -> Result<Vec<Self>> {
         let mut devices = Vec::new();
 
         // Detect legacy devices
@@ -141,7 +141,7 @@ impl TemporalDevice {
     /// Detect legacy storage devices
     ///
     /// Scans for prehistoric and magnetic era devices.
-    fn detect_legacy_devices() -> Result<Vec<TemporalDevice>> {
+    const fn detect_legacy_devices() -> Result<Vec<Self>> {
         // FUTURE: Implement legacy device detection if hardware support needed
         // - Punch card readers (if any still exist)
         // - Floppy disk drives
@@ -151,8 +151,8 @@ impl TemporalDevice {
 
     /// Detect modern storage devices
     ///
-    /// Scans for digital and modern era devices (HDD, SSD, NVMe).
-    fn detect_modern_devices() -> Result<Vec<TemporalDevice>> {
+    /// Scans for digital and modern era devices (HDD, SSD, `NVMe`).
+    const fn detect_modern_devices() -> Result<Vec<Self>> {
         // FUTURE: Implement modern device detection when physical hardware support needed
         // - Hard disk drives (HDD)
         // - Solid state drives (SSD)
@@ -163,7 +163,7 @@ impl TemporalDevice {
     /// Detect future/experimental storage devices
     ///
     /// Scans for biological and quantum storage devices.
-    fn detect_future_devices() -> Result<Vec<TemporalDevice>> {
+    const fn detect_future_devices() -> Result<Vec<Self>> {
         // FUTURE: Implement future storage technologies when available
         // - DNA storage systems
         // - Quantum storage (when available)

@@ -20,7 +20,7 @@ use crate::types::prediction::{
 
 // Type aliases to reduce complexity
 type AnalysisCache = tokio::sync::RwLock<HashMap<String, (FileAnalysis, SystemTime)>>;
-/// Type alias for PatternHistory
+/// Type alias for `PatternHistory`
 type PatternHistory = tokio::sync::RwLock<HashMap<String, Vec<AccessEvent>>>;
 
 /// File characteristics structure
@@ -509,7 +509,7 @@ impl DatasetAnalyzer {
         }
 
         // Get access patterns if available (simplified for canonical implementation)
-        let total_accesses = if !file_analyses.is_empty() { 10 } else { 0 };
+        let total_accesses = if file_analyses.is_empty() { 0 } else { 10 };
 
         Ok(AccessPattern {
             accesses_last_24h: total_accesses,
@@ -538,7 +538,7 @@ impl DatasetAnalyzer {
         }
 
         // Count files by size category
-        let large_files = if size > 100 * 1024 * 1024 { 1 } else { 0 };
+        let large_files = i32::from(size > 100 * 1024 * 1024);
 
         if large_files > 0 {
             recommendations.push("Consider moving large files to cold storage tier".to_string());
@@ -926,5 +926,65 @@ mod tests {
         };
         let serialized = serde_json::to_string(&summary).unwrap();
         assert!(serialized.contains("dataset_name"));
+    }
+
+    #[tokio::test]
+    async fn test_dataset_analyzer_aggregate_patterns_non_empty() {
+        let analyzer = DatasetAnalyzer::new();
+        let fa = FileAnalysis {
+            file_path: "/tmp/a".into(),
+            size_bytes: 500,
+            created_at: SystemTime::now(),
+            modified_at: SystemTime::now(),
+            accessed_at: SystemTime::now(),
+            file_type: "file".into(),
+        };
+        let out = analyzer
+            .aggregate_patterns(&[&fa], &AccessPattern::default())
+            .await
+            .expect("aggregate");
+        assert_eq!(out.total_accesses, 10);
+        assert_eq!(out.accesses_last_24h, 10);
+    }
+
+    #[test]
+    fn pattern_analyzer_recommend_tier_by_extension() {
+        let pa = PatternAnalyzer::new();
+        assert_eq!(pa.recommend_tier("/var/log/app.log"), StorageTier::Cold);
+        assert_eq!(pa.recommend_tier("doc/readme.pdf"), StorageTier::Warm);
+        assert_eq!(pa.recommend_tier("video.mp4"), StorageTier::Hot);
+    }
+
+    #[test]
+    fn dataset_analyzer_predict_optimal_tier_paths() {
+        let da = DatasetAnalyzer::new();
+        assert_eq!(
+            da.predict_optimal_tier("/archive/backup").unwrap(),
+            StorageTier::Cold
+        );
+        assert_eq!(
+            da.predict_optimal_tier("/active/current").unwrap(),
+            StorageTier::Hot
+        );
+        assert_eq!(
+            da.predict_optimal_tier("/data/misc").unwrap(),
+            StorageTier::Warm
+        );
+    }
+
+    #[tokio::test]
+    async fn file_analyzer_analyze_file_characteristics_compressible() {
+        let dir = tempfile::tempdir().expect("tmp");
+        let p = dir.path().join("note.txt");
+        tokio::fs::write(&p, b"hello").await.expect("write");
+        let fa = FileAnalyzer::new();
+        let ch = fa
+            .analyze_file_characteristics(p.to_str().unwrap())
+            .await
+            .expect("chars");
+        assert!(matches!(
+            ch.size_category,
+            crate::types::prediction::SizeCategory::Small
+        ));
     }
 }

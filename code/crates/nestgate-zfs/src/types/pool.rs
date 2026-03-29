@@ -143,13 +143,13 @@ pub enum PoolStatus {
 impl From<PoolStatus> for PoolHealth {
     fn from(status: PoolStatus) -> Self {
         match status {
-            PoolStatus::Healthy | PoolStatus::Online => PoolHealth::Healthy,
-            PoolStatus::Degraded => PoolHealth::Warning,
-            PoolStatus::Critical | PoolStatus::Faulted => PoolHealth::Critical,
+            PoolStatus::Healthy | PoolStatus::Online => Self::Healthy,
+            PoolStatus::Degraded => Self::Warning,
+            PoolStatus::Critical | PoolStatus::Faulted => Self::Critical,
             PoolStatus::Offline
             | PoolStatus::Removed
             | PoolStatus::Unavailable
-            | PoolStatus::Unknown => PoolHealth::Unknown,
+            | PoolStatus::Unknown => Self::Unknown,
         }
     }
 }
@@ -157,12 +157,12 @@ impl From<PoolStatus> for PoolHealth {
 impl From<PoolStatus> for PoolState {
     fn from(status: PoolStatus) -> Self {
         match status {
-            PoolStatus::Online | PoolStatus::Healthy => PoolState::Online,
-            PoolStatus::Degraded => PoolState::Degraded,
-            PoolStatus::Faulted | PoolStatus::Critical => PoolState::Faulted,
-            PoolStatus::Offline => PoolState::Offline,
-            PoolStatus::Removed => PoolState::Removed,
-            PoolStatus::Unavailable | PoolStatus::Unknown => PoolState::Unavailable,
+            PoolStatus::Online | PoolStatus::Healthy => Self::Online,
+            PoolStatus::Degraded => Self::Degraded,
+            PoolStatus::Faulted | PoolStatus::Critical => Self::Faulted,
+            PoolStatus::Offline => Self::Offline,
+            PoolStatus::Removed => Self::Removed,
+            PoolStatus::Unavailable | PoolStatus::Unknown => Self::Unavailable,
         }
     }
 }
@@ -202,5 +202,54 @@ pub struct PoolStats {
 }
 
 #[cfg(test)]
-#[path = "pool_strategic_tests.rs"]
-mod pool_strategic_tests;
+mod round5_pool_impl_tests {
+    use super::*;
+
+    #[test]
+    fn round5_pool_info_default_fields() {
+        let p = PoolInfo::default();
+        assert!(p.name.is_empty());
+        assert_eq!(p.health, PoolHealth::Unknown);
+        assert_eq!(p.capacity.deduplication_ratio, 1.0);
+    }
+
+    #[test]
+    fn round5_pool_capacity_default_impl() {
+        let c = PoolCapacity::default();
+        assert_eq!(c.total, 0);
+        assert_eq!(c.utilization_percent, 0.0);
+    }
+
+    #[test]
+    fn round5_pool_status_to_health_impl() {
+        let h: PoolHealth = PoolStatus::Healthy.into();
+        assert_eq!(h, PoolHealth::Healthy);
+        let h: PoolHealth = PoolStatus::Degraded.into();
+        assert_eq!(h, PoolHealth::Warning);
+    }
+
+    #[test]
+    fn round5_pool_status_to_state_impl() {
+        let s: PoolState = PoolStatus::Online.into();
+        assert!(matches!(s, PoolState::Online));
+        let s: PoolState = PoolStatus::Faulted.into();
+        assert!(matches!(s, PoolState::Faulted));
+    }
+
+    #[test]
+    fn round5_pool_health_serde_roundtrip() {
+        let h = PoolHealth::Critical;
+        let json = serde_json::to_string(&h).unwrap();
+        let back: PoolHealth = serde_json::from_str(&json).unwrap();
+        assert_eq!(h, back);
+    }
+
+    #[test]
+    fn round5_pool_info_serde_roundtrip() {
+        let mut p = PoolInfo::default();
+        p.name = "tank".to_string();
+        let json = serde_json::to_string(&p).unwrap();
+        let back: PoolInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.name, "tank");
+    }
+}

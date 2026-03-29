@@ -29,7 +29,7 @@ use crate::dev_stubs::zfs::PoolOperations;
 ///
 /// Request structure for creating a new universal storage pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for CreateUniversalPool operation
+/// Request parameters for `CreateUniversalPool` operation
 pub struct CreateUniversalPoolRequest {
     /// Pool name to create
     pub name: String,

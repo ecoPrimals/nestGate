@@ -143,6 +143,7 @@ impl DataDescriptor {
     /// # Returns
     ///
     /// New data descriptor with default access requirements
+    #[must_use]
     pub fn new(id: String, data_type: DataType, size_bytes: u64, source_location: String) -> Self {
         Self {
             id,
@@ -173,6 +174,7 @@ impl DataDescriptor {
     /// # Returns
     ///
     /// Optional reference to metadata value
+    #[must_use]
     pub fn get_metadata(&self, key: &str) -> Option<&String> {
         self.metadata.get(key)
     }
@@ -182,7 +184,8 @@ impl DataDescriptor {
     /// # Returns
     ///
     /// `true` if data type is genomic-related
-    pub fn is_genomic(&self) -> bool {
+    #[must_use]
+    pub const fn is_genomic(&self) -> bool {
         matches!(
             self.data_type,
             DataType::Genome | DataType::Sequence | DataType::Variants | DataType::Annotations
@@ -194,7 +197,8 @@ impl DataDescriptor {
     /// # Returns
     ///
     /// `true` if data type is AI/ML-related
-    pub fn is_ml(&self) -> bool {
+    #[must_use]
+    pub const fn is_ml(&self) -> bool {
         matches!(
             self.data_type,
             DataType::Model(_) | DataType::Dataset(_) | DataType::Weights | DataType::Configuration
@@ -206,6 +210,7 @@ impl DataDescriptor {
     /// # Returns
     ///
     /// Formatted size string (e.g., "1.5 GB")
+    #[must_use]
     pub fn size_human_readable(&self) -> String {
         const KB: u64 = 1024;
         const MB: u64 = KB * 1024;

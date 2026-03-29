@@ -40,8 +40,8 @@ pub fn is_dev_environment() -> bool {
 }
 /// Get the appropriate storage service for the current environment
 #[cfg(feature = "dev-environment-fallbacks")]
-pub async fn create_storage_service(
-) -> nestgate_core::error::CanonicalResult<std::sync::Arc<DevEnvironmentStorageService>> {
+pub async fn create_storage_service()
+-> nestgate_core::error::CanonicalResult<std::sync::Arc<DevEnvironmentStorageService>> {
     match HardwareEnvironmentDetector::detect_capabilities().await {
         HardwareCapabilities::NativeZfs => {
             tracing::info!("🔧 Native ZFS hardware detected");
@@ -78,7 +78,7 @@ cargo build --features dev-environment-fallbacks
 
 /// Runtime information about feature availability
 #[must_use]
-pub fn feature_info() -> FeatureInfo {
+pub const fn feature_info() -> FeatureInfo {
     FeatureInfo {
         dev_environment_fallbacks: cfg!(feature = "dev-environment-fallbacks"),
         hardware_detection: cfg!(feature = "hardware-detection"),

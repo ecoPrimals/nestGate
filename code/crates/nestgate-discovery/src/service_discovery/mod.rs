@@ -21,7 +21,7 @@ mod discovery_error_tests; // Nov 23, 2025 - P1 test expansion
 mod service_discovery_edge_cases; // Nov 23, 2025 - P1-5 edge case tests // ✅ NEW: Dynamic endpoint resolution system
 
 // Re-export all public types for backward compatibility
-pub use dynamic_endpoints::{resolve_service_endpoint, DynamicEndpointResolver};
+pub use dynamic_endpoints::{DynamicEndpointResolver, resolve_service_endpoint};
 pub use dynamic_endpoints_config::{DynamicEndpointsConfig, SharedEndpointsConfig}; // ✅ NEW: Export config
 pub use types::*; // ✅ NEW: Export dynamic endpoint functionality
 

@@ -8,6 +8,7 @@
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::future::Future;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::net::UnixStream;
@@ -278,7 +279,11 @@ where
 /// Trait for handling RPC method calls.
 pub trait RpcMethodHandler {
     /// Handle RPC method
-    async fn handle_method(&self, method: &str, params: Value) -> Result<Value>;
+    fn handle_method(
+        &self,
+        method: &str,
+        params: Value,
+    ) -> impl Future<Output = Result<Value>> + Send;
 }
 
 #[cfg(test)]

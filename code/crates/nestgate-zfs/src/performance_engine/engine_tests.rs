@@ -8,6 +8,9 @@ use super::types::{AlertSeverity, AlertType, PerformanceAlert};
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use std::sync::Arc;
 
+#[allow(deprecated)]
+use super::types::PerformanceEngineConfig;
+
 // ==================== HELPER FUNCTIONS ====================
 
 /// Create a test engine with default configuration
@@ -20,6 +23,16 @@ async fn create_test_engine() -> PerformanceOptimizationEngine {
 }
 
 // ==================== CONSTRUCTOR TESTS ====================
+
+#[test]
+fn performance_engine_config_default_values() {
+    let c = PerformanceEngineConfig::default();
+    assert_eq!(c.monitoring_interval.as_secs(), 5);
+    assert_eq!(c.optimization_interval.as_secs(), 30);
+    assert_eq!(c.bottleneck_detection_interval.as_secs(), 10);
+    assert_eq!(c.max_concurrent_optimizations, 3);
+    assert!(c.enable_ai_guidance);
+}
 
 #[tokio::test]
 async fn test_engine_new_creates_valid_instance() {
@@ -73,6 +86,13 @@ async fn test_handle_performance_alert() {
     };
     let response = engine.handle_performance_alert(alert);
     assert!(response.is_ok());
+}
+
+#[tokio::test]
+async fn optimize_performance_completes_without_panic() {
+    let engine = create_test_engine().await;
+    let out = engine.optimize_performance().await.expect("optimize");
+    assert!(!out.recommendations.is_empty());
 }
 
 // ==================== ASYNC TESTS ====================

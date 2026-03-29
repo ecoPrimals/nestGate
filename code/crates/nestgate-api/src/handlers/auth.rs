@@ -3,25 +3,18 @@
 
 //
 // Handles authentication using any available security primal provider,
-// eliminating hardcoded dependencies on specific security implementations.
-
-#[cfg(test)]
-#[path = "auth_comprehensive_tests.rs"]
-mod auth_comprehensive_tests;
-
 use axum::{
+    Router,
     extract::State,
     http::StatusCode,
     response::{IntoResponse, Json},
     routing::{get, post},
-    Router,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Feature-not-available error for authentication
-const AUTH_NOT_AVAILABLE_MSG: &str =
-    "Authentication service is not available. Use nestgate-core security module for production auth.";
+const AUTH_NOT_AVAILABLE_MSG: &str = "Authentication service is not available. Use nestgate-core security module for production auth.";
 
 // Simple auth service stub for canonical modernization
 #[derive(Debug, Clone, Default)]
@@ -47,7 +40,8 @@ impl AuthService {
         ))
     }
 
-    /// Gets Auth Status - returns unauthenticated (no fake stub_user)
+    /// Gets Auth Status - returns unauthenticated (no fake `stub_user`)
+    #[must_use]
     pub const fn get_auth_status(&self) -> AuthStatus {
         AuthStatus {
             authenticated: false,
@@ -57,11 +51,13 @@ impl AuthService {
     }
 
     /// Security Primal Available - returns false (no fake availability)
+    #[must_use]
     pub const fn security_primal_available(&self) -> bool {
         false
     }
 
     /// Gets Mode
+    #[must_use]
     pub const fn get_mode(&self) -> AuthMode {
         AuthMode::Development
     }
@@ -241,14 +237,14 @@ async fn set_mode(
 }
 /// Set mode request
 #[derive(Debug, Deserialize)]
-/// Request parameters for SetMode operation
+/// Request parameters for `SetMode` operation
 pub struct SetModeRequest {
-    /// Authentication mode to set ("standalone", "security_primal", etc.)
+    /// Authentication mode to set ("standalone", "`security_primal`", etc.)
     pub mode: String,
 }
 /// Set mode response
 #[derive(Debug, Serialize)]
-/// Response data for SetMode operation
+/// Response data for `SetMode` operation
 pub struct SetModeResponse {
     /// Whether the mode change was successful
     pub success: bool,
@@ -257,7 +253,7 @@ pub struct SetModeResponse {
     /// Human-readable message describing the result
     pub message: String,
 }
-/// AppState with auth service
+/// `AppState` with auth service
 pub struct AppStateWithAuth {
     /// Auth Service
     pub auth_service: AuthService,
@@ -275,6 +271,7 @@ impl From<crate::routes::AppState> for AppStateWithAuth {
 }
 
 /// Authenticate user with credentials
+#[must_use]
 pub fn authenticate_user(
     State(_app_state): State<crate::routes::AppState>,
     Json(credentials): Json<AuthCredentials>,

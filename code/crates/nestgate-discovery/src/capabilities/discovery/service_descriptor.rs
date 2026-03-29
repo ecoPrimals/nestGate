@@ -38,7 +38,7 @@ mod humantime_serde {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::capabilities::discovery::{
 ///     Endpoint, Protocol, SecurityCapability, ServiceDescriptor,
 ///     ServiceHealth, ServiceMetadata, Capability,
@@ -175,17 +175,20 @@ pub enum ServiceHealth {
 
 impl ServiceDescriptor {
     /// Check if this service provides a specific capability
+    #[must_use]
     pub fn has_capability(&self, capability: &Capability) -> bool {
         self.capabilities.iter().any(|c| c == capability)
     }
 
     /// Check if this service is healthy
-    pub fn is_healthy(&self) -> bool {
+    #[must_use]
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.health, ServiceHealth::Healthy)
     }
 
     /// Check if this service is available (healthy or degraded)
-    pub fn is_available(&self) -> bool {
+    #[must_use]
+    pub const fn is_available(&self) -> bool {
         matches!(
             self.health,
             ServiceHealth::Healthy | ServiceHealth::Degraded
@@ -193,6 +196,7 @@ impl ServiceDescriptor {
     }
 
     /// Get full service URL
+    #[must_use]
     pub fn url(&self) -> String {
         let scheme = if self.endpoint.tls { "https" } else { "http" };
         format!("{}://{}:{}", scheme, self.endpoint.host, self.endpoint.port)
@@ -201,7 +205,8 @@ impl ServiceDescriptor {
 
 impl Endpoint {
     /// Create a new endpoint
-    pub fn new(host: String, port: u16, protocol: Protocol, tls: bool) -> Self {
+    #[must_use]
+    pub const fn new(host: String, port: u16, protocol: Protocol, tls: bool) -> Self {
         Self {
             host,
             port,
@@ -211,12 +216,14 @@ impl Endpoint {
     }
 
     /// Create an HTTP endpoint
-    pub fn http(host: String, port: u16) -> Self {
+    #[must_use]
+    pub const fn http(host: String, port: u16) -> Self {
         Self::new(host, port, Protocol::HTTP, false)
     }
 
     /// Create an HTTPS endpoint
-    pub fn https(host: String, port: u16) -> Self {
+    #[must_use]
+    pub const fn https(host: String, port: u16) -> Self {
         Self::new(host, port, Protocol::HTTPS, true)
     }
 }

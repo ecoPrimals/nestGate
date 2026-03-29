@@ -9,10 +9,10 @@
 //! **MODERN CONCURRENCY**: Event-driven network simulation with real timeouts,
 //! channels, and atomics instead of sleep() for true async behavior.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
-use tokio::sync::{mpsc, Notify, Semaphore};
+use tokio::sync::{Notify, Semaphore, mpsc};
 use tokio::time::timeout;
 use tracing::{debug, info, warn};
 

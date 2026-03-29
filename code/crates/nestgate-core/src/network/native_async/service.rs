@@ -24,7 +24,8 @@ pub struct NativeAsyncNetworkService {
     /// Connections
     pub connections: HashMap<String, String>,
     service_id: String,
-    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")]
+    // Framework field - intentionally unused
     state: UnifiedServiceState,
 }
 /// Configuration for native async network service

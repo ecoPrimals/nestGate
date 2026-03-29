@@ -56,7 +56,7 @@ struct StreamHandle {
 /// JSON-RPC service implementation for remote procedure calls.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Base URL field used for service configuration
-/// Service implementation for JsonRpc
+/// Service implementation for `JsonRpc`
 pub struct JsonRpcService {
     /// Service base URL for RPC endpoints
     base_url: String,

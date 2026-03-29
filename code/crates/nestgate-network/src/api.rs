@@ -6,7 +6,7 @@
 
 //! Api module
 
-use axum::{extract::State, http::StatusCode, response::Json, routing::get, Router};
+use axum::{Router, extract::State, http::StatusCode, response::Json, routing::get};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -20,7 +20,7 @@ use nestgate_core::error::{NestGateError, Result as NestGateResult};
 use tracing::info;
 
 /// Service status enumeration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Status values for Service
 pub enum ServiceStatus {
     /// Starting
@@ -76,7 +76,7 @@ impl OrchestrationCapability {
     ///
     /// NOTE: HTTP removed - use Unix sockets via Songbird
     #[must_use]
-    pub fn new(base_url: String) -> Self {
+    pub const fn new(base_url: String) -> Self {
         Self { base_url }
     }
 

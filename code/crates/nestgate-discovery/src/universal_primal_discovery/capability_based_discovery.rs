@@ -47,9 +47,9 @@ pub enum PrimalCapability {
 /// NFS protocol version
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub enum NfsVersion {
-    /// NFSv3
+    /// `NFSv3`
     V3,
-    /// NFSv4
+    /// `NFSv4`
     V4,
 }
 
@@ -81,7 +81,8 @@ impl PrimalId {
     /// - Testing with specific IDs
     ///
     /// For runtime discovery, prefer `from_environment()`.
-    pub fn from_string(id: String) -> Self {
+    #[must_use]
+    pub const fn from_string(id: String) -> Self {
         Self(id)
     }
 
@@ -107,10 +108,11 @@ impl PrimalId {
             .map_err(|e| NestGateError::internal(format!("System time error: {e}")))?
             .as_nanos();
 
-        Ok(Self(format!("{}-{}-{}", hostname, pid, timestamp)))
+        Ok(Self(format!("{hostname}-{pid}-{timestamp}")))
     }
 
     /// Get the ID string
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -143,10 +145,10 @@ pub enum Protocol {
 impl std::fmt::Display for Protocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Protocol::Tcp => write!(f, "tcp"),
-            Protocol::Udp => write!(f, "udp"),
-            Protocol::Http => write!(f, "http"),
-            Protocol::Https => write!(f, "https"),
+            Self::Tcp => write!(f, "tcp"),
+            Self::Udp => write!(f, "udp"),
+            Self::Http => write!(f, "http"),
+            Self::Https => write!(f, "https"),
         }
     }
 }
@@ -170,8 +172,9 @@ pub enum HealthStatus {
 
 impl HealthStatus {
     /// Check if status is healthy
-    pub fn is_healthy(&self) -> bool {
-        matches!(self, HealthStatus::Healthy)
+    #[must_use]
+    pub const fn is_healthy(&self) -> bool {
+        matches!(self, Self::Healthy)
     }
 }
 
@@ -214,6 +217,7 @@ pub struct DiscoveryQuery {
 
 impl DiscoveryQuery {
     /// Query for capability
+    #[must_use]
     pub fn for_capability(capability: PrimalCapability) -> Self {
         Self {
             required_capabilities: vec![capability],
@@ -256,7 +260,8 @@ pub struct ServiceEndpoint {
 
 impl ServiceEndpoint {
     /// Create from address
-    pub fn tcp(address: SocketAddr) -> Self {
+    #[must_use]
+    pub const fn tcp(address: SocketAddr) -> Self {
         Self {
             address,
             protocol: Protocol::Tcp,
@@ -274,6 +279,7 @@ impl ServiceEndpoint {
     }
 
     /// Get connection URL
+    #[must_use]
     pub fn url(&self) -> String {
         match self.protocol {
             Protocol::Http => format!(
@@ -364,7 +370,7 @@ impl CapabilityDiscoveryManager {
         info!("Discovered available port: {}", addr.port());
 
         Ok(BindingInfo {
-            address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            address: IpAddr::V4(Ipv4Addr::LOCALHOST),
             port: addr.port(),
             protocol: Protocol::Tcp,
         })
@@ -468,10 +474,10 @@ impl CapabilityDiscoveryManager {
         }
 
         // Check latency if specified
-        if let (Some(max_latency), Some(latency)) = (query.max_latency, peer.latency) {
-            if latency > max_latency {
-                return false;
-            }
+        if let (Some(max_latency), Some(latency)) = (query.max_latency, peer.latency)
+            && latency > max_latency
+        {
+            return false;
         }
 
         true
@@ -519,9 +525,11 @@ mod tests {
         let self_knowledge = manager.self_knowledge.read().await;
 
         assert_eq!(self_knowledge.capabilities.len(), 2);
-        assert!(self_knowledge
-            .capabilities
-            .contains(&PrimalCapability::ZfsStorage));
+        assert!(
+            self_knowledge
+                .capabilities
+                .contains(&PrimalCapability::ZfsStorage)
+        );
     }
 
     #[tokio::test]

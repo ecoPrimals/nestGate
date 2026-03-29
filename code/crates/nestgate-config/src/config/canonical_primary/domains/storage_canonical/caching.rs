@@ -11,7 +11,7 @@ use std::time::Duration;
 /// Provides comprehensive caching settings including cache sizing, eviction policies,
 /// consistency guarantees, performance tuning, and monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageCaching
+/// Configuration for `StorageCaching`
 pub struct StorageCachingConfig {
     /// Whether caching is enabled (default: true).
     pub enabled: bool,
@@ -59,7 +59,7 @@ pub enum CacheEvictionPolicy {
 ///
 /// Controls cache coherency and consistency guarantees.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CacheConsistency
+/// Configuration for `CacheConsistency`
 pub struct CacheConsistencyConfig {
     /// Whether cache consistency checks are enabled (default: true).
     pub enabled: bool,
@@ -69,7 +69,7 @@ pub struct CacheConsistencyConfig {
 ///
 /// Controls performance optimizations for cache operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CachePerformance
+/// Configuration for `CachePerformance`
 pub struct CachePerformanceConfig {
     /// Whether performance optimizations are enabled (default: true).
     pub enabled: bool,
@@ -79,7 +79,7 @@ pub struct CachePerformanceConfig {
 ///
 /// Controls monitoring and metrics for cache operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CacheMonitoring
+/// Configuration for `CacheMonitoring`
 pub struct CacheMonitoringConfig {
     /// Whether cache monitoring is enabled (default: false).
     pub enabled: bool,
@@ -137,7 +137,7 @@ impl StorageCachingConfig {
 
     /// Merge this configuration with another, preferring values from `other`.
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 
@@ -146,7 +146,7 @@ impl StorageCachingConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

@@ -37,7 +37,7 @@ impl CacheConfig {
     ///
     /// # Errors
     ///
-    /// Returns an error if NESTGATE_REDIS_HOST is not set. Redis is an external service
+    /// Returns an error if `NESTGATE_REDIS_HOST` is not set. Redis is an external service
     /// and must be explicitly configured - no hardcoded localhost assumption.
     ///
     /// # Philosophy
@@ -130,10 +130,12 @@ mod tests {
         temp_env::with_vars([("NESTGATE_REDIS_HOST", None::<&str>)], || {
             let result = CacheConfig::from_environment();
             assert!(result.is_err());
-            assert!(result
-                .unwrap_err()
-                .to_string()
-                .contains("NESTGATE_REDIS_HOST"));
+            assert!(
+                result
+                    .unwrap_err()
+                    .to_string()
+                    .contains("NESTGATE_REDIS_HOST")
+            );
         });
     }
 

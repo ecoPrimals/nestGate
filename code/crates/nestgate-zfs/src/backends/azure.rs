@@ -45,7 +45,7 @@
 
 use crate::zero_cost_zfs_operations::ZeroCostZfsOperations;
 use nestgate_core::canonical_types::StorageTier;
-use nestgate_core::{config_error, NestGateError, Result};
+use nestgate_core::{NestGateError, Result, config_error};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -90,7 +90,7 @@ struct AzureClientWrapper {
 /// **EVOLUTION**: Tracks configuration provenance for audit and dynamic reconfiguration
 #[derive(Debug, Clone)]
 enum ConfigSource {
-    /// Discovered via NestGate capability system (preferred)
+    /// Discovered via `NestGate` capability system (preferred)
     CapabilityDiscovered {
         /// Service descriptor from discovery (reserved for health monitoring and failover)
         #[allow(dead_code)] // Will be used for service tracking
@@ -215,7 +215,7 @@ impl AzureBackend {
         Self::from_environment().await
     }
 
-    /// Discover Azure capability via NestGate capability system
+    /// Discover Azure capability via `NestGate` capability system
     ///
     /// **RUNTIME DISCOVERY**: No hardcoded service locations.
     /// Backend discovers Azure-compatible storage services at startup.
@@ -300,11 +300,11 @@ impl AzureBackend {
 
     /// Get dataset prefix
     fn dataset_prefix(pool_name: &str, dataset_name: &str) -> String {
-        format!("{}/{}", pool_name, dataset_name)
+        format!("{pool_name}/{dataset_name}")
     }
 
     /// Map storage tier to Azure access tier
-    fn map_tier(tier: &StorageTier) -> AzureAccessTier {
+    const fn map_tier(tier: &StorageTier) -> AzureAccessTier {
         match tier {
             StorageTier::Hot | StorageTier::Cache => AzureAccessTier::Premium,
             StorageTier::Warm => AzureAccessTier::Cool,
@@ -383,7 +383,7 @@ impl ZeroCostZfsOperations for AzureBackend {
         let dataset = AzureDataset {
             name: name.to_string(),
             pool: pool.name.clone(),
-            prefix: prefix.clone(),
+            prefix,
             tier,
             azure_tier,
             created_at: std::time::SystemTime::now(),
@@ -413,7 +413,7 @@ impl ZeroCostZfsOperations for AzureBackend {
         let snapshot = AzureSnapshot {
             name: name.to_string(),
             dataset: dataset.name.clone(),
-            snapshot_id: snapshot_id.clone(),
+            snapshot_id,
             created_at: std::time::SystemTime::now(),
         };
 
@@ -440,7 +440,7 @@ impl ZeroCostZfsOperations for AzureBackend {
                     "config_source".to_string(),
                     match &self.client.config_source {
                         ConfigSource::CapabilityDiscovered { service_id } => {
-                            format!("capability:{}", service_id)
+                            format!("capability:{service_id}")
                         }
                         ConfigSource::Environment => "environment".to_string(),
                         ConfigSource::Explicit { .. } => "explicit".to_string(),

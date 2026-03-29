@@ -5,7 +5,7 @@
 
 use super::SemanticRouter;
 use nestgate_types::error::Result;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Route `capabilities.list` → supported semantic RPC method identifiers.
 pub(super) async fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {

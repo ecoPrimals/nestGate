@@ -17,7 +17,7 @@ pub struct AiTierOptimizer {
 }
 /// Configuration for AI tier optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -35,7 +35,7 @@ pub struct AiTierOptimizer {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for AiOptimization
+/// Configuration for `AiOptimization`
 pub struct AiOptimizationConfig {
     /// Enable AI optimization
     pub enabled: bool,
@@ -161,7 +161,9 @@ impl AiTierOptimizer {
             _ => current_tier.clone(),
         };
 
-        if recommended_tier != current_tier {
+        if recommended_tier == current_tier {
+            Ok(None)
+        } else {
             Ok(Some(TierOptimizationRecommendation {
                 dataset: dataset.to_string(),
                 current_tier: current_tier.clone(),
@@ -174,8 +176,6 @@ impl AiTierOptimizer {
                     total_ops,
                 ),
             }))
-        } else {
-            Ok(None)
         }
     }
 

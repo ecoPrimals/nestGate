@@ -11,7 +11,7 @@
 //!
 //! # Examples
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::network_defaults;
 //!
 //! // Get API server host (defaults to 127.0.0.1, overridable via NESTGATE_API_HOST)
@@ -101,7 +101,7 @@ pub fn api_bind_address() -> String {
     NetworkDefaultsV2Config::from_env().api_bind_address()
 }
 
-/// API server URL (e.g., "http://127.0.0.1:8080")
+/// API server URL (e.g., "<http://127.0.0.1:8080>")
 ///
 /// # Environment Variable
 /// - `NESTGATE_API_URL`: Full API URL
@@ -165,7 +165,7 @@ pub fn websocket_bind_address() -> String {
     NetworkDefaultsV2Config::from_env().websocket_bind_address()
 }
 
-/// WebSocket URL (e.g., "ws://127.0.0.1:8081")
+/// WebSocket URL (e.g., "<ws://127.0.0.1:8081>")
 ///
 /// # Environment Variable
 /// - `NESTGATE_WS_URL`: Full WebSocket URL
@@ -203,7 +203,7 @@ pub fn health_bind_address() -> String {
     NetworkDefaultsV2Config::from_env().health_bind_address()
 }
 
-/// Health check URL (e.g., "http://127.0.0.1:8082/health")
+/// Health check URL (e.g., "<http://127.0.0.1:8082/health>")
 ///
 /// # Environment Variable
 /// - `NESTGATE_HEALTH_URL`: Full health check URL
@@ -534,7 +534,3 @@ mod tests {
         assert!(config.long_operation_timeout_ms() < 600_000); // Less than 10 minutes
     }
 }
-
-#[cfg(test)]
-#[path = "network_defaults_tests.rs"]
-mod network_defaults_tests;

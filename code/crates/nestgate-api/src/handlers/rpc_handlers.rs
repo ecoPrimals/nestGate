@@ -8,12 +8,14 @@
 //! - Protocol capabilities discovery
 //! - Protocol negotiation
 
-use axum::{http::StatusCode, Json};
+use axum::{Json, http::StatusCode};
 use nestgate_core::constants::capability_port_discovery::{
     discover_api_port_sync, discover_tarpc_port_sync,
 };
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{debug, info};
 
 use crate::nestgate_rpc_service::NestGateJsonRpcHandler;
@@ -22,11 +24,11 @@ use crate::nestgate_rpc_service::NestGateJsonRpcHandler;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
     /// JSON-RPC version (must be "2.0")
-    pub jsonrpc: String,
+    pub jsonrpc: Arc<str>,
     /// Request identifier
     pub id: String,
     /// Method name to invoke
-    pub method: String,
+    pub method: Arc<str>,
     /// Method parameters
     #[serde(default)]
     pub params: serde_json::Value,
@@ -36,7 +38,7 @@ pub struct JsonRpcRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcResponse {
     /// JSON-RPC version (always "2.0")
-    pub jsonrpc: String,
+    pub jsonrpc: Arc<str>,
     /// Request identifier (matches request)
     pub id: String,
     /// Result value (if successful)
@@ -53,7 +55,7 @@ pub struct JsonRpcError {
     /// Error code
     pub code: i32,
     /// Error message
-    pub message: String,
+    pub message: Cow<'static, str>,
     /// Additional error data
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,
@@ -106,14 +108,14 @@ pub async fn handle_jsonrpc(
     debug!("Request details: {:?}", request);
 
     // Validate JSON-RPC version
-    if request.jsonrpc != "2.0" {
+    if request.jsonrpc.as_ref() != "2.0" {
         let error_response = JsonRpcResponse {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: Arc::from("2.0"),
             id: request.id,
             result: None,
             error: Some(JsonRpcError {
                 code: -32600,
-                message: "Invalid Request - jsonrpc must be '2.0'".to_string(),
+                message: Cow::Borrowed("Invalid Request - jsonrpc must be '2.0'"),
                 data: None,
             }),
         };
@@ -124,10 +126,10 @@ pub async fn handle_jsonrpc(
     let handler = NestGateJsonRpcHandler::new();
 
     // Execute method
-    match handler.handle(&request.method, request.params).await {
+    match handler.handle(&*request.method, request.params).await {
         Ok(result) => {
             let response = JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: Arc::from("2.0"),
                 id: request.id,
                 result: Some(result),
                 error: None,
@@ -136,12 +138,12 @@ pub async fn handle_jsonrpc(
         }
         Err(err) => {
             let error_response = JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: Arc::from("2.0"),
                 id: request.id,
                 result: None,
                 error: Some(JsonRpcError {
                     code: -32603,
-                    message: format!("Internal error: {err}"),
+                    message: Cow::Owned(format!("Internal error: {err}")),
                     data: None,
                 }),
             };
@@ -254,9 +256,9 @@ mod tests {
     #[tokio::test]
     async fn test_jsonrpc_handler() {
         let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: Arc::from("2.0"),
             id: "test-1".to_string(),
-            method: "health".to_string(),
+            method: Arc::from("health"),
             params: serde_json::Value::Null,
         };
 
@@ -264,7 +266,7 @@ mod tests {
         assert!(result.is_ok());
 
         let response = result.unwrap().0;
-        assert_eq!(response.jsonrpc, "2.0");
+        assert_eq!(response.jsonrpc.as_ref(), "2.0");
         assert!(response.result.is_some());
         assert!(response.error.is_none());
     }
@@ -272,9 +274,9 @@ mod tests {
     #[tokio::test]
     async fn test_invalid_jsonrpc_version() {
         let request = JsonRpcRequest {
-            jsonrpc: "1.0".to_string(),
+            jsonrpc: Arc::from("1.0"),
             id: "test-2".to_string(),
-            method: "health".to_string(),
+            method: Arc::from("health"),
             params: serde_json::Value::Null,
         };
 

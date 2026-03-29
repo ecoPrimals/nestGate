@@ -6,7 +6,7 @@
 //! Complete test coverage for status.rs handler module.
 //! Tests system status, health checks, uptime tracking, and service information.
 
-use crate::handlers::status::{get_status, initialize_uptime, SystemStatus};
+use crate::handlers::status::{SystemStatus, get_status, initialize_uptime};
 
 // ==================== SYSTEM STATUS TESTS ====================
 

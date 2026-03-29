@@ -517,13 +517,12 @@ impl SystematicUnwrapMigrator {
 
                 if path.is_dir() {
                     // Skip target directories, .git, and migrator
-                    if let Some(dir_name) = path.file_name() {
-                        if dir_name == "target"
+                    if let Some(dir_name) = path.file_name()
+                        && (dir_name == "target"
                             || dir_name == ".git"
-                            || dir_name == "unwrap-migrator"
-                        {
-                            continue;
-                        }
+                            || dir_name == "unwrap-migrator")
+                    {
+                        continue;
                     }
 
                     // Add directory to processing queue

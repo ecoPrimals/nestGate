@@ -135,7 +135,7 @@ pub struct AuditEvent {
 }
 /// Audit event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of AuditEvent
+/// Types of `AuditEvent`
 pub enum AuditEventType {
     /// Data access
     DataAccess,

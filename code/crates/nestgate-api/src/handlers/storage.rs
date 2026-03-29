@@ -268,8 +268,8 @@ pub struct StorageSnapshotInfo {
 ///
 /// Collect real storage pools from system
 #[allow(dead_code)] // Reserved for future real storage integration
-async fn collect_real_storage_pools(
-) -> Result<Vec<StoragePool>, Box<dyn std::error::Error + Send + Sync>> {
+async fn collect_real_storage_pools()
+-> Result<Vec<StoragePool>, Box<dyn std::error::Error + Send + Sync>> {
     use std::process::Command;
     use std::str;
     let mut pools = Vec::new();
@@ -404,8 +404,8 @@ fn parse_size_string(size_str: &str) -> Option<u64> {
 
 /// Collect real storage datasets (important directories) from system
 #[allow(dead_code)] // Reserved for future real storage integration
-async fn collect_real_storage_datasets(
-) -> Result<Vec<StorageDataset>, Box<dyn std::error::Error + Send + Sync>> {
+async fn collect_real_storage_datasets()
+-> Result<Vec<StorageDataset>, Box<dyn std::error::Error + Send + Sync>> {
     // Mock implementation for datasets
     let mut datasets = Vec::new();
     // Important directories to monitor as "datasets"
@@ -414,34 +414,34 @@ async fn collect_real_storage_datasets(
     ];
 
     for dir in important_dirs {
-        if std::path::Path::new(dir).exists() {
-            if let Ok((size, used, available)) = get_directory_usage(dir) {
-                datasets.push(StorageDataset {
-                    name: "localself.base_url".to_string(),
-                    pool: "root".to_string(),
-                    size,
-                    used,
-                    available,
-                    mount_point: dir.to_string(),
-                    compression: "none".to_string(),
-                });
-            }
-        }
-    }
-
-    // Also add the current user's home directory specifically
-    if let Ok(home_dir) = std::env::var("HOME") {
-        if let Ok((size, used, available)) = get_directory_usage(&home_dir) {
+        if std::path::Path::new(dir).exists()
+            && let Ok((size, used, available)) = get_directory_usage(dir)
+        {
             datasets.push(StorageDataset {
-                name: "user_home".to_string(),
+                name: "localself.base_url".to_string(),
                 pool: "root".to_string(),
                 size,
                 used,
                 available,
-                mount_point: home_dir,
+                mount_point: dir.to_string(),
                 compression: "none".to_string(),
             });
         }
+    }
+
+    // Also add the current user's home directory specifically
+    if let Ok(home_dir) = std::env::var("HOME")
+        && let Ok((size, used, available)) = get_directory_usage(&home_dir)
+    {
+        datasets.push(StorageDataset {
+            name: "user_home".to_string(),
+            pool: "root".to_string(),
+            size,
+            used,
+            available,
+            mount_point: home_dir,
+            compression: "none".to_string(),
+        });
     }
 
     if datasets.is_empty() {
@@ -492,8 +492,8 @@ async fn create_fallback_home_dataset() -> StorageDataset {
 
 /// Collect real ZFS snapshots from system
 #[allow(dead_code)] // Reserved for future ZFS integration
-async fn collect_real_zfs_snapshots(
-) -> Result<Vec<StorageSnapshot>, Box<dyn std::error::Error + Send + Sync>> {
+async fn collect_real_zfs_snapshots()
+-> Result<Vec<StorageSnapshot>, Box<dyn std::error::Error + Send + Sync>> {
     let output = tokio::process::Command::new("zfs")
         .args([
             "list",
@@ -787,5 +787,132 @@ mod tests {
     fn test_storage_manager_new() {
         let _ = StorageManager::new();
         let _ = StorageManager::default();
+    }
+
+    #[test]
+    fn parse_size_string_kb_mb_gb() {
+        assert_eq!(super::parse_size_string("100"), Some(100));
+        assert_eq!(super::parse_size_string("-"), Some(0));
+        assert!(super::parse_size_string("2M").unwrap() >= 2 * 1024 * 1024);
+    }
+
+    #[test]
+    fn parse_size_string_terabyte_and_petabyte_units() {
+        let one_t = super::parse_size_string("1T").expect("1T");
+        assert_eq!(one_t, 1024_u64.pow(4));
+        let one_tb = super::parse_size_string("1TB").expect("1TB");
+        assert_eq!(one_tb, 1024_u64.pow(4));
+        let two_p = super::parse_size_string("2P").expect("2P");
+        assert_eq!(two_p, 2 * 1024_u64.pow(5));
+    }
+
+    #[test]
+    fn parse_size_string_invalid_number_is_none() {
+        assert!(super::parse_size_string("abcG").is_none());
+    }
+
+    #[test]
+    fn parse_size_string_trims_whitespace() {
+        assert_eq!(super::parse_size_string("  10K  "), Some(10 * 1024));
+    }
+
+    #[test]
+    fn should_include_filesystem_filters_pseudo_fs() {
+        assert!(!super::should_include_filesystem("tmpfs", "tmpfs", "/tmp"));
+        assert!(!super::should_include_filesystem(
+            "/dev/sda1",
+            "ext4",
+            "/proc/foo"
+        ));
+        assert!(super::should_include_filesystem("/dev/sda1", "ext4", "/"));
+        assert!(super::should_include_filesystem(
+            "/dev/sdb1",
+            "xfs",
+            "/home/user"
+        ));
+        assert!(super::should_include_filesystem(
+            "/dev/sdc1",
+            "ext4",
+            "/mnt/backup"
+        ));
+        assert!(super::should_include_filesystem(
+            "/dev/sdd1",
+            "ext4",
+            "/media/usb"
+        ));
+    }
+
+    #[test]
+    fn parse_bandwidth_unit_basic() {
+        assert_eq!(super::parse_bandwidth_unit("-"), Some(0.0));
+        assert_eq!(super::parse_bandwidth_unit(""), Some(0.0));
+        assert!(super::parse_bandwidth_unit("10M").unwrap() > 0.0);
+        let k = super::parse_bandwidth_unit("1024K").expect("K");
+        assert!(k > 0.0);
+        let g = super::parse_bandwidth_unit("1G").expect("G");
+        assert!(g > 100.0);
+        let raw = super::parse_bandwidth_unit("100").expect("raw");
+        assert!(raw >= 0.0);
+    }
+
+    #[test]
+    fn create_fallback_root_pool_has_name() {
+        let p = super::create_fallback_root_pool();
+        assert!(p.name.contains("root"));
+    }
+
+    // --- Round 6: `should_include_filesystem` / `parse_size_string` branches ---
+
+    #[test]
+    fn r6_should_include_btrfs_on_root() {
+        assert!(super::should_include_filesystem("/dev/xvda1", "btrfs", "/"));
+    }
+
+    #[test]
+    fn r6_should_include_xfs_under_media() {
+        assert!(super::should_include_filesystem(
+            "/dev/sdc1",
+            "xfs",
+            "/media/usbstick"
+        ));
+    }
+
+    #[test]
+    fn r6_should_exclude_sysfs_mount() {
+        assert!(!super::should_include_filesystem(
+            "sysfs",
+            "sysfs",
+            "/sys/fs/cgroup"
+        ));
+    }
+
+    #[test]
+    fn r6_should_exclude_devtmpfs_under_dev() {
+        assert!(!super::should_include_filesystem(
+            "devtmpfs", "devtmpfs", "/dev"
+        ));
+    }
+
+    #[test]
+    fn r6_parse_size_lowercase_kb() {
+        let v = super::parse_size_string("512kb").expect("kb");
+        assert!(v >= 512 * 1024);
+    }
+
+    #[test]
+    fn r6_parse_size_uppercase_mb() {
+        let v = super::parse_size_string("3MB").expect("mb");
+        assert_eq!(v, 3 * 1024 * 1024);
+    }
+
+    #[test]
+    fn r6_parse_size_no_unit_is_bytes() {
+        assert_eq!(super::parse_size_string("42"), Some(42));
+    }
+
+    #[test]
+    fn r6_parse_bandwidth_gigabit_style() {
+        let v = super::parse_bandwidth_unit("2G").expect("g");
+        assert!(v > 1000.0);
     }
 }

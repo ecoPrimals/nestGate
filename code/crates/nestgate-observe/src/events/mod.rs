@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Events system for NestGate
+//! Events system for `NestGate`
 //!
 //! Provides event bus, routing, pubsub, and related functionality.
 
@@ -61,7 +61,7 @@ pub use nestgate_config::constants::network::{
 
 /// Configuration for this module
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -79,7 +79,7 @@ pub use nestgate_config::constants::network::{
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for EventsMain
+/// Configuration for `EventsMain`
 pub struct EventsMainConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -158,6 +158,7 @@ pub struct DefaultService {
 
 impl DefaultService {
     /// Create a new service instance
+    #[must_use]
     pub fn new(config: EventsMainConfig) -> Self {
         Self {
             config,
@@ -173,7 +174,7 @@ impl DefaultService {
 
 impl Service for DefaultService {
     /// Name
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "mod"
     }
 
@@ -214,6 +215,7 @@ impl Service for DefaultService {
 // ==================== UTILITY FUNCTIONS ====================
 
 /// Create a default service instance
+#[must_use]
 pub fn create_service() -> DefaultService {
     DefaultService::new(EventsMainConfig::default())
 }

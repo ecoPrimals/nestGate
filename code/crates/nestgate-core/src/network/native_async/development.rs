@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-use crate::diagnostics::types::ServiceInfo;
 use crate::Result;
+use crate::diagnostics::types::ServiceInfo;
 /// Development Network Implementations
 /// Extracted from `native_async_network.rs` to maintain file size compliance
 /// Contains development/testing implementations of native async traits

@@ -28,7 +28,7 @@ pub struct CapacityLimits {
 impl CapacityLimits {
     /// Returns hot tier default capacity limits.
     #[must_use]
-    pub fn hot_tier_defaults() -> Self {
+    pub const fn hot_tier_defaults() -> Self {
         use crate::constants::{
             HOT_TIER_MAX_SIZE_GB, HOT_TIER_MIN_FREE_GB, HOT_TIER_WARNING_THRESHOLD,
         };
@@ -41,7 +41,7 @@ impl CapacityLimits {
 
     /// Returns warm tier default capacity limits.
     #[must_use]
-    pub fn warm_tier_defaults() -> Self {
+    pub const fn warm_tier_defaults() -> Self {
         use crate::constants::{
             WARM_TIER_MAX_SIZE_GB, WARM_TIER_MIN_FREE_GB, WARM_TIER_WARNING_THRESHOLD,
         };
@@ -54,7 +54,7 @@ impl CapacityLimits {
 
     /// Returns cold tier default capacity limits.
     #[must_use]
-    pub fn cold_tier_defaults() -> Self {
+    pub const fn cold_tier_defaults() -> Self {
         use crate::constants::{
             COLD_TIER_MAX_SIZE_GB, COLD_TIER_MIN_FREE_GB, COLD_TIER_WARNING_THRESHOLD,
         };
@@ -80,7 +80,7 @@ const COMPRESSION_OFF: &str = "off";
 // Define missing ZFS constants locally until they're added to canonical constants
 const RECORDSIZE_PROPERTY: &str = "recordsize";
 use nestgate_core::canonical_modernization::canonical_constants::zfs::{
-    RECORDSIZE_128K, RECORDSIZE_1M, RECORDSIZE_64K,
+    RECORDSIZE_1M, RECORDSIZE_64K, RECORDSIZE_128K,
 };
 /// Atime Property
 const ATIME_PROPERTY: &str = "atime";

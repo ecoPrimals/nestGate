@@ -64,12 +64,12 @@
 //! - `metadata.search` → search services by capability
 //!
 //! ### Crypto Domain (`crypto.*`)
-//! - `crypto.encrypt` → delegate to BearDog (capability discovery!)
-//! - `crypto.decrypt` → delegate to BearDog
-//! - `crypto.generate_key` → delegate to BearDog
-//! - `crypto.generate_nonce` → delegate to BearDog
-//! - `crypto.hash` → delegate to BearDog
-//! - `crypto.verify_hash` → delegate to BearDog
+//! - `crypto.encrypt` → delegate to `BearDog` (capability discovery!)
+//! - `crypto.decrypt` → delegate to `BearDog`
+//! - `crypto.generate_key` → delegate to `BearDog`
+//! - `crypto.generate_nonce` → delegate to `BearDog`
+//! - `crypto.hash` → delegate to `BearDog`
+//! - `crypto.verify_hash` → delegate to `BearDog`
 //!
 //! ### Health Domain (`health.*`)
 //! - `health.check` → `health_check`
@@ -83,12 +83,12 @@
 //!
 //! ## References
 //!
-//! - wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0
-//! - wateringHole/PRIMAL_IPC_PROTOCOL.md v1.0
-//! - CAPABILITY_MAPPINGS.md
+//! - `wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md` v2.0
+//! - `wateringHole/PRIMAL_IPC_PROTOCOL.md` v1.0
+//! - `CAPABILITY_MAPPINGS.md`
 
-use nestgate_types::error::{NestGateError, Result};
 use crate::rpc::NestGateRpcClient;
+use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
 use std::sync::Arc;
 use tracing::{debug, warn};
@@ -121,7 +121,7 @@ impl SemanticRouter {
     /// * `client` - Internal RPC client for method delegation
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::{SemanticRouter, NestGateRpcClient};
     /// use std::sync::Arc;
     ///
@@ -152,7 +152,7 @@ impl SemanticRouter {
     /// - Internal method fails
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::SemanticRouter;
     /// use serde_json::json;
     ///
@@ -216,8 +216,7 @@ impl SemanticRouter {
             _ => {
                 warn!("❌ Unknown semantic method: {}", method);
                 Err(NestGateError::not_found(format!(
-                    "semantic method `{}`",
-                    method
+                    "semantic method `{method}`"
                 )))
             }
         }

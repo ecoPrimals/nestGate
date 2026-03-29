@@ -2,8 +2,8 @@
 //!
 //! Tests load distribution across multiple backends
 
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 #[tokio::test]
 async fn test_round_robin_load_balancing() {

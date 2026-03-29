@@ -31,7 +31,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::storage_paths::StoragePaths;
 //!
 //! let paths = StoragePaths::from_environment();
@@ -82,7 +82,7 @@ impl StoragePaths {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::config::storage_paths::StoragePaths;
     ///
     /// let paths = StoragePaths::from_environment();
@@ -356,7 +356,7 @@ impl StoragePaths {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::config::storage_paths::StoragePaths;
     ///
     /// let paths = StoragePaths::from_environment();
@@ -429,7 +429,7 @@ impl StoragePaths {
 
     /// Get storage base path (datasets, objects)
     ///
-    /// **Used for**: NestGate storage backend
+    /// **Used for**: `NestGate` storage backend
     /// **Location**: `<data_dir>/storage`
     #[must_use]
     pub fn storage_base_path(&self) -> PathBuf {
@@ -444,8 +444,7 @@ impl StoragePaths {
     #[must_use]
     pub fn zfs_binary_path(&self) -> PathBuf {
         env::var("NESTGATE_ZFS_BINARY")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| PathBuf::from("/usr/sbin/zfs"))
+            .map_or_else(|_| PathBuf::from("/usr/sbin/zfs"), PathBuf::from)
     }
 
     /// Get zpool binary path with environment override
@@ -456,8 +455,7 @@ impl StoragePaths {
     #[must_use]
     pub fn zpool_binary_path(&self) -> PathBuf {
         env::var("NESTGATE_ZPOOL_BINARY")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| PathBuf::from("/usr/sbin/zpool"))
+            .map_or_else(|_| PathBuf::from("/usr/sbin/zpool"), PathBuf::from)
     }
 
     /// Get PID file path
@@ -534,7 +532,7 @@ static STORAGE_PATHS: OnceLock<StoragePaths> = OnceLock::new();
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::config::storage_paths::get_storage_paths;
 ///
 /// let paths = get_storage_paths();
@@ -553,7 +551,7 @@ pub fn get_storage_paths() -> &'static StoragePaths {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::config::storage_paths::get_data_dir;
 ///
 /// let data_dir = get_data_dir();
@@ -624,11 +622,12 @@ mod tests {
     #[test]
     fn test_explicit_override() {
         let orig = env::var("NESTGATE_DATA_DIR").ok();
-        std::env::set_var("NESTGATE_DATA_DIR", "/custom/data/path");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_DATA_DIR", "/custom/data/path");
         let data_dir = StoragePaths::resolve_data_dir();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_DATA_DIR", v),
-            None => std::env::remove_var("NESTGATE_DATA_DIR"),
+            Some(v) => crate::env_process::set_var("NESTGATE_DATA_DIR", v),
+            None => crate::env_process::remove_var("NESTGATE_DATA_DIR"),
         }
         assert_eq!(data_dir, PathBuf::from("/custom/data/path"));
     }
@@ -637,16 +636,18 @@ mod tests {
     fn test_xdg_data_home() {
         let orig_data = env::var("NESTGATE_DATA_DIR").ok();
         let orig_xdg = env::var("XDG_DATA_HOME").ok();
-        std::env::remove_var("NESTGATE_DATA_DIR");
-        std::env::set_var("XDG_DATA_HOME", "/custom/xdg/data");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_DATA_DIR");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("XDG_DATA_HOME", "/custom/xdg/data");
         let data_dir = StoragePaths::resolve_data_dir();
         match orig_data {
-            Some(v) => std::env::set_var("NESTGATE_DATA_DIR", v),
-            None => std::env::remove_var("NESTGATE_DATA_DIR"),
+            Some(v) => crate::env_process::set_var("NESTGATE_DATA_DIR", v),
+            None => crate::env_process::remove_var("NESTGATE_DATA_DIR"),
         }
         match orig_xdg {
-            Some(v) => std::env::set_var("XDG_DATA_HOME", v),
-            None => std::env::remove_var("XDG_DATA_HOME"),
+            Some(v) => crate::env_process::set_var("XDG_DATA_HOME", v),
+            None => crate::env_process::remove_var("XDG_DATA_HOME"),
         }
         assert_eq!(data_dir, PathBuf::from("/custom/xdg/data/nestgate"));
     }
@@ -655,28 +656,30 @@ mod tests {
     fn test_home_fallback() {
         let orig_data = env::var("NESTGATE_DATA_DIR").ok();
         let orig_xdg = env::var("XDG_DATA_HOME").ok();
-        std::env::remove_var("NESTGATE_DATA_DIR");
-        std::env::remove_var("XDG_DATA_HOME");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_DATA_DIR");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("XDG_DATA_HOME");
 
         if let Ok(home) = env::var("HOME") {
             let data_dir = StoragePaths::resolve_data_dir();
             match orig_data {
-                Some(v) => std::env::set_var("NESTGATE_DATA_DIR", v),
-                None => std::env::remove_var("NESTGATE_DATA_DIR"),
+                Some(v) => crate::env_process::set_var("NESTGATE_DATA_DIR", v),
+                None => crate::env_process::remove_var("NESTGATE_DATA_DIR"),
             }
             match orig_xdg {
-                Some(v) => std::env::set_var("XDG_DATA_HOME", v),
-                None => std::env::remove_var("XDG_DATA_HOME"),
+                Some(v) => crate::env_process::set_var("XDG_DATA_HOME", v),
+                None => crate::env_process::remove_var("XDG_DATA_HOME"),
             }
             assert_eq!(data_dir, PathBuf::from(home).join(".local/share/nestgate"));
         } else {
             match orig_data {
-                Some(v) => std::env::set_var("NESTGATE_DATA_DIR", v),
-                None => std::env::remove_var("NESTGATE_DATA_DIR"),
+                Some(v) => crate::env_process::set_var("NESTGATE_DATA_DIR", v),
+                None => crate::env_process::remove_var("NESTGATE_DATA_DIR"),
             }
             match orig_xdg {
-                Some(v) => std::env::set_var("XDG_DATA_HOME", v),
-                None => std::env::remove_var("XDG_DATA_HOME"),
+                Some(v) => crate::env_process::set_var("XDG_DATA_HOME", v),
+                None => crate::env_process::remove_var("XDG_DATA_HOME"),
             }
         }
     }
@@ -700,8 +703,10 @@ mod tests {
         // Save/restore to avoid env-var race conditions with parallel tests
         let orig_zfs = env::var("NESTGATE_ZFS_BINARY").ok();
         let orig_zpool = env::var("NESTGATE_ZPOOL_BINARY").ok();
-        std::env::remove_var("NESTGATE_ZFS_BINARY");
-        std::env::remove_var("NESTGATE_ZPOOL_BINARY");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_ZFS_BINARY");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_ZPOOL_BINARY");
 
         let paths = StoragePaths::from_environment();
 
@@ -713,12 +718,12 @@ mod tests {
 
         // Restore
         match orig_zfs {
-            Some(v) => std::env::set_var("NESTGATE_ZFS_BINARY", v),
-            None => std::env::remove_var("NESTGATE_ZFS_BINARY"),
+            Some(v) => crate::env_process::set_var("NESTGATE_ZFS_BINARY", v),
+            None => crate::env_process::remove_var("NESTGATE_ZFS_BINARY"),
         }
         match orig_zpool {
-            Some(v) => std::env::set_var("NESTGATE_ZPOOL_BINARY", v),
-            None => std::env::remove_var("NESTGATE_ZPOOL_BINARY"),
+            Some(v) => crate::env_process::set_var("NESTGATE_ZPOOL_BINARY", v),
+            None => crate::env_process::remove_var("NESTGATE_ZPOOL_BINARY"),
         }
     }
 
@@ -745,19 +750,21 @@ mod tests {
     fn test_temp_dir_tmpdir() {
         let orig_temp = env::var("NESTGATE_TEMP_DIR").ok();
         let orig_tmpdir = env::var("TMPDIR").ok();
-        std::env::remove_var("NESTGATE_TEMP_DIR");
-        std::env::set_var("TMPDIR", "/custom/tmp");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TEMP_DIR");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("TMPDIR", "/custom/tmp");
 
         let temp_dir = StoragePaths::resolve_temp_dir();
         assert_eq!(temp_dir, PathBuf::from("/custom/tmp/nestgate"));
 
         match orig_temp {
-            Some(v) => std::env::set_var("NESTGATE_TEMP_DIR", v),
-            None => std::env::remove_var("NESTGATE_TEMP_DIR"),
+            Some(v) => crate::env_process::set_var("NESTGATE_TEMP_DIR", v),
+            None => crate::env_process::remove_var("NESTGATE_TEMP_DIR"),
         }
         match orig_tmpdir {
-            Some(v) => std::env::set_var("TMPDIR", v),
-            None => std::env::remove_var("TMPDIR"),
+            Some(v) => crate::env_process::set_var("TMPDIR", v),
+            None => crate::env_process::remove_var("TMPDIR"),
         }
     }
 

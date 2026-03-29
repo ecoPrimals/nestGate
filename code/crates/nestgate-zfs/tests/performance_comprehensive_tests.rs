@@ -431,8 +431,8 @@ mod tuning_tests {
     }
 
     #[test]
-    fn test_tuning_recommendations_validation(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn test_tuning_recommendations_validation()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let recommendations = vec![
             ZfsTuningRecommendation {
                 parameter: "recordsize".to_string(),
@@ -534,8 +534,8 @@ mod integration_tests {
     use super::*;
 
     #[test]
-    fn test_comprehensive_performance_scenario(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn test_comprehensive_performance_scenario()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Create initial metrics
         let _metrics = create_test_performance_metrics();
 

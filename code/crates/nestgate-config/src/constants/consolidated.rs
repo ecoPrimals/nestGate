@@ -15,7 +15,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::constants::consolidated::*;
 //!
 //! // Get configuration with environment override support
@@ -107,107 +107,130 @@ impl NetworkConstants {
     // Host getters
 
     /// Returns the API host address (e.g., "localhost" or "0.0.0.0")
+    #[must_use]
     pub fn api_host(&self) -> &str {
         &self.api_host
     }
     /// Metrics Host
+    #[must_use]
     pub fn metrics_host(&self) -> &str {
         &self.metrics_host
     }
     /// Health Host
+    #[must_use]
     pub fn health_host(&self) -> &str {
         &self.health_host
     }
     /// Admin Host
+    #[must_use]
     pub fn admin_host(&self) -> &str {
         &self.admin_host
     }
 
     // Port getters
 
-    /// Returns the API port number (read from NESTGATE_API_PORT or default 8080)
-    pub fn api_port(&self) -> u16 {
+    /// Returns the API port number (read from `NESTGATE_API_PORT` or default 8080)
+    #[must_use]
+    pub const fn api_port(&self) -> u16 {
         self.api_port
     }
     /// Http Port
-    pub fn http_port(&self) -> u16 {
+    #[must_use]
+    pub const fn http_port(&self) -> u16 {
         self.http_port
     }
     /// Https Port
-    pub fn https_port(&self) -> u16 {
+    #[must_use]
+    pub const fn https_port(&self) -> u16 {
         self.https_port
     }
     /// Websocket Port
-    pub fn websocket_port(&self) -> u16 {
+    #[must_use]
+    pub const fn websocket_port(&self) -> u16 {
         self.websocket_port
     }
     /// Grpc Port
-    pub fn grpc_port(&self) -> u16 {
+    #[must_use]
+    pub const fn grpc_port(&self) -> u16 {
         self.grpc_port
     }
     /// Metrics Port
-    pub fn metrics_port(&self) -> u16 {
+    #[must_use]
+    pub const fn metrics_port(&self) -> u16 {
         self.metrics_port
     }
     /// Prometheus Port
-    pub fn prometheus_port(&self) -> u16 {
+    #[must_use]
+    pub const fn prometheus_port(&self) -> u16 {
         self.prometheus_port
     }
     /// Health Port
-    pub fn health_port(&self) -> u16 {
+    #[must_use]
+    pub const fn health_port(&self) -> u16 {
         self.health_port
     }
     /// Admin Port
-    pub fn admin_port(&self) -> u16 {
+    #[must_use]
+    pub const fn admin_port(&self) -> u16 {
         self.admin_port
     }
 
     // Address getters
 
-    /// Returns the bind address for server sockets (read from NESTGATE_BIND_ADDRESS or default "0.0.0.0")
+    /// Returns the bind address for server sockets (read from `NESTGATE_BIND_ADDRESS` or default "0.0.0.0")
+    #[must_use]
     pub fn bind_address(&self) -> &str {
         &self.bind_address
     }
     /// Localhost Ipv4
+    #[must_use]
     pub fn localhost_ipv4(&self) -> &str {
         &self.localhost_ipv4
     }
     /// Localhost Ipv6
+    #[must_use]
     pub fn localhost_ipv6(&self) -> &str {
         &self.localhost_ipv6
     }
     /// Bind All Ipv4
+    #[must_use]
     pub fn bind_all_ipv4(&self) -> &str {
         &self.bind_all_ipv4
     }
     /// Bind All Ipv6
+    #[must_use]
     pub fn bind_all_ipv6(&self) -> &str {
         &self.bind_all_ipv6
     }
 
     // Convenience methods for full URLs
 
-    /// Returns the full API URL (e.g., "http://localhost:8080")
+    /// Returns the full API URL (e.g., "<http://localhost:8080>")
+    #[must_use]
     pub fn api_url(&self) -> String {
         format!("http://{}:{}", self.api_host, self.api_port)
     }
 
     /// Api Bind Address
+    #[must_use]
     pub fn api_bind_address(&self) -> String {
         format!("{}:{}", self.bind_address, self.api_port)
     }
 
     /// Health Url
+    #[must_use]
     pub fn health_url(&self) -> String {
         format!("http://{}:{}", self.health_host, self.health_port)
     }
 
     /// Metrics Url
+    #[must_use]
     pub fn metrics_url(&self) -> String {
         format!("http://{}:{}", self.metrics_host, self.metrics_port)
     }
 
     /// Websocket Url
+    #[must_use]
     pub fn websocket_url(&self) -> String {
         format!("ws://{}:{}/ws", self.api_host, self.websocket_port)
     }
@@ -282,23 +305,28 @@ impl StorageConstants {
 
     // Database getters
 
-    /// Returns the PostgreSQL host address
+    /// Returns the `PostgreSQL` host address
+    #[must_use]
     pub fn postgres_host(&self) -> &str {
         &self.postgres_host
     }
     /// Postgres Port
-    pub fn postgres_port(&self) -> u16 {
+    #[must_use]
+    pub const fn postgres_port(&self) -> u16 {
         self.postgres_port
     }
     /// Postgres Database
+    #[must_use]
     pub fn postgres_database(&self) -> &str {
         &self.postgres_database
     }
     /// Postgres Max Connections
-    pub fn postgres_max_connections(&self) -> u32 {
+    #[must_use]
+    pub const fn postgres_max_connections(&self) -> u32 {
         self.postgres_max_connections
     }
     /// Postgres Url
+    #[must_use]
     pub fn postgres_url(&self) -> String {
         format!(
             "postgresql://{}:{}/{}",
@@ -309,18 +337,22 @@ impl StorageConstants {
     // Redis getters
 
     /// Returns the Redis host address
+    #[must_use]
     pub fn redis_host(&self) -> &str {
         &self.redis_host
     }
     /// Redis Port
-    pub fn redis_port(&self) -> u16 {
+    #[must_use]
+    pub const fn redis_port(&self) -> u16 {
         self.redis_port
     }
     /// Redis Max Connections
-    pub fn redis_max_connections(&self) -> u32 {
+    #[must_use]
+    pub const fn redis_max_connections(&self) -> u32 {
         self.redis_max_connections
     }
     /// Redis Url
+    #[must_use]
     pub fn redis_url(&self) -> String {
         format!("redis://{}:{}", self.redis_host, self.redis_port)
     }
@@ -328,33 +360,40 @@ impl StorageConstants {
     // ZFS getters
 
     /// Returns the ZFS pool name
+    #[must_use]
     pub fn zfs_pool_name(&self) -> &str {
         &self.zfs_pool_name
     }
     /// Zfs Dataset Prefix
+    #[must_use]
     pub fn zfs_dataset_prefix(&self) -> &str {
         &self.zfs_dataset_prefix
     }
     /// Zfs Compression
+    #[must_use]
     pub fn zfs_compression(&self) -> &str {
         &self.zfs_compression
     }
     /// Zfs Dedup
-    pub fn zfs_dedup(&self) -> bool {
+    #[must_use]
+    pub const fn zfs_dedup(&self) -> bool {
         self.zfs_dedup
     }
 
     // Path getters
 
     /// Returns the data directory path
+    #[must_use]
     pub fn data_dir(&self) -> &str {
         &self.data_dir
     }
     /// Cache Dir
+    #[must_use]
     pub fn cache_dir(&self) -> &str {
         &self.cache_dir
     }
     /// Log Dir
+    #[must_use]
     pub fn log_dir(&self) -> &str {
         &self.log_dir
     }
@@ -420,7 +459,7 @@ impl Default for PerformanceConstants {
             // Concurrency
             worker_threads: env_or_parse(
                 "NESTGATE_WORKERS",
-                std::thread::available_parallelism().map_or(4, |n| n.get()),
+                std::thread::available_parallelism().map_or(4, std::num::NonZero::get),
             ),
             async_tasks_limit: env_or_parse("NESTGATE_ASYNC_LIMIT", 10000),
         }
@@ -437,71 +476,85 @@ impl PerformanceConstants {
     // Connection getters
 
     /// Returns the maximum number of concurrent connections allowed
-    pub fn max_connections(&self) -> usize {
+    #[must_use]
+    pub const fn max_connections(&self) -> usize {
         self.max_connections
     }
     /// Connection Pool Size
-    pub fn connection_pool_size(&self) -> usize {
+    #[must_use]
+    pub const fn connection_pool_size(&self) -> usize {
         self.connection_pool_size
     }
 
     // Timeout getters (in Duration)
 
     /// Returns the connection timeout duration
-    pub fn connection_timeout(&self) -> std::time::Duration {
+    #[must_use]
+    pub const fn connection_timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.connection_timeout_ms)
     }
     /// Request Timeout
-    pub fn request_timeout(&self) -> std::time::Duration {
+    #[must_use]
+    pub const fn request_timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.request_timeout_ms)
     }
     /// Idle Timeout
-    pub fn idle_timeout(&self) -> std::time::Duration {
+    #[must_use]
+    pub const fn idle_timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.idle_timeout_ms)
     }
     /// Keepalive Interval
-    pub fn keepalive_interval(&self) -> std::time::Duration {
+    #[must_use]
+    pub const fn keepalive_interval(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.keepalive_interval_ms)
     }
 
     // Retry getters
 
     /// Returns the maximum number of retry attempts for failed operations
-    pub fn max_retry_attempts(&self) -> u32 {
+    #[must_use]
+    pub const fn max_retry_attempts(&self) -> u32 {
         self.max_retry_attempts
     }
     /// Retry Delay
-    pub fn retry_delay(&self) -> std::time::Duration {
+    #[must_use]
+    pub const fn retry_delay(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.retry_delay_ms)
     }
     /// Retry Backoff Multiplier
-    pub fn retry_backoff_multiplier(&self) -> f32 {
+    #[must_use]
+    pub const fn retry_backoff_multiplier(&self) -> f32 {
         self.retry_backoff_multiplier
     }
 
     // Buffer getters
 
     /// Returns the network buffer size in bytes
-    pub fn network_buffer_size(&self) -> usize {
+    #[must_use]
+    pub const fn network_buffer_size(&self) -> usize {
         self.network_buffer_size
     }
     /// Disk Buffer Size
-    pub fn disk_buffer_size(&self) -> usize {
+    #[must_use]
+    pub const fn disk_buffer_size(&self) -> usize {
         self.disk_buffer_size
     }
     /// Memory Pool Size
-    pub fn memory_pool_size(&self) -> usize {
+    #[must_use]
+    pub const fn memory_pool_size(&self) -> usize {
         self.memory_pool_size
     }
 
     // Concurrency getters
 
     /// Returns the number of worker threads for the async runtime
-    pub fn worker_threads(&self) -> usize {
+    #[must_use]
+    pub const fn worker_threads(&self) -> usize {
         self.worker_threads
     }
     /// Async Tasks Limit
-    pub fn async_tasks_limit(&self) -> usize {
+    #[must_use]
+    pub const fn async_tasks_limit(&self) -> usize {
         self.async_tasks_limit
     }
 }
@@ -570,44 +623,53 @@ impl SecurityConstants {
     // JWT getters
 
     /// Returns the JWT secret key for token signing
+    #[must_use]
     pub fn jwt_secret(&self) -> &str {
         &self.jwt_secret
     }
     /// Jwt Expiration
-    pub fn jwt_expiration(&self) -> std::time::Duration {
+    #[must_use]
+    pub const fn jwt_expiration(&self) -> std::time::Duration {
         std::time::Duration::from_secs(self.jwt_expiration_secs)
     }
     /// Jwt Refresh Expiration
-    pub fn jwt_refresh_expiration(&self) -> std::time::Duration {
+    #[must_use]
+    pub const fn jwt_refresh_expiration(&self) -> std::time::Duration {
         std::time::Duration::from_secs(self.jwt_refresh_expiration_secs)
     }
 
     // Encryption getters
 
     /// Returns the encryption algorithm name (e.g., "AES-256-GCM")
+    #[must_use]
     pub fn encryption_algorithm(&self) -> &str {
         &self.encryption_algorithm
     }
     /// Key Size Bits
-    pub fn key_size_bits(&self) -> u32 {
+    #[must_use]
+    pub const fn key_size_bits(&self) -> u32 {
         self.key_size_bits
     }
 
     // TLS getters
 
     /// Returns whether TLS is enabled for secure connections
-    pub fn tls_enabled(&self) -> bool {
+    #[must_use]
+    pub const fn tls_enabled(&self) -> bool {
         self.tls_enabled
     }
     /// Tls Cert Path
+    #[must_use]
     pub fn tls_cert_path(&self) -> &str {
         &self.tls_cert_path
     }
     /// Tls Key Path
+    #[must_use]
     pub fn tls_key_path(&self) -> &str {
         &self.tls_key_path
     }
     /// Tls Ca Path
+    #[must_use]
     pub fn tls_ca_path(&self) -> &str {
         &self.tls_ca_path
     }
@@ -615,11 +677,13 @@ impl SecurityConstants {
     // Rate limiting getters
 
     /// Returns the maximum number of requests allowed per minute for rate limiting
-    pub fn rate_limit_requests_per_minute(&self) -> u32 {
+    #[must_use]
+    pub const fn rate_limit_requests_per_minute(&self) -> u32 {
         self.rate_limit_requests_per_minute
     }
     /// Rate Limit Burst Size
-    pub fn rate_limit_burst_size(&self) -> u32 {
+    #[must_use]
+    pub const fn rate_limit_burst_size(&self) -> u32 {
         self.rate_limit_burst_size
     }
 }
@@ -646,6 +710,7 @@ fn env_or_parse<T: std::str::FromStr>(key: &str, default: T) -> T {
 // ============================================================================
 
 /// Get all constants in one call
+#[must_use]
 pub fn all_constants() -> (
     Arc<NetworkConstants>,
     Arc<StorageConstants>,

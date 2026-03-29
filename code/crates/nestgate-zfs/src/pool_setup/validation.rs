@@ -28,7 +28,7 @@ pub struct ValidationResult {
 impl ValidationResult {
     /// Creates a new validation result with default values.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             is_valid: true,
             issues: Vec::new(),
@@ -48,7 +48,7 @@ impl ValidationResult {
     }
 
     /// Merge
-    pub fn merge(&mut self, other: ValidationResult) {
+    pub fn merge(&mut self, other: Self) {
         if !other.is_valid {
             self.is_valid = false;
         }
@@ -64,7 +64,7 @@ pub struct PoolSetupValidator {
 impl PoolSetupValidator {
     /// Creates a new pool setup validator with the given configuration.
     #[must_use]
-    pub fn new(config: PoolSetupConfig) -> Self {
+    pub const fn new(config: PoolSetupConfig) -> Self {
         Self { config }
     }
 
@@ -87,17 +87,17 @@ impl PoolSetupValidator {
         }
 
         // Usage validation
-        if device.in_use {
-            if let Some(ref usage) = device.current_use {
-                // Check if it's a filesystem we should skip
-                for skip_fstype in &self.config.device_detection.skip_fstypes {
-                    if usage.contains(skip_fstype) {
-                        result.add_error(format!(
-                            "Device {} contains filesystem type that should be skipped: {}",
-                            device.device_path, skip_fstype
-                        ));
-                        break;
-                    }
+        if device.in_use
+            && let Some(ref usage) = device.current_use
+        {
+            // Check if it's a filesystem we should skip
+            for skip_fstype in &self.config.device_detection.skip_fstypes {
+                if usage.contains(skip_fstype) {
+                    result.add_error(format!(
+                        "Device {} contains filesystem type that should be skipped: {}",
+                        device.device_path, skip_fstype
+                    ));
+                    break;
                 }
             }
         }

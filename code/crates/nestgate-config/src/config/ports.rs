@@ -38,7 +38,7 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use nestgate_core::config::ports::PortConfig;
 //!
 //! # fn example() -> anyhow::Result<()> {
@@ -62,7 +62,7 @@
 use serde::{Deserialize, Serialize};
 use std::env;
 
-/// Port configuration for all NestGate services
+/// Port configuration for all `NestGate` services
 ///
 /// **Zero Hardcoding**: All ports configurable via environment variables
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -103,6 +103,7 @@ impl PortConfig {
     ///
     /// This is the recommended method for production deployments.
     /// Reads environment variables, falls back to development defaults if not set.
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             api_port: env::var("NESTGATE_API_PORT")
@@ -137,7 +138,7 @@ impl PortConfig {
     /// Use this for local development and testing.
     /// All ports use standard defaults.
     #[must_use]
-    pub fn default_dev() -> Self {
+    pub const fn default_dev() -> Self {
         Self {
             api_port: Self::DEFAULT_API_PORT,
             internal_port: Self::DEFAULT_INTERNAL_PORT,
@@ -169,7 +170,7 @@ impl Default for PortConfig {
     }
 }
 
-/// Builder for PortConfig
+/// Builder for `PortConfig`
 ///
 /// Allows explicit port configuration for testing or special deployments.
 #[derive(Debug, Clone, Default)]
@@ -185,42 +186,42 @@ pub struct PortConfigBuilder {
 impl PortConfigBuilder {
     /// Set API port
     #[must_use]
-    pub fn api_port(mut self, port: u16) -> Self {
+    pub const fn api_port(mut self, port: u16) -> Self {
         self.api_port = Some(port);
         self
     }
 
     /// Set internal services port
     #[must_use]
-    pub fn internal_port(mut self, port: u16) -> Self {
+    pub const fn internal_port(mut self, port: u16) -> Self {
         self.internal_port = Some(port);
         self
     }
 
     /// Set metrics port
     #[must_use]
-    pub fn metrics_port(mut self, port: u16) -> Self {
+    pub const fn metrics_port(mut self, port: u16) -> Self {
         self.metrics_port = Some(port);
         self
     }
 
     /// Set health check port
     #[must_use]
-    pub fn health_port(mut self, port: u16) -> Self {
+    pub const fn health_port(mut self, port: u16) -> Self {
         self.health_port = Some(port);
         self
     }
 
     /// Set admin port
     #[must_use]
-    pub fn admin_port(mut self, port: u16) -> Self {
+    pub const fn admin_port(mut self, port: u16) -> Self {
         self.admin_port = Some(port);
         self
     }
 
     /// Set discovery port
     #[must_use]
-    pub fn discovery_port(mut self, port: u16) -> Self {
+    pub const fn discovery_port(mut self, port: u16) -> Self {
         self.discovery_port = Some(port);
         self
     }

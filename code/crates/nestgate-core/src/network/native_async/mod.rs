@@ -56,8 +56,8 @@ mod tests {
     use std::collections::HashMap;
     use std::time::Duration;
     // Import canonical types for testing
-    use crate::diagnostics::types::ServiceInfo;
     use crate::Result;
+    use crate::diagnostics::types::ServiceInfo;
 
     #[cfg(test)]
     mod test_mocks {
@@ -166,8 +166,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_native_async_service_discovery(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn test_native_async_service_discovery()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Create production service discovery with native async methods
         let discovery = production::ProductionServiceDiscovery::default();
 
@@ -191,19 +191,21 @@ mod tests {
         // Test native async service discovery
         let discovered = discovery.discover("test_service").await;
         assert!(discovered.is_ok());
-        assert!(!discovered
-            .map_err(|e| {
-                tracing::error!(
-                    "Expected operation failed: {} - Error: {:?}",
-                    "Test operation should succeed",
-                    e
-                );
-                crate::NestGateError::internal_error(
-                    "Test operation should succeed",
-                    "automated_migration",
-                )
-            })?
-            .is_empty());
+        assert!(
+            !discovered
+                .map_err(|e| {
+                    tracing::error!(
+                        "Expected operation failed: {} - Error: {:?}",
+                        "Test operation should succeed",
+                        e
+                    );
+                    crate::NestGateError::internal_error(
+                        "Test operation should succeed",
+                        "automated_migration",
+                    )
+                })?
+                .is_empty()
+        );
 
         // Test native async service existence check
         let exists = discovery.exists("test_service").await;
@@ -221,8 +223,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_native_async_protocol_handler(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn test_native_async_protocol_handler()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         // Create production protocol handler with native async methods
         let handler = ProductionProtocolHandler::default();
 
@@ -258,8 +260,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_service_events_and_watching(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn test_service_events_and_watching()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let discovery = production::ProductionServiceDiscovery::default();
 
         // Register a service to generate events

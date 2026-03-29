@@ -144,9 +144,11 @@ mod network_config_comprehensive_tests {
 
     #[test]
     fn test_localhost_addresses_are_valid() {
-        assert!(network_hardcoded::addresses::LOCALHOST_IPV4
-            .parse::<std::net::Ipv4Addr>()
-            .is_ok());
+        assert!(
+            network_hardcoded::addresses::LOCALHOST_IPV4
+                .parse::<std::net::Ipv4Addr>()
+                .is_ok()
+        );
         assert_eq!(network_hardcoded::addresses::LOCALHOST_IPV6, "::1");
     }
 

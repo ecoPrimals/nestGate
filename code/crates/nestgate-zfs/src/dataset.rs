@@ -6,13 +6,13 @@
 
 //! Dataset module
 
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use crate::{
     config::ZfsConfig,
     pool::ZfsPoolManager,
     // types::{CompressionAlgorithm, DatasetProperty}, // Removed unused imports
 };
-use nestgate_core::{canonical_types::StorageTier as CoreStorageTier, Result};
+use nestgate_core::{Result, canonical_types::StorageTier as CoreStorageTier};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -21,6 +21,96 @@ use tokio::process::Command;
 use tracing::debug;
 use tracing::info;
 use tracing::warn;
+
+/// Infer storage tier from dataset name hints (used when listing without property queries).
+fn tier_hint_from_dataset_name(name: &str) -> CoreStorageTier {
+    if name.contains("hot") {
+        CoreStorageTier::Hot
+    } else if name.contains("cold") {
+        CoreStorageTier::Cold
+    } else {
+        CoreStorageTier::Warm
+    }
+}
+
+/// Parse one tab-separated line from `zfs list -H -o name,used,avail,mountpoint`.
+fn parse_zfs_dataset_list_line(dataset_name: &str, line: &str) -> Option<DatasetInfo> {
+    let fields: Vec<&str> = line.split('\t').collect();
+    if fields.len() < 4 {
+        return None;
+    }
+    let used_space = fields[1].parse::<u64>().unwrap_or(0);
+    let available_space = fields[2].parse::<u64>().unwrap_or(0);
+    let mount_point = fields[3].to_string();
+    let tier = tier_hint_from_dataset_name(dataset_name);
+    Some(DatasetInfo {
+        name: dataset_name.to_string(),
+        used_space,
+        available_space,
+        file_count: None,
+        compression_ratio: None,
+        mount_point,
+        tier,
+        properties: HashMap::new(),
+    })
+}
+
+/// Parse one line from `zfs list -t snapshot -H -o name,used,referenced,creation`.
+fn parse_zfs_snapshot_list_line(
+    line: &str,
+    dataset_name: &str,
+) -> Option<crate::snapshot::SnapshotInfo> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() < 4 {
+        return None;
+    }
+    let full_name = parts[0].to_string();
+    let name = full_name
+        .split('@')
+        .next_back()
+        .unwrap_or(&full_name)
+        .to_string();
+    let used_space: u64 = parts[1].parse().unwrap_or(0);
+    let referenced_size: u64 = parts[2].parse().unwrap_or(0);
+
+    Some(crate::snapshot::SnapshotInfo {
+        name,
+        full_name,
+        dataset: dataset_name.to_string(),
+        created_at: SystemTime::now(),
+        size: used_space,
+        referenced_size,
+        written_size: used_space,
+        compression_ratio: 1.0,
+        properties: HashMap::new(),
+        policy: None,
+        tier: CoreStorageTier::Warm,
+        protected: false,
+        tags: Vec::new(),
+    })
+}
+
+/// Parse one line from `zfs list -H -p -o name,used,avail,mountpoint` (pool-wide listing).
+fn parse_zfs_list_datasets_row(line: &str) -> Option<DatasetInfo> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() < 4 {
+        return None;
+    }
+    let name = parts[0].to_string();
+    let used_space: u64 = parts[1].parse().unwrap_or(0);
+    let available_space: u64 = parts[2].parse().unwrap_or(0);
+    let mount_point = parts[3].to_string();
+    Some(DatasetInfo {
+        name: name.clone(),
+        used_space,
+        available_space,
+        file_count: None,
+        compression_ratio: None,
+        mount_point,
+        tier: tier_hint_from_dataset_name(&name),
+        properties: HashMap::new(),
+    })
+}
 
 /// Dataset information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,7 +136,7 @@ pub struct DatasetInfo {
 /// ZFS Dataset Manager - handles dataset operations
 #[derive(Debug)]
 #[allow(dead_code)] // Some fields are planned features not yet fully implemented
-/// Manager for ZfsDataset operations
+/// Manager for `ZfsDataset` operations
 pub struct ZfsDatasetManager {
     config: Arc<ZfsConfig>,
     pool_manager: Arc<ZfsPoolManager>,
@@ -63,7 +153,10 @@ impl ZfsDatasetManager {
 
     /// Create a new ZFS dataset manager with shared config (zero-copy)
     #[must_use]
-    pub fn with_shared_config(config: Arc<ZfsConfig>, pool_manager: Arc<ZfsPoolManager>) -> Self {
+    pub const fn with_shared_config(
+        config: Arc<ZfsConfig>,
+        pool_manager: Arc<ZfsPoolManager>,
+    ) -> Self {
         Self {
             config,
             pool_manager,
@@ -232,33 +325,10 @@ impl ZfsDatasetManager {
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        if let Some(line) = stdout.lines().next() {
-            let fields: Vec<&str> = line.split('\t').collect();
-            if fields.len() >= 4 {
-                let used_space = fields[1].parse::<u64>().unwrap_or(0);
-                let available_space = fields[2].parse::<u64>().unwrap_or(0);
-                let mount_point = fields[3].to_string();
-
-                // Try to determine tier from dataset name or properties
-                let tier = if name.contains("hot") {
-                    CoreStorageTier::Hot
-                } else if name.contains("cold") {
-                    CoreStorageTier::Cold
-                } else {
-                    CoreStorageTier::Warm
-                };
-
-                return Ok(DatasetInfo {
-                    name: name.to_string(),
-                    used_space,
-                    available_space,
-                    file_count: None, // Would need additional command to get this
-                    compression_ratio: None, // Would need to parse from properties
-                    mount_point,
-                    tier,
-                    properties: HashMap::new(), // Would need separate call to get all properties
-                });
-            }
+        if let Some(line) = stdout.lines().next()
+            && let Some(info) = parse_zfs_dataset_list_line(name, line)
+        {
+            return Ok(info);
         }
 
         // Fallback if parsing fails
@@ -456,23 +526,8 @@ impl ZfsDatasetManager {
         let mut datasets = Vec::new();
 
         for line in stdout.lines() {
-            let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 4 {
-                let name = parts[0].to_string();
-                let used_space: u64 = parts[1].parse().unwrap_or(0);
-                let available_space: u64 = parts[2].parse().unwrap_or(0);
-                let mount_point = parts[3].to_string();
-
-                datasets.push(DatasetInfo {
-                    name,
-                    used_space,
-                    available_space,
-                    file_count: None,
-                    compression_ratio: None,
-                    mount_point,
-                    tier: CoreStorageTier::Warm, // Default tier, would need tier detection logic
-                    properties: HashMap::new(),
-                });
+            if let Some(row) = parse_zfs_list_datasets_row(line) {
+                datasets.push(row);
             }
         }
 
@@ -551,33 +606,8 @@ impl ZfsDatasetManager {
             if line.trim().is_empty() {
                 continue;
             }
-
-            let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 4 {
-                let full_name = parts[0].to_string();
-                let name = full_name
-                    .split('@')
-                    .next_back()
-                    .unwrap_or(&full_name)
-                    .to_string();
-                let used_space: u64 = parts[1].parse().unwrap_or(0);
-                let referenced_size: u64 = parts[2].parse().unwrap_or(0);
-
-                snapshots.push(crate::snapshot::SnapshotInfo {
-                    name,
-                    full_name,
-                    dataset: dataset_name.to_string(),
-                    created_at: SystemTime::now(), // Placeholder
-                    size: used_space,
-                    referenced_size,
-                    written_size: used_space, // Approximation
-                    compression_ratio: 1.0,   // Default value
-                    properties: std::collections::HashMap::new(),
-                    policy: None,
-                    tier: CoreStorageTier::Warm, // Default tier
-                    protected: false,
-                    tags: Vec::new(),
-                });
+            if let Some(snap) = parse_zfs_snapshot_list_line(line, dataset_name) {
+                snapshots.push(snap);
             }
         }
 
@@ -664,5 +694,145 @@ mod tests {
         let _ = m
             .create_dataset("tmpds", "nonexistent_pool_xyz", CoreStorageTier::Warm)
             .await;
+    }
+
+    #[test]
+    fn dataset_info_serde_all_storage_tiers() {
+        for tier in [
+            CoreStorageTier::Hot,
+            CoreStorageTier::Warm,
+            CoreStorageTier::Cold,
+            CoreStorageTier::Cache,
+            CoreStorageTier::Archive,
+        ] {
+            let info = DatasetInfo {
+                name: "p/d".into(),
+                used_space: 1,
+                available_space: 2,
+                file_count: None,
+                compression_ratio: None,
+                mount_point: "/m".into(),
+                tier: tier.clone(),
+                properties: HashMap::new(),
+            };
+            let json = serde_json::to_string(&info).expect("serialize tier");
+            let back: DatasetInfo = serde_json::from_str(&json).expect("deserialize tier");
+            assert_eq!(back.tier, tier);
+        }
+    }
+
+    #[test]
+    fn dataset_info_clone_and_debug() {
+        let info = DatasetInfo {
+            name: "z/a".into(),
+            used_space: 10,
+            available_space: 20,
+            file_count: Some(100),
+            compression_ratio: Some(2.0),
+            mount_point: "/z/a".into(),
+            tier: CoreStorageTier::Cold,
+            properties: HashMap::new(),
+        };
+        let c = info.clone();
+        assert_eq!(c.name, info.name);
+        let dbg = format!("{info:?}");
+        assert!(dbg.contains("DatasetInfo"));
+        assert!(dbg.contains("z/a"));
+    }
+
+    #[test]
+    fn dataset_info_optional_fields_none() {
+        let info = DatasetInfo {
+            name: "p/x".into(),
+            used_space: 0,
+            available_space: u64::MAX,
+            file_count: None,
+            compression_ratio: None,
+            mount_point: "-".into(),
+            tier: CoreStorageTier::Archive,
+            properties: HashMap::new(),
+        };
+        assert!(info.file_count.is_none());
+        assert!(info.compression_ratio.is_none());
+    }
+
+    #[tokio::test]
+    async fn create_fallback_dataset_info_always_warm_tier() {
+        let m = ZfsDatasetManager::new_for_testing();
+        let a = m
+            .create_fallback_dataset_info("tank/hot_data")
+            .expect("fallback");
+        let b = m
+            .create_fallback_dataset_info("cold/store")
+            .expect("fallback");
+        assert_eq!(a.tier, CoreStorageTier::Warm);
+        assert_eq!(b.tier, CoreStorageTier::Warm);
+    }
+
+    #[test]
+    fn tier_hint_from_dataset_name_all_variants() {
+        assert_eq!(
+            tier_hint_from_dataset_name("tank/hot_cache"),
+            CoreStorageTier::Hot
+        );
+        assert_eq!(
+            tier_hint_from_dataset_name("tank/cold_archive"),
+            CoreStorageTier::Cold
+        );
+        assert_eq!(
+            tier_hint_from_dataset_name("tank/warm_fs"),
+            CoreStorageTier::Warm
+        );
+        assert_eq!(
+            tier_hint_from_dataset_name("tank/data"),
+            CoreStorageTier::Warm
+        );
+    }
+
+    #[test]
+    fn parse_zfs_dataset_list_line_realistic_tab_output() {
+        let line = "tank/app\t1048576\t1073741824\t/tank/app";
+        let info = parse_zfs_dataset_list_line("tank/app", line).expect("line parses");
+        assert_eq!(info.name, "tank/app");
+        assert_eq!(info.used_space, 1048576);
+        assert_eq!(info.available_space, 1073741824);
+        assert_eq!(info.mount_point, "/tank/app");
+        assert_eq!(info.tier, CoreStorageTier::Warm);
+    }
+
+    #[test]
+    fn parse_zfs_dataset_list_line_hot_and_cold_tiers() {
+        let hot = parse_zfs_dataset_list_line("tank/hot/db", "tank/hot/db\t0\t0\t/mnt").expect("p");
+        assert_eq!(hot.tier, CoreStorageTier::Hot);
+        let cold = parse_zfs_dataset_list_line("store/cold/logs", "x\t1\t2\t-").expect("p");
+        assert_eq!(cold.tier, CoreStorageTier::Cold);
+    }
+
+    #[test]
+    fn parse_zfs_dataset_list_line_short_line_returns_none() {
+        assert!(parse_zfs_dataset_list_line("x", "only\t2").is_none());
+    }
+
+    #[test]
+    fn parse_zfs_list_datasets_row_sets_tier_from_name() {
+        let row = parse_zfs_list_datasets_row("tank/hot/d\t100\t200\t/mnt").expect("row");
+        assert_eq!(row.name, "tank/hot/d");
+        assert_eq!(row.tier, CoreStorageTier::Hot);
+    }
+
+    #[test]
+    fn parse_zfs_snapshot_list_line_parses_at_sign() {
+        let line = "tank/ds@s1\t4096\t8192\t1234567890";
+        let s = parse_zfs_snapshot_list_line(line, "tank/ds").expect("snap");
+        assert_eq!(s.full_name, "tank/ds@s1");
+        assert_eq!(s.name, "s1");
+        assert_eq!(s.dataset, "tank/ds");
+        assert_eq!(s.size, 4096);
+        assert_eq!(s.referenced_size, 8192);
+    }
+
+    #[test]
+    fn parse_zfs_snapshot_list_line_incomplete_returns_none() {
+        assert!(parse_zfs_snapshot_list_line("bad", "ds").is_none());
     }
 }

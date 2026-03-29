@@ -10,8 +10,8 @@ use nestgate_core::Result;
 
 // Re-export the error handling functions
 pub use error::{
-    extract_mcp_context, extract_method, extract_session_id, mcp_connection_error, method_error,
-    protocol_error, serialization_error, session_error, transport_error, McpErrorExt,
+    McpErrorExt, extract_mcp_context, extract_method, extract_session_id, mcp_connection_error,
+    method_error, protocol_error, serialization_error, session_error, transport_error,
 };
 
 pub mod config;

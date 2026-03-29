@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 /// **Zero-cost security provider configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZeroCostSecurity
+/// Configuration for `ZeroCostSecurity`
 pub struct ZeroCostSecurityConfig {
     /// Provider identifier
     pub provider_id: String,
@@ -68,19 +68,19 @@ impl ZeroCostSecurityConfig {
 
     /// Get token expiry duration
     #[must_use]
-    pub fn token_expiry_duration(&self) -> Duration {
+    pub const fn token_expiry_duration(&self) -> Duration {
         Duration::from_secs(self.token_expiry_seconds)
     }
 
     /// Get authentication timeout duration
     #[must_use]
-    pub fn auth_timeout_duration(&self) -> Duration {
+    pub const fn auth_timeout_duration(&self) -> Duration {
         Duration::from_secs(self.auth_timeout_seconds)
     }
 
     /// Get lockout duration
     #[must_use]
-    pub fn lockout_duration(&self) -> Duration {
+    pub const fn lockout_duration(&self) -> Duration {
         Duration::from_secs(self.lockout_duration_seconds)
     }
 

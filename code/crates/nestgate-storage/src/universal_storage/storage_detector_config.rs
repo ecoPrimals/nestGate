@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 /// Immutable configuration for storage detector AWS credentials
 #[derive(Debug, Clone)]
-/// Configuration for StorageDetector
+/// Configuration for `StorageDetector`
 pub struct StorageDetectorConfig {
     /// AWS access key ID (if available)
     aws_access_key: Option<String>,
@@ -24,7 +24,8 @@ pub type SharedStorageDetectorConfig = Arc<StorageDetectorConfig>;
 
 impl StorageDetectorConfig {
     /// Create a new empty configuration
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             aws_access_key: None,
             aws_secret_key: None,
@@ -33,7 +34,8 @@ impl StorageDetectorConfig {
 
     /// Load configuration from environment variables
     ///
-    /// Reads AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY once at startup.
+    /// Reads `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` once at startup.
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             aws_access_key: std::env::var("AWS_ACCESS_KEY_ID").ok(),
@@ -53,16 +55,19 @@ impl StorageDetectorConfig {
     }
 
     /// Check if AWS credentials are available
-    pub fn has_aws_credentials(&self) -> bool {
+    #[must_use]
+    pub const fn has_aws_credentials(&self) -> bool {
         self.aws_access_key.is_some() && self.aws_secret_key.is_some()
     }
 
     /// Get AWS access key (if available)
+    #[must_use]
     pub fn aws_access_key(&self) -> Option<&str> {
         self.aws_access_key.as_deref()
     }
 
     /// Get AWS secret key (if available)
+    #[must_use]
     pub fn aws_secret_key(&self) -> Option<&str> {
         self.aws_secret_key.as_deref()
     }

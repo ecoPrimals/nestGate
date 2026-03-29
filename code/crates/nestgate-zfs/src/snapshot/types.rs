@@ -45,8 +45,8 @@ pub struct SnapshotInfo {
     pub tags: Vec<String>,
 }
 /// Snapshot operation status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Status values for SnapshotOperation
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Status values for `SnapshotOperation`
 pub enum SnapshotOperationStatus {
     /// Operation is queued
     Queued,

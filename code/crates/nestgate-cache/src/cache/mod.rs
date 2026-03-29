@@ -88,72 +88,72 @@ impl CacheSystem {
         };
 
         let manager = CacheManager::new(unified_config);
-        Ok(CacheSystem::SingleTier(manager))
+        Ok(Self::SingleTier(manager))
     }
 
     /// Create a multi-tier cache system
     #[allow(deprecated)]
     pub fn multi_tier(cache_config: MultiTierCacheConfig) -> nestgate_types::Result<Self> {
         let cache = MultiTierCache::new(cache_config)?;
-        Ok(CacheSystem::MultiTier(cache))
+        Ok(Self::MultiTier(cache))
     }
 
     /// Get data from cache
     pub async fn get(&mut self, key: &str) -> nestgate_types::Result<Option<Vec<u8>>> {
         match self {
-            CacheSystem::SingleTier(cache) => Ok(cache.get(key)),
-            CacheSystem::MultiTier(cache) => cache.get(key).await,
+            Self::SingleTier(cache) => Ok(cache.get(key)),
+            Self::MultiTier(cache) => cache.get(key).await,
         }
     }
 
     /// Put data into cache
     pub async fn put(&mut self, key: &str, data: Vec<u8>) -> nestgate_types::Result<()> {
         match self {
-            CacheSystem::SingleTier(cache) => cache.put(key.to_string(), data).await,
-            CacheSystem::MultiTier(cache) => cache.put(key, data).await,
+            Self::SingleTier(cache) => cache.put(key.to_string(), data).await,
+            Self::MultiTier(cache) => cache.put(key, data).await,
         }
     }
 
     /// Remove data from cache
     pub async fn remove(&mut self, key: &str) -> nestgate_types::Result<bool> {
         match self {
-            CacheSystem::SingleTier(cache) => Ok(cache.remove(key)),
-            CacheSystem::MultiTier(cache) => cache.remove(key).await,
+            Self::SingleTier(cache) => Ok(cache.remove(key)),
+            Self::MultiTier(cache) => cache.remove(key).await,
         }
     }
 
     /// Clear all cache data
     pub async fn clear(&mut self) -> nestgate_types::Result<()> {
         match self {
-            CacheSystem::SingleTier(cache) => {
+            Self::SingleTier(cache) => {
                 cache.clear();
                 Ok(())
             }
-            CacheSystem::MultiTier(cache) => cache.clear().await,
+            Self::MultiTier(cache) => cache.clear().await,
         }
     }
 
     /// Check if cache contains a key
     pub async fn contains_key(&mut self, key: &str) -> bool {
         match self {
-            CacheSystem::SingleTier(cache) => {
+            Self::SingleTier(cache) => {
                 // Check if key exists by attempting to get it
                 cache.get(key).is_some()
             }
-            CacheSystem::MultiTier(cache) => cache.contains_key(key).await,
+            Self::MultiTier(cache) => cache.contains_key(key).await,
         }
     }
 
     /// Get cache statistics
     pub fn stats(&self) -> nestgate_types::Result<CacheSystemStats> {
         match self {
-            CacheSystem::SingleTier(_cache) => {
+            Self::SingleTier(_cache) => {
                 // Placeholder stats for single tier
                 Ok(CacheSystemStats::SingleTier(
                     crate::cache::types::CacheStats::default(),
                 ))
             }
-            CacheSystem::MultiTier(cache) => {
+            Self::MultiTier(cache) => {
                 let stats = cache.stats()?;
                 Ok(CacheSystemStats::MultiTier(stats))
             }
@@ -163,16 +163,16 @@ impl CacheSystem {
     /// Perform maintenance on cache
     pub async fn maintenance(&mut self) -> nestgate_types::Result<()> {
         match self {
-            CacheSystem::SingleTier(cache) => cache.maintenance().await,
-            CacheSystem::MultiTier(cache) => cache.maintenance(),
+            Self::SingleTier(cache) => cache.maintenance().await,
+            Self::MultiTier(cache) => cache.maintenance(),
         }
     }
 
     /// Flush cache to persistent storage
     pub fn flush(&mut self) -> nestgate_types::Result<()> {
         match self {
-            CacheSystem::SingleTier(cache) => cache.flush(),
-            CacheSystem::MultiTier(cache) => cache.flush(),
+            Self::SingleTier(cache) => cache.flush(),
+            Self::MultiTier(cache) => cache.flush(),
         }
     }
 }
@@ -190,7 +190,7 @@ pub enum CacheSystemStats {
 impl CacheSystemStats {
     /// Get total hits across all tiers
     #[must_use]
-    pub fn total_hits(&self) -> u64 {
+    pub const fn total_hits(&self) -> u64 {
         match self {
             Self::SingleTier(stats) => stats.hits,
             Self::MultiTier(stats) => stats.total_hits,
@@ -199,10 +199,10 @@ impl CacheSystemStats {
 
     /// Get total misses across all tiers
     #[must_use]
-    pub fn total_misses(&self) -> u64 {
+    pub const fn total_misses(&self) -> u64 {
         match self {
-            CacheSystemStats::SingleTier(stats) => stats.misses,
-            CacheSystemStats::MultiTier(stats) => stats.total_misses,
+            Self::SingleTier(stats) => stats.misses,
+            Self::MultiTier(stats) => stats.total_misses,
         }
     }
 
@@ -210,8 +210,8 @@ impl CacheSystemStats {
     #[must_use]
     pub fn total_items(&self) -> usize {
         match self {
-            CacheSystemStats::SingleTier(stats) => stats.total_items(),
-            CacheSystemStats::MultiTier(stats) => stats.total_items,
+            Self::SingleTier(stats) => stats.total_items(),
+            Self::MultiTier(stats) => stats.total_items,
         }
     }
 
@@ -219,8 +219,8 @@ impl CacheSystemStats {
     #[must_use]
     pub fn total_size_bytes(&self) -> u64 {
         match self {
-            CacheSystemStats::SingleTier(stats) => stats.total_size_bytes(),
-            CacheSystemStats::MultiTier(stats) => stats.total_size_bytes,
+            Self::SingleTier(stats) => stats.total_size_bytes(),
+            Self::MultiTier(stats) => stats.total_size_bytes,
         }
     }
 
@@ -228,8 +228,8 @@ impl CacheSystemStats {
     #[must_use]
     pub fn hit_ratio(&self) -> f64 {
         match self {
-            CacheSystemStats::SingleTier(stats) => stats.hit_ratio(),
-            CacheSystemStats::MultiTier(stats) => stats.overall_hit_ratio(),
+            Self::SingleTier(stats) => stats.hit_ratio(),
+            Self::MultiTier(stats) => stats.overall_hit_ratio(),
         }
     }
 }
@@ -284,14 +284,14 @@ impl CacheBuilder {
 
     /// Set cache TTL
     #[must_use]
-    pub fn with_ttl(mut self, ttl: std::time::Duration) -> Self {
+    pub const fn with_ttl(mut self, ttl: std::time::Duration) -> Self {
         self.config.ttl_seconds = Some(ttl.as_secs());
         self
     }
 
     /// Set hot tier size
     #[must_use]
-    pub fn with_hot_tier_size(mut self, size: usize) -> Self {
+    pub const fn with_hot_tier_size(mut self, size: usize) -> Self {
         self.config.hot_tier_size = Some(size as u64);
         self
     }

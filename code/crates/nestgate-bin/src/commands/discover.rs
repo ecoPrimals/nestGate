@@ -22,7 +22,7 @@ pub async fn execute(target: DiscoverTarget) -> BinResult<()> {
 
 /// Discover primals in the local ecosystem
 ///
-/// ✅ PRIMAL SELF-KNOWLEDGE: NestGate knows itself, discovers others at runtime
+/// ✅ PRIMAL SELF-KNOWLEDGE: `NestGate` knows itself, discovers others at runtime
 async fn discover_primals() -> BinResult<()> {
     println!("🔍 Primal Discovery");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -65,7 +65,7 @@ async fn discover_primals() -> BinResult<()> {
                 }
             }
             Err(e) => {
-                println!("   ⚠️  Cannot read socket directory: {}", e);
+                println!("   ⚠️  Cannot read socket directory: {e}");
             }
         }
     } else {
@@ -178,7 +178,7 @@ fn discover_socket_dir() -> Option<std::path::PathBuf> {
     // Check explicit socket path
     if let Ok(socket) = std::env::var("NESTGATE_SOCKET") {
         let path = std::path::PathBuf::from(&socket);
-        return path.parent().map(|p| p.to_path_buf());
+        return path.parent().map(std::path::Path::to_path_buf);
     }
 
     // Check biomeOS socket directory

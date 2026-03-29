@@ -8,7 +8,7 @@
 //! Utilities module
 
 use super::types::CapacityInfo;
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use nestgate_core::Result;
 // Removed unused tracing import
 
@@ -94,10 +94,10 @@ impl ZfsManager {
                 if let Some(size) = self._parse_sizevalue(line) {
                     total_bytes = size;
                 }
-            } else if line.starts_with("allocated:") {
-                if let Some(size) = self._parse_sizevalue(line) {
-                    used_bytes = size;
-                }
+            } else if line.starts_with("allocated:")
+                && let Some(size) = self._parse_sizevalue(line)
+            {
+                used_bytes = size;
             }
         }
 
@@ -130,10 +130,10 @@ impl ZfsManager {
                 if let Some(size) = self._parse_size_from_segment(part) {
                     total_bytes = size;
                 }
-            } else if part.contains("used") {
-                if let Some(size) = self._parse_size_from_segment(part) {
-                    used_bytes = size;
-                }
+            } else if part.contains("used")
+                && let Some(size) = self._parse_size_from_segment(part)
+            {
+                used_bytes = size;
             }
         }
 

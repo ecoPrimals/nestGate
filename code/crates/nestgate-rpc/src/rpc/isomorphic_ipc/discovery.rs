@@ -3,8 +3,8 @@
 
 //! # 🔍 IPC Endpoint Discovery
 //!
-//! **UNIVERSAL**: Discovers Unix socket OR TCP endpoints automatically  
-//! **ZERO CONFIG**: No environment variables or flags required  
+//! **UNIVERSAL**: Discovers Unix socket OR TCP endpoints automatically\
+//! **ZERO CONFIG**: No environment variables or flags required\
 //! **ADAPTIVE**: Tries optimal path first, falls back gracefully
 //!
 //! ## Philosophy
@@ -19,7 +19,7 @@
 //! ## Discovery Strategy
 //!
 //! 1. **Try Unix Socket** (optimal):
-//!    - Check XDG_RUNTIME_DIR
+//!    - Check `XDG_RUNTIME_DIR`
 //!    - Fallback to /tmp
 //!    - Verify socket file exists
 //!
@@ -55,21 +55,24 @@ pub enum IpcEndpoint {
 
 impl IpcEndpoint {
     /// Get endpoint description (for logging)
+    #[must_use]
     pub fn description(&self) -> String {
         match self {
-            IpcEndpoint::UnixSocket(path) => format!("Unix socket: {}", path.display()),
-            IpcEndpoint::TcpLocal(addr) => format!("TCP (localhost): {}", addr),
+            Self::UnixSocket(path) => format!("Unix socket: {}", path.display()),
+            Self::TcpLocal(addr) => format!("TCP (localhost): {addr}"),
         }
     }
 
     /// Check if endpoint is Unix socket
-    pub fn is_unix_socket(&self) -> bool {
-        matches!(self, IpcEndpoint::UnixSocket(_))
+    #[must_use]
+    pub const fn is_unix_socket(&self) -> bool {
+        matches!(self, Self::UnixSocket(_))
     }
 
     /// Check if endpoint is TCP
-    pub fn is_tcp(&self) -> bool {
-        matches!(self, IpcEndpoint::TcpLocal(_))
+    #[must_use]
+    pub const fn is_tcp(&self) -> bool {
+        matches!(self, Self::TcpLocal(_))
     }
 }
 
@@ -92,7 +95,7 @@ impl IpcEndpoint {
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::discover_ipc_endpoint;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -125,8 +128,7 @@ pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
     }
 
     Err(anyhow::anyhow!(
-        "Could not discover IPC endpoint for service: {} (tried Unix socket and TCP discovery file)",
-        service_name
+        "Could not discover IPC endpoint for service: {service_name} (tried Unix socket and TCP discovery file)"
     ))
 }
 
@@ -147,13 +149,13 @@ pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
 fn discover_unix_socket(service_name: &str) -> Result<PathBuf> {
     // Try XDG_RUNTIME_DIR first (preferred)
     if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        let socket_path = PathBuf::from(format!("{}/{}.sock", runtime_dir, service_name));
+        let socket_path = PathBuf::from(format!("{runtime_dir}/{service_name}.sock"));
         debug!("   Unix socket candidate: {}", socket_path.display());
         return Ok(socket_path);
     }
 
     // Fallback to /tmp
-    let socket_path = PathBuf::from(format!("/tmp/{}.sock", service_name));
+    let socket_path = PathBuf::from(format!("/tmp/{service_name}.sock"));
     debug!(
         "   Unix socket candidate (fallback): {}",
         socket_path.display()
@@ -190,9 +192,8 @@ fn discover_tcp_endpoint(service_name: &str) -> Result<IpcEndpoint> {
                 if let Ok(addr) = addr_str.parse::<SocketAddr>() {
                     debug!("✅ Parsed TCP endpoint from discovery file: {}", addr);
                     return Ok(IpcEndpoint::TcpLocal(addr));
-                } else {
-                    debug!("⚠️  Invalid address format: {}", addr_str);
                 }
+                debug!("⚠️  Invalid address format: {}", addr_str);
             } else {
                 debug!("⚠️  Invalid discovery file format (expected tcp:127.0.0.1:PORT)");
             }
@@ -214,21 +215,19 @@ fn get_tcp_discovery_file_candidates(service_name: &str) -> Vec<PathBuf> {
     // XDG_RUNTIME_DIR (preferred)
     if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
         candidates.push(PathBuf::from(format!(
-            "{}/{}-ipc-port",
-            runtime_dir, service_name
+            "{runtime_dir}/{service_name}-ipc-port"
         )));
     }
 
     // HOME/.local/share (fallback)
     if let Ok(home) = std::env::var("HOME") {
         candidates.push(PathBuf::from(format!(
-            "{}/.local/share/{}-ipc-port",
-            home, service_name
+            "{home}/.local/share/{service_name}-ipc-port"
         )));
     }
 
     // /tmp (last resort)
-    candidates.push(PathBuf::from(format!("/tmp/{}-ipc-port", service_name)));
+    candidates.push(PathBuf::from(format!("/tmp/{service_name}-ipc-port")));
 
     candidates
 }

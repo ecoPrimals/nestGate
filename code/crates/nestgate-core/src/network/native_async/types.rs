@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_network_connection_creation() {
-        use crate::constants::{network::LOCALHOST, DEFAULT_API_PORT};
+        use crate::constants::{DEFAULT_API_PORT, network::LOCALHOST};
 
         let connection = NetworkConnection {
             connection_id: "conn-123".to_string(),

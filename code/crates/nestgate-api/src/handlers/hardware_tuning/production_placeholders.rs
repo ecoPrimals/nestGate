@@ -157,8 +157,8 @@ pub const fn run_hardware_benchmark() -> std::result::Result<Json<BenchmarkResul
 ///
 /// **Note**: This endpoint is disabled in production builds.
 /// Returns `NOT_IMPLEMENTED` to indicate hardware tuning features are not available.
-pub const fn start_hardware_tuning_session(
-) -> std::result::Result<Json<LiveHardwareTuningSession>, StatusCode> {
+pub const fn start_hardware_tuning_session()
+-> std::result::Result<Json<LiveHardwareTuningSession>, StatusCode> {
     Err(StatusCode::NOT_IMPLEMENTED)
 }
 

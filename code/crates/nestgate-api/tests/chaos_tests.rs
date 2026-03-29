@@ -8,9 +8,9 @@
 use nestgate_api::transport::{
     JsonRpcHandler, JsonRpcRequest, NestGateRpcHandler, TransportConfig,
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 // ============================================================================
 // Network Chaos (3 tests)

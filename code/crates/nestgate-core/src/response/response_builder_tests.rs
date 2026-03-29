@@ -37,9 +37,11 @@ fn test_created_response_with_location() {
     let response = response.into_response();
 
     assert_eq!(response.status(), axum::http::StatusCode::CREATED);
-    assert!(response
-        .headers()
-        .contains_key(axum::http::header::LOCATION));
+    assert!(
+        response
+            .headers()
+            .contains_key(axum::http::header::LOCATION)
+    );
 }
 
 #[test]
@@ -248,9 +250,11 @@ fn test_with_cache() {
     let response = response.into_response();
 
     assert_eq!(response.status(), axum::http::StatusCode::OK);
-    assert!(response
-        .headers()
-        .contains_key(axum::http::header::CACHE_CONTROL));
+    assert!(
+        response
+            .headers()
+            .contains_key(axum::http::header::CACHE_CONTROL)
+    );
     assert!(response.headers().contains_key(axum::http::header::ETAG));
 }
 
@@ -264,9 +268,11 @@ fn test_with_cache_no_etag() {
     let response = response.into_response();
 
     assert_eq!(response.status(), axum::http::StatusCode::OK);
-    assert!(response
-        .headers()
-        .contains_key(axum::http::header::CACHE_CONTROL));
+    assert!(
+        response
+            .headers()
+            .contains_key(axum::http::header::CACHE_CONTROL)
+    );
     assert!(!response.headers().contains_key(axum::http::header::ETAG));
 }
 

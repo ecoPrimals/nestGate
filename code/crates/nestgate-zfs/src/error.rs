@@ -12,7 +12,7 @@ use nestgate_core::error::{InternalErrorDetails, NestGateError};
 /// Canonical error creation helpers for ZFS operations
 ///
 /// Provides ergonomic methods for creating ZFS-specific errors that integrate
-/// with the unified NestGate error system.
+/// with the unified `NestGate` error system.
 pub struct ZfsErrorBuilder;
 impl ZfsErrorBuilder {
     /// Create a generic ZFS error (for backward compatibility)

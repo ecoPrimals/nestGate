@@ -3,11 +3,11 @@
 
 //! Service implementation for orchestrator integration
 //!
-//! This module contains the ZfsService implementation that handles registration
+//! This module contains the `ZfsService` implementation that handles registration
 //! and coordination with orchestration systems.
 
 use super::types::{ServiceInfo, ServiceRegistration, ZfsHealthStatus, ZfsServiceConfig};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::sync::Arc;
 use std::time::SystemTime;
 use tracing::{debug, info, warn};
@@ -109,7 +109,7 @@ impl ZfsService {
 
     /// Check if registered with orchestrator
     #[must_use]
-    pub fn is_registered(&self) -> bool {
+    pub const fn is_registered(&self) -> bool {
         self.registered_with_orchestrator
     }
 
@@ -243,7 +243,7 @@ impl ZfsService {
 
     /// Get last health check time
     #[must_use]
-    pub fn last_health_check(&self) -> Option<SystemTime> {
+    pub const fn last_health_check(&self) -> Option<SystemTime> {
         self.last_health_check
     }
 

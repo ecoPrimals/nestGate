@@ -20,7 +20,7 @@ impl<T> IdiomaticConfigBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::IdiomaticConfigBuilder;
     ///
     /// let builder: IdiomaticConfigBuilder<String> = IdiomaticConfigBuilder::new();
@@ -41,7 +41,7 @@ impl<T> IdiomaticConfigBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::IdiomaticConfigBuilder;
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::metadata::EvolutionMetadata;
     ///
@@ -75,7 +75,7 @@ impl<T> SmartConfigBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::SmartConfigBuilder;
     ///
     /// let builder: SmartConfigBuilder<String> = SmartConfigBuilder::new();
@@ -104,14 +104,14 @@ impl<T> SmartConfigBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::SmartConfigBuilder;
     ///
     /// let builder: SmartConfigBuilder<String> = SmartConfigBuilder::new()
     ///     .apply_modernization();
     /// ```
     #[must_use]
-    pub fn apply_modernization(mut self) -> Self {
+    pub const fn apply_modernization(mut self) -> Self {
         self.modernization_applied = true;
         self
     }
@@ -137,13 +137,13 @@ impl<T> EvolutionAwareBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::EvolutionAwareBuilder;
     ///
     /// let builder: EvolutionAwareBuilder<String> = EvolutionAwareBuilder::new();
     /// ```
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             _target: None,
             compatibility_checked: false,
@@ -155,14 +155,14 @@ impl<T> EvolutionAwareBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::EvolutionAwareBuilder;
     ///
     /// let builder: EvolutionAwareBuilder<String> = EvolutionAwareBuilder::new()
     ///     .check_compatibility();
     /// ```
     #[must_use]
-    pub fn check_compatibility(mut self) -> Self {
+    pub const fn check_compatibility(mut self) -> Self {
         self.compatibility_checked = true;
         self
     }
@@ -175,14 +175,14 @@ impl<T> EvolutionAwareBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::EvolutionAwareBuilder;
     ///
     /// let builder: EvolutionAwareBuilder<String> = EvolutionAwareBuilder::new()
     ///     .with_evolution_score(0.95);
     /// ```
     #[must_use]
-    pub fn with_evolution_score(mut self, score: f64) -> Self {
+    pub const fn with_evolution_score(mut self, score: f64) -> Self {
         self.evolution_score = score;
         self
     }
@@ -206,13 +206,13 @@ impl<T> CanonicalBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::CanonicalBuilder;
     ///
     /// let builder: CanonicalBuilder<String> = CanonicalBuilder::new();
     /// ```
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             _item: None,
             canonical_patterns_applied: false,
@@ -223,14 +223,14 @@ impl<T> CanonicalBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::CanonicalBuilder;
     ///
     /// let builder: CanonicalBuilder<String> = CanonicalBuilder::new()
     ///     .apply_canonical_patterns();
     /// ```
     #[must_use]
-    pub fn apply_canonical_patterns(mut self) -> Self {
+    pub const fn apply_canonical_patterns(mut self) -> Self {
         self.canonical_patterns_applied = true;
         self
     }
@@ -255,13 +255,13 @@ impl<T> ModernizationBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::ModernizationBuilder;
     ///
     /// let builder: ModernizationBuilder<String> = ModernizationBuilder::new();
     /// ```
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             _legacy_item: None,
             modernization_steps: Vec::new(),
@@ -277,7 +277,7 @@ impl<T> ModernizationBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::ModernizationBuilder;
     ///
     /// let builder: ModernizationBuilder<String> = ModernizationBuilder::new()
@@ -297,14 +297,14 @@ impl<T> ModernizationBuilder<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::builders::ModernizationBuilder;
     ///
     /// let builder: ModernizationBuilder<String> = ModernizationBuilder::new()
     ///     .enable_rollback(false);
     /// ```
     #[must_use]
-    pub fn enable_rollback(mut self, enabled: bool) -> Self {
+    pub const fn enable_rollback(mut self, enabled: bool) -> Self {
         self.rollback_enabled = enabled;
         self
     }

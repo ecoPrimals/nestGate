@@ -4,8 +4,8 @@
 //
 // This module provides optimization recommendations for the storage system.
 
-use nestgate_core::universal_traits::compute::OptimizationRecommendation;
 use nestgate_core::Result;
+use nestgate_core::universal_traits::compute::OptimizationRecommendation;
 
 /// Optimization _engine interface
 #[derive(Debug)]

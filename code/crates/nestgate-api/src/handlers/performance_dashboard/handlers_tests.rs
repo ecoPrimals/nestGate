@@ -134,26 +134,34 @@ async fn test_get_overview_has_performance_analysis() {
     let overview = dashboard.get_overview().await.unwrap();
 
     // Performance analysis should have trend data
-    assert!(!overview
-        .performance_analysis
-        .cpu_trend
-        .data_points
-        .is_empty());
-    assert!(!overview
-        .performance_analysis
-        .memory_trend
-        .data_points
-        .is_empty());
-    assert!(!overview
-        .performance_analysis
-        .disk_io_trend
-        .data_points
-        .is_empty());
-    assert!(!overview
-        .performance_analysis
-        .network_io_trend
-        .data_points
-        .is_empty());
+    assert!(
+        !overview
+            .performance_analysis
+            .cpu_trend
+            .data_points
+            .is_empty()
+    );
+    assert!(
+        !overview
+            .performance_analysis
+            .memory_trend
+            .data_points
+            .is_empty()
+    );
+    assert!(
+        !overview
+            .performance_analysis
+            .disk_io_trend
+            .data_points
+            .is_empty()
+    );
+    assert!(
+        !overview
+            .performance_analysis
+            .network_io_trend
+            .data_points
+            .is_empty()
+    );
 }
 
 #[tokio::test]

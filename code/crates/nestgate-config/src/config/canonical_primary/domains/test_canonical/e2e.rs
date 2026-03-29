@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for E2eTest
+/// Configuration for `E2eTest`
 pub struct E2eTestConfig {
     /// Browser
     pub browser: BrowserTestConfig,
@@ -18,7 +18,7 @@ pub struct E2eTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for BrowserTest
+/// Configuration for `BrowserTest`
 pub struct BrowserTestConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -27,7 +27,7 @@ pub struct BrowserTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for UserJourney
+/// Configuration for `UserJourney`
 pub struct UserJourneyConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -36,7 +36,7 @@ pub struct UserJourneyConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ScenarioTest
+/// Configuration for `ScenarioTest`
 pub struct ScenarioTestConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -97,7 +97,7 @@ impl E2eTestConfig {
     ///
     /// Currently returns self as E2E configs don't support deep merging.
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 }

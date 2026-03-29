@@ -11,7 +11,7 @@ use std::fmt;
 /// **THE** `StorageType` - unified across all modules
 /// Replaces `StorageType` definitions in service discovery and storage modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedStorage
+/// Types of `UnifiedStorage`
 pub enum UnifiedStorageType {
     /// Local file system storage
     Local,
@@ -70,7 +70,7 @@ impl fmt::Display for UnifiedStorageType {
 /// **THE** `AccessType` - unified across all modules
 /// Replaces `AccessType` definitions in automation and other modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedAccess
+/// Types of `UnifiedAccess`
 pub enum UnifiedAccessType {
     /// Read access only
     Read,
@@ -114,7 +114,7 @@ impl fmt::Display for UnifiedAccessType {
 /// **THE** `TierType` - unified across all modules
 /// Replaces `TierType` definitions in automation and storage modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedTier
+/// Types of `UnifiedTier`
 pub enum UnifiedTierType {
     /// Hot tier - frequently accessed data
     Hot,

@@ -15,7 +15,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Performance engine configuration
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -59,7 +59,7 @@ impl Default for PerformanceEngineConfig {
 }
 
 /// Optimization state tracking
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum OptimizationState {
     /// No optimization in progress
     #[default]
@@ -122,7 +122,7 @@ pub struct ZfsDatasetMetrics {
     pub record_size: u64,
 }
 /// Access pattern classification
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AccessPattern {
     /// Sequential I/O pattern
     Sequential,
@@ -190,7 +190,7 @@ pub enum ZfsBottleneckType {
     DiskIo,
 }
 /// Bottleneck severity levels
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BottleneckSeverity {
     /// Low severity - minor impact
     Low,
@@ -218,7 +218,7 @@ impl PerformanceOptimizationResult {
     ///
     /// Combines optimizations, improvements, bottlenecks, and recommendations
     /// from multiple optimization runs.
-    pub fn merge_with(&mut self, other: PerformanceOptimizationResult) {
+    pub fn merge_with(&mut self, other: Self) {
         self.applied_optimizations
             .extend(other.applied_optimizations);
         self.performance_improvement += other.performance_improvement;
@@ -274,7 +274,7 @@ pub struct PerformanceAlert {
     pub timestamp: SystemTime,
 }
 /// Alert types
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AlertType {
     /// Performance has degraded below acceptable thresholds
     PerformanceDegradation,
@@ -286,7 +286,7 @@ pub enum AlertType {
     OptimizationFailed,
 }
 /// Alert severity levels for performance monitoring
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AlertSeverity {
     /// Informational alert - no action required
     Info,
@@ -352,7 +352,7 @@ pub struct SystemCapabilities {
     pub cpu_cores: u32,
     /// Total system memory in gigabytes
     pub memory_gb: u32,
-    /// Type of storage hardware (e.g., "NVMe", "SSD", "HDD")
+    /// Type of storage hardware (e.g., "`NVMe`", "SSD", "HDD")
     pub storage_type: String,
     /// Network bandwidth capacity in gigabits per second
     pub network_bandwidth_gbps: f64,
@@ -477,7 +477,7 @@ pub struct EcosystemAlertAnalysis {
 }
 /// Custom serialization for `SystemTime`
 pub mod system_time_serde {
-    use super::{de, Deserialize, Deserializer, Duration, Serializer, SystemTime};
+    use super::{Deserialize, Deserializer, Duration, Serializer, SystemTime, de};
     use std::time::UNIX_EPOCH;
     #[allow(clippy::type_complexity)]
     /// Function description

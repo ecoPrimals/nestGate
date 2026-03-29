@@ -36,6 +36,7 @@ fn test_e2e_complete_socket_lifecycle() {
         "default".to_string(),
         Some(test_socket.to_string()),
         None,
+        None,
     )
     .unwrap();
     assert_eq!(config.socket_path, PathBuf::from(test_socket));
@@ -75,6 +76,7 @@ fn test_e2e_multi_instance_isolation() {
             format!("node{}", i),
             Some(format!("{}/nestgate-node{}.sock", base_dir, i)),
             None,
+            None,
         )
         .unwrap();
         config.prepare_socket_path().unwrap();
@@ -96,6 +98,7 @@ fn test_e2e_xdg_runtime_fallback_chain() {
     let config = SocketConfig::resolve(
         "fallback-test".to_string(),
         "test-node".to_string(),
+        None,
         None,
         None,
     )
@@ -191,6 +194,7 @@ fn test_chaos_rapid_bind_unbind() {
         "default".to_string(),
         Some(test_socket.to_string()),
         None,
+        None,
     )
     .unwrap();
 
@@ -223,6 +227,7 @@ fn test_chaos_environment_modification_during_execution() {
         "default".to_string(),
         Some(format!("{}/socket1.sock", base_dir)),
         None,
+        None,
     )
     .unwrap();
     config1.prepare_socket_path().unwrap();
@@ -233,6 +238,7 @@ fn test_chaos_environment_modification_during_execution() {
         "env-mod".to_string(),
         "default".to_string(),
         Some(format!("{}/socket2.sock", base_dir)),
+        None,
         None,
     )
     .unwrap();
@@ -441,6 +447,7 @@ fn test_security_path_traversal_attempt() {
         "default".to_string(),
         Some("/tmp/../../../etc/nestgate.sock".to_string()),
         None,
+        None,
     )
     .unwrap();
 
@@ -484,8 +491,14 @@ fn test_performance_rapid_config_creation() {
     let iterations = 10_000;
 
     for i in 0..iterations {
-        let _config =
-            SocketConfig::resolve(format!("perf{}", i), "default".to_string(), None, None).unwrap();
+        let _config = SocketConfig::resolve(
+            format!("perf{}", i),
+            "default".to_string(),
+            None,
+            None,
+            None,
+        )
+        .unwrap();
     }
 
     let duration = start.elapsed();
@@ -556,6 +569,7 @@ async fn test_async_socket_timeout_handling() {
         "default".to_string(),
         Some(test_socket.to_string()),
         None,
+        None,
     )
     .unwrap();
 
@@ -589,6 +603,7 @@ async fn test_async_concurrent_operations() {
                 format!("async{}", i),
                 "default".to_string(),
                 Some(socket_path),
+                None,
                 None,
             )
             .unwrap();

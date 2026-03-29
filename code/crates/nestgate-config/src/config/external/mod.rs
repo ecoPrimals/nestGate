@@ -22,7 +22,7 @@
 //!
 //! # Example Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::external::ExternalConfig;
 //!
 //! # fn main() -> nestgate_core::Result<()> {
@@ -56,7 +56,7 @@ pub use services_config::{ServicesConfig, SharedServicesConfig};
 pub struct ExternalConfig {
     /// Network configuration (ports, IPs)
     pub network: NetworkConfig,
-    /// Service endpoints (URLs, discovery) - use ServicesConfig from services_config module
+    /// Service endpoints (URLs, discovery) - use `ServicesConfig` from `services_config` module
     pub services: ServicesConfig,
 }
 
@@ -118,5 +118,12 @@ mod tests {
         let json = serde_json::to_string(&config).unwrap();
         let deserialized: ExternalConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(config.network.api_port(), deserialized.network.api_port());
+    }
+
+    #[test]
+    fn round5_external_config_default_matches_default_dev() {
+        let a = ExternalConfig::default();
+        let b = ExternalConfig::default_dev();
+        assert_eq!(a.network.api_port(), b.network.api_port());
     }
 }

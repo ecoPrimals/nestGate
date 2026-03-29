@@ -458,8 +458,8 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_production_readiness_assessment(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn test_production_readiness_assessment()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let validator = ProductionReadinessValidator::new();
         let result = validator.assess_production_readiness().await;
 
@@ -494,5 +494,50 @@ mod tests {
         assert!(mocks.is_empty()); // Should default to false
 
         Ok(())
+    }
+
+    #[test]
+    fn production_readiness_report_serde_roundtrip() {
+        let report = ProductionReadinessReport {
+            ready_for_production: true,
+            zfs_available: true,
+            real_hardware_detected: true,
+            mock_dependencies: vec![],
+            performance_validated: true,
+            security_validated: true,
+            configuration_validated: true,
+            findings: vec![ReadinessFinding {
+                category: "c".to_string(),
+                description: "d".to_string(),
+                severity: FindingSeverity::Info,
+                blocking: false,
+            }],
+            recommendations: vec!["r".to_string()],
+        };
+        let json = serde_json::to_string(&report).expect("serialize");
+        let back: ProductionReadinessReport = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.ready_for_production, report.ready_for_production);
+        assert_eq!(back.findings.len(), 1);
+    }
+
+    #[test]
+    fn production_readiness_validator_default_matches_new() {
+        let a = ProductionReadinessValidator::new();
+        let b = ProductionReadinessValidator::default();
+        assert_eq!(format!("{:?}", a.real_ops), format!("{:?}", b.real_ops));
+    }
+
+    #[test]
+    fn finding_severity_serde_roundtrip() {
+        for sev in [
+            FindingSeverity::Info,
+            FindingSeverity::Warning,
+            FindingSeverity::Error,
+            FindingSeverity::Critical,
+        ] {
+            let j = serde_json::to_string(&sev).unwrap();
+            let back: FindingSeverity = serde_json::from_str(&j).unwrap();
+            assert_eq!(format!("{sev:?}"), format!("{back:?}"));
+        }
     }
 }

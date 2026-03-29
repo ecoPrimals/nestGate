@@ -10,10 +10,6 @@
 use super::types::{DetectedStorage, StorageAnalysisReport};
 use nestgate_types::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 
-#[cfg(test)]
-#[path = "analysis_tests.rs"]
-mod analysis_tests;
-
 /// Storage analyzer for generating insights and recommendations
 pub struct StorageAnalyzer {
     /// Minimum free space threshold (percentage)
@@ -31,7 +27,7 @@ impl Default for StorageAnalyzer {
 impl StorageAnalyzer {
     /// Create new storage analyzer with default thresholds
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             low_space_threshold: 10.0,   // 10% free space warning
             performance_threshold: 50.0, // 50 MB/s minimum throughput
@@ -40,7 +36,7 @@ impl StorageAnalyzer {
 
     /// Create analyzer with custom thresholds
     #[must_use]
-    pub fn with_thresholds(low_space_threshold: f64, performance_threshold: f64) -> Self {
+    pub const fn with_thresholds(low_space_threshold: f64, performance_threshold: f64) -> Self {
         Self {
             low_space_threshold,
             performance_threshold,
@@ -343,5 +339,110 @@ impl StorageAnalysisReport {
             self.recommendations.len(),
             self.recommendations.join("\n- ")
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::types::{CostProfile, DetectedStorage, PerformanceProfile};
+    use super::*;
+    use nestgate_types::unified_enums::storage_types::{
+        UnifiedStorageCapability, UnifiedStorageType,
+    };
+    use std::collections::HashMap;
+
+    fn sample_storage(
+        name: &str,
+        ty: UnifiedStorageType,
+        read_mbps: f64,
+        latency_us: f64,
+        encryption: bool,
+    ) -> DetectedStorage {
+        let mut caps = vec![];
+        if encryption {
+            caps.push(UnifiedStorageCapability::Encryption);
+        }
+        DetectedStorage {
+            identifier: name.into(),
+            storage_type: ty,
+            display_name: name.into(),
+            capabilities: caps,
+            performance_profile: PerformanceProfile {
+                read_throughput_mbps: read_mbps,
+                read_latency_us: latency_us,
+                ..PerformanceProfile::default()
+            },
+            available_space: 1024 * 1024 * 1024,
+            reliability_score: 0.95,
+            cost_profile: CostProfile {
+                storage_cost_per_gb_month: 0.02,
+                ..CostProfile::default()
+            },
+            metadata: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn analyzer_report_and_summary() {
+        let a = StorageAnalyzer::with_thresholds(5.0, 200.0);
+        let list = vec![
+            sample_storage("fast", UnifiedStorageType::Local, 800.0, 500.0, true),
+            sample_storage("slow", UnifiedStorageType::Local, 10.0, 15000.0, false),
+        ];
+        let report = a.analyze_storage_systems(&list);
+        assert!(report.recommendations.iter().any(|r| r.contains("slow")));
+        let summary = report.generate_summary();
+        assert!(summary.contains("Storage Analysis Summary"));
+    }
+
+    #[test]
+    fn recommend_storage_and_efficiency() {
+        let a = StorageAnalyzer::new();
+        let cloud = DetectedStorage {
+            identifier: "c".into(),
+            storage_type: UnifiedStorageType::Cloud,
+            display_name: "cloud".into(),
+            capabilities: vec![UnifiedStorageCapability::Encryption],
+            performance_profile: PerformanceProfile {
+                read_throughput_mbps: 100.0,
+                read_latency_us: 2000.0,
+                ..PerformanceProfile::default()
+            },
+            available_space: 10 * 1024 * 1024 * 1024,
+            reliability_score: 0.9,
+            cost_profile: CostProfile {
+                storage_cost_per_gb_month: 0.01,
+                ..CostProfile::default()
+            },
+            metadata: HashMap::new(),
+        };
+        let local = sample_storage("local", UnifiedStorageType::Local, 2000.0, 100.0, true);
+        let list = vec![cloud, local];
+        let best_hp = a
+            .recommend_storage_for_use_case(&list, StorageUseCase::HighPerformance)
+            .expect("hp");
+        assert_eq!(best_hp.display_name, "local");
+        let eff = a.calculate_efficiency_score(best_hp);
+        assert!(eff > 0.0 && eff <= 1.0);
+    }
+
+    #[test]
+    fn optimization_suggestions_consolidation_and_encryption() {
+        let a = StorageAnalyzer::new();
+        let mut locals = Vec::new();
+        for i in 0..5 {
+            locals.push(sample_storage(
+                &format!("l{i}"),
+                UnifiedStorageType::Local,
+                100.0,
+                1000.0,
+                i % 2 == 0,
+            ));
+        }
+        let s = a.generate_optimization_suggestions(&locals);
+        assert!(
+            s.iter()
+                .any(|x| x.contains("consolidat") || x.contains("RAID"))
+        );
     }
 }

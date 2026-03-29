@@ -13,7 +13,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn};
 
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::error::CanonicalResult as Result;
 
@@ -32,7 +32,7 @@ pub struct DevEnvironmentStorageService {
 }
 /// Configuration for storage abstraction
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -50,7 +50,7 @@ pub struct DevEnvironmentStorageService {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for StorageAbstraction
+/// Configuration for `StorageAbstraction`
 pub struct StorageAbstractionConfig {
     /// Base directory for all operations
     pub base_directory: PathBuf,
@@ -126,15 +126,15 @@ impl SimulatedDataset {
     }
 
     #[allow(dead_code)]
-    pub fn size(&self) -> u64 {
+    pub const fn size(&self) -> u64 {
         self.size_bytes
     }
     #[allow(dead_code)]
-    pub fn tier(&self) -> &StorageTier {
+    pub const fn tier(&self) -> &StorageTier {
         &self.tier
     }
     #[allow(dead_code)]
-    pub fn properties(&self) -> &HashMap<String, String> {
+    pub const fn properties(&self) -> &HashMap<String, String> {
         &self.properties
     }
 }

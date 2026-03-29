@@ -26,7 +26,7 @@ macro_rules! error {
 /// Use `NestGateError::config_error()` method instead.
 // Removed duplicate config_error macro - use unified error system methods
 
-/// **DEPRECATED**: Use the idiomatic `network_error!` macro from idiomatic_evolution module
+/// **DEPRECATED**: Use the idiomatic `network_error!` macro from `idiomatic_evolution` module
 #[macro_export]
 macro_rules! legacy_network_error {
     ($operation:expr, $details:expr) => {
@@ -38,7 +38,7 @@ macro_rules! legacy_network_error {
 }
 
 /// Create a storage error with operation context (LEGACY - Use idiomatic `storage_error!` instead)
-/// **DEPRECATED**: Use the idiomatic `storage_error!` macro from idiomatic_evolution module
+/// **DEPRECATED**: Use the idiomatic `storage_error!` macro from `idiomatic_evolution` module
 #[macro_export]
 macro_rules! legacy_storage_error {
     ($operation:expr, $details:expr) => {
@@ -145,6 +145,7 @@ pub fn safe_rwlock_write<'a, T>(
 
 /// **ENHANCED ERROR DISPLAY UTILITIES**
 /// Format an error chain for user-friendly display
+#[must_use]
 pub fn format_error_chain(error: &NestGateError) -> String {
     let mut chain = Vec::new();
     let mut current_error: &dyn std::error::Error = error;
@@ -165,6 +166,7 @@ pub fn format_error_chain(error: &NestGateError) -> String {
 }
 
 /// Create a development-friendly error report
+#[must_use]
 pub fn debug_error_report(error: &NestGateError) -> String {
     format!(
         "🚨 ERROR REPORT 🚨\n\
@@ -199,10 +201,12 @@ mod tests {
 
         let with_context = result.with_context("loading configuration file");
         assert!(with_context.is_err());
-        assert!(with_context
-            .expect_err("expected err")
-            .to_string()
-            .contains("loading configuration file"));
+        assert!(
+            with_context
+                .expect_err("expected err")
+                .to_string()
+                .contains("loading configuration file")
+        );
     }
 
     #[test]

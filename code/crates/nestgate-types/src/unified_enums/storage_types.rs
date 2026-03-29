@@ -7,7 +7,7 @@
 use serde::{Deserialize, Serialize};
 /// Unified storage backend types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-/// Types of UnifiedStorage
+/// Types of `UnifiedStorage`
 pub enum UnifiedStorageType {
     /// Local filesystem storage
     Local,
@@ -81,7 +81,7 @@ impl Default for StorageTier {
 impl StorageTier {
     /// Get the expected access frequency for this tier
     #[must_use]
-    pub fn access_frequency(&self) -> &'static str {
+    pub const fn access_frequency(&self) -> &'static str {
         match self {
             Self::Hot => "multiple times per day",
             Self::Warm => "weekly to monthly",
@@ -93,7 +93,7 @@ impl StorageTier {
 
     /// Get the relative cost factor for this tier (Hot = 1.0)
     #[must_use]
-    pub fn cost_factor(&self) -> f32 {
+    pub const fn cost_factor(&self) -> f32 {
         match self {
             Self::Hot => 1.0,
             Self::Warm => 0.7,

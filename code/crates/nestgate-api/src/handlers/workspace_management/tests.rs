@@ -428,8 +428,8 @@ mod tests {
 
     #[test]
     fn test_workspace_manager_concurrent_creation() {
-        use std::sync::atomic::{AtomicUsize, Ordering};
         use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
         use std::thread;
 
         let counter = Arc::new(AtomicUsize::new(0));

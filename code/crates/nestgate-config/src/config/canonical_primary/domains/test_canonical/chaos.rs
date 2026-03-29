@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ChaosTest
+/// Configuration for `ChaosTest`
 pub struct ChaosTestConfig {
     /// Experiments
     pub experiments: ChaosExperimentConfig,
@@ -17,21 +17,21 @@ pub struct ChaosTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ChaosExperiment
+/// Configuration for `ChaosExperiment`
 pub struct ChaosExperimentConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for FailureInjection
+/// Configuration for `FailureInjection`
 pub struct FailureInjectionConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ResilienceTest
+/// Configuration for `ResilienceTest`
 pub struct ResilienceTestConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -60,7 +60,7 @@ impl ChaosTestConfig {
     ///
     /// Currently returns self as chaos configs don't support deep merging.
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 }

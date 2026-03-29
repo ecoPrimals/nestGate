@@ -9,7 +9,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
-/// Port configuration for all NestGate services
+/// Port configuration for all `NestGate` services
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PortConfiguration {
     /// API server port
@@ -70,7 +70,7 @@ impl PortConfiguration {
 
     /// Create configuration with all defaults (for testing)
     #[must_use]
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         #[allow(deprecated)]
         use crate::constants::hardcoding::ports;
         use crate::constants::port_defaults::{
@@ -96,7 +96,7 @@ impl PortConfiguration {
     ///
     /// Uses high-numbered ports to avoid conflicts with production services
     #[must_use]
-    pub fn for_testing() -> Self {
+    pub const fn for_testing() -> Self {
         Self {
             api_port: 18080,           // Test HTTP port (high number to avoid conflicts)
             health_port: 18443,        // Test HTTPS port

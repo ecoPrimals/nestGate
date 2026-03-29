@@ -62,23 +62,23 @@ pub fn mem_total_gib() -> Result<u32> {
 }
 
 /// Best-effort GPU count: NVIDIA via `nvidia-smi -L` line count, else 0.
+#[must_use]
 pub fn gpu_count_best_effort() -> u32 {
     #[cfg(target_os = "linux")]
     {
-        if std::path::Path::new("/proc/driver/nvidia/gpus").exists() {
-            if let Ok(entries) = std::fs::read_dir("/proc/driver/nvidia/gpus") {
-                return u32::try_from(entries.count()).unwrap_or(0);
-            }
+        if std::path::Path::new("/proc/driver/nvidia/gpus").exists()
+            && let Ok(entries) = std::fs::read_dir("/proc/driver/nvidia/gpus")
+        {
+            return u32::try_from(entries.count()).unwrap_or(0);
         }
     }
     if let Ok(output) = std::process::Command::new("nvidia-smi")
         .args(["-L"])
         .output()
+        && output.status.success()
     {
-        if output.status.success() {
-            let s = String::from_utf8_lossy(&output.stdout);
-            return u32::try_from(s.lines().filter(|l| !l.trim().is_empty()).count()).unwrap_or(0);
-        }
+        let s = String::from_utf8_lossy(&output.stdout);
+        return u32::try_from(s.lines().filter(|l| !l.trim().is_empty()).count()).unwrap_or(0);
     }
     0
 }
@@ -88,11 +88,7 @@ pub fn compute_resources_from_proc() -> Result<ComputeResources> {
     let available_cpu = logical_cpu_count()?.max(1);
     let available_memory_gb = {
         let g = mem_total_gib()?;
-        if g == 0 {
-            1
-        } else {
-            g
-        }
+        if g == 0 { 1 } else { g }
     };
     let available_gpu = gpu_count_best_effort();
     Ok(ComputeResources {

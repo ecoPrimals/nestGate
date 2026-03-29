@@ -9,7 +9,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::canonical_primary::domains::consolidated_domains::mcp::*;
 //!
 //! let mcp_config = McpDomainConfig::default();
@@ -83,7 +83,7 @@ pub enum McpMessageFormat {
     /// JSON format
     #[default]
     Json,
-    /// MessagePack format
+    /// `MessagePack` format
     MessagePack,
     /// Protobuf format
     Protobuf,

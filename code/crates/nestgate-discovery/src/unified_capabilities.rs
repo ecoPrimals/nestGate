@@ -152,7 +152,7 @@ impl fmt::Display for UnifiedCapability {
             Self::HealthCheck => write!(f, "health-check"),
             Self::Configuration => write!(f, "configuration"),
             Self::StateManagement => write!(f, "state-management"),
-            Self::Custom(name) => write!(f, "custom:{}", name),
+            Self::Custom(name) => write!(f, "custom:{name}"),
         }
     }
 }
@@ -162,6 +162,7 @@ pub struct CapabilityMapper;
 
 impl CapabilityMapper {
     /// Convert unified capability to primal capability for discovery
+    #[must_use]
     pub fn to_primal(unified: &UnifiedCapability) -> PrimalCapability {
         match unified {
             // Storage mappings
@@ -216,6 +217,7 @@ impl CapabilityMapper {
     }
 
     /// Convert application capability to unified capability
+    #[must_use]
     pub fn from_app(app: &AppCapability) -> UnifiedCapability {
         match app {
             AppCapability::Storage(_) => UnifiedCapability::Storage,
@@ -230,6 +232,7 @@ impl CapabilityMapper {
     /// Get environment variable name for capability
     ///
     /// This enables environment-driven discovery: `NESTGATE_CAPABILITY_{NAME}_ENDPOINT`
+    #[must_use]
     pub fn env_var_name(unified: &UnifiedCapability) -> String {
         format!(
             "NESTGATE_CAPABILITY_{}_ENDPOINT",
@@ -242,7 +245,7 @@ impl CapabilityMapper {
 ///
 /// **PHILOSOPHY**: No hardcoded ports. Discovery order:
 /// 1. Environment variable (explicit configuration)
-/// 2. Runtime discovery via CapabilityResolver
+/// 2. Runtime discovery via `CapabilityResolver`
 /// 3. Error (no fallback - fail fast if service not configured)
 pub struct CapabilityPortResolver;
 
@@ -251,7 +254,7 @@ impl CapabilityPortResolver {
     ///
     /// # Arguments
     /// * `capability` - The capability to discover
-    /// * `resolver` - CapabilityResolver for runtime discovery
+    /// * `resolver` - `CapabilityResolver` for runtime discovery
     ///
     /// # Returns
     /// Port number if discovered, or error if service not available
@@ -277,8 +280,7 @@ impl CapabilityPortResolver {
                 capability: capability.to_string(),
                 env_var: CapabilityMapper::env_var_name(capability),
                 hint: format!(
-                    "Set environment variable or ensure service is registered. Error: {}",
-                    e
+                    "Set environment variable or ensure service is registered. Error: {e}"
                 ),
             }),
         }
@@ -295,8 +297,7 @@ impl CapabilityPortResolver {
                 capability: capability.to_string(),
                 env_var: CapabilityMapper::env_var_name(capability),
                 hint: format!(
-                    "Set environment variable or ensure service is registered. Error: {}",
-                    e
+                    "Set environment variable or ensure service is registered. Error: {e}"
                 ),
             }),
         }
@@ -336,10 +337,9 @@ impl fmt::Display for CapabilityResolutionError {
             } => {
                 write!(
                     f,
-                    "Service with capability '{}' not discovered.\n\
-                     Environment variable: {}\n\
-                     Hint: {}",
-                    capability, env_var, hint
+                    "Service with capability '{capability}' not discovered.\n\
+                     Environment variable: {env_var}\n\
+                     Hint: {hint}"
                 )
             }
             Self::InvalidConfiguration {
@@ -347,11 +347,7 @@ impl fmt::Display for CapabilityResolutionError {
                 value,
                 reason,
             } => {
-                write!(
-                    f,
-                    "Invalid configuration in {}='{}': {}",
-                    env_var, value, reason
-                )
+                write!(f, "Invalid configuration in {env_var}='{value}': {reason}")
             }
         }
     }
@@ -416,7 +412,8 @@ mod tests {
     async fn test_port_resolution_from_env() {
         use crate::capability_resolver::EnvironmentResolver;
 
-        std::env::set_var(
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var(
             "NESTGATE_CAPABILITY_HTTP_API_ENDPOINT",
             "http://localhost:8888",
         );
@@ -425,17 +422,55 @@ mod tests {
             CapabilityPortResolver::resolve_port(&UnifiedCapability::HttpApi, &resolver).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 8888);
-        std::env::remove_var("NESTGATE_CAPABILITY_HTTP_API_ENDPOINT");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::remove_var("NESTGATE_CAPABILITY_HTTP_API_ENDPOINT");
     }
 
     #[tokio::test]
     async fn test_no_fallback_on_missing_service() {
         use crate::capability_resolver::EnvironmentResolver;
 
-        std::env::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
         let resolver = EnvironmentResolver::new();
         let result =
             CapabilityPortResolver::resolve_port(&UnifiedCapability::Storage, &resolver).await;
         assert!(result.is_err()); // No fallback - fail fast
+    }
+
+    #[test]
+    fn round5_unified_capability_display_sample() {
+        assert_eq!(UnifiedCapability::Grpc.to_string(), "grpc");
+        assert_eq!(
+            UnifiedCapability::SecretManagement.to_string(),
+            "secret-management"
+        );
+        assert_eq!(
+            UnifiedCapability::Custom("x".to_string()).to_string(),
+            "custom:x"
+        );
+    }
+
+    #[test]
+    fn round5_capability_resolution_error_display_service_not_discovered() {
+        let e = CapabilityResolutionError::ServiceNotDiscovered {
+            capability: "storage".to_string(),
+            env_var: "NESTGATE_CAPABILITY_STORAGE_ENDPOINT".to_string(),
+            hint: "configure".to_string(),
+        };
+        let s = e.to_string();
+        assert!(s.contains("storage"));
+        assert!(s.contains("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"));
+    }
+
+    #[test]
+    fn round5_capability_resolution_error_display_invalid_configuration() {
+        let e = CapabilityResolutionError::InvalidConfiguration {
+            env_var: "PORT".to_string(),
+            value: "abc".to_string(),
+            reason: "bad".to_string(),
+        };
+        assert!(e.to_string().contains("PORT"));
+        assert!(e.to_string().contains("abc"));
     }
 }

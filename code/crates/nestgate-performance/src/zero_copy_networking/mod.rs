@@ -172,17 +172,17 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 
     /// Get buffer capacity
-    pub fn capacity(&self) -> usize {
+    pub const fn capacity(&self) -> usize {
         self.capacity
     }
 
     /// Get current length
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.length
     }
 
     /// Check if buffer is empty
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.length == 0
     }
 }
@@ -291,8 +291,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
             std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "0.0.0.0:0".to_string());
         let local_addr: SocketAddr = local_addr_str.parse().map_err(|e| {
             NestGateError::network_error(&format!(
-                "Failed to parse local endpoint '{}': {}",
-                local_addr_str, e
+                "Failed to parse local endpoint '{local_addr_str}': {e}"
             ))
         })?;
 
@@ -724,12 +723,12 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
         let next_head = (head + 1) % SIZE;
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
 
-        if next_head != tail {
+        if next_head == tail {
+            None
+        } else {
             self.head
                 .store(next_head, std::sync::atomic::Ordering::Release);
             Some(head)
-        } else {
-            None
         }
     }
 
@@ -738,11 +737,7 @@ impl<const SIZE: usize> ZeroCopyRing<SIZE> {
         let tail = self.tail.load(std::sync::atomic::Ordering::Acquire);
         let head = self.head.load(std::sync::atomic::Ordering::Acquire);
 
-        if tail != head {
-            Some(tail)
-        } else {
-            None
-        }
+        if tail == head { None } else { Some(tail) }
     }
 
     /// Set buffer in ring slot
@@ -800,7 +795,7 @@ pub mod benchmarks {
         const ITERATIONS: u32 = 1000;
 
         // Establish connection
-        use nestgate_core::constants::{hardcoding, network::LOCALHOST, DEFAULT_API_PORT};
+        use nestgate_core::constants::{DEFAULT_API_PORT, hardcoding, network::LOCALHOST};
         let default_endpoint = format!(
             "{}:{}",
             hardcoding::addresses::LOCALHOST_IPV4,
@@ -816,7 +811,7 @@ pub mod benchmarks {
                 e
             );
             // Use constant-based fallback for benchmarking
-            format!("{}:{}", LOCALHOST, DEFAULT_API_PORT)
+            format!("{LOCALHOST}:{DEFAULT_API_PORT}")
                 .parse()
                 .expect("Constants-based fallback must be valid")
         });

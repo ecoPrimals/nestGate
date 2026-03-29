@@ -2,8 +2,8 @@
 //!
 //! This test validates that the canonical modernization is working correctly
 
-use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_core::config::DeploymentEnvironment;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 
 /// Test that canonical configuration works
 #[tokio::test]

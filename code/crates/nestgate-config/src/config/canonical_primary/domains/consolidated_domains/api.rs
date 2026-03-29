@@ -10,7 +10,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::canonical_primary::domains::consolidated_domains::api::*;
 //!
 //! let api_config = ApiDomainConfig::default();

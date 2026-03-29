@@ -50,7 +50,7 @@ pub fn pool_info_from_zfs_output(pool_name: &str, output: &str) -> ZfsResult<Poo
 
     let health_str = properties
         .get("health")
-        .map(|s| s.to_string())
+        .cloned()
         .unwrap_or_else(|| "UNKNOWN".to_string());
 
     let health = match health_str.to_uppercase().as_str() {
@@ -128,7 +128,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
         .ok_or_else(|| ZfsError::DatasetError {
             message: "Missing dataset name in output".to_string(),
         })?
-        .to_string();
+        .clone();
 
     // Parse pool and dataset name
     let (pool, name) = if let Some(pos) = full_name.find('/') {
@@ -152,7 +152,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
 
     let compression = properties
         .get("compression")
-        .map(|s| s.to_string())
+        .cloned()
         .unwrap_or_else(|| "lz4".to_string());
 
     let mountpoint = properties
@@ -162,7 +162,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
 
     Ok(DatasetInfo {
         name,
-        full_name: full_name.clone(),
+        full_name,
         pool,
         size: used + available,
         used,
@@ -181,6 +181,7 @@ pub fn dataset_info_from_zfs_output(output: &str) -> ZfsResult<DatasetInfo> {
 }
 
 /// Parse pool health status from ZFS output
+#[must_use]
 pub fn parse_health_status(status: &str) -> String {
     match status.trim().to_uppercase().as_str() {
         "ONLINE" => "ONLINE".to_string(),
@@ -205,7 +206,7 @@ pub fn parse_size_with_units(size_str: &str) -> ZfsResult<u64> {
     let (num_part, unit) = if size_str.ends_with(char::is_alphabetic) {
         let split_pos = size_str
             .chars()
-            .position(|c| c.is_alphabetic())
+            .position(char::is_alphabetic)
             .unwrap_or(size_str.len());
         (&size_str[..split_pos], &size_str[split_pos..])
     } else {
@@ -215,7 +216,7 @@ pub fn parse_size_with_units(size_str: &str) -> ZfsResult<u64> {
     let base_value = num_part
         .parse::<f64>()
         .map_err(|e| ZfsError::DatasetError {
-            message: format!("Invalid size value '{}': {}", size_str, e),
+            message: format!("Invalid size value '{size_str}': {e}"),
         })?;
 
     let multiplier: u64 = match unit.to_uppercase().as_str() {
@@ -227,8 +228,8 @@ pub fn parse_size_with_units(size_str: &str) -> ZfsResult<u64> {
         "" => 1,
         _ => {
             return Err(ZfsError::DatasetError {
-                message: format!("Unknown size unit: {}", unit),
-            })
+                message: format!("Unknown size unit: {unit}"),
+            });
         }
     };
 

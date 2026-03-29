@@ -14,9 +14,9 @@ fn main() {
 }
 
 use nestgate_core::{
+    Result,
     capability_resolver::{CapabilityResolver, ResolvedService},
     unified_capabilities::UnifiedCapability,
-    Result,
 };
 
 // ============================================================================

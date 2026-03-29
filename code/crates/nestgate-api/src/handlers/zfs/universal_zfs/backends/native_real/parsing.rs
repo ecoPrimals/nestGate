@@ -308,6 +308,7 @@ pub fn parse_zpool_status(output: &str) -> UniversalZfsResult<Vec<DeviceInfo>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::handlers::zfs::universal_zfs_types::DatasetType;
 
     #[test]
     fn test_parse_size_string() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -414,5 +415,47 @@ mod tests {
         assert_eq!(num, "1.5");
         assert_eq!(unit, "GB");
         Ok(())
+    }
+
+    #[test]
+    fn parse_zpool_list_tab_line() {
+        let out = "tank\t1048576\t524288\t524288\tONLINE\n";
+        let pools = parse_zpool_list(out).unwrap();
+        assert_eq!(pools.len(), 1);
+        assert_eq!(pools[0].name, "tank");
+    }
+
+    #[test]
+    fn parse_dataset_list_filesystem() {
+        let out = "tank/foo\t1024\t2048\tfilesystem\n";
+        let ds = parse_dataset_list(out).unwrap();
+        assert_eq!(ds.len(), 1);
+        assert_eq!(ds[0].dataset_type, DatasetType::Filesystem);
+    }
+
+    #[test]
+    fn parse_snapshot_list_with_at() {
+        let out = "tank/ds@snap\t512\tref\n";
+        let sn = parse_snapshot_list(out).unwrap();
+        assert_eq!(sn.len(), 1);
+        assert_eq!(sn[0].name, "snap");
+    }
+
+    #[test]
+    fn parse_zpool_status_sample_config_block() {
+        let out = r"config:
+
+        NAME        STATE     READ WRITE CKSUM
+        tank        ONLINE       0     0     0
+errors: No known data errors
+";
+        let devs = parse_zpool_status(out).unwrap();
+        assert!(!devs.is_empty());
+        assert_eq!(devs[0].name, "tank");
+    }
+
+    #[test]
+    fn parse_size_string_rejects_bad_unit() {
+        assert!(parse_size_string("5XX").is_err());
     }
 }

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls network-specific optimizations and buffering strategies.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkPerformance
+/// Configuration for `NetworkPerformance`
 pub struct NetworkPerformanceConfig {
     /// Network optimization settings.
     pub optimization: NetworkOptimizationConfig,
@@ -22,7 +22,7 @@ pub struct NetworkPerformanceConfig {
 ///
 /// Enables network-specific performance optimizations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkOptimization
+/// Configuration for `NetworkOptimization`
 pub struct NetworkOptimizationConfig {
     /// Whether network optimization is enabled.
     pub enabled: bool,
@@ -32,7 +32,7 @@ pub struct NetworkOptimizationConfig {
 ///
 /// Controls buffer sizes for network operations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkBuffering
+/// Configuration for `NetworkBuffering`
 pub struct NetworkBufferingConfig {
     /// Network buffer size in bytes.
     pub buffer_size: usize,
@@ -44,7 +44,7 @@ impl NetworkPerformanceConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> Result<()> {
+    pub const fn validate(&self) -> Result<()> {
         Ok(())
     }
 }

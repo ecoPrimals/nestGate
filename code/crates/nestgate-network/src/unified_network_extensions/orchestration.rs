@@ -25,14 +25,14 @@ pub struct NetworkOrchestrationSettings {
     pub max_orchestration_connections: u32,
     /// Orchestration retry configuration
     /// Intentional: Transition period until v0.12.0 (May 2026)
-    /// Migration in progress to CanonicalNetworkConfig
+    /// Migration in progress to `CanonicalNetworkConfig`
     pub retry_config: OrchestrationRetryConfig,
     /// Service registration settings
     pub service_registration: ServiceRegistrationSettings,
 }
 /// Orchestration retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -50,7 +50,7 @@ pub struct NetworkOrchestrationSettings {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for OrchestrationRetry
+/// Configuration for `OrchestrationRetry`
 pub struct OrchestrationRetryConfig {
     /// Maximum retry attempts
     pub max_attempts: u32,

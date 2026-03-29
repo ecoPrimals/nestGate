@@ -9,8 +9,8 @@
 //! **Coverage Goal**: Expand API layer from 60-65% to 70%+
 //! **Test Count**: 30+ API error scenarios
 
-use nestgate_core::error::NestGateError;
 use nestgate_core::Result;
+use nestgate_core::error::NestGateError;
 
 // ==================== REQUEST VALIDATION ====================
 
@@ -255,7 +255,7 @@ fn test_xss_patterns() {
 
 #[test]
 fn test_large_response_handling() {
-    use base64::{engine::general_purpose, Engine as _};
+    use base64::{Engine as _, engine::general_purpose};
 
     let large_data = vec![0u8; 10 * 1024 * 1024]; // 10MB
     assert_eq!(large_data.len(), 10 * 1024 * 1024);

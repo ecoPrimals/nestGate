@@ -24,7 +24,7 @@ use tracing::{debug, info};
 
 /// In-memory discovery backend
 ///
-/// Stores all primal registrations in a HashMap. Thread-safe via RwLock.
+/// Stores all primal registrations in a `HashMap`. Thread-safe via `RwLock`.
 /// This is the simplest backend and serves as reference implementation.
 pub struct InMemoryDiscoveryBackend {
     /// Registered primals
@@ -64,11 +64,13 @@ struct RegisteredPrimal {
 
 impl InMemoryDiscoveryBackend {
     /// Create a new in-memory backend with default configuration
+    #[must_use]
     pub fn new() -> Self {
         Self::with_config(InMemoryConfig::default())
     }
 
     /// Create a new in-memory backend with custom configuration
+    #[must_use]
     pub fn with_config(config: InMemoryConfig) -> Self {
         Self {
             primals: Arc::new(RwLock::new(HashMap::new())),
@@ -133,10 +135,7 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
             let now = SystemTime::now();
             let registered = RegisteredPrimal {
                 knowledge: knowledge.clone(),
-                registered_at: primals
-                    .get(&knowledge.id)
-                    .map(|p| p.registered_at)
-                    .unwrap_or(now),
+                registered_at: primals.get(&knowledge.id).map_or(now, |p| p.registered_at),
                 last_updated: now,
             };
 
@@ -230,10 +229,7 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
         })
     }
 
-    fn unannounce(
-        &self,
-        id: &PrimalId,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+    fn unannounce(&self, id: &PrimalId) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
         let id = id.clone();
         Box::pin(async move {
             let mut primals = self.primals.write().await;
@@ -291,9 +287,11 @@ mod tests {
             .unwrap();
 
         assert_eq!(peers.len(), 1);
-        assert!(peers[0]
-            .capabilities
-            .contains(&PrimalCapability::ZfsStorage));
+        assert!(
+            peers[0]
+                .capabilities
+                .contains(&PrimalCapability::ZfsStorage)
+        );
     }
 
     #[tokio::test]

@@ -95,7 +95,7 @@ impl NestGateUnifiedError {
     ///
     /// # Example
     /// ```
-    /// use nestgate_core::error::NestGateError;
+    /// use nestgate_types::error::NestGateError;
     /// let error = NestGateError::config("Invalid configuration");
     /// ```
     pub fn config(message: impl Into<String>) -> Self {

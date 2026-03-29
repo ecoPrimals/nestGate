@@ -47,11 +47,11 @@
 
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::{Barrier, Mutex, Notify, RwLock};
-use tokio::time::{timeout, Instant};
+use tokio::time::{Instant, timeout};
 
 /// Error type for concurrent test operations
 use std::fmt;
@@ -409,6 +409,11 @@ impl ConcurrentCounter {
 
     /// Wait for target to be reached
     pub async fn wait(&self, max_duration: Duration) -> Result<()> {
+        // If the target was already reached before we subscribed to `notify`, the
+        // corresponding `notify_waiters()` calls are lost — complete immediately.
+        if *self.value.lock().await >= self.target {
+            return Ok(());
+        }
         wait_for_notify(self.notify.clone(), max_duration, "counter target").await
     }
 
@@ -483,7 +488,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // TEMP: Race condition - wait() might be called before all increments complete
     async fn test_concurrent_counter() {
         let counter = ConcurrentCounter::new(5);
         let handles: Vec<_> = (0..5)

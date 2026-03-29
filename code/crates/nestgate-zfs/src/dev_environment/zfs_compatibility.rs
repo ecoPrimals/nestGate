@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, warn};
 
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::error::CanonicalResult as Result;
 
@@ -42,7 +42,7 @@ pub struct DevEnvironmentZfsService {
 }
 /// Configuration for development environment ZFS compatibility
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -60,7 +60,7 @@ pub struct DevEnvironmentZfsService {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for DevEnvironment
+/// Configuration for `DevEnvironment`
 pub struct DevEnvironmentConfig {
     /// Base directory for simulated ZFS operations
     pub base_directory: std::path::PathBuf,
@@ -112,15 +112,15 @@ impl DevPool {
         &self.health
     }
     #[allow(dead_code)]
-    pub fn size_bytes(&self) -> u64 {
+    pub const fn size_bytes(&self) -> u64 {
         self.size_bytes
     }
     #[allow(dead_code)]
-    pub fn used_bytes(&self) -> u64 {
+    pub const fn used_bytes(&self) -> u64 {
         self.used_bytes
     }
     #[allow(dead_code)]
-    pub fn created_at(&self) -> std::time::SystemTime {
+    pub const fn created_at(&self) -> std::time::SystemTime {
         self.created_at
     }
 }
@@ -166,22 +166,22 @@ impl DevDataset {
     }
 
     /// Get mount point
-    pub fn mount_point(&self) -> &std::path::PathBuf {
+    pub const fn mount_point(&self) -> &std::path::PathBuf {
         &self.mount_point
     }
 
     /// Get dataset size
-    pub fn size_bytes(&self) -> u64 {
+    pub const fn size_bytes(&self) -> u64 {
         self.size_bytes
     }
 
     /// Get storage tier
-    pub fn tier(&self) -> &StorageTier {
+    pub const fn tier(&self) -> &StorageTier {
         &self.tier
     }
 
     /// Get properties
-    pub fn properties(&self) -> &HashMap<String, String> {
+    pub const fn properties(&self) -> &HashMap<String, String> {
         &self.properties
     }
 }
@@ -339,10 +339,12 @@ mod tests {
     #[test]
     fn test_dev_environment_config() {
         let config = DevEnvironmentConfig::default();
-        assert!(config
-            .base_directory
-            .to_string_lossy()
-            .contains("nestgate-dev-zfs"));
+        assert!(
+            config
+                .base_directory
+                .to_string_lossy()
+                .contains("nestgate-dev-zfs")
+        );
         assert_eq!(config.default_pool_size, 1024 * 1024 * 1024 * 10);
     }
 }

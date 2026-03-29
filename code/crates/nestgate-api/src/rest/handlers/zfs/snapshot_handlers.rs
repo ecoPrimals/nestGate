@@ -23,68 +23,66 @@ pub async fn list_snapshots(
     Query(query): Query<ListQuery>,
 ) -> std::result::Result<Json<DataResponse<Vec<Snapshot>>>, Json<DataError>> {
     debug!("Listing snapshots for dataset: {}", dataset_name);
-    let engines = state.zfs_engines.read().await;
 
-    match engines.get(&dataset_name) {
-        Some(_engine) => {
-            let placeholder_snapshots: Vec<crate::rest::models::SnapshotMetadata> = vec![];
-            match Ok::<Vec<crate::rest::models::SnapshotMetadata>, nestgate_core::NestGateError>(
-                placeholder_snapshots,
-            ) {
-                Ok(snapshot_metadata) => {
-                    let mut snapshots = Vec::new();
-                    for (i, _metadata) in snapshot_metadata.iter().enumerate() {
-                        snapshots.push(Snapshot {
-                            id: format!("{dataset_name}_{i}"),
-                            name: _metadata.name.clone(),
-                            dataset: dataset_name.clone(),
-                            created: chrono::Utc::now(),
-                            size_bytes: 0,
-                            unique_bytes: 0,
-                            referenced_bytes: 0,
-                            file_count: 0,
-                            status: SnapshotStatus::Active,
-                            description: None,
-                            tags: vec![],
-                        });
-                    }
-
-                    if let Some(filter) = &query.filter {
-                        snapshots.retain(|s| s.name.contains(filter));
-                    }
-
-                    let page = query.page.unwrap_or(1);
-                    let per_page = query.per_page.unwrap_or(50);
-                    let total = snapshots.len() as u64;
-                    let start = ((page - 1) * per_page) as usize;
-                    let end = (start + per_page as usize).min(snapshots.len());
-                    let page_snapshots = snapshots[start..end].to_vec();
-
-                    info!(
-                        "Listed {} snapshots for dataset: {}",
-                        page_snapshots.len(),
-                        dataset_name
-                    );
-                    Ok(Json(DataResponse::paginated(
-                        page_snapshots,
-                        total,
-                        page,
-                        per_page,
-                    )))
+    if state.zfs_engines.contains_key(&dataset_name) {
+        let placeholder_snapshots: Vec<crate::rest::models::SnapshotMetadata> = vec![];
+        match Ok::<Vec<crate::rest::models::SnapshotMetadata>, nestgate_core::NestGateError>(
+            placeholder_snapshots,
+        ) {
+            Ok(snapshot_metadata) => {
+                let mut snapshots = Vec::new();
+                for (i, _metadata) in snapshot_metadata.iter().enumerate() {
+                    snapshots.push(Snapshot {
+                        id: format!("{dataset_name}_{i}"),
+                        name: _metadata.name.clone(),
+                        dataset: dataset_name.clone(),
+                        created: chrono::Utc::now(),
+                        size_bytes: 0,
+                        unique_bytes: 0,
+                        referenced_bytes: 0,
+                        file_count: 0,
+                        status: SnapshotStatus::Active,
+                        description: None,
+                        tags: vec![],
+                    });
                 }
-                Err(e) => {
-                    error!("Failed to list snapshots: {}", e);
-                    Err(Json(DataError::new(
-                        "Failed to list snapshots".to_string(),
-                        "SNAPSHOTS_ERROR".to_string(),
-                    )))
+
+                if let Some(filter) = &query.filter {
+                    snapshots.retain(|s| s.name.contains(filter));
                 }
+
+                let page = query.page.unwrap_or(1);
+                let per_page = query.per_page.unwrap_or(50);
+                let total = snapshots.len() as u64;
+                let start = ((page - 1) * per_page) as usize;
+                let end = (start + per_page as usize).min(snapshots.len());
+                let page_snapshots = snapshots[start..end].to_vec();
+
+                info!(
+                    "Listed {} snapshots for dataset: {}",
+                    page_snapshots.len(),
+                    dataset_name
+                );
+                Ok(Json(DataResponse::paginated(
+                    page_snapshots,
+                    total,
+                    page,
+                    per_page,
+                )))
+            }
+            Err(e) => {
+                error!("Failed to list snapshots: {}", e);
+                Err(Json(DataError::new(
+                    "Failed to list snapshots".to_string(),
+                    "SNAPSHOTS_ERROR".to_string(),
+                )))
             }
         }
-        None => Err(Json(DataError::new(
+    } else {
+        Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
             "DATASET_NOT_FOUND".to_string(),
-        ))),
+        )))
     }
 }
 
@@ -99,43 +97,40 @@ pub async fn create_snapshot(
         "Creating snapshot '{}' for dataset: {}",
         request.name, dataset_name
     );
-    let engines = state.zfs_engines.read().await;
-
-    match engines.get(&dataset_name) {
-        Some(_engine) => {
-            let placeholder_result: std::result::Result<String, Box<dyn std::error::Error>> =
-                Ok("_snapshot_id".to_string());
-            match placeholder_result {
-                Ok(_snapshot_id) => {
-                    let snapshot = Snapshot {
-                        id: format!("{}_{}", dataset_name, request.name),
-                        name: request.name.clone(),
-                        dataset: dataset_name.clone(),
-                        created: chrono::Utc::now(),
-                        size_bytes: 0,
-                        unique_bytes: 0,
-                        referenced_bytes: 0,
-                        file_count: 0,
-                        status: SnapshotStatus::Active,
-                        description: request.description,
-                        tags: request.tags.unwrap_or_default(),
-                    };
-                    info!("Successfully created snapshot: {}", request.name);
-                    Ok(Json(DataResponse::new(snapshot)))
-                }
-                Err(e) => {
-                    error!("Failed to create snapshot: {}", e);
-                    Err(Json(DataError::new(
-                        "Failed to create snapshot".to_string(),
-                        "SNAPSHOT_ERROR".to_string(),
-                    )))
-                }
+    if state.zfs_engines.contains_key(&dataset_name) {
+        let placeholder_result: std::result::Result<String, Box<dyn std::error::Error>> =
+            Ok("_snapshot_id".to_string());
+        match placeholder_result {
+            Ok(_snapshot_id) => {
+                let snapshot = Snapshot {
+                    id: format!("{}_{}", dataset_name, request.name),
+                    name: request.name.clone(),
+                    dataset: dataset_name,
+                    created: chrono::Utc::now(),
+                    size_bytes: 0,
+                    unique_bytes: 0,
+                    referenced_bytes: 0,
+                    file_count: 0,
+                    status: SnapshotStatus::Active,
+                    description: request.description,
+                    tags: request.tags.unwrap_or_default(),
+                };
+                info!("Successfully created snapshot: {}", request.name);
+                Ok(Json(DataResponse::new(snapshot)))
+            }
+            Err(e) => {
+                error!("Failed to create snapshot: {}", e);
+                Err(Json(DataError::new(
+                    "Failed to create snapshot".to_string(),
+                    "SNAPSHOT_ERROR".to_string(),
+                )))
             }
         }
-        None => Err(Json(DataError::new(
+    } else {
+        Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
             "DATASET_NOT_FOUND".to_string(),
-        ))),
+        )))
     }
 }
 
@@ -149,51 +144,48 @@ pub async fn get_snapshot(
         "Getting snapshot '{}' for dataset: {}",
         snapshot_name, dataset_name
     );
-    let engines = state.zfs_engines.read().await;
-
-    match engines.get(&dataset_name) {
-        Some(_engine) => {
-            let placeholder_snapshots: Vec<crate::rest::models::SnapshotMetadata> = vec![];
-            match Ok::<Vec<crate::rest::models::SnapshotMetadata>, nestgate_core::NestGateError>(
-                placeholder_snapshots,
-            ) {
-                Ok(snapshots) => {
-                    for _metadata in &snapshots {
-                        if _metadata.name == snapshot_name {
-                            let snapshot = Snapshot {
-                                id: format!("{dataset_name}_{snapshot_name}"),
-                                name: snapshot_name.clone(),
-                                dataset: dataset_name.clone(),
-                                created: chrono::Utc::now(),
-                                size_bytes: 0,
-                                unique_bytes: 0,
-                                referenced_bytes: 0,
-                                file_count: 0,
-                                status: SnapshotStatus::Active,
-                                description: None,
-                                tags: vec![],
-                            };
-                            return Ok(Json(DataResponse::new(snapshot)));
-                        }
+    if state.zfs_engines.contains_key(&dataset_name) {
+        let placeholder_snapshots: Vec<crate::rest::models::SnapshotMetadata> = vec![];
+        match Ok::<Vec<crate::rest::models::SnapshotMetadata>, nestgate_core::NestGateError>(
+            placeholder_snapshots,
+        ) {
+            Ok(snapshots) => {
+                for _metadata in &snapshots {
+                    if _metadata.name == snapshot_name {
+                        let snapshot = Snapshot {
+                            id: format!("{dataset_name}_{snapshot_name}"),
+                            name: snapshot_name,
+                            dataset: dataset_name,
+                            created: chrono::Utc::now(),
+                            size_bytes: 0,
+                            unique_bytes: 0,
+                            referenced_bytes: 0,
+                            file_count: 0,
+                            status: SnapshotStatus::Active,
+                            description: None,
+                            tags: vec![],
+                        };
+                        return Ok(Json(DataResponse::new(snapshot)));
                     }
-                    Err(Json(DataError::new(
-                        format!("Snapshot '{dataset_name}' not found"),
-                        "SNAPSHOT_NOT_FOUND".to_string(),
-                    )))
                 }
-                Err(e) => {
-                    error!("Failed to list snapshots: {}", e);
-                    Err(Json(DataError::new(
-                        "Failed to get snapshot".to_string(),
-                        "SNAPSHOT_ERROR".to_string(),
-                    )))
-                }
+                Err(Json(DataError::new(
+                    format!("Snapshot '{dataset_name}' not found"),
+                    "SNAPSHOT_NOT_FOUND".to_string(),
+                )))
+            }
+            Err(e) => {
+                error!("Failed to list snapshots: {}", e);
+                Err(Json(DataError::new(
+                    "Failed to get snapshot".to_string(),
+                    "SNAPSHOT_ERROR".to_string(),
+                )))
             }
         }
-        None => Err(Json(DataError::new(
+    } else {
+        Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
             "DATASET_NOT_FOUND".to_string(),
-        ))),
+        )))
     }
 }
 
@@ -207,22 +199,19 @@ pub async fn delete_snapshot(
         "Deleting snapshot '{}' for dataset: {}",
         snapshot_name, dataset_name
     );
-    let engines = state.zfs_engines.read().await;
-
-    match engines.get(&dataset_name) {
-        Some(_engine) => {
-            info!("Snapshot '{}' deleted successfully", snapshot_name);
-            Ok(Json(DataResponse::new(json!({
-                "message": format!("Snapshot '{dataset_name}' deleted successfully"),
-                "snapshot": snapshot_name,
-                "dataset": dataset_name,
-                "deleted_at": chrono::Utc::now()
-            }))))
-        }
-        None => Err(Json(DataError::new(
+    if state.zfs_engines.contains_key(&dataset_name) {
+        info!("Snapshot '{}' deleted successfully", snapshot_name);
+        Ok(Json(DataResponse::new(json!({
+            "message": format!("Snapshot '{dataset_name}' deleted successfully"),
+            "snapshot": snapshot_name,
+            "dataset": dataset_name,
+            "deleted_at": chrono::Utc::now()
+        }))))
+    } else {
+        Err(Json(DataError::new(
             format!("Dataset '{dataset_name}' not found"),
             "DATASET_NOT_FOUND".to_string(),
-        ))),
+        )))
     }
 }
 

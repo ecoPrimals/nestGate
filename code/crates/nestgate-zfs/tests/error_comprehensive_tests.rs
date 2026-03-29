@@ -6,8 +6,8 @@
 //! Tests for ZFS error creation, formatting, and handling to achieve >80% coverage.
 
 use nestgate_zfs::error::{
-    create_zfs_error, zfs_command_error, zfs_internal, zfs_operation_error, Result,
-    ZfsErrorBuilder, ZfsOperation, ZfsResult,
+    Result, ZfsErrorBuilder, ZfsOperation, ZfsResult, create_zfs_error, zfs_command_error,
+    zfs_internal, zfs_operation_error,
 };
 
 // ==================== ERROR BUILDER TESTS ====================

@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SecurityMonitoring
+/// Configuration for `SecurityMonitoring`
 pub struct SecurityMonitoringConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -19,7 +19,7 @@ pub struct SecurityMonitoringConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AuditSecurity
+/// Configuration for `AuditSecurity`
 pub struct AuditSecurityConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -108,7 +108,7 @@ pub struct AlertingConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for IncidentResponse
+/// Configuration for `IncidentResponse`
 pub struct IncidentResponseConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -196,7 +196,7 @@ impl SecurityMonitoringConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

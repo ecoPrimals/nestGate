@@ -10,7 +10,7 @@
 use super::{RpcError, RpcStreamEvent, UnifiedRpcRequest};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{Mutex, mpsc};
 use tracing::{debug, info};
 use uuid::Uuid;
 
@@ -515,10 +515,12 @@ mod tests {
         let request = make_request("unknown_method");
         let result = manager.create_bidirectional_stream(request).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Unknown streaming method"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Unknown streaming method")
+        );
     }
 
     #[tokio::test]

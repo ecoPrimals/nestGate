@@ -3,7 +3,7 @@
 
 // **CANONICAL MEMORY CONFIGURATION**
 //! Memory configuration functionality and utilities.
-//! This module provides the unified memory configuration for the NestGate system,
+//! This module provides the unified memory configuration for the `NestGate` system,
 //! consolidating all memory-related configuration patterns.
 
 use serde::{Deserialize, Serialize};
@@ -47,7 +47,7 @@ impl Default for MemoryConfig {
 
 /// Memory pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MemoryPool
+/// Configuration for `MemoryPool`
 pub struct MemoryPoolConfig {
     /// Enable memory pooling
     pub enabled: bool,
@@ -129,7 +129,7 @@ impl Default for MemoryLimits {
 
 /// Garbage collection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for GarbageCollection
+/// Configuration for `GarbageCollection`
 pub struct GarbageCollectionConfig {
     /// Enable automatic garbage collection
     pub enabled: bool,
@@ -157,7 +157,7 @@ impl Default for GarbageCollectionConfig {
 
 /// Memory monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MemoryMonitoring
+/// Configuration for `MemoryMonitoring`
 pub struct MemoryMonitoringConfig {
     /// Enable memory monitoring
     pub enabled: bool,
@@ -183,5 +183,5 @@ impl Default for MemoryMonitoringConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for UnifiedMemoryConfig
+/// Backward compatibility alias for `UnifiedMemoryConfig`
 pub type UnifiedMemoryConfig = MemoryConfig;

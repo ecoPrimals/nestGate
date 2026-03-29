@@ -47,7 +47,8 @@ impl UniversalStorageDiscovery {
     pub async fn discover_from_env() -> Result<Vec<DiscoveredStorage>> {
         let mut storage = Vec::new();
 
-        for (key, value) in std::env::vars() {
+        let env_pairs: Vec<(String, String)> = std::env::vars().collect();
+        for (key, value) in env_pairs {
             if key.starts_with("STORAGE_") && key.ends_with("_ENDPOINT") {
                 let name = Self::extract_storage_name(&key);
                 if let Some(discovered) = Self::probe_endpoint(&name, &value).await {
@@ -106,7 +107,7 @@ impl UniversalStorageDiscovery {
 
     /// Extract storage name from environment variable key
     ///
-    /// STORAGE_BACKUP_ENDPOINT -> backup
+    /// `STORAGE_BACKUP_ENDPOINT` -> backup
     fn extract_storage_name(key: &str) -> String {
         key.trim_start_matches("STORAGE_")
             .trim_end_matches("_ENDPOINT")
@@ -171,14 +172,14 @@ impl UniversalStorageDiscovery {
         let prefix = format!("STORAGE_{}", name.to_uppercase());
 
         // Check for access key + secret key (signed headers pattern)
-        let access_key_var = format!("{}_ACCESS_KEY", prefix);
-        let secret_key_var = format!("{}_SECRET_KEY", prefix);
+        let access_key_var = format!("{prefix}_ACCESS_KEY");
+        let secret_key_var = format!("{prefix}_SECRET_KEY");
 
         if let (Ok(access_key), Ok(secret_key)) = (
             std::env::var(&access_key_var),
             std::env::var(&secret_key_var),
         ) {
-            let session_token = std::env::var(format!("{}_SESSION_TOKEN", prefix))
+            let session_token = std::env::var(format!("{prefix}_SESSION_TOKEN"))
                 .ok()
                 .map(SecretString::new);
 
@@ -196,7 +197,7 @@ impl UniversalStorageDiscovery {
         }
 
         // Check for bearer token
-        let token_var = format!("{}_TOKEN", prefix);
+        let token_var = format!("{prefix}_TOKEN");
         if let Ok(token) = std::env::var(&token_var) {
             return Some(AuthenticationPattern::BearerToken {
                 token: SecretString::new(token),
@@ -205,7 +206,7 @@ impl UniversalStorageDiscovery {
         }
 
         // Check for API key
-        let api_key_var = format!("{}_API_KEY", prefix);
+        let api_key_var = format!("{prefix}_API_KEY");
         if let Ok(api_key) = std::env::var(&api_key_var) {
             return Some(AuthenticationPattern::ApiKey {
                 key: SecretString::new(api_key),
@@ -253,6 +254,7 @@ pub struct DiscoveredStorage {
 
 impl DiscoveredStorage {
     /// Get a human-readable description
+    #[must_use]
     pub fn description(&self) -> String {
         format!(
             "{}: {} ({})",

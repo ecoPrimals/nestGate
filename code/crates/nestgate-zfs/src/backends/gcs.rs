@@ -47,7 +47,7 @@
 
 use crate::zero_cost_zfs_operations::ZeroCostZfsOperations;
 use nestgate_core::canonical_types::StorageTier;
-use nestgate_core::{config_error, NestGateError, Result};
+use nestgate_core::{NestGateError, Result, config_error};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -96,7 +96,7 @@ struct GcsClientWrapper {
 /// **EVOLUTION**: Tracks configuration provenance for audit and dynamic reconfiguration
 #[derive(Debug, Clone)]
 enum ConfigSource {
-    /// Discovered via NestGate capability system (preferred)
+    /// Discovered via `NestGate` capability system (preferred)
     CapabilityDiscovered {
         /// Service descriptor from discovery
         /// **PLANNED**: Service health monitoring and failover (v0.2.0)
@@ -191,7 +191,7 @@ pub struct GcsProperties {
 }
 
 /// GCS storage class mapping
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum GcsStorageClass {
     /// Standard storage (frequent access)
     Standard,
@@ -230,7 +230,7 @@ impl GcsBackend {
         Self::from_environment().await
     }
 
-    /// Discover GCS capability via NestGate capability system
+    /// Discover GCS capability via `NestGate` capability system
     ///
     /// **RUNTIME DISCOVERY**: No hardcoded service locations.
     /// Backend discovers GCS-compatible storage services at startup.
@@ -323,11 +323,11 @@ impl GcsBackend {
 
     /// Get dataset prefix
     fn dataset_prefix(pool_name: &str, dataset_name: &str) -> String {
-        format!("{}/{}", pool_name, dataset_name)
+        format!("{pool_name}/{dataset_name}")
     }
 
     /// Map storage tier to GCS storage class
-    fn map_tier(tier: &StorageTier) -> GcsStorageClass {
+    const fn map_tier(tier: &StorageTier) -> GcsStorageClass {
         match tier {
             StorageTier::Hot | StorageTier::Cache => GcsStorageClass::Standard,
             StorageTier::Warm => GcsStorageClass::Nearline,
@@ -337,13 +337,34 @@ impl GcsBackend {
     }
 
     /// Get storage class name for GCS API
-    fn storage_class_name(class: &GcsStorageClass) -> &'static str {
+    const fn storage_class_name(class: &GcsStorageClass) -> &'static str {
         match class {
             GcsStorageClass::Standard => "STANDARD",
             GcsStorageClass::Nearline => "NEARLINE",
             GcsStorageClass::Coldline => "COLDLINE",
             GcsStorageClass::Archive => "ARCHIVE",
         }
+    }
+}
+
+#[cfg(test)]
+impl GcsBackend {
+    /// Exercise capability-based initialization without calling external GCS APIs.
+    pub async fn from_discovered_config_for_test(
+        service_id: impl Into<String>,
+        project_id: impl Into<String>,
+        credentials_path: Option<String>,
+        bucket_prefix: impl Into<String>,
+        location: impl Into<String>,
+    ) -> Result<Self> {
+        Self::from_discovered_capability(DiscoveredGcsConfig {
+            service_id: service_id.into(),
+            project_id: project_id.into(),
+            credentials_path,
+            bucket_prefix: bucket_prefix.into(),
+            location: location.into(),
+        })
+        .await
     }
 }
 
@@ -419,7 +440,7 @@ impl ZeroCostZfsOperations for GcsBackend {
         let dataset = GcsDataset {
             name: name.to_string(),
             pool: pool.name.clone(),
-            prefix: prefix.clone(),
+            prefix,
             tier,
             storage_class,
             created_at: std::time::SystemTime::now(),
@@ -453,7 +474,7 @@ impl ZeroCostZfsOperations for GcsBackend {
         let snapshot = GcsSnapshot {
             name: name.to_string(),
             dataset: dataset.name.clone(),
-            generation: generation.clone(),
+            generation,
             created_at: std::time::SystemTime::now(),
         };
 
@@ -481,10 +502,10 @@ impl ZeroCostZfsOperations for GcsBackend {
                     "config_source".to_string(),
                     match &self.client.config_source {
                         ConfigSource::CapabilityDiscovered { service_id } => {
-                            format!("capability:{}", service_id)
+                            format!("capability:{service_id}")
                         }
                         ConfigSource::Environment => "environment".to_string(),
-                        ConfigSource::Explicit { project_id } => format!("explicit:{}", project_id),
+                        ConfigSource::Explicit { project_id } => format!("explicit:{project_id}"),
                     },
                 );
                 map
@@ -537,41 +558,10 @@ impl ZeroCostZfsOperations for GcsBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_gcs_backend_creation() {
-        // Set required environment variables for test
-        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
-        nestgate_core::env_process::set_var("GCS_BUCKET_PREFIX", "test-nestgate");
-        nestgate_core::env_process::set_var("GCS_LOCATION", "US-WEST1");
-
-        let backend = GcsBackend::new().await;
-        assert!(backend.is_ok(), "GCS backend should be created");
-
-        let backend = backend.unwrap();
-        assert_eq!(backend.bucket_prefix, "test-nestgate");
-        assert_eq!(backend.location, "US-WEST1");
-    }
-
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_bucket_name_generation() {
-        // Set required environment variables for test
-        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
-
-        let backend = GcsBackend::new().await.unwrap();
-        let bucket = backend.bucket_name("MyPool_Test");
-
-        // GCS buckets must be lowercase, no underscores
-        assert!(bucket.chars().all(|c| c.is_lowercase() || c == '-'));
-        assert!(!bucket.contains('_'));
-        assert!(bucket.starts_with(&backend.bucket_prefix));
-    }
-
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_tier_mapping() {
+    #[test]
+    fn tier_mapping_and_storage_class_names() {
         assert_eq!(
             GcsBackend::map_tier(&StorageTier::Hot),
             GcsStorageClass::Standard
@@ -592,11 +582,6 @@ mod tests {
             GcsBackend::map_tier(&StorageTier::Archive),
             GcsStorageClass::Archive
         );
-    }
-
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_storage_class_names() {
         assert_eq!(
             GcsBackend::storage_class_name(&GcsStorageClass::Standard),
             "STANDARD"
@@ -615,120 +600,121 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_create_pool() {
-        let backend = GcsBackend::new().await.unwrap();
-        let pool = backend.create_pool("test-pool", &[]).await;
-
-        assert!(pool.is_ok(), "Pool creation should succeed");
-        let pool = pool.unwrap();
-        assert_eq!(pool.name, "test-pool");
-        assert!(pool.bucket.contains("test-pool"));
-        assert!(!pool.location.is_empty());
+    #[test]
+    fn dataset_prefix_format() {
+        assert_eq!(GcsBackend::dataset_prefix("tank", "data"), "tank/data");
     }
 
     #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_create_dataset() {
-        // Set required environment variables for test
-        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
+    #[serial]
+    async fn gcs_backend_from_environment_no_external_apis() {
+        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "nestgate-gcs-test");
+        nestgate_core::env_process::set_var("GCS_BUCKET_PREFIX", "test-nestgate");
+        nestgate_core::env_process::set_var("GCS_LOCATION", "US-WEST1");
+        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
+        nestgate_core::env_process::remove_var("GCS_CREDENTIALS_PATH");
 
-        let backend = GcsBackend::new().await.unwrap();
-        let pool = backend.create_pool("test-pool", &[]).await.unwrap();
+        let backend = GcsBackend::new().await.expect("env-based backend");
+        assert_eq!(backend.bucket_prefix, "test-nestgate");
+        assert_eq!(backend.location, "US-WEST1");
+
+        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
+        nestgate_core::env_process::remove_var("GCS_BUCKET_PREFIX");
+        nestgate_core::env_process::remove_var("GCS_LOCATION");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn gcs_backend_uses_google_cloud_project_alias() {
+        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
+        nestgate_core::env_process::set_var("GOOGLE_CLOUD_PROJECT", "alias-proj");
+        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
+
+        let backend = GcsBackend::new()
+            .await
+            .expect("GOOGLE_CLOUD_PROJECT should satisfy project id");
+        assert_eq!(backend.bucket_prefix, "nestgate");
+
+        nestgate_core::env_process::remove_var("GOOGLE_CLOUD_PROJECT");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn gcs_operations_in_memory_round_trip() {
+        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "inmem-proj");
+        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
+
+        let backend = GcsBackend::new().await.expect("backend");
+        let pool = backend
+            .create_pool("test-pool", &[])
+            .await
+            .expect("create_pool");
+        let bucket = backend.bucket_name("test-pool");
+        assert!(bucket.contains("test-pool"));
+        assert!(!bucket.contains('_'));
 
         let dataset = backend
             .create_dataset(&pool, "data", StorageTier::Warm)
-            .await;
-
-        assert!(dataset.is_ok(), "Dataset creation should succeed");
-        let dataset = dataset.unwrap();
-        assert_eq!(dataset.name, "data");
-        assert_eq!(dataset.pool, "test-pool");
-        assert!(matches!(dataset.tier, StorageTier::Warm));
-        assert_eq!(dataset.storage_class, GcsStorageClass::Nearline);
-    }
-
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_create_snapshot() {
-        let backend = GcsBackend::new().await.unwrap();
-        let pool = backend.create_pool("test-pool", &[]).await.unwrap();
-        let dataset = backend
-            .create_dataset(&pool, "data", StorageTier::Hot)
             .await
-            .unwrap();
+            .expect("dataset");
+        assert_eq!(dataset.storage_class, GcsStorageClass::Nearline);
 
-        let snapshot = backend.create_snapshot(&dataset, "snap1").await;
-
-        assert!(snapshot.is_ok(), "Snapshot creation should succeed");
-        let snapshot = snapshot.unwrap();
-        assert_eq!(snapshot.name, "snap1");
+        let snapshot = backend
+            .create_snapshot(&dataset, "snap1")
+            .await
+            .expect("snapshot");
         assert_eq!(snapshot.dataset, "data");
-        assert!(!snapshot.generation.is_empty());
+
+        let props = backend.get_pool_properties(&pool).await.expect("props");
+        assert_eq!(props.project_id, "inmem-proj");
+        assert!(
+            props
+                .custom
+                .get("config_source")
+                .map_or(false, |s| s.contains("environment"))
+        );
+
+        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
     }
 
     #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_list_pools() {
-        let backend = GcsBackend::new().await.unwrap();
+    async fn gcs_backend_from_discovered_capability_path() {
+        let backend = GcsBackend::from_discovered_config_for_test(
+            "svc-1",
+            "discovered-project",
+            Some("/tmp/creds.json".to_string()),
+            "ng-prefix",
+            "EU",
+        )
+        .await
+        .expect("discovered backend");
+
+        let pool = backend.create_pool("p1", &[]).await.expect("pool");
+        let props = backend
+            .get_pool_properties(&pool)
+            .await
+            .expect("properties");
+        assert_eq!(props.project_id, "discovered-project");
+        let src = props.custom.get("config_source").expect("config_source");
+        assert!(src.contains("capability:svc-1"));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn gcs_pools_list_and_empty_datasets() {
+        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "list-proj");
+        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
+
+        let backend = GcsBackend::new().await.expect("backend");
         backend.create_pool("pool1", &[]).await.unwrap();
         backend.create_pool("pool2", &[]).await.unwrap();
-
-        let pools = backend.list_pools().await.unwrap();
+        let pools = backend.list_pools().await.expect("list pools");
         assert_eq!(pools.len(), 2);
-    }
 
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_get_pool_properties() {
-        let backend = GcsBackend::new().await.unwrap();
-        let pool = backend.create_pool("test-pool", &[]).await.unwrap();
+        let p = &pools[0];
+        let datasets = backend.list_datasets(p).await.expect("list datasets");
+        assert!(datasets.is_empty());
 
-        let props = backend.get_pool_properties(&pool).await;
-        assert!(props.is_ok(), "Should get pool properties");
-
-        let props = props.unwrap();
-        assert!(!props.project_id.is_empty());
-        assert!(!props.location.is_empty());
-        assert!(props.uniform_access); // Recommended default
-    }
-
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_all_storage_tiers() {
-        // Set required environment variables for test
-        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "test-project");
-
-        let backend = GcsBackend::new().await.unwrap();
-        let pool = backend.create_pool("test-pool", &[]).await.unwrap();
-
-        // Test all storage tiers map correctly
-        let test_cases = [
-            (StorageTier::Hot, GcsStorageClass::Standard),
-            (StorageTier::Warm, GcsStorageClass::Nearline),
-            (StorageTier::Cold, GcsStorageClass::Coldline),
-            (StorageTier::Cache, GcsStorageClass::Standard),
-            (StorageTier::Archive, GcsStorageClass::Archive),
-        ];
-
-        for (tier, expected_class) in test_cases {
-            let dataset = backend
-                .create_dataset(&pool, &format!("data-{:?}", tier), tier.clone())
-                .await
-                .unwrap();
-
-            assert_eq!(dataset.storage_class, expected_class);
-        }
-    }
-
-    #[tokio::test]
-    #[ignore = "Requires GCS credentials configuration"]
-    async fn test_multi_region_location() {
-        nestgate_core::env_process::set_var("GCS_LOCATION", "EU");
-        let backend = GcsBackend::new().await.unwrap();
-
-        let pool = backend.create_pool("eu-pool", &[]).await.unwrap();
-        assert_eq!(pool.location, "EU");
+        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
     }
 }

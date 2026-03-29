@@ -17,12 +17,13 @@ pub struct IntrospectionConfig {
     max_file_handles: Option<usize>,
 }
 
-/// Shared immutable reference to IntrospectionConfig
+/// Shared immutable reference to `IntrospectionConfig`
 pub type SharedIntrospectionConfig = Arc<IntrospectionConfig>;
 
 impl IntrospectionConfig {
     /// Create a new empty configuration (all values None, will use system detection)
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             kubernetes_namespace: None,
             docker_compose_project: None,
@@ -33,6 +34,7 @@ impl IntrospectionConfig {
 
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             kubernetes_namespace: std::env::var("KUBERNETES_NAMESPACE").ok(),
@@ -47,28 +49,33 @@ impl IntrospectionConfig {
     // Accessors
 
     /// Check if running in Kubernetes
-    pub fn is_kubernetes(&self) -> bool {
+    #[must_use]
+    pub const fn is_kubernetes(&self) -> bool {
         self.kubernetes_namespace.is_some()
     }
 
     /// Check if running in Docker Compose
-    pub fn is_docker_compose(&self) -> bool {
+    #[must_use]
+    pub const fn is_docker_compose(&self) -> bool {
         self.docker_compose_project.is_some()
     }
 
     /// Get compute capability type (modern detection)
+    #[must_use]
     pub fn get_compute_capability_type(&self) -> Option<&str> {
         self.compute_capability_type.as_deref()
     }
 
     /// Get max file handles if configured
-    pub fn get_max_file_handles(&self) -> Option<usize> {
+    #[must_use]
+    pub const fn get_max_file_handles(&self) -> Option<usize> {
         self.max_file_handles
     }
 
     /// Estimate memory based on environment
     /// Returns estimated memory in GB
-    pub fn estimate_memory_gb(&self) -> f64 {
+    #[must_use]
+    pub const fn estimate_memory_gb(&self) -> f64 {
         if self.is_kubernetes() {
             2.0 // Assume 2GB in containerized environment
         } else {
@@ -77,6 +84,7 @@ impl IntrospectionConfig {
     }
 
     /// Detect container runtime using capability-based approach
+    #[must_use]
     pub fn detect_container_runtime(&self) -> Option<String> {
         // Modern capability-based detection (preferred)
         if let Some(compute_type) = &self.compute_capability_type {
@@ -102,25 +110,29 @@ impl IntrospectionConfig {
     // Builder methods for tests
 
     /// Builder method to set Kubernetes Namespace
+    #[must_use]
     pub fn with_kubernetes_namespace(mut self, namespace: String) -> Self {
         self.kubernetes_namespace = Some(namespace);
         self
     }
 
     /// Builder method to set Docker Compose Project
+    #[must_use]
     pub fn with_docker_compose_project(mut self, project: String) -> Self {
         self.docker_compose_project = Some(project);
         self
     }
 
     /// Builder method to set Compute Capability Type
+    #[must_use]
     pub fn with_compute_capability_type(mut self, compute_type: String) -> Self {
         self.compute_capability_type = Some(compute_type);
         self
     }
 
     /// Builder method to set Max File Handles
-    pub fn with_max_file_handles(mut self, limit: usize) -> Self {
+    #[must_use]
+    pub const fn with_max_file_handles(mut self, limit: usize) -> Self {
         self.max_file_handles = Some(limit);
         self
     }

@@ -4,16 +4,16 @@
 //! **NESTGATE UNIFIED ERROR SYSTEM**
 //! Module definitions and exports.
 //! Revolutionary error handling with 90% memory efficiency improvement.
-//! This module provides the core error types and utilities for the entire NestGate system.
+//! This module provides the core error types and utilities for the entire `NestGate` system.
 
 // ==================== CORE MODULES ====================
 
 pub mod context;
 pub mod conversions;
 pub mod data;
+pub mod enhanced_ergonomics;
 pub mod utilities; // Consolidated error helpers
 pub mod variants;
-pub mod enhanced_ergonomics;
 
 // Deprecated modules removed (November 10, 2025)
 // - helpers.rs → migrated to utilities.rs
@@ -29,12 +29,12 @@ pub use context::{ErrorContext, RetryInfo};
 // Re-export data types from data module
 pub use data::*;
 
-/// Type alias for NestGate unified error type
+/// Type alias for `NestGate` unified error type
 ///
 /// Convenience alias for `NestGateUnifiedError` used throughout the codebase.
 pub type NestGateError = NestGateUnifiedError;
 
-/// Type alias for NestGate Result type
+/// Type alias for `NestGate` Result type
 ///
 /// Standard Result type using `NestGateError` as the error variant.
 pub type Result<T> = std::result::Result<T, NestGateError>;
@@ -145,7 +145,7 @@ pub enum ErrorSeverity {
 }
 
 /// Convert legacy `Result<T>` to canonical `Result<T>`
-pub fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
+pub const fn migrate_result<T>(legacy_result: std::result::Result<T, NestGateError>) -> Result<T> {
     // Pass through the legacy result as-is
     legacy_result
 }
@@ -333,9 +333,11 @@ mod error_path_tests {
         let strategies = suggest_recovery_strategy(&error);
 
         assert!(!strategies.is_empty());
-        assert!(strategies
-            .iter()
-            .any(|s| s.contains("network") || s.contains("connectivity")));
+        assert!(
+            strategies
+                .iter()
+                .any(|s| s.contains("network") || s.contains("connectivity"))
+        );
     }
 
     #[test]
@@ -344,9 +346,11 @@ mod error_path_tests {
         let strategies = suggest_recovery_strategy(&error);
 
         assert!(!strategies.is_empty());
-        assert!(strategies
-            .iter()
-            .any(|s| s.contains("disk") || s.contains("storage")));
+        assert!(
+            strategies
+                .iter()
+                .any(|s| s.contains("disk") || s.contains("storage"))
+        );
     }
 
     #[test]
@@ -355,9 +359,11 @@ mod error_path_tests {
         let strategies = suggest_recovery_strategy(&error);
 
         assert!(!strategies.is_empty());
-        assert!(strategies
-            .iter()
-            .any(|s| s.contains("authentication") || s.contains("credentials")));
+        assert!(
+            strategies
+                .iter()
+                .any(|s| s.contains("authentication") || s.contains("credentials"))
+        );
     }
 
     #[test]

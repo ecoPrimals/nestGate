@@ -4,8 +4,8 @@
 //
 // Builder patterns for creating and validating canonical configurations.
 
-use crate::config::canonical_primary::system_config::DeploymentEnvironment;
 use crate::config::canonical_primary::NestGateCanonicalConfig;
+use crate::config::canonical_primary::system_config::DeploymentEnvironment;
 use nestgate_types::error::Result;
 // Removed unused imports: serde::{Deserialize, Serialize}
 
@@ -45,14 +45,14 @@ impl CanonicalConfigBuilder {
 
     /// Set the environment
     #[must_use]
-    pub fn environment(mut self, env: DeploymentEnvironment) -> Self {
+    pub const fn environment(mut self, env: DeploymentEnvironment) -> Self {
         self.config.system.environment = env;
         self
     }
 
     /// Set the API port
     #[must_use]
-    pub fn api_port(self, _port: u16) -> Self {
+    pub const fn api_port(self, _port: u16) -> Self {
         // Removed mut and prefixed parameter with underscore
         // Note: NetworkConfig structure needs to be updated for http_server field access
         // self.config.network.http_server.port = port; // Field not available in current structure
@@ -61,7 +61,7 @@ impl CanonicalConfigBuilder {
 
     /// Enable TLS
     #[must_use]
-    pub fn enable_tls(self, _enabled: bool) -> Self {
+    pub const fn enable_tls(self, _enabled: bool) -> Self {
         // Removed mut and prefixed parameter with underscore
         // Note: NetworkConfig structure needs to be updated for tls field access
         // self.config.network.tls // Field not available in current structure.enabled = enabled;

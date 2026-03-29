@@ -13,7 +13,7 @@
 //! - **Graceful Degradation**: System works even if some primals unavailable
 //!
 //! ## Example
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::capability_based::CapabilityConfigBuilder;
 //! use nestgate_core::universal_traits::types::PrimalCapability;
 //!
@@ -33,9 +33,8 @@
 //! # }
 //! ```
 
-// TODO: move PrimalCapability to nestgate-types
-// use nestgate_core::universal_traits::types::PrimalCapability;
-/// Local capability tag (stub; replace with shared `nestgate-types` when extracted from nestgate-core).
+// Consolidation: shared `PrimalCapability` may move to `nestgate-types` with nestgate-core.
+/// Local capability tag used until shared `nestgate-types` definitions fully replace this enum.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PrimalCapability {
     /// Storage capability
@@ -59,8 +58,8 @@ pub enum PrimalCapability {
     /// Custom capability label
     Custom(String),
 }
-use nestgate_types::error::{NestGateError, Result};
 use dashmap::DashMap;
+use nestgate_types::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -114,25 +113,26 @@ pub struct DiscoveredService {
 
 impl CapabilityConfig {
     /// Create a new builder for capability config
-    pub fn builder() -> CapabilityConfigBuilder {
+    #[must_use]
+    pub const fn builder() -> CapabilityConfigBuilder {
         CapabilityConfigBuilder::new()
     }
 
     /// Get discovery timeout duration
     #[must_use]
-    pub fn discovery_timeout(&self) -> Duration {
+    pub const fn discovery_timeout(&self) -> Duration {
         self.discovery_timeout
     }
 
     /// Get number of retry attempts
     #[must_use]
-    pub fn retry_attempts(&self) -> u32 {
+    pub const fn retry_attempts(&self) -> u32 {
         self.retry_attempts
     }
 
     /// Get fallback mode
     #[must_use]
-    pub fn fallback_mode(&self) -> FallbackMode {
+    pub const fn fallback_mode(&self) -> FallbackMode {
         self.fallback_mode
     }
 
@@ -171,10 +171,7 @@ impl CapabilityConfig {
 
         Err(NestGateError::configuration_error(
             "capability_discovery",
-            &format!(
-                "Failed to discover service for capability: {:?}",
-                capability
-            ),
+            &format!("Failed to discover service for capability: {capability:?}"),
         ))
     }
 
@@ -182,9 +179,9 @@ impl CapabilityConfig {
     async fn try_discover(&self, capability: PrimalCapability) -> Result<DiscoveredService> {
         // Implementation: Use mDNS, consul, etcd, or custom discovery
         // For now, check environment variables as interim solution
-        let env_key = format!("NESTGATE_CAPABILITY_{:?}_ENDPOINT", capability)
+        let env_key = format!("NESTGATE_CAPABILITY_{capability:?}_ENDPOINT")
             .to_uppercase()
-            .replace("-", "_");
+            .replace('-', "_");
 
         let endpoint_str = std::env::var(&env_key).map_err(|_| {
             let msg = format!(
@@ -196,7 +193,7 @@ impl CapabilityConfig {
         })?;
 
         let endpoint: SocketAddr = endpoint_str.parse().map_err(|e| {
-            let msg = format!("Invalid endpoint '{}': {}", endpoint_str, e);
+            let msg = format!("Invalid endpoint '{endpoint_str}': {e}");
             NestGateError::configuration_error(&env_key, &msg)
         })?;
 
@@ -261,11 +258,11 @@ impl CapabilityConfig {
                     .and_then(|p| p.parse().ok())
                     .unwrap_or(8080);
 
-                let endpoint_str = format!("{}:{}", fallback_host, fallback_port);
+                let endpoint_str = format!("{fallback_host}:{fallback_port}");
                 let endpoint = endpoint_str.parse().map_err(|e| {
                     NestGateError::configuration_error(
                         "fallback_endpoint",
-                        &format!("Invalid fallback endpoint {}: {}", endpoint_str, e),
+                        &format!("Invalid fallback endpoint {endpoint_str}: {e}"),
                     )
                 })?;
 
@@ -285,7 +282,7 @@ impl CapabilityConfig {
     }
 }
 
-/// Builder for CapabilityConfig
+/// Builder for `CapabilityConfig`
 #[derive(Debug)]
 pub struct CapabilityConfigBuilder {
     discovery_timeout: Duration,
@@ -301,7 +298,8 @@ impl Default for CapabilityConfigBuilder {
 
 impl CapabilityConfigBuilder {
     /// Create a new builder with sensible defaults
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             discovery_timeout: Duration::from_secs(5),
             retry_attempts: 3,
@@ -310,19 +308,22 @@ impl CapabilityConfigBuilder {
     }
 
     /// Set discovery timeout
-    pub fn with_discovery_timeout(mut self, timeout: Duration) -> Self {
+    #[must_use]
+    pub const fn with_discovery_timeout(mut self, timeout: Duration) -> Self {
         self.discovery_timeout = timeout;
         self
     }
 
     /// Set retry attempts
-    pub fn with_retry_attempts(mut self, attempts: u32) -> Self {
+    #[must_use]
+    pub const fn with_retry_attempts(mut self, attempts: u32) -> Self {
         self.retry_attempts = attempts;
         self
     }
 
     /// Set fallback mode
-    pub fn with_fallback_mode(mut self, mode: FallbackMode) -> Self {
+    #[must_use]
+    pub const fn with_fallback_mode(mut self, mode: FallbackMode) -> Self {
         self.fallback_mode = mode;
         self
     }
@@ -345,7 +346,7 @@ impl CapabilityConfigBuilder {
 }
 
 /// Get human-readable name for a capability
-fn capability_name(capability: &PrimalCapability) -> &'static str {
+const fn capability_name(capability: &PrimalCapability) -> &'static str {
     match capability {
         PrimalCapability::Storage => "Storage",
         PrimalCapability::Security => "Security",

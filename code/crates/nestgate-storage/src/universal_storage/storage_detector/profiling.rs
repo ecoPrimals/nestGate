@@ -30,7 +30,7 @@ impl Default for PerformanceProfiler {
 impl PerformanceProfiler {
     /// Create new performance profiler with default settings
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             iterations: 100,
             test_data_size: 4096, // 4KB test blocks
@@ -39,7 +39,7 @@ impl PerformanceProfiler {
 
     /// Create profiler with custom settings
     #[must_use]
-    pub fn with_settings(iterations: u32, test_data_size: usize) -> Self {
+    pub const fn with_settings(iterations: u32, test_data_size: usize) -> Self {
         Self {
             iterations,
             test_data_size,
@@ -175,7 +175,7 @@ impl PerformanceProfiler {
 
         for &size in &test_sizes {
             // Create a temporary profiler with this block size
-            let profiler = PerformanceProfiler::with_settings(10, size);
+            let profiler = Self::with_settings(10, size);
             let throughput = profiler.benchmark_read_throughput(storage).await?;
 
             if throughput > best_throughput {

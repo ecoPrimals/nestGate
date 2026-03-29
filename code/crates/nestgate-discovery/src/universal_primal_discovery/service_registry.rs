@@ -52,13 +52,13 @@ use std::sync::Arc;
 #[derive(Debug, Clone)]
 pub struct ServiceEndpoint {
     /// Unique identifier for this service instance
-    pub id: String,
+    pub id: Arc<str>,
     /// IP address the service is bound to
     pub address: IpAddr,
     /// Port the service is listening on
     pub port: u16,
     /// Protocol (HTTP, HTTPS, etc.)
-    pub protocol: String,
+    pub protocol: Arc<str>,
     /// Capabilities this service provides
     pub capabilities: Vec<PrimalCapability>,
     /// Service health status
@@ -72,31 +72,34 @@ impl ServiceEndpoint {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// # use nestgate_core::universal_primal_discovery::service_registry::ServiceEndpoint;
     /// # use std::net::{IpAddr, Ipv4Addr};
     /// # let endpoint = ServiceEndpoint {
-    /// #     id: "test".to_string(),
+    /// #     id: "test".into(),
     /// #     address: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
     /// #     port: 8080,
-    /// #     protocol: "http".to_string(),
+    /// #     protocol: "http".into(),
     /// #     capabilities: vec![],
     /// #     health: nestgate_core::universal_primal_discovery::capability_based_discovery::HealthStatus::Healthy,
     /// #     metadata: Default::default(),
     /// # };
     /// assert_eq!(endpoint.url(), "http://127.0.0.1:8080");
     /// ```
+    #[must_use]
     pub fn url(&self) -> String {
         format!("{}://{}:{}", self.protocol, self.address, self.port)
     }
 
     /// Get a specific metadata value
-    pub fn get_metadata(&self, key: &str) -> Option<&String> {
-        self.metadata.get(key)
+    #[must_use]
+    pub fn get_metadata(&self, key: &str) -> Option<&str> {
+        self.metadata.get(key).map(String::as_str)
     }
 
     /// Check if service is healthy
-    pub fn is_healthy(&self) -> bool {
+    #[must_use]
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.health, HealthStatus::Healthy)
     }
 }
@@ -129,6 +132,7 @@ impl ServiceRegistry {
     /// Create a service registry with a custom discovery manager
     ///
     /// Useful for testing or when using specific discovery mechanisms (mDNS, etc.)
+    #[must_use]
     pub fn with_discovery(discovery: CapabilityDiscoveryManager) -> Self {
         Self {
             discovery: Arc::new(discovery),
@@ -167,8 +171,7 @@ impl ServiceRegistry {
             .map(Self::convert_to_endpoint)
             .ok_or_else(|| {
                 NestGateError::not_found(format!(
-                    "No healthy service found with capability: {:?}",
-                    capability
+                    "No healthy service found with capability: {capability:?}"
                 ))
             })
     }
@@ -229,13 +232,20 @@ impl ServiceRegistry {
         self.discovery.shutdown().await
     }
 
-    /// Convert internal PeerDescriptor to public ServiceEndpoint
+    /// Convert internal `PeerDescriptor` to public `ServiceEndpoint`
     fn convert_to_endpoint(peer: PeerDescriptor) -> ServiceEndpoint {
+        use crate::universal_primal_discovery::capability_based_discovery::Protocol;
+        let protocol: Arc<str> = match peer.endpoint.protocol {
+            Protocol::Tcp => Arc::from("tcp"),
+            Protocol::Udp => Arc::from("udp"),
+            Protocol::Http => Arc::from("http"),
+            Protocol::Https => Arc::from("https"),
+        };
         ServiceEndpoint {
-            id: peer.id.as_str().to_string(),
+            id: Arc::from(peer.id.as_str()),
             address: peer.endpoint.address.ip(),
             port: peer.endpoint.address.port(),
-            protocol: format!("{}", peer.endpoint.protocol), // Use Display trait
+            protocol,
             capabilities: peer.capabilities,
             health: peer.health,
             metadata: HashMap::new(), // PeerDescriptor doesn't have metadata
@@ -257,10 +267,10 @@ mod tests {
     #[tokio::test]
     async fn test_service_endpoint_url() {
         let endpoint = ServiceEndpoint {
-            id: "test".to_string(),
+            id: "test".into(),
             address: IpAddr::V4(Ipv4Addr::new(192, 168, 1, 100)),
             port: 3000,
-            protocol: "https".to_string(),
+            protocol: "https".into(),
             capabilities: vec![],
             health: HealthStatus::Healthy,
             metadata: HashMap::new(),

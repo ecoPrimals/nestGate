@@ -3,7 +3,7 @@
 
 // **CANONICAL SERVICE CONFIGURATION**
 //! Service configuration functionality and utilities.
-//! This module provides the unified service configuration for the NestGate system,
+//! This module provides the unified service configuration for the `NestGate` system,
 //! consolidating all service-related configuration patterns.
 
 use serde::{Deserialize, Serialize};
@@ -88,7 +88,7 @@ pub enum ServiceType {
 
 /// Service endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ServiceEndpoint
+/// Configuration for `ServiceEndpoint`
 pub struct ServiceEndpointConfig {
     /// Bind endpoint address
     pub bind_endpoint: String,
@@ -120,7 +120,7 @@ impl Default for ServiceEndpointConfig {
 
 /// Service health configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ServiceHealth
+/// Configuration for `ServiceHealth`
 pub struct ServiceHealthConfig {
     /// Whether health checks are enabled
     pub enabled: bool,
@@ -148,7 +148,7 @@ impl Default for ServiceHealthConfig {
 
 /// Service metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ServiceMetrics
+/// Configuration for `ServiceMetrics`
 pub struct ServiceMetricsConfig {
     /// Whether metrics collection is enabled
     pub enabled: bool,
@@ -176,7 +176,7 @@ impl Default for ServiceMetricsConfig {
 
 /// Service scaling configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ServiceScaling
+/// Configuration for `ServiceScaling`
 pub struct ServiceScalingConfig {
     /// Whether auto-scaling is enabled
     pub auto_scaling: bool,
@@ -210,7 +210,7 @@ impl Default for ServiceScalingConfig {
 
 /// Service security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ServiceSecurity
+/// Configuration for `ServiceSecurity`
 pub struct ServiceSecurityConfig {
     /// Whether authentication is required
     pub authentication_required: bool,
@@ -236,5 +236,5 @@ impl Default for ServiceSecurityConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for UnifiedServiceConfig
+/// Backward compatibility alias for `UnifiedServiceConfig`
 pub type UnifiedServiceConfig = ServiceConfig;

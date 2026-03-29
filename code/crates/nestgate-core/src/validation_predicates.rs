@@ -323,7 +323,7 @@ mod tests {
         assert!(is_valid_port_number(1)); // Valid: minimum
         assert!(is_valid_port_number(8080)); // Valid: common port
         assert!(is_valid_port_number(65535)); // Valid: maximum (u16 max)
-                                              // Note: u16 cannot exceed 65535, so upper bound check not needed
+        // Note: u16 cannot exceed 65535, so upper bound check not needed
     }
 
     #[test]

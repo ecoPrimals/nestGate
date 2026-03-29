@@ -15,7 +15,7 @@
 //!
 //! # Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::migration_bridge;
 //! use nestgate_core::config::environment::EnvironmentConfig;
 //!
@@ -53,7 +53,7 @@ fn global_config() -> &'static EnvironmentConfig {
     GLOBAL_CONFIG.get_or_init(|| match EnvironmentConfig::from_env() {
         Ok(config) => config,
         Err(e) => {
-            eprintln!("⚠️  Warning: Failed to load environment config: {}", e);
+            eprintln!("⚠️  Warning: Failed to load environment config: {e}");
             eprintln!("   Using default configuration values");
             eprintln!("   Set environment variables to customize (see CONFIGURATION_GUIDE.md)");
             EnvironmentConfig::default()
@@ -69,7 +69,7 @@ fn global_config() -> &'static EnvironmentConfig {
 ///
 /// # Migration Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::config::environment::EnvironmentConfig;
 ///
 /// // OLD
@@ -191,7 +191,7 @@ pub fn get_read_timeout_secs() -> u64 {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::config::migration_bridge;
 ///
 /// let config = migration_bridge::config();

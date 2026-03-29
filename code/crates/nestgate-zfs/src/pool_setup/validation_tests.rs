@@ -232,10 +232,12 @@ mod validation_tests {
 
         // Device is in use with ext4 (which is in skip list)
         assert!(!result.is_valid);
-        assert!(result
-            .issues
-            .iter()
-            .any(|issue| issue.contains("filesystem")));
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|issue| issue.contains("filesystem"))
+        );
     }
 
     #[test]
@@ -290,10 +292,12 @@ mod validation_tests {
         let result = validator.validate_pool_config(&invalid_config);
 
         assert!(!result.is_valid);
-        assert!(result
-            .issues
-            .iter()
-            .any(|issue| issue.contains("No devices")));
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|issue| issue.contains("No devices"))
+        );
     }
 
     #[test]
@@ -308,10 +312,12 @@ mod validation_tests {
         let result = validator.validate_pool_config(&invalid_config);
 
         assert!(!result.is_valid);
-        assert!(result
-            .issues
-            .iter()
-            .any(|issue| issue.contains("requires at least")));
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|issue| issue.contains("requires at least"))
+        );
     }
 
     #[test]
@@ -326,10 +332,12 @@ mod validation_tests {
         let result = validator.validate_pool_config(&invalid_config);
 
         assert!(!result.is_valid);
-        assert!(result
-            .issues
-            .iter()
-            .any(|issue| issue.contains("requires at least 3")));
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|issue| issue.contains("requires at least 3"))
+        );
     }
 
     #[test]
@@ -348,10 +356,12 @@ mod validation_tests {
         let result = validator.validate_pool_config(&invalid_config);
 
         assert!(!result.is_valid);
-        assert!(result
-            .issues
-            .iter()
-            .any(|issue| issue.contains("requires at least 4")));
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|issue| issue.contains("requires at least 4"))
+        );
     }
 
     #[test]
@@ -371,10 +381,12 @@ mod validation_tests {
         let result = validator.validate_pool_config(&invalid_config);
 
         assert!(!result.is_valid);
-        assert!(result
-            .issues
-            .iter()
-            .any(|issue| issue.contains("requires at least 5")));
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|issue| issue.contains("requires at least 5"))
+        );
     }
 
     #[test]

@@ -66,7 +66,7 @@ impl ZfsMetrics {
         // Simple moving average for latency using atomic operations
         let current_bits = self.avg_latency_bits.load(Ordering::Relaxed);
         let current_avg = f64::from_bits(current_bits);
-        let new_avg = (current_avg * 0.9) + (latency_ms * 0.1);
+        let new_avg = current_avg.mul_add(0.9, latency_ms * 0.1);
         self.avg_latency_bits
             .store(new_avg.to_bits(), Ordering::Relaxed);
     }

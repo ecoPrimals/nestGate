@@ -3,8 +3,8 @@
 //! Tests system stability over extended periods
 //! **MODERNIZED**: Uses event-driven patterns instead of sleep-based timing
 
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
 use tokio::sync::Notify;
 use tokio::time::Instant;

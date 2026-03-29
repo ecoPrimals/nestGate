@@ -7,7 +7,7 @@
 
 //! Initialization module
 
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::debug;
@@ -168,7 +168,7 @@ impl ZfsManager {
 
         info!("Enhanced ZFS Manager initialization complete");
 
-        Ok(ZfsManager {
+        Ok(Self {
             config: (*shared_config).clone(),
             pool_manager,
             dataset_manager,
@@ -253,7 +253,8 @@ impl ZfsManager {
                 // should be defined in ZFS configuration, not discovered from generic env vars.
                 //
                 // MIGRATION: Use ZFS's actual bind address from its configuration
-                let endpoint = if let Ok(zfs_endpoint) = std::env::var("NESTGATE_ZFS_ENDPOINT") {
+
+                if let Ok(zfs_endpoint) = std::env::var("NESTGATE_ZFS_ENDPOINT") {
                     // Explicit ZFS endpoint provided (production)
                     zfs_endpoint
                 } else if let (Ok(host), Ok(port)) = (
@@ -264,7 +265,7 @@ impl ZfsManager {
                     tracing::warn!(
                         "Using legacy NESTGATE_ZFS_HOST/PORT. Consider using NESTGATE_ZFS_ENDPOINT instead."
                     );
-                    format!("{}:{}", host, port)
+                    format!("{host}:{port}")
                 } else {
                     // **Development default**: loopback when `NESTGATE_ZFS_BIND_ADDRESS` is unset.
                     // Override via `NESTGATE_ZFS_ENDPOINT` or bind env vars for real deployments.
@@ -287,9 +288,7 @@ impl ZfsManager {
                     );
 
                     format!("{bind_addr}:{bind_port}")
-                };
-
-                endpoint
+                }
             });
             details.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
             details

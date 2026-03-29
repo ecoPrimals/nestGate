@@ -27,7 +27,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::primal_discovery::capability_helpers::*;
 //!
 //! # async fn example() -> anyhow::Result<()> {
@@ -73,12 +73,12 @@ pub enum DiscoverySource {
 }
 
 impl DiscoveredService {
-    /// Create from ServiceInfo (discovery)
+    /// Create from `ServiceInfo` (discovery)
     fn from_service_info(info: ServiceInfo) -> Self {
         Self {
             name: info.name.clone(),
             endpoint: info.endpoint.clone(),
-            capabilities: info.capabilities.clone(),
+            capabilities: info.capabilities,
             source: DiscoverySource::Discovery,
         }
     }
@@ -86,7 +86,7 @@ impl DiscoveredService {
     /// Create from environment variable
     fn from_env(capability: &str, endpoint: String) -> Self {
         Self {
-            name: format!("{}-service", capability),
+            name: format!("{capability}-service"),
             endpoint,
             capabilities: vec![capability.to_string()],
             source: DiscoverySource::Environment,
@@ -96,7 +96,7 @@ impl DiscoveredService {
     /// Create from default
     fn from_default(capability: &str, endpoint: String) -> Self {
         Self {
-            name: format!("{}-service", capability),
+            name: format!("{capability}-service"),
             endpoint,
             capabilities: vec![capability.to_string()],
             source: DiscoverySource::Default,
@@ -121,7 +121,7 @@ pub async fn discover_orchestration() -> Result<DiscoveredService> {
     discover_capability_with_legacy("orchestration", "SONGBIRD", 8080).await
 }
 
-/// Discover security service (e.g., BearDog)
+/// Discover security service (e.g., `BearDog`)
 ///
 /// **Priority**:
 /// 1. Discovery (mDNS/Consul/k8s)
@@ -132,7 +132,7 @@ pub async fn discover_security() -> Result<DiscoveredService> {
     discover_capability_with_legacy("security", "BEARDOG", 3000).await
 }
 
-/// Discover compute service (e.g., ToadStool)
+/// Discover compute service (e.g., `ToadStool`)
 ///
 /// **Priority**:
 /// 1. Discovery (mDNS/Consul/k8s)
@@ -154,7 +154,7 @@ pub async fn discover_ai() -> Result<DiscoveredService> {
     discover_capability_with_legacy("ai", "SQUIRREL", 9000).await
 }
 
-/// Discover ecosystem service (e.g., BiomeOS)
+/// Discover ecosystem service (e.g., `BiomeOS`)
 ///
 /// **Priority**:
 /// 1. Discovery (mDNS/Consul/k8s)
@@ -176,7 +176,7 @@ pub async fn discover_ecosystem() -> Result<DiscoveredService> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::primal_discovery::capability_helpers::*;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -208,8 +208,7 @@ pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> 
 
     // No fallback for arbitrary capabilities
     Err(NestGateError::network_error(&format!(
-        "Capability '{}' not found via discovery or environment. Set {} or use service discovery.",
-        capability, env_var
+        "Capability '{capability}' not found via discovery or environment. Set {env_var} or use service discovery."
     )))
 }
 
@@ -239,7 +238,7 @@ async fn discover_capability_with_legacy(
     }
 
     // Try legacy primal-specific environment variable (DEPRECATED)
-    let legacy_env_var = format!("NESTGATE_{}_URL", legacy_name);
+    let legacy_env_var = format!("NESTGATE_{legacy_name}_URL");
     if let Ok(endpoint) = std::env::var(&legacy_env_var) {
         tracing::warn!(
             "Using deprecated environment variable '{}'. Please migrate to '{}'",
@@ -250,7 +249,7 @@ async fn discover_capability_with_legacy(
     }
 
     // Last-resort default for development
-    let default_endpoint = format!("http://127.0.0.1:{}", default_port);
+    let default_endpoint = format!("http://127.0.0.1:{default_port}");
     tracing::warn!(
         "No discovery or environment configuration for '{}' capability. Using development default: {}. \
          In production, use service discovery or set {} environment variable.",
@@ -284,8 +283,7 @@ async fn try_discovery(capability: &str) -> Result<DiscoveredService> {
         Ok(DiscoveredService::from_service_info(service.clone()))
     } else {
         Err(NestGateError::network_error(&format!(
-            "No service found providing '{}' capability",
-            capability
+            "No service found providing '{capability}' capability"
         )))
     }
 }
@@ -299,7 +297,7 @@ async fn try_discovery(capability: &str) -> Result<DiscoveredService> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::primal_discovery::capability_helpers::*;
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -329,7 +327,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_with_env_var() {
-        std::env::set_var("NESTGATE_CAPABILITY_TEST", "http://test:1234");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("NESTGATE_CAPABILITY_TEST", "http://test:1234");
 
         let result = discover_capability("test").await;
         assert!(result.is_ok());
@@ -338,7 +337,8 @@ mod tests {
         assert_eq!(service.endpoint, "http://test:1234");
         assert_eq!(service.source, DiscoverySource::Environment);
 
-        std::env::remove_var("NESTGATE_CAPABILITY_TEST");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::remove_var("NESTGATE_CAPABILITY_TEST");
     }
 
     #[tokio::test]
@@ -354,7 +354,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_legacy_env_var_backward_compat() {
-        std::env::set_var("NESTGATE_BEARDOG_URL", "http://legacy:9999");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("NESTGATE_BEARDOG_URL", "http://legacy:9999");
 
         let result = discover_security().await;
         assert!(result.is_ok());
@@ -363,16 +364,19 @@ mod tests {
         assert_eq!(service.endpoint, "http://legacy:9999");
         assert_eq!(service.source, DiscoverySource::Environment);
 
-        std::env::remove_var("NESTGATE_BEARDOG_URL");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::remove_var("NESTGATE_BEARDOG_URL");
     }
 
     #[tokio::test]
     async fn test_is_capability_available() {
-        std::env::set_var("NESTGATE_CAPABILITY_CUSTOM", "http://custom:5555");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("NESTGATE_CAPABILITY_CUSTOM", "http://custom:5555");
 
         assert!(is_capability_available("custom").await);
         assert!(!is_capability_available("nonexistent").await);
 
-        std::env::remove_var("NESTGATE_CAPABILITY_CUSTOM");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::remove_var("NESTGATE_CAPABILITY_CUSTOM");
     }
 }

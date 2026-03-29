@@ -100,10 +100,12 @@ mod tests {
         )
         .unwrap();
 
-        assert!(analytics
-            .recommendations
-            .iter()
-            .any(|r| r.contains("async replication")));
+        assert!(
+            analytics
+                .recommendations
+                .iter()
+                .any(|r| r.contains("async replication"))
+        );
     }
 
     #[test]
@@ -116,10 +118,12 @@ mod tests {
         )
         .unwrap();
 
-        assert!(analytics
-            .recommendations
-            .iter()
-            .any(|r| r.contains("network connectivity")));
+        assert!(
+            analytics
+                .recommendations
+                .iter()
+                .any(|r| r.contains("network connectivity"))
+        );
     }
 
     #[test]
@@ -132,10 +136,12 @@ mod tests {
         )
         .unwrap();
 
-        assert!(analytics
-            .recommendations
-            .iter()
-            .any(|r| r.contains("compression")));
+        assert!(
+            analytics
+                .recommendations
+                .iter()
+                .any(|r| r.contains("compression"))
+        );
     }
 
     #[test]

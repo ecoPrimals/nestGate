@@ -49,7 +49,7 @@ impl NestGateUnifiedError {
     ///
     /// # Example
     /// ```
-    /// use nestgate_core::error::NestGateError;
+    /// use nestgate_types::error::NestGateError;
     /// let error = NestGateError::storage("Failed to read file");
     /// ```
     pub fn storage(message: impl Into<String>) -> Self {

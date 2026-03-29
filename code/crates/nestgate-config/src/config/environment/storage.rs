@@ -61,7 +61,7 @@ impl StorageConfig {
     where
         T::Err: std::error::Error + Send + Sync + 'static,
     {
-        let var_name = format!("{}_{}", prefix, key);
+        let var_name = format!("{prefix}_{key}");
         match env::var(&var_name) {
             Ok(val) => val.parse().map_err(|e| ConfigError::ParseError {
                 key: var_name,

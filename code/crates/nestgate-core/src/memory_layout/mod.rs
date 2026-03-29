@@ -26,7 +26,7 @@ pub mod memory_pool_safe;
 pub mod safe_memory_pool;
 
 // Re-export commonly used types
-pub use cache_alignment::{CacheAligned, CachePadded, CACHE_LINE_SIZE};
+pub use cache_alignment::{CACHE_LINE_SIZE, CacheAligned, CachePadded};
 
 // Export SAFE pool as the default (encourage safe usage)
 pub use memory_pool_safe::{PoolHandle, PoolStats, SafeMemoryPool};

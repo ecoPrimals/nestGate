@@ -98,7 +98,8 @@ impl RateLimits {
     /// # Returns
     ///
     /// Rate limits with reasonable hour/day limits derived from per-minute
-    pub fn per_minute(per_minute: u32) -> Self {
+    #[must_use]
+    pub const fn per_minute(per_minute: u32) -> Self {
         Self {
             requests_per_minute: per_minute,
             requests_per_hour: per_minute * 60,
@@ -115,7 +116,8 @@ impl RateLimits {
     /// # Returns
     ///
     /// Rate limits with reasonable minute/day limits derived from per-hour
-    pub fn per_hour(per_hour: u32) -> Self {
+    #[must_use]
+    pub const fn per_hour(per_hour: u32) -> Self {
         Self {
             requests_per_minute: per_hour / 60,
             requests_per_hour: per_hour,
@@ -132,7 +134,8 @@ impl RateLimits {
     /// # Returns
     ///
     /// Rate limits with reasonable minute/hour limits derived from per-day
-    pub fn per_day(per_day: u32) -> Self {
+    #[must_use]
+    pub const fn per_day(per_day: u32) -> Self {
         Self {
             requests_per_minute: per_day / (60 * 24),
             requests_per_hour: per_day / 24,
@@ -151,7 +154,13 @@ impl RateLimits {
     /// # Returns
     ///
     /// `true` if any limit is exceeded
-    pub fn is_exceeded(&self, requests_minute: u32, requests_hour: u32, requests_day: u32) -> bool {
+    #[must_use]
+    pub const fn is_exceeded(
+        &self,
+        requests_minute: u32,
+        requests_hour: u32,
+        requests_day: u32,
+    ) -> bool {
         requests_minute >= self.requests_per_minute
             || requests_hour >= self.requests_per_hour
             || requests_day >= self.requests_per_day
@@ -164,7 +173,8 @@ impl AccessRequirements {
     /// # Returns
     ///
     /// Access requirements for public data
-    pub fn public() -> Self {
+    #[must_use]
+    pub const fn public() -> Self {
         Self {
             authentication: Some(AuthenticationMethod::None),
             rate_limits: None,
@@ -182,7 +192,8 @@ impl AccessRequirements {
     /// # Returns
     ///
     /// Access requirements with API key authentication
-    pub fn with_api_key(api_key: String) -> Self {
+    #[must_use]
+    pub const fn with_api_key(api_key: String) -> Self {
         Self {
             authentication: Some(AuthenticationMethod::ApiKey(api_key)),
             rate_limits: None,
@@ -214,7 +225,8 @@ impl AccessRequirements {
     /// # Returns
     ///
     /// `true` if authentication is required
-    pub fn requires_authentication(&self) -> bool {
+    #[must_use]
+    pub const fn requires_authentication(&self) -> bool {
         !matches!(self.authentication, None | Some(AuthenticationMethod::None))
     }
 }

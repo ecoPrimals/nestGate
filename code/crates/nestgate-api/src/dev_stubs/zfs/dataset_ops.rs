@@ -5,7 +5,7 @@
 //!
 //! Mock implementations for ZFS dataset operations.
 //!
-//! **Extracted**: November 19, 2025 - From dev_stubs/zfs.rs
+//! **Extracted**: November 19, 2025 - From `dev_stubs/zfs.rs`
 //! **Lines**: ~350 (from original 1,015-line file)
 
 #![cfg(feature = "dev-stubs")]
@@ -14,7 +14,7 @@ use super::config::ProductionZfsManager;
 use super::types::{ZeroCostDatasetInfo, ZfsError};
 use nestgate_core::canonical_types::StorageTier;
 
-/// DatasetOperations trait
+/// `DatasetOperations` trait
 pub trait DatasetOperations {
     /// Creates  Dataset
     fn create_dataset(&self, name: &str) -> Result<(), ZfsError>;

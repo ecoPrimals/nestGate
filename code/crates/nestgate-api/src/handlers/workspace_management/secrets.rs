@@ -10,7 +10,7 @@
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use nestgate_core::zero_cost_security_provider::AuthTokenManager;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::{info, warn};
 
 /// Create workspace secret (SECURITY FEATURE - DELEGATE TO SECURITY MODULE)

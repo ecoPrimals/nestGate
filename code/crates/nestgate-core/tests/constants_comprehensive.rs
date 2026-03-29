@@ -8,9 +8,8 @@ use nestgate_core::constants::canonical_defaults::performance::{
     DEFAULT_BUFFER_SIZE, MAX_CONNECTIONS,
 };
 use nestgate_core::constants::{
-    get_api_port, get_metrics_port, DEFAULT_API_PORT, DEFAULT_BIND_ADDRESS,
-    DEFAULT_MAX_CONNECTIONS, DEFAULT_METRICS_PORT, DEFAULT_TIMEOUT_SECS, LOCALHOST,
-    NETWORK_BUFFER_SIZE,
+    DEFAULT_API_PORT, DEFAULT_BIND_ADDRESS, DEFAULT_MAX_CONNECTIONS, DEFAULT_METRICS_PORT,
+    DEFAULT_TIMEOUT_SECS, LOCALHOST, NETWORK_BUFFER_SIZE, get_api_port, get_metrics_port,
 };
 
 #[test]

@@ -341,16 +341,19 @@ impl Default for WebhookConfig {
 
 impl MonitoringConfig {
     /// Check if Prometheus is enabled
+    #[must_use]
     pub fn is_prometheus_enabled(&self) -> bool {
         self.prometheus.as_ref().is_some_and(|p| p.enabled)
     }
 
     /// Check if alerting is enabled
-    pub fn is_alerting_enabled(&self) -> bool {
+    #[must_use]
+    pub const fn is_alerting_enabled(&self) -> bool {
         self.alerts.enabled
     }
 
     /// Get Prometheus port if enabled
+    #[must_use]
     pub fn prometheus_port(&self) -> Option<u16> {
         self.prometheus.as_ref().and_then(|p| {
             if p.enabled && p.port > 0 {
@@ -398,10 +401,11 @@ impl MonitoringConfig {
         }
 
         // Validate Prometheus configuration
-        if let Some(prometheus) = &self.prometheus {
-            if prometheus.enabled && prometheus.port == 0 {
-                return Err("Prometheus port cannot be zero when enabled".to_string());
-            }
+        if let Some(prometheus) = &self.prometheus
+            && prometheus.enabled
+            && prometheus.port == 0
+        {
+            return Err("Prometheus port cannot be zero when enabled".to_string());
         }
 
         // Validate alert configuration
@@ -414,7 +418,8 @@ impl MonitoringConfig {
 
 impl AlertConfig {
     /// Check if any notification method is configured
-    pub fn has_notifications(&self) -> bool {
+    #[must_use]
+    pub const fn has_notifications(&self) -> bool {
         self.notifications.email.is_some()
             || self.notifications.slack.is_some()
             || self.notifications.webhook.is_some()
@@ -444,6 +449,7 @@ impl AlertConfig {
 
 impl AlertThresholds {
     /// Check if a threshold is exceeded
+    #[must_use]
     pub fn is_threshold_exceeded(&self, metric: &str, value: f64) -> bool {
         match metric {
             "cpu" => value > self.cpu_threshold,
@@ -456,6 +462,7 @@ impl AlertThresholds {
     }
 
     /// Get threshold value for a metric
+    #[must_use]
     pub fn get_threshold(&self, metric: &str) -> Option<f64> {
         match metric {
             "cpu" => Some(self.cpu_threshold),
@@ -545,17 +552,20 @@ impl AlertThresholds {
 
 impl NotificationConfig {
     /// Check if email notifications are configured
-    pub fn has_email(&self) -> bool {
+    #[must_use]
+    pub const fn has_email(&self) -> bool {
         self.email.is_some()
     }
 
     /// Check if Slack notifications are configured
-    pub fn has_slack(&self) -> bool {
+    #[must_use]
+    pub const fn has_slack(&self) -> bool {
         self.slack.is_some()
     }
 
     /// Check if webhook notifications are configured
-    pub fn has_webhook(&self) -> bool {
+    #[must_use]
+    pub const fn has_webhook(&self) -> bool {
         self.webhook.is_some()
     }
 

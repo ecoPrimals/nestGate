@@ -74,7 +74,7 @@ impl Default for McpConfig {
 
 /// File system monitor configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for FsMonitor
+/// Configuration for `FsMonitor`
 pub struct FsMonitorConfig {
     /// Enable file system monitoring
     pub enabled: bool,

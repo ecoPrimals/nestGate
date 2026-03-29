@@ -8,11 +8,11 @@
 //! - Uses event-driven patterns (Notify, Barrier, Atomics)
 //! - Zero arbitrary sleep() delays
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::{Barrier, Notify, RwLock};
-use tokio::time::{timeout, Instant};
+use tokio::time::{Instant, timeout};
 
 /// **Chaos Test 1: Network Partition Recovery** - MODERNIZED
 ///
@@ -349,7 +349,9 @@ async fn chaos_test_gradual_degradation() {
     assert_eq!(response_times.len(), 10, "Should have 10 measurements");
 
     // Log the trend for manual inspection if needed
-    println!("Degradation test: first={first}ms, last={last}ms, first_half_avg={first_half_avg}ms, second_half_avg={second_half_avg}ms");
+    println!(
+        "Degradation test: first={first}ms, last={last}ms, first_half_avg={first_half_avg}ms, second_half_avg={second_half_avg}ms"
+    );
 }
 
 /// **Chaos Test 15: Recovery from Complete System Crash**

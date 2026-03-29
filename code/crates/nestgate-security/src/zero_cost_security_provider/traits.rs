@@ -20,7 +20,7 @@ use nestgate_types::Result;
 ///
 /// # Deprecation & Migration
 ///
-/// **DEPRECATED**: Zero-cost patterns now integrated into canonical SecurityProvider
+/// **DEPRECATED**: Zero-cost patterns now integrated into canonical `SecurityProvider`
 ///
 /// **Old code**:
 /// ```rust,ignore
@@ -46,7 +46,7 @@ use nestgate_types::Result;
     since = "0.11.3",
     note = "Use nestgate_core::traits::canonical_provider_unification::SecurityProvider - zero-cost patterns integrated via native async (RPITIT). Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
 )]
-/// ZeroCostSecurityProvider trait
+/// `ZeroCostSecurityProvider` trait
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
     /// Security provider configuration type
     type Config: Clone + Send + Sync + 'static;
@@ -66,7 +66,7 @@ pub trait ZeroCostSecurityProvider: Send + Sync + 'static {
 
     /// Validate authentication token - native async
     fn validate_token(&self, token: &str)
-        -> impl std::future::Future<Output = Result<bool>> + Send;
+    -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Refresh authentication token - native async
     fn refresh_token(
@@ -159,7 +159,7 @@ pub trait AuthenticationProvider: Send + Sync {
     ) -> impl std::future::Future<Output = Result<ZeroCostAuthToken>> + Send;
     /// Validate token
     fn validate_token(&self, token: &str)
-        -> impl std::future::Future<Output = Result<bool>> + Send;
+    -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Refresh token
     fn refresh_token(
@@ -225,7 +225,7 @@ pub trait SigningProvider: Send + Sync {
     since = "0.9.0",
     note = "Use nestgate_core::traits::canonical::CanonicalSecurity health_check method"
 )]
-/// SecurityHealthProvider trait
+/// `SecurityHealthProvider` trait
 pub trait SecurityHealthProvider: Send + Sync {
     /// Health information type
     type Health: Clone + Send + Sync + 'static;
@@ -243,7 +243,7 @@ pub trait SecurityHealthProvider: Send + Sync {
     since = "0.9.0",
     note = "Use nestgate_core::traits::canonical::CanonicalSecurity metrics methods"
 )]
-/// SecurityMetricsProvider trait
+/// `SecurityMetricsProvider` trait
 pub trait SecurityMetricsProvider: Send + Sync {
     /// Metrics type
     type Metrics: Clone + Send + Sync + 'static;

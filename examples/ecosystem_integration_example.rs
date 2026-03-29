@@ -3,8 +3,8 @@
 //! This example demonstrates how NestGate integrates with other ecoPrimals
 //! using capability-based runtime discovery (no hardcoded dependencies).
 
-use nestgate_core::primal_discovery::{PrimalDiscovery, SelfKnowledge};
 use nestgate_core::Result;
+use nestgate_core::primal_discovery::{PrimalDiscovery, SelfKnowledge};
 
 /// Example: NestGate announces its storage capabilities
 #[allow(dead_code)]

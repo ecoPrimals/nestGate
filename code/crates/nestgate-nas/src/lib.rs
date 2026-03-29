@@ -22,7 +22,7 @@ pub struct NasService {
 impl NasService {
     /// Create a new NAS service with canonical configuration
     #[must_use]
-    pub fn new(config: NasConfig) -> Self {
+    pub const fn new(config: NasConfig) -> Self {
         Self { config }
     }
 
@@ -34,7 +34,7 @@ impl NasService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn start(&self) -> Result<(), NasError> {
+    pub const fn start(&self) -> Result<(), NasError> {
         // Implementation would go here
         Ok(())
     }
@@ -47,7 +47,7 @@ impl NasService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn stop(&self) -> Result<(), NasError> {
+    pub const fn stop(&self) -> Result<(), NasError> {
         // Implementation would go here
         Ok(())
     }
@@ -60,7 +60,7 @@ impl NasService {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn status(&self) -> Result<NasStatus, NasError> {
+    pub const fn status(&self) -> Result<NasStatus, NasError> {
         // Implementation would go here
         Ok(NasStatus::Running)
     }

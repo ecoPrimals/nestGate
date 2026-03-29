@@ -12,7 +12,7 @@ use std::time::Duration;
 ///
 /// Sends a JSON-RPC `auth.authenticate` request to the security primal's
 /// IPC endpoint. Falls back to local auth if the primal is unreachable.
-pub(crate) async fn call_security_primal(
+pub async fn call_security_primal(
     connection: &PrimalConnection,
     credentials: &ZeroCostCredentials,
     token_expiry: Duration,
@@ -46,9 +46,9 @@ pub(crate) async fn call_security_primal(
         stream.writable().await.map_err(|e| {
             NestGateError::network_error(&format!("Security socket not writable: {e}"))
         })?;
-        stream.try_write(&request_bytes).map_err(|e| {
-            NestGateError::network_error(&format!("Write to security primal: {e}"))
-        })?;
+        stream
+            .try_write(&request_bytes)
+            .map_err(|e| NestGateError::network_error(&format!("Write to security primal: {e}")))?;
 
         let mut buf = vec![0u8; 4096];
         stream.readable().await.map_err(|e| {
@@ -78,18 +78,18 @@ pub(crate) async fn call_security_primal(
             .as_str()
             .unwrap_or(&format!("primal_{}", uuid::Uuid::new_v4()))
             .to_string();
-        let roles: Vec<String> = result["roles"]
-            .as_array()
-            .map(|arr| {
+        let roles: Vec<String> = result["roles"].as_array().map_or_else(
+            || vec!["authenticated".to_string()],
+            |arr| {
                 arr.iter()
                     .filter_map(|v| v.as_str().map(String::from))
                     .collect()
-            })
-            .unwrap_or_else(|| vec!["authenticated".to_string()]);
+            },
+        );
 
         Ok(ZeroCostAuthToken::new(
             token_id,
-            credentials.username.to_string(),
+            credentials.username.clone(),
             roles,
             token_expiry,
         ))

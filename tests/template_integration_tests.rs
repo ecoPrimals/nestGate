@@ -9,7 +9,7 @@
 #![allow(deprecated)]
 
 use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;

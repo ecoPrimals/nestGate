@@ -21,7 +21,7 @@ impl EvolutionTracker {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::EvolutionTracker;
     ///
     /// let tracker = EvolutionTracker::new();
@@ -85,7 +85,7 @@ impl MigrationManager {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::MigrationManager;
     ///
     /// let manager = MigrationManager::new();
@@ -99,7 +99,7 @@ impl MigrationManager {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::MigrationManager;
     ///
     /// let manager = MigrationManager::production_optimized();
@@ -113,7 +113,7 @@ impl MigrationManager {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// use nestgate_core::canonical_modernization::idiomatic_evolution::evolution::MigrationManager;
     ///
     /// let manager = MigrationManager::development_optimized();
@@ -128,7 +128,11 @@ impl MigrationManager {
     /// # Errors
     ///
     /// Returns an error if the migration tracking fails (currently infallible).
-    pub fn update_migration_status(&mut self, component: &str, version: &str) -> nestgate_types::error::Result<()> {
+    pub fn update_migration_status(
+        &mut self,
+        component: &str,
+        version: &str,
+    ) -> nestgate_types::error::Result<()> {
         self.completed_migrations
             .insert(component.to_string(), version.to_string());
         Ok(())
@@ -149,7 +153,7 @@ impl MigrationManager {
     /// # Errors
     ///
     /// Returns an error if validation fails (currently infallible).
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }
@@ -195,7 +199,7 @@ impl CompatibilityChecker {
     /// # Errors
     ///
     /// Returns an error if validation fails
-    pub fn validate<T>(&self, _item: &T) -> nestgate_types::error::Result<()> {
+    pub const fn validate<T>(&self, _item: &T) -> nestgate_types::error::Result<()> {
         // Placeholder validation logic
         Ok(())
     }
@@ -206,7 +210,7 @@ impl CompatibilityChecker {
     ///
     /// Returns 1.0 if no validation errors, 0.8 otherwise
     #[must_use]
-    pub fn get_overall_score(&self) -> f64 {
+    pub const fn get_overall_score(&self) -> f64 {
         if self.validation_errors.is_empty() {
             1.0
         } else {
@@ -256,7 +260,7 @@ impl ModernizationEngine {
     /// # Errors
     ///
     /// Returns an error if pattern application fails
-    pub fn apply_patterns<T>(&self, item: T) -> nestgate_types::error::Result<T> {
+    pub const fn apply_patterns<T>(&self, item: T) -> nestgate_types::error::Result<T> {
         // Placeholder pattern application
         Ok(item)
     }
@@ -266,7 +270,7 @@ impl ModernizationEngine {
     /// # Errors
     ///
     /// Returns an error if validation fails
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

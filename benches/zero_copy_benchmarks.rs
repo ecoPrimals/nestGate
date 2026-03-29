@@ -3,7 +3,7 @@
 //! Benchmarks comparing zero-copy vs traditional copy operations
 //! to measure the effectiveness of our optimization strategies.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::borrow::Cow;
 use std::sync::Arc;
 

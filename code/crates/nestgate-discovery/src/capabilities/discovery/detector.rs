@@ -36,6 +36,7 @@ pub struct ServiceDetector {
 
 impl ServiceDetector {
     /// Create a new service detector
+    #[must_use]
     pub fn new(registry: Arc<CapabilityRegistry>) -> Self {
         Self {
             registry,
@@ -46,12 +47,14 @@ impl ServiceDetector {
     }
 
     /// Set detection interval
-    pub fn with_interval(mut self, interval: Duration) -> Self {
+    #[must_use]
+    pub const fn with_interval(mut self, interval: Duration) -> Self {
         self.interval = interval;
         self
     }
 
     /// Set ports to scan
+    #[must_use]
     pub fn with_scan_ports(mut self, ports: Vec<u16>) -> Self {
         self.scan_ports = ports;
         self
@@ -88,20 +91,19 @@ impl ServiceDetector {
 
         for host in hosts {
             // Try HTTP well-known endpoint for capability discovery
-            let http_url = format!("http://{}:{}/.well-known/capabilities", host, port);
-            let https_url = format!("https://{}:{}/.well-known/capabilities", host, port);
+            let http_url = format!("http://{host}:{port}/.well-known/capabilities");
+            let https_url = format!("https://{host}:{port}/.well-known/capabilities");
 
             // Try HTTPS first (more secure)
             for (_url, tls) in [(https_url, true), (http_url, false)] {
                 // Attempt basic TCP connection first
-                if let Ok(_stream) =
-                    tokio::net::TcpStream::connect(format!("{}:{}", host, port)).await
+                if let Ok(_stream) = tokio::net::TcpStream::connect(format!("{host}:{port}")).await
                 {
                     // Port is open, create a basic descriptor
                     // In production, this would make an HTTP request to discover capabilities
                     return Ok(ServiceDescriptor {
                         id: Uuid::new_v4(),
-                        name: format!("discovered-service-{}", port),
+                        name: format!("discovered-service-{port}"),
                         capabilities: vec![], // Would be populated from .well-known/capabilities
                         endpoint: Endpoint {
                             host: host.to_string(),
@@ -117,8 +119,7 @@ impl ServiceDetector {
         }
 
         Err(CapabilityError::DetectionFailed(format!(
-            "Unable to connect to port {} for capability discovery",
-            port
+            "Unable to connect to port {port} for capability discovery"
         )))
     }
 

@@ -40,7 +40,7 @@
 //!
 //! # Platform Support
 //!
-//! - Linux: ZFS on Linux (ZoL) 0.8.0+
+//! - Linux: ZFS on Linux (`ZoL`) 0.8.0+
 //! - FreeBSD: Native ZFS support
 //! - Solaris/Illumos: Native ZFS support
 //!
@@ -156,7 +156,7 @@ impl NativeZfsBackend {
     ///
     /// Reference to the ZFS configuration
     #[must_use]
-    pub fn config(&self) -> &CanonicalZfsConfig {
+    pub const fn config(&self) -> &CanonicalZfsConfig {
         &self.config
     }
 }

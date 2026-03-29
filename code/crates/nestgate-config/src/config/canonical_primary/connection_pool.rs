@@ -3,7 +3,7 @@
 
 //! **Canonical Connection Pool Configuration**
 //!
-//! This is the single source of truth for connection pool configuration in NestGate.
+//! This is the single source of truth for connection pool configuration in `NestGate`.
 //! All connection pool-related settings are consolidated here.
 
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,7 @@ use std::time::Duration;
 ///
 /// Consolidates all connection pooling settings from across the system.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionPool
+/// Configuration for `ConnectionPool`
 pub struct ConnectionPoolConfig {
     /// Enable connection pooling
     pub enabled: bool,
@@ -71,7 +71,7 @@ impl Default for ConnectionPoolConfig {
 
 /// Connection retry configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionRetry
+/// Configuration for `ConnectionRetry`
 pub struct ConnectionRetryConfig {
     /// Maximum number of retry attempts
     pub max_attempts: u32,
@@ -106,7 +106,7 @@ impl Default for ConnectionRetryConfig {
 
 /// Pool monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for PoolMonitoring
+/// Configuration for `PoolMonitoring`
 pub struct PoolMonitoringConfig {
     /// Whether monitoring is enabled
     pub enabled: bool,
@@ -182,7 +182,7 @@ impl Default for PoolThresholds {
 
 /// Connection validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionValidation
+/// Configuration for `ConnectionValidation`
 pub struct ConnectionValidationConfig {
     /// Whether connection validation is enabled
     pub enabled: bool,
@@ -221,7 +221,7 @@ impl Default for ConnectionValidationConfig {
 pub enum ValidationStrategy {
     /// Execute a validation query to check connection health
     Query,
-    /// Use driver's isValid() method for validation
+    /// Use driver's `isValid()` method for validation
     IsValid,
     /// Send a simple ping to validate connection
     Ping,
@@ -229,7 +229,7 @@ pub enum ValidationStrategy {
 
 /// Connection lifecycle configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionLifecycle
+/// Configuration for `ConnectionLifecycle`
 pub struct ConnectionLifecycleConfig {
     /// Configuration for tracking connection state
     pub state_tracking: ConnectionStateTracking,
@@ -291,7 +291,7 @@ pub enum PoolingStrategy {
 
 /// Connection load balancing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionLoadBalancing
+/// Configuration for `ConnectionLoadBalancing`
 pub struct ConnectionLoadBalancingConfig {
     /// Whether load balancing is enabled
     pub enabled: bool,

@@ -273,4 +273,84 @@ impl TierManager {
             tier_stats,
         }
     }
+
+    /// Override tier stats for unit tests (no ZFS).
+    pub async fn set_tier_stats_for_test(&self, tier: crate::types::StorageTier, stats: TierStats) {
+        self.tier_stats.write().await.insert(tier, stats);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::StorageTier;
+
+    #[tokio::test]
+    async fn initialize_tiers_and_shutdown_are_ok() {
+        let m = TierManager::new_for_testing();
+        m.initialize_tiers().expect("initialize tiers");
+        m.shutdown().await.expect("shutdown");
+    }
+
+    #[tokio::test]
+    async fn tier_status_health_branches() {
+        let m = TierManager::new_for_testing();
+
+        m.set_tier_stats_for_test(
+            StorageTier::Hot,
+            TierStats {
+                total_capacity: 100,
+                used_capacity: 50,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Hot).await.expect("status");
+        assert_eq!(s.health, "Healthy");
+        assert!((s.utilization - 50.0).abs() < f64::EPSILON);
+
+        m.set_tier_stats_for_test(
+            StorageTier::Warm,
+            TierStats {
+                total_capacity: 100,
+                used_capacity: 80,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Warm).await.expect("status");
+        assert_eq!(s.health, "Warning");
+
+        m.set_tier_stats_for_test(
+            StorageTier::Cold,
+            TierStats {
+                total_capacity: 100,
+                used_capacity: 95,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Cold).await.expect("status");
+        assert_eq!(s.health, "Critical");
+
+        m.set_tier_stats_for_test(
+            StorageTier::Cache,
+            TierStats {
+                total_capacity: 0,
+                used_capacity: 0,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Cache).await.expect("status");
+        assert_eq!(s.utilization, 0.0);
+        assert_eq!(s.health, "Healthy");
+    }
+
+    #[tokio::test]
+    async fn get_all_tier_status_returns_four_tiers() {
+        let m = TierManager::new_for_testing();
+        let v = m.get_all_tier_status().await.expect("all");
+        assert_eq!(v.len(), 4);
+    }
 }

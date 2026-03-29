@@ -177,6 +177,18 @@ mod tests {
     }
 
     #[test]
+    fn round5_simd_error_display_alignment_and_buffer() {
+        assert_eq!(
+            SimdError::InvalidAlignment.to_string(),
+            "Data not properly aligned for SIMD operations"
+        );
+        assert_eq!(
+            SimdError::BufferTooLarge.to_string(),
+            "Buffer size exceeds maximum supported size"
+        );
+    }
+
+    #[test]
     fn test_simd_capabilities_detection() {
         let caps = SimdCapabilities::detect();
         let instruction_set = caps.best_instruction_set();

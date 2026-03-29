@@ -13,7 +13,7 @@ pub struct OptimizationEngine {
 
 impl OptimizationEngine {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             // Initialize fields
         }
@@ -24,7 +24,10 @@ impl OptimizationEngine {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn analyze_and_optimize(&self, _metrics: &CurrentMetrics) -> Result<OptimizationDecision> {
+    pub const fn analyze_and_optimize(
+        &self,
+        _metrics: &CurrentMetrics,
+    ) -> Result<OptimizationDecision> {
         // Implementation would go here
         Ok(OptimizationDecision {
             parameter_adjustments: vec![],

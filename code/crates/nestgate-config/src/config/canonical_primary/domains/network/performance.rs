@@ -10,11 +10,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls TCP/IP tuning parameters to optimize network performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkPerformance
+/// Configuration for `NetworkPerformance`
 pub struct NetworkPerformanceConfig {
     /// Network buffer size in bytes.
     pub buffer_size: u32,
-    /// Whether to disable Nagle's algorithm (TCP_NODELAY).
+    /// Whether to disable Nagle's algorithm (`TCP_NODELAY`).
     pub tcp_nodelay: bool,
     /// Whether TCP keep-alive is enabled.
     pub keep_alive: bool,
@@ -27,7 +27,7 @@ impl NetworkPerformanceConfig {
     ///
     /// Uses conservative settings suitable for local testing.
     #[must_use]
-    pub fn development_optimized() -> Self {
+    pub const fn development_optimized() -> Self {
         Self {
             buffer_size: 8192,
             tcp_nodelay: false,
@@ -36,11 +36,11 @@ impl NetworkPerformanceConfig {
         }
     }
 
-    /// Create production-hardened configuration with large buffers and TCP_NODELAY.
+    /// Create production-hardened configuration with large buffers and `TCP_NODELAY`.
     ///
     /// Optimizes for low latency and high throughput in production.
     #[must_use]
-    pub fn production_hardened() -> Self {
+    pub const fn production_hardened() -> Self {
         Self {
             buffer_size: 65536,
             tcp_nodelay: true,
@@ -56,7 +56,7 @@ impl NetworkPerformanceConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> Result<()> {
+    pub const fn validate(&self) -> Result<()> {
         Ok(())
     }
 
@@ -64,7 +64,7 @@ impl NetworkPerformanceConfig {
     ///
     /// All fields from `other` will replace the current values.
     #[must_use]
-    pub fn merge(mut self, other: Self) -> Self {
+    pub const fn merge(mut self, other: Self) -> Self {
         self.buffer_size = other.buffer_size;
         self.tcp_nodelay = other.tcp_nodelay;
         self.keep_alive = other.keep_alive;

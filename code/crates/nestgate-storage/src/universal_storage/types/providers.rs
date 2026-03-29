@@ -49,9 +49,9 @@ pub enum UniversalStorageType {
 /// NFS protocol versions
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum NfsVersion {
-    /// NFSv3
+    /// `NFSv3`
     V3,
-    /// NFSv4
+    /// `NFSv4`
     V4,
     /// NFSv4.1
     V41,
@@ -62,9 +62,9 @@ pub enum NfsVersion {
 /// SMB protocol versions  
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum SmbVersion {
-    /// SMBv2
+    /// `SMBv2`
     V2,
-    /// SMBv3
+    /// `SMBv3`
     V3,
     /// SMBv3.1
     V31,

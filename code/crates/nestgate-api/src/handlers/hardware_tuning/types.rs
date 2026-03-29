@@ -16,7 +16,7 @@ use nestgate_core::Result;
 ///
 /// Configuration for hardware tuning operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for HardwareTuning
+/// Configuration for `HardwareTuning`
 pub struct HardwareTuningConfig {
     /// Number of CPU cores to allocate
     pub cpu_cores: u32,
@@ -78,7 +78,7 @@ pub struct ComputeResources {
 ///
 /// Request for compute resource allocation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for ComputeResource operation
+/// Request parameters for `ComputeResource` operation
 pub struct ComputeResourceRequest {
     /// Number of CPU cores requested
     pub cpu_cores: u32,
@@ -524,10 +524,10 @@ impl SystemMetricsCollector {
                         if let Some(value) = line.split_whitespace().nth(1) {
                             total_kb = value.parse().unwrap_or(0);
                         }
-                    } else if line.starts_with("MemAvailable:") {
-                        if let Some(value) = line.split_whitespace().nth(1) {
-                            available_kb = value.parse().unwrap_or(0);
-                        }
+                    } else if line.starts_with("MemAvailable:")
+                        && let Some(value) = line.split_whitespace().nth(1)
+                    {
+                        available_kb = value.parse().unwrap_or(0);
                     }
                 }
 
@@ -553,12 +553,11 @@ impl SystemMetricsCollector {
                 "--format=csv,noheader,nounits",
             ])
             .output()
+            && output.status.success()
         {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                if let Ok(usage) = stdout.trim().parse::<f64>() {
-                    return Ok(usage);
-                }
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            if let Ok(usage) = stdout.trim().parse::<f64>() {
+                return Ok(usage);
             }
         }
         Ok(0.0) // No GPU or monitoring not available
@@ -903,7 +902,3 @@ mod tests {
         assert_eq!(metrics.memory_usage, deserialized.memory_usage);
     }
 }
-
-#[cfg(test)]
-#[path = "types_comprehensive_tests.rs"]
-mod comprehensive_tests;

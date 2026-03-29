@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **EVENT TYPES** — Event handling and processing
 
 use crate::canonical_modernization::canonical_constants::system::DEFAULT_SERVICE_NAME;

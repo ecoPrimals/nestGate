@@ -11,13 +11,13 @@
 //!
 //! ### Why This Change?
 //!
-//! - **Separation of Concerns**: NestGate = Storage, Songbird = Communication
+//! - **Separation of Concerns**: `NestGate` = Storage, Songbird = Communication
 //! - **True Universality**: Songbird abstracts platform differences (Unix/Windows/etc.)
 //! - **Single Responsibility**: Each primal owns its domain
 //!
 //! ### Migration Path
 //!
-//! **Before (NestGate API Unix sockets)**:
+//! **Before (`NestGate` API Unix sockets)**:
 //! ```rust,ignore
 //! use nestgate_api::transport::UnixSocketListener;
 //!
@@ -100,12 +100,12 @@ impl UnixSocketListener {
         }
 
         // Create parent directory if it doesn't exist
-        if let Some(parent) = self.socket_path.parent() {
-            if !parent.exists() {
-                std::fs::create_dir_all(parent).map_err(|e| {
-                    NestGateError::network_error(&format!("Failed to create socket directory: {e}"))
-                })?;
-            }
+        if let Some(parent) = self.socket_path.parent()
+            && !parent.exists()
+        {
+            std::fs::create_dir_all(parent).map_err(|e| {
+                NestGateError::network_error(&format!("Failed to create socket directory: {e}"))
+            })?;
         }
 
         // Bind to socket

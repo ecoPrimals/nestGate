@@ -7,11 +7,11 @@ use crate::zfs::types::PoolConfig;
 /// This module replaces `async_trait` patterns in API handlers with native async methods
 /// for maximum performance in high-frequency request handling.
 use axum::{
+    Router,
     extract::Path,
     http::StatusCode,
     response::Json,
     routing::{delete, get, post},
-    Router,
 };
 use nestgate_core::error::NestGateError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -82,7 +82,7 @@ pub trait ZeroCostApiHandler<T> {
 /// **ZERO-COST REQUEST/RESPONSE TYPES**
 /// High-performance data structures for API operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for ZeroCostApi operation
+/// Request parameters for `ZeroCostApi` operation
 pub struct ZeroCostApiRequest<T> {
     /// Request payload data
     pub data: T,
@@ -102,7 +102,7 @@ pub struct ZeroCostApiRequest<T> {
 ///
 /// Response structure for zero-cost API operations with metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Response data for ZeroCostApi operation
+/// Response data for `ZeroCostApi` operation
 pub struct ZeroCostApiResponse<T> {
     /// Response payload data
     pub data: T,
@@ -378,7 +378,7 @@ struct CachedRequest {
 /// High-performance dataset handler with zero-cost abstractions.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Manager and cache fields used for dataset operations
-/// Handler for ZeroCostDataset requests
+/// Handler for `ZeroCostDataset` requests
 pub struct ZeroCostDatasetHandler<
     T: Send + Sync + Clone + 'static,
     // Cache Size
@@ -495,7 +495,7 @@ pub enum ApiError {
 ///
 /// Comprehensive error types for zero-cost API operations.
 #[derive(Debug, thiserror::Error)]
-/// Errors that can occur during ZeroCostApi operations
+/// Errors that can occur during `ZeroCostApi` operations
 pub enum ZeroCostApiError {
     /// Processing operation failed due to internal error
     #[error("Processing operation failed")]

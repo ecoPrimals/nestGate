@@ -38,7 +38,7 @@ use tracing::debug;
 /// Detects if an error is due to platform constraints (not a real error)
 ///
 /// **Platform constraints** are environmental limitations that require adaptation:
-/// - SELinux blocking Unix sockets (Android)
+/// - `SELinux` blocking Unix sockets (Android)
 /// - Platform lacking Unix socket support
 /// - Address family not supported
 ///
@@ -93,9 +93,9 @@ pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
     }
 }
 
-/// Check if SELinux is enforcing (Android/Linux)
+/// Check if `SELinux` is enforcing (Android/Linux)
 ///
-/// **SELinux (Security-Enhanced Linux)** is a mandatory access control system.
+/// **`SELinux` (Security-Enhanced Linux)** is a mandatory access control system.
 /// On Android, it often blocks Unix socket creation in app sandboxes.
 ///
 /// # Detection
@@ -107,8 +107,8 @@ pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
 ///
 /// # Returns
 ///
-/// * `true` - SELinux is enforcing (likely blocking Unix sockets)
-/// * `false` - SELinux not enforcing or not present
+/// * `true` - `SELinux` is enforcing (likely blocking Unix sockets)
+/// * `false` - `SELinux` not enforcing or not present
 fn is_selinux_enforcing() -> bool {
     match std::fs::read_to_string("/sys/fs/selinux/enforce") {
         Ok(contents) => match contents.trim().parse::<u8>() {

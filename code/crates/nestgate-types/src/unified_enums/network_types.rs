@@ -11,7 +11,7 @@ use std::fmt;
 /// **THE** `ProtocolType` - unified across all modules
 /// Replaces `ProtocolType` definitions in network and API modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedProtocol
+/// Types of `UnifiedProtocol`
 pub enum UnifiedProtocolType {
     /// HTTP protocol
     Http,
@@ -64,7 +64,7 @@ impl fmt::Display for UnifiedProtocolType {
 /// **THE** `IntegrationType` - unified across all modules
 /// Replaces `IntegrationType` definitions in ecosystem integration modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedIntegration
+/// Types of `UnifiedIntegration`
 pub enum UnifiedIntegrationType {
     /// Direct API integration
     DirectApi,
@@ -114,7 +114,7 @@ impl fmt::Display for UnifiedIntegrationType {
 /// **THE** `ProxyType` - unified across all modules
 /// Replaces `ProxyType` definitions in ecosystem integration and network modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedProxy
+/// Types of `UnifiedProxy`
 pub enum UnifiedProxyType {
     /// HTTP proxy
     Http,

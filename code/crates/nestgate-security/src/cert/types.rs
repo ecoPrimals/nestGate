@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // unused PathBuf import removed
 /// Certificate types supported by `NestGate`
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Types of Certificate
 pub enum CertificateType {
     /// Server TLS certificate
@@ -24,7 +24,7 @@ pub enum CertificateType {
     IntermediateCA,
 }
 /// Certificate integration types
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Integration
 pub enum Integration {
     /// Standalone certificate management
@@ -39,7 +39,7 @@ pub enum Integration {
     ComputeCapability,
 }
 /// Certificate mode for validation
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Certmode
 pub enum CertMode {
     /// Strict validation (all checks must pass)

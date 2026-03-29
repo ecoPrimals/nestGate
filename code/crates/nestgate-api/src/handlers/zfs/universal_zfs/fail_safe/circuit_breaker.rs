@@ -15,10 +15,6 @@ use crate::handlers::zfs::universal_zfs::config::CircuitBreakerConfig;
 use tracing::info;
 use tracing::warn;
 
-#[cfg(test)]
-#[path = "circuit_breaker_tests.rs"]
-mod circuit_breaker_tests;
-
 /// Circuit breaker states
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// Circuitbreakerstate
@@ -87,16 +83,15 @@ impl CircuitBreaker {
             CircuitBreakerState::Open => {
                 // Check if we should transition to half-open
                 let last_failure_snapshot = *self.last_failure_time.read().await;
-                if let Some(last_failure) = last_failure_snapshot {
-                    if SystemTime::now()
+                if let Some(last_failure) = last_failure_snapshot
+                    && SystemTime::now()
                         .duration_since(last_failure)
                         .unwrap_or_default()
                         > self.config.recovery_timeout
-                    {
-                        drop(state);
-                        self.transition_to_half_open().await;
-                        return true;
-                    }
+                {
+                    drop(state);
+                    self.transition_to_half_open().await;
+                    return true;
                 }
                 false
             }

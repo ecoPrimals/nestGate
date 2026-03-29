@@ -94,10 +94,12 @@ mod tests {
         let analytics = SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy)
             .expect("Test: analyze_snapshots should succeed");
 
-        assert!(analytics
-            .recommendations
-            .iter()
-            .any(|r| r.contains("cleaning up")));
+        assert!(
+            analytics
+                .recommendations
+                .iter()
+                .any(|r| r.contains("cleaning up"))
+        );
     }
 
     #[test]
@@ -107,10 +109,12 @@ mod tests {
         let analytics = SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy)
             .expect("Test: analyze_snapshots should succeed");
 
-        assert!(analytics
-            .recommendations
-            .iter()
-            .any(|r| r.contains("retention is very high")));
+        assert!(
+            analytics
+                .recommendations
+                .iter()
+                .any(|r| r.contains("retention is very high"))
+        );
     }
 
     #[test]
@@ -120,10 +124,12 @@ mod tests {
         let analytics =
             SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy).unwrap();
 
-        assert!(analytics
-            .recommendations
-            .iter()
-            .any(|r| r.contains("significant storage")));
+        assert!(
+            analytics
+                .recommendations
+                .iter()
+                .any(|r| r.contains("significant storage"))
+        );
     }
 
     #[test]

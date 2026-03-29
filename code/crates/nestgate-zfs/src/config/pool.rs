@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// Pool discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for PoolDiscovery
+/// Configuration for `PoolDiscovery`
 pub struct PoolDiscoveryConfig {
     /// Enable automatic pool discovery
     pub auto_discovery: bool,

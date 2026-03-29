@@ -179,7 +179,7 @@ impl Default for LifecycleConfig {
 /// Discovery configuration for ecosystem services
 #[cfg(feature = "network-integration")]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

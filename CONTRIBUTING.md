@@ -4,10 +4,10 @@
 
 NestGate is in active development. Current metrics:
 
-- **Build**: 22/22 crates, 0 errors
-- **Tests**: 12,278 passing, 0 failures, 472 ignored
-- **Coverage**: 69.6% line (target: 90%)
-- **Clippy**: Clean under `-D warnings`
+- **Build**: 25/25 workspace members, 0 errors
+- **Tests**: 11,707 passing, 0 failures
+- **Coverage**: 74.3% line (target: 90%)
+- **Clippy**: Workspace warnings reduced 8,227 → 4,642; production targets clean under `-D warnings`
 
 See [STATUS.md](./STATUS.md) for full metrics.
 
@@ -161,7 +161,7 @@ The `tools/` directory is excluded from coverage — it contains development too
 
 ### High Priority
 
-1. **Coverage**: Push from 69.6% toward 90% — see STATUS.md for gap analysis
+1. **Coverage**: Push from 74.3% toward 90% — see STATUS.md for gap analysis
 2. **IMPLEMENTATION STUBs**: Evolve boilerplate DefaultService patterns to real logic
 3. **Semantic method naming**: Align internal methods with `{domain}.{operation}` format
 

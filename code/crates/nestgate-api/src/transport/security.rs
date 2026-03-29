@@ -3,7 +3,7 @@
 
 //! **BEARDOG SECURITY INTEGRATION**
 //!
-//! BearDog client for hardware-backed security and authentication.
+//! `BearDog` client for hardware-backed security and authentication.
 
 use nestgate_core::capability_discovery::CapabilityDiscovery;
 use nestgate_core::error::{NestGateError, Result};
@@ -16,11 +16,11 @@ use tracing::{info, warn};
 
 /// **BEARDOG CLIENT**
 ///
-/// Client for communicating with BearDog security provider via Unix sockets.
+/// Client for communicating with `BearDog` security provider via Unix sockets.
 ///
-/// ## BearDog Integration
+/// ## `BearDog` Integration
 ///
-/// BearDog provides:
+/// `BearDog` provides:
 /// - Hardware-backed encryption/decryption
 /// - Sovereign identity management
 /// - Token generation and validation
@@ -28,7 +28,7 @@ use tracing::{info, warn};
 ///
 /// ## Runtime Discovery
 ///
-/// The client discovers BearDog via:
+/// The client discovers `BearDog` via:
 /// 1. `NESTGATE_SECURITY_PROVIDER` environment variable
 /// 2. Socket scanning: `/tmp/beardog-{family}-*.sock`
 /// 3. Fallback: `/tmp/beardog-default-default.sock`
@@ -38,7 +38,7 @@ pub struct BearDogClient {
 }
 
 impl BearDogClient {
-    /// Create new BearDog client
+    /// Create new `BearDog` client
     ///
     /// # Errors
     ///
@@ -115,7 +115,7 @@ impl BearDogClient {
     }
 
     /// Candidate directories where primal sockets may live, ordered by preference:
-    /// 1. XDG_RUNTIME_DIR (recommended, per-user, tmpfs)
+    /// 1. `XDG_RUNTIME_DIR` (recommended, per-user, tmpfs)
     /// 2. /run/user/{uid} (standard XDG fallback)
     /// 3. /tmp (least secure, universal fallback)
     fn candidate_socket_dirs() -> Vec<String> {
@@ -183,7 +183,7 @@ impl BearDogClient {
         }
     }
 
-    /// Connect to BearDog
+    /// Connect to `BearDog`
     ///
     /// # Errors
     ///
@@ -206,7 +206,7 @@ impl BearDogClient {
         Ok(())
     }
 
-    /// Encrypt data using BearDog
+    /// Encrypt data using `BearDog`
     ///
     /// # Errors
     ///
@@ -225,7 +225,7 @@ impl BearDogClient {
         Ok(response.data)
     }
 
-    /// Decrypt data using BearDog
+    /// Decrypt data using `BearDog`
     ///
     /// # Errors
     ///
@@ -321,7 +321,7 @@ impl BearDogClient {
         Ok(response)
     }
 
-    /// Check if connected to BearDog
+    /// Check if connected to `BearDog`
     #[must_use]
     pub const fn is_connected(&self) -> bool {
         self.connected

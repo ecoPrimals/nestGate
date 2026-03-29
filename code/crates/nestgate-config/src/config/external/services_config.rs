@@ -63,11 +63,12 @@ pub struct ServicesConfig {
     external_services: HashMap<String, String>,
 }
 
-/// Shared immutable reference to ServicesConfig
+/// Shared immutable reference to `ServicesConfig`
 pub type SharedServicesConfig = Arc<ServicesConfig>;
 
 impl ServicesConfig {
     /// Create a new empty configuration (all values None)
+    #[must_use]
     pub fn new() -> Self {
         Self {
             discovery_url: None,
@@ -87,6 +88,7 @@ impl ServicesConfig {
 
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
+    #[must_use]
     pub fn from_env() -> Self {
         let mut config = Self::new();
 
@@ -156,6 +158,7 @@ impl ServicesConfig {
     // Core service accessors with defaults
 
     /// Gets Discovery Url
+    #[must_use]
     pub fn get_discovery_url(&self) -> String {
         self.discovery_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -167,6 +170,7 @@ impl ServicesConfig {
     }
 
     /// Gets Adapter Url
+    #[must_use]
     pub fn get_adapter_url(&self) -> String {
         self.adapter_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -178,6 +182,7 @@ impl ServicesConfig {
     }
 
     /// Gets Health Url
+    #[must_use]
     pub fn get_health_url(&self) -> String {
         self.health_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -189,6 +194,7 @@ impl ServicesConfig {
     }
 
     /// Gets Metrics Url
+    #[must_use]
     pub fn get_metrics_url(&self) -> String {
         self.metrics_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -197,6 +203,7 @@ impl ServicesConfig {
     }
 
     /// Gets Config Url
+    #[must_use]
     pub fn get_config_url(&self) -> String {
         self.config_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
@@ -210,16 +217,19 @@ impl ServicesConfig {
     // Production accessors (for required URLs)
 
     /// Gets Discovery Url Required
+    #[must_use]
     pub fn get_discovery_url_required(&self) -> Option<&str> {
         self.discovery_url.as_deref()
     }
 
     /// Gets Adapter Url Required
+    #[must_use]
     pub fn get_adapter_url_required(&self) -> Option<&str> {
         self.adapter_url.as_deref()
     }
 
     /// Gets Health Url Required
+    #[must_use]
     pub fn get_health_url_required(&self) -> Option<&str> {
         self.health_url.as_deref()
     }
@@ -248,6 +258,7 @@ impl ServicesConfig {
     ///
     /// # Returns
     /// `Some(url)` if the capability is configured, `None` otherwise
+    #[must_use]
     pub fn get_capability_url(&self, capability: &str) -> Option<String> {
         self.capabilities.get(capability).cloned()
     }
@@ -255,7 +266,8 @@ impl ServicesConfig {
     /// Get all configured capabilities
     ///
     /// Returns a map of capability types to their URLs
-    pub fn get_all_capabilities(&self) -> &HashMap<String, String> {
+    #[must_use]
+    pub const fn get_all_capabilities(&self) -> &HashMap<String, String> {
         &self.capabilities
     }
 
@@ -270,6 +282,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use get_capability_url(\"orchestration\") for capability-based discovery"
     )]
+    #[must_use]
     pub fn get_songbird_url(&self) -> Option<&str> {
         self.songbird_url.as_deref()
     }
@@ -281,6 +294,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use get_capability_url(\"compute\") for capability-based discovery"
     )]
+    #[must_use]
     pub fn get_toadstool_url(&self) -> Option<&str> {
         self.toadstool_url.as_deref()
     }
@@ -292,6 +306,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use get_capability_url(\"security\") for capability-based discovery"
     )]
+    #[must_use]
     pub fn get_beardog_url(&self) -> Option<&str> {
         self.beardog_url.as_deref()
     }
@@ -303,6 +318,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use get_capability_url(\"ai\") for capability-based discovery"
     )]
+    #[must_use]
     pub fn get_squirrel_url(&self) -> Option<&str> {
         self.squirrel_url.as_deref()
     }
@@ -314,6 +330,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use get_capability_url(\"ecosystem\") for capability-based discovery"
     )]
+    #[must_use]
     pub fn get_biomeos_url(&self) -> Option<&str> {
         self.biomeos_url.as_deref()
     }
@@ -321,42 +338,51 @@ impl ServicesConfig {
     // External services
 
     /// Gets External Service
+    #[must_use]
     pub fn get_external_service(&self, name: &str) -> Option<&str> {
-        self.external_services.get(name).map(|s| s.as_str())
+        self.external_services
+            .get(name)
+            .map(std::string::String::as_str)
     }
 
     /// Gets All External Services
-    pub fn get_all_external_services(&self) -> &HashMap<String, String> {
+    #[must_use]
+    pub const fn get_all_external_services(&self) -> &HashMap<String, String> {
         &self.external_services
     }
 
     // Builder methods for tests
 
     /// Builder method to set Discovery Url
+    #[must_use]
     pub fn with_discovery_url(mut self, url: String) -> Self {
         self.discovery_url = Some(url);
         self
     }
 
     /// Builder method to set Adapter Url
+    #[must_use]
     pub fn with_adapter_url(mut self, url: String) -> Self {
         self.adapter_url = Some(url);
         self
     }
 
     /// Builder method to set Health Url
+    #[must_use]
     pub fn with_health_url(mut self, url: String) -> Self {
         self.health_url = Some(url);
         self
     }
 
     /// Builder method to set Metrics Url
+    #[must_use]
     pub fn with_metrics_url(mut self, url: String) -> Self {
         self.metrics_url = Some(url);
         self
     }
 
     /// Builder method to set Config Url
+    #[must_use]
     pub fn with_config_url(mut self, url: String) -> Self {
         self.config_url = Some(url);
         self
@@ -386,6 +412,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use with_capability(\"orchestration\", url) for capability-based discovery"
     )]
+    #[must_use]
     pub fn with_songbird_url(mut self, url: String) -> Self {
         self.songbird_url = Some(url.clone());
         self.capabilities.insert("orchestration".to_string(), url);
@@ -399,6 +426,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use with_capability(\"compute\", url) for capability-based discovery"
     )]
+    #[must_use]
     pub fn with_toadstool_url(mut self, url: String) -> Self {
         self.toadstool_url = Some(url.clone());
         self.capabilities.insert("compute".to_string(), url);
@@ -412,6 +440,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use with_capability(\"security\", url) for capability-based discovery"
     )]
+    #[must_use]
     pub fn with_beardog_url(mut self, url: String) -> Self {
         self.beardog_url = Some(url.clone());
         self.capabilities.insert("security".to_string(), url);
@@ -425,6 +454,7 @@ impl ServicesConfig {
         since = "0.12.0",
         note = "Use with_capability(\"ai\", url) for capability-based discovery"
     )]
+    #[must_use]
     pub fn with_squirrel_url(mut self, url: String) -> Self {
         self.squirrel_url = Some(url.clone());
         self.capabilities.insert("ai".to_string(), url);
@@ -432,12 +462,14 @@ impl ServicesConfig {
     }
 
     /// Builder method to set Biomeos Url
+    #[must_use]
     pub fn with_biomeos_url(mut self, url: String) -> Self {
         self.biomeos_url = Some(url);
         self
     }
 
     /// Builder method to set External Service
+    #[must_use]
     pub fn with_external_service(mut self, name: String, url: String) -> Self {
         self.external_services.insert(name, url);
         self

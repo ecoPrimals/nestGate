@@ -19,8 +19,8 @@ use std::time::Duration;
 /// **Replaces**:
 /// - `NetworkApiConfig` (domains/network/api.rs)
 /// - `UnifiedApiConfig` (nestgate-api/config/unified_api_config.rs)
-/// - `ApiConfig` (canonical_primary/api_config.rs)
-/// - Handler-specific configs (unified_api_config/handlers.rs)
+/// - `ApiConfig` (`canonical_primary/api_config.rs`)
+/// - Handler-specific configs (`unified_api_config/handlers.rs`)
 ///
 /// Configuration for Api
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -91,7 +91,7 @@ pub struct TlsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RateLimiting
+/// Configuration for `RateLimiting`
 pub struct RateLimitingConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -104,9 +104,9 @@ pub struct RateLimitingConfig {
 /// **API SECURITY CONFIGURATION**
 ///
 /// Authentication, authorization, and security settings for the API.
-/// Consolidates security patterns from UnifiedApiConfig.
+/// Consolidates security patterns from `UnifiedApiConfig`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ApiSecurity
+/// Configuration for `ApiSecurity`
 pub struct ApiSecurityConfig {
     /// Enable authentication for API endpoints
     pub auth_enabled: bool,
@@ -130,9 +130,9 @@ pub struct ApiSecurityConfig {
 /// **API PERFORMANCE CONFIGURATION**
 ///
 /// Performance optimization and resource management settings.
-/// Consolidates performance patterns from UnifiedApiConfig.
+/// Consolidates performance patterns from `UnifiedApiConfig`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ApiPerformance
+/// Configuration for `ApiPerformance`
 pub struct ApiPerformanceConfig {
     /// Request buffer size in bytes
     pub buffer_size: usize,
@@ -159,9 +159,9 @@ pub struct ApiPerformanceConfig {
 /// **API MONITORING CONFIGURATION**
 ///
 /// Observability, metrics, and health check settings.
-/// Consolidates monitoring patterns from UnifiedApiConfig.
+/// Consolidates monitoring patterns from `UnifiedApiConfig`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ApiMonitoring
+/// Configuration for `ApiMonitoring`
 pub struct ApiMonitoringConfig {
     /// Enable Prometheus metrics collection
     pub metrics_enabled: bool,
@@ -192,7 +192,7 @@ pub struct ApiMonitoringConfig {
 ///
 /// Threshold-based alerting for API health and performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ApiAlert
+/// Configuration for `ApiAlert`
 pub struct ApiAlertConfig {
     /// Alert when error rate exceeds this percentage
     pub error_rate_threshold: f64,
@@ -220,7 +220,7 @@ impl ApiConfig {
             bind_address: discovery_config
                 .discovery_host
                 .parse()
-                .unwrap_or_else(|_| std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1))),
+                .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
             port: discovery_config.discovery_base_port,
             max_connections: 100,
             request_timeout: Duration::from_secs(30),
@@ -259,7 +259,7 @@ impl ApiConfig {
             // Network settings
             bind_address: addresses::BIND_ALL_IPV4
                 .parse()
-                .unwrap_or_else(|_| std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0))),
+                .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED)),
             port: ports::HTTPS_DEFAULT,
             max_connections: 1000,
             request_timeout: Duration::from_secs(60),
@@ -378,7 +378,7 @@ impl RateLimitingConfig {
     /// Returns a `RateLimitingConfig` with rate limiting disabled and high limits
     /// suitable for local development and testing.
     #[must_use]
-    pub fn development() -> Self {
+    pub const fn development() -> Self {
         Self {
             enabled: false,
             requests_per_second: 1000,
@@ -391,7 +391,7 @@ impl RateLimitingConfig {
     /// Returns a `RateLimitingConfig` with rate limiting enabled and conservative limits
     /// to protect against abuse in production environments.
     #[must_use]
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         Self {
             enabled: true,
             requests_per_second: 100,
@@ -454,7 +454,7 @@ impl ApiPerformanceConfig {
     /// Returns an `ApiPerformanceConfig` with balanced settings, compression disabled,
     /// and debugging features enabled for local development.
     #[must_use]
-    pub fn development() -> Self {
+    pub const fn development() -> Self {
         use crate::constants::canonical_defaults::{
             concurrency::DEFAULT_THREAD_POOL_SIZE,
             sizes::{DEFAULT_BUFFER_SIZE, DEFAULT_CACHE_SIZE},
@@ -475,7 +475,7 @@ impl ApiPerformanceConfig {
     /// Returns an `ApiPerformanceConfig` with larger buffers, more threads, compression
     /// enabled, HTTP/2 support, and production-grade caching.
     #[must_use]
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         use crate::constants::canonical_defaults::{
             concurrency::DEFAULT_THREAD_POOL_SIZE,
             sizes::{DEFAULT_BUFFER_SIZE, DEFAULT_CACHE_SIZE},
@@ -555,7 +555,7 @@ impl ApiAlertConfig {
     /// Returns an `ApiAlertConfig` with conservative thresholds for error rates,
     /// response times, CPU, and memory usage suitable for production alerting.
     #[must_use]
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         Self {
             error_rate_threshold: 1.0,       // 1% (stricter)
             response_time_threshold_ms: 500, // 500ms (stricter)

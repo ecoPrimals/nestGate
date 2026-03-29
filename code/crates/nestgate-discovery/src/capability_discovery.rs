@@ -9,7 +9,7 @@
 //!
 //! ## Problem
 //!
-//! Previously, NestGate hardcoded primal names like "beardog", "songbird", etc. This violates:
+//! Previously, `NestGate` hardcoded primal names like "beardog", "songbird", etc. This violates:
 //! - Primal autonomy (primals shouldn't know each other's names)
 //! - Self-knowledge principle (only know capabilities, discover at runtime)
 //! - Inter-primal interaction standards
@@ -61,34 +61,16 @@
 //! - ✅ Testing: Easy to mock capabilities
 //! - ✅ Ecosystem compliant: Standards-conforming
 
-use nestgate_types::error::{NestGateError, Result};
 use dashmap::DashMap;
+use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::env;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-// TODO: wire to nestgate-rpc — replace stub with `nestgate_rpc::JsonRpcClient` (or core re-export).
-/// Minimal JSON-RPC client stub until `nestgate-rpc` is linked.
-pub struct JsonRpcClient;
-
-impl JsonRpcClient {
-    /// Stub: always fails until RPC transport is wired.
-    pub async fn connect_unix(_path: &str) -> Result<Self> {
-        Err(NestGateError::service_unavailable(
-            "JsonRpcClient not wired (nestgate-rpc)",
-        ))
-    }
-
-    /// Stub: always fails until RPC transport is wired.
-    pub async fn call(&self, _method: &str, _params: Value) -> Result<Value> {
-        Err(NestGateError::service_unavailable(
-            "JsonRpcClient not wired (nestgate-rpc)",
-        ))
-    }
-}
+pub use nestgate_rpc::JsonRpcClient;
 
 /// Service endpoint discovered by capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -208,15 +190,14 @@ impl CapabilityDiscovery {
                     "Capability discovery cache hit"
                 );
                 return Ok(entry.clone());
-            } else {
-                // Cache expired, remove
-                self.cache.remove(capability);
-                tracing::debug!(
-                    capability = capability,
-                    age_ms = age.as_millis(),
-                    "Capability discovery cache expired"
-                );
             }
+            // Cache expired, remove
+            self.cache.remove(capability);
+            tracing::debug!(
+                capability = capability,
+                age_ms = age.as_millis(),
+                "Capability discovery cache expired"
+            );
         }
 
         // Query orchestration IPC gateway
@@ -231,8 +212,7 @@ impl CapabilityDiscovery {
             .await
             .map_err(|e| {
                 NestGateError::service_unavailable(format!(
-                    "Failed to discover capability '{}': {}",
-                    capability, e
+                    "Failed to discover capability '{capability}': {e}"
                 ))
             })?;
 
@@ -243,8 +223,7 @@ impl CapabilityDiscovery {
 
         if services.is_empty() {
             return Err(NestGateError::service_unavailable(format!(
-                "No service provides capability '{}'",
-                capability
+                "No service provides capability '{capability}'"
             )));
         }
 
@@ -301,7 +280,10 @@ impl CapabilityDiscovery {
             env::var("ORCHESTRATION_IPC_PATH").ok(),
         ];
         for path in path_candidates.into_iter().flatten() {
-            tracing::debug!(path = path, "Trying orchestration IPC path from environment");
+            tracing::debug!(
+                path = path,
+                "Trying orchestration IPC path from environment"
+            );
             if Path::new(&path).exists() {
                 match JsonRpcClient::connect_unix(&path).await {
                     Ok(client) => {

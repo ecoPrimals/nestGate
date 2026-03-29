@@ -32,12 +32,13 @@
 ///
 /// # Examples
 /// ```
-/// use nestgate_core::platform::get_current_uid;
+/// use nestgate_platform::get_current_uid;
 ///
 /// let uid = get_current_uid();
 /// println!("Current UID: {}", uid);
 /// ```
 #[inline]
+#[must_use]
 pub fn get_current_uid() -> u32 {
     #[cfg(unix)]
     {
@@ -58,6 +59,7 @@ pub fn get_current_uid() -> u32 {
 ///
 /// On non-Unix platforms, returns `0` as a placeholder (same rationale as [`get_current_uid`]).
 #[inline]
+#[must_use]
 pub fn get_current_gid() -> u32 {
     #[cfg(unix)]
     {

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::SystemTime;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 
 use crate::snapshot::SnapshotPolicy;
 use crate::tier::TierStats;
@@ -176,7 +176,7 @@ pub struct ZfsPerformanceMonitor {
 
 /// Performance monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for  RemovedPerformance
+/// Configuration for  `RemovedPerformance`
 pub struct _RemovedPerformanceConfig {
     /// Metrics collection interval in seconds
     pub collection_interval: u64,
@@ -519,14 +519,14 @@ pub(crate) struct LocalMemoryInfo {
 impl LocalMemoryInfo {
     /// Create new memory info
     #[allow(dead_code)] // Development/testing method
-    pub fn new(available_mb: u64, used_mb: u64) -> Self {
+    pub const fn new(available_mb: u64, used_mb: u64) -> Self {
         Self {
             available_mb,
             used_mb,
         }
     }
     /// Get total memory
-    pub fn total_mb(&self) -> u64 {
+    pub const fn total_mb(&self) -> u64 {
         self.available_mb + self.used_mb
     }
 

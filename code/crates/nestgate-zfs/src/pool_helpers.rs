@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use tokio::process::Command as TokioCommand;
 use tracing::info;
 
-use crate::error::{create_zfs_error, Result, ZfsOperation};
+use crate::error::{Result, ZfsOperation, create_zfs_error};
 
 /// Parse size string with units (simplified implementation)
 ///
@@ -24,6 +24,7 @@ use crate::error::{create_zfs_error, Result, ZfsOperation};
 ///
 /// * `Some(u64)` - Size in bytes if parsing succeeds
 /// * `None` - If the string cannot be parsed
+#[must_use]
 pub fn parse_size_with_units(size_str: &str) -> Option<u64> {
     if size_str == "-" {
         return Some(0);

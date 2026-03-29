@@ -21,10 +21,27 @@ pub struct DownloadManager {
 impl DownloadManager {
     /// Create a new download manager
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
         }
+    }
+
+    /// Normalize a version string to a GitHub release tag (`v` prefix when missing).
+    #[must_use]
+    pub fn release_tag(version: &str) -> String {
+        if version.starts_with('v') {
+            version.to_string()
+        } else {
+            format!("v{version}")
+        }
+    }
+
+    /// API URL for release metadata for `owner/repo` and version tag.
+    #[must_use]
+    pub fn release_meta_url(repo: &str, version: &str) -> String {
+        let tag = Self::release_tag(version);
+        format!("https://api.github.com/repos/{repo}/releases/tags/{tag}")
     }
 
     fn github_repo() -> String {
@@ -51,11 +68,7 @@ impl DownloadManager {
     pub async fn download_release(&self, version: &str, target_dir: &PathBuf) -> Result<PathBuf> {
         std::fs::create_dir_all(target_dir)?;
         let repo = Self::github_repo();
-        let tag = if version.starts_with('v') {
-            version.to_string()
-        } else {
-            format!("v{version}")
-        };
+        let tag = Self::release_tag(version);
         let meta_url = format!("https://api.github.com/repos/{repo}/releases/tags/{tag}");
         let client = Self::http_client()?;
         let resp = client.get(&meta_url).send().await.map_err(|e| {
@@ -260,7 +273,7 @@ impl DownloadManager {
 
     /// Download components based on configuration
     #[allow(dead_code)] // Reserved for future component downloads
-    pub fn download_components(
+    pub const fn download_components(
         &self,
         _config: &crate::config::InstallerConfig,
     ) -> nestgate_core::error::Result<()> {
@@ -274,5 +287,40 @@ impl Default for DownloadManager {
     /// Returns the default instance
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod download_url_tests {
+    use super::DownloadManager;
+
+    #[test]
+    fn release_tag_adds_v_prefix() {
+        assert_eq!(DownloadManager::release_tag("1.2.3"), "v1.2.3");
+        assert_eq!(DownloadManager::release_tag("v1.2.3"), "v1.2.3");
+    }
+
+    #[test]
+    fn release_meta_url_format() {
+        let u = DownloadManager::release_meta_url("o/r", "2.0.0");
+        assert_eq!(u, "https://api.github.com/repos/o/r/releases/tags/v2.0.0");
+    }
+
+    #[test]
+    fn download_components_noop() {
+        let dm = DownloadManager::new();
+        let cfg = crate::config::InstallerConfig::default();
+        assert!(dm.download_components(&cfg).is_ok());
+    }
+
+    #[test]
+    fn release_tag_preserves_empty() {
+        assert_eq!(DownloadManager::release_tag(""), "v");
+    }
+
+    #[test]
+    fn release_meta_url_escapes_tag() {
+        let u = DownloadManager::release_meta_url("org/repo", "v3.0.0");
+        assert!(u.contains("v3.0.0") && u.contains("org/repo"));
     }
 }

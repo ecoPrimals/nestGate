@@ -10,5 +10,5 @@ pub mod float_compare;
 
 // Re-export commonly used items
 pub use float_compare::{
-    approx_eq_f32, approx_eq_f64, approx_eq_f64_epsilon, EPSILON_F32, EPSILON_F64,
+    EPSILON_F32, EPSILON_F64, approx_eq_f32, approx_eq_f64, approx_eq_f64_epsilon,
 };

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls network-level security including firewall rules and IP allowlists/blocklists.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkSecurity
+/// Configuration for `NetworkSecurity`
 pub struct NetworkSecurityConfig {
     /// Whether firewall is enabled.
     pub firewall_enabled: bool,
@@ -25,7 +25,7 @@ impl NetworkSecurityConfig {
     ///
     /// Allows all traffic for local development convenience.
     #[must_use]
-    pub fn development_optimized() -> Self {
+    pub const fn development_optimized() -> Self {
         Self {
             firewall_enabled: false,
             allowed_ips: vec![],
@@ -52,7 +52,7 @@ impl NetworkSecurityConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> Result<()> {
+    pub const fn validate(&self) -> Result<()> {
         Ok(())
     }
 

@@ -5,8 +5,8 @@
 //! This module defines the core trait for zero-cost ZFS operations
 //! Replaces `Arc<dyn>` patterns with compile-time dispatch for maximum performance
 
-use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::Result;
+use nestgate_core::canonical_types::StorageTier;
 
 /// **ZERO-COST ZFS OPERATIONS TRAIT**
 /// Replaces `Arc<dyn ZfsOperations>` with native async methods

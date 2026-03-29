@@ -5,10 +5,10 @@
 //! **MODERN CONCURRENCY**: Uses event-driven patterns, atomics, channels, and barriers
 //! instead of sleep() for true concurrent behavior testing.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
-use tokio::sync::{mpsc, Notify, Semaphore};
+use tokio::sync::{Notify, Semaphore, mpsc};
 use tokio::time::timeout;
 use tracing::info;
 

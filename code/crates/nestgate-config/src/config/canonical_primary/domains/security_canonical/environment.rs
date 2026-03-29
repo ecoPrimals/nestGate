@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SecurityEnvironment
+/// Configuration for `SecurityEnvironment`
 pub struct SecurityEnvironmentConfig {
     /// Development
     pub development: EnvironmentSecuritySettings,
@@ -28,7 +28,7 @@ pub struct EnvironmentSecuritySettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DeploymentSecurity
+/// Configuration for `DeploymentSecurity`
 pub struct DeploymentSecurityConfig {
     /// Secure Deployment
     pub secure_deployment: bool,
@@ -37,7 +37,7 @@ pub struct DeploymentSecurityConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RuntimeSecurity
+/// Configuration for `RuntimeSecurity`
 pub struct RuntimeSecurityConfig {
     /// Sandboxing
     pub sandboxing: bool,
@@ -128,7 +128,7 @@ impl SecurityEnvironmentConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

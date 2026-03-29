@@ -10,8 +10,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
 use crate::Result;
+use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
 
 /// Load balancer trait for distributing requests across services
 ///

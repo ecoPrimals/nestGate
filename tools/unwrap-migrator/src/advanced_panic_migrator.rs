@@ -16,7 +16,7 @@ use tokio::fs;
 use tracing::{debug, error, info};
 
 // Type alias for complex async return type
-type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + 'a>>;
+type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 #[derive(Error, Debug)]
 pub enum AdvancedPanicMigratorError {
@@ -32,7 +32,7 @@ pub enum AdvancedPanicMigratorError {
 
 pub type AdvancedPanicResult<T> = Result<T, AdvancedPanicMigratorError>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PanicPattern {
     /// panic!("message") calls
     PanicMacro,
@@ -51,12 +51,27 @@ pub enum PanicPattern {
 #[derive(Debug, Clone)]
 pub struct NestGatePanicReplacement {
     pub pattern: PanicPattern,
-    pub regex: Regex,
+    /// `None` when matching is done only via [`Self::line_matches`] (substring).
+    pub regex: Option<Regex>,
     pub replacement_template: String,
     pub priority: u32,
     pub safety_level: SafetyLevel,
     pub error_category: NestGateErrorCategory,
     pub context_requirements: Vec<ContextRequirement>,
+}
+
+impl NestGatePanicReplacement {
+    /// Match a line; some patterns use [`str::contains`] instead of regex.
+    pub(crate) fn line_matches(&self, line: &str) -> bool {
+        if let Some(re) = &self.regex {
+            return re.is_match(line);
+        }
+        match (self.pattern, self.priority) {
+            (PanicPattern::Unwrap, 100) => line.contains(".unwrap()"),
+            (PanicPattern::Unimplemented, 75) => line.contains("unimplemented!("),
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -149,7 +164,7 @@ impl AdvancedNestGatePanicMigrator {
             // High-priority unwrap patterns
             NestGatePanicReplacement {
             pattern: PanicPattern::Unwrap,
-            regex: Regex::new(r"\.unwrap\(\)")?,
+            regex: None,
             replacement_template: "?".to_string(),
             priority: 100,
             safety_level: SafetyLevel::SafeWithReview,
@@ -160,7 +175,7 @@ impl AdvancedNestGatePanicMigrator {
             // Configuration-specific expect patterns
             NestGatePanicReplacement {
                 pattern: PanicPattern::Expect,
-                regex: Regex::new(r#"\.expect\("([^"]*)"\)"#)?,
+                regex: Some(Regex::new(r#"\.expect\("([^"]*)"\)"#)?),
                 replacement_template: ".map_err(|e| NestGateError::Configuration {{ message: \"$1\".to_string(), source: Some(Box::new(e)) }})?".to_string(),
                 priority: 90,
                 safety_level: SafetyLevel::Safe,
@@ -171,7 +186,7 @@ impl AdvancedNestGatePanicMigrator {
             // ZFS-specific patterns
             NestGatePanicReplacement {
                 pattern: PanicPattern::Unwrap,
-                regex: Regex::new(r"zfs.*\.unwrap\(\)")?,
+                regex: Some(Regex::new(r"zfs.*\.unwrap\(\)")?),
                 replacement_template: ".map_err(|e| NestGateError::ZfsOperation {{ operation: \"zfs_command\".to_string(), source: Some(Box::new(e)) }})?".to_string(),
                 priority: 95,
                 safety_level: SafetyLevel::Safe,
@@ -182,7 +197,7 @@ impl AdvancedNestGatePanicMigrator {
             // Panic macro patterns
             NestGatePanicReplacement {
                 pattern: PanicPattern::PanicMacro,
-                regex: Regex::new(r#"panic!\("([^"]*)"\)"#)?,
+                regex: Some(Regex::new(r#"panic!\("([^"]*)"\)"#)?),
                 replacement_template:
                     "return Err(NestGateError::System {{ message: \"$1\".to_string(), source: None }})"
                         .to_string(),
@@ -195,7 +210,7 @@ impl AdvancedNestGatePanicMigrator {
             // Todo patterns for migration
             NestGatePanicReplacement {
                 pattern: PanicPattern::Todo,
-                regex: Regex::new(r#"todo!\("([^"]*)"\)"#)?,
+                regex: Some(Regex::new(r#"todo!\("([^"]*)"\)"#)?),
                 replacement_template: "return Err(NestGateError::System {{ message: \"Not implemented: $1\".to_string(), source: None }})".to_string(),
                 priority: 70,
                 safety_level: SafetyLevel::RequiresAnalysis,
@@ -206,7 +221,7 @@ impl AdvancedNestGatePanicMigrator {
             // Unimplemented patterns
             NestGatePanicReplacement {
                 pattern: PanicPattern::Unimplemented,
-                regex: Regex::new(r"unimplemented!\(\)")?,
+                regex: None,
                 replacement_template: "return Err(NestGateError::System {{ message: \"Feature not implemented\".to_string(), source: None }})".to_string(),
                 priority: 75,
                 safety_level: SafetyLevel::RequiresAnalysis,
@@ -255,10 +270,10 @@ impl AdvancedNestGatePanicMigrator {
                 let path = entry.path();
                 if path.is_dir() {
                     // Skip target and backup directories
-                    if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
-                        if !["target", "backup", ".git"].contains(&dir_name) {
-                            self.collect_rust_files(&path, files).await?;
-                        }
+                    if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
+                        && !["target", "backup", ".git"].contains(&dir_name)
+                    {
+                        self.collect_rust_files(&path, files).await?;
                     }
                 } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
                     files.push(path);
@@ -284,7 +299,7 @@ impl AdvancedNestGatePanicMigrator {
 
             // Try each pattern in priority order
             for pattern in &self.patterns {
-                if pattern.regex.is_match(line) && self.should_apply_pattern(pattern, &context) {
+                if pattern.line_matches(line) && self.should_apply_pattern(pattern, &context) {
                     let replacement = self.generate_replacement(pattern, line, &context);
                     modified_line = replacement;
                     _line_modified = true;
@@ -504,7 +519,9 @@ impl AdvancedNestGatePanicMigrator {
         let mut replacement = pattern.replacement_template.clone();
 
         // Handle regex capture groups
-        if let Some(captures) = pattern.regex.captures(original_line) {
+        if let Some(re) = &pattern.regex
+            && let Some(captures) = re.captures(original_line)
+        {
             for (i, capture) in captures.iter().enumerate().skip(1) {
                 if let Some(capture) = capture {
                     replacement = replacement.replace(&format!("${i}"), capture.as_str());
@@ -549,7 +566,7 @@ impl AdvancedNestGatePanicMigrator {
     }
 
     #[must_use]
-    pub fn get_stats(&self) -> &PanicMigrationStats {
+    pub const fn get_stats(&self) -> &PanicMigrationStats {
         &self.stats
     }
 }
@@ -565,7 +582,7 @@ pub struct ComprehensiveApiFixer {
 
 impl ComprehensiveApiFixer {
     #[must_use]
-    pub fn new(dry_run: bool) -> Self {
+    pub const fn new(dry_run: bool) -> Self {
         Self {
             dry_run,
             fixes_applied: 0,
@@ -602,10 +619,10 @@ impl ComprehensiveApiFixer {
             let path = entry.path();
 
             if path.is_dir() {
-                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
-                    if !["target", "backup", ".git"].contains(&dir_name) {
-                        Box::pin(self.collect_rust_files(&path, files)).await?;
-                    }
+                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
+                    && !["target", "backup", ".git"].contains(&dir_name)
+                {
+                    Box::pin(self.collect_rust_files(&path, files)).await?;
                 }
             } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
                 files.push(path);
@@ -660,11 +677,8 @@ impl ComprehensiveApiFixer {
         }
 
         // Fix 5: Remove resource variables that don't exist
-        let resource_format_regex = Regex::new(r"\{resource\}")?;
-        if resource_format_regex.is_match(&modified_content) {
-            modified_content = resource_format_regex
-                .replace_all(&modified_content, "resource")
-                .to_string();
+        if modified_content.contains("{resource}") {
+            modified_content = modified_content.replace("{resource}", "resource");
             file_modified = true;
         }
 

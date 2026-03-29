@@ -383,11 +383,13 @@ mod cache_comprehensive_tests {
             .await
             .expect("Cache operation failed");
         assert!(removed);
-        assert!(cache
-            .get("test_key")
-            .await
-            .expect("Cache operation failed")
-            .is_none());
+        assert!(
+            cache
+                .get("test_key")
+                .await
+                .expect("Cache operation failed")
+                .is_none()
+        );
     }
 
     #[tokio::test]
@@ -512,16 +514,20 @@ mod cache_comprehensive_tests {
         cache.clear().await.expect("Cache operation failed");
 
         // Verify cleared
-        assert!(cache
-            .get("key1")
-            .await
-            .expect("Cache operation failed")
-            .is_none());
-        assert!(cache
-            .get("key2")
-            .await
-            .expect("Cache operation failed")
-            .is_none());
+        assert!(
+            cache
+                .get("key1")
+                .await
+                .expect("Cache operation failed")
+                .is_none()
+        );
+        assert!(
+            cache
+                .get("key2")
+                .await
+                .expect("Cache operation failed")
+                .is_none()
+        );
     }
 
     #[tokio::test]

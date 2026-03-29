@@ -40,7 +40,7 @@ pub struct ServiceRegistration {
 ///
 /// # Migration Note
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -140,7 +140,7 @@ pub struct ServiceInfo {
 }
 
 impl ServiceInfo {
-    /// Create a new ServiceInfo instance
+    /// Create a new `ServiceInfo` instance
     pub fn new(service_id: impl Into<String>, service_type: impl Into<String>) -> Self {
         Self {
             service_id: service_id.into(),
@@ -153,6 +153,7 @@ impl ServiceInfo {
     }
 
     /// Generate a unique service ID
+    #[must_use]
     pub fn generate_id() -> String {
         Uuid::new_v4().to_string()
     }

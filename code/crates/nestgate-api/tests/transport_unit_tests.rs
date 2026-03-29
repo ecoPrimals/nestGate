@@ -9,7 +9,7 @@ use nestgate_api::transport::{
     JsonRpcError, JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, NestGateRpcHandler,
     TransportConfig,
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::PathBuf;
 
 // ============================================================================
@@ -114,6 +114,13 @@ fn test_jsonrpc_response_error() {
     assert!(response.result.is_none());
     assert!(response.error.is_some());
     assert_eq!(response.error.unwrap().code, -32601);
+}
+
+#[test]
+fn test_jsonrpc_response_error_with_code_branch() {
+    let response = JsonRpcResponse::error_with_code(7, -32000, "custom");
+    assert_eq!(response.error.expect("e").code, -32000);
+    assert!(response.result.is_none());
 }
 
 #[test]

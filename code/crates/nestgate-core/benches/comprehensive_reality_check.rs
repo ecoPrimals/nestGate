@@ -6,7 +6,7 @@
 //! This benchmark validates actual performance against documented claims
 //! using basic Rust types to avoid module dependencies.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;

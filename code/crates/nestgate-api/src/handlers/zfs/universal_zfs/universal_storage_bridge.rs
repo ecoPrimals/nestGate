@@ -249,7 +249,7 @@ impl UniversalStorageBridge {
             _ => {
                 return Err(UniversalZfsError::internal(format!(
                     "Unknown size unit: {unit}"
-                )))
+                )));
             }
         };
 

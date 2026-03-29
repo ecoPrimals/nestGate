@@ -38,7 +38,7 @@ pub trait OrchestrationPrimalProvider: Send + Sync {
 
     /// List active workflows
     fn list_workflows(&self)
-        -> impl std::future::Future<Output = Result<Vec<WorkflowInfo>>> + Send;
+    -> impl std::future::Future<Output = Result<Vec<WorkflowInfo>>> + Send;
 
     /// Register service for orchestration
     fn register_service(

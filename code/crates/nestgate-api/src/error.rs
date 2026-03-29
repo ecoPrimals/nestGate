@@ -8,9 +8,9 @@
 //! Error module
 
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -228,8 +228,34 @@ mod tests {
             _ => panic!("Expected ApiError::Json"),
         }
     }
-}
 
-#[cfg(test)]
-#[path = "error_comprehensive_tests.rs"]
-mod comprehensive_tests;
+    #[test]
+    fn round5_api_error_from_core_display() {
+        let core = nestgate_core::NestGateError::internal_error("inner", "test");
+        let err = ApiError::from(core);
+        let s = err.to_string();
+        assert!(s.contains("Core error"));
+        assert!(s.contains("inner"));
+    }
+
+    #[test]
+    fn round5_api_error_json_variant_display() {
+        let json_err = serde_json::from_str::<serde_json::Value>("not-json").unwrap_err();
+        let err = ApiError::Json(json_err);
+        assert!(err.to_string().starts_with("JSON error"));
+    }
+
+    #[test]
+    fn round5_error_response_serde_roundtrip() {
+        let er = ErrorResponse {
+            error: "e".to_string(),
+            code: "c".to_string(),
+            details: Some(serde_json::json!({"k": 1})),
+            timestamp: chrono::Utc::now(),
+        };
+        let json = serde_json::to_string(&er).unwrap();
+        let back: ErrorResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.error, er.error);
+        assert_eq!(back.code, er.code);
+    }
+}

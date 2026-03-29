@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ApiHandler
+/// Configuration for `ApiHandler`
 pub struct ApiHandlerConfig {
     /// Request
     pub request: RequestHandlerConfig,
@@ -22,7 +22,7 @@ pub struct ApiHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RequestHandler
+/// Configuration for `RequestHandler`
 pub struct RequestHandlerConfig {
     /// Logging
     pub logging: bool,
@@ -33,7 +33,7 @@ pub struct RequestHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ResponseHandler
+/// Configuration for `ResponseHandler`
 pub struct ResponseHandlerConfig {
     /// Compression
     pub compression: bool,
@@ -42,7 +42,7 @@ pub struct ResponseHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RouteHandler
+/// Configuration for `RouteHandler`
 pub struct RouteHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -51,7 +51,7 @@ pub struct RouteHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AuthHandler
+/// Configuration for `AuthHandler`
 pub struct AuthHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -60,7 +60,7 @@ pub struct AuthHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RateLimitHandler
+/// Configuration for `RateLimitHandler`
 pub struct RateLimitHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -144,7 +144,7 @@ impl ApiHandlerConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

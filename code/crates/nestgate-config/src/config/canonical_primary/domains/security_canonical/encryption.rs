@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EncryptionSecurity
+/// Configuration for `EncryptionSecurity`
 pub struct EncryptionSecurityConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -26,7 +26,7 @@ pub struct CryptographicConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for KeyManagement
+/// Configuration for `KeyManagement`
 pub struct KeyManagementConfig {
     /// Auto Rotation
     pub auto_rotation: bool,
@@ -35,7 +35,7 @@ pub struct KeyManagementConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EncryptionAlgorithm
+/// Configuration for `EncryptionAlgorithm`
 pub struct EncryptionAlgorithmConfig {
     /// Symmetric
     pub symmetric: Vec<String>,
@@ -95,7 +95,7 @@ impl EncryptionSecurityConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

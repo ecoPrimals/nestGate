@@ -8,8 +8,8 @@
 
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
 use crate::self_knowledge::SelfKnowledge;
-use nestgate_types::error::Result;
 use dashmap::DashMap;
+use nestgate_types::error::Result;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -21,7 +21,7 @@ use tokio::sync::RwLock;
 ///
 /// This is a simple implementation that stores services in memory.
 /// In production, this would use actual mDNS protocol (avahi-daemon, dns-sd, etc.)
-/// Lock-free with DashMap for better concurrent discovery performance
+/// Lock-free with `DashMap` for better concurrent discovery performance
 type ServiceRegistry = Arc<DashMap<String, ServiceInfo>>;
 
 /// mDNS discovery mechanism
@@ -60,13 +60,12 @@ impl MdnsDiscovery {
         let primary_endpoint = self_knowledge
             .endpoints
             .get("api")
-            .map(|addr| addr.to_string())
-            .unwrap_or_else(|| "unknown".to_string());
+            .map_or_else(|| "unknown".to_string(), std::string::ToString::to_string);
 
         let health_endpoint = self_knowledge
             .endpoints
             .get("health")
-            .map(|addr| addr.to_string());
+            .map(std::string::ToString::to_string);
 
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), self_knowledge.version.clone());
@@ -196,7 +195,7 @@ impl DiscoveryMechanism for MdnsDiscovery {
 
             // Clear announced service if it was us
             let mut announced = announced_service_id.write().await;
-            if announced.as_ref().map(|id| id.as_str()) == Some(service_id.as_str()) {
+            if announced.as_ref().map(std::string::String::as_str) == Some(service_id.as_str()) {
                 *announced = None;
             }
 

@@ -12,7 +12,7 @@ use super::types::{ChecksumType, CompressionType, DatasetStatus, DatasetType, St
 
 /// Request structure for creating a new dataset
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for CreateDataset operation
+/// Request parameters for `CreateDataset` operation
 pub struct CreateDatasetRequest {
     /// Name of the dataset to create
     pub name: String,
@@ -30,7 +30,7 @@ pub struct CreateDatasetRequest {
 
 /// Request structure for updating an existing dataset
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for UpdateDataset operation
+/// Request parameters for `UpdateDataset` operation
 pub struct UpdateDatasetRequest {
     /// Optional updated properties for the dataset
     pub properties: Option<DatasetProperties>,

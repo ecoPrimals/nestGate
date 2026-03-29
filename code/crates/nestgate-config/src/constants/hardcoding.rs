@@ -3,11 +3,20 @@
 
 //! ⚠️ **DEPRECATED**: This module is being phased out in favor of capability-based configuration
 //!
+//! # Primal model: self-knowledge vs peers
+//!
+//! Primal code carries **self-knowledge** only: this process’s identity, capabilities, and own
+//! listen endpoints. **Other primals** (orchestrator, storage peers, etc.) are **not** baked in at
+//! compile time; their host/port (or URL) must come from **capability discovery at runtime**
+//! (service registry, mDNS, mesh, etc.). The numeric port constants in [`ports`] exist solely as
+//! **fallback defaults** for bootstrap, tests, and legacy paths—prefer [`RuntimeDefaults`] (env then
+//! fallback) or your discovery layer in production.
+//!
 //! # Migration Path
 //!
 //! Instead of using hardcoded constants, use `CapabilityConfig` for runtime discovery:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! # use nestgate_core::capability_config::CapabilityConfig;
 //! # use anyhow::Result;
 //! # fn example() -> Result<()> {
@@ -30,6 +39,7 @@
 //! | Variable | Purpose |
 //! |----------|---------|
 //! | `NESTGATE_BIND_ADDRESS`, `NESTGATE_API_PORT`, `NESTGATE_METRICS_PORT`, `NESTGATE_HEALTH_PORT` | Core listen ports |
+//! | `NESTGATE_ORCHESTRATOR_URL` | Full orchestrator base URL when not using discovery (see [`RuntimeDefaults::orchestrator_url`]) |
 //! | `NESTGATE_ORCHESTRATOR_ADDR` | Orchestrator peer when discovery is empty (see [`crate::constants::hardcoding::get_orchestrator_fallback_addr`]) |
 //! | `NESTGATE_WEBSOCKET_PORT`, `NESTGATE_RPC_PORT`, `NESTGATE_MQ_PORT`, `NESTGATE_ORCHESTRATION_PORT` | Service ports (see getters below) |
 //! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`crate::constants::hardcoding::discovery::get_timeout_ms`]) |
@@ -50,7 +60,7 @@ use std::sync::OnceLock;
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// # use nestgate_core::constants::hardcoding::capability_helpers;
 /// # async fn example() -> nestgate_core::Result<()> {
 /// // ✅ Modern approach: Discover service by capability
@@ -59,7 +69,8 @@ use std::sync::OnceLock;
 /// # Ok(())
 /// # }
 /// ```
-// TODO: restore capability-based helpers when `universal_primal_discovery` is available from nestgate-types
+// Capability helpers may be restored when `universal_primal_discovery` types are published from
+// nestgate-types for use without nestgate-core.
 // pub mod capability_helpers {
 //     use nestgate_core::universal_primal_discovery::{
 //         capability_based_discovery::PrimalCapability, service_registry::ServiceRegistry,
@@ -96,162 +107,256 @@ pub mod addresses {
 
 /// Default network ports
 ///
-/// ⚠️ **DEPRECATED**: Use `ServiceRegistry` for capability-based discovery
+/// **Production note:** listen and peer **ports must not be assumed from this module**. Resolve them
+/// via capability / primal discovery at runtime. Values here are **deprecated fallbacks** only.
+///
+/// ⚠️ **DEPRECATED**: Prefer runtime discovery and [`RuntimeDefaults`].
 #[deprecated(
     since = "0.2.0",
-    note = "Use ServiceRegistry::find_by_capability() for runtime discovery. \
-            These hardcoded ports violate primal sovereignty."
+    note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
 )]
 pub mod ports {
     /// Default HTTP port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery; this is a compile-time fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const HTTP_DEFAULT: u16 = 8080;
 
     /// Default HTTPS port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const HTTPS_DEFAULT: u16 = 8443;
 
     /// Default API server port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const API_DEFAULT: u16 = 3000;
 
     /// Alternative API port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const API_ALT: u16 = 3001;
 
     /// Default metrics/monitoring port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const METRICS_DEFAULT: u16 = 9090;
 
     /// Prometheus metrics port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const PROMETHEUS: u16 = 9090;
 
     /// Default health check port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const HEALTH_CHECK: u16 = 8081;
 
     /// Default gRPC port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const GRPC_DEFAULT: u16 = 50051;
 
     /// Default WebSocket port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const WEBSOCKET_DEFAULT: u16 = 8082;
 
     /// Default admin interface port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const ADMIN_DEFAULT: u16 = 9000;
 
     /// Default storage service port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const STORAGE_DEFAULT: u16 = 5000;
 
     /// Default orchestration service port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const ORCHESTRATION_DEFAULT: u16 = 8083;
 
     /// Default storage discovery port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const STORAGE_DISCOVERY_DEFAULT: u16 = 8084;
 
     /// Default compute service port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const COMPUTE_DEFAULT: u16 = 8085;
 
     /// Extended services port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const EXTENDED_SERVICES: u16 = 3002;
 
     /// Discovery service port
     ///
-    /// ⚠️ **IRONIC**: Hardcoded discovery port! Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery—avoid fixed discovery ports in production.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const DISCOVERY_SERVICE: u16 = 3010;
 
     /// Alternative metrics port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const METRICS_ALT: u16 = 9001;
 
     /// Prometheus metrics port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const METRICS_PROMETHEUS: u16 = 9090;
 
     /// Default health check port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const HEALTH_DEFAULT: u16 = 8081;
 
     /// Orchestrator port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const ORCHESTRATOR_DEFAULT: u16 = 8090;
 
     /// Generic security service default port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const SECURITY_SERVICE_DEFAULT: u16 = 8081;
 
     /// Generic networking service default port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const NETWORKING_SERVICE_DEFAULT: u16 = 8082;
 
-    /// PostgreSQL database default port
+    /// `PostgreSQL` database default port
     ///
-    /// ⚠️ Use `ServiceRegistry` instead
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const POSTGRES_DEFAULT: u16 = 5432;
 
     /// Redis cache default port
-    #[deprecated(since = "0.2.0", note = "Use ServiceRegistry for discovery")]
+    ///
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const REDIS_DEFAULT: u16 = 6379;
 
-    /// MongoDB database default port
+    /// `MongoDB` database default port
+    ///
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const MONGODB_DEFAULT: u16 = 27017;
 
-    /// MySQL database default port
+    /// `MySQL` database default port
+    ///
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const MYSQL_DEFAULT: u16 = 3306;
 
     /// Streaming RPC default port
+    ///
+    /// Prefer capability discovery at runtime; fallback only.
+    #[deprecated(
+        since = "0.2.0",
+        note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
+    )]
     pub const STREAMING_RPC_DEFAULT: u16 = 8001;
 }
 
@@ -287,27 +392,149 @@ static BIND_ADDRESS: OnceLock<String> = OnceLock::new();
 /// Cache for API port from environment
 static API_PORT: OnceLock<u16> = OnceLock::new();
 
+/// Environment-first network defaults with deprecated constant fallbacks.
+///
+/// Use this for bootstrap and tests. In production, **resolve ports and peer URLs via capability
+/// discovery**; primal code should only encode self-knowledge, not fixed peers.
+pub struct RuntimeDefaults;
+
+#[allow(deprecated)]
+impl RuntimeDefaults {
+    /// `NESTGATE_BIND_ADDRESS`, else [`addresses::BIND_ALL_IPV4`].
+    #[must_use]
+    pub fn bind_address() -> &'static str {
+        BIND_ADDRESS.get_or_init(|| {
+            env::var("NESTGATE_BIND_ADDRESS")
+                .unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string())
+        })
+    }
+
+    /// `NESTGATE_API_PORT`, else [`ports::API_DEFAULT`].
+    #[must_use]
+    pub fn api_port() -> u16 {
+        *API_PORT.get_or_init(|| {
+            env::var("NESTGATE_API_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(ports::API_DEFAULT)
+        })
+    }
+
+    /// `NESTGATE_METRICS_PORT`, else [`ports::METRICS_DEFAULT`].
+    #[must_use]
+    pub fn metrics_port() -> u16 {
+        env::var("NESTGATE_METRICS_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(ports::METRICS_DEFAULT)
+    }
+
+    /// `NESTGATE_HEALTH_PORT`, else [`ports::HEALTH_CHECK`].
+    #[must_use]
+    pub fn health_port() -> u16 {
+        env::var("NESTGATE_HEALTH_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(ports::HEALTH_CHECK)
+    }
+
+    /// `NESTGATE_ORCHESTRATOR_ADDR`, else `localhost`:[`ports::HTTP_DEFAULT`]. See
+    /// [`get_orchestrator_fallback_addr`].
+    #[must_use]
+    pub fn orchestrator_fallback_addr() -> String {
+        match env::var("NESTGATE_ORCHESTRATOR_ADDR") {
+            Ok(s) if s.trim().is_empty() => String::new(),
+            Ok(s) => s,
+            Err(_) => format!("{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT),
+        }
+    }
+
+    /// `NESTGATE_ORCHESTRATOR_URL` if set; otherwise a URL derived from
+    /// [`Self::orchestrator_fallback_addr`].
+    #[must_use]
+    pub fn orchestrator_url() -> String {
+        if let Some(url) = env::var("NESTGATE_ORCHESTRATOR_URL")
+            .ok()
+            .filter(|s| !s.trim().is_empty())
+        {
+            return url.trim().to_string();
+        }
+        let addr = Self::orchestrator_fallback_addr();
+        if addr.is_empty() {
+            return format!(
+                "http://{}:{}",
+                addresses::LOCALHOST_NAME,
+                ports::HTTP_DEFAULT
+            );
+        }
+        if addr.starts_with("http://") || addr.starts_with("https://") {
+            return addr;
+        }
+        format!("http://{addr}")
+    }
+
+    /// `NESTGATE_WEBSOCKET_PORT`, else [`ports::WEBSOCKET_DEFAULT`].
+    #[must_use]
+    pub fn websocket_port() -> u16 {
+        env::var("NESTGATE_WEBSOCKET_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(ports::WEBSOCKET_DEFAULT)
+    }
+
+    /// `NESTGATE_RPC_PORT`, else [`ports::GRPC_DEFAULT`].
+    #[must_use]
+    pub fn grpc_port() -> u16 {
+        env::var("NESTGATE_RPC_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(ports::GRPC_DEFAULT)
+    }
+
+    /// `NESTGATE_MQ_PORT`, else [`super::port_defaults::DEFAULT_RABBITMQ_PORT`].
+    #[must_use]
+    pub fn message_queue_port() -> u16 {
+        env::var("NESTGATE_MQ_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(super::port_defaults::DEFAULT_RABBITMQ_PORT)
+    }
+
+    /// `NESTGATE_ORCHESTRATION_PORT`, else [`ports::ORCHESTRATION_DEFAULT`].
+    #[must_use]
+    pub fn orchestration_service_port() -> u16 {
+        env::var("NESTGATE_ORCHESTRATION_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(ports::ORCHESTRATION_DEFAULT)
+    }
+
+    /// `NESTGATE_DISCOVERY_TIMEOUT_MS`, else [`discovery::TIMEOUT_MS`].
+    #[must_use]
+    pub fn discovery_timeout_ms() -> u64 {
+        env::var("NESTGATE_DISCOVERY_TIMEOUT_MS")
+            .ok()
+            .and_then(|t| t.parse().ok())
+            .unwrap_or(discovery::TIMEOUT_MS)
+    }
+}
+
 /// Get the bind address from environment or use default
 ///
 /// Checks `NESTGATE_BIND_ADDRESS` environment variable.
 /// Falls back to `0.0.0.0` if not set.
+#[must_use]
 pub fn get_bind_address() -> &'static str {
-    BIND_ADDRESS.get_or_init(|| {
-        env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string())
-    })
+    RuntimeDefaults::bind_address()
 }
 
 /// Get the API port from environment or use default
 ///
 /// Checks `NESTGATE_API_PORT` environment variable.
 /// Falls back to 3000 if not set or invalid.
+#[must_use]
 pub fn get_api_port() -> u16 {
-    *API_PORT.get_or_init(|| {
-        env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(ports::API_DEFAULT)
-    })
+    RuntimeDefaults::api_port()
 }
 
 /// Get the metrics port from environment or use default
@@ -316,10 +543,7 @@ pub fn get_api_port() -> u16 {
 /// Falls back to 9090 if not set or invalid.
 #[must_use]
 pub fn get_metrics_port() -> u16 {
-    env::var("NESTGATE_METRICS_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(ports::METRICS_DEFAULT)
+    RuntimeDefaults::metrics_port()
 }
 
 /// Get the health check port from environment or use default
@@ -328,10 +552,7 @@ pub fn get_metrics_port() -> u16 {
 /// Falls back to 8081 if not set or invalid.
 #[must_use]
 pub fn get_health_port() -> u16 {
-    env::var("NESTGATE_HEALTH_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(ports::HEALTH_CHECK)
+    RuntimeDefaults::health_port()
 }
 
 /// Fallback orchestrator peer address when capability discovery finds none.
@@ -342,47 +563,38 @@ pub fn get_health_port() -> u16 {
 /// "no configured orchestrator".
 #[must_use]
 pub fn get_orchestrator_fallback_addr() -> String {
-    match env::var("NESTGATE_ORCHESTRATOR_ADDR") {
-        Ok(s) if s.trim().is_empty() => String::new(),
-        Ok(s) => s,
-        Err(_) => format!("{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT),
-    }
+    RuntimeDefaults::orchestrator_fallback_addr()
+}
+
+/// Orchestrator HTTP(S) base URL: `NESTGATE_ORCHESTRATOR_URL`, else derived from
+/// [`get_orchestrator_fallback_addr`].
+#[must_use]
+pub fn get_orchestrator_url() -> String {
+    RuntimeDefaults::orchestrator_url()
 }
 
 /// WebSocket port from environment or [`ports::WEBSOCKET_DEFAULT`].
 #[must_use]
 pub fn get_websocket_port() -> u16 {
-    env::var("NESTGATE_WEBSOCKET_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(ports::WEBSOCKET_DEFAULT)
+    RuntimeDefaults::websocket_port()
 }
 
 /// gRPC / RPC port from `NESTGATE_RPC_PORT` or [`ports::GRPC_DEFAULT`].
 #[must_use]
 pub fn get_grpc_port() -> u16 {
-    env::var("NESTGATE_RPC_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(ports::GRPC_DEFAULT)
+    RuntimeDefaults::grpc_port()
 }
 
-/// Message queue (e.g. RabbitMQ) port from `NESTGATE_MQ_PORT` or crate default.
+/// Message queue (e.g. `RabbitMQ`) port from `NESTGATE_MQ_PORT` or crate default.
 #[must_use]
 pub fn get_message_queue_port() -> u16 {
-    env::var("NESTGATE_MQ_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(super::port_defaults::DEFAULT_RABBITMQ_PORT)
+    RuntimeDefaults::message_queue_port()
 }
 
 /// Standalone orchestration service port from `NESTGATE_ORCHESTRATION_PORT` or default.
 #[must_use]
 pub fn get_orchestration_service_port() -> u16 {
-    env::var("NESTGATE_ORCHESTRATION_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(ports::ORCHESTRATION_DEFAULT)
+    RuntimeDefaults::orchestration_service_port()
 }
 
 // ============================================================================
@@ -391,8 +603,6 @@ pub fn get_orchestration_service_port() -> u16 {
 
 /// Default service discovery configuration
 pub mod discovery {
-    use super::*;
-
     /// Default service discovery timeout (milliseconds)
     pub const TIMEOUT_MS: u64 = 5000;
 
@@ -408,10 +618,7 @@ pub mod discovery {
     /// Get discovery timeout from environment or default
     #[must_use]
     pub fn get_timeout_ms() -> u64 {
-        env::var("NESTGATE_DISCOVERY_TIMEOUT_MS")
-            .ok()
-            .and_then(|t| t.parse().ok())
-            .unwrap_or(TIMEOUT_MS)
+        super::RuntimeDefaults::discovery_timeout_ms()
     }
 }
 
@@ -445,6 +652,7 @@ pub mod limits {
 // ============================================================================
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use super::*;
 
@@ -588,23 +796,31 @@ mod tests {
     #[test]
     fn test_ipv4_address_format() {
         // Verify IPv4 addresses are properly formatted
-        assert!(addresses::LOCALHOST_IPV4
-            .parse::<std::net::Ipv4Addr>()
-            .is_ok());
-        assert!(addresses::BIND_ALL_IPV4
-            .parse::<std::net::Ipv4Addr>()
-            .is_ok());
+        assert!(
+            addresses::LOCALHOST_IPV4
+                .parse::<std::net::Ipv4Addr>()
+                .is_ok()
+        );
+        assert!(
+            addresses::BIND_ALL_IPV4
+                .parse::<std::net::Ipv4Addr>()
+                .is_ok()
+        );
     }
 
     #[test]
     fn test_ipv6_address_format() {
         // Verify IPv6 addresses are properly formatted
-        assert!(addresses::LOCALHOST_IPV6
-            .parse::<std::net::Ipv6Addr>()
-            .is_ok());
-        assert!(addresses::BIND_ALL_IPV6
-            .parse::<std::net::Ipv6Addr>()
-            .is_ok());
+        assert!(
+            addresses::LOCALHOST_IPV6
+                .parse::<std::net::Ipv6Addr>()
+                .is_ok()
+        );
+        assert!(
+            addresses::BIND_ALL_IPV6
+                .parse::<std::net::Ipv6Addr>()
+                .is_ok()
+        );
     }
 
     #[test]

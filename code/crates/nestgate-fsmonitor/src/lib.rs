@@ -90,7 +90,7 @@ impl FsMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn start(&self) -> Result<(), FsMonitorError> {
+    pub const fn start(&self) -> Result<(), FsMonitorError> {
         // Implementation would go here
         Ok(())
     }
@@ -103,7 +103,7 @@ impl FsMonitor {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn stop(&self) -> Result<(), FsMonitorError> {
+    pub const fn stop(&self) -> Result<(), FsMonitorError> {
         // Implementation would go here
         Ok(())
     }

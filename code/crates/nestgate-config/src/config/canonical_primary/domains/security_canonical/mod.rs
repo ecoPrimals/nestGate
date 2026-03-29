@@ -81,7 +81,7 @@ pub use tls::{
 // **THE** canonical security configuration for the entire NestGate ecosystem
 // This replaces ALL other SecurityConfig variants
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for CanonicalSecurity
+/// Configuration for `CanonicalSecurity`
 pub struct CanonicalSecurityConfig {
     /// Authentication configuration
     pub authentication: AuthenticationConfig,
@@ -221,10 +221,10 @@ impl CanonicalSecurityConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for existing SecurityConfig usage
+/// Backward compatibility alias for existing `SecurityConfig` usage
 pub type SecurityConfig = CanonicalSecurityConfig;
 
-/// Backward compatibility alias for UnifiedSecurityConfig
+/// Backward compatibility alias for `UnifiedSecurityConfig`
 pub type UnifiedSecurityConfig = CanonicalSecurityConfig;
 
 #[cfg(test)]

@@ -32,6 +32,7 @@ pub const DEFAULT_HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
 ///
 /// Environment variable: `NESTGATE_CONNECTION_TIMEOUT`
 /// Default: `30` seconds
+#[must_use]
 pub fn connection_timeout() -> Duration {
     TimeoutsConfig::from_env().connection_timeout()
 }
@@ -40,6 +41,7 @@ pub fn connection_timeout() -> Duration {
 ///
 /// Environment variable: `NESTGATE_REQUEST_TIMEOUT`
 /// Default: `60` seconds
+#[must_use]
 pub fn request_timeout() -> Duration {
     TimeoutsConfig::from_env().request_timeout()
 }
@@ -48,6 +50,7 @@ pub fn request_timeout() -> Duration {
 ///
 /// Environment variable: `NESTGATE_IDLE_TIMEOUT`
 /// Default: `300` seconds (5 minutes)
+#[must_use]
 pub fn idle_timeout() -> Duration {
     TimeoutsConfig::from_env().idle_timeout()
 }
@@ -56,6 +59,7 @@ pub fn idle_timeout() -> Duration {
 ///
 /// Environment variable: `NESTGATE_KEEPALIVE_INTERVAL`
 /// Default: `60` seconds
+#[must_use]
 pub fn keepalive_interval() -> Duration {
     TimeoutsConfig::from_env().keepalive_interval()
 }
@@ -64,6 +68,7 @@ pub fn keepalive_interval() -> Duration {
 ///
 /// Environment variable: `NESTGATE_RETRY_DELAY_MS`
 /// Default: `1000` milliseconds (1 second)
+#[must_use]
 pub fn retry_delay() -> Duration {
     TimeoutsConfig::from_env().retry_delay()
 }

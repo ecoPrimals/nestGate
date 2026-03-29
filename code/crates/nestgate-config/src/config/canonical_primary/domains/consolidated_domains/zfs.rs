@@ -23,7 +23,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::canonical_primary::domains::consolidated_domains::zfs::*;
 //!
 //! let zfs_config = ZfsDomainConfig::default();

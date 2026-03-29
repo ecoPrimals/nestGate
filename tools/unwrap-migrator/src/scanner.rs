@@ -91,20 +91,16 @@ fn scan_unwrap_patterns(
     file_path: &Path,
     include_tests: bool,
 ) -> Result<Vec<UnwrapFix>, MigrationError> {
-    let unwrap_regex = Regex::new(r"\.unwrap\(\)").map_err(|e| {
-        MigrationError::PatternError(format!("Failed to compile unwrap regex: {e}"))
-    })?;
-
     let mut fixes = Vec::new();
 
     for (line_num, line) in content.lines().enumerate() {
-        if let Some(mat) = unwrap_regex.find(line) {
+        if let Some(column) = line.find(".unwrap()") {
             // Include file if tests are requested or if it's production code
             if include_tests || is_production_code(file_path) {
                 fixes.push(UnwrapFix {
                     file_path: file_path.to_path_buf(),
                     line: line_num + 1,
-                    column: mat.start(),
+                    column,
                     original_code: line.to_string(),
                     fix_type: FixType::ReplaceUnwrap,
                     severity: Severity::High,
@@ -129,24 +125,24 @@ fn scan_expect_patterns(
     let mut fixes = Vec::new();
 
     for (line_num, line) in content.lines().enumerate() {
-        if let Some(captures) = expect_regex.captures(line) {
-            if include_tests || is_production_code(file_path) {
-                let message = captures
-                    .get(1)
-                    .map(|m| m.as_str().to_string())
-                    .unwrap_or_default();
-                fixes.push(UnwrapFix {
-                    file_path: file_path.to_path_buf(),
-                    line: line_num + 1,
-                    column: captures.get(0).map_or(0, |m| m.start()),
-                    original_code: line.to_string(),
-                    fix_type: FixType::ReplaceExpected {
-                        original_message: message,
-                    },
-                    severity: Severity::High,
-                    description: "Replace .expect() with safe error handling".to_string(),
-                });
-            }
+        if let Some(captures) = expect_regex.captures(line)
+            && (include_tests || is_production_code(file_path))
+        {
+            let message = captures
+                .get(1)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_default();
+            fixes.push(UnwrapFix {
+                file_path: file_path.to_path_buf(),
+                line: line_num + 1,
+                column: captures.get(0).map_or(0, |m| m.start()),
+                original_code: line.to_string(),
+                fix_type: FixType::ReplaceExpected {
+                    original_message: message,
+                },
+                severity: Severity::High,
+                description: "Replace .expect() with safe error handling".to_string(),
+            });
         }
     }
 
@@ -164,24 +160,24 @@ fn scan_panic_patterns(
     let mut fixes = Vec::new();
 
     for (line_num, line) in content.lines().enumerate() {
-        if let Some(captures) = panic_regex.captures(line) {
-            if include_tests || is_production_code(file_path) {
-                let message = captures
-                    .get(1)
-                    .map(|m| m.as_str().to_string())
-                    .unwrap_or_default();
-                fixes.push(UnwrapFix {
-                    file_path: file_path.to_path_buf(),
-                    line: line_num + 1,
-                    column: captures.get(0).map_or(0, |m| m.start()),
-                    original_code: line.to_string(),
-                    fix_type: FixType::ReplacePanic {
-                        original_message: message,
-                    },
-                    severity: Severity::Critical,
-                    description: "Replace panic!() with safe error handling".to_string(),
-                });
-            }
+        if let Some(captures) = panic_regex.captures(line)
+            && (include_tests || is_production_code(file_path))
+        {
+            let message = captures
+                .get(1)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_default();
+            fixes.push(UnwrapFix {
+                file_path: file_path.to_path_buf(),
+                line: line_num + 1,
+                column: captures.get(0).map_or(0, |m| m.start()),
+                original_code: line.to_string(),
+                fix_type: FixType::ReplacePanic {
+                    original_message: message,
+                },
+                severity: Severity::Critical,
+                description: "Replace panic!() with safe error handling".to_string(),
+            });
         }
     }
 

@@ -4,10 +4,10 @@
 //! Extensive unit tests for ZFS functionality
 //! Targeting improved coverage for nestgate-zfs crate
 
+use nestgate_zfs::ZfsPoolManager;
 use nestgate_zfs::config::ZfsConfig;
 use nestgate_zfs::error::ZfsError;
 use nestgate_zfs::types::*;
-use nestgate_zfs::ZfsPoolManager;
 use std::collections::HashMap;
 use std::time::SystemTime;
 

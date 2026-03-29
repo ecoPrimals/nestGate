@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MiddlewareHandler
+/// Configuration for `MiddlewareHandler`
 pub struct MiddlewareHandlerConfig {
     /// Cors
     pub cors: CorsHandlerConfig,
@@ -19,28 +19,28 @@ pub struct MiddlewareHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CorsHandler
+/// Configuration for `CorsHandler`
 pub struct CorsHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CompressionHandler
+/// Configuration for `CompressionHandler`
 pub struct CompressionHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SecurityMiddleware
+/// Configuration for `SecurityMiddleware`
 pub struct SecurityMiddlewareConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for LoggingMiddleware
+/// Configuration for `LoggingMiddleware`
 pub struct LoggingMiddlewareConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl MiddlewareHandlerConfig {
 
     /// Merges this configuration with another, returning the merged result
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

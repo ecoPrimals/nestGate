@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TlsSecurity
+/// Configuration for `TlsSecurity`
 pub struct TlsSecurityConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -18,7 +18,7 @@ pub struct TlsSecurityConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CertificateManagement
+/// Configuration for `CertificateManagement`
 pub struct CertificateManagementConfig {
     /// Auto Renewal
     pub auto_renewal: bool,
@@ -96,7 +96,7 @@ pub struct CertificateConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TlsVersion
+/// Configuration for `TlsVersion`
 pub struct TlsVersionConfig {
     /// Min Version
     pub min_version: String,
@@ -105,7 +105,7 @@ pub struct TlsVersionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CipherSuite
+/// Configuration for `CipherSuite`
 pub struct CipherSuiteConfig {
     /// Allowed
     pub allowed: Vec<String>,
@@ -179,7 +179,7 @@ impl TlsSecurityConfig {
     }
 
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

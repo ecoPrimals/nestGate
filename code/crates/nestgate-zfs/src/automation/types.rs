@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
 /// Policy priority levels for automation policies
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PolicyPriority {
     /// Low priority - can be deferred
     Low,
@@ -38,7 +38,7 @@ pub struct PolicyConditions {
 /// Simple tier rule for basic automation - defines target tier based on conditions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TierRule {
-    /// Condition expression (e.g., "access_frequency > 100/day")
+    /// Condition expression (e.g., "`access_frequency` > 100/day")
     pub condition: String,
     /// Target storage tier when condition is met
     pub target_tier: StorageTier,
@@ -92,7 +92,7 @@ pub struct AutomationPolicy {
     pub last_modified: SystemTime,
 }
 /// Dataset lifecycle stages with automation rules
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LifecycleStage {
     /// Newly created, high activity expected
     New,
@@ -109,11 +109,11 @@ impl std::fmt::Display for LifecycleStage {
     /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LifecycleStage::New => write!(f, "New"),
-            LifecycleStage::Active => write!(f, "Active"),
-            LifecycleStage::Aging => write!(f, "Aging"),
-            LifecycleStage::Archived => write!(f, "Archived"),
-            LifecycleStage::Obsolete => write!(f, "Obsolete"),
+            Self::New => write!(f, "New"),
+            Self::Active => write!(f, "Active"),
+            Self::Aging => write!(f, "Aging"),
+            Self::Archived => write!(f, "Archived"),
+            Self::Obsolete => write!(f, "Obsolete"),
         }
     }
 }
@@ -158,7 +158,7 @@ pub struct AutomationEvent {
 }
 /// Types of automation events for categorization and filtering
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of AutomationEvent
+/// Types of `AutomationEvent`
 pub enum AutomationEventType {
     /// Tierassignment
     TierAssignment,

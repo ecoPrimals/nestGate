@@ -2,7 +2,7 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 //! Authentication module: configuration, hybrid external/local orchestration,
-//! Security primal IPC, JWT validation (RustCrypto), and standalone token helpers.
+//! Security primal IPC, JWT validation (`RustCrypto`), and standalone token helpers.
 
 mod auth_token_manager;
 mod config;

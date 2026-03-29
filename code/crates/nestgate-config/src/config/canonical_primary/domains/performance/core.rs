@@ -19,7 +19,7 @@ use nestgate_types::error::{NestGateError, Result};
 /// **THE** canonical performance configuration for the entire `NestGate` ecosystem
 /// This replaces ALL other `PerformanceConfig` variants
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for CanonicalPerformance
+/// Configuration for `CanonicalPerformance`
 pub struct CanonicalPerformanceConfig {
     /// CPU optimization settings
     pub cpu: CpuPerformanceConfig,

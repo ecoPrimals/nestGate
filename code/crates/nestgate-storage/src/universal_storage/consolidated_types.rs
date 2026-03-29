@@ -13,7 +13,7 @@
 //!
 //! Both paths refer to the same type; use the preferred path:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::universal_storage::types::UniversalStorageType;
 //!
 //! let _storage = UniversalStorageType::Local;

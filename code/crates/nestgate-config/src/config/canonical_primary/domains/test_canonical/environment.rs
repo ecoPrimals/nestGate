@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for TestEnvironment
+/// Configuration for `TestEnvironment`
 pub struct TestEnvironmentConfig {
     /// Infrastructure
     pub infrastructure: TestInfrastructureConfig,
@@ -15,14 +15,14 @@ pub struct TestEnvironmentConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestInfrastructure
+/// Configuration for `TestInfrastructure`
 pub struct TestInfrastructureConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestResource
+/// Configuration for `TestResource`
 pub struct TestResourceConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -55,7 +55,7 @@ impl TestEnvironmentConfig {
     }
     /// Merges this configuration with another, taking precedence
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 }

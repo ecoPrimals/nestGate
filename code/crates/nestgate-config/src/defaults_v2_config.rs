@@ -15,7 +15,7 @@ use nestgate_types::error::utilities::safe_env_var_or_default;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
-/// Configuration for DefaultsV2
+/// Configuration for `DefaultsV2`
 pub struct DefaultsV2Config {
     // Network settings
     api_port: u16,
@@ -75,11 +75,9 @@ impl DefaultsV2Config {
             .unwrap_or(Self::DEFAULT_API_PORT);
 
         let bind_address =
-            safe_env_var_or_default("NESTGATE_BIND_ADDRESS", Self::DEFAULT_BIND_ADDRESS)
-                .to_string();
+            safe_env_var_or_default("NESTGATE_BIND_ADDRESS", Self::DEFAULT_BIND_ADDRESS);
 
-        let hostname =
-            safe_env_var_or_default("NESTGATE_HOSTNAME", Self::DEFAULT_HOSTNAME).to_string();
+        let hostname = safe_env_var_or_default("NESTGATE_HOSTNAME", Self::DEFAULT_HOSTNAME);
 
         let ws_port = std::env::var("NESTGATE_WS_PORT")
             .ok()
@@ -116,7 +114,7 @@ impl DefaultsV2Config {
 
     /// Get API port
     #[must_use]
-    pub fn api_port(&self) -> u16 {
+    pub const fn api_port(&self) -> u16 {
         self.api_port
     }
 
@@ -134,25 +132,25 @@ impl DefaultsV2Config {
 
     /// Get WebSocket port
     #[must_use]
-    pub fn ws_port(&self) -> u16 {
+    pub const fn ws_port(&self) -> u16 {
         self.ws_port
     }
 
     /// Get health port
     #[must_use]
-    pub fn health_port(&self) -> u16 {
+    pub const fn health_port(&self) -> u16 {
         self.health_port
     }
 
     /// Get database port
     #[must_use]
-    pub fn db_port(&self) -> u16 {
+    pub const fn db_port(&self) -> u16 {
         self.db_port
     }
 
     /// Get metrics port
     #[must_use]
-    pub fn metrics_port(&self) -> u16 {
+    pub const fn metrics_port(&self) -> u16 {
         self.metrics_port
     }
 
@@ -178,7 +176,7 @@ impl DefaultsV2Config {
 
     /// Builder: Set API port
     #[must_use]
-    pub fn with_api_port(mut self, api_port: u16) -> Self {
+    pub const fn with_api_port(mut self, api_port: u16) -> Self {
         self.api_port = api_port;
         self
     }
@@ -199,28 +197,28 @@ impl DefaultsV2Config {
 
     /// Builder: Set WebSocket port
     #[must_use]
-    pub fn with_ws_port(mut self, ws_port: u16) -> Self {
+    pub const fn with_ws_port(mut self, ws_port: u16) -> Self {
         self.ws_port = ws_port;
         self
     }
 
     /// Builder: Set health port
     #[must_use]
-    pub fn with_health_port(mut self, health_port: u16) -> Self {
+    pub const fn with_health_port(mut self, health_port: u16) -> Self {
         self.health_port = health_port;
         self
     }
 
     /// Builder: Set database port
     #[must_use]
-    pub fn with_db_port(mut self, db_port: u16) -> Self {
+    pub const fn with_db_port(mut self, db_port: u16) -> Self {
         self.db_port = db_port;
         self
     }
 
     /// Builder: Set metrics port
     #[must_use]
-    pub fn with_metrics_port(mut self, metrics_port: u16) -> Self {
+    pub const fn with_metrics_port(mut self, metrics_port: u16) -> Self {
         self.metrics_port = metrics_port;
         self
     }

@@ -6,12 +6,12 @@
 //! **CANONICAL ZFS CONFIGURATION** - Single source of truth for all ZFS settings
 //!
 //! This module consolidates all ZFS configuration from:
-//! - `nestgate-zfs/src/canonical_zfs_config.rs` (old StandardDomainConfig pattern)
+//! - `nestgate-zfs/src/canonical_zfs_config.rs` (old `StandardDomainConfig` pattern)
 //! - `nestgate-zfs/src/config/unified_zfs_config.rs` (wrapper/re-export)
 //! - Various specialized configs throughout the codebase
 //!
 //! Migration Date: November 7, 2025
-//! Pattern: Following proven NetworkConfig migration success
+//! Pattern: Following proven `NetworkConfig` migration success
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -21,7 +21,7 @@ use std::time::Duration;
 // ==================== PRIMARY ZFS CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ZfsStorage
+/// Configuration for `ZfsStorage`
 pub struct ZfsStorageConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -46,7 +46,7 @@ pub struct ZfsStorageConfig {
 // ==================== POOL CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsPool
+/// Configuration for `ZfsPool`
 pub struct ZfsPoolConfig {
     /// Name
     pub name: String,
@@ -85,7 +85,7 @@ pub struct ZfsPoolSettings {
 // ==================== DATASET CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsDataset
+/// Configuration for `ZfsDataset`
 pub struct ZfsDatasetConfig {
     /// Auto Create
     pub auto_create: bool,
@@ -104,7 +104,7 @@ pub struct ZfsDatasetConfig {
 // ==================== SNAPSHOT CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsSnapshot
+/// Configuration for `ZfsSnapshot`
 pub struct ZfsSnapshotConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -134,7 +134,7 @@ pub struct RetentionPolicy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsMaintenance
+/// Configuration for `ZfsMaintenance`
 pub struct ZfsMaintenanceConfig {
     /// Scrub Interval
     pub scrub_interval: Duration,
@@ -145,7 +145,7 @@ pub struct ZfsMaintenanceConfig {
 // ==================== PERFORMANCE CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsPerformance
+/// Configuration for `ZfsPerformance`
 pub struct ZfsPerformanceConfig {
     /// Size of arc
     pub arc_size: Option<u64>,
@@ -153,7 +153,7 @@ pub struct ZfsPerformanceConfig {
     pub prefetch: bool,
     /// ARC cache configuration
     pub arc_cache: ArcCacheConfig,
-    /// L2Arc
+    /// `L2Arc`
     pub l2arc: L2ArcConfig,
     /// Zil
     pub zil: ZilConfig,
@@ -162,7 +162,7 @@ pub struct ZfsPerformanceConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ArcCache
+/// Configuration for `ArcCache`
 pub struct ArcCacheConfig {
     /// Min Size in megabytes
     pub min_size_mb: u64,
@@ -173,7 +173,7 @@ pub struct ArcCacheConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for L2Arc
+/// Configuration for `L2Arc`
 pub struct L2ArcConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -210,7 +210,7 @@ pub struct PrefetchConfig {
 // ==================== SECURITY CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ZfsSecurity
+/// Configuration for `ZfsSecurity`
 pub struct ZfsSecurityConfig {
     /// Encryption
     pub encryption: bool,
@@ -221,7 +221,7 @@ pub struct ZfsSecurityConfig {
 // ==================== MONITORING CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ZfsMonitoring
+/// Configuration for `ZfsMonitoring`
 pub struct ZfsMonitoringConfig {
     /// Health Check Enabled
     pub health_check_enabled: bool,
@@ -248,7 +248,7 @@ pub struct AlertThresholds {
 // ==================== MIGRATION CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ZfsMigration
+/// Configuration for `ZfsMigration`
 pub struct ZfsMigrationConfig {
     /// Migration Enabled
     pub migration_enabled: bool,
@@ -422,7 +422,7 @@ impl ZfsStorageConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

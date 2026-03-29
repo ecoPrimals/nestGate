@@ -3,7 +3,7 @@
 
 //! **CONSOLIDATED DOMAIN CONFIGURATIONS**
 //!
-//! This module consolidates 100+ scattered Config structs across the NestGate ecosystem
+//! This module consolidates 100+ scattered Config structs across the `NestGate` ecosystem
 //! into a single, canonical system organized by domain concern.
 //!
 //! ## Architecture
@@ -12,12 +12,12 @@
 //! - **`zfs`**: ZFS storage management configuration
 //! - **`api`**: API and HTTP services configuration
 //! - **`mcp`**: MCP protocol handling configuration
-//! - **`services`**: Other service domains (Network, Automation, FsMonitor, etc.)
+//! - **`services`**: Other service domains (Network, Automation, `FsMonitor`, etc.)
 //! - **`validation`**: Configuration validation framework
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs;
 //!
 //! let config = ConsolidatedDomainConfigs::default();

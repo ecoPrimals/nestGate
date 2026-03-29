@@ -225,37 +225,37 @@ impl RealTimeMetricsCollector {
         let mut write_throughput_mbs = 0.0;
         let mut _avg_latency_ms = 2.5; // Default fallback (reserved for future metrics)
 
-        if let Ok(output) = iostat_output {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
+        if let Ok(output) = iostat_output
+            && output.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
 
-                // Parse the last set of statistics (after "---" separator)
-                let mut found_data = false;
-                for line in stdout.lines().rev() {
-                    if line.contains(pool_name) && found_data {
-                        let fields: Vec<&str> = line.split_whitespace().collect();
-                        if fields.len() >= 7 {
-                            read_ops = fields[1].parse().unwrap_or(0.0);
-                            write_ops = fields[2].parse().unwrap_or(0.0);
+            // Parse the last set of statistics (after "---" separator)
+            let mut found_data = false;
+            for line in stdout.lines().rev() {
+                if line.contains(pool_name) && found_data {
+                    let fields: Vec<&str> = line.split_whitespace().collect();
+                    if fields.len() >= 7 {
+                        read_ops = fields[1].parse().unwrap_or(0.0);
+                        write_ops = fields[2].parse().unwrap_or(0.0);
 
-                            // Convert bandwidth from bytes to MB/s
-                            let read_bw_bytes: f64 = fields[3].parse().unwrap_or(0.0);
-                            let write_bw_bytes: f64 = fields[4].parse().unwrap_or(0.0);
-                            read_throughput_mbs = read_bw_bytes / (1024.0 * 1024.0);
-                            write_throughput_mbs = write_bw_bytes / (1024.0 * 1024.0);
+                        // Convert bandwidth from bytes to MB/s
+                        let read_bw_bytes: f64 = fields[3].parse().unwrap_or(0.0);
+                        let write_bw_bytes: f64 = fields[4].parse().unwrap_or(0.0);
+                        read_throughput_mbs = read_bw_bytes / (1024.0 * 1024.0);
+                        write_throughput_mbs = write_bw_bytes / (1024.0 * 1024.0);
 
-                            // Calculate latency from operations and throughput (reserved for future metrics)
-                            let total_ops = read_ops + write_ops;
-                            if total_ops > 0.0 {
-                                _avg_latency_ms = (1000.0_f64 / total_ops).min(100.0);
-                                // Cap at 100ms
-                            }
+                        // Calculate latency from operations and throughput (reserved for future metrics)
+                        let total_ops = read_ops + write_ops;
+                        if total_ops > 0.0 {
+                            _avg_latency_ms = (1000.0_f64 / total_ops).min(100.0);
+                            // Cap at 100ms
                         }
-                        break;
                     }
-                    if line.contains("---") {
-                        found_data = true;
-                    }
+                    break;
+                }
+                if line.contains("---") {
+                    found_data = true;
                 }
             }
         }
@@ -286,21 +286,21 @@ impl RealTimeMetricsCollector {
 
     /// Get CPU usage from /proc/stat
     async fn get_cpu_usage() -> Result<f64> {
-        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await {
-            if let Some(cpu_line) = content.lines().next() {
-                let fields: Vec<&str> = cpu_line.split_whitespace().collect();
-                if fields.len() >= 8 && fields[0] == "cpu" {
-                    let idle: u64 = fields[4].parse().unwrap_or(0);
-                    let iowait: u64 = fields[5].parse().unwrap_or(0);
-                    let total: u64 = fields[1..8]
-                        .iter()
-                        .map(|f| f.parse::<u64>().unwrap_or(0))
-                        .sum();
+        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await
+            && let Some(cpu_line) = content.lines().next()
+        {
+            let fields: Vec<&str> = cpu_line.split_whitespace().collect();
+            if fields.len() >= 8 && fields[0] == "cpu" {
+                let idle: u64 = fields[4].parse().unwrap_or(0);
+                let iowait: u64 = fields[5].parse().unwrap_or(0);
+                let total: u64 = fields[1..8]
+                    .iter()
+                    .map(|f| f.parse::<u64>().unwrap_or(0))
+                    .sum();
 
-                    if total > 0 {
-                        let active = total - idle - iowait;
-                        return Ok((active as f64 / total as f64) * 100.0);
-                    }
+                if total > 0 {
+                    let active = total - idle - iowait;
+                    return Ok((active as f64 / total as f64) * 100.0);
                 }
             }
         }
@@ -478,23 +478,23 @@ impl RealTimeMetricsCollector {
             .output()
             .await;
 
-        if let Ok(output) = output {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                let mut total_ratio = 0.0;
-                let mut count = 0;
+        if let Ok(output) = output
+            && output.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let mut total_ratio = 0.0;
+            let mut count = 0;
 
-                for line in stdout.lines() {
-                    let ratio_str = line.trim().replace('x', "");
-                    if let Ok(ratio) = ratio_str.parse::<f64>() {
-                        total_ratio += ratio;
-                        count += 1;
-                    }
+            for line in stdout.lines() {
+                let ratio_str = line.trim().replace('x', "");
+                if let Ok(ratio) = ratio_str.parse::<f64>() {
+                    total_ratio += ratio;
+                    count += 1;
                 }
+            }
 
-                if count > 0 {
-                    return Ok(total_ratio / f64::from(count));
-                }
+            if count > 0 {
+                return Ok(total_ratio / f64::from(count));
             }
         }
 
@@ -532,18 +532,18 @@ impl RealTimeMetricsCollector {
             .output()
             .await;
 
-        if let Ok(output) = output {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                if let Some(line) = stdout.lines().next() {
-                    let fields: Vec<&str> = line.split('\t').collect();
-                    if fields.len() >= 3 {
-                        let total_size = Self::parse_size_string(fields[0]).unwrap_or(0);
-                        let allocated_size = Self::parse_size_string(fields[1]).unwrap_or(0);
-                        let health = fields[2].to_string();
+        if let Ok(output) = output
+            && output.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            if let Some(line) = stdout.lines().next() {
+                let fields: Vec<&str> = line.split('\t').collect();
+                if fields.len() >= 3 {
+                    let total_size = Self::parse_size_string(fields[0]).unwrap_or(0);
+                    let allocated_size = Self::parse_size_string(fields[1]).unwrap_or(0);
+                    let health = fields[2].to_string();
 
-                        return (total_size, allocated_size, health);
-                    }
+                    return (total_size, allocated_size, health);
                 }
             }
         }
@@ -586,5 +586,22 @@ impl Default for RealTimeMetricsCollector {
     /// Returns the default instance
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn dashboard_metrics_collector_new_get_current() {
+        let c = RealTimeMetricsCollector::new();
+        let _ = c.get_current_metrics().await;
+    }
+
+    #[tokio::test]
+    async fn dashboard_metrics_collector_default() {
+        let c = RealTimeMetricsCollector::default();
+        let _ = c.get_current_metrics().await;
     }
 }

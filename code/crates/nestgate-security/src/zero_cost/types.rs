@@ -8,7 +8,7 @@
 
 /// Zero-cost request structure
 #[derive(Debug, Clone)]
-/// Request parameters for ZeroCost operation
+/// Request parameters for `ZeroCost` operation
 pub struct ZeroCostRequest {
     /// Unique identifier
     pub id: u64,
@@ -18,9 +18,9 @@ pub struct ZeroCostRequest {
     pub metadata: ZeroCostMetadata,
 }
 
-/// Zero-cost response structure  
+/// Zero-cost response structure\
 #[derive(Debug, Clone)]
-/// Response data for ZeroCost operation
+/// Response data for `ZeroCost` operation
 pub struct ZeroCostResponse {
     /// Unique identifier
     pub id: u64,
@@ -53,8 +53,8 @@ pub struct ZeroCostMetrics {
 }
 
 /// Zero-cost error enumeration
-#[derive(Debug, Clone, PartialEq)]
-/// Errors that can occur during ZeroCost operations
+#[derive(Debug, Clone, PartialEq, Eq)]
+/// Errors that can occur during `ZeroCost` operations
 pub enum ZeroCostError {
     /// Cacheerror
     CacheError,
@@ -157,6 +157,31 @@ mod tests {
             ZeroCostError::CacheError.to_string(),
             "Cache operation failed"
         );
+    }
+
+    #[test]
+    fn round5_zero_cost_error_display_security_storage_invalid_overload() {
+        assert_eq!(
+            ZeroCostError::SecurityError.to_string(),
+            "Security validation failed"
+        );
+        assert_eq!(
+            ZeroCostError::StorageError.to_string(),
+            "Storage operation failed"
+        );
+        assert_eq!(
+            ZeroCostError::InvalidRequest.to_string(),
+            "Invalid request format"
+        );
+        assert_eq!(
+            ZeroCostError::SystemOverload.to_string(),
+            "System capacity exceeded"
+        );
+    }
+
+    #[test]
+    fn round5_request_priority_default_impl() {
+        assert_eq!(RequestPriority::default(), RequestPriority::Normal);
     }
 
     #[test]

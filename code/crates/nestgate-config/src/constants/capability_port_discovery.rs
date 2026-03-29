@@ -14,7 +14,7 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use nestgate_core::constants::capability_port_discovery;
 //!
 //! #[tokio::main]
@@ -34,10 +34,7 @@
 //! - Environment-driven configuration
 //! - Self-knowledge only (no external assumptions)
 
-// TODO: move ServiceRegistry / PrimalCapability to nestgate-types
-// use nestgate_core::universal_primal_discovery::{
-//     capability_based_discovery::PrimalCapability, service_registry::ServiceRegistry,
-// };
+// Consolidation: `ServiceRegistry` / `PrimalCapability` may be shared from `nestgate-types`.
 use nestgate_types::error::{NestGateError, Result};
 use std::env;
 
@@ -46,7 +43,7 @@ use std::env;
 /// Discover API service port using capability-based discovery
 ///
 /// # Discovery Order
-/// 1. Capability discovery (find service advertising ApiGateway capability)
+/// 1. Capability discovery (find service advertising `ApiGateway` capability)
 /// 2. Environment variable (`NESTGATE_API_PORT`)
 /// 3. Safe default (8080)
 ///
@@ -54,7 +51,7 @@ use std::env;
 /// Respects primal autonomy - discovers services at runtime without hardcoded assumptions.
 ///
 /// # Example
-/// ```rust,no_run
+/// ```rust,ignore
 /// # use nestgate_core::constants::capability_port_discovery::discover_api_port;
 /// # async fn example() -> nestgate_core::Result<()> {
 /// let port = discover_api_port().await?;
@@ -64,19 +61,18 @@ use std::env;
 /// ```
 pub async fn discover_api_port() -> Result<u16> {
     // 1. Try capability discovery
-    if let Ok(service_url) = try_discover_api_service().await {
-        if let Some(port) = extract_port_from_url(&service_url) {
-            return Ok(port);
-        }
+    if let Ok(service_url) = try_discover_api_service().await
+        && let Some(port) = extract_port_from_url(&service_url)
+    {
+        return Ok(port);
     }
 
     // 2. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_API_PORT") {
-        if let Ok(port) = port_str.parse::<u16>() {
-            if port > 0 {
-                return Ok(port);
-            }
-        }
+    if let Ok(port_str) = env::var("NESTGATE_API_PORT")
+        && let Ok(port) = port_str.parse::<u16>()
+        && port > 0
+    {
+        return Ok(port);
     }
 
     // 3. Safe default (maintains backward compatibility)
@@ -91,19 +87,18 @@ pub async fn discover_api_port() -> Result<u16> {
 /// 3. Safe default (9090)
 pub async fn discover_metrics_port() -> Result<u16> {
     // 1. Try capability discovery
-    if let Ok(service_url) = try_discover_metrics_service().await {
-        if let Some(port) = extract_port_from_url(&service_url) {
-            return Ok(port);
-        }
+    if let Ok(service_url) = try_discover_metrics_service().await
+        && let Some(port) = extract_port_from_url(&service_url)
+    {
+        return Ok(port);
     }
 
     // 2. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_METRICS_PORT") {
-        if let Ok(port) = port_str.parse::<u16>() {
-            if port > 0 {
-                return Ok(port);
-            }
-        }
+    if let Ok(port_str) = env::var("NESTGATE_METRICS_PORT")
+        && let Ok(port) = port_str.parse::<u16>()
+        && port > 0
+    {
+        return Ok(port);
     }
 
     // 3. Safe default
@@ -118,12 +113,11 @@ pub async fn discover_metrics_port() -> Result<u16> {
 /// 3. Safe default (8082)
 pub async fn discover_health_port() -> Result<u16> {
     // 1. Environment variable (health checks are often load-balancer specific)
-    if let Ok(port_str) = env::var("NESTGATE_HEALTH_PORT") {
-        if let Ok(port) = port_str.parse::<u16>() {
-            if port > 0 {
-                return Ok(port);
-            }
-        }
+    if let Ok(port_str) = env::var("NESTGATE_HEALTH_PORT")
+        && let Ok(port) = port_str.parse::<u16>()
+        && port > 0
+    {
+        return Ok(port);
     }
 
     // 2. Safe default
@@ -137,12 +131,11 @@ pub async fn discover_health_port() -> Result<u16> {
 /// 2. Safe default (8081)
 pub async fn discover_admin_port() -> Result<u16> {
     // 1. Environment variable (admin interfaces are sensitive, explicit config preferred)
-    if let Ok(port_str) = env::var("NESTGATE_ADMIN_PORT") {
-        if let Ok(port) = port_str.parse::<u16>() {
-            if port > 0 {
-                return Ok(port);
-            }
-        }
+    if let Ok(port_str) = env::var("NESTGATE_ADMIN_PORT")
+        && let Ok(port) = port_str.parse::<u16>()
+        && port > 0
+    {
+        return Ok(port);
     }
 
     // 2. Safe default
@@ -152,24 +145,23 @@ pub async fn discover_admin_port() -> Result<u16> {
 /// Discover storage service port using capability-based discovery
 ///
 /// # Discovery Order
-/// 1. Capability discovery (ZfsStorage capability)
+/// 1. Capability discovery (`ZfsStorage` capability)
 /// 2. Environment variable (`NESTGATE_STORAGE_PORT`)
 /// 3. Safe default (8083)
 pub async fn discover_storage_port() -> Result<u16> {
     // 1. Try capability discovery
-    if let Ok(service_url) = try_discover_storage_service().await {
-        if let Some(port) = extract_port_from_url(&service_url) {
-            return Ok(port);
-        }
+    if let Ok(service_url) = try_discover_storage_service().await
+        && let Some(port) = extract_port_from_url(&service_url)
+    {
+        return Ok(port);
     }
 
     // 2. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_STORAGE_PORT") {
-        if let Ok(port) = port_str.parse::<u16>() {
-            if port > 0 {
-                return Ok(port);
-            }
-        }
+    if let Ok(port_str) = env::var("NESTGATE_STORAGE_PORT")
+        && let Ok(port) = port_str.parse::<u16>()
+        && port > 0
+    {
+        return Ok(port);
     }
 
     // 3. Safe default
@@ -186,12 +178,11 @@ pub async fn discover_storage_port() -> Result<u16> {
 /// tarpc is Rust-native high-performance RPC - discovered at runtime for flexibility
 pub async fn discover_tarpc_port() -> Result<u16> {
     // 1. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_TARPC_PORT") {
-        if let Ok(port) = port_str.parse::<u16>() {
-            if port > 0 {
-                return Ok(port);
-            }
-        }
+    if let Ok(port_str) = env::var("NESTGATE_TARPC_PORT")
+        && let Ok(port) = port_str.parse::<u16>()
+        && port > 0
+    {
+        return Ok(port);
     }
 
     // 2. Safe default
@@ -247,6 +238,7 @@ fn extract_port_from_url(url: &str) -> Option<u16> {
 ///
 /// Uses only environment variables and defaults (no capability discovery).
 /// Prefer async `discover_api_port()` when possible.
+#[must_use]
 pub fn discover_api_port_sync() -> u16 {
     env::var("NESTGATE_API_PORT")
         .ok()
@@ -256,6 +248,7 @@ pub fn discover_api_port_sync() -> u16 {
 }
 
 /// Synchronous metrics port discovery
+#[must_use]
 pub fn discover_metrics_port_sync() -> u16 {
     env::var("NESTGATE_METRICS_PORT")
         .ok()
@@ -265,6 +258,7 @@ pub fn discover_metrics_port_sync() -> u16 {
 }
 
 /// Synchronous health port discovery
+#[must_use]
 pub fn discover_health_port_sync() -> u16 {
     env::var("NESTGATE_HEALTH_PORT")
         .ok()
@@ -274,6 +268,7 @@ pub fn discover_health_port_sync() -> u16 {
 }
 
 /// Synchronous admin port discovery
+#[must_use]
 pub fn discover_admin_port_sync() -> u16 {
     env::var("NESTGATE_ADMIN_PORT")
         .ok()
@@ -283,6 +278,7 @@ pub fn discover_admin_port_sync() -> u16 {
 }
 
 /// Synchronous tarpc port discovery
+#[must_use]
 pub fn discover_tarpc_port_sync() -> u16 {
     env::var("NESTGATE_TARPC_PORT")
         .ok()

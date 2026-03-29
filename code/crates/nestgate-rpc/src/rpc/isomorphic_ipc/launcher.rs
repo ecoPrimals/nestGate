@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! NestGate Launcher with Isomorphic IPC Discovery
+//! `NestGate` Launcher with Isomorphic IPC Discovery
 //!
 //! **Phase 3: Deployment Coordination**
 //!
@@ -33,19 +33,19 @@
 //!
 //! - ✅ **Zero Hardcoding**: Discovery via XDG-compliant runtime paths
 //! - ✅ **Platform Agnostic**: Works on Linux, macOS, FreeBSD, WSL2
-//! - ✅ **Self-Knowledge**: NestGate discovers its own endpoint
-//! - ✅ **Runtime Discovery**: Other primals discover NestGate at runtime
+//! - ✅ **Self-Knowledge**: `NestGate` discovers its own endpoint
+//! - ✅ **Runtime Discovery**: Other primals discover `NestGate` at runtime
 //! - ✅ **Capability-Based**: Adapts to platform capabilities (Unix vs TCP)
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::path::PathBuf;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 use tracing::{debug, info};
 
-use super::discovery::{discover_ipc_endpoint, IpcEndpoint};
-use super::streams::{connect_endpoint, IpcStream};
+use super::discovery::{IpcEndpoint, discover_ipc_endpoint};
+use super::streams::{IpcStream, connect_endpoint};
 
-/// Default service name for NestGate IPC discovery
+/// Default service name for `NestGate` IPC discovery
 pub const NESTGATE_SERVICE_NAME: &str = "nestgate";
 
 /// Maximum retry attempts for endpoint discovery
@@ -58,7 +58,7 @@ const RETRY_DELAY: Duration = Duration::from_millis(500);
 // ENDPOINT DISCOVERY
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Discover NestGate's IPC endpoint (Unix socket or TCP)
+/// Discover `NestGate`'s IPC endpoint (Unix socket or TCP)
 ///
 /// This function embodies the principle: **Primals discover others at runtime**.
 ///
@@ -76,7 +76,7 @@ const RETRY_DELAY: Duration = Duration::from_millis(500);
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::launcher;
 ///
 /// #[tokio::main]
@@ -91,14 +91,14 @@ pub async fn discover_nestgate_endpoint() -> Result<IpcEndpoint> {
     discover_ipc_endpoint(NESTGATE_SERVICE_NAME).context("Failed to discover NestGate IPC endpoint")
 }
 
-/// Discover NestGate endpoint with retry logic
+/// Discover `NestGate` endpoint with retry logic
 ///
-/// Waits for NestGate to become available, retrying up to `MAX_DISCOVERY_RETRIES` times.
-/// Useful when launching NestGate and immediately trying to connect.
+/// Waits for `NestGate` to become available, retrying up to `MAX_DISCOVERY_RETRIES` times.
+/// Useful when launching `NestGate` and immediately trying to connect.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::launcher;
 ///
 /// #[tokio::main]
@@ -132,9 +132,7 @@ pub async fn discover_nestgate_with_retry() -> Result<IpcEndpoint> {
             }
             Err(e) => {
                 return Err(anyhow!(
-                    "Failed to discover NestGate after {} attempts: {}",
-                    attempts,
-                    e
+                    "Failed to discover NestGate after {attempts} attempts: {e}"
                 ));
             }
         }
@@ -145,24 +143,24 @@ pub async fn discover_nestgate_with_retry() -> Result<IpcEndpoint> {
 // CLIENT CONNECTION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Connect to NestGate using discovered endpoint
+/// Connect to `NestGate` using discovered endpoint
 ///
-/// This is the **primary way** other primals should connect to NestGate.
+/// This is the **primary way** other primals should connect to `NestGate`.
 ///
 /// ## Process
 ///
-/// 1. Discover NestGate endpoint (Unix or TCP)
+/// 1. Discover `NestGate` endpoint (Unix or TCP)
 /// 2. Connect using appropriate transport
 /// 3. Return polymorphic `IpcStream` (works with both)
 ///
 /// ## Deep Debt Principle
 ///
-/// **Zero Configuration**: Caller doesn't need to know if NestGate is using
+/// **Zero Configuration**: Caller doesn't need to know if `NestGate` is using
 /// Unix sockets or TCP - connection is automatic and transparent.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::launcher;
 ///
 /// #[tokio::main]
@@ -186,13 +184,13 @@ pub async fn connect_to_nestgate() -> Result<IpcStream> {
         .context("Failed to connect to NestGate")
 }
 
-/// Connect to NestGate with retry logic
+/// Connect to `NestGate` with retry logic
 ///
-/// Useful when NestGate might be starting up. Retries discovery and connection.
+/// Useful when `NestGate` might be starting up. Retries discovery and connection.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::launcher;
 ///
 /// #[tokio::main]
@@ -217,13 +215,13 @@ pub async fn connect_to_nestgate_with_retry() -> Result<IpcStream> {
 // LAUNCHER UTILITIES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Check if NestGate is currently running
+/// Check if `NestGate` is currently running
 ///
-/// Returns `true` if a NestGate endpoint can be discovered, `false` otherwise.
+/// Returns `true` if a `NestGate` endpoint can be discovered, `false` otherwise.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::launcher;
 ///
 /// #[tokio::main]
@@ -240,9 +238,9 @@ pub async fn is_nestgate_running() -> bool {
     discover_nestgate_endpoint().await.is_ok()
 }
 
-/// Get the XDG-compliant socket path for NestGate
+/// Get the XDG-compliant socket path for `NestGate`
 ///
-/// This is where NestGate will attempt to create its Unix socket (if supported).
+/// This is where `NestGate` will attempt to create its Unix socket (if supported).
 ///
 /// ## XDG Compliance
 ///
@@ -253,7 +251,7 @@ pub async fn is_nestgate_running() -> bool {
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::launcher;
 ///
 /// fn main() -> anyhow::Result<()> {
@@ -265,7 +263,7 @@ pub async fn is_nestgate_running() -> bool {
 pub fn get_nestgate_socket_path() -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR (session-specific, auto-cleaned)
     if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        let path = PathBuf::from(runtime_dir).join(format!("{}.sock", NESTGATE_SERVICE_NAME));
+        let path = PathBuf::from(runtime_dir).join(format!("{NESTGATE_SERVICE_NAME}.sock"));
         return Ok(path);
     }
 
@@ -275,7 +273,7 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
             .join(".local")
             .join("share")
             .join(NESTGATE_SERVICE_NAME)
-            .join(format!("{}.sock", NESTGATE_SERVICE_NAME));
+            .join(format!("{NESTGATE_SERVICE_NAME}.sock"));
         return Ok(path);
     }
 
@@ -285,9 +283,8 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
         use std::os::unix::fs::MetadataExt;
         let uid = std::fs::metadata("/proc/self")
             .ok()
-            .map(|m| m.uid())
-            .unwrap_or(1000); // fallback UID
-        let path = PathBuf::from("/tmp").join(format!("{}-{}.sock", NESTGATE_SERVICE_NAME, uid));
+            .map_or(1000, |m| m.uid()); // fallback UID
+        let path = PathBuf::from("/tmp").join(format!("{NESTGATE_SERVICE_NAME}-{uid}.sock"));
         Ok(path)
     }
 
@@ -300,13 +297,13 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
     }
 }
 
-/// Get the XDG-compliant TCP discovery file path for NestGate
+/// Get the XDG-compliant TCP discovery file path for `NestGate`
 ///
-/// This is where NestGate writes its TCP port information when using TCP fallback.
+/// This is where `NestGate` writes its TCP port information when using TCP fallback.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::launcher;
 ///
 /// fn main() -> anyhow::Result<()> {
@@ -318,7 +315,7 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
 pub fn get_nestgate_tcp_discovery_path() -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR
     if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        let path = PathBuf::from(runtime_dir).join(format!("{}-ipc-port", NESTGATE_SERVICE_NAME));
+        let path = PathBuf::from(runtime_dir).join(format!("{NESTGATE_SERVICE_NAME}-ipc-port"));
         return Ok(path);
     }
 
@@ -328,12 +325,12 @@ pub fn get_nestgate_tcp_discovery_path() -> Result<PathBuf> {
             .join(".local")
             .join("share")
             .join(NESTGATE_SERVICE_NAME)
-            .join(format!("{}-ipc-port", NESTGATE_SERVICE_NAME));
+            .join(format!("{NESTGATE_SERVICE_NAME}-ipc-port"));
         return Ok(path);
     }
 
     // Priority 3: /tmp
-    let path = PathBuf::from("/tmp").join(format!("{}-ipc-port", NESTGATE_SERVICE_NAME));
+    let path = PathBuf::from("/tmp").join(format!("{NESTGATE_SERVICE_NAME}-ipc-port"));
     Ok(path)
 }
 

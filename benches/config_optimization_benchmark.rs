@@ -2,7 +2,7 @@
 //!
 //! Benchmarks to demonstrate the performance improvement from Config → Arc optimization.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::sync::Arc;
 
 // Mock config structure similar to ZfsServiceConfig

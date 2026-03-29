@@ -48,6 +48,7 @@ pub enum TransportProtocol {
 
 impl TransportProtocol {
     /// Get a human-readable description
+    #[must_use]
     pub fn description(&self) -> String {
         match self {
             Self::Http { version, tls } => {
@@ -59,13 +60,14 @@ impl TransportProtocol {
             }
             Self::Tcp { framing } => format!("TCP ({})", framing.description()),
             Self::Quic { .. } => "QUIC (HTTP/3)".to_string(),
-            Self::UnixSocket { path } => format!("Unix Socket ({})", path),
-            Self::Custom { protocol_id, .. } => format!("Custom ({})", protocol_id),
+            Self::UnixSocket { path } => format!("Unix Socket ({path})"),
+            Self::Custom { protocol_id, .. } => format!("Custom ({protocol_id})"),
         }
     }
 
     /// Is this transport secure by default?
-    pub fn is_secure(&self) -> bool {
+    #[must_use]
+    pub const fn is_secure(&self) -> bool {
         match self {
             Self::Http { tls, .. } => tls.is_some(),
             Self::Quic { .. } => true, // QUIC has built-in encryption
@@ -90,7 +92,8 @@ pub enum HttpVersion {
 
 impl HttpVersion {
     /// Get version string
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Http1_0 => "1.0",
             Self::Http1_1 => "1.1",
@@ -164,6 +167,7 @@ pub enum FramingProtocol {
 
 impl FramingProtocol {
     /// Get description
+    #[must_use]
     pub fn description(&self) -> &str {
         match self {
             Self::LengthPrefixed { .. } => "length-prefixed",

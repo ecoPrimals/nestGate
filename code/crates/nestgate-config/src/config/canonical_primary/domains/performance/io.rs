@@ -12,7 +12,7 @@ use nestgate_types::error::{NestGateError, Result};
 ///
 /// Controls I/O strategies, buffering, and read-ahead for maximum throughput.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for IoPerformance
+/// Configuration for `IoPerformance`
 pub struct IoPerformanceConfig {
     /// I/O optimization settings for strategy selection.
     pub optimization: IoOptimizationConfig,
@@ -25,7 +25,7 @@ pub struct IoPerformanceConfig {
 ///
 /// Determines whether I/O operations are blocking, non-blocking, or asynchronous.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for IoOptimization
+/// Configuration for `IoOptimization`
 pub struct IoOptimizationConfig {
     /// Whether I/O optimization is enabled.
     pub enabled: bool,
@@ -52,7 +52,7 @@ pub enum IoStrategy {
 ///
 /// Controls buffer sizes and read-ahead behavior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for IoBuffering
+/// Configuration for `IoBuffering`
 pub struct IoBufferingConfig {
     /// Buffer size in bytes (default: 64KB).
     pub buffer_size: usize,

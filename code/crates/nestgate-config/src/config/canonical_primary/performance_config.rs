@@ -25,7 +25,7 @@ pub struct PerformanceConfig<const MAX_CONNECTIONS: usize = 1000, const BUFFER_S
 }
 /// Performance testing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for PerformanceTesting
+/// Configuration for `PerformanceTesting`
 pub struct PerformanceTestingConfig {
     /// Number of test iterations
     pub test_iterations: usize,

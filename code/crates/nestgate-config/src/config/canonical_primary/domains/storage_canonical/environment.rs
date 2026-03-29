@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageEnvironment
+/// Configuration for `StorageEnvironment`
 pub struct StorageEnvironmentConfig {
     /// Development
     pub development: EnvironmentStorageSettings,
@@ -35,7 +35,7 @@ pub struct EnvironmentStorageSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DeploymentStorage
+/// Configuration for `DeploymentStorage`
 pub struct DeploymentStorageConfig {
     /// Auto Provision
     pub auto_provision: bool,
@@ -44,7 +44,7 @@ pub struct DeploymentStorageConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RuntimeStorage
+/// Configuration for `RuntimeStorage`
 pub struct RuntimeStorageConfig {
     /// Hot Reload
     pub hot_reload: bool,
@@ -53,7 +53,7 @@ pub struct RuntimeStorageConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageFeature
+/// Configuration for `StorageFeature`
 pub struct StorageFeatureConfig {
     /// Feature Flags
     pub feature_flags: HashMap<String, bool>,
@@ -129,7 +129,7 @@ impl StorageEnvironmentConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

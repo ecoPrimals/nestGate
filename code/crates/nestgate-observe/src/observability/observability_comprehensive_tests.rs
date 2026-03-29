@@ -9,8 +9,8 @@
 #[cfg(test)]
 mod observability_comprehensive_tests {
     use super::super::{
-        get_observability, get_system_health, record_metric, ObservabilityConfig,
-        ObservabilityManager,
+        ObservabilityConfig, ObservabilityManager, get_observability, get_system_health,
+        record_metric,
     };
     use std::collections::HashMap;
     use std::time::Duration;

@@ -18,30 +18,30 @@
 
 // ==================== FOUNDATION RE-EXPORTS (nestgate-types) ====================
 
+pub use nestgate_types::config_error;
 pub use nestgate_types::error;
+pub use nestgate_types::internal_error;
 pub use nestgate_types::result_types;
 pub use nestgate_types::unified_enums;
-pub use nestgate_types::config_error;
-pub use nestgate_types::internal_error;
 pub use nestgate_types::validation_error;
 
 // ==================== CONFIG RE-EXPORTS (nestgate-config) ====================
 
-pub use nestgate_config::config;
-pub use nestgate_config::constants;
 pub use nestgate_config::canonical_modernization;
-pub use nestgate_config::defaults;
-pub use nestgate_config::defaults_v2_config;
 pub use nestgate_config::capability_based_config;
 pub use nestgate_config::capability_config;
+pub use nestgate_config::config;
+pub use nestgate_config::constants;
+pub use nestgate_config::defaults;
+pub use nestgate_config::defaults_v2_config;
 pub use nestgate_config::environment;
 pub use nestgate_config::environment_config;
 pub use nestgate_config::sovereignty_config;
 
 // ==================== STORAGE RE-EXPORTS (nestgate-storage) ====================
 
-pub use nestgate_storage::universal_storage;
 pub use nestgate_storage::temporal_storage;
+pub use nestgate_storage::universal_storage;
 
 // ==================== RPC RE-EXPORTS (nestgate-rpc) ====================
 
@@ -73,16 +73,16 @@ pub mod data_sources;
 pub use nestgate_platform::env_process;
 pub use nestgate_platform::linux_proc;
 pub use nestgate_platform::platform;
+/// NAT traversal persistence types and beacon records.
+pub mod nat_traversal;
 /// Error recovery and resilience patterns
 pub mod recovery;
+/// Service metadata storage for Universal IPC Architecture
+pub mod service_metadata;
 /// Canonical trait system with native async
 pub mod traits;
 /// Core types module
 pub mod types;
-/// NAT traversal persistence types and beacon records.
-pub mod nat_traversal;
-/// Service metadata storage for Universal IPC Architecture
-pub mod service_metadata;
 /// Universal adapter for primal integration
 pub mod universal_adapter;
 // ==================== CACHE RE-EXPORTS (nestgate-cache) ====================
@@ -120,18 +120,18 @@ pub use nestgate_security::zero_cost_security_provider;
 pub mod canonical;
 /// Memory layout optimizations
 pub mod memory_layout;
+/// Network services and protocols
+pub mod network;
 /// Performance optimization system
 pub mod performance;
+/// Service implementations with native async
+pub mod services;
 /// SIMD optimizations
 pub mod simd;
 /// Universal providers with zero-cost patterns
 pub mod universal_providers_zero_cost;
 /// Universal traits system
 pub mod universal_traits;
-/// Network services and protocols
-pub mod network;
-/// Service implementations with native async
-pub mod services;
 
 pub use nestgate_cache::cache_math;
 /// Consensus algorithm mathematics
@@ -143,15 +143,15 @@ pub mod validation_predicates;
 
 pub use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 pub use nestgate_config::constants::*;
+pub use nestgate_discovery::universal_primal_discovery::service_registry::ServiceRegistry;
+pub use nestgate_types::error::{CanonicalResult, TestResult};
 pub use nestgate_types::error::{NestGateError, Result};
 pub use nestgate_types::result_types::{ConnectionFactory, HealthCheckFn, ValidatorFn, VoidResult};
-pub use nestgate_types::error::{CanonicalResult, TestResult};
-pub use nestgate_discovery::universal_primal_discovery::service_registry::ServiceRegistry;
+pub use nestgate_types::unified_enums::*;
 pub use traits::{
     CanonicalAutomation, CanonicalMcp, CanonicalNetwork, CanonicalProvider, CanonicalSecurity,
     CanonicalService, CanonicalStorage,
 };
-pub use nestgate_types::unified_enums::*;
 
 // ==================== BACKWARD COMPATIBILITY ====================
 

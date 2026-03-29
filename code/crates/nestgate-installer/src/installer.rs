@@ -348,20 +348,17 @@ impl NestGateInstaller {
         let mut issues = 0;
 
         // Check if installed
-        match self.get_installation_info() {
-            Ok(info) => {
-                println!("{} NestGate is installed", green.apply_to("✓"));
-                println!("   Version: {}", info.version);
-                println!("   Path: {}", info.install_path.display());
-                println!(
-                    "   Service: {}",
-                    if info.service_installed { "Yes" } else { "No" }
-                );
-            }
-            Err(_) => {
-                println!("{} NestGate is not installed", red.apply_to("✗"));
-                issues += 1;
-            }
+        if let Ok(info) = self.get_installation_info() {
+            println!("{} NestGate is installed", green.apply_to("✓"));
+            println!("   Version: {}", info.version);
+            println!("   Path: {}", info.install_path.display());
+            println!(
+                "   Service: {}",
+                if info.service_installed { "Yes" } else { "No" }
+            );
+        } else {
+            println!("{} NestGate is not installed", red.apply_to("✗"));
+            issues += 1;
         }
 
         // Check platform support
@@ -475,13 +472,15 @@ impl NestGateInstaller {
 
         etcetera::base_strategy::choose_base_strategy()
             .ok()
-            .map(|strategy| {
-                strategy
-                    .data_dir()
-                    .join("nestgate")
-                    .join("install-info.json")
-            })
-            .unwrap_or_else(|| PathBuf::from(".nestgate-install-info.json"))
+            .map_or_else(
+                || PathBuf::from(".nestgate-install-info.json"),
+                |strategy| {
+                    strategy
+                        .data_dir()
+                        .join("nestgate")
+                        .join("install-info.json")
+                },
+            )
     }
 }
 
@@ -698,5 +697,12 @@ mod tests {
             features: vec![],
         };
         assert!(!not_installed.service_installed);
+    }
+
+    #[test]
+    fn install_with_default_config_ok() {
+        let installer = NestGateInstaller::new(None).expect("installer");
+        let cfg = InstallerConfig::default();
+        installer.install(&cfg).expect("install noop");
     }
 }

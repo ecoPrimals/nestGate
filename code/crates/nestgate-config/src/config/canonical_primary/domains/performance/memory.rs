@@ -14,7 +14,7 @@ use nestgate_types::error::{NestGateError, Result};
 /// Controls memory pooling, garbage collection, and monitoring to optimize
 /// application memory footprint and performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for MemoryPerformance
+/// Configuration for `MemoryPerformance`
 pub struct MemoryPerformanceConfig {
     /// Memory pool configuration for object pooling.
     pub pool: MemoryPoolConfig,
@@ -30,7 +30,7 @@ pub struct MemoryPerformanceConfig {
 ///
 /// Implements object pooling to reduce allocation overhead and improve performance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MemoryPool
+/// Configuration for `MemoryPool`
 pub struct MemoryPoolConfig {
     /// Initial pool size in bytes (default: 1MB).
     pub initial_size: usize,
@@ -46,7 +46,7 @@ pub struct MemoryPoolConfig {
 ///
 /// Controls when and how memory is reclaimed from unused objects.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for GarbageCollection
+/// Configuration for `GarbageCollection`
 pub struct GarbageCollectionConfig {
     /// Whether garbage collection is enabled (default: true).
     pub enabled: bool,
@@ -62,7 +62,7 @@ pub struct GarbageCollectionConfig {
 ///
 /// Enables alerts and metrics for memory consumption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MemoryMonitoring
+/// Configuration for `MemoryMonitoring`
 pub struct MemoryMonitoringConfig {
     /// Whether memory monitoring is enabled (default: true).
     pub enabled: bool,

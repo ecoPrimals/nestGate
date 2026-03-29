@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-use nestgate_core::error::utilities::safe_env_var_or_default;
 use nestgate_core::error::Result;
+use nestgate_core::error::utilities::safe_env_var_or_default;
 
 use crate::config::ZfsConfig;
 use tracing::warn;
@@ -222,13 +222,13 @@ pub struct ZfsRequestHandler {
 impl ZfsRequestHandler {
     /// Create a new ZFS request handler
     #[must_use]
-    pub fn new(config: ZfsConfig) -> Self {
+    pub const fn new(config: ZfsConfig) -> Self {
         Self { config }
     }
 
     /// Get the configuration
     #[must_use]
-    pub fn config(&self) -> &ZfsConfig {
+    pub const fn config(&self) -> &ZfsConfig {
         &self.config
     }
 
@@ -236,7 +236,7 @@ impl ZfsRequestHandler {
     #[must_use]
     pub fn get_default_pool_name(&self) -> String {
         // Use environment variable or fallback to default
-        safe_env_var_or_default("NESTGATE_DEFAULT_POOL", "tank").to_string()
+        safe_env_var_or_default("NESTGATE_DEFAULT_POOL", "tank")
     }
 
     /// Check if performance monitoring is enabled
@@ -277,7 +277,7 @@ impl ZfsRequestHandler {
                 // Additional operations can be implemented here as needed
                 // Current implementation covers the core ZFS operations
                 Ok(ZfsResponse::Success {
-                    message: "Operation completed successfully".to_string().to_string(),
+                    message: "Operation completed successfully".to_string(),
                 })
             }
         }
@@ -296,7 +296,7 @@ impl ZfsRequestHandler {
             // Fallback to development environment simulation
             warn!("ZFS not available, using development environment simulation");
             let pools = vec![PoolInfo {
-                name: pool_name.to_string(),
+                name: pool_name.clone(),
                 state: "ONLINE".to_string(),
                 size: "1TB".to_string(),
                 allocated: "500GB".to_string(),

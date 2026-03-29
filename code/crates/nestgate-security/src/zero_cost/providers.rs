@@ -35,7 +35,7 @@ impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::zero_cost::providers::ZeroCostMemoryCache;
     /// let cache: ZeroCostMemoryCache<1024> = ZeroCostMemoryCache::new();
     /// assert_eq!(cache.capacity(), 1024);
@@ -56,7 +56,7 @@ impl<const CAPACITY: usize> ZeroCostMemoryCache<CAPACITY> {
     ///
     /// The maximum number of entries this cache can hold
     #[must_use]
-    pub fn capacity(&self) -> usize {
+    pub const fn capacity(&self) -> usize {
         CAPACITY
     }
 }
@@ -101,13 +101,13 @@ impl ZeroCostJwtProvider {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::zero_cost::providers::ZeroCostJwtProvider;
     /// let secret = [0u8; 32]; // In production, use a secure random key
     /// let provider = ZeroCostJwtProvider::new(secret);
     /// ```
     #[must_use]
-    pub fn new(secret: [u8; 32]) -> Self {
+    pub const fn new(secret: [u8; 32]) -> Self {
         Self { secret }
     }
 
@@ -122,7 +122,7 @@ impl ZeroCostJwtProvider {
     ///
     /// A reference to the 32-byte secret key
     #[must_use]
-    pub fn secret(&self) -> &[u8; 32] {
+    pub const fn secret(&self) -> &[u8; 32] {
         &self.secret
     }
 
@@ -141,13 +141,13 @@ impl ZeroCostJwtProvider {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::zero_cost::providers::ZeroCostJwtProvider;
     /// # let provider = ZeroCostJwtProvider::new([0u8; 32]);
     /// let is_valid = provider.verify_signature("eyJhbGc...");
     /// ```
     #[must_use]
-    pub fn verify_signature(&self, token: &str) -> bool {
+    pub const fn verify_signature(&self, token: &str) -> bool {
         // Simplified JWT verification using the secret
         !token.is_empty() && self.secret[0] != 0
     }
@@ -196,12 +196,12 @@ impl ZeroCostFileStorage {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::zero_cost::providers::ZeroCostFileStorage;
     /// let storage = ZeroCostFileStorage::new("/var/lib/nestgate".to_string());
     /// ```
     #[must_use]
-    pub fn new(base_path: String) -> Self {
+    pub const fn new(base_path: String) -> Self {
         Self { base_path }
     }
 

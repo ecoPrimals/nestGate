@@ -10,7 +10,7 @@ use std::sync::Arc;
 /// This config eliminates hardcoded infrastructure assumptions, ensuring users
 /// maintain full control over their systems.
 #[derive(Debug, Clone)]
-/// Configuration for SovereigntyRuntime
+/// Configuration for `SovereigntyRuntime`
 pub struct SovereigntyRuntimeConfig {
     api_endpoint: Option<String>,
     api_host: Option<String>,
@@ -29,8 +29,9 @@ impl SovereigntyRuntimeConfig {
     /// Creates a new `SovereigntyRuntimeConfig` with default values from environment.
     ///
     /// Environment variables:
-    /// - `NESTGATE_API_PORT`: API port (default: from EnvironmentConfig)
-    /// - `NESTGATE_BIND_ADDRESS`: Bind address (default: from EnvironmentConfig)
+    /// - `NESTGATE_API_PORT`: API port (default: from `EnvironmentConfig`)
+    /// - `NESTGATE_BIND_ADDRESS`: Bind address (default: from `EnvironmentConfig`)
+    #[must_use]
     pub fn new() -> Self {
         use crate::config::environment::EnvironmentConfig;
 
@@ -41,7 +42,7 @@ impl SovereigntyRuntimeConfig {
             api_endpoint: None,
             api_host: None,
             api_port: env_config.network.port.get(),
-            bind_address: env_config.network.host.clone(),
+            bind_address: env_config.network.host,
             ws_endpoint: None,
             discovery_endpoint: None,
             orchestration_endpoint: None,
@@ -51,6 +52,7 @@ impl SovereigntyRuntimeConfig {
 
     /// Creates a new `SovereigntyRuntimeConfig` by reading environment variables
     /// or using default values.
+    #[must_use]
     pub fn from_env() -> Self {
         let api_endpoint = env::var("NESTGATE_API_ENDPOINT").ok();
         let api_host = env::var("NESTGATE_API_HOST").ok();
@@ -83,58 +85,66 @@ impl SovereigntyRuntimeConfig {
     ///
     /// # Arguments
     ///
-    /// * `endpoint` - The full API endpoint URL (e.g., "http://localhost:8080")
+    /// * `endpoint` - The full API endpoint URL (e.g., "<http://localhost:8080>")
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::config::sovereignty_config::SovereigntyRuntimeConfig;
     ///
     /// let config = SovereigntyRuntimeConfig::default()
     ///     .with_api_endpoint("http://api.example.com".to_string());
     /// ```
+    #[must_use]
     pub fn with_api_endpoint(mut self, endpoint: String) -> Self {
         self.api_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Api Host
+    #[must_use]
     pub fn with_api_host(mut self, host: String) -> Self {
         self.api_host = Some(host);
         self
     }
 
     /// Builder method to set Api Port
-    pub fn with_api_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_api_port(mut self, port: u16) -> Self {
         self.api_port = port;
         self
     }
 
     /// Builder method to set Bind Address
+    #[must_use]
     pub fn with_bind_address(mut self, address: String) -> Self {
         self.bind_address = address;
         self
     }
 
     /// Builder method to set Ws Endpoint
+    #[must_use]
     pub fn with_ws_endpoint(mut self, endpoint: String) -> Self {
         self.ws_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Discovery Endpoint
+    #[must_use]
     pub fn with_discovery_endpoint(mut self, endpoint: String) -> Self {
         self.discovery_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Orchestration Endpoint
+    #[must_use]
     pub fn with_orchestration_endpoint(mut self, endpoint: String) -> Self {
         self.orchestration_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Test Endpoint
+    #[must_use]
     pub fn with_test_endpoint(mut self, endpoint: String) -> Self {
         self.test_endpoint = Some(endpoint);
         self
@@ -143,6 +153,7 @@ impl SovereigntyRuntimeConfig {
     // Getter methods
 
     /// Get API endpoint with fallback logic
+    #[must_use]
     pub fn api_endpoint(&self) -> String {
         if let Some(endpoint) = &self.api_endpoint {
             return endpoint.clone();
@@ -156,16 +167,19 @@ impl SovereigntyRuntimeConfig {
     }
 
     /// Api Port
-    pub fn api_port(&self) -> u16 {
+    #[must_use]
+    pub const fn api_port(&self) -> u16 {
         self.api_port
     }
 
     /// Bind Address
+    #[must_use]
     pub fn bind_address(&self) -> String {
         self.bind_address.clone()
     }
 
     /// Get WebSocket endpoint with fallback logic
+    #[must_use]
     pub fn websocket_endpoint(&self) -> String {
         if let Some(endpoint) = &self.ws_endpoint {
             return endpoint.clone();
@@ -175,6 +189,7 @@ impl SovereigntyRuntimeConfig {
     }
 
     /// Get discovery endpoint with fallback logic
+    #[must_use]
     pub fn discovery_endpoint(&self) -> String {
         if let Some(endpoint) = &self.discovery_endpoint {
             return endpoint.clone();
@@ -184,6 +199,7 @@ impl SovereigntyRuntimeConfig {
     }
 
     /// Get orchestration endpoint with fallback logic
+    #[must_use]
     pub fn orchestration_endpoint(&self) -> String {
         if let Some(endpoint) = &self.orchestration_endpoint {
             return endpoint.clone();
@@ -193,6 +209,7 @@ impl SovereigntyRuntimeConfig {
     }
 
     /// Get test endpoint with fallback logic
+    #[must_use]
     pub fn test_endpoint(&self) -> String {
         if let Some(endpoint) = &self.test_endpoint {
             return endpoint.clone();

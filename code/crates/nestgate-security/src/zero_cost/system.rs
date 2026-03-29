@@ -33,7 +33,7 @@ where
     Storage: ZeroCostStorageProvider<String, Vec<u8>>,
 {
     /// Create new zero-cost system - compile-time composition
-    pub fn new(cache: Cache, security: Security, storage: Storage) -> Self {
+    pub const fn new(cache: Cache, security: Security, storage: Storage) -> Self {
         Self {
             cache,
             security,
@@ -76,7 +76,7 @@ where
     }
 
     /// Get system metrics
-    pub fn metrics(&self) -> ZeroCostMetrics {
+    pub const fn metrics(&self) -> ZeroCostMetrics {
         ZeroCostMetrics {
             requests_processed: 1000,   // Would be tracked in real implementation
             average_latency_ns: 50_000, // Would be measured in real implementation
@@ -84,7 +84,7 @@ where
     }
 
     /// Compile-time constants
-    pub fn max_size(&self) -> usize {
+    pub const fn max_size(&self) -> usize {
         MAX_SIZE
     }
 
@@ -96,22 +96,22 @@ where
     /// # Returns
     ///
     /// The timeout duration in milliseconds
-    pub fn timeout_ms(&self) -> u64 {
+    pub const fn timeout_ms(&self) -> u64 {
         TIMEOUT_MS
     }
 
     /// Get cache provider reference
-    pub fn cache(&self) -> &Cache {
+    pub const fn cache(&self) -> &Cache {
         &self.cache
     }
 
     /// Get security provider reference
-    pub fn security(&self) -> &Security {
+    pub const fn security(&self) -> &Security {
         &self.security
     }
 
     /// Get storage provider reference
-    pub fn storage(&self) -> &Storage {
+    pub const fn storage(&self) -> &Storage {
         &self.storage
     }
 }
@@ -133,7 +133,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> Default
 impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZE, TIMEOUT_MS> {
     /// Create new builder
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
@@ -166,7 +166,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
     ///
     /// The maximum size configured at compile time
     #[must_use]
-    pub fn max_size() -> usize {
+    pub const fn max_size() -> usize {
         MAX_SIZE
     }
 
@@ -179,7 +179,7 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
     ///
     /// The timeout duration in milliseconds
     #[must_use]
-    pub fn timeout_ms() -> u64 {
+    pub const fn timeout_ms() -> u64 {
         TIMEOUT_MS
     }
 }

@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 /// Unified RPC request that can be sent over either tarpc or JSON RPC
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for UnifiedRpc operation
+/// Request parameters for `UnifiedRpc` operation
 pub struct UnifiedRpcRequest {
     /// Unique request identifier
     pub id: Uuid,
@@ -61,7 +61,7 @@ impl Default for RequestPriority {
 
 /// Unified RPC response
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Response data for UnifiedRpc operation
+/// Response data for `UnifiedRpc` operation
 pub struct UnifiedRpcResponse {
     /// Request ID this response corresponds to
     pub request_id: Uuid,
@@ -105,7 +105,7 @@ pub struct RpcStreamEvent {
 }
 /// RPC connection type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-/// Types of RpcConnection
+/// Types of `RpcConnection`
 pub enum RpcConnectionType {
     /// Binary RPC via tarpc (for security, high-performance)
     Tarpc,
@@ -249,5 +249,47 @@ impl From<serde_json::Error> for RpcError {
     /// From
     fn from(err: serde_json::Error) -> Self {
         Self::Serialization(err.to_string())
+    }
+}
+
+#[cfg(test)]
+mod round5_rpc_types_tests {
+    use super::*;
+
+    #[test]
+    fn round5_rpc_error_from_serde_json_impl() {
+        let je = serde_json::from_str::<serde_json::Value>("oops").unwrap_err();
+        let err = RpcError::from(je);
+        assert!(matches!(err, RpcError::Serialization(_)));
+        assert!(err.to_string().contains("Serialization error"));
+    }
+
+    #[test]
+    fn round5_rpc_error_display_variants() {
+        assert!(
+            RpcError::ConnectionFailed("x".to_string())
+                .to_string()
+                .contains("Connection failed")
+        );
+        assert!(
+            RpcError::Timeout("t".to_string())
+                .to_string()
+                .contains("timeout")
+        );
+        assert!(
+            RpcError::InvalidConfiguration("c".to_string())
+                .to_string()
+                .contains("Invalid configuration")
+        );
+        assert!(
+            RpcError::StreamError("s".to_string())
+                .to_string()
+                .contains("Stream error")
+        );
+        assert!(
+            RpcError::Internal("i".to_string())
+                .to_string()
+                .contains("Internal error")
+        );
     }
 }

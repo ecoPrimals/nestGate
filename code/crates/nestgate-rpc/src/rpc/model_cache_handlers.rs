@@ -3,10 +3,11 @@
 
 //! Model Cache JSON-RPC Handlers
 //!
-//! TODO: wire to nestgate-core `services::storage` for persistent model metadata.
+//! **Integration:** Persistent model metadata belongs in `nestgate-core` `services::storage` when
+//! this RPC surface is linked to the core storage manager.
 
 use nestgate_types::error::{NestGateError, Result};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::info;
 
 /// Model key prefix for namespace isolation
@@ -14,72 +15,94 @@ const MODEL_KEY_PREFIX: &str = "model:";
 /// Model metadata key prefix
 const MODEL_META_PREFIX: &str = "model_meta:";
 
-/// model.register — stub until nestgate-core storage is wired.
-pub(crate) async fn model_register(params: &Option<Value>) -> Result<Value> {
+/// model.register — not implemented until nestgate-core storage is wired.
+pub async fn model_register(params: &Option<Value>) -> Result<Value> {
+    tracing::debug!("feature pending: model.register via nestgate-core storage");
     let _ = (MODEL_KEY_PREFIX, MODEL_META_PREFIX, params);
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core storage (model.register)",
     ))
 }
 
-/// model.exists — stub.
-pub(crate) async fn model_exists(params: &Option<Value>) -> Result<Value> {
+/// model.exists — not implemented until nestgate-core storage is wired.
+pub async fn model_exists(params: &Option<Value>) -> Result<Value> {
+    tracing::debug!("feature pending: model.exists via nestgate-core storage");
     let _ = params;
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core storage (model.exists)",
     ))
 }
 
-/// model.locate — stub.
-pub(crate) async fn model_locate(params: &Option<Value>) -> Result<Value> {
+/// model.locate — not implemented until nestgate-core storage is wired.
+pub async fn model_locate(params: &Option<Value>) -> Result<Value> {
+    tracing::debug!("feature pending: model.locate via nestgate-core storage");
     let _ = params;
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core storage (model.locate)",
     ))
 }
 
-/// model.metadata — stub.
-pub(crate) async fn model_metadata(params: &Option<Value>) -> Result<Value> {
+/// model.metadata — not implemented until nestgate-core storage is wired.
+pub async fn model_metadata(params: &Option<Value>) -> Result<Value> {
+    tracing::debug!("feature pending: model.metadata via nestgate-core storage");
     let _ = params;
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-core storage (model.metadata)",
     ))
 }
 
-/// discover_capabilities - Return all available JSON-RPC methods
-pub(crate) async fn discover_capabilities() -> Result<Value> {
+/// All JSON-RPC method names supported by the Unix socket server (`unix_socket_server`).
+/// Keep in sync with `handle_request` in `unix_socket_server/mod.rs`.
+pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
+    "health.liveness",
+    "health.readiness",
+    "health.check",
+    "health",
+    "capabilities.list",
+    "discover_capabilities",
+    "storage.store",
+    "storage.retrieve",
+    "storage.exists",
+    "storage.delete",
+    "storage.list",
+    "storage.stats",
+    "storage.store_blob",
+    "storage.retrieve_blob",
+    "model.register",
+    "model.exists",
+    "model.locate",
+    "model.metadata",
+    "templates.store",
+    "templates.retrieve",
+    "templates.list",
+    "templates.community_top",
+    "audit.store_execution",
+    "nat.store_traversal_info",
+    "nat.retrieve_traversal_info",
+    "beacon.store",
+    "beacon.retrieve",
+    "beacon.list",
+    "beacon.delete",
+];
+
+/// capabilities.list — wateringHole semantic naming; lists all supported method names.
+pub async fn capabilities_list() -> Result<Value> {
+    info!("🔍 capabilities.list called");
+    Ok(json!({
+        "methods": UNIX_SOCKET_SUPPORTED_METHODS,
+        "primal": "nestgate",
+        "version": env!("CARGO_PKG_VERSION"),
+    }))
+}
+
+/// `discover_capabilities` - Return all available JSON-RPC methods
+pub async fn discover_capabilities() -> Result<Value> {
     info!("🔍 discover_capabilities called");
 
     Ok(json!({
         "primal": "nestgate",
         "version": env!("CARGO_PKG_VERSION"),
-        "capabilities": [
-            "health",
-            "discover_capabilities",
-            "storage.store",
-            "storage.retrieve",
-            "storage.exists",
-            "storage.delete",
-            "storage.list",
-            "storage.stats",
-            "storage.store_blob",
-            "storage.retrieve_blob",
-            "model.register",
-            "model.exists",
-            "model.locate",
-            "model.metadata",
-            "templates.store",
-            "templates.retrieve",
-            "templates.list",
-            "templates.community_top",
-            "audit.store_execution",
-            "nat.store_traversal_info",
-            "nat.retrieve_traversal_info",
-            "beacon.store",
-            "beacon.retrieve",
-            "beacon.list",
-            "beacon.delete"
-        ],
+        "capabilities": UNIX_SOCKET_SUPPORTED_METHODS,
         "backend": {
             "type": "filesystem",
             "features": {
@@ -109,6 +132,16 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    async fn test_capabilities_list_matches_supported_methods() {
+        let value = capabilities_list().await.unwrap();
+        assert_eq!(value["primal"], "nestgate");
+        assert_eq!(value["version"], env!("CARGO_PKG_VERSION"));
+        let methods = value["methods"].as_array().unwrap();
+        let names: Vec<&str> = methods.iter().filter_map(|v| v.as_str()).collect();
+        assert_eq!(names, UNIX_SOCKET_SUPPORTED_METHODS);
+    }
+
+    #[tokio::test]
     async fn test_discover_capabilities_returns_valid_json() {
         let result = discover_capabilities().await;
         assert!(result.is_ok());
@@ -121,6 +154,8 @@ mod tests {
 
         let caps = value["capabilities"].as_array().unwrap();
         let cap_strings: Vec<&str> = caps.iter().filter_map(|v| v.as_str()).collect();
+        assert!(cap_strings.contains(&"health.liveness"));
+        assert!(cap_strings.contains(&"capabilities.list"));
         assert!(cap_strings.contains(&"health"));
         assert!(cap_strings.contains(&"storage.store"));
         assert!(cap_strings.contains(&"model.register"));

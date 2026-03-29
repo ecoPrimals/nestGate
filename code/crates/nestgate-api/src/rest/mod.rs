@@ -15,12 +15,12 @@ pub mod rpc;
 pub mod websocket; // ✅ WebSocket module implemented
 
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::{Mutex, RwLock};
+use dashmap::DashMap;
+use std::sync::{Arc, OnceLock};
+use tokio::sync::RwLock;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use uuid::Uuid;
 
@@ -48,13 +48,13 @@ use nestgate_core::universal_storage::{AutoConfigurator, StorageDetector};
 /// Apistate
 pub struct ApiState {
     /// ZFS engines for different datasets (placeholder)
-    pub zfs_engines: Arc<RwLock<HashMap<String, String>>>,
+    pub zfs_engines: Arc<DashMap<String, String>>,
     /// Storage detector for discovering available storage
-    pub storage_detector: Arc<Mutex<StorageDetector>>,
+    pub storage_detector: Arc<RwLock<StorageDetector>>,
     /// Auto-configurator for optimal storage setup
-    pub auto_configurator: Arc<Mutex<Option<AutoConfigurator>>>,
+    pub auto_configurator: Arc<OnceLock<AutoConfigurator>>,
     /// Unified RPC manager for security/orchestration communication
-    pub rpc_manager: Arc<Mutex<Option<UnifiedRpcManager>>>,
+    pub rpc_manager: Arc<OnceLock<UnifiedRpcManager>>,
 }
 impl ApiState {
     /// Create new API state with RPC capabilities
@@ -69,10 +69,10 @@ impl ApiState {
         let storage_detector = StorageDetector::new();
 
         Ok(Self {
-            zfs_engines: Arc::new(RwLock::new(HashMap::new())),
-            storage_detector: Arc::new(Mutex::new(storage_detector)),
-            auto_configurator: Arc::new(Mutex::new(None)),
-            rpc_manager: Arc::new(Mutex::new(None)),
+            zfs_engines: Arc::new(DashMap::new()),
+            storage_detector: Arc::new(RwLock::new(storage_detector)),
+            auto_configurator: Arc::new(OnceLock::new()),
+            rpc_manager: Arc::new(OnceLock::new()),
         })
     }
 
@@ -85,9 +85,7 @@ impl ApiState {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn init_rpc_connections(&self) -> Result<()> {
-        let mut rpc_manager_opt = self.rpc_manager.lock().await;
-
-        if rpc_manager_opt.is_none() {
+        self.rpc_manager.get_or_init(|| {
             let rpc_manager = UnifiedRpcManager::new();
 
             // ✅ UNIVERSAL ADAPTER PATTERN - Pure capability-based discovery
@@ -120,16 +118,16 @@ impl ApiState {
                 // rpc_manager.set_universal_router(universal_router);
             }
 
-            *rpc_manager_opt = Some(rpc_manager);
             tracing::info!("🔗 RPC connections initialized");
-        }
+            rpc_manager
+        });
 
         Ok(())
     }
 
     /// Get RPC manager
     #[must_use]
-    pub fn get_rpc_manager(&self) -> Option<Arc<Mutex<Option<UnifiedRpcManager>>>> {
+    pub fn get_rpc_manager(&self) -> Option<Arc<OnceLock<UnifiedRpcManager>>> {
         Some(Arc::clone(&self.rpc_manager))
     }
 }
@@ -295,21 +293,19 @@ async fn handle_rpc_call(
     axum::extract::State(state): axum::extract::State<ApiState>,
     axum::Json(request): axum::Json<UnifiedRpcRequest>,
 ) -> std::result::Result<axum::Json<DataResponse<UnifiedRpcResponse>>, axum::Json<DataError>> {
-    let rpc_manager_opt = state.rpc_manager.lock().await;
-    if let Some(rpc_manager) = rpc_manager_opt.as_ref() {
-        let target = request.target.clone();
-        match rpc_manager.call(&target, request).await {
-            Ok(response) => Ok(axum::Json(DataResponse::new(response))),
-            Err(_e) => Err(axum::Json(DataError::new(
-                "RPC call failed: self.base_url".to_string(),
-                "RPC_CALL_FAILED".to_string(),
-            ))),
-        }
-    } else {
-        Err(axum::Json(DataError::new(
+    let Some(rpc_manager) = state.rpc_manager.get() else {
+        return Err(axum::Json(DataError::new(
             "RPC manager not initialized".to_string(),
             "RPC_NOT_AVAILABLE".to_string(),
-        )))
+        )));
+    };
+    let target = request.target.clone();
+    match rpc_manager.call(&target, request).await {
+        Ok(response) => Ok(axum::Json(DataResponse::new(response))),
+        Err(_e) => Err(axum::Json(DataError::new(
+            "RPC call failed: self.base_url".to_string(),
+            "RPC_CALL_FAILED".to_string(),
+        ))),
     }
 }
 
@@ -318,36 +314,34 @@ async fn handle_rpc_stream(
     axum::extract::State(state): axum::extract::State<ApiState>,
     axum::Json(request): axum::Json<UnifiedRpcRequest>,
 ) -> std::result::Result<axum::Json<DataResponse<serde_json::Value>>, axum::Json<DataError>> {
-    let rpc_manager_opt = state.rpc_manager.lock().await;
-    if let Some(rpc_manager) = rpc_manager_opt.as_ref() {
-        match rpc_manager.start_bidirectional_stream(request) {
-            Ok((_tx, mut rx)) => {
-                let stream_id = Uuid::new_v4();
-
-                // Spawn task to handle stream events
-                tokio::spawn(async move {
-                    while let Some(event) = rx.recv().await {
-                        tracing::debug!("RPC stream event: {:?}", event);
-                        // In a real implementation, this would be sent via WebSocket
-                    }
-                });
-
-                Ok(axum::Json(DataResponse::new(serde_json::json!({
-                    "stream_id": stream_id,
-                    "status": "started",
-                    "message": "Bidirectional RPC stream initiated"
-                }))))
-            }
-            Err(_e) => Err(axum::Json(DataError::new(
-                "Failed to start RPC stream: self.base_url".to_string(),
-                "RPC_STREAM_FAILED".to_string(),
-            ))),
-        }
-    } else {
-        Err(axum::Json(DataError::new(
+    let Some(rpc_manager) = state.rpc_manager.get() else {
+        return Err(axum::Json(DataError::new(
             "RPC manager not initialized".to_string(),
             "RPC_NOT_AVAILABLE".to_string(),
-        )))
+        )));
+    };
+    match rpc_manager.start_bidirectional_stream(request) {
+        Ok((_tx, mut rx)) => {
+            let stream_id = Uuid::new_v4();
+
+            // Spawn task to handle stream events
+            tokio::spawn(async move {
+                while let Some(event) = rx.recv().await {
+                    tracing::debug!("RPC stream event: {:?}", event);
+                    // In a real implementation, this would be sent via WebSocket
+                }
+            });
+
+            Ok(axum::Json(DataResponse::new(serde_json::json!({
+                "stream_id": stream_id,
+                "status": "started",
+                "message": "Bidirectional RPC stream initiated"
+            }))))
+        }
+        Err(_e) => Err(axum::Json(DataError::new(
+            "Failed to start RPC stream: self.base_url".to_string(),
+            "RPC_STREAM_FAILED".to_string(),
+        ))),
     }
 }
 
@@ -355,8 +349,7 @@ async fn handle_rpc_stream(
 async fn handle_rpc_health(
     axum::extract::State(state): axum::extract::State<ApiState>,
 ) -> std::result::Result<axum::Json<DataResponse<serde_json::Value>>, axum::Json<DataError>> {
-    let rpc_manager_opt = state.rpc_manager.lock().await;
-    if let Some(rpc_manager) = rpc_manager_opt.as_ref() {
+    if let Some(rpc_manager) = state.rpc_manager.get() {
         let health_status = rpc_manager.get_health_status();
         Ok(axum::Json(DataResponse::new(serde_json::json!({
             "rpc_connections": health_status,

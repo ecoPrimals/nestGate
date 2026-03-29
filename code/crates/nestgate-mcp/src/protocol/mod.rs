@@ -3,7 +3,7 @@
 
 //! **MCP PROTOCOL MODULE**
 //!
-//! Advanced MCP protocol handling integrating enhanced NestGate capabilities
+//! Advanced MCP protocol handling integrating enhanced `NestGate` capabilities
 //! with v2 orchestrator-centric architecture.
 //!
 //! ## Module Structure

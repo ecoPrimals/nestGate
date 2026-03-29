@@ -5,7 +5,7 @@ use chrono::Utc;
 /// **RETURN BUILDERS - JSON BUILDERS MODULE**
 /// Contains JSON and API response construction functions.
 /// Extracted from the large `return_builders.rs` to achieve file size compliance.
-use serde_json::{json, Value as JsonValue};
+use serde_json::{Value as JsonValue, json};
 use std::collections::HashMap;
 /// Build successful API response
 /// **PURE FUNCTION**: API response construction with success status
@@ -111,7 +111,7 @@ pub fn build_json_response(
 mod tests {
     use super::*;
     use crate::canonical_types::ResponseStatus;
-    use serde_json::{json, Value as JsonValue};
+    use serde_json::{Value as JsonValue, json};
 
     #[test]
     fn build_api_success_sets_success_status_and_data() {

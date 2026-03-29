@@ -18,12 +18,12 @@ pub struct CanonicalConfigBuilder<
     config: NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>,
 }
 impl<
-        const MAX_CONNECTIONS: usize,
-        const BUFFER_SIZE: usize,
-        const TIMEOUT_MS: u64,
-        // Api Port (const generic parameter)
-        const API_PORT: u16,
-    > CanonicalConfigBuilder<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
+    const MAX_CONNECTIONS: usize,
+    const BUFFER_SIZE: usize,
+    const TIMEOUT_MS: u64,
+    // Api Port (const generic parameter)
+    const API_PORT: u16,
+> CanonicalConfigBuilder<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
     /// Create a new builder with default values
     #[must_use]
@@ -71,12 +71,12 @@ impl<
 }
 
 impl<
-        const MAX_CONNECTIONS: usize,
-        const BUFFER_SIZE: usize,
-        const TIMEOUT_MS: u64,
-        // Api Port (const generic parameter)
-        const API_PORT: u16,
-    > Default for CanonicalConfigBuilder<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
+    const MAX_CONNECTIONS: usize,
+    const BUFFER_SIZE: usize,
+    const TIMEOUT_MS: u64,
+    // Api Port (const generic parameter)
+    const API_PORT: u16,
+> Default for CanonicalConfigBuilder<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
     /// Returns the default instance
     fn default() -> Self {

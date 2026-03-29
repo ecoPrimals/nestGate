@@ -11,7 +11,7 @@
 //! - ZfsOperation enum
 
 use nestgate_zfs::error::{
-    create_zfs_error, zfs_command_error, zfs_operation_error, ZfsErrorBuilder, ZfsOperation,
+    ZfsErrorBuilder, ZfsOperation, create_zfs_error, zfs_command_error, zfs_operation_error,
 };
 use nestgate_zfs::types::ZfsError;
 use std::io;

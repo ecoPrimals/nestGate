@@ -107,22 +107,20 @@ impl ZfsConfig {
             .collect();
 
         let mut datasets = HashMap::new();
-        if Self::zfs_cli_available() {
-            if let Ok(ds_out) = Command::new("zfs")
+        if Self::zfs_cli_available()
+            && let Ok(ds_out) = Command::new("zfs")
                 .args(["list", "-H", "-o", "name"])
                 .output()
-            {
-                if ds_out.status.success() {
-                    let ds_stdout = String::from_utf8_lossy(&ds_out.stdout);
-                    for line in ds_stdout.lines() {
-                        let name = line.trim();
-                        if name.is_empty() {
-                            continue;
-                        }
-                        if let Some((pool, _rest)) = name.split_once('/') {
-                            datasets.insert(name.to_string(), pool.to_string());
-                        }
-                    }
+            && ds_out.status.success()
+        {
+            let ds_stdout = String::from_utf8_lossy(&ds_out.stdout);
+            for line in ds_stdout.lines() {
+                let name = line.trim();
+                if name.is_empty() {
+                    continue;
+                }
+                if let Some((pool, _rest)) = name.split_once('/') {
+                    datasets.insert(name.to_string(), pool.to_string());
                 }
             }
         }
@@ -170,7 +168,7 @@ impl Default for ZfsConfig {
     since = "0.1.0",
     note = "Development stub only. Use nestgate_zfs::operations::production::ProductionZfsOperations for production."
 )]
-/// Manager for ProductionZfs operations
+/// Manager for `ProductionZfs` operations
 pub struct ProductionZfsManager {
     config: ZfsConfig,
 }

@@ -370,10 +370,12 @@ mod tests {
         // Next request should fail fast
         let result = cb.execute(|| async { Ok("success") }).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Circuit breaker open"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Circuit breaker open")
+        );
     }
 
     #[tokio::test]

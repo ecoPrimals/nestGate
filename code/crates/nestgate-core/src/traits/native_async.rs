@@ -167,7 +167,7 @@ pub trait NativeAsyncSecurityProvider: Send + Sync + 'static {
 
     /// Refresh token
     fn refresh_token(&self, token: Self::Token)
-        -> impl Future<Output = Result<Self::Token>> + Send;
+    -> impl Future<Output = Result<Self::Token>> + Send;
 
     /// Revoke token
     fn revoke_token(&self, token: Self::Token) -> impl Future<Output = Result<()>> + Send;
@@ -190,7 +190,7 @@ pub trait NativeAsyncApiHandler: Send + Sync + 'static {
     type Response: Send + Sync;
     /// Handle API request
     fn handle(&self, request: Self::Request)
-        -> impl Future<Output = Result<Self::Response>> + Send;
+    -> impl Future<Output = Result<Self::Response>> + Send;
 
     /// Validate request
     fn validate_request(&self, request: &Self::Request) -> impl Future<Output = Result<()>> + Send;
@@ -245,7 +245,7 @@ pub trait NativeAsyncAutomationService: Send + Sync + 'static {
     type Task: Send + Sync;
     /// Execute workflow
     fn execute_workflow(&self, workflow: Self::Workflow)
-        -> impl Future<Output = Result<()>> + Send;
+    -> impl Future<Output = Result<()>> + Send;
 
     /// Schedule task
     fn schedule_task(

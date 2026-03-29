@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Capability-based service architecture for NestGate
+//! Capability-based service architecture for `NestGate`
 //!
 //! This module implements a capability-based service discovery and integration
 //! system that replaces hardcoded service names with dynamic, capability-driven
@@ -64,30 +64,30 @@
 //! # Supported Capabilities
 //!
 //! ## Security (7 capabilities)
-//! - Authentication, Authorization, Encryption, KeyManagement
-//! - ThreatDetection, AuditLogging, CertificateManagement
+//! - Authentication, Authorization, Encryption, `KeyManagement`
+//! - `ThreatDetection`, `AuditLogging`, `CertificateManagement`
 //!
 //! ## Networking (8 capabilities)
 //! - TCP, UDP, HTTP, WebSocket, GRPC
-//! - LoadBalancing, ServiceMesh, DNS
+//! - `LoadBalancing`, `ServiceMesh`, DNS
 //!
 //! ## AI (7 capabilities)
-//! - Inference, Training, ModelServing, FeatureExtraction
-//! - NaturalLanguage, ComputerVision, ReinforcementLearning
+//! - Inference, Training, `ModelServing`, `FeatureExtraction`
+//! - `NaturalLanguage`, `ComputerVision`, `ReinforcementLearning`
 //!
 //! ## Orchestration (6 capabilities)
-//! - ContainerManagement, ServiceScheduling, ResourceAllocation
-//! - HealthMonitoring, AutoScaling, ServiceDiscovery
+//! - `ContainerManagement`, `ServiceScheduling`, `ResourceAllocation`
+//! - `HealthMonitoring`, `AutoScaling`, `ServiceDiscovery`
 //!
 //! ## Storage (6 capabilities)
-//! - ObjectStorage, BlockStorage, FileSystem
+//! - `ObjectStorage`, `BlockStorage`, `FileSystem`
 //! - Database, Cache, Snapshots
 //!
 //! # Status
 //!
-//! **Implementation**: ✅ Complete (December 2, 2025)  
-//! **Test Coverage**: 17 unit tests, all passing  
-//! **Build Status**: ✅ Clean compilation  
+//! **Implementation**: ✅ Complete (December 2, 2025)\
+//! **Test Coverage**: 17 unit tests, all passing\
+//! **Build Status**: ✅ Clean compilation\
 //! **Next Phase**: Migrate hardcoded primal names to capability queries  
 
 pub mod discovery;

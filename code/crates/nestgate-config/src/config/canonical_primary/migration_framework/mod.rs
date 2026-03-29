@@ -240,9 +240,11 @@ mod tests {
         let migration = SafeConfigMigration::new();
         let config = NestGateCanonicalConfig::default();
         let report = migration.validate_migration(&config).unwrap();
-        assert!(report
-            .completed_steps
-            .contains(&"Validation completed".to_string()));
+        assert!(
+            report
+                .completed_steps
+                .contains(&"Validation completed".to_string())
+        );
     }
 
     #[test]

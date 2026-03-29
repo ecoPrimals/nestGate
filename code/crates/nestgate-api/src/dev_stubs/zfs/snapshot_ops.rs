@@ -5,7 +5,7 @@
 //!
 //! Mock implementations for ZFS snapshot operations.
 //!
-//! **Extracted**: November 19, 2025 - From dev_stubs/zfs.rs
+//! **Extracted**: November 19, 2025 - From `dev_stubs/zfs.rs`
 //! **Lines**: ~200 (from original 1,015-line file)
 
 #![cfg(feature = "dev-stubs")]
@@ -13,7 +13,7 @@
 use super::config::ProductionZfsManager;
 use super::types::{ZeroCostSnapshotInfo, ZfsError};
 
-/// SnapshotOperations trait
+/// `SnapshotOperations` trait
 pub trait SnapshotOperations {
     /// Creates  Snapshot
     fn create_snapshot(&self, dataset: &str, snapshot_name: &str) -> Result<(), ZfsError>;

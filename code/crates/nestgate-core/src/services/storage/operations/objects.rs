@@ -8,8 +8,8 @@
 //!
 //! **Phase 3: Smart Refactoring** - Extracted for logical cohesion (Jan 30, 2026)
 
-use crate::error::NestGateError;
 use crate::Result;
+use crate::error::NestGateError;
 use bytes::Bytes;
 use std::path::PathBuf;
 use std::time::SystemTime;

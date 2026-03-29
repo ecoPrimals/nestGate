@@ -24,7 +24,7 @@ const MINIMUM_SECRET_LENGTH: usize = 32;
 
 /// JWT secret validation error
 #[derive(Debug, Clone)]
-/// Error type for JwtSecret operations
+/// Error type for `JwtSecret` operations
 pub struct JwtSecretError {
     /// Error message describing the validation failure
     pub message: String,
@@ -69,8 +69,7 @@ fn validate_jwt_secret_value(jwt_secret: &str) -> Result<(), JwtSecretError> {
     {
         return Err(JwtSecretError {
             message: format!(
-                "CRITICAL SECURITY ERROR: JWT secret is set to insecure default value: '{}'",
-                jwt_secret
+                "CRITICAL SECURITY ERROR: JWT secret is set to insecure default value: '{jwt_secret}'"
             ),
             help: "To fix this, set a secure JWT secret using environment variables:\n\n\
                  # Generate a secure random secret (recommended):\n\
@@ -148,7 +147,7 @@ pub fn validate_jwt_secret_or_exit() {
             eprintln!("\n{}\n", "=".repeat(80));
             eprintln!("🚨 NESTGATE STARTUP BLOCKED - SECURITY VALIDATION FAILED");
             eprintln!("{}", "=".repeat(80));
-            eprintln!("\n{}\n", e);
+            eprintln!("\n{e}\n");
             eprintln!("{}", "=".repeat(80));
             eprintln!("\nNestGate will not start with insecure JWT configuration.");
             eprintln!("Fix the security issue above and try again.\n");
@@ -212,5 +211,17 @@ mod tests {
         let err = result.unwrap_err();
         assert!(err.message.contains("CRITICAL SECURITY ERROR"));
         assert!(err.help.contains("openssl rand -base64"));
+    }
+
+    #[test]
+    fn round5_jwt_secret_error_display_impl() {
+        let err = JwtSecretError {
+            message: "bad".to_string(),
+            help: "fix it".to_string(),
+        };
+        let s = err.to_string();
+        assert!(s.contains("JWT Security Error"));
+        assert!(s.contains("bad"));
+        assert!(s.contains("fix it"));
     }
 }

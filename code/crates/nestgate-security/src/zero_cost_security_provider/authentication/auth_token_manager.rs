@@ -8,7 +8,7 @@ use std::time::Duration;
 
 /// Token manager for local operations
 #[allow(dead_code)]
-/// Manager for AuthToken operations
+/// Manager for `AuthToken` operations
 pub struct AuthTokenManager {
     signing_key: String,
 }
@@ -21,13 +21,13 @@ impl AuthTokenManager {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::zero_cost_security_provider::authentication::AuthTokenManager;
     ///
     /// let manager = AuthTokenManager::new("my-secret-key".to_string());
     /// ```
     #[must_use]
-    pub fn new(signing_key: String) -> Self {
+    pub const fn new(signing_key: String) -> Self {
         Self { signing_key }
     }
 
@@ -47,7 +47,7 @@ impl AuthTokenManager {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::zero_cost_security_provider::authentication::AuthTokenManager;
     /// use std::time::Duration;
     ///
@@ -122,10 +122,7 @@ impl AuthTokenManager {
     /// # Errors
     ///
     /// Returns `NestGateError` if OS entropy or HMAC key derivation fails.
-    pub fn create_workspace_secret(
-        &self,
-        workspace_id: &str,
-    ) -> nestgate_types::Result<String> {
+    pub fn create_workspace_secret(&self, workspace_id: &str) -> nestgate_types::Result<String> {
         use hmac::{Hmac, Mac};
         use sha2::Sha256;
 

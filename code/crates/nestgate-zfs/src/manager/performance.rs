@@ -8,7 +8,7 @@
 //! Performance module
 
 use super::types::{OptimizationResult, PerformanceAnalytics};
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use crate::types::StorageTier;
 use nestgate_core::Result;
 use std::time::SystemTime;

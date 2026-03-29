@@ -18,8 +18,9 @@ Machine-verifiable attribution and derivation are intended to be enforced via th
 
 ## This repository: code layer
 
-- **Current license:** [GNU Affero General Public License v3.0 **only**](https://www.gnu.org/licenses/agpl-3.0.html) — see `LICENSE`.
-- **Ecosystem alignment:** ecoPrimals scyBorg standard names **AGPL-3.0-or-later** for software. This project is **AGPL-3.0-only** today; reconciling “-only” with “-or-later” is an explicit alignment item if the collective moves to a single SPDX line across primals.
+NestGate follows the [GNU Affero General Public License v3.0 only](https://www.gnu.org/licenses/agpl-3.0.html) (`AGPL-3.0-only`) — see `LICENSE`. That choice matches ecoPrimals **scyBorg** guidance for this codebase: the SPDX identifier for NestGate is **AGPL-3.0-only**, not AGPL-3.0-or-later.
+
+The broader wateringHole documentation may still reference **AGPL-3.0-or-later** in places; the ecosystem is **aligning on AGPL-3.0-only** for primals repositories, and NestGate is already on that line.
 
 ## Beardog entropy provision
 

@@ -466,8 +466,8 @@ impl ProductionCommunicationProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::{get_admin_port, get_api_port, get_health_port, get_metrics_port};
     use crate::constants::{LOCALHOST_IPV4, LOCALHOST_NAME};
+    use crate::constants::{get_admin_port, get_api_port, get_health_port, get_metrics_port};
     use crate::service_discovery::types::{
         CommunicationProtocol, ServiceCapability, ServiceEndpoint, ServiceMetadata,
     };

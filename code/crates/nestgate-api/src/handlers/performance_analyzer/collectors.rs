@@ -7,7 +7,7 @@
 
 use super::metrics::{MetricsError, SystemMetrics, SystemMetricsCollector};
 use std::sync::Arc;
-use tokio::time::{interval, Duration};
+use tokio::time::{Duration, interval};
 
 /// Data collection coordinator
 #[derive(Debug)]

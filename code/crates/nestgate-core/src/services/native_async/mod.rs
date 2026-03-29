@@ -16,7 +16,8 @@ pub mod traits;
 /// Type definitions for native async services
 pub mod types;
 // Re-export all public types and traits for backward compatibility
-#[expect(deprecated, reason = "migration in progress")] // Re-export for backwards compatibility
+#[expect(deprecated, reason = "migration in progress")]
+// Re-export for backwards compatibility
 pub use traits::NativeAsyncSecurityService;
 pub use traits::{
     NativeAsyncAutomationService, NativeAsyncCommunicationProvider, NativeAsyncLoadBalancer,
@@ -120,12 +121,14 @@ mod tests {
         // Test service retrieval
         let retrieved = balancer.get_service("test-service").await;
         assert!(retrieved.is_ok());
-        assert!(retrieved
-            .unwrap_or_else(|e| {
-                tracing::error!("Service retrieval failed: {:?}", e);
-                None
-            })
-            .is_some());
+        assert!(
+            retrieved
+                .unwrap_or_else(|e| {
+                    tracing::error!("Service retrieval failed: {:?}", e);
+                    None
+                })
+                .is_some()
+        );
 
         // Test service removal
         let remove_result = balancer.remove_service("test-service").await;

@@ -310,9 +310,11 @@ mod tests {
         let snapshot_err = ZfsError::SnapshotError {
             message: "Snapshot failed".to_string(),
         };
-        assert!(snapshot_err
-            .to_string()
-            .contains("Snapshot operation failed"));
+        assert!(
+            snapshot_err
+                .to_string()
+                .contains("Snapshot operation failed")
+        );
     }
 
     #[test]

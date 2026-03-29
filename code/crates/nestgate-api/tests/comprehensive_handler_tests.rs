@@ -508,8 +508,8 @@ const fn collect_metrics() -> std::result::Result<Metrics, ApiError> {
     Ok(Metrics { cpu_usage: 45.0 })
 }
 
-fn generate_dashboard_data(
-) -> std::result::Result<std::collections::HashMap<String, String>, ApiError> {
+fn generate_dashboard_data()
+-> std::result::Result<std::collections::HashMap<String, String>, ApiError> {
     let mut data = std::collections::HashMap::new();
     data.insert("uptime".to_string(), "1000".to_string());
     Ok(data)

@@ -354,10 +354,12 @@ mod validation_tests {
         let result = validator.validate_pool_config(&config);
 
         assert!(!result.is_valid);
-        assert!(result
-            .issues
-            .iter()
-            .any(|i| i.contains("devices") || i.contains("No devices")));
+        assert!(
+            result
+                .issues
+                .iter()
+                .any(|i| i.contains("devices") || i.contains("No devices"))
+        );
     }
 
     #[test]

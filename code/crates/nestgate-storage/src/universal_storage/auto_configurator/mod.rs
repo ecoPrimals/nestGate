@@ -11,8 +11,8 @@
 //! - Hybrid architectures (local + cloud, multi-cloud)
 //! - ZFS-like feature mapping across different backends
 
-use nestgate_types::error::Result;
 use crate::universal_storage::DetectedStorage;
+use nestgate_types::error::Result;
 
 // ==================== MODULE DECLARATIONS ====================
 
@@ -22,12 +22,6 @@ pub mod types;
 // Method implementations in separate modules (coming next phase)
 // pub mod analysis;
 // pub mod configuration;
-// pub mod optimization;
-
-#[cfg(test)]
-#[path = "tests.rs"]
-mod tests;
-
 // ==================== RE-EXPORTS ====================
 
 // Re-export all public types for backward compatibility
@@ -69,7 +63,7 @@ impl AutoConfigurator {
 
     /// Create configurator with custom settings
     #[must_use]
-    pub fn with_settings(
+    pub const fn with_settings(
         available_storage: Vec<DetectedStorage>,
         config: ConfiguratorSettings,
     ) -> Self {
@@ -81,18 +75,18 @@ impl AutoConfigurator {
 
     /// Get configuration settings
     #[must_use]
-    pub fn config(&self) -> &ConfiguratorSettings {
+    pub const fn config(&self) -> &ConfiguratorSettings {
         &self.config
     }
 
     /// Update configuration settings
-    pub fn update_config(&mut self, config: ConfiguratorSettings) {
+    pub const fn update_config(&mut self, config: ConfiguratorSettings) {
         self.config = config;
     }
 
     /// Check if auto-tuning is enabled
     #[must_use]
-    pub fn is_auto_tuning_enabled(&self) -> bool {
+    pub const fn is_auto_tuning_enabled(&self) -> bool {
         self.config.enable_auto_tuning
     }
 

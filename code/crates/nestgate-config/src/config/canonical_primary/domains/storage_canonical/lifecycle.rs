@@ -11,7 +11,7 @@ use std::time::Duration;
 /// Provides comprehensive lifecycle settings including data retention, archival,
 /// purging, and compliance policies for managing data from creation to deletion.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageLifecycle
+/// Configuration for `StorageLifecycle`
 pub struct StorageLifecycleConfig {
     /// General data lifecycle management settings.
     pub data_lifecycle: DataLifecycleConfig,
@@ -29,7 +29,7 @@ pub struct StorageLifecycleConfig {
 ///
 /// Controls whether lifecycle management features are enabled.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DataLifecycle
+/// Configuration for `DataLifecycle`
 pub struct DataLifecycleConfig {
     /// Whether data lifecycle management is enabled (default: true).
     pub enabled: bool,
@@ -75,7 +75,7 @@ pub struct PurgingConfig {
 ///
 /// Enables compliance features for meeting regulatory data management requirements.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ComplianceStorage
+/// Configuration for `ComplianceStorage`
 pub struct ComplianceStorageConfig {
     /// Whether compliance features are enabled (default: false).
     pub enabled: bool,
@@ -138,7 +138,7 @@ impl StorageLifecycleConfig {
 
     /// Merge this configuration with another, preferring values from `other`.
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 
@@ -147,7 +147,7 @@ impl StorageLifecycleConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

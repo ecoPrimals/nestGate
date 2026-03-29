@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! # tarpc Server for NestGate
+//! # tarpc Server for `NestGate`
 //!
 //! Primal-to-primal RPC server implementation.
 //!
@@ -14,12 +14,12 @@
 //! - Zero unsafe blocks, modern async/await
 //! - Self-knowledge: exposes only storage capabilities
 //! - Runtime discovery: registers with discovery system
-//! - Lock-free concurrent access using DashMap
+//! - Lock-free concurrent access using `DashMap`
 //! - No lock contention under high load
 //! - Better multi-primal scalability
 //!
 //! ## Usage
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::{NestGateRpcService, serve_tarpc};
 //! use nestgate_core::constants::ports;
 //! use std::net::SocketAddr;
@@ -43,14 +43,14 @@ use tarpc::context::Context;
 use tarpc::server::Channel;
 use tracing::{debug, info, warn};
 
-use nestgate_config::config::capability_discovery;
-use nestgate_config::constants::ports;
-use nestgate_types::error::{NestGateError, Result};
 use crate::rpc::tarpc_types::{
     CapabilityRegistration, DatasetInfo, DatasetParams, HealthStatus, NestGateRpc,
     NestGateRpcError, ObjectInfo, OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo,
     StorageMetrics, VersionInfo,
 };
+use nestgate_config::config::capability_discovery;
+use nestgate_config::constants::ports;
+use nestgate_types::error::{NestGateError, Result};
 
 fn unix_timestamp_secs() -> i64 {
     SystemTime::now()
@@ -67,7 +67,7 @@ struct InnerStore {
     objects: HashMap<(String, String), (Vec<u8>, HashMap<String, String>)>,
 }
 
-/// NestGate RPC service implementation.
+/// `NestGate` RPC service implementation.
 ///
 /// Uses an in-memory store in this crate; production persistence remains in `nestgate-core`.
 #[derive(Clone)]
@@ -80,7 +80,10 @@ pub struct NestGateRpcService {
 impl NestGateRpcService {
     /// Create new RPC service (in-memory storage until cross-crate wiring).
     pub async fn new() -> Result<Self> {
-        info!("🚀 Creating NestGate RPC service (in-memory storage; TODO: wire nestgate-core)");
+        info!(
+            "🚀 Creating NestGate RPC service (in-memory storage; nestgate-core persistence optional)"
+        );
+        debug!("feature pending: StorageManagerService-backed persistence from nestgate-core");
 
         Ok(Self {
             start_time: SystemTime::now(),
@@ -93,7 +96,7 @@ impl NestGateRpcService {
         self.start_time.elapsed().unwrap_or_default().as_secs()
     }
 
-    /// Convert NestGateError to NestGateRpcError
+    /// Convert `NestGateError` to `NestGateRpcError`
     fn convert_error(err: NestGateError) -> NestGateRpcError {
         // Simple conversion: wrap error message in InternalError
         // Can enhance later with pattern matching on error types
@@ -220,7 +223,7 @@ impl NestGateRpc for NestGateRpcService {
         g.objects.retain(|k, _| k.0 != name);
         Ok(OperationResult {
             success: true,
-            message: format!("Dataset {} deleted successfully", name),
+            message: format!("Dataset {name} deleted successfully"),
             metadata: HashMap::new(),
         })
     }
@@ -241,7 +244,7 @@ impl NestGateRpc for NestGateRpcService {
         }
         let ts = unix_timestamp_secs();
         let size = data.len() as u64;
-        let mut meta = metadata.unwrap_or_default();
+        let meta = metadata.unwrap_or_default();
         let object_info = ObjectInfo {
             key: key.clone(),
             dataset: dataset.clone(),
@@ -254,13 +257,9 @@ impl NestGateRpc for NestGateRpcService {
             compressed: false,
             metadata: meta.clone(),
         };
-        g.objects.insert((dataset.clone(), key), (data, meta.clone()));
+        g.objects.insert((dataset.clone(), key), (data, meta));
 
-        let object_count = g
-            .objects
-            .keys()
-            .filter(|(d, _)| d == &dataset)
-            .count() as u64;
+        let object_count = g.objects.keys().filter(|(d, _)| d == &dataset).count() as u64;
         let used_bytes: u64 = g
             .objects
             .iter()
@@ -283,7 +282,10 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<Vec<u8>, NestGateRpcError> {
-        debug!("RPC: retrieve_object({}/{}) → in-memory store", dataset, key);
+        debug!(
+            "RPC: retrieve_object({}/{}) → in-memory store",
+            dataset, key
+        );
 
         let g = self.inner.read().await;
         g.objects
@@ -298,7 +300,10 @@ impl NestGateRpc for NestGateRpcService {
         dataset: String,
         key: String,
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
-        debug!("RPC: get_object_metadata({}/{}) → in-memory store", dataset, key);
+        debug!(
+            "RPC: get_object_metadata({}/{}) → in-memory store",
+            dataset, key
+        );
 
         let g = self.inner.read().await;
         g.objects
@@ -336,10 +341,10 @@ impl NestGateRpc for NestGateRpcService {
             if ds != &dataset {
                 continue;
             }
-            if let Some(ref pfx) = prefix {
-                if !key.starts_with(pfx) {
-                    continue;
-                }
+            if let Some(ref pfx) = prefix
+                && !key.starts_with(pfx)
+            {
+                continue;
             }
             results.push(ObjectInfo {
                 key: key.clone(),
@@ -353,10 +358,10 @@ impl NestGateRpc for NestGateRpcService {
                 compressed: false,
                 metadata: meta.clone(),
             });
-            if let Some(lim) = limit {
-                if results.len() >= lim {
-                    break;
-                }
+            if let Some(lim) = limit
+                && results.len() >= lim
+            {
+                break;
             }
         }
         Ok(results)
@@ -375,11 +380,7 @@ impl NestGateRpc for NestGateRpcService {
         if !removed {
             return Err(NestGateRpcError::ObjectNotFound { dataset, key });
         }
-        let object_count = g
-            .objects
-            .keys()
-            .filter(|(d, _)| d == &dataset)
-            .count() as u64;
+        let object_count = g.objects.keys().filter(|(d, _)| d == &dataset).count() as u64;
         let used_bytes: u64 = g
             .objects
             .iter()
@@ -393,7 +394,7 @@ impl NestGateRpc for NestGateRpcService {
         }
         Ok(OperationResult {
             success: true,
-            message: format!("Object {}/{} deleted successfully", dataset, key),
+            message: format!("Object {dataset}/{key} deleted successfully"),
             metadata: std::collections::HashMap::new(),
         })
     }
@@ -442,7 +443,7 @@ impl NestGateRpc for NestGateRpcService {
                 );
                 Ok(RegistrationResult {
                     success: false,
-                    message: format!("Capability registration failed: {}", e),
+                    message: format!("Capability registration failed: {e}"),
                 })
             }
         }
@@ -454,9 +455,42 @@ impl NestGateRpc for NestGateRpcService {
         capability: String,
     ) -> std::result::Result<Vec<ServiceInfo>, NestGateRpcError> {
         debug!("RPC: discover_capability({})", capability);
-        let _ = capability;
-        // TODO: wire to nestgate-discovery — `primal_discovery::discover_capability`
-        Ok(Vec::new())
+        let env_var = format!(
+            "NESTGATE_{}_ENDPOINT",
+            capability.to_uppercase().replace('-', "_")
+        );
+        let se = match capability_discovery::discover_with_fallback(
+            &capability,
+            &env_var,
+            "tarpc://127.0.0.1:8091",
+        )
+        .await
+        {
+            Ok(se) => se,
+            Err(e) => {
+                warn!("discover_capability: {}", e);
+                return Ok(Vec::new());
+            }
+        };
+        let raw = se.endpoint.trim();
+        let tarpc_ep = if raw.starts_with("tarpc://") {
+            raw.to_string()
+        } else if let Some(r) = raw.strip_prefix("http://") {
+            format!("tarpc://{r}")
+        } else if let Some(r) = raw.strip_prefix("https://") {
+            format!("tarpc://{r}")
+        } else {
+            format!("tarpc://{raw}")
+        };
+        let mut endpoints = HashMap::new();
+        endpoints.insert("tarpc".to_string(), tarpc_ep);
+        Ok(vec![ServiceInfo {
+            id: Arc::from(format!("discovered-{capability}")),
+            capability: Arc::from(capability),
+            endpoints,
+            status: Arc::from("discovered"),
+            metadata: None,
+        }])
     }
 
     // ==================== HEALTH & MONITORING ====================
@@ -503,21 +537,21 @@ impl NestGateRpc for NestGateRpcService {
             ProtocolInfo {
                 protocol: "tarpc".to_string(),
                 version: "0.34".to_string(),
-                endpoint: format!("tarpc://{}", rpc_addr),
+                endpoint: format!("tarpc://{rpc_addr}"),
                 priority: 1,
                 enabled: true,
             },
             ProtocolInfo {
                 protocol: "jsonrpc".to_string(),
                 version: "2.0".to_string(),
-                endpoint: format!("http://{}/rpc", api_addr),
+                endpoint: format!("http://{api_addr}/rpc"),
                 priority: 2,
                 enabled: false,
             },
             ProtocolInfo {
                 protocol: "http".to_string(),
                 version: "1.1".to_string(),
-                endpoint: format!("http://{}", api_addr),
+                endpoint: format!("http://{api_addr}"),
                 priority: 3,
                 enabled: false,
             },
@@ -525,17 +559,17 @@ impl NestGateRpc for NestGateRpcService {
     }
 }
 
-/// Serve NestGate tarpc RPC on the specified address
+/// Serve `NestGate` tarpc RPC on the specified address
 ///
 /// # Arguments
 /// * `addr` - Socket address to bind to
-/// * `service` - NestGate RPC service implementation
+/// * `service` - `NestGate` RPC service implementation
 ///
 /// # Errors
 /// Returns error if server fails to start or bind to address
 ///
 /// # Example
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::{NestGateRpcService, serve_tarpc};
 /// use nestgate_core::constants::ports;
 /// use std::net::SocketAddr;
@@ -554,9 +588,7 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
     let listener =
         tarpc::serde_transport::tcp::listen(addr, tokio_serde::formats::Bincode::default)
             .await
-            .map_err(|e| {
-                NestGateError::network_error(&format!("Failed to bind to {}: {}", addr, e))
-            })?;
+            .map_err(|e| NestGateError::network_error(&format!("Failed to bind to {addr}: {e}")))?;
 
     info!("✅ NestGate tarpc server listening on {}", addr);
 
@@ -597,16 +629,9 @@ mod tests {
         let service = create_test_service()
             .await
             .expect("Failed to create service");
-        // Verify storage manager is initialized
-        let datasets = service
-            .storage_manager
-            .list_datasets()
-            .await
-            .expect("Failed to list datasets");
-        // New service should have no datasets initially
-        assert_eq!(
-            datasets.len(),
-            0,
+        let store = service.inner.read().await;
+        assert!(
+            store.datasets.is_empty(),
             "New service should start with empty storage"
         );
     }

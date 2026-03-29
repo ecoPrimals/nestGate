@@ -5,7 +5,7 @@
 //!
 //! Runtime capability discovery system implementing the Infant Discovery Architecture.
 //!
-//! This module provides zero-knowledge startup capabilities, allowing NestGate to
+//! This module provides zero-knowledge startup capabilities, allowing `NestGate` to
 //! discover and connect to external services at runtime without hardcoded dependencies.
 
 pub mod capability_scanner;

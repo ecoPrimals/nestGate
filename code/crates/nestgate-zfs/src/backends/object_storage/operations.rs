@@ -3,7 +3,7 @@
 
 //! **ZEROCOSTVFSOPERATIONS TRAIT IMPLEMENTATION**
 //!
-//! Implementation of ZeroCostZfsOperations trait for ObjectStorageBackend.
+//! Implementation of `ZeroCostZfsOperations` trait for `ObjectStorageBackend`.
 //!
 //! This module provides the complete set of pool, dataset, and snapshot operations
 //! using S3-compatible protocols.
@@ -36,7 +36,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     /// ## Deep Debt Solution: Protocol-First Bucket Creation
     ///
     /// Uses standard S3-compatible PUT operation that works with ANY provider:
-    /// - AWS S3, MinIO, Ceph, Wasabi, DigitalOcean Spaces, Backblaze B2, etc.
+    /// - AWS S3, `MinIO`, Ceph, Wasabi, `DigitalOcean` Spaces, Backblaze B2, etc.
     ///
     /// **Idempotent**: Safe to call multiple times, handles existing buckets gracefully.
     async fn create_pool(&self, name: &str, _devices: &[&str]) -> Result<Self::Pool> {
@@ -47,7 +47,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         // Create marker object to establish bucket (idempotent)
         // Note: Actual S3 client integration pending
         // Future: Use S3 SDK to create bucket with proper error handling
-        let marker_path = format!("{}/.nestgate-pool-marker", bucket_name);
+        let marker_path = format!("{bucket_name}/.nestgate-pool-marker");
         debug!("Pool marker path: {}", marker_path);
 
         // In production with S3 SDK:
@@ -106,13 +106,13 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         // Create dataset marker with tier metadata
         // Note: Actual S3 client integration pending
         // Future: Use S3 SDK to create marker object with storage class
-        let marker_path = format!("{}/.nestgate-dataset-marker", prefix);
+        let marker_path = format!("{prefix}/.nestgate-dataset-marker");
         debug!("Dataset marker path: {}", marker_path);
 
         let dataset = ObjectDataset {
             name: name.to_string(),
             pool: pool.name.clone(),
-            prefix: prefix.clone(),
+            prefix,
             tier: tier.clone(),
             created_at: std::time::SystemTime::now(),
         };
@@ -138,13 +138,13 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         // Create snapshot marker with metadata
         // Note: Actual S3 client integration pending
         // Future: Use S3 versioning API or copy objects to snapshot prefix
-        let marker_path = format!("{}/.nestgate-snapshot-marker", snapshot_id);
+        let marker_path = format!("{snapshot_id}/.nestgate-snapshot-marker");
         debug!("Snapshot marker path: {}", marker_path);
 
         let snapshot = ObjectSnapshot {
             name: name.to_string(),
             dataset: dataset.name.clone(),
-            snapshot_id: snapshot_id.clone(),
+            snapshot_id,
             created_at: std::time::SystemTime::now(),
         };
 
@@ -175,9 +175,9 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     /// ## Deep Debt Solution: Cached Pool Listing
     ///
     /// Returns pools from in-memory cache. Future enhancement can use
-    /// S3 ListBuckets API for discovery of existing buckets.
+    /// S3 `ListBuckets` API for discovery of existing buckets.
     ///
-    /// **Protocol-First**: Would use GET / (ListBuckets) with prefix filter.
+    /// **Protocol-First**: Would use GET / (`ListBuckets`) with prefix filter.
     async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
         debug!("📋 Listing object storage pools");
 
@@ -199,7 +199,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     ///
     /// ## Deep Debt Solution: Prefix-Based Dataset Discovery
     ///
-    /// Uses S3 ListObjectsV2 with delimiter to discover dataset prefixes.
+    /// Uses S3 `ListObjectsV2` with delimiter to discover dataset prefixes.
     /// Works with any S3-compatible provider.
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
         debug!("📋 Listing datasets for pool: {}", pool.name);

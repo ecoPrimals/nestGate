@@ -59,7 +59,7 @@ pub struct CanonicalHandlerConfigs {
 ///
 /// Settings applied to all handlers by default
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for GlobalHandler
+/// Configuration for `GlobalHandler`
 pub struct GlobalHandlerConfig {
     /// Default timeout for handler operations
     pub default_timeout: Duration,
@@ -103,7 +103,7 @@ impl Default for GlobalHandlerConfig {
 ///
 /// Consolidates `ZfsServiceConfig` and related ZFS handler configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsHandler
+/// Configuration for `ZfsHandler`
 pub struct ZfsHandlerConfig {
     /// Service name for ZFS handler
     pub service_name: String,
@@ -173,7 +173,7 @@ pub enum ZfsBackendConfig {
 }
 /// **ZFS FAIL-SAFE CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsFailSafe
+/// Configuration for `ZfsFailSafe`
 pub struct ZfsFailSafeConfig {
     /// Enable circuit breaker
     pub enable_circuit_breaker: bool,
@@ -193,7 +193,7 @@ pub struct ZfsFailSafeConfig {
 
 /// Circuit breaker configuration for fault tolerance
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CircuitBreaker
+/// Configuration for `CircuitBreaker`
 pub struct CircuitBreakerConfig {
     /// Whether circuit breaker is enabled
     pub enabled: bool,
@@ -201,7 +201,7 @@ pub struct CircuitBreakerConfig {
 
 /// Retry policy configuration for resilience
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RetryPolicy
+/// Configuration for `RetryPolicy`
 pub struct RetryPolicyConfig {
     /// Whether retry policy is enabled
     pub enabled: bool,
@@ -237,7 +237,7 @@ impl Default for RetryPolicyConfig {
 
 /// **ZFS OBSERVABILITY CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsObservability
+/// Configuration for `ZfsObservability`
 pub struct ZfsObservabilityConfig {
     /// Enable metrics collection
     pub enable_metrics: bool,
@@ -262,7 +262,7 @@ impl Default for ZfsObservabilityConfig {
 
 /// **ZFS PERFORMANCE CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsPerformance
+/// Configuration for `ZfsPerformance`
 pub struct ZfsPerformanceConfig {
     /// Connection pool size
     pub pool_size: usize,
@@ -290,7 +290,7 @@ impl Default for ZfsPerformanceConfig {
 
 /// **ZFS SECURITY CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsSecurity
+/// Configuration for `ZfsSecurity`
 pub struct ZfsSecurityConfig {
     /// Require authentication
     pub require_auth: bool,
@@ -323,7 +323,7 @@ impl Default for ZfsSecurityConfig {
 ///
 /// Consolidates `PerformanceAnalysisConfig` and related performance handler configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for PerformanceHandler
+/// Configuration for `PerformanceHandler`
 pub struct PerformanceHandlerConfig {
     /// Enable performance monitoring
     pub enable_monitoring: bool,
@@ -399,7 +399,7 @@ impl Default for AnalysisConfig {
 ///
 /// Consolidates `LoadTestConfig` and related load testing configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for LoadTestHandler
+/// Configuration for `LoadTestHandler`
 pub struct LoadTestHandlerConfig {
     /// Maximum concurrent connections
     pub max_connections: usize,
@@ -427,7 +427,7 @@ impl Default for LoadTestHandlerConfig {
 
 /// **WORKSPACE HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for WorkspaceHandler
+/// Configuration for `WorkspaceHandler`
 pub struct WorkspaceHandlerConfig {
     /// Default workspace size limit
     pub default_size_limit: u64,
@@ -466,7 +466,7 @@ pub enum WorkspaceCleanupPolicy {
 }
 /// **HARDWARE TUNING HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for HardwareTuningHandler
+/// Configuration for `HardwareTuningHandler`
 pub struct HardwareTuningHandlerConfig {
     /// Enable automatic tuning
     pub enable_auto_tuning: bool,
@@ -491,7 +491,7 @@ impl Default for HardwareTuningHandlerConfig {
 
 /// **COMPLIANCE HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ComplianceHandler
+/// Configuration for `ComplianceHandler`
 pub struct ComplianceHandlerConfig {
     /// Enable compliance monitoring
     pub enable_monitoring: bool,
@@ -513,7 +513,7 @@ impl Default for ComplianceHandlerConfig {
 
 /// **DASHBOARD HANDLER CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DashboardHandler
+/// Configuration for `DashboardHandler`
 pub struct DashboardHandlerConfig {
     /// Enable real-time updates
     pub enable_real_time: bool,
@@ -542,7 +542,7 @@ impl Default for DashboardHandlerConfig {
 ///
 /// Generic configuration for custom handlers
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CustomHandler
+/// Configuration for `CustomHandler`
 pub struct CustomHandlerConfig {
     /// Handler name
     pub name: String,
@@ -555,7 +555,7 @@ pub struct CustomHandlerConfig {
 }
 /// **RATE LIMIT CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RateLimit
+/// Configuration for `RateLimit`
 pub struct RateLimitConfig {
     /// Requests per minute
     pub requests_per_minute: u32,
@@ -577,7 +577,7 @@ impl Default for RateLimitConfig {
 
 /// **HANDLER SECURITY CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for HandlerSecurity
+/// Configuration for `HandlerSecurity`
 pub struct HandlerSecurityConfig {
     /// Require authentication
     pub require_auth: bool,

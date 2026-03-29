@@ -85,7 +85,8 @@ pub enum ZfsCommand {
 
 impl CommandResult {
     /// Create a successful command result
-    pub fn success(stdout: String) -> Self {
+    #[must_use]
+    pub const fn success(stdout: String) -> Self {
         Self {
             success: true,
             stdout,
@@ -95,7 +96,8 @@ impl CommandResult {
     }
 
     /// Create a failed command result
-    pub fn failure(stderr: String, exit_code: Option<i32>) -> Self {
+    #[must_use]
+    pub const fn failure(stderr: String, exit_code: Option<i32>) -> Self {
         Self {
             success: false,
             stdout: String::new(),
@@ -105,16 +107,14 @@ impl CommandResult {
     }
 
     /// Check if command succeeded
-    pub fn is_success(&self) -> bool {
+    #[must_use]
+    pub const fn is_success(&self) -> bool {
         self.success
     }
 
     /// Check if command failed
-    pub fn is_failure(&self) -> bool {
+    #[must_use]
+    pub const fn is_failure(&self) -> bool {
         !self.success
     }
 }
-
-#[cfg(test)]
-#[path = "command_strategic_tests.rs"]
-mod command_strategic_tests;

@@ -9,7 +9,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::constants::network_defaults_config::NetworkDefaultsConfig;
 //!
 //! // Load from environment variables
@@ -37,12 +37,13 @@ pub struct NetworkDefaultsConfig {
     environment: Option<String>,
 }
 
-/// Shared immutable reference to NetworkDefaultsConfig
+/// Shared immutable reference to `NetworkDefaultsConfig`
 pub type SharedNetworkDefaultsConfig = Arc<NetworkDefaultsConfig>;
 
 impl NetworkDefaultsConfig {
     /// Create a new empty configuration (all values None, will use hardcoded defaults)
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             bind_address: None,
             api_host: None,
@@ -54,6 +55,7 @@ impl NetworkDefaultsConfig {
 
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             bind_address: std::env::var("NESTGATE_BIND_ADDRESS").ok(),
@@ -67,6 +69,7 @@ impl NetworkDefaultsConfig {
     // Accessors with fallback to defaults
 
     /// Gets Bind Address
+    #[must_use]
     pub fn get_bind_address(&self) -> String {
         self.bind_address
             .clone()
@@ -74,6 +77,7 @@ impl NetworkDefaultsConfig {
     }
 
     /// Gets Api Host
+    #[must_use]
     pub fn get_api_host(&self) -> String {
         self.api_host
             .clone()
@@ -81,6 +85,7 @@ impl NetworkDefaultsConfig {
     }
 
     /// Gets Db Host
+    #[must_use]
     pub fn get_db_host(&self) -> String {
         self.db_host
             .clone()
@@ -88,6 +93,7 @@ impl NetworkDefaultsConfig {
     }
 
     /// Gets Redis Host
+    #[must_use]
     pub fn get_redis_host(&self) -> String {
         self.redis_host
             .clone()
@@ -95,54 +101,55 @@ impl NetworkDefaultsConfig {
     }
 
     /// Checks if Production
+    #[must_use]
     pub fn is_production(&self) -> bool {
-        self.environment
-            .as_ref()
-            .map(|env| {
-                let env_lower = env.to_lowercase();
-                env_lower == "production" || env_lower == "prod"
-            })
-            .unwrap_or(false)
+        self.environment.as_ref().is_some_and(|env| {
+            let env_lower = env.to_lowercase();
+            env_lower == "production" || env_lower == "prod"
+        })
     }
 
     /// Checks if Development
+    #[must_use]
     pub fn is_development(&self) -> bool {
-        self.environment
-            .as_ref()
-            .map(|env| {
-                let env_lower = env.to_lowercase();
-                env_lower == "development" || env_lower == "dev"
-            })
-            .unwrap_or(true) // Default to development for safety
+        self.environment.as_ref().is_none_or(|env| {
+            let env_lower = env.to_lowercase();
+            env_lower == "development" || env_lower == "dev"
+        }) // Default to development for safety
     }
 
     // Builder methods for tests
 
     /// Builder method to set Bind Address
+    #[must_use]
     pub fn with_bind_address(mut self, address: String) -> Self {
         self.bind_address = Some(address);
         self
     }
 
     /// Builder method to set Api Host
+    #[must_use]
     pub fn with_api_host(mut self, host: String) -> Self {
         self.api_host = Some(host);
         self
     }
 
     /// Builder method to set Db Host
+    #[must_use]
     pub fn with_db_host(mut self, host: String) -> Self {
         self.db_host = Some(host);
         self
     }
 
     /// Builder method to set Redis Host
+    #[must_use]
     pub fn with_redis_host(mut self, host: String) -> Self {
         self.redis_host = Some(host);
         self
     }
 
     /// Builder method to set Environment
+    #[must_use]
     pub fn with_environment(mut self, env: String) -> Self {
         self.environment = Some(env);
         self

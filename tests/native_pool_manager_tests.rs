@@ -182,9 +182,10 @@ fn test_pool_property_names() {
 
     for prop in properties {
         assert!(!prop.is_empty());
-        assert!(prop
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()));
+        assert!(
+            prop.chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        );
     }
 }
 
@@ -421,9 +422,11 @@ fn test_vdev_types() {
 
     for vdev_type in vdev_types {
         assert!(!vdev_type.is_empty());
-        assert!(vdev_type
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()));
+        assert!(
+            vdev_type
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        );
     }
 }
 

@@ -260,8 +260,8 @@ mod service_registry_edge_cases {
 
 #[cfg(test)]
 mod concurrent_discovery_tests {
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[tokio::test]
     async fn test_concurrent_primal_discovery() {

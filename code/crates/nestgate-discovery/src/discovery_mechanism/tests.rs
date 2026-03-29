@@ -54,7 +54,9 @@ async fn test_mdns_announce_and_find() {
     assert_eq!(storage_services.len(), 1);
     assert_eq!(storage_services[0].id, "test-storage");
     assert_eq!(storage_services[0].name, "Test Storage");
-    assert!(storage_services[0]
-        .capabilities
-        .contains(&"storage".to_string()));
+    assert!(
+        storage_services[0]
+            .capabilities
+            .contains(&"storage".to_string())
+    );
 }

@@ -4,7 +4,7 @@
 //! Simple unit tests for ZFS functionality
 //! These tests focus on basic functionality that is actually implemented
 
-use nestgate_zfs::{config::ZfsConfig, ZfsPoolManager};
+use nestgate_zfs::{ZfsPoolManager, config::ZfsConfig};
 use std::collections::HashMap;
 
 #[test]

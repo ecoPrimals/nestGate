@@ -8,7 +8,7 @@
 
 use nestgate_api::handlers::{
     metrics_collector::PoolMetrics,
-    status::{get_status, initialize_uptime, SystemStatus},
+    status::{SystemStatus, get_status, initialize_uptime},
 };
 
 // ==================== STATUS HANDLER INTEGRATION ====================

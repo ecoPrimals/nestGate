@@ -5,7 +5,7 @@
 //!
 //! These tests cover the most important API endpoints and error paths.
 
-use nestgate_api::handlers::status::{get_status, initialize_uptime, SystemStatus};
+use nestgate_api::handlers::status::{SystemStatus, get_status, initialize_uptime};
 
 #[test]
 fn test_status_endpoint_returns_healthy() {

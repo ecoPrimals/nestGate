@@ -27,7 +27,7 @@
 //! - [`storage_access_types`] - Storage access pattern enumerations
 //! - [`system_health_types`] - System health monitoring enumerations
 
-/// Unified data type enumerations for NestGate
+/// Unified data type enumerations for `NestGate`
 pub mod data_types;
 
 /// Unified message and event type enumerations
@@ -79,13 +79,13 @@ pub use service_types::UnifiedServiceState;
 pub use service_types::UnifiedServiceState as ServiceState;
 
 // Additional missing enum types referenced in lib.rs
-pub use service_types::UnifiedServiceType as UnifiedCapabilityType;
 pub use message_event_types::UnifiedAlertSeverity as UnifiedLogLevel;
 pub use message_event_types::UnifiedEventType as UnifiedErrorCategory;
+pub use service_types::UnifiedServiceType as UnifiedCapabilityType;
 
 /// Common enum patterns for use across the codebase
 ///
-/// This trait provides a standard interface for all unified enums in NestGate,
+/// This trait provides a standard interface for all unified enums in `NestGate`,
 /// enabling consistent string conversion, custom variant tracking, and debugging.
 ///
 /// # Examples

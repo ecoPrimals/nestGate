@@ -211,7 +211,7 @@ mod tests {
 
     #[test]
     fn test_timeout_elapsed_conversion() {
-        use tokio::time::{timeout, Duration as TokioDuration};
+        use tokio::time::{Duration as TokioDuration, timeout};
 
         // Create a timeout error by running an async block
         let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime for test");

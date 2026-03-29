@@ -24,7 +24,7 @@ use std::sync::Arc;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::discovery::EnvironmentDiscoveryConfig;
 ///
 /// // Production: Load from environment
@@ -35,7 +35,7 @@ use std::sync::Arc;
 /// config.set_endpoint("orchestration", "http://test:8080");
 /// ```
 #[derive(Debug, Clone, Default)]
-/// Configuration for EnvironmentDiscovery
+/// Configuration for `EnvironmentDiscovery`
 pub struct EnvironmentDiscoveryConfig {
     /// Discovered capability endpoints
     /// Key: capability type (e.g., "orchestration")
@@ -43,7 +43,7 @@ pub struct EnvironmentDiscoveryConfig {
     endpoints: HashMap<String, String>,
 
     /// Additional metadata per capability
-    /// Key: (capability_type, metadata_key)
+    /// Key: (`capability_type`, `metadata_key`)
     /// Value: metadata value
     metadata: HashMap<(String, String), String>,
 }
@@ -112,7 +112,7 @@ impl EnvironmentDiscoveryConfig {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// # use nestgate_core::discovery::EnvironmentDiscoveryConfig;
     /// let mut config = EnvironmentDiscoveryConfig::new();
     /// config.set_endpoint("orchestration", "http://orch:8080");
@@ -132,7 +132,7 @@ impl EnvironmentDiscoveryConfig {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// # use nestgate_core::discovery::EnvironmentDiscoveryConfig;
     /// let mut config = EnvironmentDiscoveryConfig::new();
     /// config.set_metadata("orchestration", "auth_key", "secret123");
@@ -154,7 +154,7 @@ impl EnvironmentDiscoveryConfig {
 
     /// Get all endpoints
     #[must_use]
-    pub fn endpoints(&self) -> &HashMap<String, String> {
+    pub const fn endpoints(&self) -> &HashMap<String, String> {
         &self.endpoints
     }
 

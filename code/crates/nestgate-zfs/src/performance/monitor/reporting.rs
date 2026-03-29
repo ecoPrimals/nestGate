@@ -6,7 +6,7 @@ use nestgate_core::Result as CoreResult;
 /// Alert management, notifications, and public metrics access API
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tokio::time::interval;
 use tracing::{debug, error};
 
@@ -32,15 +32,15 @@ impl ZfsPerformanceMonitor {
             loop {
                 interval.tick().await;
 
-                if let Some(sender) = &alert_sender {
-                    if let Err(e) = Self::check_alert_conditions(
+                if let Some(sender) = &alert_sender
+                    && let Err(e) = Self::check_alert_conditions(
                         &current_metrics,
                         &alert_conditions,
                         &active_alerts,
                         sender,
-                    ) {
-                        error!("Alert checking failed: {}", e);
-                    }
+                    )
+                {
+                    error!("Alert checking failed: {}", e);
                 }
             }
         });

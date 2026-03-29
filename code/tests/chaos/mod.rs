@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **CHAOS TEST SUITE - NESTGATE**
 //!
 //! Chaos engineering tests to verify system resilience under adverse conditions

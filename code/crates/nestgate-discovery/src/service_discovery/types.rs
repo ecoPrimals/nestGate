@@ -399,7 +399,7 @@ pub enum AIModality {
 }
 /// AI model type capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-/// Types of AIModel
+/// Types of `AIModel`
 pub enum AIModelType {
     /// Large language model
     Llm,

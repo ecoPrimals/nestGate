@@ -17,14 +17,14 @@ use super::types::{
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{broadcast, mpsc, RwLock};
+use tokio::sync::{RwLock, broadcast, mpsc};
 use tracing::info;
 
 use uuid::Uuid;
 
 /// Main RPC manager for handling unified communications
 #[derive(Clone)] // Remove Debug derive since services field can't be debugged
-/// Manager for UnifiedRpc operations
+/// Manager for `UnifiedRpc` operations
 pub struct UnifiedRpcManager {
     /// Configuration
     config: NestGateRpcConfig,
@@ -360,7 +360,7 @@ impl UnifiedRpcManager {
                 Err(e) => {
                     return Err(RpcError::InvalidConfiguration(format!(
                         "Invalid JSON-RPC URL: {e}"
-                    )))
+                    )));
                 }
             }
         } else {

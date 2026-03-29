@@ -79,8 +79,10 @@ pub use handlers::{
     compliance, hardware_tuning, load_testing, performance_analyzer, performance_dashboard,
     storage, zfs,
 };
-pub use routes::{create_router, AppState};
+pub use routes::{AppState, create_router};
 
 // Test modules
 #[cfg(test)]
 mod api_coverage_boost;
+#[cfg(test)]
+mod round6_final_coverage;

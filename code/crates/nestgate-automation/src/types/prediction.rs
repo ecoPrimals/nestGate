@@ -31,7 +31,7 @@ pub enum DataPattern {
     /// Unknown
     Unknown,
 }
-/// File type enumeration  
+/// File type enumeration\
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Types of File
 pub enum FileType {
@@ -235,9 +235,9 @@ impl From<TierType> for StorageTier {
     /// From
     fn from(tier_type: TierType) -> Self {
         match tier_type {
-            TierType::Hot => StorageTier::Hot,
-            TierType::Warm => StorageTier::Warm,
-            TierType::Cold => StorageTier::Cold,
+            TierType::Hot => Self::Hot,
+            TierType::Warm => Self::Warm,
+            TierType::Cold => Self::Cold,
         }
     }
 }
@@ -246,12 +246,12 @@ impl From<StorageTier> for TierType {
     /// From
     fn from(tier: StorageTier) -> Self {
         match tier {
-            StorageTier::Hot => TierType::Hot,
-            StorageTier::Warm => TierType::Warm,
-            StorageTier::Cold => TierType::Cold,
-            StorageTier::Cool => TierType::Cold, // Map cool to cold
-            StorageTier::Frozen => TierType::Cold, // Map frozen to cold
-            _ => TierType::Cold,                 // Default for any other variants
+            StorageTier::Hot => Self::Hot,
+            StorageTier::Warm => Self::Warm,
+            StorageTier::Cold => Self::Cold,
+            StorageTier::Cool => Self::Cold,   // Map cool to cold
+            StorageTier::Frozen => Self::Cold, // Map frozen to cold
+            _ => Self::Cold,                   // Default for any other variants
         }
     }
 }
@@ -270,12 +270,12 @@ impl From<StorageTier> for TierClassification {
     /// From
     fn from(tier: StorageTier) -> Self {
         match tier {
-            StorageTier::Hot => TierClassification::Performance,
-            StorageTier::Warm => TierClassification::Balanced,
-            StorageTier::Cold => TierClassification::Archive,
-            StorageTier::Cool => TierClassification::Archive, // Map cool to archive
-            StorageTier::Frozen => TierClassification::Archive, // Map frozen to archive
-            _ => TierClassification::Balanced,                // Default for any other variants
+            StorageTier::Hot => Self::Performance,
+            StorageTier::Warm => Self::Balanced,
+            StorageTier::Cold => Self::Archive,
+            StorageTier::Cool => Self::Archive, // Map cool to archive
+            StorageTier::Frozen => Self::Archive, // Map frozen to archive
+            _ => Self::Balanced,                // Default for any other variants
         }
     }
 }

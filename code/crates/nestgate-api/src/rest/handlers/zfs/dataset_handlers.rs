@@ -26,11 +26,15 @@ pub async fn list_datasets(
     Query(query): Query<ListQuery>,
 ) -> std::result::Result<Json<DataResponse<Vec<Dataset>>>, Json<DataError>> {
     debug!("Listing ZFS datasets with query: {:?}", query);
-    let engines = state.zfs_engines.read().await;
+    let pairs: Vec<(String, String)> = state
+        .zfs_engines
+        .iter()
+        .map(|e| (e.key().clone(), e.value().clone()))
+        .collect();
     let mut datasets = Vec::new();
 
-    for (dataset_name, _engine) in engines.iter() {
-        match helpers::convert_engine_to_placeholder_dataset(dataset_name, _engine).await {
+    for (dataset_name, _engine) in pairs {
+        match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
             Ok(dataset) => datasets.push(dataset),
             Err(e) => {
                 error!(
@@ -92,14 +96,11 @@ pub async fn create_dataset(
         )));
     }
 
-    {
-        let engines = state.zfs_engines.read().await;
-        if engines.contains_key(&request.name) {
-            return Err(Json(DataError::new(
-                format!("Dataset '{}' already exists", request.name),
-                "DATASET_EXISTS".to_string(),
-            )));
-        }
+    if state.zfs_engines.contains_key(&request.name) {
+        return Err(Json(DataError::new(
+            format!("Dataset '{}' already exists", request.name),
+            "DATASET_EXISTS".to_string(),
+        )));
     }
 
     let _storage_backend = match helpers::create_storage_backend(&request).await {
@@ -122,10 +123,9 @@ pub async fn create_dataset(
     let _engine: Arc<dyn std::any::Any + Send + Sync> =
         Arc::new(format!("engine_{}", request.name));
 
-    {
-        let mut engines = state.zfs_engines.write().await;
-        engines.insert(request.name.clone(), "placeholder_engine".to_string());
-    }
+    state
+        .zfs_engines
+        .insert(request.name.clone(), "placeholder_engine".to_string());
 
     let welcome_content = format!(
         "Welcome to your new ZFS dataset: {}\nCreated: {}\nCompression: {}\nChecksum: {}\n",
@@ -176,11 +176,14 @@ pub async fn get_dataset(
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<Dataset>>, Json<DataError>> {
     debug!("Getting ZFS dataset: {}", dataset_name);
-    let engines = state.zfs_engines.read().await;
+    let engine_opt = state
+        .zfs_engines
+        .get(&dataset_name)
+        .map(|r| r.value().clone());
 
-    match engines.get(&dataset_name) {
+    match engine_opt {
         Some(_engine) => {
-            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, _engine).await {
+            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
                 Ok(dataset) => Ok(Json(DataResponse::new(dataset))),
                 Err(e) => {
                     error!("Failed to convert _engine to dataset: {}", e);
@@ -206,11 +209,14 @@ pub async fn update_dataset(
     Json(_request): Json<UpdateDatasetRequest>,
 ) -> std::result::Result<Json<DataResponse<Dataset>>, Json<DataError>> {
     info!("Updating ZFS dataset properties: {}", dataset_name);
-    let engines = state.zfs_engines.read().await;
+    let engine_opt = state
+        .zfs_engines
+        .get(&dataset_name)
+        .map(|r| r.value().clone());
 
-    match engines.get(&dataset_name) {
+    match engine_opt {
         Some(_engine) => {
-            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, _engine).await {
+            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
                 Ok(dataset) => {
                     info!("Dataset properties updated for: {}", dataset_name);
                     Ok(Json(DataResponse::new(dataset)))
@@ -238,9 +244,8 @@ pub async fn delete_dataset(
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<serde_json::Value>>, Json<DataError>> {
     info!("Deleting ZFS dataset: {}", dataset_name);
-    let mut engines = state.zfs_engines.write().await;
 
-    match engines.remove(&dataset_name) {
+    match state.zfs_engines.remove(&dataset_name) {
         Some(_) => {
             info!("Successfully deleted ZFS dataset: {}", dataset_name);
             Ok(Json(DataResponse::new(serde_json::json!({
@@ -263,11 +268,14 @@ pub async fn get_dataset_properties(
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<DatasetProperties>>, Json<DataError>> {
     debug!("Getting properties for ZFS dataset: {}", dataset_name);
-    let engines = state.zfs_engines.read().await;
+    let engine_opt = state
+        .zfs_engines
+        .get(&dataset_name)
+        .map(|r| r.value().clone());
 
-    match engines.get(&dataset_name) {
+    match engine_opt {
         Some(_engine) => {
-            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, _engine).await {
+            match helpers::convert_engine_to_placeholder_dataset(&dataset_name, &_engine).await {
                 Ok(dataset) => Ok(Json(DataResponse::new(dataset.properties))),
                 Err(e) => {
                     error!("Failed to get dataset properties: {}", e);
@@ -293,9 +301,12 @@ pub async fn set_dataset_properties(
     Json(properties): Json<DatasetProperties>,
 ) -> std::result::Result<Json<DataResponse<DatasetProperties>>, Json<DataError>> {
     info!("Setting properties for ZFS dataset: {}", dataset_name);
-    let engines = state.zfs_engines.read().await;
+    let engine_opt = state
+        .zfs_engines
+        .get(&dataset_name)
+        .map(|r| r.value().clone());
 
-    match engines.get(&dataset_name) {
+    match engine_opt {
         Some(_engine) => {
             info!("Properties set for dataset: {}", dataset_name);
             Ok(Json(DataResponse::new(properties)))
@@ -314,12 +325,15 @@ pub async fn get_dataset_stats(
     Path(dataset_name): Path<String>,
 ) -> std::result::Result<Json<DataResponse<DatasetStats>>, Json<DataError>> {
     debug!("Getting statistics for ZFS dataset: {}", dataset_name);
-    let engines = state.zfs_engines.read().await;
+    let engine_opt = state
+        .zfs_engines
+        .get(&dataset_name)
+        .map(|r| r.value().clone());
 
-    match engines.get(&dataset_name) {
+    match engine_opt {
         Some(_engine) => {
             let dataset_stats = DatasetStats {
-                name: dataset_name.clone(),
+                name: dataset_name,
                 size_bytes: 1024 * 1024 * 1024,
                 used_bytes: 512 * 1024 * 1024,
                 available_bytes: 512 * 1024 * 1024,

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// Health monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for HealthMonitoring
+/// Configuration for `HealthMonitoring`
 pub struct HealthMonitoringConfig {
     /// Enable health monitoring
     pub enabled: bool,
@@ -69,16 +69,9 @@ impl HealthMonitoringConfig {
                 // ✅ SOVEREIGNTY: Environment-driven alert configuration
                 // Alert endpoints should be explicitly configured in production
                 // For development, this can be optional
-                let endpoints = std::env::var("NESTGATE_ALERT_ENDPOINTS")
-                    .ok()
-                    .map(|endpoints_str| {
-                        // Parse comma-separated endpoints
-                        endpoints_str
-                            .split(',')
-                            .map(|s| s.trim().to_string())
-                            .collect::<Vec<_>>()
-                    })
-                    .unwrap_or_else(|| {
+
+                std::env::var("NESTGATE_ALERT_ENDPOINTS").ok().map_or_else(
+                    || {
                         // Development-only fallback - logs warning
                         tracing::warn!(
                             "NESTGATE_ALERT_ENDPOINTS not set. Using development defaults. \
@@ -98,9 +91,15 @@ impl HealthMonitoringConfig {
                             format!("email:dev@{}", dev_host),
                             format!("webhook:http://{}:{}/alerts", dev_host, dev_port),
                         ]
-                    });
-
-                endpoints
+                    },
+                    |endpoints_str| {
+                        // Parse comma-separated endpoints
+                        endpoints_str
+                            .split(',')
+                            .map(|s| s.trim().to_string())
+                            .collect::<Vec<_>>()
+                    },
+                )
             },
         }
     }

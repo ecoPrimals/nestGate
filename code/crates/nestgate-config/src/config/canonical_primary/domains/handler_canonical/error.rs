@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ErrorHandler
+/// Configuration for `ErrorHandler`
 pub struct ErrorHandlerConfig {
     /// Response
     pub response: ErrorResponseConfig,
@@ -19,28 +19,28 @@ pub struct ErrorHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ErrorResponse
+/// Configuration for `ErrorResponse`
 pub struct ErrorResponseConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ErrorLogging
+/// Configuration for `ErrorLogging`
 pub struct ErrorLoggingConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ErrorRecovery
+/// Configuration for `ErrorRecovery`
 pub struct ErrorRecoveryConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ErrorNotification
+/// Configuration for `ErrorNotification`
 pub struct ErrorNotificationConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl ErrorHandlerConfig {
 
     /// Merges two error handler configurations, preferring values from self
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

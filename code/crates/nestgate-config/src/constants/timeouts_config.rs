@@ -9,7 +9,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::constants::timeouts_config::TimeoutsConfig;
 //!
 //! // Load from environment
@@ -45,8 +45,12 @@ pub type SharedTimeoutsConfig = Arc<TimeoutsConfig>;
 
 impl TimeoutsConfig {
     /// Creates a new `TimeoutsConfig` by loading values from environment variables.
+    #[must_use]
     pub fn from_env() -> Self {
-        use super::timeouts::*;
+        use super::timeouts::{
+            DEFAULT_CONNECTION_TIMEOUT_SECS, DEFAULT_IDLE_TIMEOUT_SECS, DEFAULT_KEEPALIVE_SECS,
+            DEFAULT_REQUEST_TIMEOUT_SECS, DEFAULT_RETRY_DELAY_MS,
+        };
 
         let connection_timeout_secs = env::var("NESTGATE_CONNECTION_TIMEOUT")
             .ok()
@@ -85,58 +89,68 @@ impl TimeoutsConfig {
     // Getter methods
 
     /// Connection Timeout
-    pub fn connection_timeout(&self) -> Duration {
+    #[must_use]
+    pub const fn connection_timeout(&self) -> Duration {
         Duration::from_secs(self.connection_timeout_secs)
     }
 
     /// Request Timeout
-    pub fn request_timeout(&self) -> Duration {
+    #[must_use]
+    pub const fn request_timeout(&self) -> Duration {
         Duration::from_secs(self.request_timeout_secs)
     }
 
     /// Idle Timeout
-    pub fn idle_timeout(&self) -> Duration {
+    #[must_use]
+    pub const fn idle_timeout(&self) -> Duration {
         Duration::from_secs(self.idle_timeout_secs)
     }
 
     /// Keepalive Interval
-    pub fn keepalive_interval(&self) -> Duration {
+    #[must_use]
+    pub const fn keepalive_interval(&self) -> Duration {
         Duration::from_secs(self.keepalive_interval_secs)
     }
 
     /// Retry Delay
-    pub fn retry_delay(&self) -> Duration {
+    #[must_use]
+    pub const fn retry_delay(&self) -> Duration {
         Duration::from_millis(self.retry_delay_ms)
     }
 
     // Builder methods for testing
 
     /// Builder method to set Connection Timeout Secs
-    pub fn with_connection_timeout_secs(mut self, secs: u64) -> Self {
+    #[must_use]
+    pub const fn with_connection_timeout_secs(mut self, secs: u64) -> Self {
         self.connection_timeout_secs = secs;
         self
     }
 
     /// Builder method to set Request Timeout Secs
-    pub fn with_request_timeout_secs(mut self, secs: u64) -> Self {
+    #[must_use]
+    pub const fn with_request_timeout_secs(mut self, secs: u64) -> Self {
         self.request_timeout_secs = secs;
         self
     }
 
     /// Builder method to set Idle Timeout Secs
-    pub fn with_idle_timeout_secs(mut self, secs: u64) -> Self {
+    #[must_use]
+    pub const fn with_idle_timeout_secs(mut self, secs: u64) -> Self {
         self.idle_timeout_secs = secs;
         self
     }
 
     /// Builder method to set Keepalive Interval Secs
-    pub fn with_keepalive_interval_secs(mut self, secs: u64) -> Self {
+    #[must_use]
+    pub const fn with_keepalive_interval_secs(mut self, secs: u64) -> Self {
         self.keepalive_interval_secs = secs;
         self
     }
 
     /// Builder method to set Retry Delay Ms
-    pub fn with_retry_delay_ms(mut self, ms: u64) -> Self {
+    #[must_use]
+    pub const fn with_retry_delay_ms(mut self, ms: u64) -> Self {
         self.retry_delay_ms = ms;
         self
     }

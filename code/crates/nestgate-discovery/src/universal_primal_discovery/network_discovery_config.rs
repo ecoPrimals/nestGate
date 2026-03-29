@@ -36,14 +36,14 @@ use std::sync::Arc;
 
 /// Immutable runtime configuration for network discovery
 ///
-/// This struct holds all runtime configuration needed for NetworkDiscovery
+/// This struct holds all runtime configuration needed for `NetworkDiscovery`
 /// without accessing environment variables during discovery operations.
 ///
 /// Note: This is separate from the deprecated `NetworkDiscoveryConfig` which
 /// handled scan timeouts and preferences. This config manages runtime values
 /// like bind addresses, ports, and endpoints.
 #[derive(Debug, Clone)]
-/// Configuration for NetworkRuntime
+/// Configuration for `NetworkRuntime`
 pub struct NetworkRuntimeConfig {
     /// Bind addresses for specific services (`NESTGATE_<SERVICE>_BIND_ADDRESS`)
     bind_addresses: HashMap<String, IpAddr>,
@@ -65,6 +65,7 @@ impl NetworkRuntimeConfig {
     /// Create a new empty configuration
     ///
     /// Typically used for testing or when building configuration programmatically.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             bind_addresses: HashMap::new(),
@@ -77,7 +78,7 @@ impl NetworkRuntimeConfig {
     /// Load configuration from environment variables
     ///
     /// This is the primary constructor for production use. It scans for all
-    /// NESTGATE_*_BIND_ADDRESS, NESTGATE_*_PORT, and NESTGATE_*_ENDPOINT
+    /// NESTGATE_*_`BIND_ADDRESS`, NESTGATE_*_PORT, and NESTGATE_*_ENDPOINT
     /// environment variables and loads them once.
     ///
     /// # Environment Variable Patterns
@@ -86,6 +87,7 @@ impl NetworkRuntimeConfig {
     /// - `NESTGATE_\<SERVICE\>_PORT`: Port for a service
     /// - `NESTGATE_\<SERVICE\>_ENDPOINT`: Endpoint for a service
     /// - `NESTGATE_\<CAPABILITY\>_ENDPOINT`: Endpoint for a capability
+    #[must_use]
     pub fn from_env() -> Self {
         let mut config = Self::new();
 
@@ -123,6 +125,7 @@ impl NetworkRuntimeConfig {
     }
 
     /// Get bind address for a service
+    #[must_use]
     pub fn get_bind_address(&self, service_name: &str) -> Option<IpAddr> {
         self.bind_addresses
             .get(&service_name.to_lowercase())
@@ -135,6 +138,7 @@ impl NetworkRuntimeConfig {
     }
 
     /// Get port for a service
+    #[must_use]
     pub fn get_bind_port(&self, service_name: &str) -> Option<u16> {
         self.bind_ports.get(&service_name.to_lowercase()).copied()
     }
@@ -146,10 +150,11 @@ impl NetworkRuntimeConfig {
     }
 
     /// Get service endpoint
+    #[must_use]
     pub fn get_service_endpoint(&self, service_name: &str) -> Option<&str> {
         self.service_endpoints
             .get(&service_name.to_lowercase())
-            .map(|s| s.as_str())
+            .map(std::string::String::as_str)
     }
 
     /// Set capability endpoint
@@ -159,26 +164,33 @@ impl NetworkRuntimeConfig {
     }
 
     /// Get capability endpoint
+    #[must_use]
     pub fn get_capability_endpoint(&self, capability: &str) -> Option<&str> {
         self.capability_endpoints
             .get(&capability.to_lowercase())
-            .map(|s| s.as_str())
+            .map(std::string::String::as_str)
     }
 
     /// Get all configured service names
+    #[must_use]
     pub fn get_configured_services(&self) -> Vec<&str> {
-        let mut services: Vec<&str> = self.service_endpoints.keys().map(|s| s.as_str()).collect();
+        let mut services: Vec<&str> = self
+            .service_endpoints
+            .keys()
+            .map(std::string::String::as_str)
+            .collect();
         services.sort_unstable();
         services.dedup();
         services
     }
 
     /// Get all configured capabilities
+    #[must_use]
     pub fn get_configured_capabilities(&self) -> Vec<&str> {
         let mut capabilities: Vec<&str> = self
             .capability_endpoints
             .keys()
-            .map(|s| s.as_str())
+            .map(std::string::String::as_str)
             .collect();
         capabilities.sort_unstable();
         capabilities.dedup();

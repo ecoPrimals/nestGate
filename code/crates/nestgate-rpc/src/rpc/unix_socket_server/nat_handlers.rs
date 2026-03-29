@@ -4,16 +4,16 @@
 //! NAT Traversal JSON-RPC Handlers
 //!
 //! Persistence previously used `StorageManagerService` + `nat_traversal` from nestgate-core.
-//! Stubbed until cross-crate wiring.
+//! These methods return `not_implemented` until cross-crate wiring; `beacon.list` uses local paths.
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::debug;
 
 use super::StorageState;
 
-// TODO: wire to nestgate-core — `nat_traversal::BEACON_DATASET`
+/// **Integration:** Align with `nestgate_core::nat_traversal::BEACON_DATASET` when this crate links to core.
 const BEACON_DATASET: &str = "_known_beacons";
 
 /// `nat.store_traversal_info` — stub until nestgate-core + storage wiring.
@@ -55,6 +55,7 @@ pub(super) async fn beacon_retrieve(
 
 /// `beacon.list` — lists beacon dataset directory keys (filesystem only).
 pub(super) async fn beacon_list(_params: &Option<Value>, _state: &StorageState) -> Result<Value> {
+    debug!("feature pending: NAT/beacon persistence via nestgate-core nat_traversal");
     debug!("beacon.list: listing known beacons");
 
     let dataset_path = get_storage_base_path()
@@ -69,10 +70,10 @@ pub(super) async fn beacon_list(_params: &Option<Value>, _state: &StorageState) 
         })?;
 
         while let Ok(Some(entry)) = entries.next_entry().await {
-            if let Some(name) = entry.file_name().to_str() {
-                if !name.starts_with('.') {
-                    peer_ids.push(name.to_string());
-                }
+            if let Some(name) = entry.file_name().to_str()
+                && !name.starts_with('.')
+            {
+                peer_ids.push(name.to_string());
             }
         }
     }

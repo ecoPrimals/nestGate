@@ -100,7 +100,7 @@ pub type SecurityConfig = ZfsSecurityConfig;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for CircuitBreaker
+/// Configuration for `CircuitBreaker`
 pub struct CircuitBreakerConfig {
     /// Whether circuit breaker is enabled
     pub enabled: bool,
@@ -193,7 +193,7 @@ impl Default for RetryPolicy {
 
 /// ZFS backend type for configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of ZfsBackend
+/// Types of `ZfsBackend`
 pub enum ZfsBackendType {
     /// Native ZFS backend (local system commands)
     Native,

@@ -9,7 +9,7 @@
 //! enabling users to save, share, and discover graph templates for faster bootstrapping.
 //!
 //! ## Philosophy
-//! - **Self-Knowledge**: Templates stored per family_id (multi-tenant isolation)
+//! - **Self-Knowledge**: Templates stored per `family_id` (multi-tenant isolation)
 //! - **Zero Hardcoding**: All behavior driven by data and environment
 //! - **Modern Rust**: No unsafe code, proper error handling throughout
 //! - **Complete Implementation**: No mocks, production-ready from day one
@@ -21,8 +21,8 @@
 //! - Usage tracking
 //! - Success rate calculations
 
-use nestgate_types::error::{NestGateError, Result};
 use chrono::{DateTime, Utc};
+use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -69,7 +69,7 @@ pub struct TemplateMetadata {
     #[serde(default)]
     pub tags: Vec<String>,
 
-    /// Niche type (e.g., "web_service", "ml_pipeline")
+    /// Niche type (e.g., "`web_service`", "`ml_pipeline`")
     #[serde(default)]
     pub niche_type: String,
 
@@ -111,7 +111,7 @@ impl Default for TemplateMetadata {
 /// Template storage state (in-memory for now, will be persistent later)
 #[derive(Debug, Clone, Default)]
 pub struct TemplateStorage {
-    /// Templates stored by family_id -> template_id -> template
+    /// Templates stored by `family_id` -> `template_id` -> template
     /// Ensures family-based isolation (self-knowledge principle)
     templates: Arc<RwLock<HashMap<String, HashMap<String, GraphTemplate>>>>,
 }
@@ -128,7 +128,7 @@ impl TemplateStorage {
     /// Store a template (with versioning)
     ///
     /// # Self-Knowledge Principle
-    /// - Templates isolated by family_id
+    /// - Templates isolated by `family_id`
     /// - No cross-family access
     /// - Auto-incrementing version numbers
     ///
@@ -210,7 +210,7 @@ impl TemplateStorage {
     /// Retrieve a template by ID
     ///
     /// # Self-Knowledge Principle
-    /// - Only retrieves from specified family_id
+    /// - Only retrieves from specified `family_id`
     /// - No cross-family access possible
     ///
     /// # Arguments
@@ -247,8 +247,8 @@ impl TemplateStorage {
     /// List templates with optional filtering
     ///
     /// # Self-Knowledge Principle
-    /// - Lists only templates for specified family_id
-    /// - Optional user_id filter for user's own templates
+    /// - Lists only templates for specified `family_id`
+    /// - Optional `user_id` filter for user's own templates
     ///
     /// # Arguments
     /// - `family_id`: Family identifier for isolation
@@ -277,31 +277,31 @@ impl TemplateStorage {
             .values()
             .filter(|t| {
                 // Filter by user_id if specified
-                if let Some(uid) = user_id {
-                    if t.user_id != uid {
-                        return false;
-                    }
+                if let Some(uid) = user_id
+                    && t.user_id != uid
+                {
+                    return false;
                 }
 
                 // Filter by tags if specified
-                if let Some(filter_tags) = tags {
-                    if !filter_tags.iter().any(|tag| t.metadata.tags.contains(tag)) {
-                        return false;
-                    }
+                if let Some(filter_tags) = tags
+                    && !filter_tags.iter().any(|tag| t.metadata.tags.contains(tag))
+                {
+                    return false;
                 }
 
                 // Filter by niche_type if specified
-                if let Some(niche) = niche_type {
-                    if t.metadata.niche_type != niche {
-                        return false;
-                    }
+                if let Some(niche) = niche_type
+                    && t.metadata.niche_type != niche
+                {
+                    return false;
                 }
 
                 // Filter by is_community if specified
-                if let Some(community) = is_community {
-                    if t.metadata.is_community != community {
-                        return false;
-                    }
+                if let Some(community) = is_community
+                    && t.metadata.is_community != community
+                {
+                    return false;
                 }
 
                 true
@@ -324,7 +324,7 @@ impl TemplateStorage {
     /// Get top community templates by ranking
     ///
     /// # Ranking Algorithm
-    /// score = 0.4 * normalized_usage + 0.3 * success_rate + 0.3 * (rating / 5.0)
+    /// score = 0.4 * `normalized_usage` + 0.3 * `success_rate` + 0.3 * (rating / 5.0)
     ///
     /// # Arguments
     /// - `niche_type`: Optional niche type filter
@@ -357,10 +357,10 @@ impl TemplateStorage {
                 }
 
                 // Filter by niche_type if specified
-                if let Some(niche) = niche_type {
-                    if t.metadata.niche_type != niche {
-                        return false;
-                    }
+                if let Some(niche) = niche_type
+                    && t.metadata.niche_type != niche
+                {
+                    return false;
                 }
 
                 true
@@ -385,11 +385,13 @@ impl TemplateStorage {
                     0.0
                 };
 
-                let rating_score = t.metadata.community_rating.map(|r| r / 5.0).unwrap_or(0.0);
+                let rating_score = t.metadata.community_rating.map_or(0.0, |r| r / 5.0);
 
                 // Ranking algorithm: weighted combination
-                let score =
-                    0.4 * normalized_usage + 0.3 * t.metadata.success_rate + 0.3 * rating_score;
+                let score = 0.3f64.mul_add(
+                    rating_score,
+                    0.4f64.mul_add(normalized_usage, 0.3 * t.metadata.success_rate),
+                );
 
                 (t, score)
             })
@@ -414,13 +416,13 @@ impl TemplateStorage {
     pub async fn increment_usage(&self, template_id: &str, family_id: &str) -> Result<()> {
         let mut storage = self.templates.write().await;
 
-        if let Some(family_templates) = storage.get_mut(family_id) {
-            if let Some(template) = family_templates.get_mut(template_id) {
-                template.metadata.usage_count += 1;
-                template.updated_at = Utc::now();
-                tracing::debug!("Incremented usage for template '{}'", template_id);
-                return Ok(());
-            }
+        if let Some(family_templates) = storage.get_mut(family_id)
+            && let Some(template) = family_templates.get_mut(template_id)
+        {
+            template.metadata.usage_count += 1;
+            template.updated_at = Utc::now();
+            tracing::debug!("Incremented usage for template '{}'", template_id);
+            return Ok(());
         }
 
         Err(NestGateError::not_found("Template not found"))
@@ -442,17 +444,17 @@ impl TemplateStorage {
 
         let mut storage = self.templates.write().await;
 
-        if let Some(family_templates) = storage.get_mut(family_id) {
-            if let Some(template) = family_templates.get_mut(template_id) {
-                template.metadata.success_rate = success_rate;
-                template.updated_at = Utc::now();
-                tracing::debug!(
-                    "Updated success rate for template '{}' to {}",
-                    template_id,
-                    success_rate
-                );
-                return Ok(());
-            }
+        if let Some(family_templates) = storage.get_mut(family_id)
+            && let Some(template) = family_templates.get_mut(template_id)
+        {
+            template.metadata.success_rate = success_rate;
+            template.updated_at = Utc::now();
+            tracing::debug!(
+                "Updated success rate for template '{}' to {}",
+                template_id,
+                success_rate
+            );
+            return Ok(());
         }
 
         Err(NestGateError::not_found("Template not found"))
@@ -460,5 +462,174 @@ impl TemplateStorage {
 }
 
 #[cfg(test)]
-#[path = "template_storage_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn store_rejects_empty_name() {
+        let ts = TemplateStorage::new();
+        let r = ts
+            .store_template(
+                String::new(),
+                "d".into(),
+                serde_json::json!({}),
+                "u".into(),
+                "fam".into(),
+                TemplateMetadata::default(),
+            )
+            .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn store_rejects_empty_family_id() {
+        let ts = TemplateStorage::new();
+        let r = ts
+            .store_template(
+                "n".into(),
+                "d".into(),
+                serde_json::json!({}),
+                "u".into(),
+                String::new(),
+                TemplateMetadata::default(),
+            )
+            .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn store_rejects_empty_user_id() {
+        let ts = TemplateStorage::new();
+        let r = ts
+            .store_template(
+                "n".into(),
+                "d".into(),
+                serde_json::json!({}),
+                String::new(),
+                "fam".into(),
+                TemplateMetadata::default(),
+            )
+            .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn store_list_retrieve_roundtrip() {
+        let ts = TemplateStorage::new();
+        let (id, ver) = ts
+            .store_template(
+                "MyTpl".into(),
+                "desc".into(),
+                serde_json::json!({"k": 1}),
+                "user1".into(),
+                "famA".into(),
+                TemplateMetadata {
+                    tags: vec!["t1".into()],
+                    niche_type: "web_service".into(),
+                    is_community: true,
+                    community_rating: Some(4.5),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(ver, 1);
+        assert!(id.starts_with("tmpl_"));
+
+        let t = ts.retrieve_template(&id, "famA").await.unwrap();
+        assert_eq!(t.name, "MyTpl");
+        assert_eq!(t.version, 1);
+
+        let list = ts
+            .list_templates("famA", Some("user1"), None, Some("web_service"), None)
+            .await
+            .unwrap();
+        assert_eq!(list.len(), 1);
+
+        let not_found = ts.retrieve_template("missing", "famA").await;
+        assert!(not_found.is_err());
+    }
+
+    #[tokio::test]
+    async fn list_unknown_family_errors() {
+        let ts = TemplateStorage::new();
+        let r = ts.list_templates("nope", None, None, None, None).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn increment_usage_and_success_rate() {
+        let ts = TemplateStorage::new();
+        let (id, _) = ts
+            .store_template(
+                "x".into(),
+                "d".into(),
+                serde_json::json!({}),
+                "u".into(),
+                "fam".into(),
+                TemplateMetadata::default(),
+            )
+            .await
+            .unwrap();
+
+        ts.increment_usage(&id, "fam").await.unwrap();
+        let t = ts.retrieve_template(&id, "fam").await.unwrap();
+        assert_eq!(t.metadata.usage_count, 1);
+
+        ts.update_success_rate(&id, "fam", 0.75).await.unwrap();
+        let t = ts.retrieve_template(&id, "fam").await.unwrap();
+        assert!((t.metadata.success_rate - 0.75).abs() < f64::EPSILON);
+
+        let bad = ts.update_success_rate(&id, "fam", 1.5).await;
+        assert!(bad.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_community_top_ranks_and_truncates() {
+        let ts = TemplateStorage::new();
+        let mut meta = TemplateMetadata {
+            niche_type: "ml".into(),
+            usage_count: 100,
+            success_rate: 1.0,
+            is_community: true,
+            community_rating: Some(5.0),
+            ..Default::default()
+        };
+        let (id1, _) = ts
+            .store_template(
+                "a".into(),
+                "".into(),
+                serde_json::json!({}),
+                "u".into(),
+                "f1".into(),
+                meta.clone(),
+            )
+            .await
+            .unwrap();
+        meta.usage_count = 10;
+        let _ = ts
+            .store_template(
+                "b".into(),
+                "".into(),
+                serde_json::json!({}),
+                "u".into(),
+                "f2".into(),
+                meta,
+            )
+            .await
+            .unwrap();
+
+        let top = ts.get_community_top(Some("ml"), 1, 0).await.unwrap();
+        assert_eq!(top.len(), 1);
+        assert_eq!(top[0].0.id, id1);
+    }
+
+    #[test]
+    fn round5_template_metadata_default_and_serde() {
+        let m = TemplateMetadata::default();
+        assert_eq!(m.usage_count, 0);
+        let json = serde_json::to_string(&m).unwrap();
+        let back: TemplateMetadata = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.niche_type, m.niche_type);
+    }
+}

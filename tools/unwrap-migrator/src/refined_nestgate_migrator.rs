@@ -82,7 +82,7 @@ pub enum ContextRequirement {
     HasErrorHandling,
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 pub enum SafetyLevel {
     /// Completely safe, can auto-migrate
     Safe,
@@ -371,7 +371,11 @@ impl RefinedNestGateMigrator {
         // Generic patterns with lower priority
         patterns.push(NestGateMigrationPattern {
             name: "generic_unwrap".to_string(),
-            pattern: Regex::new(r"\.unwrap\(\)")?,
+            // Literal `.unwrap()` match; clippy wants `contains` but we need capture positions for fixes.
+            pattern: {
+                #[allow(clippy::trivial_regex)]
+                Regex::new(r"\.unwrap\(\)")?
+            },
             replacement: "?".to_string(),
             error_category: NestGateErrorCategory::Internal,
             context_requirements: vec![
@@ -412,40 +416,39 @@ impl RefinedNestGateMigrator {
 
         for (line_number, line) in content.lines().enumerate() {
             for pattern in &self.patterns {
-                if let Some(captures) = pattern.pattern.captures(line) {
-                    if let Some(matched) = captures.get(0) {
-                        self.stats.patterns_found += 1;
+                if let Some(captures) = pattern.pattern.captures(line)
+                    && let Some(matched) = captures.get(0)
+                {
+                    self.stats.patterns_found += 1;
 
-                        let context_analysis = self
-                            .context_analyzer
-                            .analyze_context(file_path, line_number)
-                            .await?;
+                    let context_analysis = self
+                        .context_analyzer
+                        .analyze_context(file_path, line_number)
+                        .await?;
 
-                        let confidence = self.calculate_confidence(pattern, &context_analysis);
+                    let confidence = self.calculate_confidence(pattern, &context_analysis);
 
-                        if confidence >= self.config.min_confidence {
-                            let candidate = MigrationCandidate {
-                                file_path: file_path.to_path_buf(),
-                                line_number: line_number + 1,
-                                column_start: matched.start(),
-                                column_end: matched.end(),
-                                pattern_name: pattern.name.clone(),
-                                original_code: matched.as_str().to_string(),
-                                suggested_replacement: self
-                                    .generate_replacement(pattern, &captures),
-                                safety_level: pattern.safety_level.clone(),
-                                context_analysis,
-                                confidence,
-                                reasoning: self.generate_reasoning(pattern, confidence),
-                            };
+                    if confidence >= self.config.min_confidence {
+                        let candidate = MigrationCandidate {
+                            file_path: file_path.to_path_buf(),
+                            line_number: line_number + 1,
+                            column_start: matched.start(),
+                            column_end: matched.end(),
+                            pattern_name: pattern.name.clone(),
+                            original_code: matched.as_str().to_string(),
+                            suggested_replacement: self.generate_replacement(pattern, &captures),
+                            safety_level: pattern.safety_level.clone(),
+                            context_analysis,
+                            confidence,
+                            reasoning: self.generate_reasoning(pattern, confidence),
+                        };
 
-                            candidates.push(candidate);
+                        candidates.push(candidate);
 
-                            match pattern.safety_level {
-                                SafetyLevel::Safe => self.stats.safe_migrations += 1,
-                                SafetyLevel::SafeWithReview => self.stats.review_migrations += 1,
-                                _ => self.stats.skipped_migrations += 1,
-                            }
+                        match pattern.safety_level {
+                            SafetyLevel::Safe => self.stats.safe_migrations += 1,
+                            SafetyLevel::SafeWithReview => self.stats.review_migrations += 1,
+                            _ => self.stats.skipped_migrations += 1,
                         }
                     }
                 }
@@ -542,7 +545,7 @@ impl RefinedNestGateMigrator {
     }
 
     #[must_use]
-    pub fn get_stats(&self) -> &MigrationStats {
+    pub const fn get_stats(&self) -> &MigrationStats {
         &self.stats
     }
 }

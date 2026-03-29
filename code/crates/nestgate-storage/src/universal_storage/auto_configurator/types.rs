@@ -13,8 +13,8 @@ use super::enums::{
     CrossTierRedundancyStrategy, PerformanceTier, RedundancyLevel, RedundancyStrategy,
     StorageUseCase, ZfsFeature,
 };
-use nestgate_types::unified_enums::storage_types::UnifiedStorageCapability;
 use crate::universal_storage::DetectedStorage;
+use nestgate_types::unified_enums::storage_types::UnifiedStorageCapability;
 
 // ==================== CONFIGURATION SETTINGS ====================
 
@@ -72,7 +72,7 @@ pub struct StorageRequirements {
 
 /// Final optimal storage configuration
 ///
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

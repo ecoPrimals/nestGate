@@ -456,3 +456,98 @@ async fn test_zero_cost_adapter_revoke_token_delegates() {
         .await
         .expect("test: zero-cost revoke_token");
 }
+
+#[tokio::test]
+async fn test_security_primal_adapter_authorize_proxies_decrypt() {
+    let provider = MockSecurityPrimalProvider {
+        key_id: "key-1".to_string(),
+    };
+    let adapter = SecurityPrimalAdapter(provider);
+    let token = AuthToken {
+        token: "t".to_string(),
+        expires_at: SystemTime::now(),
+        permissions: vec![],
+    };
+    let out = adapter
+        .authorize(&token, b"payload")
+        .await
+        .expect("test: authorize decrypt");
+    assert_eq!(out, b"payload");
+}
+
+#[tokio::test]
+async fn test_security_primal_adapter_verify_matches_signature() {
+    let provider = MockSecurityPrimalProvider {
+        key_id: "key-1".to_string(),
+    };
+    let adapter = SecurityPrimalAdapter(provider);
+    let out = adapter
+        .verify(b"same", b"same")
+        .await
+        .expect("test: verify");
+    assert!(out.is_some());
+}
+
+#[tokio::test]
+async fn test_security_primal_adapter_sign_noop_ok() {
+    let provider = MockSecurityPrimalProvider {
+        key_id: "key-1".to_string(),
+    };
+    let adapter = SecurityPrimalAdapter(provider);
+    adapter.sign(b"data").await.expect("test: sign");
+}
+
+#[tokio::test]
+async fn test_security_primal_adapter_revoke_token_noop() {
+    let provider = MockSecurityPrimalProvider {
+        key_id: "key-1".to_string(),
+    };
+    let adapter = SecurityPrimalAdapter(provider);
+    let token = AuthToken {
+        token: "t".to_string(),
+        expires_at: SystemTime::now(),
+        permissions: vec![],
+    };
+    adapter.revoke_token(&token).await.expect("test: revoke");
+}
+
+#[tokio::test]
+async fn test_zero_cost_adapter_refresh_token_roundtrip() {
+    let provider = MockZeroCostProvider {
+        config: "cfg".to_string(),
+    };
+    let adapter = ZeroCostSecurityAdapter(provider);
+    let token = AuthToken {
+        token: "old".to_string(),
+        expires_at: SystemTime::now(),
+        permissions: vec![],
+    };
+    let new_t = adapter.refresh_token(&token).await.expect("test: refresh");
+    assert_eq!(new_t.token, "refreshed");
+}
+
+#[tokio::test]
+async fn test_zero_cost_canonical_provider_provide_errors() {
+    let provider = MockZeroCostProvider {
+        config: "cfg".to_string(),
+    };
+    let adapter: ZeroCostSecurityAdapter<_> = ZeroCostSecurityAdapter(provider);
+    match adapter.provide().await {
+        Err(e) => assert!(!e.to_string().is_empty()),
+        Ok(_) => panic!("expected provide to fail"),
+    }
+}
+
+#[tokio::test]
+async fn test_security_primal_canonical_get_capabilities() {
+    let provider = MockSecurityPrimalProvider {
+        key_id: "k".to_string(),
+    };
+    let adapter: SecurityPrimalAdapter<_> = SecurityPrimalAdapter(provider);
+    let caps = crate::traits::canonical_provider_unification::CanonicalUniversalProvider::<
+        Box<dyn crate::traits::canonical_provider_unification::SecurityService>,
+    >::get_capabilities(&adapter)
+    .await
+    .expect("caps");
+    assert!(caps.operations.contains(&"authenticate".to_string()));
+}

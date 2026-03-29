@@ -9,7 +9,7 @@
 //! and TCP fallback scenarios.
 
 use nestgate_core::rpc::isomorphic_ipc::{
-    discover_ipc_endpoint, IpcEndpoint, IsomorphicIpcServer, RpcHandler, UnixSocketRpcHandler,
+    IpcEndpoint, IsomorphicIpcServer, RpcHandler, UnixSocketRpcHandler, discover_ipc_endpoint,
 };
 use serde_json::json;
 use std::sync::Arc;

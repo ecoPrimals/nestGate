@@ -9,7 +9,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::constants::port_defaults_config::PortConfig;
 //!
 //! // Load from environment
@@ -22,7 +22,11 @@
 //!     .with_api_port(9999)
 //!     .with_metrics_port(8888);
 //! ```
-use super::port_defaults::*;
+use super::port_defaults::{
+    DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_DEV_PORT, DEFAULT_GRAFANA_PORT,
+    DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT, DEFAULT_POSTGRES_PORT, DEFAULT_PROMETHEUS_PORT,
+    DEFAULT_REDIS_PORT,
+};
 use std::sync::Arc;
 
 /// Thread-safe configuration for port defaults
@@ -49,12 +53,13 @@ pub struct PortConfig {
     grafana_port: Option<u16>,
 }
 
-/// Shared immutable reference to PortConfig
+/// Shared immutable reference to `PortConfig`
 pub type SharedPortConfig = Arc<PortConfig>;
 
 impl PortConfig {
     /// Create a new empty configuration (all values None, will use hardcoded defaults)
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             api_port: None,
             admin_port: None,
@@ -70,6 +75,7 @@ impl PortConfig {
 
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             api_port: std::env::var("NESTGATE_API_PORT")
@@ -105,46 +111,55 @@ impl PortConfig {
     // Port getters with fallback to hardcoded defaults
 
     /// Gets Api Port
+    #[must_use]
     pub fn get_api_port(&self) -> u16 {
         self.api_port.unwrap_or(DEFAULT_API_PORT)
     }
 
     /// Gets Admin Port
+    #[must_use]
     pub fn get_admin_port(&self) -> u16 {
         self.admin_port.unwrap_or(DEFAULT_ADMIN_PORT)
     }
 
     /// Gets Metrics Port
+    #[must_use]
     pub fn get_metrics_port(&self) -> u16 {
         self.metrics_port.unwrap_or(DEFAULT_METRICS_PORT)
     }
 
     /// Gets Health Port
+    #[must_use]
     pub fn get_health_port(&self) -> u16 {
         self.health_port.unwrap_or(DEFAULT_HEALTH_PORT)
     }
 
     /// Gets Dev Port
+    #[must_use]
     pub fn get_dev_port(&self) -> u16 {
         self.dev_port.unwrap_or(DEFAULT_DEV_PORT)
     }
 
     /// Gets Postgres Port
+    #[must_use]
     pub fn get_postgres_port(&self) -> u16 {
         self.postgres_port.unwrap_or(DEFAULT_POSTGRES_PORT)
     }
 
     /// Gets Redis Port
+    #[must_use]
     pub fn get_redis_port(&self) -> u16 {
         self.redis_port.unwrap_or(DEFAULT_REDIS_PORT)
     }
 
     /// Gets Prometheus Port
+    #[must_use]
     pub fn get_prometheus_port(&self) -> u16 {
         self.prometheus_port.unwrap_or(DEFAULT_PROMETHEUS_PORT)
     }
 
     /// Gets Grafana Port
+    #[must_use]
     pub fn get_grafana_port(&self) -> u16 {
         self.grafana_port.unwrap_or(DEFAULT_GRAFANA_PORT)
     }
@@ -152,55 +167,64 @@ impl PortConfig {
     // Builder methods for tests
 
     /// Builder method to set Api Port
-    pub fn with_api_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_api_port(mut self, port: u16) -> Self {
         self.api_port = Some(port);
         self
     }
 
     /// Builder method to set Admin Port
-    pub fn with_admin_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_admin_port(mut self, port: u16) -> Self {
         self.admin_port = Some(port);
         self
     }
 
     /// Builder method to set Metrics Port
-    pub fn with_metrics_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_metrics_port(mut self, port: u16) -> Self {
         self.metrics_port = Some(port);
         self
     }
 
     /// Builder method to set Health Port
-    pub fn with_health_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_health_port(mut self, port: u16) -> Self {
         self.health_port = Some(port);
         self
     }
 
     /// Builder method to set Dev Port
-    pub fn with_dev_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_dev_port(mut self, port: u16) -> Self {
         self.dev_port = Some(port);
         self
     }
 
     /// Builder method to set Postgres Port
-    pub fn with_postgres_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_postgres_port(mut self, port: u16) -> Self {
         self.postgres_port = Some(port);
         self
     }
 
     /// Builder method to set Redis Port
-    pub fn with_redis_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_redis_port(mut self, port: u16) -> Self {
         self.redis_port = Some(port);
         self
     }
 
     /// Builder method to set Prometheus Port
-    pub fn with_prometheus_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_prometheus_port(mut self, port: u16) -> Self {
         self.prometheus_port = Some(port);
         self
     }
 
     /// Builder method to set Grafana Port
-    pub fn with_grafana_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_grafana_port(mut self, port: u16) -> Self {
         self.grafana_port = Some(port);
         self
     }

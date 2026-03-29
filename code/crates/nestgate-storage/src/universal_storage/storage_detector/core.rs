@@ -90,7 +90,7 @@ impl StorageDetectorUtils {
 
     /// Check if storage type supports specific capability
     #[must_use]
-    pub fn storage_supports_capability(_storage_type: &str, _capability: &str) -> bool {
+    pub const fn storage_supports_capability(_storage_type: &str, _capability: &str) -> bool {
         true // Simplified implementation for compilation success
     }
 }

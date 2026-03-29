@@ -117,7 +117,7 @@ pub struct CapacityRecommendation {
 ///
 /// Health status of storage pools.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Status values for PoolHealth
+/// Status values for `PoolHealth`
 pub enum PoolHealthStatus {
     /// Pool is healthy
     Healthy,

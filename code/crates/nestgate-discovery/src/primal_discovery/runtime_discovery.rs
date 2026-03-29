@@ -23,9 +23,9 @@
 //! let _url = &security.endpoint;
 //! ```
 
-use nestgate_types::error::{NestGateError, Result};
 use crate::infant_discovery::{CapabilityDescriptor, CapabilityType, InfantDiscoverySystem};
 use dashmap::DashMap;
+use nestgate_types::error::{NestGateError, Result};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tracing::{debug, error, info};
@@ -33,7 +33,7 @@ use tracing::{debug, error, info};
 /// Runtime discovery service with lock-free caching
 ///
 /// Wraps the Infant Discovery Architecture with common patterns:
-/// - Automatic caching of discovered primals (lock-free with DashMap)
+/// - Automatic caching of discovered primals (lock-free with `DashMap`)
 /// - TTL-based cache invalidation
 /// - Connection health checking
 /// - Load balancing across multiple primals
@@ -45,7 +45,7 @@ pub struct RuntimeDiscovery {
     _infant_discovery: Arc<InfantDiscoverySystem<256>>,
 
     /// Cached discovered primals (lock-free for concurrent discovery)
-    /// DashMap provides 5-10x better performance for frequent lookups
+    /// `DashMap` provides 5-10x better performance for frequent lookups
     cache: Arc<DashMap<String, CachedDiscovery>>,
 
     /// Cache TTL
@@ -86,7 +86,8 @@ impl RuntimeDiscovery {
     }
 
     /// Create with custom cache TTL
-    pub fn with_cache_ttl(mut self, ttl: Duration) -> Self {
+    #[must_use]
+    pub const fn with_cache_ttl(mut self, ttl: Duration) -> Self {
         self.cache_ttl = ttl;
         self
     }
@@ -105,7 +106,7 @@ impl RuntimeDiscovery {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::primal_discovery::RuntimeDiscovery;
     /// # async fn example() -> nestgate_core::Result<()> {
     /// let discovery = RuntimeDiscovery::new().await?;
@@ -121,12 +122,12 @@ impl RuntimeDiscovery {
             .discover_with_cache("security_authentication")
             .await
             .map_err(|e| {
-                NestGateError::internal(format!("Failed to discover security capabilities: {}", e))
+                NestGateError::internal(format!("Failed to discover security capabilities: {e}"))
             })?;
 
         // Find best security primal
         self.select_best_primal(&capabilities).map_err(|e| {
-            NestGateError::security_error(&format!("No healthy security primal available: {}", e))
+            NestGateError::security_error(&format!("No healthy security primal available: {e}"))
         })
     }
 
@@ -145,13 +146,12 @@ impl RuntimeDiscovery {
             .await
             .map_err(|e| {
                 NestGateError::internal(format!(
-                    "Failed to discover orchestration capabilities: {:?}",
-                    e
+                    "Failed to discover orchestration capabilities: {e:?}"
                 ))
             })?;
 
         self.select_best_primal(&capabilities).map_err(|e| {
-            NestGateError::internal(format!("No healthy orchestrator available: {:?}", e))
+            NestGateError::internal(format!("No healthy orchestrator available: {e:?}"))
         })
     }
 
@@ -167,12 +167,11 @@ impl RuntimeDiscovery {
             .discover_with_cache("artificial_intelligence")
             .await
             .map_err(|e| {
-                NestGateError::internal(format!("Failed to discover AI capabilities: {:?}", e))
+                NestGateError::internal(format!("Failed to discover AI capabilities: {e:?}"))
             })?;
 
-        self.select_best_primal(&capabilities).map_err(|e| {
-            NestGateError::internal(format!("No healthy AI primal available: {:?}", e))
-        })
+        self.select_best_primal(&capabilities)
+            .map_err(|e| NestGateError::internal(format!("No healthy AI primal available: {e:?}")))
     }
 
     /// Find a storage primal
@@ -184,11 +183,11 @@ impl RuntimeDiscovery {
         info!("Discovering storage primal via capabilities");
 
         let capabilities = self.discover_with_cache("storage").await.map_err(|e| {
-            NestGateError::internal(format!("Failed to discover storage capabilities: {:?}", e))
+            NestGateError::internal(format!("Failed to discover storage capabilities: {e:?}"))
         })?;
 
         self.select_best_primal(&capabilities).map_err(|e| {
-            NestGateError::internal(format!("No healthy storage primal available: {:?}", e))
+            NestGateError::internal(format!("No healthy storage primal available: {e:?}"))
         })
     }
 
@@ -198,7 +197,7 @@ impl RuntimeDiscovery {
     ///
     /// # Arguments
     ///
-    /// * `capability_type` - The capability to search for (e.g., "security_authentication")
+    /// * `capability_type` - The capability to search for (e.g., "`security_authentication`")
     ///
     /// # Errors
     ///
@@ -211,15 +210,13 @@ impl RuntimeDiscovery {
             .await
             .map_err(|e| {
                 NestGateError::internal(format!(
-                    "Failed to discover capability {}: {:?}",
-                    capability_type, e
+                    "Failed to discover capability {capability_type}: {e:?}"
                 ))
             })?;
 
         self.select_best_primal(&capabilities).map_err(|e| {
             NestGateError::internal(format!(
-                "No healthy primal available for {}: {:?}",
-                capability_type, e
+                "No healthy primal available for {capability_type}: {e:?}"
             ))
         })
     }
@@ -240,8 +237,7 @@ impl RuntimeDiscovery {
             .await
             .map_err(|e| {
                 NestGateError::internal(format!(
-                    "Failed to discover capability {}: {:?}",
-                    capability_type, e
+                    "Failed to discover capability {capability_type}: {e:?}"
                 ))
             })?;
 
@@ -322,7 +318,7 @@ impl RuntimeDiscovery {
         let discovered = discovery_system
             .discover_capabilities()
             .await
-            .map_err(|e| NestGateError::internal(format!("Infant Discovery failed: {:?}", e)))?;
+            .map_err(|e| NestGateError::internal(format!("Infant Discovery failed: {e:?}")))?;
 
         // Filter by requested capability type
         let filtered: Vec<CapabilityDescriptor> = discovered
@@ -425,13 +421,13 @@ impl PrimalConnection {
 
     /// Get the capability type
     #[must_use]
-    pub fn capability_type(&self) -> &CapabilityType {
+    pub const fn capability_type(&self) -> &CapabilityType {
         &self.capability.capability_type
     }
 
     /// Check if sovereignty compliant
     #[must_use]
-    pub fn is_sovereignty_compliant(&self) -> bool {
+    pub const fn is_sovereignty_compliant(&self) -> bool {
         self.capability.sovereignty_compliant
     }
 

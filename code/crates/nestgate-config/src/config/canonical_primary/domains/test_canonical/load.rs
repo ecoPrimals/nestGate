@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for LoadTest
+/// Configuration for `LoadTest`
 pub struct LoadTestConfig {
     /// Scenarios
     pub scenarios: Vec<LoadTestScenario>,
@@ -38,7 +38,7 @@ pub struct LoadTestStep {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RampUp
+/// Configuration for `RampUp`
 pub struct RampUpConfig {
     /// Duration
     pub duration: Duration,

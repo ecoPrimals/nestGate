@@ -15,7 +15,7 @@ use nestgate_types::error::utilities::safe_env_var_or_default;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
-/// Configuration for SovereigntyHelpers
+/// Configuration for `SovereigntyHelpers`
 pub struct SovereigntyHelpersConfig {
     // API configuration
     api_host: String,
@@ -85,37 +85,27 @@ impl SovereigntyHelpersConfig {
     /// Create configuration from environment variables
     #[must_use]
     pub fn from_env() -> Self {
-        let api_host =
-            safe_env_var_or_default("NESTGATE_API_HOST", Self::DEFAULT_API_HOST).to_string();
+        let api_host = safe_env_var_or_default("NESTGATE_API_HOST", Self::DEFAULT_API_HOST);
 
-        let api_port =
-            safe_env_var_or_default("NESTGATE_API_PORT", Self::DEFAULT_API_PORT).to_string();
+        let api_port = safe_env_var_or_default("NESTGATE_API_PORT", Self::DEFAULT_API_PORT);
 
-        let api_scheme =
-            safe_env_var_or_default("NESTGATE_API_SCHEME", Self::DEFAULT_API_SCHEME).to_string();
+        let api_scheme = safe_env_var_or_default("NESTGATE_API_SCHEME", Self::DEFAULT_API_SCHEME);
 
-        let ws_scheme =
-            safe_env_var_or_default("NESTGATE_WS_SCHEME", Self::DEFAULT_WS_SCHEME).to_string();
+        let ws_scheme = safe_env_var_or_default("NESTGATE_WS_SCHEME", Self::DEFAULT_WS_SCHEME);
 
         let discovery_path =
-            safe_env_var_or_default("NESTGATE_DISCOVERY_PATH", Self::DEFAULT_DISCOVERY_PATH)
-                .to_string();
+            safe_env_var_or_default("NESTGATE_DISCOVERY_PATH", Self::DEFAULT_DISCOVERY_PATH);
 
         let bind_address =
-            safe_env_var_or_default("NESTGATE_BIND_ADDRESS", Self::DEFAULT_BIND_ADDRESS)
-                .to_string();
+            safe_env_var_or_default("NESTGATE_BIND_ADDRESS", Self::DEFAULT_BIND_ADDRESS);
 
-        let db_host =
-            safe_env_var_or_default("NESTGATE_DB_HOST", Self::DEFAULT_DB_HOST).to_string();
+        let db_host = safe_env_var_or_default("NESTGATE_DB_HOST", Self::DEFAULT_DB_HOST);
 
-        let db_port =
-            safe_env_var_or_default("NESTGATE_DB_PORT", Self::DEFAULT_DB_PORT).to_string();
+        let db_port = safe_env_var_or_default("NESTGATE_DB_PORT", Self::DEFAULT_DB_PORT);
 
-        let dev_host =
-            safe_env_var_or_default("NESTGATE_DEV_HOST", Self::DEFAULT_DEV_HOST).to_string();
+        let dev_host = safe_env_var_or_default("NESTGATE_DEV_HOST", Self::DEFAULT_DEV_HOST);
 
-        let dev_port =
-            safe_env_var_or_default("NESTGATE_DEV_PORT", Self::DEFAULT_DEV_PORT).to_string();
+        let dev_port = safe_env_var_or_default("NESTGATE_DEV_PORT", Self::DEFAULT_DEV_PORT);
 
         Self {
             api_host,

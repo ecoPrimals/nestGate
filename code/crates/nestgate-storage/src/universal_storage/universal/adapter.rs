@@ -32,11 +32,13 @@ impl UniversalStorageAdapter {
     }
 
     /// Get the endpoint
+    #[must_use]
     pub fn endpoint(&self) -> &str {
         &self.endpoint
     }
 
     /// Get the protocol
+    #[must_use]
     pub fn protocol(&self) -> &DiscoveredProtocol {
         &self.protocol
     }
@@ -213,7 +215,7 @@ impl UniversalStorageAdapter {
         if let Ok(mut entries) = tokio::fs::read_dir(search_path).await {
             while let Ok(Some(entry)) = entries.next_entry().await {
                 if let Ok(name) = entry.file_name().into_string() {
-                    keys.push(format!("{}/{}", prefix, name));
+                    keys.push(format!("{prefix}/{name}"));
                 }
             }
         }

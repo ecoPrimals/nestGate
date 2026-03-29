@@ -3,8 +3,8 @@
 
 //! # 🌐 TCP IPC Fallback Server
 //!
-//! **ISOMORPHIC**: Automatic fallback when Unix sockets unavailable  
-//! **PROTOCOL**: Same JSON-RPC 2.0 as Unix sockets  
+//! **ISOMORPHIC**: Automatic fallback when Unix sockets unavailable\
+//! **PROTOCOL**: Same JSON-RPC 2.0 as Unix sockets\
 //! **SECURITY**: Localhost only (127.0.0.1), same security as Unix sockets
 //!
 //! ## Philosophy
@@ -24,7 +24,7 @@
 //!
 //! **Compatibility**: Works on ALL platforms:
 //! - Linux (when Unix sockets blocked)
-//! - Android (SELinux restrictions)
+//! - Android (`SELinux` restrictions)
 //! - Future platforms with similar constraints
 //!
 //! ## Discovery System
@@ -88,8 +88,8 @@ impl TcpFallbackServer {
 
     /// Start TCP fallback server
     ///
-    /// **Binds to localhost:0** (ephemeral port for security)  
-    /// **Writes discovery file** (for client auto-discovery)  
+    /// **Binds to localhost:0** (ephemeral port for security)\
+    /// **Writes discovery file** (for client auto-discovery)\
     /// **Accepts connections** (same loop as Unix socket server)
     ///
     /// # Returns
@@ -103,7 +103,7 @@ impl TcpFallbackServer {
         // Bind address configurable via NESTGATE_IPC_BIND_ADDRESS (default: 127.0.0.1)
         let bind_addr =
             std::env::var("NESTGATE_IPC_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string());
-        let bind_socket = format!("{}:0", bind_addr);
+        let bind_socket = format!("{bind_addr}:0");
         info!("   Bind: {} (ephemeral port)", bind_socket);
 
         // Bind to configurable address:0 (ephemeral port, OS assigns)
@@ -145,8 +145,8 @@ impl TcpFallbackServer {
 
     /// Handle TCP connection (JSON-RPC over TCP)
     ///
-    /// **Protocol**: Line-delimited JSON-RPC 2.0  
-    /// **Format**: Each request/response is a single JSON line  
+    /// **Protocol**: Line-delimited JSON-RPC 2.0\
+    /// **Format**: Each request/response is a single JSON line\
     /// **Same as Unix sockets**: Identical protocol for transparency
     async fn handle_tcp_connection(&self, stream: TcpStream) -> Result<()> {
         let (reader, mut writer) = stream.into_split();
@@ -206,7 +206,7 @@ impl TcpFallbackServer {
 
     /// Write TCP discovery file (XDG-compliant)
     ///
-    /// **Format**: `tcp:127.0.0.1:PORT`  
+    /// **Format**: `tcp:127.0.0.1:PORT`\
     /// **Locations**: Try in order:
     /// 1. `$XDG_RUNTIME_DIR/{service}-ipc-port` (preferred)
     /// 2. `$HOME/.local/share/{service}-ipc-port` (fallback)
@@ -219,7 +219,7 @@ impl TcpFallbackServer {
             std::env::var("XDG_RUNTIME_DIR").ok(),
             std::env::var("HOME")
                 .ok()
-                .map(|h| format!("{}/.local/share", h)),
+                .map(|h| format!("{h}/.local/share")),
             Some("/tmp".to_string()),
         ];
 
@@ -232,7 +232,7 @@ impl TcpFallbackServer {
             match File::create(&discovery_file) {
                 Ok(mut f) => {
                     // Write in format: tcp:127.0.0.1:PORT
-                    if let Err(e) = writeln!(f, "tcp:{}", addr) {
+                    if let Err(e) = writeln!(f, "tcp:{addr}") {
                         warn!("⚠️  Failed to write discovery file: {}", e);
                         continue;
                     }
@@ -261,7 +261,10 @@ mod tests {
     struct MockHandler;
 
     impl RpcHandler for MockHandler {
-        fn handle_request(&self, _request: Value) -> Pin<Box<dyn Future<Output = Value> + Send + '_>> {
+        fn handle_request(
+            &self,
+            _request: Value,
+        ) -> Pin<Box<dyn Future<Output = Value> + Send + '_>> {
             Box::pin(async move {
                 serde_json::json!({
                     "jsonrpc": "2.0",

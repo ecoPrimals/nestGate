@@ -20,9 +20,9 @@ use std::env;
 
 /// Central configuration for service discovery
 ///
-/// Replaces hardcoded URLs like "http://localhost:8080" with configurable endpoints.
+/// Replaces hardcoded URLs like "<http://localhost:8080>" with configurable endpoints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ServiceDiscovery
+/// Configuration for `ServiceDiscovery`
 pub struct ServiceDiscoveryConfig {
     /// List of discovery endpoints
     pub endpoints: Vec<String>,
@@ -184,9 +184,12 @@ mod tests {
         let original_host = env::var("NESTGATE_DISCOVERY_HOST").ok();
         let original_port = env::var("NESTGATE_DISCOVERY_BASE_PORT").ok();
 
-        std::env::set_var("NESTGATE_DISCOVERY_HOST", "192.168.1.100");
-        std::env::set_var("NESTGATE_DISCOVERY_BASE_PORT", "9000");
-        std::env::remove_var("NESTGATE_DISCOVERY_ENDPOINTS");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_DISCOVERY_HOST", "192.168.1.100");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_DISCOVERY_BASE_PORT", "9000");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_DISCOVERY_ENDPOINTS");
 
         let config = ServiceDiscoveryConfig::default();
         assert_eq!(config.discovery_host, "192.168.1.100");
@@ -194,12 +197,12 @@ mod tests {
 
         // Restore original values
         match original_host {
-            Some(val) => std::env::set_var("NESTGATE_DISCOVERY_HOST", val),
-            None => std::env::remove_var("NESTGATE_DISCOVERY_HOST"),
+            Some(val) => crate::env_process::set_var("NESTGATE_DISCOVERY_HOST", val),
+            None => crate::env_process::remove_var("NESTGATE_DISCOVERY_HOST"),
         }
         match original_port {
-            Some(val) => std::env::set_var("NESTGATE_DISCOVERY_BASE_PORT", val),
-            None => std::env::remove_var("NESTGATE_DISCOVERY_BASE_PORT"),
+            Some(val) => crate::env_process::set_var("NESTGATE_DISCOVERY_BASE_PORT", val),
+            None => crate::env_process::remove_var("NESTGATE_DISCOVERY_BASE_PORT"),
         }
     }
 
@@ -240,27 +243,34 @@ mod tests {
     fn test_endpoints_from_env() {
         let original = env::var("NESTGATE_DISCOVERY_ENDPOINTS").ok();
 
-        std::env::set_var(
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var(
             "NESTGATE_DISCOVERY_ENDPOINTS",
             "http://server1:8080,http://server2:8081,http://server3:8082",
         );
 
         let config = ServiceDiscoveryConfig::default();
         assert_eq!(config.endpoints.len(), 3);
-        assert!(config
-            .endpoints
-            .contains(&"http://server1:8080".to_string()));
-        assert!(config
-            .endpoints
-            .contains(&"http://server2:8081".to_string()));
-        assert!(config
-            .endpoints
-            .contains(&"http://server3:8082".to_string()));
+        assert!(
+            config
+                .endpoints
+                .contains(&"http://server1:8080".to_string())
+        );
+        assert!(
+            config
+                .endpoints
+                .contains(&"http://server2:8081".to_string())
+        );
+        assert!(
+            config
+                .endpoints
+                .contains(&"http://server3:8082".to_string())
+        );
 
         // Restore original value
         match original {
-            Some(val) => std::env::set_var("NESTGATE_DISCOVERY_ENDPOINTS", val),
-            None => std::env::remove_var("NESTGATE_DISCOVERY_ENDPOINTS"),
+            Some(val) => crate::env_process::set_var("NESTGATE_DISCOVERY_ENDPOINTS", val),
+            None => crate::env_process::remove_var("NESTGATE_DISCOVERY_ENDPOINTS"),
         }
     }
 

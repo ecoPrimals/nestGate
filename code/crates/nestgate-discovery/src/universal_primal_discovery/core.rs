@@ -5,18 +5,18 @@ use super::{
     cache::DiscoveryCache, introspection::SystemIntrospection, network::NetworkDiscovery,
     performance::PerformanceDiscovery, registry::ServiceRegistryClient,
 };
+use dashmap::DashMap;
 /// Core Universal Primal Discovery Orchestrator
 /// This module contains the main orchestration logic that coordinates
 /// between different discovery subsystems.
 use nestgate_types::error::Result;
-use dashmap::DashMap;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
 /// **UNIVERSAL PRIMAL PRINCIPLE**: No hardcoded values, everything discovered
-/// **Performance**: Lock-free discovery with DashMap (5-15x faster)
+/// **Performance**: Lock-free discovery with `DashMap` (5-15x faster)
 /// Universalprimaldiscovery
 pub struct UniversalPrimalDiscovery {
     /// Network discovery subsystem

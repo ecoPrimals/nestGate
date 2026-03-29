@@ -11,7 +11,7 @@ use std::fmt;
 /// **THE** `DataType` - unified across all modules
 /// Replaces 4+ fragmented `DataType` definitions across `temporal_storage`, `ecosystem_integration`, etc.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedData
+/// Types of `UnifiedData`
 pub enum UnifiedDataType {
     // Core data types
     /// Binary data files
@@ -82,7 +82,7 @@ impl fmt::Display for UnifiedDataType {
 /// **THE** `ContentType` - unified across all modules
 /// Replaces `ContentType` definitions in API handlers and HTTP responses
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedContent
+/// Types of `UnifiedContent`
 pub enum UnifiedContentType {
     /// JSON content
     Json,
@@ -165,7 +165,7 @@ impl fmt::Display for UnifiedContentType {
 /// **THE** `FileType` - unified across all modules
 /// Replaces `FileType` definitions in automation and ZFS modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedFile
+/// Types of `UnifiedFile`
 pub enum UnifiedFileType {
     /// Regular file
     Regular,

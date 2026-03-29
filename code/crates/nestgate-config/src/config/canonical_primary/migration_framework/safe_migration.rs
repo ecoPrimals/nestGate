@@ -11,7 +11,9 @@ use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
-use super::types::*;
+use super::types::{
+    ErrorSeverity, MigrationError, MigrationPhase, MigrationReport, ValidationRule,
+};
 
 /// Safe configuration migration with comprehensive validation
 pub struct SafeConfigMigration {
@@ -75,7 +77,7 @@ impl SafeConfigMigration {
 
         for rule in &self.validation_rules {
             match (rule.validator)(config) {
-                Ok(_) => {}
+                Ok(()) => {}
                 Err(e) => {
                     errors.push(MigrationError {
                         message: format!("Validation rule '{}' failed: {}", rule.name, e),
@@ -105,11 +107,11 @@ impl SafeConfigMigration {
         })
     }
 
-    fn validate_required_fields(_config: &NestGateCanonicalConfig) -> Result<()> {
+    const fn validate_required_fields(_config: &NestGateCanonicalConfig) -> Result<()> {
         Ok(())
     }
 
-    fn validatevalue_ranges(_config: &NestGateCanonicalConfig) -> Result<()> {
+    const fn validatevalue_ranges(_config: &NestGateCanonicalConfig) -> Result<()> {
         Ok(())
     }
 }

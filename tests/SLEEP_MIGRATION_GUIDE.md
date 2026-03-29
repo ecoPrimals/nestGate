@@ -38,16 +38,16 @@ tokio::spawn(async { do_work().await });
 tokio::time::sleep(Duration::from_millis(100)).await;
 assert!(work_done());
 
-// ✅ GOOD - Event-driven
-use tests::common::concurrent_sync::EventSync;
+// ✅ GOOD - Event-driven (test binary must `mod common` → tests/common)
+use crate::common::modern_sync::TestCoordinator;
 
-let sync = EventSync::new();
-let s = sync.clone_handle();
+let coord = TestCoordinator::new();
+let c = coord.clone();
 tokio::spawn(async move {
     do_work().await;
-    s.record("work_done").await;
+    c.signal_ready().await;
 });
-sync.wait_for_event("work_done", Duration::from_secs(1)).await?;
+coord.wait_ready().await;
 assert!(work_done());
 ```
 
@@ -57,17 +57,19 @@ assert!(work_done());
 tokio::time::sleep(Duration::from_millis(50)).await; // Hope other task ready
 
 // ✅ GOOD - Barrier-based sync
-use tests::common::concurrent_sync::TestCoordinator;
+use crate::common::modern_sync::TestBarrier;
+use std::sync::Arc;
 
-let coord = TestCoordinator::new(2);
-let c1 = coord.clone_handle();
+let barrier = Arc::new(TestBarrier::new(2));
+let b = Arc::clone(&barrier);
 
 tokio::spawn(async move {
     // Do work
-    c1.sync_point().await; // Wait for both tasks
+    b.arrive();
 });
 
-coord.sync_point().await;
+barrier.arrive();
+barrier.wait().await;
 ```
 
 #### **3. Polling Without Backoff**
@@ -84,8 +86,10 @@ tokio::time::timeout(Duration::from_secs(1), async {
     }
 }).await?;
 
-// ✅ BETTER - Event-driven if possible
-sync.wait_for_event("condition_met", Duration::from_secs(1)).await?;
+// ✅ BETTER - Condition wait with timeout (no fixed sleep loop)
+use crate::common::sync_utils::wait_for_condition;
+
+wait_for_condition(|| condition(), Duration::from_secs(1)).await?;
 ```
 
 #### **4. Holding Locks**
@@ -119,14 +123,15 @@ for i in 0..100 {
     tokio::spawn(async move { task(i).await });
 }
 
-// ✅ OR use rate limiter if actually needed
-use tests::common::concurrent_sync::ConcurrentRateLimiter;
+// ✅ OR use a semaphore if you truly need bounded concurrency
+use tokio::sync::Semaphore;
+use std::sync::Arc;
 
-let limiter = ConcurrentRateLimiter::new(10);
+let sem = Arc::new(Semaphore::new(10));
 for i in 0..100 {
-    let lim = limiter.clone();
+    let sem = Arc::clone(&sem);
     tokio::spawn(async move {
-        let _permit = lim.acquire().await;
+        let _permit = sem.acquire().await.unwrap();
         task(i).await
     });
 }
@@ -144,8 +149,8 @@ Is this a sleep call?
   ├─ Rate limiting implementation? → KEEP (production logic)
   │
   └─ Otherwise, ask:
-      ├─ Waiting for condition? → REPLACE with EventSync
-      ├─ Coordinating tasks? → REPLACE with TestCoordinator
+      ├─ Waiting for condition? → REPLACE with `sync_utils::wait_for_*` or `modern_sync::TestEventStream`
+      ├─ Coordinating tasks? → REPLACE with `modern_sync::TestCoordinator` / `TestBarrier`
       ├─ Holding a lock? → REPLACE with channels/signals
       ├─ "Giving time" to something? → REPLACE with yield_now() or remove
       └─ Polling? → ADD timeout, consider event-driven
@@ -179,11 +184,11 @@ Already fixed:             7 (2%)
 
 ### **Pattern 1: Test Coordination**
 **Before**: `sleep(100ms)` and hope  
-**After**: `EventSync::wait_for_event()`
+**After**: `crate::common::modern_sync::TestCoordinator::wait_ready()` (after `signal_ready()`), or `crate::common::sync_utils::wait_for_condition`
 
 ### **Pattern 2: Multi-Task Sync**
 **Before**: `sleep(time * task_id)` for staggering  
-**After**: `TestCoordinator::sync_point()`
+**After**: `crate::common::modern_sync::TestBarrier` (each task `arrive()`, one waits with `wait()`)
 
 ### **Pattern 3: Timeout Testing**
 **Before**: `sleep(10s)` in operation  
@@ -208,7 +213,13 @@ Before replacing a sleep:
 
 ---
 
-**Last Updated**: December 13, 2025  
-**Files Using New Patterns**: 5 and growing  
-**Sleep Calls Eliminated**: 7 so far
+## Module paths (2026)
+
+- Prefer **`crate::common::modern_sync`** for coordinators, barriers, event streams, and result channels (`tests/common/modern_sync.rs`, exported from `tests/common/mod.rs`).
+- Prefer **`crate::common::sync_utils`** for condition polling with timeout (`tests/common/sync_utils.rs`).
+- The file `tests/common/concurrent_sync.rs` is **not** wired into `tests/common/mod.rs`; do not import it as a stable module path—use `modern_sync` / `sync_utils` (or plain `tokio::sync` primitives) instead.
+
+Integration test binaries that use these helpers typically declare `mod common;` at the top of `tests/<suite>.rs`, which resolves to `tests/common/mod.rs` (same pattern as `tests/biomeos_integration_tests.rs`).
+
+**Last Updated**: March 29, 2026
 

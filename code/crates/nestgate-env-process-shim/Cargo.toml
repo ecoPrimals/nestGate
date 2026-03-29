@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2025 ecoPrimals Collective
+
+[package]
+name = "nestgate-env-process-shim"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+description = "Rust 2021 std::env set_var/remove_var for use from Rust 2024 without unsafe"
+repository = "https://github.com/ecoprimals/nestgate"
+
+[lints]
+workspace = true

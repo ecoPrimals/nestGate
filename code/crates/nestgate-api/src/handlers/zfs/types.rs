@@ -30,7 +30,7 @@ pub struct ZfsApiState {
 }
 /// Pool creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for CreatePool operation
+/// Request parameters for `CreatePool` operation
 pub struct CreatePoolRequest {
     /// Pool name
     pub name: String,
@@ -54,7 +54,7 @@ pub struct PoolConfig {
 }
 /// Dataset creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for CreateDataset operation
+/// Request parameters for `CreateDataset` operation
 pub struct CreateDatasetRequest {
     /// Dataset name
     pub name: String,
@@ -67,7 +67,7 @@ pub struct CreateDatasetRequest {
 }
 /// Snapshot creation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for CreateSnapshot operation
+/// Request parameters for `CreateSnapshot` operation
 pub struct CreateSnapshotRequest {
     /// Snapshot name
     pub name: String,
@@ -80,7 +80,7 @@ pub struct CreateSnapshotRequest {
 }
 /// Tier migration request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for TierMigration operation
+/// Request parameters for `TierMigration` operation
 pub struct TierMigrationRequest {
     /// Dataset path
     pub dataset_path: String,
@@ -110,14 +110,14 @@ pub struct ListQuery {
 pub use nestgate_core::response::ApiResponse;
 /// Tier prediction request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for TierPrediction operation
+/// Request parameters for `TierPrediction` operation
 pub struct TierPredictionRequest {
     /// Path to the file for tier prediction
     pub file_path: String,
 }
 /// Performance analytics request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for PerformanceAnalytics operation
+/// Request parameters for `PerformanceAnalytics` operation
 pub struct PerformanceAnalyticsRequest {
     /// Pool name to analyze
     pub pool_name: Option<String>,
@@ -139,7 +139,7 @@ pub struct OptimizationRequest {
 }
 /// Manifest provisioning request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for ManifestProvisioning operation
+/// Request parameters for `ManifestProvisioning` operation
 pub struct ManifestProvisioningRequest {
     /// Service manifest
     pub manifest: serde_json::Value,
@@ -148,7 +148,7 @@ pub struct ManifestProvisioningRequest {
 }
 /// Management volume request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for ManagementVolume operation
+/// Request parameters for `ManagementVolume` operation
 pub struct ManagementVolumeRequest {
     /// Volume name
     pub name: String,
@@ -161,7 +161,7 @@ pub struct ManagementVolumeRequest {
 }
 /// Agent runtime request
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for AgentRuntime operation
+/// Request parameters for `AgentRuntime` operation
 pub struct AgentRuntimeRequest {
     /// Agent name
     pub name: String,
@@ -172,7 +172,7 @@ pub struct AgentRuntimeRequest {
 }
 /// Health check response
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Response data for HealthCheck operation
+/// Response data for `HealthCheck` operation
 pub struct HealthCheckResponse {
     /// Overall health status
     pub status: String,

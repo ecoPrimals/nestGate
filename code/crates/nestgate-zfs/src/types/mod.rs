@@ -54,4 +54,4 @@ pub use pool::*;
 pub use snapshot::*;
 
 // Re-export canonical error handling from nestgate-core
-pub use crate::error::{create_zfs_error, ZfsOperation};
+pub use crate::error::{ZfsOperation, create_zfs_error};

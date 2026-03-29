@@ -3,12 +3,15 @@
 
 //! Dynamic Endpoints module
 
-use nestgate_types::error::utilities::safe_env_var_or_default;
-use nestgate_types::error::Result;
 use dashmap::DashMap;
+use nestgate_types::error::Result;
+use nestgate_types::error::utilities::safe_env_var_or_default;
 
-// TODO: wire to nestgate-core — replace with `nestgate_core::universal_adapter::UniversalAdapter`.
-/// Placeholder type until the NestGate universal adapter is available from `nestgate-core`.
+/// Opaque marker for optional injected capability discovery.
+///
+/// **Integration:** `nestgate_core::universal_adapter::UniversalAdapter` is the full type; this crate
+/// cannot depend on `nestgate-core` (core depends on discovery). Inject an adapter from the application
+/// layer once a shared trait or `nestgate-types` bridge exists.
 #[derive(Debug, Default)]
 pub struct UniversalAdapter;
 use std::collections::HashMap;
@@ -29,7 +32,7 @@ type EndpointCacheMap = Arc<DashMap<String, String>>;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use std::sync::Arc;
 /// use nestgate_core::service_discovery::{DynamicEndpointResolver, DynamicEndpointsConfig};
 ///
@@ -82,6 +85,9 @@ impl DynamicEndpointResolver {
     /// Create resolver with universal adapter
     #[must_use]
     pub fn with_adapter(adapter: Arc<UniversalAdapter>) -> Self {
+        tracing::debug!(
+            "feature pending: UniversalAdapter-backed capability resolution from nestgate-core"
+        );
         let mut resolver = Self::from_env();
         resolver.adapter = Some(adapter);
         resolver
@@ -159,8 +165,7 @@ impl DynamicEndpointResolver {
         let hostname = safe_env_var_or_default(
             "NESTGATE_HOSTNAME",
             nestgate_config::constants::canonical_defaults::network::LOCALHOST,
-        )
-        .to_string();
+        );
 
         // Allocate port dynamically based on service type
         let port = self.get_service_port(service_type);
@@ -177,10 +182,10 @@ impl DynamicEndpointResolver {
     /// Get service port (with dynamic allocation)
     fn get_service_port(&self, service_type: &str) -> u16 {
         // Check environment variable first
-        if let Ok(port_str) = std::env::var(format!("{}_PORT", service_type.to_uppercase())) {
-            if let Ok(port) = port_str.parse::<u16>() {
-                return port;
-            }
+        if let Ok(port_str) = std::env::var(format!("{}_PORT", service_type.to_uppercase()))
+            && let Ok(port) = port_str.parse::<u16>()
+        {
+            return port;
         }
 
         // Check if we're in test mode to avoid hardcoded ports
@@ -208,7 +213,9 @@ impl DynamicEndpointResolver {
             "websocket" => api_port, // WebSocket on same port as API
             "metrics" => metrics_port,
             "health" => health_port,
-            "admin" => nestgate_config::constants::canonical_defaults::network::DEFAULT_INTERNAL_PORT,
+            "admin" => {
+                nestgate_config::constants::canonical_defaults::network::DEFAULT_INTERNAL_PORT
+            }
             "static" => api_port,
             _ => {
                 // Dynamic port allocation for unknown services
@@ -281,7 +288,11 @@ mod tests {
     #[tokio::test]
     async fn test_environment_variable_override() {
         let test_port = 9090;
-        std::env::set_var("API_ENDPOINT", format!("http://custom-api:{}", test_port));
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var(
+            "API_ENDPOINT",
+            format!("http://custom-api:{}", test_port),
+        );
 
         let resolver = DynamicEndpointResolver::new();
         let endpoint = resolver
@@ -291,7 +302,8 @@ mod tests {
 
         assert_eq!(endpoint, format!("http://custom-api:{}", test_port));
 
-        std::env::remove_var("API_ENDPOINT");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::remove_var("API_ENDPOINT");
     }
 
     #[tokio::test]

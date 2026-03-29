@@ -1,4 +1,3 @@
-use nestgate_core::canonical_types::StorageTier;
 /// E2E Test Scenario: Advanced Storage Orchestration
 ///
 /// Tests complex storage orchestration workflows including:
@@ -9,6 +8,7 @@ use nestgate_core::canonical_types::StorageTier;
 ///
 /// **Evolution**: Modern async patterns, proper error handling, no unwraps
 use nestgate_core::Result;
+use nestgate_core::canonical_types::StorageTier;
 
 #[tokio::test]
 #[ignore = "E2E test - requires full environment"]

@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 ///
 /// - `NESTGATE_FAMILY_ID`: Family identifier (default: "default")
 /// - `NESTGATE_SOCKET_PATH`: Unix socket path (default: `/tmp/nestgate-{family}.sock`)
-/// - `NESTGATE_SECURITY_PROVIDER`: BearDog socket path (default: `/tmp/beardog-{family}-default.sock`)
+/// - `NESTGATE_SECURITY_PROVIDER`: `BearDog` socket path (default: `/tmp/beardog-{family}-default.sock`)
 /// - `NESTGATE_HTTP_PORT`: Optional HTTP fallback port (default: None)
 ///
 /// ## Examples
@@ -39,7 +39,7 @@ pub struct TransportConfig {
     /// Unix socket path for primary transport
     pub socket_path: PathBuf,
 
-    /// Security provider (BearDog) socket path
+    /// Security provider (`BearDog`) socket path
     pub security_provider: PathBuf,
 
     /// Optional HTTP fallback port
@@ -142,10 +142,10 @@ impl TransportConfig {
         }
 
         // Validate HTTP port if specified
-        if let Some(port) = self.http_port {
-            if port == 0 {
-                return Err(NestGateError::api_error("HTTP port cannot be 0"));
-            }
+        if let Some(port) = self.http_port
+            && port == 0
+        {
+            return Err(NestGateError::api_error("HTTP port cannot be 0"));
         }
 
         Ok(())

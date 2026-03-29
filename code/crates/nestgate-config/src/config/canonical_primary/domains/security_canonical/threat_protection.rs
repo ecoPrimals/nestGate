@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ThreatProtection
+/// Configuration for `ThreatProtection`
 pub struct ThreatProtectionConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -21,7 +21,7 @@ pub struct ThreatProtectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for IntrusionDetection
+/// Configuration for `IntrusionDetection`
 pub struct IntrusionDetectionConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -39,7 +39,7 @@ pub struct FirewallConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DdosProtection
+/// Configuration for `DdosProtection`
 pub struct DdosProtectionConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -48,7 +48,7 @@ pub struct DdosProtectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MalwareProtection
+/// Configuration for `MalwareProtection`
 pub struct MalwareProtectionConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -148,7 +148,7 @@ impl ThreatProtectionConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

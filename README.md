@@ -1,11 +1,13 @@
 # NestGate - Universal Storage & Discovery Primal
 
 **Version**: 4.7.0-dev  
-**Build**: 22/22 crates compiling, 0 errors  
-**Tests**: 12,383 passing, 0 failures, 469 ignored  
-**Coverage**: ~72% line (llvm-cov, target: 90%)  
-**Clippy**: ZERO production warnings (pedantic+nursery+cast lints)  
-**Last Updated**: March 28, 2026
+**Build**: 25/25 workspace members compiling, 0 errors  
+**Tests**: 11,707 passing, 0 failures  
+**Coverage**: 74.3% line (llvm-cov, up from 68.4%; target: 90%)  
+**Clippy**: Warnings reduced from 8,227 to 4,642 (ongoing cleanup; production targets `-D warnings` clean)  
+**Doctests**: Zero failures  
+**Production TODO/FIXME**: Zero  
+**Last Updated**: March 29, 2026
 
 ---
 
@@ -45,11 +47,12 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ## Architecture
 
 ```
-nestGate/ (22 crates)
+nestGate/ (25 workspace members, 22+ library crates)
 │
 │  Foundation Layer (zero internal deps, compiles first)
 ├── nestgate-types       Error types, result aliases, unified enums
 ├── nestgate-platform    env_process, linux_proc, OS abstractions (rustix/uzers)
+├── nestgate-env-process-shim  Safe env mutation (tests; isolates `set_var` / `remove_var`)
 │
 │  Domain Layer (depends on types/platform)
 ├── nestgate-config      Config, constants, defaults, canonical modernization
@@ -105,11 +108,13 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 
 | Area | Status |
 |------|--------|
-| Build | 22/22 crates, 0 errors |
-| Clippy | Clean (`-D warnings`) |
+| Build | 25/25 workspace members, 0 errors |
+| Clippy | 4,642 warnings (down from 8,227); production `-D warnings` clean |
 | Format | Clean |
-| Tests | 12,383 passing, 0 failures |
-| Coverage | ~72% line (target: 90%) |
+| Tests | 11,707 passing, 0 failures |
+| Coverage | 74.3% line (target: 90%) |
+| Doctests | Zero failures |
+| Production TODO/FIXME | Zero |
 | Production unwrap/expect | Zero |
 | Unsafe blocks | Evolved (most replaced with safe alternatives) |
 | File size limit (1000 lines) | All compliant |
@@ -223,7 +228,7 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 1. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 2. Warm/cold tier data cycling (NVMe SSD warm, HDD cold)
-3. Push test coverage toward 90% target (currently 69.6%)
+3. Push test coverage toward 90% target (currently 74.3%)
 4. Wire `data.*` and `nat.*` semantic router routes
 5. Evolve remaining dev stubs to full implementations
 6. Cross-gate replication (multi-node data orchestration)
@@ -243,4 +248,4 @@ free use rights for personal, educational, and non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: March 28, 2026
+**Latest**: March 29, 2026

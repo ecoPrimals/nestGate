@@ -12,11 +12,11 @@ use serde::{Deserialize, Serialize};
 pub enum StorageProvider {
     /// AWS S3
     AwsS3,
-    /// MinIO
+    /// `MinIO`
     MinIO,
     /// Wasabi
     Wasabi,
-    /// DigitalOcean Spaces
+    /// `DigitalOcean` Spaces
     DigitalOceanSpaces,
     /// Linode Object Storage
     LinodeObjectStorage,

@@ -54,7 +54,7 @@ pub trait SecurityPrimalProvider: Send + Sync {
 
     /// Sign data cryptographically
     fn sign_data(&self, data: &[u8])
-        -> impl std::future::Future<Output = Result<Signature>> + Send;
+    -> impl std::future::Future<Output = Result<Signature>> + Send;
 
     /// Verify cryptographic signature
     fn verify_signature(

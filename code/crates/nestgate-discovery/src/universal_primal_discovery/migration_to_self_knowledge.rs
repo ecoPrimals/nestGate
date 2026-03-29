@@ -8,6 +8,13 @@
 //! This module provides a bridge between the old hardcoded discovery system
 //! and the new self-knowledge based capability discovery system.
 //!
+//! ## Primal self-knowledge and peers
+//!
+//! Primal code is written with **self-knowledge only**: this process’s identity, capabilities, and
+//! its own listen endpoints. **Other primals** (orchestrator, storage mesh, etc.) are **not**
+//! hardcoded; they are **discovered at runtime** via capability queries. Use
+//! [`resolve_orchestrator_url`] or [`PrimalDiscovery::find_capability`] instead of fixed URLs.
+//!
 //! ## Migration Strategy
 //!
 //! 1. **Phase 1** (Week 1): Add self-knowledge alongside existing code
@@ -15,14 +22,15 @@
 //! 3. **Phase 3** (Week 4): Remove hardcoded discovery code
 //! 4. **Phase 4** (Week 5-6): Complete cleanup and optimization
 
-use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
-use crate::self_knowledge::{discovery::DiscoveryConfig, PrimalDiscovery, SelfKnowledge};
-use nestgate_types::error::Result;
+use crate::self_knowledge::{PrimalDiscovery, SelfKnowledge, discovery::DiscoveryConfig};
 use anyhow::Context;
+use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
+use nestgate_config::constants::hardcoding::RuntimeDefaults;
+use nestgate_types::error::Result;
 use std::sync::Arc;
 use tracing::{debug, info};
 
-/// Create self-knowledge from NestGate configuration
+/// Create self-knowledge from `NestGate` configuration
 ///
 /// **Evolution**: This replaces hardcoded service definitions with dynamic
 /// self-awareness based on actual configuration and capabilities.
@@ -124,9 +132,33 @@ pub async fn initialize_discovery(
     Ok(Arc::new(discovery))
 }
 
+/// Resolve the orchestrator HTTP base URL: capability discovery first, then env and fallbacks.
+///
+/// Tries providers of the `orchestration` capability; if none match, uses
+/// [`RuntimeDefaults::orchestrator_url`] (`NESTGATE_ORCHESTRATOR_URL` via
+/// `std::env::var("NESTGATE_ORCHESTRATOR_URL").ok()`, then orchestrator-address fallbacks).
+pub async fn resolve_orchestrator_url(discovery: &PrimalDiscovery) -> String {
+    match discovery.find_capability("orchestration").await {
+        Ok(providers) if !providers.is_empty() => {
+            let p = &providers[0];
+            if let Some(addr) = p
+                .endpoints
+                .get("http")
+                .or_else(|| p.endpoints.get("api"))
+                .or_else(|| p.endpoints.values().next())
+            {
+                return format!("http://{addr}");
+            }
+        }
+        Ok(_) => debug!("No orchestration capability providers discovered"),
+        Err(e) => debug!("Orchestration discovery query failed: {}", e),
+    }
+    RuntimeDefaults::orchestrator_url()
+}
+
 // ==================== Helper Functions ====================
 
-fn is_zfs_enabled(_config: &NestGateCanonicalConfig) -> bool {
+const fn is_zfs_enabled(_config: &NestGateCanonicalConfig) -> bool {
     // Check if ZFS management is enabled in configuration
     // This would typically check config flags or feature detection
     true // For now, assume ZFS is always available
@@ -139,10 +171,7 @@ fn get_api_endpoint(_config: &NestGateCanonicalConfig) -> Result<std::net::Socke
     // Get from environment or config
     let host = std::env::var("NESTGATE_API_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
-    let port: u16 = std::env::var("NESTGATE_API_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(8080);
+    let port: u16 = RuntimeDefaults::api_port();
 
     let addr = IpAddr::from_str(&host).context("Invalid API host address")?;
 
@@ -155,10 +184,7 @@ fn get_metrics_endpoint(_config: &NestGateCanonicalConfig) -> Result<std::net::S
 
     let host = std::env::var("NESTGATE_METRICS_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
-    let port: u16 = std::env::var("NESTGATE_METRICS_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(9090);
+    let port: u16 = RuntimeDefaults::metrics_port();
 
     let addr = IpAddr::from_str(&host).context("Invalid metrics host address")?;
 
@@ -171,10 +197,7 @@ fn get_websocket_endpoint(_config: &NestGateCanonicalConfig) -> Result<std::net:
 
     let host = std::env::var("NESTGATE_WEBSOCKET_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
-    let port: u16 = std::env::var("NESTGATE_WEBSOCKET_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(8081);
+    let port: u16 = RuntimeDefaults::websocket_port();
 
     let addr = IpAddr::from_str(&host).context("Invalid websocket host address")?;
 
@@ -250,15 +273,21 @@ fn add_discovery_backends(
 mod migration_examples {
     use super::*;
 
-    /// ❌ OLD: Hardcoded service URLs
+    /// ❌ OLD: Hardcoded service URLs (do not use)
     #[allow(dead_code)]
     mod old_pattern {
-        pub const ORCHESTRATOR_URL: &str = "http://orchestrator:8080";
-        pub const AI_URL: &str = "http://ai:9000";
+        use nestgate_config::constants::hardcoding::RuntimeDefaults;
+
+        pub fn orchestrator_url_from_env() -> String {
+            std::env::var("NESTGATE_ORCHESTRATOR_URL")
+                .ok()
+                .filter(|s| !s.trim().is_empty())
+                .unwrap_or_else(|| RuntimeDefaults::orchestrator_url())
+        }
 
         pub async fn connect_to_orchestrator() -> anyhow::Result<()> {
-            // Hardcoded connection
-            println!("Connecting to {}", ORCHESTRATOR_URL);
+            let url = orchestrator_url_from_env();
+            println!("Connecting to {url}");
             Ok(())
         }
     }
@@ -279,9 +308,12 @@ mod migration_examples {
     #[allow(dead_code)]
     mod new_pattern {
         use super::*;
+        use crate::universal_primal_discovery::migration_to_self_knowledge::resolve_orchestrator_url;
 
         pub async fn connect_to_orchestration(discovery: &PrimalDiscovery) -> Result<()> {
-            // Find by capability, not by name
+            let url = resolve_orchestrator_url(discovery).await;
+            info!("Orchestrator URL resolved to {url}");
+
             let providers = discovery
                 .find_capability("orchestration")
                 .await

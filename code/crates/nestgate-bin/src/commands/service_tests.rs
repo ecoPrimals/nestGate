@@ -30,6 +30,7 @@ async fn test_execute_start_action() {
     let _action = ServiceAction::Start {
         port: DEFAULT_API_PORT,
         bind: DEFAULT_BIND_ADDRESS.to_string(),
+        listen: None,
         daemon: false,
     };
 
@@ -88,7 +89,7 @@ async fn test_start_service_with_default_port() {
     // Only use for manual testing, not in CI
     let _result = tokio::time::timeout(
         std::time::Duration::from_secs(1),
-        manager.start_service(None, None),
+        manager.start_service(None, None, None, None),
     )
     .await;
     // Timeout is expected - server runs indefinitely
@@ -101,7 +102,7 @@ async fn test_start_service_with_custom_port() {
     // This starts an actual server that runs forever
     let _result = tokio::time::timeout(
         std::time::Duration::from_secs(1),
-        manager.start_service(Some(9090), None),
+        manager.start_service(Some(9090), None, None, None),
     )
     .await;
     // Timeout is expected - server runs indefinitely
@@ -114,7 +115,7 @@ async fn test_start_service_with_config() {
     // This starts an actual server that runs forever
     let _result = tokio::time::timeout(
         std::time::Duration::from_secs(1),
-        manager.start_service(Some(8080), Some("/path/to/config.toml")),
+        manager.start_service(Some(8080), None, None, Some("/path/to/config.toml")),
     )
     .await;
     // Timeout is expected - server runs indefinitely
@@ -168,7 +169,7 @@ async fn test_multiple_start_stop_cycles() {
     // Start with timeout
     let result1 = tokio::time::timeout(
         std::time::Duration::from_millis(100),
-        manager.start_service(Some(8080), None),
+        manager.start_service(Some(8080), None, None, None),
     )
     .await;
     // Timeout is expected - server would run forever

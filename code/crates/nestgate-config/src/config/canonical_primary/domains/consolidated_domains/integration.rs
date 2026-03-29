@@ -121,7 +121,7 @@ pub struct EcosystemConfig {
     pub capability_routing: CapabilityRoutingConfig,
 }
 
-/// BiomeOS integration configuration (reserved for future use)
+/// `BiomeOS` integration configuration (reserved for future use)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BiomeOsIntegrationConfig {}
 

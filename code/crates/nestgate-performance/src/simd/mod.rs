@@ -54,7 +54,7 @@ impl SimdCapabilities {
 
     /// Get the optimal vector width for this CPU
     #[must_use]
-    pub fn optimal_vector_width(self) -> usize {
+    pub const fn optimal_vector_width(self) -> usize {
         if self.avx512 {
             64 // 512 bits = 64 bytes
         } else if self.avx2 || self.avx {
@@ -68,7 +68,7 @@ impl SimdCapabilities {
 
     /// Get human-readable capability description
     #[must_use]
-    pub fn description(self) -> &'static str {
+    pub const fn description(self) -> &'static str {
         if self.avx512 {
             "AVX-512 (512-bit vectors)"
         } else if self.avx2 {
@@ -109,19 +109,19 @@ impl SimdEngine {
 
     /// Get SIMD capabilities
     #[must_use]
-    pub fn capabilities(&self) -> SimdCapabilities {
+    pub const fn capabilities(&self) -> SimdCapabilities {
         self.capabilities
     }
 
     /// Get optimal vector width in bytes
     #[must_use]
-    pub fn vector_width(&self) -> usize {
+    pub const fn vector_width(&self) -> usize {
         self.vector_width
     }
 
     /// Get required memory alignment
     #[must_use]
-    pub fn alignment(&self) -> usize {
+    pub const fn alignment(&self) -> usize {
         self.alignment
     }
 
@@ -212,7 +212,7 @@ impl BatchProcessor {
 
     /// Get optimal batch size for current hardware
     #[must_use]
-    pub fn batch_size(&self) -> usize {
+    pub const fn batch_size(&self) -> usize {
         self.batch_size
     }
 }
@@ -245,7 +245,7 @@ pub struct SimdMetrics {
 impl SimdMetrics {
     /// Create new metrics instance
     #[must_use]
-    pub fn new(operation: String, input_size: usize) -> Self {
+    pub const fn new(operation: String, input_size: usize) -> Self {
         Self {
             operation,
             input_size,
@@ -267,7 +267,7 @@ impl SimdMetrics {
     }
 
     /// Set speedup factor compared to scalar implementation
-    pub fn set_speedup(&mut self, speedup_factor: f64) {
+    pub const fn set_speedup(&mut self, speedup_factor: f64) {
         self.speedup_factor = speedup_factor;
     }
 

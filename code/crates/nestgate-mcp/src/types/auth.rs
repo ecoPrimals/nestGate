@@ -26,9 +26,9 @@ pub enum AuthMethod {
 pub struct AuthCredentials {
     /// Optional API key.
     pub api_key: Option<String>,
-    /// Optional OAuth2 client ID.
+    /// Optional `OAuth2` client ID.
     pub client_id: Option<String>,
-    /// Optional OAuth2 client secret.
+    /// Optional `OAuth2` client secret.
     pub client_secret: Option<String>,
 }
 /// Authentication configuration for a provider (Enhanced with proven patterns)

@@ -97,7 +97,7 @@ impl LatencyTracker {
 
 /// Native ZFS service implementation using real zfs/zpool commands
 #[derive(Debug)]
-/// Service implementation for NativeZfs
+/// Service implementation for `NativeZfs`
 pub struct NativeZfsService {
     /// Whether ZFS commands are available on this system
     zfs_available: bool,
@@ -256,69 +256,76 @@ impl UniversalZfsService for NativeZfsService {
 
     /// Checks if Available
     fn is_available(&self) -> Pin<Box<dyn Future<Output = bool> + Send + '_>> {
-        Box::pin(async move {
-        self.zfs_available
-    })}
-
+        Box::pin(async move { self.zfs_available })
+    }
 
     /// Health Check
-    fn health_check(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HealthStatus>> + Send + '_>> {
+    fn health_check(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HealthStatus>> + Send + '_>> {
         Box::pin(async move {
-        let output = Command::new("modprobe").args(["zfs"]).output();
-        let zfs_available = output.is_ok()
-            && output
-                .map_err(|e| {
-                    tracing::error!("Operation failed: {:?}", e);
-                    std::io::Error::other("Operation failed: self.base_url".to_string())
-                })?
-                .status
-                .success();
+            let output = Command::new("modprobe").args(["zfs"]).output();
+            let zfs_available = output.is_ok()
+                && output
+                    .map_err(|e| {
+                        tracing::error!("Operation failed: {:?}", e);
+                        std::io::Error::other("Operation failed: self.base_url".to_string())
+                    })?
+                    .status
+                    .success();
 
-        Ok(HealthStatus {
-            service_name: self.service_name().to_string(),
-            status: if zfs_available {
-                ServiceStatus::Healthy
-            } else {
-                ServiceStatus::Degraded
-            },
-            checks: vec![HealthCheck {
-                name: "zfs_availability".to_string(),
-                passed: zfs_available,
-                message: Some(if zfs_available {
-                    "ZFS modules loaded successfully".to_string()
+            Ok(HealthStatus {
+                service_name: self.service_name().to_string(),
+                status: if zfs_available {
+                    ServiceStatus::Healthy
                 } else {
-                    "ZFS modules not available".to_string()
-                }),
-            }],
-            last_check: SystemTime::now(),
-            metadata: HashMap::new(),
+                    ServiceStatus::Degraded
+                },
+                checks: vec![HealthCheck {
+                    name: "zfs_availability".to_string(),
+                    passed: zfs_available,
+                    message: Some(if zfs_available {
+                        "ZFS modules loaded successfully".to_string()
+                    } else {
+                        "ZFS modules not available".to_string()
+                    }),
+                }],
+                last_check: SystemTime::now(),
+                metadata: HashMap::new(),
+            })
         })
-    })}
-
+    }
 
     /// Gets Metrics
-    fn get_metrics(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<ServiceMetrics>> + Send + '_>> {
-        Box::pin(async move {
-        Ok(self.get_service_metrics())
-    })}
-
+    fn get_metrics(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<ServiceMetrics>> + Send + '_>> {
+        Box::pin(async move { Ok(self.get_service_metrics()) })
+    }
 
     /// Shutdown
     fn shutdown(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
         Box::pin(async move {
-        info!("🔄 Shutting down Native ZFS service");
-        Ok(())
-    })}
-
+            info!("🔄 Shutting down Native ZFS service");
+            Ok(())
+        })
+    }
 
     // Forward all other methods to their respective modules
     fn list_pools(
         &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::PoolInfo>>> + Send + '_>> {
-        Box::pin(async move {
-        super::pool_operations::list_pools(self).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        Vec<crate::handlers::zfs::universal_zfs_types::PoolInfo>,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        Box::pin(async move { super::pool_operations::list_pools(self).await })
+    }
 
     // get_pool_info is not part of the trait - removed
 
@@ -326,51 +333,80 @@ impl UniversalZfsService for NativeZfsService {
     fn create_pool(
         &self,
         config: &crate::handlers::zfs::universal_zfs_types::PoolConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::PoolInfo>> + Send + '_>> {
-        Box::pin(async move {
-        super::pool_operations::create_pool(self, config).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        crate::handlers::zfs::universal_zfs_types::PoolInfo,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        let config = config.clone();
+        Box::pin(async move { super::pool_operations::create_pool(self, &config).await })
+    }
 
     /// Destroy Pool
-    fn destroy_pool(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
-        super::pool_operations::destroy_pool(self, name, false).await
-    })}
-
+    fn destroy_pool(
+        &self,
+        name: &str,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
+        let name = name.to_owned();
+        Box::pin(async move { super::pool_operations::destroy_pool(self, &name, false).await })
+    }
 
     /// Gets Pool
     fn get_pool(
         &self,
         name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs_types::PoolInfo>>> + Send + '_>> {
-        Box::pin(async move {
-        super::pool_operations::get_pool(self, name).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        Option<crate::handlers::zfs::universal_zfs_types::PoolInfo>,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        let name = name.to_owned();
+        Box::pin(async move { super::pool_operations::get_pool(self, &name).await })
+    }
 
     /// Scrub Pool
-    fn scrub_pool(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
-        super::pool_operations::scrub_pool(self, name).await
-    })}
-
+    fn scrub_pool(
+        &self,
+        name: &str,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
+        let name = name.to_owned();
+        Box::pin(async move { super::pool_operations::scrub_pool(self, &name).await })
+    }
 
     /// Gets Pool Status
-    fn get_pool_status(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async move {
-        super::pool_operations::get_pool_status(self, name).await
-    })}
-
+    fn get_pool_status(
+        &self,
+        name: &str,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
+        let name = name.to_owned();
+        Box::pin(async move { super::pool_operations::get_pool_status(self, &name).await })
+    }
 
     /// List Datasets
     fn list_datasets(
         &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::DatasetInfo>>> + Send + '_>> {
-        Box::pin(async move {
-        super::dataset_operations::list_datasets(self).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        Vec<crate::handlers::zfs::universal_zfs_types::DatasetInfo>,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        Box::pin(async move { super::dataset_operations::list_datasets(self).await })
+    }
 
     // list_datasets_internal is not part of the trait - removed
 
@@ -378,38 +414,60 @@ impl UniversalZfsService for NativeZfsService {
     fn create_dataset(
         &self,
         config: &crate::handlers::zfs::universal_zfs_types::DatasetConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::DatasetInfo>> + Send + '_>> {
-        Box::pin(async move {
-        super::dataset_operations::create_dataset(self, config).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        crate::handlers::zfs::universal_zfs_types::DatasetInfo,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        let config = config.clone();
+        Box::pin(async move { super::dataset_operations::create_dataset(self, &config).await })
+    }
 
     /// Destroy Dataset
-    fn destroy_dataset(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
-        super::dataset_operations::destroy_dataset(self, name, false).await
-    })}
-
+    fn destroy_dataset(
+        &self,
+        name: &str,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
+        let name = name.to_owned();
+        Box::pin(
+            async move { super::dataset_operations::destroy_dataset(self, &name, false).await },
+        )
+    }
 
     /// Gets Dataset
     fn get_dataset(
         &self,
         name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<crate::handlers::zfs::universal_zfs_types::DatasetInfo>>> + Send + '_>> {
-        Box::pin(async move {
-        super::dataset_operations::get_dataset(self, name).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        Option<crate::handlers::zfs::universal_zfs_types::DatasetInfo>,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        let name = name.to_owned();
+        Box::pin(async move { super::dataset_operations::get_dataset(self, &name).await })
+    }
 
     /// Gets Dataset Properties
     fn get_dataset_properties(
         &self,
         dataset_name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HashMap<String, String>>> + Send + '_>> {
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HashMap<String, String>>> + Send + '_>>
+    {
+        let dataset_name = dataset_name.to_owned();
         Box::pin(async move {
-        super::dataset_operations::get_dataset_properties(self, dataset_name).await
-    })}
-
+            super::dataset_operations::get_dataset_properties(self, &dataset_name).await
+        })
+    }
 
     /// Sets Dataset Properties
     fn set_dataset_properties(
@@ -417,88 +475,183 @@ impl UniversalZfsService for NativeZfsService {
         name: &str,
         properties: &HashMap<String, String>,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
+        let name = name.to_owned();
+        let properties = properties.clone();
         Box::pin(async move {
-        super::dataset_operations::set_dataset_properties(self, name, properties.clone()).await
-    })}
-
+            super::dataset_operations::set_dataset_properties(self, &name, properties).await
+        })
+    }
 
     /// List Dataset Snapshots
     fn list_dataset_snapshots(
         &self,
         dataset_name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>>> + Send + '_>> {
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        let dataset_name = dataset_name.to_owned();
         Box::pin(async move {
-        super::dataset_operations::list_dataset_snapshots(self, dataset_name).await
-    })}
-
+            super::dataset_operations::list_dataset_snapshots(self, &dataset_name).await
+        })
+    }
 
     /// List Snapshots
     fn list_snapshots(
         &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>>> + Send + '_>> {
-        Box::pin(async move {
-        super::snapshot_operations::list_snapshots(self, None).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        Vec<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        Box::pin(async move { super::snapshot_operations::list_snapshots(self, None).await })
+    }
 
     /// Creates  Snapshot
     fn create_snapshot(
         &self,
         config: &crate::handlers::zfs::universal_zfs_types::SnapshotConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<crate::handlers::zfs::universal_zfs_types::SnapshotInfo>> + Send + '_>> {
-        Box::pin(async move {
-        super::snapshot_operations::create_snapshot(self, config).await
-    })}
-
+    ) -> Pin<
+        Box<
+            dyn Future<
+                    Output = UniversalZfsResult<
+                        crate::handlers::zfs::universal_zfs_types::SnapshotInfo,
+                    >,
+                > + Send
+                + '_,
+        >,
+    > {
+        let config = config.clone();
+        Box::pin(async move { super::snapshot_operations::create_snapshot(self, &config).await })
+    }
 
     /// Destroy Snapshot
-    fn destroy_snapshot(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
-        super::snapshot_operations::destroy_snapshot(self, name, false).await
-    })}
-
+    fn destroy_snapshot(
+        &self,
+        name: &str,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
+        let name = name.to_owned();
+        Box::pin(
+            async move { super::snapshot_operations::destroy_snapshot(self, &name, false).await },
+        )
+    }
 
     /// Optimize
     fn optimize(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async move {
-        super::configuration::optimize(self, "general".to_string())
-    })}
-
+        Box::pin(async move { super::configuration::optimize(self, "general".to_string()) })
+    }
 
     /// Gets Optimization Analytics
-    fn get_optimization_analytics(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
+    fn get_optimization_analytics(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
         Box::pin(async move {
-        let analytics = super::configuration::get_optimization_analytics(self)?;
-        Ok(serde_json::Value::Object(analytics.into_iter().collect()))
-    })}
-
+            let analytics = super::configuration::get_optimization_analytics(self)?;
+            Ok(serde_json::Value::Object(analytics.into_iter().collect()))
+        })
+    }
 
     /// Predict Tier
-    fn predict_tier(&self, dataset_name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async move {
-        Ok(super::configuration::predict_tier(self, dataset_name)?)
-    })}
-
+    fn predict_tier(
+        &self,
+        dataset_name: &str,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
+        let dataset_name = dataset_name.to_owned();
+        Box::pin(async move { super::configuration::predict_tier(self, &dataset_name) })
+    }
 
     /// Gets Configuration
-    fn get_configuration(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
+    fn get_configuration(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
         Box::pin(async move {
-        let config = super::configuration::get_configuration(self)?;
-        Ok(serde_json::Value::Object(config.into_iter().collect()))
-    })}
-
+            let config = super::configuration::get_configuration(self)?;
+            Ok(serde_json::Value::Object(config.into_iter().collect()))
+        })
+    }
 
     /// Updates  Configuration
-    fn update_configuration(&self, config: serde_json::Value) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
+    fn update_configuration(
+        &self,
+        config: serde_json::Value,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
         Box::pin(async move {
-        // Convert serde_json::Value to HashMap if it's an object
-        let config_map = match config {
-            serde_json::Value::Object(map) => map
-                .into_iter()
-                .collect::<HashMap<String, serde_json::Value>>(),
-            _ => HashMap::new(),
-        };
-        super::configuration::update_configuration(self, config_map)
-    })}
+            // Convert serde_json::Value to HashMap if it's an object
+            let config_map = match config {
+                serde_json::Value::Object(map) => map
+                    .into_iter()
+                    .collect::<HashMap<String, serde_json::Value>>(),
+                _ => HashMap::new(),
+            };
+            super::configuration::update_configuration(self, config_map)
+        })
+    }
+}
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::handlers::zfs::universal_zfs::UniversalZfsService;
+    use std::time::Duration;
+
+    #[test]
+    fn native_zfs_service_new_default_and_trait_ids() {
+        let s = NativeZfsService::new();
+        assert_eq!(s.service_name(), "native-zfs");
+        assert_eq!(s.service_version(), "1.0.0");
+        let d = NativeZfsService::default();
+        assert_eq!(d.service_name(), "native-zfs");
+    }
+
+    #[test]
+    fn track_request_and_service_metrics_percentiles() {
+        let s = NativeZfsService::new();
+        s.track_request(Duration::from_millis(10), true);
+        s.track_request(Duration::from_millis(20), false);
+        let m = s.get_service_metrics();
+        assert_eq!(m.service_name, "native_zfs");
+        assert!(m.requests_total >= 2);
+        assert!(m.latency_p95 >= 0.0);
+        assert!(m.latency_p99 >= 0.0);
+    }
+
+    #[test]
+    fn get_service_metrics_zero_requests_has_zero_error_rate() {
+        let s = NativeZfsService::new();
+        let m = s.get_service_metrics();
+        assert_eq!(m.requests_total, 0);
+        assert_eq!(m.error_rate, 0.0);
+        assert_eq!(m.latency_avg, 0.0);
+    }
+
+    #[tokio::test]
+    async fn shutdown_trait_ok() {
+        let s = NativeZfsService::new();
+        assert!(s.shutdown().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn is_available_is_deterministic() {
+        let s = NativeZfsService::new();
+        let v = s.is_available().await;
+        assert_eq!(v, s.is_available().await);
+    }
+
+    #[tokio::test]
+    async fn get_metrics_returns_ok() {
+        let s = NativeZfsService::new();
+        let m = s.get_metrics().await.expect("metrics");
+        assert_eq!(m.service_name, "native_zfs");
+    }
 }

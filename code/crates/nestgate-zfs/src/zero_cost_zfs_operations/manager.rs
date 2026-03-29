@@ -7,13 +7,13 @@
 use super::traits::ZeroCostZfsOperations;
 use super::types::{DatasetInfoMap, PoolInfoMap, SnapshotInfoMap};
 use super::types::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo};
-use crate::error::{create_zfs_error, ZfsOperation};
-use nestgate_core::canonical_types::StorageTier;
+use crate::error::{ZfsOperation, create_zfs_error};
 use nestgate_core::Result;
+use nestgate_core::canonical_types::StorageTier;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 use std::time::Duration;
 use tokio::sync::RwLock;
 
@@ -31,11 +31,11 @@ pub struct ZeroCostZfsManager<
     request_id_counter: AtomicU64,
 }
 impl<
-        const MAX_POOLS: usize,
-        const MAX_DATASETS: usize,
-        const MAX_SNAPSHOTS: usize,
-        const COMMAND_TIMEOUT_MS: u64,
-    > Default for ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
+    const MAX_POOLS: usize,
+    const MAX_DATASETS: usize,
+    const MAX_SNAPSHOTS: usize,
+    const COMMAND_TIMEOUT_MS: u64,
+> Default for ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
     /// Returns the default instance
     fn default() -> Self {
@@ -44,11 +44,11 @@ impl<
 }
 
 impl<
-        const MAX_POOLS: usize,
-        const MAX_DATASETS: usize,
-        const MAX_SNAPSHOTS: usize,
-        const COMMAND_TIMEOUT_MS: u64,
-    > ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
+    const MAX_POOLS: usize,
+    const MAX_DATASETS: usize,
+    const MAX_SNAPSHOTS: usize,
+    const COMMAND_TIMEOUT_MS: u64,
+> ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
     /// Create new ZFS manager with compile-time configuration
     #[must_use]
@@ -63,7 +63,7 @@ impl<
 
     /// Get command timeout at compile-time
     #[must_use]
-    pub fn command_timeout() -> Duration {
+    pub const fn command_timeout() -> Duration {
         Duration::from_millis(COMMAND_TIMEOUT_MS)
     }
 
@@ -169,11 +169,11 @@ impl<
 }
 
 impl<
-        const MAX_POOLS: usize,
-        const MAX_DATASETS: usize,
-        const MAX_SNAPSHOTS: usize,
-        const COMMAND_TIMEOUT_MS: u64,
-    > ZeroCostZfsOperations<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS>
+    const MAX_POOLS: usize,
+    const MAX_DATASETS: usize,
+    const MAX_SNAPSHOTS: usize,
+    const COMMAND_TIMEOUT_MS: u64,
+> ZeroCostZfsOperations<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS>
     for ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
 {
     /// Type alias for Error
@@ -586,8 +586,106 @@ pub type TestingZfsManager = ZeroCostZfsManager<2, 10, 100, 5000>; // 2 pools, 1
 pub type EnterpriseZfsManager = ZeroCostZfsManager<1000, 100_000, 1_000_000, 60000>; // 1k pools, 100k datasets, 1M snapshots, 60s timeout
 
 #[cfg(test)]
+impl<
+    const MAX_POOLS: usize,
+    const MAX_DATASETS: usize,
+    const MAX_SNAPSHOTS: usize,
+    const COMMAND_TIMEOUT_MS: u64,
+> ZeroCostZfsManager<MAX_POOLS, MAX_DATASETS, MAX_SNAPSHOTS, COMMAND_TIMEOUT_MS>
+{
+    pub(crate) fn test_parse_pool_properties(&self, output: &str) -> HashMap<String, String> {
+        self.parse_pool_properties(output)
+    }
+
+    pub(crate) async fn test_insert_pool_entry(&self, name: String) {
+        let mut p = self.pools.write().await;
+        p.insert(
+            name.clone(),
+            ZeroCostPoolInfo {
+                name: name.clone(),
+                size: 0,
+                used: 0,
+                available: 0,
+                health: "ONLINE".into(),
+                properties: HashMap::new(),
+                created_at: std::time::SystemTime::UNIX_EPOCH,
+            },
+        );
+    }
+
+    pub(crate) async fn test_pool_map_len(&self) -> usize {
+        self.pools.read().await.len()
+    }
+
+    pub(crate) async fn test_can_create_more_pools(&self) -> bool {
+        self.can_create_more_pools().await
+    }
+
+    pub(crate) async fn test_can_create_more_datasets(&self) -> bool {
+        self.can_create_more_datasets().await
+    }
+
+    pub(crate) async fn test_insert_dataset_entry(&self, name: String, pool: String) {
+        let mut d = self.datasets.write().await;
+        d.insert(
+            name.clone(),
+            ZeroCostDatasetInfo {
+                name: name.clone(),
+                pool,
+                tier: StorageTier::Warm,
+                size: 0,
+                used: 0,
+                properties: HashMap::new(),
+                mount_point: None,
+                created_at: std::time::SystemTime::UNIX_EPOCH,
+            },
+        );
+    }
+
+    pub(crate) async fn test_can_create_more_snapshots(&self) -> bool {
+        self.can_create_more_snapshots().await
+    }
+
+    pub(crate) async fn test_insert_snapshot_entry(&self, name: String) {
+        let mut s = self.snapshots.write().await;
+        s.insert(
+            name.clone(),
+            ZeroCostSnapshotInfo {
+                name: name.clone(),
+                dataset: "pool/ds".into(),
+                size: 0,
+                created_at: std::time::SystemTime::UNIX_EPOCH,
+                properties: HashMap::new(),
+            },
+        );
+    }
+
+    pub(crate) async fn test_snapshot_map_len(&self) -> usize {
+        self.snapshots.read().await.len()
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parse_pool_properties_tab_and_trim() {
+        let m = TestingZfsManager::new();
+        let out = "size\t12345\nallocated\t100\nhealth\tONLINE\n";
+        let map = m.test_parse_pool_properties(out);
+        assert_eq!(map.get("size"), Some(&"12345".to_string()));
+        assert_eq!(map.get("allocated"), Some(&"100".to_string()));
+        assert_eq!(map.get("health"), Some(&"ONLINE".to_string()));
+    }
+
+    #[test]
+    fn parse_pool_properties_skips_lines_without_tab() {
+        let m = TestingZfsManager::new();
+        let map = m.test_parse_pool_properties("no tab here\nkey\tvalue\n");
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get("key"), Some(&"value".to_string()));
+    }
 
     #[test]
     fn test_zero_cost_zfs_manager_new() {
@@ -654,5 +752,42 @@ mod tests {
     #[test]
     fn test_type_alias_enterprise_zfs_manager() {
         let _manager: EnterpriseZfsManager = EnterpriseZfsManager::new();
+    }
+
+    #[tokio::test]
+    async fn max_pools_capacity_reached_for_testing_manager() {
+        let m = TestingZfsManager::new();
+        assert!(m.test_can_create_more_pools().await);
+        m.test_insert_pool_entry("p0".into()).await;
+        m.test_insert_pool_entry("p1".into()).await;
+        assert_eq!(m.test_pool_map_len().await, 2);
+        assert!(!m.test_can_create_more_pools().await);
+    }
+
+    #[tokio::test]
+    async fn dataset_capacity_still_available_when_under_limit() {
+        let m = TestingZfsManager::new();
+        assert!(m.test_can_create_more_datasets().await);
+        m.test_insert_dataset_entry("ds0".into(), "p0".into()).await;
+        assert_eq!(m.test_can_create_more_datasets().await, true);
+    }
+
+    #[tokio::test]
+    async fn max_snapshots_capacity_enforced_for_testing_manager() {
+        let m = TestingZfsManager::new();
+        assert!(m.test_can_create_more_snapshots().await);
+        for i in 0..100 {
+            m.test_insert_snapshot_entry(format!("snap{i}")).await;
+        }
+        assert_eq!(m.test_snapshot_map_len().await, 100);
+        assert!(!m.test_can_create_more_snapshots().await);
+    }
+
+    #[test]
+    fn parse_pool_properties_first_tab_wins_on_duplicate_key() {
+        let m = TestingZfsManager::new();
+        let out = "k\tv1\nk\tv2\n";
+        let map = m.test_parse_pool_properties(out);
+        assert_eq!(map.get("k"), Some(&"v2".to_string()));
     }
 }

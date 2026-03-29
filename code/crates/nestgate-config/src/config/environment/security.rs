@@ -45,9 +45,9 @@ impl SecurityConfig {
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
         Ok(Self {
             tls_enabled: Self::env_var_or(prefix, "TLS_ENABLED", false)?,
-            tls_cert_path: env::var(format!("{}_TLS_CERT", prefix)).ok(),
-            tls_key_path: env::var(format!("{}_TLS_KEY", prefix)).ok(),
-            api_key: env::var(format!("{}_API_KEY", prefix)).ok(),
+            tls_cert_path: env::var(format!("{prefix}_TLS_CERT")).ok(),
+            tls_key_path: env::var(format!("{prefix}_TLS_KEY")).ok(),
+            api_key: env::var(format!("{prefix}_API_KEY")).ok(),
             rate_limit_enabled: Self::env_var_or(prefix, "RATE_LIMIT_ENABLED", true)?,
             rate_limit_rpm: Self::env_var_or(prefix, "RATE_LIMIT_RPM", 100)?,
         })
@@ -58,7 +58,7 @@ impl SecurityConfig {
     where
         T::Err: std::error::Error + Send + Sync + 'static,
     {
-        let var_name = format!("{}_{}", prefix, key);
+        let var_name = format!("{prefix}_{key}");
         match env::var(&var_name) {
             Ok(val) => val.parse().map_err(|e| ConfigError::ParseError {
                 key: var_name,

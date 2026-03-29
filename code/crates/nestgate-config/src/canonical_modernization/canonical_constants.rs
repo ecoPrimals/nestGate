@@ -15,11 +15,11 @@
 /// Performance tuning and optimization constants
 /// **CONSOLIDATED**: Now references hardcoding module for common values
 pub mod performance {
-    /// Default buffer size - **CONSOLIDATED** to hardcoding::limits
+    /// Default buffer size - **CONSOLIDATED** to `hardcoding::limits`
     pub const DEFAULT_BUFFER_SIZE_BYTES: usize =
         crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
 
-    /// Maximum buffer size - **CONSOLIDATED** to hardcoding::limits
+    /// Maximum buffer size - **CONSOLIDATED** to `hardcoding::limits`
     pub const MAX_BUFFER_SIZE_BYTES: usize = crate::constants::hardcoding::limits::BUFFER_SIZE_MAX;
 
     /// Maximum number of concurrent operations
@@ -28,7 +28,7 @@ pub mod performance {
     /// Default batch size for bulk operations
     pub const DEFAULT_BATCH_SIZE: usize = 1000;
 
-    /// Maximum number of retry attempts - **CONSOLIDATED** to hardcoding::limits
+    /// Maximum number of retry attempts - **CONSOLIDATED** to `hardcoding::limits`
     pub const MAX_RETRY_ATTEMPTS: u32 = crate::constants::hardcoding::limits::MAX_RETRIES;
 
     /// Default performance monitoring interval (seconds)
@@ -43,11 +43,11 @@ pub mod performance {
     /// Maximum number of concurrent requests (zero-cost architecture)
     pub const MAX_CONCURRENT_REQUESTS: usize = 10000;
 
-    /// Maximum number of concurrent connections - **CONSOLIDATED** to hardcoding::limits
+    /// Maximum number of concurrent connections - **CONSOLIDATED** to `hardcoding::limits`
     pub const MAX_CONCURRENT_CONNECTIONS: usize =
         crate::constants::hardcoding::limits::MAX_CONNECTIONS;
 
-    /// Default request timeout - **CONSOLIDATED** to hardcoding::timeouts
+    /// Default request timeout - **CONSOLIDATED** to `hardcoding::timeouts`
     pub const REQUEST_TIMEOUT_MS: u64 = crate::constants::hardcoding::timeouts::REQUEST_MS;
 
     /// Cache line size for memory optimization
@@ -72,7 +72,7 @@ pub mod network {
     /// Override with `NESTGATE_API_PORT`
     ///
     /// # Usage
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::constants::ports;
     /// let port = ports::api_server_port(); // Environment-aware
     /// ```
@@ -852,7 +852,7 @@ pub use api::{CURRENT_API_VERSION, STATUS_INTERNAL_ERROR, STATUS_NOT_FOUND, STAT
 // ZFS constants
 pub use zfs::{CREATE, DESTROY, GET, LIST, SET, SNAPSHOT, STATUS, ZFS, ZPOOL};
 pub use zfs::{DEGRADED, FAULTED, OFFLINE, ONLINE, REMOVED, UNAVAIL};
-pub use zfs::{FSTYPE_ZFS, RECORDSIZE_128K, RECORDSIZE_1M, RECORDSIZE_64K};
+pub use zfs::{FSTYPE_ZFS, RECORDSIZE_1M, RECORDSIZE_64K, RECORDSIZE_128K};
 pub use zfs::{PROPERTY_ALL, PROPERTY_METADATA, PROPERTY_OFF, PROPERTY_ON};
 
 // Limits constants

@@ -8,9 +8,9 @@
 
 #[cfg(test)]
 mod result_types_tests {
-    use crate::error::NestGateError;
+    use crate::error::{CanonicalResult, NestGateError, ResultExt, TestResult};
     use crate::result_types::*;
-    use crate::{network_result, storage_result, validation_result};
+    use nestgate_types::{network_result, storage_result, validation_result};
     use std::io;
 
     // ==================== Result Type Alias Tests ====================

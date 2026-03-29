@@ -65,7 +65,8 @@ pub use types::{CapabilityRequest, CapabilityResponse, ServiceCapability, Servic
 #[expect(deprecated, reason = "migration in progress")] // Uses deprecated config types
 pub struct ConsolidatedCanonicalAdapter {
     /// Unique service identifier
-    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")]
+    // Framework field - intentionally unused
     service_id: Uuid,
 
     /// Adapter configuration
@@ -75,14 +76,16 @@ pub struct ConsolidatedCanonicalAdapter {
     our_capabilities: Arc<RwLock<Vec<ServiceCapability>>>,
 
     /// Discovered external capabilities (lock-free for concurrent discovery)
-    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")]
+    // Framework field - intentionally unused
     discovered_capabilities: Arc<DashMap<String, Vec<ServiceCapability>>>,
 
     /// Active requests being processed (lock-free for concurrent request tracking)
     active_requests: Arc<DashMap<String, CapabilityRequest>>,
 
     /// HTTP client for network operations
-    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")]
+    // Framework field - intentionally unused
     client: reqwest::Client,
 
     /// Adapter health and metrics
@@ -92,7 +95,8 @@ pub struct ConsolidatedCanonicalAdapter {
     stats: Arc<RwLock<AdapterStats>>,
 
     /// Service registry for discovery (lock-free for concurrent registration)
-    #[expect(dead_code, reason = "framework placeholder")] // Framework field - intentionally unused
+    #[expect(dead_code, reason = "framework placeholder")]
+    // Framework field - intentionally unused
     service_registry: Arc<DashMap<String, ServiceRegistration>>,
 }
 

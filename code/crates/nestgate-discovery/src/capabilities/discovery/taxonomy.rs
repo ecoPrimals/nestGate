@@ -157,19 +157,21 @@ pub enum StorageCapability {
 
 impl Capability {
     /// Get a human-readable description of the capability
-    pub fn description(&self) -> &'static str {
+    #[must_use]
+    pub const fn description(&self) -> &'static str {
         match self {
-            Capability::Security(_) => "Security and authentication services",
-            Capability::Networking(_) => "Network protocol and communication services",
-            Capability::AI(_) => "Artificial intelligence and machine learning services",
-            Capability::Orchestration(_) => "Service orchestration and management",
-            Capability::Storage(_) => "Data storage and persistence services",
-            Capability::Custom(_) => "Custom capability",
+            Self::Security(_) => "Security and authentication services",
+            Self::Networking(_) => "Network protocol and communication services",
+            Self::AI(_) => "Artificial intelligence and machine learning services",
+            Self::Orchestration(_) => "Service orchestration and management",
+            Self::Storage(_) => "Data storage and persistence services",
+            Self::Custom(_) => "Custom capability",
         }
     }
 
     /// Check if this capability matches another (supports hierarchy)
-    pub fn matches(&self, other: &Capability) -> bool {
+    #[must_use]
+    pub fn matches(&self, other: &Self) -> bool {
         match (self, other) {
             // Exact match
             (a, b) if a == b => true,

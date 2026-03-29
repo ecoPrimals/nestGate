@@ -36,6 +36,7 @@ pub struct DiscoveredProtocol {
 
 impl DiscoveredProtocol {
     /// Create a new discovered protocol
+    #[must_use]
     pub fn new(
         transport: TransportProtocol,
         operation_pattern: StorageOperationPattern,
@@ -57,11 +58,13 @@ impl DiscoveredProtocol {
     }
 
     /// Check if feature is supported
+    #[must_use]
     pub fn has_feature(&self, feature: &StorageFeature) -> bool {
         self.features.has(feature)
     }
 
     /// Get a human-readable description
+    #[must_use]
     pub fn description(&self) -> String {
         format!(
             "{} / {} / {} ({} features)",
@@ -73,7 +76,7 @@ impl DiscoveredProtocol {
     }
 
     /// Get operation pattern name
-    fn operation_pattern_name(&self) -> &str {
+    const fn operation_pattern_name(&self) -> &str {
         match &self.operation_pattern {
             StorageOperationPattern::ObjectStore { .. } => "Object Store",
             StorageOperationPattern::BlockStore { .. } => "Block Store",
@@ -85,6 +88,7 @@ impl DiscoveredProtocol {
     }
 
     /// Is this protocol secure?
+    #[must_use]
     pub fn is_secure(&self) -> bool {
         self.transport.is_secure() && self.authentication.is_secure()
     }
@@ -95,7 +99,7 @@ impl DiscoveredProtocol {
 pub struct ApiInfo {
     /// API specification this follows (if any)
     ///
-    /// Examples: "OpenAPI 3.0", "REST", "GraphQL", etc.
+    /// Examples: "`OpenAPI` 3.0", "REST", "GraphQL", etc.
     pub specification: Option<String>,
 
     /// API version identifier

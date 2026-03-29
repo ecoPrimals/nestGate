@@ -278,9 +278,11 @@ fn test_html_report_format() {
     let multi_report = generator.generate_multi_format(&analysis);
 
     assert!(multi_report.html.contains("<html>"));
-    assert!(multi_report
-        .html
-        .contains("<title>Performance Report</title>"));
+    assert!(
+        multi_report
+            .html
+            .contains("<title>Performance Report</title>")
+    );
     assert!(multi_report.html.contains("85.5/100"));
     assert!(multi_report.html.contains("</html>"));
 }

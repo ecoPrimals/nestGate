@@ -135,7 +135,8 @@ pub trait DiscoveryMechanism: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Result<bool>> + Send + '_>>;
 
     /// Deregister this primal (graceful shutdown)
-    fn deregister(&self, service_id: &str) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
+    fn deregister(&self, service_id: &str)
+    -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 
     /// Get mechanism name (for logging)
     fn mechanism_name(&self) -> &'static str;

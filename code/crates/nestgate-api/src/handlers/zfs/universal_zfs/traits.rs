@@ -53,7 +53,9 @@ pub trait UniversalZfsService: Send + Sync {
     // ==================== POOL OPERATIONS ====================
 
     /// List all pools
-    fn list_pools(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<PoolInfo>>> + Send + '_>>;
+    fn list_pools(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<PoolInfo>>> + Send + '_>>;
 
     /// Create a new pool
     fn create_pool(
@@ -492,10 +494,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         config: &PoolConfig,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<PoolInfo>> + Send + '_>> {
-        Box::pin(async {
+        let config = config.clone();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.create_pool(config).await,
-                Self::FailSafe(service) => service.create_pool(config).await,
+                Self::Native(service) => service.create_pool(&config).await,
+                Self::FailSafe(service) => service.create_pool(&config).await,
             }
         })
     }
@@ -505,10 +508,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<PoolInfo>>> + Send + '_>> {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.get_pool(name).await,
-                Self::FailSafe(service) => service.get_pool(name).await,
+                Self::Native(service) => service.get_pool(&name).await,
+                Self::FailSafe(service) => service.get_pool(&name).await,
             }
         })
     }
@@ -518,10 +522,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.destroy_pool(name).await,
-                Self::FailSafe(service) => service.destroy_pool(name).await,
+                Self::Native(service) => service.destroy_pool(&name).await,
+                Self::FailSafe(service) => service.destroy_pool(&name).await,
             }
         })
     }
@@ -531,10 +536,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.scrub_pool(name).await,
-                Self::FailSafe(service) => service.scrub_pool(name).await,
+                Self::Native(service) => service.scrub_pool(&name).await,
+                Self::FailSafe(service) => service.scrub_pool(&name).await,
             }
         })
     }
@@ -544,10 +550,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.get_pool_status(name).await,
-                Self::FailSafe(service) => service.get_pool_status(name).await,
+                Self::Native(service) => service.get_pool_status(&name).await,
+                Self::FailSafe(service) => service.get_pool_status(&name).await,
             }
         })
     }
@@ -569,10 +576,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         config: &DatasetConfig,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<DatasetInfo>> + Send + '_>> {
-        Box::pin(async {
+        let config = config.clone();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.create_dataset(config).await,
-                Self::FailSafe(service) => service.create_dataset(config).await,
+                Self::Native(service) => service.create_dataset(&config).await,
+                Self::FailSafe(service) => service.create_dataset(&config).await,
             }
         })
     }
@@ -582,10 +590,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<DatasetInfo>>> + Send + '_>> {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.get_dataset(name).await,
-                Self::FailSafe(service) => service.get_dataset(name).await,
+                Self::Native(service) => service.get_dataset(&name).await,
+                Self::FailSafe(service) => service.get_dataset(&name).await,
             }
         })
     }
@@ -595,10 +604,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.destroy_dataset(name).await,
-                Self::FailSafe(service) => service.destroy_dataset(name).await,
+                Self::Native(service) => service.destroy_dataset(&name).await,
+                Self::FailSafe(service) => service.destroy_dataset(&name).await,
             }
         })
     }
@@ -609,16 +619,18 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         dataset_name: &str,
         properties: &HashMap<String, String>,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async {
+        let dataset_name = dataset_name.to_owned();
+        let properties = properties.clone();
+        Box::pin(async move {
             match self {
                 Self::Native(service) => {
                     service
-                        .set_dataset_properties(dataset_name, properties)
+                        .set_dataset_properties(&dataset_name, &properties)
                         .await
                 }
                 Self::FailSafe(service) => {
                     service
-                        .set_dataset_properties(dataset_name, properties)
+                        .set_dataset_properties(&dataset_name, &properties)
                         .await
                 }
             }
@@ -631,10 +643,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HashMap<String, String>>> + Send + '_>>
     {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.get_dataset_properties(name).await,
-                Self::FailSafe(service) => service.get_dataset_properties(name).await,
+                Self::Native(service) => service.get_dataset_properties(&name).await,
+                Self::FailSafe(service) => service.get_dataset_properties(&name).await,
             }
         })
     }
@@ -656,10 +669,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         config: &SnapshotConfig,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<SnapshotInfo>> + Send + '_>> {
-        Box::pin(async {
+        let config = config.clone();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.create_snapshot(config).await,
-                Self::FailSafe(service) => service.create_snapshot(config).await,
+                Self::Native(service) => service.create_snapshot(&config).await,
+                Self::FailSafe(service) => service.create_snapshot(&config).await,
             }
         })
     }
@@ -669,10 +683,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         dataset_name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send + '_>> {
-        Box::pin(async {
+        let dataset_name = dataset_name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.list_dataset_snapshots(dataset_name).await,
-                Self::FailSafe(service) => service.list_dataset_snapshots(dataset_name).await,
+                Self::Native(service) => service.list_dataset_snapshots(&dataset_name).await,
+                Self::FailSafe(service) => service.list_dataset_snapshots(&dataset_name).await,
             }
         })
     }
@@ -682,10 +697,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         name: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async {
+        let name = name.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.destroy_snapshot(name).await,
-                Self::FailSafe(service) => service.destroy_snapshot(name).await,
+                Self::Native(service) => service.destroy_snapshot(&name).await,
+                Self::FailSafe(service) => service.destroy_snapshot(&name).await,
             }
         })
     }
@@ -717,10 +733,11 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
         &self,
         file_path: &str,
     ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async {
+        let file_path = file_path.to_owned();
+        Box::pin(async move {
             match self {
-                Self::Native(service) => service.predict_tier(file_path).await,
-                Self::FailSafe(service) => service.predict_tier(file_path).await,
+                Self::Native(service) => service.predict_tier(&file_path).await,
+                Self::FailSafe(service) => service.predict_tier(&file_path).await,
             }
         })
     }
@@ -786,6 +803,7 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_dyn_zfs_service_native_service_name() {
@@ -840,5 +858,165 @@ mod tests {
         let service = UniversalZfsServiceEnum::new_native();
         let result = service.get_metrics().await;
         let _ = result;
+    }
+
+    #[tokio::test]
+    async fn universal_zfs_service_enum_is_available_and_shutdown() {
+        let service = UniversalZfsServiceEnum::new_native();
+        assert!(service.is_available().await);
+        assert!(service.shutdown().await.is_ok());
+    }
+
+    #[test]
+    fn dyn_zfs_service_fail_safe_service_name_and_version() {
+        use crate::handlers::zfs::universal_zfs::config::FailSafeConfig;
+        use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
+        use std::sync::Arc;
+
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let mut cfg = FailSafeConfig::default();
+        cfg.circuit_breaker.enabled = false;
+        let fs = FailSafeZfsService::new(primary, cfg);
+        let wrapped = DynZfsService::FailSafe(fs);
+        assert_eq!(wrapped.service_name(), "fail-safe-zfs");
+        assert_eq!(wrapped.service_version(), "1.0.0");
+    }
+
+    #[tokio::test]
+    async fn dyn_zfs_service_fail_safe_health_check_runs() {
+        use crate::handlers::zfs::universal_zfs::config::FailSafeConfig;
+        use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
+        use std::sync::Arc;
+
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let mut cfg = FailSafeConfig::default();
+        cfg.circuit_breaker.enabled = false;
+        let fs = FailSafeZfsService::new(primary, cfg);
+        let wrapped = DynZfsService::FailSafe(fs);
+        let _ = wrapped.health_check().await;
+    }
+
+    #[test]
+    fn universal_zfs_service_enum_new_fail_safe_wraps_native() {
+        use crate::handlers::zfs::universal_zfs::config::FailSafeConfig;
+        use std::sync::Arc;
+
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let mut cfg = FailSafeConfig::default();
+        cfg.circuit_breaker.enabled = false;
+        let e = UniversalZfsServiceEnum::new_fail_safe(primary, cfg);
+        assert_eq!(e.service_name(), "fail-safe-zfs");
+    }
+
+    #[tokio::test]
+    async fn trait_object_list_pools_and_optimize_native_enum() {
+        use crate::handlers::zfs::universal_zfs_types::PoolConfig;
+
+        let svc: &dyn UniversalZfsService = &UniversalZfsServiceEnum::new_native();
+        let _ = svc.list_pools().await;
+        let _ = svc.optimize().await;
+        let cfg = PoolConfig {
+            name: "noop".to_string(),
+            _devices: vec![],
+            mountpoint: None,
+            compression: false,
+            deduplication: false,
+            properties: std::collections::HashMap::new(),
+        };
+        let _ = svc.create_pool(&cfg).await;
+    }
+
+    #[tokio::test]
+    async fn dyn_zfs_service_native_dispatches_all_wrappers() {
+        use crate::handlers::zfs::universal_zfs_types::{
+            DatasetConfig, PoolConfig, SnapshotConfig,
+        };
+
+        let svc = DynZfsService::Native(NativeZfsService::new());
+        let pool_cfg = PoolConfig {
+            name: "noop_pool".to_string(),
+            _devices: vec![],
+            mountpoint: None,
+            compression: false,
+            deduplication: false,
+            properties: HashMap::new(),
+        };
+        let ds_cfg = DatasetConfig {
+            name: "noop/ds".to_string(),
+            mountpoint: None,
+            compression: false,
+            quota: None,
+            reservation: None,
+            properties: HashMap::new(),
+        };
+        let snap_cfg = SnapshotConfig {
+            name: "snap1".to_string(),
+            dataset: "noop/ds".to_string(),
+            properties: HashMap::new(),
+        };
+
+        let _ = svc.get_pool("nope").await;
+        let _ = svc.destroy_pool("nope").await;
+        let _ = svc.scrub_pool("nope").await;
+        let _ = svc.get_pool_status("nope").await;
+        let _ = svc.list_datasets().await;
+        let _ = svc.create_dataset(&ds_cfg).await;
+        let _ = svc.get_dataset("nope").await;
+        let _ = svc.destroy_dataset("nope").await;
+        let mut props = HashMap::new();
+        props.insert("compression".to_string(), "lz4".to_string());
+        let _ = svc.set_dataset_properties("noop/ds", &props).await;
+        let _ = svc.get_dataset_properties("noop/ds").await;
+        let _ = svc.list_snapshots().await;
+        let _ = svc.create_snapshot(&snap_cfg).await;
+        let _ = svc.list_dataset_snapshots("noop/ds").await;
+        let _ = svc.destroy_snapshot("noop@snap").await;
+        let _ = svc.create_pool(&pool_cfg).await;
+        let _ = svc.optimize().await;
+        let _ = svc.get_optimization_analytics().await;
+        let _ = svc.predict_tier("/tmp/x").await;
+        let _ = svc.get_configuration().await;
+        let _ = svc
+            .update_configuration(serde_json::json!({ "k": 1 }))
+            .await;
+    }
+
+    #[tokio::test]
+    async fn universal_zfs_service_enum_native_trait_covers_remaining_methods() {
+        #[allow(deprecated)]
+        use crate::handlers::zfs::universal_zfs_types::{DatasetConfig, SnapshotConfig};
+
+        let svc = UniversalZfsServiceEnum::new_native();
+        let ds_cfg = DatasetConfig {
+            name: "t/d".to_string(),
+            mountpoint: None,
+            compression: false,
+            quota: None,
+            reservation: None,
+            properties: HashMap::new(),
+        };
+        let snap_cfg = SnapshotConfig {
+            name: "s".to_string(),
+            dataset: "t/d".to_string(),
+            properties: HashMap::new(),
+        };
+
+        let _ = svc.get_pool("x").await;
+        let _ = svc.destroy_pool("x").await;
+        let _ = svc.scrub_pool("x").await;
+        let _ = svc.get_pool_status("x").await;
+        let _ = svc.create_dataset(&ds_cfg).await;
+        let _ = svc.get_dataset("x").await;
+        let _ = svc.destroy_dataset("x").await;
+        let _ = svc.set_dataset_properties("t/d", &HashMap::new()).await;
+        let _ = svc.get_dataset_properties("t/d").await;
+        let _ = svc.list_snapshots().await;
+        let _ = svc.create_snapshot(&snap_cfg).await;
+        let _ = svc.list_dataset_snapshots("t/d").await;
+        let _ = svc.destroy_snapshot("t/d@s").await;
+        let _ = svc.get_optimization_analytics().await;
+        let _ = svc.predict_tier("/a").await;
+        let _ = svc.get_configuration().await;
+        let _ = svc.update_configuration(serde_json::json!({})).await;
     }
 }

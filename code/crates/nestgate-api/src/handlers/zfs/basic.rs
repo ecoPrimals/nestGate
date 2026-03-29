@@ -8,8 +8,8 @@
 // Production: Use real ZFS types
 #[cfg(not(feature = "dev-stubs"))]
 use nestgate_zfs::{
-    zero_cost_zfs_operations::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo},
     ProductionZfsManager,
+    zero_cost_zfs_operations::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo},
 };
 
 // Development: Use stubs for local development without ZFS
@@ -38,7 +38,7 @@ use tracing::{error, info, warn};
 /// Request structure for creating a new ZFS pool with specified _devices.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-/// Request parameters for CreatePool operation
+/// Request parameters for `CreatePool` operation
 pub struct CreatePoolRequest {
     /// Name of the ZFS pool to create
     pub name: String,
@@ -51,7 +51,7 @@ pub struct CreatePoolRequest {
 /// Request structure for creating a new ZFS dataset with optional properties.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-/// Request parameters for CreateDataset operation
+/// Request parameters for `CreateDataset` operation
 pub struct CreateDatasetRequest {
     /// Name of the ZFS dataset to create
     pub name: String,
@@ -64,7 +64,7 @@ pub struct CreateDatasetRequest {
 /// Request structure for creating a new ZFS snapshot of a dataset.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-/// Request parameters for CreateSnapshot operation
+/// Request parameters for `CreateSnapshot` operation
 pub struct CreateSnapshotRequest {
     /// Dataset to snapshot
     pub dataset: String,
@@ -77,7 +77,7 @@ pub struct CreateSnapshotRequest {
 /// Response structure containing ZFS system health information.
 /// Part of the canonical modernized ZFS API.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-/// Response data for ZfsHealth operation
+/// Response data for `ZfsHealth` operation
 pub struct ZfsHealthResponse {
     /// Overall ZFS system health status
     pub healthy: bool,
@@ -94,6 +94,34 @@ async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, 
     state
         .get_zfs_manager()
         .ok_or_else(|| "ZFS service not available".to_string())
+}
+
+/// Build [`ZfsHealthResponse`] from a pool listing (used by [`get_zfs_health`] and unit tests).
+pub(crate) fn evaluate_zfs_health(pools: Vec<ZeroCostPoolInfo>) -> ZfsHealthResponse {
+    let mut issues = Vec::new();
+    let mut healthy = true;
+
+    for pool in &pools {
+        match pool.health.as_str() {
+            "CRITICAL" | "FAULTED" | "UNAVAIL" => {
+                healthy = false;
+                issues.push(format!("Pool '{}' is in critical state", pool.name));
+            }
+            "DEGRADED" => {
+                issues.push(format!("Pool '{}' has warnings", pool.name));
+            }
+            "UNKNOWN" => {
+                issues.push(format!("Pool '{}' status unknown", pool.name));
+            }
+            _ => {}
+        }
+    }
+
+    ZfsHealthResponse {
+        healthy,
+        pools,
+        issues,
+    }
 }
 
 // ==================== SECTION ====================
@@ -503,32 +531,12 @@ pub async fn get_zfs_health(
     match get_zfs_service(&state).await {
         Ok(service) => match service.list_pools() {
             Ok(pools) => {
-                let mut issues = Vec::new();
-                let mut healthy = true;
+                let response = evaluate_zfs_health(pools);
 
-                for pool in &pools {
-                    match pool.health.as_str() {
-                        "CRITICAL" | "FAULTED" | "UNAVAIL" => {
-                            healthy = false;
-                            issues.push(format!("Pool '{}' is in critical state", pool.name));
-                        }
-                        "DEGRADED" => {
-                            issues.push(format!("Pool '{}' has warnings", pool.name));
-                        }
-                        "UNKNOWN" => {
-                            issues.push(format!("Pool '{}' status unknown", pool.name));
-                        }
-                        _ => {}
-                    }
-                }
-
-                let response = ZfsHealthResponse {
-                    healthy,
-                    pools,
-                    issues,
-                };
-
-                info!("✅ ZFS health check completed - healthy: {}", healthy);
+                info!(
+                    "✅ ZFS health check completed - healthy: {}",
+                    response.healthy
+                );
                 Ok(Json(response))
             }
             Err(e) => {
@@ -681,5 +689,136 @@ impl ZfsHandlerImpl {
     #[must_use]
     pub const fn new() -> Self {
         Self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn create_pool_request_roundtrip_json() {
+        let r = CreatePoolRequest {
+            name: "tank".to_string(),
+            _devices: vec!["/dev/sdb".to_string()],
+        };
+        let v = serde_json::to_value(&r).unwrap();
+        let back: CreatePoolRequest = serde_json::from_value(v).unwrap();
+        assert_eq!(back.name, "tank");
+        assert_eq!(back._devices.len(), 1);
+    }
+
+    #[test]
+    fn create_dataset_request_optional_properties() {
+        let mut props = HashMap::new();
+        props.insert("compression".to_string(), "lz4".to_string());
+        let r = CreateDatasetRequest {
+            name: "data".to_string(),
+            properties: Some(props),
+        };
+        let json = serde_json::to_string(&r).unwrap();
+        let back: CreateDatasetRequest = serde_json::from_str(&json).unwrap();
+        assert!(
+            back.properties
+                .as_ref()
+                .unwrap()
+                .contains_key("compression")
+        );
+    }
+
+    #[test]
+    fn create_snapshot_request_serde() {
+        let r = CreateSnapshotRequest {
+            dataset: "tank/foo".to_string(),
+            name: "snap1".to_string(),
+        };
+        let v = serde_json::to_value(&r).unwrap();
+        let back: CreateSnapshotRequest = serde_json::from_value(v).unwrap();
+        assert_eq!(back.dataset, "tank/foo");
+        assert_eq!(back.name, "snap1");
+    }
+
+    #[test]
+    fn zfs_handler_impl_default_matches_new() {
+        assert!(format!("{:?}", ZfsHandlerImpl::new()).contains("ZfsHandlerImpl"));
+        let _ = ZfsHandlerImpl::default();
+    }
+
+    #[cfg(feature = "dev-stubs")]
+    fn sample_pool(name: &str, health: &str) -> ZeroCostPoolInfo {
+        ZeroCostPoolInfo {
+            name: name.to_string(),
+            health: health.to_string(),
+            size: 0,
+            allocated: 0,
+            free: 0,
+        }
+    }
+
+    #[cfg(not(feature = "dev-stubs"))]
+    fn sample_pool(name: &str, health: &str) -> ZeroCostPoolInfo {
+        ZeroCostPoolInfo {
+            name: name.to_string(),
+            size: 0,
+            used: 0,
+            available: 0,
+            health: health.to_string(),
+            properties: std::collections::HashMap::new(),
+            created_at: std::time::SystemTime::UNIX_EPOCH,
+        }
+    }
+
+    #[test]
+    fn evaluate_zfs_health_online_only_is_healthy() {
+        let r = evaluate_zfs_health(vec![sample_pool("tank", "ONLINE")]);
+        assert!(r.healthy);
+        assert!(r.issues.is_empty());
+        assert_eq!(r.pools.len(), 1);
+    }
+
+    #[test]
+    fn evaluate_zfs_health_critical_marks_unhealthy() {
+        let r = evaluate_zfs_health(vec![sample_pool("tank", "FAULTED")]);
+        assert!(!r.healthy);
+        assert_eq!(r.issues.len(), 1);
+        assert!(r.issues[0].contains("critical"));
+    }
+
+    #[test]
+    fn evaluate_zfs_health_critical_status_marks_unhealthy() {
+        let r = evaluate_zfs_health(vec![sample_pool("tank", "CRITICAL")]);
+        assert!(!r.healthy);
+        assert!(r.issues.iter().any(|s| s.contains("critical")));
+    }
+
+    #[test]
+    fn evaluate_zfs_health_unavail_marks_unhealthy() {
+        let r = evaluate_zfs_health(vec![sample_pool("tank", "UNAVAIL")]);
+        assert!(!r.healthy);
+        assert!(r.issues.iter().any(|s| s.contains("critical")));
+    }
+
+    #[test]
+    fn evaluate_zfs_health_degraded_keeps_overall_healthy_flag() {
+        let r = evaluate_zfs_health(vec![sample_pool("tank", "DEGRADED")]);
+        assert!(r.healthy);
+        assert_eq!(r.issues.len(), 1);
+    }
+
+    #[test]
+    fn evaluate_zfs_health_unknown_pool_adds_issue() {
+        let r = evaluate_zfs_health(vec![sample_pool("tank", "UNKNOWN")]);
+        assert!(r.healthy);
+        assert!(r.issues.iter().any(|s| s.contains("unknown")));
+    }
+
+    #[test]
+    fn zfs_health_response_json_shape() {
+        let r = evaluate_zfs_health(vec![sample_pool("z", "ONLINE")]);
+        let v = serde_json::to_value(&r).unwrap();
+        assert!(v.get("healthy").is_some());
+        assert!(v.get("pools").is_some());
+        assert!(v.get("issues").is_some());
     }
 }

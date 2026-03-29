@@ -8,7 +8,7 @@
 //! Storage module
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tokio::process::Command;
 
 use tracing::error;
@@ -215,25 +215,25 @@ pub async fn cleanup_workspace(
         .output()
         .await;
 
-    if let Ok(output) = snapshot_output {
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let _cutoff_timestamp = chrono::Utc::now() - chrono::Duration::days(30);
+    if let Ok(output) = snapshot_output
+        && output.status.success()
+    {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let _cutoff_timestamp = chrono::Utc::now() - chrono::Duration::days(30);
 
-            for line in stdout.lines() {
-                let parts: Vec<&str> = line.split('\t').collect();
-                if parts.len() >= 2 {
-                    let snapshot_name = parts[0];
-                    // In a real implementation, parse creation timestamp and compare
-                    // For now, just clean up snapshots with "temp" in the name
-                    if snapshot_name.contains("temp") {
-                        let _ = Command::new("zfs")
-                            .args(["destroy", snapshot_name])
-                            .output()
-                            .await;
-                        cleanup_actions.push("Removed temporary snapshot".to_string());
-                        space_freed += 1024 * 1024; // Estimate 1MB freed per snapshot
-                    }
+        for line in stdout.lines() {
+            let parts: Vec<&str> = line.split('\t').collect();
+            if parts.len() >= 2 {
+                let snapshot_name = parts[0];
+                // In a real implementation, parse creation timestamp and compare
+                // For now, just clean up snapshots with "temp" in the name
+                if snapshot_name.contains("temp") {
+                    let _ = Command::new("zfs")
+                        .args(["destroy", snapshot_name])
+                        .output()
+                        .await;
+                    cleanup_actions.push("Removed temporary snapshot".to_string());
+                    space_freed += 1024 * 1024; // Estimate 1MB freed per snapshot
                 }
             }
         }
@@ -245,10 +245,10 @@ pub async fn cleanup_workspace(
         .output()
         .await;
 
-    if let Ok(output) = cache_output {
-        if output.status.success() {
-            cleanup_actions.push("Optimized cache settings for better performance".to_string());
-        }
+    if let Ok(output) = cache_output
+        && output.status.success()
+    {
+        cleanup_actions.push("Optimized cache settings for better performance".to_string());
     }
 
     // 3. Update dataset compression if not optimal
@@ -257,18 +257,17 @@ pub async fn cleanup_workspace(
         .output()
         .await;
 
-    if let Ok(output) = compression_output {
-        if output.status.success() {
-            let compression = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            if compression == "off" || compression == "lzjb" {
-                // Upgrade to better compression
-                let _compress_result = Command::new("zfs")
-                    .args(["set", "compression=lz4", &dataset_name])
-                    .output()
-                    .await;
-                cleanup_actions
-                    .push("Updated compression to lz4 for better efficiency".to_string());
-            }
+    if let Ok(output) = compression_output
+        && output.status.success()
+    {
+        let compression = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if compression == "off" || compression == "lzjb" {
+            // Upgrade to better compression
+            let _compress_result = Command::new("zfs")
+                .args(["set", "compression=lz4", &dataset_name])
+                .output()
+                .await;
+            cleanup_actions.push("Updated compression to lz4 for better efficiency".to_string());
         }
     }
 

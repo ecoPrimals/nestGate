@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **E2E SCENARIO 3: SERVICE DISCOVERY TIMEOUT**
 //!
 //! **Objective**: Test behavior when capability services (orchestration/ai) don't respond

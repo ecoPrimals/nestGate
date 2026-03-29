@@ -13,12 +13,12 @@ use std::path::PathBuf;
 pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u64>) -> Result<()> {
     println!("📊 NestGate Performance Monitor");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("  Interval:  {}s", interval);
+    println!("  Interval:  {interval}s");
     if let Some(ref path) = output {
         println!("  Output:    {}", path.display());
     }
     if let Some(dur) = duration {
-        println!("  Duration:  {}s", dur);
+        println!("  Duration:  {dur}s");
     } else {
         println!("  Duration:  continuous (Ctrl+C to stop)");
     }
@@ -41,14 +41,14 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
 
     loop {
         // Check duration limit
-        if let Some(dur) = duration {
-            if start.elapsed().as_secs() >= dur {
-                println!(
-                    "\n⏱️  Duration limit reached ({:.0}s)",
-                    start.elapsed().as_secs_f64()
-                );
-                break;
-            }
+        if let Some(dur) = duration
+            && start.elapsed().as_secs() >= dur
+        {
+            println!(
+                "\n⏱️  Duration limit reached ({:.0}s)",
+                start.elapsed().as_secs_f64()
+            );
+            break;
         }
 
         sample_count += 1;
@@ -59,7 +59,7 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
 
         // ✅ REAL: Gather system metrics
         let cpu_count = std::thread::available_parallelism()
-            .map(|n| n.get())
+            .map(std::num::NonZero::get)
             .unwrap_or(1);
 
         // ✅ REAL: Check socket liveness
@@ -85,8 +85,8 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
         let storage_exists = std::path::Path::new(&storage_path).exists();
 
         // Display
-        println!("[{}] Sample #{}", timestamp, sample_count);
-        println!("  CPU Cores:  {}", cpu_count);
+        println!("[{timestamp}] Sample #{sample_count}");
+        println!("  CPU Cores:  {cpu_count}");
         println!(
             "  Socket:     {}",
             if socket_alive {
@@ -119,7 +119,7 @@ pub async fn execute(interval: u64, output: Option<PathBuf>, duration: Option<u6
     if let Some(ref path) = output {
         println!("📝 Metrics written to: {}", path.display());
     }
-    println!("📊 Total samples: {}", sample_count);
+    println!("📊 Total samples: {sample_count}");
 
     Ok(())
 }

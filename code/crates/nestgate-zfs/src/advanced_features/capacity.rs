@@ -15,10 +15,7 @@ pub fn monitor_capacity_usage(
 ) -> Result<CapacityReport> {
     debug!("Monitoring capacity usage for dataset: {}", dataset);
     // Basic capacity analysis based on historical data
-    let current_usage = historical_data
-        .last()
-        .map(|info| info.disk_usage)
-        .unwrap_or(0.0);
+    let current_usage = historical_data.last().map_or(0.0, |info| info.disk_usage);
 
     let growth_rate = if historical_data.len() > 1 {
         if let Some(recent) = historical_data.last() {

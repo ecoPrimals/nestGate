@@ -41,7 +41,7 @@ impl From<&str> for NestGateUnifiedError {
 }
 
 /// Convert anyhow errors to `NestGate` errors
-/// This enables use of `?` operator with anyhow::Result in test code
+/// This enables use of `?` operator with `anyhow::Result` in test code
 impl From<anyhow::Error> for NestGateUnifiedError {
     /// From
     fn from(error: anyhow::Error) -> Self {

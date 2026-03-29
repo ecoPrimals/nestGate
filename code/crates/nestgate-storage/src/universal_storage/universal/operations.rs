@@ -32,7 +32,7 @@ pub enum StorageOperationPattern {
 
     /// File system pattern (hierarchical files and directories)
     ///
-    /// Examples: NFS, SMB, WebDAV, local filesystem
+    /// Examples: NFS, SMB, `WebDAV`, local filesystem
     FileSystem {
         /// Path separator character
         path_separator: char,
@@ -50,7 +50,7 @@ pub enum StorageOperationPattern {
 
     /// Document storage pattern (store/query documents)
     ///
-    /// Examples: MongoDB, CouchDB, DocumentDB
+    /// Examples: `MongoDB`, `CouchDB`, `DocumentDB`
     Document {
         /// Query capabilities
         query_capabilities: QueryCapabilities,
@@ -58,7 +58,7 @@ pub enum StorageOperationPattern {
 
     /// Stream storage pattern (append-only logs)
     ///
-    /// Examples: Kafka, Kinesis, EventStore
+    /// Examples: Kafka, Kinesis, `EventStore`
     Stream {
         /// Ordering guarantees
         ordering: StreamOrdering,

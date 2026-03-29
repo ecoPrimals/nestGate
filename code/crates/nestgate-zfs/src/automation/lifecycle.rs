@@ -18,7 +18,7 @@ use uuid;
 use super::types::{
     AutomationEvent, AutomationEventType, AutomationPolicy, DatasetLifecycle, LifecycleStage,
 };
-use nestgate_core::{canonical_types::StorageTier as CoreStorageTier, Result};
+use nestgate_core::{Result, canonical_types::StorageTier as CoreStorageTier};
 
 /// Update lifecycle stage based on policy rules
 pub fn update_lifecycle_stage(
@@ -87,37 +87,37 @@ fn evaluate_single_condition(
 ) -> Result<bool> {
     let condition_lower = condition.to_lowercase();
     if condition_lower.starts_with("age_days_gt_") {
-        if let Some(threshold_str) = condition_lower.strip_prefix("age_days_gt_") {
-            if let Ok(threshold) = threshold_str.parse::<u64>() {
+        if let Some(threshold_str) = condition_lower.strip_prefix("age_days_gt_")
+            && let Ok(threshold) = threshold_str.parse::<u64>()
+        {
+            let now = SystemTime::now();
+            let age_days = now
+                .duration_since(lifecycle.created)
+                .unwrap_or(Duration::from_secs(0))
+                .as_secs()
+                / (24 * 3600);
+            return Ok(age_days > threshold);
+        }
+    } else if condition_lower.starts_with("access_count_lt_") {
+        if let Some(threshold_str) = condition_lower.strip_prefix("access_count_lt_")
+            && let Ok(threshold) = threshold_str.parse::<u64>()
+        {
+            return Ok(lifecycle.access_count < threshold);
+        }
+    } else if condition_lower.starts_with("days_since_access_gt_") {
+        if let Some(threshold_str) = condition_lower.strip_prefix("days_since_access_gt_")
+            && let Ok(threshold) = threshold_str.parse::<u64>()
+        {
+            if let Some(last_accessed) = lifecycle.last_accessed {
                 let now = SystemTime::now();
-                let age_days = now
-                    .duration_since(lifecycle.created)
+                let days_since_access = now
+                    .duration_since(last_accessed)
                     .unwrap_or(Duration::from_secs(0))
                     .as_secs()
                     / (24 * 3600);
-                return Ok(age_days > threshold);
+                return Ok(days_since_access > threshold);
             }
-        }
-    } else if condition_lower.starts_with("access_count_lt_") {
-        if let Some(threshold_str) = condition_lower.strip_prefix("access_count_lt_") {
-            if let Ok(threshold) = threshold_str.parse::<u64>() {
-                return Ok(lifecycle.access_count < threshold);
-            }
-        }
-    } else if condition_lower.starts_with("days_since_access_gt_") {
-        if let Some(threshold_str) = condition_lower.strip_prefix("days_since_access_gt_") {
-            if let Ok(threshold) = threshold_str.parse::<u64>() {
-                if let Some(last_accessed) = lifecycle.last_accessed {
-                    let now = SystemTime::now();
-                    let days_since_access = now
-                        .duration_since(last_accessed)
-                        .unwrap_or(Duration::from_secs(0))
-                        .as_secs()
-                        / (24 * 3600);
-                    return Ok(days_since_access > threshold);
-                }
-                return Ok(true); // Never accessed counts as infinite days
-            }
+            return Ok(true); // Never accessed counts as infinite days
         }
     } else if condition_lower == "always" || condition_lower == "true" {
         return Ok(true);
@@ -132,7 +132,7 @@ fn evaluate_single_condition(
 
 /// Check if dataset should transition to a new stage
 #[must_use]
-pub fn should_transition_to_stage(
+pub const fn should_transition_to_stage(
     _dataset_name: &str,
     _current_lifecycle: &DatasetLifecycle,
 ) -> bool {

@@ -134,7 +134,7 @@ impl DiagnosticsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()> {
+    pub const fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()> {
         // Implementation would update internal metrics storage
         // For now, this is a placeholder that accepts metrics
         Ok(())

@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for PerformanceHandler
+/// Configuration for `PerformanceHandler`
 pub struct PerformanceHandlerConfig {
     /// Caching
     pub caching: CachingHandlerConfig,
@@ -19,28 +19,28 @@ pub struct PerformanceHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CachingHandler
+/// Configuration for `CachingHandler`
 pub struct CachingHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for OptimizationHandler
+/// Configuration for `OptimizationHandler`
 pub struct OptimizationHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ProfilerHandler
+/// Configuration for `ProfilerHandler`
 pub struct ProfilerHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for LoadBalancingHandler
+/// Configuration for `LoadBalancingHandler`
 pub struct LoadBalancingHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl PerformanceHandlerConfig {
 
     /// Merges this configuration with another, returning the merged result
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

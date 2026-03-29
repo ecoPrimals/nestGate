@@ -10,8 +10,8 @@
 //! **Test Count**: 50+ critical path scenarios
 //! **Priority**: Production error paths, config validation, discovery failures
 
-use nestgate_core::error::NestGateError;
 use nestgate_core::Result;
+use nestgate_core::error::NestGateError;
 use std::env;
 
 // ==================== CONFIG ERROR PATHS ====================

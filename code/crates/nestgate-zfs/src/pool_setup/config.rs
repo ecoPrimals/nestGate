@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 /// Pool configuration for ZFS setup
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -24,7 +24,7 @@ use std::collections::HashMap;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for PoolSetup
+/// Configuration for `PoolSetup`
 pub struct PoolSetupConfig {
     /// Pool name
     pub pool_name: String,
@@ -104,7 +104,7 @@ pub enum RedundancyLevel {
 
 /// Pool property configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -122,7 +122,7 @@ pub enum RedundancyLevel {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for PoolProperty
+/// Configuration for `PoolProperty`
 pub struct PoolPropertyConfig {
     /// Ashift
     pub ashift: u8,
@@ -151,7 +151,7 @@ impl Default for PoolPropertyConfig {
 
 /// Device detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -169,7 +169,7 @@ impl Default for PoolPropertyConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for DeviceDetection
+/// Configuration for `DeviceDetection`
 pub struct DeviceDetectionConfig {
     /// Scan Paths
     pub scan_paths: Vec<String>,
@@ -223,7 +223,7 @@ impl Default for PoolSetupConfig {
 
 /// Safety configuration for pool operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -266,9 +266,9 @@ impl Default for SafetyConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Cachethresholds
 pub struct CacheThresholds {
-    /// L1Arc Max
+    /// `L1Arc` Max
     pub l1arc_max: u64,
-    /// L2Arc Max
+    /// `L2Arc` Max
     pub l2arc_max: u64,
     /// Metadata Ratio
     pub metadata_ratio: f64,

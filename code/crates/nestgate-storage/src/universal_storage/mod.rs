@@ -3,7 +3,7 @@
 
 //! **UNIVERSAL STORAGE SYSTEM**
 //!
-//! Unified storage abstraction layer for NestGate, consolidating all storage backends
+//! Unified storage abstraction layer for `NestGate`, consolidating all storage backends
 //! into a single, consistent interface with zero-cost abstractions.
 //!
 //! # Architecture
@@ -44,8 +44,8 @@
 //!
 //! # Status
 //!
-//! **Production Ready**: ✅ Core functionality complete  
-//! **Test Coverage**: Comprehensive edge case and error tests  
+//! **Production Ready**: ✅ Core functionality complete\
+//! **Test Coverage**: Comprehensive edge case and error tests\
 //! **Performance**: Zero-cost abstractions with Arc for efficient sharing
 
 // ==================== CANONICAL STORAGE SYSTEM ====================
@@ -68,17 +68,12 @@ mod consolidated_types_tests;
 mod storage_edge_cases;
 #[cfg(test)]
 mod storage_error_tests; // Nov 23, 2025 - P1 test expansion // Nov 23, 2025 - P1-5 edge case tests
-                         // Auto-configuration for storage backends
+// Auto-configuration for storage backends
 pub mod auto_configurator;
 // Storage detection and discovery
 pub mod storage_detector;
 // Storage detector runtime configuration
 pub mod storage_detector_config;
-// Zero-copy optimizations for storage operations.
-// Disabled: zero_copy.rs has compilation issues against current storage traits.
-// Zero-copy functionality is available via zero_cost_storage_backend instead.
-// pub mod zero_copy;
-//
 // Enterprise storage operations module does not exist on disk.
 // Enterprise capabilities are provided via universal storage adapter.
 // pub mod enterprise;
@@ -129,8 +124,9 @@ pub use storage_detector::{DetectedStorage, StorageDetector};
 
 // **MIGRATION COMPLETE**:
 // All storage interfaces have been successfully migrated to the canonical system.
-// TODO: wire to nestgate-core::traits — nestgate_core::traits::canonical::CanonicalStorage for new implementations.
-// TODO: wire to nestgate-core::traits — nestgate_core::traits::unified_storage::UnifiedStorage for comprehensive operations.
+// **Integration:** New backends should implement `nestgate_core::traits::canonical::CanonicalStorage`
+// and `nestgate_core::traits::unified_storage::UnifiedStorage` when `nestgate-storage` can depend on
+// `nestgate-core` without creating a dependency cycle (or via shared traits in `nestgate-types`).
 
 #[cfg(test)]
 mod tests {

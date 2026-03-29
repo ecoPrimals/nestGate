@@ -308,3 +308,27 @@ impl ZfsPerformanceMonitor {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod monitor_mod_tests {
+    use super::ZfsPerformanceMonitor;
+
+    #[test]
+    fn new_for_testing_stop_is_ok() {
+        let mut m = ZfsPerformanceMonitor::new_for_testing();
+        assert!(m.stop().is_ok());
+    }
+
+    #[test]
+    fn new_constructor_matches_testing_shape() {
+        use crate::config::ZfsConfig;
+        use crate::dataset::ZfsDatasetManager;
+        use crate::pool::ZfsPoolManager;
+        use std::sync::Arc;
+
+        let pm = Arc::new(ZfsPoolManager::new_production(ZfsConfig::default()));
+        let cfg = ZfsConfig::default();
+        let dm = Arc::new(ZfsDatasetManager::new(cfg, Arc::clone(&pm)));
+        let _m = ZfsPerformanceMonitor::new(pm, dm);
+    }
+}

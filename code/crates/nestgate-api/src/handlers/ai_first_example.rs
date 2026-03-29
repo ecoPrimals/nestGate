@@ -7,18 +7,12 @@
 //
 // **ECOSYSTEM COMPLIANCE**: 85%+ AI-First Citizen API Standard
 // **AUTO-CONVERSION**: Middleware automatically wraps responses
-// **MANUAL CONTROL**: Direct AIFirstResponse construction when needed
-
-#[cfg(test)]
-#[path = "ai_first_example_coverage_boost.rs"]
-mod ai_first_example_coverage_boost;
-
 use axum::{
+    Router,
     extract::{Path, Query},
     http::StatusCode,
     response::Json,
     routing::{get, post},
-    Router,
 };
 // use nestgate_core::ai_first_refactored::{  // Missing module
 //    AIFirstResponse, AIFirstResponseBuilder, SuggestedAction, ActionType,
@@ -31,7 +25,7 @@ use std::collections::HashMap;
 ///
 /// Response structure that includes AI-powered insights and confidence scoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Response data for AIFirst operation
+/// Response data for `AIFirst` operation
 pub struct AIFirstResponse<T> {
     /// The actual response data
     pub data: T,
@@ -251,7 +245,7 @@ pub struct PoolQuery {
 ///
 /// Request structure for pool operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for PoolOperation operation
+/// Request parameters for `PoolOperation` operation
 pub struct PoolOperationRequest {
     /// Operation to perform on the pool
     pub b_operation: String,

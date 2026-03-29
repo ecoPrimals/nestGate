@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tokio::time::interval;
 // Removed unused tracing import
 
@@ -27,12 +27,12 @@ use tracing::info;
 
 // Type aliases for complex types
 type SnapshotPolicyMap = Arc<RwLock<HashMap<String, SnapshotPolicy>>>;
-/// Type alias for SnapshotInfoCache
+/// Type alias for `SnapshotInfoCache`
 type SnapshotInfoCache = Arc<RwLock<HashMap<String, SnapshotInfo>>>;
 
 /// ZFS Snapshot Manager
 #[derive(Debug)]
-/// Manager for ZfsSnapshot operations
+/// Manager for `ZfsSnapshot` operations
 pub struct ZfsSnapshotManager {
     #[allow(dead_code)]
     config: ZfsConfig,

@@ -223,3 +223,36 @@ pub async fn set_dataset_properties(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
+    use crate::handlers::zfs::universal_zfs::traits::UniversalZfsServiceEnum;
+    use nestgate_core::config::canonical_primary::handler_config::ZfsFailSafeConfig;
+    use std::sync::Arc;
+
+    fn svc() -> FailSafeZfsService {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = false;
+        FailSafeZfsService::new(Arc::new(UniversalZfsServiceEnum::new_native()), c)
+    }
+
+    #[tokio::test]
+    async fn list_datasets_runs_against_primary() {
+        let s = svc();
+        let _ = list_datasets(&s).await;
+    }
+
+    #[tokio::test]
+    async fn get_dataset_runs_against_primary() {
+        let s = svc();
+        let _ = get_dataset(&s, "nonexistent-dataset-xyz").await;
+    }
+
+    #[tokio::test]
+    async fn get_dataset_properties_runs() {
+        let s = svc();
+        let _ = get_dataset_properties(&s, "tank/foo").await;
+    }
+}

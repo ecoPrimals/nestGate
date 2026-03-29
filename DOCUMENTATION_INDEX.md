@@ -1,7 +1,7 @@
 # NestGate Documentation Index
 
-**Last Updated**: March 28, 2026  
-**Version**: 4.6.0-dev
+**Last Updated**: March 29, 2026  
+**Version**: 4.7.0-dev
 
 ---
 
@@ -15,7 +15,7 @@
 
 ### Configuration
 - [config/](./config/) - Production configuration templates
-- [.env.sovereignty](./config/production.env.example) - Environment variable examples
+- [production.env.example](./config/production.env.example) — Environment variable examples
 
 ---
 
@@ -51,7 +51,7 @@ Git history retains the full record of all files that were in this tree.
 
 ```
 nestGate/
-├── code/crates/                    # Core crates (13 total)
+├── code/crates/                    # Library crates (22+; see workspace Cargo.toml)
 │   ├── nestgate-core/              # Core functionality
 │   │   ├── src/rpc/                # JSON-RPC 2.0 + Isomorphic IPC
 │   │   ├── src/crypto/             # AES-256-GCM encryption
@@ -81,6 +81,6 @@ nestGate/
 
 ---
 
-**Status**: Documentation cleaned and updated March 28, 2026.  
+**Status**: Documentation cleaned and updated March 29, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: March 28, 2026
+**Last Updated**: March 29, 2026

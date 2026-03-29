@@ -22,7 +22,7 @@ pub struct MetricsCollector {
 
 impl MetricsCollector {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             cpu_utilization: AtomicU64::new(0),
             memory_utilization: AtomicU64::new(0),

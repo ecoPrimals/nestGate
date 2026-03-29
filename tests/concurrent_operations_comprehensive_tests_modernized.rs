@@ -8,8 +8,8 @@
 //! These tests cover concurrent access patterns, race conditions, and synchronization
 //! to increase code coverage (+2% target for Week 5).
 
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::time::Duration;
 use tokio::sync::{Mutex, Notify, RwLock, Semaphore};
 

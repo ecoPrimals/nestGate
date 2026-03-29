@@ -11,7 +11,9 @@
 use super::config::AuthenticationConfig;
 use super::security_primal::call_security_primal;
 use crate::crypto::jwt_rustcrypto::{JwtClaims, JwtHmac};
-use crate::zero_cost_security_provider::types::{AuthMethod, ZeroCostAuthToken, ZeroCostCredentials};
+use crate::zero_cost_security_provider::types::{
+    AuthMethod, ZeroCostAuthToken, ZeroCostCredentials,
+};
 use nestgate_discovery::primal_discovery::RuntimeDiscovery;
 use nestgate_types::{NestGateError, Result};
 use std::collections::HashMap;
@@ -20,7 +22,7 @@ use tracing::{debug, info, warn};
 
 /// Hybrid authentication manager
 #[derive(Debug)]
-/// Manager for HybridAuthentication operations
+/// Manager for `HybridAuthentication` operations
 pub struct HybridAuthenticationManager {
     config: AuthenticationConfig,
     token_cache: tokio::sync::RwLock<HashMap<String, CachedToken>>,
@@ -103,14 +105,13 @@ impl HybridAuthenticationManager {
                 let elapsed = cached
                     .created_at
                     .elapsed()
-                    .map_err(|e| NestGateError::internal(format!("System time error: {}", e)))?;
+                    .map_err(|e| NestGateError::internal(format!("System time error: {e}")))?;
 
                 if elapsed < self.config.local_token_settings.token_expiry {
                     debug!("Token found in cache and still valid");
                     return Ok(true);
-                } else {
-                    debug!("Token in cache but expired (age: {:?})", elapsed);
                 }
+                debug!("Token in cache but expired (age: {:?})", elapsed);
             }
         }
 
@@ -251,7 +252,7 @@ impl HybridAuthenticationManager {
                 {
                     let mut cache = self.token_cache.write().await;
                     cache.insert(
-                        token.token.to_string(),
+                        token.token.clone(),
                         CachedToken {
                             token: token.clone(),
                             created_at: SystemTime::now(),
@@ -301,14 +302,14 @@ impl HybridAuthenticationManager {
 
                     let token = ZeroCostAuthToken::new(
                         format!("local_{}", uuid::Uuid::new_v4()),
-                        credentials.username.to_string(),
+                        credentials.username.clone(),
                         vec!["authenticated".to_string()],
                         self.config.local_token_settings.token_expiry,
                     );
 
                     let mut cache = self.token_cache.write().await;
                     cache.insert(
-                        token.token.to_string(),
+                        token.token.clone(),
                         CachedToken {
                             token: token.clone(),
                             created_at: SystemTime::now(),
@@ -331,7 +332,7 @@ impl HybridAuthenticationManager {
                 // Validate token format and issue a scoped session token
                 let token = ZeroCostAuthToken::new(
                     format!("api_{}", uuid::Uuid::new_v4()),
-                    credentials.username.to_string(),
+                    credentials.username.clone(),
                     vec!["api".to_string()],
                     self.config.local_token_settings.token_expiry,
                 );
@@ -349,10 +350,10 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// Local JWT token validation using RustCrypto (100% pure Rust!)
+    /// Local JWT token validation using `RustCrypto` (100% pure Rust!)
     ///
     /// **Local-first**: no external HTTP calls; validates tokens locally.
-    /// **Security**: Uses audited RustCrypto HMAC-SHA256 for signature verification.
+    /// **Security**: Uses audited `RustCrypto` HMAC-SHA256 for signature verification.
     /// **Performance**: No network round-trip, instant validation.
     async fn validate_token_external(&self, token_str: &str) -> Result<bool> {
         // Use local JWT validation with RustCrypto
@@ -383,7 +384,7 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// Local JWT token refresh using RustCrypto (100% pure Rust!)
+    /// Local JWT token refresh using `RustCrypto` (100% pure Rust!)
     ///
     /// **Local-first**: no external HTTP calls; refreshes tokens locally.
     /// **Security**: Verifies old token, generates new token with extended expiry.
@@ -432,7 +433,7 @@ impl HybridAuthenticationManager {
         if let Some(cached) = cache.get(token_str) {
             let new_token = ZeroCostAuthToken::new(
                 format!("refresh_{}", uuid::Uuid::new_v4()),
-                cached.token.user_id.to_string(),
+                cached.token.user_id.clone(),
                 cached.token.permissions.clone(),
                 self.config.local_token_settings.token_expiry,
             );

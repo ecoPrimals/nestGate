@@ -9,7 +9,7 @@
 //! enabling AI learning from execution history and user modifications.
 //!
 //! ## Philosophy
-//! - **Self-Knowledge**: Audits stored per family_id (multi-tenant isolation)
+//! - **Self-Knowledge**: Audits stored per `family_id` (multi-tenant isolation)
 //! - **Zero Hardcoding**: All behavior driven by data
 //! - **Modern Rust**: No unsafe code, proper error handling
 //! - **Complete Implementation**: Production-ready from day one
@@ -20,8 +20,8 @@
 //! - Outcome recording
 //! - Query capabilities
 
-use nestgate_types::error::{NestGateError, Result};
 use chrono::{DateTime, Utc};
+use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -73,7 +73,7 @@ pub struct ExecutionAudit {
 }
 
 /// Execution status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum ExecutionStatus {
     /// Execution in progress
@@ -104,7 +104,7 @@ pub struct GraphModification {
 }
 
 /// Type of graph modification
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ModificationType {
     /// Add new node
@@ -148,7 +148,7 @@ pub struct NodeOutcome {
 }
 
 /// Node execution status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum NodeStatus {
     /// Node executed successfully
@@ -162,7 +162,7 @@ pub enum NodeStatus {
 /// Audit storage state (in-memory for now, will be persistent later)
 #[derive(Debug, Clone, Default)]
 pub struct AuditStorage {
-    /// Audits stored by family_id -> execution_id -> audit
+    /// Audits stored by `family_id` -> `execution_id` -> audit
     /// Ensures family-based isolation (self-knowledge principle)
     audits: Arc<RwLock<HashMap<String, HashMap<String, ExecutionAudit>>>>,
 }
@@ -179,7 +179,7 @@ impl AuditStorage {
     /// Store execution audit
     ///
     /// # Self-Knowledge Principle
-    /// - Audits isolated by family_id
+    /// - Audits isolated by `family_id`
     /// - No cross-family access
     /// - Immutable once stored (append-only)
     ///
@@ -240,7 +240,7 @@ impl AuditStorage {
     /// Retrieve audit by execution ID
     ///
     /// # Self-Knowledge Principle
-    /// - Only retrieves from specified family_id
+    /// - Only retrieves from specified `family_id`
     /// - No cross-family access possible
     pub async fn retrieve_audit(
         &self,
@@ -279,17 +279,17 @@ impl AuditStorage {
             .values()
             .filter(|a| {
                 // Filter by user_id if specified
-                if let Some(uid) = user_id {
-                    if a.user_id != uid {
-                        return false;
-                    }
+                if let Some(uid) = user_id
+                    && a.user_id != uid
+                {
+                    return false;
                 }
 
                 // Filter by status if specified
-                if let Some(ref s) = status {
-                    if &a.status != s {
-                        return false;
-                    }
+                if let Some(ref s) = status
+                    && &a.status != s
+                {
+                    return false;
                 }
 
                 true

@@ -8,8 +8,8 @@
 // Removed unresolved automation imports - use local implementations
 //! Integration module
 
-use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_core::Result;
+use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 
 /// Intelligent dataset manager for automated operations
 pub struct IntelligentDatasetManager;
@@ -27,7 +27,7 @@ impl Default for AutomationConfig {
 pub fn initialize_automation(config: NestGateCanonicalConfig) -> Result<IntelligentDatasetManager> {
     let _automation_config = AutomationConfig;
     let _config = config; // Use config parameter to avoid warnings
-                          // Placeholder implementation until automation crate is fully integrated
+    // Placeholder implementation until automation crate is fully integrated
     Ok(IntelligentDatasetManager)
 }
 /// Initialize automation with custom config
@@ -42,7 +42,8 @@ pub fn initialize_automation_with_config(
 }
 /// Check if ecosystem services are available for ZFS automation
 #[cfg(feature = "network-integration")]
-pub fn check_zfs_ecosystem_availability() -> bool {
+#[must_use]
+pub const fn check_zfs_ecosystem_availability() -> bool {
     // Default implementation for development - ecosystem always available
     // Production implementation would check actual automation capabilities
     true

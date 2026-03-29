@@ -3,9 +3,10 @@
 //! This example demonstrates how to evolve from hardcoded constants
 //! to modern, capability-based service discovery.
 
-use nestgate_core::config::capability_based::{CapabilityConfigBuilder, FallbackMode};
+use nestgate_core::config::capability_based::{
+    CapabilityConfigBuilder, FallbackMode, PrimalCapability,
+};
 use nestgate_core::error::Result;
-use nestgate_core::universal_traits::PrimalCapability;
 
 /// ❌ OLD APPROACH: Hardcoded constants (ANTI-PATTERN)
 mod old_hardcoded_approach {

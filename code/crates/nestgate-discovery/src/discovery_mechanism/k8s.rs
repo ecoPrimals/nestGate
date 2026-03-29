@@ -241,10 +241,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
                 (id.clone(), namespace)
             };
 
-            let url = format!(
-                "{}/api/v1/namespaces/{}/services/{}",
-                api_server, ns, name
-            );
+            let url = format!("{}/api/v1/namespaces/{}/services/{}", api_server, ns, name);
 
             let response = client.get(&url).await.map_err(|e| {
                 nestgate_types::error::NestGateError::api_error(&format!("k8s lookup failed: {e}"))
@@ -281,13 +278,12 @@ impl DiscoveryMechanism for KubernetesDiscovery {
                 (service_id.clone(), namespace)
             };
 
-            let url = format!(
-                "{}/api/v1/namespaces/{}/endpoints/{}",
-                api_server, ns, name
-            );
+            let url = format!("{}/api/v1/namespaces/{}/endpoints/{}", api_server, ns, name);
 
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!("k8s health check failed: {e}"))
+                nestgate_types::error::NestGateError::api_error(&format!(
+                    "k8s health check failed: {e}"
+                ))
             })?;
 
             Ok(response.is_success())

@@ -16,14 +16,14 @@ use nestgate_core::config::canonical_primary::domains::network::CanonicalNetwork
 
 // ==================== SECTION ====================
 
-/// **CANONICAL**: Network service configuration using canonical_primary
-/// This is the unified NetworkConfig for the entire ecosystem
+/// **CANONICAL**: Network service configuration using `canonical_primary`
+/// This is the unified `NetworkConfig` for the entire ecosystem
 pub type NetworkConfig = CanonicalNetworkConfig;
 /// Network-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
 ///
 /// **ECOSYSTEM SOVEREIGNTY**: Load balancing and circuit breaking are delegated
-/// to networking capabilities discovered at runtime. NestGate does NOT hardcode
+/// to networking capabilities discovered at runtime. `NestGate` does NOT hardcode
 /// any specific networking primal - it discovers "networking" capability providers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Networkextensions
@@ -96,7 +96,7 @@ impl ConnectionInfo {
 
     /// Get connection address
     #[must_use]
-    pub fn address(&self) -> SocketAddr {
+    pub const fn address(&self) -> SocketAddr {
         self.endpoint
     }
 
@@ -108,28 +108,28 @@ impl ConnectionInfo {
 
     /// Check if connection is active
     #[must_use]
-    pub fn is_active(&self) -> bool {
+    pub const fn is_active(&self) -> bool {
         matches!(self.status, ConnectionStatus::Active)
     }
 
     /// Get connection status
     #[must_use]
-    pub fn status(&self) -> &ConnectionStatus {
+    pub const fn status(&self) -> &ConnectionStatus {
         &self.status
     }
 
     /// Update bytes sent
-    pub fn add_bytes_sent(&mut self, bytes: u64) {
+    pub const fn add_bytes_sent(&mut self, bytes: u64) {
         self.bytes_sent += bytes;
     }
 
     /// Update bytes received
-    pub fn add_bytes_received(&mut self, bytes: u64) {
+    pub const fn add_bytes_received(&mut self, bytes: u64) {
         self.bytes_received += bytes;
     }
 
     /// Set connection status
-    pub fn set_status(&mut self, status: ConnectionStatus) {
+    pub const fn set_status(&mut self, status: ConnectionStatus) {
         self.status = status;
     }
 }
@@ -209,36 +209,36 @@ impl ServiceInfo {
 
     /// Get service address
     #[must_use]
-    pub fn address(&self) -> SocketAddr {
+    pub const fn address(&self) -> SocketAddr {
         self.endpoint
     }
 
     /// Get health status
     #[must_use]
-    pub fn health_status(&self) -> &HealthStatus {
+    pub const fn health_status(&self) -> &HealthStatus {
         &self.health_status
     }
 
     /// Get registration time
     #[must_use]
-    pub fn registered_at(&self) -> SystemTime {
+    pub const fn registered_at(&self) -> SystemTime {
         self.registered_at
     }
 
     /// Get metadata
     #[must_use]
-    pub fn metadata(&self) -> &HashMap<String, String> {
+    pub const fn metadata(&self) -> &HashMap<String, String> {
         &self.metadata
     }
 
     /// Check if service is healthy
     #[must_use]
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.health_status, HealthStatus::Healthy)
     }
 
     /// Set health status
-    pub fn set_health_status(&mut self, status: HealthStatus) {
+    pub const fn set_health_status(&mut self, status: HealthStatus) {
         self.health_status = status;
     }
 
@@ -303,7 +303,7 @@ pub struct NetworkStatistics {
 }
 
 /// Service status enumeration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Status values for Service
 pub enum ServiceStatus {
     /// Running
@@ -359,7 +359,7 @@ impl NetworkConfigBuilder {
         use std::net::IpAddr;
 
         // Safe: 127.0.0.1 is always a valid IP address (IPv4 localhost)
-        const DEFAULT_LOCALHOST: IpAddr = IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1));
+        const DEFAULT_LOCALHOST: IpAddr = IpAddr::V4(std::net::Ipv4Addr::LOCALHOST);
 
         // Development default when host parsing fails and bind env vars are unset.
         let localhost_addr = addresses::LOCALHOST_NAME
@@ -381,34 +381,34 @@ impl NetworkConfigBuilder {
     }
     /// Set port
     #[must_use]
-    pub fn port(mut self, port: u16) -> Self {
+    pub const fn port(mut self, port: u16) -> Self {
         self.config.api.port = port;
         self
     }
 
     /// Set max connections
     #[must_use]
-    pub fn max_connections(mut self, max_connections: u32) -> Self {
+    pub const fn max_connections(mut self, max_connections: u32) -> Self {
         self.config.api.max_connections = max_connections;
         self
     }
     /// Set connection timeout
     #[must_use]
-    pub fn connection_timeout(mut self, timeout_seconds: u64) -> Self {
+    pub const fn connection_timeout(mut self, timeout_seconds: u64) -> Self {
         self.config.api.connection_timeout = Duration::from_secs(timeout_seconds);
         self
     }
 
     /// Set port range
     #[must_use]
-    pub fn port_range(mut self, start: u16, end: u16) -> Self {
+    pub const fn port_range(mut self, start: u16, end: u16) -> Self {
         self.config.api.port_range_start = start;
         self.config.api.port_range_end = end;
         self
     }
     /// Enable/disable keep-alive
     #[must_use]
-    pub fn keep_alive(self, _enabled: bool) -> Self {
+    pub const fn keep_alive(self, _enabled: bool) -> Self {
         // Note: keep_alive is not a direct field in NetworkApiConfig
         // This may need to be stored elsewhere or removed
         // self.config.network.api.keep_alive = enabled;
@@ -417,7 +417,7 @@ impl NetworkConfigBuilder {
 
     /// Set keep-alive timeout
     #[must_use]
-    pub fn keep_alive_timeout(mut self, timeout_seconds: u64) -> Self {
+    pub const fn keep_alive_timeout(mut self, timeout_seconds: u64) -> Self {
         self.config.performance.keep_alive_timeout_seconds = timeout_seconds;
         self
     }

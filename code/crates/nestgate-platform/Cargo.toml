@@ -10,15 +10,18 @@ repository = "https://github.com/ecoprimals/nestgate"
 workspace = true
 
 [dependencies]
+nestgate-env-process-shim = { path = "../nestgate-env-process-shim" }
 rustix = { workspace = true }
 uzers = { workspace = true }
 gethostname = { workspace = true }
 etcetera = { workspace = true }
+tracing = { workspace = true }
 
 # sysinfo: non-Linux fallback for physical CPU count
 sysinfo = { workspace = true, optional = true }
 
 [dev-dependencies]
+temp-env = { workspace = true }
 tokio-test = { workspace = true }
 
 [features]

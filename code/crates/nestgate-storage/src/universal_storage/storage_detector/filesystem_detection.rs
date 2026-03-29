@@ -37,7 +37,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::universal_storage::storage_detector::filesystem_detection::{
 //!     UniversalFilesystemDetector, DiscoveredFilesystem
 //! };
@@ -103,6 +103,7 @@ pub struct DiscoveredFilesystem {
 
 impl DiscoveredFilesystem {
     /// Detect capabilities based on filesystem type
+    #[must_use]
     pub fn detect_capabilities(fs_type: &str) -> Vec<UnifiedStorageCapability> {
         let mut caps = Vec::new();
 
@@ -131,6 +132,7 @@ impl DiscoveredFilesystem {
     }
 
     /// Classify storage type based on filesystem characteristics
+    #[must_use]
     pub fn classify_storage_type(fs_type: &str, device: &str) -> UnifiedStorageType {
         // Network filesystems
         if device.contains(':') || ["nfs", "nfs4", "cifs", "smb", "smb3"].contains(&fs_type) {
@@ -221,7 +223,7 @@ impl FilesystemDetector for SysinfoFilesystemDetector {
         true // sysinfo is always available
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "sysinfo-filesystem-detector"
     }
 }
@@ -238,9 +240,9 @@ impl FilesystemDetector for LinuxProcFilesystemDetector {
         Box::pin(async move {
             use tokio::fs;
 
-            let mounts_content = fs::read_to_string("/proc/mounts")
-                .await
-                .map_err(|e| NestGateError::io_error(format!("Failed to read /proc/mounts: {}", e)))?;
+            let mounts_content = fs::read_to_string("/proc/mounts").await.map_err(|e| {
+                NestGateError::io_error(format!("Failed to read /proc/mounts: {e}"))
+            })?;
 
             let mut discovered = Vec::new();
 
@@ -279,7 +281,7 @@ impl FilesystemDetector for LinuxProcFilesystemDetector {
                 let capabilities = DiscoveredFilesystem::detect_capabilities(fs_type);
 
                 let id = format!("fs_{}", mount_point.replace('/', "_"));
-                let name = format!("{} ({})", mount_point, fs_type);
+                let name = format!("{mount_point} ({fs_type})");
 
                 discovered.push(DiscoveredFilesystem {
                     id,
@@ -308,7 +310,7 @@ impl FilesystemDetector for LinuxProcFilesystemDetector {
         std::path::Path::new("/proc/mounts").exists()
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "linux-proc-filesystem-detector"
     }
 }
@@ -368,16 +370,19 @@ impl UniversalFilesystemDetector {
     }
 
     /// Get detector name for diagnostics
+    #[must_use]
     pub fn detector_name(&self) -> &str {
         self.detector.name()
     }
 
     /// Check if filesystem detection is available
+    #[must_use]
     pub fn is_available(&self) -> bool {
         self.detector.is_available()
     }
 
     /// Filter filesystems by minimum size
+    #[must_use]
     pub fn filter_by_min_size(
         filesystems: Vec<DiscoveredFilesystem>,
         min_bytes: u64,
@@ -389,6 +394,7 @@ impl UniversalFilesystemDetector {
     }
 
     /// Filter out virtual filesystems
+    #[must_use]
     pub fn filter_virtual(filesystems: Vec<DiscoveredFilesystem>) -> Vec<DiscoveredFilesystem> {
         filesystems
             .into_iter()

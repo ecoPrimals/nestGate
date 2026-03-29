@@ -7,10 +7,10 @@
 
 //! Config module
 
+use nestgate_core::config::SecurityConfig;
 use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 use nestgate_core::config::canonical_primary::domains::performance::MetricsConfig;
 use nestgate_core::config::canonical_primary::domains::security_canonical::TlsSecurityConfig;
-use nestgate_core::config::SecurityConfig;
 
 use std::time::Duration;
 // Note: canonical_modernization module structure changed
@@ -37,7 +37,7 @@ use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for CanonicalRpc
+/// Configuration for `CanonicalRpc`
 pub struct CanonicalRpcConfig {
     /// Base canonical configuration
     pub base: CanonicalModernizedConfig,
@@ -82,7 +82,7 @@ pub struct RpcExtensions {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for NestGateRpc
+/// Configuration for `NestGateRpc`
 pub struct NestGateRpcConfig {
     /// Connection pool configuration for managing RPC connections
     pub connection_pool: ConnectionPoolConfig,
@@ -117,7 +117,7 @@ pub struct NestGateRpcConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for ConnectionPool
+/// Configuration for `ConnectionPool`
 pub struct ConnectionPoolConfig {
     /// Maximum number of connections per service
     pub max_connections: usize,
@@ -164,7 +164,7 @@ pub struct ConnectionPoolConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for RpcSecurity
+/// Configuration for `RpcSecurity`
 pub struct RpcSecurityConfig {
     /// Enable TLS encryption
     pub enable_tls: bool,
@@ -219,7 +219,7 @@ pub struct RpcSecurityConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for LoadBalancing
+/// Configuration for `LoadBalancing`
 pub struct LoadBalancingConfig {
     /// Load balancing strategy
     pub strategy: String, // "round_robin", "least_connections", "weighted"
@@ -248,7 +248,7 @@ pub struct LoadBalancingConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for CircuitBreaker
+/// Configuration for `CircuitBreaker`
 pub struct CircuitBreakerConfig {
     /// Failure threshold before opening circuit
     pub failure_threshold: u32,
@@ -277,7 +277,7 @@ pub struct CircuitBreakerConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for HealthMonitoring
+/// Configuration for `HealthMonitoring`
 pub struct HealthMonitoringConfig {
     /// Enable health monitoring
     pub enabled: bool,

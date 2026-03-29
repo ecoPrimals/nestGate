@@ -7,7 +7,7 @@
 
 //! Pool Operations module
 
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use nestgate_core::Result;
 // Removed unused tracing import
 

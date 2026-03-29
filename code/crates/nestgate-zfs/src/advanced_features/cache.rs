@@ -68,7 +68,7 @@ impl ArcStats {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn collect() -> Result<Self> {
+    pub const fn collect() -> Result<Self> {
         // In a real implementation, this would collect from ZFS
         Ok(Self {
             size: 1024 * 1024 * 1024, // 1GB
@@ -80,7 +80,7 @@ impl ArcStats {
 
 /// L2ARC (Level 2 Adaptive Replacement Cache) statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// L2Arcstats
+/// `L2Arcstats`
 pub struct L2arcStats {
     /// L2ARC size
     pub size: u64,
@@ -98,7 +98,7 @@ impl L2arcStats {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn collect() -> Result<Self> {
+    pub const fn collect() -> Result<Self> {
         // In a real implementation, this would collect from ZFS
         Ok(Self {
             size: 2048 * 1024 * 1024, // 2GB
@@ -129,7 +129,7 @@ impl Default for CacheEfficiency {
 impl CacheEfficiency {
     /// Creates a new cache efficiency tracker
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             overall_efficiency: 0.0,
             arc_efficiency: 0.0,
@@ -142,7 +142,7 @@ impl CacheEfficiency {
     pub fn calculate(arc_stats: &ArcStats, l2arc_stats: &L2arcStats) -> Self {
         let arc_efficiency = arc_stats.hit_ratio * 100.0;
         let l2arc_efficiency = l2arc_stats.hit_ratio * 100.0;
-        let overall_efficiency = (arc_efficiency + l2arc_efficiency) / 2.0;
+        let overall_efficiency = f64::midpoint(arc_efficiency, l2arc_efficiency);
 
         Self {
             overall_efficiency,

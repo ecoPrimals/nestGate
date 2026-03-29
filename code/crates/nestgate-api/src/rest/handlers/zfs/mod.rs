@@ -22,18 +22,17 @@ pub use snapshot_handlers::{
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rest::ListQuery;
     use crate::rest::models::{CloneSnapshotRequest, CreateSnapshotRequest};
     use crate::rest::models::{CreateDatasetRequest, DatasetProperties, DatasetType};
-    use crate::rest::ListQuery;
     use axum::extract::{Path, Query, State};
     use std::collections::HashMap;
 
     async fn create_test_state_with_dataset(name: &str) -> crate::rest::ApiState {
         let state = crate::rest::ApiState::new().expect("Failed to create test state");
-        {
-            let mut engines = state.zfs_engines.write().await;
-            engines.insert(name.to_string(), "placeholder_engine".to_string());
-        }
+        state
+            .zfs_engines
+            .insert(name.to_string(), "placeholder_engine".to_string());
         state
     }
 
@@ -276,12 +275,14 @@ mod tests {
         .await;
         assert!(result.is_ok());
         let response = result.unwrap();
-        assert!(response
-            .0
-            .data
-            .get("success")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false));
+        assert!(
+            response
+                .0
+                .data
+                .get("success")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+        );
     }
 
     #[test]

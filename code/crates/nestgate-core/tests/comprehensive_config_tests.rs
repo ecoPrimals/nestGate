@@ -8,8 +8,8 @@
 
 #![cfg(test)]
 
-use nestgate_core::error::NestGateError;
 use nestgate_core::Result;
+use nestgate_core::error::NestGateError;
 
 #[cfg(test)]
 mod config_validation_tests {

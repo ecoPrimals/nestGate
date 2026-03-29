@@ -32,9 +32,10 @@ fn test_service_id_format() {
     for id in valid_ids {
         assert!(!id.is_empty());
         assert!(id.len() <= 255);
-        assert!(id
-            .chars()
-            .all(|c| c.is_alphanumeric() || c == '-' || c == '_'));
+        assert!(
+            id.chars()
+                .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+        );
     }
 }
 

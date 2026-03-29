@@ -106,12 +106,16 @@ mod service_registration_tests {
         };
 
         assert_eq!(registration.endpoints.len(), 3);
-        assert!(registration
-            .endpoints
-            .contains(&"http://localhost:8080".to_string()));
-        assert!(registration
-            .endpoints
-            .contains(&"https://node1.cluster.local:9443".to_string()));
+        assert!(
+            registration
+                .endpoints
+                .contains(&"http://localhost:8080".to_string())
+        );
+        assert!(
+            registration
+                .endpoints
+                .contains(&"https://node1.cluster.local:9443".to_string())
+        );
     }
 
     #[test]
@@ -378,15 +382,21 @@ mod config_tests {
     fn test_zfs_service_config_capabilities() {
         let config = ZfsServiceConfig::default();
 
-        assert!(config
-            .capabilities
-            .contains(&"zfs-pool-management".to_string()));
-        assert!(config
-            .capabilities
-            .contains(&"zfs-dataset-management".to_string()));
-        assert!(config
-            .capabilities
-            .contains(&"zfs-snapshot-management".to_string()));
+        assert!(
+            config
+                .capabilities
+                .contains(&"zfs-pool-management".to_string())
+        );
+        assert!(
+            config
+                .capabilities
+                .contains(&"zfs-dataset-management".to_string())
+        );
+        assert!(
+            config
+                .capabilities
+                .contains(&"zfs-snapshot-management".to_string())
+        );
         assert!(config.capabilities.contains(&"tier-management".to_string()));
     }
 
@@ -537,11 +547,12 @@ mod edge_case_tests {
             .insert("description".to_string(), "🚀 Fast storage".to_string());
 
         assert_eq!(info.metadata.get("location"), Some(&"北京".to_string()));
-        assert!(info
-            .metadata
-            .get("description")
-            .expect("description exists")
-            .contains("🚀"));
+        assert!(
+            info.metadata
+                .get("description")
+                .expect("description exists")
+                .contains("🚀")
+        );
     }
 }
 

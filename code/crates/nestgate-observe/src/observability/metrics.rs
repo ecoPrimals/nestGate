@@ -334,10 +334,12 @@ mod tests {
 
         // Record custom metric
         let _tags: std::collections::HashMap<String, String> = HashMap::new();
-        assert!(registry
-            .record_custom_metric("test_metric", 42.0)
-            .await
-            .is_ok());
+        assert!(
+            registry
+                .record_custom_metric("test_metric", 42.0)
+                .await
+                .is_ok()
+        );
 
         // Should appear in current metrics
         let metrics = registry.get_current_metrics().await?;

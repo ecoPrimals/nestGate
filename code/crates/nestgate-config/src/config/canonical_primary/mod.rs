@@ -105,13 +105,13 @@ pub use phase2c_types::{
 // ==================== SECTION ====================
 
 // **THE** canonical configuration for the entire NestGate ecosystem
-/// The canonical configuration structure for all NestGate systems
+/// The canonical configuration structure for all `NestGate` systems
 ///
 /// This replaces ALL other configuration structures with a single,
 /// unified configuration that uses const generics for compile-time optimization.
 #[allow(deprecated)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for NestGateCanonical
+/// Configuration for `NestGateCanonical`
 pub struct NestGateCanonicalConfig<
     const MAX_CONNECTIONS: usize = 1000,
     const BUFFER_SIZE: usize = 65536,
@@ -131,7 +131,7 @@ pub struct NestGateCanonicalConfig<
     /// Security and authentication configuration
     pub security: SecurityConfig,
 
-    /// API and handler configuration (canonical from domains::network)
+    /// API and handler configuration (canonical from `domains::network`)
     pub api: domains::network::ApiConfig,
 
     /// Handler-specific configurations (NEW - consolidates 50+ scattered handler configs)
@@ -152,7 +152,7 @@ pub struct NestGateCanonicalConfig<
     /// MCP (Model Context Protocol) configuration
     pub mcp: McpConfig,
 
-    /// Automation configuration (canonical from domains::automation)
+    /// Automation configuration (canonical from `domains::automation`)
     pub automation: domains::automation::AutomationConfig,
 
     /// File system monitor configuration
@@ -184,12 +184,12 @@ pub struct NestGateCanonicalConfig<
 // ==================== IMPLEMENTATION ====================
 
 impl<
-        const MAX_CONNECTIONS: usize,
-        const BUFFER_SIZE: usize,
-        const TIMEOUT_MS: u64,
-        // Api Port (const generic parameter)
-        const API_PORT: u16,
-    > NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
+    const MAX_CONNECTIONS: usize,
+    const BUFFER_SIZE: usize,
+    const TIMEOUT_MS: u64,
+    // Api Port (const generic parameter)
+    const API_PORT: u16,
+> NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
     /// **PHASE 2C**: Create configuration from environment variables
     pub fn from_environment() -> nestgate_types::error::Result<Self> {
@@ -206,11 +206,11 @@ impl<
         }
 
         // Load API port from environment
-        if let Ok(port_str) = std::env::var("NESTGATE_API_PORT") {
-            if let Ok(_port) = port_str.parse::<u16>() {
-                // Note: In a real implementation, we'd update the network config
-                // For now, this is a placeholder showing the pattern
-            }
+        if let Ok(port_str) = std::env::var("NESTGATE_API_PORT")
+            && let Ok(_port) = port_str.parse::<u16>()
+        {
+            // Note: In a real implementation, we'd update the network config
+            // For now, this is a placeholder showing the pattern
         }
 
         Ok(config)
@@ -280,13 +280,15 @@ impl<
     #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
     pub fn validate_for_environment(&self, env: Environment) -> nestgate_types::error::Result<()> {
         if env == Environment::Production && self.network.api.port == 8080 {
-            return Err(nestgate_types::error::NestGateError::configuration_error_detailed(
-                "network.port".to_string(),
-                "Port 8080 not allowed in production".to_string(),
-                Some("8080".to_string()),
-                Some("443 or custom secure port".to_string()),
-                true,
-            ));
+            return Err(
+                nestgate_types::error::NestGateError::configuration_error_detailed(
+                    "network.port".to_string(),
+                    "Port 8080 not allowed in production".to_string(),
+                    Some("8080".to_string()),
+                    Some("443 or custom secure port".to_string()),
+                    true,
+                ),
+            );
         }
 
         self.domains.validate_for_environment(match env {
@@ -301,12 +303,12 @@ impl<
 }
 
 impl<
-        const MAX_CONNECTIONS: usize,
-        const BUFFER_SIZE: usize,
-        const TIMEOUT_MS: u64,
-        // Api Port (const generic parameter)
-        const API_PORT: u16,
-    > Default for NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
+    const MAX_CONNECTIONS: usize,
+    const BUFFER_SIZE: usize,
+    const TIMEOUT_MS: u64,
+    // Api Port (const generic parameter)
+    const API_PORT: u16,
+> Default for NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
     #[allow(deprecated)]
     fn default() -> Self {

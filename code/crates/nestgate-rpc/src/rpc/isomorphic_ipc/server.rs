@@ -3,15 +3,15 @@
 
 //! # 🔌 Isomorphic IPC Server
 //!
-//! **UNIVERSAL**: Automatically adapts to platform constraints  
-//! **PATTERN**: Try→Detect→Adapt→Succeed  
+//! **UNIVERSAL**: Automatically adapts to platform constraints\
+//! **PATTERN**: Try→Detect→Adapt→Succeed\
 //! **ZERO CONFIG**: No environment variables or flags required
 //!
 //! ## Philosophy
 //!
 //! The server should **discover its environment** and adapt automatically:
 //! - Try Unix sockets first (optimal performance)
-//! - Detect platform constraints (SELinux, lack of support)
+//! - Detect platform constraints (`SELinux`, lack of support)
 //! - Adapt to TCP fallback (automatic, transparent)
 //! - Succeed or fail with real error (clear diagnosis)
 //!
@@ -49,7 +49,7 @@
 //! [INFO] ✅ Unix socket IPC active (optimal path)
 //! ```
 //!
-//! **Android (Unix sockets blocked by SELinux)**:
+//! **Android (Unix sockets blocked by `SELinux`)**:
 //! ```text
 //! [INFO] 🔌 Starting IPC server (isomorphic mode)...
 //! [INFO]    Service: nestgate
@@ -75,8 +75,6 @@
 
 use anyhow::Result;
 use serde_json::Value;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
@@ -106,7 +104,7 @@ impl IsomorphicIpcServer {
     ///
     /// # Examples
     ///
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::isomorphic_ipc::IsomorphicIpcServer;
     /// use std::sync::Arc;
     ///
@@ -128,7 +126,7 @@ impl IsomorphicIpcServer {
     ///
     /// **AUTOMATIC ADAPTATION**:
     /// - Tries Unix socket first (optimal)
-    /// - Detects platform constraints (SELinux, lack of support)
+    /// - Detects platform constraints (`SELinux`, lack of support)
     /// - Adapts to TCP fallback (automatic)
     /// - Succeeds or fails with clear error
     ///
@@ -141,7 +139,7 @@ impl IsomorphicIpcServer {
     ///
     /// # Examples
     ///
-    /// ```no_run
+    /// ```rust,ignore
     /// # use nestgate_core::rpc::isomorphic_ipc::IsomorphicIpcServer;
     /// # use std::sync::Arc;
     /// # async fn example(server: Arc<IsomorphicIpcServer>) -> anyhow::Result<()> {
@@ -196,7 +194,7 @@ impl IsomorphicIpcServer {
 
         // Bind to Unix socket
         let listener = UnixListener::bind(&socket_path)
-            .map_err(|e| anyhow::anyhow!("Failed to bind Unix socket: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to bind Unix socket: {e}"))?;
 
         info!("✅ Unix socket bound: {}", socket_path.display());
 
@@ -313,12 +311,16 @@ impl IsomorphicIpcServer {
 mod tests {
     use super::*;
     use serde_json::Value;
+    use std::pin::Pin;
 
     /// Mock RPC handler for testing
     struct MockHandler;
 
     impl RpcHandler for MockHandler {
-        fn handle_request(&self, _request: Value) -> Pin<Box<dyn Future<Output = Value> + Send + '_>> {
+        fn handle_request(
+            &self,
+            _request: Value,
+        ) -> Pin<Box<dyn Future<Output = Value> + Send + '_>> {
             Box::pin(async move {
                 serde_json::json!({
                     "jsonrpc": "2.0",

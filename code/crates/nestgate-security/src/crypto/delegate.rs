@@ -37,7 +37,7 @@ use crate::crypto::{EncryptedData, EncryptionAlgorithm, EncryptionParams};
 use nestgate_discovery::capability_discovery::{CapabilityDiscovery, ServiceEndpoint};
 use nestgate_rpc::rpc::JsonRpcClient;
 use nestgate_types::{NestGateError, Result};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
 use tracing::{debug, info};
@@ -55,6 +55,23 @@ mod b64 {
             .decode(data)
             .map_err(|e| nestgate_types::NestGateError::api_error(&format!("base64 decode: {e}")))
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn encode_decode_roundtrip() {
+            let raw = b"\x00hello\xff";
+            let s = encode(raw);
+            assert_eq!(decode(&s).unwrap(), raw);
+        }
+
+        #[test]
+        fn decode_invalid_errors() {
+            assert!(decode("@@@").is_err());
+        }
+    }
 }
 
 /// Crypto operations delegator to an external crypto service.
@@ -62,7 +79,7 @@ mod b64 {
 /// Discovers a primal that advertises the "crypto" capability and delegates
 /// all cryptographic operations to it via JSON-RPC semantic methods.
 pub struct CryptoDelegate {
-    /// JSON-RPC client to the crypto provider (mutable for call())
+    /// JSON-RPC client to the crypto provider (mutable for `call()`)
     client: Mutex<JsonRpcClient>,
     /// Endpoint information (for logging/debugging)
     endpoint: ServiceEndpoint,
@@ -127,7 +144,7 @@ impl CryptoDelegate {
     }
 
     /// Get crypto provider information.
-    pub fn provider_info(&self) -> &ServiceEndpoint {
+    pub const fn provider_info(&self) -> &ServiceEndpoint {
         &self.endpoint
     }
 
@@ -317,6 +334,31 @@ mod tests {
         assert!(params.associated_data.is_empty());
     }
 
+    #[test]
+    fn encryption_params_chacha_roundtrip_serde() {
+        let mut p = EncryptionParams::default();
+        p.algorithm = EncryptionAlgorithm::ChaCha20Poly1305;
+        p.associated_data = b"ad".to_vec();
+        let json = serde_json::to_string(&p).unwrap();
+        let back: EncryptionParams = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.algorithm, EncryptionAlgorithm::ChaCha20Poly1305);
+        assert_eq!(back.associated_data, b"ad");
+    }
+
+    #[test]
+    fn encrypted_data_fields_roundtrip_serde() {
+        let e = EncryptedData {
+            ciphertext: vec![1, 2, 3],
+            nonce: vec![9],
+            algorithm: EncryptionAlgorithm::ChaCha20Poly1305,
+            timestamp: 42,
+        };
+        let json = serde_json::to_string(&e).unwrap();
+        let back: EncryptedData = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.timestamp, 42);
+        assert_eq!(back.algorithm, EncryptionAlgorithm::ChaCha20Poly1305);
+    }
+
     #[tokio::test]
     #[ignore = "requires running crypto capability provider"]
     async fn test_crypto_delegate_discovery() {
@@ -350,5 +392,137 @@ mod tests {
 
         let key = delegate.generate_key(32).await.unwrap();
         assert_eq!(key.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn with_endpoint_invalid_socket_fails_fast() {
+        assert!(
+            CryptoDelegate::with_endpoint("/nonexistent/nestgate-crypto.sock")
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(unix)]
+    async fn crypto_delegate_roundtrip_over_mock_unix_jsonrpc() {
+        use base64::Engine;
+        use serde_json::{Value, json};
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, split};
+        use tokio::net::{UnixListener, UnixStream};
+
+        let dir = tempfile::tempdir().expect("tmpdir");
+        let sock_path = dir.path().join("crypto.sock");
+        let _ = std::fs::remove_file(&sock_path);
+        let listener = UnixListener::bind(&sock_path).expect("bind");
+
+        let path_str = sock_path.to_string_lossy().to_string();
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.expect("accept");
+            let (read_half, mut write_half) = split(stream);
+            let mut reader = BufReader::new(read_half);
+            let mut line = String::new();
+            loop {
+                line.clear();
+                let n = reader.read_line(&mut line).await.expect("read");
+                if n == 0 {
+                    break;
+                }
+                let req: Value = serde_json::from_str(line.trim()).expect("req");
+                let id = req["id"].as_u64().unwrap_or(1);
+                let method = req["method"].as_str().unwrap_or("");
+                let params = &req["params"];
+                let result = match method {
+                    "crypto.encrypt" => {
+                        let pt_b = params["plaintext"].as_str().expect("pt");
+                        let pt = base64::engine::general_purpose::STANDARD
+                            .decode(pt_b)
+                            .expect("b64");
+                        json!({
+                            "ciphertext": base64::engine::general_purpose::STANDARD.encode(&pt),
+                            "nonce": base64::engine::general_purpose::STANDARD.encode(b"123456789012"),
+                        })
+                    }
+                    "crypto.decrypt" => {
+                        let ct_b = params["ciphertext"].as_str().expect("ct");
+                        let ct = base64::engine::general_purpose::STANDARD
+                            .decode(ct_b)
+                            .expect("ct dec");
+                        json!({
+                            "plaintext": base64::engine::general_purpose::STANDARD.encode(ct),
+                        })
+                    }
+                    "crypto.generate_key" => {
+                        let len = params["length"].as_u64().unwrap_or(16) as usize;
+                        json!({
+                            "key": base64::engine::general_purpose::STANDARD.encode(vec![7u8; len]),
+                        })
+                    }
+                    "crypto.generate_nonce" => json!({
+                        "nonce": base64::engine::general_purpose::STANDARD.encode(b"123456789012"),
+                    }),
+                    "crypto.hash" => {
+                        let d = params["data"].as_str().expect("data");
+                        let raw = base64::engine::general_purpose::STANDARD
+                            .decode(d)
+                            .expect("dec");
+                        json!({
+                            "hash": base64::engine::general_purpose::STANDARD.encode(&raw),
+                        })
+                    }
+                    "crypto.verify_hash" => json!({ "valid": true }),
+                    "health.check" => json!({ "ok": true }),
+                    _ => json!({ "unknown": method }),
+                };
+                let resp = json!({
+                    "jsonrpc": "2.0",
+                    "result": result,
+                    "id": id,
+                });
+                let mut out = resp.to_string();
+                out.push('\n');
+                write_half.write_all(out.as_bytes()).await.expect("write");
+                write_half.flush().await.expect("flush");
+            }
+        });
+
+        let delegate = CryptoDelegate::with_endpoint(&path_str)
+            .await
+            .expect("delegate");
+        assert_eq!(delegate.provider_info().capability, "crypto");
+
+        let params = crate::crypto::EncryptionParams::default();
+        let plain = b"hello-mock";
+        let enc = delegate.encrypt(plain, &params).await.expect("encrypt");
+        let dec = delegate.decrypt(&enc).await.expect("decrypt");
+        assert_eq!(dec, plain);
+
+        let key = delegate.generate_key(16).await.expect("gen key");
+        assert_eq!(key.len(), 16);
+        assert!(key.iter().all(|b| *b == 7));
+
+        let nonce = delegate
+            .generate_nonce(crate::crypto::EncryptionAlgorithm::Aes256Gcm)
+            .await
+            .expect("nonce");
+        assert_eq!(nonce.len(), 12);
+
+        let h = delegate.hash(b"data", "sha256").await.expect("hash");
+        assert_eq!(h, b"data");
+
+        let ok = delegate
+            .verify_hash(b"data", b"data", "sha256")
+            .await
+            .expect("vh");
+        assert!(ok);
+
+        let hc = delegate.health_check().await.expect("health");
+        assert_eq!(hc["ok"], true);
+
+        // Wake accept by connecting and closing (server may block on next read)
+        if let Ok(c) = UnixStream::connect(path_str).await {
+            drop(c);
+        }
+        server.abort();
     }
 }

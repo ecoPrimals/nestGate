@@ -2,6 +2,10 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 //! Universal Primal Discovery module
+//!
+//! **Integration (dev-stubs):** When `nestgate-core` exposes stable `dev_stubs::primal_discovery`
+//! types, enable `#[cfg(feature = "dev-stubs")]` re-exports of `NetworkConfigAdapter` and
+//! `StandaloneNetworkAdapter` from this module for tests and local development.
 
 /// Discovery backends for different service discovery mechanisms
 pub mod backends;
@@ -102,8 +106,3 @@ pub use production_discovery::{ProductionServiceDiscovery, ServiceDiscoveryConfi
 pub use production_discovery_config::{ProductionDiscoveryConfig, SharedProductionDiscoveryConfig};
 pub use registry::{DiscoveryQuery, ServiceRegistryClient};
 pub use registry_config::{RegistryConfig, SharedRegistryConfig};
-// TODO: wire to nestgate-core — re-export dev stubs from `nestgate_core::dev_stubs::primal_discovery`
-// #[cfg(feature = "dev-stubs")]
-// #[allow(deprecated)]
-// pub use nestgate_core::dev_stubs::primal_discovery::{NetworkConfigAdapter, StandaloneNetworkAdapter};
-// Legacy stubs functions removed - use proper discovery APIs

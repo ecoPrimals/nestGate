@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Builder for constructing SelfKnowledge instances
+//! Builder for constructing `SelfKnowledge` instances
 //!
 //! Provides a fluent API for building self-knowledge with validation.
 
 use super::{HealthStatus, PrimalId, ResourceInfo, SelfKnowledge};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::time::SystemTime;
@@ -38,6 +38,7 @@ pub struct SelfKnowledgeBuilder {
 
 impl SelfKnowledgeBuilder {
     /// Create a new builder
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -86,7 +87,7 @@ impl SelfKnowledgeBuilder {
         capabilities: impl IntoIterator<Item = impl Into<String>>,
     ) -> Self {
         self.capabilities
-            .extend(capabilities.into_iter().map(|c| c.into()));
+            .extend(capabilities.into_iter().map(std::convert::Into::into));
         self
     }
 
@@ -105,7 +106,8 @@ impl SelfKnowledgeBuilder {
     /// Set resource information
     ///
     /// **Optional**: Defaults to reasonable values if not set.
-    pub fn with_resources(mut self, resources: ResourceInfo) -> Self {
+    #[must_use]
+    pub const fn with_resources(mut self, resources: ResourceInfo) -> Self {
         self.resources = Some(resources);
         self
     }
@@ -113,12 +115,13 @@ impl SelfKnowledgeBuilder {
     /// Set initial health status
     ///
     /// **Optional**: Defaults to [`HealthStatus::Starting`] if not set.
-    pub fn with_health(mut self, health: HealthStatus) -> Self {
+    #[must_use]
+    pub const fn with_health(mut self, health: HealthStatus) -> Self {
         self.health = Some(health);
         self
     }
 
-    /// Build the SelfKnowledge instance
+    /// Build the `SelfKnowledge` instance
     ///
     /// ## Errors
     ///

@@ -70,7 +70,7 @@ pub trait StorageServiceExtension: CanonicalService {
     type StorageMetadata: Clone + Send + Sync + 'static;
     /// List storage items
     fn list_items(&self, path: &str)
-        -> impl Future<Output = Result<Vec<Self::StorageItem>>> + Send;
+    -> impl Future<Output = Result<Vec<Self::StorageItem>>> + Send;
 
     /// Get storage item metadata
     fn get_metadata(

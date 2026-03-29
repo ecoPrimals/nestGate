@@ -1,9 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Runtime;
 use tokio::sync::Semaphore;
-use tokio::time::{sleep, Instant};
+use tokio::time::{Instant, sleep};
 
 // Mock API endpoints for load testing
 const API_ENDPOINTS: &[&str] = &[

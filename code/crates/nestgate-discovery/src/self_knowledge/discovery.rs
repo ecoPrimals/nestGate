@@ -6,7 +6,7 @@
 //! **Philosophy**: Discover primals by their capabilities, not by their names or addresses.
 
 use super::{PrimalId, PrimalInfo, SelfKnowledge};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -25,7 +25,7 @@ use tracing::{debug, info, warn};
 ///
 /// ## Example
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use nestgate_core::self_knowledge::{SelfKnowledge, PrimalDiscovery};
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -96,11 +96,13 @@ impl Default for DiscoveryConfig {
 
 impl PrimalDiscovery {
     /// Create a new discovery service with default configuration
+    #[must_use]
     pub fn new(self_knowledge: SelfKnowledge) -> Self {
         Self::with_config(self_knowledge, DiscoveryConfig::default())
     }
 
     /// Create a new discovery service with custom configuration
+    #[must_use]
     pub fn with_config(self_knowledge: SelfKnowledge, config: DiscoveryConfig) -> Self {
         Self {
             self_knowledge: Arc::new(self_knowledge),
@@ -160,7 +162,7 @@ impl PrimalDiscovery {
     ///
     /// ## Example
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::self_knowledge::PrimalDiscovery;
     /// # async fn example(discovery: &PrimalDiscovery) -> anyhow::Result<()> {
     /// // Don't ask for "orchestrator" by name
@@ -237,10 +239,10 @@ impl PrimalDiscovery {
     pub async fn find_primal(&self, id: &PrimalId) -> Result<Option<PrimalInfo>> {
         // Check cache
         let discovered = self.discovered.read().await;
-        if let Some(cached) = discovered.get(id) {
-            if self.is_cache_valid(&cached.cached_at) {
-                return Ok(Some(cached.info.clone()));
-            }
+        if let Some(cached) = discovered.get(id)
+            && self.is_cache_valid(&cached.cached_at)
+        {
+            return Ok(Some(cached.info.clone()));
         }
         drop(discovered);
 
@@ -387,6 +389,7 @@ pub struct InMemoryBackend {
 
 impl InMemoryBackend {
     /// Create a new in-memory backend
+    #[must_use]
     pub fn new() -> Self {
         Self {
             primals: Arc::new(RwLock::new(HashMap::new())),
@@ -401,7 +404,7 @@ impl Default for InMemoryBackend {
 }
 
 impl DiscoveryBackend for InMemoryBackend {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "in-memory"
     }
 

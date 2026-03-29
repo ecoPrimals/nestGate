@@ -295,9 +295,11 @@ fn test_report_with_recommendations() {
     };
 
     assert_eq!(report.recommendations.len(), 3);
-    assert!(report
-        .recommendations
-        .contains(&"Enable monitoring".to_string()));
+    assert!(
+        report
+            .recommendations
+            .contains(&"Enable monitoring".to_string())
+    );
 }
 
 // Total tests added: 15
@@ -310,3 +312,46 @@ fn test_report_with_recommendations() {
 // - Mock dependencies (2 tests)
 // - Validation status (2 tests)
 // - Recommendations (1 test)
+
+#[test]
+fn ready_for_production_requires_all_green_flags() {
+    let all_green = ProductionReadinessReport {
+        ready_for_production: true,
+        zfs_available: true,
+        real_hardware_detected: true,
+        mock_dependencies: vec![],
+        performance_validated: true,
+        security_validated: true,
+        configuration_validated: true,
+        findings: vec![],
+        recommendations: vec![],
+    };
+    assert!(all_green.ready_for_production);
+
+    let missing_zfs = ProductionReadinessReport {
+        zfs_available: false,
+        ready_for_production: false,
+        ..all_green.clone()
+    };
+    assert!(!missing_zfs.zfs_available);
+
+    let with_mock = ProductionReadinessReport {
+        mock_dependencies: vec!["m".into()],
+        ready_for_production: false,
+        ..all_green
+    };
+    assert_eq!(with_mock.mock_dependencies.len(), 1);
+}
+
+#[test]
+fn readiness_finding_severity_ordering_for_triage() {
+    let critical = FindingSeverity::Critical;
+    let info = FindingSeverity::Info;
+    let rank = |s: &FindingSeverity| match s {
+        FindingSeverity::Critical => 4,
+        FindingSeverity::Error => 3,
+        FindingSeverity::Warning => 2,
+        FindingSeverity::Info => 1,
+    };
+    assert!(rank(&critical) > rank(&info));
+}

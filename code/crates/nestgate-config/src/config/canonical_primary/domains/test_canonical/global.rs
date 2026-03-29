@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for GlobalTest
+/// Configuration for `GlobalTest`
 pub struct GlobalTestConfig {
     /// Reporting
     pub reporting: TestReportingConfig,
@@ -15,14 +15,14 @@ pub struct GlobalTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestReporting
+/// Configuration for `TestReporting`
 pub struct TestReportingConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestMetrics
+/// Configuration for `TestMetrics`
 pub struct TestMetricsConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -55,7 +55,7 @@ impl GlobalTestConfig {
     }
     /// Merges this configuration with another, taking precedence
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 }

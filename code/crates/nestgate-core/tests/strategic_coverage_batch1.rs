@@ -7,8 +7,8 @@
 
 #[cfg(test)]
 mod critical_path_tests {
-    use nestgate_core::error::NestGateError;
     use nestgate_core::Result;
+    use nestgate_core::error::NestGateError;
 
     #[test]
     fn test_error_chain_preservation() {
@@ -37,8 +37,8 @@ mod critical_path_tests {
 
     #[tokio::test]
     async fn test_concurrent_error_handling() {
-        use std::sync::atomic::{AtomicUsize, Ordering};
         use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
 
         let error_count = Arc::new(AtomicUsize::new(0));
 
@@ -177,8 +177,8 @@ mod async_pattern_tests {
 mod resource_cleanup_tests {
     #[tokio::test]
     async fn test_cleanup_on_error() {
-        use std::sync::atomic::{AtomicBool, Ordering};
         use std::sync::Arc;
+        use std::sync::atomic::{AtomicBool, Ordering};
 
         let cleaned_up = Arc::new(AtomicBool::new(false));
         let cleanup_flag = Arc::clone(&cleaned_up);
@@ -219,8 +219,8 @@ mod resource_cleanup_tests {
 
     #[test]
     fn test_result_unwrap_or_else_pattern() {
-        use nestgate_core::error::NestGateError;
         use nestgate_core::Result;
+        use nestgate_core::error::NestGateError;
 
         // Test with dynamic values to avoid clippy unnecessary_literal_unwrap
         fn get_ok() -> Result<i32> {

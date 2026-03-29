@@ -289,10 +289,12 @@ mod tests {
         assert!(scenario.setup(&config).is_ok());
         let result = scenario.run().unwrap();
         assert!(result.success);
-        assert!(result
-            .metrics
-            .iter()
-            .any(|(k, v)| k == "services_coordinated" && *v == 5.0));
+        assert!(
+            result
+                .metrics
+                .iter()
+                .any(|(k, v)| k == "services_coordinated" && *v == 5.0)
+        );
         assert!(scenario.cleanup().is_ok());
     }
 
@@ -304,10 +306,12 @@ mod tests {
         assert!(scenario.setup(&config).is_ok());
         let result = scenario.run().unwrap();
         assert!(result.success);
-        assert!(result
-            .metrics
-            .iter()
-            .any(|(k, v)| k == "primals_discovered" && *v == 3.0));
+        assert!(
+            result
+                .metrics
+                .iter()
+                .any(|(k, v)| k == "primals_discovered" && *v == 3.0)
+        );
         assert!(scenario.cleanup().is_ok());
     }
 

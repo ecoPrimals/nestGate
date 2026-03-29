@@ -471,9 +471,10 @@ fn test_ldap_injection_attack(ldap: &str) {
 }
 
 fn test_xxe_attack(xxe: &str) {
-    let xxe_payloads = [
-        format!("<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"/etc/passwd\">]><foo>&xxe;</foo>{}", xxe),
-    ];
+    let xxe_payloads = [format!(
+        "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"/etc/passwd\">]><foo>&xxe;</foo>{}",
+        xxe
+    )];
 
     for xxe_payload in &xxe_payloads {
         // XML parsing should be safe from XXE

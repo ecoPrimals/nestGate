@@ -1,0 +1,14 @@
+# NestGate — canonical rustfmt configuration (stable toolchain)
+# Edition must match workspace Cargo.toml [package] edition.
+
+edition = "2024"
+
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+
+reorder_imports = true
+newline_style = "Unix"
+use_field_init_shorthand = true
+use_small_heuristics = "Default"
+use_try_shorthand = true

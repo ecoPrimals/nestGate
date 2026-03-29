@@ -7,7 +7,7 @@ use uuid;
 
 /// MCP integration configuration (from Phase 1)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -44,7 +44,7 @@ pub struct McpConfig {
 
 /// MCP capabilities configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -62,7 +62,7 @@ pub struct McpConfig {
     since = "0.11.0",
     note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for McpCapabilities
+/// Configuration for `McpCapabilities`
 pub struct McpCapabilitiesConfig {
     /// Supported storage protocols
     pub storage_protocols: Vec<String>,
@@ -78,7 +78,7 @@ pub struct McpCapabilitiesConfig {
 
 /// Federation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -157,7 +157,7 @@ impl Default for FederationConfig {
     fn default() -> Self {
         Self {
             enabled: false, // Disabled by default - orchestration service manages federation
-            cluster_name: "".to_string(), // Empty - orchestration service provides cluster name
+            cluster_name: String::new(), // Empty - orchestration service provides cluster name
             mode: "standalone".to_string(), // Default to standalone
             peers: vec![],  // Empty - orchestration service discovers peers
             heartbeat_interval: 30,
@@ -168,21 +168,25 @@ impl Default for FederationConfig {
 #[allow(deprecated)]
 impl McpConfig {
     /// Check if MCP is enabled
-    pub fn is_enabled(&self) -> bool {
+    #[must_use]
+    pub const fn is_enabled(&self) -> bool {
         self.enabled
     }
 
     /// Check if federation is enabled
-    pub fn is_federation_enabled(&self) -> bool {
+    #[must_use]
+    pub const fn is_federation_enabled(&self) -> bool {
         self.federation_enabled
     }
 
     /// Get cluster endpoint
+    #[must_use]
     pub fn cluster_endpoint(&self) -> &str {
         &self.cluster_endpoint
     }
 
     /// Get node ID
+    #[must_use]
     pub fn node_id(&self) -> &str {
         &self.node_id
     }
@@ -213,11 +217,13 @@ impl McpConfig {
 #[allow(deprecated)]
 impl McpCapabilitiesConfig {
     /// Check if a storage protocol is supported
+    #[must_use]
     pub fn supports_protocol(&self, protocol: &str) -> bool {
         self.storage_protocols.contains(&protocol.to_string())
     }
 
     /// Check if a storage tier is supported
+    #[must_use]
     pub fn supports_tier(&self, tier: &str) -> bool {
         self.storage_tiers.contains(&tier.to_string())
     }
@@ -277,21 +283,25 @@ impl McpCapabilitiesConfig {
 #[allow(deprecated)]
 impl FederationConfig {
     /// Check if federation is enabled
-    pub fn is_enabled(&self) -> bool {
+    #[must_use]
+    pub const fn is_enabled(&self) -> bool {
         self.enabled
     }
 
     /// Get cluster name
+    #[must_use]
     pub fn cluster_name(&self) -> &str {
         &self.cluster_name
     }
 
     /// Get federation mode
+    #[must_use]
     pub fn mode(&self) -> &str {
         &self.mode
     }
 
     /// Get peer nodes
+    #[must_use]
     pub fn peers(&self) -> &[String] {
         &self.peers
     }
@@ -309,16 +319,19 @@ impl FederationConfig {
     }
 
     /// Check if running in standalone mode
+    #[must_use]
     pub fn is_standalone(&self) -> bool {
         self.mode == "standalone"
     }
 
     /// Check if running in leader mode
+    #[must_use]
     pub fn is_leader(&self) -> bool {
         self.mode == "leader"
     }
 
     /// Check if running in follower mode
+    #[must_use]
     pub fn is_follower(&self) -> bool {
         self.mode == "follower"
     }

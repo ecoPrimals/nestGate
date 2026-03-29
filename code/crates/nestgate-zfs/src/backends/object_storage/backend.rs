@@ -3,13 +3,13 @@
 
 //! **BACKEND IMPLEMENTATION**
 //!
-//! Main ObjectStorageBackend struct with capability discovery and initialization.
+//! Main `ObjectStorageBackend` struct with capability discovery and initialization.
 
 use super::client::ObjectStorageClient;
 use super::config::{ConfigSource, DiscoveredStorageConfig, StorageCapability};
 use super::provider::StorageProvider;
 use super::types::ObjectPool;
-use nestgate_core::{config_error, NestGateError, Result};
+use nestgate_core::{NestGateError, Result, config_error};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -68,7 +68,7 @@ impl ObjectStorageBackend {
     /// capabilities at runtime without any hardcoded vendor dependencies.
     ///
     /// **Discovery Chain**:
-    /// 1. Query NestGate capability registry for "object-storage" services
+    /// 1. Query `NestGate` capability registry for "object-storage" services
     /// 2. Check environment for explicit configuration
     /// 3. Detect cloud provider metadata services (EC2, GCE, Azure)
     /// 4. Return first available configuration
@@ -227,6 +227,6 @@ impl ObjectStorageBackend {
 
     /// Get dataset prefix
     pub(super) fn dataset_prefix(pool_name: &str, dataset_name: &str) -> String {
-        format!("{}/{}", pool_name, dataset_name)
+        format!("{pool_name}/{dataset_name}")
     }
 }

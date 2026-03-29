@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// Configuration for production service discovery, capturing environment variables
 /// for service endpoints, resource limits, and operation timeouts.
 #[derive(Debug, Clone)]
-/// Configuration for ProductionDiscovery
+/// Configuration for `ProductionDiscovery`
 pub struct ProductionDiscoveryConfig {
     // Service endpoint environment variables
     service_hosts: HashMap<String, String>,
@@ -27,6 +27,7 @@ pub type SharedProductionDiscoveryConfig = Arc<ProductionDiscoveryConfig>;
 
 impl ProductionDiscoveryConfig {
     /// Creates a new `ProductionDiscoveryConfig` with empty values.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             service_hosts: HashMap::new(),
@@ -38,6 +39,7 @@ impl ProductionDiscoveryConfig {
     }
 
     /// Creates a new `ProductionDiscoveryConfig` by reading environment variables.
+    #[must_use]
     pub fn from_env() -> Self {
         let mut config = Self::new();
 
@@ -58,19 +60,19 @@ impl ProductionDiscoveryConfig {
 
         for service_name in &service_names {
             // Discover host
-            if let Ok(host) = env::var(format!("{}_HOST", service_name)) {
+            if let Ok(host) = env::var(format!("{service_name}_HOST")) {
                 config.service_hosts.insert(service_name.to_string(), host);
             }
 
             // Discover port
-            if let Ok(port_str) = env::var(format!("{}_PORT", service_name)) {
-                if let Ok(port) = port_str.parse::<u16>() {
-                    config.service_ports.insert(service_name.to_string(), port);
-                }
+            if let Ok(port_str) = env::var(format!("{service_name}_PORT"))
+                && let Ok(port) = port_str.parse::<u16>()
+            {
+                config.service_ports.insert(service_name.to_string(), port);
             }
 
             // Discover bind address
-            if let Ok(bind) = env::var(format!("{}_BIND", service_name)) {
+            if let Ok(bind) = env::var(format!("{service_name}_BIND")) {
                 config.service_binds.insert(service_name.to_string(), bind);
             }
         }
@@ -85,10 +87,10 @@ impl ProductionDiscoveryConfig {
         ];
 
         for (env_suffix, limit_name) in &limit_types {
-            if let Ok(value_str) = env::var(format!("NESTGATE_{}", env_suffix)) {
-                if let Ok(value) = value_str.parse::<usize>() {
-                    config.resource_limits.insert(limit_name.to_string(), value);
-                }
+            if let Ok(value_str) = env::var(format!("NESTGATE_{env_suffix}"))
+                && let Ok(value) = value_str.parse::<usize>()
+            {
+                config.resource_limits.insert(limit_name.to_string(), value);
             }
         }
 
@@ -102,12 +104,12 @@ impl ProductionDiscoveryConfig {
         ];
 
         for (env_suffix, timeout_name) in &timeout_types {
-            if let Ok(value_str) = env::var(format!("NESTGATE_{}_TIMEOUT", env_suffix)) {
-                if let Ok(value_secs) = value_str.parse::<u64>() {
-                    config
-                        .operation_timeouts
-                        .insert(timeout_name.to_string(), value_secs);
-                }
+            if let Ok(value_str) = env::var(format!("NESTGATE_{env_suffix}_TIMEOUT"))
+                && let Ok(value_secs) = value_str.parse::<u64>()
+            {
+                config
+                    .operation_timeouts
+                    .insert(timeout_name.to_string(), value_secs);
             }
         }
 
@@ -117,67 +119,83 @@ impl ProductionDiscoveryConfig {
     // Getter methods
 
     /// Get service host from environment, returns None if not set
+    #[must_use]
     pub fn get_service_host(&self, service_name: &str) -> Option<&str> {
-        self.service_hosts.get(service_name).map(|s| s.as_str())
+        self.service_hosts
+            .get(service_name)
+            .map(std::string::String::as_str)
     }
 
     /// Get service port from environment, returns None if not set
+    #[must_use]
     pub fn get_service_port(&self, service_name: &str) -> Option<u16> {
         self.service_ports.get(service_name).copied()
     }
 
     /// Get service bind address from environment, returns None if not set
+    #[must_use]
     pub fn get_service_bind(&self, service_name: &str) -> Option<&str> {
-        self.service_binds.get(service_name).map(|s| s.as_str())
+        self.service_binds
+            .get(service_name)
+            .map(std::string::String::as_str)
     }
 
     /// Get resource limit from environment, returns None if not set
+    #[must_use]
     pub fn get_resource_limit(&self, limit_name: &str) -> Option<usize> {
         self.resource_limits.get(limit_name).copied()
     }
 
     /// Get operation timeout from environment (in seconds), returns None if not set
+    #[must_use]
     pub fn get_operation_timeout(&self, timeout_name: &str) -> Option<u64> {
         self.operation_timeouts.get(timeout_name).copied()
     }
 
     /// Get all resource limits
-    pub fn get_all_resource_limits(&self) -> &HashMap<String, usize> {
+    #[must_use]
+    pub const fn get_all_resource_limits(&self) -> &HashMap<String, usize> {
         &self.resource_limits
     }
 
     /// Get all operation timeouts
-    pub fn get_all_operation_timeouts(&self) -> &HashMap<String, u64> {
+    #[must_use]
+    pub const fn get_all_operation_timeouts(&self) -> &HashMap<String, u64> {
         &self.operation_timeouts
     }
 
     // Builder methods for testing
 
     /// Builder method to set Service Host
+    #[must_use]
     pub fn with_service_host(mut self, service_name: String, host: String) -> Self {
         self.service_hosts.insert(service_name, host);
         self
     }
 
     /// Builder method to set Service Port
+    #[must_use]
     pub fn with_service_port(mut self, service_name: String, port: u16) -> Self {
         self.service_ports.insert(service_name, port);
         self
     }
 
     /// Builder method to set Service Bind
+    #[must_use]
     pub fn with_service_bind(mut self, service_name: String, bind: String) -> Self {
         self.service_binds.insert(service_name, bind);
         self
     }
 
     /// Builder method to set Resource Limit
+    #[must_use]
     pub fn with_resource_limit(mut self, limit_name: String, value: usize) -> Self {
         self.resource_limits.insert(limit_name, value);
         self
     }
 
     /// Builder method to set Operation Timeout
+    #[must_use]
     pub fn with_operation_timeout(mut self, timeout_name: String, seconds: u64) -> Self {
         self.operation_timeouts.insert(timeout_name, seconds);
         self

@@ -53,7 +53,8 @@ pub enum LoadBalancingStrategy {
 
 impl ServiceResolver {
     /// Create a new service resolver
-    pub fn new(registry: Arc<CapabilityRegistry>) -> Self {
+    #[must_use]
+    pub const fn new(registry: Arc<CapabilityRegistry>) -> Self {
         Self {
             registry,
             strategy: LoadBalancingStrategy::LeastLoaded,
@@ -61,7 +62,8 @@ impl ServiceResolver {
     }
 
     /// Set load balancing strategy
-    pub fn with_strategy(mut self, strategy: LoadBalancingStrategy) -> Self {
+    #[must_use]
+    pub const fn with_strategy(mut self, strategy: LoadBalancingStrategy) -> Self {
         self.strategy = strategy;
         self
     }
@@ -167,7 +169,10 @@ impl ServiceResolver {
     /// Find all healthy providers for a capability
     pub async fn find_healthy_providers(&self, capability: &Capability) -> Vec<ServiceDescriptor> {
         let providers = self.registry.find_providers(capability).await;
-        providers.into_iter().filter(|s| s.is_healthy()).collect()
+        providers
+            .into_iter()
+            .filter(super::service_descriptor::ServiceDescriptor::is_healthy)
+            .collect()
     }
 }
 

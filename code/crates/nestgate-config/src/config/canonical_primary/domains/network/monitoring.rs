@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls metrics collection, health checking, and event logging for network operations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkMonitoring
+/// Configuration for `NetworkMonitoring`
 pub struct NetworkMonitoringConfig {
     /// Whether metrics collection is enabled.
     pub metrics_enabled: bool,
@@ -25,7 +25,7 @@ impl NetworkMonitoringConfig {
     ///
     /// Enables metrics but disables verbose event logging.
     #[must_use]
-    pub fn development_optimized() -> Self {
+    pub const fn development_optimized() -> Self {
         Self {
             metrics_enabled: true,
             health_check_interval_secs: 60,
@@ -37,7 +37,7 @@ impl NetworkMonitoringConfig {
     ///
     /// Enables full metrics and event logging with frequent health checks.
     #[must_use]
-    pub fn production_hardened() -> Self {
+    pub const fn production_hardened() -> Self {
         Self {
             metrics_enabled: true,
             health_check_interval_secs: 30,
@@ -52,7 +52,7 @@ impl NetworkMonitoringConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> Result<()> {
+    pub const fn validate(&self) -> Result<()> {
         Ok(())
     }
 
@@ -60,7 +60,7 @@ impl NetworkMonitoringConfig {
     ///
     /// All fields from `other` will replace the current values.
     #[must_use]
-    pub fn merge(mut self, other: Self) -> Self {
+    pub const fn merge(mut self, other: Self) -> Self {
         self.metrics_enabled = other.metrics_enabled;
         self.health_check_interval_secs = other.health_check_interval_secs;
         self.log_network_events = other.log_network_events;

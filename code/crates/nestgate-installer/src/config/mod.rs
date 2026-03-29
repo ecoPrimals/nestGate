@@ -188,7 +188,7 @@ impl InstallerConfigUtils {
     }
 
     /// Set log directory (using `working_directory` as base)
-    pub fn set_log_directory(_config: &mut InstallerConfig, _config_path: &str) {
+    pub const fn set_log_directory(_config: &mut InstallerConfig, _config_path: &str) {
         // Note: canonical config doesn't have separate log_directory
         // Could be extended later if needed
     }
@@ -216,7 +216,7 @@ mod tests {
         // Environment type check simplified for canonical config
         // Canonical modernization: security installation is default
         assert!(!config.base_config.system.debug_mode); // Production should have debug_mode = false
-                                                        // Simple validation that config is accessible
+        // Simple validation that config is accessible
     }
 
     #[test]

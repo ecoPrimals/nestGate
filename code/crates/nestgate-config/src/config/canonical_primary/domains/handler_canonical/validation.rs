@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ValidationHandler
+/// Configuration for `ValidationHandler`
 pub struct ValidationHandlerConfig {
     /// Schema
     pub schema: SchemaValidationConfig,
@@ -19,28 +19,28 @@ pub struct ValidationHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SchemaValidation
+/// Configuration for `SchemaValidation`
 pub struct SchemaValidationConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DataValidation
+/// Configuration for `DataValidation`
 pub struct DataValidationConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for BusinessRuleValidation
+/// Configuration for `BusinessRuleValidation`
 pub struct BusinessRuleValidationConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CustomValidation
+/// Configuration for `CustomValidation`
 pub struct CustomValidationConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl ValidationHandlerConfig {
 
     /// Merges this configuration with another, returning the merged result
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

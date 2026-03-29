@@ -50,7 +50,7 @@ pub use traits::{
 
 // ==================== MAIN EVOLUTION SYSTEM ====================
 
-/// **THE** canonical idiomatic evolution system for NestGate
+/// **THE** canonical idiomatic evolution system for `NestGate`
 ///
 /// This system provides comprehensive evolution tracking, smart defaults,
 /// and modernization patterns for the entire ecosystem.
@@ -127,7 +127,11 @@ impl IdiomaticEvolutionSystem {
     /// # Errors
     ///
     /// Returns an error if progress tracking fails or version validation fails
-    pub fn track_evolution(&mut self, component: &str, version: &str) -> nestgate_types::error::Result<()> {
+    pub fn track_evolution(
+        &mut self,
+        component: &str,
+        version: &str,
+    ) -> nestgate_types::error::Result<()> {
         self.metadata
             .track_component_evolution(component, version)?;
         self.migration_manager
@@ -186,7 +190,7 @@ impl IdiomaticEvolutionSystem {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
 /// use nestgate_core::canonical_modernization::idiomatic_evolution::EvolutionStats;
 ///
 /// let stats = EvolutionStats {

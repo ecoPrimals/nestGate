@@ -43,15 +43,16 @@ fn test_multiple_production_discovery_instances() {
 #[test]
 fn test_discover_port_from_env() {
     let orig = env::var("NESTGATE_TEST_SERVICE_PORT").ok();
-    std::env::set_var("NESTGATE_TEST_SERVICE_PORT", "9876");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_TEST_SERVICE_PORT", "9876");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_port("test_service");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_TEST_SERVICE_PORT", v),
-        None => std::env::remove_var("NESTGATE_TEST_SERVICE_PORT"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_TEST_SERVICE_PORT", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_TEST_SERVICE_PORT"),
     }
     assert!(result.is_ok());
 }
@@ -72,15 +73,16 @@ fn test_discover_port_fallback() {
 #[test]
 fn test_discover_port_invalid_env() {
     let orig = env::var("NESTGATE_INVALID_PORT").ok();
-    std::env::set_var("NESTGATE_INVALID_PORT", "not_a_number");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_INVALID_PORT", "not_a_number");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_port("invalid");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_INVALID_PORT", v),
-        None => std::env::remove_var("NESTGATE_INVALID_PORT"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_INVALID_PORT", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_INVALID_PORT"),
     }
     assert!(result.is_ok());
 }
@@ -88,15 +90,16 @@ fn test_discover_port_invalid_env() {
 #[test]
 fn test_discover_port_out_of_range() {
     let orig = env::var("NESTGATE_OOR_PORT").ok();
-    std::env::set_var("NESTGATE_OOR_PORT", "99999");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_OOR_PORT", "99999");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_port("oor");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_OOR_PORT", v),
-        None => std::env::remove_var("NESTGATE_OOR_PORT"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_OOR_PORT", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_OOR_PORT"),
     }
     assert!(result.is_ok());
 }
@@ -106,15 +109,16 @@ fn test_discover_port_out_of_range() {
 #[test]
 fn test_discover_bind_address_from_env() {
     let orig = env::var("NESTGATE_API_HOST").ok();
-    std::env::set_var("NESTGATE_API_HOST", "192.168.1.100");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_API_HOST", "192.168.1.100");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_bind_address("api");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_API_HOST", v),
-        None => std::env::remove_var("NESTGATE_API_HOST"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_API_HOST", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_API_HOST"),
     }
     assert!(result.is_ok());
 }
@@ -135,15 +139,16 @@ fn test_discover_bind_address_localhost_fallback() {
 #[test]
 fn test_discover_bind_address_invalid_ip() {
     let orig = env::var("NESTGATE_INVALID_HOST").ok();
-    std::env::set_var("NESTGATE_INVALID_HOST", "not.an.ip.address");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_INVALID_HOST", "not.an.ip.address");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_bind_address("invalid");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_INVALID_HOST", v),
-        None => std::env::remove_var("NESTGATE_INVALID_HOST"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_INVALID_HOST", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_INVALID_HOST"),
     }
     assert!(result.is_ok());
 }
@@ -154,20 +159,22 @@ fn test_discover_bind_address_invalid_ip() {
 fn test_discover_endpoint_success() {
     let orig_host = env::var("NESTGATE_WEB_HOST").ok();
     let orig_port = env::var("NESTGATE_WEB_PORT").ok();
-    std::env::set_var("NESTGATE_WEB_HOST", "127.0.0.1");
-    std::env::set_var("NESTGATE_WEB_PORT", "8080");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_WEB_HOST", "127.0.0.1");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_WEB_PORT", "8080");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_endpoint("web");
     match orig_host {
-        Some(v) => std::env::set_var("NESTGATE_WEB_HOST", v),
-        None => std::env::remove_var("NESTGATE_WEB_HOST"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_WEB_HOST", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_WEB_HOST"),
     }
     match orig_port {
-        Some(v) => std::env::set_var("NESTGATE_WEB_PORT", v),
-        None => std::env::remove_var("NESTGATE_WEB_PORT"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_WEB_PORT", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_WEB_PORT"),
     }
     assert!(result.is_ok());
     let socket_addr = result.unwrap();
@@ -177,15 +184,16 @@ fn test_discover_endpoint_success() {
 #[test]
 fn test_discover_endpoint_partial_config() {
     let orig = env::var("NESTGATE_PARTIAL_PORT").ok();
-    std::env::set_var("NESTGATE_PARTIAL_PORT", "3000");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_PARTIAL_PORT", "3000");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_endpoint("partial");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_PARTIAL_PORT", v),
-        None => std::env::remove_var("NESTGATE_PARTIAL_PORT"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_PARTIAL_PORT", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_PARTIAL_PORT"),
     }
     assert!(result.is_ok());
     let socket_addr = result.unwrap();
@@ -197,15 +205,16 @@ fn test_discover_endpoint_partial_config() {
 #[test]
 fn test_discover_timeout_from_env() {
     let orig = env::var("NESTGATE_TIMEOUT_CONNECT_MS").ok();
-    std::env::set_var("NESTGATE_TIMEOUT_CONNECT_MS", "5000");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_TIMEOUT_CONNECT_MS", "5000");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_timeout("connect");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_TIMEOUT_CONNECT_MS", v),
-        None => std::env::remove_var("NESTGATE_TIMEOUT_CONNECT_MS"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_TIMEOUT_CONNECT_MS", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_TIMEOUT_CONNECT_MS"),
     }
     assert!(result.is_ok());
 }
@@ -225,15 +234,16 @@ fn test_discover_timeout_default() {
 #[test]
 fn test_discover_timeout_invalid() {
     let orig = env::var("NESTGATE_TIMEOUT_INVALID_MS").ok();
-    std::env::set_var("NESTGATE_TIMEOUT_INVALID_MS", "not_a_number");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_TIMEOUT_INVALID_MS", "not_a_number");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_timeout("invalid");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_TIMEOUT_INVALID_MS", v),
-        None => std::env::remove_var("NESTGATE_TIMEOUT_INVALID_MS"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_TIMEOUT_INVALID_MS", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_TIMEOUT_INVALID_MS"),
     }
     assert!(result.is_ok());
 }
@@ -353,15 +363,16 @@ async fn test_concurrent_address_discoveries() {
 #[test]
 fn test_discover_ipv4_address() {
     let orig = env::var("NESTGATE_IPV4_HOST").ok();
-    std::env::set_var("NESTGATE_IPV4_HOST", "192.168.1.1");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_IPV4_HOST", "192.168.1.1");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_bind_address("ipv4");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_IPV4_HOST", v),
-        None => std::env::remove_var("NESTGATE_IPV4_HOST"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_IPV4_HOST", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_IPV4_HOST"),
     }
     assert!(result.is_ok());
     let addr = result.unwrap();
@@ -372,15 +383,16 @@ fn test_discover_ipv4_address() {
 #[ignore] // IPv6 support is system-dependent
 fn test_discover_ipv6_address() {
     let orig = env::var("NESTGATE_IPV6_HOST").ok();
-    std::env::set_var("NESTGATE_IPV6_HOST", "::1");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_IPV6_HOST", "::1");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config).unwrap();
 
     let result = discovery.discover_bind_address("ipv6");
     match orig {
-        Some(v) => std::env::set_var("NESTGATE_IPV6_HOST", v),
-        None => std::env::remove_var("NESTGATE_IPV6_HOST"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_IPV6_HOST", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_IPV6_HOST"),
     }
     if result.is_ok() {
         let addr = result.unwrap();
@@ -411,24 +423,27 @@ fn test_graceful_error_handling() {
     let orig1 = env::var("NESTGATE_INVALID1_PORT").ok();
     let orig2 = env::var("NESTGATE_INVALID2_HOST").ok();
     let orig3 = env::var("NESTGATE_INVALID3_TIMEOUT_MS").ok();
-    std::env::set_var("NESTGATE_INVALID1_PORT", "invalid");
-    std::env::set_var("NESTGATE_INVALID2_HOST", "not-an-ip");
-    std::env::set_var("NESTGATE_INVALID3_TIMEOUT_MS", "bad");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_INVALID1_PORT", "invalid");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_INVALID2_HOST", "not-an-ip");
+    // SAFETY: single-threaded test context.
+    nestgate_platform::env_process::set_var("NESTGATE_INVALID3_TIMEOUT_MS", "bad");
 
     let config = NestGateCanonicalConfig::default();
     let discovery = ProductionServiceDiscovery::new(&config);
 
     match orig1 {
-        Some(v) => std::env::set_var("NESTGATE_INVALID1_PORT", v),
-        None => std::env::remove_var("NESTGATE_INVALID1_PORT"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_INVALID1_PORT", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_INVALID1_PORT"),
     }
     match orig2 {
-        Some(v) => std::env::set_var("NESTGATE_INVALID2_HOST", v),
-        None => std::env::remove_var("NESTGATE_INVALID2_HOST"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_INVALID2_HOST", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_INVALID2_HOST"),
     }
     match orig3 {
-        Some(v) => std::env::set_var("NESTGATE_INVALID3_TIMEOUT_MS", v),
-        None => std::env::remove_var("NESTGATE_INVALID3_TIMEOUT_MS"),
+        Some(v) => nestgate_platform::env_process::set_var("NESTGATE_INVALID3_TIMEOUT_MS", v),
+        None => nestgate_platform::env_process::remove_var("NESTGATE_INVALID3_TIMEOUT_MS"),
     }
     assert!(discovery.is_ok());
 }

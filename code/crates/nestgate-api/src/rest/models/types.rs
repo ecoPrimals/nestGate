@@ -106,7 +106,7 @@ pub enum ComparisonOperator {
 
 /// Storage backend types supported by the system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of StorageBackend
+/// Types of `StorageBackend`
 pub enum StorageBackendType {
     /// In-memory storage backend
     Memory,
@@ -292,7 +292,7 @@ pub enum AlertType {
 
 /// Circuit breaker configuration for fault tolerance
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CircuitBreaker
+/// Configuration for `CircuitBreaker`
 pub struct CircuitBreakerConfig {
     /// Number of failures before opening the circuit
     pub failure_threshold: u32,

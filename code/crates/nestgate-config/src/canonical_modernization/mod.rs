@@ -30,8 +30,8 @@ use crate::config::canonical_primary::NestGateCanonicalConfig;
 
 /// **BACKWARD COMPATIBILITY**: Legacy configuration type alias for migration compatibility
 pub type CanonicalModernizedConfig = NestGateCanonicalConfig;
-// TODO: restore `service_metadata` when ServiceRegistration / ServiceEndpoint / ServiceStatus live outside nestgate-core
-// pub mod service_metadata { ... }
+// `service_metadata` may be reintroduced when ServiceRegistration / ServiceEndpoint / ServiceStatus
+// are available from a crate below nestgate-core in the dependency graph.
 
 // ==================== SECTION ====================
 

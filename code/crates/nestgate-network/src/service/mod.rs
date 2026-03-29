@@ -21,14 +21,14 @@ use nestgate_core::NestGateError;
 // Type aliases for complex types to improve readability and reduce warnings
 // ✅ LOCK-FREE: Migrated to DashMap for concurrent network service management
 type ConnectionMap = Arc<DashMap<String, ConnectionInfo>>;
-/// Type alias for PortMap
+/// Type alias for `PortMap`
 type PortMap = Arc<DashMap<u16, String>>;
-/// Type alias for ServiceMap
+/// Type alias for `ServiceMap`
 type ServiceMap = Arc<DashMap<String, ServiceInfo>>;
 
 /// Real network service implementation
 #[derive(Debug)]
-/// Service implementation for RealNetwork
+/// Service implementation for `RealNetwork`
 pub struct RealNetworkService {
     /// Configuration
     config: NetworkConfig,
@@ -230,6 +230,7 @@ impl RealNetworkService {
     }
 
     /// Get connection details (lock-free!)
+    #[must_use]
     pub fn get_connection_details(&self, connection_id: &str) -> Option<ConnectionDetails> {
         // ✅ Lock-free get
         self.connections.get(connection_id).map(|entry| {
@@ -245,6 +246,7 @@ impl RealNetworkService {
     }
 
     /// Get service details (lock-free!)
+    #[must_use]
     pub fn get_service_details(&self, service_id: &str) -> Option<ServiceDetails> {
         // ✅ Lock-free get
         self.services.get(service_id).map(|entry| {

@@ -60,25 +60,25 @@ impl NetworkConfig {
     /// Get host from environment with alternative names for compatibility
     ///
     /// Tries in order:
-    /// 1. NESTGATE_BIND (common bind address name)
-    /// 2. NESTGATE_BIND_ADDRESS (alternative)
-    /// 3. NESTGATE_HOST (original)
+    /// 1. `NESTGATE_BIND` (common bind address name)
+    /// 2. `NESTGATE_BIND_ADDRESS` (alternative)
+    /// 3. `NESTGATE_HOST` (original)
     /// 4. Default (127.0.0.1)
     fn env_host_with_alternatives(prefix: &str) -> Result<String, ConfigError> {
         // Try BIND first (common name)
-        let bind_var = format!("{}_BIND", prefix);
+        let bind_var = format!("{prefix}_BIND");
         if let Ok(val) = env::var(&bind_var) {
             return Ok(val);
         }
 
         // Try BIND_ADDRESS (alternative)
-        let bind_address_var = format!("{}_BIND_ADDRESS", prefix);
+        let bind_address_var = format!("{prefix}_BIND_ADDRESS");
         if let Ok(val) = env::var(&bind_address_var) {
             return Ok(val);
         }
 
         // Try HOST (original)
-        let host_var = format!("{}_HOST", prefix);
+        let host_var = format!("{prefix}_HOST");
         if let Ok(val) = env::var(&host_var) {
             return Ok(val);
         }
@@ -90,13 +90,13 @@ impl NetworkConfig {
     /// Get port from environment with alternative names for compatibility
     ///
     /// Tries in order:
-    /// 1. NESTGATE_API_PORT (documented in API server)
-    /// 2. NESTGATE_HTTP_PORT (alternative)
-    /// 3. NESTGATE_PORT (original)
+    /// 1. `NESTGATE_API_PORT` (documented in API server)
+    /// 2. `NESTGATE_HTTP_PORT` (alternative)
+    /// 3. `NESTGATE_PORT` (original)
     /// 4. Default (8080)
     fn env_port_with_alternatives(prefix: &str) -> Result<Port, ConfigError> {
         // Try API_PORT first (documented name)
-        let api_port_var = format!("{}_API_PORT", prefix);
+        let api_port_var = format!("{prefix}_API_PORT");
         if let Ok(val) = env::var(&api_port_var) {
             return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
                 key: api_port_var,
@@ -105,7 +105,7 @@ impl NetworkConfig {
         }
 
         // Try HTTP_PORT (alternative)
-        let http_port_var = format!("{}_HTTP_PORT", prefix);
+        let http_port_var = format!("{prefix}_HTTP_PORT");
         if let Ok(val) = env::var(&http_port_var) {
             return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
                 key: http_port_var,
@@ -114,7 +114,7 @@ impl NetworkConfig {
         }
 
         // Try PORT (original)
-        let port_var = format!("{}_PORT", prefix);
+        let port_var = format!("{prefix}_PORT");
         if let Ok(val) = env::var(&port_var) {
             return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
                 key: port_var,
@@ -132,7 +132,7 @@ impl NetworkConfig {
     where
         T::Err: std::error::Error + Send + Sync + 'static,
     {
-        let var_name = format!("{}_{}", prefix, key);
+        let var_name = format!("{prefix}_{key}");
         match env::var(&var_name) {
             Ok(val) => val.parse().map_err(|e| ConfigError::ParseError {
                 key: var_name,
@@ -144,25 +144,25 @@ impl NetworkConfig {
 
     /// Get connection timeout as Duration
     #[must_use]
-    pub fn timeout(&self) -> Duration {
+    pub const fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout_secs)
     }
 
     /// Get read timeout as Duration
     #[must_use]
-    pub fn read_timeout(&self) -> Duration {
+    pub const fn read_timeout(&self) -> Duration {
         Duration::from_secs(self.read_timeout_secs)
     }
 
     /// Get write timeout as Duration
     #[must_use]
-    pub fn write_timeout(&self) -> Duration {
+    pub const fn write_timeout(&self) -> Duration {
         Duration::from_secs(self.write_timeout_secs)
     }
 
     /// Get keepalive timeout as Duration
     #[must_use]
-    pub fn keepalive(&self) -> Duration {
+    pub const fn keepalive(&self) -> Duration {
         Duration::from_secs(self.keepalive_secs)
     }
 }

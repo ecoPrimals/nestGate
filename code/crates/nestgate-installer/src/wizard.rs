@@ -14,7 +14,7 @@ pub struct InstallationWizard {
 impl InstallationWizard {
     /// Create new installation wizard
     #[must_use]
-    pub fn new(config: InstallerConfig) -> Self {
+    pub const fn new(config: InstallerConfig) -> Self {
         Self { config }
     }
 

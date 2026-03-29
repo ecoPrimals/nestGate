@@ -39,12 +39,12 @@ impl CacheStorageTierExt for StorageTier {
 
     fn typical_access_time(&self) -> Duration {
         match self {
-            StorageTier::Hot => Duration::from_micros(100),
-            StorageTier::Warm => Duration::from_millis(1),
-            StorageTier::Cool => Duration::from_millis(10),
-            StorageTier::Cold => Duration::from_millis(100),
-            StorageTier::Frozen => Duration::from_secs(10),
-            StorageTier::Custom(_) => Duration::from_millis(50),
+            Self::Hot => Duration::from_micros(100),
+            Self::Warm => Duration::from_millis(1),
+            Self::Cool => Duration::from_millis(10),
+            Self::Cold => Duration::from_millis(100),
+            Self::Frozen => Duration::from_secs(10),
+            Self::Custom(_) => Duration::from_millis(50),
         }
     }
 }
@@ -68,10 +68,10 @@ impl std::fmt::Display for CachePolicy {
     /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CachePolicy::None => write!(f, "none"),
-            CachePolicy::ReadOnly => write!(f, "read-only"),
-            CachePolicy::WriteThrough => write!(f, "write-through"),
-            CachePolicy::WriteBack => write!(f, "write-back"),
+            Self::None => write!(f, "none"),
+            Self::ReadOnly => write!(f, "read-only"),
+            Self::WriteThrough => write!(f, "write-through"),
+            Self::WriteBack => write!(f, "write-back"),
         }
     }
 }
@@ -148,19 +148,19 @@ impl CacheStats {
 
     /// Get total number of items across all tiers
     #[must_use]
-    pub fn total_items(&self) -> usize {
+    pub const fn total_items(&self) -> usize {
         self.hot_tier_items + self.warm_tier_items + self.cold_tier_items
     }
 
     /// Get total size across all tiers
     #[must_use]
-    pub fn total_size_bytes(&self) -> u64 {
+    pub const fn total_size_bytes(&self) -> u64 {
         self.hot_tier_size_bytes + self.warm_tier_size_bytes + self.cold_tier_size_bytes
     }
 
     /// Get total evictions across all tiers
     #[must_use]
-    pub fn total_evictions(&self) -> u64 {
+    pub const fn total_evictions(&self) -> u64 {
         self.hot_tier_evictions + self.warm_tier_evictions + self.cold_tier_evictions
     }
 
@@ -180,9 +180,10 @@ impl CacheStats {
     pub fn record_access_time(&mut self, tier: StorageTier, access_time: Duration) {
         // Update running average
         if let Some(current_avg) = self.tier_access_times.get(&tier) {
-            let new_avg = Duration::from_nanos(
-                ((current_avg.as_nanos() + access_time.as_nanos()) / 2) as u64,
-            );
+            let new_avg = Duration::from_nanos(u128::midpoint(
+                current_avg.as_nanos(),
+                access_time.as_nanos(),
+            ) as u64);
             self.tier_access_times.insert(tier, new_avg);
         } else {
             self.tier_access_times.insert(tier, access_time);
@@ -268,11 +269,7 @@ impl EfficiencyMetrics {
         // Bonus for consistent performance
         let consistency_bonus = if self.last_operations.len() >= 100 {
             let recent_variance = self.calculate_variance();
-            if recent_variance < 0.1 {
-                5.0
-            } else {
-                0.0
-            }
+            if recent_variance < 0.1 { 5.0 } else { 0.0 }
         } else {
             0.0
         };
@@ -303,13 +300,12 @@ impl EfficiencyMetrics {
         }
 
         let mean = window_hit_ratios.iter().sum::<f64>() / (window_hit_ratios.len() as f64);
-        let variance = window_hit_ratios
+
+        window_hit_ratios
             .iter()
             .map(|ratio| (ratio - mean).powi(2))
             .sum::<f64>()
-            / (window_hit_ratios.len() as f64);
-
-        variance
+            / (window_hit_ratios.len() as f64)
     }
 }
 
@@ -569,18 +565,17 @@ mod tests {
     #[test]
     fn test_cache_stats_record_access_time_average() {
         let mut stats = CacheStats::default();
-        // Default has Hot tier at 1ms
-        // First record: (1ms + 10ms) / 2 = 5.5ms
+        // Default Hot tier = 100µs. Running average: (old + new) / 2
+        // After 10ms: (100µs + 10ms) / 2 = 5050µs
         stats.record_access_time(StorageTier::Hot, Duration::from_millis(10));
-        // Second record: (5.5ms + 20ms) / 2 = 12.75ms
+        // After 20ms: (5050µs + 20ms) / 2 = 12525µs
         stats.record_access_time(StorageTier::Hot, Duration::from_millis(20));
 
         let avg = stats
             .tier_access_times
             .get(&StorageTier::Hot)
             .expect("Should have access time");
-        // Average should be 12.75ms due to running average calculation
-        assert_eq!(*avg, Duration::from_micros(12750));
+        assert_eq!(*avg, Duration::from_micros(12525));
     }
 
     // ==================== EfficiencyMetrics Tests ====================

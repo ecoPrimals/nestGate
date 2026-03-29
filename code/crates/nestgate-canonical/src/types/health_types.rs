@@ -58,13 +58,13 @@ impl ServiceHealth {
 
     /// Check if service is healthy
     #[must_use]
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.status, HealthStatus::Healthy)
     }
 
     /// Check if service is degraded
     #[must_use]
-    pub fn is_degraded(&self) -> bool {
+    pub const fn is_degraded(&self) -> bool {
         matches!(self.status, HealthStatus::Degraded)
     }
 }

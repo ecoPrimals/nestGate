@@ -147,13 +147,13 @@ impl StorageDetector {
     }
 
     /// Update detection configuration
-    pub fn update_config(&mut self, config: DetectionConfig) {
+    pub const fn update_config(&mut self, config: DetectionConfig) {
         self.config = config;
     }
 
     /// Get current configuration
     #[must_use]
-    pub fn get_config(&self) -> &DetectionConfig {
+    pub const fn get_config(&self) -> &DetectionConfig {
         &self.config
     }
 }

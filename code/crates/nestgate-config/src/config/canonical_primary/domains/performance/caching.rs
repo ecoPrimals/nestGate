@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls cache optimization and warming strategies for improved performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for CachePerformance
+/// Configuration for `CachePerformance`
 pub struct CachePerformanceConfig {
     /// Cache optimization settings.
     pub optimization: CacheOptimizationConfig,
@@ -22,7 +22,7 @@ pub struct CachePerformanceConfig {
 ///
 /// Enables cache-specific performance optimizations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for CacheOptimization
+/// Configuration for `CacheOptimization`
 pub struct CacheOptimizationConfig {
     /// Whether cache optimization is enabled.
     pub enabled: bool,
@@ -32,7 +32,7 @@ pub struct CacheOptimizationConfig {
 ///
 /// Controls how and when cache data is preloaded to reduce cold-start latency.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for CacheWarming
+/// Configuration for `CacheWarming`
 pub struct CacheWarmingConfig {
     /// Whether cache warming is enabled.
     pub enabled: bool,
@@ -64,12 +64,12 @@ impl CachePerformanceConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> Result<()> {
+    pub const fn validate(&self) -> Result<()> {
         Ok(())
     }
 }
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for UnifiedCacheConfig
+/// Backward compatibility alias for `UnifiedCacheConfig`
 pub type UnifiedCacheConfig = CachePerformanceConfig;

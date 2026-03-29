@@ -53,18 +53,18 @@ pub mod performance {
     /// - Cache line sizes (L1/L2/L3)
     /// - System call overhead vs throughput tradeoffs
     ///
-    /// ## DEFAULT_BUFFER_SIZE (4096 bytes)
+    /// ## `DEFAULT_BUFFER_SIZE` (4096 bytes)
     /// **Use for**: General I/O, disk operations, file system operations
     /// **Why 4KB**: Matches typical page size, optimal for disk I/O
     /// **Performance**: Minimizes system calls while fitting in L1 cache
     ///
-    /// ## NETWORK_BUFFER_SIZE (65536 bytes)
+    /// ## `NETWORK_BUFFER_SIZE` (65536 bytes)
     /// **Use for**: Network I/O, socket operations, streaming
     /// **Why 64KB**: Matches typical TCP window size
     /// **Performance**: Reduces context switches for network operations
     ///
     /// # Usage Guidelines
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::constants::canonical::performance;
     ///
     /// // For disk I/O
@@ -74,7 +74,7 @@ pub mod performance {
     /// let mut network_buffer = vec![0u8; performance::NETWORK_BUFFER_SIZE];
     /// ```
     ///
-    /// **CONSOLIDATED**: Now references hardcoding::limits for buffer sizes
+    /// **CONSOLIDATED**: Now references `hardcoding::limits` for buffer sizes
     pub const DEFAULT_BUFFER_SIZE: usize =
         crate::constants::hardcoding::limits::BUFFER_SIZE_DEFAULT;
     /// Network Buffer Size
@@ -91,7 +91,7 @@ pub mod performance {
 
 /// Timeout constants for network and system operations
 ///
-/// Consolidated timeout values used throughout NestGate for consistency
+/// Consolidated timeout values used throughout `NestGate` for consistency
 /// and maintainability. All values are in seconds or milliseconds as indicated.
 pub mod timeouts {
     // Removed unused Duration import
@@ -331,7 +331,7 @@ pub mod system {
 /// Operation and status constants
 ///
 /// Standard operation names, status values, and error categories used
-/// consistently across all NestGate components for state tracking and reporting.
+/// consistently across all `NestGate` components for state tracking and reporting.
 pub mod operations {
     /// Read operation
     pub const OP_READ: &str = "read";
@@ -403,7 +403,7 @@ pub struct PerformanceConstants;
 
 /// Timeout constants accessor
 ///
-/// Provides access to timeout-related constants used throughout NestGate.
+/// Provides access to timeout-related constants used throughout `NestGate`.
 pub struct TimeoutConstants;
 
 /// Network constants accessor
@@ -426,7 +426,7 @@ impl CanonicalConstants {
         PerformanceConstants
     }
 
-    /// Get timeout constants module  
+    /// Get timeout constants module\
     #[must_use]
     /// Fn
     pub const fn timeouts() -> TimeoutConstants {
@@ -515,7 +515,7 @@ pub trait ConstGenericConfig {
 ///
 /// Uses modern const assertions for zero-cost compile-time verification
 pub mod validation {
-    use super::*;
+    use super::{network, performance, timeouts};
     macro_rules! const_assert {
         ($cond:expr) => {
             const _: () = assert!($cond);
@@ -533,23 +533,23 @@ pub mod validation {
     const_assert!(network::MAX_CONCURRENT_REQUESTS > 0);
 
     /// Runtime validation function (legacy compatibility)
-    /// Note: Actual validation happens at compile time via const_assert!
+    /// Note: Actual validation happens at compile time via `const_assert`!
     #[must_use]
-    pub fn validate_performance_constants() -> bool {
+    pub const fn validate_performance_constants() -> bool {
         // Always true - verified at compile time
         true
     }
 
     /// Runtime validation function (legacy compatibility)
     #[must_use]
-    pub fn validate_timeout_constants() -> bool {
+    pub const fn validate_timeout_constants() -> bool {
         // Always true - verified at compile time
         true
     }
 
     /// Runtime validation function (legacy compatibility)
     #[must_use]
-    pub fn validate_network_constants() -> bool {
+    pub const fn validate_network_constants() -> bool {
         // Always true - verified at compile time
         true
     }

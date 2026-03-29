@@ -6,7 +6,7 @@ use std::collections::HashMap;
 // Import the configuration module for concurrent-safe access
 use crate::environment_config::EnvironmentConfig;
 
-/// Environment detection and configuration for NestGate
+/// Environment detection and configuration for `NestGate`
 ///
 /// Supports two primary modes:
 /// 1. **Orchestration-Enhanced**: All networking, ports, and service discovery handled by orchestration module
@@ -14,12 +14,11 @@ use crate::environment_config::EnvironmentConfig;
 ///
 /// The system automatically detects the environment and configures itself accordingly.
 /// **CANONICAL MODERNIZATION** - Use canonical service configuration
-// TODO: move ServiceConfig to nestgate-types
-// pub use nestgate_core::canonical_types::service::ServiceConfig;
+// Consolidation: `ServiceConfig` may move to `nestgate-types` alongside other shared service DTOs.
 pub use crate::config::canonical_primary::service::ServiceConfig;
 
-/// Operating mode for NestGate
-#[derive(Debug, Clone, PartialEq)]
+/// Operating mode for `NestGate`
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Operationmode
 pub enum OperationMode {
     /// Standalone mode: Direct networking, self-contained
@@ -30,7 +29,7 @@ pub enum OperationMode {
 
 /// Environment detection and configuration
 ///
-/// **MODERNIZED**: Simplified structure - removed deprecated NetworkConfig
+/// **MODERNIZED**: Simplified structure - removed deprecated `NetworkConfig`
 /// For comprehensive network configuration, use `config::canonical_primary::domains::network::CanonicalNetworkConfig`
 #[derive(Debug, Clone)]
 /// Environment
@@ -59,6 +58,7 @@ impl Default for Environment {
 
 impl Environment {
     /// Detect the current environment and configure accordingly
+    #[must_use]
     pub fn detect() -> Self {
         let mode = Self::detect_mode();
         let service = Self::detect_service_config();
@@ -90,8 +90,7 @@ impl Environment {
     /// Detect service configuration
     fn detect_service_config() -> ServiceConfig {
         use crate::config::canonical_primary::service::ServiceType;
-        // TODO: move ServiceId / ServiceState / full canonical service types to nestgate-types
-        // use nestgate_core::canonical_types::service::{ServiceId, ServiceState, ServiceType};
+        // Consolidation: ServiceId / ServiceState and related enums may live in `nestgate-types`.
         let config = EnvironmentConfig::from_env();
 
         let mut metadata = std::collections::HashMap::new();
@@ -106,7 +105,7 @@ impl Environment {
     }
 
     /// Detect network settings based on mode
-    /// Returns: (bind_interface, port, service_name, discovery_enabled)
+    /// Returns: (`bind_interface`, port, `service_name`, `discovery_enabled`)
     fn detect_network_settings(mode: &OperationMode) -> (String, u16, String, bool) {
         let config = EnvironmentConfig::from_env();
         let orchestration_mode = matches!(mode, OperationMode::OrchestrationEnhanced);

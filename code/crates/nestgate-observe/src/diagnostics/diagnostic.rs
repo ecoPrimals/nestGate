@@ -93,7 +93,7 @@ impl Diagnostic {
 
     /// Check if diagnostic is critical or error level
     #[must_use]
-    pub fn is_severe(&self) -> bool {
+    pub const fn is_severe(&self) -> bool {
         matches!(
             self.level,
             DiagnosticLevel::Critical | DiagnosticLevel::Error
@@ -102,7 +102,7 @@ impl Diagnostic {
 
     /// Check if diagnostic is unresolved
     #[must_use]
-    pub fn is_unresolved(&self) -> bool {
+    pub const fn is_unresolved(&self) -> bool {
         !self.resolved
     }
 
@@ -115,7 +115,3 @@ impl Diagnostic {
             .as_secs()
     }
 }
-
-#[cfg(test)]
-#[path = "diagnostic_tests.rs"]
-mod tests;

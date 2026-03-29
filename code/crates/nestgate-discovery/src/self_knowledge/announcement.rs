@@ -49,15 +49,18 @@ impl From<&SelfKnowledge> for Announcement {
 
 impl Announcement {
     /// Create announcement from self-knowledge
+    #[must_use]
     pub fn from_knowledge(knowledge: &SelfKnowledge) -> Self {
         Self::from(knowledge)
     }
     /// Create announcement with custom TTL
-    pub fn with_ttl(mut self, ttl_seconds: u64) -> Self {
+    #[must_use]
+    pub const fn with_ttl(mut self, ttl_seconds: u64) -> Self {
         self.ttl_seconds = ttl_seconds;
         self
     }
     /// Check if this announcement has expired
+    #[must_use]
     pub fn is_expired(&self) -> bool {
         match SystemTime::now().duration_since(self.announced_at) {
             Ok(elapsed) => elapsed.as_secs() > self.ttl_seconds,

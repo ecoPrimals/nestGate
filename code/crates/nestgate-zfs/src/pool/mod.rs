@@ -8,7 +8,7 @@
 //! # Organization
 //!
 //! - `types` - Type definitions for pools, states, health, and capacity
-//! - `manager` - ZfsPoolManager implementation for pool operations
+//! - `manager` - `ZfsPoolManager` implementation for pool operations
 //! - `tests` - Comprehensive test suite
 //!
 //! # Example

@@ -37,7 +37,7 @@ pub struct TierScoring {
 impl TierScoring {
     /// Create a new tier scoring instance
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             hot_score: 0.0,
             warm_score: 0.0,
@@ -108,8 +108,7 @@ pub fn evaluate_tier_by_intelligent_rules(
     let days_since_access = metadata
         .last_accessed
         .and_then(|last| SystemTime::now().duration_since(last).ok())
-        .map(|d| d.as_secs() / (24 * 3600))
-        .unwrap_or(365);
+        .map_or(365, |d| d.as_secs() / (24 * 3600));
 
     match days_since_access {
         0..=1 => tier_score.add_hot_weight(0.5, "Accessed within 24 hours"),
@@ -157,7 +156,7 @@ pub fn evaluate_tier_by_intelligent_rules(
     }
 
     // 6. Performance policy evaluation
-    for (policy_id, policy) in policies.iter() {
+    for (policy_id, policy) in policies {
         if policy.enabled && dataset_matches_policy_pattern(dataset_name, policy) {
             debug!("Dataset {} matches policy {}", dataset_name, policy_id);
 
@@ -216,10 +215,10 @@ fn dataset_matches_policy_pattern(dataset_name: &str, policy: &AutomationPolicy)
         // Add regex pattern matching
         if tier_rule.condition.starts_with("regex:") {
             let pattern = &tier_rule.condition[6..];
-            if let Ok(regex) = regex::Regex::new(pattern) {
-                if regex.is_match(dataset_name) {
-                    return true;
-                }
+            if let Ok(regex) = regex::Regex::new(pattern)
+                && regex.is_match(dataset_name)
+            {
+                return true;
             }
         }
     }

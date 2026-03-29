@@ -19,6 +19,7 @@ chrono = { workspace = true }
 bincode = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
+gethostname = { workspace = true }
 jsonrpsee = { workspace = true }
 pin-project = { workspace = true }
 serde = { workspace = true }
@@ -32,6 +33,8 @@ uuid = { workspace = true }
 uzers = { workspace = true }
 
 [dev-dependencies]
+nestgate-platform = { path = "../nestgate-platform" }
+
 fastrand = { workspace = true }
 tokio-test = { workspace = true }
 tempfile = { workspace = true }

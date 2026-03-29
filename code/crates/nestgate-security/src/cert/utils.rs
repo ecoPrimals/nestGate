@@ -108,14 +108,14 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
         // Simplified issuer parsing
         // Real implementation would parse X.509 ASN.1 structure
 
-        if cert_pem.contains("Issuer:") {
-            if let Some(start) = cert_pem.find("Issuer:") {
-                let remaining = &cert_pem[start + 7..];
-                if let Some(end) = remaining.find('\n') {
-                    return Ok(remaining[..end].trim().to_string());
-                }
-                return Ok(remaining.trim().to_string());
+        if cert_pem.contains("Issuer:")
+            && let Some(start) = cert_pem.find("Issuer:")
+        {
+            let remaining = &cert_pem[start + 7..];
+            if let Some(end) = remaining.find('\n') {
+                return Ok(remaining[..end].trim().to_string());
             }
+            return Ok(remaining.trim().to_string());
         }
 
         Ok("Unknown Issuer".to_string())
@@ -257,7 +257,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 /// **Note**: This is developmental and should not be used in production yet.
 #[cfg(feature = "dev-stubs")]
 pub mod modern {
-    use super::*;
+    use super::{Certificate, HashMap, Result, SystemTime, format_system_time, parse_system_time};
 
     /// Modern certificate generation with automatic endpoint discovery
     ///
@@ -270,8 +270,11 @@ pub mod modern {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn generate_certificate(service_name: &str) -> Result<Certificate> {
-        // TODO(nestgate-security): Restore `nestgate_discovery::universal_primal_discovery::StandaloneNetworkAdapter`
-        // when dev-stubs are re-exported from nestgate-discovery.
+        // Integration: use `nestgate_discovery::universal_primal_discovery` network adapters when
+        // dev-stubs expose `StandaloneNetworkAdapter` for real endpoint discovery.
+        tracing::debug!(
+            "feature pending: StandaloneNetworkAdapter-based endpoint discovery for dev certificates"
+        );
         let _ = service_name;
 
         // Create basic network configuration for cert service
@@ -342,30 +345,30 @@ pub mod modern {
 
         // 1. Check certificate expiration
         let _now = chrono::Utc::now();
-        if let Ok(not_after_time) = parse_system_time(&cert.not_after) {
-            if not_after_time < SystemTime::now() {
-                tracing::warn!("Certificate expired at: {:?}", cert.not_after);
-                return Ok(false);
-            }
+        if let Ok(not_after_time) = parse_system_time(&cert.not_after)
+            && not_after_time < SystemTime::now()
+        {
+            tracing::warn!("Certificate expired at: {:?}", cert.not_after);
+            return Ok(false);
         }
 
-        if let Ok(not_before_time) = parse_system_time(&cert.not_before) {
-            if not_before_time > SystemTime::now() {
-                tracing::warn!("Certificate not yet valid until: {:?}", cert.not_before);
-                return Ok(false);
-            }
+        if let Ok(not_before_time) = parse_system_time(&cert.not_before)
+            && not_before_time > SystemTime::now()
+        {
+            tracing::warn!("Certificate not yet valid until: {:?}", cert.not_before);
+            return Ok(false);
         }
 
         // 2. Validate required capabilities
-        if let Some(required_subject) = capabilities.get("required_subject") {
-            if !cert.principal.contains(required_subject) {
-                tracing::warn!(
-                    "Certificate subject '{}' does not match required '{}'",
-                    cert.principal,
-                    required_subject
-                );
-                return Ok(false);
-            }
+        if let Some(required_subject) = capabilities.get("required_subject")
+            && !cert.principal.contains(required_subject)
+        {
+            tracing::warn!(
+                "Certificate subject '{}' does not match required '{}'",
+                cert.principal,
+                required_subject
+            );
+            return Ok(false);
         }
 
         // 3. Check for required extensions (SANs, key usage, etc.) via metadata
@@ -389,8 +392,7 @@ pub mod modern {
         // 5. Check certificate chain if required
         if capabilities
             .get("require_ca_validation")
-            .map(|v| v == "true")
-            .unwrap_or(false)
+            .is_some_and(|v| v == "true")
         {
             // In production, this would validate against trusted CA roots
             tracing::debug!("CA validation required but simplified for development");
@@ -416,7 +418,7 @@ pub mod modern {
             Self {
                 principal: "nestgate".to_string(),
                 endpoints: vec![],
-                // TODO(nestgate-security): Wire `nestgate_core::safe_operations::safe_parse_ip` when available.
+                // **Integration:** Prefer `nestgate_core::safe_operations::safe_parse_ip` for shared validation when this crate can depend on core.
                 bind_endpoint: nestgate_config::constants::canonical_defaults::network::LOCALHOST
                     .parse()
                     .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
@@ -428,6 +430,7 @@ pub mod modern {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn test_generate_self_signed() {
@@ -526,5 +529,36 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
         assert!(summary.contains(&cert.issuer));
         assert!(summary.contains(&cert.serial_number));
         assert!(summary.contains("Valid: true"));
+    }
+
+    #[test]
+    fn parse_system_time_rejects_invalid() {
+        assert!(parse_system_time("not-a-number").is_err());
+    }
+
+    #[test]
+    fn format_system_time_before_epoch_falls_back() {
+        let t = SystemTime::UNIX_EPOCH - Duration::from_secs(1);
+        assert_eq!(format_system_time(t), "0");
+    }
+
+    #[test]
+    fn calculate_fingerprint_stable_for_same_bytes() {
+        let fp1 = CertUtils::calculate_fingerprint(b"abc");
+        let fp2 = CertUtils::calculate_fingerprint(b"abc");
+        assert_eq!(fp1, fp2);
+        assert!(fp1.starts_with("sha256:"));
+    }
+
+    #[test]
+    fn parse_subject_cn_with_comma() {
+        let pem = "CN=MyServer, O=Test";
+        assert_eq!(CertUtils::parse_subject(pem).unwrap(), "MyServer");
+    }
+
+    #[test]
+    fn parse_issuer_line() {
+        let pem = "Issuer: Test CA Org\n-----";
+        assert_eq!(CertUtils::parse_issuer(pem).unwrap(), "Test CA Org");
     }
 }

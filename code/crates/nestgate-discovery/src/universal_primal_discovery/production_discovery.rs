@@ -75,7 +75,7 @@ use super::production_discovery_config::ProductionDiscoveryConfig;
     since = "0.12.0",
     note = "Use CapabilityAwareDiscovery from production_capability_bridge instead"
 )]
-/// Configuration for ServiceDiscovery
+/// Configuration for `ServiceDiscovery`
 pub struct ServiceDiscoveryConfig {
     /// Service endpoints discovered from environment/config
     pub services: HashMap<String, ServiceEndpoint>,
@@ -208,7 +208,7 @@ impl ServiceDiscoveryConfig {
 
     /// Discover services from environment variables
     ///
-    /// Looks for patterns like: API_HOST, API_PORT, API_BIND
+    /// Looks for patterns like: `API_HOST`, `API_PORT`, `API_BIND`
     fn discover_services_from_env(services: &mut HashMap<String, ServiceEndpoint>) -> Result<()> {
         let service_names = [
             "API",
@@ -231,12 +231,10 @@ impl ServiceDiscoveryConfig {
             let name_lower = service_name.to_lowercase();
 
             // Discover host (via config)
-            let host = config
-                .get_service_host(service_name)
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| {
-                    nestgate_config::constants::canonical_defaults::network::LOCALHOST.to_string()
-                });
+            let host = config.get_service_host(service_name).map_or_else(
+                || nestgate_config::constants::canonical_defaults::network::LOCALHOST.to_string(),
+                std::string::ToString::to_string,
+            );
 
             // Discover port (via config, with safe fallback)
             let port = config
@@ -317,6 +315,7 @@ impl ServiceDiscoveryConfig {
     }
 
     /// Get default port for a service (used when env var not set)
+    #[must_use]
     pub fn default_port_for_service(service_name: &str) -> u16 {
         use nestgate_config::constants::canonical_defaults::network;
         match service_name {
@@ -329,6 +328,7 @@ impl ServiceDiscoveryConfig {
     }
 
     /// Get default bind address for a service
+    #[must_use]
     pub fn default_bind_for_service(service_name: &str) -> IpAddr {
         match service_name {
             "api" | "web" => IpAddr::V4(Ipv4Addr::UNSPECIFIED), // 0.0.0.0 for external access
@@ -474,13 +474,13 @@ impl ProductionServiceDiscovery {
 
     /// Get all discovered services
     #[must_use]
-    pub fn all_services(&self) -> &HashMap<String, ServiceEndpoint> {
+    pub const fn all_services(&self) -> &HashMap<String, ServiceEndpoint> {
         &self.config.services
     }
 
     /// Get discovery configuration
     #[must_use]
-    pub fn config(&self) -> &ServiceDiscoveryConfig {
+    pub const fn config(&self) -> &ServiceDiscoveryConfig {
         &self.config
     }
 }

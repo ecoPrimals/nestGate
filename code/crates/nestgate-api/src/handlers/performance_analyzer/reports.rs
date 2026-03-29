@@ -140,7 +140,12 @@ impl ReportGenerator {
             report.overall_score,
             report.status,
             report.summary,
-            report.recommendations.iter().map(|r| format!("- {r}")).collect::<Vec<_>>().join("\n")
+            report
+                .recommendations
+                .iter()
+                .map(|r| format!("- {r}"))
+                .collect::<Vec<_>>()
+                .join("\n")
         )
     }
 
@@ -148,9 +153,7 @@ impl ReportGenerator {
     fn generate_html_report(&self, report: &PerformanceReport) -> String {
         format!(
             "<html><head><title>Performance Report</title></head><body><h1>Performance Report</h1><p><strong>Score:</strong> {:.1}/100</p><p><strong>Status:</strong> {:?}</p><p>{}</p></body></html>",
-            report.overall_score,
-            report.status,
-            report.summary
+            report.overall_score, report.status, report.summary
         )
     }
 

@@ -17,7 +17,7 @@
 ///
 /// **TESTABLE**: Can verify exact arithmetic with boundary conditions
 #[must_use]
-pub fn needs_eviction(current_size: u64, new_item_size: u64, max_size: u64) -> bool {
+pub const fn needs_eviction(current_size: u64, new_item_size: u64, max_size: u64) -> bool {
     if max_size == 0 {
         return false; // No size limit
     }
@@ -43,7 +43,7 @@ pub fn calculate_total_cache_size(item_sizes: &[u64]) -> u64 {
 /// **PURE FUNCTION**: Safe subtraction with minimum eviction amount
 /// **TESTABLE**: Can verify exact eviction calculations
 #[must_use]
-pub fn calculate_eviction_size(current_size: u64, new_item_size: u64, max_size: u64) -> u64 {
+pub const fn calculate_eviction_size(current_size: u64, new_item_size: u64, max_size: u64) -> u64 {
     if current_size + new_item_size <= max_size {
         return 0; // No eviction needed
     }
@@ -72,21 +72,21 @@ pub fn calculate_hit_ratio(hits: u64, misses: u64) -> f64 {
 /// **PURE FUNCTION**: Simple addition with overflow protection
 /// **TESTABLE**: Can verify size updates with boundary conditions
 #[must_use]
-pub fn add_to_cache_size(current_size: u64, item_size: u64) -> u64 {
+pub const fn add_to_cache_size(current_size: u64, item_size: u64) -> u64 {
     current_size.saturating_add(item_size)
 }
 /// Update cache size after removing an item
 /// **PURE FUNCTION**: Safe subtraction preventing underflow
 /// **TESTABLE**: Can verify size updates with underflow protection
 #[must_use]
-pub fn subtract_from_cache_size(current_size: u64, item_size: u64) -> u64 {
+pub const fn subtract_from_cache_size(current_size: u64, item_size: u64) -> u64 {
     current_size.saturating_sub(item_size)
 }
 /// Check if cache has reached maximum size threshold
 /// **PURE FUNCTION**: Simple comparison logic
 /// **TESTABLE**: Can verify boundary conditions precisely
 #[must_use]
-pub fn is_at_max_size(current_size: u64, max_size: u64) -> bool {
+pub const fn is_at_max_size(current_size: u64, max_size: u64) -> bool {
     if max_size == 0 {
         return false; // No size limit
     }

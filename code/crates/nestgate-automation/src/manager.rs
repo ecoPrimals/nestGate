@@ -12,8 +12,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use nestgate_core::unified_enums::StorageTier;
 use nestgate_core::Result;
+use nestgate_core::unified_enums::StorageTier;
 
 // Type alias to reduce complexity
 type PerformanceCache = Arc<RwLock<HashMap<String, DatasetPerformance>>>;
@@ -37,7 +37,7 @@ pub struct DatasetPerformance {
 }
 /// Intelligent dataset manager with canonical implementation
 #[derive(Debug)]
-/// Manager for IntelligentDataset operations
+/// Manager for `IntelligentDataset` operations
 pub struct IntelligentDatasetManager {
     #[allow(dead_code)]
     config: AutomationConfig,
@@ -56,7 +56,7 @@ impl IntelligentDatasetManager {
     }
 
     /// Start the intelligent automation system
-    pub fn start(&mut self) -> Result<()> {
+    pub const fn start(&mut self) -> Result<()> {
         // Simplified canonical implementation
         Ok(())
     }
@@ -82,7 +82,7 @@ impl IntelligentDatasetManager {
             accesses_last_week: 70,
             accesses_last_month: 300,
             size_bytes: analysis.size_bytes,
-            file_type: analysis.file_type.clone(),
+            file_type: analysis.file_type,
             recommendation_reason: "Based on file size and access patterns".to_string(),
         })
     }

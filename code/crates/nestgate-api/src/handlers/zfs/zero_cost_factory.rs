@@ -19,7 +19,7 @@ use crate::dev_stubs::zfs::ZeroCostZfsOperations;
 /// High-performance ZFS service implementation with zero-cost abstractions.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Inner field used for ZFS operations
-/// Service implementation for ZeroCostNativeZfs
+/// Service implementation for `ZeroCostNativeZfs`
 pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize> {
     /// ZFS operations interface
     inner: ZeroCostZfsOperations,

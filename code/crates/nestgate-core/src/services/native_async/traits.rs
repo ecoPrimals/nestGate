@@ -371,7 +371,7 @@ pub trait NativeAsyncSecurityService<
 
     /// Validate token - direct async method
     fn validate_token(&self, token: &str)
-        -> impl std::future::Future<Output = Result<bool>> + Send;
+    -> impl std::future::Future<Output = Result<bool>> + Send;
 
     /// Compile-time constants
     /// Returns the maximum number of sessions.

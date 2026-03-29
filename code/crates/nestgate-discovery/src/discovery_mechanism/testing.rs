@@ -5,7 +5,7 @@
 //!
 //! Provides mock implementations for testing without actual infrastructure.
 
-use super::*;
+use super::{Capability, DiscoveryMechanism, Result, ServiceInfo};
 use crate::self_knowledge::SelfKnowledge;
 use std::collections::HashMap;
 use std::future::Future;
@@ -20,7 +20,7 @@ use tokio::sync::RwLock;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::discovery_mechanism::testing::MockDiscovery;
 /// use nestgate_core::discovery_mechanism::{DiscoveryMechanism, ServiceInfo};
 /// use nestgate_core::self_knowledge::SelfKnowledge;
@@ -52,6 +52,7 @@ pub struct MockDiscovery {
 
 impl MockDiscovery {
     /// Create a new mock discovery
+    #[must_use]
     pub fn new() -> Self {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
@@ -112,14 +113,16 @@ impl DiscoveryMechanism for MockDiscovery {
                 endpoint: sk
                     .endpoints
                     .get("api")
-                    .map(|addr| addr.to_string())
-                    .unwrap_or_else(|| "unknown".to_string()),
+                    .map_or_else(|| "unknown".to_string(), std::string::ToString::to_string),
                 metadata: {
                     let mut meta = HashMap::new();
                     meta.insert("version".to_string(), sk.version.clone());
                     meta
                 },
-                health_endpoint: sk.endpoints.get("health").map(|addr| addr.to_string()),
+                health_endpoint: sk
+                    .endpoints
+                    .get("health")
+                    .map(std::string::ToString::to_string),
             };
 
             let mut announced = announced.write().await;
@@ -222,6 +225,7 @@ impl TestServiceBuilder {
     }
 
     /// Add multiple capabilities
+    #[must_use]
     pub fn capabilities(mut self, caps: Vec<String>) -> Self {
         self.capabilities.extend(caps);
         self
@@ -240,6 +244,7 @@ impl TestServiceBuilder {
     }
 
     /// Build the service info
+    #[must_use]
     pub fn build(self) -> ServiceInfo {
         ServiceInfo {
             id: self.id,

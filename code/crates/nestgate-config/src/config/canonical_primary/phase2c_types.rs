@@ -3,6 +3,7 @@
 
 // **PHASE 2C SUPPORTING TYPES**
 //! Supporting types and enums for the Phase 2C configuration unification enhancements.
+//!
 //! Phase2c Types functionality and utilities.
 //! This module contains the core type definitions used throughout the Phase 2C
 //! configuration system, including environment types, tier definitions, and
@@ -42,10 +43,10 @@ impl std::fmt::Display for Environment {
     /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Environment::Development => write!(f, "development"),
-            Environment::Staging => write!(f, "staging"),
-            Environment::Production => write!(f, "production"),
-            Environment::Testing => write!(f, "testing"),
+            Self::Development => write!(f, "development"),
+            Self::Staging => write!(f, "staging"),
+            Self::Production => write!(f, "production"),
+            Self::Testing => write!(f, "testing"),
         }
     }
 }
@@ -57,10 +58,10 @@ impl std::str::FromStr for Environment {
     /// Creates from Str
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "development" | "dev" => Ok(Environment::Development),
-            "staging" | "stage" => Ok(Environment::Staging),
-            "production" | "prod" => Ok(Environment::Production),
-            "testing" | "test" => Ok(Environment::Testing),
+            "development" | "dev" => Ok(Self::Development),
+            "staging" | "stage" => Ok(Self::Staging),
+            "production" | "prod" => Ok(Self::Production),
+            "testing" | "test" => Ok(Self::Testing),
             _ => Err(format!("Unknown environment: {s}")),
         }
     }
@@ -218,7 +219,7 @@ pub enum ConfigSource {
     Remote(String),
 
     /// Merged from multiple sources
-    Merged(Vec<ConfigSource>),
+    Merged(Vec<Self>),
 }
 // ==================== FEATURE FLAGS ====================
 
@@ -344,35 +345,35 @@ pub enum WarningSeverity {
 impl Environment {
     /// Check if this is a production-like environment
     #[must_use]
-    pub fn is_production_like(&self) -> bool {
+    pub const fn is_production_like(&self) -> bool {
         matches!(self, Self::Production | Self::Staging)
     }
 
     /// Check if this is a development-like environment
     #[must_use]
-    pub fn is_development_like(&self) -> bool {
-        matches!(self, Environment::Development | Environment::Testing)
+    pub const fn is_development_like(&self) -> bool {
+        matches!(self, Self::Development | Self::Testing)
     }
 
     /// Get default port for this environment
     #[must_use]
-    pub fn default_port(&self) -> u16 {
+    pub const fn default_port(&self) -> u16 {
         match self {
-            Environment::Production => 443,
-            Environment::Staging => 8443,
-            Environment::Development => 8080,
-            Environment::Testing => 3000,
+            Self::Production => 443,
+            Self::Staging => 8443,
+            Self::Development => 8080,
+            Self::Testing => 3000,
         }
     }
 
     /// Get default optimization level for this environment
     #[must_use]
-    pub fn default_optimization(&self) -> OptimizationLevel {
+    pub const fn default_optimization(&self) -> OptimizationLevel {
         match self {
-            Environment::Production => OptimizationLevel::Performance,
-            Environment::Staging => OptimizationLevel::Balanced,
-            Environment::Development => OptimizationLevel::Debug,
-            Environment::Testing => OptimizationLevel::Debug,
+            Self::Production => OptimizationLevel::Performance,
+            Self::Staging => OptimizationLevel::Balanced,
+            Self::Development => OptimizationLevel::Debug,
+            Self::Testing => OptimizationLevel::Debug,
         }
     }
 }
@@ -436,5 +437,14 @@ mod tests {
         let metadata = ConfigMetadata::default();
         assert_eq!(metadata.version, "2.0.0");
         assert_eq!(metadata.source, ConfigSource::Default);
+    }
+
+    #[test]
+    fn round5_environment_display_default_serde() {
+        assert_eq!(Environment::default(), Environment::Development);
+        assert_eq!(Environment::Production.to_string(), "production");
+        let json = serde_json::to_string(&Environment::Staging).unwrap();
+        let back: Environment = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, Environment::Staging);
     }
 }

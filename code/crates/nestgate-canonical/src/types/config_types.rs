@@ -87,7 +87,7 @@ pub struct StorageConfig {
 
 /// Canonical Security Configuration
 ///
-/// **⚠️ DEPRECATED**: This config has been consolidated into canonical_primary
+/// **⚠️ DEPRECATED**: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore

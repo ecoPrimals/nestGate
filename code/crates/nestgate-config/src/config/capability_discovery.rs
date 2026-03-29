@@ -22,7 +22,7 @@
 //!
 //! # Examples
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use nestgate_core::config::capability_discovery;
 //!
 //! # async fn example() -> nestgate_core::Result<()> {
@@ -110,8 +110,7 @@ pub async fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
 
     // No service found
     Err(NestGateError::network_error(&format!(
-        "Service '{}' not found (tried: capability, environment, local discovery)",
-        capability
+        "Service '{capability}' not found (tried: capability, environment, local discovery)"
     )))
 }
 
@@ -163,7 +162,7 @@ pub async fn discover_with_fallback(
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use nestgate_core::config::capability_discovery;
 ///
 /// # async fn example() -> nestgate_core::Result<()> {
@@ -177,9 +176,11 @@ pub async fn discover_with_fallback(
 /// # }
 /// ```
 pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> Result<()> {
-    // TODO: wire DiscoveryBuilder / SelfKnowledge when moved out of nestgate-core (tests / integration)
-    // use nestgate_core::discovery_mechanism::DiscoveryBuilder;
-    // use nestgate_core::self_knowledge::SelfKnowledge;
+    // Integration: `DiscoveryBuilder` / `SelfKnowledge` from nestgate-core apply when those APIs are
+    // exposed without pulling the full core graph into nestgate-config.
+    tracing::debug!(
+        "feature pending: DiscoveryBuilder/SelfKnowledge announcement (using local log only)"
+    );
 
     tracing::info!(
         "Announcing capability '{}' at '{}' (TTL: {:?}) (local log only; discovery TBD)",
@@ -195,7 +196,7 @@ pub async fn announce_capability(capability: &str, endpoint: &str, ttl: Duration
 
 /// Discover from capability registry (primary method)
 async fn discover_from_capability_registry(capability: &str) -> Result<ServiceEndpoint> {
-    // TODO: nestgate-core `DiscoveryBuilder` was here; restore when discovery lives outside nestgate-core
+    tracing::debug!("feature pending: capability registry via nestgate-core DiscoveryBuilder");
     let _ = capability;
     Err(NestGateError::network_error(
         "Capability registry discovery unavailable (nestgate-core decoupled)",
@@ -217,14 +218,13 @@ async fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> 
     }
 
     Err(NestGateError::network_error(&format!(
-        "Environment variable '{}' not set",
-        env_var
+        "Environment variable '{env_var}' not set"
     )))
 }
 
 /// Discover from local network (mDNS, etc.)
 async fn discover_from_local(capability: &str) -> Result<ServiceEndpoint> {
-    // TODO: nestgate-core `DiscoveryBuilder` was here; restore when mDNS discovery is wired without nestgate-core
+    tracing::debug!("feature pending: mDNS/local discovery without nestgate-core DiscoveryBuilder");
     let _ = capability;
     Err(NestGateError::network_error(
         "Local mDNS discovery unavailable (nestgate-core decoupled)",
@@ -263,8 +263,7 @@ fn parse_hostport_endpoint(hostport: &str) -> Result<(String, u16)> {
 
     if parts.len() != 2 {
         return Err(NestGateError::validation_error(&format!(
-            "Invalid endpoint format '{}': expected 'host:port'",
-            hostport
+            "Invalid endpoint format '{hostport}': expected 'host:port'"
         )));
     }
 

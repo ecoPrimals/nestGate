@@ -129,9 +129,10 @@ mod zfs_comprehensive_coverage {
     fn test_pool_name_valid() {
         let name = "tank";
         assert!(!name.is_empty());
-        assert!(name
-            .chars()
-            .all(|c| c.is_alphanumeric() || c == '_' || c == '-'));
+        assert!(
+            name.chars()
+                .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+        );
     }
 
     #[test]

@@ -8,8 +8,8 @@
 
 // HTTP removed - use Songbird via capability discovery for external HTTP
 // use crate::http_client_stub as reqwest;
-use nestgate_types::error::{NestGateError, Result};
 use crate::primal_discovery::PrimalDiscovery;
+use nestgate_types::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -84,11 +84,13 @@ struct EndpointCache {
 
 impl DiscoveryOrEnv {
     /// Create new migration helper
+    #[must_use]
     pub fn new(discovery: Arc<PrimalDiscovery>) -> Self {
         Self::with_config(discovery, MigrationConfig::default())
     }
 
     /// Create with custom configuration
+    #[must_use]
     pub fn with_config(discovery: Arc<PrimalDiscovery>, config: MigrationConfig) -> Self {
         Self {
             discovery,
@@ -104,12 +106,12 @@ impl DiscoveryOrEnv {
     /// # Arguments
     ///
     /// * `capability` - Capability to discover (e.g., "security", "storage")
-    /// * `env_var` - Environment variable name (e.g., "AUTH_SERVICE_PORT")
+    /// * `env_var` - Environment variable name (e.g., "`AUTH_SERVICE_PORT`")
     /// * `default_port` - Default port for development
     ///
     /// # Returns
     ///
-    /// Full endpoint URL (e.g., "http://192.168.1.100:8080")
+    /// Full endpoint URL (e.g., "<http://192.168.1.100:8080>")
     pub async fn endpoint_for(
         &self,
         capability: &str,
@@ -144,13 +146,13 @@ impl DiscoveryOrEnv {
             }
             None => Err(NestGateError::configuration_error(
                 "endpoint_resolution",
-                &format!("Could not resolve endpoint for capability: {}", capability),
+                &format!("Could not resolve endpoint for capability: {capability}"),
             )),
         }
     }
 
     /// Try discovery (currently returns None, reserved for async integration)
-    fn try_discovery_sync(&self, _capability: &str) -> Option<(String, EndpointSource)> {
+    const fn try_discovery_sync(&self, _capability: &str) -> Option<(String, EndpointSource)> {
         // Reserved for future async discovery integration
         // Currently using environment and defaults only
         None
@@ -161,7 +163,7 @@ impl DiscoveryOrEnv {
         std::env::var(env_var).ok().and_then(|val| {
             // Try as port first
             if let Ok(port) = val.parse::<u16>() {
-                let url = format!("http://localhost:{}", port);
+                let url = format!("http://localhost:{port}");
                 debug!("Found {} in environment: {}", env_var, url);
                 Some((url, EndpointSource::Environment))
             } else if val.starts_with("http://") || val.starts_with("https://") {
@@ -178,7 +180,7 @@ impl DiscoveryOrEnv {
     /// Try default (development fallback)
     fn try_default(&self, port: u16) -> Option<(String, EndpointSource)> {
         if self.config.allow_defaults {
-            let url = format!("http://localhost:{}", port);
+            let url = format!("http://localhost:{port}");
             warn!("Using default endpoint: {}", url);
             Some((url, EndpointSource::Default))
         } else {
@@ -250,7 +252,8 @@ mod tests {
     #[tokio::test]
     async fn test_environment_fallback() {
         let orig = std::env::var("TEST_SERVICE_PORT").ok();
-        std::env::set_var("TEST_SERVICE_PORT", "7777");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("TEST_SERVICE_PORT", "7777");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -261,8 +264,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("TEST_SERVICE_PORT", v),
-            None => std::env::remove_var("TEST_SERVICE_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("TEST_SERVICE_PORT", v),
+            None => nestgate_platform::env_process::remove_var("TEST_SERVICE_PORT"),
         }
         assert_eq!(endpoint, "http://localhost:7777");
     }
@@ -270,7 +273,8 @@ mod tests {
     #[tokio::test]
     async fn test_default_fallback() {
         let orig = std::env::var("NONEXISTENT_PORT").ok();
-        std::env::remove_var("NONEXISTENT_PORT");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::remove_var("NONEXISTENT_PORT");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -281,7 +285,7 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("NONEXISTENT_PORT", v),
+            Some(v) => nestgate_platform::env_process::set_var("NONEXISTENT_PORT", v),
             None => {}
         }
         assert_eq!(endpoint, "http://localhost:6666");
@@ -290,7 +294,8 @@ mod tests {
     #[tokio::test]
     async fn test_cache_invalidation() {
         let orig = std::env::var("TEST_PORT").ok();
-        std::env::set_var("TEST_PORT", "5555");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("TEST_PORT", "5555");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -300,7 +305,8 @@ mod tests {
             .await
             .unwrap();
 
-        std::env::set_var("TEST_PORT", "3333");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("TEST_PORT", "3333");
 
         let endpoint2 = helper
             .endpoint_for("test", "TEST_PORT", 4444)
@@ -315,8 +321,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("TEST_PORT", v),
-            None => std::env::remove_var("TEST_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("TEST_PORT", v),
+            None => nestgate_platform::env_process::remove_var("TEST_PORT"),
         }
         assert_eq!(endpoint1, endpoint2);
         assert_eq!(endpoint3, "http://localhost:3333");
@@ -343,7 +349,8 @@ mod tests {
     #[tokio::test]
     async fn test_invalid_port_in_environment_falls_back_to_default() {
         let orig = std::env::var("INVALID_PORT").ok();
-        std::env::set_var("INVALID_PORT", "99999");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("INVALID_PORT", "99999");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -354,8 +361,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("INVALID_PORT", v),
-            None => std::env::remove_var("INVALID_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("INVALID_PORT", v),
+            None => nestgate_platform::env_process::remove_var("INVALID_PORT"),
         }
         assert_eq!(endpoint, "http://localhost:8080");
     }
@@ -363,7 +370,8 @@ mod tests {
     #[tokio::test]
     async fn test_full_url_in_environment_variable() {
         let orig = std::env::var("SERVICE_URL").ok();
-        std::env::set_var("SERVICE_URL", "https://api.example.com:8443");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("SERVICE_URL", "https://api.example.com:8443");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -374,8 +382,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("SERVICE_URL", v),
-            None => std::env::remove_var("SERVICE_URL"),
+            Some(v) => nestgate_platform::env_process::set_var("SERVICE_URL", v),
+            None => nestgate_platform::env_process::remove_var("SERVICE_URL"),
         }
         assert_eq!(endpoint, "https://api.example.com:8443");
     }
@@ -383,7 +391,8 @@ mod tests {
     #[tokio::test]
     async fn test_cache_expiration_via_invalidation() {
         let orig = std::env::var("TEST_TTL_PORT").ok();
-        std::env::set_var("TEST_TTL_PORT", "5000");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("TEST_TTL_PORT", "5000");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -393,7 +402,8 @@ mod tests {
             .await
             .unwrap();
 
-        std::env::set_var("TEST_TTL_PORT", "6000");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("TEST_TTL_PORT", "6000");
 
         let endpoint2 = helper
             .endpoint_for("ttl_test", "TEST_TTL_PORT", 9000)
@@ -408,8 +418,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("TEST_TTL_PORT", v),
-            None => std::env::remove_var("TEST_TTL_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("TEST_TTL_PORT", v),
+            None => nestgate_platform::env_process::remove_var("TEST_TTL_PORT"),
         }
         assert_eq!(endpoint1, "http://localhost:5000");
         assert_eq!(endpoint2, "http://localhost:5000");
@@ -419,7 +429,8 @@ mod tests {
     #[tokio::test]
     async fn test_prefer_environment_over_discovery() {
         let orig = std::env::var("PRIORITY_PORT").ok();
-        std::env::set_var("PRIORITY_PORT", "7000");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("PRIORITY_PORT", "7000");
 
         let discovery = create_test_discovery();
         let mut config = MigrationConfig::default();
@@ -432,8 +443,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("PRIORITY_PORT", v),
-            None => std::env::remove_var("PRIORITY_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("PRIORITY_PORT", v),
+            None => nestgate_platform::env_process::remove_var("PRIORITY_PORT"),
         }
         assert_eq!(endpoint, "http://localhost:7000");
     }
@@ -443,9 +454,12 @@ mod tests {
         let orig1 = std::env::var("SERVICE1_PORT").ok();
         let orig2 = std::env::var("SERVICE2_PORT").ok();
         let orig3 = std::env::var("SERVICE3_PORT").ok();
-        std::env::set_var("SERVICE1_PORT", "5001");
-        std::env::set_var("SERVICE2_PORT", "5002");
-        std::env::set_var("SERVICE3_PORT", "5003");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("SERVICE1_PORT", "5001");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("SERVICE2_PORT", "5002");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("SERVICE3_PORT", "5003");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -456,9 +470,12 @@ mod tests {
 
         helper.clear_cache().await;
 
-        std::env::set_var("SERVICE1_PORT", "6001");
-        std::env::set_var("SERVICE2_PORT", "6002");
-        std::env::set_var("SERVICE3_PORT", "6003");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("SERVICE1_PORT", "6001");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("SERVICE2_PORT", "6002");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("SERVICE3_PORT", "6003");
 
         let e1 = helper
             .endpoint_for("service1", "SERVICE1_PORT", 9000)
@@ -474,16 +491,16 @@ mod tests {
             .unwrap();
 
         match orig1 {
-            Some(v) => std::env::set_var("SERVICE1_PORT", v),
-            None => std::env::remove_var("SERVICE1_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("SERVICE1_PORT", v),
+            None => nestgate_platform::env_process::remove_var("SERVICE1_PORT"),
         }
         match orig2 {
-            Some(v) => std::env::set_var("SERVICE2_PORT", v),
-            None => std::env::remove_var("SERVICE2_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("SERVICE2_PORT", v),
+            None => nestgate_platform::env_process::remove_var("SERVICE2_PORT"),
         }
         match orig3 {
-            Some(v) => std::env::set_var("SERVICE3_PORT", v),
-            None => std::env::remove_var("SERVICE3_PORT"),
+            Some(v) => nestgate_platform::env_process::set_var("SERVICE3_PORT", v),
+            None => nestgate_platform::env_process::remove_var("SERVICE3_PORT"),
         }
         assert_eq!(e1, "http://localhost:6001");
         assert_eq!(e2, "http://localhost:6002");
@@ -493,7 +510,8 @@ mod tests {
     #[tokio::test]
     async fn test_empty_environment_variable_falls_back() {
         let orig = std::env::var("EMPTY_VAR").ok();
-        std::env::set_var("EMPTY_VAR", "");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("EMPTY_VAR", "");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -504,8 +522,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("EMPTY_VAR", v),
-            None => std::env::remove_var("EMPTY_VAR"),
+            Some(v) => nestgate_platform::env_process::set_var("EMPTY_VAR", v),
+            None => nestgate_platform::env_process::remove_var("EMPTY_VAR"),
         }
         assert_eq!(endpoint, "http://localhost:7070");
     }
@@ -513,7 +531,8 @@ mod tests {
     #[tokio::test]
     async fn test_malformed_url_in_environment_falls_back() {
         let orig = std::env::var("MALFORMED_URL").ok();
-        std::env::set_var("MALFORMED_URL", "not-a-valid-url");
+        // SAFETY: single-threaded test context.
+        nestgate_platform::env_process::set_var("MALFORMED_URL", "not-a-valid-url");
 
         let discovery = create_test_discovery();
         let helper = DiscoveryOrEnv::new(discovery);
@@ -524,8 +543,8 @@ mod tests {
             .unwrap();
 
         match orig {
-            Some(v) => std::env::set_var("MALFORMED_URL", v),
-            None => std::env::remove_var("MALFORMED_URL"),
+            Some(v) => nestgate_platform::env_process::set_var("MALFORMED_URL", v),
+            None => nestgate_platform::env_process::remove_var("MALFORMED_URL"),
         }
         assert_eq!(endpoint, "http://localhost:8181");
     }
@@ -540,7 +559,11 @@ mod tests {
             .collect();
 
         for i in 0..10 {
-            std::env::set_var(format!("CONCURRENT_PORT_{}", i), format!("{}", 5000 + i));
+            // SAFETY: single-threaded test context.
+            nestgate_platform::env_process::set_var(
+                format!("CONCURRENT_PORT_{}", i),
+                format!("{}", 5000 + i),
+            );
         }
 
         let discovery = create_test_discovery();
@@ -569,8 +592,8 @@ mod tests {
 
         for (k, v) in &saved {
             match v {
-                Some(val) => std::env::set_var(k, val),
-                None => std::env::remove_var(k),
+                Some(val) => nestgate_platform::env_process::set_var(k, val),
+                None => nestgate_platform::env_process::remove_var(k),
             }
         }
 

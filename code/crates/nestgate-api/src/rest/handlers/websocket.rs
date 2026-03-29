@@ -15,12 +15,12 @@ use axum::{
 };
 use serde::Deserialize;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use tokio::time::{interval, Duration};
+use tokio::time::{Duration, interval};
 use tracing::{debug, error, info};
 
+use crate::rest::ApiState;
 use crate::rest::models::types::ZfsMetrics;
 use crate::rest::models::{DiskIoMetrics, NetworkIoMetrics, SystemMetrics};
-use crate::rest::ApiState;
 
 // ==================== SECTION ====================
 // WEBSOCKET DATA HANDLERS
@@ -174,13 +174,12 @@ async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: 
 /// Get current system metrics
 async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> {
     // Get ZFS metrics from engines
-    let engines = state.zfs_engines.read().await;
     let mut total_datasets = 0;
     let total_snapshots = 0;
     let mut total_used_bytes = 0;
     let mut _total_available_bytes = 0;
     let mut compression_ratios = Vec::new();
-    for (_name, _engine) in engines.iter() {
+    for _entry in state.zfs_engines.iter() {
         // Placeholder stats - _engine is now just a String
         total_datasets += 1;
         // Use available stats instead of cow_stats
@@ -328,8 +327,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
 
-    let engines = state.zfs_engines.read().await;
-    let dataset_count = engines.len();
+    let dataset_count = state.zfs_engines.len();
 
     let event_types = [
         ("dataset_created", "info"),

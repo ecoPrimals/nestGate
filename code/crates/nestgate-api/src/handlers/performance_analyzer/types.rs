@@ -158,7 +158,7 @@ pub struct ZfsMetrics {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for PerformanceAnalysis
+/// Configuration for `PerformanceAnalysis`
 pub struct PerformanceAnalysisConfig {
     /// Enable CPU monitoring
     pub enable_cpu_monitoring: bool,

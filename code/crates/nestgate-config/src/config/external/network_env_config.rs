@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// Configuration for external network endpoints, capturing environment variables
 /// for service host/port combinations.
 #[derive(Debug, Clone)]
-/// Configuration for NetworkEnv
+/// Configuration for `NetworkEnv`
 pub struct NetworkEnvConfig {
     // Map of prefix → (host, port)
     endpoints: HashMap<String, (Option<String>, Option<u16>)>,
@@ -19,6 +19,7 @@ pub type SharedNetworkEnvConfig = Arc<NetworkEnvConfig>;
 
 impl NetworkEnvConfig {
     /// Creates a new `NetworkEnvConfig` with empty values.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             endpoints: HashMap::new(),
@@ -27,6 +28,7 @@ impl NetworkEnvConfig {
 
     /// Creates a new `NetworkEnvConfig` by reading environment variables
     /// for common service prefixes.
+    #[must_use]
     pub fn from_env() -> Self {
         let mut config = Self::new();
 
@@ -43,8 +45,8 @@ impl NetworkEnvConfig {
         ];
 
         for prefix in &prefixes {
-            let host = env::var(format!("{}_HOST", prefix)).ok();
-            let port = env::var(format!("{}_PORT", prefix))
+            let host = env::var(format!("{prefix}_HOST")).ok();
+            let port = env::var(format!("{prefix}_PORT"))
                 .ok()
                 .and_then(|p| p.parse::<u16>().ok());
 
@@ -59,6 +61,7 @@ impl NetworkEnvConfig {
     // Getter methods
 
     /// Get host for a given prefix, returns None if not set
+    #[must_use]
     pub fn get_host(&self, prefix: &str) -> Option<&str> {
         self.endpoints
             .get(prefix)
@@ -66,11 +69,13 @@ impl NetworkEnvConfig {
     }
 
     /// Get port for a given prefix, returns None if not set
+    #[must_use]
     pub fn get_port(&self, prefix: &str) -> Option<u16> {
         self.endpoints.get(prefix).and_then(|(_, port)| *port)
     }
 
     /// Check if host is set for a given prefix
+    #[must_use]
     pub fn has_host(&self, prefix: &str) -> bool {
         self.endpoints
             .get(prefix)
@@ -79,6 +84,7 @@ impl NetworkEnvConfig {
     }
 
     /// Check if port is set for a given prefix
+    #[must_use]
     pub fn has_port(&self, prefix: &str) -> bool {
         self.endpoints
             .get(prefix)
@@ -89,6 +95,7 @@ impl NetworkEnvConfig {
     // Builder methods for testing
 
     /// Builder method to set Endpoint
+    #[must_use]
     pub fn with_endpoint(
         mut self,
         prefix: String,
@@ -100,6 +107,7 @@ impl NetworkEnvConfig {
     }
 
     /// Builder method to set Host
+    #[must_use]
     pub fn with_host(mut self, prefix: String, host: String) -> Self {
         let entry = self.endpoints.entry(prefix).or_insert((None, None));
         entry.0 = Some(host);
@@ -107,6 +115,7 @@ impl NetworkEnvConfig {
     }
 
     /// Builder method to set Port
+    #[must_use]
     pub fn with_port(mut self, prefix: String, port: u16) -> Self {
         let entry = self.endpoints.entry(prefix).or_insert((None, None));
         entry.1 = Some(port);

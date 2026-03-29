@@ -18,10 +18,6 @@ use tracing::info;
 
 use super::core::NativeZfsService;
 
-#[cfg(test)]
-#[path = "pool_operations_tests.rs"]
-mod pool_operations_tests;
-
 /// Get pool information by querying pool status
 async fn get_pool_status_info(
     _service: &NativeZfsService,
@@ -48,7 +44,7 @@ async fn get_pool_status_info(
 }
 
 /// Parse pool status from zpool status output
-pub(super) fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
+pub fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
     let lines: Vec<&str> = output.lines().collect();
     if lines.is_empty() {
         return Err(UniversalZfsError::internal("Empty zpool status output"));
@@ -58,10 +54,10 @@ pub(super) fn parse_pool_status(output: &str) -> UniversalZfsResult<PoolInfo> {
     let mut health = PoolHealth::Unknown;
 
     // Parse pool name and state from first line
-    if let Some(first_line) = lines.first() {
-        if let Some(name) = first_line.strip_prefix("  pool: ") {
-            pool_name = name.to_string();
-        }
+    if let Some(first_line) = lines.first()
+        && let Some(name) = first_line.strip_prefix("  pool: ")
+    {
+        pool_name = name.to_string();
     }
 
     // Parse state and health
@@ -248,4 +244,24 @@ pub async fn get_pool_status(service: &NativeZfsService, name: &str) -> Universa
     info!("Getting pool status for: {}", name);
     let output = service.execute_zpool_command(&["status", name]).await?;
     Ok(output)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_pool_status_reads_pool_and_state() {
+        let out = r"  pool: tank
+ state: ONLINE
+";
+        let p = parse_pool_status(out).expect("pool");
+        assert_eq!(p.name, "tank");
+        assert_eq!(p.health, PoolHealth::Online);
+    }
+
+    #[test]
+    fn parse_pool_status_empty_errors() {
+        assert!(parse_pool_status("").is_err());
+    }
 }

@@ -112,8 +112,8 @@ mod pool_manager_tests {
     }
 
     #[tokio::test]
-    async fn test_pool_operations_error_handling(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_operations_error_handling()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = ZfsConfig::default();
         let manager = ZfsPoolManager::new_production(config);
 
@@ -149,8 +149,8 @@ mod pool_manager_tests {
     }
 
     #[tokio::test]
-    async fn test_pool_creation_error_handling(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_creation_error_handling()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let manager = ZfsPoolManager::new_production(ZfsConfig::default());
 
         // Test pool creation with invalid devices
@@ -172,8 +172,8 @@ mod pool_manager_tests {
     }
 
     #[tokio::test]
-    async fn test_pool_destruction_error_handling(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    async fn test_pool_destruction_error_handling()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let manager = ZfsPoolManager::new_production(ZfsConfig::default());
 
         let result = manager.destroy_pool("nonexistent_pool").await;

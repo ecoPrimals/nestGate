@@ -83,26 +83,21 @@ impl EnvironmentConfig {
         let orchestration_url = std::env::var("ORCHESTRATION_URL").ok();
         let orchestration_url_present = orchestration_url.is_some();
 
-        let environment =
-            safe_env_var_or_default("ENVIRONMENT", Self::DEFAULT_ENVIRONMENT).to_string();
+        let environment = safe_env_var_or_default("ENVIRONMENT", Self::DEFAULT_ENVIRONMENT);
 
-        let service_name =
-            safe_env_var_or_default("SERVICE_NAME", Self::DEFAULT_SERVICE_NAME).to_string();
+        let service_name = safe_env_var_or_default("SERVICE_NAME", Self::DEFAULT_SERVICE_NAME);
 
         let bind_interface_standalone =
-            safe_env_var_or_default("NESTGATE_BIND_INTERFACE", Self::DEFAULT_BIND_STANDALONE)
-                .to_string();
+            safe_env_var_or_default("NESTGATE_BIND_INTERFACE", Self::DEFAULT_BIND_STANDALONE);
 
         let bind_interface_orchestration =
-            safe_env_var_or_default("NESTGATE_BIND_INTERFACE", Self::DEFAULT_BIND_ORCHESTRATION)
-                .to_string();
+            safe_env_var_or_default("NESTGATE_BIND_INTERFACE", Self::DEFAULT_BIND_ORCHESTRATION);
 
         let port_str = safe_env_var_or_default("NESTGATE_PORT", &Self::DEFAULT_PORT.to_string());
         let port = port_str.parse().unwrap_or(Self::DEFAULT_PORT);
 
         let nestgate_service_name =
-            safe_env_var_or_default("NESTGATE_SERVICE_NAME", Self::DEFAULT_SERVICE_NAME)
-                .to_string();
+            safe_env_var_or_default("NESTGATE_SERVICE_NAME", Self::DEFAULT_SERVICE_NAME);
 
         let discovery_enabled_standalone = std::env::var("NESTGATE_DISCOVERY_ENABLED")
             .ok()
@@ -139,7 +134,7 @@ impl EnvironmentConfig {
 
     /// Check if orchestration URL is present (determines operation mode)
     #[must_use]
-    pub fn is_orchestration_mode(&self) -> bool {
+    pub const fn is_orchestration_mode(&self) -> bool {
         self.orchestration_url_present
     }
 
@@ -185,11 +180,11 @@ impl EnvironmentConfig {
 
     /// Get port
     #[must_use]
-    pub fn port(&self) -> u16 {
+    pub const fn port(&self) -> u16 {
         self.port
     }
 
-    /// Get NestGate service name (for networking)
+    /// Get `NestGate` service name (for networking)
     #[must_use]
     pub fn nestgate_service_name(&self) -> String {
         self.nestgate_service_name.clone()
@@ -197,19 +192,19 @@ impl EnvironmentConfig {
 
     /// Get discovery enabled setting for standalone mode
     #[must_use]
-    pub fn discovery_enabled_standalone(&self) -> bool {
+    pub const fn discovery_enabled_standalone(&self) -> bool {
         self.discovery_enabled_standalone
     }
 
     /// Get discovery enabled setting for orchestration mode
     #[must_use]
-    pub fn discovery_enabled_orchestration(&self) -> bool {
+    pub const fn discovery_enabled_orchestration(&self) -> bool {
         self.discovery_enabled_orchestration
     }
 
     /// Get discovery enabled based on operation mode
     #[must_use]
-    pub fn discovery_enabled(&self, orchestration_mode: bool) -> bool {
+    pub const fn discovery_enabled(&self, orchestration_mode: bool) -> bool {
         if orchestration_mode {
             self.discovery_enabled_orchestration
         } else {
@@ -235,7 +230,7 @@ impl EnvironmentConfig {
         self.compute_url.clone()
     }
 
-    /// Get all external service URLs as a HashMap
+    /// Get all external service URLs as a `HashMap`
     #[must_use]
     pub fn external_services(&self, orchestration_mode: bool) -> HashMap<String, String> {
         let mut services = HashMap::new();
@@ -284,21 +279,21 @@ impl EnvironmentConfig {
 
     /// Builder: Set port
     #[must_use]
-    pub fn with_port(mut self, port: u16) -> Self {
+    pub const fn with_port(mut self, port: u16) -> Self {
         self.port = port;
         self
     }
 
     /// Builder: Set discovery enabled for standalone mode
     #[must_use]
-    pub fn with_discovery_standalone(mut self, enabled: bool) -> Self {
+    pub const fn with_discovery_standalone(mut self, enabled: bool) -> Self {
         self.discovery_enabled_standalone = enabled;
         self
     }
 
     /// Builder: Set discovery enabled for orchestration mode
     #[must_use]
-    pub fn with_discovery_orchestration(mut self, enabled: bool) -> Self {
+    pub const fn with_discovery_orchestration(mut self, enabled: bool) -> Self {
         self.discovery_enabled_orchestration = enabled;
         self
     }

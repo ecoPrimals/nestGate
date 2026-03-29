@@ -19,7 +19,10 @@ pub fn safe_smart_default<T: SmartDefault>() -> Result<T, &'static str> {
     Ok(T::smart_default())
 }
 /// Apply evolution metadata to a type
-pub fn with_evolution_metadata<T>(value: T, metadata: EvolutionMetadata) -> (T, EvolutionMetadata) {
+pub const fn with_evolution_metadata<T>(
+    value: T,
+    metadata: EvolutionMetadata,
+) -> (T, EvolutionMetadata) {
     (value, metadata)
 }
 /// Apply modernization pattern to any compatible type

@@ -17,7 +17,7 @@ use tracing::debug;
 
 /// Cache configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -35,7 +35,7 @@ use tracing::debug;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for UnifiedCache
+/// Configuration for `UnifiedCache`
 pub struct UnifiedCacheConfig {
     /// Size of max
     pub max_size: usize,
@@ -232,7 +232,7 @@ impl CacheManager {
 
     /// Get cache statistics
     #[must_use]
-    pub fn stats(&self) -> &CacheStats {
+    pub const fn stats(&self) -> &CacheStats {
         &self.stats
     }
 
@@ -331,36 +331,36 @@ impl CacheManager {
     /// Evict one entry using LRU policy
     fn evict_one_entry(&mut self) -> Result<()> {
         // Try to evict from cold tier first
-        if !self.cold_tier.is_empty() {
-            if let Some(key) = self.find_lru_key(&self.cold_tier) {
-                self.cold_tier.remove(&key);
-                self.stats.evictions += 1;
-                self.stats.size = self.stats.size.saturating_sub(1);
-                debug!("Evicted from cold tier: {}", key);
-                return Ok(());
-            }
+        if !self.cold_tier.is_empty()
+            && let Some(key) = self.find_lru_key(&self.cold_tier)
+        {
+            self.cold_tier.remove(&key);
+            self.stats.evictions += 1;
+            self.stats.size = self.stats.size.saturating_sub(1);
+            debug!("Evicted from cold tier: {}", key);
+            return Ok(());
         }
 
         // Then warm tier
-        if !self.warm_tier.is_empty() {
-            if let Some(key) = self.find_lru_key(&self.warm_tier) {
-                self.warm_tier.remove(&key);
-                self.stats.evictions += 1;
-                self.stats.size = self.stats.size.saturating_sub(1);
-                debug!("Evicted from warm tier: {}", key);
-                return Ok(());
-            }
+        if !self.warm_tier.is_empty()
+            && let Some(key) = self.find_lru_key(&self.warm_tier)
+        {
+            self.warm_tier.remove(&key);
+            self.stats.evictions += 1;
+            self.stats.size = self.stats.size.saturating_sub(1);
+            debug!("Evicted from warm tier: {}", key);
+            return Ok(());
         }
 
         // Finally hot tier
-        if !self.hot_tier.is_empty() {
-            if let Some(key) = self.find_lru_key(&self.hot_tier) {
-                self.hot_tier.remove(&key);
-                self.stats.evictions += 1;
-                self.stats.size = self.stats.size.saturating_sub(1);
-                debug!("Evicted from hot tier: {}", key);
-                return Ok(());
-            }
+        if !self.hot_tier.is_empty()
+            && let Some(key) = self.find_lru_key(&self.hot_tier)
+        {
+            self.hot_tier.remove(&key);
+            self.stats.evictions += 1;
+            self.stats.size = self.stats.size.saturating_sub(1);
+            debug!("Evicted from hot tier: {}", key);
+            return Ok(());
         }
 
         Ok(())

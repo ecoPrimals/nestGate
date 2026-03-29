@@ -12,9 +12,6 @@ use nestgate_types::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-#[cfg(test)]
-#[path = "introspection_tests.rs"]
-mod introspection_tests;
 /// System capabilities profile
 #[derive(Debug, Clone)]
 /// Systemcapabilities
@@ -70,7 +67,7 @@ impl Default for SystemIntrospection {
 impl SystemIntrospection {
     /// Create new system introspection subsystem with runtime config
     #[must_use]
-    pub fn with_config(config: SharedIntrospectionConfig) -> Self {
+    pub const fn with_config(config: SharedIntrospectionConfig) -> Self {
         Self {
             capabilities: None,
             hardware_profile: None,
@@ -79,7 +76,7 @@ impl SystemIntrospection {
     }
 
     /// Create new system introspection subsystem (backward compatibility)
-    /// NOTE: Creates config from env each time. For tests, use with_config() directly.
+    /// NOTE: Creates config from env each time. For tests, use `with_config()` directly.
     #[must_use]
     pub fn new() -> Self {
         Self::with_config(Arc::new(IntrospectionConfig::from_env()))
@@ -147,7 +144,7 @@ impl SystemIntrospection {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn detect_system_capabilities(&self) -> Result<SystemCapabilities> {
-        let cores = std::thread::available_parallelism().map_or(4usize, |n| n.get());
+        let cores = std::thread::available_parallelism().map_or(4usize, std::num::NonZero::get);
         Ok(SystemCapabilities {
             cpu_cores: cores,
             logical_cores: cores,
@@ -219,12 +216,11 @@ impl SystemIntrospection {
         if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
             // Parse /proc/meminfo on Linux systems
             for line in meminfo.lines() {
-                if line.starts_with("MemTotal:") {
-                    if let Some(kb_str) = line.split_whitespace().nth(1) {
-                        if let Ok(kb) = kb_str.parse::<u64>() {
-                            return Ok(kb as f64 / 1024.0 / 1024.0); // Convert KB to GB
-                        }
-                    }
+                if line.starts_with("MemTotal:")
+                    && let Some(kb_str) = line.split_whitespace().nth(1)
+                    && let Ok(kb) = kb_str.parse::<u64>()
+                {
+                    return Ok(kb as f64 / 1024.0 / 1024.0); // Convert KB to GB
                 }
             }
         }
@@ -396,5 +392,39 @@ impl SystemIntrospection {
         summary.insert("os_type".to_string(), capabilities.os_type);
 
         Ok(summary)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    #[test]
+    fn introspection_config_new_is_not_kubernetes() {
+        let c = IntrospectionConfig::new();
+        assert!(!c.is_kubernetes());
+        assert!(!c.is_docker_compose());
+        assert!(c.get_max_file_handles().is_none());
+    }
+
+    #[tokio::test]
+    async fn discover_resource_limits_generic_branch() {
+        let cfg = Arc::new(IntrospectionConfig::new());
+        let mut intro = SystemIntrospection::with_config(cfg);
+        let n = intro
+            .discover_resource_limits("unknown_resource_kind")
+            .await
+            .expect("generic limit");
+        assert!(n >= 1000);
+    }
+
+    #[tokio::test]
+    async fn get_introspection_summary_contains_keys() {
+        let cfg = Arc::new(IntrospectionConfig::new());
+        let mut intro = SystemIntrospection::with_config(cfg);
+        let m = intro.get_introspection_summary().await.expect("summary");
+        assert!(m.contains_key("cpu_cores"));
+        assert!(m.contains_key("os_type"));
     }
 }

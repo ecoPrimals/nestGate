@@ -45,7 +45,7 @@ pub trait NetworkService: Send + Sync + 'static {
 
 // Type aliases for complex types to improve readability and reduce warnings
 type ConnectionMap = Arc<RwLock<HashMap<String, ConnectionInfo>>>;
-/// Type alias for ServiceMap
+/// Type alias for `ServiceMap`
 type ServiceMap = Arc<RwLock<HashMap<String, ServiceInfo>>>;
 
 /// Network service manager for comprehensive connection and service management
@@ -197,7 +197,7 @@ pub struct HttpProtocolHandler {
 impl HttpProtocolHandler {
     /// Create a new HTTP protocol handler
     #[must_use]
-    pub fn new(config: NetworkConfig) -> Self {
+    pub const fn new(config: NetworkConfig) -> Self {
         Self { _config: config }
     }
 
@@ -289,7 +289,7 @@ pub struct TcpProtocolHandler {
 impl TcpProtocolHandler {
     /// Create a new TCP protocol handler
     #[must_use]
-    pub fn new(config: NetworkConfig) -> Self {
+    pub const fn new(config: NetworkConfig) -> Self {
         Self { _config: config }
     }
 

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 // ```
 // Certificate configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 /// Configuration for Certificate
 pub struct CertificateConfig {
     /// Certificate file path
-    /// Private key file path  
+    /// Private key file path\
     /// CA certificate path (optional)
     /// Certificate validity period in days
     pub validity_days: u32,

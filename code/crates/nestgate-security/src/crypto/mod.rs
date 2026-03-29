@@ -28,8 +28,8 @@
 //! This module **replaces** the insecure base64 "encryption" found in:
 //! - `ecosystem_integration/fallback_providers/security.rs` (base64 fallback)
 //!
-//! **Date**: November 19, 2025  
-//! **Status**: Production-ready  
+//! **Date**: November 19, 2025\
+//! **Status**: Production-ready\
 //! **Compliance**: FIPS 140-2 compatible algorithms
 
 use nestgate_types::{NestGateError, Result};
@@ -38,8 +38,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 // ✅ EVOLVED: Real Pure Rust crypto (RustCrypto stack, audited by NCC Group)
 use aes_gcm::{
-    aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Nonce,
+    aead::{Aead, KeyInit, OsRng},
 };
 use rand::RngCore;
 
@@ -60,16 +60,16 @@ use rand::RngCore;
 /// let ciphertext = crypto.encrypt(b"secret", &params).await?;
 /// ```
 ///
-/// ✅ EVOLVED: Real Pure Rust implementation using RustCrypto (audited, FIPS-compatible)
+/// ✅ EVOLVED: Real Pure Rust implementation using `RustCrypto` (audited, FIPS-compatible)
 ///
-/// **Architecture**: Local RustCrypto for data-at-rest encryption within NestGate.
+/// **Architecture**: Local `RustCrypto` for data-at-rest encryption within `NestGate`.
 /// Capability-based delegation remains available for cross-primal crypto coordination.
 ///
 /// **Security**: AES-256-GCM via `aes-gcm` crate (NCC Group audited)
 /// **Performance**: Hardware-accelerated AES-NI when available
 /// **Pure Rust**: Zero C dependencies
 pub struct SecureCrypto {
-    /// Selected encryption algorithm (used in with_algorithm and for future ChaCha20 dispatch)
+    /// Selected encryption algorithm (used in `with_algorithm` and for future `ChaCha20` dispatch)
     #[allow(dead_code)]
     algorithm: EncryptionAlgorithm,
     /// AES-256-GCM cipher instance (created from key)
@@ -178,7 +178,7 @@ impl SecureCrypto {
     ///
     /// # Security
     ///
-    /// - Uses cryptographically secure random 96-bit nonces (OsRng)
+    /// - Uses cryptographically secure random 96-bit nonces (`OsRng`)
     /// - Provides AEAD (Authenticated Encryption with Associated Data)
     /// - Prevents tampering and forgery via GCM authentication tag
     /// - Hardware-accelerated AES-NI when available
@@ -209,7 +209,7 @@ impl SecureCrypto {
             )
         }
         .map_err(|e| {
-            NestGateError::configuration_error("crypto", &format!("Encryption failed: {}", e))
+            NestGateError::configuration_error("crypto", &format!("Encryption failed: {e}"))
         })?;
 
         let timestamp = SystemTime::now()
@@ -246,14 +246,14 @@ impl SecureCrypto {
             .map_err(|e| {
                 NestGateError::configuration_error(
                     "crypto",
-                    &format!("Decryption failed (data may be tampered): {}", e),
+                    &format!("Decryption failed (data may be tampered): {e}"),
                 )
             })
     }
 
     /// Generate a secure random key of specified length.
     ///
-    /// ✅ EVOLVED: Real key generation using OsRng (cryptographically secure)
+    /// ✅ EVOLVED: Real key generation using `OsRng` (cryptographically secure)
     pub fn generate_key(length: usize) -> Result<Vec<u8>> {
         let mut key = vec![0u8; length];
         rand::rngs::OsRng.fill_bytes(&mut key);
@@ -262,7 +262,7 @@ impl SecureCrypto {
 
     /// Generate a secure random nonce for AES-256-GCM (96 bits / 12 bytes).
     ///
-    /// ✅ EVOLVED: Real nonce generation using OsRng
+    /// ✅ EVOLVED: Real nonce generation using `OsRng`
     pub fn generate_nonce(&self) -> Result<Vec<u8>> {
         let mut nonce = vec![0u8; 12]; // 96-bit nonce for AES-GCM
         rand::rngs::OsRng.fill_bytes(&mut nonce);

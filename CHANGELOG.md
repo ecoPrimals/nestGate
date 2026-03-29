@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 6: Doctests, coverage, Clippy, and wire-type hygiene (March 29, 2026)
+
+**Tests**: 11,707 passing, 0 failures  
+**Coverage**: 74.3% line (up from 68.4%, llvm-cov)  
+**Doctests**: Zero failures (65 failing doctests fixed across 7 crates)  
+**Clippy**: Warnings reduced from 8,227 to 4,642 (unnecessary `unsafe`, `Send` fixes, trivial regex, bulk auto-fixes)
+
+#### Added
+- **704 new tests** (11,003 → 11,707)
+- **`nestgate-env-process-shim`** crate for safe environment mutation in tests (Rust 2024 `set_var` / isolation)
+
+#### Changed
+- **`Arc<str>`** for discovery and RPC identifier strings (fewer allocations, clearer ownership)
+- **`Cow<'static, str>`** for JSON-RPC wire types where appropriate
+- Root documentation (README, DOCUMENTATION_INDEX, QUICK_REFERENCE, QUICK_START, STATUS) aligned to 4.7.0-dev and current workspace layout (`code/crates/`, 25 workspace members)
+
 ### Session 5: Phase 2 Modernization — Compilation Surface & Idiomatic Evolution (March 28, 2026)
 
 **Build**: 22/22 crates (0 errors)  
@@ -100,9 +116,9 @@ parallel compilation:
 
 ### Session 3: Security Hardening & Stub Elimination (March 28, 2026)
 
-**Tests**: 12,383 passing, 0 failures, 469 ignored  
-**Coverage**: ~72% line (target: 90%)  
-**Clippy**: ZERO production warnings (pedantic+nursery)
+**Tests** (snapshot at session close): 12,383 passing, 0 failures, 469 ignored — superseded by Session 6 metrics in Unreleased header  
+**Coverage** (snapshot): ~72% line (target: 90%) — superseded (74.3% as of Mar 29, 2026)  
+**Clippy** (snapshot): ZERO production warnings (pedantic+nursery) — workspace-wide warning count evolved in Session 6 (8,227 → 4,642)
 
 #### Security
 - Removed hardcoded `admin/admin` credentials — local auth requires `NESTGATE_LOCAL_AUTH_HASH` (argon2)
@@ -433,7 +449,7 @@ parallel compilation:
 
 ## Active Goals
 
-- Push coverage from 69.6% toward 90% target
+- Push coverage from 74.3% toward 90% target
 - Wire `data.*` and `nat.*` semantic router routes
 - Complete sysinfo optional feature gating
 - Evolve remaining dev stubs to production implementations
@@ -612,5 +628,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: March 27, 2026  
-**Current Version**: 4.1.0-dev
+**Last Updated**: March 29, 2026  
+**Current Version**: 4.7.0-dev

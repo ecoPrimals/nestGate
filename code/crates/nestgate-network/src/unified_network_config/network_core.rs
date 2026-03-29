@@ -41,7 +41,7 @@ pub struct NetworkExtensions {
 /// CANONICAL MODERNIZATION: Simplified type alias without type parameters
 pub type UnifiedNetworkConfig = crate::types::NetworkConfig;
 
-/// NetworkConfigExt trait
+/// `NetworkConfigExt` trait
 pub trait NetworkConfigExt {
     /// Development
     fn development() -> Self;

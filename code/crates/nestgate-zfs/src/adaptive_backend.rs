@@ -3,12 +3,12 @@
 
 //! **ADAPTIVE ZFS BACKEND**
 //!
-//! NestGate's sovereign ZFS implementation that adapts to the environment:
+//! `NestGate`'s sovereign ZFS implementation that adapts to the environment:
 //! - Uses system ZFS when available (optimal performance)
 //! - Falls back to internal ZFS implementation when system ZFS unavailable
 //! - Never blocks startup due to missing system ZFS modules
 //!
-//! This ensures NestGate is always a **self-sufficient, standalone binary**
+//! This ensures `NestGate` is always a **self-sufficient, standalone binary**
 //! while leveraging system resources when available.
 
 use tokio::process::Command;
@@ -20,7 +20,7 @@ use tracing::{debug, info, warn};
 pub enum ZfsAvailability {
     /// System ZFS is available and functional
     SystemZfs,
-    /// Using NestGate's internal ZFS implementation
+    /// Using `NestGate`'s internal ZFS implementation
     InternalZfs,
     /// Both unavailable (degraded mode - limited functionality)
     Degraded,
@@ -44,16 +44,19 @@ pub struct ZfsCapabilities {
 
 impl ZfsCapabilities {
     /// Check if we can use system ZFS
+    #[must_use]
     pub fn can_use_system_zfs(&self) -> bool {
         self.availability == ZfsAvailability::SystemZfs
     }
 
     /// Check if we should use internal ZFS
+    #[must_use]
     pub fn should_use_internal_zfs(&self) -> bool {
         self.availability == ZfsAvailability::InternalZfs
     }
 
     /// Check if any ZFS functionality is available
+    #[must_use]
     pub fn is_functional(&self) -> bool {
         self.availability != ZfsAvailability::Degraded
     }
@@ -96,8 +99,7 @@ impl AdaptiveZfsBackend {
             (
                 ZfsAvailability::InternalZfs,
                 format!(
-                    "Partial system ZFS (zfs: {}, zpool: {}) - using internal implementation",
-                    has_zfs_command, has_zpool_command
+                    "Partial system ZFS (zfs: {has_zfs_command}, zpool: {has_zpool_command}) - using internal implementation"
                 ),
             )
         } else {
@@ -159,7 +161,7 @@ impl AdaptiveZfsBackend {
     ///
     /// - Linux: Checks /proc/modules for 'zfs' module
     /// - Other platforms: Assumes ZFS is available if commands work
-    ///   (FreeBSD/illumos have ZFS built-in, macOS uses OpenZFS kext)
+    ///   (FreeBSD/illumos have ZFS built-in, macOS uses `OpenZFS` kext)
     async fn check_kernel_module() -> bool {
         // Try to read /proc/modules (Linux-specific, but fails gracefully on other platforms)
         match tokio::fs::read_to_string("/proc/modules").await {
@@ -172,7 +174,9 @@ impl AdaptiveZfsBackend {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
                 // /proc/modules doesn't exist - we're not on Linux
                 // On FreeBSD, illumos, macOS: ZFS is integrated differently
-                debug!("ℹ️  Non-Linux system detected (no /proc/modules) - ZFS may be built-in or use different loading mechanism");
+                debug!(
+                    "ℹ️  Non-Linux system detected (no /proc/modules) - ZFS may be built-in or use different loading mechanism"
+                );
                 true // Assume available - will be validated by command checks
             }
             Err(e) => {
@@ -229,6 +233,7 @@ impl AdaptiveZfsBackend {
     }
 
     /// Get a quick sync check (for use in non-async contexts)
+    #[must_use]
     pub fn quick_check_sync() -> bool {
         // Quick synchronous check for ZFS availability
         std::process::Command::new("zfs")
@@ -247,7 +252,7 @@ pub struct GracefulZfsOperations;
 impl GracefulZfsOperations {
     /// Execute a ZFS command with graceful fallback
     ///
-    /// Returns: (success: bool, output: String, used_system: bool)
+    /// Returns: (success: bool, output: String, `used_system`: bool)
     pub async fn execute_with_fallback(
         command: &str,
         args: &[&str],
@@ -283,7 +288,7 @@ impl GracefulZfsOperations {
         (result.0, result.1, false)
     }
 
-    /// Execute using NestGate's internal ZFS implementation
+    /// Execute using `NestGate`'s internal ZFS implementation
     async fn execute_internal(command: &str, args: &[&str]) -> (bool, String) {
         // This would call into NestGate's internal ZFS implementation
         // For now, return a placeholder that indicates we're using internal impl
@@ -305,10 +310,7 @@ impl GracefulZfsOperations {
                 // Internal implementation would handle all commands
                 (
                     true,
-                    format!(
-                        "Internal ZFS: {} {:?} (not yet implemented)\n",
-                        command, args
-                    ),
+                    format!("Internal ZFS: {command} {args:?} (not yet implemented)\n"),
                 )
             }
         }

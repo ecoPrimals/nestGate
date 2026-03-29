@@ -45,7 +45,7 @@ impl Default for AuthenticationConfig {
 
 /// Local token validation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for LocalToken
+/// Configuration for `LocalToken`
 pub struct LocalTokenConfig {
     /// Token signing key
     pub signing_key: String,

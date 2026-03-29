@@ -16,7 +16,7 @@ pub struct NetworkVlanSettings {
     /// Enable VLAN support
     pub enabled: bool,
     /// VLAN configurations by VLAN ID
-    /// Migration in progress to CanonicalNetworkConfig (transition period until v0.12.0)
+    /// Migration in progress to `CanonicalNetworkConfig` (transition period until v0.12.0)
     pub vlans: HashMap<u16, NetworkVlanConfig>,
     /// Default VLAN ID for untagged traffic
     pub default_vlan_id: u16,
@@ -24,7 +24,7 @@ pub struct NetworkVlanSettings {
     pub enable_trunking: bool,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -42,7 +42,7 @@ pub struct NetworkVlanSettings {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for NetworkVlan
+/// Configuration for `NetworkVlan`
 pub struct NetworkVlanConfig {
     /// Vlan identifier
     pub vlan_id: u16,

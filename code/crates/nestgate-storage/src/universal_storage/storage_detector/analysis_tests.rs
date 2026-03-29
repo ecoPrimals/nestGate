@@ -6,10 +6,10 @@
 //! Tests cover storage analysis, scoring, recommendations, and optimization suggestions.
 
 use super::{StorageAnalyzer, StorageUseCase};
-use nestgate_types::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 use crate::universal_storage::storage_detector::{
     CostProfile, DetectedStorage, PerformanceProfile,
 };
+use nestgate_types::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
 use std::collections::HashMap;
 
 // ==================== TEST HELPERS ====================
@@ -191,10 +191,12 @@ fn test_analyze_storage_generates_low_throughput_recommendation() {
     let report = analyzer.analyze_storage_systems(&[slow_storage]);
 
     // Should generate performance recommendation
-    assert!(report
-        .recommendations
-        .iter()
-        .any(|r| r.contains("low read throughput")));
+    assert!(
+        report
+            .recommendations
+            .iter()
+            .any(|r| r.contains("low read throughput"))
+    );
 }
 
 #[test]
@@ -214,10 +216,12 @@ fn test_analyze_storage_generates_high_latency_recommendation() {
     let report = analyzer.analyze_storage_systems(&[high_latency_storage]);
 
     // Should generate latency recommendation
-    assert!(report
-        .recommendations
-        .iter()
-        .any(|r| r.contains("high latency")));
+    assert!(
+        report
+            .recommendations
+            .iter()
+            .any(|r| r.contains("high latency"))
+    );
 }
 
 #[test]
@@ -237,10 +241,12 @@ fn test_analyze_storage_generates_encryption_recommendation() {
     let report = analyzer.analyze_storage_systems(&[unencrypted_storage]);
 
     // Should recommend encryption
-    assert!(report
-        .recommendations
-        .iter()
-        .any(|r| r.contains("encryption")));
+    assert!(
+        report
+            .recommendations
+            .iter()
+            .any(|r| r.contains("encryption"))
+    );
 }
 
 #[test]
@@ -260,10 +266,12 @@ fn test_analyze_storage_generates_reliability_recommendation() {
     let report = analyzer.analyze_storage_systems(&[unreliable_storage]);
 
     // Should recommend backup strategies
-    assert!(report
-        .recommendations
-        .iter()
-        .any(|r| r.contains("reliability")));
+    assert!(
+        report
+            .recommendations
+            .iter()
+            .any(|r| r.contains("reliability"))
+    );
 }
 
 #[test]
@@ -283,10 +291,12 @@ fn test_analyze_storage_generates_cost_recommendation() {
     let report = analyzer.analyze_storage_systems(&[expensive_cloud_storage]);
 
     // Should recommend cheaper alternatives
-    assert!(report
-        .recommendations
-        .iter()
-        .any(|r| r.contains("high cost")));
+    assert!(
+        report
+            .recommendations
+            .iter()
+            .any(|r| r.contains("high cost"))
+    );
 }
 
 // ==================== USE CASE SCORING TESTS ====================

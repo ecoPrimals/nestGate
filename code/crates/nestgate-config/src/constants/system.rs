@@ -105,7 +105,8 @@ mod tests {
         /// Creates a new instance
         fn new(key: &str, value: &str) -> Self {
             let original = env::var(key).ok();
-            std::env::set_var(key, value);
+            // SAFETY: single-threaded test context.
+            crate::env_process::set_var(key, value);
             Self {
                 key: key.to_string(),
                 original,
@@ -117,8 +118,8 @@ mod tests {
         /// Drop
         fn drop(&mut self) {
             match &self.original {
-                Some(value) => std::env::set_var(&self.key, value),
-                None => std::env::remove_var(&self.key),
+                Some(value) => crate::env_process::set_var(&self.key, value),
+                None => crate::env_process::remove_var(&self.key),
             }
         }
     }
@@ -139,11 +140,13 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_TIMEOUT_MS").ok();
-        std::env::remove_var("NESTGATE_TIMEOUT_MS");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_TIMEOUT_MS");
         assert_eq!(timeout_ms(), 5000);
         // Restore original value if it existed
         if let Some(value) = original {
-            std::env::set_var("NESTGATE_TIMEOUT_MS", value);
+            // SAFETY: single-threaded test context.
+            crate::env_process::set_var("NESTGATE_TIMEOUT_MS", value);
         }
     }
 
@@ -166,11 +169,13 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_MAX_CONNECTIONS").ok();
-        std::env::remove_var("NESTGATE_MAX_CONNECTIONS");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_MAX_CONNECTIONS");
         assert_eq!(max_connections(), 1000);
         // Restore original value if it existed
         if let Some(value) = original {
-            std::env::set_var("NESTGATE_MAX_CONNECTIONS", value);
+            // SAFETY: single-threaded test context.
+            crate::env_process::set_var("NESTGATE_MAX_CONNECTIONS", value);
         }
     }
 
@@ -193,11 +198,13 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_BUFFER_SIZE").ok();
-        std::env::remove_var("NESTGATE_BUFFER_SIZE");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_BUFFER_SIZE");
         assert_eq!(buffer_size(), 8192);
         // Restore original value if it existed
         if let Some(value) = original {
-            std::env::set_var("NESTGATE_BUFFER_SIZE", value);
+            // SAFETY: single-threaded test context.
+            crate::env_process::set_var("NESTGATE_BUFFER_SIZE", value);
         }
     }
 
@@ -221,11 +228,13 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         // Save original value, remove var, test default, then restore
         let original = env::var("NESTGATE_RETRY_ATTEMPTS").ok();
-        std::env::remove_var("NESTGATE_RETRY_ATTEMPTS");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_RETRY_ATTEMPTS");
         assert_eq!(default_retry_attempts(), 3);
         // Restore original value if it existed
         if let Some(value) = original {
-            std::env::set_var("NESTGATE_RETRY_ATTEMPTS", value);
+            // SAFETY: single-threaded test context.
+            crate::env_process::set_var("NESTGATE_RETRY_ATTEMPTS", value);
         }
     }
 
@@ -247,7 +256,8 @@ mod tests {
     fn test_health_check_interval_default() {
         let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
         let _guard = EnvGuard::new("NESTGATE_HEALTH_CHECK_INTERVAL", "");
-        std::env::remove_var("NESTGATE_HEALTH_CHECK_INTERVAL");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HEALTH_CHECK_INTERVAL");
         assert_eq!(health_check_interval(), 30);
     }
 

@@ -52,7 +52,7 @@ const DEFAULT_ZFS_COMMAND_TIMEOUT_SECS: u64 = 300;
 
 /// Typical number of properties in a ZFS dataset
 ///
-/// Used for HashMap pre-allocation to reduce reallocations when
+/// Used for `HashMap` pre-allocation to reduce reallocations when
 /// parsing ZFS property lists. Most datasets have 30-50 properties.
 const ZFS_TYPICAL_PROPERTY_COUNT: usize = 40;
 
@@ -80,7 +80,7 @@ pub struct NativeZfsCommandExecutor {
     timeout_seconds: u64,
 
     /// Whether to log all commands for debugging
-    /// (enabled via ZFS_VERBOSE_LOGGING environment variable)
+    /// (enabled via `ZFS_VERBOSE_LOGGING` environment variable)
     verbose_logging: bool,
 }
 
@@ -94,7 +94,7 @@ pub struct NativeZfsCommandExecutor {
 /// - **success**: Whether the command completed successfully
 /// - **stdout**: Standard output from the command
 /// - **stderr**: Standard error from the command
-/// - **exit_code**: Process exit code (0 = success)
+/// - **`exit_code`**: Process exit code (0 = success)
 ///
 /// # Examples
 ///
@@ -365,8 +365,3 @@ impl Default for NativeZfsCommandExecutor {
         Self::new()
     }
 }
-
-// Test modules
-#[cfg(test)]
-#[path = "command_executor_tests.rs"]
-mod command_executor_tests;

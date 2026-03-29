@@ -77,6 +77,7 @@ impl IngestedData {
     /// # Returns
     ///
     /// New ingested data with unvalidated status
+    #[must_use]
     pub fn new(
         data_id: String,
         descriptor: DataDescriptor,
@@ -143,7 +144,8 @@ impl IngestedData {
     /// # Returns
     ///
     /// `true` if validation status is Valid
-    pub fn is_valid(&self) -> bool {
+    #[must_use]
+    pub const fn is_valid(&self) -> bool {
         matches!(
             self.ingestion_metadata.validation_status,
             ValidationStatus::Valid
@@ -155,7 +157,8 @@ impl IngestedData {
     /// # Returns
     ///
     /// `true` if validation has been performed
-    pub fn is_validated(&self) -> bool {
+    #[must_use]
+    pub const fn is_validated(&self) -> bool {
         !matches!(
             self.ingestion_metadata.validation_status,
             ValidationStatus::Unvalidated
@@ -167,7 +170,8 @@ impl IngestedData {
     /// # Returns
     ///
     /// Size of content in bytes
-    pub fn content_size(&self) -> usize {
+    #[must_use]
+    pub const fn content_size(&self) -> usize {
         self.content.len()
     }
 }
@@ -177,8 +181,9 @@ impl ValidationStatus {
     ///
     /// # Returns
     ///
-    /// `true` if Valid or PartiallyValid
-    pub fn is_acceptable(&self) -> bool {
+    /// `true` if Valid or `PartiallyValid`
+    #[must_use]
+    pub const fn is_acceptable(&self) -> bool {
         matches!(self, Self::Valid | Self::PartiallyValid(_))
     }
 
@@ -187,6 +192,7 @@ impl ValidationStatus {
     /// # Returns
     ///
     /// Error message for Invalid status, None otherwise
+    #[must_use]
     pub fn error_message(&self) -> Option<&str> {
         match self {
             Self::Invalid(msg) => Some(msg),
@@ -198,7 +204,8 @@ impl ValidationStatus {
     ///
     /// # Returns
     ///
-    /// Vector of issues for PartiallyValid, empty otherwise
+    /// Vector of issues for `PartiallyValid`, empty otherwise
+    #[must_use]
     pub fn issues(&self) -> Vec<String> {
         match self {
             Self::PartiallyValid(issues) => issues.clone(),

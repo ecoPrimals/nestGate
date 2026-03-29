@@ -176,8 +176,8 @@ fn test_very_long_strings() {
 /// **Edge Case Test 13: Rapid State Changes**
 #[tokio::test]
 async fn test_rapid_state_changes() {
-    use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicU32, Ordering};
 
     let counter = Arc::new(AtomicU32::new(0));
     let mut handles = vec![];

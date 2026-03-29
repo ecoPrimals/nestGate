@@ -104,6 +104,7 @@ impl SubstrateTiers {
     }
 
     /// Returns all available substrate paths across both tiers
+    #[must_use]
     pub fn all_paths(&self) -> Vec<&Path> {
         self.warm
             .iter()
@@ -113,6 +114,7 @@ impl SubstrateTiers {
     }
 
     /// Returns substrate paths grouped by filesystem type
+    #[must_use]
     pub fn by_fs_type(&self) -> std::collections::HashMap<&str, Vec<&SubstrateMount>> {
         let mut map: std::collections::HashMap<&str, Vec<&SubstrateMount>> =
             std::collections::HashMap::new();
@@ -246,20 +248,22 @@ mod tests {
         let orig_warm = std::env::var("NESTGATE_WARM_PATHS").ok();
         let orig_cold = std::env::var("NESTGATE_COLD_PATHS").ok();
 
-        std::env::set_var("NESTGATE_WARM_PATHS", "/tmp");
-        std::env::set_var("NESTGATE_COLD_PATHS", "/tmp");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_WARM_PATHS", "/tmp");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_COLD_PATHS", "/tmp");
 
         let tiers = SubstrateTiers::from_environment();
         assert_eq!(tiers.warm.len(), 1);
         assert_eq!(tiers.cold.len(), 1);
 
         match orig_warm {
-            Some(v) => std::env::set_var("NESTGATE_WARM_PATHS", v),
-            None => std::env::remove_var("NESTGATE_WARM_PATHS"),
+            Some(v) => crate::env_process::set_var("NESTGATE_WARM_PATHS", v),
+            None => crate::env_process::remove_var("NESTGATE_WARM_PATHS"),
         }
         match orig_cold {
-            Some(v) => std::env::set_var("NESTGATE_COLD_PATHS", v),
-            None => std::env::remove_var("NESTGATE_COLD_PATHS"),
+            Some(v) => crate::env_process::set_var("NESTGATE_COLD_PATHS", v),
+            None => crate::env_process::remove_var("NESTGATE_COLD_PATHS"),
         }
     }
 }

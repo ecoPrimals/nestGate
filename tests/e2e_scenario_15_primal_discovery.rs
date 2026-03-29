@@ -20,8 +20,8 @@
 //! - Health monitoring active
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::time::SystemTime;
 use tokio::sync::RwLock;
 

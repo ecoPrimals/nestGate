@@ -24,6 +24,8 @@ mod response_builder_tests;
 pub mod success_response;
 /// Response conversion traits for seamless type transformations.
 pub mod traits;
+#[cfg(test)]
+mod traits_round3_tests;
 // Re-export all types for backward compatibility and ease of use
 pub use ai_first_response::{
     AIErrorCategory, AIFirstError, AIFirstResponse, AIResponseMetadata, CacheInfo, DataQuality,
@@ -379,10 +381,11 @@ mod tests {
             vec![("id1".to_string(), "boom".to_string())],
         );
         assert!(!resp.success);
-        assert!(resp
-            .error
-            .expect("test: batch error msg")
-            .contains("failures"));
+        assert!(
+            resp.error
+                .expect("test: batch error msg")
+                .contains("failures")
+        );
     }
 
     #[test]
@@ -421,9 +424,10 @@ mod tests {
     fn validation_api_response_errors() {
         let err =
             validation::validate_api_response(&sample_api_response_invalid_success_missing_data());
-        assert!(err
-            .expect_err("test: invalid success")
-            .contains("must have data"));
+        assert!(
+            err.expect_err("test: invalid success")
+                .contains("must have data")
+        );
 
         let invalid_fail = ApiResponse::<()> {
             request_id: "r".to_string(),
@@ -437,9 +441,10 @@ mod tests {
             processing_time_ms: 0,
         };
         let e2 = validation::validate_api_response(&invalid_fail);
-        assert!(e2
-            .expect_err("test: failed without error message")
-            .contains("must have error message"));
+        assert!(
+            e2.expect_err("test: failed without error message")
+                .contains("must have error message")
+        );
     }
 
     #[test]
@@ -469,9 +474,11 @@ mod tests {
             timestamp: Utc::now().to_rfc3339(),
             correlation_id: None,
         };
-        assert!(validation::validate_success_response(&bad)
-            .expect_err("test: empty message")
-            .contains("must have message"));
+        assert!(
+            validation::validate_success_response(&bad)
+                .expect_err("test: empty message")
+                .contains("must have message")
+        );
         let good = SuccessResponse::new("ok");
         validation::validate_success_response(&good).expect("test: good success");
     }

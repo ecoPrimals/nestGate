@@ -14,7 +14,7 @@
 #![allow(deprecated, dead_code, unused_imports)]
 
 use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;

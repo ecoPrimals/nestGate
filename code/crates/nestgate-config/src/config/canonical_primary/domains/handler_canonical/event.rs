@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EventHandler
+/// Configuration for `EventHandler`
 pub struct EventHandlerConfig {
     /// Processing
     pub processing: EventProcessingConfig,
@@ -19,28 +19,28 @@ pub struct EventHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EventProcessing
+/// Configuration for `EventProcessing`
 pub struct EventProcessingConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EventRouting
+/// Configuration for `EventRouting`
 pub struct EventRoutingConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EventSubscription
+/// Configuration for `EventSubscription`
 pub struct EventSubscriptionConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EventPublishing
+/// Configuration for `EventPublishing`
 pub struct EventPublishingConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl EventHandlerConfig {
 
     /// Merges this configuration with another, returning the merged result
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

@@ -87,7 +87,7 @@ mod serde_system_time {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    /// Type alias for SerializeResult
+    /// Type alias for `SerializeResult`
     type SerializeResult<S> = Result<<S as Serializer>::Ok, <S as Serializer>::Error>;
 
     /// Serialize

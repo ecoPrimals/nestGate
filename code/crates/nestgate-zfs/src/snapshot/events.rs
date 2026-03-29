@@ -10,7 +10,7 @@ use std::time::SystemTime;
 
 /// Snapshot event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of SnapshotEvent
+/// Types of `SnapshotEvent`
 pub enum SnapshotEventType {
     /// Created
     Created,

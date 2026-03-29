@@ -277,14 +277,18 @@ mod tests {
 
         // Verify all expected metrics are present
         assert!(result.metrics.iter().any(|(k, _)| k == "total_connections"));
-        assert!(result
-            .metrics
-            .iter()
-            .any(|(k, _)| k == "successful_connections"));
-        assert!(result
-            .metrics
-            .iter()
-            .any(|(k, _)| k == "failed_connections"));
+        assert!(
+            result
+                .metrics
+                .iter()
+                .any(|(k, _)| k == "successful_connections")
+        );
+        assert!(
+            result
+                .metrics
+                .iter()
+                .any(|(k, _)| k == "failed_connections")
+        );
         assert!(result.metrics.iter().any(|(k, _)| k == "success_rate"));
         assert!(result.metrics.iter().any(|(k, _)| k == "test_duration_ms"));
     }

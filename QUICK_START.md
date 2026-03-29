@@ -1,7 +1,7 @@
 # NestGate Quick Start
 
-**Version**: 4.6.0-dev  
-**Last Updated**: March 28, 2026
+**Version**: 4.7.0-dev  
+**Last Updated**: March 29, 2026
 
 ---
 
@@ -114,4 +114,4 @@ RUST_LOG=info                    # Logging level
 ---
 
 **License**: AGPL-3.0-only  
-**Last Updated**: March 27, 2026
+**Last Updated**: March 29, 2026

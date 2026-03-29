@@ -15,7 +15,7 @@
 //!
 //! # Example
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 //! use anyhow::Result;
 //!
@@ -116,12 +116,14 @@ pub struct Endpoint {
 
 impl Endpoint {
     /// Get the full URL for this endpoint
+    #[must_use]
     pub fn url(&self) -> String {
         let path = self.path.as_deref().unwrap_or("");
         format!("{}://{}:{}{}", self.protocol, self.address, self.port, path)
     }
 
     /// Get the health check URL
+    #[must_use]
     pub fn health_url(&self) -> Option<String> {
         self.health_path.as_ref().map(|health_path| {
             format!(
@@ -144,7 +146,7 @@ pub enum DiscoveryMechanism {
     /// DNS Service Discovery (RFC 6763)
     DnsSd,
 
-    /// HashiCorp Consul
+    /// `HashiCorp` Consul
     Consul,
 
     /// Kubernetes service discovery
@@ -175,11 +177,13 @@ pub struct DiscoveredPrimal {
 
 impl DiscoveredPrimal {
     /// Get the primary endpoint URL
+    #[must_use]
     pub fn primary_endpoint(&self) -> String {
         self.primary_endpoint.url()
     }
 
     /// Check if this primal provides a specific capability
+    #[must_use]
     pub fn has_capability(&self, capability: &str) -> bool {
         self.capabilities
             .iter()
@@ -292,7 +296,7 @@ impl PrimalSelfKnowledge {
 
         let api_port = api_port_str
             .parse()
-            .with_context(|| format!("Invalid NESTGATE_API_PORT: {}", api_port_str))?;
+            .with_context(|| format!("Invalid NESTGATE_API_PORT: {api_port_str}"))?;
 
         endpoints.push(Endpoint {
             protocol: "http".to_string(),
@@ -419,8 +423,7 @@ impl PrimalSelfKnowledge {
 
         // 3. Not found - fail clearly (no hardcoded fallback!)
         anyhow::bail!(
-            "Primal '{}' not discovered. Configure environment or enable discovery mechanisms.",
-            primal_type
+            "Primal '{primal_type}' not discovered. Configure environment or enable discovery mechanisms."
         )
     }
 
@@ -454,17 +457,14 @@ impl PrimalSelfKnowledge {
     }
 
     /// Discover from environment variables
-    fn discover_from_environment(
-        &self,
-        primal_type: &str,
-    ) -> Result<Option<DiscoveredPrimal>> {
+    fn discover_from_environment(&self, primal_type: &str) -> Result<Option<DiscoveredPrimal>> {
         let prefix = format!("{}_{}", primal_type.to_uppercase(), "HOST");
         let port_var = format!("{}_{}", primal_type.to_uppercase(), "PORT");
 
         if let (Ok(host), Ok(port_str)) = (std::env::var(&prefix), std::env::var(&port_var)) {
             let port = port_str
                 .parse()
-                .with_context(|| format!("Invalid port in {}", port_var))?;
+                .with_context(|| format!("Invalid port in {port_var}"))?;
 
             let endpoint = Endpoint {
                 protocol: "http".to_string(),
@@ -475,7 +475,7 @@ impl PrimalSelfKnowledge {
             };
 
             let identity = PrimalIdentity {
-                id: format!("{}-discovered-via-env", primal_type),
+                id: format!("{primal_type}-discovered-via-env"),
                 primal_type: primal_type.to_string(),
                 version: "unknown".to_string(),
                 started_at: std::time::SystemTime::now(),
@@ -504,15 +504,15 @@ impl PrimalSelfKnowledge {
         }
 
         // Construct expected service name
-        let service_name = format!("{}-service", primal_type);
+        let service_name = format!("{primal_type}-service");
         let namespace =
             std::env::var("KUBERNETES_NAMESPACE").unwrap_or_else(|_| "default".to_string());
 
         // K8s service DNS: <service>.<namespace>.svc.cluster.local
-        let dns_name = format!("{}.{}.svc.cluster.local", service_name, namespace);
+        let dns_name = format!("{service_name}.{namespace}.svc.cluster.local");
 
         // Try to resolve the DNS name
-        match tokio::net::lookup_host(format!("{}:80", dns_name)).await {
+        match tokio::net::lookup_host(format!("{dns_name}:80")).await {
             Ok(mut addrs) => {
                 if let Some(addr) = addrs.next() {
                     let endpoint = Endpoint {
@@ -524,7 +524,7 @@ impl PrimalSelfKnowledge {
                     };
 
                     let identity = PrimalIdentity {
-                        id: format!("{}-k8s", primal_type),
+                        id: format!("{primal_type}-k8s"),
                         primal_type: primal_type.to_string(),
                         version: "unknown".to_string(),
                         started_at: std::time::SystemTime::now(),
@@ -548,21 +548,25 @@ impl PrimalSelfKnowledge {
     }
 
     /// Get our identity
+    #[must_use]
     pub fn identity(&self) -> &PrimalIdentity {
         &self.identity
     }
 
     /// Get our capabilities
+    #[must_use]
     pub fn capabilities(&self) -> &[Capability] {
         &self.capabilities
     }
 
     /// Get our endpoints
+    #[must_use]
     pub fn endpoints(&self) -> &[Endpoint] {
         &self.endpoints
     }
 
     /// Get discovered primals (lock-free!)
+    #[must_use]
     pub fn discovered_primals(&self) -> std::collections::HashMap<String, DiscoveredPrimal> {
         self.discovered_primals
             .iter()

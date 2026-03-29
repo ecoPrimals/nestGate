@@ -33,7 +33,7 @@ pub mod traits;
 /// `zero_cost_security_provider.rs` (921 lines) with focused, maintainable modules
 /// following security domain separation principles.
 ///
-/// **REPLACES**: `zero_cost_security_provider.rs` (921 lines) with modular architecture  
+/// **REPLACES**: `zero_cost_security_provider.rs` (921 lines) with modular architecture\
 /// **PROVIDES**: Focused security modules with clear separation of concerns
 ///
 /// The architecture uses a hybrid approach:
@@ -49,9 +49,9 @@ mod types_coverage_boost;
 // External heavy: Route to Security via universal adapter for complex security
 // Local smart: Basic security operations for standalone mode
 pub mod authentication; // Hybrid: external Security + local token validation
-                        // pub mod encryption;      // Hybrid: external Security + local basic encryption
-                        // pub mod signing;         // Hybrid: external Security + local signature verification
-                        // pub mod provider;        // Hybrid security provider implementation
+// pub mod encryption;      // Hybrid: external Security + local basic encryption
+// pub mod signing;         // Hybrid: external Security + local signature verification
+// pub mod provider;        // Hybrid security provider implementation
 
 /// Security configuration management with zero-cost patterns
 pub mod config;

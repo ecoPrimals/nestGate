@@ -47,8 +47,8 @@
 //! - `streaming-rpc`: Enable bidirectional RPC streaming (optional)
 
 use axum::{
-    routing::{delete, get, patch, post, put},
     Router,
+    routing::{delete, get, patch, post, put},
 };
 use std::sync::Arc;
 
@@ -750,5 +750,29 @@ mod tests {
     fn test_create_router_with_state_returns_router() {
         let router = create_router_with_state();
         let _ = router;
+    }
+
+    #[tokio::test]
+    async fn websocket_ping_returns_pong() {
+        let state = AppState::new();
+        let msg = serde_json::json!({"type": "ping"});
+        let out = handle_websocket_message(msg, &state).await;
+        assert!(out.contains("pong"));
+    }
+
+    #[tokio::test]
+    async fn websocket_unknown_type_is_error() {
+        let state = AppState::new();
+        let msg = serde_json::json!({"type": "not_real_type_xyz"});
+        let out = handle_websocket_message(msg, &state).await;
+        assert!(out.contains("error"));
+    }
+
+    #[tokio::test]
+    async fn websocket_subscribe_includes_channel() {
+        let state = AppState::new();
+        let msg = serde_json::json!({"type": "subscribe", "channel": "metrics"});
+        let out = handle_websocket_message(msg, &state).await;
+        assert!(out.contains("metrics"));
     }
 }

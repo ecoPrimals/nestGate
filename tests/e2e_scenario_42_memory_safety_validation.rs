@@ -5,8 +5,8 @@
 
 #[cfg(test)]
 mod memory_safety_e2e {
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[test]
     fn test_ownership_transfer() {

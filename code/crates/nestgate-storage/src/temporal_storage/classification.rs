@@ -149,7 +149,8 @@ impl DataClassification {
     /// # Returns
     ///
     /// Classification optimized for critical data
-    pub fn critical() -> Self {
+    #[must_use]
+    pub const fn critical() -> Self {
         Self {
             content_type: ContentType::Unknown,
             data_category: DataCategory::Critical,
@@ -165,7 +166,8 @@ impl DataClassification {
     /// # Returns
     ///
     /// Classification optimized for archival storage
-    pub fn archival() -> Self {
+    #[must_use]
+    pub const fn archival() -> Self {
         Self {
             content_type: ContentType::Unknown,
             data_category: DataCategory::Archive,
@@ -181,7 +183,8 @@ impl DataClassification {
     /// # Returns
     ///
     /// Classification for temporary/ephemeral data
-    pub fn temporary() -> Self {
+    #[must_use]
+    pub const fn temporary() -> Self {
         Self {
             content_type: ContentType::Unknown,
             data_category: DataCategory::Temporary,
@@ -197,7 +200,7 @@ impl DataClassification {
     /// # Arguments
     ///
     /// * `content_type` - New content type
-    pub fn set_content_type(&mut self, content_type: ContentType) {
+    pub const fn set_content_type(&mut self, content_type: ContentType) {
         self.content_type = content_type;
     }
 
@@ -206,7 +209,8 @@ impl DataClassification {
     /// # Returns
     ///
     /// `true` if replication is recommended
-    pub fn should_replicate(&self) -> bool {
+    #[must_use]
+    pub const fn should_replicate(&self) -> bool {
         !matches!(self.replication_strategy, ReplicationStrategy::None)
     }
 
@@ -215,7 +219,8 @@ impl DataClassification {
     /// # Returns
     ///
     /// `true` if compression is recommended
-    pub fn should_compress(&self) -> bool {
+    #[must_use]
+    pub const fn should_compress(&self) -> bool {
         !matches!(self.compression_strategy, CompressionStrategy::None)
     }
 
@@ -224,7 +229,8 @@ impl DataClassification {
     /// # Returns
     ///
     /// Estimated compression ratio (1.0 = no compression)
-    pub fn estimated_compression_ratio(&self) -> f32 {
+    #[must_use]
+    pub const fn estimated_compression_ratio(&self) -> f32 {
         match &self.compression_strategy {
             CompressionStrategy::None => 1.0,
             CompressionStrategy::Fast => 2.0,

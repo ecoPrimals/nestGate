@@ -67,13 +67,13 @@ impl ZeroCostCredentials {
 
     /// Check if credentials are valid (non-empty)
     #[must_use]
-    pub fn is_valid(&self) -> bool {
+    pub const fn is_valid(&self) -> bool {
         !self.username.is_empty() && !self.password.is_empty()
     }
 }
 
 /// **Authentication methods**
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 /// Authmethod
 pub enum AuthMethod {
     /// Password-based authentication
@@ -95,26 +95,26 @@ pub enum AuthMethod {
 impl AuthMethod {
     /// Check if this is a multi-factor authentication method
     #[must_use]
-    pub fn is_multi_factor(&self) -> bool {
+    pub const fn is_multi_factor(&self) -> bool {
         matches!(self, Self::MultiFactor { .. })
     }
 
     /// Get the primary authentication method name
     #[must_use]
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
-            AuthMethod::Password => "password",
-            AuthMethod::Token => "token",
-            AuthMethod::Certificate => "certificate",
-            AuthMethod::Biometric => "biometric",
-            AuthMethod::MultiFactor { .. } => "multi_factor",
+            Self::Password => "password",
+            Self::Token => "token",
+            Self::Certificate => "certificate",
+            Self::Biometric => "biometric",
+            Self::MultiFactor { .. } => "multi_factor",
         }
     }
 
     /// Check if this method requires secure transport
     #[must_use]
-    pub fn requires_secure_transport(&self) -> bool {
-        matches!(self, AuthMethod::Password | AuthMethod::MultiFactor { .. })
+    pub const fn requires_secure_transport(&self) -> bool {
+        matches!(self, Self::Password | Self::MultiFactor { .. })
     }
 }
 
@@ -241,7 +241,7 @@ impl ZeroCostSignature {
 
     /// Check if the signature is valid (non-empty fields)
     #[must_use]
-    pub fn is_valid(&self) -> bool {
+    pub const fn is_valid(&self) -> bool {
         !self.algorithm.is_empty() && !self.signature.is_empty() && !self.key_id.is_empty()
     }
 
@@ -294,12 +294,12 @@ impl<T> SecurityOperationResult<T> {
     }
 
     /// Check if the operation was successful
-    pub fn is_success(&self) -> bool {
+    pub const fn is_success(&self) -> bool {
         self.success
     }
 
     /// Get the operation data if successful
-    pub fn data(&self) -> Option<&T> {
+    pub const fn data(&self) -> Option<&T> {
         self.data.as_ref()
     }
 

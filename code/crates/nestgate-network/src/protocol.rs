@@ -37,12 +37,12 @@ impl std::fmt::Display for Protocol {
     /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Protocol::Nfs => write!(f, "NFS"),
-            Protocol::Smb => write!(f, "SMB"),
-            Protocol::Ftp => write!(f, "FTP"),
-            Protocol::Sftp => write!(f, "SFTP"),
-            Protocol::Http => write!(f, "HTTP"),
-            Protocol::Tcp => write!(f, "TCP"),
+            Self::Nfs => write!(f, "NFS"),
+            Self::Smb => write!(f, "SMB"),
+            Self::Ftp => write!(f, "FTP"),
+            Self::Sftp => write!(f, "SFTP"),
+            Self::Http => write!(f, "HTTP"),
+            Self::Tcp => write!(f, "TCP"),
         }
     }
 }
@@ -64,7 +64,7 @@ pub enum PerformancePreference {
 }
 /// Protocol configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -248,7 +248,7 @@ impl ProtocolManager {
             mount_id: uuid::Uuid::new_v4().to_string(),
             success: true,
             message: "Successfully mounted self.base_url resource".to_string(),
-            mount_point: request.mount_point.clone(),
+            mount_point: request.mount_point,
         })
     }
 
@@ -293,8 +293,7 @@ impl ProtocolManager {
             mounted: true,
             mount_point: std::path::PathBuf::from("/tmp/mount"),
             protocol,
-            server: safe_env_var_or_default("NESTGATE_DEFAULT_SERVER", addresses::LOCALHOST_NAME)
-                .to_string(),
+            server: safe_env_var_or_default("NESTGATE_DEFAULT_SERVER", addresses::LOCALHOST_NAME),
             remote_path: "/remote".to_string(),
             last_access: Some(chrono::Utc::now()),
             error: None,
@@ -331,3 +330,46 @@ pub type ProtocolConfigCanonical =
 // Note: Keep using ProtocolConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod round5_protocol_impl_tests {
+    use super::*;
+
+    #[test]
+    fn round5_protocol_display_nfs() {
+        assert_eq!(Protocol::Nfs.to_string(), "NFS");
+    }
+
+    #[test]
+    fn round5_protocol_display_smb() {
+        assert_eq!(Protocol::Smb.to_string(), "SMB");
+    }
+
+    #[test]
+    fn round5_protocol_display_ftp() {
+        assert_eq!(Protocol::Ftp.to_string(), "FTP");
+    }
+
+    #[test]
+    fn round5_protocol_display_sftp() {
+        assert_eq!(Protocol::Sftp.to_string(), "SFTP");
+    }
+
+    #[test]
+    fn round5_protocol_display_http() {
+        assert_eq!(Protocol::Http.to_string(), "HTTP");
+    }
+
+    #[test]
+    fn round5_protocol_display_tcp() {
+        assert_eq!(Protocol::Tcp.to_string(), "TCP");
+    }
+
+    #[test]
+    fn round5_protocol_serde_roundtrip() {
+        let p = Protocol::Sftp;
+        let json = serde_json::to_string(&p).unwrap();
+        let back: Protocol = serde_json::from_str(&json).unwrap();
+        assert_eq!(p, back);
+    }
+}

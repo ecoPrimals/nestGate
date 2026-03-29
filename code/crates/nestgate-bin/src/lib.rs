@@ -3,7 +3,7 @@
 
 //! **NESTGATE BINARY LIBRARY**
 //!
-//! Command-line interface and utilities for NestGate
+//! Command-line interface and utilities for `NestGate`
 
 // Allow pedantic lints during refactoring
 #![allow(clippy::empty_docs)]

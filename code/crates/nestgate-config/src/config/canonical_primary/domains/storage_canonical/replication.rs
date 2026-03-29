@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive replication settings including real-time replication,
 /// backup strategies, and disaster recovery planning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageReplication
+/// Configuration for `StorageReplication`
 pub struct StorageReplicationConfig {
     /// Real-time data replication configuration.
     pub replication: ReplicationConfig,
@@ -48,7 +48,7 @@ pub struct BackupConfig {
 ///
 /// Defines recovery time objectives (RTO) and recovery point objectives (RPO).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DisasterRecovery
+/// Configuration for `DisasterRecovery`
 pub struct DisasterRecoveryConfig {
     /// Whether disaster recovery is enabled (default: false).
     pub enabled: bool,
@@ -153,7 +153,7 @@ impl StorageReplicationConfig {
 
     /// Merge this configuration with another, preferring values from `other`.
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 
@@ -162,7 +162,7 @@ impl StorageReplicationConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

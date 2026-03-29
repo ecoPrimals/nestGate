@@ -83,7 +83,7 @@ pub use storage::StorageConfig;
 /// Global configuration instance (thread-safe, lazy-initialized)
 static GLOBAL_CONFIG: OnceLock<NestGateRuntimeConfig> = OnceLock::new();
 
-/// Centralized runtime configuration for all NestGate components.
+/// Centralized runtime configuration for all `NestGate` components.
 ///
 /// This is the **single source of truth** for all runtime configuration,
 /// systematically replacing 805+ hardcoded values throughout the codebase.

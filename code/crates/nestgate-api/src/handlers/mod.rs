@@ -367,7 +367,7 @@ pub fn available_handlers() -> Vec<&'static str> {
 
 /// AI-First handler for intelligent operations
 #[derive(Debug, Clone)]
-/// Handler for AIFirst requests
+/// Handler for `AIFirst` requests
 pub struct AIFirstHandler {
     /// HTTP router for AI-first endpoints
     pub router: Router,
@@ -419,7 +419,7 @@ impl ComplianceHandler {
 
 /// Hardware tuning handler for performance optimization
 #[derive(Debug, Clone)]
-/// Handler for HardwareTuning requests
+/// Handler for `HardwareTuning` requests
 pub struct HardwareTuningHandler {
     /// Hardware tuning configuration settings
     pub config: HardwareTuningConfig,
@@ -464,7 +464,7 @@ impl HealthHandler {
 
 /// Load testing handler for performance testing
 #[derive(Debug, Clone)]
-/// Handler for LoadTest requests
+/// Handler for `LoadTest` requests
 pub struct LoadTestHandler {
     /// Load testing configuration parameters and settings
     pub config: load_testing::config::LoadTestConfig,
@@ -643,7 +643,7 @@ impl ComplianceManager {
 ///
 /// Manager for hardware tuning and optimization.
 #[derive(Debug, Clone)]
-/// Manager for HardwareTuning operations
+/// Manager for `HardwareTuning` operations
 pub struct HardwareTuningManager {
     /// Hardware tuning configuration settings
     pub config: HardwareTuningConfig,
@@ -670,7 +670,7 @@ impl HardwareTuningManager {
 ///
 /// Manager for load testing operations and scenarios.
 #[derive(Debug, Clone)]
-/// Manager for LoadTest operations
+/// Manager for `LoadTest` operations
 pub struct LoadTestManager {
     /// Load testing configuration
     pub config: load_testing::config::LoadTestConfig,
@@ -697,7 +697,7 @@ impl LoadTestManager {
 ///
 /// Manager for performance analysis operations.
 #[derive(Debug, Clone)]
-/// Manager for PerformanceAnalyzer operations
+/// Manager for `PerformanceAnalyzer` operations
 pub struct PerformanceAnalyzerManager {
     /// Performance analyzer state
     pub analyzer: performance_analytics::PerformanceAnalyzerState,

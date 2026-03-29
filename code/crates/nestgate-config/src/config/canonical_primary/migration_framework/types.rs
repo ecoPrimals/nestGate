@@ -87,7 +87,7 @@ pub struct MigrationProgress {
 }
 
 /// Different phases of the migration process
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MigrationPhase {
     /// Initial validation of source configuration
     SourceValidation,

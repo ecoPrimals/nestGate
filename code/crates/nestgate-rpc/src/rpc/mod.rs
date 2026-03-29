@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! # 🚀 RPC Module for NestGate
+//! # 🚀 RPC Module for `NestGate`
 //!
 //! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL COMMUNICATION** (v0.3.0)
 //!
-//! Provides tarpc, JSON-RPC, and **isomorphic IPC** interfaces for NestGate storage operations.
+//! Provides tarpc, JSON-RPC, and **isomorphic IPC** interfaces for `NestGate` storage operations.
 //!
 //! ## Protocol Priority (Ecosystem Standard)
 //! 1. **Isomorphic IPC** (NEW, OPTIMAL) - Unix socket OR TCP, auto-adaptive (~5-10μs)
@@ -17,14 +17,14 @@
 //!
 //! **Try→Detect→Adapt→Succeed** pattern for universal IPC:
 //! - Tries Unix sockets first (optimal)
-//! - Detects platform constraints (SELinux, lack of support)
+//! - Detects platform constraints (`SELinux`, lack of support)
 //! - Adapts to TCP fallback (automatic)
 //! - Works on ALL platforms (Linux, Android, etc.)
 //!
 //! See `isomorphic_ipc` module for details.
 //!
 //! ## Philosophy (Primal Sovereignty)
-//! - **Self-knowledge**: NestGate exposes only storage capabilities
+//! - **Self-knowledge**: `NestGate` exposes only storage capabilities
 //! - **Runtime discovery**: Other primals discovered via capability
 //! - **Zero hardcoding**: No primal names, ports, or endpoints
 //! - **Zero unsafe blocks**: Memory-safe throughout
@@ -34,7 +34,7 @@
 //! ## Usage
 //!
 //! ### Server
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::{NestGateRpcService, serve_tarpc};
 //! use std::net::SocketAddr;
 //!
@@ -48,7 +48,7 @@
 //! ```
 //!
 //! ### Client
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::NestGateRpcClient;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -98,14 +98,14 @@ pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
 // pub use songbird_registration::SongbirdRegistration; // REMOVED: Deprecated module removed
 pub use tarpc_client::NestGateRpcClient;
-pub use tarpc_server::{serve_tarpc, NestGateRpcService};
+pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
 pub use unix_socket_server::JsonRpcUnixServer;
 
 // NEW: Isomorphic IPC exports (v0.3.0)
 pub use isomorphic_ipc::{
-    connect_endpoint, discover_ipc_endpoint, is_platform_constraint, IpcEndpoint, IpcStream,
-    IsomorphicIpcServer, RpcHandler, TcpFallbackServer, UnixSocketRpcHandler,
+    IpcEndpoint, IpcStream, IsomorphicIpcServer, RpcHandler, TcpFallbackServer,
+    UnixSocketRpcHandler, connect_endpoint, discover_ipc_endpoint, is_platform_constraint,
 };
 
 #[cfg(test)]

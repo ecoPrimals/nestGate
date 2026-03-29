@@ -7,8 +7,8 @@
 
 #[cfg(test)]
 mod error_handling_comprehensive_tests {
-    use nestgate_core::error::NestGateError;
     use nestgate_core::Result;
+    use nestgate_core::error::NestGateError;
 
     #[test]
     fn test_error_creation_configuration() {

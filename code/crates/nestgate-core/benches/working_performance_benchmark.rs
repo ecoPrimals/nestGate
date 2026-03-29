@@ -6,7 +6,7 @@
 //! This benchmark uses only standard Rust types to measure baseline performance
 //! and validate optimization claims without relying on problematic modules.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};

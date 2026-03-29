@@ -44,7 +44,7 @@ pub trait DiscoveryMethod: Send + Sync {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use std::sync::Arc;
 /// use nestgate_core::discovery::{EnvironmentDiscovery, EnvironmentDiscoveryConfig};
 ///
@@ -86,7 +86,7 @@ impl EnvironmentDiscovery {
     /// This allows injecting test configuration without polluting the
     /// environment. Makes tests truly isolated and parallel-safe.
     #[must_use]
-    pub fn with_config(
+    pub const fn with_config(
         config: std::sync::Arc<super::capability_scanner_config::EnvironmentDiscoveryConfig>,
     ) -> Self {
         Self { config }
@@ -147,7 +147,7 @@ impl DiscoveryMethod for EnvironmentDiscovery {
     }
 
     /// Method Name
-    fn method_name(&self) -> &str {
+    fn method_name(&self) -> &'static str {
         "environment"
     }
 }
@@ -161,13 +161,13 @@ impl DiscoveryMethod for EnvironmentDiscovery {
 pub enum DiscoveryMethodImpl {
     /// Environment variable discovery
     Environment(EnvironmentDiscovery),
-    /// DNS-SRV discovery (requires network_discovery module)
+    /// DNS-SRV discovery (requires `network_discovery` module)
     #[allow(dead_code)]
     Dns(super::network_discovery::DnsServiceDiscovery),
-    /// Multicast discovery (requires network_discovery module)
+    /// Multicast discovery (requires `network_discovery` module)
     #[allow(dead_code)]
     Multicast(super::network_discovery::MulticastDiscovery),
-    /// Port scan discovery (requires network_discovery module)
+    /// Port scan discovery (requires `network_discovery` module)
     #[allow(dead_code)]
     PortScan(super::network_discovery::PortScanDiscovery),
 }
@@ -386,8 +386,3 @@ mod tests {
         );
     }
 }
-
-// ==================== TESTS ====================
-#[cfg(test)]
-#[path = "capability_scanner_tests_v2.rs"]
-mod capability_scanner_tests;

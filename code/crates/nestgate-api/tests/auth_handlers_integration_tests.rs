@@ -309,11 +309,13 @@ fn test_auth_status_special_chars_in_user_id() {
         permissions: vec![],
     };
 
-    assert!(status
-        .user_id
-        .as_ref()
-        .expect("Authentication failed")
-        .contains('@'));
+    assert!(
+        status
+            .user_id
+            .as_ref()
+            .expect("Authentication failed")
+            .contains('@')
+    );
     assert!(status.user_id.is_some());
 }
 

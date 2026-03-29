@@ -8,7 +8,7 @@
 //! Optimization module
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use tracing::info;
 // Removed unused tracing import
@@ -54,11 +54,11 @@ pub async fn optimize_workspace(
     }
 
     // 6. Apply deduplication if beneficial
-    if pattern_analysis.duplicate_ratio > 0.1 {
-        if let Some(dedup_opt) = optimize_deduplication(&dataset_name) {
-            info!("✅ Deduplication optimization: {}", dedup_opt);
-            optimizations.push(dedup_opt);
-        }
+    if pattern_analysis.duplicate_ratio > 0.1
+        && let Some(dedup_opt) = optimize_deduplication(&dataset_name)
+    {
+        info!("✅ Deduplication optimization: {}", dedup_opt);
+        optimizations.push(dedup_opt);
     }
 
     // Get final optimization statistics
@@ -96,12 +96,11 @@ fn analyze_storage_patterns(dataset_name: &str) -> StoragePattern {
     if let Ok(output) = std::process::Command::new("zfs")
         .args(["get", "-H", "-o", "value", "compressratio", dataset_name])
         .output()
+        && output.status.success()
     {
-        if output.status.success() {
-            let ratio_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            if let Ok(ratio) = ratio_str.replace('x', "").parse::<f64>() {
-                duplicate_ratio = (ratio - 1.0) / ratio; // Approximate duplicate ratio
-            }
+        let ratio_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if let Ok(ratio) = ratio_str.replace('x', "").parse::<f64>() {
+            duplicate_ratio = (ratio - 1.0) / ratio; // Approximate duplicate ratio
         }
     }
 
@@ -261,7 +260,7 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
         tracing::warn!("AI optimization removed - HTTP removed");
 
         if false { // Dead code stub
-             // AI provider not available, continue without AI recommendations
+            // AI provider not available, continue without AI recommendations
         }
     }
 

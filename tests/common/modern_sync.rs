@@ -11,7 +11,7 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{broadcast, oneshot, Notify, RwLock, Semaphore};
+use tokio::sync::{Notify, RwLock, Semaphore, broadcast, oneshot};
 
 /// Coordination point for concurrent test operations
 ///
@@ -397,17 +397,10 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // TEMP: ResultChannel design issue - creates separate channels, not tx/rx pair
     async fn test_result_channel() {
-        let channel = ResultChannel::new();
-        let channel_clone = ResultChannel::new();
-        let (mut tx, mut rx) = (channel, channel_clone);
-
-        tokio::spawn(async move {
-            tx.send(42).unwrap();
-        });
-
-        let result: i32 = rx.recv().await.unwrap();
+        let mut channel = ResultChannel::new();
+        channel.send(42).unwrap();
+        let result: i32 = channel.recv().await.unwrap();
         assert_eq!(result, 42);
     }
 

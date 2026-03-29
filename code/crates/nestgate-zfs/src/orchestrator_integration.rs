@@ -25,7 +25,7 @@
 //!
 //! This module is organized into logical sub-modules:
 //! - `types` - Type definitions for service registration and health status
-//! - `service` - ZfsService implementation for orchestrator coordination
+//! - `service` - `ZfsService` implementation for orchestrator coordination
 //!
 //! # Examples
 //!

@@ -27,7 +27,7 @@ use nestgate_core::{NestGateError, Result};
 /// Uses `/proc` and optional `nvidia-smi` for resource discovery; benchmarks remain lightweight stubs.
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Fields used for configuration and monitoring
-/// Handler for RealHardwareTuning requests
+/// Handler for `RealHardwareTuning` requests
 pub struct RealHardwareTuningHandler {
     /// Hardware tuning configuration
     config: HardwareTuningConfig,
@@ -465,17 +465,16 @@ impl RealHardwareTuningHandler {
             .arg("--format=csv,noheader,nounits")
             .output()
             .await
+            && output.status.success()
         {
-            if output.status.success() {
-                let output_str = String::from_utf8_lossy(&output.stdout);
-                if let Some(line) = output_str.lines().next() {
-                    let parts: Vec<&str> = line.split(',').collect();
-                    if parts.len() >= 2 {
-                        return Some(GpuInfo {
-                            name: parts[0].trim().to_string(),
-                            memory_mb: parts[1].trim().parse().unwrap_or(0),
-                        });
-                    }
+            let output_str = String::from_utf8_lossy(&output.stdout);
+            if let Some(line) = output_str.lines().next() {
+                let parts: Vec<&str> = line.split(',').collect();
+                if parts.len() >= 2 {
+                    return Some(GpuInfo {
+                        name: parts[0].trim().to_string(),
+                        memory_mb: parts[1].trim().parse().unwrap_or(0),
+                    });
                 }
             }
         }

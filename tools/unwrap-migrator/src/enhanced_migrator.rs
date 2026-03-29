@@ -125,7 +125,7 @@ impl EnhancedUnwrapMigrator {
     }
 
     /// Set whether to include test files in processing
-    pub fn set_include_tests(&mut self, include_tests: bool) {
+    pub const fn set_include_tests(&mut self, include_tests: bool) {
         self.include_tests = include_tests;
     }
 
@@ -411,12 +411,12 @@ impl EnhancedUnwrapMigrator {
     /// Replace expect calls with `safe_unwrap`
     fn replace_expect_call(&self, line: &str, replacement: &str) -> String {
         // Find the expect call and replace it
-        if let Some(start) = line.find(".expect(") {
-            if let Some(end) = line[start..].find(')') {
-                let before = &line[..start];
-                let after = &line[start + end + 1..];
-                return format!("{before}{replacement}{after}");
-            }
+        if let Some(start) = line.find(".expect(")
+            && let Some(end) = line[start..].find(')')
+        {
+            let before = &line[..start];
+            let after = &line[start + end + 1..];
+            return format!("{before}{replacement}{after}");
         }
 
         // Fallback if we can't parse the expect call
@@ -668,10 +668,10 @@ impl EnhancedUnwrapMigrator {
 
             if path.is_dir() {
                 // Skip certain directories
-                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
-                    if dir_name == "target" || dir_name == ".git" || dir_name == "node_modules" {
-                        continue;
-                    }
+                if let Some(dir_name) = path.file_name().and_then(|n| n.to_str())
+                    && (dir_name == "target" || dir_name == ".git" || dir_name == "node_modules")
+                {
+                    continue;
                 }
 
                 // Recursively process subdirectories
@@ -712,20 +712,24 @@ mod tests {
     tracing::error!(\"Environment variable access failed: {:?}\", e);
     std::io::Error::new(std::io::ErrorKind::NotFound, format!(\"Environment variable error: {}\", e))
 })?;";
-        assert!(migrator
-            .category_mappings
-            .get("env::var")
-            .is_some_and(|cat| cat.contains("Configuration")));
+        assert!(
+            migrator
+                .category_mappings
+                .get("env::var")
+                .is_some_and(|cat| cat.contains("Configuration"))
+        );
 
         // Test JSON parsing categorization
         let _json_context = "let data = serde_json::from_str(&input).map_err(|e| {
     tracing::error!(\"JSON parsing failed: {}\", e);
     std::io::Error::new(std::io::ErrorKind::InvalidData, format!(\"JSON parsing error: {}\", e))
 })?;";
-        assert!(migrator
-            .category_mappings
-            .get("serde_json")
-            .is_some_and(|cat| cat.contains("Validation")));
+        assert!(
+            migrator
+                .category_mappings
+                .get("serde_json")
+                .is_some_and(|cat| cat.contains("Validation"))
+        );
     }
 
     type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -744,12 +748,16 @@ mod tests {
         let rust_files = migrator.discover_rust_files(temp_path).await?;
 
         assert_eq!(rust_files.len(), 2);
-        assert!(rust_files
-            .iter()
-            .any(|f| f.file_name().and_then(|n| n.to_str()) == Some("main.rs")));
-        assert!(rust_files
-            .iter()
-            .any(|f| f.file_name().and_then(|n| n.to_str()) == Some("lib.rs")));
+        assert!(
+            rust_files
+                .iter()
+                .any(|f| f.file_name().and_then(|n| n.to_str()) == Some("main.rs"))
+        );
+        assert!(
+            rust_files
+                .iter()
+                .any(|f| f.file_name().and_then(|n| n.to_str()) == Some("lib.rs"))
+        );
 
         Ok(())
     }

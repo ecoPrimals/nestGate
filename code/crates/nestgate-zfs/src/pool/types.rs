@@ -27,7 +27,7 @@ pub struct PoolInfo {
 }
 
 /// ZFS Pool State
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Poolstate
 pub enum PoolState {
     /// Online
@@ -43,7 +43,7 @@ pub enum PoolState {
 }
 
 /// ZFS Pool Health Status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Poolhealth
 pub enum PoolHealth {
     /// Healthy
@@ -81,7 +81,7 @@ pub struct PoolCapacity {
     pub deduplication_ratio: f64,
 }
 
-fn default_dedup_ratio() -> f64 {
+const fn default_dedup_ratio() -> f64 {
     1.0
 }
 

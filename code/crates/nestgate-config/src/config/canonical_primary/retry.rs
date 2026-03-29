@@ -77,7 +77,7 @@ impl RetryConfig {
 
     /// Create a fast retry configuration for low-latency operations
     #[must_use]
-    pub fn fast() -> Self {
+    pub const fn fast() -> Self {
         Self {
             max_attempts: 5,
             base_delay: Duration::from_millis(50),
@@ -91,7 +91,7 @@ impl RetryConfig {
 
     /// Create a slow retry configuration for high-latency operations
     #[must_use]
-    pub fn slow() -> Self {
+    pub const fn slow() -> Self {
         Self {
             max_attempts: 3,
             base_delay: Duration::from_secs(1),
@@ -105,7 +105,7 @@ impl RetryConfig {
 
     /// Create a linear retry configuration (no exponential backoff)
     #[must_use]
-    pub fn linear() -> Self {
+    pub const fn linear() -> Self {
         Self {
             max_attempts: 4,
             base_delay: Duration::from_millis(500),
@@ -119,7 +119,7 @@ impl RetryConfig {
 
     /// Create a high-frequency retry configuration for very frequent operations
     #[must_use]
-    pub fn high_frequency() -> Self {
+    pub const fn high_frequency() -> Self {
         Self {
             max_attempts: 10,
             base_delay: Duration::from_millis(10),
@@ -133,7 +133,7 @@ impl RetryConfig {
 
     /// Create a critical operations retry configuration with extended patience
     #[must_use]
-    pub fn critical_operations() -> Self {
+    pub const fn critical_operations() -> Self {
         Self {
             max_attempts: 8,
             base_delay: Duration::from_millis(100),
@@ -148,5 +148,5 @@ impl RetryConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for UnifiedRetryConfig
+/// Backward compatibility alias for `UnifiedRetryConfig`
 pub type UnifiedRetryConfig = RetryConfig;

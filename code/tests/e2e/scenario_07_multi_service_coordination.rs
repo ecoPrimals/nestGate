@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 //! **E2E SCENARIO 7: MULTI-SERVICE COORDINATION**
 //!
 //! **Objective**: Test coordination between multiple primals in complex workflows

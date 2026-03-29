@@ -144,7 +144,7 @@ impl NetworkConfig {
 
     /// Get API port
     #[must_use]
-    pub fn api_port(&self) -> u16 {
+    pub const fn api_port(&self) -> u16 {
         self.api.port
     }
 
@@ -201,10 +201,10 @@ impl EndpointConfig {
         // Use config to get environment variables
         let config = NetworkEnvConfig::from_env();
 
-        let host = config
-            .get_host(prefix)
-            .map(|s| s.to_string())
-            .unwrap_or_else(|| default_host.to_string());
+        let host = config.get_host(prefix).map_or_else(
+            || default_host.to_string(),
+            std::string::ToString::to_string,
+        );
 
         let port = config.get_port(prefix).unwrap_or(default_port);
 
@@ -222,11 +222,11 @@ impl EndpointConfig {
 
         let host = config
             .get_host(prefix)
-            .map(|s| s.to_string())
+            .map(std::string::ToString::to_string)
             .ok_or_else(|| {
                 nestgate_types::error::NestGateUnifiedError::Configuration(Box::new(
                     nestgate_types::error::ConfigurationErrorDetails {
-                        field: format!("{}_HOST", prefix),
+                        field: format!("{prefix}_HOST"),
                         message: "Environment variable not set".to_string(),
                         currentvalue: None,
                         expected: Some("Valid hostname or IP address".to_string()),
@@ -238,7 +238,7 @@ impl EndpointConfig {
         let port = config.get_port(prefix).ok_or_else(|| {
             nestgate_types::error::NestGateUnifiedError::Configuration(Box::new(
                 nestgate_types::error::ConfigurationErrorDetails {
-                    field: format!("{}_PORT", prefix),
+                    field: format!("{prefix}_PORT"),
                     message: "Environment variable not set or invalid port number".to_string(),
                     currentvalue: None,
                     expected: Some("Valid port number (1-65535)".to_string()),
@@ -256,10 +256,7 @@ impl EndpointConfig {
     ///
     /// Returns error if host cannot be parsed as IP address
     pub fn socket_addr(&self) -> Result<SocketAddr> {
-        let ip: IpAddr = self
-            .host
-            .parse()
-            .unwrap_or(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)));
+        let ip: IpAddr = self.host.parse().unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST));
         Ok(SocketAddr::new(ip, self.port))
     }
 

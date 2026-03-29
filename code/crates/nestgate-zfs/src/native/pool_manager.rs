@@ -15,6 +15,16 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::info;
 
+/// Parse one tab-separated line from `zpool get -H -p all <pool>` (pool, property, value, ...).
+fn parse_zpool_get_property_line(line: &str) -> Option<(String, String)> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() >= 4 {
+        Some((parts[1].to_string(), parts[2].to_string()))
+    } else {
+        None
+    }
+}
+
 /// Native ZFS pool manager
 pub struct NativeZfsPoolManager {
     command_executor: Arc<NativeZfsCommandExecutor>,
@@ -66,7 +76,7 @@ pub struct PoolStats {
 impl NativeZfsPoolManager {
     /// Create a new pool manager
     #[must_use]
-    pub fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
+    pub const fn new(command_executor: Arc<NativeZfsCommandExecutor>) -> Self {
         Self { command_executor }
     }
 
@@ -288,10 +298,7 @@ impl NativeZfsPoolManager {
         let mut properties = HashMap::new();
 
         for line in output.lines() {
-            let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 4 {
-                let property = parts[1].to_string();
-                let value = parts[2].to_string();
+            if let Some((property, value)) = parse_zpool_get_property_line(line) {
                 properties.insert(property, value);
             }
         }
@@ -317,8 +324,60 @@ impl NativeZfsPoolManager {
 }
 
 #[cfg(test)]
+impl NativeZfsPoolManager {
+    pub(crate) fn test_parse_pool_health(&self, health_str: &str) -> PoolStatus {
+        self.parse_pool_health(health_str)
+    }
+
+    pub(crate) fn test_parse_zpool_get_property_line(line: &str) -> Option<(String, String)> {
+        parse_zpool_get_property_line(line)
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::PoolStatus;
+
+    #[test]
+    fn parse_pool_health_all_known_strings() {
+        let ex = Arc::new(crate::native::command_executor::NativeZfsCommandExecutor::new());
+        let m = NativeZfsPoolManager::new(ex);
+        assert_eq!(m.test_parse_pool_health("online"), PoolStatus::Online);
+        assert_eq!(m.test_parse_pool_health("Degraded"), PoolStatus::Degraded);
+        assert_eq!(m.test_parse_pool_health("FAULTED"), PoolStatus::Faulted);
+        assert_eq!(m.test_parse_pool_health("offline"), PoolStatus::Offline);
+        assert_eq!(m.test_parse_pool_health("removed"), PoolStatus::Removed);
+        assert_eq!(m.test_parse_pool_health("UNAVAIL"), PoolStatus::Unavailable);
+        assert_eq!(
+            m.test_parse_pool_health("unavailable"),
+            PoolStatus::Unavailable
+        );
+    }
+
+    #[test]
+    fn parse_zpool_get_property_line_realistic() {
+        let line = "tank\thealth\tONLINE\t-\n";
+        let (k, v) =
+            NativeZfsPoolManager::test_parse_zpool_get_property_line(line.trim()).expect("parses");
+        assert_eq!(k, "health");
+        assert_eq!(v, "ONLINE");
+    }
+
+    #[test]
+    fn parse_zpool_get_property_line_short_line_none() {
+        assert!(NativeZfsPoolManager::test_parse_zpool_get_property_line("a\tb").is_none());
+    }
+
+    #[test]
+    fn parse_pool_health_unknown_maps_to_unavailable() {
+        let ex = Arc::new(crate::native::command_executor::NativeZfsCommandExecutor::new());
+        let m = NativeZfsPoolManager::new(ex);
+        assert_eq!(
+            m.test_parse_pool_health("weird-state-xyz"),
+            PoolStatus::Unavailable
+        );
+    }
 
     #[test]
     fn test_pool_stats_creation() {

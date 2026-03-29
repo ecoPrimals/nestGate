@@ -12,8 +12,8 @@
 
 use super::http::DiscoveryHttpClient;
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
-use nestgate_config::constants::get_api_port;
 use crate::self_knowledge::SelfKnowledge;
+use nestgate_config::constants::get_api_port;
 use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -184,14 +184,15 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let (address, port) = Self::extract_address_port(&primary_endpoint);
 
-            let health_check = self_knowledge
-                .endpoints
-                .get("health")
-                .map(|addr| ConsulHealthCheck {
-                    http: addr.to_string(),
-                    interval: "10s".to_string(),
-                    timeout: format!("{}s", timeout.as_secs()),
-                });
+            let health_check =
+                self_knowledge
+                    .endpoints
+                    .get("health")
+                    .map(|addr| ConsulHealthCheck {
+                        http: addr.to_string(),
+                        interval: "10s".to_string(),
+                        timeout: format!("{}s", timeout.as_secs()),
+                    });
 
             let mut meta = HashMap::new();
             meta.insert("version".to_string(), self_knowledge.version.clone());
@@ -211,14 +212,11 @@ impl DiscoveryMechanism for ConsulDiscovery {
             };
 
             let url = format!("{}/v1/agent/service/register", consul_addr);
-            client
-                .put_json(&url, &registration)
-                .await
-                .map_err(|e| {
-                    nestgate_types::error::NestGateError::api_error(&format!(
-                        "Consul registration failed: {e}"
-                    ))
-                })?;
+            client.put_json(&url, &registration).await.map_err(|e| {
+                nestgate_types::error::NestGateError::api_error(&format!(
+                    "Consul registration failed: {e}"
+                ))
+            })?;
 
             tracing::info!("Successfully registered with Consul");
             Ok(())
@@ -236,7 +234,9 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let url = format!("{}/v1/catalog/service/{}", consul_addr, capability);
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!("Consul query failed: {e}"))
+                nestgate_types::error::NestGateError::api_error(&format!(
+                    "Consul query failed: {e}"
+                ))
             })?;
 
             if !response.is_success() {
@@ -275,7 +275,9 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let url = format!("{}/v1/agent/service/{}", consul_addr, id);
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!("Consul lookup failed: {e}"))
+                nestgate_types::error::NestGateError::api_error(&format!(
+                    "Consul lookup failed: {e}"
+                ))
             })?;
 
             if !response.is_success() {
@@ -311,7 +313,9 @@ impl DiscoveryMechanism for ConsulDiscovery {
 
             let url = format!("{}/v1/health/service/{}", consul_addr, service_id);
             let response = client.get(&url).await.map_err(|e| {
-                nestgate_types::error::NestGateError::api_error(&format!("Consul health check failed: {e}"))
+                nestgate_types::error::NestGateError::api_error(&format!(
+                    "Consul health check failed: {e}"
+                ))
             })?;
 
             Ok(response.is_success())
@@ -328,10 +332,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
         Box::pin(async move {
             tracing::info!("Consul deregister: {}", service_id);
 
-            let url = format!(
-                "{}/v1/agent/service/deregister/{}",
-                consul_addr, service_id
-            );
+            let url = format!("{}/v1/agent/service/deregister/{}", consul_addr, service_id);
             client
                 .put_json(&url, &serde_json::Value::Null)
                 .await

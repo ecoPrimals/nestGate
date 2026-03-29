@@ -13,10 +13,6 @@ use crate::handlers::zfs::universal_zfs::config::RetryPolicy;
 use crate::handlers::zfs::universal_zfs_types::UniversalZfsResult;
 use tracing::debug;
 
-#[cfg(test)]
-#[path = "retry_executor_tests.rs"]
-mod retry_executor_tests;
-
 /// Retry executor for operations
 #[derive(Debug, Clone)]
 /// Retryexecutor

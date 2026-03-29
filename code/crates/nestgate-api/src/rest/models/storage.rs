@@ -242,7 +242,7 @@ pub struct BenchmarkResults {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Request parameters for AutoConfig operation
+/// Request parameters for `AutoConfig` operation
 pub struct AutoConfigRequest {
     /// Recommended storage configuration
     pub storage_config: StorageConfiguration,
@@ -261,7 +261,7 @@ pub struct AutoConfigRequest {
 /// Specifies parameters for executing storage performance
 /// benchmarks against specific backend configurations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for BenchmarkStorage operation
+/// Request parameters for `BenchmarkStorage` operation
 pub struct BenchmarkStorageRequest {
     /// Storage configuration to benchmark
     pub storage_config: StorageConfiguration,
@@ -491,7 +491,7 @@ pub struct CostBreakdown {
 /// Configuration for automated discovery and analysis of
 /// existing storage systems and available resources.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for ScanStorage operation
+/// Request parameters for `ScanStorage` operation
 pub struct ScanStorageRequest {
     /// Scanning depth level (1 = shallow, 5 = deep analysis)
     pub scan_depth: u8, // 1 = shallow, 5 = deep

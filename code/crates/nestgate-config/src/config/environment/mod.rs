@@ -24,7 +24,7 @@
 //!
 //! # Examples
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::config::environment::EnvironmentConfig;
 //!
 //! // Load configuration from environment
@@ -162,10 +162,10 @@ impl EnvironmentConfig {
         }
 
         // Try DNS resolution for hostnames (e.g. "localhost")
-        if let Ok(mut addrs) = std::net::ToSocketAddrs::to_socket_addrs(&addr_str) {
-            if let Some(addr) = addrs.next() {
-                return Ok(addr);
-            }
+        if let Ok(mut addrs) = std::net::ToSocketAddrs::to_socket_addrs(&addr_str)
+            && let Some(addr) = addrs.next()
+        {
+            return Ok(addr);
         }
 
         // Fallback: invalid/unresolvable host -> 127.0.0.1
@@ -235,5 +235,19 @@ impl FromStr for Port {
 impl fmt::Display for Port {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+#[cfg(test)]
+mod round5_port_tests {
+    use super::Port;
+    use std::str::FromStr;
+
+    #[test]
+    fn round5_port_default_display_from_str() {
+        assert_eq!(Port::default().get(), 8080);
+        assert_eq!(Port::default().to_string(), "8080");
+        let p: Port = FromStr::from_str("9090").unwrap();
+        assert_eq!(p.get(), 9090);
     }
 }

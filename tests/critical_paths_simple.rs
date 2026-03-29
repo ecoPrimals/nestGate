@@ -285,11 +285,7 @@ async fn test_result_chaining() {
     }
 
     fn operation3(x: u32) -> Result<u32, &'static str> {
-        if x > 100 {
-            Err("Too large")
-        } else {
-            Ok(x + 5)
-        }
+        if x > 100 { Err("Too large") } else { Ok(x + 5) }
     }
 
     let result = operation1().and_then(operation2).and_then(operation3);

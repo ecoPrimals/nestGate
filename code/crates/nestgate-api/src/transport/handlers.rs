@@ -3,7 +3,7 @@
 
 //! **RPC METHOD HANDLERS**
 //!
-//! JSON-RPC method implementations for NestGate storage and system operations.
+//! JSON-RPC method implementations for `NestGate` storage and system operations.
 
 use super::jsonrpc::RpcMethodHandler;
 use nestgate_core::error::{NestGateError, Result};
@@ -16,7 +16,7 @@ use tracing::debug;
 
 /// **NESTGATE RPC HANDLER**
 ///
-/// Implements JSON-RPC methods for NestGate storage and system operations.
+/// Implements JSON-RPC methods for `NestGate` storage and system operations.
 ///
 /// ## Method Namespace
 ///
@@ -231,13 +231,14 @@ struct ListRequest {
 /// Trait for storage implementations to be used by RPC handlers.
 pub trait StorageBackend: Send + Sync {
     /// Store a key-value pair
-    fn store(&self, key: &str, value: &[u8]) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
-
-    /// Retrieve a value by key
-    fn retrieve(
+    fn store(
         &self,
         key: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>>;
+        value: &[u8],
+    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
+
+    /// Retrieve a value by key
+    fn retrieve(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>>;
 
     /// Delete a key
     fn delete(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
@@ -280,9 +281,7 @@ mod tests {
             &self,
             _prefix: &Option<String>,
         ) -> Pin<Box<dyn Future<Output = Result<Vec<String>>> + Send + '_>> {
-            Box::pin(async {
-                Ok(vec!["key1".to_string(), "key2".to_string()])
-            })
+            Box::pin(async { Ok(vec!["key1".to_string(), "key2".to_string()]) })
         }
     }
 
@@ -323,5 +322,119 @@ mod tests {
         let params = serde_json::json!({"key": "test", "value": [1, 2, 3]});
         let result = handler.handle_store(params).await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_retrieve_invalid_params() {
+        let handler = NestGateRpcHandler::new();
+        let result = handler
+            .handle_retrieve(serde_json::json!("not_object"))
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_retrieve_without_backend() {
+        let handler = NestGateRpcHandler::new();
+        let result = handler
+            .handle_retrieve(serde_json::json!({"key": "k"}))
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_retrieve_with_backend_ok() {
+        let handler = NestGateRpcHandler::with_storage(Arc::new(MockStorage));
+        let result = handler
+            .handle_retrieve(serde_json::json!({"key": "k"}))
+            .await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_delete_invalid_params() {
+        let handler = NestGateRpcHandler::new();
+        assert!(handler.handle_delete(serde_json::json!([])).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_delete_without_backend() {
+        let handler = NestGateRpcHandler::new();
+        assert!(
+            handler
+                .handle_delete(serde_json::json!({"key": "k"}))
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_delete_with_backend_ok() {
+        let handler = NestGateRpcHandler::with_storage(Arc::new(MockStorage));
+        assert!(
+            handler
+                .handle_delete(serde_json::json!({"key": "k"}))
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_list_invalid_params_type() {
+        let handler = NestGateRpcHandler::new();
+        assert!(handler.handle_list(serde_json::json!("x")).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_list_without_backend() {
+        let handler = NestGateRpcHandler::new();
+        assert!(handler.handle_list(serde_json::json!({})).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_list_with_backend_ok() {
+        let handler = NestGateRpcHandler::with_storage(Arc::new(MockStorage));
+        assert!(
+            handler
+                .handle_list(serde_json::json!({"prefix": "p"}))
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_store_invalid_params() {
+        let handler = NestGateRpcHandler::with_storage(Arc::new(MockStorage));
+        assert!(
+            handler
+                .handle_store(serde_json::json!({"key": 1}))
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_system_info_ok() {
+        let handler = NestGateRpcHandler::new();
+        let v = handler.handle_system_info(serde_json::Value::Null).await;
+        assert!(v.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_method_dispatch_branches() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::new();
+        assert!(
+            handler
+                .handle_method("storage.list", serde_json::json!({}))
+                .await
+                .is_err()
+        );
+        assert!(
+            handler
+                .handle_method("health.ping", serde_json::json!({}))
+                .await
+                .is_ok()
+        );
     }
 }

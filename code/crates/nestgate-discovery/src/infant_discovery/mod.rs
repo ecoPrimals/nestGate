@@ -69,7 +69,7 @@ pub struct CapabilityDescriptor {
 }
 
 /// Types of capabilities that can be discovered
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Types of Capability
 pub enum CapabilityType {
     /// Storage capabilities (discovered, not assumed)
@@ -178,7 +178,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         let discovery_time = start_time.elapsed().as_nanos() as u64;
         engine.discovery_stats.total_discovered += compliant_capabilities.len() as u64;
         engine.discovery_stats.avg_discovery_time_ns =
-            (engine.discovery_stats.avg_discovery_time_ns + discovery_time) / 2;
+            u64::midpoint(engine.discovery_stats.avg_discovery_time_ns, discovery_time);
 
         for capability in &compliant_capabilities {
             engine
@@ -225,14 +225,16 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
 
     /// Verify sovereignty compliance
     #[must_use]
-    pub fn verify_sovereignty_compliance(&self) -> bool {
+    pub const fn verify_sovereignty_compliance(&self) -> bool {
         self.sovereignty_layer.compliance_status
     }
 
     // Private implementation methods
 
     /// Perform Runtime Discovery
-    async fn perform_runtime_discovery(&self) -> Result<Vec<CapabilityDescriptor>, InfantDiscoveryError> {
+    async fn perform_runtime_discovery(
+        &self,
+    ) -> Result<Vec<CapabilityDescriptor>, InfantDiscoveryError> {
         // In a real implementation, this would:
         // 1. Scan the network environment
         // 2. Detect available services without hardcoded knowledge
@@ -268,7 +270,10 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     }
 
     /// Creates  O1 Connection
-    async fn create_o1_connection(&self, capability_id: &str) -> Result<Connection, InfantDiscoveryError> {
+    async fn create_o1_connection(
+        &self,
+        capability_id: &str,
+    ) -> Result<Connection, InfantDiscoveryError> {
         // O(1) connection establishment
         let engine = self.discovery_engine.read().await;
 
@@ -438,9 +443,11 @@ mod tests {
             sovereignty_compliant: true,
         };
 
-        assert!(system
-            .sovereignty_layer
-            .validate_capability(&compliant_capability));
+        assert!(
+            system
+                .sovereignty_layer
+                .validate_capability(&compliant_capability)
+        );
 
         let non_compliant_capability = CapabilityDescriptor {
             id: "surveillance_capability".to_string(),
@@ -450,8 +457,10 @@ mod tests {
             sovereignty_compliant: false,
         };
 
-        assert!(!system
-            .sovereignty_layer
-            .validate_capability(&non_compliant_capability));
+        assert!(
+            !system
+                .sovereignty_layer
+                .validate_capability(&non_compliant_capability)
+        );
     }
 }

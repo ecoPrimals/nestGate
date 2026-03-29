@@ -106,29 +106,25 @@ pub struct ResourceUsage {
 pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<HealthStatus>> {
     debug!("Performing health check");
     // Check service statuses
-    let zfs_engines = state.zfs_engines.read().await;
-    let zfs_status = if zfs_engines.is_empty() {
+    let zfs_status = if state.zfs_engines.is_empty() {
         "idle"
     } else {
         "online"
     };
 
-    let storage_detector = state.storage_detector.try_lock();
+    let storage_detector = state.storage_detector.try_read();
     let storage_detector_status = if storage_detector.is_ok() {
         "online"
     } else {
         "busy"
     };
 
-    {
-        let guard = state.auto_configurator.lock().await;
-        if guard.is_none() {
-            tracing::warn!("Auto configurator not available - continuing with degraded status");
-            // Continue with degraded status rather than error;
-            // auto_configurator_status will be set to "unavailable" below.
-        }
+    if state.auto_configurator.get().is_none() {
+        tracing::warn!("Auto configurator not available - continuing with degraded status");
+        // Continue with degraded status rather than error;
+        // auto_configurator_status will be set to "unavailable" below.
     }
-    let auto_configurator_status = if state.auto_configurator.lock().await.is_some() {
+    let auto_configurator_status = if state.auto_configurator.get().is_some() {
         "online"
     } else {
         "unavailable"
@@ -184,11 +180,10 @@ pub async fn system_status(State(state): State<ApiState>) -> Json<DataResponse<S
     let resources = get_resource_usage();
 
     // Count datasets and snapshots
-    let engines = state.zfs_engines.read().await;
-    let datasets_count = engines.len() as u32;
+    let datasets_count = state.zfs_engines.len() as u32;
 
     let mut snapshots_count = 0;
-    for (_name, _engine) in engines.iter() {
+    for _entry in state.zfs_engines.iter() {
         // Placeholder stats - _engine is now just a String
         snapshots_count += 5; // Placeholder snapshot count
     }
@@ -313,11 +308,11 @@ fn get_engine_snapshot_count(
     use std::fs;
     use std::path::Path;
     let snapshot_dir = Path::new("/tmp/nestgate/snapshots");
-    if snapshot_dir.exists() {
-        if let Ok(entries) = fs::read_dir(snapshot_dir) {
-            let count = entries.filter_map(std::result::Result::ok).count() as u64;
-            return Ok(count);
-        }
+    if snapshot_dir.exists()
+        && let Ok(entries) = fs::read_dir(snapshot_dir)
+    {
+        let count = entries.filter_map(std::result::Result::ok).count() as u64;
+        return Ok(count);
     }
 
     // Default to 0 if no snapshots found
@@ -328,18 +323,18 @@ fn get_engine_snapshot_count(
 mod tests {
     use super::*;
     use crate::rest::ApiState;
+    use dashmap::DashMap;
     use nestgate_core::universal_storage::StorageDetector;
-    use std::collections::HashMap;
-    use std::sync::Arc;
-    use tokio::sync::{Mutex, RwLock};
+    use std::sync::{Arc, OnceLock};
+    use tokio::sync::RwLock;
 
     /// Helper to create a test API state
     fn create_test_api_state() -> ApiState {
         ApiState {
-            zfs_engines: Arc::new(RwLock::new(HashMap::new())),
-            storage_detector: Arc::new(Mutex::new(StorageDetector::default())),
-            auto_configurator: Arc::new(Mutex::new(None)),
-            rpc_manager: Arc::new(Mutex::new(None)),
+            zfs_engines: Arc::new(DashMap::new()),
+            storage_detector: Arc::new(RwLock::new(StorageDetector::default())),
+            auto_configurator: Arc::new(OnceLock::new()),
+            rpc_manager: Arc::new(OnceLock::new()),
         }
     }
 
@@ -370,10 +365,9 @@ mod tests {
         let state = create_test_api_state();
 
         // Add a test engine
-        {
-            let mut engines = state.zfs_engines.write().await;
-            engines.insert("test-engine".to_string(), "engine-data".to_string());
-        }
+        state
+            .zfs_engines
+            .insert("test-engine".to_string(), "engine-data".to_string());
 
         let result = health_check(State(state)).await;
 
@@ -426,12 +420,15 @@ mod tests {
         let state = create_test_api_state();
 
         // Add test datasets
-        {
-            let mut engines = state.zfs_engines.write().await;
-            engines.insert("dataset1".to_string(), "data1".to_string());
-            engines.insert("dataset2".to_string(), "data2".to_string());
-            engines.insert("dataset3".to_string(), "data3".to_string());
-        }
+        state
+            .zfs_engines
+            .insert("dataset1".to_string(), "data1".to_string());
+        state
+            .zfs_engines
+            .insert("dataset2".to_string(), "data2".to_string());
+        state
+            .zfs_engines
+            .insert("dataset3".to_string(), "data3".to_string());
 
         let result = system_status(State(state)).await;
 

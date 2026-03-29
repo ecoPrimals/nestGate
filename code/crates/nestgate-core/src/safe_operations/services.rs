@@ -3,8 +3,8 @@
 
 // Safe service operations
 
-use crate::error::NestGateError;
 use crate::Result;
+use crate::error::NestGateError;
 
 /// Safely call a service operation with error handling
 pub fn safe_service_call<T, F>(operation_name: &str, operation: F) -> Result<T>

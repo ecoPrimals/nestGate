@@ -9,15 +9,15 @@
 
 use axum::{
     extract::{
-        ws::{Message, WebSocket},
         WebSocketUpgrade,
+        ws::{Message, WebSocket},
     },
     response::IntoResponse,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{RwLock, broadcast};
 use tracing::{error, info, warn};
 
 /// WebSocket event types for real-time communication
@@ -140,11 +140,11 @@ async fn handle_websocket_connection(
         timestamp: chrono::Utc::now().to_rfc3339(),
     };
 
-    if let Ok(welcome_json) = serde_json::to_string(&welcome_event) {
-        if let Err(e) = socket.send(Message::Text(welcome_json)).await {
-            error!("Failed to send welcome message: {}", e);
-            return;
-        }
+    if let Ok(welcome_json) = serde_json::to_string(&welcome_event)
+        && let Err(e) = socket.send(Message::Text(welcome_json)).await
+    {
+        error!("Failed to send welcome message: {}", e);
+        return;
     }
 
     // Handle incoming messages and broadcast events
@@ -161,12 +161,11 @@ async fn handle_websocket_connection(
                             timestamp: chrono::Utc::now().to_rfc3339(),
                         };
 
-                        if let Ok(response_json) = serde_json::to_string(&response) {
-                            if let Err(e) = socket.send(Message::Text(response_json)).await {
+                        if let Ok(response_json) = serde_json::to_string(&response)
+                            && let Err(e) = socket.send(Message::Text(response_json)).await {
                                 error!("Failed to send response: {}", e);
                                 break;
                             }
-                        }
                     }
                     Some(Ok(Message::Close(_))) => {
                         info!("WebSocket client disconnected");
@@ -189,12 +188,11 @@ async fn handle_websocket_connection(
             event = event_receiver.recv() => {
                 match event {
                     Ok(event) => {
-                        if let Ok(event_json) = serde_json::to_string(&event) {
-                            if let Err(e) = socket.send(Message::Text(event_json)).await {
+                        if let Ok(event_json) = serde_json::to_string(&event)
+                            && let Err(e) = socket.send(Message::Text(event_json)).await {
                                 error!("Failed to send broadcast event: {}", e);
                                 break;
                             }
-                        }
                     }
                     Err(broadcast::error::RecvError::Closed) => {
                         info!("Broadcast channel closed");

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive performance settings including general optimization,
 /// I/O tuning, compression, deduplication, and auto-tuning capabilities.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StoragePerformance
+/// Configuration for `StoragePerformance`
 pub struct StoragePerformanceConfig {
     /// General performance optimization settings.
     pub optimization: PerformanceOptimizationConfig,
@@ -28,7 +28,7 @@ pub struct StoragePerformanceConfig {
 ///
 /// Controls whether performance optimizations are enabled globally.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for PerformanceOptimization
+/// Configuration for `PerformanceOptimization`
 pub struct PerformanceOptimizationConfig {
     /// Whether performance optimizations are enabled (default: true).
     pub enabled: bool,
@@ -38,7 +38,7 @@ pub struct PerformanceOptimizationConfig {
 ///
 /// Controls I/O-specific performance optimizations like buffering and prefetching.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for IOOptimization
+/// Configuration for `IOOptimization`
 pub struct IOOptimizationConfig {
     /// Whether I/O optimizations are enabled (default: true).
     pub enabled: bool,
@@ -136,7 +136,7 @@ impl StoragePerformanceConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

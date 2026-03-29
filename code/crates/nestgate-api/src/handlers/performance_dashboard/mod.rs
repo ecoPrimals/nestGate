@@ -17,8 +17,8 @@ pub use types::*;
 
 // Re-export simplified handler functions
 pub use handlers::{
-    get_dashboard_overview, get_performance_analysis, stream_dashboard_metrics, DashboardQuery,
-    PerformanceDashboard,
+    DashboardQuery, PerformanceDashboard, get_dashboard_overview, get_performance_analysis,
+    stream_dashboard_metrics,
 };
 
 #[cfg(test)]

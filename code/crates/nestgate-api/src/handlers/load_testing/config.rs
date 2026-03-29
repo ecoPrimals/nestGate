@@ -26,7 +26,7 @@ use std::collections::HashMap;
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for LoadTest
+/// Configuration for `LoadTest`
 pub struct LoadTestConfig {
     /// Test duration in seconds
     pub duration_seconds: u64,
@@ -119,7 +119,7 @@ pub struct LoadTestParameters {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for TestData
+/// Configuration for `TestData`
 pub struct TestDataConfig {
     /// Request payload size in bytes
     pub payload_size_bytes: usize,

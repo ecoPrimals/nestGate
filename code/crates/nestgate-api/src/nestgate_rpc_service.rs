@@ -29,7 +29,7 @@ use tracing::{debug, error, info, warn};
 
 // ==================== TARPC SERVICE TRAIT ====================
 
-/// NestGate RPC Service trait - defines storage operations for inter-primal communication
+/// `NestGate` RPC Service trait - defines storage operations for inter-primal communication
 ///
 /// This follows the same pattern as Songbird's `SongbirdRpc` trait.
 /// Songbird will discover and call these methods for distributed storage operations.
@@ -188,7 +188,7 @@ pub struct VersionInfo {
 
 // ==================== TARPC SERVER IMPLEMENTATION ====================
 
-/// NestGate tarpc server implementation with real backend connections
+/// `NestGate` tarpc server implementation with real backend connections
 #[derive(Clone)]
 pub struct NestGateRpcServer {
     state: Arc<ServerState>,
@@ -203,7 +203,7 @@ struct ServerState {
 }
 
 impl NestGateRpcServer {
-    /// Create new NestGate RPC server with real ZFS backend
+    /// Create new `NestGate` RPC server with real ZFS backend
     ///
     /// ## Deep Debt Solution: Real Backend Connection
     ///
@@ -541,8 +541,8 @@ impl NestGateRpc for NestGateRpcServer {
                     (t + pool_total, u + pool_used, a + pool_avail, c + 1.5) // Compression from pool props
                 });
 
-        let dataset_count = datasets_result.as_ref().map_or(0, |d| d.len());
-        let snapshot_count = snapshots_result.as_ref().map_or(0, |s| s.len());
+        let dataset_count = datasets_result.as_ref().map_or(0, std::vec::Vec::len);
+        let snapshot_count = snapshots_result.as_ref().map_or(0, std::vec::Vec::len);
 
         let avg_compression = if pools.is_empty() {
             1.0
@@ -658,7 +658,7 @@ impl NestGateRpc for NestGateRpcServer {
 
 // ==================== JSON-RPC WRAPPER ====================
 
-/// JSON-RPC handler for NestGate operations
+/// JSON-RPC handler for `NestGate` operations
 ///
 /// This provides HTTP-based RPC access using JSON-RPC 2.0 protocol.
 /// Songbird can use this for initial discovery before escalating to tarpc.
@@ -668,6 +668,7 @@ pub struct NestGateJsonRpcHandler {
 
 impl NestGateJsonRpcHandler {
     /// Create new JSON-RPC handler
+    #[must_use]
     pub fn new() -> Self {
         Self {
             server: NestGateRpcServer::default(),
@@ -702,11 +703,26 @@ impl NestGateJsonRpcHandler {
                 serde_json::to_value(result)
                     .map_err(|e| format!("Failed to serialize get_metrics result: {e}"))
             }
-            "health" => {
+            // Full health snapshot (legacy "health" + semantic names)
+            "health" | "health.liveness" | "health.check" => {
                 let ctx = Context::current();
                 let result = self.server.clone().health(ctx).await;
                 serde_json::to_value(result)
                     .map_err(|e| format!("Failed to serialize health result: {e}"))
+            }
+            "health.readiness" => {
+                let ctx = Context::current();
+                let h = self.server.clone().health(ctx).await;
+                let ready = h.status != "unhealthy";
+                serde_json::to_value(serde_json::json!({
+                    "ready": ready,
+                    "status": h.status,
+                    "version": h.version,
+                    "uptime_seconds": h.uptime_seconds,
+                    "pools_healthy": h.pools_healthy,
+                    "pools_total": h.pools_total,
+                }))
+                .map_err(|e| format!("Failed to serialize health.readiness result: {e}"))
             }
             "version" => {
                 let ctx = Context::current();
@@ -714,7 +730,7 @@ impl NestGateJsonRpcHandler {
                 serde_json::to_value(result)
                     .map_err(|e| format!("Failed to serialize version result: {e}"))
             }
-            "capabilities" => {
+            "capabilities" | "capabilities.list" => {
                 let ctx = Context::current();
                 let result = self.server.clone().capabilities(ctx).await;
                 serde_json::to_value(result)
@@ -735,7 +751,7 @@ impl Default for NestGateJsonRpcHandler {
 
 /// Parse pool capacity from ZFS pool info
 ///
-/// Returns (total_gb, used_gb, available_gb)
+/// Returns (`total_gb`, `used_gb`, `available_gb`)
 fn parse_pool_capacity(pool: &nestgate_zfs::command::ZfsPool) -> (u64, u64, u64) {
     // Parse ZFS size strings (e.g., "500G", "1.5T")
     let parse_size = |s: &str| -> u64 {
@@ -782,6 +798,98 @@ fn parse_zfs_size(s: &str) -> u64 {
 mod tests {
     use super::*;
 
+    #[test]
+    fn parse_zfs_size_units() {
+        assert_eq!(parse_zfs_size("2T"), 2048);
+        assert_eq!(parse_zfs_size("10G"), 10);
+        assert_eq!(parse_zfs_size("1024M"), 1);
+        assert_eq!(parse_zfs_size("1048576K"), 1);
+        assert_eq!(parse_zfs_size(&format!("{}", 2u64 * 1024 * 1024 * 1024)), 2);
+        assert_eq!(parse_zfs_size("  5G  "), 5);
+        assert_eq!(parse_zfs_size("bad"), 0);
+    }
+
+    #[test]
+    fn parse_pool_capacity_from_zfs_pool() {
+        let pool = nestgate_zfs::command::ZfsPool {
+            name: "tank".to_string(),
+            size: "4T".to_string(),
+            allocated: "500G".to_string(),
+            free: "3.5T".to_string(),
+            health: "ONLINE".to_string(),
+        };
+        let (t, u, f) = parse_pool_capacity(&pool);
+        assert_eq!(t, 4 * 1024);
+        assert_eq!(u, 500);
+        // "3.5T" truncates f64 to u64 before scaling (3 * 1024)
+        assert_eq!(f, 3072);
+    }
+
+    #[tokio::test]
+    async fn json_rpc_unknown_method_returns_err() {
+        let handler = NestGateJsonRpcHandler::new();
+        let err = handler
+            .handle("not_a_real_method", serde_json::Value::Null)
+            .await
+            .unwrap_err();
+        assert!(err.contains("Unknown method"));
+    }
+
+    #[tokio::test]
+    async fn json_rpc_list_datasets_requires_pool_string() {
+        let handler = NestGateJsonRpcHandler::new();
+        let err = handler
+            .handle("list_datasets", serde_json::json!(123))
+            .await
+            .unwrap_err();
+        assert!(!err.is_empty());
+    }
+
+    #[tokio::test]
+    async fn json_rpc_list_datasets_with_pool_serializes() {
+        let handler = NestGateJsonRpcHandler::new();
+        let v = handler
+            .handle("list_datasets", serde_json::json!("my_pool"))
+            .await
+            .expect("list_datasets");
+        assert!(v.is_array());
+    }
+
+    #[tokio::test]
+    async fn json_rpc_capabilities_aliases() {
+        let handler = NestGateJsonRpcHandler::new();
+        let a = handler
+            .handle("capabilities", serde_json::Value::Null)
+            .await
+            .unwrap();
+        let b = handler
+            .handle("capabilities.list", serde_json::Value::Null)
+            .await
+            .unwrap();
+        assert_eq!(a, b);
+    }
+
+    #[tokio::test]
+    async fn json_rpc_version_round_trip() {
+        let handler = NestGateJsonRpcHandler::new();
+        let v = handler
+            .handle("version", serde_json::Value::Null)
+            .await
+            .expect("version");
+        assert!(v.get("protocol").and_then(|x| x.as_str()) == Some("tarpc"));
+    }
+
+    #[tokio::test]
+    async fn json_rpc_health_readiness_shape() {
+        let handler = NestGateJsonRpcHandler::new();
+        let v = handler
+            .handle("health.readiness", serde_json::Value::Null)
+            .await
+            .expect("readiness");
+        assert!(v.get("ready").is_some());
+        assert!(v.get("status").is_some());
+    }
+
     #[tokio::test]
     async fn test_rpc_server_creation() {
         // Create mock ZFS backend for testing
@@ -827,5 +935,91 @@ mod tests {
 
         let result = handler.handle("health", serde_json::Value::Null).await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn json_rpc_health_liveness_matches_health_core_fields() {
+        let handler = NestGateJsonRpcHandler::new();
+        let h = handler
+            .handle("health", serde_json::Value::Null)
+            .await
+            .unwrap();
+        let l = handler
+            .handle("health.liveness", serde_json::Value::Null)
+            .await
+            .unwrap();
+        assert_eq!(h.get("status"), l.get("status"));
+        assert_eq!(h.get("pools_total"), l.get("pools_total"));
+    }
+
+    #[tokio::test]
+    async fn json_rpc_health_check_alias_is_health() {
+        let handler = NestGateJsonRpcHandler::new();
+        let a = handler
+            .handle("health.check", serde_json::Value::Null)
+            .await
+            .unwrap();
+        let b = handler
+            .handle("health", serde_json::Value::Null)
+            .await
+            .unwrap();
+        assert_eq!(a, b);
+    }
+
+    #[tokio::test]
+    async fn json_rpc_get_metrics_has_capacity_fields() {
+        let handler = NestGateJsonRpcHandler::new();
+        let v = handler
+            .handle("get_metrics", serde_json::Value::Null)
+            .await
+            .unwrap();
+        assert!(v.get("total_capacity_gb").is_some());
+        assert!(v.get("dataset_count").is_some());
+    }
+
+    #[test]
+    fn rpc_pool_info_and_health_status_serde_roundtrip() {
+        let p = PoolInfo {
+            name: "t".to_string(),
+            total_capacity_gb: 10,
+            used_capacity_gb: 1,
+            available_capacity_gb: 9,
+            health_status: "ONLINE".to_string(),
+            backend: "zfs".to_string(),
+        };
+        let v = serde_json::to_value(&p).unwrap();
+        let back: PoolInfo = serde_json::from_value(v).unwrap();
+        assert_eq!(back.name, p.name);
+
+        let h = HealthStatus {
+            status: "healthy".to_string(),
+            version: "0".to_string(),
+            uptime_seconds: 1,
+            pools_healthy: 1,
+            pools_total: 1,
+        };
+        let v2 = serde_json::to_string(&h).unwrap();
+        let h2: HealthStatus = serde_json::from_str(&v2).unwrap();
+        assert_eq!(h2.status, "healthy");
+    }
+
+    #[test]
+    fn operation_result_and_version_info_serde() {
+        let r = OperationResult {
+            success: true,
+            message: "ok".to_string(),
+            data: Some(serde_json::json!({"a": 1})),
+        };
+        let s = serde_json::to_string(&r).unwrap();
+        let r2: OperationResult = serde_json::from_str(&s).unwrap();
+        assert!(r2.success);
+
+        let vi = VersionInfo {
+            version: "1".to_string(),
+            protocol: "tarpc".to_string(),
+            capabilities: vec!["storage".to_string()],
+        };
+        let v = serde_json::to_value(&vi).unwrap();
+        assert_eq!(v["protocol"], "tarpc");
     }
 }

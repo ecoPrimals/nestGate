@@ -18,7 +18,7 @@ pub use handlers::{
     create_compliance_routes, create_retention_policy, get_audit_logs, get_compliance_dashboard,
     get_retention_policies, get_violations,
 };
-pub use manager::{initialize_compliance_manager, ComplianceManager, ComplianceState};
+pub use manager::{ComplianceManager, ComplianceState, initialize_compliance_manager};
 pub use types::*;
 
 #[cfg(test)]

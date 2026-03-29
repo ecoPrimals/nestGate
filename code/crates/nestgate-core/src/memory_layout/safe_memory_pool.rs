@@ -29,8 +29,8 @@
 //! ```
 
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
 use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 

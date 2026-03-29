@@ -6,7 +6,7 @@ use std::sync::Arc;
 /// Thread-safe configuration for network port defaults
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
-/// Configuration for NetworkDefaults
+/// Configuration for `NetworkDefaults`
 pub struct NetworkDefaultsConfig {
     // Port configurations
     api_port: Option<u16>,
@@ -33,12 +33,13 @@ pub struct NetworkDefaultsConfig {
     request_timeout_ms: Option<u64>,
 }
 
-/// Shared immutable reference to NetworkDefaultsConfig
+/// Shared immutable reference to `NetworkDefaultsConfig`
 pub type SharedNetworkDefaultsConfig = Arc<NetworkDefaultsConfig>;
 
 impl NetworkDefaultsConfig {
     /// Create a new empty configuration (all values None, will use hardcoded defaults)
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             api_port: None,
             websocket_port: None,
@@ -61,6 +62,7 @@ impl NetworkDefaultsConfig {
 
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             api_port: std::env::var("NESTGATE_API_PORT")
@@ -105,41 +107,49 @@ impl NetworkDefaultsConfig {
     // Port getters with fallback to established defaults
 
     /// Gets Api Port
+    #[must_use]
     pub fn get_api_port(&self) -> u16 {
         self.api_port.unwrap_or(3000) // API default (Node.js convention)
     }
 
     /// Gets Websocket Port
+    #[must_use]
     pub fn get_websocket_port(&self) -> u16 {
         self.websocket_port.unwrap_or(8082) // WebSocket default
     }
 
     /// Gets Http Port
+    #[must_use]
     pub fn get_http_port(&self) -> u16 {
         self.http_port.unwrap_or(8080) // HTTP default
     }
 
     /// Gets Nas Http Port
+    #[must_use]
     pub fn get_nas_http_port(&self) -> u16 {
         self.nas_http_port.unwrap_or(8080) // HTTP default for NAS
     }
 
     /// Gets Dev Server Port
+    #[must_use]
     pub fn get_dev_server_port(&self) -> u16 {
         self.dev_server_port.unwrap_or(3000) // Development server default
     }
 
     /// Gets Metrics Port
+    #[must_use]
     pub fn get_metrics_port(&self) -> u16 {
         self.metrics_port.unwrap_or(9090) // Prometheus default
     }
 
     /// Gets Health Port
+    #[must_use]
     pub fn get_health_port(&self) -> u16 {
         self.health_port.unwrap_or(8081) // Health check default
     }
 
     /// Gets Orchestrator Port
+    #[must_use]
     pub fn get_orchestrator_port(&self) -> u16 {
         self.orchestrator_port.unwrap_or(8090) // Orchestrator default
     }
@@ -147,6 +157,7 @@ impl NetworkDefaultsConfig {
     // Address getters with fallback to defaults
 
     /// Gets Bind Address
+    #[must_use]
     pub fn get_bind_address(&self) -> String {
         self.bind_address
             .clone()
@@ -154,6 +165,7 @@ impl NetworkDefaultsConfig {
     }
 
     /// Gets Development Bind Address
+    #[must_use]
     pub fn get_development_bind_address(&self) -> String {
         self.dev_bind_address
             .clone()
@@ -161,6 +173,7 @@ impl NetworkDefaultsConfig {
     }
 
     /// Gets Hostname
+    #[must_use]
     pub fn get_hostname(&self) -> String {
         self.hostname
             .clone()
@@ -168,6 +181,7 @@ impl NetworkDefaultsConfig {
     }
 
     /// Gets External Hostname
+    #[must_use]
     pub fn get_external_hostname(&self) -> String {
         self.external_hostname
             .clone()
@@ -177,6 +191,7 @@ impl NetworkDefaultsConfig {
     // URL getters with dynamic construction if not provided
 
     /// Gets Websocket Base Url
+    #[must_use]
     pub fn get_websocket_base_url(&self) -> String {
         self.websocket_base_url.clone().unwrap_or_else(|| {
             let discovery_config =
@@ -190,6 +205,7 @@ impl NetworkDefaultsConfig {
     }
 
     /// Gets Api Base Url
+    #[must_use]
     pub fn get_api_base_url(&self) -> String {
         self.api_base_url.clone().unwrap_or_else(|| {
             let discovery_config =
@@ -201,11 +217,13 @@ impl NetworkDefaultsConfig {
     // Timeout getters
 
     /// Gets Connection Timeout Ms
+    #[must_use]
     pub fn get_connection_timeout_ms(&self) -> u64 {
         self.connection_timeout_ms.unwrap_or(3000)
     }
 
     /// Gets Request Timeout Ms
+    #[must_use]
     pub fn get_request_timeout_ms(&self) -> u64 {
         self.request_timeout_ms.unwrap_or(30000)
     }
@@ -213,37 +231,43 @@ impl NetworkDefaultsConfig {
     // Builder methods for tests
 
     /// Builder method to set Api Port
-    pub fn with_api_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_api_port(mut self, port: u16) -> Self {
         self.api_port = Some(port);
         self
     }
 
     /// Builder method to set Websocket Port
-    pub fn with_websocket_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_websocket_port(mut self, port: u16) -> Self {
         self.websocket_port = Some(port);
         self
     }
 
     /// Builder method to set Http Port
-    pub fn with_http_port(mut self, port: u16) -> Self {
+    #[must_use]
+    pub const fn with_http_port(mut self, port: u16) -> Self {
         self.http_port = Some(port);
         self
     }
 
     /// Builder method to set Bind Address
+    #[must_use]
     pub fn with_bind_address(mut self, address: String) -> Self {
         self.bind_address = Some(address);
         self
     }
 
     /// Builder method to set Hostname
+    #[must_use]
     pub fn with_hostname(mut self, hostname: String) -> Self {
         self.hostname = Some(hostname);
         self
     }
 
     /// Builder method to set Connection Timeout Ms
-    pub fn with_connection_timeout_ms(mut self, timeout: u64) -> Self {
+    #[must_use]
+    pub const fn with_connection_timeout_ms(mut self, timeout: u64) -> Self {
         self.connection_timeout_ms = Some(timeout);
         self
     }

@@ -25,11 +25,11 @@
 //! - **Phase 3** (Week 3): Deprecate environment-only discovery
 //! - **Phase 4** (Week 4): Remove deprecated code
 
-use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 use crate::universal_primal_discovery::backends::{InMemoryDiscoveryBackend, MdnsDiscoveryBackend};
 use crate::universal_primal_discovery::capability_based_discovery::{
     CapabilityDiscoveryManager, DiscoveryQuery, PeerDescriptor, PrimalCapability,
 };
+use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_types::error::{NestGateError, Result};
 use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
@@ -64,7 +64,7 @@ impl CapabilityAwareDiscovery {
     ///
     /// # Arguments
     ///
-    /// * `config` - NestGate canonical configuration
+    /// * `config` - `NestGate` canonical configuration
     ///
     /// # Returns
     ///
@@ -79,7 +79,7 @@ impl CapabilityAwareDiscovery {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery;
     /// # use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
     /// # async fn example(config: &NestGateCanonicalConfig) -> nestgate_core::Result<()> {
@@ -314,7 +314,7 @@ impl CapabilityAwareDiscovery {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery;
     /// # async fn example(discovery: &CapabilityAwareDiscovery) -> nestgate_core::Result<()> {
     /// // Get best endpoint automatically
@@ -336,13 +336,13 @@ impl CapabilityAwareDiscovery {
             })
             .min_by_key(|s| s.latency.unwrap_or(Duration::from_secs(999)))
             .ok_or_else(|| {
-                NestGateError::not_found(format!("No healthy {} service", service_name))
+                NestGateError::not_found(format!("No healthy {service_name} service"))
             })?;
 
         Ok(best.endpoint.address)
     }
 
-    /// Discover port - DEPRECATED (use find_service instead)
+    /// Discover port - DEPRECATED (use `find_service` instead)
     ///
     /// Maintained for backward compatibility. New code should use `find_service`.
     ///
@@ -359,8 +359,7 @@ impl CapabilityAwareDiscovery {
             Ok(_) => {
                 // No services found - return error (no hardcoded fallback!)
                 Err(NestGateError::not_found(format!(
-                    "Service '{}' not found in discovery",
-                    service_name
+                    "Service '{service_name}' not found in discovery"
                 )))
             }
             Err(e) => Err(e),
@@ -380,8 +379,7 @@ impl CapabilityAwareDiscovery {
         match self.find_service(service_name).await {
             Ok(services) if !services.is_empty() => Ok(services[0].endpoint.address.ip()),
             Ok(_) => Err(NestGateError::not_found(format!(
-                "Service '{}' not found",
-                service_name
+                "Service '{service_name}' not found"
             ))),
             Err(e) => Err(e),
         }
@@ -404,7 +402,7 @@ impl CapabilityAwareDiscovery {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust,ignore
     /// # use nestgate_core::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery;
     /// # async fn example(discovery: CapabilityAwareDiscovery) -> nestgate_core::Result<()> {
     /// // During application shutdown

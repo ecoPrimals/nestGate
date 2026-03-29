@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-/// Universal Service Registry Implementation  
+/// Universal Service Registry Implementation\
 /// Extracted from `universal_service_discovery.rs` to maintain file size compliance
 /// Contains the main `InMemoryServiceRegistry` implementation and trait definitions
 ///
-/// **MODERNIZED**: Lock-free concurrent access using DashMap (2-10x faster!)
+/// **MODERNIZED**: Lock-free concurrent access using `DashMap` (2-10x faster!)
 /// - Eliminates lock contention in service lookups
 /// - Better multi-core scalability
-/// - Simpler API (no .read()/.write() ceremony)
+/// - Simpler API (no .`read()/.write()` ceremony)
 use super::types::{
     SelectionPreferences, ServiceCapability, ServiceCategory, ServiceHandle, ServiceInfo,
     ServiceRequirements, ServiceRole, UniversalServiceRegistration,
 };
-use nestgate_types::error::Result;
 use dashmap::DashMap;
+use nestgate_types::error::Result;
 use std::sync::Arc;
 use uuid::Uuid;
 
 // Type aliases to reduce complexity - using DashMap for lock-free concurrent access
 type ServiceMap = Arc<DashMap<Uuid, UniversalServiceRegistration>>;
-/// Type alias for CapabilityIndexMap - lock-free concurrent index
+/// Type alias for `CapabilityIndexMap` - lock-free concurrent index
 type CapabilityIndexMap = Arc<DashMap<ServiceCapability, Vec<Uuid>>>;
 
 /// Universal service registry trait - capability-based service discovery
@@ -301,20 +301,18 @@ impl InMemoryServiceRegistry {
 
         // Check resource constraints if specified
         if let Some(constraints) = &requirements.resource_constraints {
-            if let Some(max_cpu) = constraints.max_cpu_cores {
-                if let Some(service_cpu) = registration.resources.cpu_cores {
-                    if service_cpu > max_cpu {
-                        return false;
-                    }
-                }
+            if let Some(max_cpu) = constraints.max_cpu_cores
+                && let Some(service_cpu) = registration.resources.cpu_cores
+                && service_cpu > max_cpu
+            {
+                return false;
             }
 
-            if let Some(max_memory) = constraints.max_memory_mb {
-                if let Some(service_memory) = registration.resources.memory_mb {
-                    if service_memory > max_memory {
-                        return false;
-                    }
-                }
+            if let Some(max_memory) = constraints.max_memory_mb
+                && let Some(service_memory) = registration.resources.memory_mb
+                && service_memory > max_memory
+            {
+                return false;
             }
         }
 
@@ -367,7 +365,7 @@ impl InMemoryServiceRegistry {
                 service_id: registration.service_id,
                 metadata: registration.metadata.clone(),
                 capabilities: registration.capabilities.clone(),
-                endpoints: registration.endpoints.clone(),
+                endpoints: registration.endpoints,
                 last_seen: std::time::SystemTime::now(),
             })
             .collect();

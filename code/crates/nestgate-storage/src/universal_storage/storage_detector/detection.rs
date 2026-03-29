@@ -21,7 +21,7 @@ pub struct DetectionEngine<'a> {
 impl<'a> DetectionEngine<'a> {
     /// Create new detection engine with configuration
     #[must_use]
-    pub fn new(config: &'a DetectionConfig) -> Self {
+    pub const fn new(config: &'a DetectionConfig) -> Self {
         Self { config }
     }
 

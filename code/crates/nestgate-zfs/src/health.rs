@@ -8,8 +8,8 @@
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ use tracing::debug;
 use tracing::info;
 
 /// Health status enumeration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 /// Status values for Health
 pub enum HealthStatus {
     /// Healthy
@@ -104,14 +104,14 @@ pub struct ZfsHealthMonitor {
 impl HealthStatus {
     /// Returns `true` if the health status is critical.
     #[must_use]
-    pub fn is_critical(&self) -> bool {
+    pub const fn is_critical(&self) -> bool {
         matches!(self, Self::Critical)
     }
 
     /// Returns `true` if the health status is healthy.
     #[must_use]
-    pub fn is_healthy(&self) -> bool {
-        matches!(self, HealthStatus::Healthy)
+    pub const fn is_healthy(&self) -> bool {
+        matches!(self, Self::Healthy)
     }
 }
 
@@ -119,10 +119,10 @@ impl std::fmt::Display for HealthStatus {
     /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            HealthStatus::Healthy => write!(f, "Healthy"),
-            HealthStatus::Warning => write!(f, "Warning"),
-            HealthStatus::Critical => write!(f, "Critical"),
-            HealthStatus::Unknown => write!(f, "Unknown"),
+            Self::Healthy => write!(f, "Healthy"),
+            Self::Warning => write!(f, "Warning"),
+            Self::Critical => write!(f, "Critical"),
+            Self::Unknown => write!(f, "Unknown"),
         }
     }
 }
@@ -233,9 +233,7 @@ impl ZfsHealthMonitor {
                                 component_name: pool.name.clone(),
                                 status: health_status,
                                 last_check: SystemTime::now(),
-                                details: "Dataset health assessment completed"
-                                    .to_string()
-                                    .to_string(),
+                                details: "Dataset health assessment completed".to_string().clone(),
                             },
                         );
                     }
@@ -376,11 +374,11 @@ impl ZfsHealthMonitor {
                         total_datasets += 1;
 
                         // Parse available space and check if it's critically low
-                        if let Ok(avail_bytes) = fields[1].parse::<u64>() {
-                            if avail_bytes < 1024 * 1024 * 1024 {
-                                // Less than 1GB available
-                                low_space_datasets += 1;
-                            }
+                        if let Ok(avail_bytes) = fields[1].parse::<u64>()
+                            && avail_bytes < 1024 * 1024 * 1024
+                        {
+                            // Less than 1GB available
+                            low_space_datasets += 1;
                         }
                     }
                 }
@@ -512,5 +510,28 @@ mod tests {
         assert!(r1.is_ok());
         let r2 = monitor.start_monitoring();
         assert!(r2.is_ok());
+    }
+
+    #[test]
+    fn alert_level_roundtrip_serde() {
+        for level in [AlertLevel::Info, AlertLevel::Warning, AlertLevel::Critical] {
+            let json = serde_json::to_string(&level).unwrap();
+            let back: AlertLevel = serde_json::from_str(&json).unwrap();
+            assert_eq!(format!("{level:?}"), format!("{back:?}"));
+        }
+    }
+
+    #[test]
+    fn health_status_partial_eq() {
+        assert_eq!(HealthStatus::Healthy, HealthStatus::Healthy);
+        assert_ne!(HealthStatus::Healthy, HealthStatus::Critical);
+    }
+
+    #[test]
+    fn round5_health_status_display_impl() {
+        assert_eq!(HealthStatus::Healthy.to_string(), "Healthy");
+        assert_eq!(HealthStatus::Warning.to_string(), "Warning");
+        assert_eq!(HealthStatus::Critical.to_string(), "Critical");
+        assert_eq!(HealthStatus::Unknown.to_string(), "Unknown");
     }
 }

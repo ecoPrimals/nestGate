@@ -299,15 +299,17 @@ impl CapabilityConfig {
     /// Get capability URL (http://host:port format)
     pub fn get_capability_url(&self, capability_id: &str) -> Result<String> {
         let endpoint = self.get_endpoint(capability_id)?;
-        Ok(format!("http://{}", endpoint))
+        Ok(format!("http://{endpoint}"))
     }
 
     /// Check if capability is available
+    #[must_use]
     pub fn has_capability(&self, capability_id: &str) -> bool {
         self.capabilities.contains_key(capability_id)
     }
 
     /// List all available capabilities
+    #[must_use]
     pub fn available_capabilities(&self) -> Vec<String> {
         self.capabilities.keys().cloned().collect()
     }
@@ -328,6 +330,7 @@ impl CapabilityDefaults {
     /// Secure defaults for production
     ///
     /// Uses 0.0.0.0 (all interfaces) with sensible port ranges.
+    #[must_use]
     pub fn secure() -> Self {
         let mut port_ranges = HashMap::new();
         port_ranges.insert(
@@ -366,6 +369,7 @@ impl CapabilityDefaults {
     /// Localhost defaults for development
     ///
     /// Uses 127.0.0.1 (localhost only) for safety.
+    #[must_use]
     pub fn development() -> Self {
         let mut defaults = Self::secure();
         defaults.bind_address = "127.0.0.1".to_string();
@@ -384,6 +388,7 @@ impl CapabilityInfo {
     }
 
     /// Get all endpoints (primary + additional)
+    #[must_use]
     pub fn all_endpoints(&self) -> Vec<SocketAddr> {
         let mut endpoints = Vec::new();
         if let Some(primary) = self.primary_endpoint {

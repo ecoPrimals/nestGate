@@ -281,4 +281,45 @@ mod tests {
     fn test_performance_tier_default() {
         assert_eq!(PerformanceTier::default(), PerformanceTier::Standard);
     }
+
+    #[test]
+    fn round5_performance_tier_display_impl() {
+        assert_eq!(PerformanceTier::Ultra.to_string(), "Ultra");
+        assert_eq!(PerformanceTier::Economy.to_string(), "Economy");
+    }
+
+    #[test]
+    fn round5_performance_tier_serde_roundtrip() {
+        for tier in [
+            PerformanceTier::Ultra,
+            PerformanceTier::High,
+            PerformanceTier::Standard,
+            PerformanceTier::Economy,
+        ] {
+            let json = serde_json::to_string(&tier).unwrap();
+            let back: PerformanceTier = serde_json::from_str(&json).unwrap();
+            assert_eq!(tier, back);
+        }
+    }
+
+    #[test]
+    fn round5_service_state_serde_roundtrip() {
+        for state in [
+            ServiceState::Running,
+            ServiceState::Stopping,
+            ServiceState::Error,
+        ] {
+            let json = serde_json::to_string(&state).unwrap();
+            let back: ServiceState = serde_json::from_str(&json).unwrap();
+            assert_eq!(state, back);
+        }
+    }
+
+    #[test]
+    fn round5_health_status_serde_roundtrip() {
+        let h = HealthStatus::Unhealthy;
+        let json = serde_json::to_string(&h).unwrap();
+        let back: HealthStatus = serde_json::from_str(&json).unwrap();
+        assert_eq!(h, back);
+    }
 }

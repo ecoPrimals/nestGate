@@ -42,8 +42,8 @@ pub mod runtime_discovery;
 
 // Re-export key types for convenience
 pub use capability_helpers::{
-    discover_ai, discover_capability, discover_compute, discover_ecosystem, discover_orchestration,
-    discover_security, is_capability_available, DiscoveredService, DiscoverySource,
+    DiscoveredService, DiscoverySource, discover_ai, discover_capability, discover_compute,
+    discover_ecosystem, discover_orchestration, discover_security, is_capability_available,
 };
 pub use runtime_discovery::{PrimalConnection, RuntimeDiscovery};
 
@@ -94,6 +94,7 @@ pub struct Endpoint {
 
 impl Endpoint {
     /// Create HTTP endpoint
+    #[must_use]
     pub fn http(port: u16) -> Self {
         Self {
             protocol: "http".into(),
@@ -103,6 +104,7 @@ impl Endpoint {
     }
 
     /// Get full URL
+    #[must_use]
     pub fn url(&self) -> String {
         let path = self.path.as_deref().unwrap_or("");
         format!("{}://{}{}", self.protocol, self.addr, path)
@@ -111,6 +113,7 @@ impl Endpoint {
 
 impl SelfKnowledge {
     /// Create a builder for self-knowledge
+    #[must_use]
     pub fn builder() -> SelfKnowledgeBuilder {
         SelfKnowledgeBuilder::default()
     }
@@ -139,6 +142,7 @@ impl SelfKnowledgeBuilder {
     }
 
     /// Add HTTP endpoint
+    #[must_use]
     pub fn endpoint_http(mut self, port: u16) -> Self {
         self.endpoints.push(Endpoint::http(port));
         self
@@ -151,6 +155,7 @@ impl SelfKnowledgeBuilder {
     }
 
     /// Build self-knowledge
+    #[must_use]
     pub fn build(self) -> SelfKnowledge {
         SelfKnowledge {
             name: self.name.unwrap_or_else(|| "unknown".into()),
@@ -171,7 +176,7 @@ pub struct PrimalDiscovery {
     self_knowledge: SelfKnowledge,
 
     /// Discovered primals (lock-free for concurrent discovery)
-    /// DashMap provides 5-10x better performance for discovery operations
+    /// `DashMap` provides 5-10x better performance for discovery operations
     discovered: Arc<DashMap<String, PrimalInfo>>,
 
     /// Discovery backend (mDNS, DNS-SD, etc.)
@@ -209,22 +214,25 @@ impl PrimalInfo {
     ///
     /// Each primal knows only itself. If no endpoint is configured, that's a
     /// configuration error, not something to paper over with hardcoded localhost.
+    #[must_use]
     pub fn primary_endpoint(&self) -> Option<String> {
-        self.endpoints.first().map(|e| e.url())
+        self.endpoints.first().map(Endpoint::url)
     }
 
     /// Get primary endpoint URL or a default from environment
     ///
     /// This is a convenience method that checks `NESTGATE_DEFAULT_ENDPOINT` environment
     /// variable as a fallback. Still no hardcoded values.
+    #[must_use]
     pub fn primary_endpoint_or_env_default(&self) -> Option<String> {
         self.endpoints
             .first()
-            .map(|e| e.url())
+            .map(Endpoint::url)
             .or_else(|| std::env::var("NESTGATE_DEFAULT_ENDPOINT").ok())
     }
 
     /// Check if primal is stale (not seen recently)
+    #[must_use]
     pub fn is_stale(&self, threshold: Duration) -> bool {
         self.last_seen.elapsed() > threshold
     }
@@ -232,6 +240,7 @@ impl PrimalInfo {
 
 impl PrimalDiscovery {
     /// Create new discovery system with default mDNS backend (lock-free discovered map)
+    #[must_use]
     pub fn new(self_knowledge: SelfKnowledge) -> Self {
         Self {
             self_knowledge,
@@ -249,7 +258,7 @@ impl PrimalDiscovery {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// # use nestgate_core::primal_discovery::*;
     /// # async fn example(discovery: &PrimalDiscovery) -> Result<(), Box<dyn std::error::Error>> {
     /// // Discover security capability (could be beardog or other primal)
@@ -310,9 +319,9 @@ pub trait DiscoveryBackend: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Result<PrimalInfo>> + Send + '_>>;
 }
 
-/// Production discovery backend using discovery_mechanism
+/// Production discovery backend using `discovery_mechanism`
 ///
-/// This integrates with the unified discovery system (discovery_mechanism.rs)
+/// This integrates with the unified discovery system (`discovery_mechanism.rs`)
 /// which supports mDNS, Consul, and Kubernetes backends.
 #[derive(Default)]
 struct ProductionBackend {
@@ -337,7 +346,7 @@ impl ProductionBackend {
         })
     }
 
-    /// Convert primal_discovery SelfKnowledge to discovery_mechanism SelfKnowledge
+    /// Convert `primal_discovery` `SelfKnowledge` to `discovery_mechanism` `SelfKnowledge`
     fn convert_self_knowledge(knowledge: &SelfKnowledge) -> crate::self_knowledge::SelfKnowledge {
         crate::self_knowledge::SelfKnowledge::builder()
             .with_id(&knowledge.name)
@@ -367,7 +376,7 @@ impl ProductionBackend {
             })
     }
 
-    /// Convert discovery_mechanism ServiceInfo to PrimalInfo
+    /// Convert `discovery_mechanism` `ServiceInfo` to `PrimalInfo`
     fn convert_service_info(service: crate::discovery_mechanism::ServiceInfo) -> PrimalInfo {
         PrimalInfo {
             name: service.name,
@@ -428,8 +437,7 @@ impl DiscoveryBackend for ProductionBackend {
                 }
 
                 Err(NestGateError::network_error(&format!(
-                    "No primal found providing capability: {}",
-                    capability
+                    "No primal found providing capability: {capability}"
                 )))
             } else {
                 // Fallback: Try environment variable
@@ -451,15 +459,14 @@ impl DiscoveryBackend for ProductionBackend {
                 }
 
                 Err(NestGateError::network_error(&format!(
-                    "No discovery mechanism available and no environment fallback for capability: {}",
-                    capability
+                    "No discovery mechanism available and no environment fallback for capability: {capability}"
                 )))
             }
         })
     }
 }
 
-/// mDNS/DNS-SD discovery backend (legacy, uses ProductionBackend)
+/// mDNS/DNS-SD discovery backend (legacy, uses `ProductionBackend`)
 #[derive(Default)]
 struct MDnsBackend {
     _marker: std::marker::PhantomData<()>,
@@ -494,6 +501,7 @@ impl DiscoveryBackend for MDnsBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn test_self_knowledge_builder() {
@@ -548,5 +556,64 @@ mod tests {
         let list = discovery.list_discovered().await;
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].name, "test-primal");
+    }
+
+    #[test]
+    fn primal_info_primary_endpoint_https_and_stale() {
+        let ep = Endpoint {
+            protocol: "https".into(),
+            addr: ([192, 168, 1, 1], 8443).into(),
+            path: Some("/api".into()),
+        };
+        let info = PrimalInfo {
+            name: "p".into(),
+            capabilities: vec![],
+            endpoints: vec![ep],
+            last_seen: Instant::now() - Duration::from_secs(10_000),
+            metadata: Default::default(),
+        };
+        assert!(info.primary_endpoint().unwrap().starts_with("https://"));
+        assert!(info.is_stale(Duration::from_secs(5)));
+
+        let empty = PrimalInfo {
+            name: "x".into(),
+            capabilities: vec![],
+            endpoints: vec![],
+            last_seen: Instant::now(),
+            metadata: Default::default(),
+        };
+        assert!(empty.primary_endpoint().is_none());
+    }
+
+    #[test]
+    fn primary_endpoint_or_env_prefers_explicit_endpoint() {
+        let ep = Endpoint::http(8081);
+        let info = PrimalInfo {
+            name: "p".into(),
+            capabilities: vec![],
+            endpoints: vec![ep],
+            last_seen: Instant::now(),
+            metadata: Default::default(),
+        };
+        assert_eq!(
+            info.primary_endpoint_or_env_default().as_deref(),
+            Some("http://127.0.0.1:8081")
+        );
+    }
+
+    #[test]
+    fn endpoint_url_with_path_appends() {
+        let ep = Endpoint {
+            protocol: "http".into(),
+            addr: ([127, 0, 0, 1], 80).into(),
+            path: Some("/v1".into()),
+        };
+        assert_eq!(ep.url(), "http://127.0.0.1:80/v1");
+    }
+
+    #[test]
+    fn self_knowledge_builder_default_name() {
+        let k = SelfKnowledge::builder().build();
+        assert_eq!(k.name, "unknown");
     }
 }

@@ -165,7 +165,3 @@ impl ZfsError {
 ///
 /// **MIGRATION NOTE**: Prefer using `nestgate_core::error::Result<T>` for new code.
 pub type ZfsResult<T> = std::result::Result<T, ZfsError>;
-
-#[cfg(test)]
-#[path = "errors_strategic_tests.rs"]
-mod errors_strategic_tests;

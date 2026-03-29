@@ -11,7 +11,7 @@ use std::fmt;
 /// **THE** `MessageType` - unified across all modules
 /// Replaces 3+ fragmented `MessageType` definitions across MCP, network, and communication modules
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedMessage
+/// Types of `UnifiedMessage`
 pub enum UnifiedMessageType {
     /// Request message
     Request,
@@ -67,7 +67,7 @@ impl fmt::Display for UnifiedMessageType {
 /// **THE** `EventType` - unified across all modules
 /// Replaces 5+ fragmented `EventType` definitions across various event systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedEvent
+/// Types of `UnifiedEvent`
 pub enum UnifiedEventType {
     /// System startup/initialization event
     SystemStart,
@@ -132,7 +132,7 @@ impl fmt::Display for UnifiedEventType {
 /// **THE** `OperationType` - unified across all modules
 /// Replaces `OperationType` definitions across service operations and handlers
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedOperation
+/// Types of `UnifiedOperation`
 pub enum UnifiedOperationType {
     /// Create operation
     Create,
@@ -197,7 +197,7 @@ impl fmt::Display for UnifiedOperationType {
 /// **THE** `AlertType` - unified across all modules
 /// Replaces `AlertType` definitions in monitoring and notification systems
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedAlert
+/// Types of `UnifiedAlert`
 pub enum UnifiedAlertType {
     /// System performance alert
     Performance,

@@ -6,8 +6,8 @@
 //! Tests for network configuration, builders, and default values.
 
 use nestgate_network::{
-    default_network_config, development_network_config, production_network_config,
-    NetworkConfigBuilder,
+    NetworkConfigBuilder, default_network_config, development_network_config,
+    production_network_config,
 };
 use std::time::Duration;
 

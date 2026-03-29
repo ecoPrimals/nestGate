@@ -11,8 +11,8 @@ mod network_resilience_tests {
 
     #[tokio::test]
     async fn test_network_retry_pattern() {
-        use std::sync::atomic::{AtomicUsize, Ordering};
         use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
 
         let attempts = Arc::new(AtomicUsize::new(0));
         let counter = Arc::clone(&attempts);
@@ -43,8 +43,8 @@ mod network_resilience_tests {
 
     #[tokio::test]
     async fn test_connection_pool_exhaustion() {
-        use std::sync::atomic::{AtomicUsize, Ordering};
         use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
 
         struct ConnectionPool {
             active: Arc<AtomicUsize>,
@@ -350,8 +350,8 @@ mod integration_patterns {
 
 #[cfg(test)]
 mod error_recovery_patterns {
-    use nestgate_core::error::NestGateError;
     use nestgate_core::Result;
+    use nestgate_core::error::NestGateError;
 
     #[test]
     fn test_or_else_recovery() {

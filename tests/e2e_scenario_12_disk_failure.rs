@@ -17,8 +17,8 @@
 //! - Data accessible and consistent
 //! - Resilver completes successfully
 
-use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use tokio::sync::RwLock;
 
 /// Disk states

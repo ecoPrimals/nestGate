@@ -30,26 +30,26 @@ pub async fn optimize(service: &NativeZfsService) -> UniversalZfsResult<String> 
         let health_output = service
             .execute_zfs_command(&["list", "-H", "-o", "health", pool])
             .await;
-        if let Ok(health) = health_output {
-            if health.trim() == "ONLINE" {
-                // Optimize compression settings
-                let _ = service
-                    .execute_zfs_command(&["set", "compression=lz4", pool])
-                    .await;
-                results.push(format!("Optimized compression for {pool}"));
+        if let Ok(health) = health_output
+            && health.trim() == "ONLINE"
+        {
+            // Optimize compression settings
+            let _ = service
+                .execute_zfs_command(&["set", "compression=lz4", pool])
+                .await;
+            results.push(format!("Optimized compression for {pool}"));
 
-                // Optimize record size for large files
-                let _ = service
-                    .execute_zfs_command(&["set", "recordsize=128k", pool])
-                    .await;
-                results.push(format!("Optimized record size for {pool}"));
+            // Optimize record size for large files
+            let _ = service
+                .execute_zfs_command(&["set", "recordsize=128k", pool])
+                .await;
+            results.push(format!("Optimized record size for {pool}"));
 
-                // Enable deduplication if beneficial
-                let _ = service
-                    .execute_zfs_command(&["set", "dedup=on", pool])
-                    .await;
-                results.push(format!("Enabled deduplication for {pool}"));
-            }
+            // Enable deduplication if beneficial
+            let _ = service
+                .execute_zfs_command(&["set", "dedup=on", pool])
+                .await;
+            results.push(format!("Enabled deduplication for {pool}"));
         }
     }
 
@@ -226,4 +226,16 @@ fn extract_access_time(stat_output: &str) -> Option<u64> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn predict_tier_defaults_warm_when_zfs_stat_fails() {
+        let svc = NativeZfsService::new();
+        let tier = predict_tier(&svc, "/this/path/should/not/exist/nestgate_test").await;
+        assert_eq!(tier.expect("tier"), "warm");
+    }
 }

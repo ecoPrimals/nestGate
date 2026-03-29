@@ -24,8 +24,8 @@ use crate::universal_storage::consolidated_types::{StorageItem, StorageRequest, 
 //     UnifiedStorageItem, UnifiedStorageMetadata, UnifiedStorageRequest, UnifiedStorageResponse,
 // };
 // Removed unused imports: UnifiedStorageType, UnifiedStorageCapability
-// TODO: wire to nestgate-core::traits — use `nestgate_core::traits::unified_storage::StorageMetadata` when integrated
-/// Storage metadata for zero-cost traits (local copy; align with core when wired).
+/// Storage metadata for zero-cost traits.
+/// **Integration:** Align fields with `nestgate_core::traits::unified_storage::StorageMetadata` when shared.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageMetadata {
     /// Size in bytes
@@ -36,7 +36,7 @@ pub struct StorageMetadata {
     pub modified_at: SystemTime,
     /// MIME or content type
     pub content_type: Option<String>,
-    /// ETag
+    /// `ETag`
     pub etag: Option<String>,
     /// Version identifier
     pub version: Option<String>,

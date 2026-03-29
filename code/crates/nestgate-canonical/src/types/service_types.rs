@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// Canonical Service Type Classification
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedService
+/// Types of `UnifiedService`
 pub enum UnifiedServiceType {
     /// Storage
     Storage,
@@ -54,7 +54,7 @@ pub struct CapabilityId {
 impl CapabilityId {
     /// Create a new capability ID with pedantic validation
     #[must_use]
-    pub fn new(domain: String, capability: String, version: String) -> Self {
+    pub const fn new(domain: String, capability: String, version: String) -> Self {
         Self {
             domain,
             capability,

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for PerformanceTest
+/// Configuration for `PerformanceTest`
 pub struct PerformanceTestConfig {
     /// Benchmark
     pub benchmark: BenchmarkConfig,
@@ -36,7 +36,7 @@ pub struct ProfilingConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MetricsTest
+/// Configuration for `MetricsTest`
 pub struct MetricsTestConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -87,7 +87,7 @@ impl PerformanceTestConfig {
     }
     /// Merges this configuration with another, taking precedence
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
 }

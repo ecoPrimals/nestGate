@@ -11,7 +11,7 @@ trait NativeAsyncService {
         data: String,
     ) -> impl Future<Output = Result<String, Box<dyn std::error::Error>>> + Send;
     fn health_check(&self)
-        -> impl Future<Output = Result<bool, Box<dyn std::error::Error>>> + Send;
+    -> impl Future<Output = Result<bool, Box<dyn std::error::Error>>> + Send;
 }
 
 // Example implementation

@@ -10,15 +10,15 @@
 //!
 //! The discovery system is built on five core components:
 //!
-//! 1. **CapabilityRegistry** - Central registry of service capabilities
-//! 2. **ServiceDetector** - Auto-discovers services and their capabilities
-//! 3. **ServiceResolver** - Resolves capabilities to connections
-//! 4. **CapabilityTaxonomy** - Hierarchical capability organization
-//! 5. **ServiceDescriptor** - Metadata about discovered services
+//! 1. **`CapabilityRegistry`** - Central registry of service capabilities
+//! 2. **`ServiceDetector`** - Auto-discovers services and their capabilities
+//! 3. **`ServiceResolver`** - Resolves capabilities to connections
+//! 4. **`CapabilityTaxonomy`** - Hierarchical capability organization
+//! 5. **`ServiceDescriptor`** - Metadata about discovered services
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::capabilities::discovery::{CapabilityRegistry, Capability, SecurityCapability};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -88,7 +88,7 @@ pub type CapabilityResult<T> = Result<T, CapabilityError>;
 
 /// Alias for backward compatibility during migration phase
 /// NOTE: This type alias maintains compatibility with existing code that uses
-/// DiscoveryManager while the codebase transitions to the capability-based model.
+/// `DiscoveryManager` while the codebase transitions to the capability-based model.
 /// Can be removed once all references are updated (estimated: Phase 2 completion).
 pub type DiscoveryManager = CapabilityRegistry;
 

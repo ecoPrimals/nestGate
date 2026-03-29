@@ -15,7 +15,7 @@ use crate::rest::models::{
 use nestgate_core::error::Result;
 
 /// Convert ZFS _engine to API Dataset model
-pub(crate) async fn convert_engine_to_placeholder_dataset(
+pub async fn convert_engine_to_placeholder_dataset(
     name: &str,
     _engine: &String,
 ) -> std::result::Result<Dataset, Box<dyn std::error::Error + Send + Sync>> {
@@ -73,7 +73,7 @@ pub(crate) async fn convert_engine_to_placeholder_dataset(
 }
 
 /// Create storage backend from request
-pub(crate) async fn create_storage_backend(
+pub async fn create_storage_backend(
     _request: &CreateDatasetRequest,
 ) -> std::result::Result<Arc<serde_json::Value>, Box<dyn std::error::Error + Send + Sync>> {
     match _request.backend {
@@ -93,12 +93,12 @@ pub(crate) async fn create_storage_backend(
 }
 
 /// Get snapshot count from ZFS _engine
-pub(crate) fn get_snapshot_count_from_engine_impl() -> Result<u64> {
+pub fn get_snapshot_count_from_engine_impl() -> Result<u64> {
     let snapshot_dir = Path::new("/tmp/nestgate/snapshots");
-    if snapshot_dir.exists() {
-        if let Ok(entries) = fs::read_dir(snapshot_dir) {
-            return Ok(entries.count() as u64);
-        }
+    if snapshot_dir.exists()
+        && let Ok(entries) = fs::read_dir(snapshot_dir)
+    {
+        return Ok(entries.count() as u64);
     }
     Ok(0)
 }
@@ -106,7 +106,7 @@ pub(crate) fn get_snapshot_count_from_engine_impl() -> Result<u64> {
 /// Convert real ZFS stats to API format, with sensible defaults if unavailable
 #[cfg(feature = "dev-stubs")]
 #[allow(dead_code)]
-pub(crate) fn convert_zfs_stats_to_api(
+pub fn convert_zfs_stats_to_api(
     zfs_stats: Option<crate::handlers::zfs_stub::ZeroCostDatasetInfo>,
     default_name: &str,
 ) -> DatasetStats {
@@ -154,7 +154,7 @@ pub(crate) fn convert_zfs_stats_to_api(
 
 /// Convert _engine statistics to API format
 #[allow(dead_code)]
-pub(crate) fn convert_engine_stats_to_api(_stats: &serde_json::Value) -> DatasetStats {
+pub fn convert_engine_stats_to_api(_stats: &serde_json::Value) -> DatasetStats {
     DatasetStats {
         name: "placeholder".to_string(),
         size_bytes: 1024 * 1024 * 100,
@@ -178,10 +178,7 @@ pub(crate) fn convert_engine_stats_to_api(_stats: &serde_json::Value) -> Dataset
 
 /// Calculate file operations from ZFS _engine statistics
 #[allow(dead_code)]
-pub(crate) fn calculate_file_operations_from_stats(
-    _stats: &serde_json::Value,
-    operation: &str,
-) -> u64 {
+pub fn calculate_file_operations_from_stats(_stats: &serde_json::Value, operation: &str) -> u64 {
     match operation {
         "write" => 50,
         "read" => 200,

@@ -73,9 +73,9 @@ impl PerformanceOptimizationEngine {
         // >,
     ) -> Self {
         Self {
-            config: config.clone(),
-            pool_manager: pool_manager.clone(),
-            dataset_manager: dataset_manager.clone(),
+            config,
+            pool_manager,
+            dataset_manager,
             // Network integration initialization (feature-gated)
             // #[cfg(feature = "network-integration")]
             // ecosystem_discovery,
@@ -452,13 +452,13 @@ impl PerformanceOptimizationEngine {
             }
         }
 
-        if !bottlenecks.is_empty() {
+        if bottlenecks.is_empty() {
+            debug!("✅ No performance bottlenecks detected");
+        } else {
             info!("🚨 Detected {} performance bottlenecks", bottlenecks.len());
             for bottleneck in &bottlenecks {
                 warn!("Bottleneck: {}", bottleneck.description);
             }
-        } else {
-            debug!("✅ No performance bottlenecks detected");
         }
         Ok(bottlenecks)
     }

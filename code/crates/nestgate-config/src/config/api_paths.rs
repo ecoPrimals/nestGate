@@ -32,7 +32,7 @@ const PATH_DIAGNOSTICS: &str = "/diagnostics";
 
 /// API paths configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -50,7 +50,7 @@ const PATH_DIAGNOSTICS: &str = "/diagnostics";
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for ApiPaths
+/// Configuration for `ApiPaths`
 pub struct ApiPathsConfig {
     /// Base API version prefix
     pub api_version: String,
@@ -202,7 +202,7 @@ impl ApiPathsConfig {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// use nestgate_core::config::api_paths::ApiPathsConfig;
     ///
     /// let config = ApiPathsConfig::default_with_version("v2");
@@ -223,6 +223,7 @@ impl ApiPathsConfig {
 
 impl ZfsApiPaths {
     /// Default With Version
+    #[must_use]
     pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/zfs");
 
@@ -248,6 +249,7 @@ impl ZfsApiPaths {
 
 impl StorageApiPaths {
     /// Default With Version
+    #[must_use]
     pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/storage");
 
@@ -267,6 +269,7 @@ impl StorageApiPaths {
 
 impl SystemApiPaths {
     /// Default With Version
+    #[must_use]
     pub fn default_with_version(api_version: &str) -> Self {
         let base = format!("/api/{api_version}/system");
 
@@ -287,7 +290,7 @@ impl SystemApiPaths {
 impl Default for HealthApiPaths {
     /// Returns the default instance
     fn default() -> Self {
-        HealthApiPaths {
+        Self {
             health: PATH_HEALTH.to_string(),
             health_detailed: PATH_HEALTH_DETAILED.to_string(),
             health_zfs: PATH_HEALTH_ZFS.to_string(),
@@ -305,6 +308,7 @@ impl Default for HealthApiPaths {
 
 impl ApiPathsConfig {
     /// Get a custom endpoint or default path
+    #[must_use]
     pub fn get_endpoint(&self, key: &str, default: &str) -> String {
         self.custom_endpoints
             .get(key)
@@ -318,6 +322,7 @@ impl ApiPathsConfig {
     }
 
     /// Get all ZFS endpoints as a vector
+    #[must_use]
     pub fn all_zfs_endpoints(&self) -> Vec<String> {
         vec![
             self.zfs.pools.clone(),
@@ -327,6 +332,7 @@ impl ApiPathsConfig {
     }
 
     /// Get all storage endpoints as a vector
+    #[must_use]
     pub fn all_storage_endpoints(&self) -> Vec<String> {
         vec![
             self.storage.info.clone(),
@@ -336,6 +342,7 @@ impl ApiPathsConfig {
     }
 
     /// Get all health endpoints as a vector
+    #[must_use]
     pub fn all_health_endpoints(&self) -> Vec<String> {
         vec![self.health.health.clone(), self.health.metrics.clone()]
     }

@@ -50,7 +50,7 @@ impl DnsServiceDiscovery {
     }
 
     /// Set DNS timeout
-    pub fn set_timeout(&mut self, timeout: Duration) {
+    pub const fn set_timeout(&mut self, timeout: Duration) {
         self.timeout_duration = timeout;
     }
 }
@@ -103,7 +103,7 @@ impl DiscoveryMethod for DnsServiceDiscovery {
     }
 
     /// Method Name
-    fn method_name(&self) -> &str {
+    fn method_name(&self) -> &'static str {
         "dns-srv"
     }
 }
@@ -184,7 +184,7 @@ impl MulticastDiscovery {
     }
 
     /// Set discovery timeout
-    pub fn set_timeout(&mut self, timeout: Duration) {
+    pub const fn set_timeout(&mut self, timeout: Duration) {
         self.timeout_duration = timeout;
     }
 }
@@ -234,7 +234,7 @@ impl DiscoveryMethod for MulticastDiscovery {
     }
 
     /// Method Name
-    fn method_name(&self) -> &str {
+    fn method_name(&self) -> &'static str {
         "multicast"
     }
 }
@@ -312,11 +312,7 @@ impl MulticastDiscovery {
             let metadata_start = if parts.len() >= 4 && (parts[2] == "http" || parts[2] == "https")
             {
                 // Skip URL parts when looking for metadata
-                if parts.len() >= 5 {
-                    5
-                } else {
-                    4
-                }
+                if parts.len() >= 5 { 5 } else { 4 }
             } else {
                 3
             };
@@ -530,7 +526,7 @@ impl DiscoveryMethod for PortScanDiscovery {
     }
 
     /// Method Name
-    fn method_name(&self) -> &str {
+    fn method_name(&self) -> &'static str {
         "port-scan"
     }
 }

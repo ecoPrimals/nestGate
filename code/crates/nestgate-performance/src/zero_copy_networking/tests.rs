@@ -37,7 +37,7 @@ fn test_buffer_pool() -> std::result::Result<(), Box<dyn std::error::Error>> {
 async fn test_zero_copy_interface() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let interface = ZeroCopyNetworkInterface::<1024>::new();
 
-    use nestgate_core::constants::{hardcoding, DEFAULT_API_PORT};
+    use nestgate_core::constants::{DEFAULT_API_PORT, hardcoding};
     let default_endpoint = format!(
         "{}:{}",
         hardcoding::addresses::LOCALHOST_IPV4,

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! NestGate binary main entry point
+//! `NestGate` binary main entry point
 //!
-//! **TRUE UniBin Architecture**: One binary, multiple modes via subcommands
+//! **TRUE `UniBin` Architecture**: One binary, multiple modes via subcommands
 //! - Primary: `nestgate <subcommand>` - Modern CLI interface
 //! - Legacy: Detects `nestgate-server` and `nestgate-client` symlinks for backward compatibility
 //!
@@ -32,7 +32,7 @@ async fn main() -> BinResult<()> {
             Path::new(&p)
                 .file_name()
                 .and_then(|n| n.to_str())
-                .map(|s| s.to_string())
+                .map(std::string::ToString::to_string)
         })
         .unwrap_or_else(|| "nestgate".to_string());
 
@@ -48,11 +48,12 @@ async fn main() -> BinResult<()> {
             .init();
 
         // Run daemon with socket-only mode as default (PRIMAL_DEPLOYMENT_STANDARD)
-        // CRITICAL: run_daemon's 4th param is `enable_http`, NOT `socket_only`
+        // CRITICAL: run_daemon's `enable_http` is NOT `socket_only`
         // enable_http = false means socket-only mode (the correct default)
         return nestgate_bin::commands::service::run_daemon(
             nestgate_core::defaults::network::DEFAULT_API_PORT,
             nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS,
+            None, // listen: legacy symlink has no CLI; use bind + port above
             false,
             false, // enable_http = false (socket-only is default)
             None,  // family_id: discovered at runtime

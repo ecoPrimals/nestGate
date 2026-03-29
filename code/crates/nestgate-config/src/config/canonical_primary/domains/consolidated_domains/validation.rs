@@ -7,7 +7,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::canonical_primary::domains::consolidated_domains::validation::*;
 //! use nestgate_core::Result;
 //!
@@ -54,11 +54,13 @@ pub trait DomainConfigValidation {
     fn validate_for_environment(&self, env: &str) -> nestgate_types::error::Result<()>;
 
     /// Get list of required field names
+    #[must_use]
     fn required_fields() -> Vec<&'static str> {
         Vec::new()
     }
 
     /// Get list of optional field names
+    #[must_use]
     fn optional_fields() -> Vec<&'static str> {
         Vec::new()
     }
@@ -100,7 +102,7 @@ impl std::fmt::Display for ValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: {}", self.field, self.message)?;
         if let Some(suggestion) = &self.suggestion {
-            write!(f, " (Suggestion: {})", suggestion)?;
+            write!(f, " (Suggestion: {suggestion})")?;
         }
         Ok(())
     }

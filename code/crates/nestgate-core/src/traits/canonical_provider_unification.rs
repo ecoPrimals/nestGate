@@ -11,8 +11,8 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::time::SystemTime;
 
-use crate::unified_enums::service_types::UnifiedServiceType;
 use crate::Result;
+use crate::unified_enums::service_types::UnifiedServiceType;
 
 /// **DEPRECATED**: Extended provider trait with lifecycle management
 ///
@@ -284,7 +284,7 @@ pub trait SecurityProvider: CanonicalUniversalProvider<Box<dyn SecurityService>>
     /// * `Ok(Vec<u8>)` - Encrypted data
     /// * `Err(NestGateError)` - Encryption failure
     fn encrypt(&self, data: &[u8], algorithm: &str)
-        -> impl Future<Output = Result<Vec<u8>>> + Send;
+    -> impl Future<Output = Result<Vec<u8>>> + Send;
 
     /// Decrypt data
     ///

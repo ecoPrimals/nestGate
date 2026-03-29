@@ -104,6 +104,7 @@ pub struct ServiceEndpoint {
 
 impl ServiceEndpoint {
     /// Get the full URL for this endpoint
+    #[must_use]
     pub fn url(&self) -> String {
         let path = self.path.as_deref().unwrap_or("");
         format!("{}://{}:{}{}", self.protocol, self.address, self.port, path)
@@ -230,11 +231,10 @@ impl CapabilityConfig {
             .arg("--version")
             .output()
             .await
+            && output.status.success()
         {
-            if output.status.success() {
-                debug!("✅ ZFS capability detected (universal runtime check)");
-                capabilities.push("zfs".to_string());
-            }
+            debug!("✅ ZFS capability detected (universal runtime check)");
+            capabilities.push("zfs".to_string());
         }
 
         Ok(capabilities)
@@ -260,31 +260,26 @@ impl CapabilityConfig {
 
     /// Resolve port from environment with fallback
     fn resolve_port_from_env(env_var: &str, fallback: u16) -> Result<u16> {
-        match std::env::var(env_var) {
-            Ok(val) => val
-                .parse()
-                .with_context(|| format!("Invalid port in {}: {}", env_var, val)),
-            Err(_) => {
-                debug!("Port {} not set, using fallback: {}", env_var, fallback);
-                Ok(fallback)
-            }
+        if let Ok(val) = std::env::var(env_var) {
+            val.parse()
+                .with_context(|| format!("Invalid port in {env_var}: {val}"))
+        } else {
+            debug!("Port {} not set, using fallback: {}", env_var, fallback);
+            Ok(fallback)
         }
     }
 
     /// Resolve address from environment with fallback
     fn resolve_address_from_env(env_var: &str, fallback: &str) -> Result<String> {
-        match std::env::var(env_var) {
-            Ok(val) => {
-                // Validate it's a valid address format
-                if val.is_empty() {
-                    anyhow::bail!("{} cannot be empty", env_var);
-                }
-                Ok(val)
+        if let Ok(val) = std::env::var(env_var) {
+            // Validate it's a valid address format
+            if val.is_empty() {
+                anyhow::bail!("{env_var} cannot be empty");
             }
-            Err(_) => {
-                debug!("Address {} not set, using fallback: {}", env_var, fallback);
-                Ok(fallback.to_string())
-            }
+            Ok(val)
+        } else {
+            debug!("Address {} not set, using fallback: {}", env_var, fallback);
+            Ok(fallback.to_string())
         }
     }
 
@@ -336,8 +331,7 @@ impl CapabilityConfig {
 
         // 4. No hardcoded fallback - fail clearly
         anyhow::bail!(
-            "Capability '{}' not found. Enable discovery or set environment variables.",
-            capability
+            "Capability '{capability}' not found. Enable discovery or set environment variables."
         )
     }
 
@@ -347,13 +341,13 @@ impl CapabilityConfig {
         let env_prefix = format!("NESTGATE_{}_", capability.to_uppercase());
 
         // Try to get host and port
-        let host_var = format!("{}HOST", env_prefix);
-        let port_var = format!("{}PORT", env_prefix);
+        let host_var = format!("{env_prefix}HOST");
+        let port_var = format!("{env_prefix}PORT");
 
         if let (Ok(host), Ok(port_str)) = (std::env::var(&host_var), std::env::var(&port_var)) {
             let port = port_str
                 .parse()
-                .with_context(|| format!("Invalid port in {}", port_var))?;
+                .with_context(|| format!("Invalid port in {port_var}"))?;
 
             return Ok(Some(ServiceEndpoint {
                 protocol: "http".to_string(), // Could be from env too
@@ -437,7 +431,7 @@ impl CapabilityConfig {
         if let Ok(val) = std::env::var(env_var) {
             return val
                 .parse()
-                .with_context(|| format!("Invalid port in {}: {}", env_var, val));
+                .with_context(|| format!("Invalid port in {env_var}: {val}"));
         }
 
         // 2. Try to discover
@@ -453,9 +447,7 @@ impl CapabilityConfig {
 
         // 3. Fail clearly - no hardcoded fallback
         anyhow::bail!(
-            "Port for {} not configured. Set {} environment variable or enable discovery.",
-            capability,
-            env_var
+            "Port for {capability} not configured. Set {env_var} environment variable or enable discovery."
         )
     }
 
@@ -469,7 +461,7 @@ impl CapabilityConfig {
 
         addr_str
             .parse()
-            .with_context(|| format!("Invalid socket address: {}", addr_str))
+            .with_context(|| format!("Invalid socket address: {addr_str}"))
     }
 
     /// Announce our capabilities to the ecosystem
@@ -526,6 +518,7 @@ impl CapabilityConfig {
     }
 
     /// Get our self-knowledge
+    #[must_use]
     pub fn self_knowledge(&self) -> &SelfKnowledge {
         &self.self_knowledge
     }

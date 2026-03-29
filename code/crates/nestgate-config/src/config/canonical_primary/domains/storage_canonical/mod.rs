@@ -3,10 +3,10 @@
 
 //! **CANONICAL STORAGE CONFIGURATION MODULE**
 //!
-//! The single source of truth for all storage configuration across NestGate.
-//! Consolidates StorageConfig, UnifiedStorageConfig, and storage domain configs.
+//! The single source of truth for all storage configuration across `NestGate`.
+//! Consolidates `StorageConfig`, `UnifiedStorageConfig`, and storage domain configs.
 //!
-//! This module consolidates ALL storage configuration variants across the NestGate ecosystem
+//! This module consolidates ALL storage configuration variants across the `NestGate` ecosystem
 //! into a single, authoritative configuration structure.
 //!
 //! **CONSOLIDATES**:
@@ -133,7 +133,7 @@ pub use replication::{
 // **THE** canonical storage configuration for the entire NestGate ecosystem
 // This replaces ALL other StorageConfig variants
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for CanonicalStorage
+/// Configuration for `CanonicalStorage`
 pub struct CanonicalStorageConfig {
     /// Storage backend configurations
     pub backends: StorageBackendConfig,
@@ -283,7 +283,7 @@ impl CanonicalStorageConfig {
 
     /// Get storage capacity information
     #[must_use]
-    pub fn get_total_capacity(&self) -> u64 {
+    pub const fn get_total_capacity(&self) -> u64 {
         // Implementation would calculate total capacity across all backends
         0
     }
@@ -303,10 +303,10 @@ impl CanonicalStorageConfig {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for existing StorageConfig usage
+/// Backward compatibility alias for existing `StorageConfig` usage
 pub type StorageConfig = CanonicalStorageConfig;
 
-/// Backward compatibility alias for UnifiedStorageConfig
+/// Backward compatibility alias for `UnifiedStorageConfig`
 pub type UnifiedStorageConfig = CanonicalStorageConfig;
 
 #[cfg(test)]

@@ -18,9 +18,9 @@ use super::registry_config::{RegistryConfig, SharedRegistryConfig};
 /// Discoveryquery
 pub struct DiscoveryQuery {
     /// Service name
-    pub service_name: String,
+    pub service_name: Arc<str>,
     /// Query Type
-    pub query_type: String,
+    pub query_type: Arc<str>,
     /// Timeout
     pub timeout: Duration,
     /// Fallback Enabled
@@ -46,12 +46,14 @@ impl Default for ServiceRegistryClient {
 
 impl ServiceRegistryClient {
     /// Create new service registry client using environment variables
-    /// NOTE: Creates config from env each time. For tests, use with_config() directly.
+    /// NOTE: Creates config from env each time. For tests, use `with_config()` directly.
     #[must_use]
     pub fn new() -> Self {
         let config = Arc::new(RegistryConfig::from_env());
         Self {
-            base_url: config.get_registry_url().map(|s| s.to_string()),
+            base_url: config
+                .get_registry_url()
+                .map(std::string::ToString::to_string),
             timeout: Duration::from_secs(10),
             registry_cache: HashMap::new(),
             config,
@@ -62,7 +64,9 @@ impl ServiceRegistryClient {
     #[must_use]
     pub fn with_config(config: SharedRegistryConfig) -> Self {
         Self {
-            base_url: config.get_registry_url().map(|s| s.to_string()),
+            base_url: config
+                .get_registry_url()
+                .map(std::string::ToString::to_string),
             timeout: Duration::from_secs(10),
             registry_cache: HashMap::new(),
             config,
@@ -139,11 +143,10 @@ impl ServiceRegistryClient {
         }
 
         // Fallback to localhost for development (from config or default)
-        Ok(self
-            .config
-            .get_api_endpoint()
-            .map(|s| s.to_string())
-            .unwrap_or_else(nestgate_config::constants::canonical_defaults::network::build_api_url))
+        Ok(self.config.get_api_endpoint().map_or_else(
+            nestgate_config::constants::canonical_defaults::network::build_api_url,
+            std::string::ToString::to_string,
+        ))
     }
 
     /// **CAPABILITY REGISTRATION**: Register capability endpoint
@@ -182,7 +185,7 @@ impl ServiceRegistryClient {
     /// - Network or I/O errors occur
     pub fn discover_port_via_adapter(&self, service_name: &str, port_type: &str) -> Result<u16> {
         // Try adapter-based discovery through config (captured from environment at initialization)
-        let adapter_key = format!("{}_{}", service_name, port_type);
+        let adapter_key = format!("{service_name}_{port_type}");
 
         if let Some(port) = self.config.get_adapter_port(&adapter_key) {
             Ok(port)
@@ -459,9 +462,11 @@ mod tests {
 
         let warnings = result.unwrap();
         assert!(!warnings.is_empty());
-        assert!(warnings
-            .iter()
-            .any(|w| w.contains("No registry URL configured")));
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.contains("No registry URL configured"))
+        );
     }
 
     #[test]
@@ -495,14 +500,14 @@ mod tests {
     #[test]
     fn test_discovery_query_creation() {
         let query = DiscoveryQuery {
-            service_name: "test_service".to_string(),
-            query_type: "endpoint".to_string(),
+            service_name: "test_service".into(),
+            query_type: "endpoint".into(),
             timeout: Duration::from_secs(5),
             fallback_enabled: true,
         };
 
-        assert_eq!(query.service_name, "test_service");
-        assert_eq!(query.query_type, "endpoint");
+        assert_eq!(query.service_name.as_ref(), "test_service");
+        assert_eq!(query.query_type.as_ref(), "endpoint");
         assert_eq!(query.timeout, Duration::from_secs(5));
         assert!(query.fallback_enabled);
     }
@@ -510,8 +515,8 @@ mod tests {
     #[test]
     fn test_discovery_query_clone() {
         let query1 = DiscoveryQuery {
-            service_name: "test".to_string(),
-            query_type: "api".to_string(),
+            service_name: "test".into(),
+            query_type: "api".into(),
             timeout: Duration::from_secs(10),
             fallback_enabled: false,
         };
@@ -533,8 +538,8 @@ mod tests {
     #[test]
     fn test_discovery_query_debug() {
         let query = DiscoveryQuery {
-            service_name: "test".to_string(),
-            query_type: "api".to_string(),
+            service_name: "test".into(),
+            query_type: "api".into(),
             timeout: Duration::from_secs(5),
             fallback_enabled: true,
         };

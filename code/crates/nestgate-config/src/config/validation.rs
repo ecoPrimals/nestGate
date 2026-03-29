@@ -41,7 +41,8 @@ pub struct ValidationResult {
 
 impl ValidationResult {
     /// Create a successful validation result
-    pub fn success() -> Self {
+    #[must_use]
+    pub const fn success() -> Self {
         Self {
             is_valid: true,
             errors: Vec::new(),
@@ -51,7 +52,8 @@ impl ValidationResult {
     }
 
     /// Create a failed validation result with errors
-    pub fn with_errors(errors: Vec<ValidationError>) -> Self {
+    #[must_use]
+    pub const fn with_errors(errors: Vec<ValidationError>) -> Self {
         Self {
             is_valid: false,
             errors,
@@ -61,12 +63,14 @@ impl ValidationResult {
     }
 
     /// Add a warning to the result
+    #[must_use]
     pub fn with_warning(mut self, warning: ValidationWarning) -> Self {
         self.warnings.push(warning);
         self
     }
 
     /// Add a suggestion to the result
+    #[must_use]
     pub fn with_suggestion(mut self, suggestion: ValidationSuggestion) -> Self {
         self.suggestions.push(suggestion);
         self
@@ -109,7 +113,7 @@ pub struct ValidationError {
 
 /// Types of validation errors
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-/// Types of ValidationError
+/// Types of `ValidationError`
 pub enum ValidationErrorType {
     /// Required
     Required,
@@ -212,6 +216,7 @@ pub struct ValidationErrorBuilder {
 
 impl ValidationErrorBuilder {
     /// Create a new validation error builder
+    #[must_use]
     pub fn new(field: &str, message: &str, error_type: ValidationErrorType) -> Self {
         Self {
             field: field.to_string(),
@@ -223,18 +228,21 @@ impl ValidationErrorBuilder {
     }
 
     /// Set the current value
+    #[must_use]
     pub fn current_value(mut self, value: &str) -> Self {
         self.current_value = Some(value.to_string());
         self
     }
 
     /// Set the expected format
+    #[must_use]
     pub fn expected_format(mut self, format: &str) -> Self {
         self.expected_format = Some(format.to_string());
         self
     }
 
     /// Build the validation error
+    #[must_use]
     pub fn build(self) -> ValidationError {
         ValidationError {
             field: self.field,
@@ -253,6 +261,7 @@ pub struct ValidationUtils;
 
 impl ValidationUtils {
     /// Validate a port number
+    #[must_use]
     pub fn validate_port(field: &str, port: u16) -> Option<ValidationError> {
         if port == 0 {
             Some(
@@ -271,6 +280,7 @@ impl ValidationUtils {
     }
 
     /// Validate a timeout duration
+    #[must_use]
     pub fn validate_timeout(field: &str, timeout: Duration) -> Option<ValidationError> {
         if timeout.is_zero() {
             Some(
@@ -279,7 +289,7 @@ impl ValidationUtils {
                     "Timeout cannot be zero",
                     ValidationErrorType::InvalidValue,
                 )
-                .current_value(&format!("{:?}", timeout))
+                .current_value(&format!("{timeout:?}"))
                 .expected_format("> 0ms")
                 .build(),
             )
@@ -290,7 +300,7 @@ impl ValidationUtils {
                     "Timeout is unusually long (>1 hour)",
                     ValidationErrorType::OutOfRange,
                 )
-                .current_value(&format!("{:?}", timeout))
+                .current_value(&format!("{timeout:?}"))
                 .expected_format("1ms - 1 hour")
                 .build(),
             )
@@ -300,6 +310,7 @@ impl ValidationUtils {
     }
 
     /// Validate an IP address string
+    #[must_use]
     pub fn validate_ip_address(field: &str, ip: &str) -> Option<ValidationError> {
         if ip.parse::<IpAddr>().is_err() {
             Some(
@@ -318,6 +329,7 @@ impl ValidationUtils {
     }
 
     /// Validate a socket address string
+    #[must_use]
     pub fn validate_socket_address(field: &str, addr: &str) -> Option<ValidationError> {
         if addr.parse::<SocketAddr>().is_err() {
             Some(
@@ -336,6 +348,7 @@ impl ValidationUtils {
     }
 
     /// Validate a file path exists
+    #[must_use]
     pub fn validate_file_path(field: &str, path: &Path) -> Option<ValidationError> {
         if !path.exists() {
             Some(
@@ -363,6 +376,7 @@ impl ValidationUtils {
     }
 
     /// Validate a directory path exists
+    #[must_use]
     pub fn validate_directory_path(field: &str, path: &Path) -> Option<ValidationError> {
         if !path.exists() {
             Some(
@@ -390,6 +404,7 @@ impl ValidationUtils {
     }
 
     /// Validate a string is not empty
+    #[must_use]
     pub fn validate_non_empty_string(field: &str, value: &str) -> Option<ValidationError> {
         if value.trim().is_empty() {
             Some(
@@ -415,11 +430,11 @@ impl ValidationUtils {
             Some(
                 ValidationErrorBuilder::new(
                     field,
-                    &format!("Value {} is outside valid range", value),
+                    &format!("Value {value} is outside valid range"),
                     ValidationErrorType::OutOfRange,
                 )
                 .current_value(&value.to_string())
-                .expected_format(&format!("{} - {}", min, max))
+                .expected_format(&format!("{min} - {max}"))
                 .build(),
             )
         } else {
@@ -558,7 +573,9 @@ impl ConfigValidator {
     }
 
     /// Validate and return a Result type
-    pub async fn validate_strict<T: ConfigValidation>(config: &T) -> nestgate_types::error::Result<()> {
+    pub async fn validate_strict<T: ConfigValidation + Sync>(
+        config: &T,
+    ) -> nestgate_types::error::Result<()> {
         config.validate().into_result().await
     }
 
@@ -582,10 +599,10 @@ impl ConfigValidator {
             for error in &result.errors {
                 report.push_str(&format!("  ❌ {}: {}\n", error.field, error.message));
                 if let Some(current) = &error.current_value {
-                    report.push_str(&format!("     Current: {}\n", current));
+                    report.push_str(&format!("     Current: {current}\n"));
                 }
                 if let Some(expected) = &error.expected_format {
-                    report.push_str(&format!("     Expected: {}\n", expected));
+                    report.push_str(&format!("     Expected: {expected}\n"));
                 }
             }
             report.push('\n');
@@ -615,7 +632,7 @@ impl ConfigValidator {
                     suggestion.field, suggestion.message
                 ));
                 if let Some(suggested) = &suggestion.suggested_value {
-                    report.push_str(&format!("     Suggested: {}\n", suggested));
+                    report.push_str(&format!("     Suggested: {suggested}\n"));
                 }
             }
         }
@@ -629,8 +646,8 @@ impl ConfigValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use tempfile::NamedTempFile;
+    use tempfile::tempdir;
 
     #[test]
     fn test_validation_utils_port() {
@@ -728,12 +745,10 @@ mod tests {
         let result = ValidationResult::success();
         assert!(result.into_result().await.is_ok());
 
-        let result = ValidationResult::with_errors(vec![ValidationErrorBuilder::new(
-            "test",
-            "test error",
-            ValidationErrorType::Required,
-        )
-        .build()]);
+        let result = ValidationResult::with_errors(vec![
+            ValidationErrorBuilder::new("test", "test error", ValidationErrorType::Required)
+                .build(),
+        ]);
         assert!(result.into_result().await.is_err());
     }
 
@@ -902,5 +917,36 @@ mod tests {
         config.security.allowed_ips.clear();
         let result = ConfigValidation::validate(&config);
         assert!(!result.warnings.is_empty());
+    }
+
+    // --- Round 5: extra validation branches ---
+    #[test]
+    fn validation_utils_port_max_boundary() {
+        assert!(ValidationUtils::validate_port("p", u16::MAX).is_none());
+    }
+
+    #[test]
+    fn validation_utils_range_exclusive_outside() {
+        assert!(ValidationUtils::validate_range("r", 0, 1, 10).is_some());
+        assert!(ValidationUtils::validate_range("r", 11, 1, 10).is_some());
+    }
+
+    #[test]
+    fn validation_result_with_errors_not_valid() {
+        let r = ValidationResult::with_errors(vec![
+            ValidationErrorBuilder::new("f", "e", ValidationErrorType::InvalidValue).build(),
+        ]);
+        assert!(!r.is_valid);
+    }
+
+    #[test]
+    fn validation_error_type_conflict_and_security() {
+        let _ = ValidationErrorType::Conflict;
+        let _ = ValidationErrorType::Security;
+    }
+
+    #[test]
+    fn validation_utils_non_empty_trims_not_applied_to_whitespace_only_inner() {
+        assert!(ValidationUtils::validate_non_empty_string("f", "  \t  ").is_some());
     }
 }

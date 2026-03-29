@@ -39,9 +39,11 @@ mod infant_discovery_validation {
         ];
 
         assert_eq!(discovered_services.len(), 3);
-        assert!(discovered_services
-            .iter()
-            .any(|(name, _)| *name == "nestgate-api"));
+        assert!(
+            discovered_services
+                .iter()
+                .any(|(name, _)| *name == "nestgate-api")
+        );
     }
 
     #[tokio::test]

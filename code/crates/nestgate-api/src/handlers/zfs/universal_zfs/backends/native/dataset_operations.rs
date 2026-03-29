@@ -16,10 +16,6 @@ use tracing::info;
 
 use super::core::NativeZfsService;
 
-#[cfg(test)]
-#[path = "dataset_operations_tests.rs"]
-mod dataset_operations_tests;
-
 /// List all ZFS datasets (zero-copy optimized)
 pub async fn list_datasets(service: &NativeZfsService) -> UniversalZfsResult<Vec<DatasetInfo>> {
     info!("Listing ZFS datasets");

@@ -168,7 +168,9 @@ impl DiscoveryCache {
         let key = format!("timeout:{service_name}");
 
         if let Some(entry) = self.timeout_cache.get_mut(&key) {
-            if !entry.is_expired() {
+            if entry.is_expired() {
+                self.timeout_cache.remove(&key);
+            } else {
                 let value = entry.access();
                 // Parse duration string back to Duration (simplified)
                 if let Ok(secs) = value
@@ -177,8 +179,6 @@ impl DiscoveryCache {
                 {
                     return Some(Duration::from_secs(secs));
                 }
-            } else {
-                self.timeout_cache.remove(&key);
             }
         }
 

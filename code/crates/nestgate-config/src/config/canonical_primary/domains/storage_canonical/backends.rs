@@ -15,7 +15,7 @@ use std::time::Duration;
 
 /// Storage backend configuration supporting multiple storage types
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageBackend
+/// Configuration for `StorageBackend`
 pub struct StorageBackendConfig {
     /// Default storage backend to use
     pub default_backend: StorageBackendType,
@@ -32,14 +32,14 @@ pub struct StorageBackendConfig {
     /// Load balancing across backends
     pub load_balancing: StorageLoadBalancingConfig,
 }
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Types of StorageBackend
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of `StorageBackend`
 pub enum StorageBackendType {
     /// Filesystem
     Filesystem,
     /// Zfs
     Zfs,
-    /// S3Compatible
+    /// `S3Compatible`
     S3Compatible,
     /// Azure
     Azure,
@@ -219,7 +219,7 @@ pub enum ConsistencyLevel {
 // ==================== CONNECTION CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageConnection
+/// Configuration for `StorageConnection`
 pub struct StorageConnectionConfig {
     /// Connection timeout
     pub timeout: Duration,
@@ -238,7 +238,7 @@ pub struct StorageConnectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionRetry
+/// Configuration for `ConnectionRetry`
 pub struct ConnectionRetryConfig {
     /// Maximum retry attempts
     pub max_attempts: u32,
@@ -267,7 +267,7 @@ pub enum RetryStrategy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionPool
+/// Configuration for `ConnectionPool`
 pub struct ConnectionPoolConfig {
     /// Minimum pool size
     pub min_size: u32,
@@ -283,7 +283,7 @@ pub struct ConnectionPoolConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ConnectionTls
+/// Configuration for `ConnectionTls`
 pub struct ConnectionTlsConfig {
     /// Enable TLS
     pub enabled: bool,
@@ -304,7 +304,7 @@ pub struct ConnectionTlsConfig {
 // ==================== LIMITS AND HEALTH CHECK CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageLimits
+/// Configuration for `StorageLimits`
 pub struct StorageLimitsConfig {
     /// Maximum storage capacity
     pub max_capacity: Option<u64>,
@@ -320,7 +320,7 @@ pub struct StorageLimitsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for RateLimits
+/// Configuration for `RateLimits`
 pub struct RateLimitsConfig {
     /// Reads per second
     pub reads_per_second: Option<u32>,
@@ -333,7 +333,7 @@ pub struct RateLimitsConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageHealthCheck
+/// Configuration for `StorageHealthCheck`
 pub struct StorageHealthCheckConfig {
     /// Enable health checks
     pub enabled: bool,
@@ -357,7 +357,7 @@ pub struct StorageHealthCheckConfig {
 // ==================== ROUTING AND LOAD BALANCING ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageRouting
+/// Configuration for `StorageRouting`
 pub struct StorageRoutingConfig {
     /// Routing rules
     pub rules: Vec<RoutingRule>,
@@ -425,7 +425,7 @@ pub enum ComparisonOperator {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageFailover
+/// Configuration for `StorageFailover`
 pub struct StorageFailoverConfig {
     /// Enable automatic failover
     pub enabled: bool,
@@ -454,7 +454,7 @@ pub enum FailoverStrategy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for FailoverHealthCheck
+/// Configuration for `FailoverHealthCheck`
 pub struct FailoverHealthCheckConfig {
     /// Health check interval
     pub interval: Duration,
@@ -467,7 +467,7 @@ pub struct FailoverHealthCheckConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageLoadBalancing
+/// Configuration for `StorageLoadBalancing`
 pub struct StorageLoadBalancingConfig {
     /// Load balancing algorithm
     pub algorithm: LoadBalancingAlgorithm,
@@ -733,10 +733,12 @@ impl StorageBackendConfig {
         // Validate routing configuration
         for rule in &self.routing.rules {
             if !self.backends.contains_key(&rule.backend) {
-                return Err(nestgate_types::error::NestGateError::validation_error(&format!(
-                    "Routing rule '{}' references non-existent backend '{}'",
-                    rule.name, rule.backend
-                )));
+                return Err(nestgate_types::error::NestGateError::validation_error(
+                    &format!(
+                        "Routing rule '{}' references non-existent backend '{}'",
+                        rule.name, rule.backend
+                    ),
+                ));
             }
         }
 

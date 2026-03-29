@@ -30,7 +30,7 @@
 //!
 //! **Result**: **20 unsafe blocks eliminated** ✅
 
-use crossbeam::channel::{unbounded, Receiver, Sender};
+use crossbeam::channel::{Receiver, Sender, unbounded};
 use dashmap::DashMap;
 use std::hash::Hash;
 use std::sync::Arc;

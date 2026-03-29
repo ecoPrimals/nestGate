@@ -7,12 +7,12 @@
 
 //! Integration Tests module
 
-use nestgate_network::api::ServiceStatus;
 use nestgate_network::NetworkService;
+use nestgate_network::api::ServiceStatus;
 
 #[tokio::test]
-async fn test_network_service_basic_functionality(
-) -> std::result::Result<(), Box<dyn std::error::Error>> {
+async fn test_network_service_basic_functionality()
+-> std::result::Result<(), Box<dyn std::error::Error>> {
     // Basic test to verify the module can be instantiated
     let config = nestgate_network::default_network_config();
     let _service = NetworkService::new(config);

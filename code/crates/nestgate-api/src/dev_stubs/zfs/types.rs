@@ -5,7 +5,7 @@
 //!
 //! Type definitions for ZFS stub operations.
 //!
-//! **Extracted**: November 19, 2025 - From dev_stubs/zfs.rs
+//! **Extracted**: November 19, 2025 - From `dev_stubs/zfs.rs`
 //! **Lines**: ~680 (from original 1,015-line file)
 
 #![cfg(feature = "dev-stubs")]
@@ -490,8 +490,10 @@ mod tests {
     #[test]
     fn test_zero_cost_zfs_operations_new() {
         let ops = ZeroCostZfsOperations::new();
-        assert!(ZeroCostZfsOperations::check_zfs_available()
-            .expect("Test: check_zfs_available should succeed"));
+        assert!(
+            ZeroCostZfsOperations::check_zfs_available()
+                .expect("Test: check_zfs_available should succeed")
+        );
     }
 
     #[test]

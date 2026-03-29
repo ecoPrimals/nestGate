@@ -51,7 +51,7 @@ pub struct AnalysisConfig {
 ///
 /// Response structure for performance metrics data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Response data for PerformanceMetrics operation
+/// Response data for `PerformanceMetrics` operation
 pub struct PerformanceMetricsResponse {
     /// Current system metrics
     pub metrics: HashMap<String, f64>,
@@ -144,8 +144,8 @@ pub async fn get_performance_alerts() -> Result<Json<Vec<PerformanceAlert>>, Sta
 /// **GET PERFORMANCE RECOMMENDATIONS HANDLER**
 ///
 /// Retrieve performance optimization recommendations.
-pub async fn get_performance_recommendations(
-) -> Result<Json<Vec<PerformanceRecommendation>>, StatusCode> {
+pub async fn get_performance_recommendations()
+-> Result<Json<Vec<PerformanceRecommendation>>, StatusCode> {
     let recommendations = vec![
         PerformanceRecommendation {
             id: "rec_001".to_string(),

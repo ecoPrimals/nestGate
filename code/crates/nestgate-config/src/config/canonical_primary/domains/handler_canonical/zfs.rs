@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ZfsHandler
+/// Configuration for `ZfsHandler`
 pub struct ZfsHandlerConfig {
     /// Pool
     pub pool: PoolHandlerConfig,
@@ -19,28 +19,28 @@ pub struct ZfsHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for PoolHandler
+/// Configuration for `PoolHandler`
 pub struct PoolHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DatasetHandler
+/// Configuration for `DatasetHandler`
 pub struct DatasetHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SnapshotHandler
+/// Configuration for `SnapshotHandler`
 pub struct SnapshotHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for BackupHandler
+/// Configuration for `BackupHandler`
 pub struct BackupHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl ZfsHandlerConfig {
 
     /// Merges this configuration with another, returning the merged result
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

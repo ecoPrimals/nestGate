@@ -12,7 +12,7 @@ use axum::{
     http::StatusCode,
 };
 use nestgate_core::error::utilities::safe_env_var_or_default;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tokio::process::Command;
 use tracing::{error, info, warn};
 // Removed unused tracing import
@@ -261,9 +261,16 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
 
             // Calculate utilization
             // ✅ FIXED: Replace unwrap_or with .get().map().unwrap_or_default() for safety
-            let used_bytes = parse_size(properties.get("used").map(|s| s.as_str()).unwrap_or("0"));
-            let quota_bytes =
-                parse_size(properties.get("quota").map(|s| s.as_str()).unwrap_or("0"));
+            let used_bytes = parse_size(
+                properties
+                    .get("used")
+                    .map_or("0", std::string::String::as_str),
+            );
+            let quota_bytes = parse_size(
+                properties
+                    .get("quota")
+                    .map_or("0", std::string::String::as_str),
+            );
             // Calculate utilization percentage safely (avoid division by zero)
             let utilization = if quota_bytes > 0 {
                 (used_bytes as f64 / quota_bytes as f64) * 100.0
@@ -295,14 +302,14 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
                     "health_status": health_status,
                     "utilization_percent": utilization,
                     // ✅ FIXED: Replace unwrap_or with safe map().unwrap_or() pattern
-                    "used": properties.get("used").map(|s| s.as_str()).unwrap_or("0"),
-                    "available": properties.get("available").map(|s| s.as_str()).unwrap_or("0"),
-                    "referenced": properties.get("referenced").map(|s| s.as_str()).unwrap_or("0"),
-                    "quota": properties.get("quota").map(|s| s.as_str()).unwrap_or("none"),
-                    "compression": properties.get("compression").map(|s| s.as_str()).unwrap_or("off"),
-                    "recordsize": properties.get("recordsize").map(|s| s.as_str()).unwrap_or("128K"),
-                    "mountpoint": properties.get("mountpoint").map(|s| s.as_str()).unwrap_or("none"),
-                    "created": properties.get("creation").map(|s| s.as_str()).unwrap_or("unknown"),
+                    "used": properties.get("used").map_or("0", std::string::String::as_str),
+                    "available": properties.get("available").map_or("0", std::string::String::as_str),
+                    "referenced": properties.get("referenced").map_or("0", std::string::String::as_str),
+                    "quota": properties.get("quota").map_or("none", std::string::String::as_str),
+                    "compression": properties.get("compression").map_or("off", std::string::String::as_str),
+                    "recordsize": properties.get("recordsize").map_or("128K", std::string::String::as_str),
+                    "mountpoint": properties.get("mountpoint").map_or("none", std::string::String::as_str),
+                    "created": properties.get("creation").map_or("unknown", std::string::String::as_str),
                     "snapshot_count": snapshot_count,
                     "type": "zfs_dataset"
                 }
@@ -557,21 +564,21 @@ async fn get_workspace_properties(dataset_name: &str) -> (String, String, String
         ])
         .output()
         .await;
-    if let Ok(output) = props_output {
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let lines: Vec<&str> = stdout.lines().collect();
-            if lines.len() >= 3 {
-                let compression = lines[0].to_string();
-                let quota = lines[1].to_string();
-                let mounted = lines[2];
-                let status = if mounted == "yes" {
-                    "active"
-                } else {
-                    "inactive"
-                };
-                return (compression, quota, status.to_string());
-            }
+    if let Ok(output) = props_output
+        && output.status.success()
+    {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let lines: Vec<&str> = stdout.lines().collect();
+        if lines.len() >= 3 {
+            let compression = lines[0].to_string();
+            let quota = lines[1].to_string();
+            let mounted = lines[2];
+            let status = if mounted == "yes" {
+                "active"
+            } else {
+                "inactive"
+            };
+            return (compression, quota, status.to_string());
         }
     }
 
@@ -594,18 +601,18 @@ async fn get_workspace_details(_workspace_id: &str) -> Value {
         .output()
         .await;
 
-    if let Ok(output) = props_output {
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let lines: Vec<&str> = stdout.lines().collect();
-            if lines.len() >= 4 {
-                return json!({
-                    "used": lines[0],
-                    "available": lines[1],
-                    "quota": lines[2],
-                    "compression": lines[3]
-                });
-            }
+    if let Ok(output) = props_output
+        && output.status.success()
+    {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let lines: Vec<&str> = stdout.lines().collect();
+        if lines.len() >= 4 {
+            return json!({
+                "used": lines[0],
+                "available": lines[1],
+                "quota": lines[2],
+                "compression": lines[3]
+            });
         }
     }
 
@@ -623,11 +630,11 @@ async fn get_snapshot_count(dataset_name: &str) -> u32 {
         .args(["list", "-H", "-t", "snapshot", "-d", "1", dataset_name])
         .output()
         .await;
-    if let Ok(output) = snapshot_output {
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            return stdout.lines().count() as u32;
-        }
+    if let Ok(output) = snapshot_output
+        && output.status.success()
+    {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        return stdout.lines().count() as u32;
     }
 
     0
@@ -670,5 +677,54 @@ pub(crate) fn parse_size(size_str: &str) -> u64 {
         (number * multiplier as f64) as u64
     } else {
         0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::extract::Path;
+    use serde_json::json;
+
+    #[test]
+    fn parse_size_numeric_and_none() {
+        assert_eq!(parse_size("4096"), 4096);
+        assert_eq!(parse_size("none"), 0);
+        assert_eq!(parse_size("-"), 0);
+        assert!(parse_size("1M") >= 1024 * 1024);
+    }
+
+    #[test]
+    fn parse_size_suffixes_k_g_t_p() {
+        assert_eq!(parse_size("2G"), 2 * 1024 * 1024 * 1024);
+        assert_eq!(parse_size("1K"), 1024);
+        let one_t = parse_size("1T");
+        assert!(one_t >= 1024_u64 * 1024 * 1024 * 1024);
+        let one_p = parse_size("1P");
+        assert!(one_p > one_t);
+    }
+
+    #[test]
+    fn parse_size_whitespace_and_invalid() {
+        assert_eq!(parse_size("  3G  "), 3 * 1024 * 1024 * 1024);
+        assert_eq!(parse_size(""), 0);
+        assert_eq!(parse_size("Z"), 0);
+    }
+
+    #[tokio::test]
+    async fn update_workspace_config_rejects_empty_or_slash_id() {
+        let bad =
+            update_workspace_config(Path(String::new()), Json(json!({ "quota": "1G" }))).await;
+        assert!(matches!(bad, Err(StatusCode::BAD_REQUEST)));
+        let bad2 = update_workspace_config(Path("a/b".to_string()), Json(json!({}))).await;
+        assert!(matches!(bad2, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    async fn delete_workspace_rejects_invalid_id() {
+        let r = delete_workspace(Path("".to_string())).await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+        let r2 = delete_workspace(Path("../escape".to_string())).await;
+        assert!(matches!(r2, Err(StatusCode::BAD_REQUEST)));
     }
 }

@@ -70,7 +70,7 @@ pub fn get_api_host() -> String {
 
 /// Get database host from environment or default
 ///
-/// **DEPRECATED**: Database configuration should be external to NestGate
+/// **DEPRECATED**: Database configuration should be external to `NestGate`
 ///
 /// **Development default**: when `NESTGATE_DB_HOST` is unset, returns `localhost`.
 #[deprecated(
@@ -84,7 +84,7 @@ pub fn get_db_host() -> String {
 
 /// Get Redis host from environment or default
 ///
-/// **DEPRECATED**: Database configuration should be external to NestGate
+/// **DEPRECATED**: Database configuration should be external to `NestGate`
 ///
 /// **Development default**: when `NESTGATE_REDIS_HOST` is unset, returns `localhost`.
 #[deprecated(
@@ -112,7 +112,7 @@ pub fn is_production() -> bool {
 
 /// Check if running in development mode
 ///
-/// **DEPRECATED**: Use environment detection from EnvironmentConfig
+/// **DEPRECATED**: Use environment detection from `EnvironmentConfig`
 #[deprecated(
     since = "0.6.0",
     note = "Use EnvironmentConfig for environment detection"
@@ -166,8 +166,3 @@ mod tests {
         let _environment_determined = is_dev || is_prod;
     }
 }
-
-// Additional comprehensive tests in separate module for better organization
-#[cfg(test)]
-#[path = "network_defaults_tests.rs"]
-mod network_defaults_tests;

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// Provides comprehensive encryption settings including key management,
 /// data encryption, transit encryption, and algorithm selection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for StorageEncryption
+/// Configuration for `StorageEncryption`
 pub struct StorageEncryptionConfig {
     /// General encryption settings.
     pub encryption: EncryptionConfig,
@@ -38,7 +38,7 @@ pub struct EncryptionConfig {
 ///
 /// Defines where and how encryption keys are stored and managed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for KeyManagementStorage
+/// Configuration for `KeyManagementStorage`
 pub struct KeyManagementStorageConfig {
     /// Key management provider (e.g., "local", "vault", "kms").
     pub provider: String,
@@ -48,7 +48,7 @@ pub struct KeyManagementStorageConfig {
 ///
 /// Controls encryption of stored data on disk.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DataEncryption
+/// Configuration for `DataEncryption`
 pub struct DataEncryptionConfig {
     /// Whether data-at-rest encryption is enabled.
     pub enabled: bool,
@@ -58,7 +58,7 @@ pub struct DataEncryptionConfig {
 ///
 /// Controls encryption of data during network transmission.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TransitEncryption
+/// Configuration for `TransitEncryption`
 pub struct TransitEncryptionConfig {
     /// Whether transit encryption (TLS/SSL) is enabled (default: true).
     pub enabled: bool,
@@ -68,7 +68,7 @@ pub struct TransitEncryptionConfig {
 ///
 /// Specifies the cryptographic algorithm used for encryption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for EncryptionAlgorithmStorage
+/// Configuration for `EncryptionAlgorithmStorage`
 pub struct EncryptionAlgorithmStorageConfig {
     /// Encryption algorithm name (default: "AES-256-GCM").
     pub algorithm: String,
@@ -135,7 +135,7 @@ impl StorageEncryptionConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

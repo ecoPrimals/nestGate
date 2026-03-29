@@ -21,7 +21,7 @@ pub mod external;
 /// Default configuration values and environment variable support
 pub mod defaults;
 
-/// Thread-safe configuration for defaults (eliminates runtime env::var calls)
+/// Thread-safe configuration for defaults (eliminates runtime `env::var` calls)
 pub mod defaults_config;
 
 /// Network defaults configuration (replaces direct env::var calls)
@@ -45,7 +45,7 @@ pub mod api_paths;
 /// Sovereignty configuration (environment-driven, eliminates infrastructure assumptions)
 pub mod sovereignty;
 
-/// Thread-safe configuration for sovereignty module (eliminates runtime env::var calls)
+/// Thread-safe configuration for sovereignty module (eliminates runtime `env::var` calls)
 pub mod sovereignty_config;
 
 /// Capability-based service discovery for configuration
@@ -293,7 +293,7 @@ mod defaults_additional_tests; // NEW: Test expansion phase (Nov 6, 2025) // Inc
 
 /// Infant discovery configuration - no hardcoded assumptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -311,7 +311,7 @@ mod defaults_additional_tests; // NEW: Test expansion phase (Nov 6, 2025) // Inc
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for InfantDiscovery
+/// Configuration for `InfantDiscovery`
 pub struct InfantDiscoveryConfig {
     /// Whether infant discovery is enabled
     pub enabled: bool,

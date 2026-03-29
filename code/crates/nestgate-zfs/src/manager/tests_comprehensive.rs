@@ -434,3 +434,30 @@ mod zfs_manager_comprehensive_tests {
         assert!(debug_output.contains("snapshot_manager"));
     }
 }
+
+/// Exercises `ZfsManager::mock()` without ZFS — all integration tests above remain ignored.
+#[cfg(test)]
+mod mock_manager_without_zfs {
+    use super::super::ZfsManager;
+
+    #[test]
+    fn mock_shutdown_succeeds() {
+        let m = ZfsManager::mock();
+        assert!(m.shutdown().is_ok());
+    }
+
+    #[test]
+    fn mock_debug_format_includes_components() {
+        let m = ZfsManager::mock();
+        let s = format!("{m:?}");
+        assert!(s.contains("ZfsManager"));
+        assert!(s.contains("pool_manager"));
+    }
+
+    #[tokio::test]
+    async fn mock_pool_list_uses_empty_or_cached_pools() {
+        let m = ZfsManager::mock();
+        let pools = m.pool_manager.list_pools().await;
+        assert!(pools.is_ok());
+    }
+}

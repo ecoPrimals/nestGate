@@ -22,7 +22,7 @@
 //! ```
 
 use std::future::Future;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use tokio::runtime::{Builder, Runtime};
 
 use super::env_isolation::IsolatedEnvironment;
@@ -372,8 +372,8 @@ macro_rules! isolated_test {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::time::Duration;
 
     #[test]

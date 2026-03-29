@@ -11,6 +11,7 @@
 //! Cli module
 
 use clap::{Parser, Subcommand};
+use std::net::SocketAddr;
 use std::path::PathBuf;
 
 /// `NestGate` - Universal ZFS and Storage Management
@@ -65,8 +66,8 @@ pub struct Cli {
     pub command: Commands,
 }
 
-/// Read port from environment with fallback chain (UniBin compliance)
-/// Priority: NESTGATE_API_PORT → NESTGATE_HTTP_PORT → NESTGATE_PORT → default
+/// Read port from environment with fallback chain (`UniBin` compliance)
+/// Priority: `NESTGATE_API_PORT` → `NESTGATE_HTTP_PORT` → `NESTGATE_PORT` → default
 fn port_from_env_or_default() -> u16 {
     std::env::var("NESTGATE_API_PORT")
         .or_else(|_| std::env::var("NESTGATE_HTTP_PORT"))
@@ -76,8 +77,8 @@ fn port_from_env_or_default() -> u16 {
         .unwrap_or(nestgate_core::defaults::network::DEFAULT_API_PORT)
 }
 
-/// Read bind address from environment with fallback (UniBin compliance)
-/// Priority: NESTGATE_BIND → NESTGATE_BIND_ADDRESS → NESTGATE_HOST → default
+/// Read bind address from environment with fallback (`UniBin` compliance)
+/// Priority: `NESTGATE_BIND` → `NESTGATE_BIND_ADDRESS` → `NESTGATE_HOST` → default
 fn bind_from_env_or_default() -> String {
     std::env::var("NESTGATE_BIND")
         .or_else(|_| std::env::var("NESTGATE_BIND_ADDRESS"))
@@ -88,24 +89,27 @@ fn bind_from_env_or_default() -> String {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Run NestGate as a daemon (server mode) - UniBin pattern
+    /// Run `NestGate` as a daemon (server mode) - `UniBin` pattern
     #[command(name = "daemon", alias = "server")]
     #[command(about = "Run NestGate daemon (server mode)")]
     Daemon {
         /// Port to bind to (ignored in socket-only mode)
-        /// Reads from: NESTGATE_API_PORT, NESTGATE_HTTP_PORT, or NESTGATE_PORT
+        /// Reads from: `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT`
         #[arg(short, long, default_value_t = port_from_env_or_default())]
         port: u16,
         /// Bind address (ignored in socket-only mode)
-        /// Reads from: NESTGATE_BIND, NESTGATE_BIND_ADDRESS, or NESTGATE_HOST
+        /// Reads from: `NESTGATE_BIND`, `NESTGATE_BIND_ADDRESS`, or `NESTGATE_HOST`
         #[arg(long, default_value_t = bind_from_env_or_default())]
         bind: String,
+        /// Listen address as `host:port` (`UniBin` v1.2). Takes precedence over `--bind` and `--port`.
+        #[arg(long)]
+        listen: Option<SocketAddr>,
         /// Enable development mode
         #[arg(long)]
         dev: bool,
         /// Run in Unix socket-only mode (no HTTP server, no external dependencies)
         /// Perfect for NUCLEUS atomic patterns and inter-primal communication
-        /// NOTE: Socket-only is now the DEFAULT per PRIMAL_DEPLOYMENT_STANDARD
+        /// NOTE: Socket-only is now the DEFAULT per `PRIMAL_DEPLOYMENT_STANDARD`
         #[arg(long, default_value_t = true)]
         socket_only: bool,
         /// Enable HTTP server mode (legacy/standalone mode)
@@ -114,22 +118,22 @@ pub enum Commands {
         enable_http: bool,
         /// Family ID for multi-family socket support
         /// Creates family-scoped socket: nestgate-{family_id}.sock
-        /// Reads from: NESTGATE_FAMILY_ID environment variable if not specified
+        /// Reads from: `NESTGATE_FAMILY_ID` environment variable if not specified
         #[arg(long)]
         family_id: Option<String>,
     },
 
-    /// Show daemon status (UniBin)
+    /// Show daemon status (`UniBin`)
     #[command(name = "status")]
     #[command(about = "Check daemon status")]
     Status,
 
-    /// Health check (UniBin)
+    /// Health check (`UniBin`)
     #[command(name = "health")]
     #[command(about = "Health check for all components")]
     Health,
 
-    /// Show version information (UniBin)
+    /// Show version information (`UniBin`)
     #[command(name = "version")]
     #[command(about = "Show version and build information")]
     Version,
@@ -188,7 +192,7 @@ pub enum Commands {
         duration: Option<u64>,
     },
 
-    /// Discovery operations (UniBin)
+    /// Discovery operations (`UniBin`)
     #[command(name = "discover")]
     #[command(about = "Discover primals and services")]
     Discover {
@@ -207,6 +211,9 @@ pub enum ServiceAction {
         /// Bind address (can be overridden with `NESTGATE_BIND_ADDRESS`)
         #[arg(long, default_value = nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS)]
         bind: String,
+        /// Listen address as `host:port` (`UniBin` v1.2). Takes precedence over `--bind` and `--port`.
+        #[arg(long)]
+        listen: Option<SocketAddr>,
         /// Run in background
         #[arg(short, long)]
         daemon: bool,
@@ -334,6 +341,7 @@ impl Cli {
             Commands::Daemon {
                 port,
                 bind,
+                listen,
                 dev,
                 enable_http,
                 family_id,
@@ -357,6 +365,7 @@ impl Cli {
                 crate::commands::service::run_daemon(
                     port,
                     &bind,
+                    listen,
                     dev,
                     enable_http,
                     resolved_family_id.as_deref(),
@@ -481,4 +490,152 @@ pub fn print_banner() {
     println!("⚡ Production-ready performance");
     println!("🔒 Enterprise-grade data integrity");
     println!();
+}
+
+#[cfg(test)]
+mod cli_parse_tests {
+    use super::{Cli, Commands, ServiceAction};
+    use clap::Parser;
+    use std::net::SocketAddr;
+    use std::path::PathBuf;
+
+    #[test]
+    fn parses_version_subcommand() {
+        let cli = Cli::try_parse_from(["nestgate", "version"]).expect("parse");
+        assert!(matches!(cli.command, Commands::Version));
+    }
+
+    #[test]
+    fn parses_service_status() {
+        let cli = Cli::try_parse_from(["nestgate", "service", "status"]).expect("parse");
+        match cli.command {
+            Commands::Service { action } => assert!(matches!(action, ServiceAction::Status)),
+            _ => panic!("expected service"),
+        }
+    }
+
+    #[test]
+    fn parses_service_start_with_listen() {
+        let cli = Cli::try_parse_from([
+            "nestgate",
+            "service",
+            "start",
+            "--port",
+            "3000",
+            "--bind",
+            "127.0.0.1",
+            "--listen",
+            "127.0.0.1:4000",
+        ])
+        .expect("parse");
+        match cli.command {
+            Commands::Service { action } => match action {
+                ServiceAction::Start {
+                    port, bind, listen, ..
+                } => {
+                    assert_eq!(port, 3000);
+                    assert_eq!(bind, "127.0.0.1");
+                    assert_eq!(
+                        listen,
+                        Some("127.0.0.1:4000".parse::<SocketAddr>().unwrap())
+                    );
+                }
+                _ => panic!("start"),
+            },
+            _ => panic!("service"),
+        }
+    }
+
+    #[test]
+    fn global_verbose_and_config() {
+        let cli = Cli::try_parse_from([
+            "nestgate",
+            "-v",
+            "--config",
+            "/tmp/ng.toml",
+            "--output",
+            "json",
+            "health",
+        ])
+        .expect("parse");
+        assert!(cli.verbose);
+        assert_eq!(cli.config, Some(PathBuf::from("/tmp/ng.toml")));
+        assert_eq!(cli.output, "json");
+        assert!(matches!(cli.command, Commands::Health));
+    }
+
+    #[test]
+    fn daemon_parses_socket_only_and_family() {
+        let cli = Cli::try_parse_from([
+            "nestgate",
+            "daemon",
+            "--family-id",
+            "fam-a",
+            "--enable-http",
+        ])
+        .expect("parse");
+        match cli.command {
+            Commands::Daemon {
+                family_id,
+                enable_http,
+                ..
+            } => {
+                assert_eq!(family_id.as_deref(), Some("fam-a"));
+                assert!(enable_http);
+            }
+            _ => panic!("daemon"),
+        }
+    }
+
+    #[test]
+    fn service_logs_defaults() {
+        let cli = Cli::try_parse_from(["nestgate", "service", "logs"]).expect("parse");
+        match cli.command {
+            Commands::Service { action } => match action {
+                ServiceAction::Logs { lines, follow } => {
+                    assert_eq!(lines, 100);
+                    assert!(!follow);
+                }
+                _ => panic!("logs"),
+            },
+            _ => panic!("service"),
+        }
+    }
+
+    #[test]
+    fn parses_doctor_storage_config_discover() {
+        assert!(matches!(
+            Cli::try_parse_from(["nestgate", "doctor", "--comprehensive"])
+                .unwrap()
+                .command,
+            Commands::Doctor {
+                comprehensive: true,
+                fix: false
+            }
+        ));
+        assert!(matches!(
+            Cli::try_parse_from(["nestgate", "storage", "list"])
+                .unwrap()
+                .command,
+            Commands::Storage { .. }
+        ));
+        assert!(matches!(
+            Cli::try_parse_from(["nestgate", "config", "validate"])
+                .unwrap()
+                .command,
+            Commands::Config { .. }
+        ));
+        assert!(matches!(
+            Cli::try_parse_from(["nestgate", "discover", "capabilities"])
+                .unwrap()
+                .command,
+            Commands::Discover { .. }
+        ));
+    }
+
+    #[test]
+    fn parses_zfs_list_datasets() {
+        let cli = Cli::try_parse_from(["nestgate", "zfs", "list-datasets"]).expect("parse");
+        assert!(matches!(cli.command, Commands::Zfs { .. }));
+    }
 }

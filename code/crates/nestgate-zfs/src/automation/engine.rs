@@ -16,7 +16,7 @@ use tokio::sync::RwLock;
 
 // Type aliases to reduce complexity
 type PolicyMap = Arc<RwLock<HashMap<String, AutomationPolicy>>>;
-/// Type alias for LifecycleMap
+/// Type alias for `LifecycleMap`
 type LifecycleMap = Arc<RwLock<HashMap<String, DatasetLifecycle>>>;
 use tracing::debug;
 use tracing::info;
@@ -229,19 +229,19 @@ impl DatasetAutomation {
                     }
 
                     // Check for stage transition
-                    if let Some(next_stage) = &lifecycle_rule.next_stage {
-                        if lifecycle::should_transition_to_stage(dataset_name, lifecycle) {
-                            info!(
-                                "🔄 Transitioning dataset {} from {:?} to {:?}",
-                                dataset_name, lifecycle.lifecycle_stage, next_stage
-                            );
-                            let mut lifecycle_tracker = self.lifecycle_tracker.write().await;
-                            lifecycle::transition_lifecycle_stage(
-                                dataset_name,
-                                next_stage.clone(),
-                                &mut lifecycle_tracker,
-                            )?;
-                        }
+                    if let Some(next_stage) = &lifecycle_rule.next_stage
+                        && lifecycle::should_transition_to_stage(dataset_name, lifecycle)
+                    {
+                        info!(
+                            "🔄 Transitioning dataset {} from {:?} to {:?}",
+                            dataset_name, lifecycle.lifecycle_stage, next_stage
+                        );
+                        let mut lifecycle_tracker = self.lifecycle_tracker.write().await;
+                        lifecycle::transition_lifecycle_stage(
+                            dataset_name,
+                            next_stage.clone(),
+                            &mut lifecycle_tracker,
+                        )?;
                     }
                 }
             }
@@ -324,7 +324,7 @@ impl DatasetAutomation {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate_policy(&self, _policy: &AutomationPolicy) -> Result<()> {
+    pub const fn validate_policy(&self, _policy: &AutomationPolicy) -> Result<()> {
         // Basic validation - could be enhanced
         Ok(())
     }
@@ -347,7 +347,7 @@ impl DatasetAutomation {
         let policies = self.policies.read().await;
         tier_evaluation::evaluate_tier_by_intelligent_rules(dataset_name, metadata, &policies)
             .map_err(|e| {
-                NestGateUnifiedError::storage_error(&format!("Tier evaluation failed: {}", e))
+                NestGateUnifiedError::storage_error(&format!("Tier evaluation failed: {e}"))
             })
     }
 }

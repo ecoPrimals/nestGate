@@ -7,9 +7,9 @@
 //! registry and discovery systems in the codebase, enabling them to work together.
 //!
 //! **SYSTEMS UNIFIED**:
-//! 1. InMemoryServiceRegistry (service_discovery)
-//! 2. ServiceRegistry (universal_primal_discovery)
-//! 3. CapabilityDiscoveryManager
+//! 1. `InMemoryServiceRegistry` (`service_discovery`)
+//! 2. `ServiceRegistry` (`universal_primal_discovery`)
+//! 3. `CapabilityDiscoveryManager`
 //! 4. Application layer capabilities
 //!
 //! **PHILOSOPHY**: One interface to rule them all - capability-based discovery
@@ -19,18 +19,19 @@ use crate::unified_capabilities::{CapabilityMapper, UnifiedCapability};
 use nestgate_types::error::{NestGateError, Result};
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
 
 /// Unified service endpoint result from capability resolution
 #[derive(Debug, Clone)]
 pub struct ResolvedService {
     /// Service identifier
-    pub id: String,
+    pub id: Arc<str>,
     /// Host address
     pub host: String,
     /// Port number
     pub port: u16,
     /// Protocol (http, https, grpc, etc.)
-    pub protocol: String,
+    pub protocol: Arc<str>,
     /// Capabilities this service provides
     pub capabilities: Vec<UnifiedCapability>,
     /// Service health indicator
@@ -39,11 +40,13 @@ pub struct ResolvedService {
 
 impl ResolvedService {
     /// Get full URL for this service
+    #[must_use]
     pub fn url(&self) -> String {
-        format!("{}://{}:{}", self.protocol, self.host, self.port)
+        format!("{}://{}:{}", &*self.protocol, self.host, self.port)
     }
 
     /// Get endpoint without protocol
+    #[must_use]
     pub fn endpoint(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
@@ -81,7 +84,7 @@ pub trait CapabilityResolver: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = bool> + Send + '_>>;
 }
 
-/// Adapter for universal_primal_discovery::ServiceRegistry
+/// Adapter for `universal_primal_discovery::ServiceRegistry`
 ///
 /// Bridges the universal primal discovery system to the unified interface
 pub struct PrimalDiscoveryAdapter<'a> {
@@ -90,14 +93,15 @@ pub struct PrimalDiscoveryAdapter<'a> {
 
 impl<'a> PrimalDiscoveryAdapter<'a> {
     /// Create adapter from primal discovery registry
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         registry: &'a crate::universal_primal_discovery::service_registry::ServiceRegistry,
     ) -> Self {
         Self { registry }
     }
 }
 
-impl<'a> CapabilityResolver for PrimalDiscoveryAdapter<'a> {
+impl CapabilityResolver for PrimalDiscoveryAdapter<'_> {
     fn resolve_capability(
         &self,
         capability: &UnifiedCapability,
@@ -159,7 +163,7 @@ impl<'a> CapabilityResolver for PrimalDiscoveryAdapter<'a> {
     }
 }
 
-/// Adapter for service_discovery::InMemoryServiceRegistry
+/// Adapter for `service_discovery::InMemoryServiceRegistry`
 ///
 /// Bridges the in-memory service registry to the unified interface
 pub struct InMemoryRegistryAdapter<'a> {
@@ -168,12 +172,15 @@ pub struct InMemoryRegistryAdapter<'a> {
 
 impl<'a> InMemoryRegistryAdapter<'a> {
     /// Create adapter from in-memory registry
-    pub fn new(registry: &'a crate::service_discovery::registry::InMemoryServiceRegistry) -> Self {
+    #[must_use]
+    pub const fn new(
+        registry: &'a crate::service_discovery::registry::InMemoryServiceRegistry,
+    ) -> Self {
         Self { registry }
     }
 }
 
-impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
+impl CapabilityResolver for InMemoryRegistryAdapter<'_> {
     fn resolve_capability(
         &self,
         capability: &UnifiedCapability,
@@ -191,7 +198,7 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
 
             let service = services.into_iter().next().ok_or_else(|| {
                 NestGateError::internal_error(
-                    format!("No service found for capability: {}", capability),
+                    format!("No service found for capability: {capability}"),
                     "capability_resolver",
                 )
             })?;
@@ -237,16 +244,21 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
                 })?;
 
             Ok(ResolvedService {
-                id: service.service_id.to_string(),
+                id: Arc::from(service.service_id.to_string()),
                 host,
                 port,
                 protocol: match endpoint.protocol {
-                    crate::service_discovery::types::CommunicationProtocol::Http => "http",
-                    crate::service_discovery::types::CommunicationProtocol::Grpc => "grpc",
-                    crate::service_discovery::types::CommunicationProtocol::WebSocket => "ws",
-                    _ => "http",
-                }
-                .to_string(),
+                    crate::service_discovery::types::CommunicationProtocol::Http => {
+                        Arc::from("http")
+                    }
+                    crate::service_discovery::types::CommunicationProtocol::Grpc => {
+                        Arc::from("grpc")
+                    }
+                    crate::service_discovery::types::CommunicationProtocol::WebSocket => {
+                        Arc::from("ws")
+                    }
+                    _ => Arc::from("http"),
+                },
                 capabilities: vec![capability.clone()],
                 is_healthy: true, // InMemoryRegistry doesn't track health separately
             })
@@ -284,15 +296,15 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
                             })?; // Skip service if no port and no default
 
                             Some(ResolvedService {
-                                id: service.service_id.to_string(),
+                                id: Arc::from(service.service_id.to_string()),
                                 host,
                                 port,
                                 protocol: match endpoint.protocol {
-                                    crate::service_discovery::types::CommunicationProtocol::Http => "http",
-                                    crate::service_discovery::types::CommunicationProtocol::Grpc => "grpc",
-                                    crate::service_discovery::types::CommunicationProtocol::WebSocket => "ws",
-                                    _ => "http",
-                                }.to_string(),
+                                    crate::service_discovery::types::CommunicationProtocol::Http => Arc::from("http"),
+                                    crate::service_discovery::types::CommunicationProtocol::Grpc => Arc::from("grpc"),
+                                    crate::service_discovery::types::CommunicationProtocol::WebSocket => Arc::from("ws"),
+                                    _ => Arc::from("http"),
+                                },
                                 capabilities: vec![capability.clone()],
                                 is_healthy: true,
                             })
@@ -320,8 +332,8 @@ impl<'a> CapabilityResolver for InMemoryRegistryAdapter<'a> {
     }
 }
 
-impl<'a> InMemoryRegistryAdapter<'a> {
-    /// Convert UnifiedCapability to ServiceCapability
+impl InMemoryRegistryAdapter<'_> {
+    /// Convert `UnifiedCapability` to `ServiceCapability`
     fn unified_to_service_capability(
         &self,
         capability: &UnifiedCapability,
@@ -386,7 +398,8 @@ pub struct EnvironmentResolver;
 
 impl EnvironmentResolver {
     /// Create new environment resolver
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self
     }
 }
@@ -408,8 +421,7 @@ impl CapabilityResolver for EnvironmentResolver {
             let value = std::env::var(&env_var).map_err(|_| {
                 NestGateError::internal_error(
                     format!(
-                        "Capability '{}' not configured. Set {} environment variable.",
-                        capability, env_var
+                        "Capability '{capability}' not configured. Set {env_var} environment variable."
                     ),
                     "environment_resolver",
                 )
@@ -424,8 +436,7 @@ impl CapabilityResolver for EnvironmentResolver {
                         NestGateError::configuration_error(
                             "capability_endpoint_host",
                             &format!(
-                                "Environment variable {} has URL without host: {}",
-                                env_var, value
+                                "Environment variable {env_var} has URL without host: {value}"
                             ),
                         )
                     })?
@@ -447,33 +458,32 @@ impl CapabilityResolver for EnvironmentResolver {
                 ))?;
 
                 Ok(ResolvedService {
-                    id: "env-configured".to_string(),
+                    id: Arc::from("env-configured"),
                     host,
                     port,
-                    protocol: url.scheme().to_string(),
+                    protocol: Arc::from(url.scheme().to_string()),
                     capabilities: vec![capability.clone()],
                     is_healthy: true,
                 })
             } else if let Some((host, port_str)) = value.split_once(':') {
                 let port = port_str.parse().map_err(|_| {
                     NestGateError::internal_error(
-                        format!("Invalid port in {}: {}", env_var, port_str),
+                        format!("Invalid port in {env_var}: {port_str}"),
                         "environment_resolver",
                     )
                 })?;
                 Ok(ResolvedService {
-                    id: "env-configured".to_string(),
+                    id: Arc::from("env-configured"),
                     host: host.to_string(),
                     port,
-                    protocol: "http".to_string(),
+                    protocol: Arc::from("http"),
                     capabilities: vec![capability.clone()],
                     is_healthy: true,
                 })
             } else {
                 Err(NestGateError::internal_error(
                     format!(
-                        "Invalid endpoint format in {}: {}. Expected URL or host:port",
-                        env_var, value
+                        "Invalid endpoint format in {env_var}: {value}. Expected URL or host:port"
                     ),
                     "environment_resolver",
                 ))
@@ -515,6 +525,7 @@ pub struct CompositeResolver<'a> {
 
 impl<'a> CompositeResolver<'a> {
     /// Create new composite resolver
+    #[must_use]
     pub fn new() -> Self {
         Self {
             resolvers: Vec::new(),
@@ -522,12 +533,14 @@ impl<'a> CompositeResolver<'a> {
     }
 
     /// Add a resolver to the chain
+    #[must_use]
     pub fn with_resolver(mut self, resolver: Box<dyn CapabilityResolver + 'a>) -> Self {
         self.resolvers.push(resolver);
         self
     }
 
     /// Create default resolver chain (registry -> environment)
+    #[must_use]
     pub fn default_chain(
         registry: Option<&'a crate::universal_primal_discovery::service_registry::ServiceRegistry>,
     ) -> Self {
@@ -543,13 +556,13 @@ impl<'a> CompositeResolver<'a> {
     }
 }
 
-impl<'a> Default for CompositeResolver<'a> {
+impl Default for CompositeResolver<'_> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<'a> CapabilityResolver for CompositeResolver<'a> {
+impl CapabilityResolver for CompositeResolver<'_> {
     fn resolve_capability(
         &self,
         capability: &UnifiedCapability,
@@ -563,10 +576,7 @@ impl<'a> CapabilityResolver for CompositeResolver<'a> {
             }
 
             Err(NestGateError::internal_error(
-                format!(
-                    "Capability '{}' could not be resolved by any resolver",
-                    capability
-                ),
+                format!("Capability '{capability}' could not be resolved by any resolver"),
                 "composite_resolver",
             ))
         })
@@ -588,7 +598,7 @@ impl<'a> CapabilityResolver for CompositeResolver<'a> {
 
             if all_services.is_empty() {
                 Err(NestGateError::internal_error(
-                    format!("No services found for capability: {}", capability),
+                    format!("No services found for capability: {capability}"),
                     "composite_resolver",
                 ))
             } else {
@@ -614,5 +624,189 @@ impl<'a> CapabilityResolver for CompositeResolver<'a> {
 }
 
 #[cfg(test)]
-#[path = "capability_resolver_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+    use crate::unified_capabilities::{CapabilityMapper, UnifiedCapability};
+
+    #[test]
+    fn resolved_service_url_and_endpoint() {
+        let s = ResolvedService {
+            id: "1".into(),
+            host: "127.0.0.1".into(),
+            port: 8080,
+            protocol: "http".into(),
+            capabilities: vec![],
+            is_healthy: true,
+        };
+        assert_eq!(s.url(), "http://127.0.0.1:8080");
+        assert_eq!(s.endpoint(), "127.0.0.1:8080");
+    }
+
+    #[test]
+    fn resolved_service_url_includes_non_http_scheme() {
+        let s = ResolvedService {
+            id: "g".into(),
+            host: "10.0.0.2".into(),
+            port: 9090,
+            protocol: "grpc".into(),
+            capabilities: vec![],
+            is_healthy: true,
+        };
+        assert_eq!(s.url(), "grpc://10.0.0.2:9090");
+    }
+
+    #[test]
+    fn capability_mapper_env_var_name_format() {
+        let name = CapabilityMapper::env_var_name(&UnifiedCapability::Storage);
+        assert!(name.contains("STORAGE"));
+        assert!(name.starts_with("NESTGATE_CAPABILITY_"));
+        assert!(name.ends_with("_ENDPOINT"));
+    }
+
+    #[tokio::test]
+    async fn composite_resolver_empty_chain_fails() {
+        let c = CompositeResolver::new();
+        let err = c
+            .resolve_capability(&UnifiedCapability::Storage)
+            .await
+            .expect_err("no resolvers");
+        assert!(!err.to_string().is_empty());
+    }
+
+    #[test]
+    fn unified_capability_display_covers_variants() {
+        use UnifiedCapability::*;
+        let samples = [
+            (Storage, "storage"),
+            (ZfsManagement, "zfs-management"),
+            (Custom("x".into()), "custom:x"),
+            (ArtificialIntelligence, "ai"),
+        ];
+        for (cap, needle) in samples {
+            let s = cap.to_string();
+            assert!(s.contains(needle), "{cap:?} -> {s}");
+        }
+    }
+
+    #[tokio::test]
+    async fn composite_resolve_capability_all_errors_when_empty() {
+        let cap = UnifiedCapability::Storage;
+        let c = CompositeResolver::new();
+        let err = c.resolve_capability_all(&cap).await.expect_err("empty");
+        assert!(!err.to_string().is_empty());
+    }
+
+    #[test]
+    fn environment_resolver_new_and_default() {
+        let _ = EnvironmentResolver::new();
+        let _ = EnvironmentResolver::default();
+    }
+
+    #[tokio::test]
+    async fn in_memory_registry_adapter_resolve_storage_service() {
+        use crate::service_discovery::registry::{
+            InMemoryServiceRegistry, UniversalServiceRegistry,
+        };
+        use crate::service_discovery::types::{
+            CommunicationProtocol, IntegrationPreferences, ResourceSpec, ServiceCapability,
+            ServiceEndpoint as SvcEp, ServiceMetadata, StorageType, UniversalServiceRegistration,
+        };
+        use uuid::Uuid;
+
+        let reg = InMemoryServiceRegistry::new();
+        let sid = Uuid::new_v4();
+        let registration = UniversalServiceRegistration {
+            service_id: sid,
+            metadata: ServiceMetadata {
+                name: "storage-a".into(),
+                ..Default::default()
+            },
+            capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
+            resources: ResourceSpec::default(),
+            endpoints: vec![SvcEp {
+                url: "http://127.0.0.1:8080/path".into(),
+                protocol: CommunicationProtocol::Http,
+                health_check: None,
+            }],
+            integration: IntegrationPreferences::default(),
+            extensions: Default::default(),
+        };
+        reg.register_service(registration).await.expect("register");
+
+        let adapter = InMemoryRegistryAdapter::new(&reg);
+        let resolved = adapter
+            .resolve_capability(&UnifiedCapability::Storage)
+            .await
+            .expect("resolve");
+        assert_eq!(resolved.host, "127.0.0.1");
+        assert_eq!(resolved.port, 8080);
+        assert_eq!(resolved.protocol.as_ref(), "http");
+
+        let all = adapter
+            .resolve_capability_all(&UnifiedCapability::Storage)
+            .await
+            .expect("resolve all");
+        assert_eq!(all.len(), 1);
+
+        assert!(adapter.has_capability(&UnifiedCapability::Storage).await);
+    }
+
+    #[tokio::test]
+    async fn environment_resolver_missing_env_returns_error() {
+        let cap = UnifiedCapability::Custom("round3_missing_env_only".into());
+        let err = EnvironmentResolver::new()
+            .resolve_capability(&cap)
+            .await
+            .expect_err("unset env");
+        assert!(!err.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn composite_resolver_in_memory_plus_environment_fallback() {
+        use crate::service_discovery::registry::{
+            InMemoryServiceRegistry, UniversalServiceRegistry,
+        };
+        use crate::service_discovery::types::{
+            CommunicationProtocol, IntegrationPreferences, ResourceSpec, ServiceCapability,
+            ServiceEndpoint as SvcEp, ServiceMetadata, StorageType, UniversalServiceRegistration,
+        };
+        use uuid::Uuid;
+
+        let reg = InMemoryServiceRegistry::new();
+        let sid = Uuid::new_v4();
+        reg.register_service(UniversalServiceRegistration {
+            service_id: sid,
+            metadata: ServiceMetadata {
+                name: "s".into(),
+                ..Default::default()
+            },
+            capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
+            resources: ResourceSpec::default(),
+            endpoints: vec![SvcEp {
+                url: "http://192.168.1.10:9000".into(),
+                protocol: CommunicationProtocol::Http,
+                health_check: None,
+            }],
+            integration: IntegrationPreferences::default(),
+            extensions: Default::default(),
+        })
+        .await
+        .expect("reg");
+
+        let composite = CompositeResolver::new()
+            .with_resolver(Box::new(InMemoryRegistryAdapter::new(&reg)))
+            .with_resolver(Box::new(EnvironmentResolver::new()));
+        let s = composite
+            .resolve_capability(&UnifiedCapability::Storage)
+            .await
+            .expect("composite");
+        assert_eq!(s.host, "192.168.1.10");
+
+        let merged = composite
+            .resolve_capability_all(&UnifiedCapability::Storage)
+            .await
+            .expect("all");
+        assert!(!merged.is_empty());
+        assert!(composite.has_capability(&UnifiedCapability::Storage).await);
+    }
+}

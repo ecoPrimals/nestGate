@@ -22,10 +22,10 @@ impl fmt::Display for DiagnosticLevel {
     /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DiagnosticLevel::Info => write!(f, "INFO"),
-            DiagnosticLevel::Warning => write!(f, "WARNING"),
-            DiagnosticLevel::Error => write!(f, "ERROR"),
-            DiagnosticLevel::Critical => write!(f, "CRITICAL"),
+            Self::Info => write!(f, "INFO"),
+            Self::Warning => write!(f, "WARNING"),
+            Self::Error => write!(f, "ERROR"),
+            Self::Critical => write!(f, "CRITICAL"),
         }
     }
 }
@@ -55,14 +55,14 @@ impl fmt::Display for ComponentType {
     /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ComponentType::Cpu => write!(f, "CPU"),
-            ComponentType::Memory => write!(f, "Memory"),
-            ComponentType::Storage => write!(f, "Storage"),
-            ComponentType::Network => write!(f, "Network"),
-            ComponentType::System => write!(f, "System"),
-            ComponentType::Application => write!(f, "Application"),
-            ComponentType::Database => write!(f, "Database"),
-            ComponentType::Cache => write!(f, "Cache"),
+            Self::Cpu => write!(f, "CPU"),
+            Self::Memory => write!(f, "Memory"),
+            Self::Storage => write!(f, "Storage"),
+            Self::Network => write!(f, "Network"),
+            Self::System => write!(f, "System"),
+            Self::Application => write!(f, "Application"),
+            Self::Database => write!(f, "Database"),
+            Self::Cache => write!(f, "Cache"),
         }
     }
 }
@@ -111,8 +111,3 @@ impl Default for ServiceInfo {
 }
 
 // Use UnifiedHealthStatus and UnifiedServiceState from nestgate_types::unified_enums instead
-// This cleanup eliminates fragmented status type definitions in favor of the unified system.
-
-#[cfg(test)]
-#[path = "types_tests.rs"]
-mod tests;

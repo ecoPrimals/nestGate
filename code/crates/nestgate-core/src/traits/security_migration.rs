@@ -67,8 +67,8 @@ use crate::unified_enums::service_types::UnifiedServiceType;
 use crate::universal_traits::{Credentials, SecurityPrimalProvider, Signature};
 use crate::zero_cost_security_provider::{ZeroCostCredentials, ZeroCostSignature};
 // Import the trait from the dedicated traits module
-use crate::zero_cost_security_provider::traits::ZeroCostSecurityProvider;
 use crate::Result;
+use crate::zero_cost_security_provider::traits::ZeroCostSecurityProvider;
 // Removed unused import: use std::future::Future;
 
 // ==================== SECURITY PRIMAL ADAPTER ====================
@@ -553,4 +553,4 @@ impl<T: ZeroCostSecurityProvider + Send + Sync + 'static>
 
 #[cfg(test)]
 #[path = "security_migration_tests.rs"]
-mod tests;
+mod security_migration_tests;

@@ -8,7 +8,7 @@
 use nestgate_api::transport::{
     JsonRpcHandler, JsonRpcRequest, NestGateRpcHandler, TransportConfig,
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
 
 // ============================================================================
@@ -132,11 +132,13 @@ async fn test_config_precedence() {
         None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
     }
     assert_eq!(manual_config.family_id, "manual_family");
-    assert!(manual_config
-        .socket_path
-        .to_str()
-        .unwrap()
-        .contains("manual"));
+    assert!(
+        manual_config
+            .socket_path
+            .to_str()
+            .unwrap()
+            .contains("manual")
+    );
 }
 
 // ============================================================================

@@ -39,8 +39,8 @@ mod before_hardcoded {
 // ============================================================================
 
 mod after_agnostic {
-    use nestgate_core::config::agnostic_config::migrate_port;
     use nestgate_core::Result;
+    use nestgate_core::config::agnostic_config::migrate_port;
 
     pub struct ServerConfig {
         pub api_port: u16,

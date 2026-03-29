@@ -116,37 +116,37 @@ impl SystemConfig {
 
     /// Get timeout in milliseconds
     #[must_use]
-    pub fn timeout_ms(&self) -> u64 {
+    pub const fn timeout_ms(&self) -> u64 {
         self.timeout_ms
     }
 
     /// Get maximum connections
     #[must_use]
-    pub fn max_connections(&self) -> usize {
+    pub const fn max_connections(&self) -> usize {
         self.max_connections
     }
 
     /// Get buffer size
     #[must_use]
-    pub fn buffer_size(&self) -> usize {
+    pub const fn buffer_size(&self) -> usize {
         self.buffer_size
     }
 
     /// Get default retry attempts
     #[must_use]
-    pub fn retry_attempts(&self) -> u32 {
+    pub const fn retry_attempts(&self) -> u32 {
         self.retry_attempts
     }
 
     /// Get health check interval in seconds
     #[must_use]
-    pub fn health_check_interval(&self) -> u64 {
+    pub const fn health_check_interval(&self) -> u64 {
         self.health_check_interval
     }
 
     /// Get API port
     #[must_use]
-    pub fn api_port(&self) -> u16 {
+    pub const fn api_port(&self) -> u16 {
         self.api_port
     }
 
@@ -168,42 +168,42 @@ impl SystemConfig {
 
     /// Builder: Set timeout in milliseconds
     #[must_use]
-    pub fn with_timeout_ms(mut self, timeout_ms: u64) -> Self {
+    pub const fn with_timeout_ms(mut self, timeout_ms: u64) -> Self {
         self.timeout_ms = timeout_ms;
         self
     }
 
     /// Builder: Set maximum connections
     #[must_use]
-    pub fn with_max_connections(mut self, max_connections: usize) -> Self {
+    pub const fn with_max_connections(mut self, max_connections: usize) -> Self {
         self.max_connections = max_connections;
         self
     }
 
     /// Builder: Set buffer size
     #[must_use]
-    pub fn with_buffer_size(mut self, buffer_size: usize) -> Self {
+    pub const fn with_buffer_size(mut self, buffer_size: usize) -> Self {
         self.buffer_size = buffer_size;
         self
     }
 
     /// Builder: Set retry attempts
     #[must_use]
-    pub fn with_retry_attempts(mut self, retry_attempts: u32) -> Self {
+    pub const fn with_retry_attempts(mut self, retry_attempts: u32) -> Self {
         self.retry_attempts = retry_attempts;
         self
     }
 
     /// Builder: Set health check interval
     #[must_use]
-    pub fn with_health_check_interval(mut self, health_check_interval: u64) -> Self {
+    pub const fn with_health_check_interval(mut self, health_check_interval: u64) -> Self {
         self.health_check_interval = health_check_interval;
         self
     }
 
     /// Builder: Set API port
     #[must_use]
-    pub fn with_api_port(mut self, api_port: u16) -> Self {
+    pub const fn with_api_port(mut self, api_port: u16) -> Self {
         self.api_port = api_port;
         self
     }

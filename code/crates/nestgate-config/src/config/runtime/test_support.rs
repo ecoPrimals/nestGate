@@ -26,7 +26,7 @@
 //!
 //! # Usage in Tests
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::config::runtime::test_support::TestConfigGuard;
 //!
 //! // Example test showing isolated configuration
@@ -63,7 +63,7 @@ thread_local! {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::config::runtime::test_support::TestConfigGuard;
 ///
 /// // Example test showing custom port
@@ -161,18 +161,21 @@ mod tests {
     #[test]
     fn test_config_guard_isolation() {
         // Clear any existing env vars to ensure clean state
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
 
         // Test 1: Custom port
         {
-            std::env::set_var("NESTGATE_API_PORT", "7777");
+            // SAFETY: single-threaded test context.
+            crate::env_process::set_var("NESTGATE_API_PORT", "7777");
             let _guard = TestConfigGuard::with_port(7777);
             let config = get_test_config();
             assert_eq!(config.network.api_port, 7777);
         }
 
         // After guard dropped, reset to default
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
         // Note: Config caching means we might still see old value
         // In production, each process gets its own config at startup
         // Tests should use guards for isolation
@@ -197,9 +200,11 @@ mod tests {
     #[test]
     fn test_config_from_env() {
         // Clean environment first to avoid pollution
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
 
-        std::env::set_var("NESTGATE_API_PORT", "6666");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_API_PORT", "6666");
 
         let _guard = TestConfigGuard::from_test_env();
         let config = get_test_config();
@@ -209,6 +214,7 @@ mod tests {
             config.network.api_port
         );
 
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
     }
 }

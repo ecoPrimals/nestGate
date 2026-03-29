@@ -418,8 +418,8 @@ async fn test_create_optimal_config_cost_priority() {
 
 /// Create a test detected storage instance
 fn create_test_storage(name: &str, capacity_gb: u64) -> DetectedStorage {
-    use nestgate_types::unified_enums::storage_types::UnifiedStorageType;
     use crate::universal_storage::storage_detector::{CostProfile, PerformanceProfile};
+    use nestgate_types::unified_enums::storage_types::UnifiedStorageType;
     use std::collections::HashMap;
 
     // Create detected storage instance

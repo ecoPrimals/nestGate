@@ -2,7 +2,7 @@
 //!
 //! Basic benchmark to establish performance baseline and verify benchmark infrastructure
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use std::collections::HashMap;
 
 // Simple function benchmarks for core operations

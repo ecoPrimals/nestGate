@@ -3,25 +3,29 @@
 
 //! Discovery domain semantic methods
 //!
-//! TODO: wire to nestgate-core `service_metadata` / nestgate-discovery.
+//! **Integration:** Full discovery responses come from `nestgate-core` `service_metadata` and
+//! `nestgate-discovery` when those are callable from this router.
 
 use super::SemanticRouter;
 use nestgate_types::error::{NestGateError, Result};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub(super) async fn discovery_announce(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+    tracing::debug!("feature pending: discovery.announce (nestgate-discovery / service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-discovery / service_metadata",
     ))
 }
 
 pub(super) async fn discovery_query(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+    tracing::debug!("feature pending: discovery.query (nestgate-discovery / service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-discovery / service_metadata",
     ))
 }
 
 pub(super) async fn discovery_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+    tracing::debug!("feature pending: discovery.list (nestgate-discovery / service_metadata)");
     Err(NestGateError::not_implemented(
         "wire cross-crate dep: nestgate-discovery / service_metadata",
     ))

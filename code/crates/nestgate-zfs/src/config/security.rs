@@ -24,7 +24,7 @@ pub struct SecurityConfig {
 }
 /// Key management configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -42,7 +42,7 @@ pub struct SecurityConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for KeyManagement
+/// Configuration for `KeyManagement`
 pub struct KeyManagementConfig {
     /// Key storage location
     pub key_storage_path: PathBuf,
@@ -53,7 +53,7 @@ pub struct KeyManagementConfig {
 }
 /// Access control configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -71,7 +71,7 @@ pub struct KeyManagementConfig {
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for AccessControl
+/// Configuration for `AccessControl`
 pub struct AccessControlConfig {
     /// Default permissions for new datasets
     pub default_permissions: String,

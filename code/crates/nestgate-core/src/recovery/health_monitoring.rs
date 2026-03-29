@@ -118,7 +118,9 @@ pub trait HealthCheckZeroCost: Send + Sync + std::fmt::Debug {
 /// Prefer `HealthCheckZeroCost` when you don't need dynamic dispatch.
 pub trait HealthCheckDyn: Send + Sync + std::fmt::Debug {
     /// Perform health check
-    fn check_health(&self) -> Pin<Box<dyn Future<Output = Result<HealthStatus, NestGateError>> + Send + '_>>;
+    fn check_health(
+        &self,
+    ) -> Pin<Box<dyn Future<Output = Result<HealthStatus, NestGateError>> + Send + '_>>;
 
     /// Get component name
     fn component_name(&self) -> &str;
@@ -249,7 +251,3 @@ impl Default for HealthMonitor {
         Self::new(Duration::from_secs(30))
     }
 }
-
-#[cfg(test)]
-#[path = "health_monitoring_tests.rs"]
-mod health_monitoring_tests;

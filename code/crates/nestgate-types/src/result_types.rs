@@ -3,7 +3,7 @@
 
 //! **CANONICAL RESULT TYPES**
 //!
-//! Single source of truth for all Result type aliases in NestGate.
+//! Single source of truth for all Result type aliases in `NestGate`.
 //!
 //! ## Purpose
 //!
@@ -21,7 +21,7 @@
 //!
 //! ## Migration from Legacy Types
 //!
-//! All domain-specific Result aliases (ApiResult, CacheResult, StorageResult, etc.)
+//! All domain-specific Result aliases (`ApiResult`, `CacheResult`, `StorageResult`, etc.)
 //! have been deprecated in v0.11.2 and will be removed in v0.12.0 (May 2026).
 //!
 //! Use `nestgate_types::Result` (or `nestgate_types::error::Result`) with your concrete `Ok` type directly:
@@ -38,9 +38,9 @@
 //!
 //! ## Consolidation Summary
 //!
-//! **Before**: 54 Result type aliases scattered across codebase  
-//! **After**: 12-14 canonical types with clear ownership  
-//! **Eliminated**: 17 redundant aliases (all resolved to `Result` with `NestGateError`)  
+//! **Before**: 54 Result type aliases scattered across codebase\
+//! **After**: 12-14 canonical types with clear ownership\
+//! **Eliminated**: 17 redundant aliases (all resolved to `Result` with `NestGateError`)\
 //! **Benefit**: Single source of truth, reduced confusion, easier maintenance
 
 use crate::error::NestGateError;
@@ -50,9 +50,9 @@ use std::sync::Arc;
 
 /// **PRIMARY RESULT TYPE**
 ///
-/// The canonical Result type for NestGate. Uses `NestGateError` as default error.
+/// The canonical Result type for `NestGate`. Uses `NestGateError` as default error.
 ///
-/// This is the **preferred** Result type for all NestGate operations.
+/// This is the **preferred** Result type for all `NestGate` operations.
 ///
 /// ## Usage
 ///

@@ -122,6 +122,7 @@ impl PrimalId {
     }
 
     /// Get the string representation
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -175,6 +176,7 @@ pub struct SelfKnowledge {
 
 impl SelfKnowledge {
     /// Create a builder for constructing self-knowledge
+    #[must_use]
     pub fn builder() -> SelfKnowledgeBuilder {
         SelfKnowledgeBuilder::new()
     }
@@ -192,11 +194,13 @@ impl SelfKnowledge {
     }
 
     /// Get a specific endpoint by name
+    #[must_use]
     pub fn get_endpoint(&self, name: &str) -> Option<&SocketAddr> {
         self.endpoints.get(name)
     }
 
     /// Check if this primal provides a capability
+    #[must_use]
     pub fn has_capability(&self, capability: &str) -> bool {
         self.capabilities.iter().any(|c| c == capability)
     }

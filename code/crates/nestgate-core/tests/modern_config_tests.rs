@@ -8,8 +8,8 @@
 
 #[cfg(test)]
 mod error_handling_tests {
-    use nestgate_core::error::NestGateError;
     use nestgate_core::Result;
+    use nestgate_core::error::NestGateError;
 
     #[test]
     fn test_configuration_error_creation() {

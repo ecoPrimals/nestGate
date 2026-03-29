@@ -16,7 +16,7 @@ use std::time::SystemTime;
 type HealthProviderMap = Arc<DashMap<String, Box<dyn HealthCheckProvider + Send + Sync>>>;
 
 /// Health status for individual components
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Status values for Health
 pub enum HealthStatus {
     /// Component is healthy and operational
@@ -195,7 +195,7 @@ impl HealthCheckProvider for SystemHealthProvider {
     }
 
     /// Component Name
-    fn component_name(&self) -> &str {
+    fn component_name(&self) -> &'static str {
         "system"
     }
 }

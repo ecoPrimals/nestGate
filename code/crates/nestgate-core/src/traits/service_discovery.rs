@@ -7,9 +7,9 @@
 //! **CANONICAL**: This is the single source of truth for service discovery
 //! **STATUS**: Production-ready, native async
 
+use crate::Result;
 use crate::service_discovery::types::ServiceInfo;
 use crate::unified_enums::service_types::UnifiedServiceState as HealthStatus;
-use crate::Result;
 use futures_util::stream::Stream;
 use std::collections::HashMap;
 

@@ -6,7 +6,7 @@
 //! Provides a builder pattern for creating discovery mechanisms with
 //! configuration options like timeouts, caching, and auto-detection.
 
-use super::{mdns, DiscoveryMechanism};
+use super::{DiscoveryMechanism, mdns};
 use nestgate_types::error::Result;
 use std::time::Duration;
 
@@ -38,18 +38,21 @@ impl Default for DiscoveryBuilder {
 
 impl DiscoveryBuilder {
     /// Create new builder
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Set operation timeout
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+    #[must_use]
+    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }
 
     /// Set cache duration
-    pub fn with_cache_duration(mut self, duration: Duration) -> Self {
+    #[must_use]
+    pub const fn with_cache_duration(mut self, duration: Duration) -> Self {
         self.cache_duration = duration;
         self
     }
@@ -63,8 +66,8 @@ impl DiscoveryBuilder {
     /// Auto-detect best available discovery mechanism
     ///
     /// Detection order (by preference):
-    /// 1. Kubernetes (if KUBERNETES_SERVICE_HOST set)
-    /// 2. Consul (if CONSUL_HTTP_ADDR set)
+    /// 1. Kubernetes (if `KUBERNETES_SERVICE_HOST` set)
+    /// 2. Consul (if `CONSUL_HTTP_ADDR` set)
     /// 3. mDNS (default fallback)
     pub async fn detect(self) -> Result<Box<dyn DiscoveryMechanism>> {
         // Check for kubernetes

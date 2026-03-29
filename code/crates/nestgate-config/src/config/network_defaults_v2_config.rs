@@ -15,7 +15,7 @@ use nestgate_types::error::utilities::safe_env_var_or_default;
 /// This struct captures all environment variables at initialization time,
 /// eliminating the need for runtime `env::var()` calls.
 #[derive(Debug, Clone)]
-/// Configuration for NetworkDefaultsV2
+/// Configuration for `NetworkDefaultsV2`
 pub struct NetworkDefaultsV2Config {
     // API Server
     api_host: String,
@@ -99,7 +99,7 @@ impl NetworkDefaultsV2Config {
         let api_host = if api_host_env.is_empty() {
             crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()
         } else {
-            api_host_env.to_string()
+            api_host_env
         };
 
         let api_port = std::env::var("NESTGATE_API_PORT")
@@ -108,7 +108,7 @@ impl NetworkDefaultsV2Config {
             .unwrap_or(crate::constants::hardcoding::ports::HTTP_DEFAULT);
 
         Self {
-            api_host: api_host.clone(),
+            api_host,
             api_port,
             api_bind: std::env::var("NESTGATE_API_BIND").ok(),
             api_url: std::env::var("NESTGATE_API_URL").ok(),
@@ -164,7 +164,7 @@ impl NetworkDefaultsV2Config {
 
     /// Get API server port
     #[must_use]
-    pub fn api_port(&self) -> u16 {
+    pub const fn api_port(&self) -> u16 {
         self.api_port
     }
 
@@ -186,7 +186,7 @@ impl NetworkDefaultsV2Config {
 
     /// Get metrics port
     #[must_use]
-    pub fn metrics_port(&self) -> u16 {
+    pub const fn metrics_port(&self) -> u16 {
         self.metrics_port
     }
 
@@ -200,7 +200,7 @@ impl NetworkDefaultsV2Config {
 
     /// Get WebSocket port
     #[must_use]
-    pub fn websocket_port(&self) -> u16 {
+    pub const fn websocket_port(&self) -> u16 {
         self.ws_port
     }
 
@@ -222,7 +222,7 @@ impl NetworkDefaultsV2Config {
 
     /// Get health check port
     #[must_use]
-    pub fn health_port(&self) -> u16 {
+    pub const fn health_port(&self) -> u16 {
         self.health_port
     }
 
@@ -244,7 +244,7 @@ impl NetworkDefaultsV2Config {
 
     /// Get storage port
     #[must_use]
-    pub fn storage_port(&self) -> u16 {
+    pub const fn storage_port(&self) -> u16 {
         self.storage_port
     }
 
@@ -258,19 +258,19 @@ impl NetworkDefaultsV2Config {
 
     /// Get connection timeout in milliseconds
     #[must_use]
-    pub fn connect_timeout_ms(&self) -> u64 {
+    pub const fn connect_timeout_ms(&self) -> u64 {
         self.connect_timeout_ms
     }
 
     /// Get request timeout in milliseconds
     #[must_use]
-    pub fn request_timeout_ms(&self) -> u64 {
+    pub const fn request_timeout_ms(&self) -> u64 {
         self.request_timeout_ms
     }
 
     /// Get long operation timeout in milliseconds
     #[must_use]
-    pub fn long_operation_timeout_ms(&self) -> u64 {
+    pub const fn long_operation_timeout_ms(&self) -> u64 {
         self.long_op_timeout_ms
     }
 
@@ -285,56 +285,56 @@ impl NetworkDefaultsV2Config {
 
     /// Builder: Set API port
     #[must_use]
-    pub fn with_api_port(mut self, port: u16) -> Self {
+    pub const fn with_api_port(mut self, port: u16) -> Self {
         self.api_port = port;
         self
     }
 
     /// Builder: Set metrics port
     #[must_use]
-    pub fn with_metrics_port(mut self, port: u16) -> Self {
+    pub const fn with_metrics_port(mut self, port: u16) -> Self {
         self.metrics_port = port;
         self
     }
 
     /// Builder: Set WebSocket port
     #[must_use]
-    pub fn with_websocket_port(mut self, port: u16) -> Self {
+    pub const fn with_websocket_port(mut self, port: u16) -> Self {
         self.ws_port = port;
         self
     }
 
     /// Builder: Set health port
     #[must_use]
-    pub fn with_health_port(mut self, port: u16) -> Self {
+    pub const fn with_health_port(mut self, port: u16) -> Self {
         self.health_port = port;
         self
     }
 
     /// Builder: Set storage port
     #[must_use]
-    pub fn with_storage_port(mut self, port: u16) -> Self {
+    pub const fn with_storage_port(mut self, port: u16) -> Self {
         self.storage_port = port;
         self
     }
 
     /// Builder: Set connection timeout
     #[must_use]
-    pub fn with_connect_timeout_ms(mut self, timeout_ms: u64) -> Self {
+    pub const fn with_connect_timeout_ms(mut self, timeout_ms: u64) -> Self {
         self.connect_timeout_ms = timeout_ms;
         self
     }
 
     /// Builder: Set request timeout
     #[must_use]
-    pub fn with_request_timeout_ms(mut self, timeout_ms: u64) -> Self {
+    pub const fn with_request_timeout_ms(mut self, timeout_ms: u64) -> Self {
         self.request_timeout_ms = timeout_ms;
         self
     }
 
     /// Builder: Set long operation timeout
     #[must_use]
-    pub fn with_long_operation_timeout_ms(mut self, timeout_ms: u64) -> Self {
+    pub const fn with_long_operation_timeout_ms(mut self, timeout_ms: u64) -> Self {
         self.long_op_timeout_ms = timeout_ms;
         self
     }

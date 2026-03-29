@@ -7,10 +7,10 @@
 //! latency, exponential backoff) and yield_now() for coordination where appropriate.
 
 use nestgate_core::{
+    CanonicalNetwork, CanonicalSecurity, CanonicalService, CanonicalStorage,
     config::canonical_primary::NestGateCanonicalConfig,
     error::{NestGateError, Result},
     service_discovery::types::{ServiceInfo, ServiceMetadata},
-    CanonicalNetwork, CanonicalSecurity, CanonicalService, CanonicalStorage,
 };
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};

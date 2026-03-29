@@ -8,8 +8,8 @@ use super::metrics::MetricsCollector;
 use super::tuner::AutoTuner;
 use super::types::PerformanceHistory;
 use nestgate_core::error::Result;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 
 /// Adaptive Performance Monitor - main orchestrator
@@ -48,7 +48,7 @@ impl AdaptivePerformanceMonitor {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn start_monitoring(&self) -> Result<()> {
+    pub const fn start_monitoring(&self) -> Result<()> {
         // Implementation would go here
         Ok(())
     }
@@ -58,7 +58,7 @@ impl AdaptivePerformanceMonitor {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn stop_monitoring(&self) -> Result<()> {
+    pub const fn stop_monitoring(&self) -> Result<()> {
         // Implementation would go here
         Ok(())
     }

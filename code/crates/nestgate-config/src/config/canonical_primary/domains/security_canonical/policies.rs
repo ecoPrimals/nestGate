@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for SecurityPolicies
+/// Configuration for `SecurityPolicies`
 pub struct SecurityPoliciesConfig {
     /// Compliance
     pub compliance: ComplianceConfig,
@@ -29,7 +29,7 @@ pub struct ComplianceConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for DataProtection
+/// Configuration for `DataProtection`
 pub struct DataProtectionConfig {
     /// Encryption At Rest
     pub encryption_at_rest: bool,
@@ -38,7 +38,7 @@ pub struct DataProtectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RetentionPolicy
+/// Configuration for `RetentionPolicy`
 pub struct RetentionPolicyConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -131,7 +131,7 @@ impl SecurityPoliciesConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

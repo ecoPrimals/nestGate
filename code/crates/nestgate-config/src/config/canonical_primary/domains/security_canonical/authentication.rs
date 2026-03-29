@@ -111,7 +111,7 @@ pub enum MfaMethod {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for BackupCodes
+/// Configuration for `BackupCodes`
 pub struct BackupCodesConfig {
     /// Enable backup codes
     pub enabled: bool,
@@ -127,7 +127,7 @@ pub struct BackupCodesConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RememberDevice
+/// Configuration for `RememberDevice`
 pub struct RememberDeviceConfig {
     /// Enable remember device functionality
     pub enabled: bool,
@@ -164,7 +164,7 @@ pub struct SessionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SessionStorage
+/// Configuration for `SessionStorage`
 pub struct SessionStorageConfig {
     /// Session storage type
     pub storage_type: SessionStorageType,
@@ -177,7 +177,7 @@ pub struct SessionStorageConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of SessionStorage
+/// Types of `SessionStorage`
 pub enum SessionStorageType {
     /// In-memory storage
     Memory,
@@ -192,7 +192,7 @@ pub enum SessionStorageType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SessionEncryption
+/// Configuration for `SessionEncryption`
 pub struct SessionEncryptionConfig {
     /// Enable session encryption
     pub enabled: bool,
@@ -205,7 +205,7 @@ pub struct SessionEncryptionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for KeyRotation
+/// Configuration for `KeyRotation`
 pub struct KeyRotationConfig {
     /// Enable automatic key rotation
     pub enabled: bool,
@@ -218,7 +218,7 @@ pub struct KeyRotationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SessionSecurity
+/// Configuration for `SessionSecurity`
 pub struct SessionSecurityConfig {
     /// Secure cookie settings
     pub secure_cookies: bool,
@@ -251,7 +251,7 @@ pub enum SameSitePolicy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for SessionRefresh
+/// Configuration for `SessionRefresh`
 pub struct SessionRefreshConfig {
     /// Enable automatic session refresh
     pub enabled: bool,
@@ -333,7 +333,7 @@ pub enum JwtAlgorithm {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ApiKey
+/// Configuration for `ApiKey`
 pub struct ApiKeyConfig {
     /// Enable API key authentication
     pub enabled: bool,
@@ -352,7 +352,7 @@ pub struct ApiKeyConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RateLimit
+/// Configuration for `RateLimit`
 pub struct RateLimitConfig {
     /// Requests per window
     pub requests: u32,
@@ -365,7 +365,7 @@ pub struct RateLimitConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for RefreshToken
+/// Configuration for `RefreshToken`
 pub struct RefreshTokenConfig {
     /// Enable refresh tokens
     pub enabled: bool,
@@ -381,7 +381,7 @@ pub struct RefreshTokenConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AccessToken
+/// Configuration for `AccessToken`
 pub struct AccessTokenConfig {
     /// Access token lifetime
     pub lifetime: Duration,
@@ -396,7 +396,7 @@ pub struct AccessTokenConfig {
 // ==================== PASSWORD POLICIES ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for PasswordPolicy
+/// Configuration for `PasswordPolicy`
 pub struct PasswordPolicyConfig {
     /// Minimum password length
     pub min_length: u32,
@@ -435,7 +435,7 @@ pub struct PasswordPolicyConfig {
 // ==================== ACCOUNT LOCKOUT ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AccountLockout
+/// Configuration for `AccountLockout`
 pub struct AccountLockoutConfig {
     /// Enable account lockout
     pub enabled: bool,
@@ -478,7 +478,7 @@ pub struct ExternalAuthProvider {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of ExternalProvider
+/// Types of `ExternalProvider`
 pub enum ExternalProviderType {
     /// Oauth2
     OAuth2,
@@ -809,7 +809,7 @@ impl AuthenticationConfig {
     #[must_use]
     pub fn compliance_focused() -> Self {
         Self::production_hardened() // Start with production hardened
-                                    // Add compliance-specific overrides here
+        // Add compliance-specific overrides here
     }
 
     /// Merge with another configuration

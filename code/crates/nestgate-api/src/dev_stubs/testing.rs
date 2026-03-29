@@ -161,7 +161,7 @@ pub struct MockingConfig {
 
 /// Mock service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MockService
+/// Configuration for `MockService`
 pub struct MockServiceConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -169,7 +169,7 @@ pub struct MockServiceConfig {
 
 /// Test double configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestDouble
+/// Configuration for `TestDouble`
 pub struct TestDoubleConfig {
     /// Whether this feature is enabled
     pub enabled: bool,

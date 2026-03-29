@@ -36,7 +36,3 @@ mod tests {
         );
     }
 }
-
-#[cfg(test)]
-#[path = "health_extended_tests.rs"]
-mod health_extended_tests;

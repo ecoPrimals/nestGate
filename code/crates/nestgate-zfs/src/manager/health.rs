@@ -12,7 +12,7 @@ use super::types::{
     PoolOverallStatus, SnapshotStatus, TierOverallStatus,
 };
 use crate::command::ZfsOperations;
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use nestgate_core::Result;
 use std::time::SystemTime;
 // Removed unused tracing import
@@ -102,7 +102,7 @@ impl ZfsManager {
 
         // Get snapshot status
         let snapshot_status = SnapshotStatus {
-            total_snapshots: self.get_total_snapshots().await.unwrap_or(0) as u64,
+            total_snapshots: u64::from(self.get_total_snapshots().await.unwrap_or(0)),
             active_policies: 8,
             pending_operations: 2,
             recent_failures: 0,
@@ -190,7 +190,7 @@ impl ZfsManager {
     }
 
     /// Get active migration jobs count
-    fn get_active_migration_jobs(&self) -> Result<u32> {
+    const fn get_active_migration_jobs(&self) -> Result<u32> {
         // In a real implementation, this would query the migration engine
         // For now, return a count based on system activity
         Ok(1) // Typically 0-2 active jobs

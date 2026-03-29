@@ -18,8 +18,8 @@
 //! - Resource cleanup correct
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use tokio::sync::{RwLock, Semaphore};
 
 /// Simulated dataset with thread-safe operations

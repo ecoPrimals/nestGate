@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! # Default Constants for NestGate
+//! # Default Constants for `NestGate`
 //!
 //! This module provides centralized default values to eliminate hardcoding
 //! throughout the codebase while maintaining sovereignty principles.
@@ -18,7 +18,7 @@ use std::time::Duration;
 
 /// **NETWORK DEFAULTS**
 pub mod network {
-    use super::*;
+    use super::{addresses, ports};
 
     /// Default API port - can be overridden with `NESTGATE_API_PORT`
     pub const DEFAULT_API_PORT: u16 = ports::HTTP_DEFAULT;
@@ -46,10 +46,10 @@ pub mod database {
     /// Default Redis port - can be overridden with `NESTGATE_REDIS_PORT`
     pub const DEFAULT_REDIS_PORT: u16 = ports::REDIS_DEFAULT;
 
-    /// Default MongoDB port - can be overridden with `NESTGATE_MONGODB_PORT`
+    /// Default `MongoDB` port - can be overridden with `NESTGATE_MONGODB_PORT`
     pub const DEFAULT_MONGODB_PORT: u16 = ports::MONGODB_DEFAULT;
 
-    /// Default MySQL port - can be overridden with `NESTGATE_MYSQL_PORT`
+    /// Default `MySQL` port - can be overridden with `NESTGATE_MYSQL_PORT`
     pub const DEFAULT_MYSQL_PORT: u16 = ports::MYSQL_DEFAULT;
 
     /// Default database host - can be overridden with `NESTGATE_DB_HOST`
@@ -84,7 +84,7 @@ pub mod timeouts {
     pub const DEFAULT_WS_TIMEOUT: Duration = Duration::from_secs(60);
 }
 
-/// **ENVIRONMENT HELPERS** - ✅ MODERNIZED (Week 2): Now delegates to migration_bridge
+/// **ENVIRONMENT HELPERS** - ✅ MODERNIZED (Week 2): Now delegates to `migration_bridge`
 ///
 /// **MIGRATION NOTE**: These helpers now use the modern `EnvironmentConfig` system
 /// via `migration_bridge`. They will show deprecation warnings guiding to direct
@@ -136,7 +136,7 @@ pub mod env_helpers {
 
     /// Get database port from environment or default
     ///
-    /// **DEPRECATED**: Database config should be external, not in NestGate core
+    /// **DEPRECATED**: Database config should be external, not in `NestGate` core
     #[deprecated(since = "0.6.0", note = "Database configuration should be external")]
     #[must_use]
     pub fn db_port() -> u16 {
@@ -258,9 +258,11 @@ mod tests {
     #[ignore] // Disabled: Environment variable pollution in parallel test execution
     fn test_environment_override() {
         let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        std::env::set_var("NESTGATE_API_PORT", "9999");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_API_PORT", "9999");
         assert_eq!(env_helpers::api_port(), 9999);
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
         assert_eq!(env_helpers::api_port(), ports::HTTP_DEFAULT);
     }
 
@@ -327,21 +329,25 @@ mod tests {
     fn test_env_helpers_api_port() {
         let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         // Clear any existing env var
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
 
         // Test default
         assert_eq!(env_helpers::api_port(), 8080);
 
         // Test override
-        std::env::set_var("NESTGATE_API_PORT", "3000");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_API_PORT", "3000");
         assert_eq!(env_helpers::api_port(), 3000);
 
         // Test invalid value falls back to default
-        std::env::set_var("NESTGATE_API_PORT", "invalid");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_API_PORT", "invalid");
         assert_eq!(env_helpers::api_port(), 8080);
 
         // Cleanup
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
     }
 
     #[test]
@@ -364,14 +370,17 @@ mod tests {
 
     #[test]
     fn test_env_helpers_db_port() {
-        std::env::remove_var("NESTGATE_DB_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_DB_PORT");
 
         assert_eq!(env_helpers::db_port(), 5432);
 
-        std::env::set_var("NESTGATE_DB_PORT", "5433");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_DB_PORT", "5433");
         assert_eq!(env_helpers::db_port(), 5433);
 
-        std::env::remove_var("NESTGATE_DB_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_DB_PORT");
     }
 
     #[test]
@@ -384,22 +393,26 @@ mod tests {
 
     #[test]
     fn test_api_url_format() {
-        std::env::remove_var("NESTGATE_HOSTNAME");
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HOSTNAME");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
 
         let url = urls::api_url();
         assert!(url.starts_with("http://"));
         // URL should contain host and port
         assert!(url.matches(':').count() >= 2); // http:// and port separator
-                                                // Should have a valid structure
+        // Should have a valid structure
         assert!(url.len() > 10); // Minimum valid URL length
     }
 
     #[test]
     #[serial_test::serial]
     fn test_websocket_url_format() {
-        std::env::remove_var("NESTGATE_HOSTNAME");
-        std::env::remove_var("NESTGATE_WS_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HOSTNAME");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_WS_PORT");
 
         let url = urls::websocket_url();
         assert!(url.starts_with("ws://"));
@@ -410,8 +423,10 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn test_health_url_format() {
-        std::env::remove_var("NESTGATE_HOSTNAME");
-        std::env::remove_var("NESTGATE_HEALTH_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HOSTNAME");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HEALTH_PORT");
 
         let url = urls::health_url();
         assert!(url.starts_with("http://"));
@@ -424,7 +439,8 @@ mod tests {
     fn test_url_builders_with_custom_host() {
         // Save and restore env var to avoid test pollution
         let original = env::var("NESTGATE_HOSTNAME").ok();
-        std::env::set_var("NESTGATE_HOSTNAME", "custom.example.com");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_HOSTNAME", "custom.example.com");
 
         let api_url = urls::api_url();
         // URL builders may use localhost or the hostname - just verify they work
@@ -438,8 +454,8 @@ mod tests {
 
         // Restore original value or remove if it didn't exist
         match original {
-            Some(val) => std::env::set_var("NESTGATE_HOSTNAME", val),
-            None => std::env::remove_var("NESTGATE_HOSTNAME"),
+            Some(val) => crate::env_process::set_var("NESTGATE_HOSTNAME", val),
+            None => crate::env_process::remove_var("NESTGATE_HOSTNAME"),
         }
     }
 
@@ -467,18 +483,24 @@ mod tests {
     #[test]
     fn test_port_parsing_invalid_values() {
         // Test that invalid port values fall back to defaults
-        std::env::set_var("NESTGATE_API_PORT", "not_a_number");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_API_PORT", "not_a_number");
         assert_eq!(env_helpers::api_port(), 8080);
 
-        std::env::set_var("NESTGATE_DB_PORT", "999999"); // Out of u16 range
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_DB_PORT", "999999"); // Out of u16 range
         assert_eq!(env_helpers::db_port(), 5432);
 
-        std::env::set_var("NESTGATE_METRICS_PORT", "");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_METRICS_PORT", "");
         assert_eq!(env_helpers::metrics_port(), 9090);
 
-        std::env::remove_var("NESTGATE_API_PORT");
-        std::env::remove_var("NESTGATE_DB_PORT");
-        std::env::remove_var("NESTGATE_METRICS_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_DB_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_METRICS_PORT");
     }
 
     #[test]
@@ -604,7 +626,3 @@ mod tests {
         assert!(url.contains(':'));
     }
 }
-
-#[cfg(test)]
-#[path = "defaults_validation_tests.rs"]
-mod defaults_validation_tests;

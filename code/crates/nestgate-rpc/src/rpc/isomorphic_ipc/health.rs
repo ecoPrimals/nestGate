@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Health Monitoring for NestGate with Isomorphic IPC
+//! Health Monitoring for `NestGate` with Isomorphic IPC
 //!
 //! **Phase 3: Deployment Coordination - Health Checks**
 //!
 //! This module provides health monitoring using the isomorphic IPC client,
-//! enabling other primals to check NestGate's status without knowing
+//! enabling other primals to check `NestGate`'s status without knowing
 //! whether it's using Unix sockets or TCP.
 //!
 //! ## Architecture
@@ -36,7 +36,7 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::time::{interval, sleep};
@@ -48,32 +48,31 @@ use super::launcher::connect_to_nestgate;
 // HEALTH STATUS TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Health status of NestGate
+/// Health status of `NestGate`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HealthStatus {
-    /// NestGate is healthy and operational
+    /// `NestGate` is healthy and operational
     Healthy,
-    /// NestGate is degraded but operational
+    /// `NestGate` is degraded but operational
     Degraded,
-    /// NestGate is unhealthy and may not respond
+    /// `NestGate` is unhealthy and may not respond
     Unhealthy,
-    /// NestGate is not responding
+    /// `NestGate` is not responding
     Unreachable,
 }
 
 impl HealthStatus {
-    /// Check if status indicates NestGate is operational
-    pub fn is_operational(&self) -> bool {
-        matches!(self, HealthStatus::Healthy | HealthStatus::Degraded)
+    /// Check if status indicates `NestGate` is operational
+    #[must_use]
+    pub const fn is_operational(&self) -> bool {
+        matches!(self, Self::Healthy | Self::Degraded)
     }
 
-    /// Check if status indicates NestGate needs attention
-    pub fn needs_attention(&self) -> bool {
-        matches!(
-            self,
-            HealthStatus::Degraded | HealthStatus::Unhealthy | HealthStatus::Unreachable
-        )
+    /// Check if status indicates `NestGate` needs attention
+    #[must_use]
+    pub const fn needs_attention(&self) -> bool {
+        matches!(self, Self::Degraded | Self::Unhealthy | Self::Unreachable)
     }
 }
 
@@ -82,7 +81,7 @@ impl HealthStatus {
 pub struct HealthCheckResponse {
     /// Overall health status
     pub status: HealthStatus,
-    /// NestGate version
+    /// `NestGate` version
     pub version: String,
     /// Uptime in seconds
     #[serde(default)]
@@ -99,20 +98,20 @@ pub struct HealthCheckResponse {
 // HEALTH CHECK CLIENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Perform a health check on NestGate
+/// Perform a health check on `NestGate`
 ///
 /// This is the **primary health check function** for other primals.
 ///
 /// ## Process
 ///
-/// 1. Discover NestGate endpoint (automatic)
+/// 1. Discover `NestGate` endpoint (automatic)
 /// 2. Connect using isomorphic transport
 /// 3. Send `health.check` JSON-RPC request
 /// 4. Parse and return response
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::health;
 ///
 /// #[tokio::main]
@@ -140,13 +139,13 @@ pub async fn check_nestgate_health() -> Result<HealthStatus> {
     }
 }
 
-/// Perform a detailed health check on NestGate
+/// Perform a detailed health check on `NestGate`
 ///
 /// Returns full `HealthCheckResponse` with version, uptime, and connection info.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::health;
 ///
 /// #[tokio::main]
@@ -176,7 +175,7 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
     // Send request
     let request_str = serde_json::to_string(&request)?;
     stream
-        .write_all(format!("{}\n", request_str).as_bytes())
+        .write_all(format!("{request_str}\n").as_bytes())
         .await
         .context("Failed to send health check request")?;
     stream.flush().await?;
@@ -247,14 +246,14 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
 // PERIODIC HEALTH MONITORING
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Monitor NestGate health periodically
+/// Monitor `NestGate` health periodically
 ///
-/// Runs a background task that checks NestGate health at the specified interval.
+/// Runs a background task that checks `NestGate` health at the specified interval.
 /// Useful for monitoring daemons and health check services.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::health;
 /// use std::time::Duration;
 ///
@@ -301,14 +300,14 @@ where
     }
 }
 
-/// Wait for NestGate to become healthy
+/// Wait for `NestGate` to become healthy
 ///
-/// Polls health status until NestGate responds with a healthy status,
+/// Polls health status until `NestGate` responds with a healthy status,
 /// or until timeout is reached.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::health;
 /// use std::time::Duration;
 ///
@@ -329,8 +328,7 @@ pub async fn wait_for_healthy(timeout: Duration) -> Result<()> {
     loop {
         if start.elapsed() > timeout {
             return Err(anyhow::anyhow!(
-                "Timeout waiting for NestGate to become healthy after {:?}",
-                timeout
+                "Timeout waiting for NestGate to become healthy after {timeout:?}"
             ));
         }
 

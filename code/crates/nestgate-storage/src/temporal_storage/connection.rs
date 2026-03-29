@@ -158,7 +158,8 @@ impl ConnectionHandle {
     /// # Returns
     ///
     /// New connection handle in Connecting state
-    pub fn new(connection_id: String, source_type: DataSourceType) -> Self {
+    #[must_use]
+    pub const fn new(connection_id: String, source_type: DataSourceType) -> Self {
         Self {
             connection_id,
             source_type,
@@ -191,7 +192,8 @@ impl ConnectionHandle {
     /// # Returns
     ///
     /// `true` if connected, `false` otherwise
-    pub fn is_connected(&self) -> bool {
+    #[must_use]
+    pub const fn is_connected(&self) -> bool {
         matches!(self.status, ConnectionStatus::Connected)
     }
 
@@ -204,6 +206,7 @@ impl ConnectionHandle {
     /// # Returns
     ///
     /// `true` if capability is supported
+    #[must_use]
     pub fn has_capability(&self, capability: &str) -> bool {
         self.capabilities.iter().any(|c| c == capability)
     }

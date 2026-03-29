@@ -83,6 +83,7 @@ async fn test_e2e_unix_socket_server_startup() {
         "default".to_string(),
         Some(test_socket.to_string()),
         None,
+        None,
     )
     .expect("Socket config should be created");
 
@@ -290,6 +291,7 @@ async fn test_fault_unicode_in_family_id() {
         "default".to_string(),
         None,
         None,
+        None,
     );
     assert!(config.is_ok(), "Should handle unicode in family ID");
     let config = config.expect("resolve succeeded");
@@ -329,6 +331,7 @@ async fn test_integration_atomic_deployment_scenario() {
         family_id.clone(),
         node_id.clone(),
         Some(socket_path.clone()),
+        None,
         None,
     );
 

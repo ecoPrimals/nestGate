@@ -311,8 +311,8 @@ mod api_response_tests {
 
 #[cfg(test)]
 mod api_concurrent_requests_tests {
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[tokio::test]
     async fn test_concurrent_read_requests() {

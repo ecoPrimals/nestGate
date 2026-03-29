@@ -1,19 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Security, cryptography, certificate management, and zero-cost security providers for NestGate.
+//! Security, cryptography, certificate management, and zero-cost security providers for `NestGate`.
 
-/// TODO(nestgate-security): Wire to `nestgate_core::universal_adapter` when that module is available to this crate.
+/// Crate-local primal-agnostic adapter handle used by certificate utilities.
+///
+/// **Integration:** `nestgate_core::universal_adapter::UniversalAdapter` (exported as
+/// `PrimalAgnosticAdapter` in core) is the full implementation. `nestgate-security` cannot depend on
+/// `nestgate-core` because `nestgate-core` already depends on this crate; inject or replace this
+/// type only after a shared trait or `nestgate-types` bridge breaks that cycle.
 pub mod universal_adapter {
-    /// Stub — was `nestgate_core::universal_adapter::PrimalAgnosticAdapter`.
+    /// Lightweight endpoint holder for security flows that only need a resolved adapter URL.
     pub struct PrimalAgnosticAdapter {
         #[allow(dead_code)]
         endpoint: String,
     }
 
     impl PrimalAgnosticAdapter {
-        /// Creates a stub adapter bound to the given endpoint URL.
+        /// Creates an adapter bound to the given endpoint URL.
         pub fn new(endpoint: String) -> Self {
+            tracing::debug!(
+                "feature pending: full universal adapter integration; using local endpoint holder"
+            );
             Self { endpoint }
         }
     }

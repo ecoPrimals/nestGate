@@ -180,17 +180,17 @@ impl CanonicalTestConfigs {
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for existing TestConfig usage
+/// Backward compatibility alias for existing `TestConfig` usage
 ///
 /// **Deprecated**: Use `CanonicalTestConfigs` directly instead
 pub type TestConfig = CanonicalTestConfigs;
 
-/// Backward compatibility alias for UnifiedTestConfig
+/// Backward compatibility alias for `UnifiedTestConfig`
 ///
 /// **Deprecated**: Use `CanonicalTestConfigs` directly instead
 pub type UnifiedTestConfig = CanonicalTestConfigs;
 
-/// Backward compatibility alias for TestConfigs
+/// Backward compatibility alias for `TestConfigs`
 ///
 /// **Deprecated**: Use `CanonicalTestConfigs` directly instead
 pub type TestConfigs = CanonicalTestConfigs;

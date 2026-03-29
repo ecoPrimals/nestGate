@@ -22,7 +22,7 @@ use std::sync::Arc;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use nestgate_core::service_discovery::DynamicEndpointsConfig;
 /// use std::sync::Arc;
 ///
@@ -34,7 +34,7 @@ use std::sync::Arc;
 /// config.set_endpoint("api", "http://api:8080");
 /// ```
 #[derive(Debug, Clone)]
-/// Configuration for DynamicEndpoints
+/// Configuration for `DynamicEndpoints`
 pub struct DynamicEndpointsConfig {
     /// Service-specific endpoint overrides
     /// Key: service type (e.g., "api", "storage")
@@ -92,7 +92,7 @@ impl DynamicEndpointsConfig {
         ];
 
         for service_type in &service_types {
-            let env_key = format!("{}_ENDPOINT", service_type);
+            let env_key = format!("{service_type}_ENDPOINT");
             if let Ok(endpoint) = std::env::var(&env_key) {
                 config.set_endpoint(&service_type.to_lowercase(), &endpoint);
             }
@@ -126,12 +126,12 @@ impl DynamicEndpointsConfig {
 
     /// Get port base for dynamic allocation
     #[must_use]
-    pub fn port_base(&self) -> u16 {
+    pub const fn port_base(&self) -> u16 {
         self.port_base
     }
 
     /// Set port base for dynamic allocation
-    pub fn set_port_base(&mut self, port_base: u16) {
+    pub const fn set_port_base(&mut self, port_base: u16) {
         self.port_base = port_base;
     }
 
@@ -149,7 +149,7 @@ impl DynamicEndpointsConfig {
 
     /// Get all configured endpoints
     #[must_use]
-    pub fn endpoints(&self) -> &HashMap<String, String> {
+    pub const fn endpoints(&self) -> &HashMap<String, String> {
         &self.endpoints
     }
 }

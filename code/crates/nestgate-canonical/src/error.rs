@@ -13,7 +13,7 @@ use std::fmt;
 ///
 /// This replaces all fragmented error types across crates with a unified system
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Errors that can occur during NestGate operations
+/// Errors that can occur during `NestGate` operations
 pub enum NestGateError {
     /// Configuration-related errors
     Configuration {
@@ -56,7 +56,7 @@ impl fmt::Display for NestGateError {
                 }
                 Ok(())
             }
-            NestGateError::Network {
+            Self::Network {
                 message, endpoint, ..
             } => {
                 write!(f, "Network Error: {message}")?;
@@ -65,14 +65,14 @@ impl fmt::Display for NestGateError {
                 }
                 Ok(())
             }
-            NestGateError::Storage { message, path, .. } => {
+            Self::Storage { message, path, .. } => {
                 write!(f, "Storage Error: {message}")?;
                 if let Some(path_info) = path {
                     write!(f, " (Path: {path_info})")?;
                 }
                 Ok(())
             }
-            NestGateError::Security {
+            Self::Security {
                 message, details, ..
             } => {
                 write!(f, "Security Error: {message}")?;
@@ -81,11 +81,11 @@ impl fmt::Display for NestGateError {
                 }
                 Ok(())
             }
-            NestGateError::Internal { message, component } => {
+            Self::Internal { message, component } => {
                 write!(f, "Internal Error: {message} (Component: {component})")?;
                 Ok(())
             }
-            NestGateError::Validation { message, field } => {
+            Self::Validation { message, field } => {
                 write!(f, "Validation Error: {message} (Field: {field})")?;
                 Ok(())
             }
@@ -593,5 +593,43 @@ mod tests {
         let result: NestGateResult<String> = Ok("data".to_string());
         assert!(result.is_ok());
         assert_eq!(result.expect("Operation failed"), "data");
+    }
+
+    #[test]
+    fn round5_canonical_error_serde_configuration() {
+        let e = NestGateError::configuration("c");
+        let json = serde_json::to_string(&e).unwrap();
+        let back: NestGateError = serde_json::from_str(&json).unwrap();
+        assert_eq!(e.to_string(), back.to_string());
+    }
+
+    #[test]
+    fn round5_canonical_error_serde_network() {
+        let e = NestGateError::network_endpoint("n", "e");
+        let json = serde_json::to_string(&e).unwrap();
+        let back: NestGateError = serde_json::from_str(&json).unwrap();
+        assert_eq!(e.to_string(), back.to_string());
+    }
+
+    #[test]
+    fn round5_canonical_error_serde_internal() {
+        let e = NestGateError::Internal {
+            message: "m".to_string(),
+            component: "c".to_string(),
+        };
+        let json = serde_json::to_string(&e).unwrap();
+        let back: NestGateError = serde_json::from_str(&json).unwrap();
+        assert_eq!(e.to_string(), back.to_string());
+    }
+
+    #[test]
+    fn round5_canonical_error_serde_validation() {
+        let e = NestGateError::Validation {
+            message: "bad".to_string(),
+            field: "f".to_string(),
+        };
+        let json = serde_json::to_string(&e).unwrap();
+        let back: NestGateError = serde_json::from_str(&json).unwrap();
+        assert_eq!(e.to_string(), back.to_string());
     }
 }

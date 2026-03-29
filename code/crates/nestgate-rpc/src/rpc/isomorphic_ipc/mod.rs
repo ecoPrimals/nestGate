@@ -3,8 +3,8 @@
 
 //! # 🔌 Isomorphic IPC Module
 //!
-//! **UNIVERSAL**: Same binary works on ALL platforms  
-//! **ADAPTIVE**: Automatic TCP fallback when Unix sockets unavailable  
+//! **UNIVERSAL**: Same binary works on ALL platforms\
+//! **ADAPTIVE**: Automatic TCP fallback when Unix sockets unavailable\
 //! **ZERO CONFIG**: No environment variables or flags required
 //!
 //! ## Philosophy
@@ -15,7 +15,7 @@
 //!
 //! This module implements isomorphic IPC following the Try→Detect→Adapt→Succeed pattern:
 //! 1. **TRY** Unix sockets first (optimal)
-//! 2. **DETECT** platform constraints (SELinux, lack of support)
+//! 2. **DETECT** platform constraints (`SELinux`, lack of support)
 //! 3. **ADAPT** to TCP fallback (automatic)
 //! 4. **SUCCEED** or fail with real error
 //!
@@ -55,7 +55,7 @@
 //!
 //! ## Modules
 //!
-//! - **`platform_detection`**: Detect platform constraints (SELinux, lack of support)
+//! - **`platform_detection`**: Detect platform constraints (`SELinux`, lack of support)
 //! - **`tcp_fallback`**: TCP IPC server (automatic fallback)
 //! - **`server`**: Isomorphic server facade (Try→Detect→Adapt→Succeed)
 //! - **`discovery`**: Client endpoint discovery (Unix OR TCP)
@@ -65,7 +65,7 @@
 //!
 //! ### Server-Side
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::isomorphic_ipc::{IsomorphicIpcServer, RpcHandler};
 //! use std::sync::Arc;
 //! use serde_json::Value;
@@ -96,7 +96,7 @@
 //!
 //! ### Client-Side
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::isomorphic_ipc::{discover_ipc_endpoint, connect_endpoint};
 //! use tokio::io::{AsyncReadExt, AsyncWriteExt};
 //!
@@ -125,7 +125,7 @@
 //! [INFO] ✅ Unix socket IPC active (optimal path)
 //! ```
 //!
-//! ### Android (Unix sockets blocked by SELinux)
+//! ### Android (Unix sockets blocked by `SELinux`)
 //!
 //! ```text
 //! [INFO] 🔌 Starting IPC server (isomorphic mode)...
@@ -150,7 +150,7 @@
 //!
 //! ## Reference
 //!
-//! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)  
+//! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)\
 //! Implementation guide: `ISOMORPHIC_IPC_IMPLEMENTATION_PLAN_JAN_31_2026.md`
 //!
 //! **Status**: Phases 1, 2 & 3 Complete ✅ (A++ Grade)
@@ -168,15 +168,15 @@ pub mod health;
 pub mod launcher;
 
 // Re-exports for convenience
-pub use discovery::{discover_ipc_endpoint, IpcEndpoint};
+pub use discovery::{IpcEndpoint, discover_ipc_endpoint};
 pub use platform_detection::is_platform_constraint;
 pub use server::IsomorphicIpcServer;
-pub use streams::{connect_endpoint, IpcStream};
+pub use streams::{IpcStream, connect_endpoint};
 pub use tcp_fallback::{RpcHandler, TcpFallbackServer};
 pub use unix_adapter::UnixSocketRpcHandler;
 // Phase 3 re-exports
-pub use atomic::{verify_nest_health, verify_nestgate_health, AtomicStatus, AtomicType};
-pub use health::{check_nestgate_health, check_nestgate_health_detailed, HealthStatus};
+pub use atomic::{AtomicStatus, AtomicType, verify_nest_health, verify_nestgate_health};
+pub use health::{HealthStatus, check_nestgate_health, check_nestgate_health_detailed};
 pub use launcher::{
     connect_to_nestgate, connect_to_nestgate_with_retry, discover_nestgate_endpoint,
     discover_nestgate_with_retry, is_nestgate_running,

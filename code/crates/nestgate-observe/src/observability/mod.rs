@@ -24,7 +24,7 @@ mod observability_comprehensive_tests;
 // Re-export key observability components
 pub use health_checks::{HealthChecker, HealthStatus, SystemHealth};
 pub use metrics::{MetricsCollector, MetricsRegistry, PerformanceMetrics};
-pub use tracing_config::{init_tracing, TracingConfig};
+pub use tracing_config::{TracingConfig, init_tracing};
 
 use nestgate_types::Result;
 use std::sync::Arc;

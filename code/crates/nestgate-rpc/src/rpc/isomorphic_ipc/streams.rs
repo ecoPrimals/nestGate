@@ -3,8 +3,8 @@
 
 //! # 🔌 Polymorphic IPC Streams
 //!
-//! **UNIVERSAL**: Unified interface for Unix socket and TCP streams  
-//! **TRANSPARENT**: Same API regardless of transport  
+//! **UNIVERSAL**: Unified interface for Unix socket and TCP streams\
+//! **TRANSPARENT**: Same API regardless of transport\
 //! **ZERO OVERHEAD**: Direct trait implementation (no boxing in hot path)
 //!
 //! ## Philosophy
@@ -19,7 +19,7 @@
 //!
 //! ## Usage Pattern
 //!
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::isomorphic_ipc::{discover_ipc_endpoint, connect_endpoint};
 //!
 //! # async fn example() -> anyhow::Result<()> {
@@ -60,10 +60,10 @@ use super::discovery::IpcEndpoint;
 /// allowing transparent usage regardless of transport.
 pub trait AsyncStream: AsyncRead + AsyncWrite + Send + Unpin {}
 
-/// Implement AsyncStream for Unix sockets
+/// Implement `AsyncStream` for Unix sockets
 impl AsyncStream for UnixStream {}
 
-/// Implement AsyncStream for TCP sockets
+/// Implement `AsyncStream` for TCP sockets
 impl AsyncStream for TcpStream {}
 
 /// Polymorphic stream wrapper
@@ -79,15 +79,15 @@ pub enum IpcStream {
 
 impl IpcStream {
     /// Get stream type description (for logging)
-    pub fn stream_type(&self) -> &str {
+    pub const fn stream_type(&self) -> &str {
         match self {
-            IpcStream::Unix(_) => "Unix socket",
-            IpcStream::Tcp(_) => "TCP (localhost)",
+            Self::Unix(_) => "Unix socket",
+            Self::Tcp(_) => "TCP (localhost)",
         }
     }
 }
 
-/// Implement AsyncRead for IpcStream (delegates to inner stream)
+/// Implement `AsyncRead` for `IpcStream` (delegates to inner stream)
 impl AsyncRead for IpcStream {
     fn poll_read(
         mut self: Pin<&mut Self>,
@@ -95,13 +95,13 @@ impl AsyncRead for IpcStream {
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
         match &mut *self {
-            IpcStream::Unix(stream) => Pin::new(stream).poll_read(cx, buf),
-            IpcStream::Tcp(stream) => Pin::new(stream).poll_read(cx, buf),
+            Self::Unix(stream) => Pin::new(stream).poll_read(cx, buf),
+            Self::Tcp(stream) => Pin::new(stream).poll_read(cx, buf),
         }
     }
 }
 
-/// Implement AsyncWrite for IpcStream (delegates to inner stream)
+/// Implement `AsyncWrite` for `IpcStream` (delegates to inner stream)
 impl AsyncWrite for IpcStream {
     fn poll_write(
         mut self: Pin<&mut Self>,
@@ -109,8 +109,8 @@ impl AsyncWrite for IpcStream {
         buf: &[u8],
     ) -> Poll<Result<usize, std::io::Error>> {
         match &mut *self {
-            IpcStream::Unix(stream) => Pin::new(stream).poll_write(cx, buf),
-            IpcStream::Tcp(stream) => Pin::new(stream).poll_write(cx, buf),
+            Self::Unix(stream) => Pin::new(stream).poll_write(cx, buf),
+            Self::Tcp(stream) => Pin::new(stream).poll_write(cx, buf),
         }
     }
 
@@ -119,8 +119,8 @@ impl AsyncWrite for IpcStream {
         cx: &mut Context<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
         match &mut *self {
-            IpcStream::Unix(stream) => Pin::new(stream).poll_flush(cx),
-            IpcStream::Tcp(stream) => Pin::new(stream).poll_flush(cx),
+            Self::Unix(stream) => Pin::new(stream).poll_flush(cx),
+            Self::Tcp(stream) => Pin::new(stream).poll_flush(cx),
         }
     }
 
@@ -129,16 +129,16 @@ impl AsyncWrite for IpcStream {
         cx: &mut Context<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
         match &mut *self {
-            IpcStream::Unix(stream) => Pin::new(stream).poll_shutdown(cx),
-            IpcStream::Tcp(stream) => Pin::new(stream).poll_shutdown(cx),
+            Self::Unix(stream) => Pin::new(stream).poll_shutdown(cx),
+            Self::Tcp(stream) => Pin::new(stream).poll_shutdown(cx),
         }
     }
 }
 
 /// Connect to IPC endpoint (polymorphic)
 ///
-/// **UNIVERSAL**: Works with Unix socket or TCP endpoints  
-/// **TRANSPARENT**: Returns unified stream interface  
+/// **UNIVERSAL**: Works with Unix socket or TCP endpoints\
+/// **TRANSPARENT**: Returns unified stream interface\
 /// **AUTOMATIC**: Transport determined by endpoint type
 ///
 /// # Arguments
@@ -152,7 +152,7 @@ impl AsyncWrite for IpcStream {
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::{discover_ipc_endpoint, connect_endpoint};
 ///
 /// # async fn example() -> anyhow::Result<()> {
@@ -170,7 +170,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
             debug!("   Using Unix socket transport");
             let stream = UnixStream::connect(path)
                 .await
-                .map_err(|e| anyhow::anyhow!("Failed to connect to Unix socket: {}", e))?;
+                .map_err(|e| anyhow::anyhow!("Failed to connect to Unix socket: {e}"))?;
 
             debug!("✅ Connected via Unix socket");
             Ok(IpcStream::Unix(stream))
@@ -179,7 +179,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
             debug!("   Using TCP transport (localhost)");
             let stream = TcpStream::connect(addr)
                 .await
-                .map_err(|e| anyhow::anyhow!("Failed to connect to TCP endpoint: {}", e))?;
+                .map_err(|e| anyhow::anyhow!("Failed to connect to TCP endpoint: {e}"))?;
 
             debug!("✅ Connected via TCP (localhost)");
             Ok(IpcStream::Tcp(stream))

@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use tokio::process::Command as TokioCommand;
 use tracing::{debug, info, warn};
 
-use crate::error::{create_zfs_error, ZfsOperation};
+use crate::error::{ZfsOperation, create_zfs_error};
 use crate::pool_helpers::parse_size_with_units;
 use crate::{config::ZfsConfig, error::Result};
 use nestgate_core::error::NestGateError;
@@ -18,7 +18,7 @@ use super::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
 
 /// ZFS Pool Manager - handles pool operations and management
 #[derive(Debug, Clone)]
-/// Manager for ZfsPool operations
+/// Manager for `ZfsPool` operations
 pub struct ZfsPoolManager {
     #[allow(dead_code)]
     config: ZfsConfig,

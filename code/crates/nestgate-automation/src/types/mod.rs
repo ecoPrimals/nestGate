@@ -30,7 +30,7 @@ pub use nestgate_core::config::canonical_primary::domains::automation::{
 
 // ==================== BACKWARD COMPATIBILITY ALIASES ====================
 
-/// Backward compatibility alias for UnifiedAutomationConfig
+/// Backward compatibility alias for `UnifiedAutomationConfig`
 ///
 /// **Migration Path**: Use `CanonicalAutomationConfig` or the specific sub-configs instead.
 pub use CanonicalAutomationConfig as UnifiedAutomationConfig;

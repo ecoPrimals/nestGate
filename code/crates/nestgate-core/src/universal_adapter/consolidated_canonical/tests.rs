@@ -6,6 +6,7 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
+    use crate::universal_adapter::consolidated_canonical::enums::ResponseStatus;
 
     #[test]
     fn test_adapter_config_defaults() {
@@ -55,5 +56,25 @@ mod tests {
         assert_eq!(stats.total_requests, 0);
         assert_eq!(stats.successful_requests, 0);
         assert_eq!(stats.failed_requests, 0);
+    }
+
+    #[tokio::test]
+    async fn adapter_initialize_and_request_capability_updates_stats() {
+        use std::collections::HashMap;
+
+        #[allow(deprecated)]
+        let config = CanonicalAdapterConfig::default();
+        let adapter = ConsolidatedCanonicalAdapter::new(config).expect("adapter new");
+        adapter.initialize().await.expect("initialize");
+        let resp = adapter
+            .request_capability("nestgate_storage", "ping", HashMap::new())
+            .await
+            .expect("request_capability");
+        assert_eq!(resp.status, ResponseStatus::Success);
+        let stats = adapter.get_stats().await;
+        assert_eq!(stats.total_requests, 1);
+        assert_eq!(stats.successful_requests, 1);
+        let _ = adapter.get_health().await;
+        adapter.shutdown().await.expect("shutdown");
     }
 }

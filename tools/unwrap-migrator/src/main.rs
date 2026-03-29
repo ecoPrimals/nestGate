@@ -214,7 +214,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 nestgate_mode,
                 verbose,
             )
-            .await?
+            .await?;
         }
         "interactive" => run_interactive(target_path, confidence, include_tests, verbose).await?,
         "report" => run_report(target_path, format, output_file, include_tests, verbose).await?,
@@ -362,29 +362,31 @@ async fn analyze_patterns(
 ) -> Result<PatternStats, Box<dyn std::error::Error>> {
     let mut stats = PatternStats::default();
 
-    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
-        if entry.file_type().is_file() {
-            if let Some(ext) = entry.path().extension() {
-                if ext == "rs" {
-                    // Skip test files unless explicitly included
-                    if !include_tests && is_test_file(entry.path()) {
-                        continue;
-                    }
+    for entry in WalkDir::new(path)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+    {
+        if entry.file_type().is_file()
+            && let Some(ext) = entry.path().extension()
+            && ext == "rs"
+        {
+            // Skip test files unless explicitly included
+            if !include_tests && is_test_file(entry.path()) {
+                continue;
+            }
 
-                    let content = tokio::fs::read_to_string(entry.path()).await?;
-                    stats.files_scanned += 1;
+            let content = tokio::fs::read_to_string(entry.path()).await?;
+            stats.files_scanned += 1;
 
-                    // Count different pattern types
-                    stats.unwrap_calls += content.matches(".unwrap()").count();
-                    stats.expect_calls += content.matches(".expect(").count();
-                    stats.panic_calls += content.matches("panic!(").count();
-                    stats.todo_calls += content.matches("todo!(").count();
-                    stats.unimplemented_calls += content.matches("unimplemented!").count();
+            // Count different pattern types
+            stats.unwrap_calls += content.matches(".unwrap()").count();
+            stats.expect_calls += content.matches(".expect(").count();
+            stats.panic_calls += content.matches("panic!(").count();
+            stats.todo_calls += content.matches("todo!(").count();
+            stats.unimplemented_calls += content.matches("unimplemented!").count();
 
-                    if stats.has_patterns(&content) {
-                        stats.files_with_patterns += 1;
-                    }
-                }
+            if stats.has_patterns(&content) {
+                stats.files_with_patterns += 1;
             }
         }
     }
@@ -564,7 +566,7 @@ fn generate_html_report(stats: &PatternStats, _verbose: bool) -> String {
     )
 }
 
-fn pattern_risk(count: usize) -> &'static str {
+const fn pattern_risk(count: usize) -> &'static str {
     match count {
         0 => "✅",
         1..=5 => "🟡 Low",
@@ -573,7 +575,7 @@ fn pattern_risk(count: usize) -> &'static str {
     }
 }
 
-fn panic_risk(count: usize) -> &'static str {
+const fn panic_risk(count: usize) -> &'static str {
     match count {
         0 => "✅",
         1..=2 => "🟠 Medium",
@@ -581,7 +583,7 @@ fn panic_risk(count: usize) -> &'static str {
     }
 }
 
-fn todo_risk(count: usize) -> &'static str {
+const fn todo_risk(count: usize) -> &'static str {
     match count {
         0 => "✅",
         1..=10 => "🟡 Low",
@@ -589,7 +591,7 @@ fn todo_risk(count: usize) -> &'static str {
     }
 }
 
-fn unimpl_risk(count: usize) -> &'static str {
+const fn unimpl_risk(count: usize) -> &'static str {
     match count {
         0 => "✅",
         1..=3 => "🟡 Low",
@@ -609,7 +611,7 @@ struct PatternStats {
 }
 
 impl PatternStats {
-    fn total_patterns(&self) -> usize {
+    const fn total_patterns(&self) -> usize {
         self.unwrap_calls
             + self.expect_calls
             + self.panic_calls

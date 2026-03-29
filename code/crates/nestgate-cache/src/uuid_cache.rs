@@ -8,22 +8,22 @@
 /// in service registration and identification operations.
 ///
 /// ## Performance Impact  
-/// - **Before**: 274,587 ns/iter (frequent UUID generation with RwLock)
-/// - **After**: <10,000 ns/iter with DashMap (10-30x improvement!)
-/// - **Strategy**: Lock-free concurrent access with DashMap + Arc<Uuid> sharing
+/// - **Before**: 274,587 ns/iter (frequent UUID generation with `RwLock`)
+/// - **After**: <10,000 ns/iter with `DashMap` (10-30x improvement!)
+/// - **Strategy**: Lock-free concurrent access with `DashMap` + Arc<Uuid> sharing
 ///
 /// **MODERNIZED**: Migrated from `Arc<RwLock<HashMap>>` to `DashMap` for lock-free access
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use uuid::Uuid;
 
 /// High-performance UUID cache with lock-free concurrent access!
 #[derive(Debug)]
-/// UuidCache  
+/// `UuidCache`  
 pub struct UuidCache {
-    /// Lock-free concurrent cache storage (DashMap!)
+    /// Lock-free concurrent cache storage (`DashMap`!)
     cache: Arc<DashMap<String, Arc<Uuid>>>,
     /// Generation counter for cache statistics
     generation_counter: Arc<AtomicU64>,
@@ -49,7 +49,7 @@ impl UuidCache {
     /// This is the main performance-critical method that eliminates
     /// frequent UUID generation through intelligent caching.
     ///
-    /// **PERFORMANCE**: Lock-free with DashMap - no contention, no blocking!
+    /// **PERFORMANCE**: Lock-free with `DashMap` - no contention, no blocking!
     #[must_use]
     pub fn get_or_create(&self, key: &str) -> Arc<Uuid> {
         // DashMap: Lock-free get or insert!
@@ -79,6 +79,7 @@ impl UuidCache {
     }
 
     /// Get a UUID from cache without creating if missing (lock-free!)
+    #[must_use]
     pub fn get(&self, key: &str) -> Option<Arc<Uuid>> {
         // DashMap: Lock-free concurrent get!
         self.cache.get(key).map(|entry| Arc::clone(entry.value()))
@@ -226,7 +227,7 @@ pub struct UuidManager;
 impl UuidManager {
     /// Create a new UUID manager
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 

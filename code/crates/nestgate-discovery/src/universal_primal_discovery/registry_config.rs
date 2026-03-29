@@ -32,11 +32,12 @@ pub struct RegistryConfig {
     adapter_ports: HashMap<String, u16>,
 }
 
-/// Shared immutable reference to RegistryConfig
+/// Shared immutable reference to `RegistryConfig`
 pub type SharedRegistryConfig = Arc<RegistryConfig>;
 
 impl RegistryConfig {
     /// Create a new empty configuration (all values None)
+    #[must_use]
     pub fn new() -> Self {
         Self {
             registry_url: None,
@@ -52,6 +53,7 @@ impl RegistryConfig {
 
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
+    #[must_use]
     pub fn from_env() -> Self {
         let mut config = Self::new();
 
@@ -80,10 +82,11 @@ impl RegistryConfig {
 
         // Scan for adapter port entries (NESTGATE_ADAPTER_*_PORT)
         for (key, value) in std::env::vars() {
-            if key.starts_with("NESTGATE_ADAPTER_") && key.ends_with("_PORT") {
-                if let Ok(port) = value.parse::<u16>() {
-                    config.adapter_ports.insert(key, port);
-                }
+            if key.starts_with("NESTGATE_ADAPTER_")
+                && key.ends_with("_PORT")
+                && let Ok(port) = value.parse::<u16>()
+            {
+                config.adapter_ports.insert(key, port);
             }
         }
 
@@ -93,53 +96,64 @@ impl RegistryConfig {
     // Accessor methods
 
     /// Gets Registry Url
+    #[must_use]
     pub fn get_registry_url(&self) -> Option<&str> {
         self.registry_url.as_deref()
     }
 
     /// Gets Service Mesh Endpoint
+    #[must_use]
     pub fn get_service_mesh_endpoint(&self) -> Option<&str> {
         self.service_mesh_endpoint.as_deref()
     }
 
     /// Gets Kubernetes Namespace
+    #[must_use]
     pub fn get_kubernetes_namespace(&self) -> Option<&str> {
         self.kubernetes_namespace.as_deref()
     }
 
     /// Checks if has Docker Compose Project
-    pub fn has_docker_compose_project(&self) -> bool {
+    #[must_use]
+    pub const fn has_docker_compose_project(&self) -> bool {
         self.docker_compose_project.is_some()
     }
 
     /// Gets Capability Discovery Endpoint
+    #[must_use]
     pub fn get_capability_discovery_endpoint(&self) -> Option<&str> {
         self.capability_discovery_endpoint.as_deref()
     }
 
     /// Gets Api Endpoint
+    #[must_use]
     pub fn get_api_endpoint(&self) -> Option<&str> {
         self.api_endpoint.as_deref()
     }
 
     /// Get a registry entry by constructing the key from service name and query type
+    #[must_use]
     pub fn get_registry_entry(&self, service_name: &str, query_type: &str) -> Option<&str> {
         let key = format!(
             "NESTGATE_REGISTRY_{}_{}",
             service_name.to_uppercase(),
             query_type.to_uppercase()
         );
-        self.registry_entries.get(&key).map(|s| s.as_str())
+        self.registry_entries
+            .get(&key)
+            .map(std::string::String::as_str)
     }
 
     /// Get adapter port by adapter name
+    #[must_use]
     pub fn get_adapter_port(&self, adapter_name: &str) -> Option<u16> {
         let key = format!("NESTGATE_ADAPTER_{}_PORT", adapter_name.to_uppercase());
         self.adapter_ports.get(&key).copied()
     }
 
     /// Check if any service mesh configuration is present
-    pub fn has_service_mesh(&self) -> bool {
+    #[must_use]
+    pub const fn has_service_mesh(&self) -> bool {
         self.service_mesh_endpoint.is_some()
             || self.kubernetes_namespace.is_some()
             || self.docker_compose_project.is_some()
@@ -147,6 +161,7 @@ impl RegistryConfig {
 
     /// Check if a specific environment variable was present
     /// Used for health checks and diagnostics
+    #[must_use]
     pub fn has_env_var(&self, var_name: &str) -> bool {
         match var_name {
             "NESTGATE_SERVICE_MESH_ENDPOINT" => self.service_mesh_endpoint.is_some(),
@@ -159,30 +174,35 @@ impl RegistryConfig {
     // Builder methods for tests
 
     /// Builder method to set Registry Url
+    #[must_use]
     pub fn with_registry_url(mut self, url: String) -> Self {
         self.registry_url = Some(url);
         self
     }
 
     /// Builder method to set Service Mesh Endpoint
+    #[must_use]
     pub fn with_service_mesh_endpoint(mut self, endpoint: String) -> Self {
         self.service_mesh_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Kubernetes Namespace
+    #[must_use]
     pub fn with_kubernetes_namespace(mut self, namespace: String) -> Self {
         self.kubernetes_namespace = Some(namespace);
         self
     }
 
     /// Builder method to set Capability Discovery Endpoint
+    #[must_use]
     pub fn with_capability_discovery_endpoint(mut self, endpoint: String) -> Self {
         self.capability_discovery_endpoint = Some(endpoint);
         self
     }
 
     /// Builder method to set Registry Entry
+    #[must_use]
     pub fn with_registry_entry(mut self, service: &str, query_type: &str, value: String) -> Self {
         let key = format!(
             "NESTGATE_REGISTRY_{}_{}",
@@ -194,6 +214,7 @@ impl RegistryConfig {
     }
 
     /// Builder method to set Adapter Port
+    #[must_use]
     pub fn with_adapter_port(mut self, adapter_name: &str, port: u16) -> Self {
         let key = format!("NESTGATE_ADAPTER_{}_PORT", adapter_name.to_uppercase());
         self.adapter_ports.insert(key, port);

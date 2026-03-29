@@ -12,7 +12,7 @@ use std::time::Duration;
 // ==================== UNIT TEST CONFIGURATION ====================
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for UnitTest
+/// Configuration for `UnitTest`
 pub struct UnitTestConfig {
     /// Test execution settings
     pub execution: TestExecutionConfig,
@@ -31,7 +31,7 @@ pub struct UnitTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestExecution
+/// Configuration for `TestExecution`
 pub struct TestExecutionConfig {
     /// Test timeout
     pub timeout: Duration,
@@ -150,7 +150,7 @@ pub struct CustomAssertion {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestData
+/// Configuration for `TestData`
 pub struct TestDataConfig {
     /// Test data directory
     pub data_dir: PathBuf,
@@ -196,7 +196,7 @@ pub enum FixtureType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for DataGeneration
+/// Configuration for `DataGeneration`
 pub struct DataGenerationConfig {
     /// Enable data generation
     pub enabled: bool,
@@ -237,7 +237,7 @@ pub enum StrategyType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TestDatabase
+/// Configuration for `TestDatabase`
 pub struct TestDatabaseConfig {
     /// Database URL
     pub url: String,
@@ -291,7 +291,7 @@ pub enum CleanupStrategy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ParallelTest
+/// Configuration for `ParallelTest`
 pub struct ParallelTestConfig {
     /// Enable parallel execution
     pub enabled: bool,
@@ -307,7 +307,7 @@ pub struct ParallelTestConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ThreadPool
+/// Configuration for `ThreadPool`
 pub struct ThreadPoolConfig {
     /// Core pool size
     pub core_size: usize,
@@ -323,7 +323,7 @@ pub struct ThreadPoolConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for ResourceSharing
+/// Configuration for `ResourceSharing`
 pub struct ResourceSharingConfig {
     /// Shared resources
     pub shared_resources: Vec<SharedResource>,
@@ -500,8 +500,8 @@ impl Default for ThreadPoolConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            core_size: std::thread::available_parallelism().map_or(4, |n| n.get()),
-            max_size: std::thread::available_parallelism().map_or(4, |n| n.get()) * 2,
+            core_size: std::thread::available_parallelism().map_or(4, std::num::NonZero::get),
+            max_size: std::thread::available_parallelism().map_or(4, std::num::NonZero::get) * 2,
             keep_alive: Duration::from_secs(60),
             queue_capacity: 1000,
         }

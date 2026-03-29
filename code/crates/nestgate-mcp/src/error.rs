@@ -5,8 +5,8 @@
 //!
 //! Simplified error constructors using standard `NestGateError` types
 
-use nestgate_core::error::{ExternalErrorDetails, InternalErrorDetails};
 use nestgate_core::NestGateError;
+use nestgate_core::error::{ExternalErrorDetails, InternalErrorDetails};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
@@ -91,10 +91,10 @@ impl McpErrorExt for NestGateError {
     /// Extract Mcp Context
     fn extract_mcp_context(&self) -> Option<String> {
         match self {
-            NestGateError::Internal(details) if details.component == "nestgate-mcp" => {
+            Self::Internal(details) if details.component == "nestgate-mcp" => {
                 Some("MCP operation".to_string())
             }
-            NestGateError::External(details) if details.service == "mcp-transport" => {
+            Self::External(details) if details.service == "mcp-transport" => {
                 Some("MCP transport".to_string())
             }
             _ => None,
@@ -104,7 +104,7 @@ impl McpErrorExt for NestGateError {
     /// Extract Session Id
     fn extract_session_id(&self) -> Option<String> {
         match self {
-            NestGateError::Internal(details) => details.location.clone(),
+            Self::Internal(details) => details.location.clone(),
             _ => None,
         }
     }
@@ -112,7 +112,7 @@ impl McpErrorExt for NestGateError {
     /// Extract Method
     fn extract_method(&self) -> Option<String> {
         match self {
-            NestGateError::Internal(details) => details.location.clone(),
+            Self::Internal(details) => details.location.clone(),
             _ => None,
         }
     }

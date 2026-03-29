@@ -8,7 +8,8 @@
 use anyhow::Result;
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -20,15 +21,15 @@ use super::tcp_fallback::RpcHandler;
 #[derive(Debug, Deserialize)]
 struct JsonRpcRequest {
     #[allow(dead_code)]
-    jsonrpc: String,
-    method: String,
+    jsonrpc: Arc<str>,
+    method: Arc<str>,
     params: Option<Value>,
     id: Option<Value>,
 }
 
 #[derive(Debug, Serialize)]
 struct JsonRpcResponse {
-    jsonrpc: String,
+    jsonrpc: Arc<str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     result: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -39,12 +40,12 @@ struct JsonRpcResponse {
 #[derive(Debug, Serialize)]
 struct JsonRpcError {
     code: i32,
-    message: String,
+    message: Cow<'static, str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<Value>,
 }
 
-// TODO: wire nestgate-core `nat_traversal::BEACON_DATASET`
+/// **Integration:** Match `nestgate_core::nat_traversal::BEACON_DATASET` when core is linked.
 const BEACON_DATASET: &str = "_known_beacons";
 
 #[derive(Clone)]
@@ -81,7 +82,7 @@ impl UnixSocketRpcHandler {
         debug!("📥 Processing JSON-RPC request: method={}", request.method);
 
         let id = request.id.clone();
-        let result = match request.method.as_str() {
+        let result = match &*request.method {
             "storage.store" => self.handle_storage_store(&request).await,
             "storage.retrieve" => self.handle_storage_retrieve(&request).await,
             "storage.list" => self.handle_storage_list(&request).await,
@@ -110,25 +111,32 @@ impl UnixSocketRpcHandler {
                 ]
             })),
 
-            "nat.store_traversal_info" | "nat.retrieve_traversal_info" | "beacon.store"
-            | "beacon.retrieve" | "beacon.delete" => {
-                Err((-32603, "wire cross-crate dep: nestgate-core nat_traversal + storage".to_string()))
-            }
+            "nat.store_traversal_info"
+            | "nat.retrieve_traversal_info"
+            | "beacon.store"
+            | "beacon.retrieve"
+            | "beacon.delete" => Err((
+                -32603,
+                Cow::Borrowed("wire cross-crate dep: nestgate-core nat_traversal + storage"),
+            )),
 
             "beacon.list" => self.handle_beacon_list().await,
 
-            _ => Err((-32601, format!("Method not found: {}", request.method))),
+            _ => Err((
+                -32601,
+                Cow::Owned(format!("Method not found: {}", request.method)),
+            )),
         };
 
         match result {
             Ok(value) => JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: Arc::from("2.0"),
                 result: Some(value),
                 error: None,
                 id,
             },
             Err((code, message)) => JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: Arc::from("2.0"),
                 result: None,
                 error: Some(JsonRpcError {
                     code,
@@ -143,21 +151,21 @@ impl UnixSocketRpcHandler {
     async fn handle_storage_store(
         &self,
         request: &JsonRpcRequest,
-    ) -> std::result::Result<Value, (i32, String)> {
+    ) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
         let params = request
             .params
             .as_ref()
-            .ok_or((-32602, "Missing params".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing params")))?;
         let key = params
             .get("key")
             .and_then(|v| v.as_str())
-            .ok_or((-32602, "Missing 'key' parameter".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing 'key' parameter")))?;
         let value = params
             .get("value")
-            .ok_or((-32602, "Missing 'value' parameter".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing 'value' parameter")))?;
 
         let data = serde_json::to_vec(value)
-            .map_err(|e| (-32603, format!("Serialization error: {}", e)))?;
+            .map_err(|e| (-32603, Cow::Owned(format!("Serialization error: {e}"))))?;
 
         let mut g = self.state.kv.write().await;
         g.insert(key.to_string(), data);
@@ -168,15 +176,15 @@ impl UnixSocketRpcHandler {
     async fn handle_storage_retrieve(
         &self,
         request: &JsonRpcRequest,
-    ) -> std::result::Result<Value, (i32, String)> {
+    ) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
         let params = request
             .params
             .as_ref()
-            .ok_or((-32602, "Missing params".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing params")))?;
         let key = params
             .get("key")
             .and_then(|v| v.as_str())
-            .ok_or((-32602, "Missing 'key' parameter".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing 'key' parameter")))?;
 
         let g = self.state.kv.read().await;
         match g.get(key) {
@@ -192,7 +200,7 @@ impl UnixSocketRpcHandler {
     async fn handle_storage_list(
         &self,
         _request: &JsonRpcRequest,
-    ) -> std::result::Result<Value, (i32, String)> {
+    ) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
         let _ = self;
         Ok(json!({"datasets": []}))
     }
@@ -200,15 +208,15 @@ impl UnixSocketRpcHandler {
     async fn handle_storage_delete(
         &self,
         request: &JsonRpcRequest,
-    ) -> std::result::Result<Value, (i32, String)> {
+    ) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
         let params = request
             .params
             .as_ref()
-            .ok_or((-32602, "Missing params".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing params")))?;
         let key = params
             .get("key")
             .and_then(|v| v.as_str())
-            .ok_or((-32602, "Missing 'key' parameter".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing 'key' parameter")))?;
 
         let mut g = self.state.kv.write().await;
         g.remove(key);
@@ -218,37 +226,41 @@ impl UnixSocketRpcHandler {
     async fn handle_storage_exists(
         &self,
         request: &JsonRpcRequest,
-    ) -> std::result::Result<Value, (i32, String)> {
+    ) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
         let params = request
             .params
             .as_ref()
-            .ok_or((-32602, "Missing params".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing params")))?;
         let key = params
             .get("key")
             .and_then(|v| v.as_str())
-            .ok_or((-32602, "Missing 'key' parameter".to_string()))?;
+            .ok_or((-32602, Cow::Borrowed("Missing 'key' parameter")))?;
 
         let g = self.state.kv.read().await;
         let exists = g.contains_key(key);
         Ok(json!({"exists": exists, "key": key}))
     }
 
-    async fn handle_beacon_list(&self) -> std::result::Result<Value, (i32, String)> {
+    async fn handle_beacon_list(&self) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
         let _ = self;
+        debug!("feature pending: beacon dataset name alignment with nestgate-core nat_traversal");
         let dataset_path = get_storage_base_path()
             .join("datasets")
             .join(BEACON_DATASET);
 
         let mut peer_ids: Vec<String> = Vec::new();
         if dataset_path.exists() {
-            let mut entries = tokio::fs::read_dir(&dataset_path)
-                .await
-                .map_err(|e| (-32603, format!("Failed to read beacon dataset: {e}")))?;
+            let mut entries = tokio::fs::read_dir(&dataset_path).await.map_err(|e| {
+                (
+                    -32603,
+                    Cow::Owned(format!("Failed to read beacon dataset: {e}")),
+                )
+            })?;
             while let Ok(Some(entry)) = entries.next_entry().await {
-                if let Some(name) = entry.file_name().to_str() {
-                    if !name.starts_with('.') {
-                        peer_ids.push(name.to_string());
-                    }
+                if let Some(name) = entry.file_name().to_str()
+                    && !name.starts_with('.')
+                {
+                    peer_ids.push(name.to_string());
                 }
             }
         }

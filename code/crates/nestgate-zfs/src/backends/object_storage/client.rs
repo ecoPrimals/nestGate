@@ -19,14 +19,14 @@ pub struct ObjectStorageClient {
     pub(super) region: String,
     /// Configuration source
     pub(super) config_source: ConfigSource,
-    /// Optional path-style requests (for MinIO, legacy S3)
+    /// Optional path-style requests (for `MinIO`, legacy S3)
     pub(super) path_style: bool,
 }
 
 impl ObjectStorageClient {
     /// Create new client from configuration
     #[must_use]
-    pub fn new(
+    pub const fn new(
         endpoint: String,
         region: String,
         config_source: ConfigSource,
@@ -54,7 +54,7 @@ impl ObjectStorageClient {
 
     /// Check if path-style requests are enabled
     #[must_use]
-    pub fn is_path_style(&self) -> bool {
+    pub const fn is_path_style(&self) -> bool {
         self.path_style
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Observability, diagnostics, and event system for NestGate.
+//! Observability, diagnostics, and event system for `NestGate`.
 
 mod stubs;
 

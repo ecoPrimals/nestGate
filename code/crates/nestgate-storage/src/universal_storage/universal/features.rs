@@ -249,6 +249,7 @@ pub struct FeatureSet {
 
 impl FeatureSet {
     /// Create empty feature set
+    #[must_use]
     pub fn new() -> Self {
         Self {
             features: HashSet::new(),
@@ -261,6 +262,7 @@ impl FeatureSet {
     }
 
     /// Check if feature is supported
+    #[must_use]
     pub fn has(&self, feature: &StorageFeature) -> bool {
         self.features.contains(feature)
     }
@@ -271,16 +273,19 @@ impl FeatureSet {
     }
 
     /// Get all features
-    pub fn features(&self) -> &HashSet<StorageFeature> {
+    #[must_use]
+    pub const fn features(&self) -> &HashSet<StorageFeature> {
         &self.features
     }
 
     /// Number of features
+    #[must_use]
     pub fn len(&self) -> usize {
         self.features.len()
     }
 
     /// Is empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.features.is_empty()
     }

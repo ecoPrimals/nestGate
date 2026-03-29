@@ -3,8 +3,8 @@
 
 //! **CANONICAL AUTOMATION CONFIGURATION MODULE**
 //!
-//! The single source of truth for all automation configuration across NestGate.
-//! Consolidates AutomationConfig, UnifiedAutomationConfig, and automation domain configs.
+//! The single source of truth for all automation configuration across `NestGate`.
+//! Consolidates `AutomationConfig`, `UnifiedAutomationConfig`, and automation domain configs.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -16,10 +16,10 @@ use std::time::Duration;
 ///
 /// **Replaces**:
 /// - `AutomationConfig` (nestgate-automation/src/types/config.rs)
-/// - `AutomationConfig` (canonical_primary/supporting_types.rs)
-/// - `AutomationConfig` (canonical_primary/detailed_configs.rs)
-/// - `AutomationDomainConfig` (unified_final_config/domain_configs/automation.rs)
-/// - `UnifiedAutomationExtensions` (unified_automation_config/mod.rs)
+/// - `AutomationConfig` (`canonical_primary/supporting_types.rs`)
+/// - `AutomationConfig` (`canonical_primary/detailed_configs.rs`)
+/// - `AutomationDomainConfig` (`unified_final_config/domain_configs/automation.rs`)
+/// - `UnifiedAutomationExtensions` (`unified_automation_config/mod.rs`)
 /// - `DatasetAutomationConfig` (nestgate-zfs/src/config/automation.rs - kept separate in storage domain)
 ///
 /// Configuration for Automation
@@ -150,7 +150,7 @@ pub struct PredictionConfig {
 ///
 /// Machine learning-specific prediction settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MlPrediction
+/// Configuration for `MlPrediction`
 pub struct MlPredictionConfig {
     /// Enable ML predictions
     pub enabled: bool,
@@ -175,7 +175,7 @@ pub struct MlPredictionConfig {
 ///
 /// AI-powered automation settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AiAutomation
+/// Configuration for `AiAutomation`
 pub struct AiAutomationConfig {
     /// Enable AI automation
     pub enabled: bool,
@@ -638,7 +638,7 @@ impl LifecycleConfig {
     /// Returns a `LifecycleConfig` with lifecycle features disabled and shorter retention
     /// periods suitable for development environments.
     #[must_use]
-    pub fn development() -> Self {
+    pub const fn development() -> Self {
         Self {
             enabled: false, // Disabled in dev
             hot_retention_days: 7,
@@ -775,7 +775,7 @@ impl SchedulingConfig {
     /// Returns a `SchedulingConfig` with scheduling disabled and simple configuration
     /// suitable for development environments.
     #[must_use]
-    pub fn development() -> Self {
+    pub const fn development() -> Self {
         Self {
             enabled: false,
             check_interval: Duration::from_secs(60),
@@ -898,5 +898,34 @@ impl ActionsConfig {
                 "execute_script".to_string(),
             ],
         }
+    }
+}
+
+#[cfg(test)]
+mod automation_domain_round3_tests {
+    use super::*;
+
+    #[test]
+    fn automation_config_default_matches_development() {
+        let a = AutomationConfig::default();
+        let d = AutomationConfig::development();
+        assert_eq!(a.enabled, d.enabled);
+        assert_eq!(a.max_concurrent_tasks, d.max_concurrent_tasks);
+    }
+
+    #[test]
+    fn automation_config_production_serde_roundtrip() {
+        let p = AutomationConfig::production();
+        let json = serde_json::to_string(&p).expect("ser");
+        let back: AutomationConfig = serde_json::from_str(&json).expect("de");
+        assert!(back.enabled);
+        assert!(back.min_confidence_threshold >= 0.7);
+    }
+
+    #[test]
+    fn analysis_config_production_has_deep_analysis() {
+        let a = AnalysisConfig::production();
+        assert!(a.deep_analysis_enabled);
+        assert!(a.parallel_workers >= 8);
     }
 }

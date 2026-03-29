@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Controls VLAN tagging and trunk port configuration for network segmentation.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkVlan
+/// Configuration for `NetworkVlan`
 pub struct NetworkVlanConfig {
     /// Whether VLAN tagging is enabled.
     pub enabled: bool,
@@ -25,7 +25,7 @@ impl NetworkVlanConfig {
     ///
     /// No VLAN isolation for simplified local development.
     #[must_use]
-    pub fn development_optimized() -> Self {
+    pub const fn development_optimized() -> Self {
         Self {
             enabled: false,
             vlan_id: 100,
@@ -52,7 +52,7 @@ impl NetworkVlanConfig {
     /// # Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(&self) -> Result<()> {
+    pub const fn validate(&self) -> Result<()> {
         Ok(())
     }
 

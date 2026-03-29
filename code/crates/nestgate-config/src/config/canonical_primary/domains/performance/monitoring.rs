@@ -11,7 +11,7 @@ use std::time::Duration;
 ///
 /// Controls metrics collection, profiling, and alerting for performance monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for PerformanceMonitoring
+/// Configuration for `PerformanceMonitoring`
 pub struct PerformanceMonitoringConfig {
     /// Whether performance monitoring is enabled.
     pub enabled: bool,

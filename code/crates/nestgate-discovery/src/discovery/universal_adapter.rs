@@ -6,8 +6,8 @@
 //! O(1) connection management for capability-based architecture.
 
 use super::capability_scanner::CapabilityInfo;
-use nestgate_types::error::NestGateError;
 use bytes::Bytes;
+use nestgate_types::error::NestGateError;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -162,7 +162,7 @@ impl Connection for ConnectionImpl {
 #[derive(Clone)]
 /// HTTP connection for external HTTP delegation to Songbird
 ///
-/// **BiomeOS Architecture**: NestGate does NOT make external HTTP calls directly.
+/// **`BiomeOS` Architecture**: `NestGate` does NOT make external HTTP calls directly.
 /// All external HTTP is delegated to Songbird primal via JSON-RPC over Unix sockets.
 /// This struct exists for capability routing, NOT for actual HTTP client usage.
 pub struct HttpConnection {
@@ -207,7 +207,9 @@ impl Connection for HttpConnection {
         // BiomeOS Concentrated Gap: External HTTP removed
         // For primal-to-primal: Use tarpc (Unix sockets)
         // For external HTTP: Use Songbird via discover_capability("external-http")
-        Err(NestGateError::api_error("HTTP adapter deprecated. Use tarpc for primal-to-primal or Songbird RPC for external HTTP"))
+        Err(NestGateError::api_error(
+            "HTTP adapter deprecated. Use tarpc for primal-to-primal or Songbird RPC for external HTTP",
+        ))
 
         // REMOVED: HTTP client implementation (BiomeOS evolution)
         // Previous implementation: ~45 lines of HTTP request/response handling
@@ -241,7 +243,7 @@ impl Connection for HttpConnection {
     }
 
     /// Connection Type
-    fn connection_type(&self) -> &str {
+    fn connection_type(&self) -> &'static str {
         "http"
     }
 
@@ -429,7 +431,9 @@ mod tests {
         let mut metadata = HashMap::new();
         metadata.insert("test".to_string(), "true".to_string());
 
-        use nestgate_config::constants::{network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port};
+        use nestgate_config::constants::{
+            network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port,
+        };
         let endpoint = format!("http://{}:{}", LOCALHOST_NAME, get_admin_port());
         let capability = CapabilityInfo {
             capability_type: "test".to_string(),

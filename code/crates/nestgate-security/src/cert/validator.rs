@@ -70,7 +70,7 @@ impl CertificateValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate_certificate(&self, cert_data: &[u8]) -> Result<bool> {
+    pub const fn validate_certificate(&self, cert_data: &[u8]) -> Result<bool> {
         // Use the universal adapter for certificate validation
         // This is a simplified validation for the modernization
         Ok(!cert_data.is_empty())
@@ -84,7 +84,7 @@ impl CertificateValidator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn is_certificate_expired(&self, _cert_data: &[u8]) -> Result<bool> {
+    pub const fn is_certificate_expired(&self, _cert_data: &[u8]) -> Result<bool> {
         // Simplified expiration check
         Ok(false)
     }

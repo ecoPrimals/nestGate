@@ -61,25 +61,24 @@ impl RealMetricsCollector {
 
     /// Get real CPU utilization from /proc/stat
     async fn get_cpu_utilization() -> CoreResult<f64> {
-        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await {
-            if let Some(line) = content.lines().next() {
-                if line.starts_with("cpu ") {
-                    let fields: Vec<&str> = line.split_whitespace().collect();
-                    if fields.len() >= 8 {
-                        // Parse CPU times: user, nice, system, idle, iowait, irq, softirq, steal
-                        let user: u64 = fields[1].parse().unwrap_or(0);
-                        let nice: u64 = fields[2].parse().unwrap_or(0);
-                        let system: u64 = fields[3].parse().unwrap_or(0);
-                        let idle: u64 = fields[4].parse().unwrap_or(0);
-                        let iowait: u64 = fields[5].parse().unwrap_or(0);
+        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await
+            && let Some(line) = content.lines().next()
+            && line.starts_with("cpu ")
+        {
+            let fields: Vec<&str> = line.split_whitespace().collect();
+            if fields.len() >= 8 {
+                // Parse CPU times: user, nice, system, idle, iowait, irq, softirq, steal
+                let user: u64 = fields[1].parse().unwrap_or(0);
+                let nice: u64 = fields[2].parse().unwrap_or(0);
+                let system: u64 = fields[3].parse().unwrap_or(0);
+                let idle: u64 = fields[4].parse().unwrap_or(0);
+                let iowait: u64 = fields[5].parse().unwrap_or(0);
 
-                        let total = user + nice + system + idle + iowait;
-                        let active = total - idle;
+                let total = user + nice + system + idle + iowait;
+                let active = total - idle;
 
-                        if total > 0 {
-                            return Ok((active as f64 / total as f64) * 100.0);
-                        }
-                    }
+                if total > 0 {
+                    return Ok((active as f64 / total as f64) * 100.0);
                 }
             }
         }
@@ -122,12 +121,11 @@ impl RealMetricsCollector {
 
     /// Get real load average from /proc/loadavg
     async fn get_load_average() -> CoreResult<f64> {
-        if let Ok(content) = tokio::fs::read_to_string("/proc/loadavg").await {
-            if let Some(first_field) = content.split_whitespace().next() {
-                if let Ok(load) = first_field.parse::<f64>() {
-                    return Ok(load);
-                }
-            }
+        if let Ok(content) = tokio::fs::read_to_string("/proc/loadavg").await
+            && let Some(first_field) = content.split_whitespace().next()
+            && let Ok(load) = first_field.parse::<f64>()
+        {
+            return Ok(load);
         }
 
         warn!("Could not read load average from /proc/loadavg, using fallback");
@@ -136,21 +134,20 @@ impl RealMetricsCollector {
 
     /// Get I/O wait percentage
     async fn get_io_wait() -> CoreResult<f64> {
-        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await {
-            if let Some(line) = content.lines().next() {
-                if line.starts_with("cpu ") {
-                    let fields: Vec<&str> = line.split_whitespace().collect();
-                    if fields.len() >= 6 {
-                        let iowait: u64 = fields[5].parse().unwrap_or(0);
-                        let total: u64 = fields[1..8]
-                            .iter()
-                            .map(|f| f.parse::<u64>().unwrap_or(0))
-                            .sum();
+        if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await
+            && let Some(line) = content.lines().next()
+            && line.starts_with("cpu ")
+        {
+            let fields: Vec<&str> = line.split_whitespace().collect();
+            if fields.len() >= 6 {
+                let iowait: u64 = fields[5].parse().unwrap_or(0);
+                let total: u64 = fields[1..8]
+                    .iter()
+                    .map(|f| f.parse::<u64>().unwrap_or(0))
+                    .sum();
 
-                        if total > 0 {
-                            return Ok((iowait as f64 / total as f64) * 100.0);
-                        }
-                    }
+                if total > 0 {
+                    return Ok((iowait as f64 / total as f64) * 100.0);
                 }
             }
         }
@@ -221,14 +218,13 @@ impl RealMetricsCollector {
             .args(["list", "-H", "-o", "frag", pool_name])
             .output()
             .await
+            && output.status.success()
         {
-            if output.status.success() {
-                let frag_str = String::from_utf8_lossy(&output.stdout)
-                    .trim()
-                    .replace('%', "");
-                if let Ok(frag) = frag_str.parse::<f64>() {
-                    metrics.fragmentation_percent = frag;
-                }
+            let frag_str = String::from_utf8_lossy(&output.stdout)
+                .trim()
+                .replace('%', "");
+            if let Ok(frag) = frag_str.parse::<f64>() {
+                metrics.fragmentation_percent = frag;
             }
         }
 

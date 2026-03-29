@@ -22,11 +22,11 @@ pub trait ZeroCostCacheProvider<K, V> {
     since = "0.9.0",
     note = "Use nestgate_core::traits::canonical::CanonicalSecurity with const generics"
 )]
-/// ZeroCostSecurityProvider trait
+/// `ZeroCostSecurityProvider` trait
 pub trait ZeroCostSecurityProvider<Token, Credentials> {
     /// Authenticate - compile-time specialization
     fn authenticate(&self, credentials: &Credentials)
-        -> Result<Token, super::types::ZeroCostError>;
+    -> Result<Token, super::types::ZeroCostError>;
     /// Validate token - direct dispatch
     fn validate(&self, token: &Token) -> bool;
     /// Refresh token - zero allocation
@@ -39,7 +39,7 @@ pub trait ZeroCostSecurityProvider<Token, Credentials> {
     since = "0.9.0",
     note = "Use nestgate_core::traits::unified_storage::UnifiedStorage with const generics for zero-cost patterns"
 )]
-/// ZeroCostStorageProvider trait
+/// `ZeroCostStorageProvider` trait
 pub trait ZeroCostStorageProvider<Key, Value> {
     /// Store value - no runtime overhead
     fn store(&self, key: Key, value: Value) -> Result<(), super::types::ZeroCostError>;

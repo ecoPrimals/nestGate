@@ -189,10 +189,12 @@ fn test_snapshot_analyze_with_few_snapshots() {
     assert_eq!(analytics.snapshot_count, 10);
     assert!(analytics.storage_usage > 0);
     // Few snapshots shouldn't trigger cleanup recommendation
-    assert!(!analytics
-        .recommendations
-        .iter()
-        .any(|r| r.contains("cleaning up")));
+    assert!(
+        !analytics
+            .recommendations
+            .iter()
+            .any(|r| r.contains("cleaning up"))
+    );
 }
 
 #[test]
@@ -213,10 +215,12 @@ fn test_snapshot_analyze_with_many_snapshots() {
 
     assert_eq!(analytics.snapshot_count, 100);
     // Many snapshots (>50) should trigger cleanup recommendation
-    assert!(analytics
-        .recommendations
-        .iter()
-        .any(|r| r.contains("cleaning up") || r.contains("old snapshots")));
+    assert!(
+        analytics
+            .recommendations
+            .iter()
+            .any(|r| r.contains("cleaning up") || r.contains("old snapshots"))
+    );
 }
 
 #[test]
@@ -236,10 +240,12 @@ fn test_snapshot_analyze_high_retention_policy() {
     let analytics = result.unwrap();
 
     // Should detect high daily retention
-    assert!(analytics
-        .recommendations
-        .iter()
-        .any(|r| r.contains("Daily") || r.contains("retention")));
+    assert!(
+        analytics
+            .recommendations
+            .iter()
+            .any(|r| r.contains("Daily") || r.contains("retention"))
+    );
 }
 
 #[test]
@@ -261,10 +267,12 @@ fn test_snapshot_analyze_high_storage_usage() {
 
     // With 200 snapshots @ 100MB each = 20GB, should trigger storage warning
     assert!(analytics.storage_usage > 10 * 1024 * 1024 * 1024);
-    assert!(analytics
-        .recommendations
-        .iter()
-        .any(|r| r.contains("storage") || r.contains("significant")));
+    assert!(
+        analytics
+            .recommendations
+            .iter()
+            .any(|r| r.contains("storage") || r.contains("significant"))
+    );
 }
 
 #[test]

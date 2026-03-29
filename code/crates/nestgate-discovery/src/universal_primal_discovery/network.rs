@@ -19,7 +19,7 @@ use std::time::Duration;
 use super::network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntimeConfig};
 /// Network discovery configuration
 #[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
+/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
 /// ```rust,ignore
@@ -37,7 +37,7 @@ use super::network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntime
     since = "0.11.0",
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-/// Configuration for NetworkDiscovery
+/// Configuration for `NetworkDiscovery`
 pub struct NetworkDiscoveryConfig {
     /// Scan Timeout
     pub scan_timeout: Duration,
@@ -175,10 +175,10 @@ impl NetworkDiscovery {
         start_range: u16,
     ) -> Result<u16> {
         // Check runtime configuration (immutable, thread-safe)
-        if let Some(port) = self.runtime_config.get_bind_port(service_name) {
-            if self.port_is_available(port).await? {
-                return Ok(port);
-            }
+        if let Some(port) = self.runtime_config.get_bind_port(service_name)
+            && self.port_is_available(port).await?
+        {
+            return Ok(port);
         }
 
         // Dynamic port discovery - scan for available port
@@ -327,7 +327,7 @@ impl NetworkDiscovery {
         let bind_address = self.detect_optimal_bind_interface().await?;
         // Use the port range from discovery config
         let (start_port, _end_port) = self.discovery_config.port_scan_range; // PEDANTIC: Fixed unused variable
-                                                                             // start_port is already available from the tuple above
+        // start_port is already available from the tuple above
         let port = self
             .discover_available_port(service_name, start_port)
             .await?;

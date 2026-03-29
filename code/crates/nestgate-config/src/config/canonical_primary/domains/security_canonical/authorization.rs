@@ -17,7 +17,7 @@ pub struct AuthorizationConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AccessControl
+/// Configuration for `AccessControl`
 pub struct AccessControlConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -130,7 +130,7 @@ impl AuthorizationConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

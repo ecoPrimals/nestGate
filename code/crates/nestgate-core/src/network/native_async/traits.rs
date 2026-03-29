@@ -137,7 +137,7 @@ pub trait NativeAsyncProtocolHandler<
 
     /// Ping connection - direct async method
     fn ping(&self, _connection: &Self::Connection)
-        -> impl Future<Output = Result<Duration>> + Send;
+    -> impl Future<Output = Result<Duration>> + Send;
 
     /// Max connections at compile-time
     /// Returns the maximum number of connections.

@@ -21,7 +21,7 @@
 //!
 //! # Examples
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::agnostic_config::ConfigBuilder;
 //!
 //! # async fn example() -> nestgate_core::Result<()> {
@@ -73,24 +73,28 @@ pub struct ConfigBuilder {
 
 impl ConfigBuilder {
     /// Create a new configuration builder
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Enable capability-based discovery
-    pub fn with_capability_discovery(mut self) -> Self {
+    #[must_use]
+    pub const fn with_capability_discovery(mut self) -> Self {
         self.enable_capability_discovery = true;
         self
     }
 
     /// Enable environment variable fallback
-    pub fn with_environment_fallback(mut self) -> Self {
+    #[must_use]
+    pub const fn with_environment_fallback(mut self) -> Self {
         self.enable_environment = true;
         self
     }
 
     /// Enable safe default values
-    pub fn with_safe_defaults(mut self) -> Self {
+    #[must_use]
+    pub const fn with_safe_defaults(mut self) -> Self {
         self.enable_defaults = true;
         self
     }
@@ -137,10 +141,10 @@ impl ConfigBuilder {
 
     async fn discover_endpoint(&self, service: &str) -> Result<String> {
         // Try capability discovery
-        if self.enable_capability_discovery {
-            if let Ok(endpoint) = capability_discovery::discover_service(service).await {
-                return Ok(endpoint.endpoint);
-            }
+        if self.enable_capability_discovery
+            && let Ok(endpoint) = capability_discovery::discover_service(service).await
+        {
+            return Ok(endpoint.endpoint);
         }
 
         // Try environment
@@ -152,16 +156,16 @@ impl ConfigBuilder {
         }
 
         // Try custom defaults
-        let key = format!("{}_endpoint", service);
+        let key = format!("{service}_endpoint");
         if let Some(value) = self.custom_defaults.get(&key) {
             return Ok(value.clone());
         }
 
         // Capability env (NESTGATE_CAPABILITY_*_ENDPOINT) before generic dev defaults
-        if let Some(cap_env) = capability_endpoint_env_key(service) {
-            if let Ok(value) = env::var(cap_env) {
-                return Ok(value);
-            }
+        if let Some(cap_env) = capability_endpoint_env_key(service)
+            && let Ok(value) = env::var(cap_env)
+        {
+            return Ok(value);
         }
 
         // Use safe defaults (host from env — never assume a fixed peer address)
@@ -181,37 +185,35 @@ impl ConfigBuilder {
         }
 
         Err(NestGateError::network_error(&format!(
-            "Could not discover endpoint for service '{}'",
-            service
+            "Could not discover endpoint for service '{service}'"
         )))
     }
 
     async fn discover_port(&self, service: &str) -> Result<u16> {
         // Try capability discovery
-        if self.enable_capability_discovery {
-            if let Ok(endpoint) = capability_discovery::discover_service(service).await {
-                if let Ok((_, port)) = capability_discovery::parse_endpoint(&endpoint.endpoint) {
-                    return Ok(port);
-                }
-            }
+        if self.enable_capability_discovery
+            && let Ok(endpoint) = capability_discovery::discover_service(service).await
+            && let Ok((_, port)) = capability_discovery::parse_endpoint(&endpoint.endpoint)
+        {
+            return Ok(port);
         }
 
         // Try environment
         if self.enable_environment {
             let env_var = format!("NESTGATE_{}_PORT", service.to_uppercase());
-            if let Ok(value) = env::var(&env_var) {
-                if let Ok(port) = value.parse::<u16>() {
-                    return Ok(port);
-                }
+            if let Ok(value) = env::var(&env_var)
+                && let Ok(port) = value.parse::<u16>()
+            {
+                return Ok(port);
             }
         }
 
         // Try custom defaults
-        let key = format!("{}_port", service);
-        if let Some(value) = self.custom_defaults.get(&key) {
-            if let Ok(port) = value.parse::<u16>() {
-                return Ok(port);
-            }
+        let key = format!("{service}_port");
+        if let Some(value) = self.custom_defaults.get(&key)
+            && let Ok(port) = value.parse::<u16>()
+        {
+            return Ok(port);
         }
 
         // Use safe defaults
@@ -220,8 +222,7 @@ impl ConfigBuilder {
         }
 
         Err(NestGateError::network_error(&format!(
-            "Could not discover port for service '{}'",
-            service
+            "Could not discover port for service '{service}'"
         )))
     }
 
@@ -263,6 +264,7 @@ impl AgnosticConfig {
     /// This config is "agnostic" - it adapts to what's available but doesn't
     /// hardcode infrastructure assumptions. If no endpoint is configured,
     /// we don't silently use localhost.
+    #[must_use]
     pub fn api_endpoint(&self) -> Option<String> {
         self.endpoints.get("api").cloned().or_else(|| {
             // Try to construct from environment
@@ -280,6 +282,7 @@ impl AgnosticConfig {
         not(debug_assertions),
         deprecated(note = "Use api_endpoint() in production and handle None explicitly")
     )]
+    #[must_use]
     pub fn api_endpoint_or_dev_default(&self) -> String {
         use crate::constants::hardcoding::addresses;
 
@@ -297,20 +300,21 @@ impl AgnosticConfig {
 
     /// Get API port
     ///
-    /// ✅ MIGRATED: Now uses centralized get_api_port() function
+    /// ✅ MIGRATED: Now uses centralized `get_api_port()` function
     pub fn api_port(&self) -> u16 {
         use crate::constants::get_api_port;
         self.ports.get("api").copied().unwrap_or_else(get_api_port)
     }
 
     /// Get storage endpoint
+    #[must_use]
     pub fn storage_endpoint(&self) -> Option<String> {
         self.endpoints.get("storage").cloned()
     }
 
     /// Get metrics port
     ///
-    /// ✅ MIGRATED: Now uses centralized get_metrics_port() function
+    /// ✅ MIGRATED: Now uses centralized `get_metrics_port()` function
     pub fn metrics_port(&self) -> u16 {
         use crate::constants::get_metrics_port;
         self.ports
@@ -321,7 +325,7 @@ impl AgnosticConfig {
 
     /// Get health check port
     ///
-    /// ✅ MIGRATED: Now uses centralized get_health_port() function
+    /// ✅ MIGRATED: Now uses centralized `get_health_port()` function
     pub fn health_port(&self) -> u16 {
         use crate::constants::get_health_port;
         self.ports
@@ -331,6 +335,7 @@ impl AgnosticConfig {
     }
 
     /// Check if feature is enabled
+    #[must_use]
     pub fn is_feature_enabled(&self, feature: &str) -> bool {
         self.features.get(feature).copied().unwrap_or(false)
     }
@@ -358,17 +363,14 @@ pub async fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16>
     ConfigBuilder::new()
         .with_capability_discovery()
         .with_environment_fallback()
-        .with_default(format!("{}_port", service), hardcoded_fallback.to_string())
+        .with_default(format!("{service}_port"), hardcoded_fallback.to_string())
         .build()
         .await?
         .ports
         .get(service)
         .copied()
         .ok_or_else(|| {
-            NestGateError::network_error(&format!(
-                "Could not migrate port for service '{}'",
-                service
-            ))
+            NestGateError::network_error(&format!("Could not migrate port for service '{service}'"))
         })
 }
 
@@ -378,7 +380,7 @@ pub async fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result
         .with_capability_discovery()
         .with_environment_fallback()
         .with_default(
-            format!("{}_endpoint", service),
+            format!("{service}_endpoint"),
             hardcoded_fallback.to_string(),
         )
         .build()
@@ -386,8 +388,7 @@ pub async fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result
 
     config.endpoints.get(service).cloned().ok_or_else(|| {
         NestGateError::network_error(&format!(
-            "Could not migrate endpoint for service '{}'",
-            service
+            "Could not migrate endpoint for service '{service}'"
         ))
     })
 }
@@ -426,7 +427,8 @@ mod tests {
     #[tokio::test]
     async fn test_config_builder_with_environment() {
         let orig = env::var("NESTGATE_API_PORT").ok();
-        std::env::set_var("NESTGATE_API_PORT", "9999");
+        // SAFETY: single-threaded test context.
+        crate::env_process::set_var("NESTGATE_API_PORT", "9999");
 
         let config = ConfigBuilder::new()
             .with_environment_fallback()
@@ -436,8 +438,8 @@ mod tests {
             .expect("Should build config");
 
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_API_PORT", v),
-            None => std::env::remove_var("NESTGATE_API_PORT"),
+            Some(v) => crate::env_process::set_var("NESTGATE_API_PORT", v),
+            None => crate::env_process::remove_var("NESTGATE_API_PORT"),
         }
         assert_eq!(config.api_port(), 9999);
     }

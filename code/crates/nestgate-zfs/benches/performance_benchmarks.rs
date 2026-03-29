@@ -15,7 +15,7 @@
 /// - Proper error handling with match expressions
 /// - Correct unwrap_or usage for Option types
 /// - Zero technical debt
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use nestgate_zfs::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -403,6 +403,8 @@ criterion_main!(benches);
 // Stub main when benchmarks are disabled
 #[cfg(not(feature = "benchmark_broken_needs_fix"))]
 fn main() {
-    eprintln!("Benchmarks are disabled. Use modern benchmarks in benches/zero_copy_benchmarks.rs instead.");
+    eprintln!(
+        "Benchmarks are disabled. Use modern benchmarks in benches/zero_copy_benchmarks.rs instead."
+    );
     eprintln!("Or enable with: cargo bench --features benchmark_broken_needs_fix");
 }

@@ -6,58 +6,67 @@ use super::defaults_config::NetworkDefaultsConfig;
 /// Network port defaults with environment variable support
 pub struct NetworkPortDefaults;
 impl NetworkPortDefaults {
-    /// Default API port - configurable via NESTGATE_API_PORT
+    /// Default API port - configurable via `NESTGATE_API_PORT`
     ///
-    /// ✅ MIGRATED: Now uses centralized get_api_port() function
+    /// ✅ MIGRATED: Now uses centralized `get_api_port()` function
+    #[must_use]
     pub fn api_port() -> u16 {
         crate::constants::get_api_port()
     }
 
-    /// Default WebSocket port - configurable via NESTGATE_WEBSOCKET_PORT
+    /// Default WebSocket port - configurable via `NESTGATE_WEBSOCKET_PORT`
     ///
-    /// ✅ MIGRATED: Now uses centralized get_admin_port() function (WebSocket uses admin port)
+    /// ✅ MIGRATED: Now uses centralized `get_admin_port()` function (WebSocket uses admin port)
+    #[must_use]
     pub fn websocket_port() -> u16 {
         crate::constants::get_admin_port()
     }
 
-    /// Default HTTP port - configurable via NESTGATE_HTTP_PORT
+    /// Default HTTP port - configurable via `NESTGATE_HTTP_PORT`
     ///
-    /// ✅ MIGRATED: Now uses centralized get_api_port() function
+    /// ✅ MIGRATED: Now uses centralized `get_api_port()` function
+    #[must_use]
     pub fn http_port() -> u16 {
         crate::constants::get_api_port()
     }
 
-    /// Default streaming RPC port - configurable via NESTGATE_STREAMING_RPC_PORT
-    pub fn streaming_rpc_port() -> u16 {
+    /// Default streaming RPC port - configurable via `NESTGATE_STREAMING_RPC_PORT`
+    #[must_use]
+    pub const fn streaming_rpc_port() -> u16 {
         use crate::constants::hardcoding::ports;
         ports::API_ALT
     }
 
-    /// Default NAS HTTP port - configurable via NESTGATE_NAS_HTTP_PORT
-    pub fn nas_http_port() -> u16 {
+    /// Default NAS HTTP port - configurable via `NESTGATE_NAS_HTTP_PORT`
+    #[must_use]
+    pub const fn nas_http_port() -> u16 {
         use crate::constants::hardcoding::ports;
         ports::HTTP_DEFAULT
     }
 
-    /// Default development server port - configurable via NESTGATE_DEV_SERVER_PORT
-    pub fn dev_server_port() -> u16 {
+    /// Default development server port - configurable via `NESTGATE_DEV_SERVER_PORT`
+    #[must_use]
+    pub const fn dev_server_port() -> u16 {
         use crate::constants::hardcoding::ports;
         ports::API_DEFAULT
     }
 
     /// Port range for auto-discovery - start
-    pub fn discovery_port_start() -> u16 {
+    #[must_use]
+    pub const fn discovery_port_start() -> u16 {
         use crate::constants::hardcoding::ports;
         ports::HTTP_DEFAULT
     }
 
     /// Port range for auto-discovery - end
-    pub fn discovery_port_end() -> u16 {
+    #[must_use]
+    pub const fn discovery_port_end() -> u16 {
         use crate::constants::hardcoding::ports;
         ports::ADMIN_DEFAULT
     }
 
     /// Common service discovery ports
+    #[must_use]
     pub fn common_ports() -> Vec<u16> {
         use crate::constants::hardcoding::ports;
         vec![
@@ -75,61 +84,71 @@ impl NetworkPortDefaults {
     }
 
     /// Get API port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_api_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_api_port()
     }
 
     /// Get WebSocket port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_websocket_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_websocket_port()
     }
 
     /// Get HTTP port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_http_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_http_port()
     }
 
     /// Get NAS HTTP port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_nas_http_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_nas_http_port()
     }
 
     /// Get development server port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_dev_server_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_dev_server_port()
     }
 
     /// Get metrics port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_metrics_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_metrics_port()
     }
 
     /// Get health check port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_health_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_health_port()
     }
 
     /// Get orchestrator port from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_orchestrator_port() -> u16 {
         NetworkDefaultsConfig::from_env().get_orchestrator_port()
     }
 
     /// Get WebSocket base URL from environment or build from config
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_websocket_base_url() -> String {
         NetworkDefaultsConfig::from_env().get_websocket_base_url()
     }
 
     /// Get API base URL from environment or build from config
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_api_base_url() -> String {
         NetworkDefaultsConfig::from_env().get_api_base_url()
     }
@@ -139,43 +158,50 @@ impl NetworkPortDefaults {
 pub struct NetworkAddressDefaults;
 impl NetworkAddressDefaults {
     /// Default bind address for production (localhost only - secure default)
-    pub fn secure_bind() -> &'static str {
+    #[must_use]
+    pub const fn secure_bind() -> &'static str {
         // Use centralized constant to eliminate hardcoding
         "127.0.0.1"
     }
 
     /// Default bind address for development (all interfaces)
-    pub fn development_bind() -> &'static str {
+    #[must_use]
+    pub const fn development_bind() -> &'static str {
         // Use centralized constant to eliminate hardcoding
         "0.0.0.0"
     }
 
     /// Default hostname
-    pub fn hostname() -> &'static str {
+    #[must_use]
+    pub const fn hostname() -> &'static str {
         // Use centralized constant to eliminate hardcoding
         crate::constants::network_defaults::LOCALHOST_NAME
     }
 
     /// Get bind address from environment or secure default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_bind_address() -> String {
         NetworkDefaultsConfig::from_env().get_bind_address()
     }
 
     /// Get development bind address (used for dev servers)
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_development_bind_address() -> String {
         NetworkDefaultsConfig::from_env().get_development_bind_address()
     }
 
     /// Get hostname from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_hostname() -> String {
         NetworkDefaultsConfig::from_env().get_hostname()
     }
 
     /// Get external hostname from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_external_hostname() -> String {
         NetworkDefaultsConfig::from_env().get_external_hostname()
     }
@@ -186,31 +212,36 @@ pub struct TimeoutDefaults;
 impl TimeoutDefaults {
     /// Default connection timeout in milliseconds (environment-driven)
     ///
-    /// ✅ EVOLVED: Use TimeoutsConfig::from_env() for environment variable support
-    pub fn connection_timeout_ms() -> u64 {
+    /// ✅ EVOLVED: Use `TimeoutsConfig::from_env()` for environment variable support
+    #[must_use]
+    pub const fn connection_timeout_ms() -> u64 {
         3000 // Override via NESTGATE_CONNECTION_TIMEOUT_MS
     }
 
     /// Default request timeout in milliseconds (environment-driven)
     ///
-    /// ✅ EVOLVED: Use TimeoutsConfig::from_env() for environment variable support
-    pub fn request_timeout_ms() -> u64 {
+    /// ✅ EVOLVED: Use `TimeoutsConfig::from_env()` for environment variable support
+    #[must_use]
+    pub const fn request_timeout_ms() -> u64 {
         30000 // Override via NESTGATE_REQUEST_TIMEOUT_MS
     }
 
     /// Default health check timeout in seconds
-    pub fn health_check_timeout_seconds() -> u64 {
+    #[must_use]
+    pub const fn health_check_timeout_seconds() -> u64 {
         5
     }
 
     /// Get connection timeout from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_connection_timeout_ms() -> u64 {
         NetworkDefaultsConfig::from_env().get_connection_timeout_ms()
     }
 
     /// Get request timeout from environment or default
-    /// NOTE: Creates config from env each time. For tests, use NetworkDefaultsConfig directly.
+    /// NOTE: Creates config from env each time. For tests, use `NetworkDefaultsConfig` directly.
+    #[must_use]
     pub fn get_request_timeout_ms() -> u64 {
         NetworkDefaultsConfig::from_env().get_request_timeout_ms()
     }
@@ -298,10 +329,11 @@ mod tests {
     #[test]
     fn test_network_port_defaults_get_api_port_default() {
         let orig = std::env::var("NESTGATE_API_PORT").ok();
-        std::env::remove_var("NESTGATE_API_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_API_PORT");
         let port = NetworkPortDefaults::get_api_port();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_API_PORT", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_API_PORT", v),
             None => {}
         }
         assert_eq!(port, 3000); // API_DEFAULT = 3000
@@ -310,10 +342,11 @@ mod tests {
     #[test]
     fn test_network_port_defaults_get_http_port_default() {
         let orig = std::env::var("NESTGATE_HTTP_PORT").ok();
-        std::env::remove_var("NESTGATE_HTTP_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HTTP_PORT");
         let port = NetworkPortDefaults::get_http_port();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_HTTP_PORT", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_HTTP_PORT", v),
             None => {}
         }
         assert_eq!(port, 8080); // HTTP_DEFAULT = 8080
@@ -322,10 +355,11 @@ mod tests {
     #[test]
     fn test_network_port_defaults_get_metrics_port_default() {
         let orig = std::env::var("NESTGATE_METRICS_PORT").ok();
-        std::env::remove_var("NESTGATE_METRICS_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_METRICS_PORT");
         let port = NetworkPortDefaults::get_metrics_port();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_METRICS_PORT", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_METRICS_PORT", v),
             None => {}
         }
         assert_eq!(port, 9090);
@@ -334,10 +368,11 @@ mod tests {
     #[test]
     fn test_network_port_defaults_get_health_port_default() {
         let orig = std::env::var("NESTGATE_HEALTH_PORT").ok();
-        std::env::remove_var("NESTGATE_HEALTH_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HEALTH_PORT");
         let port = NetworkPortDefaults::get_health_port();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_HEALTH_PORT", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_HEALTH_PORT", v),
             None => {}
         }
         assert_eq!(port, 8081);
@@ -346,10 +381,11 @@ mod tests {
     #[test]
     fn test_network_port_defaults_get_orchestrator_port_default() {
         let orig = std::env::var("NESTGATE_ORCHESTRATOR_PORT").ok();
-        std::env::remove_var("NESTGATE_ORCHESTRATOR_PORT");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_ORCHESTRATOR_PORT");
         let port = NetworkPortDefaults::get_orchestrator_port();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_ORCHESTRATOR_PORT", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_ORCHESTRATOR_PORT", v),
             None => {}
         }
         assert_eq!(port, 8090);
@@ -396,10 +432,11 @@ mod tests {
     #[test]
     fn test_network_address_defaults_get_bind_address_default() {
         let orig = std::env::var("NESTGATE_BIND_ADDRESS").ok();
-        std::env::remove_var("NESTGATE_BIND_ADDRESS");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_BIND_ADDRESS");
         let addr = NetworkAddressDefaults::get_bind_address();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_BIND_ADDRESS", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_BIND_ADDRESS", v),
             None => {}
         }
         assert_eq!(addr, "127.0.0.1");
@@ -408,10 +445,11 @@ mod tests {
     #[test]
     fn test_network_address_defaults_get_development_bind_address_default() {
         let orig = std::env::var("NESTGATE_DEV_BIND_ADDRESS").ok();
-        std::env::remove_var("NESTGATE_DEV_BIND_ADDRESS");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_DEV_BIND_ADDRESS");
         let addr = NetworkAddressDefaults::get_development_bind_address();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_DEV_BIND_ADDRESS", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_DEV_BIND_ADDRESS", v),
             None => {}
         }
         assert_eq!(addr, "0.0.0.0");
@@ -420,10 +458,11 @@ mod tests {
     #[test]
     fn test_network_address_defaults_get_hostname_default() {
         let orig = std::env::var("NESTGATE_HOSTNAME").ok();
-        std::env::remove_var("NESTGATE_HOSTNAME");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_HOSTNAME");
         let host = NetworkAddressDefaults::get_hostname();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_HOSTNAME", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_HOSTNAME", v),
             None => {}
         }
         assert_eq!(host, "localhost");
@@ -432,10 +471,11 @@ mod tests {
     #[test]
     fn test_network_address_defaults_get_external_hostname_default() {
         let orig = std::env::var("NESTGATE_EXTERNAL_HOSTNAME").ok();
-        std::env::remove_var("NESTGATE_EXTERNAL_HOSTNAME");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_EXTERNAL_HOSTNAME");
         let host = NetworkAddressDefaults::get_external_hostname();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_EXTERNAL_HOSTNAME", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_EXTERNAL_HOSTNAME", v),
             None => {}
         }
         assert_eq!(host, "localhost");
@@ -473,10 +513,11 @@ mod tests {
     #[test]
     fn test_timeout_defaults_get_connection_timeout_ms_default() {
         let orig = std::env::var("NESTGATE_CONNECTION_TIMEOUT_MS").ok();
-        std::env::remove_var("NESTGATE_CONNECTION_TIMEOUT_MS");
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var("NESTGATE_CONNECTION_TIMEOUT_MS");
         let timeout = TimeoutDefaults::get_connection_timeout_ms();
         match orig {
-            Some(v) => std::env::set_var("NESTGATE_CONNECTION_TIMEOUT_MS", v),
+            Some(v) => crate::env_process::set_var("NESTGATE_CONNECTION_TIMEOUT_MS", v),
             None => {}
         }
         assert_eq!(timeout, 3000);

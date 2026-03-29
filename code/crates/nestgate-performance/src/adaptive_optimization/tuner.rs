@@ -13,7 +13,7 @@ pub struct AutoTuner {
 
 impl AutoTuner {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             // Initialize fields
         }
@@ -24,7 +24,7 @@ impl AutoTuner {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub fn apply_optimization(
+    pub const fn apply_optimization(
         &self,
         _decision: &OptimizationDecision,
     ) -> Result<OptimizationResult> {

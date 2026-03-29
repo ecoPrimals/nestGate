@@ -27,7 +27,7 @@ impl ZfsMigrationGuide {
 
     /// Expected performance improvements
     #[must_use]
-    pub fn expected_improvements() -> (f64, f64, f64) {
+    pub const fn expected_improvements() -> (f64, f64, f64) {
         (
             80.0, // Performance gain % (high due to storage I/O optimization)
             50.0, // Memory reduction % (eliminating Arc overhead)
@@ -45,7 +45,7 @@ impl ZfsBenchmark {
     /// Modern pattern: Simulate work without sleep using CPU-bound task
     pub async fn benchmark_zfs_operations<Z>(_zfs: &Z, operations: u32) -> Duration
     where
-        Z: ZeroCostZfsOperations,
+        Z: ZeroCostZfsOperations + Sync,
     {
         let start = std::time::Instant::now();
 

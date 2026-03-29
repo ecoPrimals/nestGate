@@ -189,15 +189,21 @@ mod tests {
         assert_eq!(config.max_retries, 3);
         assert_eq!(config.fallback_behavior, FallbackBehavior::NoOp);
         assert_eq!(config.discovery_methods.len(), 3);
-        assert!(config
-            .discovery_methods
-            .contains(&DiscoveryMethod::Environment));
-        assert!(config
-            .discovery_methods
-            .contains(&DiscoveryMethod::ServiceRegistry));
-        assert!(config
-            .discovery_methods
-            .contains(&DiscoveryMethod::NetworkScan));
+        assert!(
+            config
+                .discovery_methods
+                .contains(&DiscoveryMethod::Environment)
+        );
+        assert!(
+            config
+                .discovery_methods
+                .contains(&DiscoveryMethod::ServiceRegistry)
+        );
+        assert!(
+            config
+                .discovery_methods
+                .contains(&DiscoveryMethod::NetworkScan)
+        );
     }
 
     #[test]
@@ -253,10 +259,12 @@ mod tests {
         // ✅ MIGRATED: Now uses ServiceDiscoveryConfig, which generates endpoints
         // Default: 3 endpoints starting from 127.0.0.1:8080
         assert_eq!(config.endpoints.len(), 3);
-        assert!(config
-            .endpoints
-            .iter()
-            .any(|e| e.starts_with("http://127.0.0.1:")));
+        assert!(
+            config
+                .endpoints
+                .iter()
+                .any(|e| e.starts_with("http://127.0.0.1:"))
+        );
     }
 
     #[test]
@@ -282,9 +290,11 @@ mod tests {
 
         // ✅ MIGRATED: ServiceDiscoveryConfig generates 3 endpoints + 1 custom = 4
         assert_eq!(config.endpoints.len(), 4);
-        assert!(config
-            .endpoints
-            .contains(&"http://custom:9000/discovery".to_string()));
+        assert!(
+            config
+                .endpoints
+                .contains(&"http://custom:9000/discovery".to_string())
+        );
     }
 
     #[test]

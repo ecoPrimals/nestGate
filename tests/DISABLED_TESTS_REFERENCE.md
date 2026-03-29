@@ -1,120 +1,70 @@
 # 🚫 Disabled Tests Reference
 
-**Last Updated**: November 5, 2025  
-**Status**: Documented
+**Last Updated**: March 29, 2026  
+**Status**: Active
 
 ---
 
-## 📋 Disabled Test Files
+## `.disabled` test files
 
-### 1. `sovereignty_chaos_testing.rs.disabled`
-**Location**: `tests/sovereignty_chaos_testing.rs.disabled`  
-**Status**: Deferred to Phase 3  
-**Reason**: Complex chaos testing framework requiring extensive refactoring
+There are **no** `*.disabled` test files in the repository. Nothing is excluded from compilation by renaming sources to `.disabled`.
 
-**Details:**
-- **Estimated Fix Time**: 16-20 hours
-- **Compilation Errors**: 80+ errors (outdated APIs)
-- **Scope**: Comprehensive chaos/fault injection testing
-- **Decision**: Defer until after Phase 2 (90% coverage achieved)
-
-**When to Re-enable:**
-- After Phase 2 completion (90% coverage)
-- After core test infrastructure stabilized
-- When chaos testing becomes priority
-
----
-
-### 2. `unified_performance_validation.rs.disabled`
-**Location**: `code/crates/nestgate-core/benches/unified_performance_validation.rs.disabled`  
-**Status**: Deferred (benchmark, not critical)  
-**Reason**: Benchmark file with compilation errors
-
-**Details:**
-- **Type**: Performance benchmark (non-critical)
-- **Compilation Errors**: Multiple API mismatches
-- **Scope**: Unified performance validation benchmark
-- **Decision**: Focus on test coverage first, benchmarks later
-
-**When to Re-enable:**
-- After Phase 2 completion
-- When performance tuning becomes focus
-- After API stabilization
-
----
-
-## 📊 Context
-
-### Testing Status (Current):
-- **Tests Passing**: 973+ tests ✅
-- **Coverage**: 4.74% (baseline measured) ✅
-- **Disabled Tests**: 2 (documented here)
-- **Compilation Errors**: 52 remaining (non-blocking)
-
-### Why Disable Instead of Fix?
-
-**Prioritization:**
-1. **Phase 1 Complete**: Deep debt cleanup (262 errors fixed)
-2. **Phase 2 Active**: Writing new tests for 90% coverage
-3. **Phase 3 Future**: Advanced testing (chaos, performance)
-
-**Strategic Decision:**
-- Fixing these 2 files: ~20 hours
-- Writing 300 new tests: ~20 hours
-- **Choice**: Write new tests → faster path to 90% coverage
-
----
-
-## 🚀 Re-enabling Strategy
-
-### When Coverage Reaches 90%:
-
-**Step 1: Assess Priority**
-- Is chaos testing needed for production?
-- Is performance benchmarking critical?
-
-**Step 2: Modernization Approach**
-- Apply patterns from Phase 1 (deep debt solutions)
-- Use current test infrastructure
-- Leverage modern APIs
-
-**Step 3: Re-integration**
-- Fix compilation errors
-- Update to modern test patterns
-- Re-enable and verify
-
----
-
-## 📝 Maintenance
-
-### Adding Disabled Tests:
-1. Rename test file to `.disabled`
-2. Document in this file (reason, errors, estimated fix time)
-3. Reference in `CURRENT_STATUS.md`
-
-### Re-enabling Tests:
-1. Fix compilation errors
-2. Update this file
-3. Update test count in `CURRENT_STATUS.md`
-4. Remove `.disabled` suffix
-
----
-
-## 🔍 Finding Disabled Tests
+To confirm:
 
 ```bash
-# Find all .disabled files
 find . -name "*.disabled" -type f
-
-# Current count
-find . -name "*.disabled" -type f | wc -l
+# (expect no test sources; only unrelated tooling if any)
 ```
 
-**Expected**: 2 files
+---
+
+## Ignored tests (`#[ignore]`)
+
+**563** tests are marked `#[ignore]`. They are compiled and shipped with the suite but **not** run by default. Most need real infrastructure, privileged operations, or long-running setup (e.g. e2e, chaos, live storage/network).
+
+Run them explicitly when your environment matches the test’s assumptions:
+
+```bash
+cargo test --workspace --all-features -- --ignored
+```
+
+Narrow by name or test binary as usual, e.g. filters on scenario or module path.
+
+---
+
+## Where to run focused suites
+
+Use the layout and frameworks under `tests/`:
+
+- **`tests/e2e/`** — enhanced e2e framework and workflows (`enhanced_e2e_framework.rs`, `framework/`, `workflows/`, …).
+- **`tests/chaos/`** — chaos harnesses and scenarios (`chaos_testing_framework.rs`, `enhanced_chaos_framework.rs`, …).
+- **`tests/fault/`** — fault-injection-oriented tests.
+- **`tests/performance/`** — performance-oriented modules.
+
+See [README.md](README.md) for the full category list and `cargo test --workspace --all-features` as the main entry point.
+
+---
+
+## Current metrics (reference)
+
+| Metric | Value |
+|--------|--------|
+| Passing | 11,707 |
+| Failed | 0 |
+| Ignored | 563 |
+| Workspace coverage (all features) | ~74.3% |
+
+Re-run tests and `cargo llvm-cov --workspace --all-features` after large changes; numbers drift with the tree.
+
+---
+
+## Maintenance
+
+- Prefer `#[ignore]` with a short comment over ad hoc `.disabled` filenames unless a file truly cannot compile.
+- When adding long-running or environment-specific tests, mark them ignored and document required setup beside the test or in the relevant `tests/<category>/` README.
+- If a source is temporarily renamed to `.disabled`, restore it or delete it, and document the reason in this file.
 
 ---
 
 **Maintained By**: Development Team  
-**Status**: Active reference  
-**Next Review**: After Phase 2 completion
-
+**Next Review**: When ignored-test count or infra assumptions change materially

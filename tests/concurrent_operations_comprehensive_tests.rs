@@ -5,8 +5,8 @@
 //!
 //! **MODERNIZED**: Uses event-driven coordination instead of sleep-based timing
 
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::time::Duration;
 use tokio::sync::{Mutex, RwLock, Semaphore};
 
@@ -344,7 +344,6 @@ async fn test_oneshot_channel() {
 
 /// **Concurrent Test 13: Watch Channel Updates**
 #[tokio::test]
-#[ignore] // TEMP: Hangs indefinitely - rx.changed() never returns
 async fn test_watch_channel_updates() {
     use tokio::sync::watch;
 
@@ -352,22 +351,25 @@ async fn test_watch_channel_updates() {
 
     let handle = tokio::spawn(async move {
         let mut values = Vec::new();
-        while rx.changed().await.is_ok() {
-            values.push(*rx.borrow());
-            if values.len() >= 3 {
+        while values.len() < 3 {
+            if rx.changed().await.is_err() {
                 break;
             }
+            values.push(*rx.borrow());
         }
         values
     });
 
-    // Send values immediately - watch channel naturally coordinates updates
-    tx.send(1).unwrap();
-    tx.send(2).unwrap();
-    tx.send(3).unwrap();
+    // `watch` stores only the latest value; rapid sends before the task runs coalesce
+    // into one update. Interleave sends with yields so each send is observed.
+    for v in [1_i32, 2, 3] {
+        tx.send(v).unwrap();
+        tokio::task::yield_now().await;
+    }
+    drop(tx);
 
     let values = handle.await.unwrap();
-    assert!(values.len() >= 2);
+    assert_eq!(values, vec![1, 2, 3]);
 }
 
 /// **Concurrent Test 14: Select Multiple Futures**

@@ -53,13 +53,13 @@ impl<const MAX_CONNECTIONS: usize, const BUFFER_SIZE: usize>
 {
     /// Get effective max connections (compile-time optimized)
     #[must_use]
-    pub fn max_connections() -> usize {
+    pub const fn max_connections() -> usize {
         MAX_CONNECTIONS
     }
 
     /// Get effective buffer size (compile-time optimized)
     #[must_use]
-    pub fn buffer_size() -> usize {
+    pub const fn buffer_size() -> usize {
         BUFFER_SIZE
     }
 

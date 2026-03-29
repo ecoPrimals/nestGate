@@ -314,3 +314,72 @@ impl ServiceConfigBuilder for ZfsServiceConfig {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn service_config_builder_chains() {
+        let c = ZfsServiceConfig::default()
+            .with_backend(ZfsBackend::Native)
+            .with_fail_safe(false)
+            .with_graceful_degradation(false)
+            .with_circuit_breaker(true)
+            .with_retry_policy(false);
+        assert!(matches!(c.backend, ZfsBackend::Native));
+        assert!(c.fail_safe.circuit_breaker.enabled);
+        assert!(!c.fail_safe.retry_policy.enabled);
+        assert!(!c.fail_safe.enable_graceful_degradation);
+    }
+
+    #[test]
+    fn create_production_service_is_native_named() {
+        let svc = ZfsServiceFactory::create_production_service();
+        assert_eq!(svc.service_name(), "native-zfs");
+    }
+
+    #[tokio::test]
+    async fn create_service_rejects_empty_service_name() {
+        let mut config = ZfsServiceConfig::default();
+        config.service_name = String::new();
+        let err = ZfsServiceFactory::create_service(config)
+            .await
+            .err()
+            .expect("expected validation error");
+        assert!(err.to_string().contains("Service name") || err.to_string().contains("empty"));
+    }
+
+    #[tokio::test]
+    async fn create_service_remote_backend_errors() {
+        let config = ZfsServiceConfig {
+            backend: ZfsBackend::Remote {
+                endpoint: "http://example.invalid".to_string(),
+                timeout: Duration::from_secs(1),
+            },
+            ..Default::default()
+        };
+        let err = ZfsServiceFactory::create_service(config)
+            .await
+            .err()
+            .expect("expected remote backend error");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Remote") || msg.contains("native"),
+            "unexpected: {msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn create_service_native_without_fail_safe_wraps_primary() {
+        let mut config = ZfsServiceConfig::default();
+        config.backend = ZfsBackend::Native;
+        config.fail_safe.circuit_breaker.enabled = false;
+        config.fail_safe.retry_policy.enabled = false;
+        let svc = ZfsServiceFactory::create_service(config)
+            .await
+            .expect("native service");
+        assert_eq!(svc.service_name(), "native-zfs");
+    }
+}

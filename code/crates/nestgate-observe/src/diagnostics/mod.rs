@@ -3,7 +3,7 @@
 
 // Diagnostics module for NestGate
 // This module provides system diagnostics and monitoring functionality
-//! for the NestGate system. It has been refactored into focused sub-modules:
+//! for the `NestGate` system. It has been refactored into focused sub-modules:
 //! - `types`: Core diagnostic types and enums
 //! - `metrics`: System metrics collection and structures
 //! - `diagnostic`: Individual diagnostic entries

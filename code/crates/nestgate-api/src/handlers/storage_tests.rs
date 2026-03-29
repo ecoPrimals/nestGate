@@ -302,8 +302,8 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_dataset_info_serialization(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn test_storage_dataset_info_serialization()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let dataset_info = StorageDatasetInfo {
             name: "pool/important-data".to_string(),
             pool_name: "pool".to_string(),
@@ -320,8 +320,8 @@ mod tests {
     }
 
     #[test]
-    fn test_storage_snapshot_info_serialization(
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn test_storage_snapshot_info_serialization()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let snapshot_info = StorageSnapshotInfo {
             name: "pool/data@weekly-backup".to_string(),
             dataset_name: "pool/data".to_string(),

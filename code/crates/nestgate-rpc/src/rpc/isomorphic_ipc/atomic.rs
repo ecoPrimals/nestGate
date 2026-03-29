@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Atomic Composition Support for NestGate
+//! Atomic Composition Support for `NestGate`
 //!
 //! **Phase 3: Deployment Coordination - Atomic Compositions**
 //!
@@ -51,7 +51,7 @@ use anyhow::{Context, Result};
 use std::time::Duration;
 use tracing::{debug, info, warn};
 
-use super::health::{check_nestgate_health, wait_for_healthy, HealthStatus};
+use super::health::{HealthStatus, check_nestgate_health, wait_for_healthy};
 use super::launcher::{discover_nestgate_endpoint, is_nestgate_running};
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -83,7 +83,7 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
     let socket_path = discover_primal_socket(primal_name);
 
     let Some(socket) = socket_path else {
-        anyhow::bail!("{} socket not found in any standard location", primal_name);
+        anyhow::bail!("{primal_name} socket not found in any standard location");
     };
 
     // ✅ RUNTIME DISCOVERY: Attempt to connect to the primal's socket
@@ -242,6 +242,7 @@ pub mod capabilities {
 
 impl AtomicType {
     /// Get human-readable name
+    #[must_use]
     pub fn name(&self) -> &str {
         match self {
             Self::Tower => "TOWER",
@@ -276,7 +277,8 @@ impl AtomicType {
         }
     }
 
-    /// Check if this composition requires the storage capability (i.e. NestGate's role)
+    /// Check if this composition requires the storage capability (i.e. `NestGate`'s role)
+    #[must_use]
     pub fn requires_storage(&self) -> bool {
         self.required_capabilities()
             .contains(&capabilities::STORAGE)
@@ -296,6 +298,7 @@ pub struct AtomicStatus {
 
 impl AtomicStatus {
     /// Check if atomic is fully operational
+    #[must_use]
     pub fn is_operational(&self) -> bool {
         self.overall_health.is_operational()
             && self
@@ -305,6 +308,7 @@ impl AtomicStatus {
     }
 
     /// Get components that need attention
+    #[must_use]
     pub fn components_needing_attention(&self) -> Vec<&str> {
         self.component_statuses
             .iter()
@@ -318,19 +322,19 @@ impl AtomicStatus {
 // NESTGATE ATOMIC FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Verify NestGate is healthy and operational
+/// Verify `NestGate` is healthy and operational
 ///
 /// This is the **primary verification function** for NEST atomic composition.
 ///
 /// ## Process
 ///
-/// 1. Check if NestGate is running (discovery)
+/// 1. Check if `NestGate` is running (discovery)
 /// 2. Perform health check
 /// 3. Verify operational status
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::atomic;
 ///
 /// #[tokio::main]
@@ -354,21 +358,21 @@ pub async fn verify_nestgate_health() -> Result<()> {
         .context("Failed to check NestGate health")?;
 
     if !status.is_operational() {
-        return Err(anyhow::anyhow!("NestGate is not operational: {:?}", status));
+        return Err(anyhow::anyhow!("NestGate is not operational: {status:?}"));
     }
 
     info!("✅ NestGate health verified: {:?}", status);
     Ok(())
 }
 
-/// Wait for NestGate to start and become healthy
+/// Wait for `NestGate` to start and become healthy
 ///
-/// Used during NEST atomic composition to ensure NestGate is ready
+/// Used during NEST atomic composition to ensure `NestGate` is ready
 /// before proceeding with dependent services (like squirrel).
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::atomic;
 /// use std::time::Duration;
 ///
@@ -400,14 +404,14 @@ pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
 ///
 /// ## Note
 ///
-/// This function currently only verifies NestGate's health directly.
+/// This function currently only verifies `NestGate`'s health directly.
 /// Full NEST atomic health verification requires coordination with
 /// biomeOS atomic-deploy crate or integration with beardog/songbird/squirrel
 /// health check implementations.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::atomic;
 ///
 /// #[tokio::main]
@@ -434,7 +438,7 @@ pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
 ///
 /// # Self-Knowledge Principle
 ///
-/// NestGate checks its own health directly. For all other capabilities,
+/// `NestGate` checks its own health directly. For all other capabilities,
 /// it discovers primals via socket scanning and checks them dynamically.
 pub async fn verify_composition_health(composition: &AtomicType) -> Result<AtomicStatus> {
     info!(
@@ -509,7 +513,7 @@ pub async fn verify_nest_health() -> Result<AtomicStatus> {
 
 /// Discover available primals by scanning standard socket locations
 ///
-/// Scans BIOMEOS_SOCKET_DIR, XDG_RUNTIME_DIR/biomeos, and /tmp for
+/// Scans `BIOMEOS_SOCKET_DIR`, `XDG_RUNTIME_DIR/biomeos`, and /tmp for
 /// primal sockets. Returns discovered primal names (without assuming
 /// which primals should exist).
 async fn discover_available_primals() -> Vec<String> {
@@ -556,13 +560,12 @@ fn gather_socket_search_dirs() -> Vec<String> {
     }
 
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        dirs.push(format!("{}/biomeos", xdg));
+        dirs.push(format!("{xdg}/biomeos"));
     }
 
-    // UID-based XDG fallback
-    // TODO: wire to nestgate-core `platform::get_current_uid`
+    // UID-based XDG fallback (same effective source as `nestgate_platform` / core helpers when unified).
     let uid = uzers::get_current_uid();
-    let xdg_default = format!("/run/user/{}/biomeos", uid);
+    let xdg_default = format!("/run/user/{uid}/biomeos");
     if !dirs.contains(&xdg_default) {
         dirs.push(xdg_default);
     }
@@ -575,14 +578,14 @@ fn gather_socket_search_dirs() -> Vec<String> {
 // INTEGRATION WITH BIOMEOS ATOMIC-DEPLOY
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Get NestGate's endpoint for atomic composition coordination
+/// Get `NestGate`'s endpoint for atomic composition coordination
 ///
 /// This function can be called by biomeOS atomic-deploy crate to discover
-/// NestGate's endpoint during NEST atomic composition.
+/// `NestGate`'s endpoint during NEST atomic composition.
 ///
 /// ## Example
 ///
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::isomorphic_ipc::atomic;
 ///
 /// #[tokio::main]
@@ -594,7 +597,7 @@ fn gather_socket_search_dirs() -> Vec<String> {
 /// ```
 pub async fn get_nestgate_endpoint_for_atomic() -> Result<String> {
     let endpoint = discover_nestgate_endpoint().await?;
-    Ok(format!("{:?}", endpoint))
+    Ok(format!("{endpoint:?}"))
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

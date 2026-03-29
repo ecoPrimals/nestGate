@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for HandlerEnvironment
+/// Configuration for `HandlerEnvironment`
 pub struct HandlerEnvironmentConfig {
     /// Environment
     pub environment: String,
@@ -20,7 +20,7 @@ pub struct HandlerEnvironmentConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for HandlerDebug
+/// Configuration for `HandlerDebug`
 pub struct HandlerDebugConfig {
     /// Debug Logging
     pub debug_logging: bool,
@@ -33,14 +33,14 @@ pub struct HandlerDebugConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for HandlerFeature
+/// Configuration for `HandlerFeature`
 pub struct HandlerFeatureConfig {
     /// Feature Flags
     pub feature_flags: HashMap<String, bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for HandlerOverride
+/// Configuration for `HandlerOverride`
 pub struct HandlerOverrideConfig {
     /// Overrides
     pub overrides: HashMap<String, serde_json::Value>,
@@ -95,7 +95,7 @@ impl HandlerEnvironmentConfig {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for NetworkProtocol
+/// Configuration for `NetworkProtocol`
 pub struct NetworkProtocolConfig {
     /// Http
     pub http: HttpConfig,
@@ -103,7 +103,7 @@ impl NetworkProtocolConfig {
     ///
     /// Returns an error if validation fails. Currently always succeeds but may be extended
     /// with additional validation rules in the future.
-    pub fn validate(&self) -> Result<()> {
+    pub const fn validate(&self) -> Result<()> {
         Ok(())
     }
 

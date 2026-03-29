@@ -335,7 +335,7 @@ mod infant_discovery_tests_week3 {
         let old_api_version = "v1";
         let new_api_version = "v2";
         let supports_v1 = new_api_version != old_api_version; // v2 should support v1
-                                                              // Validate that version support is a boolean value
+        // Validate that version support is a boolean value
         let _version_supported = supports_v1; // Either true or false is valid
     }
 

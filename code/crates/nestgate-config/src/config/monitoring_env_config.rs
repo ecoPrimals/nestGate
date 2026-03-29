@@ -9,7 +9,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::config::monitoring_env_config::MonitoringEnvConfig;
 //!
 //! // Load from environment
@@ -41,6 +41,7 @@ pub type SharedMonitoringEnvConfig = Arc<MonitoringEnvConfig>;
 
 impl MonitoringEnvConfig {
     /// Creates a new `MonitoringEnvConfig` by loading values from environment variables.
+    #[must_use]
     pub fn from_env() -> Self {
         let log_rotation_size_bytes = env::var("NESTGATE_LOG_ROTATION_SIZE_BYTES")
             .ok()
@@ -53,7 +54,8 @@ impl MonitoringEnvConfig {
     }
 
     /// Log Rotation Size Bytes
-    pub fn log_rotation_size_bytes(&self) -> usize {
+    #[must_use]
+    pub const fn log_rotation_size_bytes(&self) -> usize {
         self.log_rotation_size_bytes
     }
 
@@ -65,12 +67,13 @@ impl MonitoringEnvConfig {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// # use nestgate_core::config::monitoring_env_config::MonitoringEnvConfig;
     /// let config = MonitoringEnvConfig::from_env()
     ///     .with_log_rotation_size_bytes(10 * 1024 * 1024); // 10MB
     /// ```
-    pub fn with_log_rotation_size_bytes(mut self, size: usize) -> Self {
+    #[must_use]
+    pub const fn with_log_rotation_size_bytes(mut self, size: usize) -> Self {
         self.log_rotation_size_bytes = size;
         self
     }

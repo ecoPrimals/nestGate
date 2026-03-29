@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MonitoringHandler
+/// Configuration for `MonitoringHandler`
 pub struct MonitoringHandlerConfig {
     /// Metrics
     pub metrics: MetricsHandlerConfig,
@@ -19,28 +19,28 @@ pub struct MonitoringHandlerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for MetricsHandler
+/// Configuration for `MetricsHandler`
 pub struct MetricsHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for TracingHandler
+/// Configuration for `TracingHandler`
 pub struct TracingHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for HealthCheckHandler
+/// Configuration for `HealthCheckHandler`
 pub struct HealthCheckHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for AlertingHandler
+/// Configuration for `AlertingHandler`
 pub struct AlertingHandlerConfig {
     /// Whether this feature is enabled
     pub enabled: bool,
@@ -79,11 +79,11 @@ impl MonitoringHandlerConfig {
 
     /// Merges this configuration with another, returning the merged result
     #[must_use]
-    pub fn merge(self, _other: Self) -> Self {
+    pub const fn merge(self, _other: Self) -> Self {
         self
     }
     /// Validates data
-    pub fn validate(&self) -> nestgate_types::error::Result<()> {
+    pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
 }

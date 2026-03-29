@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! # 🚀 tarpc Types and Traits for NestGate
+//! # 🚀 tarpc Types and Traits for `NestGate`
 //!
 //! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL RPC** (v0.2.0)
 //!
@@ -18,7 +18,7 @@
 //! - **tarpc PRIMARY** for primal-to-primal communication
 //! - **JSON-RPC SECONDARY** for universal access
 //! - **HTTP FALLBACK** for network-only scenarios
-//! - **Self-knowledge**: NestGate knows only storage capabilities
+//! - **Self-knowledge**: `NestGate` knows only storage capabilities
 //! - **Runtime discovery**: Other primals discovered via capability
 //! - **Zero hardcoding**: No primal names, ports, or endpoints
 //! - Zero unsafe blocks
@@ -26,8 +26,9 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 
-/// tarpc service trait for NestGate storage operations
+/// tarpc service trait for `NestGate` storage operations
 ///
 /// This trait defines the async RPC interface using tarpc.
 /// Both client and server implementations use this trait.
@@ -38,7 +39,7 @@ use std::collections::HashMap;
 /// 3. **HTTP** (FALLBACK) - Enableable for network scenarios
 ///
 /// # Self-Knowledge
-/// NestGate exposes only storage operations. Discovery of other primals
+/// `NestGate` exposes only storage operations. Discovery of other primals
 /// (orchestration, security, AI, compute, management) happens at runtime
 /// through the universal adapter.
 #[tarpc::service]
@@ -152,7 +153,7 @@ pub trait NestGateRpc {
 
     // ==================== CAPABILITY OPERATIONS ====================
 
-    /// Register NestGate's capabilities with discovery system
+    /// Register `NestGate`'s capabilities with discovery system
     ///
     /// # Arguments
     /// * `registration` - Service registration information
@@ -177,7 +178,7 @@ pub trait NestGateRpc {
     /// Get health status
     ///
     /// # Returns
-    /// Current health status of NestGate
+    /// Current health status of `NestGate`
     async fn health() -> HealthStatus;
 
     /// Get storage metrics
@@ -321,25 +322,25 @@ pub struct OperationResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityRegistration {
     /// Service ID (UUID)
-    pub service_id: String,
+    pub service_id: Arc<str>,
 
     /// Service name ("nestgate")
-    pub service_name: String,
+    pub service_name: Arc<str>,
 
     /// Primary capability ("storage")
-    pub capability: String,
+    pub capability: Arc<str>,
 
     /// All capabilities provided
-    pub capabilities: Vec<String>,
+    pub capabilities: Vec<Arc<str>>,
 
     /// tarpc endpoint
-    pub tarpc_endpoint: String,
+    pub tarpc_endpoint: Arc<str>,
 
     /// JSON-RPC endpoint
-    pub jsonrpc_endpoint: Option<String>,
+    pub jsonrpc_endpoint: Option<Arc<str>>,
 
     /// HTTP endpoint (if enabled)
-    pub http_endpoint: Option<String>,
+    pub http_endpoint: Option<Arc<str>>,
 
     /// Service metadata
     #[serde(default)]
@@ -350,16 +351,16 @@ pub struct CapabilityRegistration {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInfo {
     /// Service ID
-    pub id: String,
+    pub id: Arc<str>,
 
     /// Service capability
-    pub capability: String,
+    pub capability: Arc<str>,
 
     /// Available endpoints by protocol
     pub endpoints: HashMap<String, String>,
 
     /// Service status
-    pub status: String,
+    pub status: Arc<str>,
 
     /// Service metadata
     pub metadata: Option<serde_json::Value>,
@@ -562,24 +563,23 @@ pub enum NestGateRpcError {
 impl std::fmt::Display for NestGateRpcError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::DatasetNotFound { dataset } => write!(f, "Dataset not found: {}", dataset),
+            Self::DatasetNotFound { dataset } => write!(f, "Dataset not found: {dataset}"),
             Self::DatasetAlreadyExists { dataset } => {
-                write!(f, "Dataset already exists: {}", dataset)
+                write!(f, "Dataset already exists: {dataset}")
             }
             Self::ObjectNotFound { dataset, key } => {
-                write!(f, "Object not found: {}/{}", dataset, key)
+                write!(f, "Object not found: {dataset}/{key}")
             }
             Self::ObjectAlreadyExists { dataset, key } => {
-                write!(f, "Object already exists: {}/{}", dataset, key)
+                write!(f, "Object already exists: {dataset}/{key}")
             }
-            Self::InvalidParameters { message } => write!(f, "Invalid parameters: {}", message),
+            Self::InvalidParameters { message } => write!(f, "Invalid parameters: {message}"),
             Self::StorageFull {
                 required,
                 available,
             } => write!(
                 f,
-                "Storage full: required {} bytes, available {} bytes",
-                required, available
+                "Storage full: required {required} bytes, available {available} bytes"
             ),
             Self::QuotaExceeded {
                 dataset,
@@ -587,14 +587,13 @@ impl std::fmt::Display for NestGateRpcError {
                 requested,
             } => write!(
                 f,
-                "Quota exceeded for dataset {}: quota {} bytes, requested {} bytes",
-                dataset, quota, requested
+                "Quota exceeded for dataset {dataset}: quota {quota} bytes, requested {requested} bytes"
             ),
-            Self::PermissionDenied { message } => write!(f, "Permission denied: {}", message),
-            Self::InternalError { message } => write!(f, "Internal error: {}", message),
-            Self::ServiceUnavailable { message } => write!(f, "Service unavailable: {}", message),
-            Self::ConnectionError { message } => write!(f, "Connection error: {}", message),
-            Self::Timeout { operation } => write!(f, "Timeout: {}", operation),
+            Self::PermissionDenied { message } => write!(f, "Permission denied: {message}"),
+            Self::InternalError { message } => write!(f, "Internal error: {message}"),
+            Self::ServiceUnavailable { message } => write!(f, "Service unavailable: {message}"),
+            Self::ConnectionError { message } => write!(f, "Connection error: {message}"),
+            Self::Timeout { operation } => write!(f, "Timeout: {operation}"),
         }
     }
 }
@@ -631,5 +630,101 @@ mod tests {
             dataset: "test".to_string(),
         };
         assert_eq!(error.to_string(), "Dataset not found: test");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_dataset_already_exists() {
+        let e = NestGateRpcError::DatasetAlreadyExists {
+            dataset: "tank/data".to_string(),
+        };
+        assert!(e.to_string().contains("already exists"));
+        assert!(e.to_string().contains("tank/data"));
+    }
+
+    #[test]
+    fn round5_rpc_error_display_object_not_found() {
+        let e = NestGateRpcError::ObjectNotFound {
+            dataset: "d".to_string(),
+            key: "k".to_string(),
+        };
+        assert_eq!(e.to_string(), "Object not found: d/k");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_object_already_exists() {
+        let e = NestGateRpcError::ObjectAlreadyExists {
+            dataset: "d".to_string(),
+            key: "k".to_string(),
+        };
+        assert_eq!(e.to_string(), "Object already exists: d/k");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_invalid_parameters() {
+        let e = NestGateRpcError::InvalidParameters {
+            message: "bad".to_string(),
+        };
+        assert_eq!(e.to_string(), "Invalid parameters: bad");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_storage_full() {
+        let e = NestGateRpcError::StorageFull {
+            required: 100,
+            available: 10,
+        };
+        assert!(e.to_string().contains("Storage full"));
+        assert!(e.to_string().contains("100"));
+    }
+
+    #[test]
+    fn round5_rpc_error_display_quota_exceeded() {
+        let e = NestGateRpcError::QuotaExceeded {
+            dataset: "z".to_string(),
+            quota: 50,
+            requested: 60,
+        };
+        assert!(e.to_string().contains("Quota exceeded"));
+        assert!(e.to_string().contains("z"));
+    }
+
+    #[test]
+    fn round5_rpc_error_display_permission_denied() {
+        let e = NestGateRpcError::PermissionDenied {
+            message: "nope".to_string(),
+        };
+        assert_eq!(e.to_string(), "Permission denied: nope");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_internal_error() {
+        let e = NestGateRpcError::InternalError {
+            message: "panic".to_string(),
+        };
+        assert_eq!(e.to_string(), "Internal error: panic");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_service_unavailable() {
+        let e = NestGateRpcError::ServiceUnavailable {
+            message: "down".to_string(),
+        };
+        assert_eq!(e.to_string(), "Service unavailable: down");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_connection_error() {
+        let e = NestGateRpcError::ConnectionError {
+            message: "reset".to_string(),
+        };
+        assert_eq!(e.to_string(), "Connection error: reset");
+    }
+
+    #[test]
+    fn round5_rpc_error_display_timeout() {
+        let e = NestGateRpcError::Timeout {
+            operation: "read".to_string(),
+        };
+        assert_eq!(e.to_string(), "Timeout: read");
     }
 }

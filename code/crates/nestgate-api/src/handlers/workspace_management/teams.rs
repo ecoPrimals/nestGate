@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Request structure for creating a new team.
 #[derive(Debug, Deserialize)]
-/// Request parameters for CreateTeam operation
+/// Request parameters for `CreateTeam` operation
 pub struct CreateTeamRequest {
     /// Team name
     pub name: String,
@@ -47,11 +47,13 @@ pub async fn create_team(
 ) -> Result<Json<TeamInfo>, StatusCode> {
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or_else(|_| {
-            tracing::warn!("System time before UNIX_EPOCH, using 0");
-            0
-        });
+        .map_or_else(
+            |_| {
+                tracing::warn!("System time before UNIX_EPOCH, using 0");
+                0
+            },
+            |d| d.as_secs(),
+        );
 
     let team = TeamInfo {
         id: format!("team_{timestamp}"),

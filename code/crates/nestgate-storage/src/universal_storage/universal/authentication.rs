@@ -87,6 +87,7 @@ pub enum AuthenticationPattern {
 
 impl AuthenticationPattern {
     /// Get a description of this authentication pattern
+    #[must_use]
     pub fn description(&self) -> &str {
         match self {
             Self::None => "No authentication",
@@ -101,7 +102,8 @@ impl AuthenticationPattern {
     }
 
     /// Is this authentication pattern secure?
-    pub fn is_secure(&self) -> bool {
+    #[must_use]
+    pub const fn is_secure(&self) -> bool {
         match self {
             Self::None => false,
             Self::HttpBasic { .. } => false, // Only secure over TLS
@@ -116,7 +118,8 @@ pub struct SecretString(String);
 
 impl SecretString {
     /// Create from string
-    pub fn new(s: String) -> Self {
+    #[must_use]
+    pub const fn new(s: String) -> Self {
         Self(s)
     }
 
@@ -126,6 +129,7 @@ impl SecretString {
     }
 
     /// Get the inner value (use sparingly)
+    #[must_use]
     pub fn expose_secret(&self) -> &str {
         &self.0
     }
@@ -154,7 +158,7 @@ pub enum ApiKeyLocation {
 
     /// In query parameter
     QueryParameter {
-        /// Parameter name (e.g., "api_key")
+        /// Parameter name (e.g., "`api_key`")
         name: String,
     },
 

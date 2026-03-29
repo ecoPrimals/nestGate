@@ -1,3 +1,4 @@
+use std::sync::Arc;
 /// Fault Injection Test Suite - MODERNIZED
 ///
 /// This suite systematically injects specific faults to test
@@ -5,7 +6,6 @@
 ///
 /// ✅ MODERNIZED: No sleep() calls - uses proper async coordination
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::time::timeout;

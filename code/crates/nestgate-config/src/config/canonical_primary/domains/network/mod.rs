@@ -61,7 +61,7 @@ use serde::{Deserialize, Serialize};
 // **THE** canonical network configuration for the entire NestGate ecosystem
 // This replaces ALL other NetworkConfig variants
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CanonicalNetwork
+/// Configuration for `CanonicalNetwork`
 pub struct CanonicalNetworkConfig {
     /// Core API server configuration
     pub api: ApiConfig,

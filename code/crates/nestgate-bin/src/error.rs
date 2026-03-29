@@ -159,10 +159,10 @@ impl BinErrorHelper {
 /// Implements the canonical `IntoNestGateError` trait for seamless integration
 impl From<NestGateBinError> for NestGateError {
     /// From
-    fn from(err: NestGateBinError) -> NestGateError {
+    fn from(err: NestGateBinError) -> Self {
         match err {
             NestGateBinError::ArgumentParsingError { argument, message } => {
-                NestGateError::validation(format!(
+                Self::validation(format!(
                     "Argument parsing: {} - {}",
                     argument.unwrap_or_else(|| "unknown".to_string()),
                     message
@@ -171,7 +171,7 @@ impl From<NestGateBinError> for NestGateError {
             NestGateBinError::ConfigurationError {
                 config_path,
                 message,
-            } => NestGateError::configuration_error(
+            } => Self::configuration_error(
                 "config",
                 &format!(
                     "{} - {}",
@@ -179,7 +179,7 @@ impl From<NestGateBinError> for NestGateError {
                     message
                 ),
             ),
-            NestGateBinError::RuntimeError { operation, message } => NestGateError::internal_error(
+            NestGateBinError::RuntimeError { operation, message } => Self::internal_error(
                 format!(
                     "Runtime: {} - {}",
                     operation.unwrap_or_else(|| "runtime".to_string()),
@@ -190,7 +190,7 @@ impl From<NestGateBinError> for NestGateError {
             NestGateBinError::ServiceInitializationError {
                 service_name,
                 message,
-            } => NestGateError::internal_error(
+            } => Self::internal_error(
                 format!(
                     "Service: {} - {}",
                     service_name.unwrap_or_else(|| "service".to_string()),
@@ -202,7 +202,7 @@ impl From<NestGateBinError> for NestGateError {
                 command,
                 exit_code,
                 message,
-            } => NestGateError::internal_error(
+            } => Self::internal_error(
                 format!("Command: {command:?}, exit: {exit_code:?} - {message}"),
                 "nestgate-bin",
             ),
@@ -277,14 +277,14 @@ pub trait BinResultExt<T> {
 
 impl<T> BinResultExt<T> for BinResult<T> {
     /// Builder method to set Context
-    fn with_context(self, context: &str) -> CanonicalResult<T> {
+    fn with_context(self, context: &str) -> Self {
         self.map_err(|_e| {
             NestGateError::internal_error(format!("Context: {context}"), "nestgate-bin")
         })
     }
 
     /// Into Canonical
-    fn into_canonical(self) -> CanonicalResult<T> {
+    fn into_canonical(self) -> Self {
         self.map_err(|_e| NestGateError::internal_error("Conversion error", "nestgate-bin"))
     }
 }

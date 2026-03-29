@@ -49,20 +49,24 @@ pub struct SelfKnowledgeBuilder {
 }
 
 impl SelfKnowledge {
+    #[must_use]
     pub fn builder() -> SelfKnowledgeBuilder {
         SelfKnowledgeBuilder::default()
     }
 }
 
 impl SelfKnowledgeBuilder {
+    #[must_use]
     pub fn with_id(mut self, id: &str) -> Self {
         self.id = Some(id.to_string());
         self
     }
+    #[must_use]
     pub fn with_name(mut self, name: &str) -> Self {
         self.name = Some(name.to_string());
         self
     }
+    #[must_use]
     pub fn with_capability(mut self, c: &str) -> Self {
         self.capabilities.push(c.to_string());
         self
@@ -152,11 +156,13 @@ impl OrchestratorRegistration {
         warn!("start_health_reporting: stub until orchestrator wiring");
     }
 
+    #[must_use]
     pub fn discovery(&self) -> &Arc<dyn DiscoveryMechanism> {
         &self.discovery
     }
 
-    pub fn orchestrator(&self) -> Option<&ServiceInfo> {
+    #[must_use]
+    pub const fn orchestrator(&self) -> Option<&ServiceInfo> {
         self.orchestrator.as_ref()
     }
 }
@@ -167,7 +173,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_registration_disabled() {
-        std::env::set_var("NESTGATE_DISABLE_ORCHESTRATOR", "true");
+        // SAFETY: single-threaded test — no concurrent env readers.
+        nestgate_platform::env_process::set_var("NESTGATE_DISABLE_ORCHESTRATOR", "true");
 
         let self_knowledge = SelfKnowledge::builder()
             .with_id("test")
@@ -179,7 +186,8 @@ mod tests {
         let registration = OrchestratorRegistration::new(self_knowledge).await.unwrap();
         assert!(!registration.enabled);
 
-        std::env::remove_var("NESTGATE_DISABLE_ORCHESTRATOR");
+        // SAFETY: single-threaded test — no concurrent env readers.
+        nestgate_platform::env_process::remove_var("NESTGATE_DISABLE_ORCHESTRATOR");
     }
 
     #[tokio::test]

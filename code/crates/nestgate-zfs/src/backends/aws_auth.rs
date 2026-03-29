@@ -52,7 +52,8 @@ impl AwsSigV4 {
     /// * `credentials` - AWS credentials
     /// * `region` - AWS region (e.g., "us-east-1")
     /// * `service` - AWS service name (e.g., "s3")
-    pub fn new(credentials: AwsCredentials, region: String, service: String) -> Self {
+    #[must_use]
+    pub const fn new(credentials: AwsCredentials, region: String, service: String) -> Self {
         Self {
             credentials,
             region,
@@ -71,7 +72,7 @@ impl AwsSigV4 {
     ///
     /// # Returns
     ///
-    /// Returns a tuple of (authorization_header, x_amz_date)
+    /// Returns a tuple of (`authorization_header`, `x_amz_date`)
     pub fn sign(
         &self,
         method: &str,
@@ -156,13 +157,7 @@ impl AwsSigV4 {
 
         // Combine into canonical request
         let canonical_request = format!(
-            "{}\n{}\n{}\n{}\n\n{}\n{}",
-            method,
-            canonical_uri,
-            canonical_query,
-            canonical_headers_str,
-            signed_headers,
-            payload_hash
+            "{method}\n{canonical_uri}\n{canonical_query}\n{canonical_headers_str}\n\n{signed_headers}\n{payload_hash}"
         );
 
         Ok(canonical_request)
@@ -205,8 +200,7 @@ impl AwsSigV4 {
         let canonical_request_hash = hex_encode(&sha256_hash(canonical_request.as_bytes()));
 
         Ok(format!(
-            "AWS4-HMAC-SHA256\n{}\n{}\n{}",
-            amz_date, credential_scope, canonical_request_hash
+            "AWS4-HMAC-SHA256\n{amz_date}\n{credential_scope}\n{canonical_request_hash}"
         ))
     }
 
@@ -264,7 +258,7 @@ fn sha256_hash(data: &[u8]) -> Vec<u8> {
 /// Hex encode bytes
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().fold(String::new(), |mut output, b| {
-        let _ = write!(output, "{:02x}", b);
+        let _ = write!(output, "{b:02x}");
         output
     })
 }
@@ -277,7 +271,7 @@ fn uri_encode(s: &str, encode_slash: bool) -> String {
                 (b as char).to_string()
             }
             b'/' if !encode_slash => "/".to_string(),
-            _ => format!("%{:02X}", b),
+            _ => format!("%{b:02X}"),
         })
         .collect()
 }

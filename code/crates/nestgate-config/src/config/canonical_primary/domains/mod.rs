@@ -4,6 +4,8 @@
 // **CANONICAL DOMAIN CONFIGURATIONS MODULE**
 //! Module definitions and exports.
 // This module provides access to all domain-specific canonical configurations
+//!
+// This module provides access to all domain-specific canonical configurations
 //! that consolidate scattered config structures across the `NestGate` ecosystem.
 //! Module definitions and exports.
 // **PHASE 2C ENHANCEMENT**: Added consolidated domain configurations that unify

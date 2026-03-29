@@ -3,16 +3,16 @@
 
 //! Audit JSON-RPC Handlers
 //!
-//! Extracted from unix_socket_server for domain-based refactoring.
-//! Handles: audit.store_execution
+//! Extracted from `unix_socket_server` for domain-based refactoring.
+//! Handles: `audit.store_execution`
 
 use nestgate_types::error::{NestGateError, Result};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::debug;
 
 use super::StorageState;
 
-/// audit.store_execution - Store execution audit trail
+/// `audit.store_execution` - Store execution audit trail
 pub(super) async fn audit_store_execution(
     params: &Option<Value>,
     state: &StorageState,
@@ -26,7 +26,7 @@ pub(super) async fn audit_store_execution(
         .map_err(|e| {
         NestGateError::invalid_input_with_field(
             "audit_data",
-            format!("Invalid audit data format: {}", e),
+            format!("Invalid audit data format: {e}"),
         )
     })?;
 

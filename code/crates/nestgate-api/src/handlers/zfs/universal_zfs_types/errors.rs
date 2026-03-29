@@ -53,7 +53,7 @@ pub struct RateLimitInfo {
 
 /// Comprehensive error types for universal ZFS operations
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
-/// Errors that can occur during UniversalZfs operations
+/// Errors that can occur during `UniversalZfs` operations
 pub enum UniversalZfsError {
     #[error("Service unavailable: {message}")]
     /// Service is temporarily unavailable

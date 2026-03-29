@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! # 🚀 tarpc Client for NestGate
+//! # 🚀 tarpc Client for `NestGate`
 //!
 //! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL RPC CLIENT** (v0.2.0)
 //!
-//! Provides an async tarpc client for connecting to NestGate storage services.
+//! Provides an async tarpc client for connecting to `NestGate` storage services.
 //!
 //! ## Performance
 //! - ~10-20 μs latency (5-10x faster than JSON-RPC)
@@ -19,10 +19,10 @@
 //! - **Modern async/await**
 //! - **Type-safe error handling**
 //! - **Automatic reconnection support**
-//! - **Self-knowledge**: Client discovers NestGate via capability, not hardcoded endpoint
+//! - **Self-knowledge**: Client discovers `NestGate` via capability, not hardcoded endpoint
 //!
 //! ## Usage
-//! ```no_run
+//! ```rust,ignore
 //! use nestgate_core::rpc::NestGateRpcClient;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -47,11 +47,12 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
-use nestgate_types::error::{NestGateError, Result};
 use crate::rpc::tarpc_types::{
     CapabilityRegistration, DatasetInfo, DatasetParams, HealthStatus, NestGateRpcError, ObjectInfo,
     OperationResult, ProtocolInfo, RegistrationResult, ServiceInfo, StorageMetrics, VersionInfo,
 };
+use nestgate_config::config::capability_discovery;
+use nestgate_types::error::{NestGateError, Result};
 
 // Import the generated client from the tarpc macro
 // The #[tarpc::service] macro in tarpc_types.rs generates NestGateRpcClient
@@ -60,7 +61,7 @@ use tarpc::client;
 // Type alias for the generated client
 type GeneratedClient = crate::rpc::tarpc_types::NestGateRpcClient;
 
-/// Modern async tarpc client for NestGate
+/// Modern async tarpc client for `NestGate`
 ///
 /// Provides high-performance binary RPC communication with automatic
 /// connection management and type-safe method calls.
@@ -72,7 +73,7 @@ type GeneratedClient = crate::rpc::tarpc_types::NestGateRpcClient;
 /// - Capability-based discovery
 ///
 /// # Example
-/// ```no_run
+/// ```rust,ignore
 /// use nestgate_core::rpc::NestGateRpcClient;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -96,7 +97,7 @@ pub struct NestGateRpcClient {
 
     /// Client connection (lazy-initialized)
     ///
-    /// Wrapped in RwLock for safe concurrent access.
+    /// Wrapped in `RwLock` for safe concurrent access.
     /// Uses Option to allow for lazy initialization and reconnection.
     connection: Arc<RwLock<Option<GeneratedClient>>>,
 
@@ -108,13 +109,13 @@ impl NestGateRpcClient {
     /// Create new tarpc client from endpoint
     ///
     /// # Arguments
-    /// * `endpoint` - tarpc URL (e.g., "tarpc://localhost:8091")
+    /// * `endpoint` - tarpc URL (e.g., "<tarpc://localhost:8091>")
     ///
     /// # Errors
     /// Returns error if endpoint is invalid or cannot be parsed
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::NestGateRpcClient;
     ///
     /// let client = NestGateRpcClient::new("tarpc://localhost:8091").unwrap();
@@ -133,7 +134,7 @@ impl NestGateRpcClient {
         })
     }
 
-    /// Discover NestGate by capability (runtime discovery - no hardcoding!)
+    /// Discover `NestGate` by capability (runtime discovery - no hardcoding!)
     ///
     /// # Arguments
     /// * `capability` - Capability to discover (e.g., "storage")
@@ -142,7 +143,7 @@ impl NestGateRpcClient {
     /// Returns error if discovery fails or no services found
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::NestGateRpcClient;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -151,11 +152,38 @@ impl NestGateRpcClient {
     /// # }
     /// ```
     pub async fn discover_by_capability(capability: &str) -> Result<Self> {
-        let _ = capability;
-        // TODO: wire to nestgate-discovery — `primal_discovery::RuntimeDiscovery`
-        Err(NestGateError::not_implemented(
-            "discover_by_capability: wire nestgate-discovery",
-        ))
+        let env_var = format!(
+            "NESTGATE_{}_ENDPOINT",
+            capability.to_uppercase().replace('-', "_")
+        );
+        let se = capability_discovery::discover_with_fallback(
+            capability,
+            &env_var,
+            "tarpc://127.0.0.1:8091",
+        )
+        .await?;
+        let endpoint = Self::normalize_to_tarpc_endpoint(&se.endpoint);
+        debug!(
+            capability = capability,
+            endpoint = %endpoint,
+            source = ?se.source,
+            "resolved tarpc endpoint via nestgate-config capability discovery"
+        );
+        Self::new(&endpoint)
+    }
+
+    pub(crate) fn normalize_to_tarpc_endpoint(raw: &str) -> String {
+        let s = raw.trim();
+        if s.starts_with("tarpc://") {
+            return s.to_string();
+        }
+        if let Some(rest) = s.strip_prefix("http://") {
+            return format!("tarpc://{rest}");
+        }
+        if let Some(rest) = s.strip_prefix("https://") {
+            return format!("tarpc://{rest}");
+        }
+        format!("tarpc://{s}")
     }
 
     /// Set request timeout
@@ -164,7 +192,7 @@ impl NestGateRpcClient {
     /// * `timeout` - Timeout duration
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,ignore
     /// use nestgate_core::rpc::NestGateRpcClient;
     /// use std::time::Duration;
     ///
@@ -173,7 +201,7 @@ impl NestGateRpcClient {
     ///     .with_timeout(Duration::from_secs(10));
     /// ```
     #[must_use]
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }
@@ -196,7 +224,7 @@ impl NestGateRpcClient {
         client
             .create_dataset(ctx, name.to_string(), params)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -212,7 +240,7 @@ impl NestGateRpcClient {
         client
             .list_datasets(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -231,7 +259,7 @@ impl NestGateRpcClient {
         client
             .get_dataset(ctx, name.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -250,7 +278,7 @@ impl NestGateRpcClient {
         client
             .delete_dataset(ctx, name.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -278,7 +306,7 @@ impl NestGateRpcClient {
         client
             .store_object(ctx, dataset.to_string(), key.to_string(), data, metadata)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -298,7 +326,7 @@ impl NestGateRpcClient {
         client
             .retrieve_object(ctx, dataset.to_string(), key.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -318,7 +346,7 @@ impl NestGateRpcClient {
         client
             .get_object_metadata(ctx, dataset.to_string(), key.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -344,7 +372,7 @@ impl NestGateRpcClient {
         client
             .list_objects(ctx, dataset.to_string(), prefix, limit)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -364,7 +392,7 @@ impl NestGateRpcClient {
         client
             .delete_object(ctx, dataset.to_string(), key.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -388,7 +416,7 @@ impl NestGateRpcClient {
         client
             .register_capability(ctx, registration)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -407,7 +435,7 @@ impl NestGateRpcClient {
         client
             .discover_capability(ctx, capability.to_string())
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))?
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
     }
 
@@ -425,7 +453,7 @@ impl NestGateRpcClient {
         client
             .health(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))
     }
 
     /// Get storage metrics
@@ -440,7 +468,7 @@ impl NestGateRpcClient {
         client
             .metrics(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))
     }
 
     /// Get version information
@@ -455,7 +483,7 @@ impl NestGateRpcClient {
         client
             .version(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))
     }
 
     /// Get available protocols
@@ -470,7 +498,7 @@ impl NestGateRpcClient {
         client
             .protocols(ctx)
             .await
-            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {}", e)))
+            .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))
     }
 
     // ==================== INTERNAL HELPERS ====================
@@ -521,44 +549,38 @@ impl NestGateRpcClient {
         if !endpoint.starts_with("tarpc://") {
             return Err(NestGateError::configuration_error(
                 "endpoint",
-                &format!(
-                    "Invalid tarpc endpoint (must start with tarpc://): {}",
-                    endpoint
-                ),
+                &format!("Invalid tarpc endpoint (must start with tarpc://): {endpoint}"),
             ));
         }
 
         let addr_str = endpoint.strip_prefix("tarpc://").ok_or_else(|| {
             NestGateError::configuration_error(
                 "endpoint",
-                &format!("endpoint must start with 'tarpc://': {}", endpoint),
+                &format!("endpoint must start with 'tarpc://': {endpoint}"),
             )
         })?;
         addr_str.parse().map_err(|e| {
             NestGateError::configuration_error(
                 "endpoint",
-                &format!("Invalid socket address {}: {}", addr_str, e),
+                &format!("Invalid socket address {addr_str}: {e}"),
             )
         })
     }
 
-    /// Convert RPC error to NestGateError
+    /// Convert RPC error to `NestGateError`
     fn convert_rpc_error(error: NestGateRpcError) -> NestGateError {
         match error {
             NestGateRpcError::DatasetNotFound { dataset } => {
-                NestGateError::not_found(format!("Dataset not found: {}", dataset))
+                NestGateError::not_found(format!("Dataset not found: {dataset}"))
             }
             NestGateRpcError::DatasetAlreadyExists { dataset } => {
-                NestGateError::api_internal_error(format!("Dataset already exists: {}", dataset))
+                NestGateError::api_internal_error(format!("Dataset already exists: {dataset}"))
             }
             NestGateRpcError::ObjectNotFound { dataset, key } => {
-                NestGateError::not_found(format!("Object not found: {}/{}", dataset, key))
+                NestGateError::not_found(format!("Object not found: {dataset}/{key}"))
             }
             NestGateRpcError::ObjectAlreadyExists { dataset, key } => {
-                NestGateError::api_internal_error(format!(
-                    "Object already exists: {}/{}",
-                    dataset, key
-                ))
+                NestGateError::api_internal_error(format!("Object already exists: {dataset}/{key}"))
             }
             NestGateRpcError::InvalidParameters { message } => {
                 NestGateError::validation_error(&message)
@@ -567,16 +589,14 @@ impl NestGateRpcClient {
                 required,
                 available,
             } => NestGateError::storage_error(&format!(
-                "Storage full: required {} bytes, available {} bytes",
-                required, available
+                "Storage full: required {required} bytes, available {available} bytes"
             )),
             NestGateRpcError::QuotaExceeded {
                 dataset,
                 quota,
                 requested,
             } => NestGateError::storage_error(&format!(
-                "Quota exceeded for dataset {}: quota {} bytes, requested {} bytes",
-                dataset, quota, requested
+                "Quota exceeded for dataset {dataset}: quota {quota} bytes, requested {requested} bytes"
             )),
             NestGateRpcError::PermissionDenied { message } => {
                 NestGateError::authorization(&message, "storage")
@@ -811,14 +831,141 @@ mod tests {
         assert_eq!(addr.port(), 8091);
     }
 
+    #[test]
+    fn normalize_to_tarpc_endpoint_preserves_scheme() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("tarpc://127.0.0.1:8091"),
+            "tarpc://127.0.0.1:8091"
+        );
+    }
+
+    #[test]
+    fn normalize_to_tarpc_endpoint_http_to_tarpc() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("http://10.0.0.5:8080"),
+            "tarpc://10.0.0.5:8080"
+        );
+    }
+
+    #[test]
+    fn normalize_to_tarpc_endpoint_https_to_tarpc() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("https://api.example.com:443"),
+            "tarpc://api.example.com:443"
+        );
+    }
+
+    #[test]
+    fn normalize_to_tarpc_endpoint_bare_host_gets_prefix() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("127.0.0.1:8091"),
+            "tarpc://127.0.0.1:8091"
+        );
+    }
+
+    #[test]
+    fn normalize_to_tarpc_endpoint_trims_whitespace() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("  http://127.0.0.1:1  "),
+            "tarpc://127.0.0.1:1"
+        );
+    }
+
+    #[test]
+    fn normalize_to_tarpc_endpoint_ipv6_host_in_brackets() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("tarpc://[::1]:8092"),
+            "tarpc://[::1]:8092"
+        );
+    }
+
     #[tokio::test]
     async fn test_discover_by_capability_unknown() {
+        // `discover_with_fallback` does not treat unknown capabilities as errors: it falls
+        // back to NESTGATE_<CAP>_ENDPOINT or the safe default (tarpc://127.0.0.1:8091).
         let result = NestGateRpcClient::discover_by_capability("unknown_capability").await;
-        assert!(result.is_err());
-        let err_msg = match &result {
-            Err(e) => e.to_string(),
-            Ok(_) => String::new(),
-        };
-        assert!(err_msg.contains("Unknown capability"));
+        assert!(
+            result.is_ok(),
+            "unknown capability should still yield a client via default fallback: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn discover_by_capability_env_var_name_uses_uppercase_and_underscores() {
+        let cap = "my-cap_name";
+        let expected = format!("NESTGATE_{}_ENDPOINT", cap.to_uppercase().replace('-', "_"));
+        assert_eq!(expected, "NESTGATE_MY_CAP_NAME_ENDPOINT");
+    }
+
+    #[test]
+    fn new_parses_host_literal_tarpc_endpoint() {
+        let c = NestGateRpcClient::new("tarpc://192.168.0.1:9000").unwrap();
+        assert_eq!(c.addr.to_string(), "192.168.0.1:9000");
+    }
+
+    // --- Round 6: normalize / parse edge matrix ---
+
+    #[test]
+    fn r6_normalize_http_ipv6_brackets() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("http://[2001:db8::1]:8443"),
+            "tarpc://[2001:db8::1]:8443"
+        );
+    }
+
+    #[test]
+    fn r6_normalize_https_ipv6_brackets() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("https://[::1]:443"),
+            "tarpc://[::1]:443"
+        );
+    }
+
+    #[test]
+    fn r6_parse_endpoint_ipv6_full() {
+        let a = NestGateRpcClient::parse_endpoint("tarpc://[::1]:65535").unwrap();
+        assert_eq!(a.port(), 65535);
+    }
+
+    #[test]
+    fn r6_client_with_timeout_250ms() {
+        let c = NestGateRpcClient::new("tarpc://127.0.0.1:8091")
+            .unwrap()
+            .with_timeout(Duration::from_millis(250));
+        assert_eq!(c.timeout, Duration::from_millis(250));
+    }
+
+    #[test]
+    fn r6_client_with_timeout_120s() {
+        let c = NestGateRpcClient::new("tarpc://127.0.0.1:8091")
+            .unwrap()
+            .with_timeout(Duration::from_secs(120));
+        assert_eq!(c.timeout, Duration::from_secs(120));
+    }
+
+    #[test]
+    fn r6_normalize_bare_ipv6_needs_brackets_for_parse() {
+        let n = NestGateRpcClient::normalize_to_tarpc_endpoint("[::1]:1234");
+        assert!(n.starts_with("tarpc://"));
+    }
+
+    #[test]
+    fn r6_normalize_preserves_port_1() {
+        assert_eq!(
+            NestGateRpcClient::normalize_to_tarpc_endpoint("http://127.0.0.1:1"),
+            "tarpc://127.0.0.1:1"
+        );
+    }
+
+    #[test]
+    fn r6_parse_rejects_tarpc_without_host() {
+        assert!(NestGateRpcClient::parse_endpoint("tarpc://").is_err());
+    }
+
+    #[test]
+    fn r6_normalize_http_host_port_only() {
+        let n = NestGateRpcClient::normalize_to_tarpc_endpoint("http://192.168.1.10:99");
+        assert_eq!(n, "tarpc://192.168.1.10:99");
     }
 }

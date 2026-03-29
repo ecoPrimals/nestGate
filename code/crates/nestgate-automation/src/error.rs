@@ -24,11 +24,11 @@ impl fmt::Display for AutomationError {
     /// Fmt
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AutomationError::AnalysisError(msg) => write!(f, "Analysis error: {msg}"),
-            AutomationError::PredictionError(msg) => write!(f, "Prediction error: {msg}"),
-            AutomationError::ConfigError(msg) => write!(f, "Configuration error: {msg}"),
-            AutomationError::IoError(msg) => write!(f, "I/O error: {msg}"),
-            AutomationError::CoreError(err) => write!(f, "Core system error: {err}"),
+            Self::AnalysisError(msg) => write!(f, "Analysis error: {msg}"),
+            Self::PredictionError(msg) => write!(f, "Prediction error: {msg}"),
+            Self::ConfigError(msg) => write!(f, "Configuration error: {msg}"),
+            Self::IoError(msg) => write!(f, "I/O error: {msg}"),
+            Self::CoreError(err) => write!(f, "Core system error: {err}"),
         }
     }
 }
@@ -38,14 +38,14 @@ impl std::error::Error for AutomationError {}
 impl From<NestGateError> for AutomationError {
     /// From
     fn from(err: NestGateError) -> Self {
-        AutomationError::CoreError(err)
+        Self::CoreError(err)
     }
 }
 
 impl From<std::io::Error> for AutomationError {
     /// From
     fn from(err: std::io::Error) -> Self {
-        AutomationError::IoError(err.to_string())
+        Self::IoError(err.to_string())
     }
 }
 
@@ -324,5 +324,52 @@ mod tests {
             let debug = format!("{:?}", variant);
             assert!(!debug.is_empty());
         }
+    }
+
+    #[test]
+    fn round5_automation_error_from_nestgate_core_impl() {
+        let core = NestGateError::internal_error("inner", "automation");
+        let e: AutomationError = core.into();
+        assert!(matches!(e, AutomationError::CoreError(_)));
+        assert!(e.to_string().contains("Core system error"));
+    }
+
+    #[test]
+    fn round5_automation_error_core_display_contains_nested() {
+        let core = NestGateError::internal_error("nested", "mod");
+        let e = AutomationError::CoreError(core);
+        assert!(e.to_string().contains("nested"));
+    }
+
+    #[test]
+    fn round5_automation_error_serde_roundtrip_prediction() {
+        let e = AutomationError::PredictionError("p".to_string());
+        let json = serde_json::to_string(&e).unwrap();
+        let back: AutomationError = serde_json::from_str(&json).unwrap();
+        assert_eq!(format!("{e:?}"), format!("{back:?}"));
+    }
+
+    #[test]
+    fn round5_automation_error_serde_roundtrip_config() {
+        let e = AutomationError::ConfigError("cfg".to_string());
+        let json = serde_json::to_string(&e).unwrap();
+        let back: AutomationError = serde_json::from_str(&json).unwrap();
+        assert_eq!(format!("{e:?}"), format!("{back:?}"));
+    }
+
+    #[test]
+    fn round5_automation_error_serde_roundtrip_io() {
+        let e = AutomationError::IoError("io".to_string());
+        let json = serde_json::to_string(&e).unwrap();
+        let back: AutomationError = serde_json::from_str(&json).unwrap();
+        assert_eq!(format!("{e:?}"), format!("{back:?}"));
+    }
+
+    #[test]
+    fn round5_automation_error_serde_roundtrip_analysis() {
+        let e = AutomationError::AnalysisError("a".to_string());
+        let json = serde_json::to_string(&e).unwrap();
+        let back: AutomationError = serde_json::from_str(&json).unwrap();
+        assert_eq!(format!("{e:?}"), format!("{back:?}"));
     }
 }

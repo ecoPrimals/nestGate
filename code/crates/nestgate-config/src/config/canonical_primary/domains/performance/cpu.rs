@@ -16,7 +16,7 @@ use nestgate_types::error::{NestGateError, Result};
 /// Controls CPU affinity, thread pooling, scheduling, SIMD optimizations,
 /// and CPU monitoring for maximum performance.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Configuration for CpuPerformance
+/// Configuration for `CpuPerformance`
 pub struct CpuPerformanceConfig {
     /// CPU affinity settings for core pinning.
     pub affinity: CpuAffinityConfig,
@@ -38,7 +38,7 @@ pub struct CpuPerformanceConfig {
 ///
 /// Enables CPU core pinning to reduce context switching and improve cache locality.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CpuAffinity
+/// Configuration for `CpuAffinity`
 pub struct CpuAffinityConfig {
     /// Whether CPU affinity is enabled.
     pub enabled: bool,
@@ -70,7 +70,7 @@ pub enum IsolationStrategy {
 ///
 /// Controls thread pool sizing, keep-alive time, queue size, and thread naming.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for ThreadPool
+/// Configuration for `ThreadPool`
 pub struct ThreadPoolConfig {
     /// Core thread pool size (default: CPU count).
     pub core_size: usize,
@@ -92,7 +92,7 @@ pub struct ThreadPoolConfig {
 ///
 /// Controls how the OS schedules CPU time for the application.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CpuScheduling
+/// Configuration for `CpuScheduling`
 pub struct CpuSchedulingConfig {
     /// Scheduling policy to use.
     pub policy: SchedulingPolicy,
@@ -166,7 +166,7 @@ pub enum SimdInstructionSet {
 ///
 /// Enables alerts and metrics for CPU consumption.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for CpuMonitoring
+/// Configuration for `CpuMonitoring`
 pub struct CpuMonitoringConfig {
     /// Whether CPU monitoring is enabled.
     pub enabled: bool,
@@ -195,8 +195,8 @@ impl Default for ThreadPoolConfig {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            core_size: std::thread::available_parallelism().map_or(4, |n| n.get()),
-            max_size: std::thread::available_parallelism().map_or(4, |n| n.get()) * 2,
+            core_size: std::thread::available_parallelism().map_or(4, std::num::NonZero::get),
+            max_size: std::thread::available_parallelism().map_or(4, std::num::NonZero::get) * 2,
             keep_alive: Duration::from_secs(60),
             queue_size: 1000,
             thread_name_pattern: "nestgate-worker-{}".to_string(),

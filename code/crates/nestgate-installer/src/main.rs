@@ -41,7 +41,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Install NestGate with interactive wizard
+    /// Install `NestGate` with interactive wizard
     Install {
         /// Force reinstallation even if already installed
         #[arg(long)]
@@ -55,7 +55,7 @@ enum Commands {
         #[arg(long)]
         skip_zfs: bool,
     },
-    /// Uninstall NestGate
+    /// Uninstall `NestGate`
     Uninstall {
         /// Remove configuration files
         #[arg(long)]
@@ -223,4 +223,36 @@ async fn main() -> nestgate_core::Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod main_cli_round3_tests {
+    use super::Cli;
+    use clap::Parser;
+
+    #[test]
+    fn parses_install_doctor_update_flags() {
+        let _ = Cli::try_parse_from(["nestgate-installer", "install", "--force", "--service"])
+            .expect("install");
+        let _ = Cli::try_parse_from(["nestgate-installer", "doctor"]).expect("doctor");
+        let _ = Cli::try_parse_from(["nestgate-installer", "update", "--version", "1.2.3"])
+            .expect("update");
+        let _ = Cli::try_parse_from(["nestgate-installer", "-y", "uninstall", "--remove-config"])
+            .expect("uninstall");
+    }
+
+    #[test]
+    fn parses_global_flags() {
+        let c = Cli::try_parse_from([
+            "nestgate-installer",
+            "-v",
+            "--install-dir",
+            "/opt/ng",
+            "configure",
+            "--wizard",
+        ])
+        .expect("cfg");
+        assert!(c.verbose);
+        assert_eq!(c.install_dir, Some(std::path::PathBuf::from("/opt/ng")));
+    }
 }

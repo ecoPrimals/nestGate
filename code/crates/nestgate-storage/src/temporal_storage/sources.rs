@@ -190,7 +190,8 @@ impl DataSourceType {
     /// # Returns
     ///
     /// `true` if source is local device
-    pub fn is_local(&self) -> bool {
+    #[must_use]
+    pub const fn is_local(&self) -> bool {
         matches!(self, Self::LocalDevice {})
     }
 
@@ -199,7 +200,8 @@ impl DataSourceType {
     /// # Returns
     ///
     /// `true` if source is remote (API or cloud)
-    pub fn is_remote(&self) -> bool {
+    #[must_use]
+    pub const fn is_remote(&self) -> bool {
         matches!(self, Self::RemoteAPI { .. } | Self::CloudStorage { .. })
     }
 
@@ -208,7 +210,8 @@ impl DataSourceType {
     /// # Returns
     ///
     /// `true` if source uses capability-based discovery
-    pub fn is_capability_based(&self) -> bool {
+    #[must_use]
+    pub const fn is_capability_based(&self) -> bool {
         matches!(self, Self::DataCapability { .. })
     }
 
@@ -217,6 +220,7 @@ impl DataSourceType {
     /// # Returns
     ///
     /// Optional endpoint URL for remote APIs
+    #[must_use]
     pub fn endpoint_url(&self) -> Option<&str> {
         match self {
             Self::RemoteAPI { endpoint, .. } => Some(endpoint),
@@ -231,7 +235,8 @@ impl APIType {
     /// # Returns
     ///
     /// `true` if REST API
-    pub fn is_rest(&self) -> bool {
+    #[must_use]
+    pub const fn is_rest(&self) -> bool {
         matches!(self, Self::Rest)
     }
 
@@ -240,6 +245,7 @@ impl APIType {
     /// # Returns
     ///
     /// Protocol name as string
+    #[must_use]
     pub fn protocol_name(&self) -> &str {
         match self {
             Self::Rest => "REST",

@@ -5,14 +5,14 @@
 //!
 //! **CAPABILITY-BASED DISCOVERY**: Discovers services by WHAT THEY DO, not WHO THEY ARE.
 //!
-//! This module implements the capability-based discovery pattern, allowing NestGate
+//! This module implements the capability-based discovery pattern, allowing `NestGate`
 //! to discover and integrate with ANY primal offering required capabilities, without
 //! hardcoding specific primal names or URLs.
 //!
 //! # Philosophy
 //!
 //! - ✅ **Capability-based**: "I need security" → discovers ANY security provider
-//! - ❌ **NOT identity-based**: "I need BearDog" → vendor lock-in
+//! - ❌ **NOT identity-based**: "I need `BearDog`" → vendor lock-in
 //!
 //! # Example
 //!
@@ -60,7 +60,7 @@ use std::env;
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServicesConfig {
     /// Capability URLs indexed by capability name (e.g., "security", "ai", "compute")
-    /// This replaces individual fields like beardog_url, songbird_url, etc.
+    /// This replaces individual fields like `beardog_url`, `songbird_url`, etc.
     #[serde(default)]
     pub discovered_capabilities: HashMap<String, String>,
 
@@ -283,7 +283,7 @@ impl ServicesConfig {
             .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string());
 
         self.get_capability_url(capability)
-            .unwrap_or_else(|| format!("http://{}:{}", host, port))
+            .unwrap_or_else(|| format!("http://{host}:{port}"))
     }
 }
 

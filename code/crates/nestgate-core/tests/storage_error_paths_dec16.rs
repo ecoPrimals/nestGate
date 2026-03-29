@@ -9,8 +9,8 @@
 //! **Coverage Goal**: Expand storage coverage from 65-70% to 75%+
 //! **Test Count**: 30+ storage error scenarios
 
-use nestgate_core::error::NestGateError;
 use nestgate_core::Result;
+use nestgate_core::error::NestGateError;
 use std::path::Path;
 
 // ==================== FILE SYSTEM ERRORS ====================

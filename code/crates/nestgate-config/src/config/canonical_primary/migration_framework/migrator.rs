@@ -10,7 +10,10 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
-use super::types::*;
+use super::types::{
+    BackupMetadata, ErrorSeverity, MigrationBackup, MigrationError, MigrationOptions,
+    MigrationPhase, MigrationProgress, MigrationReport,
+};
 
 /// Primary interface for migrating from legacy configuration systems
 /// to the unified canonical configuration system.
@@ -203,7 +206,7 @@ impl ConfigMigrator {
         Ok(())
     }
 
-    fn update_phase(&mut self, phase: MigrationPhase) {
+    const fn update_phase(&mut self, phase: MigrationPhase) {
         self.progress.current_phase = phase;
         self.progress.progress_percentage = match self.progress.current_phase {
             MigrationPhase::SourceValidation => 10,
@@ -321,7 +324,7 @@ impl ConfigMigrator {
         }
     }
 
-    fn restore_from_backup(&self, _backup: &MigrationBackup) -> Result<()> {
+    const fn restore_from_backup(&self, _backup: &MigrationBackup) -> Result<()> {
         Ok(())
     }
 }

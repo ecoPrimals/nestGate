@@ -69,6 +69,7 @@ pub struct HttpResponse {
 
 impl HttpResponse {
     /// Whether the status code indicates success (2xx)
+    #[must_use]
     pub fn is_success(&self) -> bool {
         (200..300).contains(&self.status)
     }
@@ -94,6 +95,7 @@ pub struct DiscoveryHttpClient {
 
 impl DiscoveryHttpClient {
     /// Create a new discovery HTTP client with the given timeout.
+    #[must_use]
     pub fn new(timeout: Duration) -> Self {
         Self {
             timeout,
@@ -122,7 +124,11 @@ impl DiscoveryHttpClient {
     /// # Errors
     ///
     /// Returns an error if serialization, connection, or response reading fails.
-    pub async fn put_json<T: serde::Serialize>(&self, url: &str, body: &T) -> Result<HttpResponse> {
+    pub async fn put_json<T: serde::Serialize + Sync>(
+        &self,
+        url: &str,
+        body: &T,
+    ) -> Result<HttpResponse> {
         let json = serde_json::to_vec(body).map_err(|e| {
             NestGateError::api_error(&format!("Discovery HTTP: JSON serialize error: {e}"))
         })?;
@@ -134,7 +140,7 @@ impl DiscoveryHttpClient {
     /// # Errors
     ///
     /// Returns an error if serialization, connection, or response reading fails.
-    pub async fn post_json<T: serde::Serialize>(
+    pub async fn post_json<T: serde::Serialize + Sync>(
         &self,
         url: &str,
         body: &T,

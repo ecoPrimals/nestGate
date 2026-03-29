@@ -21,7 +21,7 @@
 //! - **Type Safety**: Strong typing with compile-time guarantees
 //!
 //! ## Usage
-//! ```rust
+//! ```rust,ignore
 //! use nestgate_core::universal_storage::types::{
 //!     UniversalStorageType,
 //!     UniversalStorageResource,

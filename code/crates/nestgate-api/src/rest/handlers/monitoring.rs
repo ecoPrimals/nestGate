@@ -47,14 +47,13 @@ pub async fn get_metrics(
 ) -> Result<Json<DataResponse<SystemMetrics>>, Json<DataError>> {
     debug!("Getting current system metrics");
     // Get current ZFS metrics from engines
-    let engines = state.zfs_engines.read().await;
     let mut total_datasets = 0;
     let total_snapshots = 0;
     let mut total_used_bytes = 0;
     let mut _total_available_bytes = 0;
     let mut compression_ratios = Vec::new();
 
-    for (_name, _engine) in engines.iter() {
+    for _entry in state.zfs_engines.iter() {
         total_datasets += 1;
         total_used_bytes += 1024 * 1024; // Estimated per-engine until real stats wired
         _total_available_bytes += 1024 * 1024 * 1024; // 1GB per dataset (placeholder)
@@ -108,9 +107,7 @@ pub async fn get_metrics(
         timestamp: chrono::Utc::now(),
         cpu_usage_percent: cpu_usage,
         memory_usage_percent: memory_usage,
-        load_average: nestgate_core::linux_proc::load_averages()
-            .map(|(m1, _, _)| m1)
-            .unwrap_or(0.0),
+        load_average: nestgate_core::linux_proc::load_averages().map_or(0.0, |(m1, _, _)| m1),
         uptime_seconds: nestgate_core::linux_proc::uptime_secs().unwrap_or(0),
         disk_io: DiskIoMetrics {
             read_bytes_per_sec: total_read_bytes,
@@ -190,8 +187,7 @@ pub async fn get_metrics_history(
 
     while current_time <= end_time {
         // Get current ZFS state (simplified)
-        let engines = state.zfs_engines.read().await;
-        let total_datasets = engines.len() as u32;
+        let total_datasets = state.zfs_engines.len() as u32;
 
         // ✅ NOTE: Historical data should come from time-series database
         // For now, return current real-time metrics for all historical points
@@ -412,8 +408,7 @@ pub async fn get_alerts(
     debug!("Getting active alerts");
     let mut alerts = Vec::new();
 
-    let engines = state.zfs_engines.read().await;
-    let total_datasets = engines.len();
+    let total_datasets = state.zfs_engines.len();
 
     if total_datasets > 10 {
         push_dataset_count_alert(&mut alerts, total_datasets);
@@ -518,18 +513,18 @@ async fn calculate_real_zfs_cache_hit_ratio() -> Result<f64, Box<dyn std::error:
 mod tests {
     use super::*;
     use crate::rest::ApiState;
+    use dashmap::DashMap;
     use nestgate_core::universal_storage::StorageDetector;
-    use std::collections::HashMap;
-    use std::sync::Arc;
-    use tokio::sync::{Mutex, RwLock};
+    use std::sync::{Arc, OnceLock};
+    use tokio::sync::RwLock;
 
     /// Helper to create a test API state
     fn create_test_api_state() -> ApiState {
         ApiState {
-            zfs_engines: Arc::new(RwLock::new(HashMap::new())),
-            storage_detector: Arc::new(Mutex::new(StorageDetector::default())),
-            auto_configurator: Arc::new(Mutex::new(None)),
-            rpc_manager: Arc::new(Mutex::new(None)),
+            zfs_engines: Arc::new(DashMap::new()),
+            storage_detector: Arc::new(RwLock::new(StorageDetector::default())),
+            auto_configurator: Arc::new(OnceLock::new()),
+            rpc_manager: Arc::new(OnceLock::new()),
         }
     }
 
@@ -570,10 +565,9 @@ mod tests {
         let state = create_test_api_state();
 
         // Add test datasets
-        {
-            let mut engines = state.zfs_engines.write().await;
-            engines.insert("dataset1".to_string(), "data1".to_string());
-        }
+        state
+            .zfs_engines
+            .insert("dataset1".to_string(), "data1".to_string());
 
         let result = get_metrics(State(state)).await;
         assert!(result.is_ok());
@@ -703,11 +697,10 @@ mod tests {
         let state = create_test_api_state();
 
         // Add more than 10 datasets to trigger alert
-        {
-            let mut engines = state.zfs_engines.write().await;
-            for i in 0..15 {
-                engines.insert(format!("dataset{i}"), format!("data{i}"));
-            }
+        for i in 0..15 {
+            state
+                .zfs_engines
+                .insert(format!("dataset{i}"), format!("data{i}"));
         }
 
         let result = get_alerts(State(state)).await;
@@ -731,11 +724,10 @@ mod tests {
         let state = create_test_api_state();
 
         // Add datasets to generate some alerts
-        {
-            let mut engines = state.zfs_engines.write().await;
-            for i in 0..15 {
-                engines.insert(format!("dataset{i}"), format!("data{i}"));
-            }
+        for i in 0..15 {
+            state
+                .zfs_engines
+                .insert(format!("dataset{i}"), format!("data{i}"));
         }
 
         let result = get_alerts(State(state)).await;
@@ -766,11 +758,10 @@ mod tests {
         let state = create_test_api_state();
 
         // Add datasets to generate alerts
-        {
-            let mut engines = state.zfs_engines.write().await;
-            for i in 0..15 {
-                engines.insert(format!("dataset{i}"), format!("data{i}"));
-            }
+        for i in 0..15 {
+            state
+                .zfs_engines
+                .insert(format!("dataset{i}"), format!("data{i}"));
         }
 
         let result = get_alerts(State(state)).await;

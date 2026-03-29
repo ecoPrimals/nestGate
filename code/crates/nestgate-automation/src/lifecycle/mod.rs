@@ -11,7 +11,7 @@ use nestgate_core::error::NestGateError;
 use nestgate_core::unified_enums::storage_types::StorageTier;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, info, warn};
 
 /// Dataset lifecycle manager
@@ -145,11 +145,11 @@ impl DatasetLifecycleManager {
         let (recommended_stage, recommended_actions) =
             self.evaluate_transitions(&current_state, &policies).await?;
 
-        if let Some(new_stage) = &recommended_stage {
-            if *new_stage != current_state.current_stage {
-                self.update_dataset_stage(dataset_name, new_stage.clone())
-                    .await?;
-            }
+        if let Some(new_stage) = &recommended_stage
+            && *new_stage != current_state.current_stage
+        {
+            self.update_dataset_stage(dataset_name, new_stage.clone())
+                .await?;
         }
 
         self.update_evaluation_stats(start_time).await;
@@ -498,9 +498,10 @@ impl DatasetLifecycleManager {
             .duration_since(start_time)
             .unwrap_or_default();
         stats.last_evaluation_time = Some(SystemTime::now());
-        stats.average_evaluation_duration = Duration::from_millis(
-            ((stats.average_evaluation_duration.as_millis() + duration.as_millis()) / 2) as u64,
-        );
+        stats.average_evaluation_duration = Duration::from_millis(u128::midpoint(
+            stats.average_evaluation_duration.as_millis(),
+            duration.as_millis(),
+        ) as u64);
     }
 }
 

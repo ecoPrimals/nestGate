@@ -6,17 +6,17 @@
 //! Central registry of all discovered services and their capabilities.
 //! Supports concurrent access and dynamic service registration.
 //!
-//! **MODERNIZED**: Lock-free concurrent access using DashMap
+//! **MODERNIZED**: Lock-free concurrent access using `DashMap`
 //! - Eliminates lock contention in capability lookups
 //! - 2-10x faster in concurrent scenarios
-//! - Simpler API without .read()/.write() ceremony
+//! - Simpler API without .`read()/.write()` ceremony
 
 use dashmap::DashMap;
 use std::sync::Arc;
 
+use super::CapabilityResult;
 use super::service_descriptor::ServiceDescriptor;
 use super::taxonomy::Capability;
-use super::CapabilityResult;
 
 /// Central registry of service capabilities (lock-free concurrent!)
 ///
@@ -27,12 +27,13 @@ use super::CapabilityResult;
 /// let registry = CapabilityRegistry::new();
 /// ```
 pub struct CapabilityRegistry {
-    /// Map of capabilities to service providers (lock-free with DashMap!)
+    /// Map of capabilities to service providers (lock-free with `DashMap`!)
     capabilities: Arc<DashMap<Capability, Vec<ServiceDescriptor>>>,
 }
 
 impl CapabilityRegistry {
     /// Create a new capability registry with lock-free concurrent access
+    #[must_use]
     pub fn new() -> Self {
         Self {
             capabilities: Arc::new(DashMap::new()),

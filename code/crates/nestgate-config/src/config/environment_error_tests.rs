@@ -94,7 +94,8 @@ fn test_port_from_string_with_whitespace() {
 #[ignore = "Sensitive to environment pollution from other tests; run in isolation"]
 fn test_missing_required_env_var() {
     // Ensure critical env vars don't exist
-    std::env::remove_var("NESTGATE_CRITICAL_REQUIRED_VAR");
+    // SAFETY: single-threaded test context.
+    crate::env_process::remove_var("NESTGATE_CRITICAL_REQUIRED_VAR");
 
     // If config requires it, should handle gracefully
     // (Most of our config uses sensible defaults, which is good!)
@@ -209,7 +210,8 @@ fn test_config_has_sensible_defaults() {
         .collect();
 
     for var in &vars_to_clear {
-        std::env::remove_var(var);
+        // SAFETY: single-threaded test context.
+        crate::env_process::remove_var(var);
     }
 
     // Config should work with all defaults
@@ -224,8 +226,8 @@ fn test_config_has_sensible_defaults() {
     // Restore originals
     for (var, original) in originals {
         match original {
-            Some(val) => std::env::set_var(var, val),
-            None => std::env::remove_var(var),
+            Some(val) => crate::env_process::set_var(var, val),
+            None => crate::env_process::remove_var(var),
         }
     }
 }
@@ -244,7 +246,8 @@ fn test_port_serialization_roundtrip() {
 #[test]
 fn test_config_clone_independence() {
     // Ensure NESTGATE_PORT is set for test environment
-    std::env::set_var("NESTGATE_PORT", "8080");
+    // SAFETY: single-threaded test context.
+    crate::env_process::set_var("NESTGATE_PORT", "8080");
 
     let config1 = EnvironmentConfig::from_env().expect("Config should load");
     let config2 = config1.clone();
@@ -255,7 +258,8 @@ fn test_config_clone_independence() {
     // But be independent (not sharing internal state)
     // This is validated by the fact that clone() works
 
-    std::env::remove_var("NESTGATE_PORT");
+    // SAFETY: single-threaded test context.
+    crate::env_process::remove_var("NESTGATE_PORT");
 }
 
 #[test]
@@ -296,9 +300,12 @@ fn test_config_survives_corrupted_environment() {
     .collect();
 
     // Set completely corrupted values
-    std::env::set_var("NESTGATE_PORT", "CORRUPTED#$%");
-    std::env::set_var("NESTGATE_TIMEOUT", "NOT_A_NUMBER");
-    std::env::set_var("NESTGATE_MAX_CONNECTIONS", "-999999");
+    // SAFETY: single-threaded test context.
+    crate::env_process::set_var("NESTGATE_PORT", "CORRUPTED#$%");
+    // SAFETY: single-threaded test context.
+    crate::env_process::set_var("NESTGATE_TIMEOUT", "NOT_A_NUMBER");
+    // SAFETY: single-threaded test context.
+    crate::env_process::set_var("NESTGATE_MAX_CONNECTIONS", "-999999");
 
     // Config should handle corrupted environment
     // It might error (which is fine) or use defaults
@@ -315,8 +322,8 @@ fn test_config_survives_corrupted_environment() {
     // Restore
     for (var, original) in original_vars {
         match original {
-            Some(val) => std::env::set_var(var, val),
-            None => std::env::remove_var(var),
+            Some(val) => crate::env_process::set_var(var, val),
+            None => crate::env_process::remove_var(var),
         }
     }
 }

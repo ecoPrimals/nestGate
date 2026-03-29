@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Represents different types of service capabilities in the `NestGate` ecosystem
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedCapability
+/// Types of `UnifiedCapability`
 pub enum UnifiedCapabilityType {
     /// Storage capabilities (ZFS, NAS, etc.)
     Storage,
@@ -43,7 +43,7 @@ impl Default for UnifiedCapabilityType {
 ///
 /// Represents different types of services in the `NestGate` ecosystem
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedService
+/// Types of `UnifiedService`
 pub enum UnifiedServiceType {
     /// Storage services
     Storage,
@@ -107,7 +107,7 @@ impl Default for UnifiedServiceState {
 ///
 /// Represents the health status of a service or component
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Status values for UnifiedHealth
+/// Status values for `UnifiedHealth`
 pub enum UnifiedHealthStatus {
     /// Component is healthy
     Healthy,
@@ -145,7 +145,7 @@ impl Default for UnifiedHealthStatus {
 ///
 /// Represents different storage tiers
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedTier
+/// Types of `UnifiedTier`
 pub enum UnifiedTierType {
     /// Hot tier (frequently accessed)
     Hot,
@@ -167,7 +167,7 @@ impl Default for UnifiedTierType {
 
 /// Unified file type enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-/// Types of UnifiedFile
+/// Types of `UnifiedFile`
 pub enum UnifiedFileType {
     /// Document file
     Document,
