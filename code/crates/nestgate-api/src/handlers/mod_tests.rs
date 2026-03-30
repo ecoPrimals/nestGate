@@ -208,6 +208,7 @@ mod handlers_module_tests {
 #[cfg(test)]
 mod handler_functionality_tests {
     use super::super::*;
+    use axum::Router;
 
     // ==================== HANDLER COLLECTION TESTS ====================
 

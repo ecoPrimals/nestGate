@@ -48,6 +48,7 @@
 //! - ✅ **Capability-Based**: Adapts to available platform capabilities
 
 use anyhow::{Context, Result};
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tracing::{debug, info, warn};
@@ -58,6 +59,12 @@ use super::launcher::{discover_nestgate_endpoint, is_nestgate_running};
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
+
+fn local_primal_id() -> String {
+    std::env::var("NESTGATE_SERVICE_NAME")
+        .or_else(|_| std::env::var("NESTGATE_PRIMAL_ID"))
+        .unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_string())
+}
 
 /// Check health of a primal via capability-based discovery
 ///
@@ -74,10 +81,7 @@ use super::launcher::{discover_nestgate_endpoint, is_nestgate_running};
 /// * `Ok(HealthStatus)` - Health status if primal discovered and responsive
 /// * `Err(_)` - Primal not available or health check failed
 async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
-    debug!(
-        "🔍 Attempting to discover {} health endpoint...",
-        primal_name
-    );
+    debug!("Attempting to discover {} health endpoint...", primal_name);
 
     // ✅ CAPABILITY-BASED: Discover primal socket via standard paths
     // Priority: BIOMEOS_SOCKET_DIR → XDG_RUNTIME_DIR/biomeos → /tmp
@@ -88,7 +92,7 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
     };
 
     // ✅ RUNTIME DISCOVERY: Attempt to connect to the primal's socket
-    debug!("🔌 Connecting to {} at {}", primal_name, socket.display());
+    debug!("Connecting to {} at {}", primal_name, socket.display());
 
     let stream = tokio::net::UnixStream::connect(&socket)
         .await
@@ -129,28 +133,28 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
             // Parse response to check for health
             if let Ok(resp) = serde_json::from_str::<serde_json::Value>(&response_line) {
                 if resp.get("result").is_some() {
-                    debug!("✅ {} is healthy (responded to health check)", primal_name);
+                    debug!("{} is healthy (responded to health check)", primal_name);
                     return Ok(HealthStatus::Healthy);
                 } else if resp.get("error").is_some() {
-                    debug!("⚠️  {} responded with error", primal_name);
+                    debug!("{} responded with error", primal_name);
                     return Ok(HealthStatus::Degraded);
                 }
             }
             // Got a response but couldn't parse - still alive
-            debug!("⚠️  {} responded but health format unknown", primal_name);
+            debug!("{} responded but health format unknown", primal_name);
             Ok(HealthStatus::Degraded)
         }
         Ok(Ok(_)) => {
             // Empty response
-            debug!("⚠️  {} connected but no response", primal_name);
+            debug!("{} connected but no response", primal_name);
             Ok(HealthStatus::Degraded)
         }
         Ok(Err(e)) => {
-            debug!("❌ {} read error: {}", primal_name, e);
+            debug!("{} read error: {}", primal_name, e);
             Ok(HealthStatus::Unreachable)
         }
         Err(_) => {
-            debug!("⏰ {} health check timed out (5s)", primal_name);
+            debug!("{} health check timed out (5s)", primal_name);
             Ok(HealthStatus::Degraded)
         }
     }
@@ -345,7 +349,7 @@ impl AtomicStatus {
 /// }
 /// ```
 pub async fn verify_nestgate_health() -> Result<()> {
-    info!("🔍 Verifying NestGate health...");
+    info!("Verifying NestGate health...");
 
     // Check if running
     if !is_nestgate_running().await {
@@ -361,7 +365,7 @@ pub async fn verify_nestgate_health() -> Result<()> {
         return Err(anyhow::anyhow!("NestGate is not operational: {status:?}"));
     }
 
-    info!("✅ NestGate health verified: {:?}", status);
+    info!("NestGate health verified: {:?}", status);
     Ok(())
 }
 
@@ -385,10 +389,7 @@ pub async fn verify_nestgate_health() -> Result<()> {
 /// }
 /// ```
 pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
-    info!(
-        "⏳ Waiting for NestGate to start (timeout: {:?})...",
-        timeout
-    );
+    info!("Waiting for NestGate to start (timeout: {:?})...", timeout);
     wait_for_healthy(timeout)
         .await
         .context("Timeout waiting for NestGate")
@@ -437,25 +438,25 @@ pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
 /// it discovers primals via socket scanning and checks them dynamically.
 pub async fn verify_composition_health(composition: &AtomicType) -> Result<AtomicStatus> {
     info!(
-        "🔍 Verifying {} atomic composition health...",
+        "Verifying {} atomic composition health...",
         composition.name()
     );
 
     let mut component_statuses = Vec::new();
+    let self_pkg = local_primal_id();
 
     // Self-knowledge: check our own health directly
     let nestgate_status = check_nestgate_health().await.unwrap_or_else(|e| {
-        warn!("⚠️  Failed to check NestGate health: {}", e);
+        warn!("Failed to check NestGate health: {}", e);
         HealthStatus::Unreachable
     });
-    component_statuses.push(("nestgate (self)".to_string(), nestgate_status));
+    component_statuses.push((format!("{self_pkg} (self)"), nestgate_status));
 
     // Discover and check all other primals via socket scanning
     let discovered_primals = discover_available_primals();
-    let self_pkg = "nestgate";
 
     for primal_name in &discovered_primals {
-        if primal_name == self_pkg {
+        if primal_name == &self_pkg {
             continue; // Already checked via self-knowledge
         }
 
@@ -490,11 +491,7 @@ pub async fn verify_composition_health(composition: &AtomicType) -> Result<Atomi
         component_statuses,
     };
 
-    info!(
-        "📊 {} health: {:?}",
-        composition.name(),
-        status.overall_health
-    );
+    info!("{} health: {:?}", composition.name(), status.overall_health);
     for (component, component_status) in &status.component_statuses {
         info!("  - {}: {:?}", component, component_status);
     }
@@ -545,7 +542,7 @@ fn discover_available_primals() -> Vec<String> {
         }
     }
 
-    debug!("🔍 Discovered primals via socket scan: {:?}", primals);
+    debug!("Discovered primals via socket scan: {:?}", primals);
     primals
 }
 

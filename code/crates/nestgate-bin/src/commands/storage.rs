@@ -29,67 +29,67 @@ pub async fn execute(action: StorageAction) -> Result<()> {
 
 /// List all available and detected storage backends
 async fn list_backends() -> Result<()> {
-    println!("💾 NestGate Storage Backends");
+    println!("NestGate Storage Backends");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     // ✅ REAL: Detect backend capabilities
     let caps = nestgate_core::services::storage::capabilities::detect_backend();
-    println!("\n📊 Active Backend:");
+    println!("\nActive Backend:");
     println!("  Type:       {:?}", caps.backend_type);
     println!("  Features:");
     if caps.native_snapshots {
-        println!("    ✅ snapshots");
+        println!("    snapshots");
     }
     if caps.native_deduplication {
-        println!("    ✅ deduplication");
+        println!("    deduplication");
     }
     if caps.native_compression {
-        println!("    ✅ compression");
+        println!("    compression");
     }
     if caps.native_checksums {
-        println!("    ✅ checksums");
+        println!("    checksums");
     }
     if caps.native_replication {
-        println!("    ✅ replication");
+        println!("    replication");
     }
     if caps.basic_operations {
-        println!("    ✅ basic_operations");
+        println!("    basic_operations");
     }
 
     // Storage path
     let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
         .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
-    println!("\n📁 Storage Path: {storage_path}");
+    println!("\nStorage Path: {storage_path}");
 
     if std::path::Path::new(&storage_path).exists() {
         // Check available space
-        println!("  Status: ✅ Exists");
+        println!("  Status: Exists");
         if let Ok(metadata) = tokio::fs::metadata(&storage_path).await
             && metadata.is_dir()
         {
             println!("  Type:   Directory");
         }
     } else {
-        println!("  Status: ⚠️  Not found (will be created on first use)");
+        println!("  Status: Not found (will be created on first use)");
     }
 
     // List supported backends
-    println!("\n📋 Supported Backends:");
-    println!("  ✅ filesystem  - Local filesystem (ext4, xfs, btrfs, etc.)");
-    println!("  ✅ zfs         - ZFS with snapshots, dedup, compression");
-    println!("  ✅ tmpfs       - In-memory temporary storage");
-    println!("  ⏳ s3          - AWS S3 compatible (future)");
-    println!("  ⏳ nfs         - Network File System (future)");
+    println!("\nSupported Backends:");
+    println!("  filesystem  - Local filesystem (ext4, xfs, btrfs, etc.)");
+    println!("  zfs         - ZFS with snapshots, dedup, compression");
+    println!("  tmpfs       - In-memory temporary storage");
+    println!("  s3          - AWS S3 compatible (future)");
+    println!("  nfs         - Network File System (future)");
 
     Ok(())
 }
 
 /// Scan for available storage at a path
 async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> Result<()> {
-    println!("🔍 Scanning for storage at: {}", path.display());
+    println!("Scanning for storage at: {}", path.display());
 
     if !path.exists() {
-        println!("  ❌ Path does not exist");
+        println!("  Path does not exist");
         return Ok(());
     }
 
@@ -102,16 +102,16 @@ async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> R
             "File"
         }
     );
-    println!("  Readable: ✅");
+    println!("  Readable: yes");
 
     // Check write permission by attempting to create a temp file
     let test_path = path.join(".nestgate_scan_test");
     let writable = tokio::fs::write(&test_path, b"test").await.is_ok();
     if writable {
         let _ = tokio::fs::remove_file(&test_path).await;
-        println!("  Writable: ✅");
+        println!("  Writable: yes");
     } else {
-        println!("  Writable: ❌");
+        println!("  Writable: no");
     }
 
     // Detect filesystem type
@@ -121,31 +121,31 @@ async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> R
     // Scan for existing NestGate data
     let nestgate_data = path.join("nestgate");
     if nestgate_data.exists() {
-        println!("\n  📦 Found existing NestGate data directory");
+        println!("\n  Found existing NestGate data directory");
         if let Ok(mut entries) = tokio::fs::read_dir(&nestgate_data).await {
             let mut count = 0;
             while let Ok(Some(_)) = entries.next_entry().await {
                 count += 1;
             }
-            println!("  📊 Objects: {count}");
+            println!("  Objects: {count}");
         }
     }
 
     if cloud {
-        println!("\n  ☁️  Cloud scanning: Environment-based detection");
+        println!("\n  Cloud scanning: Environment-based detection");
         if std::env::var("AWS_ACCESS_KEY_ID").is_ok() {
-            println!("    ✅ AWS credentials detected");
+            println!("    AWS credentials detected");
         }
         if std::env::var("AZURE_STORAGE_ACCOUNT").is_ok() {
-            println!("    ✅ Azure credentials detected");
+            println!("    Azure credentials detected");
         }
         if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok() {
-            println!("    ✅ GCP credentials detected");
+            println!("    GCP credentials detected");
         }
     }
 
     if network {
-        println!("\n  🌐 Network scanning: checking for NFS/SMB mounts");
+        println!("\n  Network scanning: checking for NFS/SMB mounts");
         #[cfg(unix)]
         {
             // Check /proc/mounts for network filesystems
@@ -163,7 +163,7 @@ async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> R
 
 /// Run storage performance benchmark
 async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result<()> {
-    println!("⚡ NestGate Storage Benchmark");
+    println!("NestGate Storage Benchmark");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("  Backend:    {backend}");
     println!("  Duration:   {duration}s");
@@ -179,7 +179,7 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
     let data = vec![0xABu8; size_bytes as usize];
 
     // Write benchmark
-    println!("📝 Write benchmark...");
+    println!("Write benchmark...");
     let write_start = std::time::Instant::now();
     let write_path = bench_dir.join("bench_data");
     tokio::fs::write(&write_path, &data).await?;
@@ -193,7 +193,7 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
     );
 
     // Read benchmark
-    println!("📖 Read benchmark...");
+    println!("Read benchmark...");
     let read_start = std::time::Instant::now();
     let _read_data = tokio::fs::read(&write_path).await?;
     let read_elapsed = read_start.elapsed();
@@ -208,7 +208,7 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
     // Cleanup
     let _ = tokio::fs::remove_dir_all(&bench_dir).await;
 
-    println!("\n📊 Summary:");
+    println!("\nSummary:");
     println!("  Sequential Write: {write_mbps:.1} MB/s");
     println!("  Sequential Read:  {read_mbps:.1} MB/s");
 
@@ -217,12 +217,12 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
 
 /// Configure a storage backend
 async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
-    println!("⚙️  Configuring storage backend: {backend}");
+    println!("Configuring storage backend: {backend}");
 
     if settings.is_empty() {
         // Show current config
         let runtime_config = nestgate_core::config::runtime::get_config();
-        println!("\n📋 Current configuration:");
+        println!("\nCurrent configuration:");
         println!("  API Port:    {}", runtime_config.network.api_port);
         println!(
             "  Backend:     {:?}",
@@ -233,7 +233,7 @@ async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
             .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
         println!("  Storage:     {storage_path}");
 
-        println!("\n💡 Use --set key=value to modify settings:");
+        println!("\nUse --set key=value to modify settings:");
         println!("  nestgate storage configure {backend} --set storage_path=/data/nestgate");
         return Ok(());
     }
@@ -246,19 +246,19 @@ async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
                     // Validate the path exists or can be created
                     let path = std::path::Path::new(value);
                     if path.exists() {
-                        println!("    ✅ Path exists: {value}");
+                        println!("    Path exists: {value}");
                     } else {
                         tokio::fs::create_dir_all(path).await?;
-                        println!("    ✅ Created directory: {value}");
+                        println!("    Created directory: {value}");
                     }
-                    println!("    💡 Set NESTGATE_STORAGE_PATH={value} in your environment");
+                    println!("    Set NESTGATE_STORAGE_PATH={value} in your environment");
                 }
                 _ => {
-                    println!("    ⚠️  Unknown key: {key} (supported: storage_path)");
+                    println!("    Unknown key: {key} (supported: storage_path)");
                 }
             }
         } else {
-            println!("  ⚠️  Invalid format: {setting} (expected key=value)");
+            println!("  Invalid format: {setting} (expected key=value)");
         }
     }
 

@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 9: Deep debt execution — smart refactoring, modern Rust, dependency evolution (March 30, 2026)
+
+**Tests**: 1,509 lib tests passing (106 suites), 0 failures  
+**Coverage**: ~80% line (llvm-cov)  
+**Clippy**: ZERO warnings — `--all-features --all-targets`  
+**Format**: Clean  
+**Production files > 800 lines**: 0
+
+#### Refactored (20+ files decomposed via smart domain-driven decomposition)
+- `consolidated.rs` (979) → `consolidated/` (network, storage, security, performance, defaults)
+- `core_errors.rs` (941) → `core_errors/` (severity, unified_enum, constructors, detail domains)
+- `manager.rs` (947) → `manager/` (pool_ops, dataset_ops, snapshot_ops, validation, command)
+- `capability_system.rs` (929) → `capability_system/` (types, registry, matching, router, self_knowledge)
+- `handlers.rs` (934) → `handlers/` (service_trait, manager, protocols, load_balancer)
+- `automation/mod.rs` (931) → 10 submodules by concern
+- `zero_copy_networking/mod.rs` (930) → buffer_pool, interface, kernel_bypass, benchmarks
+- Plus 13 more files (storage, hardware_tuning, lifecycle, metrics_collector, compliance, authentication, routes, canonical_constants, metrics, mcp_integration, basic, capability_resolver, storage_paths, monitoring, dataset, performance_analyzer, handlers/mod)
+
+#### Changed
+- **Pin<Box<dyn Future>> → async fn in traits** — 145+ instances modernized (edition 2024 native support)
+- **tower 0.4 → 0.5** — aligned with axum 0.7
+- **hyper 0.14 removed** — vestigial, no source code imports
+- **delete_dataset** evolved from stub to real `zfs destroy` via `ZfsOperations::destroy_dataset`
+- **MultiTierCache** evolved from all-zero-stats placeholder to functional hit tracking, promotion/demotion, and maintenance
+- **Production shim JSON** (ZFS + hardware_tuning) evolved to minimal stable shape
+- **Hardcoded addresses/ports** → env-backed capability discovery (`NESTGATE_<CAPABILITY>_HOST`, `NESTGATE_*_PORT`)
+- **Primal identity** → `NESTGATE_SERVICE_NAME` / `NESTGATE_PRIMAL_ID` env vars
+- **Consul URL** → env-backed (no more hardcoded `127.0.0.1:8500`)
+- **Emoji stripped** from production tracing macros (4 files) and CLI println output (4 bin command files)
+- **create_snapshot bugfix** — was building `dataset@error_details` instead of `dataset@snapshot_name`
+
+#### Added
+- Tests for nestgate-config (`env_or`/`env_or_parse`), nestgate-discovery (builder, timeout config), nestgate-storage (adapter round-trip), nestgate-observe (metrics JSON serde)
+- `ECOSYSTEM` runtime fallback port (6000) for ecosystem bootstrap
+
+#### Removed
+- `hyper = "0.14"` from workspace dependencies (dead dependency)
+- Emoji from production log messages and CLI output
+
 ### Session 8: Coverage push, ring elimination, pure-Rust evolution (March 30, 2026)
 
 **Tests**: 1,457 lib tests passing, 0 failures, 48 ignored  
@@ -680,5 +719,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: March 29, 2026  
+**Last Updated**: March 30, 2026  
 **Current Version**: 4.7.0-dev

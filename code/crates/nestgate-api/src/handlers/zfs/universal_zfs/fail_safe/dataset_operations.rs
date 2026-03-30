@@ -7,24 +7,26 @@
 //! Dataset Operations module
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
+use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, UniversalZfsError, UniversalZfsResult,
 };
+use async_recursion::async_recursion;
 
 use super::core::FailSafeZfsService;
 
 /// List Datasets
+#[async_recursion]
 pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<DatasetInfo>> {
-    // Check circuit breaker
     if !service.circuit_breaker.can_execute().await {
         return if let Some(fallback) = &service.fallback {
-            fallback.list_datasets().await
+            dispatch_list_datasets(fallback).await
         } else {
-            // Try fallback operation
             match service.execute_fallback_operation("list_datasets", &service.primary) {
-                Ok(()) => Ok(Vec::new()), // Return empty list as fallback
+                Ok(()) => Ok(Vec::new()),
                 Err(_) => Err(UniversalZfsError::CircuitBreakerOpen {
                     backend: service.service_name.clone(),
                 }),
@@ -32,7 +34,6 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
         };
     }
 
-    // Execute with retry logic
     let primary = service.primary.clone();
     let timeout_duration = service.timeout_config.operation_timeout;
     let result = service
@@ -40,21 +41,18 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
         .execute(|| {
             let primary = primary.clone();
             Box::pin(async move {
-                // Apply timeout
-                tokio::time::timeout(timeout_duration, primary.list_datasets())
+                tokio::time::timeout(timeout_duration, dispatch_list_datasets(&primary))
                     .await
                     .map_err(|_| UniversalZfsError::timeout("list_datasets", timeout_duration))?
             })
         })
         .await;
 
-    // Update circuit breaker state
     match &result {
         Ok(_) => service.circuit_breaker.record_success().await,
         Err(_) => service.circuit_breaker.record_failure().await,
     }
 
-    // Update metrics
     service
         .update_metrics("list_datasets", result.is_ok())
         .await;
@@ -62,23 +60,32 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
     result
 }
 
+#[async_recursion]
+async fn dispatch_list_datasets(
+    e: &Arc<UniversalZfsServiceEnum>,
+) -> UniversalZfsResult<Vec<DatasetInfo>> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.list_datasets().await,
+        UniversalZfsServiceEnum::FailSafe(f) => list_datasets(f).await,
+    }
+}
+
 /// Gets Dataset
+#[async_recursion]
 pub async fn get_dataset(
     service: &FailSafeZfsService,
     name: &str,
 ) -> UniversalZfsResult<Option<DatasetInfo>> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.get_dataset(name).await;
+            return dispatch_get_dataset(fallback, name).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.get_dataset(name).await {
+    match dispatch_get_dataset(&service.primary, name).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -86,31 +93,41 @@ pub async fn get_dataset(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.get_dataset(name).await
+                dispatch_get_dataset(fallback, name).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_get_dataset(
+    e: &Arc<UniversalZfsServiceEnum>,
+    name: &str,
+) -> UniversalZfsResult<Option<DatasetInfo>> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.get_dataset(name).await,
+        UniversalZfsServiceEnum::FailSafe(f) => get_dataset(f, name).await,
     }
 }
 
 /// Creates  Dataset
+#[async_recursion]
 pub async fn create_dataset(
     service: &FailSafeZfsService,
     config: &DatasetConfig,
 ) -> UniversalZfsResult<DatasetInfo> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.create_dataset(config).await;
+            return dispatch_create_dataset(fallback, config).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.create_dataset(config).await {
+    match dispatch_create_dataset(&service.primary, config).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -118,28 +135,38 @@ pub async fn create_dataset(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.create_dataset(config).await
+                dispatch_create_dataset(fallback, config).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_create_dataset(
+    e: &Arc<UniversalZfsServiceEnum>,
+    config: &DatasetConfig,
+) -> UniversalZfsResult<DatasetInfo> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.create_dataset(config).await,
+        UniversalZfsServiceEnum::FailSafe(f) => create_dataset(f, config).await,
     }
 }
 
 /// Destroy Dataset
+#[async_recursion]
 pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.destroy_dataset(name).await;
+            return dispatch_destroy_dataset(fallback, name).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.destroy_dataset(name).await {
+    match dispatch_destroy_dataset(&service.primary, name).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -147,31 +174,41 @@ pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> Univer
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.destroy_dataset(name).await
+                dispatch_destroy_dataset(fallback, name).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_destroy_dataset(
+    e: &Arc<UniversalZfsServiceEnum>,
+    name: &str,
+) -> UniversalZfsResult<()> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.destroy_dataset(name).await,
+        UniversalZfsServiceEnum::FailSafe(f) => destroy_dataset(f, name).await,
     }
 }
 
 /// Gets Dataset Properties
+#[async_recursion]
 pub async fn get_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,
 ) -> UniversalZfsResult<HashMap<String, String>> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.get_dataset_properties(name).await;
+            return dispatch_get_dataset_properties(fallback, name).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.get_dataset_properties(name).await {
+    match dispatch_get_dataset_properties(&service.primary, name).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -179,7 +216,7 @@ pub async fn get_dataset_properties(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.get_dataset_properties(name).await
+                dispatch_get_dataset_properties(fallback, name).await
             } else {
                 Err(e)
             }
@@ -187,28 +224,34 @@ pub async fn get_dataset_properties(
     }
 }
 
+#[async_recursion]
+async fn dispatch_get_dataset_properties(
+    e: &Arc<UniversalZfsServiceEnum>,
+    name: &str,
+) -> UniversalZfsResult<HashMap<String, String>> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.get_dataset_properties(name).await,
+        UniversalZfsServiceEnum::FailSafe(f) => get_dataset_properties(f, name).await,
+    }
+}
+
 /// Sets Dataset Properties
+#[async_recursion]
 pub async fn set_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,
     properties: &HashMap<String, String>,
 ) -> UniversalZfsResult<()> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.set_dataset_properties(name, properties).await;
+            return dispatch_set_dataset_properties(fallback, name, properties).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service
-        .primary
-        .set_dataset_properties(name, properties)
-        .await
-    {
+    match dispatch_set_dataset_properties(&service.primary, name, properties).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -216,11 +259,23 @@ pub async fn set_dataset_properties(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.set_dataset_properties(name, properties).await
+                dispatch_set_dataset_properties(fallback, name, properties).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_set_dataset_properties(
+    e: &Arc<UniversalZfsServiceEnum>,
+    name: &str,
+    properties: &HashMap<String, String>,
+) -> UniversalZfsResult<()> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.set_dataset_properties(name, properties).await,
+        UniversalZfsServiceEnum::FailSafe(f) => set_dataset_properties(f, name, properties).await,
     }
 }
 

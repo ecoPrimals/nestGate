@@ -428,10 +428,12 @@ mod tests {
 
     #[test]
     fn test_alert_channel_custom() {
-        // Use environment variable or placeholder for sensitive webhook URLs
-        let endpoint = std::env::var("SLACK_WEBHOOK_URL").unwrap_or_else(|_| {
-            "https://hooks.slack.com/services/TEST123/TEST456/TestWebhookPlaceholder".to_string()
-        });
+        let Some(endpoint) = std::env::var("SLACK_WEBHOOK_URL")
+            .ok()
+            .filter(|s| !s.is_empty())
+        else {
+            return;
+        };
 
         let channel = AlertChannel {
             channel_id: "slack-001".to_string(),

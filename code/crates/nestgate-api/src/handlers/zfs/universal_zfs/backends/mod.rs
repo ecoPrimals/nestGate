@@ -24,6 +24,7 @@ pub use native::NativeZfsService;
 // pub use remote::RemoteZfsService;  // HTTP removed
 // Note: native_real uses NativeZfsService internally - no separate export needed
 
+use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use std::sync::Arc;
@@ -33,20 +34,18 @@ pub struct ZfsServiceFactory;
 impl ZfsServiceFactory {
     /// Create a ZFS service instance based on configuration
     #[must_use]
-    pub fn create_service(
-        _config: NestGateCanonicalConfig,
-    ) -> Arc<dyn UniversalZfsService + Send + Sync> {
+    pub fn create_service(_config: NestGateCanonicalConfig) -> Arc<UniversalZfsServiceEnum> {
         // ✅ PRODUCTION: Always use native service - no more mocks in production
-        Arc::new(NativeZfsService::new())
+        Arc::new(UniversalZfsServiceEnum::Native(NativeZfsService::new()))
     }
 
     /// Create a ZFS service with sudo privileges (for systems requiring elevated permissions)
     #[must_use]
     pub fn create_service_with_sudo(
         _config: NestGateCanonicalConfig,
-    ) -> Arc<dyn UniversalZfsService + Send + Sync> {
+    ) -> Arc<UniversalZfsServiceEnum> {
         // ✅ PRODUCTION: Always use native service with sudo - no more mocks
-        Arc::new(NativeZfsService::new())
+        Arc::new(UniversalZfsServiceEnum::Native(NativeZfsService::new()))
     }
 
     /// Check if ZFS is available on the system (sync version)
@@ -74,7 +73,7 @@ impl ZfsServiceFactory {
     /// - Internal ZFS (`NestGate`'s implementation) - always works, sovereignty
     pub async fn create_auto_service(
         config: NestGateCanonicalConfig,
-    ) -> Arc<dyn UniversalZfsService + Send + Sync> {
+    ) -> Arc<UniversalZfsServiceEnum> {
         // ✅ ADAPTIVE: Detect ZFS capabilities
         let capabilities = Self::detect_zfs_capabilities().await;
 

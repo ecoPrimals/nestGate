@@ -33,7 +33,7 @@
 //!     "primal": "beardog"
 //! })).await?;
 //!
-//! let endpoint = response["endpoint"].as_str().unwrap();
+//! let endpoint = response["endpoint"].as_str().unwrap_or("");
 //! println!("BearDog is at: {}", endpoint);
 //! # Ok(())
 //! # }

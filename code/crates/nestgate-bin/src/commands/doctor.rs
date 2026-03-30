@@ -12,7 +12,7 @@ use nestgate_core::services::storage::capabilities;
 
 /// Execute doctor diagnostics
 pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
-    println!("🩺 NestGate System Diagnostics");
+    println!("NestGate System Diagnostics");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
 
@@ -20,7 +20,7 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
     let mut warnings = 0;
 
     // Check 1: Version
-    println!("📦 Version Check:");
+    println!("Version Check:");
     println!("   NestGate v{}", env!("CARGO_PKG_VERSION"));
     println!(
         "   Build: {}",
@@ -30,26 +30,26 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
             "release"
         }
     );
-    println!("   ✅ OK");
+    println!("   OK");
     println!();
 
     // Check 2: Storage backend
-    println!("🗄️  Storage Backend Check:");
+    println!("Storage Backend Check:");
     let caps = capabilities::detect_backend();
     match caps.backend_type {
         capabilities::BackendType::Zfs => {
             println!("   Backend: ZFS (optimized)");
-            println!("   ✅ Native features available");
+            println!("   Native features available");
         }
         capabilities::BackendType::Filesystem => {
             println!("   Backend: Filesystem (universal)");
-            println!("   ✅ Basic operations available");
+            println!("   Basic operations available");
         }
     }
     println!();
 
     // Check 3: Storage directory
-    println!("📁 Storage Directory Check:");
+    println!("Storage Directory Check:");
     let storage_base = std::env::var("NESTGATE_STORAGE_PATH")
         .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
     let storage_path = std::path::PathBuf::from(&storage_base);
@@ -63,47 +63,47 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                     let test_file = storage_path.join(".doctor_check");
                     if matches!(tokio::fs::write(&test_file, b"ok").await, Ok(())) {
                         let _ = tokio::fs::remove_file(&test_file).await;
-                        println!("   ✅ Writable");
+                        println!("   Writable");
                     } else {
-                        println!("   ⚠️  Not writable (may need permissions)");
+                        println!("   Not writable (may need permissions)");
                         warnings += 1;
                     }
                 } else {
-                    println!("   ❌ Path exists but is not a directory");
+                    println!("   Path exists but is not a directory");
                     issues += 1;
                 }
             }
             Err(e) => {
-                println!("   ⚠️  Cannot stat: {e}");
+                println!("   Cannot stat: {e}");
                 warnings += 1;
             }
         }
     } else {
         println!("   Path: {storage_base} (does not exist yet - will be created on first use)");
-        println!("   ℹ️  Normal for first run");
+        println!("   Normal for first run");
     }
     println!();
 
     // Check 4: Socket configuration
-    println!("🔌 Socket Configuration Check:");
+    println!("Socket Configuration Check:");
     match nestgate_core::rpc::SocketConfig::from_environment() {
         Ok(config) => {
             println!("   Socket: {}", config.socket_path.display());
             println!("   Family: {}", config.family_id);
             println!("   Node: {}", config.node_id);
             println!("   Source: {:?}", config.source);
-            println!("   ✅ Configuration valid");
+            println!("   Configuration valid");
         }
         Err(e) => {
-            println!("   ⚠️  Socket config: {e}");
-            println!("   ℹ️  Set NESTGATE_FAMILY_ID or NESTGATE_SOCKET");
+            println!("   Socket config: {e}");
+            println!("   Set NESTGATE_FAMILY_ID or NESTGATE_SOCKET");
             warnings += 1;
         }
     }
     println!();
 
     // Check 5: Environment variables
-    println!("🌍 Environment Check:");
+    println!("Environment Check:");
     let env_vars = [
         ("NESTGATE_FAMILY_ID", false),
         ("NESTGATE_API_PORT", false),
@@ -115,13 +115,13 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
         match std::env::var(var) {
             Ok(val) => {
                 if sensitive {
-                    println!("   ✅ {var} = ****");
+                    println!("   {var} = ****");
                 } else {
-                    println!("   ✅ {var} = {val}");
+                    println!("   {var} = {val}");
                 }
             }
             Err(_) => {
-                println!("   ℹ️  {var} (not set, using default)");
+                println!("   {var} (not set, using default)");
             }
         }
     }
@@ -129,7 +129,7 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
 
     if comprehensive {
         // Check 6: ZFS detailed check
-        println!("🔬 Comprehensive ZFS Check:");
+        println!("Comprehensive ZFS Check:");
         if capabilities::is_zfs_available() {
             // Check ZFS pool health
             match tokio::process::Command::new("zpool")
@@ -140,9 +140,9 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                 Ok(output) if output.status.success() => {
                     let stdout = String::from_utf8_lossy(&output.stdout);
                     if stdout.contains("all pools are healthy") {
-                        println!("   ✅ All ZFS pools healthy");
+                        println!("   All ZFS pools healthy");
                     } else {
-                        println!("   ⚠️  ZFS pool issues detected:");
+                        println!("   ZFS pool issues detected:");
                         for line in stdout.lines().take(5) {
                             println!("      {line}");
                         }
@@ -150,11 +150,11 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                     }
                 }
                 Ok(_) => {
-                    println!("   ⚠️  Cannot check ZFS pool status");
+                    println!("   Cannot check ZFS pool status");
                     warnings += 1;
                 }
                 Err(e) => {
-                    println!("   ℹ️  ZFS not available: {e}");
+                    println!("   ZFS not available: {e}");
                 }
             }
 
@@ -167,23 +167,23 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
                             if parts.len() >= 3
                                 && let Ok(size) = parts[2].parse::<u64>()
                             {
-                                println!("   📊 ARC size: {:.2} MB", size as f64 / 1024.0 / 1024.0);
+                                println!("   ARC size: {:.2} MB", size as f64 / 1024.0 / 1024.0);
                             }
                             break;
                         }
                     }
                 }
                 Err(_) => {
-                    println!("   ℹ️  ARC stats not available");
+                    println!("   ARC stats not available");
                 }
             }
         } else {
-            println!("   ℹ️  ZFS not installed (using filesystem mode)");
+            println!("   ZFS not installed (using filesystem mode)");
         }
         println!();
 
         // Check 7: Rust/system info
-        println!("🖥️  System Info:");
+        println!("System Info:");
         println!("   Pure Rust: 100%");
         println!("   Unsafe blocks: Minimal (justified, documented)");
         println!("   Architecture: {}", std::env::consts::ARCH);
@@ -194,11 +194,11 @@ pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
     // Summary
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     if issues == 0 && warnings == 0 {
-        println!("✅ All checks passed! NestGate is healthy.");
+        println!("All checks passed! NestGate is healthy.");
     } else if issues == 0 {
-        println!("⚠️  {warnings} warning(s), 0 issues. NestGate is operational.");
+        println!("{warnings} warning(s), 0 issues. NestGate is operational.");
     } else {
-        println!("❌ {issues} issue(s), {warnings} warning(s). Review above.");
+        println!("{issues} issue(s), {warnings} warning(s). Review above.");
     }
     println!();
 

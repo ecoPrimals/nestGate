@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![expect(
+    async_fn_in_trait,
+    reason = "Native async fn on UniversalZfsService; use UniversalZfsServiceEnum or other concrete types, not dyn"
+)]
 // **CANONICAL ZFS SERVICE TRAIT - COMPREHENSIVE UNIFICATION**
 //
 // This trait provides the complete canonical interface for all ZFS backend implementations.
@@ -9,8 +13,6 @@
 //! Traits module
 
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
@@ -24,7 +26,8 @@ use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
 ///
 /// This trait defines the complete interface that all ZFS backend implementations must provide.
 /// It includes all methods from `native_real`, remote, and `fail_safe` implementations.
-/// **CANONICAL MODERNIZATION**: Dyn-compatible explicit future boxing for `Arc<dyn UniversalZfsService>`
+/// Async methods use native `async fn` (Rust 1.75+); use [`UniversalZfsServiceEnum`] or concrete
+/// types for storage—`dyn UniversalZfsService` is not supported with async fn in traits.
 pub trait UniversalZfsService: Send + Sync {
     // ==================== CORE SERVICE METHODS ====================
     /// Get the service name
@@ -34,147 +37,97 @@ pub trait UniversalZfsService: Send + Sync {
     fn service_version(&self) -> &str;
 
     /// Perform a health check on the service
-    fn health_check(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HealthStatus>> + Send + '_>>;
+    async fn health_check(&self) -> UniversalZfsResult<HealthStatus>;
 
     /// Get service metrics
-    fn get_metrics(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<ServiceMetrics>> + Send + '_>>;
+    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics>;
 
     /// Check if the service is available
-    fn is_available(&self) -> Pin<Box<dyn Future<Output = bool> + Send + '_>>;
+    async fn is_available(&self) -> bool;
 
     /// Shutdown the service gracefully
-    fn shutdown(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>>;
+    async fn shutdown(&self) -> UniversalZfsResult<()>;
 
     // ==================== POOL OPERATIONS ====================
 
     /// List all pools
-    fn list_pools(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<PoolInfo>>> + Send + '_>>;
+    async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>>;
 
     /// Create a new pool
-    fn create_pool(
-        &self,
-        config: &PoolConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<PoolInfo>> + Send + '_>>;
+    async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo>;
 
     /// Get information about a specific pool
-    fn get_pool(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<PoolInfo>>> + Send + '_>>;
+    async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>>;
 
     /// Destroy a pool
-    fn destroy_pool(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>>;
+    async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()>;
 
     /// Scrub a pool (data integrity check)
-    fn scrub_pool(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>>;
+    async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()>;
 
     /// Get pool status information
-    fn get_pool_status(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>>;
+    async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String>;
 
     // ==================== DATASET OPERATIONS ====================
 
     /// List all datasets
-    fn list_datasets(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<DatasetInfo>>> + Send + '_>>;
+    async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>>;
 
     /// Create a new dataset
-    fn create_dataset(
-        &self,
-        config: &DatasetConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<DatasetInfo>> + Send + '_>>;
+    async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo>;
 
     /// Get information about a specific dataset
-    fn get_dataset(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<DatasetInfo>>> + Send + '_>>;
+    async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>>;
 
     /// Destroy a dataset
-    fn destroy_dataset(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>>;
+    async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()>;
 
     /// Set dataset properties
-    fn set_dataset_properties(
+    async fn set_dataset_properties(
         &self,
         dataset_name: &str,
         properties: &HashMap<String, String>,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>>;
+    ) -> UniversalZfsResult<()>;
 
     /// Get dataset properties
-    fn get_dataset_properties(
+    async fn get_dataset_properties(
         &self,
         dataset_name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HashMap<String, String>>> + Send + '_>>;
+    ) -> UniversalZfsResult<HashMap<String, String>>;
 
     // ==================== SNAPSHOT OPERATIONS ====================
 
     /// List all snapshots
-    fn list_snapshots(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send + '_>>;
+    async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>>;
 
     /// Create a snapshot
-    fn create_snapshot(
-        &self,
-        config: &SnapshotConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<SnapshotInfo>> + Send + '_>>;
+    async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo>;
 
     /// List snapshots for a specific dataset
-    fn list_dataset_snapshots(
+    async fn list_dataset_snapshots(
         &self,
         dataset_name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send + '_>>;
+    ) -> UniversalZfsResult<Vec<SnapshotInfo>>;
 
     /// Destroy a snapshot
-    fn destroy_snapshot(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>>;
+    async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()>;
 
     // ==================== OPTIMIZATION & CONFIGURATION ====================
 
     /// Optimize ZFS configuration
-    fn optimize(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>>;
+    async fn optimize(&self) -> UniversalZfsResult<String>;
 
     /// Get optimization analytics
-    fn get_optimization_analytics(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>>;
+    async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value>;
 
     /// Predict optimal tier for data
-    fn predict_tier(
-        &self,
-        file_path: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>>;
+    async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String>;
 
     /// Get current configuration
-    fn get_configuration(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>>;
+    async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value>;
 
     /// Update configuration
-    fn update_configuration(
-        &self,
-        config: serde_json::Value,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>>;
+    async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()>;
 }
 
 /// **DYN-COMPATIBLE ZFS SERVICE WRAPPER**
@@ -376,6 +329,14 @@ impl DynZfsService {
         match self {
             Self::Native(service) => service.list_dataset_snapshots(dataset_name).await,
             Self::FailSafe(service) => service.list_dataset_snapshots(dataset_name).await,
+        }
+    }
+
+    /// List pools
+    pub async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
+        match self {
+            Self::Native(service) => service.list_pools().await,
+            Self::FailSafe(service) => service.list_pools().await,
         }
     }
 

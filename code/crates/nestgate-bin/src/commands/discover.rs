@@ -24,14 +24,14 @@ pub async fn execute(target: DiscoverTarget) -> BinResult<()> {
 ///
 /// ✅ PRIMAL SELF-KNOWLEDGE: `NestGate` knows itself, discovers others at runtime
 async fn discover_primals() -> BinResult<()> {
-    println!("🔍 Primal Discovery");
+    println!("Primal Discovery");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
 
     // Self-knowledge: NestGate always knows itself
-    println!("📦 Local Primals:");
+    println!("Local Primals:");
     println!(
-        "   ✅ nestgate (self) - Universal Data Orchestrator v{}",
+        "   nestgate (self) - Universal Data Orchestrator v{}",
         env!("CARGO_PKG_VERSION")
     );
 
@@ -39,7 +39,7 @@ async fn discover_primals() -> BinResult<()> {
     let socket_dir = discover_socket_dir();
     if let Some(dir) = &socket_dir {
         println!();
-        println!("🔌 Socket Directory: {}", dir.display());
+        println!("Socket Directory: {}", dir.display());
 
         match tokio::fs::read_dir(dir).await {
             Ok(mut entries) => {
@@ -52,9 +52,9 @@ async fn discover_primals() -> BinResult<()> {
                         // Check if socket is alive
                         let status = if tokio::net::UnixStream::connect(entry.path()).await.is_ok()
                         {
-                            "✅ ALIVE"
+                            "ALIVE"
                         } else {
-                            "❌ STALE"
+                            "STALE"
                         };
                         println!("   {} {} ({})", status, primal_name, entry.path().display());
                         found += 1;
@@ -65,12 +65,12 @@ async fn discover_primals() -> BinResult<()> {
                 }
             }
             Err(e) => {
-                println!("   ⚠️  Cannot read socket directory: {e}");
+                println!("   Cannot read socket directory: {e}");
             }
         }
     } else {
         println!();
-        println!("   ℹ️  No socket directory configured");
+        println!("   No socket directory configured");
         println!("   Set NESTGATE_SOCKET or BIOMEOS_SOCKET_DIR to enable discovery");
     }
 
@@ -80,35 +80,35 @@ async fn discover_primals() -> BinResult<()> {
 
 /// Discover available services
 async fn discover_services() -> BinResult<()> {
-    println!("🔍 Service Discovery");
+    println!("Service Discovery");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
 
     // NestGate's own services
-    println!("📦 NestGate Services:");
-    println!("   ✅ storage      - Persistent key-value storage");
-    println!("   ✅ blob_storage - Binary large object storage");
-    println!("   ✅ model_cache  - Model registration and discovery");
-    println!("   ✅ templates    - Collaborative template management");
-    println!("   ✅ audit        - Execution audit trail");
+    println!("NestGate Services:");
+    println!("   storage      - Persistent key-value storage");
+    println!("   blob_storage - Binary large object storage");
+    println!("   model_cache  - Model registration and discovery");
+    println!("   templates    - Collaborative template management");
+    println!("   audit        - Execution audit trail");
 
     // Backend detection
     let caps = capabilities::detect_backend();
     println!();
-    println!("🗄️  Storage Backend:");
+    println!("Storage Backend:");
     match caps.backend_type {
         capabilities::BackendType::Zfs => {
             println!("   Type: ZFS (full feature set)");
-            println!("   ✅ Native snapshots");
-            println!("   ✅ Native deduplication");
-            println!("   ✅ Native compression");
-            println!("   ✅ Native checksums");
-            println!("   ✅ Native replication");
+            println!("   Native snapshots");
+            println!("   Native deduplication");
+            println!("   Native compression");
+            println!("   Native checksums");
+            println!("   Native replication");
         }
         capabilities::BackendType::Filesystem => {
             println!("   Type: Filesystem (universal compatibility)");
-            println!("   ✅ Basic operations");
-            println!("   ℹ️  Software-level snapshots, dedup, compression");
+            println!("   Basic operations");
+            println!("   Software-level snapshots, dedup, compression");
         }
     }
 
@@ -118,11 +118,11 @@ async fn discover_services() -> BinResult<()> {
 
 /// Discover available capabilities (JSON-RPC methods)
 async fn discover_capabilities() -> BinResult<()> {
-    println!("🔍 Capability Discovery");
+    println!("Capability Discovery");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
 
-    println!("📊 Available JSON-RPC Methods:");
+    println!("Available JSON-RPC Methods:");
     println!();
 
     // Health & Discovery

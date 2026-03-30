@@ -16,11 +16,11 @@
 mod circuit_breaker;
 /// Core fail-safe service implementation
 pub mod core;
-mod dataset_operations;
-mod optimization;
-mod pool_operations;
+pub(crate) mod dataset_operations;
+pub(crate) mod optimization;
+pub(crate) mod pool_operations;
 mod retry_executor;
-mod snapshot_operations;
+pub(crate) mod snapshot_operations;
 
 // Re-export the main service
 pub use circuit_breaker::{CircuitBreaker, CircuitBreakerState};

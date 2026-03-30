@@ -1,53 +1,59 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//
-// This module contains all the data structures, enums, and types used by the
-// performance optimization engine.
-
-use std::collections::HashMap;
-use std::time::Duration;
 use std::time::SystemTime;
 
-use crate::types::StorageTier;
-use serde::de;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
-/// Performance engine configuration
-#[derive(Debug, Clone)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::PerformanceEngineConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::PerformanceEngineConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-pub struct PerformanceEngineConfig {
-    pub monitoring_interval: std::time::Duration,
-    pub optimization_interval: std::time::Duration,
-    pub bottleneck_detection_interval: std::time::Duration,
-    pub max_concurrent_optimizations: usize,
-    pub enable_ai_guidance: bool,
+use super::optimization::PerformanceOptimizationResult;
+
+/// Performance alert
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceAlert {
+    /// Type of performance alert
+    pub alert_type: AlertType,
+    /// Severity level of the alert
+    pub severity: AlertSeverity,
+    /// Name of the affected ZFS pool
+    pub pool_name: String,
+    /// Name of the affected dataset (if applicable)
+    pub dataset_name: Option<String>,
+    /// Human-readable alert description
+    pub description: String,
+    /// When the alert was triggered
+    pub timestamp: SystemTime,
 }
-impl Default for PerformanceEngineConfig {
-    fn default() -> Self {
-        Self {
-            monitoring_interval: std::time::Duration::from_secs(5),
-            optimization_interval: std::time::Duration::from_secs(30),
-            bottleneck_detection_interval: std::time::Duration::from_secs(10),
-            max_concurrent_optimizations: 3,
-            enable_ai_guidance: true,
-        }
-    }
+/// Alert types
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AlertType {
+    /// Performance has degraded below acceptable thresholds
+    PerformanceDegradation,
+    /// A performance bottleneck has been identified
+    BottleneckDetected,
+    /// A performance threshold has been exceeded
+    ThresholdExceeded,
+    /// An optimization attempt has failed
+    OptimizationFailed,
+}
+/// Alert severity levels for performance monitoring
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AlertSeverity {
+    /// Informational alert - no action required
+    Info,
+    /// Warning alert - attention recommended
+    Warning,
+    /// Error alert - action required
+    Error,
+    /// Critical alert - immediate action required
+    Critical,
+}
+/// Alert response
+#[derive(Debug, Clone, Default)]
+pub struct AlertResponse {
+    /// Whether mitigation was applied successfully
+    pub mitigation_applied: bool,
+    /// Result of optimization if applied
+    pub optimization_result: Option<PerformanceOptimizationResult>,
+    /// Whether follow-up action is required
+    pub follow_up_required: bool,
 }

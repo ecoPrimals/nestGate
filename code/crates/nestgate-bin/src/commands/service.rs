@@ -119,7 +119,7 @@ impl ServiceManager {
     async fn start_unix_socket_mode(&self) -> BinResult<()> {
         use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 
-        info!("🔌 Starting in ECOSYSTEM MODE (Unix socket)");
+        info!("Starting in ECOSYSTEM MODE (Unix socket)");
 
         // Get socket configuration with 3-tier fallback
         let socket_config = SocketConfig::from_environment().map_err(|e| {
@@ -205,7 +205,7 @@ impl ServiceManager {
         listen: Option<SocketAddr>,
         config: Option<&str>,
     ) -> BinResult<()> {
-        info!("🌐 Starting in STANDALONE MODE (HTTP)");
+        info!("Starting in STANDALONE MODE (HTTP)");
 
         // ✅ MIGRATED: Use runtime configuration instead of hardcoding
         let runtime_config = nestgate_core::config::runtime::get_config();
@@ -226,10 +226,10 @@ impl ServiceManager {
             bind_all_ipv4,
         );
 
-        info!("🚀 Starting NestGate HTTP service on {}", bind_addr);
+        info!("Starting NestGate HTTP service on {}", bind_addr);
 
         if let Some(config_path) = config {
-            info!("📄 Using configuration file: {}", config_path);
+            info!("Using configuration file: {}", config_path);
         }
 
         // Create the API router from nestgate-api crate
@@ -318,13 +318,13 @@ impl ServiceManager {
 
     // Stop NestGate service
     async fn stop_service(&mut self) -> BinResult<()> {
-        info!("🛑 Stopping NestGate service");
+        info!("Stopping NestGate service");
 
         // ✅ MODERN CONCURRENT: Event-driven shutdown instead of sleep
         if let Some(tx) = &self.shutdown_tx {
             // Send shutdown signal to all subscribers
             let _ = tx.send(());
-            info!("📡 Shutdown signal sent to service");
+            info!("Shutdown signal sent to service");
 
             // Wait for graceful shutdown with timeout
             // Service should acknowledge shutdown within reasonable time
@@ -347,7 +347,7 @@ impl ServiceManager {
 
     // Restart NestGate service
     async fn restart_service(&mut self, port: Option<u16>, config: Option<&str>) -> BinResult<()> {
-        info!("🔄 Restarting NestGate service");
+        info!("Restarting NestGate service");
 
         // ✅ MODERN CONCURRENT: Event-driven coordination, no sleep!
         // Stop service and wait for graceful shutdown
@@ -365,7 +365,7 @@ impl ServiceManager {
     // Show service status
     // ✅ EVOLVED: Real runtime checks replacing hardcoded placeholders
     async fn show_status(&self) -> BinResult<()> {
-        info!("📊 Checking NestGate service status");
+        info!("Checking NestGate service status");
 
         let runtime_config = nestgate_core::config::runtime::get_config();
 
@@ -442,11 +442,11 @@ pub async fn run_daemon(
     // Set family_id in environment for downstream socket config resolution
     if let Some(fid) = family_id {
         nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", fid);
-        info!("👪 Multi-family mode: family_id='{}'", fid);
+        info!("Multi-family mode: family_id='{}'", fid);
     }
 
     if enable_http {
-        info!("🌐 Starting NestGate with HTTP server (optional mode)");
+        info!("Starting NestGate with HTTP server (optional mode)");
         info!("   Port: {}, Bind: {}, Dev: {}", port, bind, dev);
 
         let manager = ServiceManager::new();
@@ -454,7 +454,7 @@ pub async fn run_daemon(
             .start_service(Some(port), Some(bind), listen, None)
             .await
     } else {
-        info!("🔌 Starting NestGate in socket-only mode (TRUE ecoBin - default)");
+        info!("Starting NestGate in socket-only mode (TRUE ecoBin - default)");
         run_socket_only_daemon().await
     }
 }

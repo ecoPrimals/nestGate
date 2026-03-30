@@ -11,6 +11,7 @@
 //! JSON-RPC method implementations for `NestGate` storage and system operations.
 
 use super::jsonrpc::RpcMethodHandler;
+use nestgate_core::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -18,6 +19,10 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use tracing::debug;
+
+fn self_primal_name() -> String {
+    std::env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_string())
+}
 
 /// **NESTGATE RPC HANDLER**
 ///
@@ -147,9 +152,10 @@ impl NestGateRpcHandler {
 
     /// Handle health.status request
     fn handle_status(&self, _params: Value) -> Result<Value> {
+        let primal = self_primal_name();
         Ok(serde_json::json!({
             "status": "healthy",
-            "primal": "nestgate",
+            "primal": primal,
             "transport": "unix-socket",
             "protocol": "jsonrpc-2.0",
             "timestamp": chrono::Utc::now().timestamp()
@@ -160,9 +166,10 @@ impl NestGateRpcHandler {
     fn handle_identity(&self, _params: Value) -> Result<Value> {
         let family_id =
             std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+        let primal = self_primal_name();
 
         Ok(serde_json::json!({
-            "primal": "nestgate",
+            "primal": primal,
             "family": family_id,
             "role": "storage",
             "version": env!("CARGO_PKG_VERSION")
@@ -184,8 +191,9 @@ impl NestGateRpcHandler {
 
     /// Handle system.info request
     fn handle_system_info(&self, _params: Value) -> Result<Value> {
+        let primal = self_primal_name();
         Ok(serde_json::json!({
-            "primal": "nestgate",
+            "primal": primal,
             "version": env!("CARGO_PKG_VERSION"),
             "rust_version": env!("CARGO_PKG_RUST_VERSION"),
             "uptime_seconds": get_uptime_seconds(),

@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! **ZFS PRODUCTION PLACEHOLDERS**
+//! **ZFS PRODUCTION SHIMS**
 //!
-//! These are placeholder handlers for production builds where `dev-stubs` is not enabled.
-//! They return helpful error messages directing users to use `nestgate_zfs` crate directly.
+//! Handlers for production builds where `dev-stubs` is not enabled: routes compile and return
+//! `501 Not Implemented` with a structured body (no fake documentation URLs or placeholder copy).
 //!
-//! **⚠️ IMPORTANT ⚠️**
-//!
-//! These are NOT functional handlers - they exist solely to allow compilation
-//! without `dev-stubs` feature. For production ZFS operations, use `nestgate_zfs` crate.
+//! For interactive ZFS over HTTP, enable the `dev-stubs` feature or call `nestgate_zfs` from your integration layer.
 
 use axum::{extract::Path, http::StatusCode, response::Json};
 use serde_json::json;
@@ -71,15 +68,14 @@ impl Default for ZfsHandlerImpl {
     }
 }
 
-/// Placeholder response for disabled ZFS API endpoints
+/// Response body when the ZFS HTTP surface is not compiled in (production without `dev-stubs`).
 fn zfs_endpoint_disabled() -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::NOT_IMPLEMENTED,
         Json(json!({
-            "error": "ZFS API endpoints are disabled in production builds",
-            "message": "For production ZFS operations, use nestgate_zfs crate directly",
-            "recommendation": "Enable 'dev-stubs' feature for development ZFS API",
-            "documentation": "https://docs.nestgate.io/zfs-integration"
+            "error": "not_implemented",
+            "feature": "zfs_http",
+            "details": null,
         })),
     )
 }
@@ -245,11 +241,9 @@ mod tests {
     use axum::extract::Path;
 
     fn assert_not_implemented_json(body: &serde_json::Value) {
-        assert_eq!(
-            body["error"].as_str(),
-            Some("ZFS API endpoints are disabled in production builds")
-        );
-        assert!(body["documentation"].as_str().unwrap().contains("nestgate"));
+        assert_eq!(body["error"].as_str(), Some("not_implemented"));
+        assert_eq!(body["feature"].as_str(), Some("zfs_http"));
+        assert!(body["details"].is_null());
     }
 
     #[tokio::test]

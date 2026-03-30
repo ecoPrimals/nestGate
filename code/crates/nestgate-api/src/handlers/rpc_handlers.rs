@@ -12,6 +12,7 @@ use axum::{Json, http::StatusCode};
 use nestgate_core::constants::capability_port_discovery::{
     discover_api_port_sync, discover_tarpc_port_sync,
 };
+use nestgate_core::constants::system::DEFAULT_SERVICE_NAME;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -168,6 +169,8 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
     // Discover ports at runtime (no hardcoding!)
     let api_port = discover_api_port_sync();
     let tarpc_port = discover_tarpc_port_sync();
+    let advertise_host = std::env::var("NESTGATE_API_HOST")
+        .unwrap_or_else(|_| nestgate_core::BIND_ALL_IPV4.to_string());
 
     let mut protocols = HashMap::new();
 
@@ -177,7 +180,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
         ProtocolInfo {
             name: "HTTP/REST".to_string(),
             version: "1.1".to_string(),
-            endpoint: format!("http://0.0.0.0:{api_port}"),
+            endpoint: format!("http://{advertise_host}:{api_port}"),
             port: Some(api_port),
             features: vec![
                 "rest".to_string(),
@@ -195,7 +198,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
         ProtocolInfo {
             name: "JSON-RPC".to_string(),
             version: "2.0".to_string(),
-            endpoint: format!("http://0.0.0.0:{api_port}/jsonrpc"),
+            endpoint: format!("http://{advertise_host}:{api_port}/jsonrpc"),
             port: Some(api_port),
             features: vec![
                 "rpc".to_string(),
@@ -213,7 +216,7 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
         ProtocolInfo {
             name: "tarpc".to_string(),
             version: "0.34".to_string(),
-            endpoint: format!("tarpc://0.0.0.0:{tarpc_port}"),
+            endpoint: format!("tarpc://{advertise_host}:{tarpc_port}"),
             port: Some(tarpc_port),
             features: vec![
                 "binary".to_string(),
@@ -228,7 +231,8 @@ pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
     );
 
     Json(ProtocolCapabilities {
-        service: "nestgate".to_string(),
+        service: std::env::var("NESTGATE_SERVICE_NAME")
+            .unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_string()),
         version: env!("CARGO_PKG_VERSION").to_string(),
         protocols,
         capabilities: crate::nestgate_rpc_service::nestgate_capabilities_vec(),

@@ -19,6 +19,7 @@ use crate::handlers::zfs::universal_zfs::{
     // backends::RemoteZfsService,  // HTTP removed
     config::{ZfsBackend, ZfsServiceConfig},
     fail_safe::FailSafeZfsService,
+    service_enum::UniversalZfsServiceEnum,
     traits::UniversalZfsService,
 };
 use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
@@ -26,7 +27,7 @@ use tracing::{debug, error, info, warn};
 
 // Type alias to reduce complexity
 type ZfsServiceFuture = std::pin::Pin<
-    Box<dyn std::future::Future<Output = UniversalZfsResult<Arc<dyn UniversalZfsService>>> + Send>,
+    Box<dyn std::future::Future<Output = UniversalZfsResult<Arc<UniversalZfsServiceEnum>>> + Send>,
 >;
 
 /// Factory for creating ZFS services
@@ -63,7 +64,7 @@ impl ZfsServiceFactory {
     /// Create service based on configuration with proper cloning
     pub async fn create_service(
         config: ZfsServiceConfig,
-    ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
+    ) -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
         info!("Creating ZFS service with backend: {:?}", config.backend);
 
         // Validate configuration
@@ -102,7 +103,7 @@ impl ZfsServiceFactory {
                 fail_safe_service
             };
 
-            Arc::new(fail_safe_service) as Arc<dyn UniversalZfsService>
+            Arc::new(UniversalZfsServiceEnum::FailSafe(fail_safe_service))
         } else {
             // Primary Service
             primary_service
@@ -116,21 +117,21 @@ impl ZfsServiceFactory {
     }
 
     /// Create a service with automatic backend detection
-    pub async fn create_auto_service() -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
+    pub async fn create_auto_service() -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
         let config = ZfsServiceConfig::default(); // Use default instead of from_env
         Self::create_service(config).await
     }
 
     /// CANONICAL MODERNIZATION: Production service creation always uses real implementation
     #[must_use]
-    pub fn create_production_service() -> Arc<dyn UniversalZfsService> {
-        Arc::new(
+    pub fn create_production_service() -> Arc<UniversalZfsServiceEnum> {
+        Arc::new(UniversalZfsServiceEnum::Native(
             crate::handlers::zfs::universal_zfs::backends::native::core::NativeZfsService::new(),
-        )
+        ))
     }
 
     /// Auto-detect the best available backend
-    async fn auto_detect_backend() -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
+    async fn auto_detect_backend() -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
         debug!("Auto-detecting ZFS backend");
 
         // Check if ZFS is available natively
@@ -177,13 +178,13 @@ impl ZfsServiceFactory {
     }
 
     /// Create native ZFS service
-    fn create_native_service() -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
+    fn create_native_service() -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
         // Use the real native ZFS implementation
         debug!("Creating native ZFS service");
         let service =
             crate::handlers::zfs::universal_zfs::backends::native::NativeZfsService::new();
         info!("Successfully created native ZFS service");
-        Ok(Arc::new(service) as Arc<dyn UniversalZfsService>)
+        Ok(Arc::new(UniversalZfsServiceEnum::Native(service)))
     }
 
     /// Create remote ZFS service (HTTP removed)
@@ -193,7 +194,7 @@ impl ZfsServiceFactory {
     )]
     fn create_remote_service(
         config: &crate::handlers::zfs::universal_zfs::config::RemoteConfig,
-    ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
+    ) -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
         let _ = config;
         error!("Remote ZFS service removed - HTTP removed per Concentrated Gap Architecture");
         Err(UniversalZfsError::configuration(
@@ -204,19 +205,19 @@ impl ZfsServiceFactory {
     /// Create fallback service
     fn create_fallback_service(
         backend: &ZfsBackend,
-    ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
+    ) -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
         match backend {
             ZfsBackend::Auto | ZfsBackend::Native => {
                 // Try to create a minimal native service as fallback
                 warn!("Creating minimal native ZFS service as fallback");
                 let service = crate::handlers::zfs::universal_zfs::backends::native::core::NativeZfsService::new();
-                Ok(Arc::new(service))
+                Ok(Arc::new(UniversalZfsServiceEnum::Native(service)))
             }
             ZfsBackend::Development => {
                 // Development backend uses native implementation
                 debug!("Creating development ZFS backend using native implementation");
                 let service = crate::handlers::zfs::universal_zfs::backends::native::core::NativeZfsService::new();
-                Ok(Arc::new(service))
+                Ok(Arc::new(UniversalZfsServiceEnum::Native(service)))
             }
             ZfsBackend::Remote { endpoint, timeout } => {
                 // HTTP removed per Concentrated Gap Architecture
@@ -230,7 +231,7 @@ impl ZfsServiceFactory {
     }
 
     /// Detect remote ZFS services (HTTP removed)
-    fn detect_remote_services() -> Option<Arc<dyn UniversalZfsService>> {
+    fn detect_remote_services() -> Option<Arc<UniversalZfsServiceEnum>> {
         // HTTP removed per Concentrated Gap Architecture
         warn!("Remote ZFS service detection removed - HTTP removed");
         None
@@ -240,7 +241,7 @@ impl ZfsServiceFactory {
     pub async fn create_test_service(
         backend: ZfsBackend,
         fail_safe_enabled: bool,
-    ) -> UniversalZfsResult<Arc<dyn UniversalZfsService>> {
+    ) -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
         let mut config = ZfsServiceConfig {
             backend,
             ..Default::default()

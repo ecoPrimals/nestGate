@@ -2,8 +2,8 @@
 
 **Version**: 4.7.0-dev  
 **Build**: 25/25 workspace members compiling, 0 errors  
-**Tests**: 1,457 lib tests passing, 0 failures  
-**Coverage**: 80.25% line (workspace `--lib`, llvm-cov)  
+**Tests**: 1,509 lib tests passing (106 test suites), 0 failures  
+**Coverage**: ~80% line (workspace `--lib`, llvm-cov)  
 **Clippy**: ZERO errors — full workspace `cargo clippy --workspace --all-targets --all-features -- -D warnings` clean  
 **Docs**: Zero warnings (`cargo doc --workspace --no-deps`)  
 **Production TODO/FIXME**: Zero  
@@ -11,7 +11,7 @@
 **ring dependency**: Eliminated — TLS via `aws-lc-rs` (no `ring` in `cargo tree`)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 **Binary (musl)**: ~4.7MB static (`x86_64-unknown-linux-musl`)  
-**File size**: All files under 1,000 lines  
+**File size**: All production files under 800 lines  
 **Last Updated**: March 30, 2026
 
 ---
@@ -124,7 +124,7 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
 | ring | Eliminated — TLS via `aws-lc-rs` provider |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
-| File size limit (1000 lines) | All compliant |
+| File size (production < 800) | All compliant |
 | Env-var race conditions | Fixed (temp-env + serial_test) |
 
 ### Compliance (wateringHole)

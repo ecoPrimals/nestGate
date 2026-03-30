@@ -33,6 +33,7 @@
 //! - **Scalability**: New domains can be added without bloating existing modules
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 // Re-export all domain modules
 pub mod api;
@@ -97,11 +98,73 @@ pub struct ConsolidatedDomainConfigs {
     pub binary: BinaryDomainConfig,
 }
 
+fn merge_json_values(base: &mut serde_json::Value, patch: &serde_json::Value) {
+    match (base, patch) {
+        (serde_json::Value::Object(a), serde_json::Value::Object(b)) => {
+            for (k, v) in b {
+                if let Some(existing) = a.get_mut(k) {
+                    merge_json_values(existing, v);
+                } else {
+                    a.insert(k.clone(), v.clone());
+                }
+            }
+        }
+        (b, p) => *b = p.clone(),
+    }
+}
+
+fn merge_json_patch<T>(
+    target: &mut T,
+    patch: &serde_json::Value,
+) -> nestgate_types::error::Result<()>
+where
+    T: serde::Serialize + serde::de::DeserializeOwned,
+{
+    let mut base = serde_json::to_value(&*target).map_err(|e| {
+        nestgate_types::error::NestGateError::configuration_error(
+            "domain_overrides",
+            format!("serialize domain config: {e}"),
+        )
+    })?;
+    merge_json_values(&mut base, patch);
+    *target = serde_json::from_value(base).map_err(|e| {
+        nestgate_types::error::NestGateError::configuration_error(
+            "domain_overrides",
+            format!("merge domain override: {e}"),
+        )
+    })?;
+    Ok(())
+}
+
 impl ConsolidatedDomainConfigs {
     /// Create new consolidated domain configurations with defaults
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Merge per-domain JSON patches into this consolidated configuration (deep-merge objects).
+    pub fn merge_domain_json_overrides(&mut self, overrides: HashMap<String, serde_json::Value>) {
+        for (domain, patch) in overrides {
+            let res = match domain.as_str() {
+                "zfs" => merge_json_patch(&mut self.zfs, &patch),
+                "api" => merge_json_patch(&mut self.api, &patch),
+                "mcp" => merge_json_patch(&mut self.mcp, &patch),
+                "network_services" => merge_json_patch(&mut self.network_services, &patch),
+                "automation" => merge_json_patch(&mut self.automation, &patch),
+                "fsmonitor" => merge_json_patch(&mut self.fsmonitor, &patch),
+                "installer" => merge_json_patch(&mut self.installer, &patch),
+                "performance" => merge_json_patch(&mut self.performance, &patch),
+                "binary" => merge_json_patch(&mut self.binary, &patch),
+                _ => {
+                    tracing::warn!("unknown domain override key: {domain}");
+                    Ok(())
+                }
+            };
+            if let Err(e) = res {
+                tracing::warn!("failed to apply domain override for {domain}: {e}");
+            }
+        }
     }
 
     /// Validate all domain configurations

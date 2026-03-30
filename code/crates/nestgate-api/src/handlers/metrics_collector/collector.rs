@@ -1,0 +1,247 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::SystemTime;
+
+use nestgate_core::Result;
+use tokio::sync::broadcast;
+use tracing::{debug, info};
+
+use crate::handlers::dashboard_types::{DashboardEvent, DashboardTimeRange};
+
+use super::linux_proc;
+use super::types::{
+    CacheMetricsPoint, CapacityMetricsPoint, ComprehensiveMetricsPoint, PoolMetrics,
+    RealTimeMetrics, SystemSnapshot,
+};
+
+/// Real-time metrics collection engine backed by /proc filesystem reads.
+#[derive(Debug)]
+pub struct RealTimeMetricsCollector {
+    // Implementation details
+}
+impl RealTimeMetricsCollector {
+    /// Create a new metrics collector
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {}
+    }
+
+    /// Start real-time metrics collection with event broadcasting
+    pub fn start_collection(&self, _broadcaster: Arc<broadcast::Sender<DashboardEvent>>) {
+        // Implementation for starting real-time metrics collection
+        info!("Starting real-time metrics collection");
+        // This would spawn background tasks to continuously collect metrics
+    }
+
+    /// Get current system and storage metrics with real data collection
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics> {
+        info!("📊 Collecting real-time system and storage metrics");
+
+        // Collect real system metrics
+        let system_metrics = linux_proc::collect_real_system_metrics().await?;
+
+        // Collect ZFS pool metrics (if available)
+        let pool_metrics = linux_proc::collect_zfs_pool_metrics()
+            .await
+            .unwrap_or_else(|_| vec![]);
+
+        // Collect ZFS ARC statistics
+        let (arc_hit_ratio, l2arc_hit_ratio, compression_ratio) =
+            linux_proc::collect_zfs_cache_stats().await?;
+
+        // Calculate total throughput from pool metrics or system I/O
+        let total_throughput = if pool_metrics.is_empty() {
+            // Fallback to system disk I/O throughput estimation
+            (system_metrics.disk_io.read_bytes + system_metrics.disk_io.write_bytes) as f64
+                / (1024.0 * 1024.0) // MB/s
+        } else {
+            pool_metrics
+                .iter()
+                .map(|p| p.read_throughput + p.write_throughput)
+                .sum()
+        };
+
+        // Calculate average latencies from system disk metrics
+        let average_read_latency = if pool_metrics.is_empty() {
+            // Estimate from system I/O (simplified calculation)
+            let read_ops = system_metrics.disk_io.read_bytes.max(1);
+            (system_metrics.disk_io.read_bytes as f64 / read_ops as f64) / 1000.0
+        // Rough latency estimate
+        } else {
+            pool_metrics.iter().map(|p| p.read_throughput).sum::<f64>()
+                / pool_metrics.len().max(1) as f64
+        };
+
+        let average_write_latency = if pool_metrics.is_empty() {
+            let write_ops = system_metrics.disk_io.write_bytes.max(1);
+            (system_metrics.disk_io.write_bytes as f64 / write_ops as f64) / 1000.0
+        // Rough latency estimate
+        } else {
+            pool_metrics.iter().map(|p| p.write_throughput).sum::<f64>()
+                / pool_metrics.len().max(1) as f64
+        };
+
+        Ok(RealTimeMetrics {
+            timestamp: SystemTime::now(),
+            pool_metrics,
+            system_metrics,
+            arc_hit_ratio,
+            l2arc_hit_ratio,
+            compression_ratio,
+            total_throughput,
+            average_read_latency,
+            average_write_latency,
+        })
+    }
+
+    /// Get historical performance data for a specific pool.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metric retrieval fails.
+    pub fn get_historical_data(
+        &self,
+        pool_name: &str,
+        _time_range: &DashboardTimeRange,
+    ) -> Result<Vec<PoolMetrics>> {
+        // Implementation for getting historical data
+        debug!("Getting historical data for pool: {}", pool_name);
+        Ok(vec![])
+    }
+
+    /// Get system resource snapshot from /proc, with safe fallbacks.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if system metrics cannot be collected.
+    pub fn get_system_resources(&self) -> Result<SystemSnapshot> {
+        let cpu_cores = std::thread::available_parallelism()
+            .map(|n| n.get() as u32)
+            .unwrap_or(1);
+
+        let (memory_total_gb, memory_used_gb, cpu_usage) =
+            match std::fs::read_to_string("/proc/meminfo") {
+                Ok(content) => {
+                    let mut mem_total_kb = 0u64;
+                    let mut mem_available_kb = 0u64;
+                    for line in content.lines() {
+                        let parts: Vec<&str> = line.split_whitespace().collect();
+                        if parts.len() >= 2 {
+                            match parts[0] {
+                                "MemTotal:" => mem_total_kb = parts[1].parse().unwrap_or(0),
+                                "MemAvailable:" => mem_available_kb = parts[1].parse().unwrap_or(0),
+                                _ => {}
+                            }
+                        }
+                    }
+                    let total_gb = (mem_total_kb / (1024 * 1024)) as u32;
+                    let used_gb =
+                        ((mem_total_kb.saturating_sub(mem_available_kb)) / (1024 * 1024)) as u32;
+                    (total_gb, used_gb, 0.0)
+                }
+                Err(_) => (0, 0, 0.0),
+            };
+
+        // statvfs would be ideal but we stay pure-Rust; disk metrics deferred
+        let (disk_total_gb, disk_used_gb) = (0, 0);
+
+        let network_interfaces = match std::fs::read_to_string("/proc/net/dev") {
+            Ok(content) => content
+                .lines()
+                .skip(2)
+                .filter_map(|line| line.split(':').next().map(|name| name.trim().to_string()))
+                .collect(),
+            Err(_) => vec![],
+        };
+
+        Ok(SystemSnapshot {
+            timestamp: SystemTime::now(),
+            cpu_cores,
+            cpu_usage_percent: cpu_usage,
+            memory_total_gb,
+            memory_used_gb,
+            disk_total_gb,
+            disk_used_gb,
+            network_interfaces,
+        })
+    }
+
+    /// Get metrics for all storage pools.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metric retrieval fails.
+    pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
+        // Implementation for getting all pool metrics
+        debug!("Getting all pool metrics");
+        Ok(HashMap::new())
+    }
+
+    /// Get I/O performance historical data.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metric retrieval fails.
+    pub fn get_io_historical_data(
+        &self,
+        _time_range: &DashboardTimeRange,
+    ) -> Result<Vec<super::types::IOMetricsPoint>> {
+        // Implementation for I/O historical data
+        debug!("Getting I/O historical data");
+        Ok(vec![])
+    }
+
+    /// Get cache performance metrics.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metric retrieval fails.
+    pub fn get_cache_metrics(&self) -> Result<Vec<super::types::CacheMetricsPoint>> {
+        // Implementation for cache metrics
+        debug!("Getting cache metrics");
+        Ok(vec![])
+    }
+
+    /// Get comprehensive historical metrics combining all metric types.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metric retrieval fails.
+    pub fn get_comprehensive_historical_data(
+        &self,
+    ) -> Result<Vec<super::types::ComprehensiveMetricsPoint>> {
+        // Implementation for comprehensive historical data
+        debug!("Getting comprehensive historical data");
+        Ok(vec![])
+    }
+
+    /// Get storage capacity historical data.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metric retrieval fails.
+    pub fn get_capacity_historical_data(
+        &self,
+        _time_range: &DashboardTimeRange,
+    ) -> Result<Vec<super::types::CapacityMetricsPoint>> {
+        // Implementation for capacity historical data
+        debug!("Getting capacity historical data");
+        Ok(vec![])
+    }
+}
+
+impl Default for RealTimeMetricsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}

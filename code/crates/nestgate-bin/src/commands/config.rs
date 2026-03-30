@@ -24,32 +24,32 @@ pub async fn execute(action: ConfigAction) -> Result<()> {
 
 /// Show current configuration
 async fn show_config() -> Result<()> {
-    println!("⚙️  NestGate Configuration");
+    println!("NestGate Configuration");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     let runtime_config = nestgate_core::config::runtime::get_config();
 
-    println!("\n📡 Network:");
+    println!("\nNetwork:");
     println!("  API Port:     {}", runtime_config.network.api_port);
     println!("  API Host:     {}", runtime_config.network.api_host);
 
     // Socket configuration
     match nestgate_core::rpc::SocketConfig::from_environment() {
         Ok(socket_config) => {
-            println!("\n🔌 Socket:");
+            println!("\nSocket:");
             println!("  Path:         {}", socket_config.socket_path.display());
             if let Ok(fid) = std::env::var("NESTGATE_FAMILY_ID") {
                 println!("  Family ID:    {fid}");
             }
         }
         Err(e) => {
-            println!("\n🔌 Socket: ⚠️  {e}");
+            println!("\nSocket: {e}");
         }
     }
 
     // Storage backend
     let caps = nestgate_core::services::storage::capabilities::detect_backend();
-    println!("\n💾 Storage:");
+    println!("\nStorage:");
     println!("  Backend:      {:?}", caps.backend_type);
     let mut features = Vec::new();
     if caps.native_snapshots {
@@ -80,7 +80,7 @@ async fn show_config() -> Result<()> {
     println!("  Path:         {storage_path}");
 
     // Environment
-    println!("\n🌍 Environment:");
+    println!("\nEnvironment:");
     let env_vars = [
         "NESTGATE_API_PORT",
         "NESTGATE_BIND",
@@ -105,42 +105,42 @@ async fn show_config() -> Result<()> {
         }
     }
 
-    println!("\n📋 Version: {}", env!("CARGO_PKG_VERSION"));
+    println!("\nVersion: {}", env!("CARGO_PKG_VERSION"));
 
     Ok(())
 }
 
 /// Set a configuration value
 async fn set_config(key: &str, value: &str) -> Result<()> {
-    println!("⚙️  Setting configuration: {key}={value}");
+    println!("Setting configuration: {key}={value}");
 
     // NestGate uses environment-first configuration
     // We inform the user how to persist the setting
     match key {
         "api_port" | "port" => {
-            println!("  💡 Set environment variable: NESTGATE_API_PORT={value}");
-            println!("  📝 Or add to .env.sovereignty: NESTGATE_API_PORT={value}");
+            println!("  Set environment variable: NESTGATE_API_PORT={value}");
+            println!("  Or add to .env.sovereignty: NESTGATE_API_PORT={value}");
         }
         "bind" | "api_bind" => {
-            println!("  💡 Set environment variable: NESTGATE_BIND={value}");
+            println!("  Set environment variable: NESTGATE_BIND={value}");
         }
         "storage_path" => {
-            println!("  💡 Set environment variable: NESTGATE_STORAGE_PATH={value}");
+            println!("  Set environment variable: NESTGATE_STORAGE_PATH={value}");
             let path = std::path::Path::new(value);
             if !path.exists() {
-                println!("  ⚠️  Path does not exist yet (will be created on first use)");
+                println!("  Path does not exist yet (will be created on first use)");
             }
         }
         "family_id" => {
-            println!("  💡 Set environment variable: NESTGATE_FAMILY_ID={value}");
-            println!("  📝 Or use CLI flag: nestgate daemon --family-id {value}");
+            println!("  Set environment variable: NESTGATE_FAMILY_ID={value}");
+            println!("  Or use CLI flag: nestgate daemon --family-id {value}");
         }
         "socket_path" | "socket" => {
-            println!("  💡 Set environment variable: NESTGATE_SOCKET={value}");
+            println!("  Set environment variable: NESTGATE_SOCKET={value}");
         }
         _ => {
-            println!("  ⚠️  Unknown configuration key: {key}");
-            println!("\n  📋 Available keys:");
+            println!("  Unknown configuration key: {key}");
+            println!("\n  Available keys:");
             println!("    api_port      - API port (NESTGATE_API_PORT)");
             println!("    bind          - Bind address (NESTGATE_BIND)");
             println!("    storage_path  - Storage directory (NESTGATE_STORAGE_PATH)");
@@ -178,7 +178,7 @@ async fn get_config(key: &str) -> Result<()> {
         }
         "version" => env!("CARGO_PKG_VERSION").to_string(),
         _ => {
-            println!("⚠️  Unknown key: {key}");
+            println!("Unknown key: {key}");
             println!(
                 "Available: api_port, bind, storage_path, family_id, socket_path, backend, version"
             );
@@ -193,26 +193,26 @@ async fn get_config(key: &str) -> Result<()> {
 /// Reset configuration to defaults
 async fn reset_config(confirm: bool) -> Result<()> {
     if !confirm {
-        println!("⚠️  This will reset NestGate configuration to defaults.");
+        println!("This will reset NestGate configuration to defaults.");
         println!("   Run with --confirm to proceed.");
         println!("\n   Note: NestGate uses environment-first configuration.");
         println!("   This will clear any local config overrides but not environment variables.");
         return Ok(());
     }
 
-    println!("🔄 Resetting configuration to defaults...");
+    println!("Resetting configuration to defaults...");
 
     // Check for local config files
     let config_paths = ["nestgate.toml", "config/nestgate.toml", ".nestgate.toml"];
 
     for path in &config_paths {
         if std::path::Path::new(path).exists() {
-            println!("  📝 Found local config: {path} (would need manual removal)");
+            println!("  Found local config: {path} (would need manual removal)");
         }
     }
 
-    println!("\n  ✅ Runtime configuration reset to defaults");
-    println!("  💡 Environment variables remain active - unset them to fully reset:");
+    println!("\n  Runtime configuration reset to defaults");
+    println!("  Environment variables remain active - unset them to fully reset:");
     println!("     unset NESTGATE_API_PORT NESTGATE_BIND NESTGATE_STORAGE_PATH");
 
     Ok(())
@@ -220,45 +220,45 @@ async fn reset_config(confirm: bool) -> Result<()> {
 
 /// Validate the current configuration
 async fn validate_config() -> Result<()> {
-    println!("🔍 Validating NestGate configuration...");
+    println!("Validating NestGate configuration...");
     let mut issues = 0;
 
     // Check JWT secret
     let jwt_secret = std::env::var("NESTGATE_JWT_SECRET").unwrap_or_default();
     if jwt_secret.is_empty() || jwt_secret == "development-secret-change-me" {
-        println!("  ⚠️  JWT secret not set or using default (set NESTGATE_JWT_SECRET)");
+        println!("  JWT secret not set or using default (set NESTGATE_JWT_SECRET)");
         issues += 1;
     } else {
-        println!("  ✅ JWT secret configured");
+        println!("  JWT secret configured");
     }
 
     // Check storage path
     let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
         .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
     if std::path::Path::new(&storage_path).exists() {
-        println!("  ✅ Storage path exists: {storage_path}");
+        println!("  Storage path exists: {storage_path}");
     } else {
-        println!("  ⚠️  Storage path missing: {storage_path} (will be created on first use)");
+        println!("  Storage path missing: {storage_path} (will be created on first use)");
         issues += 1;
     }
 
     // Check socket config
     match nestgate_core::rpc::SocketConfig::from_environment() {
-        Ok(config) => println!("  ✅ Socket config valid: {}", config.socket_path.display()),
+        Ok(config) => println!("  Socket config valid: {}", config.socket_path.display()),
         Err(e) => {
-            println!("  ⚠️  Socket config issue: {e}");
+            println!("  Socket config issue: {e}");
             issues += 1;
         }
     }
 
     // Check backend
     let caps = nestgate_core::services::storage::capabilities::detect_backend();
-    println!("  ✅ Backend detected: {:?}", caps.backend_type);
+    println!("  Backend detected: {:?}", caps.backend_type);
 
     if issues == 0 {
-        println!("\n✅ Configuration is valid");
+        println!("\nConfiguration is valid");
     } else {
-        println!("\n⚠️  {issues} issue(s) found");
+        println!("\n{issues} issue(s) found");
     }
 
     Ok(())
@@ -292,7 +292,7 @@ async fn export_config(output: Option<std::path::PathBuf>, format: &str) -> Resu
     match output {
         Some(path) => {
             tokio::fs::write(&path, &content).await?;
-            println!("📝 Configuration exported to: {}", path.display());
+            println!("Configuration exported to: {}", path.display());
         }
         None => {
             println!("{content}");
@@ -309,18 +309,18 @@ async fn import_config(input: std::path::PathBuf) -> Result<()> {
     }
 
     let content = tokio::fs::read_to_string(&input).await?;
-    println!("📥 Reading configuration from: {}", input.display());
+    println!("Reading configuration from: {}", input.display());
 
     // Parse and display what would be imported
     if let Ok(config) = serde_json::from_str::<serde_json::Value>(&content) {
-        println!("  📋 Configuration contents:");
+        println!("  Configuration contents:");
         if let Some(network) = config.get("network") {
             println!("    Network: {network}");
         }
         if let Some(storage) = config.get("storage") {
             println!("    Storage: {storage}");
         }
-        println!("\n  💡 To apply, set the corresponding environment variables:");
+        println!("\n  To apply, set the corresponding environment variables:");
         if let Some(port) = config.pointer("/network/api_port") {
             println!("    export NESTGATE_API_PORT={port}");
         }
@@ -331,7 +331,7 @@ async fn import_config(input: std::path::PathBuf) -> Result<()> {
             println!("    export NESTGATE_STORAGE_PATH={p}");
         }
     } else {
-        println!("  ⚠️  Could not parse configuration file (expected JSON)");
+        println!("  Could not parse configuration file (expected JSON)");
     }
 
     Ok(())

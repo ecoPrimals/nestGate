@@ -49,6 +49,7 @@ use crate::config::canonical_primary::{
 };
 use crate::universal_adapter::stats::AdapterStats;
 use nestgate_config::LOCALHOST_IPV4;
+use nestgate_config::constants::hardcoding::addresses::BIND_ALL_IPV4 as BIND_ALL_IPV4_STR;
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, RwLock};
@@ -75,7 +76,7 @@ fn stub_loopback_ip() -> IpAddr {
 pub fn discover_bind_address(service_name: &str) -> Result<IpAddr> {
     match service_name {
         "api" | "web" | "http" => Ok(crate::safe_operations::safe_parse_ip_with_fallback(
-            "0.0.0.0",
+            BIND_ALL_IPV4_STR,
             std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
             "stub_service_discovery",
         )),

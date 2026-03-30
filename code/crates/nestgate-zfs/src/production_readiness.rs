@@ -571,4 +571,89 @@ mod tests {
         let o = RealZfsOperations::default();
         let _ = format!("{o:?}");
     }
+
+    #[test]
+    fn validate_performance_fails_when_min_memory_below_threshold() {
+        temp_env::with_var("NESTGATE_MIN_MEMORY_MB", Some("256"), || {
+            let v = ProductionReadinessValidator::new();
+            assert!(!v.validate_performance().expect("result"));
+        });
+    }
+
+    #[test]
+    fn validate_performance_passes_when_min_memory_at_default_level() {
+        temp_env::with_var("NESTGATE_MIN_MEMORY_MB", None::<&str>, || {
+            let v = ProductionReadinessValidator::new();
+            assert!(v.validate_performance().expect("result"));
+        });
+    }
+
+    #[test]
+    fn validate_performance_passes_when_min_memory_explicitly_high() {
+        temp_env::with_var("NESTGATE_MIN_MEMORY_MB", Some("2048"), || {
+            let v = ProductionReadinessValidator::new();
+            assert!(v.validate_performance().expect("result"));
+        });
+    }
+
+    #[test]
+    fn detect_real_hardware_false_when_mock_mode_enabled() {
+        temp_env::with_var("NESTGATE_MOCK_MODE", Some("true"), || {
+            let v = ProductionReadinessValidator::new();
+            assert!(!v.detect_real_hardware().expect("result"));
+        });
+    }
+
+    #[test]
+    fn validate_security_passes_when_secure_mode_unset_or_false() {
+        temp_env::with_var("NESTGATE_SECURE_MODE", None::<&str>, || {
+            let v = ProductionReadinessValidator::new();
+            assert!(v.validate_security().expect("result"));
+        });
+        temp_env::with_var("NESTGATE_SECURE_MODE", Some("false"), || {
+            let v = ProductionReadinessValidator::new();
+            assert!(v.validate_security().expect("result"));
+        });
+    }
+
+    #[test]
+    fn validate_configuration_succeeds_with_writable_temp_directories() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let data = tmp.path().join("data");
+        let cfg = tmp.path().join("config");
+        let data_s = data.to_str().expect("utf8");
+        let cfg_s = cfg.to_str().expect("utf8");
+        temp_env::with_vars(
+            [
+                ("NESTGATE_DATA_DIR", Some(data_s)),
+                ("NESTGATE_CONFIG_DIR", Some(cfg_s)),
+            ],
+            || {
+                let v = ProductionReadinessValidator::new();
+                assert!(v.validate_configuration().expect("result"));
+            },
+        );
+    }
+
+    #[test]
+    fn assess_production_readiness_with_mock_mode_records_mock_dependency_finding() {
+        temp_env::with_var("NESTGATE_MOCK_MODE", Some("true"), || {
+            let v = ProductionReadinessValidator::new();
+            let report = v.assess_production_readiness().expect("report");
+            assert!(!report.mock_dependencies.is_empty());
+            assert!(
+                report
+                    .findings
+                    .iter()
+                    .any(|f| f.category == "Mock Dependencies" && f.blocking)
+            );
+        });
+    }
+
+    #[tokio::test]
+    async fn real_zfs_operations_is_available_is_stable_across_calls() {
+        let a = RealZfsOperations::is_available().await;
+        let b = RealZfsOperations::is_available().await;
+        assert_eq!(a, b);
+    }
 }

@@ -112,7 +112,7 @@ impl StorageManagerService {
         // Initialize service with real implementations
         service.initialize().await?;
 
-        info!("✅ Storage Manager Service initialized successfully with real ZFS support");
+        info!("Storage Manager Service initialized successfully with real ZFS support");
         Ok(service)
     }
 
@@ -147,7 +147,7 @@ impl StorageManagerService {
 
     /// Check if ZFS is available on the system
     async fn check_zfs_availability(&self) -> Result<()> {
-        info!("🔍 Checking ZFS availability");
+        info!("Checking ZFS availability");
 
         // Check if ZFS kernel module is loaded
         match std::fs::read_to_string("/proc/modules") {
@@ -175,7 +175,7 @@ impl StorageManagerService {
             .await
         {
             Ok(output) if output.status.success() => {
-                info!("✅ ZFS tools available");
+                info!("ZFS tools available");
                 Ok(())
             }
             _ => {
@@ -190,7 +190,7 @@ impl StorageManagerService {
 
     /// Discover existing ZFS pools
     async fn discover_zfs_pools(&self) -> Result<()> {
-        info!("🔍 Discovering existing ZFS pools");
+        info!("Discovering existing ZFS pools");
 
         // Execute 'zpool list' to discover existing pools
         match tokio::process::Command::new("zpool")
@@ -206,18 +206,18 @@ impl StorageManagerService {
                     .count();
 
                 if pool_count > 0 {
-                    info!("✅ Discovered {} existing ZFS pools", pool_count);
+                    info!("Discovered {} existing ZFS pools", pool_count);
                     for line in stdout.lines().filter(|line| !line.trim().is_empty()) {
                         let parts: Vec<&str> = line.split('\t').collect();
                         if parts.len() >= 5 {
                             info!(
-                                "  📦 Pool: {} | Size: {} | Health: {}",
+                                "  Pool: {} | Size: {} | Health: {}",
                                 parts[0], parts[1], parts[4]
                             );
                         }
                     }
                 } else {
-                    info!("📦 No existing ZFS pools found");
+                    info!("No existing ZFS pools found");
                 }
                 Ok(())
             }
@@ -237,11 +237,11 @@ impl StorageManagerService {
 
     /// Initialize quota management
     async fn initialize_quota_management(&self) -> Result<()> {
-        info!("📊 Initializing quota management");
+        info!("Initializing quota management");
 
         // Initialize quota tracking structures
         if self.config.enable_quotas {
-            info!("✅ Quota management enabled - initializing tracking");
+            info!("Quota management enabled - initializing tracking");
 
             // Check if ZFS quotas are supported
             match tokio::process::Command::new("zfs")
@@ -250,14 +250,14 @@ impl StorageManagerService {
                 .await
             {
                 Ok(output) if output.status.success() => {
-                    info!("✅ ZFS quota support confirmed");
+                    info!("ZFS quota support confirmed");
                 }
                 _ => {
                     warn!("ZFS quota support check failed - quotas may not work properly");
                 }
             }
         } else {
-            info!("📊 Quota management disabled in configuration");
+            info!("Quota management disabled in configuration");
         }
 
         Ok(())
@@ -265,11 +265,11 @@ impl StorageManagerService {
 
     /// Initialize cache management
     fn initialize_cache_management(&self) -> Result<()> {
-        info!("🚀 Initializing cache management");
+        info!("Initializing cache management");
 
         // Initialize cache management based on configuration
         // Configure ARC (Adaptive Replacement Cache) if available
-        info!("✅ Initializing ZFS ARC cache management");
+        info!("Initializing ZFS ARC cache management");
 
         // Check current ARC statistics
         match std::fs::read_to_string("/proc/spl/kstat/zfs/arcstats") {
@@ -287,7 +287,7 @@ impl StorageManagerService {
                                 )]
                                 let arc_size_f: f64 = arc_size as f64;
                                 let arc_mb = arc_size_f / 1024.0 / 1024.0;
-                                info!("📊 Current ARC size: {} bytes ({arc_mb:.2} MB)", arc_size);
+                                info!("Current ARC size: {} bytes ({arc_mb:.2} MB)", arc_size);
                             }
                         }
                         break;
@@ -295,19 +295,19 @@ impl StorageManagerService {
                 }
             }
             Err(_) => {
-                info!("📊 ARC statistics not available (ZFS may not be running)");
+                info!("ARC statistics not available (ZFS may not be running)");
             }
         }
 
         // Initialize cache monitoring
-        info!("✅ Cache monitoring initialized");
+        info!("Cache monitoring initialized");
 
         Ok(())
     }
 
     /// Start background monitoring tasks
     fn start_background_tasks(&self) -> Result<()> {
-        info!("🔄 Starting background monitoring tasks");
+        info!("Starting background monitoring tasks");
 
         // Start health monitoring task
         let service_id = self.service_id;
@@ -325,16 +325,13 @@ impl StorageManagerService {
                     Ok(output) if output.status.success() => {
                         let stdout = String::from_utf8_lossy(&output.stdout);
                         if stdout.contains("all pools are healthy") {
-                            debug!("✅ All ZFS pools healthy (service: {})", service_id);
+                            debug!("All ZFS pools healthy (service: {})", service_id);
                         } else {
-                            warn!(
-                                "⚠️  ZFS pool health issues detected (service: {})",
-                                service_id
-                            );
+                            warn!("ZFS pool health issues detected (service: {})", service_id);
                         }
                     }
                     _ => {
-                        debug!("🔍 ZFS health check skipped (service: {})", service_id);
+                        debug!("ZFS health check skipped (service: {})", service_id);
                     }
                 }
             }
@@ -370,13 +367,13 @@ impl StorageManagerService {
                             reason = "ARC hit/miss counters; percentage for debug log only"
                         )]
                         let hit_rate = hits as f64 / total as f64 * 100.0;
-                        debug!("📊 ZFS ARC hit rate: {:.2}%", hit_rate);
+                        debug!("ZFS ARC hit rate: {:.2}%", hit_rate);
                     }
                 }
             }
         });
 
-        info!("✅ Background monitoring tasks started");
+        info!("Background monitoring tasks started");
         Ok(())
     }
 

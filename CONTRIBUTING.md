@@ -5,8 +5,8 @@
 NestGate is in active development. Current metrics:
 
 - **Build**: 25/25 workspace members, 0 errors
-- **Tests**: 8,177 lib tests passing, 0 failures, 64 ignored
-- **Coverage**: 77.1% line (llvm-cov)
+- **Tests**: 1,509 lib tests passing (106 suites), 0 failures
+- **Coverage**: ~80% line (llvm-cov)
 - **Clippy**: ZERO errors — full workspace `cargo clippy --workspace --all-targets -- -D warnings` clean
 - **Safety**: `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`
 
@@ -29,11 +29,11 @@ See [STATUS.md](./STATUS.md) for full metrics.
 
 | System | Location | Usage |
 |--------|----------|-------|
-| Error handling | `nestgate-core/src/error/` | `NestGateError` variants |
-| Configuration | `nestgate-core/src/config/` | Environment-driven, XDG-compliant |
-| Constants | `nestgate-core/src/constants/` | Unified constants |
+| Error handling | `nestgate-types/src/error/` | `NestGateError` variants |
+| Configuration | `nestgate-config/src/config/` | Environment-driven, XDG-compliant |
+| Constants | `nestgate-config/src/constants/` | Unified constants |
 | Traits | `nestgate-core/src/traits/` | Canonical service traits |
-| Discovery | `nestgate-core/src/capability_discovery.rs` | Capability-based IPC |
+| Discovery | `nestgate-discovery/src/` | Capability-based IPC |
 
 ---
 
@@ -184,4 +184,4 @@ The `tools/` directory is excluded from coverage — it contains development too
 
 ---
 
-**Last Updated**: March 29, 2026
+**Last Updated**: March 30, 2026

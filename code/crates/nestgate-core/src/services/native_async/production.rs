@@ -471,8 +471,11 @@ mod tests {
         CommunicationProtocol, ServiceCapability, ServiceEndpoint, ServiceMetadata,
     };
     use crate::universal_traits::ServiceRequest;
+    use anyhow::Context;
     use std::collections::HashMap;
     use uuid::Uuid;
+
+    type TestResult = anyhow::Result<()>;
 
     fn make_service_info(name: &str) -> crate::service_discovery::types::ServiceInfo {
         use crate::service_discovery::types::{ServiceCategory, StorageType};
@@ -498,52 +501,57 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_default() {
+    async fn test_production_load_balancer_default() -> TestResult {
         let lb = ProductionLoadBalancer::default();
-        let stats = lb.get_stats().await.unwrap();
+        let stats = lb.get_stats().await?;
         assert_eq!(stats.total_requests, 0);
         assert_eq!(stats.algorithm, "round_robin");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_add_remove_service() {
+    async fn test_production_load_balancer_add_remove_service() -> TestResult {
         let lb = ProductionLoadBalancer::default();
         let svc = make_service_info("test-svc");
 
-        lb.add_service(svc).await.unwrap();
-        assert!(lb.service_exists("test-svc").await.unwrap());
+        lb.add_service(svc).await?;
+        assert!(lb.service_exists("test-svc").await?);
 
-        lb.remove_service("test-svc").await.unwrap();
-        assert!(!lb.service_exists("test-svc").await.unwrap());
+        lb.remove_service("test-svc").await?;
+        assert!(!lb.service_exists("test-svc").await?);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_list_services() {
+    async fn test_production_load_balancer_list_services() -> TestResult {
         let lb = ProductionLoadBalancer::default();
-        lb.add_service(make_service_info("a")).await.unwrap();
-        lb.add_service(make_service_info("b")).await.unwrap();
+        lb.add_service(make_service_info("a")).await?;
+        lb.add_service(make_service_info("b")).await?;
 
-        let list = lb.list_services().await.unwrap();
+        let list = lb.list_services().await?;
         assert_eq!(list.len(), 2);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_get_service() {
+    async fn test_production_load_balancer_get_service() -> TestResult {
         let lb = ProductionLoadBalancer::default();
-        lb.add_service(make_service_info("my-svc")).await.unwrap();
+        lb.add_service(make_service_info("my-svc")).await?;
 
-        let opt = lb.get_service("my-svc").await.unwrap();
-        assert!(opt.is_some());
-        assert_eq!(opt.unwrap().metadata.name, "my-svc");
+        let opt = lb.get_service("my-svc").await?;
+        let service = opt.context("expected service")?;
+        assert_eq!(service.metadata.name, "my-svc");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_get_stats_after_add() {
+    async fn test_production_load_balancer_get_stats_after_add() -> TestResult {
         let lb = ProductionLoadBalancer::default();
-        lb.add_service(make_service_info("s1")).await.unwrap();
+        lb.add_service(make_service_info("s1")).await?;
 
-        let stats = lb.get_stats().await.unwrap();
+        let stats = lb.get_stats().await?;
         assert!(stats.service_stats.contains_key("s1"));
+        Ok(())
     }
 
     #[tokio::test]
@@ -560,29 +568,32 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_health_check_all() {
+    async fn test_production_load_balancer_health_check_all() -> TestResult {
         let lb = ProductionLoadBalancer::default();
-        lb.add_service(make_service_info("h")).await.unwrap();
+        lb.add_service(make_service_info("h")).await?;
 
-        let health = lb.health_check_all().await.unwrap();
+        let health = lb.health_check_all().await?;
         assert_eq!(health.len(), 1);
         assert_eq!(health[0].0, "h");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_update_service_weight() {
+    async fn test_production_load_balancer_update_service_weight() -> TestResult {
         let lb = ProductionLoadBalancer::default();
-        lb.add_service(make_service_info("w")).await.unwrap();
+        lb.add_service(make_service_info("w")).await?;
         let result = lb.update_service_weight("w", 2.0).await;
         assert!(result.is_ok());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_load_balancer_get_service_stats() {
+    async fn test_production_load_balancer_get_service_stats() -> TestResult {
         let lb = ProductionLoadBalancer::default();
-        lb.add_service(make_service_info("stats")).await.unwrap();
-        let s = lb.get_service_stats("stats").await.unwrap();
+        lb.add_service(make_service_info("stats")).await?;
+        let s = lb.get_service_stats("stats").await?;
         assert_eq!(s.requests, 0);
+        Ok(())
     }
 
     #[tokio::test]
@@ -593,29 +604,31 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_production_communication_provider_default() {
+    async fn test_production_communication_provider_default() -> TestResult {
         let provider = ProductionCommunicationProvider::default();
-        let msg = provider.receive_message().await.unwrap();
+        let msg = provider.receive_message().await?;
         assert!(!msg.message_id.is_empty());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_communication_provider_connect_disconnect() {
+    async fn test_production_communication_provider_connect_disconnect() -> TestResult {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
             host: LOCALHOST_NAME.to_string(),
             port: get_metrics_port(),
         };
-        let conn = provider.connect(addr).await.unwrap();
+        let conn = provider.connect(addr).await?;
         assert!(matches!(conn.status, ConnectionStatus::Connected));
 
-        provider.disconnect(&conn).await.unwrap();
-        let list = provider.list_connections().await.unwrap();
+        provider.disconnect(&conn).await?;
+        let list = provider.list_connections().await?;
         assert!(!list.iter().any(|c| c.connection_id == conn.connection_id));
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_communication_provider_send_message() {
+    async fn test_production_communication_provider_send_message() -> TestResult {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
             host: LOCALHOST_IPV4.to_string(),
@@ -630,11 +643,12 @@ mod tests {
             timestamp: SystemTime::now(),
             priority: crate::services::native_async::types::MessagePriority::Normal,
         };
-        provider.send_message(addr, msg).await.unwrap();
+        provider.send_message(addr, msg).await?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_communication_provider_broadcast() {
+    async fn test_production_communication_provider_broadcast() -> TestResult {
         let provider = ProductionCommunicationProvider::default();
         let msg = CommunicationMessage {
             message_id: "b1".to_string(),
@@ -645,31 +659,34 @@ mod tests {
             timestamp: SystemTime::now(),
             priority: crate::services::native_async::types::MessagePriority::Normal,
         };
-        let count = provider.broadcast(msg).await.unwrap();
+        let count = provider.broadcast(msg).await?;
         let _ = count; // number of connections broadcast to
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_communication_provider_connection_status() {
+    async fn test_production_communication_provider_connection_status() -> TestResult {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
             host: LOCALHOST_NAME.to_string(),
             port: get_admin_port(),
         };
-        let conn = provider.connect(addr).await.unwrap();
-        let status = provider.connection_status(&conn).await.unwrap();
+        let conn = provider.connect(addr).await?;
+        let status = provider.connection_status(&conn).await?;
         assert!(status.contains("Connected"));
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_production_communication_provider_ping() {
+    async fn test_production_communication_provider_ping() -> TestResult {
         let provider = ProductionCommunicationProvider::default();
         let addr = NetworkAddress {
             host: LOCALHOST_NAME.to_string(),
             port: get_health_port(),
         };
-        let conn = provider.connect(addr).await.unwrap();
-        let _ = provider.ping(&conn).await.unwrap();
+        let conn = provider.connect(addr).await?;
+        let _ = provider.ping(&conn).await?;
+        Ok(())
     }
 }
 

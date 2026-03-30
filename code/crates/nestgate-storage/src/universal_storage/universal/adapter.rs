@@ -244,45 +244,104 @@ impl std::fmt::Debug for UniversalStorageAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::universal_storage::universal::transport::FramingProtocol;
     use crate::universal_storage::universal::{
         AuthenticationPattern, HttpVersion, ObjectAddressing, ObjectOrganization,
         StorageOperationPattern, TransportProtocol,
     };
+    use anyhow::Result;
 
-    fn create_test_adapter() -> UniversalStorageAdapter {
+    fn http_object_adapter(
+        addressing: ObjectAddressing,
+        endpoint: &str,
+    ) -> UniversalStorageAdapter {
         let protocol = DiscoveredProtocol::new(
             TransportProtocol::Http {
                 version: HttpVersion::Http1_1,
                 tls: None,
             },
             StorageOperationPattern::ObjectStore {
-                addressing: ObjectAddressing::PathBased,
+                addressing,
                 organization: ObjectOrganization::Hierarchical { separator: '/' },
             },
             AuthenticationPattern::None,
         );
-
-        UniversalStorageAdapter::new("http://storage.example.com/bucket", protocol)
+        UniversalStorageAdapter::new(endpoint, protocol)
     }
 
     #[test]
-    fn test_adapter_creation() {
-        let adapter = create_test_adapter();
+    fn adapter_creation_and_endpoint() -> Result<()> {
+        let adapter = http_object_adapter(
+            ObjectAddressing::PathBased,
+            "http://storage.example.com/bucket",
+        );
         assert_eq!(adapter.endpoint(), "http://storage.example.com/bucket");
+        Ok(())
     }
 
     #[test]
-    fn test_build_url_path_based() {
-        let adapter = create_test_adapter();
-        let url = adapter.build_url("path/to/object");
-        assert_eq!(url, "http://storage.example.com/bucket/path/to/object");
+    fn build_url_path_query_and_header_based() -> Result<()> {
+        let base = "http://storage.example.com/bucket";
+        assert_eq!(
+            http_object_adapter(ObjectAddressing::PathBased, base).build_url("k"),
+            "http://storage.example.com/bucket/k"
+        );
+        assert_eq!(
+            http_object_adapter(ObjectAddressing::QueryBased, base).build_url("mykey"),
+            "http://storage.example.com/bucket?key=mykey"
+        );
+        assert_eq!(
+            http_object_adapter(
+                ObjectAddressing::HeaderBased {
+                    location_headers: vec!["X-Loc".to_string()],
+                },
+                base
+            )
+            .build_url("ignored"),
+            base.to_string()
+        );
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_filesystem_operations() {
+    async fn http_read_returns_placeholder_bytes() -> Result<()> {
+        let adapter = http_object_adapter(ObjectAddressing::PathBased, "http://localhost:9000");
+        let data = adapter.read("obj").await?;
+        assert!(data.starts_with(b"HTTP read from http://localhost:9000"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn unsupported_tcp_transport_returns_not_implemented() -> Result<()> {
+        let protocol = DiscoveredProtocol::new(
+            TransportProtocol::Tcp {
+                framing: FramingProtocol::LengthPrefixed { length_bytes: 4 },
+            },
+            StorageOperationPattern::ObjectStore {
+                addressing: ObjectAddressing::PathBased,
+                organization: ObjectOrganization::Flat,
+            },
+            AuthenticationPattern::None,
+        );
+        let adapter = UniversalStorageAdapter::new("127.0.0.1:9999", protocol);
+        let err = adapter.read("k").await.expect_err("tcp unsupported");
+        assert!(
+            err.to_string().to_lowercase().contains("not implemented")
+                || err.to_string().contains("not yet implemented")
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn filesystem_round_trip_via_tempdir() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let root = dir
+            .path()
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("temp path utf-8"))?;
         let protocol = DiscoveredProtocol::new(
             TransportProtocol::UnixSocket {
-                path: "/tmp/test_storage".to_string(),
+                path: root.to_string(),
             },
             StorageOperationPattern::FileSystem {
                 path_separator: '/',
@@ -290,20 +349,11 @@ mod tests {
             },
             AuthenticationPattern::None,
         );
-
-        let adapter = UniversalStorageAdapter::new("/tmp/test_storage", protocol);
-
-        // Write test
-        let result = adapter.write("test.txt", b"test data").await;
-        assert!(result.is_ok());
-
-        // Read test
-        let result = adapter.read("test.txt").await;
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), b"test data");
-
-        // Delete test
-        let result = adapter.delete("test.txt").await;
-        assert!(result.is_ok());
+        let adapter = UniversalStorageAdapter::new(root, protocol);
+        adapter.write("nestgate_test.txt", b"payload").await?;
+        let data = adapter.read("nestgate_test.txt").await?;
+        assert_eq!(data, b"payload");
+        adapter.delete("nestgate_test.txt").await?;
+        Ok(())
     }
 }

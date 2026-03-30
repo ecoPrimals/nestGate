@@ -575,10 +575,7 @@ mod cache_comprehensive_tests {
 
         let stats = cache.stats().expect("Cache operation failed");
 
-        // NOTE: stats() is currently a placeholder implementation that returns zeros.
-        // Future enhancement: Implement actual stats tracking in MultiTierCache.
-        // This test validates the placeholder behavior.
-        assert_eq!(stats.total_hits, 0); // Placeholder implementation returns 0
-        assert_eq!(stats.total_misses, 0); // Placeholder implementation returns 0
+        assert_eq!(stats.total_hits, 1);
+        assert_eq!(stats.total_misses, 1);
     }
 }

@@ -6,61 +6,71 @@
 
 //! Snapshot Operations module
 
+use std::sync::Arc;
+
+use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
+use async_recursion::async_recursion;
 
 use super::core::FailSafeZfsService;
 
 /// List Snapshots
+#[async_recursion]
 pub async fn list_snapshots(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<SnapshotInfo>> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
-        // Try fallback service if available
         if let Some(fallback) = &service.fallback {
-            return fallback.list_snapshots().await;
+            return dispatch_list_snapshots(fallback).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.list_snapshots().await {
+    match dispatch_list_snapshots(&service.primary).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
         }
         Err(e) => {
             service.circuit_breaker.record_failure().await;
-            // Try fallback if available
             if let Some(fallback) = &service.fallback {
-                fallback.list_snapshots().await
+                dispatch_list_snapshots(fallback).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_list_snapshots(
+    e: &Arc<UniversalZfsServiceEnum>,
+) -> UniversalZfsResult<Vec<SnapshotInfo>> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.list_snapshots().await,
+        UniversalZfsServiceEnum::FailSafe(f) => list_snapshots(f).await,
     }
 }
 
 /// List Dataset Snapshots
+#[async_recursion]
 pub async fn list_dataset_snapshots(
     service: &FailSafeZfsService,
     dataset: &str,
 ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.list_dataset_snapshots(dataset).await;
+            return dispatch_list_dataset_snapshots(fallback, dataset).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.list_dataset_snapshots(dataset).await {
+    match dispatch_list_dataset_snapshots(&service.primary, dataset).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -68,41 +78,49 @@ pub async fn list_dataset_snapshots(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.list_dataset_snapshots(dataset).await
+                dispatch_list_dataset_snapshots(fallback, dataset).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_list_dataset_snapshots(
+    e: &Arc<UniversalZfsServiceEnum>,
+    dataset: &str,
+) -> UniversalZfsResult<Vec<SnapshotInfo>> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.list_dataset_snapshots(dataset).await,
+        UniversalZfsServiceEnum::FailSafe(f) => list_dataset_snapshots(f, dataset).await,
     }
 }
 
 /// Creates  Snapshot
+#[async_recursion]
 pub async fn create_snapshot(
     service: &FailSafeZfsService,
     config: &SnapshotConfig,
 ) -> UniversalZfsResult<SnapshotInfo> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
-        // Try fallback service if available
         if let Some(fallback) = &service.fallback {
-            return fallback.create_snapshot(config).await;
+            return dispatch_create_snapshot(fallback, config).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.create_snapshot(config).await {
+    match dispatch_create_snapshot(&service.primary, config).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
         }
         Err(e) => {
             service.circuit_breaker.record_failure().await;
-            // Try fallback if available
             if let Some(fallback) = &service.fallback {
-                fallback.create_snapshot(config).await
+                dispatch_create_snapshot(fallback, config).await
             } else {
                 Err(e)
             }
@@ -110,20 +128,30 @@ pub async fn create_snapshot(
     }
 }
 
+#[async_recursion]
+async fn dispatch_create_snapshot(
+    e: &Arc<UniversalZfsServiceEnum>,
+    config: &SnapshotConfig,
+) -> UniversalZfsResult<SnapshotInfo> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.create_snapshot(config).await,
+        UniversalZfsServiceEnum::FailSafe(f) => create_snapshot(f, config).await,
+    }
+}
+
 /// Destroy Snapshot
+#[async_recursion]
 pub async fn destroy_snapshot(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.destroy_snapshot(name).await;
+            return dispatch_destroy_snapshot(fallback, name).await;
         }
         return Err(UniversalZfsError::internal(
             "Circuit breaker open and no fallback available",
         ));
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.destroy_snapshot(name).await {
+    match dispatch_destroy_snapshot(&service.primary, name).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -131,11 +159,22 @@ pub async fn destroy_snapshot(service: &FailSafeZfsService, name: &str) -> Unive
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.destroy_snapshot(name).await
+                dispatch_destroy_snapshot(fallback, name).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_destroy_snapshot(
+    e: &Arc<UniversalZfsServiceEnum>,
+    name: &str,
+) -> UniversalZfsResult<()> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.destroy_snapshot(name).await,
+        UniversalZfsServiceEnum::FailSafe(f) => destroy_snapshot(f, name).await,
     }
 }
 

@@ -116,6 +116,9 @@ mod tests {
 
     #[tokio::test]
     async fn non_socket_endpoint_returns_error() {
+        let endpoint = std::env::var("NESTGATE_SECURITY_PRIMAL_URL")
+            .ok()
+            .unwrap_or_else(|| "http://0.0.0.0:0".to_string());
         let conn = PrimalConnection {
             capability: CapabilityDescriptor {
                 id: "sec".to_string(),
@@ -124,7 +127,7 @@ mod tests {
                 metadata: HashMap::new(),
                 sovereignty_compliant: true,
             },
-            endpoint: "http://127.0.0.1:9".to_string(),
+            endpoint,
         };
         let creds = ZeroCostCredentials::new_password("u".into(), "p".into());
         let err = call_security_primal(&conn, &creds, Duration::from_secs(60))

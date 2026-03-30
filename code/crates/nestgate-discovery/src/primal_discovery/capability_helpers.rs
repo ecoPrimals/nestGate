@@ -46,7 +46,40 @@
 //! ```
 
 use crate::discovery_mechanism::{DiscoveryBuilder, ServiceInfo};
+use nestgate_config::constants::hardcoding::runtime_fallback_ports as fallback_ports;
+use nestgate_config::constants::{get_api_port, get_dev_port};
 use nestgate_types::error::{NestGateError, Result};
+
+/// Last-resort host for capability bootstrap when discovery and env URLs are unset.
+/// Prefer `NESTGATE_<CAPABILITY>_HOST` (e.g. `NESTGATE_ORCHESTRATION_HOST`), then
+/// `NESTGATE_DISCOVERY_FALLBACK_HOST`, then loopback.
+fn fallback_host_for_capability(capability: &str) -> String {
+    let specific = format!("NESTGATE_{}_HOST", capability.to_uppercase());
+    std::env::var(&specific)
+        .or_else(|_| std::env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
+        .unwrap_or_else(|_| "127.0.0.1".to_string())
+}
+
+fn default_port_compute() -> u16 {
+    std::env::var("NESTGATE_COMPUTE_PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(fallback_ports::COMPUTE)
+}
+
+fn default_port_ai() -> u16 {
+    std::env::var("NESTGATE_AI_PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(fallback_ports::ADMIN)
+}
+
+fn default_port_ecosystem() -> u16 {
+    std::env::var("NESTGATE_ECOSYSTEM_PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(fallback_ports::ECOSYSTEM)
+}
 
 /// Discovered service information
 #[derive(Debug, Clone)]
@@ -112,13 +145,13 @@ impl DiscoveredService {
 /// 1. Discovery (mDNS/Consul/k8s)
 /// 2. `NESTGATE_CAPABILITY_ORCHESTRATION` environment variable
 /// 3. `NESTGATE_SONGBIRD_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://127.0.0.1:8080`
+/// 4. Last-resort default: `http://{NESTGATE_ORCHESTRATION_HOST or fallback}:{NESTGATE_API_PORT}`
 ///
 /// # Errors
 ///
 /// Returns error only if all discovery methods fail and no fallback is available.
 pub async fn discover_orchestration() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("orchestration", "SONGBIRD", 8080).await
+    discover_capability_with_legacy("orchestration", "SONGBIRD", get_api_port).await
 }
 
 /// Discover security service (e.g., `BearDog`)
@@ -127,9 +160,9 @@ pub async fn discover_orchestration() -> Result<DiscoveredService> {
 /// 1. Discovery (mDNS/Consul/k8s)
 /// 2. `NESTGATE_CAPABILITY_SECURITY` environment variable
 /// 3. `NESTGATE_BEARDOG_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://127.0.0.1:3000`
+/// 4. Last-resort default: `http://{NESTGATE_SECURITY_HOST or fallback}:{NESTGATE_DEV_PORT}`
 pub async fn discover_security() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("security", "BEARDOG", 3000).await
+    discover_capability_with_legacy("security", "BEARDOG", get_dev_port).await
 }
 
 /// Discover compute service (e.g., `ToadStool`)
@@ -138,9 +171,9 @@ pub async fn discover_security() -> Result<DiscoveredService> {
 /// 1. Discovery (mDNS/Consul/k8s)
 /// 2. `NESTGATE_CAPABILITY_COMPUTE` environment variable
 /// 3. `NESTGATE_TOADSTOOL_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://127.0.0.1:7070`
+/// 4. Last-resort default: `http://{NESTGATE_COMPUTE_HOST or fallback}:{NESTGATE_COMPUTE_PORT or canonical}`
 pub async fn discover_compute() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("compute", "TOADSTOOL", 7070).await
+    discover_capability_with_legacy("compute", "TOADSTOOL", default_port_compute).await
 }
 
 /// Discover AI service (e.g., Squirrel)
@@ -149,9 +182,9 @@ pub async fn discover_compute() -> Result<DiscoveredService> {
 /// 1. Discovery (mDNS/Consul/k8s)
 /// 2. `NESTGATE_CAPABILITY_AI` environment variable
 /// 3. `NESTGATE_SQUIRREL_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://127.0.0.1:9000`
+/// 4. Last-resort default: `http://{NESTGATE_AI_HOST or fallback}:{NESTGATE_AI_PORT or canonical}`
 pub async fn discover_ai() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("ai", "SQUIRREL", 9000).await
+    discover_capability_with_legacy("ai", "SQUIRREL", default_port_ai).await
 }
 
 /// Discover ecosystem service (e.g., `BiomeOS`)
@@ -160,9 +193,9 @@ pub async fn discover_ai() -> Result<DiscoveredService> {
 /// 1. Discovery (mDNS/Consul/k8s)
 /// 2. `NESTGATE_CAPABILITY_ECOSYSTEM` environment variable
 /// 3. `NESTGATE_BIOMEOS_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://127.0.0.1:6000`
+/// 4. Last-resort default: `http://{NESTGATE_ECOSYSTEM_HOST or fallback}:{NESTGATE_ECOSYSTEM_PORT or canonical}`
 pub async fn discover_ecosystem() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("ecosystem", "BIOMEOS", 6000).await
+    discover_capability_with_legacy("ecosystem", "BIOMEOS", default_port_ecosystem).await
 }
 
 // ==================== CORE DISCOVERY LOGIC ====================
@@ -219,7 +252,7 @@ pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> 
 async fn discover_capability_with_legacy(
     capability: &str,
     legacy_name: &str,
-    default_port: u16,
+    default_port: impl FnOnce() -> u16,
 ) -> Result<DiscoveredService> {
     // Try discovery first
     if let Ok(service) = try_discovery(capability).await {
@@ -249,7 +282,8 @@ async fn discover_capability_with_legacy(
     }
 
     // Last-resort default for development
-    let default_endpoint = format!("http://127.0.0.1:{default_port}");
+    let host = fallback_host_for_capability(capability);
+    let default_endpoint = format!("http://{}:{}", host, default_port());
     tracing::warn!(
         "No discovery or environment configuration for '{}' capability. Using development default: {}. \
          In production, use service discovery or set {} environment variable.",

@@ -9,6 +9,9 @@
 //!
 //! **Announce URL**: Registration requires self-knowledge `endpoints['api']`, `NESTGATE_API_URL`, or
 //! `NESTGATE_CAPABILITY_HTTP_API_ENDPOINT`. No implicit localhost HTTP fallback for peer endpoints.
+//!
+//! **Consul agent URL**: Resolved from `NESTGATE_CONSUL_URL`, or `CONSUL_HTTP_ADDR`, or
+//! `NESTGATE_CONSUL_HTTP_ADDR` (`Option<String>` resolution — no default bind to loopback).
 
 use super::http::DiscoveryHttpClient;
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
@@ -81,27 +84,29 @@ pub struct ConsulDiscovery {
 impl ConsulDiscovery {
     /// Create a new Consul discovery instance.
     ///
-    /// Resolves the Consul agent HTTP address from (in order):
-    /// - `CONSUL_HTTP_ADDR` (`HashiCorp` convention)
-    /// - `NESTGATE_CONSUL_HTTP_ADDR` (`NestGate` capability-style alias)
+    /// Resolves the Consul agent HTTP base URL from (in order):
+    /// - `NESTGATE_CONSUL_URL`
+    /// - `CONSUL_HTTP_ADDR` (HashiCorp convention)
+    /// - `NESTGATE_CONSUL_HTTP_ADDR` (NestGate alias)
     ///
-    /// If neither is set, logs a warning and uses a **development-only** default
-    /// (`http://127.0.0.1:8500`). Production deployments should always set one of the
-    /// variables above.
+    /// If none are set, returns a configuration error (no implicit localhost default).
     ///
     /// # Errors
     ///
-    /// Returns an error if the client cannot be constructed.
+    /// Returns an error if the Consul URL is unset or the client cannot be constructed.
     pub fn new(builder: &DiscoveryBuilder) -> Result<Self> {
-        let consul_addr = std::env::var("CONSUL_HTTP_ADDR")
-            .or_else(|_| std::env::var("NESTGATE_CONSUL_HTTP_ADDR"))
-            .unwrap_or_else(|_| {
-                tracing::warn!(
-                    "CONSUL_HTTP_ADDR and NESTGATE_CONSUL_HTTP_ADDR unset; using http://127.0.0.1:8500 \
-                     as development default. Set CONSUL_HTTP_ADDR for production."
-                );
-                "http://127.0.0.1:8500".to_string()
-            });
+        let consul_addr: Option<String> = std::env::var("NESTGATE_CONSUL_URL")
+            .ok()
+            .or_else(|| std::env::var("CONSUL_HTTP_ADDR").ok())
+            .or_else(|| std::env::var("NESTGATE_CONSUL_HTTP_ADDR").ok());
+
+        let consul_addr = consul_addr.ok_or_else(|| {
+            nestgate_types::error::NestGateError::configuration_error(
+                "NESTGATE_CONSUL_URL",
+                "Consul discovery requires NESTGATE_CONSUL_URL (or CONSUL_HTTP_ADDR / \
+                 NESTGATE_CONSUL_HTTP_ADDR); no default loopback address is applied",
+            )
+        })?;
 
         let client = DiscoveryHttpClient::new(builder.timeout);
 

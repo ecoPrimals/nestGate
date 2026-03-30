@@ -13,9 +13,9 @@ Musl static:        WORKING (4.7MB static binary, x86_64-unknown-linux-musl)
 Clippy:             ZERO ERRORS — `cargo clippy --workspace --all-targets --all-features -- -D warnings`
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               ZERO WARNINGS — `cargo doc --workspace --no-deps`
-Tests:              1,457 lib tests passing, 0 failures, 48 ignored
-Coverage:           80.25% line, 79.67% function (cargo llvm-cov --workspace --lib)
-Files > 1000 lines: 0
+Tests:              1,509 lib tests passing (106 suites), 0 failures
+Coverage:           ~80% line (cargo llvm-cov --workspace --lib)
+Files > 800 lines:  0 (production); 4 test files 800-856
 Unwrap/Expect:      ZERO in production code (test-only, gated by crate-level cfg_attr)
 TODO/FIXME:         ZERO in .rs files
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (except env_process_shim bridge)
@@ -378,15 +378,15 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
 | `ring` dependency | ELIMINATED (aws-lc-rs TLS provider) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
-| Coverage gap to 90% | ~9.75 pp remaining (80.25% current) |
+| Coverage gap to 90% | ~10 pp remaining (~80% current) |
 | Semantic router | COMPILED & WIRED (`data.*`, `nat.*` routes pending) |
 | `#[allow(dead_code)]` | ~95 instances remaining (down from 137+), incremental pruning |
 
 ### Coverage
 
 ```
-Current:  80.25% line coverage (llvm-cov, Mar 30 2026)
-          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80.25%)
+Current:  ~80% line coverage (llvm-cov, Mar 30 2026)
+          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → ~80%)
 Target:   90% line coverage
 Gap:      ~9.75 percentage points
 Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary entrypoints
@@ -443,7 +443,7 @@ nestGate/ (25 workspace members)
 | JSON-RPC 2.0 | PASS |
 | tarpc | PASS (feature-gated, version aligned) |
 | Semantic naming | PASS (JSON-RPC server, IPC) |
-| File size (<1000) | PASS (0 files over limit) |
+| File size (<800 production) | PASS (0 production files over 800) |
 | Sovereignty | EVOLVED (env-driven, capability-based) |
 | mDNS Discovery | EVOLVED |
 | Crypto delegation | EVOLVED |

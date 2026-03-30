@@ -147,9 +147,7 @@ impl NestGateRpc for NestGateRpcService {
 
         let mut g = self.inner.write().await;
         if g.datasets.contains_key(&name) {
-            return Err(NestGateRpcError::DatasetAlreadyExists {
-                dataset: name.clone(),
-            });
+            return Err(NestGateRpcError::DatasetAlreadyExists { dataset: name });
         }
         let ts = unix_timestamp_secs();
         let info = DatasetInfo {
@@ -161,7 +159,7 @@ impl NestGateRpc for NestGateRpcService {
             object_count: 0,
             compression_ratio: 1.0,
             params: params.clone(),
-            status: "active".to_string(),
+            status: String::from("active"),
         };
         g.datasets.insert(name, info.clone());
         Ok(info)
@@ -239,22 +237,30 @@ impl NestGateRpc for NestGateRpcService {
             compressed: false,
             metadata: meta.clone(),
         };
-        g.objects.insert((dataset.clone(), key), (data, meta));
+        g.objects.insert((dataset, key), (data, meta));
 
-        let object_count = byte_len_u64(g.objects.keys().filter(|(d, _)| d == &dataset).count());
+        let object_count = byte_len_u64(
+            g.objects
+                .keys()
+                .filter(|(d, _)| d == &object_info.dataset)
+                .count(),
+        );
         let used_bytes: u64 = g
             .objects
             .iter()
-            .filter(|((d, _), _)| d == &dataset)
+            .filter(|((d, _), _)| d == &object_info.dataset)
             .map(|(_, (b, _))| byte_len_u64(b.len()))
             .sum();
-        if let Some(ds) = g.datasets.get_mut(&dataset) {
+        if let Some(ds) = g.datasets.get_mut(&object_info.dataset) {
             ds.object_count = object_count;
             ds.size_bytes = used_bytes;
             ds.modified_at = ts;
         }
 
-        info!("✅ Stored object: {}/{}", dataset, object_info.key);
+        info!(
+            "✅ Stored object: {}/{}",
+            object_info.dataset, object_info.key
+        );
         Ok(object_info)
     }
 
@@ -270,8 +276,9 @@ impl NestGateRpc for NestGateRpcService {
         );
 
         let g = self.inner.read().await;
+        let lookup = (dataset.clone(), key.clone());
         g.objects
-            .get(&(dataset.clone(), key.clone()))
+            .get(&lookup)
             .map(|(b, _)| b.clone())
             .ok_or(NestGateRpcError::ObjectNotFound { dataset, key })
     }
@@ -288,8 +295,9 @@ impl NestGateRpc for NestGateRpcService {
         );
 
         let g = self.inner.read().await;
+        let lookup = (dataset.clone(), key.clone());
         g.objects
-            .get(&(dataset.clone(), key.clone()))
+            .get(&lookup)
             .map(|(data, meta)| ObjectInfo {
                 key: key.clone(),
                 dataset: dataset.clone(),
@@ -358,7 +366,8 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: delete_object({}/{}) → in-memory store", dataset, key);
 
         let mut g = self.inner.write().await;
-        let removed = g.objects.remove(&(dataset.clone(), key.clone())).is_some();
+        let lookup = (dataset.clone(), key.clone());
+        let removed = g.objects.remove(&lookup).is_some();
         if !removed {
             return Err(NestGateRpcError::ObjectNotFound { dataset, key });
         }
@@ -470,7 +479,7 @@ impl NestGateRpc for NestGateRpcService {
             format!("tarpc://{raw}")
         };
         let mut endpoints = HashMap::new();
-        endpoints.insert("tarpc".to_string(), tarpc_ep);
+        endpoints.insert(String::from("tarpc"), tarpc_ep);
         Ok(vec![ServiceInfo {
             id: Arc::from(format!("discovered-{capability}")),
             capability: Arc::from(capability),
@@ -488,8 +497,8 @@ impl NestGateRpc for NestGateRpcService {
         let metrics = self.calculate_metrics().await;
 
         HealthStatus {
-            status: "healthy".to_string(),
-            version: "0.2.0".to_string(),
+            status: String::from("healthy"),
+            version: String::from("0.2.0"),
             uptime_seconds: self.uptime_seconds(),
             total_datasets: metrics.dataset_count,
             total_objects: metrics.object_count,
@@ -507,10 +516,10 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: version()");
 
         VersionInfo {
-            version: "0.2.0".to_string(),
-            api_version: "1.0".to_string(),
-            protocol_versions: vec!["tarpc-0.34".to_string(), "jsonrpc-2.0".to_string()],
-            build_info: Some("NestGate Storage Primal".to_string()),
+            version: String::from("0.2.0"),
+            api_version: String::from("1.0"),
+            protocol_versions: vec![String::from("tarpc-0.34"), String::from("jsonrpc-2.0")],
+            build_info: Some(String::from("NestGate Storage Primal")),
         }
     }
 
@@ -522,22 +531,22 @@ impl NestGateRpc for NestGateRpcService {
 
         vec![
             ProtocolInfo {
-                protocol: "tarpc".to_string(),
-                version: "0.34".to_string(),
+                protocol: String::from("tarpc"),
+                version: String::from("0.34"),
                 endpoint: format!("tarpc://{rpc_addr}"),
                 priority: 1,
                 enabled: true,
             },
             ProtocolInfo {
-                protocol: "jsonrpc".to_string(),
-                version: "2.0".to_string(),
+                protocol: String::from("jsonrpc"),
+                version: String::from("2.0"),
                 endpoint: format!("http://{api_addr}/rpc"),
                 priority: 2,
                 enabled: false,
             },
             ProtocolInfo {
-                protocol: "http".to_string(),
-                version: "1.1".to_string(),
+                protocol: String::from("http"),
+                version: String::from("1.1"),
                 endpoint: format!("http://{api_addr}"),
                 priority: 3,
                 enabled: false,
@@ -579,6 +588,9 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
 
     info!("✅ NestGate tarpc server listening on {}", addr);
 
+    let inner = Arc::clone(&service.inner);
+    let start_time = service.start_time;
+
     listener
         .filter_map(|conn| async move {
             match conn {
@@ -591,7 +603,10 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
         })
         .map(|transport| {
             let server = tarpc::server::BaseChannel::with_defaults(transport);
-            let service = service.clone();
+            let service = NestGateRpcService {
+                start_time,
+                inner: Arc::clone(&inner),
+            };
             server.execute(service.serve())
         })
         .flatten()

@@ -120,3 +120,62 @@ impl TimeoutDiscoverySettings {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use std::time::Duration;
+
+    #[test]
+    fn default_settings_validate() -> Result<()> {
+        let s = TimeoutDiscoverySettings::default();
+        s.validate()?;
+        Ok(())
+    }
+
+    #[test]
+    fn validate_rejects_min_greater_than_max() -> Result<()> {
+        let mut s = TimeoutDiscoverySettings::default();
+        s.min_timeout = Duration::from_secs(10);
+        s.max_timeout = Duration::from_secs(5);
+        assert!(s.validate().is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn validate_rejects_default_outside_bounds() -> Result<()> {
+        let mut s = TimeoutDiscoverySettings::default();
+        s.default_timeout = Duration::from_secs(500);
+        assert!(s.validate().is_err());
+        let mut s2 = TimeoutDiscoverySettings::default();
+        s2.default_timeout = Duration::from_millis(0);
+        assert!(s2.validate().is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn adaptive_timeout_disabled_returns_default() -> Result<()> {
+        let mut s = TimeoutDiscoverySettings::default();
+        s.enable_dynamic_timeouts = false;
+        let out = s.calculate_adaptive_timeout(Duration::from_secs(10), 0.99);
+        assert_eq!(out, s.default_timeout);
+        Ok(())
+    }
+
+    #[test]
+    fn adaptive_timeout_clamps_to_bounds() -> Result<()> {
+        let mut s = TimeoutDiscoverySettings::default();
+        s.enable_dynamic_timeouts = true;
+        s.adjustment_factor = 10.0;
+        s.min_timeout = Duration::from_secs(2);
+        s.max_timeout = Duration::from_secs(20);
+        // Low success rate increases timeout; very large base should clamp to max
+        let hi = s.calculate_adaptive_timeout(Duration::from_secs(100), 0.5);
+        assert_eq!(hi, s.max_timeout);
+        // High success rate decreases timeout; small base should clamp to min
+        let lo = s.calculate_adaptive_timeout(Duration::from_secs(1), 0.95);
+        assert_eq!(lo, s.min_timeout);
+        Ok(())
+    }
+}

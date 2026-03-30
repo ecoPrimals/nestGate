@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! **HARDWARE TUNING PRODUCTION PLACEHOLDERS**
+//! **HARDWARE TUNING PRODUCTION SHIMS**
 //!
-//! Placeholder handlers for production builds where `dev-stubs` is not enabled.
-//! These return helpful error messages directing users to implement real hardware detection.
-//!
-//! **⚠️ IMPORTANT ⚠️**
-//!
-//! These are NOT functional handlers - they exist solely to allow compilation
-//! without `dev-stubs` feature. For production hardware tuning, implement using
-//! `nestgate_core::linux_proc` and `hardware_tuning::linux_proc` (ecoBin v3.0; `sysinfo` is legacy).
+//! Handlers for production builds where `dev-stubs` is not enabled: routes compile and return
+//! `501 Not Implemented` with a minimal structured body (no hardcoded external URLs).
 
 use axum::{http::StatusCode, response::Json};
 use serde_json::json;
@@ -21,16 +15,14 @@ use super::types::{
     SystemMetricsCollector,
 };
 
-/// Placeholder response for disabled hardware tuning endpoints
+/// Response body when the hardware tuning HTTP surface is not compiled in.
 fn hardware_tuning_disabled() -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::NOT_IMPLEMENTED,
         Json(json!({
-            "error": "Hardware tuning API is disabled in production builds",
-            "message": "Hardware tuning stubs are development-only",
-            "recommendation": "Implement real hardware detection using /proc + rustix (ecoBin v3.0); see linux_proc in nestgate-core",
-            "implementation_guide": "See handlers.rs (dev-stubs) and hardware_tuning::linux_proc for implementation examples",
-            "documentation": "https://docs.rs/rustix/latest/rustix/"
+            "error": "not_implemented",
+            "feature": "hardware_tuning_http",
+            "details": null,
         })),
     )
 }
@@ -185,9 +177,15 @@ mod tests {
         assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
 
         let value = response.0;
-        assert!(value.get("error").is_some());
-        assert!(value.get("message").is_some());
-        assert!(value.get("recommendation").is_some());
+        assert_eq!(
+            value.get("error").and_then(|v| v.as_str()),
+            Some("not_implemented")
+        );
+        assert_eq!(
+            value.get("feature").and_then(|v| v.as_str()),
+            Some("hardware_tuning_http")
+        );
+        assert!(value.get("details").map_or(true, |v| v.is_null()));
     }
 
     #[test]

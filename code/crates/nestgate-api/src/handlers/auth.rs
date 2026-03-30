@@ -2,7 +2,9 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 //
-// Handles authentication using any available security primal provider,
+// Authentication handlers delegate to `nestgate-security` (`HybridAuthenticationManager`).
+// When no security capability or local auth material is configured, endpoints return
+// explicit HTTP errors rather than hardcoded success or placeholder credentials.
 use axum::{
     Router,
     extract::State,
@@ -10,42 +12,81 @@ use axum::{
     response::{IntoResponse, Json},
     routing::{get, post},
 };
+use nestgate_security::zero_cost_security_provider::{
+    AuthenticationConfig, HybridAuthenticationManager, ZeroCostAuthToken, ZeroCostCredentials,
+};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::sync::Arc;
 
-/// Feature-not-available error for authentication
-const AUTH_NOT_AVAILABLE_MSG: &str = "Authentication service is not available. Use nestgate-core security module for production auth.";
+/// Human-readable message when authentication cannot run because nothing is configured
+const AUTH_UNCONFIGURED: &str = "Authentication is not configured: set NESTGATE_LOCAL_AUTH_HASH for standalone password \
+     auth, or configure AUTH_CAPABILITY_ENDPOINT / NESTGATE_SECURITY_AUTH_ENDPOINT / \
+     AUTH_PROVIDER_ENDPOINT for capability-based auth.";
 
-// Simple auth service stub for canonical modernization
-#[derive(Debug, Clone, Default)]
+fn authentication_config_snapshot() -> AuthenticationConfig {
+    AuthenticationConfig::default()
+}
+
+fn auth_http_status(err: &nestgate_core::NestGateError) -> StatusCode {
+    let msg = err.to_string();
+    if msg.contains("Invalid credentials") {
+        StatusCode::UNAUTHORIZED
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    }
+}
+
+fn auth_response_from_error(err: nestgate_core::NestGateError) -> AuthResponse {
+    AuthResponse {
+        success: false,
+        token: None,
+        expires_at: None,
+        permissions: None,
+        message: err.to_string(),
+    }
+}
+
+/// Auth service: delegates to `nestgate-security` hybrid authentication (no hardcoded users).
+#[derive(Debug, Clone)]
 /// Service implementation for Auth
 pub struct AuthService {
-    _authenticated_users: HashMap<String, bool>,
+    hybrid: Arc<HybridAuthenticationManager>,
+}
+
+impl Default for AuthService {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AuthService {
-    /// Creates a new auth service (empty user map; production auth uses nestgate-core).
+    /// Creates a new auth service backed by [`HybridAuthenticationManager`].
     #[must_use]
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            hybrid: Arc::new(HybridAuthenticationManager::new(
+                authentication_config_snapshot(),
+            )),
+        }
     }
 
-    /// Authenticate - returns Err with feature-not-available (no fake success)
+    /// Authenticate via `nestgate-security` (local hash or discovered security capability).
     ///
     /// # Errors
     ///
-    /// Returns [`nestgate_core::NestGateError`] because decentralized authentication is not
-    /// implemented in this stub; production callers must use the nestgate-core security module.
-    pub fn authenticate(
+    /// Returns [`nestgate_core::NestGateError`] when credentials are invalid or no auth path is configured.
+    pub async fn authenticate(
         &self,
-        _credentials: &nestgate_core::universal_traits::Credentials,
-    ) -> Result<bool, nestgate_core::NestGateError> {
-        Err(nestgate_core::NestGateError::validation(
-            "security.authentication.decentralized: Decentralized authentication required - use nestgate-core security module",
-        ))
+        credentials: &nestgate_core::universal_traits::Credentials,
+    ) -> Result<ZeroCostAuthToken, nestgate_core::NestGateError> {
+        let zc = ZeroCostCredentials::new_password(
+            credentials.username.clone(),
+            credentials.password.clone(),
+        );
+        self.hybrid.authenticate(&zc).await
     }
 
-    /// Gets Auth Status - returns unauthenticated (no fake `stub_user`)
+    /// Gets Auth Status — stateless HTTP layer has no session; reports unauthenticated.
     #[must_use]
     pub const fn get_auth_status(&self) -> AuthStatus {
         AuthStatus {
@@ -55,16 +96,20 @@ impl AuthService {
         }
     }
 
-    /// Security Primal Available - returns false (no fake availability)
+    /// Whether a capability-style external auth endpoint is configured (env-based discovery).
     #[must_use]
-    pub const fn security_primal_available(&self) -> bool {
-        false
+    pub fn security_primal_available(&self) -> bool {
+        authentication_config_snapshot().use_external_auth
     }
 
-    /// Gets Mode
+    /// Gets Mode — production when external auth endpoint env is set, else development.
     #[must_use]
-    pub const fn get_mode(&self) -> AuthMode {
-        AuthMode::Development
+    pub fn get_mode(&self) -> AuthMode {
+        if authentication_config_snapshot().use_external_auth {
+            AuthMode::Production
+        } else {
+            AuthMode::Development
+        }
     }
 }
 
@@ -143,7 +188,7 @@ pub fn auth_router() -> Router<crate::routes::AppState> {
         .route("/status", get(get_status))
         .route("/mode", post(set_mode))
 }
-/// Login endpoint - returns 501 when auth is not implemented
+/// Login endpoint — delegates to `nestgate-security` or returns a service / auth error.
 async fn login(
     State(_app_state): State<crate::routes::AppState>,
     Json(request): Json<AuthRequest>,
@@ -155,37 +200,20 @@ async fn login(
         client_info: request.domain,
     };
     let auth_service = AuthService::new();
-    match auth_service.authenticate(&credentials) {
-        Ok(true) => Json(AuthResponse {
+    match auth_service.authenticate(&credentials).await {
+        Ok(token) => Json(AuthResponse {
             success: true,
-            token: None,
-            expires_at: None,
-            permissions: None,
+            token: Some(token.token),
+            expires_at: Some(token.expires_at),
+            permissions: Some(token.permissions),
             message: "Authentication successful".to_string(),
         })
         .into_response(),
-        Ok(false) => (
-            StatusCode::UNAUTHORIZED,
-            Json(AuthResponse {
-                success: false,
-                token: None,
-                expires_at: None,
-                permissions: None,
-                message: "Authentication failed".to_string(),
-            }),
-        )
-            .into_response(),
-        Err(_e) => (
-            StatusCode::NOT_IMPLEMENTED,
-            Json(AuthResponse {
-                success: false,
-                token: None,
-                expires_at: None,
-                permissions: None,
-                message: AUTH_NOT_AVAILABLE_MSG.to_string(),
-            }),
-        )
-            .into_response(),
+        Err(e) => {
+            let status = auth_http_status(&e);
+            let body = auth_response_from_error(e);
+            (status, Json(body)).into_response()
+        }
     }
 }
 
@@ -217,7 +245,7 @@ async fn set_mode(
                 Json(SetModeResponse {
                     success: false,
                     mode: "standalone",
-                    message: "No security primal available".to_string(),
+                    message: "No security capability endpoint configured (set AUTH_CAPABILITY_ENDPOINT, NESTGATE_SECURITY_AUTH_ENDPOINT, or AUTH_PROVIDER_ENDPOINT)".to_string(),
                 })
             }
         }
@@ -277,44 +305,42 @@ impl From<crate::routes::AppState> for AppStateWithAuth {
 
 /// Authenticate user with credentials
 #[must_use]
-pub fn authenticate_user(
+pub async fn authenticate_user(
     State(_app_state): State<crate::routes::AppState>,
     Json(credentials): Json<AuthCredentials>,
 ) -> impl IntoResponse {
     let auth_service = AuthService::new();
-    match auth_service.authenticate(&nestgate_core::universal_traits::Credentials {
-        username: credentials.username,
-        password: credentials.password,
-        mfa_token: None,
-        client_info: None,
-    }) {
-        Ok(true) => (
+    match auth_service
+        .authenticate(&nestgate_core::universal_traits::Credentials {
+            username: credentials.username,
+            password: credentials.password,
+            mfa_token: None,
+            client_info: None,
+        })
+        .await
+    {
+        Ok(token) => (
             StatusCode::OK,
             Json(serde_json::json!({
                 "status": "success",
                 "message": "Authentication successful",
-                "authenticated": true
+                "authenticated": true,
+                "token": token.token,
             })),
         )
             .into_response(),
-        Ok(false) => (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({
-                "status": "error",
-                "message": "Authentication failed",
-                "authenticated": false
-            })),
-        )
-            .into_response(),
-        Err(_) => (
-            StatusCode::NOT_IMPLEMENTED,
-            Json(serde_json::json!({
-                "status": "error",
-                "message": AUTH_NOT_AVAILABLE_MSG,
-                "authenticated": false
-            })),
-        )
-            .into_response(),
+        Err(e) => {
+            let status = auth_http_status(&e);
+            (
+                status,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": e.to_string(),
+                    "authenticated": false
+                })),
+            )
+                .into_response()
+        }
     }
 }
 /// Get authentication status
@@ -327,11 +353,17 @@ pub fn get_auth_status(State(_app_state): State<crate::routes::AppState>) -> imp
 #[must_use]
 pub fn get_security_status(State(_app_state): State<crate::routes::AppState>) -> impl IntoResponse {
     let auth_service = AuthService::new();
+    let cfg = authentication_config_snapshot();
+    let local_hash = std::env::var("NESTGATE_LOCAL_AUTH_HASH")
+        .ok()
+        .is_some_and(|s| !s.is_empty());
+    let configured = cfg.use_external_auth || local_hash;
     Json(serde_json::json!({
-        "security_primal_available": auth_service.security_primal_available(),
+        "security_auth_endpoint_configured": cfg.use_external_auth,
+        "local_password_auth_configured": local_hash,
         "auth_mode": auth_service.get_mode(),
-        "status": "not_implemented",
-        "message": AUTH_NOT_AVAILABLE_MSG
+        "status": if configured { "configured" } else { "unconfigured" },
+        "message": if configured { "Authentication backends available" } else { AUTH_UNCONFIGURED }
     }))
 }
 
@@ -401,7 +433,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_decentralized_authentication_denial() {
+    async fn test_authentication_without_local_hash_returns_error() {
         let service = AuthService::new();
 
         let credentials = nestgate_core::universal_traits::Credentials {
@@ -411,15 +443,17 @@ mod tests {
             client_info: None,
         };
 
-        // With no security services available, decentralized auth should gracefully deny
-        let result = service.authenticate(&credentials);
+        let result = service.authenticate(&credentials).await;
         assert!(result.is_err());
 
         let error_message = result
             .expect_err("Expected authentication to fail")
             .to_string();
-        assert!(error_message.contains("Decentralized authentication required"));
-        assert!(error_message.contains("security.authentication.decentralized"));
+        assert!(
+            error_message.contains("NESTGATE_LOCAL_AUTH_HASH")
+                || error_message.contains("Security error"),
+            "{error_message}"
+        );
     }
 
     #[tokio::test]
@@ -433,7 +467,7 @@ mod tests {
             client_info: None,
         };
 
-        let result = service.authenticate(&credentials);
+        let result = service.authenticate(&credentials).await;
         assert!(result.is_err());
     }
 
@@ -452,7 +486,10 @@ mod tests {
                 "domain": "example.test"
             }))
             .await;
-        assert_eq!(login.status_code(), axum::http::StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(
+            login.status_code(),
+            axum::http::StatusCode::SERVICE_UNAVAILABLE
+        );
 
         server.get("/status").await.assert_status_ok();
 

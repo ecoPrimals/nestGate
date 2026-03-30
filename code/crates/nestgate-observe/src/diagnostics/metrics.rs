@@ -117,6 +117,86 @@ pub struct NetworkMetrics {
     /// Duplex mode (full/half)
     pub duplex: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+
+    #[test]
+    fn system_metrics_default_json_roundtrip() -> Result<()> {
+        let m = SystemMetrics::default();
+        let j = serde_json::to_string(&m)?;
+        let back: SystemMetrics = serde_json::from_str(&j)?;
+        assert_eq!(back.memory_total, m.memory_total);
+        assert_eq!(back.storage_total, m.storage_total);
+        assert_eq!(back.uptime_seconds, m.uptime_seconds);
+        Ok(())
+    }
+
+    #[test]
+    fn disk_metrics_roundtrip() -> Result<()> {
+        let d = DiskMetrics {
+            device: "/dev/sda1".to_string(),
+            mount_point: "/".to_string(),
+            filesystem: "ext4".to_string(),
+            total_bytes: 1024,
+            used_bytes: 512,
+            available_bytes: 512,
+            usage_percent: 50.0,
+            read_ops_per_sec: 1.0,
+            write_ops_per_sec: 2.0,
+            read_bytes_per_sec: 100,
+            write_bytes_per_sec: 200,
+        };
+        let j = serde_json::to_string(&d)?;
+        let back: DiskMetrics = serde_json::from_str(&j)?;
+        assert_eq!(back.device, d.device);
+        assert_eq!(back.usage_percent, 50.0);
+        Ok(())
+    }
+
+    #[test]
+    fn network_metrics_roundtrip() -> Result<()> {
+        let n = NetworkMetrics {
+            interface: "eth0".to_string(),
+            rx_bytes: 1,
+            tx_bytes: 2,
+            rx_packets: 3,
+            tx_packets: 4,
+            rx_errors: 0,
+            tx_errors: 0,
+            rx_drops: 0,
+            tx_drops: 0,
+            status: "up".to_string(),
+            speed_mbps: 1000,
+            duplex: "full".to_string(),
+        };
+        let j = serde_json::to_string(&n)?;
+        let back: NetworkMetrics = serde_json::from_str(&j)?;
+        assert_eq!(back.interface, n.interface);
+        assert_eq!(back.speed_mbps, 1000);
+        Ok(())
+    }
+
+    #[test]
+    fn service_info_serializes_status() -> Result<()> {
+        let s = ServiceInfo {
+            name: "nestgate".to_string(),
+            status: ServiceStatus::Running,
+            pid: Some(42),
+            cpu_percent: 1.5,
+            memory_bytes: 4096,
+            start_time: None,
+            description: None,
+            dependencies: vec![],
+            command_line: None,
+        };
+        let j = serde_json::to_string(&s)?;
+        assert!(j.contains("Running"));
+        Ok(())
+    }
+}
 /// Service information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Serviceinfo

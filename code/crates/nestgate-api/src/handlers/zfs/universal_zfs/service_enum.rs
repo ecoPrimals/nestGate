@@ -7,12 +7,16 @@
 //! so callers can use trait-object-free dispatch without `dyn`.
 
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::handlers::zfs::universal_zfs::backends::native::core::NativeZfsService;
-use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
+use crate::handlers::zfs::universal_zfs::fail_safe::core::{
+    self as fail_safe_core, FailSafeZfsService,
+};
+use crate::handlers::zfs::universal_zfs::fail_safe::{
+    dataset_operations as fail_safe_dataset, optimization as fail_safe_optimization,
+    pool_operations as fail_safe_pool, snapshot_operations as fail_safe_snapshot,
+};
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, HealthStatus, PoolConfig, PoolInfo, ServiceMetrics, SnapshotConfig,
     SnapshotInfo, UniversalZfsResult,
@@ -64,337 +68,229 @@ impl UniversalZfsService for UniversalZfsServiceEnum {
     }
 
     /// Health Check
-    fn health_check(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HealthStatus>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.health_check().await,
-                Self::FailSafe(service) => service.health_check().await,
-            }
-        })
+    async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
+        match self {
+            Self::Native(service) => service.health_check().await,
+            Self::FailSafe(service) => fail_safe_core::health_check(service).await,
+        }
     }
 
     /// Gets Metrics
-    fn get_metrics(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<ServiceMetrics>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.get_metrics().await,
-                Self::FailSafe(service) => service.get_metrics().await,
-            }
-        })
+    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
+        match self {
+            Self::Native(service) => service.get_metrics().await,
+            Self::FailSafe(service) => service.get_metrics().await,
+        }
     }
 
     /// Creates  Pool
-    fn create_pool(
-        &self,
-        config: &PoolConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<PoolInfo>> + Send + '_>> {
-        let config = config.clone();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.create_pool(&config).await,
-                Self::FailSafe(service) => service.create_pool(&config).await,
-            }
-        })
+    async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
+        match self {
+            Self::Native(service) => service.create_pool(config).await,
+            Self::FailSafe(service) => fail_safe_pool::create_pool(service, config).await,
+        }
     }
 
     /// Gets Pool
-    fn get_pool(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<PoolInfo>>> + Send + '_>> {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.get_pool(&name).await,
-                Self::FailSafe(service) => service.get_pool(&name).await,
-            }
-        })
+    async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>> {
+        match self {
+            Self::Native(service) => service.get_pool(name).await,
+            Self::FailSafe(service) => fail_safe_pool::get_pool(service, name).await,
+        }
     }
 
     /// Destroy Pool
-    fn destroy_pool(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.destroy_pool(&name).await,
-                Self::FailSafe(service) => service.destroy_pool(&name).await,
-            }
-        })
+    async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
+        match self {
+            Self::Native(service) => service.destroy_pool(name).await,
+            Self::FailSafe(service) => fail_safe_pool::destroy_pool(service, name).await,
+        }
     }
 
     /// Scrub Pool
-    fn scrub_pool(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.scrub_pool(&name).await,
-                Self::FailSafe(service) => service.scrub_pool(&name).await,
-            }
-        })
+    async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
+        match self {
+            Self::Native(service) => service.scrub_pool(name).await,
+            Self::FailSafe(service) => fail_safe_pool::scrub_pool(service, name).await,
+        }
     }
 
     /// Gets Pool Status
-    fn get_pool_status(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.get_pool_status(&name).await,
-                Self::FailSafe(service) => service.get_pool_status(&name).await,
-            }
-        })
+    async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
+        match self {
+            Self::Native(service) => service.get_pool_status(name).await,
+            Self::FailSafe(service) => fail_safe_pool::get_pool_status(service, name).await,
+        }
     }
 
     /// List Datasets
-    fn list_datasets(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<DatasetInfo>>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.list_datasets().await,
-                Self::FailSafe(service) => service.list_datasets().await,
-            }
-        })
+    async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
+        match self {
+            Self::Native(service) => service.list_datasets().await,
+            Self::FailSafe(service) => fail_safe_dataset::list_datasets(service).await,
+        }
     }
 
     /// Creates  Dataset
-    fn create_dataset(
-        &self,
-        config: &DatasetConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<DatasetInfo>> + Send + '_>> {
-        let config = config.clone();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.create_dataset(&config).await,
-                Self::FailSafe(service) => service.create_dataset(&config).await,
-            }
-        })
+    async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+        match self {
+            Self::Native(service) => service.create_dataset(config).await,
+            Self::FailSafe(service) => fail_safe_dataset::create_dataset(service, config).await,
+        }
     }
 
     /// Gets Dataset
-    fn get_dataset(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<DatasetInfo>>> + Send + '_>> {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.get_dataset(&name).await,
-                Self::FailSafe(service) => service.get_dataset(&name).await,
-            }
-        })
+    async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>> {
+        match self {
+            Self::Native(service) => service.get_dataset(name).await,
+            Self::FailSafe(service) => fail_safe_dataset::get_dataset(service, name).await,
+        }
     }
 
     /// Destroy Dataset
-    fn destroy_dataset(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.destroy_dataset(&name).await,
-                Self::FailSafe(service) => service.destroy_dataset(&name).await,
-            }
-        })
+    async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
+        match self {
+            Self::Native(service) => service.destroy_dataset(name).await,
+            Self::FailSafe(service) => fail_safe_dataset::destroy_dataset(service, name).await,
+        }
     }
 
     /// Sets Dataset Properties
-    fn set_dataset_properties(
+    async fn set_dataset_properties(
         &self,
         dataset_name: &str,
         properties: &HashMap<String, String>,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        let dataset_name = dataset_name.to_owned();
-        let properties = properties.clone();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => {
-                    service
-                        .set_dataset_properties(&dataset_name, &properties)
-                        .await
-                }
-                Self::FailSafe(service) => {
-                    service
-                        .set_dataset_properties(&dataset_name, &properties)
-                        .await
-                }
+    ) -> UniversalZfsResult<()> {
+        match self {
+            Self::Native(service) => {
+                service
+                    .set_dataset_properties(dataset_name, properties)
+                    .await
             }
-        })
+            Self::FailSafe(service) => {
+                fail_safe_dataset::set_dataset_properties(service, dataset_name, properties).await
+            }
+        }
     }
 
     /// Gets Dataset Properties
-    fn get_dataset_properties(
+    async fn get_dataset_properties(
         &self,
         name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HashMap<String, String>>> + Send + '_>>
-    {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.get_dataset_properties(&name).await,
-                Self::FailSafe(service) => service.get_dataset_properties(&name).await,
+    ) -> UniversalZfsResult<HashMap<String, String>> {
+        match self {
+            Self::Native(service) => service.get_dataset_properties(name).await,
+            Self::FailSafe(service) => {
+                fail_safe_dataset::get_dataset_properties(service, name).await
             }
-        })
+        }
     }
 
     /// List Snapshots
-    fn list_snapshots(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.list_snapshots().await,
-                Self::FailSafe(service) => service.list_snapshots().await,
-            }
-        })
+    async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
+        match self {
+            Self::Native(service) => service.list_snapshots().await,
+            Self::FailSafe(service) => fail_safe_snapshot::list_snapshots(service).await,
+        }
     }
 
     /// Creates  Snapshot
-    fn create_snapshot(
-        &self,
-        config: &SnapshotConfig,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<SnapshotInfo>> + Send + '_>> {
-        let config = config.clone();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.create_snapshot(&config).await,
-                Self::FailSafe(service) => service.create_snapshot(&config).await,
-            }
-        })
+    async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo> {
+        match self {
+            Self::Native(service) => service.create_snapshot(config).await,
+            Self::FailSafe(service) => fail_safe_snapshot::create_snapshot(service, config).await,
+        }
     }
 
     /// List Dataset Snapshots
-    fn list_dataset_snapshots(
+    async fn list_dataset_snapshots(
         &self,
         dataset_name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send + '_>> {
-        let dataset_name = dataset_name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.list_dataset_snapshots(&dataset_name).await,
-                Self::FailSafe(service) => service.list_dataset_snapshots(&dataset_name).await,
+    ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
+        match self {
+            Self::Native(service) => service.list_dataset_snapshots(dataset_name).await,
+            Self::FailSafe(service) => {
+                fail_safe_snapshot::list_dataset_snapshots(service, dataset_name).await
             }
-        })
+        }
     }
 
     /// Destroy Snapshot
-    fn destroy_snapshot(
-        &self,
-        name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        let name = name.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.destroy_snapshot(&name).await,
-                Self::FailSafe(service) => service.destroy_snapshot(&name).await,
-            }
-        })
+    async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
+        match self {
+            Self::Native(service) => service.destroy_snapshot(name).await,
+            Self::FailSafe(service) => fail_safe_snapshot::destroy_snapshot(service, name).await,
+        }
     }
 
     /// Optimize
-    fn optimize(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.optimize().await,
-                Self::FailSafe(service) => service.optimize().await,
-            }
-        })
+    async fn optimize(&self) -> UniversalZfsResult<String> {
+        match self {
+            Self::Native(service) => service.optimize().await,
+            Self::FailSafe(service) => fail_safe_optimization::optimize(service).await,
+        }
     }
 
     /// Gets Optimization Analytics
-    fn get_optimization_analytics(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.get_optimization_analytics().await,
-                Self::FailSafe(service) => service.get_optimization_analytics().await,
+    async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
+        match self {
+            Self::Native(service) => service.get_optimization_analytics().await,
+            Self::FailSafe(service) => {
+                fail_safe_optimization::get_optimization_analytics(service).await
             }
-        })
+        }
     }
 
     /// Predict Tier
-    fn predict_tier(
-        &self,
-        file_path: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        let file_path = file_path.to_owned();
-        Box::pin(async move {
-            match self {
-                Self::Native(service) => service.predict_tier(&file_path).await,
-                Self::FailSafe(service) => service.predict_tier(&file_path).await,
+    async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
+        match self {
+            Self::Native(service) => service.predict_tier(file_path).await,
+            Self::FailSafe(service) => {
+                fail_safe_optimization::predict_tier(service, file_path).await
             }
-        })
+        }
     }
 
     /// Gets Configuration
-    fn get_configuration(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.get_configuration().await,
-                Self::FailSafe(service) => service.get_configuration().await,
-            }
-        })
+    async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
+        match self {
+            Self::Native(service) => service.get_configuration().await,
+            Self::FailSafe(service) => fail_safe_optimization::get_configuration(service).await,
+        }
     }
 
     /// Updates  Configuration
-    fn update_configuration(
-        &self,
-        config: serde_json::Value,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.update_configuration(config).await,
-                Self::FailSafe(service) => service.update_configuration(config).await,
+    async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
+        match self {
+            Self::Native(service) => service.update_configuration(config).await,
+            Self::FailSafe(service) => {
+                fail_safe_optimization::update_configuration(service, config).await
             }
-        })
+        }
     }
 
     /// Checks if Available
-    fn is_available(&self) -> Pin<Box<dyn Future<Output = bool> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.is_available().await,
-                Self::FailSafe(service) => service.is_available().await,
-            }
-        })
+    async fn is_available(&self) -> bool {
+        match self {
+            Self::Native(service) => service.is_available().await,
+            Self::FailSafe(service) => fail_safe_core::is_available_dispatch(service).await,
+        }
     }
 
     /// Shutdown
-    fn shutdown(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.shutdown().await,
-                Self::FailSafe(service) => service.shutdown().await,
-            }
-        })
+    async fn shutdown(&self) -> UniversalZfsResult<()> {
+        match self {
+            Self::Native(service) => service.shutdown().await,
+            Self::FailSafe(service) => fail_safe_optimization::shutdown(service).await,
+        }
     }
 
     /// List Pools
-    fn list_pools(
-        &self,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<PoolInfo>>> + Send + '_>> {
-        Box::pin(async {
-            match self {
-                Self::Native(service) => service.list_pools().await,
-                Self::FailSafe(service) => service.list_pools().await,
-            }
-        })
+    async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
+        match self {
+            Self::Native(service) => service.list_pools().await,
+            Self::FailSafe(service) => fail_safe_pool::list_pools(service).await,
+        }
     }
 }
 
@@ -505,24 +401,6 @@ mod tests {
         cfg.circuit_breaker.enabled = false;
         let e = UniversalZfsServiceEnum::new_fail_safe(primary, cfg);
         assert_eq!(e.service_name(), "fail-safe-zfs");
-    }
-
-    #[tokio::test]
-    async fn trait_object_list_pools_and_optimize_native_enum() {
-        use crate::handlers::zfs::universal_zfs_types::PoolConfig;
-
-        let svc: &dyn UniversalZfsService = &UniversalZfsServiceEnum::new_native();
-        let _ = svc.list_pools().await;
-        let _ = svc.optimize().await;
-        let cfg = PoolConfig {
-            name: "noop".to_string(),
-            devices: vec![],
-            mountpoint: None,
-            compression: false,
-            deduplication: false,
-            properties: std::collections::HashMap::new(),
-        };
-        let _ = svc.create_pool(&cfg).await;
     }
 
     #[tokio::test]

@@ -19,6 +19,8 @@
 //! - `supporting_types`: Common types and enums
 //! - `builders`: Configuration builders and factories
 use serde::{Deserialize, Serialize};
+use std::net::IpAddr;
+use std::time::Duration;
 // ==================== SECTION ====================
 
 /// System-level configuration types (environment, logging, debug settings)
@@ -204,12 +206,12 @@ impl<
             };
         }
 
-        // Load API port from environment
         if let Ok(port_str) = std::env::var("NESTGATE_API_PORT")
-            && let Ok(_port) = port_str.parse::<u16>()
+            && let Ok(port) = port_str.parse::<u16>()
         {
-            // Note: In a real implementation, we'd update the network config
-            // For now, this is a placeholder showing the pattern
+            config.network.api.port = port;
+            config.api.port = port;
+            config.domains.api.server.port = port;
         }
 
         Ok(config)
@@ -223,13 +225,71 @@ impl<
             self.environment = env;
         }
 
-        // Apply domain-specific overrides
         if let Some(domain_overrides) = overrides.domain_overrides {
-            // Apply domain configuration overrides
-            for (domain, configvalue) in domain_overrides {
-                // In a real implementation, we'd apply these overrides
-                // For now, this is a placeholder
-                let _ = (domain, configvalue);
+            self.domains.merge_domain_json_overrides(domain_overrides);
+        }
+
+        if let Some(net) = overrides.network_overrides {
+            if let Some(port) = net.api_port {
+                self.network.api.port = port;
+                self.api.port = port;
+                self.domains.api.server.port = port;
+            }
+            if let Some(ref addr) = net.bind_address {
+                if let Ok(ip) = addr.parse::<IpAddr>() {
+                    self.network.api.bind_address = ip;
+                }
+                self.domains.api.server.bind_address.clone_from(addr);
+            }
+            if let Some(ms) = net.timeout_ms {
+                let d = Duration::from_millis(ms);
+                self.network.api.request_timeout = d;
+                self.network.api.connection_timeout = d;
+                self.domains.api.server.request_timeout = d;
+            }
+            if let Some(workers) = net.workers {
+                self.domains.api.server.workers = Some(workers);
+            }
+        }
+
+        if let Some(sec) = overrides.security_overrides {
+            if let Some(v) = sec.tls_enabled {
+                self.network
+                    .api
+                    .api_settings
+                    .insert("tls_enabled".to_string(), serde_json::json!(v));
+            }
+            if let Some(v) = sec.require_auth {
+                self.security.auth.enabled = v;
+                self.network.api.security.auth_enabled = v;
+            }
+            if let Some(v) = sec.dev_mode_bypass {
+                self.system.debug_mode = v;
+            }
+            if let Some(ref path) = sec.cert_path {
+                self.network.api.tls.cert_path.clone_from(path);
+            }
+        }
+
+        if let Some(perf) = overrides.performance_overrides {
+            if let Some(n) = perf.max_connections {
+                self.system.max_connections_override = Some(n);
+                self.performance.max_connections = n;
+            }
+            if let Some(n) = perf.buffer_size {
+                self.system.buffer_size_override = Some(n);
+                self.performance.buffer_size = n;
+                self.network.api.performance.buffer_size = n;
+            }
+            if let Some(n) = perf.cache_size {
+                self.network.api.performance.cache_size = n as u64;
+            }
+            if let Some(level) = perf.optimization_level
+                && let Ok(v) = serde_json::to_value(level)
+            {
+                self.performance
+                    .performance_settings
+                    .insert("optimization_level".to_string(), v);
             }
         }
 

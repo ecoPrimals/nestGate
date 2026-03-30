@@ -423,13 +423,28 @@ impl ZfsOperations {
         Ok(())
     }
 
+    /// Destroy a dataset (`zfs destroy <dataset_name>`).
+    pub async fn destroy_dataset(&self, dataset_name: &str) -> ZfsCommandResult<()> {
+        let result = self.command.zfs(&["destroy", dataset_name]).await?;
+
+        if !result.is_success() {
+            return Err(anyhow::anyhow!(
+                "Failed to destroy dataset: {}",
+                result.stderr
+            ));
+        }
+
+        info!("Successfully destroyed dataset: {}", dataset_name);
+        Ok(())
+    }
+
     /// Create a snapshot
     pub async fn create_snapshot(
         &self,
         dataset_name: &str,
-        _snapshot_name: &str,
+        snapshot_name: &str,
     ) -> ZfsCommandResult<()> {
-        let full_name = format!("{dataset_name}@error details");
+        let full_name = format!("{dataset_name}@{snapshot_name}");
         let result = self.command.zfs(&["snapshot", &full_name]).await?;
 
         if !result.is_success() {

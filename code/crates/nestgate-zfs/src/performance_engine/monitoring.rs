@@ -745,4 +745,38 @@ mod regression_tests {
             assert_eq!(back, p);
         }
     }
+
+    #[test]
+    fn parse_sizevalue_invalid_suffixes_return_errors() {
+        assert!(RealTimePerformanceMonitor::test_parse_sizevalue("12Mbad").is_err());
+        assert!(RealTimePerformanceMonitor::test_parse_sizevalue("badM").is_err());
+        assert!(RealTimePerformanceMonitor::test_parse_sizevalue("badG").is_err());
+        assert!(RealTimePerformanceMonitor::test_parse_sizevalue("badT").is_err());
+    }
+
+    #[tokio::test]
+    async fn get_trending_data_returns_inserted_snapshots() {
+        let m = RealTimePerformanceMonitor::new();
+        let cache = m.get_metrics_cache();
+        {
+            let mut w = cache.write().await;
+            w.insert("latest".into(), sample_metrics_snapshot("tank", 0.9, 0.5));
+        }
+        let rows = m.get_trending_data().await.expect("trending");
+        assert_eq!(rows.len(), 1);
+        assert!((rows[0].arc_stats.hit_ratio - 0.9).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn performance_monitor_type_alias_constructible() {
+        let m: super::PerformanceMonitor = super::PerformanceMonitor::new();
+        let _ = m.get_metrics_cache();
+    }
+
+    #[test]
+    fn realtime_performance_monitor_debug_format() {
+        let m = RealTimePerformanceMonitor::new();
+        let s = format!("{m:?}");
+        assert!(s.contains("RealTimePerformanceMonitor"));
+    }
 }

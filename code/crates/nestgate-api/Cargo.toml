@@ -15,6 +15,7 @@ workspace = true
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
+nestgate-security = { path = "../nestgate-security" }
 nestgate-zfs = { path = "../nestgate-zfs" }
 nestgate-network = { path = "../nestgate-network" }
 nestgate-automation = { path = "../nestgate-automation" }
@@ -27,6 +28,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
+async-recursion = { workspace = true }
 tokio-stream = { workspace = true }
 uuid = { workspace = true }
 anyhow = { workspace = true }

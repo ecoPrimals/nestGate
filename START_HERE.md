@@ -4,8 +4,8 @@
 
 ```
 Build:       25/25 workspace members compiling (0 errors)
-Tests:       1,457 lib tests passing, 0 failures, 48 ignored
-Coverage:    80.25% line (llvm-cov) — wateringHole 80% minimum met
+Tests:       1,509 lib tests passing (106 suites), 0 failures
+Coverage:    ~80% line (llvm-cov) — wateringHole 80% minimum met
 Clippy:      ZERO errors — full workspace --all-features -D warnings clean
 Docs:        ZERO warnings (cargo doc --workspace --no-deps)
 Unsafe:      #![forbid(unsafe_code)] on all crate roots except env-process-shim

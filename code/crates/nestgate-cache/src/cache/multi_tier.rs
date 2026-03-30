@@ -13,6 +13,7 @@ use nestgate_types::Result;
 use std::future::{Future, ready};
 use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 // Type aliases for complex cache types
 /// Type-erased cache provider for dynamic dispatch across multiple cache implementations.
@@ -85,17 +86,19 @@ pub struct MultiTierCacheConfig {
 /// Multi-tier cache that manages data across different performance tiers
 pub struct MultiTierCache {
     /// Hot tier for frequently accessed data (RAM-based, fastest)
-    #[allow(dead_code)]
     hot_tier: InMemoryCache,
     /// Warm tier for moderately accessed data (SSD-based, fast)
-    #[allow(dead_code)]
     warm_tier: InMemoryCache,
     /// Cold tier for infrequently accessed data (HDD-based, slow but large)
-    #[allow(dead_code)]
     cold_tier: InMemoryCache,
-    /// Global cache configuration
-    #[allow(dead_code)]
-    config: nestgate_config::config::canonical_primary::CacheConfig,
+    /// Tier byte limits and thresholds from construction-time config
+    tier_config: MultiTierCacheConfig,
+    hot_tier_hits: AtomicU64,
+    warm_tier_hits: AtomicU64,
+    cold_tier_hits: AtomicU64,
+    total_misses: AtomicU64,
+    promotion_events: AtomicU64,
+    demotion_events: AtomicU64,
 }
 impl MultiTierCache {
     /// Create new multi-tier cache with specified configuration
@@ -106,13 +109,7 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn new(_config: MultiTierCacheConfig) -> Result<Self> {
-        // This is a placeholder implementation
-        // In a real implementation, we would initialize actual cache providers
-        // for each tier based on the configuration
-
-        // For now, we'll use a simple in-memory cache for all tiers
-        // In production, these would be different storage backends
+    pub fn new(config: MultiTierCacheConfig) -> Result<Self> {
         let hot_tier = InMemoryCache::new();
         let warm_tier = InMemoryCache::new();
         let cold_tier = InMemoryCache::new();
@@ -121,7 +118,13 @@ impl MultiTierCache {
             hot_tier,
             warm_tier,
             cold_tier,
-            config: nestgate_config::config::canonical_primary::CacheConfig::default(),
+            tier_config: config,
+            hot_tier_hits: AtomicU64::new(0),
+            warm_tier_hits: AtomicU64::new(0),
+            cold_tier_hits: AtomicU64::new(0),
+            total_misses: AtomicU64::new(0),
+            promotion_events: AtomicU64::new(0),
+            demotion_events: AtomicU64::new(0),
         })
     }
 
@@ -154,27 +157,26 @@ impl MultiTierCache {
         reason = "Result matches public cache API and future I/O-backed tiers"
     )]
     fn get_impl(&self, key: &str) -> Result<Option<Vec<u8>>> {
-        // Try tiers in order of performance: hot -> warm -> cold
-
-        // Try hot tier first
         if let Ok(Some(value)) = self.hot_tier.get_entry(key) {
+            self.hot_tier_hits.fetch_add(1, Ordering::Relaxed);
             return Ok(Some(value));
         }
 
-        // Try warm tier
         if let Ok(Some(value)) = self.warm_tier.get_entry(key) {
-            // Promote to hot tier for future access
+            self.warm_tier_hits.fetch_add(1, Ordering::Relaxed);
+            self.promotion_events.fetch_add(1, Ordering::Relaxed);
             let _ = self.hot_tier.set_entry(key.to_string(), value.clone());
             return Ok(Some(value));
         }
 
-        // Try cold tier
         if let Ok(Some(value)) = self.cold_tier.get_entry(key) {
-            // Promote to warm tier for future access
+            self.cold_tier_hits.fetch_add(1, Ordering::Relaxed);
+            self.promotion_events.fetch_add(1, Ordering::Relaxed);
             let _ = self.warm_tier.set_entry(key.to_string(), value.clone());
             return Ok(Some(value));
         }
 
+        self.total_misses.fetch_add(1, Ordering::Relaxed);
         Ok(None)
     }
 
@@ -190,15 +192,10 @@ impl MultiTierCache {
         ready(self.get_impl(key)).await
     }
 
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "Result matches public cache API and future I/O-backed tiers"
-    )]
     fn remove_impl(&self, key: &str) -> Result<bool> {
-        let removed = self.hot_tier.remove_entry(key).unwrap_or(false)
-            || self.warm_tier.remove_entry(key).unwrap_or(false)
-            || self.cold_tier.remove_entry(key).unwrap_or(false);
-        Ok(removed)
+        Ok(self.hot_tier.remove_entry(key)?
+            || self.warm_tier.remove_entry(key)?
+            || self.cold_tier.remove_entry(key)?)
     }
 
     /// Remove data from all tiers.
@@ -239,9 +236,21 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub const fn maintenance(&mut self) -> Result<()> {
-        // Implementation would perform maintenance tasks
-        // For now, this is a placeholder
+    pub fn maintenance(&mut self) -> Result<()> {
+        let max_bytes = self.tier_config.hot_tier_config.max_size;
+        loop {
+            let total = self.hot_tier.total_value_bytes();
+            if total <= max_bytes {
+                break;
+            }
+            match self.hot_tier.drain_one() {
+                Some((k, v)) => {
+                    self.warm_tier.set_entry(k, v)?;
+                    self.demotion_events.fetch_add(1, Ordering::Relaxed);
+                }
+                None => break,
+            }
+        }
         Ok(())
     }
 
@@ -254,17 +263,16 @@ impl MultiTierCache {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub const fn flush(&mut self) -> Result<()> {
-        // Implementation would flush pending writes
-        // For now, this is a placeholder
+        // In-memory tiers have no pending I/O; disk-backed tiers would sync here.
         Ok(())
     }
 
     /// Check if key exists in any tier
     pub async fn contains_key(&self, key: &str) -> bool {
         ready(
-            self.hot_tier.get_entry(key).unwrap_or(None).is_some()
-                || self.warm_tier.get_entry(key).unwrap_or(None).is_some()
-                || self.cold_tier.get_entry(key).unwrap_or(None).is_some(),
+            tier_has_entry(&self.hot_tier, key)
+                || tier_has_entry(&self.warm_tier, key)
+                || tier_has_entry(&self.cold_tier, key),
         )
         .await
     }
@@ -277,20 +285,42 @@ impl MultiTierCache {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub const fn stats(&self) -> Result<MultiTierCacheStats> {
-        // In a real implementation, we would collect stats from each tier
+    pub fn stats(&self) -> Result<MultiTierCacheStats> {
+        let hot_hits = self.hot_tier_hits.load(Ordering::Relaxed);
+        let warm_hits = self.warm_tier_hits.load(Ordering::Relaxed);
+        let cold_hits = self.cold_tier_hits.load(Ordering::Relaxed);
+        let total_hits = hot_hits.saturating_add(warm_hits).saturating_add(cold_hits);
+        let total_misses = self.total_misses.load(Ordering::Relaxed);
+        let promotion_events = self.promotion_events.load(Ordering::Relaxed);
+        let demotion_events = self.demotion_events.load(Ordering::Relaxed);
+        let total_items = self
+            .hot_tier
+            .len()
+            .saturating_add(self.warm_tier.len())
+            .saturating_add(self.cold_tier.len());
+        let total_size_bytes = self
+            .hot_tier
+            .total_value_bytes()
+            .saturating_add(self.warm_tier.total_value_bytes())
+            .saturating_add(self.cold_tier.total_value_bytes());
+        let total_size_u64 = u64::try_from(total_size_bytes).map_or(u64::MAX, |v| v);
+
         Ok(MultiTierCacheStats {
-            hot_tier_hits: 0,
-            warm_tier_hits: 0,
-            cold_tier_hits: 0,
-            total_misses: 0,
-            total_hits: 0,
-            total_items: 0,
-            total_size_bytes: 0,
-            promotion_events: 0,
-            demotion_events: 0,
+            hot_tier_hits: hot_hits,
+            warm_tier_hits: warm_hits,
+            cold_tier_hits: cold_hits,
+            total_misses,
+            total_hits,
+            total_items,
+            total_size_bytes: total_size_u64,
+            promotion_events,
+            demotion_events,
         })
     }
+}
+
+fn tier_has_entry(tier: &InMemoryCache, key: &str) -> bool {
+    matches!(tier.get_entry(key), Ok(Some(_)))
 }
 
 /// Statistics for multi-tier cache performance
@@ -390,6 +420,25 @@ impl InMemoryCache {
     )]
     fn size_entry(&self) -> Result<usize> {
         Ok(self.data.len())
+    }
+
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    fn total_value_bytes(&self) -> usize {
+        let mut sum = 0usize;
+        for entry in self.data.iter() {
+            sum = sum.saturating_add(entry.value().len());
+        }
+        sum
+    }
+
+    /// Removes one arbitrary entry (iteration order) for hot-tier eviction.
+    fn drain_one(&self) -> Option<(String, Vec<u8>)> {
+        let first = self.data.iter().next()?;
+        let key = first.key().clone();
+        self.data.remove(&key)
     }
 }
 
@@ -590,7 +639,7 @@ mod tests {
                 "async_task",
             )
         })?;
-        assert_eq!(stats.hot_tier_hits, 0); // Since we're using mock implementation
+        assert_eq!(stats.hot_tier_hits, 2);
 
         // Test clear
         cache.clear().await.map_err(|e| {
@@ -657,7 +706,7 @@ mod tests {
                 "async_task".to_string(),
             )
         })?;
-        assert_eq!(stats.promotion_events, 0); // Mock implementation returns 0
+        assert_eq!(stats.promotion_events, 0);
         Ok(())
     }
 }

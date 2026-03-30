@@ -4,25 +4,28 @@
 //
 // Optimization operations with circuit breaker and retry logic.
 
+use std::sync::Arc;
+
+use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
+use async_recursion::async_recursion;
 
 use super::core::FailSafeZfsService;
 
 /// Optimize
+#[async_recursion]
 pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.optimize().await;
+            return dispatch_optimize(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
             backend: "zfs_optimization".to_string(),
         });
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.optimize().await {
+    match dispatch_optimize(&service.primary).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -30,30 +33,37 @@ pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.optimize().await
+                dispatch_optimize(fallback).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_optimize(e: &Arc<UniversalZfsServiceEnum>) -> UniversalZfsResult<String> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.optimize().await,
+        UniversalZfsServiceEnum::FailSafe(f) => optimize(f).await,
     }
 }
 
 /// Gets Optimization Analytics
+#[async_recursion]
 pub async fn get_optimization_analytics(
     service: &FailSafeZfsService,
 ) -> UniversalZfsResult<serde_json::Value> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.get_optimization_analytics().await;
+            return dispatch_get_optimization_analytics(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
             backend: "zfs_optimization".to_string(),
         });
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.get_optimization_analytics().await {
+    match dispatch_get_optimization_analytics(&service.primary).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -61,31 +71,40 @@ pub async fn get_optimization_analytics(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.get_optimization_analytics().await
+                dispatch_get_optimization_analytics(fallback).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_get_optimization_analytics(
+    e: &Arc<UniversalZfsServiceEnum>,
+) -> UniversalZfsResult<serde_json::Value> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.get_optimization_analytics().await,
+        UniversalZfsServiceEnum::FailSafe(f) => get_optimization_analytics(f).await,
     }
 }
 
 /// Predict Tier
+#[async_recursion]
 pub async fn predict_tier(
     service: &FailSafeZfsService,
     file_path: &str,
 ) -> UniversalZfsResult<String> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.predict_tier(file_path).await;
+            return dispatch_predict_tier(fallback, file_path).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
             backend: "zfs_optimization".to_string(),
         });
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.predict_tier(file_path).await {
+    match dispatch_predict_tier(&service.primary, file_path).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -93,30 +112,40 @@ pub async fn predict_tier(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.predict_tier(file_path).await
+                dispatch_predict_tier(fallback, file_path).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_predict_tier(
+    e: &Arc<UniversalZfsServiceEnum>,
+    file_path: &str,
+) -> UniversalZfsResult<String> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.predict_tier(file_path).await,
+        UniversalZfsServiceEnum::FailSafe(f) => predict_tier(f, file_path).await,
     }
 }
 
 /// Gets Configuration
+#[async_recursion]
 pub async fn get_configuration(
     service: &FailSafeZfsService,
 ) -> UniversalZfsResult<serde_json::Value> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.get_configuration().await;
+            return dispatch_get_configuration(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
             backend: "zfs_optimization".to_string(),
         });
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.get_configuration().await {
+    match dispatch_get_configuration(&service.primary).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -124,31 +153,40 @@ pub async fn get_configuration(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.get_configuration().await
+                dispatch_get_configuration(fallback).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_get_configuration(
+    e: &Arc<UniversalZfsServiceEnum>,
+) -> UniversalZfsResult<serde_json::Value> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.get_configuration().await,
+        UniversalZfsServiceEnum::FailSafe(f) => get_configuration(f).await,
     }
 }
 
 /// Updates  Configuration
+#[async_recursion]
 pub async fn update_configuration(
     service: &FailSafeZfsService,
     config: serde_json::Value,
 ) -> UniversalZfsResult<()> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.update_configuration(config).await;
+            return dispatch_update_configuration(fallback, config).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
             backend: "zfs_optimization".to_string(),
         });
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.update_configuration(config.clone()).await {
+    match dispatch_update_configuration(&service.primary, config.clone()).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -156,7 +194,7 @@ pub async fn update_configuration(
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.update_configuration(config).await
+                dispatch_update_configuration(fallback, config).await
             } else {
                 Err(e)
             }
@@ -164,20 +202,30 @@ pub async fn update_configuration(
     }
 }
 
+#[async_recursion]
+async fn dispatch_update_configuration(
+    e: &Arc<UniversalZfsServiceEnum>,
+    config: serde_json::Value,
+) -> UniversalZfsResult<()> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.update_configuration(config.clone()).await,
+        UniversalZfsServiceEnum::FailSafe(f) => update_configuration(f, config).await,
+    }
+}
+
 /// Shutdown
+#[async_recursion]
 pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
-    // Check if circuit breaker allows execution
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.shutdown().await;
+            return dispatch_shutdown(fallback).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
             backend: "zfs_optimization".to_string(),
         });
     }
 
-    // Execute primary service with circuit breaker tracking
-    match service.primary.shutdown().await {
+    match dispatch_shutdown(&service.primary).await {
         Ok(result) => {
             service.circuit_breaker.record_success().await;
             Ok(result)
@@ -185,11 +233,19 @@ pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
         Err(e) => {
             service.circuit_breaker.record_failure().await;
             if let Some(fallback) = &service.fallback {
-                fallback.shutdown().await
+                dispatch_shutdown(fallback).await
             } else {
                 Err(e)
             }
         }
+    }
+}
+
+#[async_recursion]
+async fn dispatch_shutdown(e: &Arc<UniversalZfsServiceEnum>) -> UniversalZfsResult<()> {
+    match e.as_ref() {
+        UniversalZfsServiceEnum::Native(n) => n.shutdown().await,
+        UniversalZfsServiceEnum::FailSafe(f) => shutdown(f).await,
     }
 }
 

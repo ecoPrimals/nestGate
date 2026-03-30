@@ -68,7 +68,7 @@ impl DiscoveryBuilder {
     ///
     /// Detection order (by preference):
     /// 1. Kubernetes (if `KUBERNETES_SERVICE_HOST` set)
-    /// 2. Consul (if `CONSUL_HTTP_ADDR` set)
+    /// 2. Consul (if `NESTGATE_CONSUL_URL`, `CONSUL_HTTP_ADDR`, or `NESTGATE_CONSUL_HTTP_ADDR` set)
     /// 3. mDNS (default fallback)
     pub fn detect(self) -> Result<Box<dyn DiscoveryMechanism>> {
         // Check for kubernetes
@@ -80,8 +80,11 @@ impl DiscoveryBuilder {
             tracing::info!("Kubernetes detected but feature not enabled, falling back");
         }
 
-        // Check for consul
-        if std::env::var("CONSUL_HTTP_ADDR").is_ok() {
+        // Check for consul (capability-style URL or HashiCorp-compatible env)
+        if std::env::var("NESTGATE_CONSUL_URL").is_ok()
+            || std::env::var("CONSUL_HTTP_ADDR").is_ok()
+            || std::env::var("NESTGATE_CONSUL_HTTP_ADDR").is_ok()
+        {
             #[cfg(feature = "consul")]
             return Ok(Box::new(consul::ConsulDiscovery::new(&self)?));
 
@@ -108,5 +111,50 @@ impl DiscoveryBuilder {
     #[cfg(feature = "kubernetes")]
     pub fn build_kubernetes(self) -> Result<Box<dyn DiscoveryMechanism>> {
         Ok(Box::new(k8s::KubernetesDiscovery::new(&self)?))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use std::time::Duration;
+
+    #[test]
+    fn default_and_new_match_expected_timeouts() -> Result<()> {
+        let d = DiscoveryBuilder::default();
+        assert_eq!(d.timeout, Duration::from_secs(5));
+        assert_eq!(d.cache_duration, Duration::from_secs(60));
+        assert!(d.preferred_mechanism.is_none());
+        let n = DiscoveryBuilder::new();
+        assert_eq!(n.timeout, d.timeout);
+        assert_eq!(n.cache_duration, d.cache_duration);
+        Ok(())
+    }
+
+    #[test]
+    fn builder_chain_sets_timeout_cache_and_preference() -> Result<()> {
+        let b = DiscoveryBuilder::new()
+            .with_timeout(Duration::from_secs(12))
+            .with_cache_duration(Duration::from_secs(180))
+            .prefer_mechanism("mdns");
+        assert_eq!(b.timeout, Duration::from_secs(12));
+        assert_eq!(b.cache_duration, Duration::from_secs(180));
+        assert_eq!(b.preferred_mechanism.as_deref(), Some("mdns"));
+        Ok(())
+    }
+
+    #[test]
+    fn build_mdns_produces_mechanism() -> Result<()> {
+        let mech = DiscoveryBuilder::new().build_mdns()?;
+        drop(mech);
+        Ok(())
+    }
+
+    #[test]
+    fn prefer_mechanism_accepts_into_string() -> Result<()> {
+        let b = DiscoveryBuilder::new().prefer_mechanism(String::from("consul"));
+        assert_eq!(b.preferred_mechanism.as_deref(), Some("consul"));
+        Ok(())
     }
 }

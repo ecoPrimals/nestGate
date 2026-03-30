@@ -8,7 +8,7 @@
 
 use std::env;
 
-use tracing::{debug, error, warn};
+use tracing::{error, warn};
 
 /// Default JWT secret that must NOT be used in production
 const INSECURE_DEFAULT_SECRET: &str = "CHANGE_ME_IN_PRODUCTION";
@@ -142,7 +142,7 @@ pub fn validate_jwt_secret_or_exit() {
     match validate_jwt_secret() {
         Ok(()) => {
             #[cfg(debug_assertions)]
-            debug!("JWT secret validation passed");
+            tracing::debug!("JWT secret validation passed");
         }
         Err(e) => {
             let line = "=".repeat(80);
