@@ -97,6 +97,7 @@ impl ZfsHandler {
     }
 
     /// Execute ZFS command
+    #[allow(clippy::too_many_lines)]
     pub async fn execute(&mut self, command: ZfsCommands) -> Result<()> {
         println!("🚀 NestGate ZFS Management (API-based)");
         println!("📡 API Endpoint: {}", self.api_endpoint);
@@ -186,10 +187,8 @@ impl ZfsHandler {
                 "",
             ),
             ZfsCommands::Set { property, target } => {
-                let (prop_name, propvalue) = if let Some((name, value)) = property.split_once('=') {
-                    (name, value)
-                } else {
-                    println!("❌ Invalid property format. Use: property=value");
+                let Some((prop_name, propvalue)) = property.split_once('=') else {
+                    println!("Invalid property format. Use: property=value");
                     return Ok(());
                 };
 

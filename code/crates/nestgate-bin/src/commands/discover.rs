@@ -37,8 +37,8 @@ async fn discover_primals() -> BinResult<()> {
 
     // Discover via socket directory
     let socket_dir = discover_socket_dir();
+    println!();
     if let Some(dir) = &socket_dir {
-        println!();
         println!("Socket Directory: {}", dir.display());
 
         match tokio::fs::read_dir(dir).await {

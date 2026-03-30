@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//
-// Core types and data structures for the file system monitor.
-
-// TEMPORARY: SmartDefault disabled pending native async compatibility fixes
-// use nestgate_core::smart_abstractions::smart_default::SmartDefault;
-// SmartDefault temporarily disabled for compilation
-// use nestgate_core::error::idiomatic_evolution::SmartDefault;
-//! Types module
+//! Core types and data structures for the file system monitor.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

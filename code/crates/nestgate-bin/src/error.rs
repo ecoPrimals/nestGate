@@ -71,7 +71,7 @@ pub enum NestGateBinError {
 ///
 /// The bin crate now uses the unified `NestGateError` system for all operations,
 /// eliminating the fragmented `NestGateBinError` type.
-
+///
 /// **CANONICAL RESULT** - Use unified Result from nestgate-core
 pub type Result<T> = nestgate_core::error::Result<T>;
 
@@ -87,7 +87,7 @@ impl BinErrorHelper {
     /// Create command execution error using unified system
     pub fn command_execution_error(
         message: impl Into<String>,
-        command: Option<String>,
+        command: Option<&str>,
         exit_code: Option<i32>,
     ) -> NestGateError {
         NestGateError::internal_error(
@@ -399,8 +399,7 @@ mod tests {
 
     #[test]
     fn test_bin_error_helper_command_execution() {
-        let error =
-            BinErrorHelper::command_execution_error("failed", Some("cmd".to_string()), Some(127));
+        let error = BinErrorHelper::command_execution_error("failed", Some("cmd"), Some(127));
         assert!(error.to_string().contains("Command execution failed"));
     }
 

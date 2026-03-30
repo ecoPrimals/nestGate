@@ -25,6 +25,7 @@ pub use native::NativeZfsService;
 // Note: native_real uses NativeZfsService internally - no separate export needed
 
 use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
+#[cfg(test)]
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use nestgate_core::config::canonical_primary::NestGateCanonicalConfig;
 use std::sync::Arc;

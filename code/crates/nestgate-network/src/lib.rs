@@ -5,7 +5,20 @@
 #![warn(missing_docs)]
 #![cfg_attr(
     test,
-    allow(clippy::panic, clippy::too_many_lines, clippy::cognitive_complexity,)
+    allow(
+        clippy::panic,
+        clippy::too_many_lines,
+        clippy::cognitive_complexity,
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::float_cmp,
+        clippy::ip_constant,
+        clippy::redundant_clone,
+        clippy::manual_range_contains,
+        clippy::needless_collect,
+        clippy::manual_string_new,
+        clippy::type_complexity,
+    )
 )]
 #![allow(
     deprecated,
@@ -27,22 +40,13 @@
     clippy::unused_async,
     clippy::needless_pass_by_value,
     clippy::option_if_let_else,
-    clippy::type_complexity,
-    clippy::redundant_clone,
     clippy::unreadable_literal,
-    clippy::ip_constant,
     clippy::unnecessary_literal_unwrap,
     clippy::module_inception,
     clippy::field_reassign_with_default,
     clippy::no_effect_underscore_binding,
-    clippy::manual_string_new,
-    clippy::manual_range_contains,
-    clippy::needless_collect,
     clippy::items_after_statements,
-    clippy::uninlined_format_args,
-    clippy::float_cmp,
-    clippy::unwrap_used,
-    clippy::expect_used
+    clippy::uninlined_format_args
 )]
 
 //! **NESTGATE NETWORK CRATE**

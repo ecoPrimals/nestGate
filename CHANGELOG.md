@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 10: Deprecated trait excision, flaky test fix, idiomacy & cleanup (March 30, 2026)
+
+**Clippy**: ZERO production warnings  
+**Format**: Clean  
+**Tests**: All passing, 0 failures  
+**Docs**: ZERO warnings
+
+#### Removed
+- **2,300+ lines** of deprecated trait dead code: `canonical_provider_unification.rs`, `security_migration.rs`, `security_migration_tests.rs`, `canonical_hierarchy/` (7 files), `migration/` (7 files)
+- **4 orphaned workspace deps**: `gethostname`, `ipnetwork`, `tungstenite`, `tokio-tungstenite`
+- Dead `capability_auth` compat module, `SecurityModularizationComplete` marker struct
+- 4 stale `TEMP_DISABLED` comments, 2 empty directories (`nestgate-zfs/{data,config}`)
+- Stale migration comments from `traits/mod.rs` (~80 lines)
+
+#### Changed
+- **Hardcoded `"nestgate"` → `DEFAULT_SERVICE_NAME`** in 8 production files (RPC health, IPC discovery, self-knowledge, tracing config, JWT issuer)
+- **Flaky tests → isolated**: 8 test functions migrated from raw `set_var`/`remove_var` to `temp_env::with_var` + `#[serial_test::serial]` across 5 files
+- **Allow-block reduction**: nestgate-api (67→31 lints), nestgate-core (nuclear test allows → 12 targeted)
+- **Deprecation notes** updated in 5 files to point to `CanonicalSecurity` (not deleted path)
+
+#### Fixed
+- 6 clippy warnings: unused import, `map_or`, `.err().expect()`, float comparison, double-nested module, redundant clones
+- 8 real bugs surfaced by allow-block reduction (unused imports, dead fields, unfulfilled expect)
+- Parallel test pollution in `fault_injection_tests.rs` (env var `NESTGATE_HTTP_PORT` leaking as `"not_a_number"`)
+
 ### Session 9: Deep debt execution — smart refactoring, modern Rust, dependency evolution (March 30, 2026)
 
 **Tests**: 1,509 lib tests passing (106 suites), 0 failures  

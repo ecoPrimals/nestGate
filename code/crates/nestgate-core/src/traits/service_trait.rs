@@ -17,13 +17,11 @@
 /// ```rust
 /// use nestgate_core::traits::Service;
 ///
-/// struct MyService {
-///     name: String,
-/// }
+/// struct MyService;
 ///
 /// impl Service for MyService {
 ///     fn name(&self) -> &'static str {
-///         &self.name
+///         "my-service"
 ///     }
 ///     
 ///     fn initialize(&self) -> impl std::future::Future<Output = nestgate_core::Result<()>> + Send {

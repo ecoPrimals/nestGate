@@ -176,7 +176,7 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
     tokio::fs::create_dir_all(&bench_dir).await?;
 
     let size_bytes = size_mb * 1024 * 1024;
-    let data = vec![0xABu8; size_bytes as usize];
+    let data = vec![0xABu8; usize::try_from(size_bytes).unwrap_or(usize::MAX)];
 
     // Write benchmark
     println!("Write benchmark...");

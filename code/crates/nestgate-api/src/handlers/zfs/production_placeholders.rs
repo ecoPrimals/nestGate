@@ -214,10 +214,6 @@ pub async fn get_performance_analytics() -> (StatusCode, Json<serde_json::Value>
 /// Predict storage tier
 ///
 /// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
-#[expect(
-    clippy::unused_async,
-    reason = "Axum handler requires async signature for Json extractor compatibility"
-)]
 pub async fn predict_tier(
     _body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {

@@ -322,68 +322,48 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_network_port_defaults_get_api_port_default() {
-        let orig = std::env::var("NESTGATE_API_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-        let port = NetworkPortDefaults::get_api_port();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_API_PORT", v),
-            None => {}
-        }
-        assert_eq!(port, 3000); // API_DEFAULT = 3000
+        temp_env::with_var_unset("NESTGATE_API_PORT", || {
+            let port = NetworkPortDefaults::get_api_port();
+            assert_eq!(port, 3000);
+        });
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_network_port_defaults_get_http_port_default() {
-        let orig = std::env::var("NESTGATE_HTTP_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HTTP_PORT");
-        let port = NetworkPortDefaults::get_http_port();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_HTTP_PORT", v),
-            None => {}
-        }
-        assert_eq!(port, 8080); // HTTP_DEFAULT = 8080
+        temp_env::with_var_unset("NESTGATE_HTTP_PORT", || {
+            let port = NetworkPortDefaults::get_http_port();
+            assert_eq!(port, 8080);
+        });
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_network_port_defaults_get_metrics_port_default() {
-        let orig = std::env::var("NESTGATE_METRICS_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_METRICS_PORT");
-        let port = NetworkPortDefaults::get_metrics_port();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_METRICS_PORT", v),
-            None => {}
-        }
-        assert_eq!(port, 9090);
+        temp_env::with_var_unset("NESTGATE_METRICS_PORT", || {
+            let port = NetworkPortDefaults::get_metrics_port();
+            assert_eq!(port, 9090);
+        });
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_network_port_defaults_get_health_port_default() {
-        let orig = std::env::var("NESTGATE_HEALTH_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HEALTH_PORT");
-        let port = NetworkPortDefaults::get_health_port();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_HEALTH_PORT", v),
-            None => {}
-        }
-        assert_eq!(port, 8081);
+        temp_env::with_var_unset("NESTGATE_HEALTH_PORT", || {
+            let port = NetworkPortDefaults::get_health_port();
+            assert_eq!(port, 8081);
+        });
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_network_port_defaults_get_orchestrator_port_default() {
-        let orig = std::env::var("NESTGATE_ORCHESTRATOR_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_ORCHESTRATOR_PORT");
-        let port = NetworkPortDefaults::get_orchestrator_port();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_ORCHESTRATOR_PORT", v),
-            None => {}
-        }
-        assert_eq!(port, 8090);
+        temp_env::with_var_unset("NESTGATE_ORCHESTRATOR_PORT", || {
+            let port = NetworkPortDefaults::get_orchestrator_port();
+            assert_eq!(port, 8090);
+        });
     }
 
     #[test]

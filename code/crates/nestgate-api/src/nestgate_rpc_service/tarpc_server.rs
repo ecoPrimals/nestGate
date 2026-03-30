@@ -13,7 +13,10 @@ use tarpc::context::Context;
 use tracing::{debug, error, info, warn};
 
 use super::parsing::{parse_pool_capacity, parse_zfs_size};
-use super::types::*;
+use super::types::{
+    CreateDatasetRequest, DatasetInfo, HealthStatus, OperationResult, PoolInfo, SnapshotInfo,
+    StorageMetrics, VersionInfo,
+};
 use super::{NestGateRpc, nestgate_capabilities_vec};
 
 /// tarpc server with real ZFS backend connections
@@ -94,9 +97,10 @@ impl NestGateRpc for NestGateRpcServer {
         match self.state.zfs_backend.list_datasets(None).await {
             Ok(datasets) => {
                 info!("Listed {} datasets from real backend", datasets.len());
+                let prefix = format!("{pool}/");
                 datasets
                     .into_iter()
-                    .filter(|ds| ds.name.starts_with(&format!("{pool}/")) || ds.name == pool)
+                    .filter(|ds| ds.name.starts_with(&prefix) || ds.name == pool)
                     .map(|ds| {
                         let used_gb = parse_zfs_size(&ds.used);
                         DatasetInfo {

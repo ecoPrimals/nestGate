@@ -38,13 +38,13 @@ use nestgate_types::Result;
 /// }
 /// ```
 ///
-/// The canonical `SecurityProvider` includes all zero-cost optimizations through
-/// native async (`impl Future`) without the complexity of associated types.
+/// The canonical `CanonicalSecurity` trait includes all zero-cost optimizations
+/// through native async (`impl Future`) without the complexity of associated types.
 ///
 /// **Timeline**: Deprecated v0.11.3 (Nov 2025), Remove v0.12.0 (May 2026)
 #[deprecated(
     since = "0.11.3",
-    note = "Use nestgate_core::traits::canonical_provider_unification::SecurityProvider - zero-cost patterns integrated via native async (RPITIT). Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
+    note = "Use nestgate_core::traits::canonical::CanonicalSecurity instead"
 )]
 /// `ZeroCostSecurityProvider` trait
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {

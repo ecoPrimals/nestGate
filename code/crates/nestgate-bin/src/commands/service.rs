@@ -26,28 +26,25 @@ pub(crate) fn resolve_standalone_http_bind(
     api_host: &str,
     bind_all_ipv4: &str,
 ) -> (String, u16, String) {
-    if let Some(addr) = listen {
-        let host = addr.ip().to_string();
-        (addr.to_string(), addr.port(), host)
-    } else {
-        let http_port = port.unwrap_or(default_api_port);
-        let bind_host = if let Some(b) = bind {
-            b.to_string()
-        } else if bind_all {
-            bind_all_ipv4.to_string()
-        } else {
-            api_host.to_string()
-        };
-        let bind_addr = format!("{bind_host}:{http_port}");
-        (bind_addr, http_port, bind_host)
-    }
+    listen.map_or_else(
+        || {
+            let http_port = port.unwrap_or(default_api_port);
+            let bind_host = match bind {
+                Some(b) => b.to_string(),
+                None if bind_all => bind_all_ipv4.to_string(),
+                None => api_host.to_string(),
+            };
+            let bind_addr = format!("{bind_host}:{http_port}");
+            (bind_addr, http_port, bind_host)
+        },
+        |addr| {
+            let host = addr.ip().to_string();
+            (addr.to_string(), addr.port(), host)
+        },
+    )
 }
 
-// Service Management Commands
-///
-// Handles service lifecycle operations for NestGate services
-
-// Service manager for CLI operations
+/// Service manager for CLI lifecycle operations.
 pub struct ServiceManager {
     // Shutdown signal for graceful service termination
     shutdown_tx: Option<tokio::sync::broadcast::Sender<()>>,
@@ -378,7 +375,7 @@ impl ServiceManager {
         {
             let path = &config.socket_path;
             if path.exists() {
-                if let Ok(_) = tokio::net::UnixStream::connect(path).await {
+                if tokio::net::UnixStream::connect(path).await.is_ok() {
                     println!("  Socket: ✅ ALIVE ({})", path.display());
                     true
                 } else {

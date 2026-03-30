@@ -4,6 +4,7 @@
 //! NestGate's advertised capabilities (the only primal identity this adapter hardcodes).
 
 use super::types::{CapabilityCategory, ServiceCapability};
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -38,7 +39,7 @@ impl NestGateSelfKnowledge {
         ];
 
         let mut metadata = HashMap::new();
-        metadata.insert("service_name".to_string(), "nestgate".to_string());
+        metadata.insert("service_name".to_string(), DEFAULT_SERVICE_NAME.to_string());
         metadata.insert("version".to_string(), "1.0.0".to_string());
         metadata.insert("primary_capability".to_string(), "storage".to_string());
 

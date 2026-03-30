@@ -16,10 +16,9 @@ use std::collections::HashMap;
 use tracing::{debug, info};
 
 use crate::rest::models::{
-    AutoConfigInput, AutoConfigResult, BenchmarkResults, BenchmarkScenario,
-    BenchmarkStorageRequest, PerformanceProjection, PerformanceRequirements, ScanStorageRequest,
-    StorageBackend, StorageBackendType, StorageConfiguration, StoragePerformance, StorageTier,
-    costs::CostEstimate, performance::PerformanceMetrics,
+    AutoConfigInput, AutoConfigResult, BenchmarkResults, BenchmarkStorageRequest,
+    PerformanceProjection, PerformanceRequirements, ScanStorageRequest, StorageBackend,
+    StorageBackendType, StorageConfiguration, StoragePerformance, StorageTier, costs::CostEstimate,
 };
 use crate::rest::{ApiState, DataError, DataResponse, ListQuery};
 use nestgate_core::universal_storage::AutoConfigurator;
@@ -229,33 +228,8 @@ pub async fn scan_storage(
         });
     }
 
-    // Mock cloud storage if requested (using request parameters directly)
     if request.include_cloud.unwrap_or(false) {
-        discovered_backends.push(StorageBackend {
-            backend_type: StorageBackendType::Cloud,
-            name: "Cloud Storage (Mock)".to_string(),
-            config: [
-                (
-                    "description".to_string(),
-                    "Simulated cloud storage backend".to_string(),
-                ),
-                ("available_gb".to_string(), "100".to_string()),
-                (
-                    "capabilities".to_string(),
-                    "scalable,durable,backup".to_string(),
-                ),
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            performance: StoragePerformance {
-                read_iops: 2000,
-                write_iops: 1500,
-                read_throughput_mbps: 50.0,
-                write_throughput_mbps: 30.0,
-                avg_latency_ms: 10.0,
-            },
-        });
+        debug!("Cloud storage discovery requested but no cloud backends are configured");
     }
 
     info!("Discovered {} storage backends", discovered_backends.len());
@@ -273,69 +247,16 @@ pub async fn benchmark_storage(
     State(_state): State<ApiState>,
     Json(request): Json<BenchmarkStorageRequest>,
 ) -> Result<Json<DataResponse<BenchmarkResults>>, Json<DataError>> {
-    info!("Benchmarking storage backend: {:?}", request.backend);
-    let duration = request.duration_seconds.unwrap_or(30);
-    let _test_size_mb = request.test_size_mb.unwrap_or(100);
-
-    // Simulate benchmark (in real implementation, would perform actual I/O tests)
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await; // Simulate test time
-
-    let results = match request.backend {
-        StorageBackendType::Memory => BenchmarkResults {
-            scenario: BenchmarkScenario::Mixed,
-            backend: StorageBackendType::Memory,
-            performance: PerformanceMetrics {
-                throughput_mbps: 8500.0,
-                avg_latency_ms: 0.001,
-                p95_latency_ms: 0.002,
-                p99_latency_ms: 0.005,
-                iops: 850_000,
-                cpu_usage: 15.0,
-                memory_usage: 25.0,
-            },
-            duration_seconds: duration,
-        },
-        StorageBackendType::Filesystem => BenchmarkResults {
-            scenario: BenchmarkScenario::Mixed,
-            backend: StorageBackendType::Filesystem,
-            performance: PerformanceMetrics {
-                throughput_mbps: 425.3,
-                avg_latency_ms: 0.9,
-                p95_latency_ms: 1.2,
-                p99_latency_ms: 2.1,
-                iops: 42530,
-                cpu_usage: 12.0,
-                memory_usage: 18.0,
-            },
-            duration_seconds: duration,
-        },
-        StorageBackendType::Cloud => BenchmarkResults {
-            scenario: BenchmarkScenario::Mixed,
-            backend: StorageBackendType::Cloud,
-            performance: PerformanceMetrics {
-                throughput_mbps: 95.2,
-                avg_latency_ms: 45.0,
-                p95_latency_ms: 120.0,
-                p99_latency_ms: 250.0,
-                iops: 9520,
-                cpu_usage: 8.0,
-                memory_usage: 12.0,
-            },
-            duration_seconds: duration,
-        },
-        _ => {
-            return Err(Json(DataError::new(
-                format!(
-                    "Benchmarking not supported for backend: {:?}",
-                    request.backend
-                ),
-                "BENCHMARK_NOT_SUPPORTED".to_string(),
-            )));
-        }
-    };
-
-    info!("Benchmark completed for {:?} backend", request.backend);
-    Ok(Json(DataResponse::new(results)))
+    info!(
+        "Storage benchmark requested for {:?} — real I/O benchmarking not yet wired",
+        request.backend
+    );
+    Err(Json(DataError::new(
+        "Storage benchmarking requires a real I/O workload engine (not yet wired). \
+         Use 'fio' or 'dd' from the CLI for actual performance measurements."
+            .to_string(),
+        "BENCHMARK_NOT_IMPLEMENTED".to_string(),
+    )))
 }
 
 fn development_storage_configuration() -> StorageConfiguration {

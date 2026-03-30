@@ -67,7 +67,7 @@ impl JwtClaims {
             sub: subject,
             iat: now,
             exp: now + expiry_seconds,
-            iss: Some("nestgate".to_string()),
+            iss: Some(nestgate_config::constants::system::DEFAULT_SERVICE_NAME.to_string()),
             aud: None,
             permissions: None,
         })

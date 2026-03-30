@@ -358,6 +358,7 @@ async fn test_integration_atomic_deployment_scenario() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn test_integration_development_scenario() {
     let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
     let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();

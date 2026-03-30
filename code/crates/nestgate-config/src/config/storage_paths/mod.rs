@@ -12,9 +12,9 @@
 //!
 //! ## Submodules
 //!
-//! - [`resolve`] — per-directory env / XDG resolution
-//! - [`paths`] — [`StoragePaths`] aggregate and derived paths
-//! - [`global`] — process-wide singleton and convenience getters
+//! - `resolve` — per-directory env / XDG resolution
+//! - `paths` — `StoragePaths` aggregate and derived paths
+//! - `global` — process-wide singleton and convenience getters
 
 pub(crate) mod resolve;
 

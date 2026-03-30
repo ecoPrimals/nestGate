@@ -97,6 +97,7 @@ mod storage_handlers;
 mod template_handlers;
 
 use crate::rpc::model_cache_handlers;
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -384,23 +385,23 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         // Health — wateringHole semantic names + legacy aliases
         "health.liveness" => Ok(json!({
             "status": "alive",
-            "primal": "nestgate",
+            "primal": DEFAULT_SERVICE_NAME,
         })),
         "health.readiness" => Ok(if state.storage_initialized {
             json!({
                 "status": "ready",
-                "primal": "nestgate",
+                "primal": DEFAULT_SERVICE_NAME,
                 "storage": "initialized",
             })
         } else {
             json!({
                 "status": "not_ready",
-                "primal": "nestgate",
+                "primal": DEFAULT_SERVICE_NAME,
                 "storage": "not_initialized",
             })
         }),
         "health" | "health.check" => Ok(
-            json!({"status": "healthy", "version": env!("CARGO_PKG_VERSION"), "primal": "nestgate"}),
+            json!({"status": "healthy", "version": env!("CARGO_PKG_VERSION"), "primal": DEFAULT_SERVICE_NAME}),
         ),
         "capabilities.list" => model_cache_handlers::capabilities_list(),
         "discover_capabilities" | "discover.capabilities" => {

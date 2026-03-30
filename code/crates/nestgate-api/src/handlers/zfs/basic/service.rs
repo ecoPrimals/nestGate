@@ -8,7 +8,7 @@ use crate::routes::AppState;
 use std::sync::Arc;
 
 /// Get ZFS service instance using zero-cost operations
-pub(crate) async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, String> {
+pub async fn get_zfs_service(state: &AppState) -> Result<Arc<ProductionZfsManager>, String> {
     state
         .get_zfs_manager()
         .ok_or_else(|| "ZFS service not available".to_string())

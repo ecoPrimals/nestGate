@@ -11,6 +11,7 @@
 //! **Integration:** Persistent model metadata belongs in `nestgate-core` `services::storage` when
 //! this RPC surface is linked to the core storage manager.
 
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use tracing::info;
@@ -95,7 +96,7 @@ pub fn capabilities_list() -> Result<Value> {
     info!("🔍 capabilities.list called");
     Ok(json!({
         "methods": UNIX_SOCKET_SUPPORTED_METHODS,
-        "primal": "nestgate",
+        "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
     }))
 }
@@ -105,7 +106,7 @@ pub fn discover_capabilities() -> Result<Value> {
     info!("🔍 discover_capabilities called");
 
     Ok(json!({
-        "primal": "nestgate",
+        "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
         "capabilities": UNIX_SOCKET_SUPPORTED_METHODS,
         "backend": {

@@ -12,10 +12,7 @@ use tracing::{debug, info};
 use crate::handlers::dashboard_types::{DashboardEvent, DashboardTimeRange};
 
 use super::linux_proc;
-use super::types::{
-    CacheMetricsPoint, CapacityMetricsPoint, ComprehensiveMetricsPoint, PoolMetrics,
-    RealTimeMetrics, SystemSnapshot,
-};
+use super::types::{PoolMetrics, RealTimeMetrics, SystemSnapshot};
 
 /// Real-time metrics collection engine backed by /proc filesystem reads.
 #[derive(Debug)]

@@ -100,8 +100,6 @@ impl WorkspaceManager {
     }
 }
 
-// TEMP_DISABLED: mod lifecycle_tests - file does not exist (use lifecycle_comprehensive_tests or lifecycle_new_tests)
-
 #[cfg(test)]
 mod collaboration_tests;
 

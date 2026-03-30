@@ -16,7 +16,7 @@ use crate::performance::types::{
 
 impl ZfsPerformanceMonitor {
     /// Collect real ZFS pool performance metrics
-    pub(super) async fn collect_pool_metrics(
+    pub(crate) async fn collect_pool_metrics(
         pool_manager: &Arc<ZfsPoolManager>,
     ) -> CoreResult<PoolPerformanceMetrics> {
         debug!("Collecting ZFS pool metrics");
@@ -99,7 +99,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Parse zpool iostat output into structured metrics
-    pub(super) fn parse_zpool_iostat(output: &str) -> CoreResult<IoStatsSummary> {
+    pub(crate) fn parse_zpool_iostat(output: &str) -> CoreResult<IoStatsSummary> {
         let mut read_ops = 0u64;
         let mut write_ops = 0u64;
         let mut read_bytes = 0u64;
@@ -137,7 +137,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get pool properties for monitoring
-    pub(super) async fn get_pool_properties(pool_name: &str) -> CoreResult<PoolProperties> {
+    pub(crate) async fn get_pool_properties(pool_name: &str) -> CoreResult<PoolProperties> {
         let output = tokio::process::Command::new("zpool")
             .args(["get", "all", pool_name])
             .output()

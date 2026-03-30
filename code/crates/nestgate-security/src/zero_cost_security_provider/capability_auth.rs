@@ -174,18 +174,15 @@ impl CapabilityAuthClient {
         let old_claims = self.jwt_verifier.verify(token)
             .map_err(|_| NestGateError::security_error("Cannot refresh invalid token"))?;
         
-        // Create new token with extended expiry (default: 1 hour)
         let new_expiry_seconds = 3600i64;
+        let now_secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|_| NestGateError::security_error("System clock is before UNIX epoch"))?
+            .as_secs() as i64;
         let new_claims = JwtClaims {
             sub: old_claims.sub.clone(),
-            iat: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs() as i64,
-            exp: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs() as i64 + new_expiry_seconds,
+            iat: now_secs,
+            exp: now_secs + new_expiry_seconds,
             iss: old_claims.iss.clone(),
             aud: old_claims.aud.clone(),
             permissions: old_claims.permissions.clone(),

@@ -228,6 +228,10 @@ impl ZfsMcpStorageProvider {
     }
 
     /// Trigger AI optimization
+    ///
+    /// # Errors
+    ///
+    /// Returns error when AI optimization is disabled or not yet wired.
     pub fn trigger_ai_optimization(&self) -> Result<()> {
         if !self.config.enable_ai_optimization {
             return Err(nestgate_core::NestGateError::internal_error(
@@ -236,11 +240,9 @@ impl ZfsMcpStorageProvider {
             ));
         }
 
-        info!("Triggering AI optimization for MCP resources");
-
-        // This is a placeholder - in a real implementation, this would
-        // trigger actual AI optimization of the storage tiers
-        info!("AI optimization completed");
-        Ok(())
+        info!("AI optimization requested for MCP resources");
+        Err(nestgate_core::NestGateError::not_implemented(
+            "AI-driven tier optimization is not yet wired — enable_ai_optimization accepted but no optimization engine is available",
+        ))
     }
 }

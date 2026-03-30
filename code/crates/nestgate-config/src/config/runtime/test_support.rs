@@ -159,37 +159,24 @@ mod tests {
     use super::*;
 
     #[test]
+    #[serial_test::serial]
     fn test_config_guard_isolation() {
-        // Clear any existing env vars to ensure clean state
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-
-        // Test 1: Custom port
-        {
-            // SAFETY: single-threaded test context.
-            crate::env_process::set_var("NESTGATE_API_PORT", "7777");
-            let _guard = TestConfigGuard::with_port(7777);
-            let config = get_test_config();
-            assert_eq!(config.network.api_port, 7777);
-        }
-
-        // After guard dropped, reset to default
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-        // Note: Config caching means we might still see old value
-        // In production, each process gets its own config at startup
-        // Tests should use guards for isolation
+        temp_env::with_var_unset("NESTGATE_API_PORT", || {
+            temp_env::with_var("NESTGATE_API_PORT", Some("7777"), || {
+                let _guard = TestConfigGuard::with_port(7777);
+                let config = get_test_config();
+                assert_eq!(config.network.api_port, 7777);
+            });
+        });
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_concurrent_config_isolation() {
-        // Simulate concurrent test - each gets own config
         let _guard1 = TestConfigGuard::with_port(8888);
         let config1 = get_test_config();
         assert_eq!(config1.network.api_port, 8888);
 
-        // This would be in a different thread in real concurrent tests
-        // Here we just verify the pattern works
         drop(_guard1);
 
         let _guard2 = TestConfigGuard::with_port(9999);
@@ -198,23 +185,16 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_config_from_env() {
-        // Clean environment first to avoid pollution
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_API_PORT", "6666");
-
-        let _guard = TestConfigGuard::from_test_env();
-        let config = get_test_config();
-        assert_eq!(
-            config.network.api_port, 6666,
-            "Expected port 6666 from NESTGATE_API_PORT env var, got {}",
-            config.network.api_port
-        );
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
+        temp_env::with_var("NESTGATE_API_PORT", Some("6666"), || {
+            let _guard = TestConfigGuard::from_test_env();
+            let config = get_test_config();
+            assert_eq!(
+                config.network.api_port, 6666,
+                "Expected port 6666 from NESTGATE_API_PORT env var, got {}",
+                config.network.api_port
+            );
+        });
     }
 }

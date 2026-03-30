@@ -354,8 +354,7 @@ mod tests {
         config.service_name = String::new();
         let err = ZfsServiceFactory::create_service(config)
             .await
-            .err()
-            .expect("expected validation error");
+            .expect_err("expected validation error");
         assert!(err.to_string().contains("Service name") || err.to_string().contains("empty"));
     }
 
@@ -370,8 +369,7 @@ mod tests {
         };
         let err = ZfsServiceFactory::create_service(config)
             .await
-            .err()
-            .expect("expected remote backend error");
+            .expect_err("expected remote backend error");
         let msg = err.to_string();
         assert!(
             msg.contains("Remote") || msg.contains("native"),

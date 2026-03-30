@@ -199,11 +199,7 @@ where
                 }
             };
 
-            // Parse request
-            let request_str = String::from_utf8_lossy(&buffer[..n]);
-            trace!("Received request: {}", request_str);
-
-            let request: JsonRpcRequest = match serde_json::from_str(&request_str) {
+            let request: JsonRpcRequest = match serde_json::from_slice(&buffer[..n]) {
                 Ok(req) => req,
                 Err(e) => {
                     error!("Invalid JSON-RPC request: {}", e);

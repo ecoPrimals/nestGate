@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Adapter bridging `universal_primal_discovery::ServiceRegistry` to [`CapabilityResolver`](super::types::CapabilityResolver).
+//! Adapter bridging `universal_primal_discovery::ServiceRegistry` to [`CapabilityResolver`].
 
 use crate::unified_capabilities::{CapabilityMapper, UnifiedCapability};
 use nestgate_types::error::Result;

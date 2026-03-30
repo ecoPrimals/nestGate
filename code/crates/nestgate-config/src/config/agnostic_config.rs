@@ -436,22 +436,17 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_config_builder_with_environment() {
-        let orig = env::var("NESTGATE_API_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_API_PORT", "9999");
+        temp_env::with_var("NESTGATE_API_PORT", Some("9999"), || {
+            let config = ConfigBuilder::new()
+                .with_environment_fallback()
+                .with_safe_defaults()
+                .build()
+                .expect("Should build config");
 
-        let config = ConfigBuilder::new()
-            .with_environment_fallback()
-            .with_safe_defaults()
-            .build()
-            .expect("Should build config");
-
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_API_PORT", v),
-            None => crate::env_process::remove_var("NESTGATE_API_PORT"),
-        }
-        assert_eq!(config.api_port(), 9999);
+            assert_eq!(config.api_port(), 9999);
+        });
     }
 
     #[test]

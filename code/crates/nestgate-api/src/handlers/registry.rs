@@ -6,8 +6,7 @@
 use crate::handlers::{
     AIFirstHandler, ComplianceHandler, HardwareTuningHandler, HealthHandler, LoadTestHandler,
     MetricsCollector, PerformanceAnalyzer, StorageHandler, WorkspaceManager, ZfsHandler,
-    ai_first_example, compliance, load_testing, metrics_collector, performance_analyzer, storage,
-    workspace_management,
+    ai_first_example,
 };
 
 /// Collection of all core handlers for easy registration

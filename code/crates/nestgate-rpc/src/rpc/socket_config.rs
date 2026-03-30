@@ -177,8 +177,12 @@ impl SocketConfig {
             "standalone".to_string()
         });
 
-        let node_id = std::env::var("NESTGATE_NODE_ID")
-            .unwrap_or_else(|_| gethostname::gethostname().to_string_lossy().into_owned());
+        let node_id = std::env::var("NESTGATE_NODE_ID").unwrap_or_else(|_| {
+            rustix::system::uname()
+                .nodename()
+                .to_string_lossy()
+                .into_owned()
+        });
 
         let socket_override = std::env::var("NESTGATE_SOCKET").ok();
         let biomeos_socket_dir = std::env::var("BIOMEOS_SOCKET_DIR").ok();

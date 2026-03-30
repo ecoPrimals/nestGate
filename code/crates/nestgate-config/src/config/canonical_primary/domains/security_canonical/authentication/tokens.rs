@@ -122,7 +122,7 @@ impl Default for JwtConfig {
             algorithm: JwtAlgorithm::HS256,
             secret: "change-me-in-production".to_string(),
             expiration: Duration::from_secs(15 * 60), // 15 minutes
-            issuer: "nestgate".to_string(),
+            issuer: crate::constants::system::DEFAULT_SERVICE_NAME.to_string(),
             audience: vec!["nestgate-api".to_string()],
             custom_claims: HashMap::new(),
         }

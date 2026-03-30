@@ -49,7 +49,7 @@ pub struct ZfsHealthResponse {
 }
 
 /// Build [`ZfsHealthResponse`] from a pool listing (health endpoint and unit tests).
-pub(crate) fn evaluate_zfs_health(pools: Vec<ZeroCostPoolInfo>) -> ZfsHealthResponse {
+pub fn evaluate_zfs_health(pools: Vec<ZeroCostPoolInfo>) -> ZfsHealthResponse {
     let mut issues = Vec::new();
     let mut healthy = true;
 

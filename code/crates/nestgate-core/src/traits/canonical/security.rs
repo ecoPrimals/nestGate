@@ -17,10 +17,8 @@ use std::future::Future;
 /// **THE** canonical security trait that replaces ALL security service traits
 ///
 /// This trait consolidates and replaces:
-/// - `SecurityProvider` (from `canonical_provider_unification.rs`)
-/// - `ZeroCostSecurityProvider` (multiple versions)
-/// - `SecurityPrimalProvider` (from `universal_traits/security.rs`)
-/// - `NativeAsyncSecurityProvider` (multiple versions)
+/// - Former `SecurityProvider` / `SecurityPrimalProvider` traits (removed)
+/// - Former `ZeroCostSecurityProvider` / `NativeAsyncSecurityProvider` traits (deprecated)
 ///
 /// **ENHANCED**: Now includes comprehensive security operations (14 methods)
 /// **PERFORMANCE**: Native async throughout - zero overhead

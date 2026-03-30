@@ -11,6 +11,7 @@ use crate::error::BinResult;
 use nestgate_core::services::storage::capabilities;
 
 /// Execute doctor diagnostics
+#[allow(clippy::too_many_lines)]
 pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
     println!("NestGate System Diagnostics");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");

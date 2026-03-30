@@ -27,29 +27,7 @@ pub async fn get_metrics(
     State(state): State<ApiState>,
 ) -> Result<Json<DataResponse<SystemMetrics>>, Json<DataError>> {
     debug!("Getting current system metrics");
-    // Get current ZFS metrics from engines
-    let mut total_datasets = 0;
-    let total_snapshots = 0;
-    let mut total_used_bytes = 0;
-    let mut _total_available_bytes = 0;
-    let mut compression_ratios = Vec::new();
-
-    for _entry in state.zfs_engines.iter() {
-        total_datasets += 1;
-        total_used_bytes += 1024 * 1024; // Estimated per-engine until real stats wired
-        _total_available_bytes += 1024 * 1024 * 1024; // 1GB per dataset (placeholder)
-
-        {
-            compression_ratios.push(2.5); // Default until per-engine ZFS compression is wired
-        }
-    }
-
-    // Calculate overall compression ratio
-    let overall_compression_ratio = if compression_ratios.is_empty() {
-        1.0
-    } else {
-        compression_ratios.iter().sum::<f64>() / (compression_ratios.len() as f64)
-    };
+    let total_datasets = state.zfs_engines.len() as u32;
 
     // Real system metrics via linux_proc on Linux, with sensible fallbacks
     #[cfg(target_os = "linux")]
@@ -112,16 +90,16 @@ pub async fn get_metrics(
             tx_packets_per_sec: 0.0,
         },
         zfs_metrics: ZfsMetrics {
-            arc_hit_ratio: calculate_real_zfs_cache_hit_ratio().await.unwrap_or(85.0), // Real ZFS ARC hit ratio
-            arc_size_bytes: 2_147_483_648,                                             // 2GB
-            arc_target_size_bytes: 2_147_483_648,
-            read_throughput_mbps: 100.0,
-            write_throughput_mbps: 50.0,
-            compression_ratio: overall_compression_ratio,
-            deduplication_ratio: 1.2,
+            arc_hit_ratio: calculate_real_zfs_cache_hit_ratio().await.unwrap_or(0.0),
+            arc_size_bytes: 0,
+            arc_target_size_bytes: 0,
+            read_throughput_mbps: 0.0,
+            write_throughput_mbps: 0.0,
+            compression_ratio: 0.0,
+            deduplication_ratio: 0.0,
             total_datasets,
-            total_snapshots: total_snapshots.try_into().unwrap_or(0),
-            total_used_bytes,
+            total_snapshots: 0,
+            total_used_bytes: 0,
         },
     };
 
@@ -137,7 +115,7 @@ pub async fn get_metrics(
 /// Returns [`Json`] containing [`DataError`] when the time-series query
 /// fails (reserved for future TSDB-backed history).
 pub async fn get_metrics_history(
-    State(state): State<ApiState>,
+    State(_state): State<ApiState>,
     Query(query): Query<MetricsHistoryQuery>,
 ) -> Result<Json<DataResponse<Vec<SystemMetrics>>>, Json<DataError>> {
     debug!("Getting historical metrics data: {:?}", query);
@@ -166,67 +144,14 @@ pub async fn get_metrics_history(
         _ => 5, // Default to 5 minutes (includes `5m` and unknown)
     };
 
-    // Generate historical data points
-    let mut metrics_history = Vec::new();
-    let mut current_time = start_time;
-
-    while current_time <= end_time {
-        // Get current ZFS state (simplified)
-        let total_datasets = state.zfs_engines.len() as u32;
-
-        // ✅ NOTE: Historical data should come from time-series database
-        // For now, return current real-time metrics for all historical points
-        // In production, this would query stored metrics from InfluxDB/Prometheus
-
-        // ecoBin v3.0: historical placeholders; real data should come from TSDB or `/proc`-based collectors.
-        let metrics = SystemMetrics {
-            cpu_usage_percent: 45.0,
-            memory_usage_percent: 65.0,
-            load_average: 1.2,
-            uptime_seconds: 86400,
-            timestamp: current_time,
-            disk_io: DiskIoMetrics {
-                read_bytes_per_sec: 100.0 * 1024.0 * 1024.0,
-                write_bytes_per_sec: 50.0 * 1024.0 * 1024.0,
-                read_ops_per_sec: 1000.0,
-                write_ops_per_sec: 500.0,
-                read_mbps: 100.0,
-                write_mbps: 50.0,
-                read_iops: 1000.0,
-                write_iops: 500.0,
-                avg_queue_depth: 2.5,
-            },
-            network_io: NetworkIoMetrics {
-                bytes_sent: (1024 * 1024 * 15) as u64,
-                bytes_received: (1024 * 1024 * 25) as u64,
-                packets_sent: 800,
-                packets_received: 1000,
-                rx_bytes_per_sec: f64::from(1024 * 1024 * 25),
-                tx_bytes_per_sec: f64::from(1024 * 1024 * 15),
-                rx_packets_per_sec: 1000.0,
-                tx_packets_per_sec: 800.0,
-            },
-            zfs_metrics: ZfsMetrics {
-                arc_hit_ratio: 85.0,           // Real ZFS ARC hit ratio would be calculated here
-                arc_size_bytes: 2_147_483_648, // 2GB
-                arc_target_size_bytes: 2_147_483_648,
-                read_throughput_mbps: 100.0,
-                write_throughput_mbps: 50.0,
-                compression_ratio: 0.68,
-                deduplication_ratio: 1.2,
-                total_datasets,
-                total_snapshots: total_datasets * 3, // Assume 3 snapshots per dataset
-                total_used_bytes: u64::from(total_datasets) * 2 * 1024 * 1024 * 1024, // 2GB per dataset
-            },
-        };
-
-        metrics_history.push(metrics);
-        current_time += chrono::Duration::minutes(interval_minutes);
-    }
+    // TSDB not yet wired — return empty history rather than fabricated data.
+    // When a time-series backend (Prometheus/VictoriaMetrics) is integrated,
+    // this endpoint will query stored samples for the requested range.
+    let metrics_history: Vec<SystemMetrics> = Vec::new();
 
     info!(
-        "Retrieved {} historical metrics data points",
-        metrics_history.len()
+        "Metrics history requested ({} to {}, interval {}m) — TSDB not yet wired, returning empty",
+        start_time, end_time, interval_minutes
     );
     Ok(Json(DataResponse::new(metrics_history)))
 }

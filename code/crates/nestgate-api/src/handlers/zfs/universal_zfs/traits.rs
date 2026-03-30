@@ -26,8 +26,8 @@ use crate::handlers::zfs::universal_zfs::fail_safe::core::FailSafeZfsService;
 ///
 /// This trait defines the complete interface that all ZFS backend implementations must provide.
 /// It includes all methods from `native_real`, remote, and `fail_safe` implementations.
-/// Async methods use native `async fn` (Rust 1.75+); use [`UniversalZfsServiceEnum`] or concrete
-/// types for storage—`dyn UniversalZfsService` is not supported with async fn in traits.
+/// Async methods use native `async fn` (Rust 1.75+); use `UniversalZfsServiceEnum` or concrete
+/// types for storage — `dyn UniversalZfsService` is not supported with async fn in traits.
 pub trait UniversalZfsService: Send + Sync {
     // ==================== CORE SERVICE METHODS ====================
     /// Get the service name

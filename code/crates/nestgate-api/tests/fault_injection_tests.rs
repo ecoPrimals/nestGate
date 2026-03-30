@@ -167,23 +167,19 @@ async fn test_fault_invalid_socket_path() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn test_fault_conflicting_config() {
-    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    let orig_port = std::env::var("NESTGATE_HTTP_PORT").ok();
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "env_family");
-    nestgate_core::env_process::set_var("NESTGATE_HTTP_PORT", "not_a_number");
-
-    let result = TransportConfig::from_env();
-
-    match orig_fid {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    match orig_port {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_HTTP_PORT", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_HTTP_PORT"),
-    }
-    assert!(result.is_ok() || result.is_err());
+    temp_env::async_with_vars(
+        [
+            ("NESTGATE_FAMILY_ID", Some("env_family")),
+            ("NESTGATE_HTTP_PORT", Some("not_a_number")),
+        ],
+        async {
+            let result = TransportConfig::from_env();
+            assert!(result.is_ok() || result.is_err());
+        },
+    )
+    .await;
 }
 
 // ============================================================================

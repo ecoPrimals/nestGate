@@ -303,26 +303,33 @@ TOTAL SYSTEM PERFORMANCE: 6.7x - 40.3x IMPROVEMENT
 ```
 code/crates/nestgate-core/src/
 ├── traits/
-│   ├── canonical_storage_unification.rs     # Native async storage
-│   ├── canonical_provider_unification.rs    # Native async providers
-│   └── mod.rs                               # Unified trait system
-├── universal_providers_zero_cost.rs         # Direct composition providers
-├── const_generic_configs.rs                 # Compile-time configuration
-├── simd_optimizations.rs                    # SIMD acceleration
-├── memory_layout_optimization.rs            # Cache optimization
+│   ├── canonical/                            # Canonical trait definitions
+│   │   ├── storage.rs                        # Native async storage
+│   │   ├── security.rs                       # Native async security
+│   │   ├── network.rs                        # Native async network
+│   │   ├── provider.rs                       # Native async providers
+│   │   └── mod.rs                            # Re-exports
+│   └── mod.rs                                # Unified trait system
+├── universal_providers_zero_cost/             # Direct composition providers
+│   ├── mod.rs
+│   └── ...                                   # Per-domain submodules
+├── const_generic_configs.rs                   # Compile-time configuration
+├── simd_optimizations.rs                      # SIMD acceleration
+├── memory_layout_optimization.rs              # Cache optimization
 └── connection_pool/
-    └── zero_cost_patterns.rs               # Zero-cost connection pools
+    └── zero_cost_patterns.rs                 # Zero-cost connection pools
 ```
 
 ### **Key Files and Their Optimizations**
 
 #### **Native Async Trait Conversions**
-- `traits/canonical_storage_unification.rs`: Complete native async conversion
-- `traits/canonical_provider_unification.rs`: All provider methods optimized
-- `traits/mod.rs`: Legacy compatibility with native async patterns
+- `traits/canonical/storage.rs`: Complete native async conversion
+- `traits/canonical/provider.rs`: All provider methods optimized
+- `traits/canonical/security.rs`: Native async security traits
+- `traits/mod.rs`: Re-exports canonical traits as the single trait hierarchy
 
 #### **Direct Composition Implementations**
-- `universal_providers_zero_cost.rs`: Arc<dyn> elimination for providers
+- `universal_providers_zero_cost/`: Arc<dyn> elimination for providers (directory module)
 - `connection_pool/zero_cost_patterns.rs`: Factory pattern optimization
 
 #### **Advanced Optimizations**

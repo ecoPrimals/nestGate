@@ -17,9 +17,8 @@ use std::future::Future;
 /// **THE** canonical network trait that replaces ALL network service traits
 ///
 /// This trait consolidates and replaces:
-/// - `NetworkProvider` (from `canonical_provider_unification.rs`) ✨ **Deprecated Nov 9, 2025**
-/// - `NetworkService` (various service traits)
-/// - `ZeroCostNetworkProvider` (if any)
+/// - Former `NetworkProvider` trait (removed)
+/// - Various network service traits
 /// - Other network-related provider traits
 ///
 /// **ENHANCED**: November 9, 2025 - Comprehensive network interface (9 methods)

@@ -3,6 +3,7 @@
 
 //! **ZERO-COPY NETWORKING BENCHMARKS**
 
+use std::net::SocketAddr;
 use std::time::Instant;
 
 use super::buffer_pool::ZeroCopyBufferPool;
@@ -16,7 +17,7 @@ pub fn benchmark_zero_copy_networking() -> (u64, u64, f64) {
     const ITERATIONS: u32 = 1000;
 
     // Establish connection
-    use nestgate_core::constants::{DEFAULT_API_PORT, hardcoding, network::LOCALHOST};
+    use nestgate_core::constants::{DEFAULT_API_PORT, hardcoding};
     let default_endpoint = format!(
         "{}:{}",
         hardcoding::addresses::LOCALHOST_IPV4,
@@ -31,10 +32,7 @@ pub fn benchmark_zero_copy_networking() -> (u64, u64, f64) {
             test_endpoint,
             e
         );
-        // Use constant-based fallback for benchmarking
-        format!("{LOCALHOST}:{DEFAULT_API_PORT}")
-            .parse()
-            .expect("Constants-based fallback must be valid")
+        SocketAddr::from(([127, 0, 0, 1], DEFAULT_API_PORT))
     });
     let connection_id = interface.connect(socket_addr).unwrap_or_else(|e| {
         tracing::error!("Benchmark connection failed: {}. Using mock connection.", e);

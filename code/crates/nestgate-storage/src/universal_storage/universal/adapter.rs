@@ -5,7 +5,6 @@
 //!
 //! Adapts discovered protocols to a common storage interface.
 
-use super::operations::ObjectAddressing;
 use super::protocol::DiscoveredProtocol;
 use nestgate_types::error::{NestGateError, Result};
 use std::sync::Arc;
@@ -55,11 +54,8 @@ impl UniversalStorageAdapter {
         // For now, this is a placeholder that demonstrates the concept
 
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => Ok(self.http_read(key)),
-            super::TransportProtocol::UnixSocket { .. } => {
-                // Local filesystem read
-                self.fs_read(key).await
-            }
+            super::TransportProtocol::Http { .. } => self.http_read(key),
+            super::TransportProtocol::UnixSocket { .. } => self.fs_read(key).await,
             _ => Err(NestGateError::not_implemented(
                 "Transport not yet implemented",
             )),
@@ -73,14 +69,8 @@ impl UniversalStorageAdapter {
     /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn write(&self, key: &str, data: &[u8]) -> Result<()> {
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => {
-                self.http_write(key, data);
-                Ok(())
-            }
-            super::TransportProtocol::UnixSocket { .. } => {
-                // Local filesystem write
-                self.fs_write(key, data).await
-            }
+            super::TransportProtocol::Http { .. } => self.http_write(key, data),
+            super::TransportProtocol::UnixSocket { .. } => self.fs_write(key, data).await,
             _ => Err(NestGateError::not_implemented(
                 "Transport not yet implemented",
             )),
@@ -94,14 +84,8 @@ impl UniversalStorageAdapter {
     /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn delete(&self, key: &str) -> Result<()> {
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => {
-                self.http_delete(key);
-                Ok(())
-            }
-            super::TransportProtocol::UnixSocket { .. } => {
-                // Local filesystem delete
-                self.fs_delete(key).await
-            }
+            super::TransportProtocol::Http { .. } => self.http_delete(key),
+            super::TransportProtocol::UnixSocket { .. } => self.fs_delete(key).await,
             _ => Err(NestGateError::not_implemented(
                 "Transport not yet implemented",
             )),
@@ -115,11 +99,8 @@ impl UniversalStorageAdapter {
     /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn list(&self, prefix: &str) -> Result<Vec<String>> {
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => Ok(self.http_list(prefix)),
-            super::TransportProtocol::UnixSocket { .. } => {
-                // Local filesystem list
-                self.fs_list(prefix).await
-            }
+            super::TransportProtocol::Http { .. } => self.http_list(prefix),
+            super::TransportProtocol::UnixSocket { .. } => self.fs_list(prefix).await,
             _ => Err(NestGateError::not_implemented(
                 "Transport not yet implemented",
             )),
@@ -127,60 +108,31 @@ impl UniversalStorageAdapter {
     }
 
     // ==================== HTTP Operations ====================
+    // HTTP transport requires an async HTTP client (reqwest/hyper).
+    // Until wired, operations return not_implemented to avoid misleading callers.
 
-    fn http_read(&self, key: &str) -> Vec<u8> {
-        // Build URL based on addressing pattern
-        let _url = self.build_url(key);
-
-        // Build authenticated request
-        // let request = self.build_authenticated_request(&url, "GET");
-
-        // Send request and get response
-        // For now, placeholder
-        format!("HTTP read from {} key {key}", self.endpoint).into_bytes()
+    fn http_read(&self, _key: &str) -> Result<Vec<u8>> {
+        Err(NestGateError::not_implemented(
+            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
+        ))
     }
 
-    fn http_write(&self, key: &str, _data: &[u8]) {
-        let _url = self.build_url(key);
-        // Build authenticated PUT/POST request
-        // Send data
+    fn http_write(&self, _key: &str, _data: &[u8]) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
+        ))
     }
 
-    fn http_delete(&self, key: &str) {
-        let _url = self.build_url(key);
-        // Build authenticated DELETE request
-        // Send request
+    fn http_delete(&self, _key: &str) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
+        ))
     }
 
-    fn http_list(&self, prefix: &str) -> Vec<String> {
-        let _url = self.build_url(prefix);
-        // Build authenticated GET request
-        // Parse response for list of keys
-        vec![]
-    }
-
-    fn build_url(&self, key: &str) -> String {
-        match &self.protocol.operation_pattern {
-            super::StorageOperationPattern::ObjectStore { addressing, .. } => {
-                match addressing {
-                    ObjectAddressing::PathBased => {
-                        format!("{}/{}", self.endpoint, key)
-                    }
-                    ObjectAddressing::SubdomainBased => {
-                        // Extract bucket from key and build subdomain URL
-                        format!("{}/{}", self.endpoint, key)
-                    }
-                    ObjectAddressing::QueryBased => {
-                        format!("{}?key={}", self.endpoint, key)
-                    }
-                    ObjectAddressing::HeaderBased { .. } => {
-                        // Key will be in headers, just use endpoint
-                        self.endpoint.clone()
-                    }
-                }
-            }
-            _ => format!("{}/{}", self.endpoint, key),
-        }
+    fn http_list(&self, _prefix: &str) -> Result<Vec<String>> {
+        Err(NestGateError::not_implemented(
+            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
+        ))
     }
 
     // ==================== Filesystem Operations ====================
@@ -279,35 +231,25 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn build_url_path_query_and_header_based() -> Result<()> {
-        let base = "http://storage.example.com/bucket";
-        assert_eq!(
-            http_object_adapter(ObjectAddressing::PathBased, base).build_url("k"),
-            "http://storage.example.com/bucket/k"
-        );
-        assert_eq!(
-            http_object_adapter(ObjectAddressing::QueryBased, base).build_url("mykey"),
-            "http://storage.example.com/bucket?key=mykey"
-        );
-        assert_eq!(
-            http_object_adapter(
-                ObjectAddressing::HeaderBased {
-                    location_headers: vec!["X-Loc".to_string()],
-                },
-                base
-            )
-            .build_url("ignored"),
-            base.to_string()
-        );
+    #[tokio::test]
+    async fn http_write_returns_not_implemented() -> Result<()> {
+        let adapter = http_object_adapter(ObjectAddressing::PathBased, "http://localhost:9000");
+        let err = adapter
+            .write("k", b"data")
+            .await
+            .expect_err("HTTP write not yet wired");
+        assert!(err.to_string().to_lowercase().contains("not"));
         Ok(())
     }
 
     #[tokio::test]
-    async fn http_read_returns_placeholder_bytes() -> Result<()> {
+    async fn http_read_returns_not_implemented() -> Result<()> {
         let adapter = http_object_adapter(ObjectAddressing::PathBased, "http://localhost:9000");
-        let data = adapter.read("obj").await?;
-        assert!(data.starts_with(b"HTTP read from http://localhost:9000"));
+        let err = adapter.read("obj").await.expect_err("HTTP not yet wired");
+        assert!(
+            err.to_string().to_lowercase().contains("not")
+                && err.to_string().to_lowercase().contains("implemented")
+        );
         Ok(())
     }
 

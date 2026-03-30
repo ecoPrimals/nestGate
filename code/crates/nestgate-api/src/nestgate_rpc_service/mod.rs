@@ -20,8 +20,6 @@ pub use json_rpc_handler::NestGateJsonRpcHandler;
 pub use tarpc_server::NestGateRpcServer;
 pub use types::*;
 
-use super::*;
-
 /// Capability labels advertised by this primal.
 pub(crate) const NESTGATE_CAPABILITY_LABELS: &[&str] = &[
     "storage",

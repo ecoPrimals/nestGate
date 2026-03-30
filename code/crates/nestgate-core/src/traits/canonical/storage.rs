@@ -22,14 +22,10 @@ pub type CanonicalBatchReadResult<K, I, E> = std::result::Result<Vec<(K, Option<
 /// **THE** canonical storage trait that replaces ALL storage traits
 ///
 /// This trait consolidates and replaces:
-/// - `StorageProvider` (from `canonical_provider_unification.rs`) ✨ **Deprecated Nov 9, 2025**
-/// - `UnifiedStorageBackend` (from `unified_storage_traits.rs`)
-/// - `CanonicalStorageBackend` (from `canonical_storage.rs`)  
-/// - `StorageBackend` (from backends/mod.rs)
-/// - `ZeroCostStorageProvider` (from `migration::storage_adapters`)
-/// - `NativeAsyncStorageProvider` (from `migration::storage_adapters`)
-/// - `ZeroCostUnifiedStorageBackend` (from `zero_cost_unified_storage_traits.rs`)
-/// - `EnterpriseStorageCapabilities` (from enterprise/traits.rs)
+/// - Former `StorageProvider` / `StorageBackend` traits (removed)
+/// - Former `UnifiedStorageBackend` / `CanonicalStorageBackend` traits (removed)
+/// - Former `ZeroCostStorageProvider` / `NativeAsyncStorageProvider` traits (removed)
+/// - Former `ZeroCostUnifiedStorageBackend` / `EnterpriseStorageCapabilities` traits (removed)
 ///
 /// **ENHANCED**: November 9, 2025 - Comprehensive storage interface (17+ methods)
 /// **PERFORMANCE**: Native async throughout - zero `async_trait` overhead

@@ -343,25 +343,20 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_sync_discovery_invalid_env() {
-        // Set invalid env var
-        crate::env_process::set_var("NESTGATE_API_PORT", "invalid");
-
-        // Should fall back to default
-        assert_eq!(discover_api_port_sync(), 8080);
-
-        // Cleanup
-        crate::env_process::remove_var("NESTGATE_API_PORT");
+        temp_env::with_var("NESTGATE_API_PORT", Some("invalid"), || {
+            assert_eq!(discover_api_port_sync(), 8080);
+        });
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_async_discovery_fallback() {
-        // Clear env vars
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-
-        // Should fall back to default when capability discovery fails
-        let port = discover_api_port().unwrap();
-        assert_eq!(port, 8080);
+        temp_env::with_var_unset("NESTGATE_API_PORT", || {
+            let port = discover_api_port().unwrap();
+            assert_eq!(port, 8080);
+        });
     }
 
     #[test]

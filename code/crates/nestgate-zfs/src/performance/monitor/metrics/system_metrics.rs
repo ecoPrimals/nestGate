@@ -11,7 +11,7 @@ use tracing::debug;
 
 impl ZfsPerformanceMonitor {
     /// Collect system performance metrics
-    pub(super) async fn collect_system_metrics() -> CoreResult<SystemPerformanceMetrics> {
+    pub(crate) async fn collect_system_metrics() -> CoreResult<SystemPerformanceMetrics> {
         debug!("Collecting system performance metrics");
 
         // Read memory information
@@ -29,7 +29,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get memory information
-    pub(super) async fn get_memory_info() -> MemoryInfo {
+    pub(crate) async fn get_memory_info() -> MemoryInfo {
         if let Ok(content) = tokio::fs::read_to_string("/proc/meminfo").await {
             let mut total = 0u64;
             let mut available = 0u64;
@@ -67,7 +67,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get CPU usage percentage
-    pub(super) async fn get_cpu_usage() -> f64 {
+    pub(crate) async fn get_cpu_usage() -> f64 {
         if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await
             && let Some(line) = content.lines().next()
             && line.starts_with("cpu ")
@@ -94,7 +94,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get disk I/O statistics
-    pub(super) async fn get_disk_io_stats() -> DiskIoStats {
+    pub(crate) async fn get_disk_io_stats() -> DiskIoStats {
         // Read from /proc/diskstats for real disk I/O data
         if let Ok(content) = tokio::fs::read_to_string("/proc/diskstats").await {
             let mut total_reads = 0u64;
@@ -125,7 +125,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get system load average
-    pub(super) async fn get_load_average() -> f64 {
+    pub(crate) async fn get_load_average() -> f64 {
         if let Ok(content) = tokio::fs::read_to_string("/proc/loadavg").await {
             let fields: Vec<&str> = content.split_whitespace().collect();
             if !fields.is_empty() {

@@ -86,8 +86,8 @@ impl ConsulDiscovery {
     ///
     /// Resolves the Consul agent HTTP base URL from (in order):
     /// - `NESTGATE_CONSUL_URL`
-    /// - `CONSUL_HTTP_ADDR` (HashiCorp convention)
-    /// - `NESTGATE_CONSUL_HTTP_ADDR` (NestGate alias)
+    /// - `CONSUL_HTTP_ADDR` (`HashiCorp` convention)
+    /// - `NESTGATE_CONSUL_HTTP_ADDR` (`NestGate` alias)
     ///
     /// If none are set, returns a configuration error (no implicit localhost default).
     ///

@@ -3,15 +3,10 @@
 
 #![forbid(unsafe_code)]
 #![allow(
-    unused,
-    dead_code,
     deprecated,
     missing_docs,
-    clippy::all,
-    clippy::pedantic,
-    clippy::nursery,
-    clippy::restriction,
-    clippy::cargo
+    clippy::missing_errors_doc,
+    clippy::module_name_repetitions
 )]
 
 //! `NestGate` binary main entry point

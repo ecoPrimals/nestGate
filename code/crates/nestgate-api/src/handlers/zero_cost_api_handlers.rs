@@ -344,7 +344,7 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
                     Arc::clone(&request.request_id), // Arc clone is cheap
                     CachedRequest {
                         timestamp: request.timestamp,
-                        metadata: Arc::clone(&request.metadata), // Arc clone is cheap
+                        _metadata: Arc::clone(&request.metadata),
                     },
                 );
             }
@@ -375,7 +375,7 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
 #[derive(Debug, Clone)]
 struct CachedRequest {
     timestamp: std::time::SystemTime,
-    metadata: Arc<HashMap<String, String>>,
+    _metadata: Arc<HashMap<String, String>>,
 }
 /// **ZERO-COST DATASET HANDLER**
 ///

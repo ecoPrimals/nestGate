@@ -744,14 +744,14 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let bio = dir.path().join("biomeos");
         std::fs::create_dir_all(&bio).unwrap();
-        let sock = bio.join("tower-fam9.sock");
+        let sock = bio.join("beacon-fam9.sock");
         std::fs::write(&sock, b"x").unwrap();
         nestgate_platform::env_process::set_var(
             "XDG_RUNTIME_DIR",
             dir.path().to_string_lossy().as_ref(),
         );
         nestgate_platform::env_process::set_var("NESTGATE_FAMILY_ID", "fam9");
-        let p = super::discover_primal_socket("tower");
+        let p = super::discover_primal_socket("beacon");
         nestgate_platform::env_process::remove_var("XDG_RUNTIME_DIR");
         nestgate_platform::env_process::remove_var("NESTGATE_FAMILY_ID");
         assert_eq!(p, Some(sock));

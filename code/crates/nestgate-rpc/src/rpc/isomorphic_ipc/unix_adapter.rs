@@ -12,6 +12,7 @@
 
 use anyhow::Result;
 use nestgate_config::config::storage_paths::get_storage_base_path;
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::borrow::Cow;
@@ -107,7 +108,7 @@ impl UnixSocketRpcHandler {
 
             "health" | "health.check" => Ok(json!({
                 "status": "healthy",
-                "service": "nestgate",
+                "service": DEFAULT_SERVICE_NAME,
                 "version": env!("CARGO_PKG_VERSION"),
                 "isomorphic": true
             })),
@@ -116,7 +117,7 @@ impl UnixSocketRpcHandler {
                 "ipc": "isomorphic"
             })),
             "discover_capabilities" => Ok(json!({
-                "primal": "nestgate",
+                "primal": DEFAULT_SERVICE_NAME,
                 "version": env!("CARGO_PKG_VERSION"),
                 "capabilities": [
                     "storage.store", "storage.retrieve", "storage.list",

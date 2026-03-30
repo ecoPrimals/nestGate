@@ -22,14 +22,14 @@ use serde::{Deserialize, Serialize};
 ///
 /// **New code**:
 /// ```rust,ignore
-/// impl SecurityProvider for MyProvider { ... }
+/// impl CanonicalSecurity for MyProvider { ... }
 /// ```
 ///
-/// See: `crate::traits::canonical_provider_unification::SecurityProvider`
+/// See: `crate::traits::canonical::CanonicalSecurity`
 /// Timeline: Deprecated v0.11.3 (Nov 2025), Remove v0.12.0 (May 2026)
 #[deprecated(
     since = "0.11.3",
-    note = "Use crate::traits::canonical_provider_unification::SecurityProvider - enhanced with 14 comprehensive security methods. Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
+    note = "Use crate::traits::canonical::CanonicalSecurity instead"
 )]
 /// SecurityPrimalProvider trait
 pub trait SecurityPrimalProvider: Send + Sync {

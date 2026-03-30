@@ -256,24 +256,16 @@ fn test_port_serialization_roundtrip() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_config_clone_independence() {
-    // Ensure NESTGATE_PORT is set for test environment
-    // SAFETY: single-threaded test context.
-    crate::env_process::set_var("NESTGATE_PORT", "8080");
+    temp_env::with_var("NESTGATE_PORT", Some("8080"), || {
+        let Ok(config1) = EnvironmentConfig::from_env() else {
+            panic!("Config should load");
+        };
+        let config2 = config1.clone();
 
-    let Ok(config1) = EnvironmentConfig::from_env() else {
-        panic!("Config should load");
-    };
-    let config2 = config1.clone();
-
-    // Clones should have same values
-    assert_eq!(config1.network.port.get(), config2.network.port.get());
-
-    // But be independent (not sharing internal state)
-    // This is validated by the fact that clone() works
-
-    // SAFETY: single-threaded test context.
-    crate::env_process::remove_var("NESTGATE_PORT");
+        assert_eq!(config1.network.port.get(), config2.network.port.get());
+    });
 }
 
 #[test]

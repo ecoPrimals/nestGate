@@ -18,30 +18,15 @@
 #![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
 // `#[cfg(test)]` modules use permissive test patterns; `cargo clippy -p nestgate-core --lib` does not set `cfg(test)`.
-#![cfg_attr(
-    test,
-    allow(
-        dead_code,
-        unused_imports,
-        unused_variables,
-        clippy::all,
-        clippy::cargo,
-        clippy::nursery,
-        clippy::pedantic,
-        clippy::restriction,
-    )
-)]
 #![allow(
     deprecated,
     missing_docs,
-    clippy::doc_markdown,
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
     clippy::module_name_repetitions,
     clippy::struct_excessive_bools,
     clippy::struct_field_names,
     clippy::cast_precision_loss,
-    clippy::cast_possible_wrap,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
     clippy::return_self_not_must_use,
@@ -51,18 +36,36 @@
     clippy::unnecessary_wraps,
     clippy::unused_self,
     clippy::unused_async,
-    clippy::inline_always,
-    clippy::redundant_closure,
-    clippy::redundant_closure_for_method_calls,
-    clippy::collapsible_if,
-    clippy::single_char_pattern,
-    clippy::doc_overindented_list_items,
     clippy::implicit_hasher,
     clippy::too_long_first_doc_paragraph,
+    clippy::doc_overindented_list_items,
+    clippy::doc_markdown,
     clippy::float_cmp,
-    clippy::manual_midpoint,
     clippy::suboptimal_flops,
-    clippy::default_constructed_unit_structs
+    clippy::manual_midpoint,
+    clippy::inline_always,
+    clippy::collapsible_if,
+    clippy::redundant_closure,
+    clippy::redundant_closure_for_method_calls,
+    clippy::single_char_pattern,
+    clippy::cast_possible_wrap
+)]
+#![cfg_attr(
+    test,
+    allow(
+        dead_code,
+        unused_imports,
+        unused_variables,
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::too_many_lines,
+        clippy::cognitive_complexity,
+        clippy::bool_assert_comparison,
+        clippy::assertions_on_constants,
+        clippy::no_effect_underscore_binding,
+        clippy::field_reassign_with_default,
+    )
 )]
 
 // ==================== FOUNDATION RE-EXPORTS (nestgate-types) ====================

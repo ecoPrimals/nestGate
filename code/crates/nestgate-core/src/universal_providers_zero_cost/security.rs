@@ -29,13 +29,13 @@ where
 ///
 /// # Migration
 ///
-/// Use `crate::traits::canonical_provider_unification::SecurityProvider` which includes
+/// Use `crate::traits::canonical::CanonicalSecurity` which includes
 /// all zero-cost optimizations through native async (RPITIT).
 ///
 /// **Timeline**: Deprecated v0.11.3 (Nov 2025), Remove v0.12.0 (May 2026)
 #[deprecated(
     since = "0.11.3",
-    note = "Use crate::traits::canonical_provider_unification::SecurityProvider - zero-cost patterns integrated via native async. Migration guide: docs/guides/SECURITY_PROVIDER_MIGRATION.md"
+    note = "Use crate::traits::canonical::CanonicalSecurity instead"
 )]
 /// ZeroCostSecurityProvider trait
 pub trait ZeroCostSecurityProvider: Send + Sync + 'static {

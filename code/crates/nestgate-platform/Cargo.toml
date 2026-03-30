@@ -13,7 +13,6 @@ workspace = true
 nestgate-env-process-shim = { path = "../nestgate-env-process-shim" }
 rustix = { workspace = true }
 uzers = { workspace = true }
-gethostname = { workspace = true }
 etcetera = { workspace = true }
 tracing = { workspace = true }
 

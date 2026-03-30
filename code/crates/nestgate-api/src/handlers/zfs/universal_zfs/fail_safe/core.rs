@@ -284,7 +284,7 @@ impl UniversalZfsService for FailSafeZfsService {
 /// Health check implementation for fail-safe ZFS service
 ///
 /// Checks the circuit breaker state and falls back to the fallback service if available.
-/// Dispatches on [`UniversalZfsServiceEnum`] without re-entering the trait on `FailSafe` to avoid
+/// Dispatches on `UniversalZfsServiceEnum` without re-entering the trait on `FailSafe` to avoid
 /// recursive `async fn` types (see `UniversalZfsServiceEnum` fail-safe arms).
 #[async_recursion]
 pub async fn health_check(service: &FailSafeZfsService) -> UniversalZfsResult<HealthStatus> {

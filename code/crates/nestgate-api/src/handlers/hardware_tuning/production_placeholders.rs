@@ -185,7 +185,7 @@ mod tests {
             value.get("feature").and_then(|v| v.as_str()),
             Some("hardware_tuning_http")
         );
-        assert!(value.get("details").map_or(true, |v| v.is_null()));
+        assert!(value.get("details").is_none_or(|v| v.is_null()));
     }
 
     #[test]

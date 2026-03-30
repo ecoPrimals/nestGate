@@ -152,7 +152,7 @@ mod tests {
         let j = serde_json::to_string(&d)?;
         let back: DiskMetrics = serde_json::from_str(&j)?;
         assert_eq!(back.device, d.device);
-        assert_eq!(back.usage_percent, 50.0);
+        assert!((back.usage_percent - 50.0).abs() < f64::EPSILON);
         Ok(())
     }
 

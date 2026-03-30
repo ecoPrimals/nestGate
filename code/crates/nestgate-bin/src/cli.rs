@@ -322,6 +322,7 @@ pub enum ConfigAction {
 }
 impl Cli {
     /// Run the CLI application
+    #[allow(clippy::too_many_lines)]
     pub async fn run(self) -> crate::error::BinResult<()> {
         use crate::error::BinErrorHelper;
 

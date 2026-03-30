@@ -29,7 +29,7 @@ impl Default for TracingConfig {
             level: "info".to_string(),
             json_format: false,
             distributed_tracing: false,
-            service_name: "nestgate".to_string(),
+            service_name: nestgate_config::constants::system::DEFAULT_SERVICE_NAME.to_string(),
             environment: "development".to_string(),
         }
     }

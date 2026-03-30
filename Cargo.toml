@@ -39,6 +39,7 @@ regex = { workspace = true }
 futures = { workspace = true }
 # Concurrent test infrastructure
 dashmap = { workspace = true }
+serial_test = { workspace = true }
 # once_cell removed: evolved to std::sync::LazyLock
 # Add workspace crates for integration tests
 nestgate-zfs = { path = "code/crates/nestgate-zfs" }
@@ -104,8 +105,18 @@ keywords = ["sovereignty", "zfs", "copyleft", "infrastructure"]
 categories = ["network-programming", "filesystem", "web-programming"]
 
 [workspace.dependencies]
-# Core async runtime
-tokio = { version = "1.0", features = ["full"] }
+# Core async runtime — minimal feature set (was "full")
+tokio = { version = "1.0", features = [
+    "fs",
+    "io-util",
+    "macros",
+    "net",
+    "process",
+    "rt-multi-thread",
+    "signal",
+    "sync",
+    "time",
+] }
 tokio-test = "0.4"
 
 # Error handling and utilities
@@ -145,8 +156,7 @@ memmap2 = "0.9"
 # System utilities (100% Pure Rust!)
 uzers = "0.11"
 sysinfo = "0.30"
-rustix = { version = "0.38", default-features = false, features = ["std", "fs"] }
-gethostname = "0.4"
+rustix = { version = "0.38", default-features = false, features = ["std", "fs", "system"] }
 etcetera = "0.8"
 
 # Crypto and encoding (RustCrypto - audited, pure Rust!)
@@ -207,10 +217,6 @@ axum-test = "15.0"
 mockall = "0.13"
 rstest = "0.18"
 
-# Network utilities
-ipnetwork = "0.20"
-tokio-tungstenite = "0.24"
-tungstenite = "0.24"
 
 # Additional utilities and data structures
 indexmap = "2.0"

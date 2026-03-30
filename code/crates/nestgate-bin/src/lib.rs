@@ -3,16 +3,23 @@
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        clippy::too_many_lines,
+    )
+)]
 #![allow(
-    unused,
-    dead_code,
     deprecated,
     missing_docs,
-    clippy::all,
-    clippy::pedantic,
-    clippy::nursery,
-    clippy::restriction,
-    clippy::cargo
+    clippy::missing_errors_doc,
+    clippy::module_name_repetitions,
+    clippy::unused_async,
+    clippy::cast_precision_loss,
+    clippy::items_after_statements
 )]
 
 //! **NESTGATE BINARY LIBRARY**
