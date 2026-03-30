@@ -792,4 +792,19 @@ mod iostat_and_queue_tests {
         assert_eq!(p.compression_ratio, 1.0);
         assert_eq!(p.dedup_ratio, 1.0);
     }
+
+    #[test]
+    fn parse_zpool_iostat_skips_pool_header_and_dash_lines() {
+        // Lines containing the substring `pool` are ignored (filters header rows).
+        let out = "-\nzpool alloc free read write read write\n\
+                    tank 0 0 2 3 1024 2048\n";
+        let s = ZfsPerformanceMonitor::test_parse_zpool_iostat(out).expect("parse");
+        assert_eq!(s.read_ops, 2);
+        assert_eq!(s.write_ops, 3);
+    }
+
+    #[test]
+    fn parse_iostat_bandwidth_invalid_number_errors() {
+        assert!(ZfsPerformanceMonitor::test_parse_iostat_bandwidth("not_a_number").is_err());
+    }
 }

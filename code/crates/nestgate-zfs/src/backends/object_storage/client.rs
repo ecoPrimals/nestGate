@@ -58,3 +58,22 @@ impl ObjectStorageClient {
         self.path_style
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ObjectStorageClient;
+    use crate::backends::object_storage::config::ConfigSource;
+
+    #[test]
+    fn new_exposes_endpoint_region_and_path_style() {
+        let c = ObjectStorageClient::new(
+            "https://minio.local:9000".to_string(),
+            "us-west-1".to_string(),
+            ConfigSource::Environment,
+            true,
+        );
+        assert_eq!(c.endpoint(), "https://minio.local:9000");
+        assert_eq!(c.region(), "us-west-1");
+        assert!(c.is_path_style());
+    }
+}

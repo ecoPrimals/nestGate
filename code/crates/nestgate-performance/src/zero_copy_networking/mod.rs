@@ -18,6 +18,7 @@
 
 //! Zero Copy Networking module
 
+use bytes::Bytes;
 use std::io::{IoSlice, IoSliceMut};
 use std::marker::PhantomData;
 use std::net::SocketAddr;
@@ -187,6 +188,14 @@ impl<const SIZE: usize> ZeroCopyBuffer<SIZE> {
     }
 }
 
+/// Outbound payload: copy into a pooled buffer, or enqueue refcounted [`Bytes`] without copying data.
+pub enum ZeroCopyTxPayload<const N: usize> {
+    /// Data staged in a pooled [`ZeroCopyBuffer`].
+    Pooled(ZeroCopyBuffer<N>),
+    /// Shared payload (cheap clone, no memcpy of contents).
+    Shared(Bytes),
+}
+
 #[derive(Debug, Clone)]
 /// Bufferpoolstats
 pub struct BufferPoolStats {
@@ -210,7 +219,7 @@ pub struct BufferPoolStats {
 /// **✅ 100% SAFE** - Uses safe concurrent structures (zero unsafe code)
 pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
-    connection_registry: SafeConcurrentHashMap<String, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
+    connection_registry: SafeConcurrentHashMap<u64, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
     stats: NetworkStats,
 }
 /// **ZERO-COPY CONNECTION**
@@ -224,7 +233,7 @@ pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,
     remote_addr: SocketAddr,
     local_addr: SocketAddr,
-    tx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
+    tx_queue: SafeConcurrentQueue<ZeroCopyTxPayload<BUFFER_SIZE>>,
     rx_queue: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     connection_stats: ConnectionStats,
 }
@@ -305,8 +314,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         });
 
         // Register connection
-        self.connection_registry
-            .insert(connection_id.to_string(), connection);
+        self.connection_registry.insert(connection_id, connection);
 
         tracing::info!(
             "Zero-copy connection established: {} -> {}",
@@ -341,7 +349,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         buffer.set_length(copy_len);
 
         // Queue for zero-copy transmission
-        connection.tx_queue.push(buffer); // ✅ SAFE
+        connection.tx_queue.push(ZeroCopyTxPayload::Pooled(buffer)); // ✅ SAFE
 
         // Update statistics
         self.stats
@@ -367,6 +375,46 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         );
 
         Ok(data.len())
+    }
+
+    /// Send data already held in refcounted [`Bytes`] without copying payload bytes.
+    ///
+    /// The segment is queued directly; only the refcount is updated (typical `Bytes` clone cost).
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The operation fails due to invalid input
+    /// - System resources are unavailable
+    /// - Network or I/O errors occur
+    pub fn zero_copy_send_bytes(&self, connection_id: u64, data: Bytes) -> Result<usize> {
+        let connection = self.get_connection(connection_id)?;
+        let len = data.len();
+
+        connection.tx_queue.push(ZeroCopyTxPayload::Shared(data)); // ✅ SAFE
+
+        self.stats
+            .bytes_sent
+            .fetch_add(len as u64, std::sync::atomic::Ordering::Relaxed);
+        self.stats
+            .packets_sent
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.stats
+            .zero_copy_operations
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
+        let cycles_saved = (len as u64) * 2;
+        self.stats
+            .cpu_cycles_saved
+            .fetch_add(cycles_saved, std::sync::atomic::Ordering::Relaxed);
+
+        tracing::debug!(
+            "Zero-copy send (Bytes): {} bytes on connection {}",
+            len,
+            connection_id
+        );
+
+        Ok(len)
     }
 
     /// Receive data with zero-copy optimization
@@ -484,7 +532,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
     // Helper methods
     fn get_connection(&self, connection_id: u64) -> Result<Arc<ZeroCopyConnection<BUFFER_SIZE>>> {
         self.connection_registry
-            .get(&connection_id.to_string())
+            .get(&connection_id)
             .ok_or_else(|| NestGateError::network_error("Connection not found"))
     }
 

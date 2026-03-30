@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: March 29, 2026  
+**Last Updated**: March 30, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -10,25 +10,24 @@
 ```
 Build:              25/25 workspace members compiling (0 errors)
 Musl static:        WORKING (4.7MB static binary, x86_64-unknown-linux-musl)
-Clippy:             ZERO ERRORS — full workspace `cargo clippy --workspace --all-targets -- -D warnings` CLEAN
+Clippy:             ZERO ERRORS — `cargo clippy --workspace --all-targets --all-features -- -D warnings`
 Format:             CLEAN (cargo fmt --check passes)
-Docs:               Crate-level doc policies; 52 public APIs have # Errors sections
-Tests:              8,177 lib tests passing, 0 failures, 64 ignored
-Coverage:           77.1% line, 76.0% function (cargo llvm-cov --workspace --lib)
-Doctests:           ZERO failures
-Files > 1000 lines: 0 (largest: 987 lines)
+Docs:               ZERO WARNINGS — `cargo doc --workspace --no-deps`
+Tests:              1,457 lib tests passing, 0 failures, 48 ignored
+Coverage:           80.25% line, 79.67% function (cargo llvm-cov --workspace --lib)
+Files > 1000 lines: 0
 Unwrap/Expect:      ZERO in production code (test-only, gated by crate-level cfg_attr)
-TODO/FIXME:         1 (zero-copy Cow migration note in core_errors.rs)
+TODO/FIXME:         ZERO in .rs files
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (except env_process_shim bridge)
-println! in lib:    ZERO (migrated to tracing::info!/debug!/warn!/error!)
+println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
-serde_yaml_ng:      REMOVED from core/config (dead dep; only fuzz retains for YAML fuzzing)
-ring dependency:    Transitive only — reqwest→rustls in nestgate-installer
+ring dependency:    ELIMINATED — TLS via aws-lc-rs provider (zero ring in cargo tree)
+sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
 Primal sovereignty: Zero other-primal references; literal "nestgate" identity throughout
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
-Workspace members:  25 (code/crates + tools/unwrap-migrator + fuzz)
+Workspace members:  25 (23 code/crates + tools/unwrap-migrator + fuzz)
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
 
@@ -49,14 +48,14 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 - **serde_yaml_ng** (unsafe-libyaml) removed from core/config — dead dependency eliminated
 
 ### Dependency evolution
-- **ring**: transitive only via reqwest→rustls in installer. Upstream rustls RustCrypto backend not yet stable
+- **ring**: ELIMINATED — installer switched from `rustls-tls` to `rustls-tls-webpki-roots-no-provider` + `aws-lc-rs`
+- **sysinfo**: OPTIONAL — Linux uses pure-Rust `/proc` parsing; sysinfo only for non-Linux
 - **serde_yaml_ng**: removed from production crates (only fuzz retains for YAML fuzzing)
-- **CONTEXT.md**: created per wateringHole `PUBLIC_SURFACE_STANDARD.md`
 
 ### Coverage evolution
-- **74.5% → 77.1% line** (llvm-cov), **73.3% → 76.0% function** — target: 90%
-- +296 net new tests (7,881 → 8,177)
-- Targeted coverage for 0% files: ZFS handlers/manager/health/utilities, API fail-safe, transport, compliance
+- **74.5% → 80.25% line** (llvm-cov), **73.3% → 79.67% function** — target: 90%
+- 1,457 lib tests (from baseline ~1,100), 0 failures
+- Targeted coverage for 0% files: ZFS, API, config modernization, cache, automation, types, discovery
 - RPC coverage raised to 84.2%, types to 83.9%, observe to 87.6%
 - E2e (20+ files), chaos (20+ files), fault injection (7 files) test suites present
 
@@ -373,44 +372,36 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 | Area | Status |
 |------|--------|
 | Production unwrap/expect | CLEAN |
-| Production TODO/FIXME | CLEAN (removed Mar 28) |
-| unsafe blocks | EVOLVED (most replaced with safe alternatives) |
-| Hardcoded primal names | EVOLVED (capability-based + env config) |
-| TEMP_DISABLED modules | RESOLVED (infra-dependent only) |
-| IMPLEMENTATION STUBs | EVOLVED (http_client, connection_pool, download, hardware, ZFS) |
-| `#[allow]` suppression | 30 in nestgate-api (reduced from 52), targeting further reduction |
-| Ignored tests | 468 (ZFS, E2E, cloud, chaos requiring real infrastructure) |
-| Coverage gap to 90% | ~15.7 pp remaining (74.3% current) |
-| `sysinfo` removal | EVOLVED (Linux uses /proc first; sysinfo = cross-platform fallback) |
+| Production TODO/FIXME | CLEAN |
+| unsafe blocks | EVOLVED (safe alternatives everywhere except env-process-shim) |
+| Hardcoded primal names | CLEAN (capability-based + env config) |
+| Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
+| `ring` dependency | ELIMINATED (aws-lc-rs TLS provider) |
+| `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
+| Coverage gap to 90% | ~9.75 pp remaining (80.25% current) |
 | Semantic router | COMPILED & WIRED (`data.*`, `nat.*` routes pending) |
-| tarpc RPC manager | Placeholder (`dead_code`); needs completion or removal |
-| `JsonRpcUnixServer` | Deprecated, locally suppressed; migration to IsomorphicIpcServer pending |
-| reqwest dependency | REMOVED — pure-Rust HTTP client for discovery bootstrap |
+| `#[allow(dead_code)]` | ~95 instances remaining (down from 137+), incremental pruning |
 
 ### Coverage
 
 ```
-Current:  74.3% line coverage (llvm-cov, Mar 29 2026)
-          (prior snapshot: 71.4% Mar 28; baseline evolution 68.4%)
+Current:  80.25% line coverage (llvm-cov, Mar 30 2026)
+          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80.25%)
 Target:   90% line coverage
-Gap:      ~15.7 percentage points
-High-ROI targets:
-  - tools/unwrap-migrator (~900 lines at 0%)
-  - nestgate-zfs large modules (dataset, pool_setup, performance)
-  - nestgate-api handlers (high line count, mid coverage)
-  - nestgate-core enterprise modules
+Gap:      ~9.75 percentage points
 Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary entrypoints
 ```
 
 ### Dependency Purity
 
 ```
-Production:    Mostly pure Rust; platform via rustix (replacing sysinfo)
+Production:    Pure Rust; platform via rustix + /proc parsing
 Crypto:        100% RustCrypto
+TLS:           aws-lc-rs (no ring)
 HTTP client:   Pure Rust (tokio TcpStream for discovery bootstrap)
 No direct libc: uzers used instead
 Discovery:     mDNS (mdns-sd), Consul/K8s (pure-Rust HTTP, feature-gated)
-New:           rustix for /proc filesystem access
+sysinfo:       Optional, non-Linux only
 ```
 
 ---
@@ -448,7 +439,7 @@ nestGate/ (25 workspace members)
 | Standard | Status |
 |----------|--------|
 | UniBin | PASS |
-| ecoBin | PASS (sysinfo fallback being evolved) |
+| ecoBin | PASS (pure Rust; no ring; sysinfo optional non-Linux only) |
 | JSON-RPC 2.0 | PASS |
 | tarpc | PASS (feature-gated, version aligned) |
 | Semantic naming | PASS (JSON-RPC server, IPC) |
@@ -496,4 +487,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: March 29, 2026
+**Latest**: March 30, 2026

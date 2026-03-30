@@ -100,3 +100,53 @@ impl Default for PoolCapacity {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn pool_info_serde_and_enums() {
+        let info = PoolInfo {
+            name: "tank".to_string(),
+            state: PoolState::Online,
+            health: PoolHealth::Healthy,
+            capacity: PoolCapacity::default(),
+            devices: vec!["/dev/sda".to_string()],
+            properties: HashMap::from([("key".to_string(), "v".to_string())]),
+        };
+        let json = serde_json::to_string(&info).expect("serialize");
+        let back: PoolInfo = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.name, "tank");
+        assert_eq!(back.state, PoolState::Online);
+
+        for s in [
+            PoolState::Online,
+            PoolState::Offline,
+            PoolState::Degraded,
+            PoolState::Faulted,
+            PoolState::Unknown,
+        ] {
+            let v = serde_json::to_string(&s).unwrap();
+            let _: PoolState = serde_json::from_str(&v).unwrap();
+        }
+        for h in [
+            PoolHealth::Healthy,
+            PoolHealth::Warning,
+            PoolHealth::Critical,
+            PoolHealth::Unknown,
+        ] {
+            let v = serde_json::to_string(&h).unwrap();
+            let _: PoolHealth = serde_json::from_str(&v).unwrap();
+        }
+    }
+
+    #[test]
+    fn pool_capacity_default_and_serde() {
+        let c = PoolCapacity::default();
+        assert_eq!(c.deduplication_ratio, 1.0);
+        let json = serde_json::to_string(&c).unwrap();
+        let _: PoolCapacity = serde_json::from_str(&json).unwrap();
+    }
+}

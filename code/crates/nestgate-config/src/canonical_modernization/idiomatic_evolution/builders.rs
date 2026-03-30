@@ -316,3 +316,42 @@ impl<T> Default for ModernizationBuilder<T> {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::metadata::EvolutionMetadata;
+    use super::*;
+
+    #[test]
+    fn idiomatic_config_builder_smoke() {
+        let b: IdiomaticConfigBuilder<String> = IdiomaticConfigBuilder::default()
+            .with_metadata(EvolutionMetadata::production_optimized());
+        let _ = b;
+    }
+
+    #[test]
+    fn smart_config_builder_smoke() {
+        let _b: SmartConfigBuilder<u32> = SmartConfigBuilder::new()
+            .with_evolution_metadata(EvolutionMetadata::default())
+            .apply_modernization();
+    }
+
+    #[test]
+    fn evolution_aware_builder_smoke() {
+        let _b: EvolutionAwareBuilder<()> = EvolutionAwareBuilder::new()
+            .check_compatibility()
+            .with_evolution_score(0.5);
+    }
+
+    #[test]
+    fn canonical_builder_smoke() {
+        let _b: CanonicalBuilder<()> = CanonicalBuilder::new().apply_canonical_patterns();
+    }
+
+    #[test]
+    fn modernization_builder_smoke() {
+        let _b: ModernizationBuilder<u8> = ModernizationBuilder::new()
+            .add_modernization_step("step".to_string())
+            .enable_rollback(false);
+    }
+}

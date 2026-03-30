@@ -790,4 +790,39 @@ mod tests {
         let map = m.test_parse_pool_properties(out);
         assert_eq!(map.get("k"), Some(&"v2".to_string()));
     }
+
+    #[test]
+    fn zero_cost_pool_info_serde_roundtrip() {
+        let p = ZeroCostPoolInfo {
+            name: "tank".into(),
+            size: 100,
+            used: 10,
+            available: 90,
+            health: "ONLINE".into(),
+            properties: HashMap::from([("ashift".into(), "12".into())]),
+            created_at: std::time::SystemTime::UNIX_EPOCH,
+        };
+        let json = serde_json::to_string(&p).expect("serialize");
+        let back: ZeroCostPoolInfo = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.name, p.name);
+        assert_eq!(back.health, p.health);
+    }
+
+    #[test]
+    fn zero_cost_dataset_info_serde_roundtrip() {
+        use nestgate_core::canonical_types::StorageTier;
+        let d = ZeroCostDatasetInfo {
+            name: "d".into(),
+            pool: "tank".into(),
+            tier: StorageTier::Cold,
+            size: 1,
+            used: 1,
+            properties: HashMap::new(),
+            mount_point: None,
+            created_at: std::time::SystemTime::UNIX_EPOCH,
+        };
+        let json = serde_json::to_string(&d).expect("serialize");
+        let back: ZeroCostDatasetInfo = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.tier, StorageTier::Cold);
+    }
 }

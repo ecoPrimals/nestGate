@@ -14,6 +14,7 @@ use super::http::DiscoveryHttpClient;
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
 use crate::self_knowledge::SelfKnowledge;
 use nestgate_config::constants::get_api_port;
+use nestgate_config::constants::hardcoding::addresses::LOCALHOST_IPV4;
 use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -53,6 +54,7 @@ struct ConsulHealthCheck {
 
 /// Consul service query response
 #[derive(Debug, Deserialize)]
+#[allow(clippy::struct_field_names)]
 struct ConsulService {
     #[serde(rename = "ServiceID")]
     service_id: String,
@@ -80,8 +82,8 @@ impl ConsulDiscovery {
     /// Create a new Consul discovery instance.
     ///
     /// Resolves the Consul agent HTTP address from (in order):
-    /// - `CONSUL_HTTP_ADDR` (HashiCorp convention)
-    /// - `NESTGATE_CONSUL_HTTP_ADDR` (NestGate capability-style alias)
+    /// - `CONSUL_HTTP_ADDR` (`HashiCorp` convention)
+    /// - `NESTGATE_CONSUL_HTTP_ADDR` (`NestGate` capability-style alias)
     ///
     /// If neither is set, logs a warning and uses a **development-only** default
     /// (`http://127.0.0.1:8500`). Production deployments should always set one of the
@@ -90,7 +92,7 @@ impl ConsulDiscovery {
     /// # Errors
     ///
     /// Returns an error if the client cannot be constructed.
-    pub async fn new(builder: DiscoveryBuilder) -> Result<Self> {
+    pub fn new(builder: &DiscoveryBuilder) -> Result<Self> {
         let consul_addr = std::env::var("CONSUL_HTTP_ADDR")
             .or_else(|_| std::env::var("NESTGATE_CONSUL_HTTP_ADDR"))
             .unwrap_or_else(|_| {
@@ -137,11 +139,12 @@ impl ConsulDiscovery {
             let host = std::env::var("NESTGATE_CONSUL_SERVICE_ADDRESS_FALLBACK_HOST")
                 .unwrap_or_else(|_| {
                     tracing::warn!(
-                        "Consul returned an empty ServiceAddress; using 127.0.0.1. \
+                        "Consul returned an empty ServiceAddress; using {}. \
                          Set NESTGATE_CONSUL_SERVICE_ADDRESS_FALLBACK_HOST or fix Consul advertise \
-                         configuration."
+                         configuration.",
+                        LOCALHOST_IPV4
                     );
-                    "127.0.0.1".to_string()
+                    LOCALHOST_IPV4.to_string()
                 });
             format!("http://{host}:{port}")
         } else {
@@ -211,7 +214,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
                 meta,
             };
 
-            let url = format!("{}/v1/agent/service/register", consul_addr);
+            let url = format!("{consul_addr}/v1/agent/service/register");
             client.put_json(&url, &registration).await.map_err(|e| {
                 nestgate_types::error::NestGateError::api_error(format!(
                     "Consul registration failed: {e}"
@@ -232,7 +235,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
         Box::pin(async move {
             tracing::debug!("Consul query for capability: {:?}", capability);
 
-            let url = format!("{}/v1/catalog/service/{}", consul_addr, capability);
+            let url = format!("{consul_addr}/v1/catalog/service/{capability}");
             let response = client.get(&url).await.map_err(|e| {
                 nestgate_types::error::NestGateError::api_error(format!("Consul query failed: {e}"))
             })?;
@@ -271,7 +274,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
         Box::pin(async move {
             tracing::debug!("Consul lookup service: {}", id);
 
-            let url = format!("{}/v1/agent/service/{}", consul_addr, id);
+            let url = format!("{consul_addr}/v1/agent/service/{id}");
             let response = client.get(&url).await.map_err(|e| {
                 nestgate_types::error::NestGateError::api_error(format!(
                     "Consul lookup failed: {e}"
@@ -309,7 +312,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
         Box::pin(async move {
             tracing::debug!("Consul health check: {}", service_id);
 
-            let url = format!("{}/v1/health/service/{}", consul_addr, service_id);
+            let url = format!("{consul_addr}/v1/health/service/{service_id}");
             let response = client.get(&url).await.map_err(|e| {
                 nestgate_types::error::NestGateError::api_error(format!(
                     "Consul health check failed: {e}"
@@ -330,7 +333,7 @@ impl DiscoveryMechanism for ConsulDiscovery {
         Box::pin(async move {
             tracing::info!("Consul deregister: {}", service_id);
 
-            let url = format!("{}/v1/agent/service/deregister/{}", consul_addr, service_id);
+            let url = format!("{consul_addr}/v1/agent/service/deregister/{service_id}");
             client
                 .put_json(&url, &serde_json::Value::Null)
                 .await

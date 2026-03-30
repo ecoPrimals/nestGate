@@ -88,3 +88,19 @@ impl ZfsPerformanceMonitor {
         self.active_alerts.read().await.clone()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::performance::ZfsPerformanceMonitor;
+    use crate::types::StorageTier;
+
+    #[tokio::test]
+    async fn reporting_getters_return_cloneable_defaults() {
+        let m = ZfsPerformanceMonitor::new_for_testing();
+        let cur = m.get_current_metrics().await;
+        assert_eq!(cur.trends.prediction_confidence, 0.5);
+        assert!(m.get_metrics_history().await.is_empty());
+        assert!(m.get_active_alerts().await.is_empty());
+        assert!(m.get_tier_performance(StorageTier::Hot).await.is_none());
+    }
+}

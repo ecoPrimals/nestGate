@@ -545,4 +545,30 @@ mod tests {
             assert_eq!(format!("{sev:?}"), format!("{back:?}"));
         }
     }
+
+    #[test]
+    fn check_production_readiness_returns_report() {
+        let r = check_production_readiness().expect("check");
+        assert!(r.recommendations.len() >= 3);
+    }
+
+    #[test]
+    fn readiness_finding_serde_roundtrip() {
+        let f = ReadinessFinding {
+            category: "cat".into(),
+            description: "desc".into(),
+            severity: FindingSeverity::Warning,
+            blocking: true,
+        };
+        let j = serde_json::to_string(&f).expect("serialize");
+        let back: ReadinessFinding = serde_json::from_str(&j).expect("deserialize");
+        assert_eq!(back.category, f.category);
+        assert_eq!(back.blocking, f.blocking);
+    }
+
+    #[test]
+    fn real_zfs_operations_default_debug() {
+        let o = RealZfsOperations::default();
+        let _ = format!("{o:?}");
+    }
 }

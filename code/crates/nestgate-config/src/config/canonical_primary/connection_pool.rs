@@ -359,3 +359,50 @@ impl Default for LoadBalancerHealthCheck {
 
 /// Backward compatibility alias
 pub type UnifiedConnectionPoolConfig = ConnectionPoolConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let s = serde_json::to_string(v).expect("to_string");
+        let _: T = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn connection_pool_config_default() {
+        let c = ConnectionPoolConfig::default();
+        assert!(c.enabled);
+        serde_roundtrip(&c);
+    }
+
+    #[test]
+    fn pool_metric_variants() {
+        serde_roundtrip(&PoolMetric::ConnectionFailureRate);
+    }
+
+    #[test]
+    fn validation_strategy_variants() {
+        for v in [
+            ValidationStrategy::Query,
+            ValidationStrategy::IsValid,
+            ValidationStrategy::Ping,
+        ] {
+            serde_roundtrip(&v);
+        }
+    }
+
+    #[test]
+    fn pooling_and_load_balancing_variants() {
+        serde_roundtrip(&PoolingStrategy::Lru);
+        serde_roundtrip(&LoadBalancingStrategy::LeastConnections);
+    }
+
+    #[test]
+    fn load_balancing_config_default() {
+        serde_roundtrip(&ConnectionLoadBalancingConfig::default());
+    }
+}

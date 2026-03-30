@@ -113,6 +113,10 @@ const ERROR_WEBHOOK_URL_EMPTY: &str = "Webhook URL cannot be empty";
 const ERROR_HTTP_METHOD_EMPTY: &str = "HTTP method cannot be empty";
 /// Error Timeout Zero
 const ERROR_TIMEOUT_ZERO: &str = "Timeout must be greater than 0";
+/// Error Prometheus Port Zero
+const ERROR_PROMETHEUS_PORT_ZERO: &str = "Prometheus port cannot be zero when enabled";
+/// Error Email From Empty
+const ERROR_EMAIL_FROM_EMPTY: &str = "Email from_endpoint cannot be empty";
 
 /// Monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -379,25 +383,25 @@ impl MonitoringConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), &'static str> {
         // Validate metrics interval
         if self.metrics_interval == 0 {
-            return Err(ERROR_METRICS_INTERVAL_ZERO.to_string());
+            return Err(ERROR_METRICS_INTERVAL_ZERO);
         }
 
         // Validate log file path
         if self.log_file.is_empty() {
-            return Err(ERROR_LOG_FILE_EMPTY.to_string());
+            return Err(ERROR_LOG_FILE_EMPTY);
         }
 
         // Validate log rotation size
         if self.log_rotation_size == 0 {
-            return Err(ERROR_LOG_ROTATION_SIZE_ZERO.to_string());
+            return Err(ERROR_LOG_ROTATION_SIZE_ZERO);
         }
 
         // Validate log retention days
         if self.log_retention_days == 0 {
-            return Err(ERROR_LOG_RETENTION_ZERO.to_string());
+            return Err(ERROR_LOG_RETENTION_ZERO);
         }
 
         // Validate Prometheus configuration
@@ -405,7 +409,7 @@ impl MonitoringConfig {
             && prometheus.enabled
             && prometheus.port == 0
         {
-            return Err("Prometheus port cannot be zero when enabled".to_string());
+            return Err(ERROR_PROMETHEUS_PORT_ZERO);
         }
 
         // Validate alert configuration
@@ -433,13 +437,13 @@ impl AlertConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), &'static str> {
         // Validate thresholds
         self.thresholds.validate()?;
 
         // Validate notification configuration
         if self.enabled && !self.has_notifications() {
-            return Err(ERROR_NOTIFICATION_REQUIRED.to_string());
+            return Err(ERROR_NOTIFICATION_REQUIRED);
         }
 
         self.notifications.validate()?;
@@ -526,25 +530,25 @@ impl AlertThresholds {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), &'static str> {
         if self.cpu_threshold < 0.0 || self.cpu_threshold > 100.0 {
-            return Err(ERROR_CPU_THRESHOLD_RANGE.to_string());
+            return Err(ERROR_CPU_THRESHOLD_RANGE);
         }
 
         if self.memory_threshold < 0.0 || self.memory_threshold > 100.0 {
-            return Err(ERROR_MEMORY_THRESHOLD_RANGE.to_string());
+            return Err(ERROR_MEMORY_THRESHOLD_RANGE);
         }
 
         if self.disk_threshold < 0.0 || self.disk_threshold > 100.0 {
-            return Err(ERROR_DISK_THRESHOLD_RANGE.to_string());
+            return Err(ERROR_DISK_THRESHOLD_RANGE);
         }
 
         if self.latency_threshold < 0.0 {
-            return Err(ERROR_LATENCY_THRESHOLD_POSITIVE.to_string());
+            return Err(ERROR_LATENCY_THRESHOLD_POSITIVE);
         }
 
         if self.error_rate_threshold < 0.0 || self.error_rate_threshold > 100.0 {
-            return Err(ERROR_ERROR_RATE_RANGE.to_string());
+            return Err(ERROR_ERROR_RATE_RANGE);
         }
         Ok(())
     }
@@ -577,7 +581,7 @@ impl NotificationConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), &'static str> {
         // Validate email configuration
         if let Some(email) = &self.email {
             email.validate()?;
@@ -605,21 +609,21 @@ impl EmailConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub const fn validate(&self) -> Result<(), &'static str> {
         if self.smtp_server.is_empty() {
-            return Err(ERROR_SMTP_SERVER_EMPTY.to_string());
+            return Err(ERROR_SMTP_SERVER_EMPTY);
         }
 
         if self.smtp_port == 0 {
-            return Err(ERROR_SMTP_PORT_ZERO.to_string());
+            return Err(ERROR_SMTP_PORT_ZERO);
         }
 
         if self.from_endpoint.is_empty() {
-            return Err("Email from_endpoint cannot be empty".to_string());
+            return Err(ERROR_EMAIL_FROM_EMPTY);
         }
 
         if self.to_addresses.is_empty() {
-            return Err(ERROR_RECIPIENT_REQUIRED.to_string());
+            return Err(ERROR_RECIPIENT_REQUIRED);
         }
         Ok(())
     }
@@ -634,17 +638,17 @@ impl SlackConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub const fn validate(&self) -> Result<(), &'static str> {
         if self.webhook_url.is_empty() {
-            return Err(ERROR_SLACK_WEBHOOK_EMPTY.to_string());
+            return Err(ERROR_SLACK_WEBHOOK_EMPTY);
         }
 
         if self.channel.is_empty() {
-            return Err(ERROR_SLACK_CHANNEL_EMPTY.to_string());
+            return Err(ERROR_SLACK_CHANNEL_EMPTY);
         }
 
         if self.username.is_empty() {
-            return Err(ERROR_SLACK_USERNAME_EMPTY.to_string());
+            return Err(ERROR_SLACK_USERNAME_EMPTY);
         }
         Ok(())
     }
@@ -659,17 +663,17 @@ impl WebhookConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub const fn validate(&self) -> Result<(), &'static str> {
         if self.url.is_empty() {
-            return Err(ERROR_WEBHOOK_URL_EMPTY.to_string());
+            return Err(ERROR_WEBHOOK_URL_EMPTY);
         }
 
         if self.method.is_empty() {
-            return Err(ERROR_HTTP_METHOD_EMPTY.to_string());
+            return Err(ERROR_HTTP_METHOD_EMPTY);
         }
 
         if self.timeout == 0 {
-            return Err(ERROR_TIMEOUT_ZERO.to_string());
+            return Err(ERROR_TIMEOUT_ZERO);
         }
         Ok(())
     }

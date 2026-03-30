@@ -154,3 +154,42 @@ impl SmartClone for bool {
         *self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::traits::SmartClone;
+    use super::super::traits::SmartDefault;
+    use super::*;
+
+    #[test]
+    fn smart_default_primitives() {
+        assert_eq!(String::smart_default(), String::new());
+        assert_eq!(u16::smart_default(), 8080);
+        assert_eq!(u32::smart_default(), 0);
+        assert_eq!(u64::smart_default(), 0);
+        assert_eq!(usize::smart_default(), 0);
+        assert!(!bool::smart_default());
+        assert_eq!(i32::smart_default(), 0);
+        assert_eq!(i64::smart_default(), 0);
+        assert_eq!(f64::smart_default(), 0.0);
+    }
+
+    #[test]
+    fn smart_clone_primitives() {
+        assert_eq!(String::smart_clone(&"a".to_string()), "a");
+        assert_eq!(u32::smart_clone(&3), 3);
+        assert_eq!(bool::smart_clone(&true), true);
+    }
+
+    #[test]
+    fn evolution_helpers_smoke() {
+        assert_eq!(StringEvolution::modernize_string("  x  "), "x");
+        assert_eq!(NumericEvolution::modernize_port(0), 8080);
+        assert_eq!(NumericEvolution::modernize_port(9000), 9000);
+        assert!(BooleanEvolution::modernize_flag(true));
+        let v = vec![1, 2];
+        assert_eq!(CollectionEvolution::modernize_vec(v.clone()), v);
+        assert_eq!(ConfigEvolution::apply_config_patterns(1u8), 1u8);
+        assert_eq!(ServiceEvolution::modernize_service_config("s"), "s");
+    }
+}

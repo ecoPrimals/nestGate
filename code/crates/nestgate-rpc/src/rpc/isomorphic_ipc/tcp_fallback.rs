@@ -47,6 +47,7 @@
 //! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)
 
 use anyhow::{Context, Result};
+use nestgate_config::constants::hardcoding::addresses::LOCALHOST_IPV4;
 use serde_json::Value;
 use std::fs::File;
 use std::future::Future;
@@ -105,9 +106,9 @@ impl TcpFallbackServer {
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
         info!("   Security: Localhost only (127.0.0.1)");
 
-        // Bind address configurable via NESTGATE_IPC_BIND_ADDRESS (default: 127.0.0.1)
-        let bind_addr =
-            std::env::var("NESTGATE_IPC_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string());
+        // Bind address configurable via NESTGATE_IPC_BIND_ADDRESS (default: loopback from config)
+        let bind_addr = std::env::var("NESTGATE_IPC_BIND_ADDRESS")
+            .unwrap_or_else(|_| LOCALHOST_IPV4.to_string());
         let bind_socket = format!("{bind_addr}:0");
         info!("   Bind: {} (ephemeral port)", bind_socket);
 
@@ -312,8 +313,8 @@ mod tests {
     #[test]
     fn test_bind_address_from_env() {
         // Default when NESTGATE_IPC_BIND_ADDRESS not set
-        let bind_addr =
-            std::env::var("NESTGATE_IPC_BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string());
+        let bind_addr = std::env::var("NESTGATE_IPC_BIND_ADDRESS")
+            .unwrap_or_else(|_| LOCALHOST_IPV4.to_string());
         assert!(!bind_addr.is_empty());
         assert!(bind_addr.contains('.') || bind_addr == "localhost" || bind_addr == "::1");
     }

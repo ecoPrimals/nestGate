@@ -68,3 +68,27 @@ impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
         Self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ZeroCostNativeZfsService;
+
+    #[test]
+    fn production_placeholder_new_and_default() {
+        let a = ZeroCostNativeZfsService::<4>::new();
+        let b = ZeroCostNativeZfsService::<4>::default();
+        drop((a, b));
+    }
+}
+
+#[cfg(all(test, feature = "dev-stubs"))]
+mod dev_stubs_tests {
+    use super::ZeroCostNativeZfsService;
+
+    #[test]
+    fn dev_stubs_new_and_default() {
+        let a = ZeroCostNativeZfsService::<8>::new();
+        let b = ZeroCostNativeZfsService::<8>::default();
+        drop((a, b));
+    }
+}

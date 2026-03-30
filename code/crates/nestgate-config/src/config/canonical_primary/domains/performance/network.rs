@@ -48,3 +48,16 @@ impl NetworkPerformanceConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn network_performance_validate_serde() {
+        let c = NetworkPerformanceConfig::default();
+        c.validate().expect("validate");
+        let s = serde_json::to_string(&c).expect("to_string");
+        let _: NetworkPerformanceConfig = serde_json::from_str(&s).expect("from_str");
+    }
+}

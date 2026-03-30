@@ -74,7 +74,7 @@ fn port_from_env_or_default() -> u16 {
         .or_else(|_| std::env::var("NESTGATE_PORT"))
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(nestgate_core::defaults::network::DEFAULT_API_PORT)
+        .unwrap_or(nestgate_core::constants::DEFAULT_API_PORT)
 }
 
 /// Read bind address from environment with fallback (`UniBin` compliance)
@@ -84,7 +84,7 @@ fn bind_from_env_or_default() -> String {
         .or_else(|_| std::env::var("NESTGATE_BIND_ADDRESS"))
         .or_else(|_| std::env::var("NESTGATE_HOST"))
         .ok()
-        .unwrap_or_else(|| nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS.to_string())
+        .unwrap_or_else(|| nestgate_core::constants::DEFAULT_BIND_ADDRESS.to_string())
 }
 
 #[derive(Debug, Subcommand)]
@@ -206,10 +206,10 @@ pub enum ServiceAction {
     /// Start `NestGate` service
     Start {
         /// Port to bind to (can be overridden with `NESTGATE_API_PORT`)
-        #[arg(short, long, default_value_t = nestgate_core::defaults::network::DEFAULT_API_PORT)]
+        #[arg(short, long, default_value_t = nestgate_core::constants::get_api_port())]
         port: u16,
         /// Bind address (can be overridden with `NESTGATE_BIND_ADDRESS`)
-        #[arg(long, default_value = nestgate_core::defaults::network::DEFAULT_BIND_ADDRESS)]
+        #[arg(long, default_value = nestgate_core::constants::DEFAULT_BIND_ADDRESS)]
         bind: String,
         /// Listen address as `host:port` (`UniBin` v1.2). Takes precedence over `--bind` and `--port`.
         #[arg(long)]

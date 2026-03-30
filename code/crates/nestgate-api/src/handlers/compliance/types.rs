@@ -428,7 +428,7 @@ impl ComplianceManager {
     #[must_use]
     pub fn check_data_retention(&self, data_type: &str, data_age_days: u32) -> bool {
         for policy in self.retention_policies.values() {
-            if policy.data_types.contains(&data_type.to_string()) {
+            if policy.data_types.iter().any(|dt| dt == data_type) {
                 if policy.legal_hold {
                     return true; // Legal hold overrides retention
                 }

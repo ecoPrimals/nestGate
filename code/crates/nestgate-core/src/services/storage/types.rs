@@ -393,6 +393,54 @@ mod tests {
     }
 
     #[test]
+    fn storage_pool_usage_percentage_zero_total() {
+        let mut pool = StoragePool::new("p".to_string(), StoragePoolType::Filesystem);
+        pool.total_size = 0;
+        pool.used_size = 0;
+        assert_eq!(pool.usage_percentage(), 0.0);
+    }
+
+    #[test]
+    fn storage_pool_update_stats_sets_available() {
+        let mut pool = StoragePool::new("p".to_string(), StoragePoolType::Zfs);
+        pool.update_stats(1000, 250);
+        assert_eq!(pool.total_size, 1000);
+        assert_eq!(pool.used_size, 250);
+        assert_eq!(pool.available_size, 750);
+    }
+
+    #[test]
+    fn storage_pool_is_healthy_false_when_not_online() {
+        let mut pool = StoragePool::new("p".to_string(), StoragePoolType::Zfs);
+        pool.health = PoolHealth::Degraded;
+        assert!(!pool.is_healthy());
+    }
+
+    #[test]
+    fn storage_quota_soft_limit_helpers_and_usage_percentage() {
+        let mut q = StorageQuota::new("/a".to_string());
+        q.soft_limit = Some(10);
+        q.hard_limit = Some(100);
+        q.current_usage = 10;
+        assert!(q.is_soft_limit_exceeded());
+        q.current_usage = 5;
+        assert!(!q.is_soft_limit_exceeded());
+
+        assert_eq!(q.usage_percentage(), Some(5.0_f64));
+        q.hard_limit = Some(0);
+        assert_eq!(q.usage_percentage(), Some(0.0));
+    }
+
+    #[test]
+    fn storage_operation_result_helpers() {
+        let ok = StorageOperationResult::success(StorageOperationType::Read, Some(10));
+        assert!(ok.success);
+        let bad = StorageOperationResult::failure(StorageOperationType::Write, "e".to_string());
+        assert!(!bad.success);
+        assert_eq!(bad.error_message.as_deref(), Some("e"));
+    }
+
+    #[test]
     fn test_cache_config_usage() {
         // Simple test using local struct instead of complex import
         #[allow(dead_code)]

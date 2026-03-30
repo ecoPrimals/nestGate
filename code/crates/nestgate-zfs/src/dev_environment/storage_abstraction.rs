@@ -75,31 +75,13 @@ impl Default for StorageAbstractionConfig {
 
 /// Simulated storage pool using filesystem operations
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development environment simulation - fields intentionally unused
 struct SimulatedPool {
-    name: String,
     path: PathBuf,
     datasets: Vec<SimulatedDataset>,
-    tier: StorageTier,
-    created_at: std::time::SystemTime,
-}
-impl SimulatedPool {
-    /// Create a new simulated pool
-    #[allow(dead_code)] // Development environment simulation
-    pub fn new(name: String, path: PathBuf, tier: StorageTier) -> Self {
-        Self {
-            name,
-            path,
-            datasets: Vec::new(),
-            tier,
-            created_at: std::time::SystemTime::now(),
-        }
-    }
 }
 
 /// Simulated dataset using directories
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Development environment simulation - fields intentionally unused
 struct SimulatedDataset {
     name: String,
     path: PathBuf,
@@ -107,36 +89,6 @@ struct SimulatedDataset {
     size_bytes: u64,
     tier: StorageTier,
     properties: HashMap<String, String>,
-}
-impl SimulatedDataset {
-    /// Create a new simulated dataset
-    #[allow(dead_code)]
-    pub fn new(name: String, tier: StorageTier) -> Self {
-        let path = PathBuf::from("/dev/datasets/error details".to_string());
-        let mount_point = PathBuf::from("/mnt/error details".to_string());
-
-        Self {
-            name,
-            path,
-            mount_point,
-            tier,
-            properties: HashMap::new(),
-            size_bytes: 0,
-        }
-    }
-
-    #[allow(dead_code)]
-    pub const fn size(&self) -> u64 {
-        self.size_bytes
-    }
-    #[allow(dead_code)]
-    pub const fn tier(&self) -> &StorageTier {
-        &self.tier
-    }
-    #[allow(dead_code)]
-    pub const fn properties(&self) -> &HashMap<String, String> {
-        &self.properties
-    }
 }
 
 impl DevEnvironmentStorageService {
@@ -245,11 +197,8 @@ impl DevEnvironmentStorageService {
         }
 
         let pool = SimulatedPool {
-            name: name.to_string(),
             path: pool_path,
             datasets: Vec::new(),
-            tier: StorageTier::Hot, // Default to hot tier
-            created_at: std::time::SystemTime::now(),
         };
 
         pools.insert(name.to_string(), pool);

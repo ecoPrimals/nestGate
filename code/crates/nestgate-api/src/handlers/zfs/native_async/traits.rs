@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![allow(async_fn_in_trait)] // Intentional ergonomic async trait for adapter implementations
+
 //! Async ZFS service trait for the `dev-stubs` native async adapter.
 
 use crate::handlers::zfs::universal_zfs_types::{

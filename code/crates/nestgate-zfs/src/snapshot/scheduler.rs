@@ -625,4 +625,28 @@ mod tests {
         assert_eq!(to_delete[0].name, "old");
         let _ = (s, retention); // policy shape documented alongside dataset retention matcher
     }
+
+    #[tokio::test]
+    async fn process_policies_empty_map_ok() {
+        let s = test_scheduler();
+        s.process_policies().await.expect("process");
+    }
+
+    #[tokio::test]
+    async fn process_policies_disabled_policy_skipped() {
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let mut map = HashMap::new();
+        map.insert(
+            "p1".into(),
+            SnapshotPolicy {
+                name: "disabled".into(),
+                enabled: false,
+                ..SnapshotPolicy::default()
+            },
+        );
+        let policies: SnapshotPolicyMap = Arc::new(RwLock::new(map));
+        let queue = Arc::new(RwLock::new(Vec::new()));
+        let s = PolicyScheduler::new(dm, policies, queue);
+        s.process_policies().await.expect("process");
+    }
 }

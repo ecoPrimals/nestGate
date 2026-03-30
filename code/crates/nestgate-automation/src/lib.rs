@@ -7,6 +7,7 @@
 //!
 //! Provides predictive analytics and automated optimization for storage systems.
 
+#![warn(missing_docs)]
 #![cfg_attr(
     test,
     allow(

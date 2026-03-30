@@ -267,7 +267,7 @@ async fn discover_capability_with_legacy(
 /// Try to discover service via discovery mechanism
 async fn try_discovery(capability: &str) -> Result<DiscoveredService> {
     // Auto-detect discovery mechanism
-    let discovery = DiscoveryBuilder::default().detect().await?;
+    let discovery = DiscoveryBuilder::default().detect()?;
 
     // Query by capability
     let services = discovery.find_by_capability(capability.to_string()).await?;

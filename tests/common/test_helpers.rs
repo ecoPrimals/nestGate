@@ -112,10 +112,12 @@ impl UniversalService for MockTestService {
                         message: "Mock service configured to fail".to_string(),
                     }),
                     context: ErrorContext {
-                        operation: "handle_request".to_string(),
-                        component: "MockTestService".to_string(),
+                        operation: std::borrow::Cow::Borrowed("handle_request"),
+                        component: std::borrow::Cow::Borrowed("MockTestService"),
                         metadata: std::collections::HashMap::new(),
                         timestamp: std::time::SystemTime::now(),
+                        request_id: None,
+                        user_id: None,
                     },
                 })));
             }

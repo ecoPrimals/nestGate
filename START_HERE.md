@@ -4,11 +4,13 @@
 
 ```
 Build:       25/25 workspace members compiling (0 errors)
-Tests:       8,177 lib tests passing, 0 failures, 64 ignored
-Coverage:    77.1% line (llvm-cov)
-Clippy:      ZERO errors — full workspace -D warnings clean
-Doctests:    Zero failures
+Tests:       1,457 lib tests passing, 0 failures, 48 ignored
+Coverage:    80.25% line (llvm-cov) — wateringHole 80% minimum met
+Clippy:      ZERO errors — full workspace --all-features -D warnings clean
+Docs:        ZERO warnings (cargo doc --workspace --no-deps)
 Unsafe:      #![forbid(unsafe_code)] on all crate roots except env-process-shim
+ring:        Eliminated — TLS via aws-lc-rs (no ring in cargo tree)
+sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
 Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```
@@ -166,4 +168,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: March 29, 2026
+**Last Updated**: March 30, 2026

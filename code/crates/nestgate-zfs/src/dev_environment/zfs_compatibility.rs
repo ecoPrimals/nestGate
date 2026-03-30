@@ -18,12 +18,11 @@
 
 //! Zfs Compatibility module
 
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::sync::Arc;
 use tracing::{info, warn};
 
 use crate::error::{ZfsOperation, create_zfs_error};
-use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::error::CanonicalResult as Result;
 
 /// Development Environment ZFS Service
@@ -33,10 +32,10 @@ use nestgate_core::error::CanonicalResult as Result;
 ///
 /// **This replaces the confusingly-named "`MockZfsService`"**
 pub struct DevEnvironmentZfsService {
-    /// Simulated pools for development
-    pools: Arc<tokio::sync::RwLock<HashMap<String, DevPool>>>,
-    /// Simulated datasets
-    datasets: Arc<tokio::sync::RwLock<HashMap<String, DevDataset>>>,
+    /// Simulated pool names for development
+    pools: Arc<tokio::sync::RwLock<HashSet<String>>>,
+    /// Simulated dataset names for development
+    datasets: Arc<tokio::sync::RwLock<HashSet<String>>>,
     /// Configuration for the development environment
     config: DevEnvironmentConfig,
 }
@@ -80,112 +79,6 @@ impl Default for DevEnvironmentConfig {
     }
 }
 
-/// Simulated ZFS pool for development
-#[derive(Debug, Clone)]
-#[allow(dead_code)] // Development environment simulation - fields intentionally unused
-struct DevPool {
-    name: String,
-    size_bytes: u64,
-    used_bytes: u64,
-    health: String,
-    created_at: std::time::SystemTime,
-}
-impl DevPool {
-    /// Create a new development pool
-    #[allow(dead_code)]
-    pub fn new(name: String, size_bytes: u64) -> Self {
-        Self {
-            name,
-            health: "ONLINE".to_string(),
-            size_bytes,
-            used_bytes: 0,
-            created_at: std::time::SystemTime::now(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-    #[allow(dead_code)]
-    pub fn health(&self) -> &str {
-        &self.health
-    }
-    #[allow(dead_code)]
-    pub const fn size_bytes(&self) -> u64 {
-        self.size_bytes
-    }
-    #[allow(dead_code)]
-    pub const fn used_bytes(&self) -> u64 {
-        self.used_bytes
-    }
-    #[allow(dead_code)]
-    pub const fn created_at(&self) -> std::time::SystemTime {
-        self.created_at
-    }
-}
-
-/// Simulated ZFS dataset for development
-#[derive(Debug, Clone)]
-#[allow(dead_code)] // Development environment simulation - fields intentionally unused
-struct DevDataset {
-    name: String,
-    pool: String,
-    mount_point: std::path::PathBuf,
-    size_bytes: u64,
-    tier: StorageTier,
-    properties: HashMap<String, String>,
-}
-#[allow(dead_code)] // Development environment methods
-impl DevDataset {
-    /// Create a new development dataset
-    #[allow(dead_code)] // Development environment simulation
-    pub fn new(
-        name: String,
-        pool: String,
-        mount_point: std::path::PathBuf,
-        tier: StorageTier,
-    ) -> Self {
-        Self {
-            name,
-            pool,
-            mount_point,
-            size_bytes: 0,
-            tier,
-            properties: HashMap::new(),
-        }
-    }
-    /// Get dataset name
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    /// Get parent pool
-    pub fn pool(&self) -> &str {
-        &self.pool
-    }
-
-    /// Get mount point
-    pub const fn mount_point(&self) -> &std::path::PathBuf {
-        &self.mount_point
-    }
-
-    /// Get dataset size
-    pub const fn size_bytes(&self) -> u64 {
-        self.size_bytes
-    }
-
-    /// Get storage tier
-    pub const fn tier(&self) -> &StorageTier {
-        &self.tier
-    }
-
-    /// Get properties
-    pub const fn properties(&self) -> &HashMap<String, String> {
-        &self.properties
-    }
-}
-
 impl DevEnvironmentZfsService {
     /// Create new development environment ZFS service
     pub fn new() -> Self {
@@ -195,8 +88,8 @@ impl DevEnvironmentZfsService {
         info!("📁 Base directory: {:?}", config.base_directory);
 
         Self {
-            pools: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
-            datasets: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            pools: Arc::new(tokio::sync::RwLock::new(HashSet::new())),
+            datasets: Arc::new(tokio::sync::RwLock::new(HashSet::new())),
             config,
         }
     }
@@ -207,8 +100,8 @@ impl DevEnvironmentZfsService {
         info!("📁 Base directory: {:?}", config.base_directory);
 
         Self {
-            pools: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
-            datasets: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            pools: Arc::new(tokio::sync::RwLock::new(HashSet::new())),
+            datasets: Arc::new(tokio::sync::RwLock::new(HashSet::new())),
             config,
         }
     }
@@ -246,15 +139,7 @@ impl DevEnvironmentZfsService {
     async fn create_dev_pool(&self, name: &str, size_bytes: u64) -> Result<()> {
         let mut pools = self.pools.write().await;
 
-        let pool = DevPool {
-            name: name.to_string(),
-            size_bytes,
-            used_bytes: 0,
-            health: "ONLINE".to_string(),
-            created_at: std::time::SystemTime::now(),
-        };
-
-        pools.insert(name.to_string(), pool);
+        pools.insert(name.to_string());
 
         // Create physical directory for this pool
         let pool_dir = self.config.base_directory.join(name);
@@ -289,7 +174,7 @@ impl DevEnvironmentZfsService {
             pools.len(),
             datasets.len(),
             self.config.verbose_logging,
-            pools.keys().collect::<Vec<_>>()
+            pools.iter().cloned().collect::<Vec<_>>()
         )
     }
 }

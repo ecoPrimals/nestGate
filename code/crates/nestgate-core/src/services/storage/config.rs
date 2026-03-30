@@ -393,4 +393,80 @@ mod tests {
         invalid_config.discovery_interval = 0;
         assert!(invalid_config.validate().is_err());
     }
+
+    #[test]
+    fn zfs_config_validate_errors_on_empty_zpool_and_zero_timeout() {
+        let mut c = ZfsConfig::default();
+        c.zpool_binary = String::new();
+        assert!(c.validate().is_err());
+
+        let mut c2 = ZfsConfig::default();
+        c2.command_timeout = std::time::Duration::from_secs(0);
+        assert!(c2.validate().is_err());
+    }
+
+    #[test]
+    fn storage_service_config_interval_durations() {
+        let c = StorageServiceConfig::default();
+        assert_eq!(
+            c.discovery_interval_duration(),
+            std::time::Duration::from_secs(c.discovery_interval)
+        );
+        assert_eq!(
+            c.quota_check_interval_duration(),
+            std::time::Duration::from_secs(c.quota_check_interval)
+        );
+        assert_eq!(
+            c.monitoring_interval_duration(),
+            std::time::Duration::from_secs(c.monitoring_interval)
+        );
+        assert_eq!(
+            c.operation_timeout_duration(),
+            std::time::Duration::from_secs(c.operation_timeout)
+        );
+    }
+
+    #[test]
+    fn storage_service_config_validate_zero_intervals_rejected() {
+        let mut c = StorageServiceConfig::default();
+        c.quota_check_interval = 0;
+        assert!(c.validate().is_err());
+
+        let mut c = StorageServiceConfig::default();
+        c.monitoring_interval = 0;
+        assert!(c.validate().is_err());
+
+        let mut c = StorageServiceConfig::default();
+        c.operation_timeout = 0;
+        assert!(c.validate().is_err());
+
+        let mut c = StorageServiceConfig::default();
+        c.max_concurrent_operations = 0;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn storage_service_config_production_and_development_constructors() {
+        let dev = StorageServiceConfig::development();
+        assert!(dev.discovery_interval < StorageServiceConfig::default().discovery_interval);
+
+        let prod = StorageServiceConfig::production();
+        assert!(
+            prod.max_concurrent_operations
+                >= StorageServiceConfig::default().max_concurrent_operations
+        );
+    }
+
+    #[test]
+    fn cache_policies_and_eviction_policy_serde_roundtrip() {
+        let p = CachePolicies {
+            eviction_strategy: EvictionPolicy::Arc,
+            compression: true,
+            deduplication: true,
+        };
+        let json = serde_json::to_string(&p).unwrap();
+        let back: CachePolicies = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.eviction_strategy, EvictionPolicy::Arc);
+        assert!(back.compression);
+    }
 }

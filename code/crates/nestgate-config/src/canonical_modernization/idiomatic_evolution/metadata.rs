@@ -171,3 +171,78 @@ impl EvolutionMetadata {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let json = serde_json::to_string(v).expect("serialize");
+        let _: T = serde_json::from_str(&json).expect("deserialize");
+    }
+
+    #[test]
+    fn evolution_metadata_default_and_production() {
+        let d = EvolutionMetadata::default();
+        assert!(d.validate().is_ok());
+        let mut p = EvolutionMetadata::production_optimized();
+        p.track_component_evolution("a", "1").expect("track");
+        assert_eq!(p.get_component_count(), 1);
+        let dev = EvolutionMetadata::development_optimized();
+        assert!(dev.validate().is_ok());
+    }
+
+    #[test]
+    fn evolution_metadata_validate_empty_version_fails() {
+        let mut m = EvolutionMetadata::default();
+        m.version.clear();
+        assert!(m.validate().is_err());
+    }
+
+    #[test]
+    fn serde_roundtrip_structs() {
+        serde_roundtrip(&EvolutionMetadata::default());
+        serde_roundtrip(&MigrationPath {
+            from_version: "0".to_string(),
+            to_version: "1".to_string(),
+            steps: vec!["s".to_string()],
+            can_rollback: false,
+        });
+        serde_roundtrip(&CompatibilityInfo {
+            compatible_versions: vec!["1".to_string()],
+            breaking_changes: vec![],
+            deprecations: vec![DeprecationInfo {
+                item: "x".to_string(),
+                since_version: "0".to_string(),
+                removal_version: None,
+                replacement: None,
+            }],
+        });
+        serde_roundtrip(&ModernizationMetadata {
+            status: ModernizationStatus::InProgress,
+            applied_patterns: vec!["p".to_string()],
+            recommendations: vec![],
+        });
+        serde_roundtrip(&VersionInfo {
+            current: "1".to_string(),
+            previous: None,
+            next: None,
+        });
+    }
+
+    #[test]
+    fn modernization_status_variants() {
+        for s in [
+            ModernizationStatus::NotStarted,
+            ModernizationStatus::InProgress,
+            ModernizationStatus::Completed,
+            ModernizationStatus::Failed,
+            ModernizationStatus::RolledBack,
+        ] {
+            serde_roundtrip(&s);
+        }
+    }
+}

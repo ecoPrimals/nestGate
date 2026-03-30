@@ -126,6 +126,14 @@ const ERROR_POOL_NAME_EMPTY: &str = "Pool name cannot be empty";
 /// Error Dataset Prefix Empty
 const ERROR_DATASET_PREFIX_EMPTY: &str = "Dataset prefix cannot be empty";
 
+#[inline]
+fn str_string_map<const N: usize>(pairs: [(&str, &str); N]) -> HashMap<String, String> {
+    pairs
+        .into_iter()
+        .map(|(k, v)| (k.into(), v.into()))
+        .collect()
+}
+
 /// Tier-specific configurations for hot/warm/cold storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Tierconfigurations
@@ -204,20 +212,18 @@ impl TierConfig {
     /// Default configuration for hot tier (high performance)
     #[must_use]
     pub fn hot_tier_default() -> Self {
-        let mut properties = HashMap::new();
-        properties.insert(
-            COMPRESSION_PROPERTY.to_string(),
-            COMPRESSION_OFF.to_string(),
-        );
-        properties.insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_128K.to_string());
-        properties.insert(ATIME_PROPERTY.to_string(), VALUE_OFF.to_string());
-        properties.insert(PRIMARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
-        properties.insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
+        let properties = str_string_map([
+            (COMPRESSION_PROPERTY, COMPRESSION_OFF),
+            (RECORDSIZE_PROPERTY, RECORDSIZE_128K),
+            (ATIME_PROPERTY, VALUE_OFF),
+            (PRIMARYCACHE_PROPERTY, CACHE_ALL),
+            (SECONDARYCACHE_PROPERTY, CACHE_ALL),
+        ]);
 
         Self {
-            name: TIER_HOT.to_string(),
-            pool_name: POOL_DEFAULT.to_string(),
-            dataset_prefix: TIER_HOT.to_string(),
+            name: TIER_HOT.into(),
+            pool_name: POOL_DEFAULT.into(),
+            dataset_prefix: TIER_HOT.into(),
             properties,
             performance_profile: PerformanceProfile::HighPerformance,
             migration_rules: MigrationRules::hot_tier_defaults(),
@@ -228,26 +234,18 @@ impl TierConfig {
     /// Default configuration for warm tier (balanced)
     #[must_use]
     pub fn warm_tier_default() -> Self {
-        let mut properties = HashMap::new();
-        properties.insert(
-            COMPRESSION_PROPERTY.to_string(),
-            COMPRESSION_LZ4.to_string(),
-        );
-        properties.insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_1M.to_string());
-        properties.insert(ATIME_PROPERTY.to_string(), VALUE_ON.to_string());
-        properties.insert(
-            PRIMARYCACHE_PROPERTY.to_string(),
-            CACHE_METADATA.to_string(),
-        );
-        properties.insert(
-            SECONDARYCACHE_PROPERTY.to_string(),
-            CACHE_METADATA.to_string(),
-        );
+        let properties = str_string_map([
+            (COMPRESSION_PROPERTY, COMPRESSION_LZ4),
+            (RECORDSIZE_PROPERTY, RECORDSIZE_1M),
+            (ATIME_PROPERTY, VALUE_ON),
+            (PRIMARYCACHE_PROPERTY, CACHE_METADATA),
+            (SECONDARYCACHE_PROPERTY, CACHE_METADATA),
+        ]);
 
         Self {
-            name: TIER_WARM.to_string(),
-            pool_name: POOL_DEFAULT.to_string(),
-            dataset_prefix: TIER_WARM.to_string(),
+            name: TIER_WARM.into(),
+            pool_name: POOL_DEFAULT.into(),
+            dataset_prefix: TIER_WARM.into(),
             properties,
             performance_profile: PerformanceProfile::Balanced,
             migration_rules: MigrationRules::warm_tier_defaults(),
@@ -258,24 +256,19 @@ impl TierConfig {
     /// Default configuration for cold tier (high compression)
     #[must_use]
     pub fn cold_tier_default() -> Self {
-        let mut properties = HashMap::new();
-        properties.insert(
-            COMPRESSION_PROPERTY.to_string(),
-            COMPRESSION_ZSTD.to_string(),
-        );
-        properties.insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_1M.to_string());
-        properties.insert(ATIME_PROPERTY.to_string(), VALUE_OFF.to_string());
-        properties.insert(
-            PRIMARYCACHE_PROPERTY.to_string(),
-            CACHE_METADATA.to_string(),
-        );
-        properties.insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_NONE.to_string());
-        properties.insert(SYNC_PROPERTY.to_string(), VALUE_ALWAYS.to_string());
+        let properties = str_string_map([
+            (COMPRESSION_PROPERTY, COMPRESSION_ZSTD),
+            (RECORDSIZE_PROPERTY, RECORDSIZE_1M),
+            (ATIME_PROPERTY, VALUE_OFF),
+            (PRIMARYCACHE_PROPERTY, CACHE_METADATA),
+            (SECONDARYCACHE_PROPERTY, CACHE_NONE),
+            (SYNC_PROPERTY, VALUE_ALWAYS),
+        ]);
 
         Self {
-            name: TIER_COLD.to_string(),
-            pool_name: POOL_DEFAULT.to_string(),
-            dataset_prefix: TIER_COLD.to_string(),
+            name: TIER_COLD.into(),
+            pool_name: POOL_DEFAULT.into(),
+            dataset_prefix: TIER_COLD.into(),
             properties,
             performance_profile: PerformanceProfile::HighCompression,
             migration_rules: MigrationRules::cold_tier_defaults(),
@@ -287,28 +280,27 @@ impl TierConfig {
     #[must_use]
     pub fn hot_tier_production() -> Self {
         let mut config = Self::hot_tier_default();
-        config.pool_name = POOL_PRODUCTION.to_string();
+        config.pool_name = POOL_PRODUCTION.into();
 
         // Performance-optimized properties for hot tier
         config
             .properties
-            .insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_64K.to_string());
-        config.properties.insert(
-            COMPRESSION_PROPERTY.to_string(),
-            COMPRESSION_LZ4.to_string(),
-        );
+            .insert(RECORDSIZE_PROPERTY.into(), RECORDSIZE_64K.into());
         config
             .properties
-            .insert(PRIMARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
+            .insert(COMPRESSION_PROPERTY.into(), COMPRESSION_LZ4.into());
         config
             .properties
-            .insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_ALL.to_string());
+            .insert(PRIMARYCACHE_PROPERTY.into(), CACHE_ALL.into());
         config
             .properties
-            .insert(LOGBIAS_PROPERTY.to_string(), BIAS_LATENCY.to_string());
+            .insert(SECONDARYCACHE_PROPERTY.into(), CACHE_ALL.into());
         config
             .properties
-            .insert(SYNC_PROPERTY.to_string(), VALUE_STANDARD.to_string());
+            .insert(LOGBIAS_PROPERTY.into(), BIAS_LATENCY.into());
+        config
+            .properties
+            .insert(SYNC_PROPERTY.into(), VALUE_STANDARD.into());
 
         // Aggressive migration rules for hot tier
         config.migration_rules.age_threshold_days = 7; // 7 days
@@ -322,27 +314,24 @@ impl TierConfig {
     #[must_use]
     pub fn warm_tier_production() -> Self {
         let mut config = Self::warm_tier_default();
-        config.pool_name = POOL_PRODUCTION.to_string();
+        config.pool_name = POOL_PRODUCTION.into();
 
         // Balanced properties for warm tier
         config
             .properties
-            .insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_128K.to_string());
-        config.properties.insert(
-            COMPRESSION_PROPERTY.to_string(),
-            COMPRESSION_ZSTD.to_string(),
-        );
-        config.properties.insert(
-            PRIMARYCACHE_PROPERTY.to_string(),
-            CACHE_METADATA.to_string(),
-        );
-        config.properties.insert(
-            SECONDARYCACHE_PROPERTY.to_string(),
-            CACHE_METADATA.to_string(),
-        );
+            .insert(RECORDSIZE_PROPERTY.into(), RECORDSIZE_128K.into());
         config
             .properties
-            .insert(LOGBIAS_PROPERTY.to_string(), BIAS_THROUGHPUT.to_string());
+            .insert(COMPRESSION_PROPERTY.into(), COMPRESSION_ZSTD.into());
+        config
+            .properties
+            .insert(PRIMARYCACHE_PROPERTY.into(), CACHE_METADATA.into());
+        config
+            .properties
+            .insert(SECONDARYCACHE_PROPERTY.into(), CACHE_METADATA.into());
+        config
+            .properties
+            .insert(LOGBIAS_PROPERTY.into(), BIAS_THROUGHPUT.into());
 
         // Balanced migration rules
         config.migration_rules.age_threshold_days = 30; // 30 days
@@ -356,29 +345,27 @@ impl TierConfig {
     #[must_use]
     pub fn cold_tier_production() -> Self {
         let mut config = Self::cold_tier_default();
-        config.pool_name = POOL_PRODUCTION.to_string();
+        config.pool_name = POOL_PRODUCTION.into();
 
         // Space-optimized properties for cold tier
         config
             .properties
-            .insert(RECORDSIZE_PROPERTY.to_string(), RECORDSIZE_1M.to_string());
-        config.properties.insert(
-            COMPRESSION_PROPERTY.to_string(),
-            COMPRESSION_GZIP_9.to_string(),
-        );
-        config.properties.insert(
-            PRIMARYCACHE_PROPERTY.to_string(),
-            CACHE_METADATA.to_string(),
-        );
+            .insert(RECORDSIZE_PROPERTY.into(), RECORDSIZE_1M.into());
         config
             .properties
-            .insert(SECONDARYCACHE_PROPERTY.to_string(), CACHE_NONE.to_string());
+            .insert(COMPRESSION_PROPERTY.into(), COMPRESSION_GZIP_9.into());
         config
             .properties
-            .insert(LOGBIAS_PROPERTY.to_string(), BIAS_THROUGHPUT.to_string());
+            .insert(PRIMARYCACHE_PROPERTY.into(), CACHE_METADATA.into());
         config
             .properties
-            .insert(DEDUP_PROPERTY.to_string(), VALUE_ON.to_string());
+            .insert(SECONDARYCACHE_PROPERTY.into(), CACHE_NONE.into());
+        config
+            .properties
+            .insert(LOGBIAS_PROPERTY.into(), BIAS_THROUGHPUT.into());
+        config
+            .properties
+            .insert(DEDUP_PROPERTY.into(), VALUE_ON.into());
 
         // Conservative migration rules
         config.migration_rules.age_threshold_days = 90; // 90 days
@@ -392,8 +379,8 @@ impl TierConfig {
     #[must_use]
     pub fn auto_detect_hot(pool_name: &str) -> Self {
         let mut config = Self::hot_tier_default();
-        config.pool_name = pool_name.to_string();
-        config.dataset_prefix = TIER_HOT.to_string();
+        config.pool_name = pool_name.into();
+        config.dataset_prefix = TIER_HOT.into();
         config
     }
 
@@ -401,8 +388,8 @@ impl TierConfig {
     #[must_use]
     pub fn auto_detect_warm(pool_name: &str) -> Self {
         let mut config = Self::warm_tier_default();
-        config.pool_name = pool_name.to_string();
-        config.dataset_prefix = TIER_WARM.to_string();
+        config.pool_name = pool_name.into();
+        config.dataset_prefix = TIER_WARM.into();
         config
     }
 
@@ -410,8 +397,8 @@ impl TierConfig {
     #[must_use]
     pub fn auto_detect_cold(pool_name: &str) -> Self {
         let mut config = Self::cold_tier_default();
-        config.pool_name = pool_name.to_string();
-        config.dataset_prefix = TIER_COLD.to_string();
+        config.pool_name = pool_name.into();
+        config.dataset_prefix = TIER_COLD.into();
         config
     }
 
@@ -423,15 +410,15 @@ impl TierConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn validate(&self) -> Result<(), String> {
+    pub const fn validate(&self) -> Result<(), &'static str> {
         if self.name.is_empty() {
-            return Err(ERROR_TIER_NAME_EMPTY.to_string());
+            return Err(ERROR_TIER_NAME_EMPTY);
         }
         if self.pool_name.is_empty() {
-            return Err(ERROR_POOL_NAME_EMPTY.to_string());
+            return Err(ERROR_POOL_NAME_EMPTY);
         }
         if self.dataset_prefix.is_empty() {
-            return Err(ERROR_DATASET_PREFIX_EMPTY.to_string());
+            return Err(ERROR_DATASET_PREFIX_EMPTY);
         }
         Ok(())
     }

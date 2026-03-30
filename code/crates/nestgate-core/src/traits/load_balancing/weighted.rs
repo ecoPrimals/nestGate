@@ -140,8 +140,12 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
     }
 
     /// Updates  Weights
-    async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()> {
-        *self.weights.write() = weights;
+    async fn update_weights(&self, weights: &[(&str, f64)]) -> Result<()> {
+        let mut map = HashMap::with_capacity(weights.len());
+        for (k, v) in weights {
+            map.insert((*k).to_string(), *v);
+        }
+        *self.weights.write() = map;
         Ok(())
     }
 
@@ -280,8 +284,12 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
     }
 
     /// Updates  Weights
-    async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()> {
-        *self.weights.write() = weights;
+    async fn update_weights(&self, weights: &[(&str, f64)]) -> Result<()> {
+        let mut map = HashMap::with_capacity(weights.len());
+        for (k, v) in weights {
+            map.insert((*k).to_string(), *v);
+        }
+        *self.weights.write() = map;
         Ok(())
     }
 
@@ -302,7 +310,6 @@ mod tests {
     use crate::traits::load_balancing::core::LoadBalancer;
     use crate::universal_traits::orchestration::ServiceStatus;
     use crate::universal_traits::{ServiceInfo, ServiceRequest, ServiceResponse};
-    use std::collections::HashMap;
     use std::time::SystemTime;
 
     fn svc(name: &str) -> ServiceInfo {
@@ -357,12 +364,9 @@ mod tests {
             .expect("test: wrr first select");
         assert!(s0.name == "a" || s0.name == "b");
 
-        lb.update_weights(HashMap::from([
-            ("a".to_string(), 2.0),
-            ("b".to_string(), 1.0),
-        ]))
-        .await
-        .expect("test: wrr update weights");
+        lb.update_weights(&[("a", 2.0), ("b", 1.0)])
+            .await
+            .expect("test: wrr update weights");
 
         let _ = lb
             .select_service(&services, &req)
@@ -425,12 +429,9 @@ mod tests {
     async fn weighted_random_non_positive_total_weight_uses_uniform_fallback() {
         let lb = WeightedRandomLoadBalancer::new();
         let services = vec![svc("n1"), svc("n2")];
-        lb.update_weights(HashMap::from([
-            ("n1".to_string(), -1.0),
-            ("n2".to_string(), -1.0),
-        ]))
-        .await
-        .expect("test: wr negative weights");
+        lb.update_weights(&[("n1", -1.0), ("n2", -1.0)])
+            .await
+            .expect("test: wr negative weights");
 
         for _ in 0..8 {
             let picked = lb
@@ -444,7 +445,7 @@ mod tests {
     #[tokio::test]
     async fn weighted_random_update_weights_get_stats_record_response() {
         let lb = WeightedRandomLoadBalancer::new();
-        lb.update_weights(HashMap::from([("u".to_string(), 3.0)]))
+        lb.update_weights(&[("u", 3.0)])
             .await
             .expect("test: wr update weights");
 

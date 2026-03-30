@@ -105,3 +105,88 @@ pub async fn call_security_primal(
         )))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_discovery::infant_discovery::{CapabilityDescriptor, CapabilityType};
+    use nestgate_discovery::primal_discovery::PrimalConnection;
+    use std::collections::HashMap;
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn non_socket_endpoint_returns_error() {
+        let conn = PrimalConnection {
+            capability: CapabilityDescriptor {
+                id: "sec".to_string(),
+                capability_type: CapabilityType::Security,
+                endpoint: None,
+                metadata: HashMap::new(),
+                sovereignty_compliant: true,
+            },
+            endpoint: "http://127.0.0.1:9".to_string(),
+        };
+        let creds = ZeroCostCredentials::new_password("u".into(), "p".into());
+        let err = call_security_primal(&conn, &creds, Duration::from_secs(60))
+            .await
+            .unwrap_err();
+        let s = err.to_string();
+        assert!(
+            s.contains("not supported") || s.contains("Non-socket"),
+            "{s}"
+        );
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn unix_socket_success_returns_token() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::net::UnixListener;
+        use tokio::sync::oneshot;
+
+        let dir = tempfile::tempdir().expect("tempdir");
+        let sock_path = dir.path().join("security-primal-auth.sock");
+        let (ready_tx, ready_rx) = oneshot::channel();
+        let server_path = sock_path.clone();
+
+        let server = tokio::spawn(async move {
+            let listener = UnixListener::bind(&server_path).expect("bind unix listener");
+            ready_tx.send(()).expect("signal ready");
+            let (mut stream, _) = listener.accept().await.expect("accept");
+            let mut buf = vec![0u8; 8192];
+            let n = stream.read(&mut buf).await.expect("read request");
+            assert!(n > 0, "expected request bytes");
+            let response = serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "result": { "token": "tok-from-primal", "roles": ["authenticated"] }
+            });
+            stream
+                .write_all(&serde_json::to_vec(&response).unwrap())
+                .await
+                .expect("write response");
+        });
+
+        ready_rx.await.expect("server ready");
+
+        let endpoint = sock_path.to_string_lossy().into_owned();
+        let conn = PrimalConnection {
+            capability: CapabilityDescriptor {
+                id: "sec".to_string(),
+                capability_type: CapabilityType::Security,
+                endpoint: Some(endpoint.clone()),
+                metadata: HashMap::new(),
+                sovereignty_compliant: true,
+            },
+            endpoint,
+        };
+        let creds = ZeroCostCredentials::new_password("alice".into(), "secret".into());
+        let token = call_security_primal(&conn, &creds, Duration::from_secs(120))
+            .await
+            .expect("auth ok");
+        assert_eq!(token.token, "tok-from-primal");
+        assert_eq!(token.user_id, "alice");
+
+        server.await.expect("server task");
+    }
+}

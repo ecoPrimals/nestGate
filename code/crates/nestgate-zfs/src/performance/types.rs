@@ -540,6 +540,32 @@ impl LocalMemoryInfo {
     }
 }
 
+#[cfg(test)]
+mod local_pool_stats_tests {
+    use super::{DatasetPerformanceStats, LocalMemoryInfo, PoolIoStats, PoolProperties};
+
+    #[test]
+    fn local_memory_info_total_and_usage() {
+        let z = LocalMemoryInfo::new(0, 0);
+        assert_eq!(z.total_mb(), 0);
+        assert_eq!(z.usage_percentage(), 0.0);
+
+        let m = LocalMemoryInfo::new(700, 300);
+        assert_eq!(m.total_mb(), 1000);
+        assert!((m.usage_percentage() - 30.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn pool_io_stats_and_properties_default() {
+        let p = PoolIoStats::default();
+        assert_eq!(p.read_ops, 0);
+        let props = PoolProperties::default();
+        assert_eq!(props.fragmentation, 0.0);
+        let d = DatasetPerformanceStats::default();
+        assert_eq!(d.read_iops, 0.0);
+    }
+}
+
 /// Pool I/O statistics
 #[derive(Debug, Clone, Default)]
 pub(crate) struct PoolIoStats {

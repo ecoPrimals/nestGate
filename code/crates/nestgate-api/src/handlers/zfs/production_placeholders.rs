@@ -238,3 +238,52 @@ pub async fn predict_tier(
 pub async fn get_zfs_health() -> (StatusCode, Json<serde_json::Value>) {
     zfs_endpoint_disabled()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::extract::Path;
+
+    fn assert_not_implemented_json(body: &serde_json::Value) {
+        assert_eq!(
+            body["error"].as_str(),
+            Some("ZFS API endpoints are disabled in production builds")
+        );
+        assert!(body["documentation"].as_str().unwrap().contains("nestgate"));
+    }
+
+    #[tokio::test]
+    async fn list_universal_pools_not_implemented() {
+        let (code, Json(v)) = list_universal_pools().await;
+        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
+        assert_not_implemented_json(&v);
+    }
+
+    #[tokio::test]
+    async fn create_pool_not_implemented() {
+        let (code, Json(v)) = create_pool(Json(HashMap::new())).await;
+        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
+        assert_not_implemented_json(&v);
+    }
+
+    #[tokio::test]
+    async fn get_universal_pool_not_implemented() {
+        let (code, Json(v)) = get_universal_pool(Path("p".to_string())).await;
+        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
+        assert_not_implemented_json(&v);
+    }
+
+    #[tokio::test]
+    async fn predict_tier_not_implemented() {
+        let (code, _) = predict_tier(Json(HashMap::new())).await;
+        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
+    }
+
+    #[tokio::test]
+    async fn placeholder_types_construct() {
+        let _ = ZfsConfig::default();
+        let _ = ProductionZfsManager::new(ZfsConfig::default());
+        let _ = ZeroCostZfsOperations::new();
+        let _ = ZfsHandlerImpl::default();
+    }
+}

@@ -8,10 +8,8 @@
 //! the codebase keeps a single audited surface while the workspace lint `unsafe_code` remains
 //! denied at call sites.
 //!
-//! **Tests:** For unit tests, prefer [`test_support`] helpers built on [`temp_env`] so changes are
+//! **Tests:** For unit tests, prefer `test_support` helpers built on `temp_env` so changes are
 //! scoped and less likely to race with parallel tests.
-//!
-//! [`test_support`]: crate::env_process::test_support
 
 use std::ffi::OsStr;
 

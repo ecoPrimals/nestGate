@@ -234,3 +234,53 @@ pub struct EvolutionStats {
 ///
 /// This alias exists for backward compatibility only. Use `EvolutionMetadata` directly in new code.
 pub type LegacyEvolutionMetadata = EvolutionMetadata;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Clone, Debug)]
+    struct EvoOk;
+
+    impl EvolutionCompatible for EvoOk {
+        fn check_compatibility(&self) -> nestgate_types::error::Result<bool> {
+            Ok(true)
+        }
+    }
+
+    impl ModernizationTrait for EvoOk {
+        fn apply_modernization(self) -> nestgate_types::error::Result<Self> {
+            Ok(self)
+        }
+    }
+
+    #[test]
+    fn idiomatic_evolution_system_constructors() {
+        let _ = IdiomaticEvolutionSystem::new();
+        let _ = IdiomaticEvolutionSystem::default();
+        let _ = IdiomaticEvolutionSystem::production_optimized();
+        let _ = IdiomaticEvolutionSystem::development_optimized();
+    }
+
+    #[test]
+    fn idiomatic_evolution_system_apply_and_track() {
+        let mut sys = IdiomaticEvolutionSystem::new();
+        let out = sys.apply_evolution(EvoOk).expect("apply");
+        assert!(matches!(out, EvoOk));
+        sys.track_evolution("c", "1.0").expect("track");
+        let stats = sys.get_evolution_stats();
+        assert!(stats.total_components > 0);
+        assert!(sys.validate().is_ok());
+    }
+
+    #[test]
+    fn evolution_stats_fields() {
+        let s = EvolutionStats {
+            total_components: 2,
+            modernized_components: 1,
+            compatibility_score: 1.0,
+            evolution_progress: 50.0,
+        };
+        assert!((s.evolution_progress - 50.0).abs() < f64::EPSILON);
+    }
+}

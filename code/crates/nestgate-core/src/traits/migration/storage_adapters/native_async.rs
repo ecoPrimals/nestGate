@@ -43,11 +43,11 @@ impl<T> NativeAsyncStorageAdapter<T> {
     }
 
     /// Create with custom name and version
-    pub fn with_metadata(inner: T, name: String, version: String) -> Self {
+    pub fn with_metadata(inner: T, name: impl Into<String>, version: impl Into<String>) -> Self {
         Self {
             inner,
-            name,
-            version,
+            name: name.into(),
+            version: version.into(),
             config: serde_json::json!({}),
         }
     }

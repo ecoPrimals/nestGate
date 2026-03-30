@@ -8,6 +8,7 @@
 //! This crate provides ZFS storage management functionality for `NestGate`,
 //! with canonical configuration integration and zero-cost abstractions.
 
+#![warn(missing_docs)]
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic,))]
 #![allow(
     deprecated,
@@ -160,6 +161,7 @@ pub mod config;
 ///
 /// This module provides development-time helpers and configurations for working
 /// with ZFS in development environments where actual ZFS may not be available.
+#[cfg(feature = "dev-stubs")]
 pub mod dev_environment;
 
 // Performance engine

@@ -73,3 +73,19 @@ pub type CertificateConfigCanonical =
 // Note: Keep using CertificateConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod certificate_config_tests {
+    use super::CertificateConfig;
+    use serde_json::json;
+
+    #[test]
+    #[allow(deprecated)]
+    fn certificate_config_default_and_serde_roundtrip() {
+        let c = CertificateConfig::default();
+        assert_eq!(c.validity_days, 365);
+        let v = json!({ "validity_days": c.validity_days });
+        let back: CertificateConfig = serde_json::from_value(v).unwrap();
+        assert_eq!(back.validity_days, 365);
+    }
+}

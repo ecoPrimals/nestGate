@@ -69,3 +69,45 @@ impl Default for ConcurrencyConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let s = serde_json::to_string(v).expect("to_string");
+        let _: T = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn concurrency_config_default_serde() {
+        serde_roundtrip(&ConcurrencyConfig::default());
+    }
+
+    #[test]
+    fn concurrency_model_variants() {
+        for m in [
+            ConcurrencyModel::ThreadPool,
+            ConcurrencyModel::ActorModel,
+            ConcurrencyModel::ReactiveStreams,
+            ConcurrencyModel::AsyncAwait,
+        ] {
+            serde_roundtrip(&m);
+        }
+    }
+
+    #[test]
+    fn load_balancing_strategy_variants() {
+        for s in [
+            LoadBalancingStrategy::RoundRobin,
+            LoadBalancingStrategy::LeastLoaded,
+            LoadBalancingStrategy::Random,
+            LoadBalancingStrategy::Weighted,
+        ] {
+            serde_roundtrip(&s);
+        }
+    }
+}

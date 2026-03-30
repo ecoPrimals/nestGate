@@ -57,3 +57,17 @@ pub type PerformanceConfig = CanonicalPerformanceConfig;
 pub type UnifiedPerformanceConfig = CanonicalPerformanceConfig;
 /// Backward compatibility alias for `UnifiedPerformanceTestConfig`
 pub type UnifiedPerformanceTestConfig = CanonicalPerformanceConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reexports_construct_and_alias() {
+        let _ = CacheOptimizationConfig::default();
+        let _ = ConcurrencyConfig::default();
+        let _: PerformanceConfig = CanonicalPerformanceConfig::default();
+        let _: UnifiedPerformanceConfig = CanonicalPerformanceConfig::default();
+        let _: UnifiedPerformanceTestConfig = CanonicalPerformanceConfig::default();
+    }
+}

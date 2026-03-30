@@ -459,4 +459,149 @@ mod tests {
         assert_eq!(metrics.cache_hits, 0);
         assert_eq!(metrics.cache_misses, 0);
     }
+
+    #[tokio::test]
+    async fn get_capability_miss_then_hit_cache() {
+        use nestgate_config::constants::{
+            network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port,
+        };
+
+        let adapter = UniversalAdapter::new();
+        let endpoint = format!("http://{}:{}", LOCALHOST_NAME, get_admin_port());
+        let capability = CapabilityInfo {
+            capability_type: "alpha".to_string(),
+            endpoint: endpoint.clone(),
+            confidence: 1.0,
+            metadata: HashMap::new(),
+        };
+        adapter.register_capability(capability).await;
+
+        let c1 = adapter.get_capability("alpha").await.expect("first");
+        let c2 = adapter.get_capability("alpha").await.expect("cached");
+        assert_eq!(c1.endpoint(), c2.endpoint());
+
+        let m = adapter.get_metrics().await;
+        assert_eq!(m.cache_misses, 1);
+        assert_eq!(m.cache_hits, 1);
+        assert_eq!(m.total_connections, 1);
+    }
+
+    #[tokio::test]
+    async fn get_capability_unknown_errors() {
+        let adapter = UniversalAdapter::new();
+        let err = adapter.get_capability("nope").await.err().expect("err");
+        assert!(err.to_string().contains("nope") || err.to_string().contains("Capability"));
+    }
+
+    #[tokio::test]
+    async fn clear_connections_and_health_check_all() {
+        use nestgate_config::constants::{
+            network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port,
+        };
+
+        let adapter = UniversalAdapter::new();
+        let endpoint = format!("http://{}:{}", LOCALHOST_NAME, get_admin_port());
+        adapter
+            .register_capability(CapabilityInfo {
+                capability_type: "h".to_string(),
+                endpoint,
+                confidence: 1.0,
+                metadata: HashMap::new(),
+            })
+            .await;
+        let _ = adapter.get_capability("h").await.unwrap();
+        adapter.clear_connections().await;
+        let m = adapter.get_metrics().await;
+        assert_eq!(m.total_connections, 1);
+
+        adapter
+            .register_capability(CapabilityInfo {
+                capability_type: "h2".to_string(),
+                endpoint: format!("http://{}:{}", LOCALHOST_NAME, get_admin_port()),
+                confidence: 1.0,
+                metadata: HashMap::new(),
+            })
+            .await;
+        let _ = adapter.get_capability("h2").await.unwrap();
+        let health = adapter.health_check_all().await;
+        assert!(health.contains_key("h2"));
+    }
+
+    #[tokio::test]
+    async fn http_connection_trait_methods() {
+        use nestgate_config::constants::{
+            network_defaults::LOCALHOST_NAME, port_defaults::get_admin_port,
+        };
+
+        let endpoint = format!("http://{}:{}", LOCALHOST_NAME, get_admin_port());
+        let info = CapabilityInfo {
+            capability_type: "x".to_string(),
+            endpoint: endpoint.clone(),
+            confidence: 0.5,
+            metadata: HashMap::from([("k".to_string(), "v".to_string())]),
+        };
+        let http = HttpConnection::new(info).expect("http conn");
+        assert_eq!(http.connection_type(), "http");
+        assert_eq!(http.endpoint(), endpoint.as_str());
+
+        let meta = http.get_metadata().await.expect("meta");
+        assert_eq!(meta.connection_type, "http");
+        assert_eq!(meta.endpoint, endpoint);
+
+        let hc = http.health_check().await.expect("health");
+        assert!(matches!(hc, HealthStatus::Degraded));
+
+        let err = http
+            .send_request(Request {
+                id: std::borrow::Cow::Borrowed("1"),
+                method: std::borrow::Cow::Borrowed("m"),
+                params: serde_json::json!({}),
+                headers: HashMap::new(),
+                body: None,
+            })
+            .await
+            .expect_err("deprecated http");
+        assert!(err.to_string().contains("HTTP") || err.to_string().contains("deprecated"));
+
+        let conn = ConnectionImpl::Http(http);
+        let _: &str = conn.connection_type();
+        let _: &str = conn.endpoint();
+    }
+
+    #[test]
+    fn request_response_serde_roundtrip() {
+        let req = Request {
+            id: std::borrow::Cow::Borrowed("rid"),
+            method: std::borrow::Cow::Borrowed("m"),
+            params: serde_json::json!({"a": 1}),
+            headers: HashMap::new(),
+            body: None,
+        };
+        let s = serde_json::to_string(&req).unwrap();
+        let back: Request = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.id, req.id);
+        assert_eq!(back.method, req.method);
+
+        let resp = Response {
+            id: std::borrow::Cow::Borrowed("rid"),
+            success: true,
+            data: serde_json::json!({"ok": true}),
+            error: None,
+            headers: HashMap::new(),
+            body: None,
+        };
+        let s2 = serde_json::to_string(&resp).unwrap();
+        let back2: Response = serde_json::from_str(&s2).unwrap();
+        assert!(back2.success);
+    }
+
+    #[tokio::test]
+    async fn universal_adapter_default_matches_new() {
+        let a = UniversalAdapter::default();
+        let b = UniversalAdapter::new();
+        let ma = a.get_metrics().await;
+        let mb = b.get_metrics().await;
+        assert_eq!(ma.total_requests, mb.total_requests);
+        assert_eq!(ma.failed_connections, mb.failed_connections);
+    }
 }

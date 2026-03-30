@@ -74,3 +74,27 @@ impl NestGateUnifiedError {
         )))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::StorageErrorDetails;
+    use crate::error::variants::core_errors::NestGateUnifiedError;
+
+    #[test]
+    fn storage_error_details_constructors() {
+        let d = StorageErrorDetails::new("m");
+        assert_eq!(d.message.as_ref(), "m");
+        let d = StorageErrorDetails::with_operation("m", "op");
+        assert_eq!(d.operation.as_deref(), Some("op"));
+        let d = StorageErrorDetails::zfs_error("z", "pool");
+        assert!(d.resource.as_ref().is_some());
+    }
+
+    #[test]
+    fn nestgate_unified_storage_constructors() {
+        let e = NestGateUnifiedError::storage("s");
+        assert!(matches!(e, NestGateUnifiedError::Storage(_)));
+        let e = NestGateUnifiedError::storage_with_operation("s", "read");
+        assert!(matches!(e, NestGateUnifiedError::Storage(_)));
+    }
+}

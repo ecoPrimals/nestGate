@@ -1,9 +1,9 @@
 # NestGate Documentation Index
 
-**Last Updated**: March 29, 2026  
+**Last Updated**: March 30, 2026  
 **Version**: 4.7.0-dev
 
-Paths linked below (root files, `config/production.env.example`, `docs/guides/*.md`, `docs/api/`, `docs/architecture/`, `docs/operations/`, top-level `tests/`) exist in this repository as of March 29, 2026.
+Paths linked below exist in this repository as of March 30, 2026.
 
 ---
 
@@ -36,16 +36,14 @@ Paths linked below (root files, `config/production.env.example`, `docs/guides/*.
 
 ### Operations & Testing
 - [docs/operations/](./docs/operations/) - Operations runbook
-- [tests/](./tests/) - Integration and unit tests
+- [tests/](./tests/) - Integration tests, disabled tests reference
 
 ---
 
 ## Fossil Record
 
-Session archives, planning docs, and historical reports have been moved to
-`ecoPrimals/infra/wateringHole/fossilRecord/nestgate/` for preservation.
-
-Git history retains the full record of all files that were in this tree.
+Session archives, planning docs, stale examples, old specs, and historical reports are preserved in
+`ecoPrimals/infra/wateringHole/fossilRecord/nestgate/`. Git history retains the full record.
 
 ---
 
@@ -64,10 +62,9 @@ nestgate/
 │   ├── nestgate-zfs/               # ZFS integration
 │   ├── nestgate-mcp/               # MCP provider
 │   └── ...                         # Additional crates
-├── docs/                           # Documentation (api, architecture, guides, testing)
+├── docs/                           # Documentation (api, architecture, guides)
 ├── tests/                          # Integration tests
 ├── benches/                        # Performance benchmarks
-├── examples/                       # Usage examples
 ├── config/                         # Configuration templates
 ├── scripts/                        # Setup and utility scripts
 └── specs/                          # Protocol specifications
@@ -83,6 +80,6 @@ nestgate/
 
 ---
 
-**Status**: Documentation cleaned and updated March 29, 2026.  
+**Status**: Documentation cleaned and updated March 30, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: March 29, 2026
+**Last Updated**: March 30, 2026

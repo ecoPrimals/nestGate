@@ -291,7 +291,6 @@ fn test_transaction_rollback() {
             self.operations.push(op.into());
         }
 
-        #[allow(dead_code)]
         fn commit(&mut self) -> Result<()> {
             if self.operations.is_empty() {
                 return Err(NestGateError::validation_error("No operations to commit"));
@@ -339,7 +338,6 @@ fn test_atomic_write_operations() {
 fn test_versioning_conflict() {
     struct VersionedData {
         version: u64,
-        #[allow(dead_code)]
         data: String,
     }
 
@@ -380,7 +378,6 @@ fn test_cache_invalidation() {
     use std::time::{Duration, SystemTime};
 
     struct CacheEntry {
-        #[allow(dead_code)]
         data: String,
         expires_at: SystemTime,
     }
@@ -558,7 +555,6 @@ fn test_circuit_breaker_pattern() {
     enum CircuitState {
         Closed,
         Open,
-        #[allow(dead_code)]
         HalfOpen,
     }
 
@@ -576,7 +572,6 @@ fn test_circuit_breaker_pattern() {
             }
         }
 
-        #[allow(dead_code)]
         fn record_success(&mut self) {
             self.failure_count = 0;
             self.state = CircuitState::Closed;

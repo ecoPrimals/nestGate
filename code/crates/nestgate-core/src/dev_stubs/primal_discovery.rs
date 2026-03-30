@@ -44,7 +44,6 @@
 //! [`CapabilityAwareDiscovery`]: crate::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery
 use crate::Result;
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
-#[expect(deprecated, reason = "migration in progress")]
 use crate::config::canonical_primary::{
     NestGateCanonicalConfig, domains::network::CanonicalNetworkConfig as UnifiedNetworkConfig,
 };
@@ -120,7 +119,6 @@ pub fn discover_endpoint(service_name: &str) -> Result<SocketAddr> {
 pub fn discover_limit(resource_type: &str) -> Result<usize> {
     match resource_type {
         "connections" => Ok(1000),
-        "requests_per_second" => Ok(100),
         "memory_mb" => Ok(512),
         "disk_mb" => Ok(1024),
         _ => Ok(100),
@@ -140,7 +138,6 @@ pub fn discover_port(service_name: &str) -> Result<u16> {
 pub fn discover_timeout(operation: &str) -> crate::Result<Duration> {
     match operation {
         "connect" => Ok(Duration::from_secs(10)),
-        "request" => Ok(Duration::from_secs(30)),
         "health_check" => Ok(Duration::from_secs(5)),
         "discovery" => Ok(Duration::from_secs(15)),
         _ => Ok(Duration::from_secs(30)),
@@ -154,8 +151,6 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
     };
 
     match service_name {
-        "api" => DEFAULT_API_PORT,         // 8080
-        "web" => DEFAULT_API_PORT,         // 8080
         "metrics" => DEFAULT_METRICS_PORT, // 9090
         "health" => DEFAULT_HEALTH_PORT,   // 8081
         "admin" => DEFAULT_ADMIN_PORT,     // 8082
@@ -174,19 +169,14 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
     since = "0.9.0",
     note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
-#[expect(deprecated, reason = "migration in progress")]
 /// Networkconfigadapter
+#[allow(dead_code)] // Placeholder fields retained for API compatibility with future discovery wiring
 pub struct NetworkConfigAdapter {
-    #[expect(dead_code, reason = "framework placeholder")]
     service_name: String,
-    #[expect(dead_code, reason = "framework placeholder")]
     config: NestGateCanonicalConfig,
-    #[expect(dead_code, reason = "framework placeholder")]
     discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
-    #[expect(dead_code, reason = "framework placeholder")]
     stats: Arc<RwLock<AdapterStats>>,
 }
-#[expect(deprecated, reason = "migration in progress")]
 impl NetworkConfigAdapter {
     /// Creates a new NetworkConfigAdapter with default configuration
     ///
@@ -194,10 +184,7 @@ impl NetworkConfigAdapter {
     /// * `service_name` - Name of the service to configure
     #[must_use]
     pub fn new(service_name: String) -> Self {
-        let network_config = UnifiedNetworkConfig {
-            // Use default NetworkConfig structure - fields updated to match unified config
-            ..Default::default()
-        };
+        let network_config = UnifiedNetworkConfig::default();
 
         let config = crate::config::canonical_primary::NestGateCanonicalConfig {
             network: network_config,
@@ -214,7 +201,7 @@ impl NetworkConfigAdapter {
 
     /// Returns a reference to the network configuration
     #[must_use]
-    pub fn config(&self) -> &UnifiedNetworkConfig {
+    pub const fn config(&self) -> &UnifiedNetworkConfig {
         &self.config.network
     }
 }
@@ -280,7 +267,7 @@ impl StandaloneNetworkAdapter {
     /// # Returns
     /// Always returns `true` for the standalone adapter
     #[must_use]
-    pub fn is_standalone(&self) -> bool {
+    pub const fn is_standalone(&self) -> bool {
         true
     }
 }

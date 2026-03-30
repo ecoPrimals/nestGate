@@ -31,6 +31,8 @@
 //!
 //! The [`AppState`] struct contains shared resources:
 //! - `zfs_manager`: ZFS operations manager
+//! - `communication_counters`: live counters for WebSocket / SSE snapshot traffic (zeros until observed)
+//! - `event_log`: optional operational events recorded by producers (empty until populated)
 //! - Configuration and connection pools (as needed)
 //!
 //! # Example
@@ -41,8 +43,10 @@
 //! #[tokio::main]
 //! async fn main() {
 //!     let router = create_router();
-//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
-//!     axum::serve(listener, router).await.unwrap();
+//!     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080")
+//!         .await
+//!         .expect("bind listener");
+//!     axum::serve(listener, router).await.expect("serve");
 //! }
 //! ```
 //!
@@ -56,6 +60,7 @@ use axum::{
     routing::{delete, get, patch, post, put},
 };
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::handlers::load_testing::{
     get_load_test_history, get_load_test_results, get_performance_baselines, start_load_test,
@@ -88,19 +93,88 @@ use crate::dev_stubs::zfs::{ProductionZfsManager, ZfsConfig};
 /// the application for consistent ZFS operations and management.
 pub type ZfsManager = ProductionZfsManager;
 
-#[cfg(feature = "streaming-rpc")]
-// Removed unused import: crate::{}
+/// Atomic counters backing `GET /api/v1/communication/stats`.
+///
+/// Updated by live handlers when those code paths run (e.g. WebSocket lifecycle, SSE JSON
+/// snapshot routes). Unobserved layers remain at zero rather than invented values.
+#[derive(Debug)]
+pub struct CommunicationCounters {
+    /// Current WebSocket connections served by this process (`streaming-rpc`).
+    pub websocket_active: AtomicU64,
+    /// WebSocket messages handled after upgrade (`streaming-rpc`).
+    pub websocket_messages_total: AtomicU64,
+    /// Reserved for long-lived SSE subscribers when that transport is instrumented.
+    pub sse_active: AtomicU64,
+    /// Snapshots returned by the SSE JSON endpoints under `/api/v1/sse/*` (`streaming-rpc`).
+    pub sse_events_sent: AtomicU64,
+    /// Reserved for MCP streaming when wired.
+    pub mcp_active_streams: AtomicU64,
+    /// Reserved for MCP message totals when wired.
+    pub mcp_messages_total: AtomicU64,
+}
+
+impl CommunicationCounters {
+    #[must_use]
+    /// Build a fresh counter set (all zeros).
+    pub fn new() -> Arc<Self> {
+        Arc::new(Self {
+            websocket_active: AtomicU64::new(0),
+            websocket_messages_total: AtomicU64::new(0),
+            sse_active: AtomicU64::new(0),
+            sse_events_sent: AtomicU64::new(0),
+            mcp_active_streams: AtomicU64::new(0),
+            mcp_messages_total: AtomicU64::new(0),
+        })
+    }
+
+    /// Serialize current counter values for the REST response.
+    #[must_use]
+    pub fn to_json_snapshot(&self) -> serde_json::Value {
+        let websocket_active = self.websocket_active.load(Ordering::Relaxed);
+        let websocket_messages = self.websocket_messages_total.load(Ordering::Relaxed);
+        let sse_active = self.sse_active.load(Ordering::Relaxed);
+        let sse_events = self.sse_events_sent.load(Ordering::Relaxed);
+        let mcp_streams = self.mcp_active_streams.load(Ordering::Relaxed);
+        let mcp_messages = self.mcp_messages_total.load(Ordering::Relaxed);
+        let total_active = websocket_active
+            .saturating_add(sse_active)
+            .saturating_add(mcp_streams);
+        let total_messages = websocket_messages
+            .saturating_add(sse_events)
+            .saturating_add(mcp_messages);
+        serde_json::json!({
+            "websocket": {
+                "active_connections": websocket_active,
+                "total_messages": websocket_messages,
+            },
+            "sse": {
+                "active_connections": sse_active,
+                "events_sent": sse_events,
+            },
+            "mcp_streaming": {
+                "active_streams": mcp_streams,
+                "total_messages": mcp_messages,
+            },
+            "total_active_connections": total_active,
+            "total_messages_processed": total_messages,
+        })
+    }
+}
+
 /// Application state shared across all route handlers
 ///
 /// Contains shared resources and services that route handlers need
 /// to access, including ZFS management and configuration.
 #[derive(Clone)]
-/// Appstate
 pub struct AppState {
     /// ZFS manager instance for storage operations
     pub zfs_manager: Arc<ZfsManager>,
-    // Add other shared state here as needed
+    /// Live communication counters for `/api/v1/communication/stats`.
+    pub communication_counters: Arc<CommunicationCounters>,
+    /// Operational events for `GET /api/v1/events`; empty until producers record entries.
+    pub event_log: Arc<tokio::sync::RwLock<Vec<serde_json::Value>>>,
     /// Phantom data for future extensibility
+    #[cfg(feature = "streaming-rpc")]
     pub _phantom: std::marker::PhantomData<()>,
 }
 
@@ -121,6 +195,8 @@ impl AppState {
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
             #[cfg(not(feature = "dev-stubs"))]
             zfs_manager: Arc::new(ZfsManager::new()),
+            communication_counters: CommunicationCounters::new(),
+            event_log: Arc::new(tokio::sync::RwLock::new(Vec::new())),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -133,6 +209,8 @@ impl AppState {
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
             #[cfg(not(feature = "dev-stubs"))]
             zfs_manager: Arc::new(ZfsManager::new()),
+            communication_counters: CommunicationCounters::new(),
+            event_log: Arc::new(tokio::sync::RwLock::new(Vec::new())),
             #[cfg(feature = "streaming-rpc")]
             _phantom: std::marker::PhantomData,
         }
@@ -146,6 +224,8 @@ impl AppState {
             zfs_manager: Arc::new(ZfsManager::new(ZfsConfig::default())),
             #[cfg(not(feature = "dev-stubs"))]
             zfs_manager: Arc::new(ZfsManager::new()),
+            communication_counters: CommunicationCounters::new(),
+            event_log: Arc::new(tokio::sync::RwLock::new(Vec::new())),
             #[cfg(feature = "streaming-rpc")]
             _phantom: std::marker::PhantomData,
         }
@@ -407,54 +487,42 @@ async fn health_check() -> axum::response::Json<serde_json::Value> {
     }))
 }
 
-// Enhanced communication stats endpoint
+/// GET `/api/v1/communication/stats` — current communication layer counters from [`AppState::communication_counters`].
+///
+/// Reflects live WebSocket traffic when `streaming-rpc` is enabled and clients connect; SSE JSON
+/// snapshot routes increment `sse.events_sent`. Layers that are not instrumented remain at zero.
 async fn get_communication_stats(
-    axum::extract::State(_state): axum::extract::State<AppState>,
+    axum::extract::State(state): axum::extract::State<AppState>,
 ) -> axum::response::Json<serde_json::Value> {
-    // Return stub stats since the manager fields are not available
+    axum::response::Json(state.communication_counters.to_json_snapshot())
+}
+
+/// GET `/api/v1/events` — operational events stored in [`AppState::event_log`].
+///
+/// Returns an empty `events` array when nothing has been recorded; entries are never synthesized.
+async fn get_events(
+    axum::extract::State(state): axum::extract::State<AppState>,
+) -> axum::response::Json<serde_json::Value> {
+    let events = state.event_log.read().await.clone();
+    let total_events = events.len();
     axum::response::Json(serde_json::json!({
-        "websocket": {
-            "active_connections": 0,
-            "total_messages": 0
-        },
-        "sse": {
-            "active_connections": 0,
-            "events_sent": 0
-        },
-        "mcp_streaming": {
-            "active_streams": 0,
-            "total_messages": 0
-        },
-        "total_active_connections": 0,
-        "total_messages_processed": 0
+        "events": events,
+        "total_events": total_events,
     }))
 }
 
-// Events endpoint
-async fn get_events(
-    axum::extract::State(_state): axum::extract::State<AppState>,
-) -> axum::response::Json<serde_json::Value> {
-    // Return stub events since event_coordinator is not available
-    axum::response::Json(serde_json::json!({
-        "events": [
-            {
-                "id": "event_1",
-                "type": "system_startup",
-                "message": "System initialized successfully",
-                "timestamp": chrono::Utc::now().to_rfc3339(),
-                "source": "nestgate-api"
-            },
-            {
-                "id": "event_2",
-                "type": "zfs_status",
-                "message": "ZFS pools healthy",
-                "timestamp": chrono::Utc::now().to_rfc3339(),
-                "source": "zfs_manager"
-            }
-        ],
-        "total_events": 2,
-        "handler_count": 1
-    }))
+#[cfg(feature = "streaming-rpc")]
+struct WebSocketActiveGuard {
+    counters: Arc<CommunicationCounters>,
+}
+
+#[cfg(feature = "streaming-rpc")]
+impl Drop for WebSocketActiveGuard {
+    fn drop(&mut self) {
+        self.counters
+            .websocket_active
+            .fetch_sub(1, Ordering::Relaxed);
+    }
 }
 
 // WebSocket handler
@@ -477,10 +545,19 @@ async fn websocket_handler(
 /// - Message routing and processing
 /// - Periodic health checks and keepalive
 /// - Graceful disconnection handling
+#[cfg(feature = "streaming-rpc")]
 async fn handle_websocket_connection(mut socket: axum::extract::ws::WebSocket, state: AppState) {
     use axum::extract::ws::Message;
 
     tracing::info!("WebSocket connection established");
+
+    state
+        .communication_counters
+        .websocket_active
+        .fetch_add(1, Ordering::Relaxed);
+    let _active_guard = WebSocketActiveGuard {
+        counters: Arc::clone(&state.communication_counters),
+    };
 
     // Send initial connection success message
     if socket
@@ -505,6 +582,11 @@ async fn handle_websocket_connection(mut socket: axum::extract::ws::WebSocket, s
         match msg {
             Ok(Message::Text(text)) => {
                 tracing::debug!("Received WebSocket message: {}", text);
+
+                state
+                    .communication_counters
+                    .websocket_messages_total
+                    .fetch_add(1, Ordering::Relaxed);
 
                 // Parse and route message
                 match serde_json::from_str::<serde_json::Value>(&text) {
@@ -554,6 +636,7 @@ async fn handle_websocket_connection(mut socket: axum::extract::ws::WebSocket, s
 /// Process WebSocket message and generate response
 ///
 /// Routes messages based on type and returns appropriate responses.
+#[cfg(feature = "streaming-rpc")]
 #[expect(
     clippy::unused_async,
     reason = "cfg(test) callers await this helper; body is synchronous"
@@ -627,6 +710,10 @@ async fn handle_websocket_message(msg: serde_json::Value, state: &AppState) -> S
 async fn sse_events(
     axum::extract::State(state): axum::extract::State<AppState>,
 ) -> impl axum::response::IntoResponse {
+    state
+        .communication_counters
+        .sse_events_sent
+        .fetch_add(1, Ordering::Relaxed);
     // Get real system events
     let events = vec![serde_json::json!({
         "id": format!("event_{}", uuid::Uuid::new_v4()),
@@ -657,6 +744,10 @@ async fn sse_events(
 async fn sse_storage(
     axum::extract::State(state): axum::extract::State<AppState>,
 ) -> impl axum::response::IntoResponse {
+    state
+        .communication_counters
+        .sse_events_sent
+        .fetch_add(1, Ordering::Relaxed);
     // Check ZFS manager availability and get storage status
     let storage_events = match state.get_zfs_manager() {
         Some(_manager) => {
@@ -700,6 +791,10 @@ async fn sse_storage(
 async fn sse_health(
     axum::extract::State(state): axum::extract::State<AppState>,
 ) -> impl axum::response::IntoResponse {
+    state
+        .communication_counters
+        .sse_events_sent
+        .fetch_add(1, Ordering::Relaxed);
     // Perform actual health checks
     let zfs_healthy = state.get_zfs_manager().is_some();
     let overall_status = if zfs_healthy { "healthy" } else { "degraded" };
@@ -761,6 +856,7 @@ mod tests {
         let _ = router;
     }
 
+    #[cfg(feature = "streaming-rpc")]
     #[tokio::test]
     async fn websocket_ping_returns_pong() {
         let state = AppState::new();
@@ -769,6 +865,7 @@ mod tests {
         assert!(out.contains("pong"));
     }
 
+    #[cfg(feature = "streaming-rpc")]
     #[tokio::test]
     async fn websocket_unknown_type_is_error() {
         let state = AppState::new();
@@ -777,6 +874,7 @@ mod tests {
         assert!(out.contains("error"));
     }
 
+    #[cfg(feature = "streaming-rpc")]
     #[tokio::test]
     async fn websocket_subscribe_includes_channel() {
         let state = AppState::new();

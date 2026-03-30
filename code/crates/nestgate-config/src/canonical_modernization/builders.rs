@@ -84,3 +84,29 @@ impl NestGateCanonicalConfig {
         Self::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::canonical_primary::system_config::DeploymentEnvironment;
+
+    #[test]
+    fn canonical_config_builder_default_and_build() {
+        let cfg = CanonicalConfigBuilder::default()
+            .service_name("test-svc")
+            .environment(DeploymentEnvironment::Development)
+            .api_port(9090)
+            .enable_tls(true)
+            .build()
+            .expect("build");
+        assert_eq!(cfg.system.instance_name, "test-svc");
+        assert_eq!(cfg.system.environment, DeploymentEnvironment::Development);
+    }
+
+    #[test]
+    fn nestgate_canonical_default_config_alias() {
+        let a: NestGateCanonicalConfig = NestGateCanonicalConfig::default_config();
+        let b: NestGateCanonicalConfig = NestGateCanonicalConfig::default();
+        assert_eq!(a.system.instance_name, b.system.instance_name);
+    }
+}

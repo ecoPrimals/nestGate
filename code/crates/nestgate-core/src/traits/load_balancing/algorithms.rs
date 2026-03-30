@@ -7,7 +7,6 @@
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::core::{LoadBalancer, LoadBalancerStats, ServiceStats};
@@ -81,7 +80,7 @@ impl LoadBalancer for RoundRobinLoadBalancer {
     }
 
     /// Updates  Weights
-    async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
+    async fn update_weights(&self, _weights: &[(&str, f64)]) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
                 feature: "update_weights".into(),
@@ -197,7 +196,7 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
     }
 
     /// Updates  Weights
-    async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
+    async fn update_weights(&self, _weights: &[(&str, f64)]) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
                 feature: "update_weights".into(),
@@ -304,7 +303,7 @@ impl LoadBalancer for RandomLoadBalancer {
     }
 
     /// Updates  Weights
-    async fn update_weights(&self, _weights: HashMap<String, f64>) -> Result<()> {
+    async fn update_weights(&self, _weights: &[(&str, f64)]) -> Result<()> {
         Err(NestGateError::NotImplemented(Box::new(
             crate::error::variants::core_errors::NotImplementedErrorDetails {
                 feature: "update_weights".into(),
@@ -415,10 +414,7 @@ mod tests {
     #[tokio::test]
     async fn round_robin_update_weights_not_supported() {
         let lb = RoundRobinLoadBalancer::new();
-        let err = lb
-            .update_weights(Default::default())
-            .await
-            .expect_err("test: rr weights");
+        let err = lb.update_weights(&[]).await.expect_err("test: rr weights");
         assert!(err.to_string().contains("NotImplemented") || err.to_string().contains("weights"));
     }
 
@@ -482,6 +478,25 @@ mod tests {
     #[tokio::test]
     async fn least_connections_update_weights_not_supported() {
         let lb = LeastConnectionsLoadBalancer::new();
-        assert!(lb.update_weights(Default::default()).await.is_err());
+        assert!(lb.update_weights(&[]).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn random_balancer_record_response_and_update_weights() {
+        let lb = RandomLoadBalancer::new();
+        let s = svc("z");
+        lb.record_response(&s, &ok_response())
+            .await
+            .expect("test: random record");
+        let stats = lb.get_stats().await.expect("test: random stats");
+        assert!(
+            stats
+                .service_stats
+                .get("z")
+                .map(|x| x.requests)
+                .unwrap_or(0)
+                >= 1
+        );
+        assert!(lb.update_weights(&[]).await.is_err());
     }
 }

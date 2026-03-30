@@ -321,4 +321,52 @@ mod tests {
         assert_eq!(parse_size_with_units("1M").unwrap(), 1024 * 1024);
         assert_eq!(parse_size_with_units("2G").unwrap(), 2 * 1024 * 1024 * 1024);
     }
+
+    #[test]
+    fn pool_info_parsing_additional_health_and_state() {
+        let out = "size\t1000\nallocated\t100\nhealth\tFAULTED\n";
+        let p = pool_info_from_zfs_output("fp", out).unwrap();
+        assert!(matches!(p.health, PoolHealth::Critical));
+        assert!(matches!(p.state, PoolState::Faulted));
+
+        let out2 = "size\t1000\nallocated\t100\nhealth\tUNAVAIL\n";
+        let p2 = pool_info_from_zfs_output("u", out2).unwrap();
+        assert!(matches!(p2.state, PoolState::Unavailable));
+
+        let out3 = "size\t1000\nallocated\t100\nhealth\tREMOVED\n";
+        let p3 = pool_info_from_zfs_output("r", out3).unwrap();
+        assert!(matches!(p3.state, PoolState::Removed));
+
+        let out4 = "size\t1000\nallocated\t100\nhealth\tUNKNOWN\n";
+        let p4 = pool_info_from_zfs_output("x", out4).unwrap();
+        assert!(matches!(p4.health, PoolHealth::Unknown));
+        assert!(matches!(p4.state, PoolState::Offline));
+    }
+
+    #[test]
+    fn parse_health_status_all_branches() {
+        assert_eq!(parse_health_status("OFFLINE"), "OFFLINE");
+        assert_eq!(parse_health_status("UNAVAIL"), "UNAVAIL");
+        assert_eq!(parse_health_status("REMOVED"), "REMOVED");
+        assert_eq!(parse_health_status("custom"), "custom");
+    }
+
+    #[test]
+    fn parse_size_with_units_tb_pb_and_errors() {
+        assert!(parse_size_with_units("1T").unwrap() > 0);
+        assert!(parse_size_with_units("1TB").unwrap() > 0);
+        assert!(parse_size_with_units("1P").unwrap() > 0);
+        assert!(parse_size_with_units("1PB").unwrap() > 0);
+        assert!(parse_size_with_units("2.5M").unwrap() > 1024 * 1024);
+        assert!(parse_size_with_units("bad_unit").is_err());
+        assert!(parse_size_with_units("10Z").is_err());
+    }
+
+    #[test]
+    fn dataset_info_single_segment_name() {
+        let output = "name\tonlyname\nused\t10\navailable\t90\n";
+        let d = dataset_info_from_zfs_output(output).unwrap();
+        assert_eq!(d.pool, "onlyname");
+        assert_eq!(d.name, "onlyname");
+    }
 }

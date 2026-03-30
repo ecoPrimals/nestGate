@@ -555,4 +555,24 @@ mod tests {
         let service = StorageManagerService::with_config(config).await;
         assert!(service.is_ok());
     }
+
+    #[tokio::test]
+    async fn storage_manager_accessors_after_init() {
+        let mut config = StorageServiceConfig::development();
+        config.auto_discover_pools = false;
+        config.enable_quotas = false;
+        config.enable_caching = false;
+        config.enable_monitoring = false;
+
+        let svc = StorageManagerService::with_config(config.clone())
+            .await
+            .expect("init");
+        assert_eq!(*svc.config().base_path, config.base_path);
+        assert!(svc.is_zfs_enabled());
+        assert!(!svc.is_adaptive_storage_available());
+        let stats = svc.stats().await;
+        assert_eq!(stats.total_operations, 0);
+        assert!(svc.get_pools().await.is_empty());
+        assert!(svc.get_quotas().await.is_empty());
+    }
 }

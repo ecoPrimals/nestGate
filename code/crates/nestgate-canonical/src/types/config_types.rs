@@ -5,6 +5,8 @@
 //!
 //! Canonical configuration types for services, networks, storage, security, and performance.
 
+use nestgate_core::constants::get_api_port;
+use nestgate_core::constants::network_defaults::LOCALHOST_IPV4;
 use serde::{Deserialize, Serialize};
 
 /// Canonical Configuration - Top-level configuration container
@@ -192,16 +194,16 @@ impl Default for NetworkConfig {
     /// Returns the default instance.
     ///
     /// **Development default**: when `NESTGATE_BIND_ADDRESS` is unset, bind endpoint defaults
-    /// to loopback (`127.0.0.1`). Production and non-local deployments must set
+    /// to loopback ([`LOCALHOST_IPV4`]). Production and non-local deployments must set
     /// `NESTGATE_BIND_ADDRESS` (or equivalent) explicitly.
     fn default() -> Self {
         Self {
             bind_endpoint: std::env::var("NESTGATE_BIND_ADDRESS")
-                .unwrap_or_else(|_| "127.0.0.1".to_string()),
+                .unwrap_or_else(|_| LOCALHOST_IPV4.to_string()),
             port: std::env::var("NESTGATE_PORT")
-                .unwrap_or_else(|_| "8080".to_string())
-                .parse()
-                .unwrap_or(8080),
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or_else(get_api_port),
             timeout_seconds: 30,
             max_connections: 1000,
             enable_tls: false,

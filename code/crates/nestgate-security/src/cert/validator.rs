@@ -98,3 +98,69 @@ impl CertificateValidator {
 pub fn create_default_certificate_validator() -> Result<CertificateValidator> {
     CertificateValidator::new(NestGateCanonicalConfig::default())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_types::NestGateError;
+
+    #[test]
+    fn new_errors_when_no_adapter_env() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
+                ("NESTGATE_API_URL", None::<&str>),
+            ],
+            || {
+                let err = CertificateValidator::new(NestGateCanonicalConfig::default())
+                    .err()
+                    .expect("expected configuration error");
+                match err {
+                    NestGateError::Configuration(d) => {
+                        assert_eq!(d.field, "adapter_endpoint");
+                    }
+                    ref other => panic!("unexpected {other:?}"),
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn validate_certificate_empty_is_false() {
+        temp_env::with_var(
+            "NESTGATE_ADAPTER_ENDPOINT",
+            Some("http://localhost/adapter"),
+            || {
+                let v = CertificateValidator::new(NestGateCanonicalConfig::default()).unwrap();
+                assert!(!v.validate_certificate(&[]).unwrap());
+                assert!(v.validate_certificate(b"x").unwrap());
+            },
+        );
+    }
+
+    #[test]
+    fn is_certificate_expired_returns_false_in_stub() {
+        temp_env::with_var(
+            "NESTGATE_ADAPTER_ENDPOINT",
+            Some("http://localhost/adapter"),
+            || {
+                let v = CertificateValidator::new(NestGateCanonicalConfig::default()).unwrap();
+                assert!(!v.is_certificate_expired(b"any").unwrap());
+            },
+        );
+    }
+
+    #[test]
+    fn create_default_certificate_validator_uses_api_url_fallback() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
+                ("NESTGATE_API_URL", Some("https://example.com/")),
+            ],
+            || {
+                let v = create_default_certificate_validator().unwrap();
+                assert!(v.validate_certificate(b"x").unwrap());
+            },
+        );
+    }
+}

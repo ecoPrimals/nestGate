@@ -130,3 +130,30 @@ impl NestGateUnifiedError {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::error::variants::core_errors::NestGateUnifiedError;
+
+    #[test]
+    fn system_and_internal_constructors_smoke() {
+        let e = NestGateUnifiedError::system("m", "c");
+        assert!(matches!(e, NestGateUnifiedError::System(_)));
+        let e = NestGateUnifiedError::internal("i");
+        assert!(matches!(e, NestGateUnifiedError::Internal(_)));
+        let e = NestGateUnifiedError::internal_with_component("i", "comp");
+        assert!(matches!(e, NestGateUnifiedError::Internal(_)));
+        let e = NestGateUnifiedError::internal_error("i", "c");
+        assert!(matches!(e, NestGateUnifiedError::Internal(_)));
+        let e = NestGateUnifiedError::external_service_unavailable("svc", "down");
+        assert!(matches!(e, NestGateUnifiedError::External(_)));
+        let e = NestGateUnifiedError::validation("bad");
+        assert!(matches!(e, NestGateUnifiedError::Validation(_)));
+        let e = NestGateUnifiedError::io_error("read fail");
+        assert!(matches!(e, NestGateUnifiedError::System(_)));
+        let e = NestGateUnifiedError::internal_error_with_debug_context("m", "dbg");
+        assert!(matches!(e, NestGateUnifiedError::Internal(_)));
+        let e = NestGateUnifiedError::not_implemented("feature-x");
+        assert!(matches!(e, NestGateUnifiedError::NotImplemented(_)));
+    }
+}

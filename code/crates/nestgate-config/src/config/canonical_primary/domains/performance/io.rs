@@ -102,3 +102,30 @@ impl IoPerformanceConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let s = serde_json::to_string(v).expect("to_string");
+        let _: T = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn io_performance_validate_and_strategies() {
+        let c = IoPerformanceConfig::default();
+        c.validate().expect("validate");
+        serde_roundtrip(&c);
+        for s in [
+            IoStrategy::Blocking,
+            IoStrategy::NonBlocking,
+            IoStrategy::Async,
+        ] {
+            serde_roundtrip(&s);
+        }
+    }
+}

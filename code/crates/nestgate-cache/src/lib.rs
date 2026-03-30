@@ -5,6 +5,8 @@
 
 //! Caching subsystem: multi-tier cache, UUID cache, and cache math utilities.
 
+#![warn(missing_docs)]
+
 pub mod cache;
 /// Pure functions for cache sizing, eviction thresholds, and hit-ratio math (mutation-test targets).
 pub mod cache_math;

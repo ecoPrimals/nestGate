@@ -8,6 +8,7 @@
 //! This module now uses the canonical configuration system instead of
 //! scattered FSMonitor-specific configuration structures.
 
+#![warn(missing_docs)]
 #![cfg_attr(
     test,
     allow(

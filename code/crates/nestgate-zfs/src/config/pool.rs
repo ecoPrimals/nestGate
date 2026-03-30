@@ -86,3 +86,21 @@ pub type PoolDiscoveryConfigCanonical =
 // Note: Keep using PoolDiscoveryConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[allow(deprecated)]
+    #[test]
+    fn pool_discovery_config_default_and_production() {
+        let d = PoolDiscoveryConfig::default();
+        assert!(d.auto_discovery);
+        assert_eq!(d.default_pool, "zfspool");
+        let p = PoolDiscoveryConfig::production();
+        assert_eq!(p.discovery_interval_seconds, 30);
+        let json = serde_json::to_string(&d).expect("serialize");
+        let back: PoolDiscoveryConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.exclude_pools, d.exclude_pools);
+    }
+}

@@ -339,6 +339,59 @@ pub fn get_security_status(State(_app_state): State<crate::routes::AppState>) ->
 mod tests {
     use super::*;
 
+    #[test]
+    fn auth_types_serde_roundtrip() {
+        let creds = AuthCredentials {
+            username: "u".into(),
+            password: "p".into(),
+        };
+        let j = serde_json::to_string(&creds).unwrap();
+        let back: AuthCredentials = serde_json::from_str(&j).unwrap();
+        assert_eq!(back.username, "u");
+
+        let status = AuthStatus {
+            authenticated: false,
+            user_id: None,
+            permissions: vec!["read".into()],
+        };
+        let j = serde_json::to_string(&status).unwrap();
+        let back: AuthStatus = serde_json::from_str(&j).unwrap();
+        assert!(!back.authenticated);
+
+        let mode = AuthMode::Production;
+        let j = serde_json::to_string(&mode).unwrap();
+        let back: AuthMode = serde_json::from_str(&j).unwrap();
+        assert_eq!(back, AuthMode::Production);
+
+        let ch = AuthChallenge {
+            challenge: "c".into(),
+            timestamp: 1,
+            expires_at: 2,
+        };
+        let j = serde_json::to_string(&ch).unwrap();
+        let back: AuthChallenge = serde_json::from_str(&j).unwrap();
+        assert_eq!(back.challenge, "c");
+    }
+
+    #[test]
+    fn auth_response_serializes() {
+        let r = AuthResponse {
+            success: false,
+            token: None,
+            expires_at: None,
+            permissions: None,
+            message: "m".into(),
+        };
+        let v = serde_json::to_value(&r).unwrap();
+        assert_eq!(v["message"], "m");
+    }
+
+    #[test]
+    fn set_mode_request_deserializes() {
+        let req: SetModeRequest = serde_json::from_str(r#"{"mode":"standalone"}"#).unwrap();
+        assert_eq!(req.mode, "standalone");
+    }
+
     #[tokio::test]
     async fn test_auth_service_standalone() {
         let service = AuthService::new();
@@ -382,5 +435,33 @@ mod tests {
 
         let result = service.authenticate(&credentials);
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn auth_router_hits_login_status_and_mode_branches() {
+        use axum_test::TestServer;
+
+        let app = auth_router().with_state(crate::routes::AppState::new());
+        let server = TestServer::new(app).expect("server");
+
+        let login = server
+            .post("/login")
+            .json(&serde_json::json!({
+                "username": "u",
+                "password": "p",
+                "domain": "example.test"
+            }))
+            .await;
+        assert_eq!(login.status_code(), axum::http::StatusCode::NOT_IMPLEMENTED);
+
+        server.get("/status").await.assert_status_ok();
+
+        for mode in ["standalone", "security_primal", "hybrid", "unknown_mode"] {
+            let r = server
+                .post("/mode")
+                .json(&serde_json::json!({ "mode": mode }))
+                .await;
+            r.assert_status_ok();
+        }
     }
 }

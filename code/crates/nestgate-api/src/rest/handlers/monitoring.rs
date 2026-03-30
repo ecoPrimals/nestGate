@@ -45,7 +45,7 @@ pub struct MetricsHistoryQuery {
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when metrics aggregation or
+/// Returns [`Json`] containing [`DataError`] when metrics aggregation or
 /// serialization fails (reserved for future wired collectors).
 pub async fn get_metrics(
     State(state): State<ApiState>,
@@ -158,7 +158,7 @@ pub async fn get_metrics(
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the time-series query
+/// Returns [`Json`] containing [`DataError`] when the time-series query
 /// fails (reserved for future TSDB-backed history).
 pub async fn get_metrics_history(
     State(state): State<ApiState>,

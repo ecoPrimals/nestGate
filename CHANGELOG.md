@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 8: Coverage push, ring elimination, pure-Rust evolution (March 30, 2026)
+
+**Tests**: 1,457 lib tests passing, 0 failures, 48 ignored  
+**Coverage**: 80.25% line (wateringHole 80% minimum met)  
+**Clippy**: ZERO errors — `--all-features -D warnings`  
+**Docs**: ZERO warnings — `cargo doc --workspace --no-deps`
+
+#### Added
+- 67+ new test functions across config modernization, canonical types, API handlers, cache, automation, ZFS engine, security, transport, discovery, performance, types
+- `CommunicationCounters` (Arc + AtomicU64) for real-time WebSocket/SSE metrics in AppState
+- `event_log` (Arc<RwLock<Vec>>) for honest event history in AppState
+
+#### Changed
+- **ring eliminated** — installer TLS switched from `rustls-tls` to `rustls-tls-webpki-roots-no-provider` + `aws-lc-rs`; `cargo tree -i ring` returns nothing
+- **sysinfo made optional** — Linux uses pure-Rust `/proc` parsing as primary; sysinfo only pulled for non-Linux platforms
+- **Production stubs evolved** — `get_communication_stats` returns live counters; `get_events` returns real event log (empty by default, not fabricated)
+- **Dead events module removed** — 15 files of unused event bus/dlq/pubsub/routing/streaming in nestgate-observe and nestgate-core
+- **dev_environment feature-gated** — `nestgate-zfs::dev_environment` behind `dev-stubs` feature
+- **stubs.rs renamed to compat.rs** — `nestgate-observe::stubs` → `nestgate-observe::compat`
+- **Test isolation hardened** — `test_concurrent_config_access` wrapped in `temp_env::with_vars` + `#[serial_test::serial]`
+
+#### Removed
+- `ring` from dependency tree (was transitive via reqwest→rustls in installer)
+- Dead `events` module tree from nestgate-observe (bus, dlq, pubsub, routing, streaming)
+- sysinfo from default features on Linux builds
+
 ### Session 7: Deep debt evolution & idiomatic Rust (March 29, 2026)
 
 **Tests**: 7,887 lib tests passing, 0 failures, 64 ignored  

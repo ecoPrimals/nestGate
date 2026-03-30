@@ -107,3 +107,97 @@ where
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::metadata::EvolutionMetadata;
+    use super::super::traits::{EvolutionCompatible, IdiomaticBuilder, ModernizationTrait};
+    use super::*;
+
+    #[derive(Debug, Clone)]
+    struct TestEvo(bool);
+
+    impl EvolutionCompatible for TestEvo {
+        fn check_compatibility(&self) -> nestgate_types::error::Result<bool> {
+            Ok(!self.0)
+        }
+    }
+
+    impl ModernizationTrait for TestEvo {
+        fn apply_modernization(self) -> nestgate_types::error::Result<Self> {
+            Ok(self)
+        }
+
+        fn needs_modernization(&self) -> bool {
+            self.0
+        }
+    }
+
+    #[derive(Debug)]
+    struct DummyBuilder;
+
+    impl IdiomaticBuilder<String> for DummyBuilder {
+        fn builder() -> Self {
+            Self
+        }
+
+        fn build(self) -> String {
+            "built".to_string()
+        }
+    }
+
+    #[derive(Debug)]
+    struct EvoU32(u32);
+
+    impl EvolutionCompatible for EvoU32 {
+        fn check_compatibility(&self) -> nestgate_types::error::Result<bool> {
+            Ok(true)
+        }
+    }
+
+    impl From<EvoU32> for u64 {
+        fn from(v: EvoU32) -> Self {
+            Self::from(v.0)
+        }
+    }
+
+    #[test]
+    fn safe_smart_default_u16() {
+        assert_eq!(safe_smart_default::<u16>().expect("ok"), 8080);
+    }
+
+    #[test]
+    fn with_evolution_metadata_tuple() {
+        let (n, _m): (u32, EvolutionMetadata) =
+            with_evolution_metadata(1, EvolutionMetadata::default());
+        assert_eq!(n, 1);
+    }
+
+    #[test]
+    fn apply_modernization_pattern_ok() {
+        let t = TestEvo(false);
+        assert_eq!(apply_modernization_pattern(t).expect("ok").0, false);
+    }
+
+    #[test]
+    fn create_idiomatic_builder_builds() {
+        let b: DummyBuilder = create_idiomatic_builder::<String, DummyBuilder>();
+        assert_eq!(b.build(), "built");
+    }
+
+    #[test]
+    fn smart_conversion_pattern_u64() {
+        let out: u64 = smart_conversion_pattern(EvoU32(5)).expect("conv");
+        assert_eq!(out, 5u64);
+    }
+
+    #[test]
+    fn validate_evolution_ok() {
+        validate_evolution(&TestEvo(false)).expect("ok");
+    }
+
+    #[test]
+    fn validate_evolution_needs_modernization_err() {
+        assert!(validate_evolution(&TestEvo(true)).is_err());
+    }
+}

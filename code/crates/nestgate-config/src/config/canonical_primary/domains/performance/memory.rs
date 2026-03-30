@@ -121,3 +121,23 @@ impl MemoryPerformanceConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let s = serde_json::to_string(v).expect("to_string");
+        let _: T = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn memory_performance_default_validate_serde() {
+        let c = MemoryPerformanceConfig::default();
+        c.validate().expect("validate");
+        serde_roundtrip(&c);
+    }
+}

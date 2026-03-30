@@ -7,6 +7,7 @@
 //! and additional metadata.
 
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::time::{Duration, SystemTime};
 
 /// Error context information
@@ -16,13 +17,13 @@ pub struct ErrorContext {
     /// When the error occurred
     pub timestamp: SystemTime,
     /// Operation that was being performed
-    pub operation: String,
+    pub operation: Cow<'static, str>,
     /// Component that generated the error
-    pub component: String,
+    pub component: Cow<'static, str>,
     /// Request ID for tracing
-    pub request_id: Option<String>,
+    pub request_id: Option<Cow<'static, str>>,
     /// User ID if available
-    pub user_id: Option<String>,
+    pub user_id: Option<Cow<'static, str>>,
     /// Additional context data
     pub metadata: std::collections::HashMap<String, String>,
 }
@@ -32,8 +33,8 @@ impl Default for ErrorContext {
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
-            operation: "unknown".to_string(),
-            component: "unknown".to_string(),
+            operation: Cow::Borrowed("unknown"),
+            component: Cow::Borrowed("unknown"),
             request_id: None,
             user_id: None,
             metadata: std::collections::HashMap::new(),

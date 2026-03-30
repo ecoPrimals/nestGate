@@ -805,6 +805,7 @@ fn parse_zfs_size(s: &str) -> u64 {
 mod nestgate_rpc_service_tests {
     use super::*;
     use nestgate_zfs::command::ZfsPool;
+    use std::collections::HashMap;
 
     #[test]
     fn nestgate_capabilities_vec_matches_labels() {
@@ -900,5 +901,167 @@ mod nestgate_rpc_service_tests {
             name: "d".into(),
             properties: props,
         };
+    }
+
+    #[test]
+    fn rpc_types_full_serde_roundtrip() {
+        let dataset = DatasetInfo {
+            name: "p/d".into(),
+            pool_name: "p".into(),
+            used_space_gb: 3,
+            compression_ratio: 1.2,
+            dedup_ratio: 1.0,
+            created_at: Some("2020-01-01T00:00:00Z".into()),
+        };
+        let _: DatasetInfo =
+            serde_json::from_str(&serde_json::to_string(&dataset).unwrap()).unwrap();
+
+        let snap = SnapshotInfo {
+            name: "p/d@s".into(),
+            dataset: "p/d".into(),
+            created_at: "t".into(),
+            size_gb: 1,
+        };
+        let _: SnapshotInfo = serde_json::from_str(&serde_json::to_string(&snap).unwrap()).unwrap();
+
+        let health = HealthStatus {
+            status: "healthy".into(),
+            version: "1".into(),
+            uptime_seconds: 10,
+            pools_healthy: 1,
+            pools_total: 1,
+        };
+        let _: HealthStatus =
+            serde_json::from_str(&serde_json::to_string(&health).unwrap()).unwrap();
+
+        let ver = VersionInfo {
+            version: "0.1".into(),
+            protocol: "tarpc".into(),
+            capabilities: vec!["a".into()],
+        };
+        let _: VersionInfo = serde_json::from_str(&serde_json::to_string(&ver).unwrap()).unwrap();
+
+        let req = CreateDatasetRequest {
+            pool: "p".into(),
+            name: "n".into(),
+            properties: HashMap::from([("compression".into(), "lz4".into())]),
+        };
+        let _: CreateDatasetRequest =
+            serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
+    }
+
+    #[tokio::test]
+    async fn nestgate_rpc_server_runs_core_tarpc_paths() {
+        let server = NestGateRpcServer::default();
+        let ctx = Context::current();
+
+        let _ = server.clone().list_pools(ctx).await;
+        let ctx = Context::current();
+        let _ = server
+            .clone()
+            .list_datasets(ctx, "nonexistent_pool".into())
+            .await;
+
+        let ctx = Context::current();
+        let del = server
+            .clone()
+            .delete_dataset(ctx, "tank".into(), String::new())
+            .await;
+        assert!(!del.success);
+
+        let ctx = Context::current();
+        let del2 = server
+            .clone()
+            .delete_dataset(ctx, "tank".into(), "tank".into())
+            .await;
+        assert!(!del2.success);
+
+        let ctx = Context::current();
+        let _ = server
+            .clone()
+            .create_snapshot(ctx, "p".into(), "d".into(), "snap".into())
+            .await;
+
+        let ctx = Context::current();
+        let _ = server
+            .clone()
+            .list_snapshots(ctx, "p".into(), "d".into())
+            .await;
+
+        let ctx = Context::current();
+        let _ = server.clone().get_metrics(ctx).await;
+
+        let ctx = Context::current();
+        let _ = server.clone().health(ctx).await;
+
+        let ctx = Context::current();
+        let _ = server.clone().version(ctx).await;
+
+        let ctx = Context::current();
+        let caps = server.clone().capabilities(ctx).await;
+        assert!(!caps.is_empty());
+
+        let ctx = Context::current();
+        let _ = server
+            .clone()
+            .create_dataset(
+                ctx,
+                CreateDatasetRequest {
+                    pool: "nonexistent_pool_xyz".into(),
+                    name: "ds".into(),
+                    properties: HashMap::from([
+                        ("tier".into(), "cold".into()),
+                        ("x".into(), "y".into()),
+                    ]),
+                },
+            )
+            .await;
+    }
+
+    #[tokio::test]
+    async fn nestgate_json_rpc_handler_routes_methods() {
+        let h = NestGateJsonRpcHandler::default();
+
+        assert!(
+            h.handle("list_pools", serde_json::json!(null))
+                .await
+                .is_ok()
+        );
+        assert!(
+            h.handle("list_datasets", serde_json::json!("p"))
+                .await
+                .is_ok()
+        );
+        assert!(
+            h.handle("get_metrics", serde_json::json!(null))
+                .await
+                .is_ok()
+        );
+
+        for m in ["health", "health.liveness", "health.check"] {
+            assert!(h.handle(m, serde_json::json!(null)).await.is_ok());
+        }
+        assert!(
+            h.handle("health.readiness", serde_json::json!(null))
+                .await
+                .is_ok()
+        );
+        assert!(h.handle("version", serde_json::json!(null)).await.is_ok());
+        assert!(
+            h.handle("capabilities", serde_json::json!(null))
+                .await
+                .is_ok()
+        );
+        assert!(
+            h.handle("capabilities.list", serde_json::json!(null))
+                .await
+                .is_ok()
+        );
+
+        assert!(
+            h.handle("not_a_real_method", serde_json::json!(null))
+                .await
+                .is_err()
+        );
     }
 }

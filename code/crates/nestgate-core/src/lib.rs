@@ -15,7 +15,7 @@
 //! - `nestgate-rpc`: rpc (JSON-RPC + tarpc)
 //! - `nestgate-discovery`: discovery, capabilities, service_discovery
 
-#![allow(missing_docs)]
+#![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
 // `#[cfg(test)]` modules use permissive test patterns; `cargo clippy -p nestgate-core --lib` does not set `cfg(test)`.
 #![cfg_attr(
@@ -33,6 +33,7 @@
 )]
 #![allow(
     deprecated,
+    missing_docs,
     clippy::doc_markdown,
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
@@ -148,7 +149,6 @@ pub use nestgate_security::crypto;
 // ==================== OBSERVE RE-EXPORTS (nestgate-observe) ====================
 
 pub use nestgate_observe::diagnostics;
-pub use nestgate_observe::events;
 /// Mathematical utilities
 pub mod math;
 pub use nestgate_observe::observability;

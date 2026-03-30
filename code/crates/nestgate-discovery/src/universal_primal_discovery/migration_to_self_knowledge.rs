@@ -18,7 +18,7 @@
 //! Primal code is written with **self-knowledge only**: this process’s identity, capabilities, and
 //! its own listen endpoints. **Other primals** (orchestrator, storage mesh, etc.) are **not**
 //! hardcoded; they are **discovered at runtime** via capability queries. Use
-//! [`resolve_orchestrator_url`] or [`PrimalDiscovery::find_capability`] instead of fixed URLs.
+//! `resolve_orchestrator_url` or `PrimalDiscovery::find_capability` instead of fixed URLs.
 //!
 //! ## Migration Strategy
 //!

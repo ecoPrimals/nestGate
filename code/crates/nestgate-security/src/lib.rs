@@ -5,6 +5,7 @@
 
 //! Security, cryptography, certificate management, and zero-cost security providers for `NestGate`.
 
+#![warn(missing_docs)]
 #![allow(deprecated, clippy::missing_errors_doc)]
 #![cfg_attr(
     test,
@@ -45,3 +46,13 @@ pub mod crypto;
 pub mod jwt_validation;
 pub mod zero_cost;
 pub mod zero_cost_security_provider;
+
+#[cfg(test)]
+mod lib_smoke_tests {
+    use super::universal_adapter::PrimalAgnosticAdapter;
+
+    #[test]
+    fn primal_agnostic_adapter_new_is_constructible() {
+        let _ = PrimalAgnosticAdapter::new("http://localhost:0/adapter".to_string());
+    }
+}

@@ -2,10 +2,6 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 #![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
-#![expect(
     clippy::cast_precision_loss,
     reason = "Telemetry maps u64/usize OS counters to approximate f64 gauges"
 )]
@@ -77,7 +73,7 @@ impl Default for PerformanceMetrics {
 }
 
 #[cfg(all(not(feature = "mock-metrics"), feature = "sysinfo"))]
-fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> Result<PerformanceMetrics> {
+fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> PerformanceMetrics {
     use sysinfo::{Disks, Networks, System};
 
     let mut sys = System::new_all();
@@ -96,7 +92,7 @@ fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> Result<Perfo
     let disks = Disks::new_with_refreshed_list();
     let disk_iops: f64 = disks.len() as f64 * 100.0; // Estimated baseline per-disk IOPS
 
-    Ok(PerformanceMetrics {
+    PerformanceMetrics {
         timestamp: SystemTime::now(),
         cpu_usage,
         memory_usage,
@@ -118,7 +114,7 @@ fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> Result<Perfo
                 )
             })
             .collect(),
-    })
+    }
 }
 
 /// Metrics registry for collecting and storing performance data
@@ -283,7 +279,7 @@ impl MetricsRegistry {
             // Non-Linux, or Linux when `/proc` parsing failed: `sysinfo` fallback.
             #[cfg(feature = "sysinfo")]
             {
-                gather_performance_metrics_sysinfo(&custom)
+                Ok(gather_performance_metrics_sysinfo(&custom))
             }
             #[cfg(not(feature = "sysinfo"))]
             {

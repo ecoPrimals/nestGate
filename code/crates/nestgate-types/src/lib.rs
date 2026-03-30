@@ -32,6 +32,32 @@ pub use unified_enums::UnifiedEnum;
 mod round5_impl_coverage;
 
 #[cfg(test)]
+mod unified_enums_exhaustive_tests;
+
+#[cfg(test)]
+mod error_mod_coverage_tests {
+    use crate::error::ResultExt;
+    use crate::{NestGateError, NestGateUnifiedError};
+
+    #[test]
+    fn result_ext_to_canonical_ok_with_context_err() {
+        let ok: std::result::Result<i32, NestGateError> = Ok(7);
+        assert_eq!(ok.to_canonical().expect("ok"), 7);
+
+        let err: std::result::Result<(), &str> = Err("e");
+        let mapped = err.with_context(|| "ctx".to_string());
+        assert!(mapped.is_err());
+    }
+
+    #[test]
+    fn type_aliases_compile() {
+        let _: crate::CanonicalResult<i32> = Ok(1);
+        let _: crate::TestResult = Ok(());
+        let _: crate::Result<i32> = Err(NestGateUnifiedError::internal("i"));
+    }
+}
+
+#[cfg(test)]
 mod result_types_macro_tests {
     use crate::NestGateError;
     use crate::validation_result;

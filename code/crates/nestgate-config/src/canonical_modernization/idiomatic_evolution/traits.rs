@@ -130,3 +130,61 @@ pub trait CanonicalEvolution: SmartDefault + EvolutionCompatible + Modernization
         1.0 // Default perfect score
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Debug, Clone)]
+    struct TestEvo(u32);
+
+    impl SmartDefault for TestEvo {
+        fn smart_default() -> Self {
+            Self(0)
+        }
+    }
+
+    impl EvolutionCompatible for TestEvo {
+        fn check_compatibility(&self) -> nestgate_types::error::Result<bool> {
+            Ok(true)
+        }
+    }
+
+    impl ModernizationTrait for TestEvo {
+        fn apply_modernization(self) -> nestgate_types::error::Result<Self> {
+            Ok(self)
+        }
+    }
+
+    impl CanonicalEvolution for TestEvo {}
+
+    #[test]
+    fn smart_default_extension_methods() {
+        assert_eq!(String::smart_default_with_context("ctx"), String::new());
+        assert!(!String::can_derive_default());
+        let s = "hi".to_string();
+        assert_eq!(s.smart_clone_with_context("c"), "hi");
+    }
+
+    #[test]
+    fn canonical_evolution_evolve_canonically() {
+        let v = TestEvo(7);
+        let out = v.evolve_canonically().expect("evolve");
+        assert_eq!(out.0, 7);
+        assert!((out.get_evolution_score() - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn evolution_compatible_defaults() {
+        let mut t = TestEvo(1);
+        t.apply_compatibility_fixes().expect("fixes");
+        assert_eq!(t.get_evolution_version(), "1.0.0");
+    }
+
+    #[test]
+    fn modernization_trait_defaults() {
+        let t = TestEvo(2);
+        assert!(!t.needs_modernization());
+        assert!(t.get_modernization_recommendations().is_empty());
+    }
+}

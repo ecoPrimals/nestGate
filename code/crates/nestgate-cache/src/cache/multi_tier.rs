@@ -10,7 +10,7 @@
 
 use dashmap::DashMap;
 use nestgate_types::Result;
-use std::future::Future;
+use std::future::{Future, ready};
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -86,13 +86,13 @@ pub struct MultiTierCacheConfig {
 pub struct MultiTierCache {
     /// Hot tier for frequently accessed data (RAM-based, fastest)
     #[allow(dead_code)]
-    hot_tier: CacheProviderBox,
+    hot_tier: InMemoryCache,
     /// Warm tier for moderately accessed data (SSD-based, fast)
     #[allow(dead_code)]
-    warm_tier: CacheProviderBox,
+    warm_tier: InMemoryCache,
     /// Cold tier for infrequently accessed data (HDD-based, slow but large)
     #[allow(dead_code)]
-    cold_tier: CacheProviderBox,
+    cold_tier: InMemoryCache,
     /// Global cache configuration
     #[allow(dead_code)]
     config: nestgate_config::config::canonical_primary::CacheConfig,
@@ -113,9 +113,9 @@ impl MultiTierCache {
 
         // For now, we'll use a simple in-memory cache for all tiers
         // In production, these would be different storage backends
-        let hot_tier: Box<dyn CacheProvider<String, Vec<u8>>> = Box::new(InMemoryCache::new());
-        let warm_tier: Box<dyn CacheProvider<String, Vec<u8>>> = Box::new(InMemoryCache::new());
-        let cold_tier: Box<dyn CacheProvider<String, Vec<u8>>> = Box::new(InMemoryCache::new());
+        let hot_tier = InMemoryCache::new();
+        let warm_tier = InMemoryCache::new();
+        let cold_tier = InMemoryCache::new();
 
         Ok(Self {
             hot_tier,
@@ -134,7 +134,7 @@ impl MultiTierCache {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
-        self.hot_tier.set(key, value).await
+        ready(self.hot_tier.set_entry(key, value)).await
     }
 
     /// Store data (alias for set - for compatibility)
@@ -149,6 +149,35 @@ impl MultiTierCache {
         self.set(key.to_string(), data).await
     }
 
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result matches public cache API and future I/O-backed tiers"
+    )]
+    fn get_impl(&self, key: &str) -> Result<Option<Vec<u8>>> {
+        // Try tiers in order of performance: hot -> warm -> cold
+
+        // Try hot tier first
+        if let Ok(Some(value)) = self.hot_tier.get_entry(key) {
+            return Ok(Some(value));
+        }
+
+        // Try warm tier
+        if let Ok(Some(value)) = self.warm_tier.get_entry(key) {
+            // Promote to hot tier for future access
+            let _ = self.hot_tier.set_entry(key.to_string(), value.clone());
+            return Ok(Some(value));
+        }
+
+        // Try cold tier
+        if let Ok(Some(value)) = self.cold_tier.get_entry(key) {
+            // Promote to warm tier for future access
+            let _ = self.warm_tier.set_entry(key.to_string(), value.clone());
+            return Ok(Some(value));
+        }
+
+        Ok(None)
+    }
+
     /// Retrieve data from any tier
     ///
     /// # Errors
@@ -158,31 +187,21 @@ impl MultiTierCache {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
-        // Try tiers in order of performance: hot -> warm -> cold
-
-        // Try hot tier first
-        if let Ok(Some(value)) = self.hot_tier.get(key).await {
-            return Ok(Some(value));
-        }
-
-        // Try warm tier
-        if let Ok(Some(value)) = self.warm_tier.get(key).await {
-            // Promote to hot tier for future access
-            let _ = self.hot_tier.set(key.to_string(), value.clone()).await;
-            return Ok(Some(value));
-        }
-
-        // Try cold tier
-        if let Ok(Some(value)) = self.cold_tier.get(key).await {
-            // Promote to warm tier for future access
-            let _ = self.warm_tier.set(key.to_string(), value.clone()).await;
-            return Ok(Some(value));
-        }
-
-        Ok(None)
+        ready(self.get_impl(key)).await
     }
 
-    /// Remove data from all tiers
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result matches public cache API and future I/O-backed tiers"
+    )]
+    fn remove_impl(&self, key: &str) -> Result<bool> {
+        let removed = self.hot_tier.remove_entry(key).unwrap_or(false)
+            || self.warm_tier.remove_entry(key).unwrap_or(false)
+            || self.cold_tier.remove_entry(key).unwrap_or(false);
+        Ok(removed)
+    }
+
+    /// Remove data from all tiers.
     ///
     /// # Errors
     ///
@@ -191,11 +210,7 @@ impl MultiTierCache {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn remove(&self, key: &str) -> Result<bool> {
-        let removed = self.hot_tier.remove(key).await.unwrap_or(false)
-            || self.warm_tier.remove(key).await.unwrap_or(false)
-            || self.cold_tier.remove(key).await.unwrap_or(false);
-
-        Ok(removed)
+        ready(self.remove_impl(key)).await
     }
 
     /// Clear all tiers
@@ -207,10 +222,13 @@ impl MultiTierCache {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn clear(&self) -> Result<()> {
-        self.hot_tier.clear().await?;
-        self.warm_tier.clear().await?;
-        self.cold_tier.clear().await?;
-        Ok(())
+        ready({
+            self.hot_tier.clear_all()?;
+            self.warm_tier.clear_all()?;
+            self.cold_tier.clear_all()?;
+            Ok(())
+        })
+        .await
     }
 
     /// Perform cache maintenance (cleanup, compaction, etc.)
@@ -243,17 +261,12 @@ impl MultiTierCache {
 
     /// Check if key exists in any tier
     pub async fn contains_key(&self, key: &str) -> bool {
-        // Check all tiers for the key
-        if self.hot_tier.get(key).await.unwrap_or(None).is_some() {
-            return true;
-        }
-        if self.warm_tier.get(key).await.unwrap_or(None).is_some() {
-            return true;
-        }
-        if self.cold_tier.get(key).await.unwrap_or(None).is_some() {
-            return true;
-        }
-        false
+        ready(
+            self.hot_tier.get_entry(key).unwrap_or(None).is_some()
+                || self.warm_tier.get_entry(key).unwrap_or(None).is_some()
+                || self.cold_tier.get_entry(key).unwrap_or(None).is_some(),
+        )
+        .await
     }
 
     /// Get cache statistics across all tiers
@@ -331,6 +344,53 @@ impl InMemoryCache {
             data: Arc::new(DashMap::new()),
         }
     }
+
+    /// Direct synchronous access for `MultiTierCache` (avoids `Box<dyn Future>` per call).
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result aligns with `CacheProvider` and future fallible backends"
+    )]
+    fn set_entry(&self, key: String, value: Vec<u8>) -> Result<()> {
+        self.data.insert(key, value);
+        Ok(())
+    }
+
+    /// Direct get
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result aligns with `CacheProvider` and future fallible backends"
+    )]
+    fn get_entry(&self, key: &str) -> Result<Option<Vec<u8>>> {
+        Ok(self.data.get(key).map(|entry| entry.value().clone()))
+    }
+
+    /// Direct remove
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result aligns with `CacheProvider` and future fallible backends"
+    )]
+    fn remove_entry(&self, key: &str) -> Result<bool> {
+        Ok(self.data.remove(key).is_some())
+    }
+
+    /// Direct clear
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result aligns with `CacheProvider` and future fallible backends"
+    )]
+    fn clear_all(&self) -> Result<()> {
+        self.data.clear();
+        Ok(())
+    }
+
+    /// Direct size
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result aligns with `CacheProvider` and future fallible backends"
+    )]
+    fn size_entry(&self) -> Result<usize> {
+        Ok(self.data.len())
+    }
 }
 
 impl CacheProvider<String, Vec<u8>> for InMemoryCache {
@@ -340,51 +400,29 @@ impl CacheProvider<String, Vec<u8>> for InMemoryCache {
         key: String,
         value: Vec<u8>,
     ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-        let data = Arc::clone(&self.data);
-        Box::pin(async move {
-            // DashMap: Lock-free insert!
-            data.insert(key, value);
-            Ok(())
-        })
+        Box::pin(ready(self.set_entry(key, value)))
     }
 
     /// Get (lock-free!)
     fn get(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<Option<Vec<u8>>>> + Send + '_>> {
-        let data = Arc::clone(&self.data);
         let key = key.to_string();
-        Box::pin(async move {
-            // DashMap: Lock-free get!
-            Ok(data.get(&key).map(|entry| entry.value().clone()))
-        })
+        Box::pin(ready(self.get_entry(&key)))
     }
 
     /// Remove (lock-free!)
     fn remove(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<bool>> + Send + '_>> {
-        let data = Arc::clone(&self.data);
         let key = key.to_string();
-        Box::pin(async move {
-            // DashMap: Lock-free removal!
-            Ok(data.remove(&key).is_some())
-        })
+        Box::pin(ready(self.remove_entry(&key)))
     }
 
     /// Clear (lock-free!)
     fn clear(&self) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-        let data = Arc::clone(&self.data);
-        Box::pin(async move {
-            // DashMap: Lock-free clear!
-            data.clear();
-            Ok(())
-        })
+        Box::pin(ready(self.clear_all()))
     }
 
     /// Size (lock-free!)
     fn size(&self) -> Pin<Box<dyn Future<Output = Result<usize>> + Send + '_>> {
-        let data = Arc::clone(&self.data);
-        Box::pin(async move {
-            // DashMap: Lock-free len!
-            Ok(data.len())
-        })
+        Box::pin(ready(self.size_entry()))
     }
 }
 

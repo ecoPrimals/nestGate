@@ -83,3 +83,13 @@ impl<
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn canonical_config_builder_new_build() {
+        let _: NestGateCanonicalConfig = CanonicalConfigBuilder::new().build();
+    }
+}

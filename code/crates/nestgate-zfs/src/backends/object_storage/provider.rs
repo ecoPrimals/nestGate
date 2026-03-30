@@ -50,3 +50,56 @@ impl StorageProvider {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_provider_detect_from_endpoint_branches() {
+        assert!(matches!(
+            StorageProvider::detect_from_endpoint("https://bucket.s3.amazonaws.com"),
+            StorageProvider::AwsS3
+        ));
+        assert!(matches!(
+            StorageProvider::detect_from_endpoint("http://localhost:9000"),
+            StorageProvider::MinIO
+        ));
+        assert!(matches!(
+            StorageProvider::detect_from_endpoint("https://example.wasabisys.com"),
+            StorageProvider::Wasabi
+        ));
+        assert!(matches!(
+            StorageProvider::detect_from_endpoint("https://nyc3.digitalocean.com"),
+            StorageProvider::DigitalOceanSpaces
+        ));
+        assert!(matches!(
+            StorageProvider::detect_from_endpoint("https://us-east-1.linodeobjects.com"),
+            StorageProvider::LinodeObjectStorage
+        ));
+        assert!(matches!(
+            StorageProvider::detect_from_endpoint("https://f004.backblazeb2.com"),
+            StorageProvider::BackblazeB2
+        ));
+        assert!(matches!(
+            StorageProvider::detect_from_endpoint("https://example.com"),
+            StorageProvider::Unknown
+        ));
+    }
+
+    #[test]
+    fn storage_provider_serde_roundtrip() {
+        let roundtrip = |p: StorageProvider| {
+            let json = serde_json::to_string(&p).unwrap();
+            let back: StorageProvider = serde_json::from_str(&json).unwrap();
+            assert!(std::mem::discriminant(&p) == std::mem::discriminant(&back));
+        };
+        roundtrip(StorageProvider::AwsS3);
+        roundtrip(StorageProvider::MinIO);
+        roundtrip(StorageProvider::Wasabi);
+        roundtrip(StorageProvider::DigitalOceanSpaces);
+        roundtrip(StorageProvider::LinodeObjectStorage);
+        roundtrip(StorageProvider::BackblazeB2);
+        roundtrip(StorageProvider::Unknown);
+    }
+}

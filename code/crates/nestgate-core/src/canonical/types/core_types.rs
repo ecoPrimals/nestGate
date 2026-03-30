@@ -207,11 +207,11 @@ impl Default for ServiceInfo {
         let discovery_config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
         let api_port = crate::constants::port_defaults::get_api_port();
         Self {
-            service_id: "unknown".to_string(),
-            service_type: "generic".to_string(),
+            service_id: "unknown".into(),
+            service_type: "generic".into(),
             capabilities: Vec::new(),
             endpoint: discovery_config.build_endpoint(api_port),
-            health_status: "unknown".to_string(),
+            health_status: "unknown".into(),
             metadata: HashMap::new(),
         }
     }
@@ -221,9 +221,9 @@ impl Default for EventHandler {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            handler_id: "default".to_string(),
-            event_type: "generic".to_string(),
-            handler_function: "default_handler".to_string(),
+            handler_id: "default".into(),
+            event_type: "generic".into(),
+            handler_function: "default_handler".into(),
         }
     }
 }
@@ -232,10 +232,10 @@ impl Default for AlertRule {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            rule_id: "default".to_string(),
-            name: "Default Rule".to_string(),
-            condition: "always".to_string(),
-            severity: "info".to_string(),
+            rule_id: "default".into(),
+            name: "Default Rule".into(),
+            condition: "always".into(),
+            severity: "info".into(),
             enabled: true,
         }
     }
@@ -259,9 +259,9 @@ impl Default for AlertChannel {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            channel_id: "default".to_string(),
-            channel_type: "console".to_string(),
-            endpoint: "stdout".to_string(),
+            channel_id: "default".into(),
+            channel_type: "console".into(),
+            endpoint: "stdout".into(),
             enabled: true,
         }
     }
@@ -284,9 +284,9 @@ impl Default for HealthCheck {
     /// Returns the default instance
     fn default() -> Self {
         Self {
-            check_id: "default".to_string(),
-            name: "Default Health Check".to_string(),
-            component: "system".to_string(),
+            check_id: "default".into(),
+            name: "Default Health Check".into(),
+            component: "system".into(),
             interval_seconds: 30,
             timeout_seconds: 5,
             enabled: true,

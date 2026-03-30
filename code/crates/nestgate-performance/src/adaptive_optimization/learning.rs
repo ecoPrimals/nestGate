@@ -79,3 +79,31 @@ impl Default for TrendAnalyzer {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod learning_smoke_tests {
+    use super::{SimpleLearningModel, TrendAnalyzer};
+    use crate::adaptive_optimization::types::{CurrentMetrics, PerformanceHistory};
+
+    #[test]
+    fn predict_and_analyze_const_paths() {
+        let m = CurrentMetrics {
+            cpu_usage: 0.0,
+            memory_usage: 0.0,
+            network_throughput: 0,
+            disk_iops: 0,
+            cache_hit_ratio: 0.0,
+            lock_contention: 0.0,
+            simd_utilization: 0.0,
+            allocation_efficiency: 0.0,
+        };
+        let lm = SimpleLearningModel::new();
+        let _ = lm.predict_optimization(&m);
+        let _ = SimpleLearningModel::default().predict_optimization(&m);
+
+        let h = PerformanceHistory::new(10, 5);
+        let ta = TrendAnalyzer::new();
+        let _ = ta.analyze_trends(&h);
+        let _ = TrendAnalyzer::default().analyze_trends(&h);
+    }
+}

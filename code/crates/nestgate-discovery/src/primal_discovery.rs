@@ -334,20 +334,18 @@ struct ProductionBackend {
 
 impl ProductionBackend {
     /// Create new backend with auto-detected discovery mechanism
-    async fn new() -> Result<Self> {
-        // Auto-detect best available discovery mechanism
+    fn new() -> Self {
         let discovery = crate::discovery_mechanism::DiscoveryBuilder::default()
             .detect()
-            .await
             .ok();
 
         if discovery.is_none() {
             tracing::warn!("No discovery mechanism detected, discovery will use fallbacks");
         }
 
-        Ok(Self {
+        Self {
             discovery: discovery.map(Arc::from),
-        })
+        }
     }
 
     /// Convert `primal_discovery` `SelfKnowledge` to `discovery_mechanism` `SelfKnowledge`
@@ -484,7 +482,7 @@ impl DiscoveryBackend for MDnsBackend {
         let knowledge = knowledge.clone();
         Box::pin(async move {
             // Delegate to production backend
-            let backend = ProductionBackend::new().await?;
+            let backend = ProductionBackend::new();
             backend.announce(&knowledge).await
         })
     }
@@ -496,7 +494,7 @@ impl DiscoveryBackend for MDnsBackend {
         let capability = capability.to_string();
         Box::pin(async move {
             // Delegate to production backend
-            let backend = ProductionBackend::new().await?;
+            let backend = ProductionBackend::new();
             backend.discover(&capability).await
         })
     }

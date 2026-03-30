@@ -107,3 +107,99 @@ where
 
     Ok(value)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    struct DatasetNameField {
+        #[serde(deserialize_with = "super::validate_dataset_name")]
+        name: String,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct SnapshotNameField {
+        #[serde(deserialize_with = "super::validate_snapshot_name")]
+        name: String,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct PositiveF64Field {
+        #[serde(deserialize_with = "super::validate_positive_f64")]
+        value: f64,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct PositiveU64Field {
+        #[serde(deserialize_with = "super::validate_positive_u64")]
+        value: u64,
+    }
+
+    #[test]
+    fn dataset_name_roundtrip_ok() {
+        let v: DatasetNameField = serde_json::from_str(r#"{"name":"tank/data"}"#).unwrap();
+        assert_eq!(v.name, "tank/data");
+    }
+
+    #[test]
+    fn dataset_name_rejects_empty() {
+        let err = serde_json::from_str::<DatasetNameField>(r#"{"name":""}"#).unwrap_err();
+        assert!(err.to_string().contains("1 and 255"));
+    }
+
+    #[test]
+    fn dataset_name_rejects_trailing_slash() {
+        let err = serde_json::from_str::<DatasetNameField>(r#"{"name":"bad/"}"#).unwrap_err();
+        assert!(err.to_string().contains("forward slash"));
+    }
+
+    #[test]
+    fn dataset_name_rejects_nul() {
+        let err = serde_json::from_str::<DatasetNameField>(r#"{"name":"a\u0000b"}"#).unwrap_err();
+        assert!(err.to_string().contains("invalid characters"));
+    }
+
+    #[test]
+    fn snapshot_name_rejects_at_sign() {
+        let err = serde_json::from_str::<SnapshotNameField>(r#"{"name":"snap@1"}"#).unwrap_err();
+        assert!(err.to_string().contains("invalid characters"));
+    }
+
+    #[test]
+    fn snapshot_name_rejects_leading_dash() {
+        let err = serde_json::from_str::<SnapshotNameField>(r#"{"name":"-bad"}"#).unwrap_err();
+        assert!(err.to_string().contains("dash"));
+    }
+
+    #[test]
+    fn positive_f64_ok() {
+        let v: PositiveF64Field = serde_json::from_str(r#"{"value":1.5}"#).unwrap();
+        assert!((v.value - 1.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn positive_f64_rejects_non_positive() {
+        let err = serde_json::from_str::<PositiveF64Field>(r#"{"value":0}"#).unwrap_err();
+        assert!(err.to_string().contains("positive"));
+    }
+
+    #[test]
+    fn positive_f64_rejects_non_finite() {
+        // JSON overflow or IEEE non-finite: serde_json may error at parse or our validator rejects inf.
+        assert!(serde_json::from_str::<PositiveF64Field>(r#"{"value":1e400}"#).is_err());
+    }
+
+    #[test]
+    fn positive_u64_ok() {
+        let v: PositiveU64Field = serde_json::from_str(r#"{"value":42}"#).unwrap();
+        assert_eq!(v.value, 42);
+    }
+
+    #[test]
+    fn positive_u64_rejects_zero() {
+        let err = serde_json::from_str::<PositiveU64Field>(r#"{"value":0}"#).unwrap_err();
+        assert!(err.to_string().contains("positive"));
+    }
+}

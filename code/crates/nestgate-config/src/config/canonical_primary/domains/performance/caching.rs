@@ -73,3 +73,34 @@ impl CachePerformanceConfig {
 
 /// Backward compatibility alias for `UnifiedCacheConfig`
 pub type UnifiedCacheConfig = CachePerformanceConfig;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let s = serde_json::to_string(v).expect("to_string");
+        let _: T = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn cache_performance_validate_serde() {
+        let c = CachePerformanceConfig::default();
+        c.validate().expect("validate");
+        serde_roundtrip(&c);
+    }
+
+    #[test]
+    fn warming_strategy_variants() {
+        for w in [
+            WarmingStrategy::Eager,
+            WarmingStrategy::Lazy,
+            WarmingStrategy::Predictive,
+        ] {
+            serde_roundtrip(&w);
+        }
+    }
+}

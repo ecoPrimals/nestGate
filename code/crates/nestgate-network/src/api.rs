@@ -62,7 +62,6 @@ type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 ///
 /// NOTE: HTTP removed per Concentrated Gap Architecture
 /// All orchestration now via Songbird gateway using Unix sockets
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 /// Orchestrationcapability
 pub struct OrchestrationCapability {
@@ -70,7 +69,6 @@ pub struct OrchestrationCapability {
     pub base_url: String,
     // HTTP client removed - use Unix sockets via Songbird
 }
-#[allow(dead_code)]
 impl OrchestrationCapability {
     /// Create a new Orchestration client
     ///
@@ -84,7 +82,6 @@ impl OrchestrationCapability {
     ///
     /// ✅ EVOLVED: Returns error instead of panicking via unimplemented!()
     /// HTTP removed per Concentrated Gap Architecture - use Unix sockets via Songbird
-    #[allow(dead_code)]
     pub fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
         let _ = service;
         Err(NestGateError::network_error(
@@ -95,7 +92,6 @@ impl OrchestrationCapability {
     /// Request port allocation from Orchestration
     ///
     /// ✅ EVOLVED: Returns error instead of panicking
-    #[allow(dead_code)]
     pub fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
         let _ = (service_name, port_type);
         Err(NestGateError::network_error(
@@ -106,7 +102,6 @@ impl OrchestrationCapability {
     /// Release port allocation
     ///
     /// ✅ EVOLVED: Returns error instead of panicking
-    #[allow(dead_code)]
     pub fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
         let _ = (service_name, port);
         Err(NestGateError::network_error(
@@ -117,7 +112,6 @@ impl OrchestrationCapability {
     /// Send health status to Orchestration
     ///
     /// ✅ EVOLVED: Returns error instead of panicking
-    #[allow(dead_code)]
     pub fn send_health_status(
         &self,
         service_name: &str,

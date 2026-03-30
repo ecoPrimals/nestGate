@@ -119,7 +119,7 @@ impl KubernetesDiscovery {
     /// # Errors
     ///
     /// Returns an error if the client cannot be constructed.
-    pub async fn new(builder: DiscoveryBuilder) -> Result<Self> {
+    pub fn new(builder: &DiscoveryBuilder) -> Result<Self> {
         let namespace = std::env::var("NAMESPACE")
             .or_else(|_| std::env::var("POD_NAMESPACE"))
             .unwrap_or_else(|_| "default".to_string());
@@ -198,8 +198,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
             tracing::debug!("k8s query for capability: {:?}", capability);
 
             let url = format!(
-                "{}/api/v1/namespaces/{}/services?labelSelector=capabilities={}",
-                api_server, namespace, capability
+                "{api_server}/api/v1/namespaces/{namespace}/services?labelSelector=capabilities={capability}"
             );
 
             let response = client.get(&url).await.map_err(|e| {
@@ -241,7 +240,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
                 (id.clone(), namespace)
             };
 
-            let url = format!("{}/api/v1/namespaces/{}/services/{}", api_server, ns, name);
+            let url = format!("{api_server}/api/v1/namespaces/{ns}/services/{name}");
 
             let response = client.get(&url).await.map_err(|e| {
                 nestgate_types::error::NestGateError::api_error(format!("k8s lookup failed: {e}"))
@@ -278,7 +277,7 @@ impl DiscoveryMechanism for KubernetesDiscovery {
                 (service_id.clone(), namespace)
             };
 
-            let url = format!("{}/api/v1/namespaces/{}/endpoints/{}", api_server, ns, name);
+            let url = format!("{api_server}/api/v1/namespaces/{ns}/endpoints/{name}");
 
             let response = client.get(&url).await.map_err(|e| {
                 nestgate_types::error::NestGateError::api_error(format!(

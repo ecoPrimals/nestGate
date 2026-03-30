@@ -534,4 +534,26 @@ mod tests {
         assert_eq!(HealthStatus::Critical.to_string(), "Critical");
         assert_eq!(HealthStatus::Unknown.to_string(), "Unknown");
     }
+
+    #[tokio::test]
+    async fn get_current_status_returns_enhanced_status() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
+        let monitor = ZfsHealthMonitor::new(pool_manager, dataset_manager).expect("monitor");
+        let status = monitor.get_current_status().await.expect("status");
+        assert!(matches!(
+            status.overall_health,
+            crate::manager::HealthState::Healthy
+        ));
+    }
+
+    #[tokio::test]
+    async fn stop_monitoring_when_inactive_is_ok() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
+        let mut monitor = ZfsHealthMonitor::new(pool_manager, dataset_manager).expect("monitor");
+        monitor.stop_monitoring().await.expect("stop");
+    }
 }

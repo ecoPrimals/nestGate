@@ -81,11 +81,12 @@ pub fn build_error_context(
     _details: String,      // Prefixed with underscore - planned for error enrichment
     _code: Option<String>, // Prefixed with underscore - planned for error code mapping
 ) -> crate::error::ErrorContext {
+    use std::borrow::Cow;
     use std::time::SystemTime;
 
     crate::error::ErrorContext {
-        operation: operation.to_string(),
-        component: "config_builder".to_string(),
+        operation: Cow::Owned(operation.to_string()),
+        component: Cow::Borrowed("config_builder"),
         timestamp: SystemTime::now(),
         metadata: std::collections::HashMap::new(),
         request_id: None,

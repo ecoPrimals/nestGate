@@ -121,3 +121,28 @@ pub type HealthMonitoringConfigCanonical =
 // Note: Keep using HealthMonitoringConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[allow(deprecated)]
+    #[test]
+    fn health_monitoring_config_default_roundtrip_json() {
+        let c = HealthMonitoringConfig::default();
+        let json = serde_json::to_string(&c).expect("serialize");
+        let back: HealthMonitoringConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.enabled, c.enabled);
+        assert_eq!(back.failure_threshold, c.failure_threshold);
+        assert_eq!(back.alert_endpoints, c.alert_endpoints);
+    }
+
+    #[allow(deprecated)]
+    #[test]
+    fn health_monitoring_config_production_sets_alerting() {
+        let p = HealthMonitoringConfig::production();
+        assert!(p.enabled);
+        assert!(p.alerting_enabled);
+        assert!(!p.alert_endpoints.is_empty());
+    }
+}

@@ -260,6 +260,7 @@ mod tests {
     use super::*;
     use serde_json::Value;
 
+    #[derive(Clone)]
     struct TestHandler;
 
     impl RpcMethodHandler for TestHandler {
@@ -308,5 +309,22 @@ mod tests {
         let handler = TestHandler;
         let server = TransportServer::new(config, handler).unwrap();
         server.shutdown();
+    }
+
+    #[tokio::test]
+    async fn start_unix_listener_then_shutdown_completes() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let sock = dir.path().join("nestgate-transport-test.sock");
+        let config = TransportConfig::new("fam").with_socket_path(&sock);
+        let server = TransportServer::new(config, TestHandler).unwrap();
+        let s = server.clone();
+        let handle = tokio::spawn(async move { s.start().await });
+        tokio::time::sleep(std::time::Duration::from_millis(80)).await;
+        server.shutdown();
+        let out = tokio::time::timeout(std::time::Duration::from_secs(3), handle)
+            .await
+            .expect("server task should finish");
+        assert!(out.is_ok());
+        assert!(out.unwrap().is_ok());
     }
 }

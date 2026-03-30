@@ -70,15 +70,11 @@ impl DiscoveryBuilder {
     /// 1. Kubernetes (if `KUBERNETES_SERVICE_HOST` set)
     /// 2. Consul (if `CONSUL_HTTP_ADDR` set)
     /// 3. mDNS (default fallback)
-    #[cfg_attr(
-        not(any(feature = "kubernetes", feature = "consul")),
-        allow(clippy::unused_async)
-    )]
-    pub async fn detect(self) -> Result<Box<dyn DiscoveryMechanism>> {
+    pub fn detect(self) -> Result<Box<dyn DiscoveryMechanism>> {
         // Check for kubernetes
         if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
             #[cfg(feature = "kubernetes")]
-            return Ok(Box::new(k8s::KubernetesDiscovery::new(self).await?));
+            return Ok(Box::new(k8s::KubernetesDiscovery::new(&self)?));
 
             #[cfg(not(feature = "kubernetes"))]
             tracing::info!("Kubernetes detected but feature not enabled, falling back");
@@ -87,7 +83,7 @@ impl DiscoveryBuilder {
         // Check for consul
         if std::env::var("CONSUL_HTTP_ADDR").is_ok() {
             #[cfg(feature = "consul")]
-            return Ok(Box::new(consul::ConsulDiscovery::new(self).await?));
+            return Ok(Box::new(consul::ConsulDiscovery::new(&self)?));
 
             #[cfg(not(feature = "consul"))]
             tracing::info!("Consul detected but feature not enabled, falling back");
@@ -104,13 +100,13 @@ impl DiscoveryBuilder {
 
     /// Build Consul discovery
     #[cfg(feature = "consul")]
-    pub async fn build_consul(self) -> Result<Box<dyn DiscoveryMechanism>> {
-        Ok(Box::new(consul::ConsulDiscovery::new(self).await?))
+    pub fn build_consul(self) -> Result<Box<dyn DiscoveryMechanism>> {
+        Ok(Box::new(consul::ConsulDiscovery::new(&self)?))
     }
 
     /// Build Kubernetes discovery
     #[cfg(feature = "kubernetes")]
-    pub async fn build_kubernetes(self) -> Result<Box<dyn DiscoveryMechanism>> {
-        Ok(Box::new(k8s::KubernetesDiscovery::new(self).await?))
+    pub fn build_kubernetes(self) -> Result<Box<dyn DiscoveryMechanism>> {
+        Ok(Box::new(k8s::KubernetesDiscovery::new(&self)?))
     }
 }

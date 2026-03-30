@@ -337,6 +337,17 @@ mod tests {
     }
 
     #[test]
+    fn test_config_constructors() {
+        let e = NestGateUnifiedError::config("bad");
+        assert!(matches!(e, NestGateUnifiedError::Configuration(_)));
+        let e2 = NestGateUnifiedError::config_with_field("port", "invalid");
+        assert!(matches!(e2, NestGateUnifiedError::Configuration(_)));
+        if let NestGateUnifiedError::Configuration(d) = e2 {
+            assert_eq!(d.field.as_ref(), "port");
+        }
+    }
+
+    #[test]
     fn test_status_codes() {
         let service_error = NestGateUnifiedError::service_unavailable("test");
         let not_found_error = NestGateUnifiedError::not_found("test");

@@ -2,6 +2,7 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     test,
     allow(clippy::panic, clippy::too_many_lines, clippy::cognitive_complexity,)
@@ -64,6 +65,8 @@ pub mod adaptive_optimization;
 pub mod safe_concurrent; // ✅ 100% SAFE - Zero unsafe code
 pub mod simd;
 pub mod zero_copy_networking;
+
+pub use zero_copy_networking::{ZeroCopyBuffer, ZeroCopyNetworkInterface, ZeroCopyTxPayload};
 
 // Re-export main types
 pub use adaptive_optimization::{

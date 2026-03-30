@@ -542,11 +542,21 @@ impl RealTimePerformanceMonitor {
     pub(crate) fn test_parse_sizevalue(size_str: &str) -> Result<u64> {
         Self::parse_sizevalue(size_str)
     }
+
+    pub(crate) async fn test_analyze_performance_trends(&self) -> Result<()> {
+        self.analyze_performance_trends().await
+    }
 }
 
 #[cfg(test)]
 mod regression_tests {
+    use super::super::types::{
+        AccessPattern, ArcStatistics, SystemMemoryUsage, ZfsDatasetMetrics, ZfsPerformanceMetrics,
+        ZfsPoolMetrics,
+    };
     use super::{AlertThresholds, RealTimePerformanceMonitor};
+    use std::collections::HashMap;
+    use std::time::SystemTime;
 
     #[test]
     fn calculate_trend_short_and_linear() {
@@ -628,5 +638,111 @@ mod regression_tests {
     async fn default_monitor_matches_new() {
         let a = RealTimePerformanceMonitor::default();
         let _ = a.get_metrics_cache();
+    }
+
+    fn sample_metrics_snapshot(
+        pool_name: &str,
+        arc_hit: f64,
+        mem_used_ratio: f64,
+    ) -> ZfsPerformanceMetrics {
+        let mut pool_metrics = HashMap::new();
+        pool_metrics.insert(
+            pool_name.to_string(),
+            ZfsPoolMetrics {
+                pool_name: pool_name.to_string(),
+                read_ops: 100.0,
+                write_ops: 50.0,
+                read_bandwidth: 10.0,
+                write_bandwidth: 5.0,
+                latency: 120.0,
+                cache_hit_ratio: 0.5,
+                fragmentation: 55.0,
+            },
+        );
+        let total = 10_000_u64;
+        let used = (total as f64 * mem_used_ratio) as u64;
+        ZfsPerformanceMetrics {
+            timestamp: SystemTime::UNIX_EPOCH,
+            pool_metrics,
+            dataset_metrics: HashMap::from([(
+                "tank/d0".to_string(),
+                ZfsDatasetMetrics {
+                    dataset_name: "tank/d0".to_string(),
+                    access_pattern: AccessPattern::Mixed,
+                    dedup_ratio: 1.0,
+                    record_size: 128 * 1024,
+                },
+            )]),
+            system_memory: SystemMemoryUsage {
+                total,
+                used,
+                available: total.saturating_sub(used),
+            },
+            arc_stats: ArcStatistics {
+                hit_ratio: arc_hit,
+                size: 1,
+                target_size: 2,
+                miss_ratio: 1.0 - arc_hit,
+            },
+        }
+    }
+
+    #[tokio::test]
+    async fn analyze_performance_trends_insufficient_points_is_ok() {
+        let m = RealTimePerformanceMonitor::new();
+        let cache = m.get_metrics_cache();
+        {
+            let mut w = cache.write().await;
+            for i in 0..3 {
+                w.insert(
+                    format!("m{i}"),
+                    sample_metrics_snapshot("p0", 0.9 - (i as f64) * 0.01, 0.5),
+                );
+            }
+        }
+        m.test_analyze_performance_trends().await.expect("analyze");
+    }
+
+    #[tokio::test]
+    async fn analyze_performance_trends_full_branch_exercise() {
+        let m = RealTimePerformanceMonitor::new();
+        let cache = m.get_metrics_cache();
+        {
+            let mut w = cache.write().await;
+            w.clear();
+            for i in 0..5 {
+                w.insert(
+                    format!("m{i}"),
+                    sample_metrics_snapshot(
+                        "heavy",
+                        0.5 - (i as f64) * 0.02,
+                        0.92 + (i as f64) * 0.001,
+                    ),
+                );
+            }
+        }
+        m.test_analyze_performance_trends().await.expect("analyze");
+    }
+
+    #[test]
+    fn zfs_performance_metrics_serde_roundtrip() {
+        let m = sample_metrics_snapshot("z", 0.8, 0.5);
+        let json = serde_json::to_string(&m).expect("serialize");
+        let back: ZfsPerformanceMetrics = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.pool_metrics.len(), m.pool_metrics.len());
+        assert!((back.arc_stats.hit_ratio - m.arc_stats.hit_ratio).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn access_pattern_serde_roundtrip() {
+        for p in [
+            AccessPattern::Sequential,
+            AccessPattern::Random,
+            AccessPattern::Mixed,
+        ] {
+            let j = serde_json::to_string(&p).unwrap();
+            let back: AccessPattern = serde_json::from_str(&j).unwrap();
+            assert_eq!(back, p);
+        }
     }
 }

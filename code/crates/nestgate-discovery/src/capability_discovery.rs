@@ -431,4 +431,90 @@ mod tests {
         };
         assert_eq!(s.clone().size, 3);
     }
+
+    #[tokio::test]
+    async fn find_roundtrip_over_unix_ipc_mock() {
+        use serde_json::json;
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        use tokio::net::UnixListener;
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("orch.sock");
+        let path_str = path.to_string_lossy().to_string();
+
+        let _ = std::fs::remove_file(&path);
+        let listener = UnixListener::bind(&path).unwrap();
+
+        let server = tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut line = String::new();
+            let mut br = BufReader::new(&mut stream);
+            br.read_line(&mut line).await.unwrap();
+            let response = json!({
+                "jsonrpc": "2.0",
+                "result": {
+                    "services": [{
+                        "name": "mock-svc",
+                        "endpoint": "/tmp/mock.sock",
+                        "version": "9.9.9"
+                    }]
+                },
+                "id": 1
+            });
+            stream
+                .write_all(format!("{}\n", serde_json::to_string(&response).unwrap()).as_bytes())
+                .await
+                .unwrap();
+        });
+
+        let client = JsonRpcClient::connect_unix(&path_str).await.unwrap();
+        let mut discovery = CapabilityDiscovery::new(client);
+        let ep = discovery.find("crypto").await.expect("find");
+        assert_eq!(ep.capability, "crypto");
+        assert_eq!(ep.name, "mock-svc");
+        assert_eq!(ep.endpoint, "/tmp/mock.sock");
+        assert_eq!(ep.version, "9.9.9");
+
+        let ep2 = discovery.find("crypto").await.expect("cache");
+        assert_eq!(ep.endpoint, ep2.endpoint);
+
+        discovery.clear_cache();
+        assert_eq!(discovery.cache_stats().size, 0);
+
+        server.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn find_errors_when_services_empty() {
+        use serde_json::json;
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        use tokio::net::UnixListener;
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("orch2.sock");
+        let path_str = path.to_string_lossy().to_string();
+        let _ = std::fs::remove_file(&path);
+        let listener = UnixListener::bind(&path).unwrap();
+
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut line = String::new();
+            let mut br = BufReader::new(&mut stream);
+            br.read_line(&mut line).await.unwrap();
+            let response = json!({
+                "jsonrpc": "2.0",
+                "result": { "services": [] },
+                "id": 1
+            });
+            stream
+                .write_all(format!("{}\n", serde_json::to_string(&response).unwrap()).as_bytes())
+                .await
+                .unwrap();
+        });
+
+        let client = JsonRpcClient::connect_unix(&path_str).await.unwrap();
+        let mut discovery = CapabilityDiscovery::new(client);
+        let err = discovery.find("missing").await.expect_err("empty services");
+        assert!(err.to_string().contains("No service") || err.to_string().contains("missing"));
+    }
 }

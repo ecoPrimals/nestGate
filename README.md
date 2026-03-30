@@ -2,15 +2,17 @@
 
 **Version**: 4.7.0-dev  
 **Build**: 25/25 workspace members compiling, 0 errors  
-**Tests**: 8,177 passing (lib), 0 failures  
-**Coverage**: 77.1% line (workspace `--lib`, llvm-cov)  
-**Clippy**: ZERO errors — full workspace `cargo clippy --workspace --all-targets -- -D warnings` clean  
-**Doctests**: Zero failures  
+**Tests**: 1,457 lib tests passing, 0 failures  
+**Coverage**: 80.25% line (workspace `--lib`, llvm-cov)  
+**Clippy**: ZERO errors — full workspace `cargo clippy --workspace --all-targets --all-features -- -D warnings` clean  
+**Docs**: Zero warnings (`cargo doc --workspace --no-deps`)  
 **Production TODO/FIXME**: Zero  
 **Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
+**ring dependency**: Eliminated — TLS via `aws-lc-rs` (no `ring` in `cargo tree`)  
+**sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 **Binary (musl)**: ~4.7MB static (`x86_64-unknown-linux-musl`)  
-**File size**: All files under 1,000 lines (largest: 987)  
-**Last Updated**: March 29, 2026
+**File size**: All files under 1,000 lines  
+**Last Updated**: March 30, 2026
 
 ---
 
@@ -112,15 +114,17 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Area | Status |
 |------|--------|
 | Build | 25/25 workspace members, 0 errors |
-| Clippy | ZERO errors; full workspace `-D warnings` clean |
+| Clippy | ZERO errors; full workspace `--all-features -D warnings` clean |
 | Format | Clean |
-| Tests | 8,177 lib tests passing, 0 failures, 64 ignored |
-| Coverage | 77.1% line (llvm-cov) |
-| Doctests | Zero failures |
+| Tests | 1,457 lib tests passing, 0 failures, 48 ignored |
+| Coverage | 80.25% line (llvm-cov) — wateringHole 80% minimum met |
+| Docs | Zero warnings (`cargo doc --workspace --no-deps`) |
 | Production TODO/FIXME | Zero |
 | Production unwrap/expect | Zero |
 | Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
-| File size limit (1000 lines) | All compliant (largest: 987) |
+| ring | Eliminated — TLS via `aws-lc-rs` provider |
+| sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
+| File size limit (1000 lines) | All compliant |
 | Env-var race conditions | Fixed (temp-env + serial_test) |
 
 ### Compliance (wateringHole)
@@ -128,16 +132,16 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Standard | Status |
 |----------|--------|
 | UniBin | Pass — single `nestgate` binary |
-| ecoBin | Pass — pure Rust, socket-only default |
+| ecoBin | Pass — pure Rust, socket-only default, no `ring` |
 | JSON-RPC 2.0 | Pass |
 | tarpc | Pass — wired into daemon (feature-gated) |
-| Semantic naming | Pass — `health.*`, `storage.*`, `crypto.*`, `capabilities.*` compliant |
-| Semantic router | Compiled and wired |
-| sysinfo evolution | ecoBin: Linux `/proc` first, sysinfo fallback |
+| Semantic naming | Pass — `health.*`, `storage.*`, `crypto.*`, `capabilities.*` |
+| sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
+| Coverage (80%+) | Pass — 80.25% line (wateringHole minimum met) |
 | File size (<1000) | Pass |
-| Sovereignty | Evolved — capability-based discovery |
-| mDNS Discovery | Evolved — real mdns-sd with cache fallback |
-| Crypto delegation | Evolved — capability-based, compiles clean |
+| Sovereignty | Pass — capability-based discovery, zero hardcoded primals |
+| mDNS Discovery | Pass — real mdns-sd with cache fallback |
+| Crypto delegation | Pass — capability-based, compiles clean |
 
 ### Platform Support
 
@@ -184,7 +188,7 @@ cargo doc --no-deps --workspace
 - **Language**: Rust (stable toolchain)
 - **Async Runtime**: Tokio
 - **HTTP**: Axum
-- **Serialization**: Serde, serde_json, serde_yaml_ng
+- **Serialization**: Serde, serde_json
 - **Concurrency**: DashMap, std::sync::LazyLock, pin-project
 - **Security**: RustCrypto stack (AES-256-GCM, ed25519-dalek, hmac, argon2, sha2)
 - **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0)
@@ -231,11 +235,9 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 1. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 2. Warm/cold tier data cycling (NVMe SSD warm, HDD cold)
-3. Push test coverage toward 90% target
+3. Push test coverage toward 90% target (currently 80.25%)
 4. Wire `data.*` and `nat.*` semantic router routes
-5. Evolve remaining dev stubs to full implementations
-6. Cross-gate replication (multi-node data orchestration)
-7. Evolve `unsafe-libyaml` dep to pure Rust YAML parser
+5. Cross-gate replication (multi-node data orchestration)
 
 For details: See [STATUS.md](./STATUS.md).
 
@@ -252,4 +254,4 @@ free use rights for personal, educational, and non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: March 29, 2026
+**Latest**: March 30, 2026

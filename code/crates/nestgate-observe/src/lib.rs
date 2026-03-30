@@ -3,6 +3,7 @@
 
 //! Observability, diagnostics, and event system for `NestGate`.
 
+#![warn(missing_docs)]
 #![cfg_attr(
     test,
     allow(
@@ -16,11 +17,10 @@
     )
 )]
 
-mod stubs;
+mod compat;
 
-pub use stubs::canonical_types;
-pub use stubs::traits;
+pub use compat::canonical_types;
+pub use compat::traits;
 
 pub mod diagnostics;
-pub mod events;
 pub mod observability;

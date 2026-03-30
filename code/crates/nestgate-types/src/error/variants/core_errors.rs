@@ -924,7 +924,7 @@ impl NestGateUnifiedError {
 
     /// Create a simple error from a message string.
     ///
-    /// Convenience constructor that wraps the message as an [`Internal`] error
+    /// Convenience constructor that wraps the message as an `Internal` error
     /// with automatic module tracking. Prefer domain-specific constructors
     /// (`configuration_error`, `network_error`, etc.) when the error category
     /// is known; use `simple` for quick prototyping and macro-generated errors.

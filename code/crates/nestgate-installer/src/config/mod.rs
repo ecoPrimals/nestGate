@@ -51,7 +51,6 @@ impl Default for InstallerConfig {
     }
 }
 
-#[allow(dead_code)] // Allow unused methods in infrastructure code
 impl InstallerConfig {
     /// Create a development configuration
     #[must_use]
@@ -83,7 +82,6 @@ impl InstallerConfig {
 
 /// Installer-specific configuration extensions
 /// Domain-specific fields that don't belong in unified base configs
-#[allow(dead_code)] // Reserved for future installer extensions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct InstallerExtensions {
     /// Installation mode and behavior
@@ -95,7 +93,6 @@ pub struct InstallerExtensions {
     /// Enable verbose output
     pub verbose: bool,
 }
-#[allow(dead_code)] // Reserved for future installation modes
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum InstallMode {
     #[default]
@@ -124,7 +121,6 @@ pub mod installer_config_factory {
 
     /// Production configuration
     #[must_use]
-    #[allow(dead_code)] // Reserved for future production config
     pub fn production() -> InstallerConfig {
         InstallerConfig {
             base_config: NestGateCanonicalConfig::default(),
@@ -137,9 +133,7 @@ pub mod installer_config_factory {
 // ==================== SECTION ====================
 
 /// Installer-specific configuration utilities
-#[allow(dead_code)] // Allow unused utility struct
 pub struct InstallerConfigUtils;
-#[allow(dead_code)] // Allow unused utility methods
 impl InstallerConfigUtils {
     /// Function description
     ///

@@ -14,8 +14,8 @@
 //!
 //! # Modules
 //!
-//! - [`traits`](self::traits) - Core security provider traits
-//! - [`types`](self::types) - Security types and structures (~120 lines)
+//! - [`traits`] - Core security provider traits
+//! - [`types`] - Security types and structures (~120 lines)
 //! - `authentication` - Authentication operations (~180 lines)
 //! - `config` - Configuration management (~80 lines)
 //! - `metadata` - Metadata and capabilities (~60 lines)

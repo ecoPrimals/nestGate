@@ -17,7 +17,7 @@ gethostname = { workspace = true }
 etcetera = { workspace = true }
 tracing = { workspace = true }
 
-# sysinfo: non-Linux fallback for physical CPU count
+# sysinfo: optional fallback in `linux_proc::physical_cpu_count` on non-Linux (Linux uses `/proc`).
 sysinfo = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -25,5 +25,5 @@ temp-env = { workspace = true }
 tokio-test = { workspace = true }
 
 [features]
-default = ["sysinfo"]
+default = []
 sysinfo = ["dep:sysinfo"]

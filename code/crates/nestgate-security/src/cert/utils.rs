@@ -306,7 +306,7 @@ pub mod modern {
     }
 
     #[allow(dead_code)]
-    async fn generate_certificate_modern(config: &CertificateConfig) -> Result<Certificate> {
+    fn generate_certificate_modern(config: &CertificateConfig) -> Certificate {
         // Modern implementation with dynamic discovery
 
         // Generate a self-signed certificate for development/testing
@@ -323,7 +323,7 @@ pub mod modern {
 
         // For development, create a basic certificate structure
         // Production implementation would use proper certificate generation libraries
-        Ok(Certificate {
+        Certificate {
             id: format!("cert-{}", config.principal),
             cert_type: crate::cert::types::CertificateType::Server,
             principal: config.principal.clone(),
@@ -336,14 +336,14 @@ pub mod modern {
             data: vec![1, 2, 3, 4], // Placeholder - would be actual certificate data
             fingerprint: format!("{:x}", 67890), // Placeholder fingerprint
             metadata,
-        })
+        }
     }
 
     #[allow(dead_code)]
-    async fn validate_certificate_against_capabilities(
+    fn validate_certificate_against_capabilities(
         cert: &Certificate,
         capabilities: &std::collections::HashMap<String, String>,
-    ) -> Result<bool> {
+    ) -> bool {
         // Modern validation implementation with comprehensive checks
         tracing::debug!("Validating certificate against capabilities");
 
@@ -353,14 +353,14 @@ pub mod modern {
             && not_after_time < SystemTime::now()
         {
             tracing::warn!("Certificate expired at: {:?}", cert.not_after);
-            return Ok(false);
+            return false;
         }
 
         if let Ok(not_before_time) = parse_system_time(&cert.not_before)
             && not_before_time > SystemTime::now()
         {
             tracing::warn!("Certificate not yet valid until: {:?}", cert.not_before);
-            return Ok(false);
+            return false;
         }
 
         // 2. Validate required capabilities
@@ -372,7 +372,7 @@ pub mod modern {
                 cert.principal,
                 required_subject
             );
-            return Ok(false);
+            return false;
         }
 
         // 3. Check for required extensions (SANs, key usage, etc.) via metadata
@@ -383,14 +383,14 @@ pub mod modern {
                 .any(|value| value.contains(required_san));
             if !has_required_san {
                 tracing::warn!("Certificate missing required SAN: {}", required_san);
-                return Ok(false);
+                return false;
             }
         }
 
         // 4. Validate certificate data (simplified for development)
         if cert.data.is_empty() {
             tracing::warn!("Certificate has empty data");
-            return Ok(false);
+            return false;
         }
 
         // 5. Check certificate chain if required
@@ -406,7 +406,7 @@ pub mod modern {
             "Certificate validation successful for principal: {}",
             cert.principal
         );
-        Ok(true)
+        true
     }
 
     #[allow(dead_code)]

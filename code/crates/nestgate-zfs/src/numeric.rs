@@ -46,3 +46,33 @@ pub const fn u64_to_f64_approximate(x: u64) -> f64 {
     let v: f64 = x as f64;
     v
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn f64_to_u64_saturating_non_positive_and_non_finite_yield_zero() {
+        assert_eq!(f64_to_u64_saturating(f64::NAN), 0);
+        assert_eq!(f64_to_u64_saturating(f64::INFINITY), 0);
+        assert_eq!(f64_to_u64_saturating(f64::NEG_INFINITY), 0);
+        assert_eq!(f64_to_u64_saturating(-1.0), 0);
+        assert_eq!(f64_to_u64_saturating(0.0), 0);
+    }
+
+    #[test]
+    fn f64_to_u64_saturating_clamps_and_truncates() {
+        assert_eq!(f64_to_u64_saturating(u64::MAX as f64), u64::MAX);
+        assert_eq!(f64_to_u64_saturating((u64::MAX as f64) * 2.0), u64::MAX);
+        assert_eq!(f64_to_u64_saturating(42.7), 42);
+        assert_eq!(f64_to_u64_saturating(1.0), 1);
+    }
+
+    #[test]
+    fn usize_and_u64_to_f64() {
+        assert_eq!(usize_to_f64_lossy(0), 0.0);
+        assert_eq!(usize_to_f64_lossy(1024), 1024.0);
+        assert_eq!(u64_to_f64_approximate(0), 0.0);
+        assert_eq!(u64_to_f64_approximate(u64::MAX), u64::MAX as f64);
+    }
+}

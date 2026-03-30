@@ -108,3 +108,29 @@ pub type DatasetAutomationConfigCanonical =
 // Note: Keep using DatasetAutomationConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    #![allow(deprecated)]
+
+    use super::*;
+
+    #[test]
+    fn dataset_automation_config_default_and_serde() {
+        let c = DatasetAutomationConfig::default();
+        assert!(c.enabled);
+        let j = serde_json::to_string(&c).expect("serialize");
+        let d: DatasetAutomationConfig = serde_json::from_str(&j).expect("deserialize");
+        assert_eq!(d.scan_interval_seconds, c.scan_interval_seconds);
+    }
+
+    #[test]
+    fn ai_automation_settings_default_production_and_serde() {
+        let a = AiAutomationSettings::default();
+        let p = AiAutomationSettings::production();
+        assert!(p.ai_enabled);
+        assert!(p.confidence_threshold > a.confidence_threshold);
+        let j = serde_json::to_string(&a).expect("serialize");
+        let _: AiAutomationSettings = serde_json::from_str(&j).expect("deserialize");
+    }
+}

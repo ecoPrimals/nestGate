@@ -91,3 +91,74 @@ impl CertificateManager {
 pub fn create_default_certificate_manager() -> Result<CertificateManager> {
     CertificateManager::new(NestGateCanonicalConfig::default())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_types::NestGateError;
+
+    #[test]
+    fn new_errors_when_no_adapter_env() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
+                ("NESTGATE_API_URL", None::<&str>),
+            ],
+            || {
+                let err = CertificateManager::new(NestGateCanonicalConfig::default())
+                    .err()
+                    .expect("expected configuration error");
+                match err {
+                    NestGateError::Configuration(d) => {
+                        assert_eq!(d.field, "adapter_endpoint");
+                    }
+                    ref other => panic!("unexpected {other:?}"),
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn get_certificate_info_with_explicit_adapter_endpoint() {
+        temp_env::with_var(
+            "NESTGATE_ADAPTER_ENDPOINT",
+            Some("unix:///tmp/nestgate-adapter.sock"),
+            || {
+                let m = CertificateManager::new(NestGateCanonicalConfig::default()).unwrap();
+                let info = m.get_certificate_info("cert-1").unwrap();
+                assert_eq!(info.get("id"), Some(&"cert-1".to_string()));
+                assert_eq!(info.get("status"), Some(&"valid".to_string()));
+            },
+        );
+    }
+
+    #[test]
+    fn create_default_certificate_manager_uses_api_url_fallback() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
+                ("NESTGATE_API_URL", Some("http://127.0.0.1:8080")),
+            ],
+            || {
+                let m = create_default_certificate_manager().unwrap();
+                let info = m.get_certificate_info("x").unwrap();
+                assert_eq!(info.get("status"), Some(&"valid".to_string()));
+            },
+        );
+    }
+
+    #[test]
+    fn new_trims_trailing_slash_on_api_url_for_adapter_path() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
+                ("NESTGATE_API_URL", Some("https://api.example.com/v1///")),
+            ],
+            || {
+                let m = CertificateManager::new(NestGateCanonicalConfig::default()).unwrap();
+                let info = m.get_certificate_info("id").unwrap();
+                assert_eq!(info.get("id"), Some(&"id".to_string()));
+            },
+        );
+    }
+}

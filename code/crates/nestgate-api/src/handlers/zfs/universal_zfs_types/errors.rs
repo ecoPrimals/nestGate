@@ -366,3 +366,103 @@ impl From<UniversalZfsError> for NestGateError {
         }
     }
 }
+
+#[cfg(test)]
+mod universal_zfs_error_tests {
+    use super::*;
+    use nestgate_core::error::NestGateError;
+    use std::time::Duration;
+
+    #[test]
+    fn constructors_and_to_error_data_cover_variants() {
+        let reset = SystemTime::UNIX_EPOCH + Duration::from_secs(1_700_000_000);
+        let rli = RateLimitInfo {
+            limit: 10,
+            window: Duration::from_secs(60),
+            current_usage: 3,
+            reset_time: reset,
+        };
+
+        let cases: Vec<UniversalZfsError> = vec![
+            UniversalZfsError::service_unavailable("svc"),
+            UniversalZfsError::timeout("op", Duration::from_millis(12)),
+            UniversalZfsError::configuration("cfg"),
+            UniversalZfsError::backend("b", "m"),
+            UniversalZfsError::invalid_input("bad"),
+            UniversalZfsError::not_found("/p"),
+            UniversalZfsError::circuit_breaker_open("cb"),
+            UniversalZfsError::rate_limit_exceeded("rl", Some(rli.clone())),
+            UniversalZfsError::internal("in"),
+            UniversalZfsError::PoolOperationFailed {
+                message: "p".to_string(),
+            },
+            UniversalZfsError::DatasetOperationFailed {
+                message: "d".to_string(),
+            },
+            UniversalZfsError::SnapshotOperationFailed {
+                message: "s".to_string(),
+            },
+        ];
+
+        for err in cases {
+            let data = err.to_error_data();
+            assert!(!data.message.is_empty());
+            let _: UniversalZfsErrorData = data;
+        }
+
+        let rl_only_msg = UniversalZfsError::rate_limit_exceeded("x", None);
+        assert!(rl_only_msg.to_error_data().rate_limit_info.is_none());
+    }
+
+    #[test]
+    fn from_io_and_tokio_elapsed() {
+        let io_err = std::io::Error::other("disk");
+        let u1: UniversalZfsError = io_err.into();
+        assert!(matches!(u1, UniversalZfsError::Backend { .. }));
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_time()
+            .build()
+            .expect("runtime");
+        rt.block_on(async {
+            let res =
+                tokio::time::timeout(Duration::from_nanos(1), std::future::pending::<()>()).await;
+            let elapsed = res.expect_err("timeout");
+            let u2: UniversalZfsError = elapsed.into();
+            assert!(matches!(u2, UniversalZfsError::Timeout { .. }));
+        });
+    }
+
+    #[test]
+    fn into_nest_gate_error_maps_all_variants() {
+        let reset = SystemTime::UNIX_EPOCH + Duration::from_secs(1_700_000_000);
+        let rli = RateLimitInfo {
+            limit: 1,
+            window: Duration::from_secs(1),
+            current_usage: 0,
+            reset_time: reset,
+        };
+
+        let _: NestGateError = UniversalZfsError::service_unavailable("x").into();
+        let _: NestGateError = UniversalZfsError::circuit_breaker_open("b").into();
+        let _: NestGateError = UniversalZfsError::rate_limit_exceeded("m", Some(rli)).into();
+        let _: NestGateError = UniversalZfsError::timeout("op", Duration::from_secs(1)).into();
+        let _: NestGateError = UniversalZfsError::configuration("c").into();
+        let _: NestGateError = UniversalZfsError::backend("be", "msg").into();
+        let _: NestGateError = UniversalZfsError::invalid_input("i").into();
+        let _: NestGateError = UniversalZfsError::not_found("/n").into();
+        let _: NestGateError = UniversalZfsError::internal("i").into();
+        let _: NestGateError = UniversalZfsError::PoolOperationFailed {
+            message: "p".to_string(),
+        }
+        .into();
+        let _: NestGateError = UniversalZfsError::DatasetOperationFailed {
+            message: "d".to_string(),
+        }
+        .into();
+        let _: NestGateError = UniversalZfsError::SnapshotOperationFailed {
+            message: "s".to_string(),
+        }
+        .into();
+    }
+}

@@ -3,8 +3,9 @@
 
 //! Linux system metrics via `/proc` and [`rustix::fs::statvfs`].
 //!
-//! ecoBin v3.0 evolution: primary path on Linux; [`sysinfo`] remains the non-Linux / fallback
-//! implementation in call sites until fully removed.
+//! Primary path on Linux (pure Rust + rustix). The optional `sysinfo` crate feature is only for
+//! [`physical_cpu_count`] on non-Linux; metrics in `nestgate-observe` use `/proc` first, then
+//! `sysinfo` only when the `sysinfo` feature is enabled (see that crate’s `Cargo.toml`).
 
 use std::io;
 
@@ -105,7 +106,7 @@ fn physical_cpu_count_from_proc_cpuinfo() -> Option<usize> {
     }
 }
 
-/// Best-effort physical CPU core count: Linux `/proc/cpuinfo` first, then [`sysinfo::System`] (cross-platform fallback).
+/// Best-effort physical CPU core count: Linux `/proc/cpuinfo` first, then `sysinfo::System` (cross-platform fallback).
 #[must_use]
 pub fn physical_cpu_count() -> usize {
     #[cfg(target_os = "linux")]

@@ -12,3 +12,21 @@ pub type MiddlewareConfig = NestGateCanonicalConfig;
 pub fn create_default_config() -> MiddlewareConfig {
     NestGateCanonicalConfig::default()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_default_config_smoke() {
+        let cfg = create_default_config();
+        assert!(!cfg.system.instance_name.is_empty());
+    }
+
+    #[test]
+    fn two_defaults_are_consistent() {
+        let a = create_default_config();
+        let b = create_default_config();
+        assert_eq!(a.system.instance_name, b.system.instance_name);
+    }
+}

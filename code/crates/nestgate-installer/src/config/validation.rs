@@ -4,10 +4,8 @@
 use super::platform::SystemRequirements;
 /// Pre-install checks, post-install validation, health monitoring, and system requirements validation
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 // Migration utilities no longer needed - using canonical configurations
 
-#[allow(dead_code)] // Reserved for future validation settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ValidationSettings {
     /// System requirements
@@ -19,7 +17,6 @@ pub struct ValidationSettings {
     /// Health monitoring
     pub health_checks: HealthCheckSettings,
 }
-#[allow(dead_code)] // Reserved for future pre-install checks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreInstallCheckSettings {
     /// Check system requirements
@@ -43,7 +40,6 @@ pub struct PreInstallCheckSettings {
     /// Validate checksums during installation
     pub validate_checksums: bool,
 }
-#[allow(dead_code)] // Reserved for future post-install validation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostInstallValidationSettings {
     /// Validate service installation
@@ -55,7 +51,6 @@ pub struct PostInstallValidationSettings {
     /// Run smoke tests
     pub run_smoke_tests: bool,
 }
-#[allow(dead_code)] // Reserved for future health check settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckSettings {
     /// Enable health checks
@@ -110,90 +105,26 @@ impl Default for HealthCheckSettings {
     }
 }
 
-/// Validation utilities for installer configuration
-pub mod config_validation {
-    use super::{PathBuf, SystemRequirements};
-    use crate::config::InstallerConfig;
-    /// Validate installer-specific configuration
-    #[allow(dead_code)] // Reserved for future installer validation features
-    /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-    pub fn validate_installer_config(config: &InstallerConfig) -> Result<(), String> {
-        // Note: Base validation removed as validate_domain_config doesn't exist in nestgate-core
-        // Base configuration validation completed
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        // Use canonical config structure - system config instead of domains
-        let system_config = &config.base_config.system;
-
-        // Installer-specific validations
-        if !system_config.data_dir.is_absolute() {
-            return Err("Installation directory must be an absolute path".to_string());
-        }
-
-        // Note: config_dir doesn't exist in canonical config - using working_directory
-
-        // CANONICAL MODERNIZATION: System requirements validation simplified
-        // Note: system requirements not in canonical config yet - skip for now
-
-        Ok(())
+    #[test]
+    fn validation_settings_default_roundtrip_json() {
+        let v = ValidationSettings::default();
+        let json = serde_json::to_string(&v).unwrap();
+        let back: ValidationSettings = serde_json::from_str(&json).unwrap();
+        assert!(back.pre_install_checks.check_network);
+        assert_eq!(back.health_checks.retry_attempts, 3);
     }
 
-    /// Validate system requirements against current system
-    #[allow(dead_code)]
-    /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-    pub fn validate_system_requirements(requirements: &SystemRequirements) -> Result<(), String> {
-        // This would typically check actual system resources
-        // For now, we'll do basic validation of the requirements structure
-
-        if requirements.min_ram_mb == 0 {
-            return Err("Minimum RAM must be greater than 0".to_string());
-        }
-
-        if requirements.min_disk_space_mb == 0 {
-            return Err("Minimum disk space must be greater than 0".to_string());
-        }
-
-        if requirements.min_cpu_cores == 0 {
-            return Err("Minimum CPU cores must be greater than 0".to_string());
-        }
-        Ok(())
-    }
-
-    /// Validate directory paths
-    #[allow(dead_code)]
-    /// Function description
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if the operation fails.
-    pub fn validate_installation_paths(
-        install_dir: &PathBuf,
-        config_dir: &PathBuf,
-        data_dir: &PathBuf,
-    ) -> Result<(), String> {
-        if !install_dir.is_absolute() {
-            return Err("Install directory must be absolute".to_string());
-        }
-
-        if !config_dir.is_absolute() {
-            return Err("Config directory must be absolute".to_string());
-        }
-
-        if !data_dir.is_absolute() {
-            return Err("Data directory must be absolute".to_string());
-        }
-
-        // Check for conflicts
-        if install_dir == config_dir || install_dir == data_dir || config_dir == data_dir {
-            return Err("Installation directories must be unique".to_string());
-        }
-        Ok(())
+    #[test]
+    fn nested_defaults_smoke() {
+        let p = PreInstallCheckSettings::default();
+        assert!(p.validate_checksums);
+        let post = PostInstallValidationSettings::default();
+        assert!(post.run_smoke_tests);
+        let h = HealthCheckSettings::default();
+        assert!(h.enabled);
     }
 }

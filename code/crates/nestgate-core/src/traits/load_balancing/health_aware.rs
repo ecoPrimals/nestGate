@@ -5,7 +5,6 @@
 //! Health Aware functionality and utilities.
 // Health-aware load balancer wrapper that filters unhealthy services
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::core::{LoadBalancer, LoadBalancerStats};
@@ -114,7 +113,7 @@ impl<L: LoadBalancer> LoadBalancer for HealthAwareLoadBalancer<L> {
     }
 
     /// Updates  Weights
-    async fn update_weights(&self, weights: HashMap<String, f64>) -> Result<()> {
+    async fn update_weights(&self, weights: &[(&str, f64)]) -> Result<()> {
         self.inner.update_weights(weights).await
     }
 

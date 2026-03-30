@@ -375,6 +375,29 @@ mod tests {
         let result = creator.create_pool_safe(&config).await;
         assert!(result.is_err());
     }
+
+    #[tokio::test]
+    async fn dry_run_import_pool_returns_success_message() {
+        let creator = PoolCreator::new_dry_run();
+        let r = creator.import_pool("imported-pool").await.expect("import");
+        assert!(r.success);
+        assert!(r.message.contains("Dry run"));
+    }
+
+    #[tokio::test]
+    async fn dry_run_destroy_pool_ok() {
+        let creator = PoolCreator::new_dry_run();
+        creator
+            .destroy_pool("gone-pool", true)
+            .await
+            .expect("destroy dry run");
+    }
+
+    #[test]
+    fn pool_creator_default_constructible() {
+        let _ = PoolCreator::default();
+        let _ = PoolCreator::new();
+    }
 }
 
 #[cfg(test)]

@@ -331,4 +331,23 @@ mod monitor_mod_tests {
         let dm = Arc::new(ZfsDatasetManager::new(cfg, Arc::clone(&pm)));
         let _m = ZfsPerformanceMonitor::new(pm, dm);
     }
+
+    #[tokio::test]
+    async fn start_then_stop_does_not_panic() {
+        let mut m = ZfsPerformanceMonitor::new_for_testing();
+        m.start().await.expect("start");
+        m.stop().expect("stop");
+    }
+
+    #[test]
+    fn current_performance_metrics_default() {
+        use crate::performance::types::CurrentPerformanceMetrics;
+        let _ = CurrentPerformanceMetrics::default();
+    }
+
+    #[tokio::test]
+    async fn stop_without_start_is_ok() {
+        let mut m = ZfsPerformanceMonitor::new_for_testing();
+        m.stop().expect("stop");
+    }
 }

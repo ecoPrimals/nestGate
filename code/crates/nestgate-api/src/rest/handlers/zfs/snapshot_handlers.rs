@@ -20,7 +20,7 @@ use crate::rest::{ApiState, DataError, DataResponse, ListQuery};
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the dataset is missing,
+/// Returns [`Json`] containing [`DataError`] when the dataset is missing,
 /// snapshot listing fails, or the response cannot be built.
 pub async fn list_snapshots(
     State(state): State<ApiState>,
@@ -96,7 +96,7 @@ pub async fn list_snapshots(
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the dataset is missing,
+/// Returns [`Json`] containing [`DataError`] when the dataset is missing,
 /// validation fails, or creation fails.
 pub async fn create_snapshot(
     State(state): State<ApiState>,

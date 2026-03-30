@@ -44,3 +44,26 @@ impl Default for OptimizationEngine {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod engine_smoke_tests {
+    use super::OptimizationEngine;
+    use crate::adaptive_optimization::types::CurrentMetrics;
+
+    #[test]
+    fn analyze_and_optimize_const_path() {
+        let m = CurrentMetrics {
+            cpu_usage: 0.0,
+            memory_usage: 0.0,
+            network_throughput: 0,
+            disk_iops: 0,
+            cache_hit_ratio: 0.0,
+            lock_contention: 0.0,
+            simd_utilization: 0.0,
+            allocation_efficiency: 0.0,
+        };
+        let e = OptimizationEngine::new();
+        let _ = e.analyze_and_optimize(&m);
+        let _ = OptimizationEngine::default().analyze_and_optimize(&m);
+    }
+}

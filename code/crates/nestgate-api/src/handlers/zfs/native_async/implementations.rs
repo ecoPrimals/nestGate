@@ -27,7 +27,7 @@ fn zfs_kernel_present() -> bool {
 fn zfs_disabled_by_env() -> bool {
     matches!(
         std::env::var("NESTGATE_ZFS_DISABLE").as_deref(),
-        Ok("1") | Ok("true") | Ok("TRUE")
+        Ok("1" | "true" | "TRUE")
     )
 }
 
@@ -442,7 +442,7 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
         &self.service_name
     }
 
-    fn service_version(&self) -> &str {
+    fn service_version(&self) -> &'static str {
         "dev-1.0.0"
     }
 

@@ -362,3 +362,55 @@ impl Default for CacheBuilder {
 }
 
 // Convenience functions for common use cases - moved to test helpers
+
+#[cfg(test)]
+mod cache_mod_coverage_tests {
+    #![allow(clippy::expect_used, clippy::float_cmp, clippy::panic)]
+
+    use super::*;
+
+    #[test]
+    fn cache_system_stats_single_tier_totals() {
+        let st = CacheStats::default();
+        let agg = CacheSystemStats::SingleTier(st);
+        assert_eq!(agg.total_hits(), 0);
+        assert_eq!(agg.total_misses(), 0);
+        assert_eq!(agg.total_items(), 0);
+        assert_eq!(agg.total_size_bytes(), 0);
+        assert_eq!(agg.hit_ratio(), 0.0);
+    }
+
+    #[test]
+    fn cache_builder_default_and_single_tier_build() -> nestgate_types::Result<()> {
+        assert!(!CacheBuilder::default().multi_tier);
+        let sys = CacheBuilder::new()
+            .with_policy(CachePolicy::WriteThrough)
+            .with_ttl(std::time::Duration::from_secs(60))
+            .with_hot_tier_size(128)
+            .build()?;
+        match sys {
+            CacheSystem::SingleTier(_) => {}
+            CacheSystem::MultiTier(_) => panic!("expected single tier"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn cache_builder_multi_tier_build() -> nestgate_types::Result<()> {
+        let sys = CacheBuilder::new().enable_multi_tier().build()?;
+        match sys {
+            CacheSystem::MultiTier(_) => {}
+            CacheSystem::SingleTier(_) => panic!("expected multi tier"),
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn cache_builder_with_multi_tier_builds() -> nestgate_types::Result<()> {
+        let sys = CacheBuilder::new()
+            .with_multi_tier(NestGateCanonicalConfig::default())
+            .build()?;
+        assert!(matches!(sys, CacheSystem::MultiTier(_)));
+        Ok(())
+    }
+}

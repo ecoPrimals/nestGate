@@ -50,7 +50,7 @@ impl EnvironmentConfig {
     pub const DEFAULT_BIND_STANDALONE: &'static str = "127.0.0.1";
     /// Default bind interface for orchestration mode
     pub const DEFAULT_BIND_ORCHESTRATION: &'static str = "0.0.0.0";
-    /// Default port (matches [`crate::constants::hardcoding::RuntimeDefaults::api_port`] fallback
+    /// Default port (matches `crate::constants::hardcoding::RuntimeDefaults::api_port` fallback
     /// when `NESTGATE_API_PORT` is unset; see also [`crate::constants::hardcoding::get_api_port`].)
     pub const DEFAULT_PORT: u16 = crate::constants::hardcoding::runtime_fallback_ports::HTTP;
     /// Default service name

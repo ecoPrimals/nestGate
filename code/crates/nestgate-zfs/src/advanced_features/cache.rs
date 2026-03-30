@@ -151,3 +151,35 @@ impl CacheEfficiency {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn arc_and_l2arc_collect_and_cache_efficiency_calculate() {
+        let arc = ArcStats::collect().expect("arc");
+        let l2 = L2arcStats::collect().expect("l2");
+        let eff = CacheEfficiency::calculate(&arc, &l2);
+        assert!(eff.overall_efficiency >= 0.0);
+        assert_eq!(eff.arc_efficiency, arc.hit_ratio);
+        assert_eq!(eff.l2arc_efficiency, 75.0);
+        let d = CacheEfficiency::default();
+        assert_eq!(d.overall_efficiency, 0.0);
+        let n = CacheEfficiency::new();
+        assert_eq!(n.overall_efficiency, d.overall_efficiency);
+        assert_eq!(n.arc_efficiency, d.arc_efficiency);
+        assert_eq!(n.l2arc_efficiency, d.l2arc_efficiency);
+    }
+
+    #[test]
+    fn analyze_cache_performance_roundtrip_serde() {
+        let a = CacheAnalytics::analyze_cache_performance("tank").expect("analyze");
+        let json = serde_json::to_string(&a).expect("ser");
+        let back: CacheAnalytics = serde_json::from_str(&json).expect("de");
+        assert_eq!(back.arc_stats.size, a.arc_stats.size);
+        assert!(
+            (back.efficiency.overall_efficiency - a.efficiency.overall_efficiency).abs() < 1e-9
+        );
+    }
+}

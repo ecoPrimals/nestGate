@@ -33,7 +33,7 @@ use nestgate_core::universal_storage::AutoConfigurator;
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the response cannot be
+/// Returns [`Json`] containing [`DataError`] when the response cannot be
 /// built (reserved for future storage-detector failures).
 pub async fn list_backends(
     State(state): State<ApiState>,
@@ -155,7 +155,7 @@ pub async fn list_backends(
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the response cannot be
+/// Returns [`Json`] containing [`DataError`] when the response cannot be
 /// built (reserved for future scan failures).
 pub async fn scan_storage(
     State(state): State<ApiState>,
@@ -267,7 +267,7 @@ pub async fn scan_storage(
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when the requested backend
+/// Returns [`Json`] containing [`DataError`] when the requested backend
 /// type does not support benchmarking or when the response cannot be built.
 pub async fn benchmark_storage(
     State(_state): State<ApiState>,

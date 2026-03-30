@@ -24,7 +24,7 @@ use super::helpers;
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when listing or serializing
+/// Returns [`Json`] containing [`DataError`] when listing or serializing
 /// datasets fails.
 pub async fn list_datasets(
     State(state): State<ApiState>,
@@ -87,7 +87,7 @@ pub async fn list_datasets(
 ///
 /// # Errors
 ///
-/// Returns [`Json`] containing [`DataError`](crate::rest::DataError) when validation fails or the
+/// Returns [`Json`] containing [`DataError`] when validation fails or the
 /// dataset already exists.
 pub async fn create_dataset(
     State(state): State<ApiState>,

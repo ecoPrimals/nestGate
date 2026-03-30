@@ -27,6 +27,7 @@
 
 use crate::error::Result;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::future::Future;
 use std::time::{Duration, SystemTime};
@@ -181,7 +182,7 @@ pub struct StorageMetadata {
 /// Storagestream
 pub struct StorageStream {
     /// Stream identifier
-    pub stream_id: String,
+    pub stream_id: Cow<'static, str>,
     /// Size of total
     pub total_size: Option<u64>,
     /// Size of chunk
@@ -194,7 +195,7 @@ pub struct StorageStream {
 /// Storagetransaction
 pub struct StorageTransaction {
     /// Transaction identifier
-    pub transaction_id: String,
+    pub transaction_id: Cow<'static, str>,
     /// Timestamp when this was created
     pub created_at: SystemTime,
     /// Timeout
@@ -254,9 +255,9 @@ impl Default for StorageMetadata {
 impl StorageStream {
     /// Create a new storage stream
     #[must_use]
-    pub const fn new(stream_id: String) -> Self {
+    pub fn new(stream_id: impl Into<Cow<'static, str>>) -> Self {
         Self {
-            stream_id,
+            stream_id: stream_id.into(),
             total_size: None,
             chunk_size: 65536, // 64KB default
             metadata: None,
@@ -281,9 +282,9 @@ impl StorageStream {
 impl StorageTransaction {
     /// Create a new storage transaction
     #[must_use]
-    pub fn new(transaction_id: String) -> Self {
+    pub fn new(transaction_id: impl Into<Cow<'static, str>>) -> Self {
         Self {
-            transaction_id,
+            transaction_id: transaction_id.into(),
             created_at: SystemTime::now(),
             timeout: Duration::from_secs(30),
         }

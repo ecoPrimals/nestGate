@@ -33,3 +33,22 @@ pub struct PerformanceDebugConfig {
     /// Log level for performance debug messages.
     pub log_level: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn performance_environment_serde_roundtrip() {
+        let c = PerformanceEnvironmentConfig::default();
+        let s = serde_json::to_string(&c).expect("to_string");
+        let _: PerformanceEnvironmentConfig = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn performance_debug_config_roundtrip() {
+        let d = PerformanceDebugConfig::default();
+        let s = serde_json::to_string(&d).expect("to_string");
+        let _: PerformanceDebugConfig = serde_json::from_str(&s).expect("from_str");
+    }
+}

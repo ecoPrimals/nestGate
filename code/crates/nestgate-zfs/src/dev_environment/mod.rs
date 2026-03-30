@@ -99,3 +99,21 @@ pub struct FeatureInfo {
     /// Dev Verbose Logging
     pub dev_verbose_logging: bool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn feature_info_reflects_compile_time_flags() {
+        let fi = feature_info();
+        assert!(fi.dev_environment_fallbacks);
+    }
+
+    #[test]
+    fn feature_info_clone_and_debug() {
+        let fi = feature_info();
+        let _ = format!("{fi:?}");
+        let _ = fi.clone();
+    }
+}

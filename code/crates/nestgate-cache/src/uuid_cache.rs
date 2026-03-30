@@ -394,4 +394,53 @@ mod tests {
         let stats = cache.statistics();
         assert_eq!(stats.total_generations, 0);
     }
+
+    #[test]
+    fn uuid_cache_remove_clear_size_clone() {
+        let cache = UuidCache::default();
+        let u = cache.get_or_create("rk");
+        assert_eq!(cache.size(), 1);
+        assert_eq!(cache.remove("rk").map(|a| *a), Some(*u));
+        assert_eq!(cache.size(), 0);
+        cache.clear();
+        let c2 = cache.clone();
+        assert_eq!(c2.size(), 0);
+        assert_eq!(cache.size(), c2.size());
+    }
+
+    #[test]
+    fn cache_statistics_performance_assessment_branches() {
+        let mut s = CacheStatistics {
+            cache_size: 0,
+            total_generations: 0,
+            cache_hits: 0,
+            cache_misses: 0,
+            hit_ratio: 0.95,
+        };
+        assert!(s.is_efficient());
+        assert_eq!(s.performance_assessment(), "Excellent");
+        s.hit_ratio = 0.8;
+        assert_eq!(s.performance_assessment(), "Good");
+        s.hit_ratio = 0.6;
+        assert_eq!(s.performance_assessment(), "Fair");
+        s.hit_ratio = 0.2;
+        assert!(s.performance_assessment().contains("Poor"));
+    }
+
+    #[test]
+    fn uuid_manager_generators() {
+        let m = UuidManager::new();
+        assert!(m.workspace_id().starts_with("ws-"));
+        assert!(!m.service_id().is_empty());
+        assert!(!m.request_id().is_empty());
+        assert!(!m.event_id().is_empty());
+        assert!(m.benchmark_id().starts_with("bench-"));
+        assert!(m.generate_prefixed("k", "pfx").starts_with("pfx-"));
+    }
+
+    #[test]
+    fn global_cache_helpers_smoke() {
+        let _ = global_cache_statistics();
+        preload_common_uuids(vec![("preload_key_only".into(), Uuid::new_v4())]);
+    }
 }

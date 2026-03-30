@@ -56,3 +56,44 @@ impl Default for CanonicalResponse {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn canonical_response_default() {
+        let r = CanonicalResponse::default();
+        assert_eq!(r.request_id, "unknown");
+        assert!(!r.success);
+    }
+
+    #[test]
+    fn canonical_request_and_response_serde_roundtrip() {
+        let req = CanonicalRequest {
+            id: "1".to_string(),
+            service_type: UnifiedServiceType::Storage,
+            capability: CapabilityId {
+                domain: "d".to_string(),
+                capability: "c".to_string(),
+                version: "v1".to_string(),
+            },
+            payload: HashMap::new(),
+            timeout: Some(Duration::from_secs(5)),
+        };
+        let js = serde_json::to_string(&req).expect("req serde");
+        let _: CanonicalRequest = serde_json::from_str(&js).expect("req de");
+
+        let res = CanonicalResponse {
+            request_id: "1".to_string(),
+            success: true,
+            payload: Some(serde_json::json!({ "k": 1 })),
+            error: None,
+            metrics: Some(ServiceMetrics::default()),
+        };
+        let js2 = serde_json::to_string(&res).expect("res serde");
+        let back: CanonicalResponse = serde_json::from_str(&js2).expect("res de");
+        assert!(back.success);
+    }
+}

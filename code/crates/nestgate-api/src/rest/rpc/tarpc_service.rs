@@ -112,3 +112,69 @@ impl TarpcRpcService {
         Ok(true)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rest::rpc::types::{
+        RequestPriority, ResponseMetrics, RpcConnectionType, UnifiedRpcRequest, UnifiedRpcResponse,
+    };
+    use std::collections::HashMap;
+    use uuid::Uuid;
+
+    fn sample_request(method: &str) -> UnifiedRpcRequest {
+        UnifiedRpcRequest {
+            id: Uuid::nil(),
+            source: "nestgate".to_string(),
+            target: "security".to_string(),
+            method: method.to_string(),
+            _params: serde_json::json!({}),
+            _metadata: HashMap::new(),
+            timestamp: chrono::Utc::now(),
+            streaming: false,
+            priority: RequestPriority::Normal,
+            timeout: None,
+        }
+    }
+
+    #[test]
+    fn new_and_connection_type() {
+        let svc = TarpcRpcService::new("tcp://127.0.0.1:0");
+        assert_eq!(svc.connection_type(), RpcConnectionType::Tarpc);
+        assert!(svc.health_check().unwrap());
+    }
+
+    #[test]
+    fn execute_request_returns_success_response() {
+        let svc = TarpcRpcService::new("tcp://127.0.0.1:0");
+        let req = sample_request("ping");
+        let resp = svc.execute_request(req).unwrap();
+        assert!(resp.success);
+        assert_eq!(resp.request_id, Uuid::nil());
+        assert!(resp.error.is_none());
+    }
+
+    #[test]
+    fn start_stream_returns_channels() {
+        let svc = TarpcRpcService::new("tcp://127.0.0.1:0");
+        let req = sample_request("stream");
+        let (tx, _rx) = svc.start_stream(req).unwrap();
+        drop(tx);
+    }
+
+    #[test]
+    fn unified_response_roundtrip_serde() {
+        let r = UnifiedRpcResponse {
+            request_id: Uuid::nil(),
+            success: true,
+            data: Some(serde_json::json!({"ok": true})),
+            error: None,
+            _metadata: HashMap::new(),
+            timestamp: chrono::Utc::now(),
+            metrics: ResponseMetrics::default(),
+        };
+        let json = serde_json::to_string(&r).unwrap();
+        let back: UnifiedRpcResponse = serde_json::from_str(&json).unwrap();
+        assert!(back.success);
+    }
+}

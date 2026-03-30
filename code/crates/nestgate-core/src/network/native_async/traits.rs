@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::time::Duration;
 
-/// Native async service discovery trait - replaces #[`async_trait`] `ServiceDiscovery`
+/// Native async service discovery trait - replaces #\[async_trait\] `ServiceDiscovery`
 pub trait NativeAsyncServiceDiscovery<
     const MAX_SERVICES: usize = 10000,
     const DISCOVERY_TIMEOUT_SECS: u64 = 30,
@@ -91,7 +91,7 @@ pub trait NativeAsyncServiceDiscovery<
     }
 }
 
-/// Native async network protocol handler trait - replaces #[`async_trait`] `ProtocolHandler`
+/// Native async network protocol handler trait - replaces #\[async_trait\] `ProtocolHandler`
 pub trait NativeAsyncProtocolHandler<
     const MAX_CONNECTIONS: usize = 1000,
     const CONNECTION_TIMEOUT_SECS: u64 = 30,
@@ -159,7 +159,7 @@ pub trait NativeAsyncProtocolHandler<
     }
 }
 
-/// Native async unified service interface trait - replaces #[`async_trait`] `UnifiedServiceInterface`
+/// Native async unified service interface trait - replaces #\[async_trait\] `UnifiedServiceInterface`
 pub trait NativeAsyncUnifiedServiceInterface<
     const MAX_REQUESTS_PER_SEC: usize = 1000,
     const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,
@@ -218,7 +218,7 @@ pub trait NativeAsyncUnifiedServiceInterface<
     }
 }
 
-/// Native async load balancer trait - replaces #[`async_trait`] `LoadBalancer`
+/// Native async load balancer trait - replaces #\[async_trait\] `LoadBalancer`
 pub trait NativeAsyncLoadBalancer<
     const MAX_BACKENDS: usize = 100,
     const HEALTH_CHECK_INTERVAL_SECS: u64 = 30,

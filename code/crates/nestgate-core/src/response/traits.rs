@@ -303,3 +303,100 @@ impl ResponseChaining for SuccessResponse {
         self
     }
 }
+
+#[cfg(test)]
+mod traits_coverage_tests {
+    use super::{
+        IntoApiResponse, IntoSuccessResponse, IntoUnifiedErrorResponse, ResponseChaining,
+        ResponseConversion, ResponseMetadata,
+    };
+    use crate::response::api_response::ApiResponse;
+    use crate::response::error_response::{LegacyErrorResponse, UnifiedErrorResponse};
+    use crate::response::success_response::SuccessResponse;
+    use chrono::Utc;
+    use std::collections::HashMap;
+
+    #[test]
+    fn into_api_response_branches() {
+        let ok: Result<i32, &str> = Ok(42);
+        let r = ok.into_api_response();
+        assert!(r.success);
+        let err: Result<i32, &str> = Err("e");
+        let r = err.into_api_response();
+        assert!(!r.success);
+        let err2: Result<i32, &str> = Err("ignored");
+        let r = err2.into_api_response_with_message("custom");
+        assert_eq!(r.error.as_deref(), Some("custom"));
+    }
+
+    #[test]
+    fn into_success_response_serializes_payload() {
+        let s = serde_json::json!({"k": 1}).into_success_response("ok");
+        assert_eq!(s.message, "ok");
+    }
+
+    #[test]
+    fn into_unified_error_response_from_display() {
+        let e = std::io::Error::other("boom");
+        let u = e.to_unified_error_response("nestgate-core");
+        assert_eq!(u.component, "nestgate-core");
+    }
+
+    #[test]
+    fn legacy_error_response_converts() {
+        let leg = LegacyErrorResponse {
+            error: "e".into(),
+            code: Some("LEG".into()),
+            timestamp: Utc::now().to_rfc3339(),
+        };
+        let u: UnifiedErrorResponse = leg.convert();
+        assert_eq!(u.code, "LEG");
+        assert_eq!(u.component, "legacy");
+    }
+
+    #[test]
+    fn success_response_converts_to_api_response() {
+        let s = SuccessResponse::new("m")
+            .add_data("a", serde_json::json!(1))
+            .add_metadata("meta", serde_json::json!("v"));
+        let api: ApiResponse<()> = s.convert();
+        assert!(api.success);
+    }
+
+    #[test]
+    fn response_metadata_api_success_unified() {
+        let api: ApiResponse<()> = ApiResponse::error_with_code("e".into(), "E".into())
+            .with_meta("x", serde_json::json!(true));
+        let md = api.extract_metadata();
+        assert!(md.contains_key("meta_x") || md.contains_key("error"));
+        assert!(api.is_successful() == api.success);
+
+        let sr = SuccessResponse::new("hi");
+        let md = sr.extract_metadata();
+        assert!(md.contains_key("message"));
+        assert!(sr.is_successful());
+
+        let ue = UnifiedErrorResponse::simple("m", "C", "comp")
+            .with_details(HashMap::from([("d".into(), serde_json::json!(1))]));
+        let md = ue.extract_metadata();
+        assert!(md.contains_key("detail_d") || md.keys().any(|k| k.starts_with("detail_")));
+        assert!(!ue.is_successful());
+        let _ = ue.get_timestamp();
+    }
+
+    #[test]
+    fn response_chaining_unified_api_success() {
+        let ts = Utc::now();
+        let u = UnifiedErrorResponse::simple("a", "b", "c").with_timestamp_chain(ts);
+        assert!(!u.timestamp.is_empty());
+
+        let a = ApiResponse::success(1i32).with_context_chain("k", serde_json::json!([]));
+        assert!(a.metadata.is_some());
+
+        let s = SuccessResponse::new("m")
+            .with_context_chain("k", serde_json::json!(null))
+            .with_metadata_chain("mk", "mv")
+            .with_timestamp_chain(ts);
+        assert!(!s.timestamp.is_empty());
+    }
+}

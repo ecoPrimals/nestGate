@@ -235,3 +235,60 @@ impl ObjectStorageBackend {
         format!("{pool_name}/{dataset_name}")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ObjectStorageBackend;
+    use serial_test::serial;
+
+    #[test]
+    #[serial]
+    fn new_fails_when_no_object_storage_configured() {
+        temp_env::with_vars(
+            [
+                ("OBJECT_STORAGE_ENDPOINT", None::<&str>),
+                ("OBJECT_STORAGE_ACCESS_KEY", None::<&str>),
+                ("OBJECT_STORAGE_SECRET_KEY", None::<&str>),
+            ],
+            || assert!(ObjectStorageBackend::new().is_err()),
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn new_succeeds_with_endpoint_discovery_env() {
+        temp_env::with_var(
+            "OBJECT_STORAGE_ENDPOINT",
+            Some("https://s3.example.com"),
+            || {
+                assert!(ObjectStorageBackend::new().is_ok());
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_environment_requires_credentials() {
+        temp_env::with_vars(
+            [
+                ("OBJECT_STORAGE_ENDPOINT", Some("https://s3.example.com")),
+                ("OBJECT_STORAGE_ACCESS_KEY", None::<&str>),
+                ("OBJECT_STORAGE_SECRET_KEY", None::<&str>),
+            ],
+            || assert!(ObjectStorageBackend::from_environment().is_err()),
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_environment_succeeds_with_full_env() {
+        temp_env::with_vars(
+            [
+                ("OBJECT_STORAGE_ENDPOINT", Some("https://s3.example.com")),
+                ("OBJECT_STORAGE_ACCESS_KEY", Some("ak")),
+                ("OBJECT_STORAGE_SECRET_KEY", Some("sk")),
+            ],
+            || assert!(ObjectStorageBackend::from_environment().is_ok()),
+        );
+    }
+}

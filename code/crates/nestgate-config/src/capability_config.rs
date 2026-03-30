@@ -424,6 +424,8 @@ impl CapabilityInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
+    use std::net::{IpAddr, Ipv4Addr};
 
     #[test]
     fn test_capability_defaults() {
@@ -446,5 +448,105 @@ mod tests {
 
         assert!(config.capabilities.is_empty());
         assert!(config.fallbacks.is_some());
+    }
+
+    #[test]
+    fn capability_config_serde_roundtrip() {
+        let mut caps = HashMap::new();
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8080);
+        caps.insert(
+            "api".to_string(),
+            CapabilityInfo {
+                id: "api".to_string(),
+                primary_endpoint: Some(addr),
+                additional_endpoints: vec![],
+                metadata: HashMap::new(),
+                health_check: Some(HealthCheckConfig {
+                    interval: Duration::from_secs(10),
+                    timeout: Duration::from_secs(2),
+                    path: "/health".to_string(),
+                }),
+            },
+        );
+        let cfg = CapabilityConfig {
+            capabilities: caps,
+            fallbacks: None,
+            discovery_backends: vec![
+                DiscoveryBackend::DnsSrv {
+                    domain: "example.com".to_string(),
+                },
+                DiscoveryBackend::MDns {
+                    service_type: "_http._tcp".to_string(),
+                },
+                DiscoveryBackend::Consul {
+                    address: "127.0.0.1:8500".to_string(),
+                },
+                DiscoveryBackend::Kubernetes {
+                    namespace: "ns".to_string(),
+                },
+                DiscoveryBackend::Environment,
+            ],
+        };
+        let json = serde_json::to_string(&cfg).expect("serialize");
+        let back: CapabilityConfig = serde_json::from_str(&json).expect("deserialize");
+        assert!(back.has_capability("api"));
+        assert_eq!(back.resolve_capability("api").expect("resolve").id, "api");
+    }
+
+    #[test]
+    fn capability_info_endpoints() {
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9000);
+        let info = CapabilityInfo {
+            id: "m".to_string(),
+            primary_endpoint: None,
+            additional_endpoints: vec![addr],
+            metadata: HashMap::new(),
+            health_check: None,
+        };
+        assert_eq!(info.primary_endpoint().expect("pe"), addr);
+        assert_eq!(info.all_endpoints(), vec![addr]);
+    }
+
+    #[test]
+    fn with_fallback_and_register() {
+        let mut cfg = CapabilityConfig {
+            capabilities: HashMap::new(),
+            fallbacks: None,
+            discovery_backends: vec![],
+        };
+        cfg = cfg
+            .with_fallback(CapabilityDefaults::secure())
+            .expect("fallback");
+        assert!(cfg.fallbacks.is_some());
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 7000);
+        cfg.register_capability(CapabilityInfo {
+            id: "x".to_string(),
+            primary_endpoint: Some(addr),
+            additional_endpoints: vec![],
+            metadata: HashMap::new(),
+            health_check: None,
+        });
+        assert_eq!(cfg.get_endpoint("x").expect("ep"), addr);
+        assert_eq!(
+            cfg.get_capability_url("x").expect("url"),
+            format!("http://{addr}")
+        );
+        assert_eq!(cfg.get_all_endpoints("x").expect("all"), vec![addr]);
+    }
+
+    #[test]
+    #[serial]
+    fn from_env_reads_capabilities() {
+        temp_env::with_vars(
+            [
+                ("NESTGATE_CAPABILITIES", Some("api")),
+                ("NESTGATE_API_ENDPOINT", Some("127.0.0.1:18080")),
+                ("NESTGATE_DISCOVERY_BACKENDS", Some("environment")),
+            ],
+            || {
+                let c = CapabilityConfig::from_env().expect("from_env");
+                assert!(c.has_capability("api"));
+            },
+        );
     }
 }

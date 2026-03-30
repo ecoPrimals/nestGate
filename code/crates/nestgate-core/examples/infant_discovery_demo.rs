@@ -76,7 +76,6 @@ async fn main() -> Result<()> {
         .with_timeout(std::time::Duration::from_secs(5))
         .with_cache_duration(std::time::Duration::from_secs(60))
         .detect()
-        .await
         .context("Failed to detect discovery mechanism")?;
 
     println!("   ✅ Detected mechanism: {}", discovery.mechanism_name());

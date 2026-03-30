@@ -165,3 +165,29 @@ impl ZfsError {
 ///
 /// **MIGRATION NOTE**: Prefer using `nestgate_core::error::Result<T>` for new code.
 pub type ZfsResult<T> = std::result::Result<T, ZfsError>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn zfs_error_constructors_and_display() {
+        let cases: Vec<ZfsError> = vec![
+            ZfsError::pool_error("p"),
+            ZfsError::dataset_error("d"),
+            ZfsError::snapshot_error("s"),
+            ZfsError::command_error("c"),
+            ZfsError::config_error("cfg"),
+            ZfsError::capacity_too_small("small"),
+            ZfsError::capacity_exceeded("big"),
+            ZfsError::invalid_path("path"),
+            ZfsError::invalid_property("prop"),
+            ZfsError::cross_pool_rename("x"),
+            ZfsError::Io(std::io::Error::other("io")),
+        ];
+        for e in cases {
+            let s = e.to_string();
+            assert!(!s.is_empty());
+        }
+    }
+}

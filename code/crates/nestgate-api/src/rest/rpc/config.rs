@@ -547,3 +547,53 @@ pub type NestGateRpcConfigCanonical =
 // Note: Keep using NestGateRpcConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    #![allow(deprecated)]
+
+    use super::*;
+
+    #[test]
+    fn nestgate_rpc_config_default_smoke() {
+        let c = NestGateRpcConfig::default();
+        assert!(c.security.enable_tls);
+        assert_eq!(c.load_balancing.strategy, "round_robin");
+        assert!(c.health_monitoring.enabled);
+    }
+
+    #[test]
+    fn canonical_rpc_config_default_and_from_legacy() {
+        let legacy = NestGateRpcConfig::default();
+        let migrated = CanonicalRpcConfig::from_legacy(legacy);
+        assert!(
+            migrated
+                .base
+                .security
+                .security_settings
+                .contains_key("tls_enabled")
+        );
+        assert_eq!(
+            migrated.rpc_extensions.load_balancing.strategy,
+            "round_robin"
+        );
+    }
+
+    #[test]
+    fn canonical_rpc_config_accessors() {
+        let c = CanonicalRpcConfig::default();
+        let _net: &CanonicalNetworkConfig = c.network();
+        let _sec: &SecurityConfig = c.security();
+    }
+
+    #[test]
+    fn rpc_extensions_default() {
+        let e = RpcExtensions::default();
+        assert_eq!(e.connection_pool.max_connections, 0);
+    }
+
+    #[test]
+    fn type_alias_smoke_compile() {
+        let _: ConnectionPoolConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig::default();
+    }
+}

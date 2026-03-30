@@ -39,7 +39,7 @@
 //! // Full example requires DiscoveryBuilder, SelfKnowledge with SocketAddr endpoints
 //! use nestgate_core::discovery_mechanism::{DiscoveryBuilder, MdnsDiscovery};
 //! use nestgate_core::self_knowledge::SelfKnowledge;
-//! let discovery = DiscoveryBuilder::default().detect().await?;
+//! let discovery = DiscoveryBuilder::default().detect()?;
 //! let self_knowledge = SelfKnowledge::builder().with_id("nestgate").build()?;
 //! ```
 

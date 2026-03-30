@@ -90,3 +90,44 @@ pub fn from_io_error(error: std::io::Error, _b_operation: impl Into<String>) -> 
 pub fn validation(_message: impl Into<String>) -> NestGateError {
     NestGateError::validation("Validation error occurred during installation")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nestgate_core::error::NestGateError;
+
+    #[test]
+    fn installer_error_configuration_maps_to_nest_gate_error() {
+        let e = InstallerError::configuration("bad config");
+        assert!(matches!(e, NestGateError::Configuration(_)));
+    }
+
+    #[test]
+    fn installer_error_installation_and_system_helpers() {
+        let e = InstallerError::installation_error("failed");
+        assert!(matches!(e, NestGateError::Internal(_)));
+        let e = InstallerError::system_requirement("need more ram");
+        assert!(matches!(e, NestGateError::System(_)));
+        let e = InstallerError::permission_error("root only");
+        assert!(matches!(e, NestGateError::System(_)));
+    }
+
+    #[test]
+    fn installation_error_helper_contains_prefix() {
+        let e = installation_error("disk full");
+        assert!(e.to_string().contains("Installation"));
+    }
+
+    #[test]
+    fn from_io_error_maps_io() {
+        let io = std::io::Error::other("oops");
+        let e = from_io_error(io, "copy");
+        assert!(e.to_string().contains("IO"));
+    }
+
+    #[test]
+    fn validation_helper_returns_validation_variant() {
+        let e = validation("x");
+        assert!(matches!(e, NestGateError::Validation(_)));
+    }
+}

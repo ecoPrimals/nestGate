@@ -33,8 +33,7 @@ pub struct PlatformInfo {
     pub arch: String,
     /// Service manager (runtime detected)
     pub service_manager: ServiceManager,
-    #[allow(dead_code)] // Reserved for future binary extension support
-    /// Binary Extension
+    /// Binary extension (e.g. `.exe` on Windows) for `get_binary_name`
     pub binary_extension: String,
 }
 
@@ -90,7 +89,8 @@ impl PlatformInfo {
     }
 }
 
-#[allow(dead_code)] // Reserved for installer PATH modification
+/// Not wired into the wizard yet; kept for a future “add install dir to PATH” step.
+#[allow(dead_code)]
 pub fn add_to_path(install_path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
@@ -104,7 +104,6 @@ pub fn add_to_path(install_path: &Path) -> Result<()> {
 }
 
 #[cfg(unix)]
-#[allow(dead_code)] // Platform-specific PATH implementation
 fn add_to_path_unix(install_path: &Path) -> Result<()> {
     use etcetera::BaseStrategy;
     use std::fs::OpenOptions;
@@ -167,7 +166,8 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
     Ok(())
 }
 
-#[allow(dead_code)] // Reserved for desktop integration features
+/// Optional post-install UX; not invoked by the current installer flow.
+#[allow(dead_code)]
 pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
     #[cfg(unix)]
     {
@@ -181,7 +181,6 @@ pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
 }
 
 #[cfg(unix)]
-#[allow(dead_code)] // Platform-specific desktop integration
 fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
     use std::fs;
 

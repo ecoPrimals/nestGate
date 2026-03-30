@@ -101,20 +101,31 @@ fn test_port_from_string_with_whitespace() {
 #[test]
 #[serial_test::serial]
 fn test_missing_required_env_var() {
-    // Isolate from a polluted host env (e.g. invalid `NESTGATE_PORT`).
-    temp_env::with_vars(vec![("NESTGATE_PORT", None::<&str>)], || {
-        temp_env::with_var_unset("NESTGATE_CRITICAL_REQUIRED_VAR", || {
-            let config = EnvironmentConfig::from_env();
-            if let Err(e) = &config {
-                eprintln!("Config error: {e:?}");
-            }
-            assert!(
-                config.is_ok(),
-                "Config should work with defaults: {:?}",
-                config.err()
-            );
-        });
-    });
+    // Isolate from a polluted host env (e.g. invalid `NESTGATE_PORT` or
+    // `NESTGATE_MAX_CONNECTIONS` left by a prior test).
+    temp_env::with_vars(
+        vec![
+            ("NESTGATE_PORT", None::<&str>),
+            ("NESTGATE_MAX_CONNECTIONS", None::<&str>),
+            ("NESTGATE_TIMEOUT", None::<&str>),
+            ("NESTGATE_HOST", None::<&str>),
+            ("NESTGATE_API_PORT", None::<&str>),
+            ("NESTGATE_HTTP_PORT", None::<&str>),
+        ],
+        || {
+            temp_env::with_var_unset("NESTGATE_CRITICAL_REQUIRED_VAR", || {
+                let config = EnvironmentConfig::from_env();
+                if let Err(e) = &config {
+                    eprintln!("Config error: {e:?}");
+                }
+                assert!(
+                    config.is_ok(),
+                    "Config should work with defaults: {:?}",
+                    config.err()
+                );
+            });
+        },
+    );
 }
 
 #[tokio::test]
@@ -168,30 +179,41 @@ async fn test_environment_config_with_partial_values() {
 // ==================== CONCURRENT ACCESS TESTS ====================
 
 #[test]
+#[serial_test::serial]
 fn test_concurrent_config_access() {
     use std::sync::Arc;
     use std::thread;
 
-    let Ok(config) = EnvironmentConfig::from_env() else {
-        panic!("Config should load");
-    };
-    let config = Arc::new(config);
-    let mut handles = vec![];
+    temp_env::with_vars(
+        vec![
+            ("NESTGATE_PORT", None::<&str>),
+            ("NESTGATE_MAX_CONNECTIONS", None::<&str>),
+            ("NESTGATE_TIMEOUT", None::<&str>),
+            ("NESTGATE_HOST", None::<&str>),
+            ("NESTGATE_API_PORT", None::<&str>),
+            ("NESTGATE_HTTP_PORT", None::<&str>),
+        ],
+        || {
+            let Ok(config) = EnvironmentConfig::from_env() else {
+                panic!("Config should load");
+            };
+            let config = Arc::new(config);
+            let mut handles = vec![];
 
-    // Spawn multiple threads reading config
-    for _ in 0..10 {
-        let cfg = config.clone();
-        let handle = thread::spawn(move || {
-            let port = cfg.network.port.get();
-            assert!(port >= 1024);
-        });
-        handles.push(handle);
-    }
+            for _ in 0..10 {
+                let cfg = config.clone();
+                let handle = thread::spawn(move || {
+                    let port = cfg.network.port.get();
+                    assert!(port >= 1024);
+                });
+                handles.push(handle);
+            }
 
-    // All should complete without panic
-    for handle in handles {
-        assert!(handle.join().is_ok(), "Thread should not panic");
-    }
+            for handle in handles {
+                assert!(handle.join().is_ok(), "Thread should not panic");
+            }
+        },
+    );
 }
 
 // ==================== DEFAULT VALUE TESTS ====================
@@ -283,35 +305,18 @@ fn test_environment_config_is_send_sync() {
 // ==================== INTEGRATION ERROR TESTS ====================
 
 #[test]
+#[serial_test::serial]
 fn test_config_survives_corrupted_environment() {
-    let original_vars: Vec<_> = [
-        "NESTGATE_PORT",
-        "NESTGATE_TIMEOUT",
-        "NESTGATE_MAX_CONNECTIONS",
-    ]
-    .iter()
-    .map(|var| (*var, std::env::var(var).ok()))
-    .collect();
-
-    // Set completely corrupted values
-    // SAFETY: single-threaded test context.
-    crate::env_process::set_var("NESTGATE_PORT", "CORRUPTED#$%");
-    // SAFETY: single-threaded test context.
-    crate::env_process::set_var("NESTGATE_TIMEOUT", "NOT_A_NUMBER");
-    // SAFETY: single-threaded test context.
-    crate::env_process::set_var("NESTGATE_MAX_CONNECTIONS", "-999999");
-
-    // Config should handle corrupted environment
-    // It might error (which is fine) or use defaults
-    let _ = EnvironmentConfig::from_env();
-
-    // Restore
-    for (var, original) in original_vars {
-        match original {
-            Some(val) => crate::env_process::set_var(var, val),
-            None => crate::env_process::remove_var(var),
-        }
-    }
+    temp_env::with_vars(
+        vec![
+            ("NESTGATE_PORT", Some("CORRUPTED#$%")),
+            ("NESTGATE_TIMEOUT", Some("NOT_A_NUMBER")),
+            ("NESTGATE_MAX_CONNECTIONS", Some("-999999")),
+        ],
+        || {
+            let _ = EnvironmentConfig::from_env();
+        },
+    );
 }
 
 #[test]

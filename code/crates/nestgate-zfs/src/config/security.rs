@@ -203,3 +203,56 @@ pub type KeyManagementConfigCanonical =
 // Note: Keep using KeyManagementConfig (the deprecated struct) for now.
 // We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
 // This alias is here for reference and future migration.
+
+#[cfg(test)]
+mod tests {
+    #![allow(deprecated)]
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn security_config_default_production_and_json() {
+        let d = SecurityConfig::default();
+        assert!(!d.enable_encryption);
+        let p = SecurityConfig::production();
+        assert!(p.enable_encryption);
+        let json = serde_json::to_string(&d).expect("serialize");
+        let back: SecurityConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.encryption_algorithm, d.encryption_algorithm);
+    }
+
+    #[test]
+    fn key_and_access_control_defaults_and_production() {
+        let km = KeyManagementConfig::default();
+        assert_eq!(km.rotation_interval_days, 90);
+        let kprod = KeyManagementConfig::production();
+        assert!(
+            kprod
+                .key_storage_path
+                .to_string_lossy()
+                .contains("production")
+        );
+
+        let ac = AccessControlConfig::default();
+        assert_eq!(ac.default_permissions, "755");
+        let acp = AccessControlConfig::production();
+        assert!(acp.user_rules.contains_key("zfs-admin"));
+
+        let json = serde_json::to_string(&km).unwrap();
+        let _: KeyManagementConfig = serde_json::from_str(&json).unwrap();
+        let ac_json = serde_json::to_string(&ac).unwrap();
+        let _: AccessControlConfig = serde_json::from_str(&ac_json).unwrap();
+    }
+
+    #[test]
+    fn key_management_path_roundtrip() {
+        let km = KeyManagementConfig {
+            key_storage_path: PathBuf::from("/tmp/nestgate-test-keys"),
+            rotation_interval_days: 7,
+            backup_locations: vec![PathBuf::from("/backup")],
+        };
+        let json = serde_json::to_string(&km).unwrap();
+        let back: KeyManagementConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.rotation_interval_days, 7);
+    }
+}

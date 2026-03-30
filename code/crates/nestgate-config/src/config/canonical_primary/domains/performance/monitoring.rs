@@ -141,3 +141,48 @@ impl Default for AlertingConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let s = serde_json::to_string(v).expect("to_string");
+        let _: T = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn performance_monitoring_default_serde() {
+        let c = PerformanceMonitoringConfig::default();
+        serde_roundtrip(&c);
+    }
+
+    #[test]
+    fn performance_metric_variants() {
+        for m in [
+            PerformanceMetric::CpuUsage,
+            PerformanceMetric::MemoryUsage,
+            PerformanceMetric::IoLatency,
+            PerformanceMetric::NetworkLatency,
+            PerformanceMetric::Throughput,
+            PerformanceMetric::ErrorRate,
+        ] {
+            serde_roundtrip(&m);
+        }
+    }
+
+    #[test]
+    fn profiling_mode_variants() {
+        for m in [
+            ProfilingMode::Cpu,
+            ProfilingMode::Memory,
+            ProfilingMode::Both,
+            ProfilingMode::Custom("x".to_string()),
+        ] {
+            serde_roundtrip(&m);
+        }
+    }
+}

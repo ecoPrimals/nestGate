@@ -198,3 +198,50 @@ impl Default for UnifiedFileType {
         Self::Unknown
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn roundtrip_json<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
+    {
+        let json = serde_json::to_string(v).expect("serialize");
+        let back: T = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(*v, back);
+    }
+
+    #[test]
+    fn unified_capability_type_default_and_variants() {
+        assert_eq!(
+            UnifiedCapabilityType::default(),
+            UnifiedCapabilityType::Generic
+        );
+        roundtrip_json(&UnifiedCapabilityType::Storage);
+        roundtrip_json(&UnifiedCapabilityType::Custom("x".to_string()));
+    }
+
+    #[test]
+    fn unified_service_type_and_state() {
+        assert_eq!(UnifiedServiceType::default(), UnifiedServiceType::Generic);
+        roundtrip_json(&UnifiedServiceType::Monitoring);
+        assert_eq!(UnifiedServiceState::default(), UnifiedServiceState::Unknown);
+        roundtrip_json(&UnifiedServiceState::Running);
+        roundtrip_json(&UnifiedServiceState::Custom("s".to_string()));
+    }
+
+    #[test]
+    fn unified_health_and_tier() {
+        assert_eq!(UnifiedHealthStatus::default(), UnifiedHealthStatus::Unknown);
+        roundtrip_json(&UnifiedHealthStatus::Healthy);
+        assert_eq!(UnifiedTierType::default(), UnifiedTierType::Hot);
+        roundtrip_json(&UnifiedTierType::Archive);
+    }
+
+    #[test]
+    fn unified_file_type_roundtrip() {
+        assert_eq!(UnifiedFileType::default(), UnifiedFileType::Unknown);
+        roundtrip_json(&UnifiedFileType::SourceCode);
+    }
+}

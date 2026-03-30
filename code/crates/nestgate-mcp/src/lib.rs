@@ -2,6 +2,7 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![cfg_attr(
     test,
     allow(clippy::panic, clippy::too_many_lines, clippy::cognitive_complexity,)

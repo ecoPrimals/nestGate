@@ -46,10 +46,13 @@ pub trait LoadBalancer: Send + Sync {
 
     /// Update service weights (for weighted algorithms)
     ///
+    /// Slice of `(endpoint_id, weight)` pairs avoids forcing callers to build a
+    /// `HashMap<String, f64>` when keys are available as `&str` (e.g. literals).
+    ///
     /// Not all algorithms use weights. Default implementation does nothing.
     fn update_weights(
         &self,
-        weights: HashMap<String, f64>,
+        weights: &[(&str, f64)],
     ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Get load balancer statistics

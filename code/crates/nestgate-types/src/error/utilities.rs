@@ -275,4 +275,21 @@ mod tests {
         drop(rx);
         assert!(safe_send(&tx, 1).is_err());
     }
+
+    #[test]
+    fn safe_read_to_string_ok_and_err() {
+        let path = std::env::temp_dir().join(format!("nestgate_types_read_{}", std::process::id()));
+        std::fs::write(&path, b"content").unwrap();
+        assert_eq!(safe_read_to_string(&path).unwrap(), "content");
+        std::fs::remove_file(&path).ok();
+        let missing = path.join("definitely_missing");
+        assert!(safe_read_to_string(&missing).is_err());
+    }
+
+    #[test]
+    fn safe_env_var_reads_home_when_set() {
+        if let Ok(home) = std::env::var("HOME") {
+            assert_eq!(safe_env_var("HOME").unwrap(), home);
+        }
+    }
 }

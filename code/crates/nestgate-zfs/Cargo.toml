@@ -22,6 +22,8 @@ advanced = ["zfs", "network-integration"]
 ai = ["advanced", "network-integration"]
 performance = ["zfs"]
 dev-environment-fallbacks = []
+# Dev-only ZFS environment helpers (`dev_environment` module); opt-in for stubbed/local workflows.
+dev-stubs = []
 hardware-detection = []
 container = []
 dev-verbose-logging = []
@@ -73,3 +75,4 @@ assert_matches = "1.5"
 approx = "0.5"
 fake = { version = "2.9", features = ["derive", "chrono"] }
 test-log = { version = "0.2", features = ["trace"] }
+temp-env = { workspace = true }

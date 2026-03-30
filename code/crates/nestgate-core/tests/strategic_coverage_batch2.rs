@@ -193,14 +193,12 @@ mod service_discovery_patterns {
     #[tokio::test]
     async fn test_service_health_check() {
         #[derive(Debug, Clone, Copy, PartialEq)]
-        #[allow(dead_code)]
         enum HealthStatus {
             Healthy,
             Degraded,
             Unhealthy,
         }
 
-        #[allow(dead_code)]
         struct Service {
             name: String,
             health: HealthStatus,
@@ -292,14 +290,12 @@ mod integration_patterns {
     #[test]
     fn test_builder_pattern_validation() {
         #[derive(Debug)]
-        #[allow(dead_code)]
         struct Config {
             host: String,
             port: u16,
             timeout: std::time::Duration,
         }
 
-        #[allow(dead_code)]
         struct ConfigBuilder {
             host: Option<String>,
             port: Option<u16>,
@@ -325,7 +321,6 @@ mod integration_patterns {
                 self
             }
 
-            #[allow(dead_code)]
             fn timeout(mut self, timeout: std::time::Duration) -> Self {
                 self.timeout = Some(timeout);
                 self

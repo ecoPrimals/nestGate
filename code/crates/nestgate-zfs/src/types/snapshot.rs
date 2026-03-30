@@ -49,3 +49,20 @@ pub struct SnapshotOptions {
     /// Custom properties to set on snapshot
     pub properties: std::collections::HashMap<String, String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn snapshot_info_default_and_options_serde() {
+        let i = SnapshotInfo::default();
+        assert!(i.name.is_empty());
+        let json = serde_json::to_string(&i).expect("serialize info");
+        let _: SnapshotInfo = serde_json::from_str(&json).expect("deserialize info");
+
+        let o = SnapshotOptions::default();
+        let j = serde_json::to_string(&o).unwrap();
+        let _: SnapshotOptions = serde_json::from_str(&j).unwrap();
+    }
+}

@@ -360,3 +360,46 @@ impl Default for DeploymentSettings {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn installation_settings_serde_roundtrip() {
+        let s = InstallationSettings {
+            mode: InstallMode::Production,
+            install_dir: PathBuf::from("/opt/ng"),
+            config_dir: PathBuf::from("/etc/ng"),
+            data_dir: PathBuf::from("/var/ng"),
+            log_dir: PathBuf::from("/var/log/ng"),
+            temp_dir: PathBuf::from("/tmp/ng"),
+            force_install: true,
+            interactive: false,
+            verbose: true,
+        };
+        let json = serde_json::to_string(&s).unwrap();
+        let back: InstallationSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.mode as u8, s.mode as u8);
+        assert_eq!(back.install_dir, s.install_dir);
+    }
+
+    #[test]
+    fn enums_and_defaults_smoke() {
+        let _ = InstallMode::Standalone;
+        let _ = DeploymentMode::Cluster;
+        let _ = PlatformType::LinuxX64;
+        let _ = PackageManagerType::Apt;
+        let ps = PostInstallSettings::default();
+        assert!(ps.run_initial_setup);
+        let ds = DeploymentSettings::default();
+        assert!(ds.rollback_on_failure);
+    }
+
+    #[test]
+    fn component_selection_default_install_flags() {
+        let c = ComponentSelection::default();
+        assert!(c.install_api);
+        assert!(!c.install_mcp);
+    }
+}

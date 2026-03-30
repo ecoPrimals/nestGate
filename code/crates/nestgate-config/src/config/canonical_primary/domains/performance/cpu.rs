@@ -275,3 +275,44 @@ impl CpuPerformanceConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn serde_roundtrip<T>(v: &T)
+    where
+        T: serde::Serialize + serde::de::DeserializeOwned,
+    {
+        let s = serde_json::to_string(v).expect("to_string");
+        let _: T = serde_json::from_str(&s).expect("from_str");
+    }
+
+    #[test]
+    fn cpu_performance_default_validate_serde() {
+        let c = CpuPerformanceConfig::default();
+        c.validate().expect("validate");
+        serde_roundtrip(&c);
+    }
+
+    #[test]
+    fn isolation_and_scheduling_variants() {
+        for i in [
+            IsolationStrategy::None,
+            IsolationStrategy::Soft,
+            IsolationStrategy::Hard,
+            IsolationStrategy::Adaptive,
+        ] {
+            serde_roundtrip(&i);
+        }
+        for p in [
+            SchedulingPolicy::Normal,
+            SchedulingPolicy::Fifo,
+            SchedulingPolicy::RoundRobin,
+            SchedulingPolicy::Batch,
+            SchedulingPolicy::Idle,
+        ] {
+            serde_roundtrip(&p);
+        }
+    }
+}

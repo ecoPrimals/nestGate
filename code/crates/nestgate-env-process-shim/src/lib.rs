@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+#![warn(missing_docs)]
+
 //! Thin wrappers around [`std::env::set_var`] and [`std::env::remove_var`].
 //!
 //! This crate is **edition 2021**. In that edition those functions are still safe; in Rust 2024

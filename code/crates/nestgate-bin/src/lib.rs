@@ -2,6 +2,7 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![allow(
     unused,
     dead_code,

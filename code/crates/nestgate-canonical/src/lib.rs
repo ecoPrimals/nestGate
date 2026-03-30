@@ -9,6 +9,7 @@
 //! `NestGate` ecosystem. It serves as the single source of truth for all cross-crate
 //! communication and ensures consistent patterns throughout the system.
 
+#![warn(missing_docs)]
 #![cfg_attr(
     test,
     allow(

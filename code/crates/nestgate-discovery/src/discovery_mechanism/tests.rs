@@ -20,7 +20,7 @@ async fn test_mdns_discovery_creation() {
 #[tokio::test]
 async fn test_auto_detect_defaults_to_mdns() {
     // When no discovery env vars set, should default to mDNS
-    let discovery = DiscoveryBuilder::new().detect().await;
+    let discovery = DiscoveryBuilder::new().detect();
 
     assert!(discovery.is_ok());
     let discovery = discovery.unwrap();

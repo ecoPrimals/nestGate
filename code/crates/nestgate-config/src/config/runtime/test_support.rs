@@ -108,9 +108,9 @@ impl TestConfigGuard {
     pub fn with_host_port(host: &str, port: u16) -> Self {
         Self::new(|config| {
             // Try to parse as IpAddr, if fails use 127.0.0.1 (for test hostnames like "custom.example.com")
-            config.network.api_host = host
-                .parse()
-                .unwrap_or_else(|_| "127.0.0.1".parse().unwrap());
+            config.network.api_host = host.parse().unwrap_or_else(|_| {
+                std::net::Ipv4Addr::LOCALHOST.into()
+            });
             config.network.api_port = port;
         })
     }

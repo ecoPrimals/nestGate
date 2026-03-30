@@ -355,7 +355,31 @@ struct BearDogResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+    use std::time::Duration;
     use tempfile::TempDir;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::UnixListener;
+
+    #[test]
+    fn beardog_protocol_types_serde_roundtrip() {
+        let req = json!({
+            "method": "encrypt",
+            "data": [1u8, 2, 3]
+        });
+        let back: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
+        assert_eq!(back["method"], "encrypt");
+
+        let resp = json!({
+            "success": true,
+            "data": [9u8],
+            "error": null
+        });
+        let s = serde_json::to_string(&resp).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&s).unwrap();
+        assert!(parsed["success"].as_bool().unwrap());
+    }
 
     #[test]
     fn test_client_creation() {
@@ -363,6 +387,9 @@ mod tests {
         let socket_path = temp_dir.path().join("beardog.sock");
         let client = BearDogClient::new(&socket_path);
         assert!(client.is_ok());
+        let c = client.unwrap();
+        assert_eq!(c.socket_path(), socket_path);
+        assert!(!c.is_connected());
     }
 
     #[test]
@@ -377,5 +404,196 @@ mod tests {
         let result = BearDogClient::discover("test").await;
         // In test environment, BearDog won't be available
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn discover_via_env_returns_client_without_socket_file() {
+        temp_env::async_with_vars(
+            [(
+                "NESTGATE_SECURITY_PROVIDER",
+                Some("/tmp/nestgate-test-beardog-not-created.sock"),
+            )],
+            async {
+                let c = BearDogClient::discover("fam").await.expect("env path");
+                assert_eq!(
+                    c.socket_path(),
+                    std::path::Path::new("/tmp/nestgate-test-beardog-not-created.sock")
+                );
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn connect_errors_when_socket_missing() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("nope.sock");
+        let mut c = BearDogClient::new(&path).unwrap();
+        assert!(c.connect().await.is_err());
+        assert!(!c.is_connected());
+    }
+
+    #[tokio::test]
+    async fn encrypt_decrypt_errors_when_not_connected() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("x.sock");
+        let c = BearDogClient::new(&path).unwrap();
+        assert!(c.encrypt(b"hi").await.is_err());
+        assert!(c.decrypt(b"hi").await.is_err());
+        assert!(c.generate_token("id").await.is_err());
+        assert!(c.validate_token("t").await.is_err());
+    }
+
+    /// Minimal BearDog-compatible responder (JSON request in, JSON response out).
+    /// `connect()` opens a short-lived socket; RPC methods open a new connection each time.
+    /// Stops when `accept` idles past `idle` (so the task terminates and tests do not hang).
+    async fn run_mock_beardog(
+        path: std::path::PathBuf,
+        on_success: bool,
+        token_bytes: Vec<u8>,
+        idle: Duration,
+    ) {
+        let _ = tokio::fs::remove_file(&path).await;
+        let listener = UnixListener::bind(&path).expect("bind mock beardog");
+        loop {
+            let accept_fut = listener.accept();
+            let Ok(accept_result) = tokio::time::timeout(idle, accept_fut).await else {
+                break;
+            };
+            let Ok((mut stream, _)) = accept_result else {
+                break;
+            };
+            let mut buf = vec![0u8; 65536];
+            let Ok(n) = stream.read(&mut buf).await else {
+                continue;
+            };
+            if n == 0 {
+                continue;
+            }
+            let v: serde_json::Value = match serde_json::from_slice(&buf[..n]) {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+            let method = v["method"].as_str().unwrap_or("");
+            let data = v["data"]
+                .as_array()
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|x| x.as_u64().map(|n| n as u8))
+                        .collect::<Vec<u8>>()
+                })
+                .unwrap_or_default();
+
+            let (success, out_data, err) = if on_success {
+                let out = match method {
+                    "encrypt" | "decrypt" => data,
+                    "generate_token" => b"tok".to_vec(),
+                    "validate_token" => token_bytes.clone(),
+                    _ => vec![],
+                };
+                (true, out, None)
+            } else {
+                (false, vec![], Some("mock failure".to_string()))
+            };
+
+            let resp = json!({
+                "success": success,
+                "data": out_data,
+                "error": err
+            });
+            let bytes = serde_json::to_vec(&resp).unwrap();
+            let _ = stream.write_all(&bytes).await;
+        }
+    }
+
+    #[tokio::test]
+    async fn connect_encrypt_roundtrip_with_mock_server() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("bd.sock");
+        let path_clone = path.clone();
+        let server = tokio::spawn(run_mock_beardog(
+            path_clone,
+            true,
+            vec![],
+            Duration::from_millis(400),
+        ));
+
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
+        let mut c = BearDogClient::new(&path).unwrap();
+        c.connect().await.expect("connect");
+        assert!(c.is_connected());
+        let out = c.encrypt(b"plain").await.expect("encrypt");
+        assert_eq!(out, b"plain");
+
+        let _ = server.await;
+    }
+
+    #[tokio::test]
+    async fn send_request_returns_security_error_when_success_false() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("bd2.sock");
+        let path_clone = path.clone();
+        let server = tokio::spawn(run_mock_beardog(
+            path_clone,
+            false,
+            vec![],
+            Duration::from_millis(400),
+        ));
+
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
+        let mut c = BearDogClient::new(&path).unwrap();
+        c.connect().await.unwrap();
+        let err = c.encrypt(b"x").await.expect_err("expect BearDog err");
+        assert!(err.to_string().contains("mock failure") || err.to_string().contains("BearDog"));
+
+        let _ = server.await;
+    }
+
+    #[tokio::test]
+    async fn validate_token_interprets_first_byte() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("bd3.sock");
+        let path_clone = path.clone();
+        let server = tokio::spawn(run_mock_beardog(
+            path_clone,
+            true,
+            vec![1],
+            Duration::from_millis(400),
+        ));
+
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
+        let mut c = BearDogClient::new(&path).unwrap();
+        c.connect().await.unwrap();
+        assert!(c.validate_token("any").await.unwrap());
+
+        let _ = server.await;
+    }
+
+    #[tokio::test]
+    async fn discover_finds_socket_via_glob_under_tmp() {
+        let dir = TempDir::new().unwrap();
+        let sock_name = "beardog-globfam-zz.sock";
+        let path = dir.path().join(sock_name);
+        let _ = tokio::fs::remove_file(&path).await;
+        let _listener = UnixListener::bind(&path).expect("bind for discover");
+        let path_clone = path.clone();
+
+        temp_env::async_with_vars(
+            vec![
+                ("NESTGATE_SECURITY_PROVIDER", None::<&str>),
+                ("XDG_RUNTIME_DIR", Some(dir.path().to_str().unwrap())),
+                ("NESTGATE_SECURITY_SLUG", Some("beardog")),
+            ],
+            async move {
+                let c = BearDogClient::discover("globfam")
+                    .await
+                    .expect("glob discover");
+                assert_eq!(c.socket_path(), path_clone);
+            },
+        )
+        .await;
     }
 }

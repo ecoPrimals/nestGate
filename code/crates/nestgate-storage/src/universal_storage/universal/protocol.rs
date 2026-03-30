@@ -182,4 +182,47 @@ mod tests {
         assert_eq!(info.version, Some("v1".to_string()));
         assert_eq!(info.metadata.get("vendor"), Some(&"example".to_string()));
     }
+
+    #[test]
+    fn discovered_protocol_all_operation_pattern_names() {
+        use crate::universal_storage::universal::authentication::AuthenticationPattern;
+        use crate::universal_storage::universal::operations::{
+            BlockAddressing, KeyFormat, QueryCapabilities, StorageOperationPattern, StreamOrdering,
+        };
+        use crate::universal_storage::universal::transport::{HttpVersion, TransportProtocol};
+
+        let transport = TransportProtocol::Http {
+            version: HttpVersion::Http1_1,
+            tls: None,
+        };
+        let auth = AuthenticationPattern::None;
+
+        for op in [
+            StorageOperationPattern::ObjectStore {
+                addressing: ObjectAddressing::PathBased,
+                organization: ObjectOrganization::Flat,
+            },
+            StorageOperationPattern::BlockStore {
+                block_size: 512,
+                addressing: BlockAddressing::Sequential,
+            },
+            StorageOperationPattern::FileSystem {
+                path_separator: '/',
+                case_sensitive: false,
+            },
+            StorageOperationPattern::KeyValue {
+                key_format: KeyFormat::default(),
+            },
+            StorageOperationPattern::Document {
+                query_capabilities: QueryCapabilities::default(),
+            },
+            StorageOperationPattern::Stream {
+                ordering: StreamOrdering::Unordered,
+            },
+        ] {
+            let p = DiscoveredProtocol::new(transport.clone(), op, auth.clone());
+            assert!(!p.description().is_empty());
+            assert!(!p.is_secure());
+        }
+    }
 }

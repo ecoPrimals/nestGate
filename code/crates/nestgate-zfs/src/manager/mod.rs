@@ -77,20 +77,19 @@ pub struct ZfsManager {
 impl std::fmt::Debug for ZfsManager {
     /// Fmt
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ZfsManager")
-            .field("pool_manager", &self.pool_manager)
+        let mut dbg = f.debug_struct("ZfsManager");
+        dbg.field("pool_manager", &self.pool_manager)
             .field("dataset_manager", &self.dataset_manager)
             .field("snapshot_manager", &self.snapshot_manager)
-            // .field("migration_engine", &self.migration_engine) // Commented out - not yet implemented
-            // .field("dataset_analyzer", &self.dataset_analyzer) // Commented out - not yet implemented
             .field("performance_monitor", &self.performance_monitor)
             .field("tier_manager", &self.tier_manager)
             .field("health_monitor", &self.health_monitor)
             .field("metrics", &self.metrics)
             .field("automation", &self.automation)
-            .field("config", &self.config)
-            .field("orchestrator_client", &"<trait object>")
-            .finish()
+            .field("config", &self.config);
+        #[cfg(feature = "orchestrator")]
+        dbg.field("orchestrator_enabled", &self.orchestrator_enabled);
+        dbg.finish()
     }
 }
 

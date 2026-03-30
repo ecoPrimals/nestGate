@@ -22,7 +22,8 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
-# sysinfo fallback for metrics on non-Linux
+# sysinfo: fallback for `gather_system_metrics` on non-Linux (or when `/proc` fails). Linux uses
+# `nestgate_platform::linux_proc` only — enable with `--features sysinfo` on macOS/Windows.
 sysinfo = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -30,6 +31,6 @@ tokio-test = { workspace = true }
 tempfile = { workspace = true }
 
 [features]
-default = ["sysinfo"]
+default = []
 sysinfo = ["dep:sysinfo"]
 mock-metrics = []

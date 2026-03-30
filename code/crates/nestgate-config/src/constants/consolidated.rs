@@ -930,4 +930,50 @@ mod tests {
             },
         );
     }
+
+    #[test]
+    fn smoke_all_network_constants_getters() {
+        let nc = NetworkConstants::default();
+        assert!(!nc.api_host().is_empty());
+        assert!(!nc.metrics_host().is_empty());
+        assert!(!nc.health_host().is_empty());
+        assert!(!nc.admin_host().is_empty());
+        assert!(nc.api_port() > 0);
+        assert!(nc.http_port() > 0);
+        assert!(nc.https_port() > 0);
+        assert!(nc.websocket_port() > 0);
+        assert!(nc.grpc_port() > 0);
+        assert!(nc.metrics_port() > 0);
+        assert!(nc.prometheus_port() > 0);
+        assert!(nc.health_port() > 0);
+        assert!(nc.admin_port() > 0);
+        assert!(!nc.bind_address().is_empty());
+        assert!(!nc.localhost_ipv4().is_empty());
+        assert!(!nc.localhost_ipv6().is_empty());
+        assert!(!nc.bind_all_ipv4().is_empty());
+        assert!(!nc.bind_all_ipv6().is_empty());
+        assert!(nc.api_url().starts_with("http://"));
+        assert!(nc.api_bind_address().contains(':'));
+        assert!(nc.health_url().starts_with("http://"));
+        assert!(nc.metrics_url().starts_with("http://"));
+        assert!(nc.websocket_url().starts_with("ws://"));
+    }
+
+    #[test]
+    fn smoke_all_performance_constants_getters() {
+        let pc = PerformanceConstants::default();
+        assert!(pc.connection_pool_size() > 0);
+        assert!(pc.idle_timeout().as_millis() > 0);
+        assert!(pc.keepalive_interval().as_millis() > 0);
+        assert!(pc.retry_delay().as_millis() > 0);
+        assert!(pc.retry_backoff_multiplier() > 0.0);
+    }
+
+    #[test]
+    fn smoke_all_security_tls_getters() {
+        let sc = SecurityConstants::default();
+        assert!(!sc.tls_cert_path().is_empty());
+        assert!(!sc.tls_key_path().is_empty());
+        assert!(!sc.tls_ca_path().is_empty());
+    }
 }

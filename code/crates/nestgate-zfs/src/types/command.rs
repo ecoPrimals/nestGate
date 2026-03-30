@@ -118,3 +118,50 @@ impl CommandResult {
         !self.success
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn command_result_constructors() {
+        let ok = CommandResult::success("out".to_string());
+        assert!(ok.is_success());
+        assert!(!ok.is_failure());
+        let bad = CommandResult::failure("e".to_string(), Some(1));
+        assert!(bad.is_failure());
+        assert!(!bad.is_success());
+    }
+
+    #[test]
+    fn zfs_command_variants_are_constructible() {
+        let _ = ZfsCommand::CreatePool {
+            name: "p".into(),
+            devices: vec!["/dev/sdb".into()],
+        };
+        let _ = ZfsCommand::CreateDataset {
+            name: "p/d".into(),
+            properties: HashMap::new(),
+        };
+        let _ = ZfsCommand::CreateSnapshot {
+            dataset: "p/d".into(),
+            snapshot: "s".into(),
+            recursive: true,
+        };
+        let _ = ZfsCommand::ListPools;
+        let _ = ZfsCommand::ListDatasets {
+            pool: Some("p".into()),
+        };
+        let _ = ZfsCommand::GetPoolStatus { pool: "p".into() };
+        let _ = ZfsCommand::SetProperty {
+            dataset: "p/d".into(),
+            property: "atime".into(),
+            value: "off".into(),
+        };
+        let _ = ZfsCommand::Destroy {
+            target: "p/d@s".into(),
+            force: false,
+        };
+    }
+}

@@ -5,6 +5,8 @@
 
 //! Platform-specific utilities: environment handling, Linux proc metrics, and OS abstractions.
 
+#![warn(missing_docs)]
+
 pub mod env_process;
 pub mod linux_proc;
 pub mod platform;

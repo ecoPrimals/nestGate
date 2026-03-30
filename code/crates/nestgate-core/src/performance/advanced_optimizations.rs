@@ -483,4 +483,46 @@ mod tests {
         assert_eq!(profiler.get_metric(1), Some(1));
         assert_eq!(profiler.get_metric(2), Some(0));
     }
+
+    #[test]
+    fn cache_aligned_compare_exchange_and_simd_helpers() {
+        let c = CacheAlignedCounter::new(3);
+        assert_eq!(c.compare_exchange(3, 7), Ok(3));
+        assert_eq!(c.get(), 7);
+
+        assert_eq!(SimdOperations::sum_u32_slice(&[10, 20, 30]), 60);
+        assert_eq!(SimdOperations::max_u32_slice(&[]), None);
+        assert_eq!(SimdOperations::max_u32_slice(&[3, 9, 2]), Some(9));
+        let mut dst = [0u8; 6];
+        SimdOperations::copy_safe(&mut dst, &[1, 2, 3, 4]);
+        assert_eq!(dst[..4], [1, 2, 3, 4]);
+        let mut short = [0u8; 1];
+        SimdOperations::optimized_copy(&mut short, &[9, 8]);
+        assert_eq!(short[0], 9);
+    }
+
+    #[test]
+    fn branch_optimized_likely_unlikely() {
+        assert!(BranchOptimized::likely(true));
+        assert!(!BranchOptimized::likely(false));
+        assert!(BranchOptimized::unlikely(true));
+        assert!(!BranchOptimized::unlikely(false));
+    }
+
+    #[test]
+    fn performance_constants_and_profiler_reset() {
+        let _ = PerformanceConstants::OPTIMAL_BUFFER_SIZE
+            + PerformanceConstants::CACHE_LINE_SIZE
+            + PerformanceConstants::PAGE_SIZE
+            + PerformanceConstants::MAX_SIMD_WIDTH
+            + PerformanceConstants::VECTORIZED_BATCH_SIZE
+            + PerformanceConstants::PREFETCH_DISTANCE;
+        assert!((PerformanceConstants::BRANCH_PREDICTION_THRESHOLD - 0.9).abs() < f64::EPSILON);
+
+        let profiler = PerformanceProfiler::default();
+        profiler.record(0);
+        profiler.record(25);
+        profiler.reset();
+        assert_eq!(profiler.get_all_metrics(), [0u64; 16]);
+    }
 }

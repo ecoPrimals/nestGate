@@ -272,14 +272,14 @@ impl ZfsManager {
                     let bind_addr = std::env::var("NESTGATE_ZFS_BIND_ADDRESS")
                         .unwrap_or_else(|_| {
                             tracing::warn!(
-                                "NESTGATE_ZFS_BIND_ADDRESS unset; using 127.0.0.1 as development default. \
-                                 Set NESTGATE_ZFS_ENDPOINT or bind address env vars for production."
+                                "NESTGATE_ZFS_BIND_ADDRESS unset; using {} as development default. \
+                                 Set NESTGATE_ZFS_ENDPOINT or bind address env vars for production.",
+                                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4
                             );
-                            "127.0.0.1".to_string()
+                            nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4
+                                .to_string()
                         });
-                    let bind_port = std::env::var("NESTGATE_ZFS_BIND_PORT")
-                        .and_then(|s| s.parse::<u16>().map_err(|_| std::env::VarError::NotPresent))
-                        .unwrap_or(8085);
+                    let bind_port = nestgate_core::constants::hardcoding::get_zfs_bind_port();
 
                     tracing::debug!(
                         "ZFS endpoint from self-knowledge: {}:{}",

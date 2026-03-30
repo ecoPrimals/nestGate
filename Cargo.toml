@@ -57,7 +57,7 @@ bytes = { workspace = true }
 [features]
 default = []
 # Development stubs - include mock/stub implementations for testing
-dev-stubs = ["nestgate-core/dev-stubs"]
+dev-stubs = ["nestgate-core/dev-stubs", "nestgate-zfs/dev-stubs"]
 # Streaming RPC - enable enhanced streaming capabilities
 streaming-rpc = []
 chrono = ["dep:chrono"]

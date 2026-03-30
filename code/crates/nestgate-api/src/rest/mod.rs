@@ -422,4 +422,130 @@ mod tests {
         let state = state.unwrap();
         assert!(state.get_rpc_manager().is_some());
     }
+
+    #[test]
+    fn create_api_router_smoke() {
+        let state = ApiState::new().expect("state");
+        let _router = create_api_router(state);
+    }
+
+    #[tokio::test]
+    async fn api_state_init_rpc_connections_ok() {
+        let state = ApiState::new().expect("state");
+        state.init_rpc_connections().expect("rpc init");
+    }
+
+    #[test]
+    fn data_response_paginated_last_page_has_no_more() {
+        let resp = DataResponse::<()>::paginated((), 10, 1, 10);
+        assert!(!resp.meta.expect("meta").has_more);
+    }
+
+    #[test]
+    fn data_response_serde_roundtrip() {
+        let r = DataResponse::new("hello".to_string());
+        let json = serde_json::to_string(&r).expect("ser");
+        let back: DataResponse<String> = serde_json::from_str(&json).expect("de");
+        assert_eq!(back.data, "hello");
+    }
+
+    #[tokio::test]
+    async fn http_get_health_and_rpc_health() {
+        use axum_test::TestServer;
+
+        let state = ApiState::new().expect("state");
+        let app = create_api_router(state.clone());
+        let server = TestServer::new(app).expect("server");
+        server.get("/health").await.assert_status_ok();
+
+        let state2 = ApiState::new().expect("state");
+        state2.init_rpc_connections().expect("init");
+        let app2 = create_api_router(state2);
+        let server2 = TestServer::new(app2).expect("server2");
+        server2.get("/api/v1/rpc/health").await.assert_status_ok();
+    }
+
+    #[tokio::test]
+    async fn http_get_version_and_monitoring_routes() {
+        use axum_test::TestServer;
+
+        let state = ApiState::new().expect("state");
+        let app = create_api_router(state);
+        let server = TestServer::new(app).expect("server");
+
+        server.get("/health").await.assert_status_ok();
+        server.get("/version").await.assert_status_ok();
+        server.get("/system/status").await.assert_status_ok();
+        server
+            .get("/api/v1/monitoring/metrics")
+            .await
+            .assert_status_ok();
+        server
+            .get("/api/v1/monitoring/alerts")
+            .await
+            .assert_status_ok();
+        server.get("/api/v1/zfs/datasets").await.assert_status_ok();
+    }
+
+    #[tokio::test]
+    async fn http_post_rpc_call_hits_handler() {
+        use crate::rest::rpc::{RequestPriority, UnifiedRpcRequest};
+        use axum_test::TestServer;
+        use std::collections::HashMap;
+        use uuid::Uuid;
+
+        let state = ApiState::new().expect("state");
+        state.init_rpc_connections().expect("init");
+        let app = create_api_router(state);
+        let server = TestServer::new(app).expect("server");
+
+        let body = UnifiedRpcRequest {
+            id: Uuid::nil(),
+            source: "nestgate".into(),
+            target: "security".into(),
+            method: "ping".into(),
+            _params: serde_json::json!({}),
+            _metadata: HashMap::new(),
+            timestamp: chrono::Utc::now(),
+            streaming: false,
+            priority: RequestPriority::Normal,
+            timeout: None,
+        };
+
+        let res = server.post("/api/v1/rpc/call").json(&body).await;
+        let code = res.status_code().as_u16();
+        assert!((200..500).contains(&code));
+    }
+
+    #[tokio::test]
+    async fn http_post_rpc_stream_starts_background_task() {
+        use crate::rest::rpc::{RequestPriority, UnifiedRpcRequest};
+        use axum_test::TestServer;
+        use std::collections::HashMap;
+        use uuid::Uuid;
+
+        let state = ApiState::new().expect("state");
+        state.init_rpc_connections().expect("init");
+        let app = create_api_router(state);
+        let server = TestServer::new(app).expect("server");
+
+        let body = UnifiedRpcRequest {
+            id: Uuid::nil(),
+            source: "nestgate".into(),
+            target: "stream".into(),
+            method: "watch".into(),
+            _params: serde_json::json!({}),
+            _metadata: HashMap::new(),
+            timestamp: chrono::Utc::now(),
+            streaming: true,
+            priority: RequestPriority::Normal,
+            timeout: None,
+        };
+
+        server
+            .post("/api/v1/rpc/stream")
+            .json(&body)
+            .await
+            .assert_status_ok();
+    }
 }

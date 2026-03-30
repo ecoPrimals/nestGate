@@ -143,6 +143,7 @@ impl From<serde_json::Error> for ApiError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error as _;
 
     #[test]
     fn test_error_response_structure() {
@@ -257,5 +258,29 @@ mod tests {
         let back: ErrorResponse = serde_json::from_str(&json).unwrap();
         assert_eq!(back.error, er.error);
         assert_eq!(back.code, er.code);
+    }
+
+    #[test]
+    fn api_error_into_response_status_core() {
+        let core = nestgate_core::NestGateError::internal_error("inner", "test");
+        let resp = ApiError::from(core).into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[test]
+    fn api_error_into_response_status_json() {
+        let json_err = serde_json::from_str::<serde_json::Value>("not-json").unwrap_err();
+        let resp = ApiError::from(json_err).into_response();
+        assert_eq!(resp.status(), axum::http::StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn api_error_source_for_core_io_json() {
+        let core = nestgate_core::NestGateError::internal_error("x", "y");
+        assert!(ApiError::from(core).source().is_some());
+        let io = std::io::Error::other("io");
+        assert!(ApiError::from(io).source().is_some());
+        let je = serde_json::from_str::<serde_json::Value>("{").unwrap_err();
+        assert!(ApiError::from(je).source().is_some());
     }
 }

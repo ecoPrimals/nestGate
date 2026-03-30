@@ -3,7 +3,7 @@
 
 use crate::Result;
 
-/// Native async load balancer trait - replaces #[`async_trait`] `LoadBalancer`
+/// Native async load balancer trait - replaces #\[async_trait\] `LoadBalancer`
 pub trait NativeAsyncLoadBalancer<
     const MAX_SERVICES: usize = 1000,
     const MAX_CONCURRENT_REQUESTS: usize = 10000,
@@ -64,7 +64,7 @@ pub trait NativeAsyncLoadBalancer<
     #[must_use] fn health_check_interval_seconds() -> u64 { HEALTH_CHECK_INTERVAL_SECS }
     }
 
-/// Native async communication provider trait - replaces #[`async_trait`] `CommunicationProvider`  
+/// Native async communication provider trait - replaces #\[async_trait\] `CommunicationProvider`  
 pub trait NativeAsyncCommunicationProvider<
     const MAX_CONNECTIONS: usize = 1000,
     const MAX_MESSAGE_SIZE: usize = 1024,
@@ -146,7 +146,7 @@ pub trait NativeAsyncCommunicationProvider<
     }
 }
 
-/// Native async MCP protocol handler trait - replaces #[`async_trait`] `MCPProtocolHandler`
+/// Native async MCP protocol handler trait - replaces #\[async_trait\] `MCPProtocolHandler`
 pub trait NativeAsyncMCPProtocolHandler<
     const MAX_SESSIONS: usize = 1000,
     const SESSION_TIMEOUT_SECS: u64 = 300,
@@ -228,7 +228,7 @@ pub trait NativeAsyncMCPProtocolHandler<
     }
 }
 
-/// Native async automation service trait - replaces #[`async_trait`] `AutomationService`
+/// Native async automation service trait - replaces #\[async_trait\] `AutomationService`
 pub trait NativeAsyncAutomationService<
     const MAX_WORKFLOWS: usize = 1000,
     const MAX_CONCURRENT_EXECUTIONS: usize = 100,
@@ -301,7 +301,7 @@ pub trait NativeAsyncAutomationService<
     }
 }
 
-/// Native async universal service provider trait - replaces #[`async_trait`] `UniversalServiceProvider`
+/// Native async universal service provider trait - replaces #\[async_trait\] `UniversalServiceProvider`
 pub trait NativeAsyncUniversalServiceProvider<
     const MAX_SERVICES: usize = 1000,
     const SERVICE_TIMEOUT_SECS: u64 = 300,
@@ -347,7 +347,7 @@ pub trait NativeAsyncUniversalServiceProvider<
     }
 }
 
-/// Native async security service trait - replaces #[`async_trait`] `SecurityService`
+/// Native async security service trait - replaces #\[async_trait\] `SecurityService`
 /// **DEPRECATED**: Service pattern consolidated into canonical security
 #[deprecated(
     since = "0.9.0",
@@ -386,7 +386,7 @@ pub trait NativeAsyncSecurityService<
     }
 }
 
-/// Native async MCP service trait - replaces #[`async_trait`] `McpService`
+/// Native async MCP service trait - replaces #\[async_trait\] `McpService`
 pub trait NativeAsyncMcpService<
     const MAX_CONNECTIONS: usize = 1000,
     const REQUEST_TIMEOUT_SECS: u64 = 300,
@@ -421,7 +421,7 @@ pub trait NativeAsyncMcpService<
     }
 }
 
-/// Native async workflow service trait - replaces #[`async_trait`] `WorkflowService`
+/// Native async workflow service trait - replaces #\[async_trait\] `WorkflowService`
 pub trait NativeAsyncWorkflowService<
     const MAX_WORKFLOWS: usize = 1000,
     const EXECUTION_TIMEOUT_SECS: u64 = 300,
