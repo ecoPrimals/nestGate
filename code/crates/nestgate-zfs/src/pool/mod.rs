@@ -8,7 +8,10 @@
 //! # Organization
 //!
 //! - `types` - Type definitions for pools, states, health, and capacity
-//! - `manager` - `ZfsPoolManager` implementation for pool operations
+//! - `manager` - `ZfsPoolManager` type and constructors
+//! - `discovery` - Pool discovery, parsing, cache-backed listing and info
+//! - `status` - Aggregate status and `zpool status` output
+//! - `operations` - Create, destroy, scrub
 //! - `tests` - Comprehensive test suite
 //!
 //! # Example
@@ -25,7 +28,10 @@
 //! # }
 //! ```
 
+mod discovery;
 pub mod manager;
+mod operations;
+mod status;
 pub mod types;
 
 #[cfg(test)]

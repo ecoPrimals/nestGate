@@ -50,9 +50,7 @@ fn test_missing_required_fields() {
 
     #[derive(serde::Deserialize)]
     struct RequiredFields {
-        #[allow(dead_code)]
         required: String,
-        #[allow(dead_code)]
         optional: Option<String>,
     }
 
@@ -66,7 +64,6 @@ fn test_invalid_field_types() {
 
     #[derive(serde::Deserialize)]
     struct Config {
-        #[allow(dead_code)]
         port: u16,
     }
 

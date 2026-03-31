@@ -157,11 +157,8 @@ impl CacheSystem {
     /// Get cache statistics
     pub fn stats(&self) -> nestgate_types::Result<CacheSystemStats> {
         match self {
-            Self::SingleTier(_cache) => {
-                // Placeholder stats for single tier
-                Ok(CacheSystemStats::SingleTier(
-                    crate::cache::types::CacheStats::default(),
-                ))
+            Self::SingleTier(cache) => {
+                Ok(CacheSystemStats::SingleTier(cache.snapshot_public_stats()))
             }
             Self::MultiTier(cache) => {
                 let stats = cache.stats()?;
@@ -312,21 +309,22 @@ impl CacheBuilder {
     pub fn with_multi_tier(mut self, _config: NestGateCanonicalConfig) -> Self {
         self.multi_tier = true;
         // Convert NestGateCanonicalConfig to MultiTierCacheConfig
+        let base = crate::cache::multi_tier::resolve_cache_base();
         let multi_tier_config = MultiTierCacheConfig {
             hot_tier_config: crate::cache::multi_tier::SimpleCacheConfig {
-                max_size: 1024 * 1024, // 1MB
+                max_size: 1024 * 1024,
                 ttl: std::time::Duration::from_secs(300),
-                cache_dir: "/tmp/nestgate_hot".to_string(),
+                cache_dir: format!("{base}/hot"),
             },
             warm_tier_config: crate::cache::multi_tier::SimpleCacheConfig {
-                max_size: 10 * 1024 * 1024, // 10MB
+                max_size: 10 * 1024 * 1024,
                 ttl: std::time::Duration::from_secs(3600),
-                cache_dir: "/tmp/nestgate_warm".to_string(),
+                cache_dir: format!("{base}/warm"),
             },
             cold_tier_config: crate::cache::multi_tier::SimpleCacheConfig {
-                max_size: 100 * 1024 * 1024, // 100MB
+                max_size: 100 * 1024 * 1024,
                 ttl: std::time::Duration::from_secs(86400),
-                cache_dir: "/tmp/nestgate_cold".to_string(),
+                cache_dir: format!("{base}/cold"),
             },
             promotion_threshold: 10,
             demotion_threshold: 100,

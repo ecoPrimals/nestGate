@@ -31,15 +31,9 @@ fn hardware_tuning_disabled() -> (StatusCode, Json<serde_json::Value>) {
 #[derive(Debug, Clone)]
 /// Handler for `RealHardwareTuning` requests
 pub struct RealHardwareTuningHandler {
-    #[expect(
-        dead_code,
-        reason = "Reserved for future hardware tuning implementation"
-    )]
-    config: HardwareTuningConfig,
-    #[expect(dead_code, reason = "Reserved for future metrics collection")]
-    metrics_collector: SystemMetricsCollector,
-    #[expect(dead_code, reason = "Reserved for future hardware monitoring")]
-    monitors: HardwareMonitors,
+    _config: HardwareTuningConfig,
+    _metrics_collector: SystemMetricsCollector,
+    _monitors: HardwareMonitors,
 }
 
 impl Default for RealHardwareTuningHandler {
@@ -54,13 +48,13 @@ impl RealHardwareTuningHandler {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            config: HardwareTuningConfig::default(),
-            metrics_collector: SystemMetricsCollector {
+            _config: HardwareTuningConfig::default(),
+            _metrics_collector: SystemMetricsCollector {
                 cpu_monitor: CpuMonitor,
                 memory_monitor: MemoryMonitor,
                 gpu_monitor: Some(GpuMonitor),
             },
-            monitors: HardwareMonitors {
+            _monitors: HardwareMonitors {
                 cpu: CpuMonitor,
                 memory: MemoryMonitor,
                 gpu: Some(GpuMonitor),
@@ -191,14 +185,14 @@ mod tests {
     #[test]
     fn test_real_hardware_tuning_handler_new() {
         let handler = RealHardwareTuningHandler::new();
-        assert_eq!(handler.config.cpu_cores, 8);
-        assert_eq!(handler.config.memory_gb, 16);
+        assert_eq!(handler._config.cpu_cores, 8);
+        assert_eq!(handler._config.memory_gb, 16);
     }
 
     #[test]
     fn test_real_hardware_tuning_handler_default() {
         let handler = RealHardwareTuningHandler::default();
-        assert_eq!(handler.config.cpu_cores, 8);
+        assert_eq!(handler._config.cpu_cores, 8);
     }
 
     #[test]
@@ -262,12 +256,12 @@ mod tests {
     #[test]
     fn test_handler_has_correct_monitors() {
         let handler = RealHardwareTuningHandler::new();
-        assert!(handler.monitors.gpu.is_some());
+        assert!(handler._monitors.gpu.is_some());
     }
 
     #[test]
     fn test_handler_has_metrics_collector() {
         let handler = RealHardwareTuningHandler::new();
-        assert!(handler.metrics_collector.gpu_monitor.is_some());
+        assert!(handler._metrics_collector.gpu_monitor.is_some());
     }
 }

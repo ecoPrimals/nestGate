@@ -307,8 +307,7 @@ cargo test --package nestgate-performance --lib
 # nestgate-nas (34 tests)
 cargo test --package nestgate-nas --lib
 
-# nestgate-mcp (28 tests)
-cargo test --package nestgate-mcp --lib
+# nestgate-mcp: removed from workspace (MCP delegated to biomeOS capability.call)
 ```
 
 ---

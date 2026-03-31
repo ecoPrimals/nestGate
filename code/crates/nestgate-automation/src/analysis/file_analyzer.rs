@@ -111,13 +111,6 @@ impl FileAnalyzer {
         None
     }
 
-    /// Cache analysis result
-    #[allow(dead_code)]
-    async fn cache_analysis(&self, file_path: &str, analysis: FileAnalysis) {
-        let mut cache = self.analysis_cache.write().await;
-        cache.insert(file_path.to_string(), (analysis, SystemTime::now()));
-    }
-
     fn determine_file_type(&self, path: &std::path::Path) -> FileType {
         let extension = path
             .extension()

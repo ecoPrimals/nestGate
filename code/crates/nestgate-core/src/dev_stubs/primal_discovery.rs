@@ -171,12 +171,11 @@ pub fn get_fallback_port(service_name: &str) -> u16 {
     note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 /// Networkconfigadapter
-#[allow(dead_code)] // Placeholder fields retained for API compatibility with future discovery wiring
 pub struct NetworkConfigAdapter {
-    service_name: String,
+    _service_name: String,
     config: NestGateCanonicalConfig,
-    discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
-    stats: Arc<RwLock<AdapterStats>>,
+    _discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
+    _stats: Arc<RwLock<AdapterStats>>,
 }
 impl NetworkConfigAdapter {
     /// Creates a new NetworkConfigAdapter with default configuration
@@ -193,10 +192,10 @@ impl NetworkConfigAdapter {
         };
 
         Self {
-            service_name,
+            _service_name: service_name,
             config,
-            discovery_manager: Arc::new(RwLock::new(())), // Placeholder
-            stats: Arc::new(RwLock::new(AdapterStats::default())),
+            _discovery_manager: Arc::new(RwLock::new(())), // Placeholder
+            _stats: Arc::new(RwLock::new(AdapterStats::default())),
         }
     }
 
@@ -209,14 +208,10 @@ impl NetworkConfigAdapter {
 
 /// Standalone network adapter for isolated deployments
 pub struct StandaloneNetworkAdapter {
-    #[expect(dead_code, reason = "framework placeholder")]
-    service_name: String,
-    #[expect(dead_code, reason = "framework placeholder")]
-    config: NestGateCanonicalConfig,
-    #[expect(dead_code, reason = "framework placeholder")]
-    discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
-    #[expect(dead_code, reason = "framework placeholder")]
-    stats: Arc<RwLock<AdapterStats>>,
+    _service_name: String,
+    _config: NestGateCanonicalConfig,
+    _discovery_manager: Arc<RwLock<()>>, // Placeholder for capability registry
+    _stats: Arc<RwLock<AdapterStats>>,
     endpoints: HashMap<String, SocketAddr>,
 }
 impl StandaloneNetworkAdapter {
@@ -237,10 +232,10 @@ impl StandaloneNetworkAdapter {
         );
 
         Self {
-            service_name,
-            config: NestGateCanonicalConfig::default(), // Placeholder, needs proper initialization
-            discovery_manager: Arc::new(RwLock::new(())), // Placeholder
-            stats: Arc::new(RwLock::new(AdapterStats::default())),
+            _service_name: service_name,
+            _config: NestGateCanonicalConfig::default(), // Placeholder, needs proper initialization
+            _discovery_manager: Arc::new(RwLock::new(())), // Placeholder
+            _stats: Arc::new(RwLock::new(AdapterStats::default())),
             endpoints,
         }
     }

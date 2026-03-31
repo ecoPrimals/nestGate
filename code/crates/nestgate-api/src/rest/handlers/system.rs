@@ -11,7 +11,6 @@
 use axum::{extract::State, response::Json};
 use serde::{Deserialize, Serialize};
 
-use std::sync::Arc;
 use tracing::{debug, info};
 
 use crate::rest::{ApiState, DataResponse};
@@ -256,62 +255,45 @@ fn get_build_profile() -> String {
         "release".to_string()
     }
 }
-/// Get current resource usage (simplified)
+/// Current resource usage from `/proc` and root [`statvfs`](nestgate_core::linux_proc::statvfs_space) (Linux).
 fn get_resource_usage() -> ResourceUsage {
-    // In a real implementation, would read from system APIs
-    // For demo, generate realistic values
-    let memory_total = 8 * 1024 * 1024 * 1024; // 8GB
-    let memory_used = (memory_total as f64 * 0.45) as u64; // 45% usage
-    let memory_usage_percent = (memory_used as f64 / memory_total as f64) * 100.0;
-
-    let disk_total = 100 * 1024 * 1024 * 1024; // 100GB
-    let disk_used = (disk_total as f64 * 0.25) as u64; // 25% usage
-    let disk_usage_percent = (disk_used as f64 / disk_total as f64) * 100.0;
-
-    // Generate CPU usage based on current time for some variation
-    let cpu_usage_percent = {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher = DefaultHasher::new();
-        chrono::Utc::now().timestamp().hash(&mut hasher);
-        let seed = hasher.finish();
-
-        let base = 20.0;
-        let variation = ((seed % 100) as f64) * 0.3;
-        (base + variation).min(80.0)
-    };
-
-    ResourceUsage {
-        memory_used_bytes: memory_used,
-        memory_total_bytes: memory_total,
-        memory_usage_percent,
-        cpu_usage_percent,
-        disk_used_bytes: disk_used,
-        disk_total_bytes: disk_total,
-        disk_usage_percent,
-    }
-}
-
-/// Get snapshot count from a ZFS engine.
-#[expect(dead_code, reason = "Utility function for snapshot monitoring")]
-fn get_engine_snapshot_count(_engine: &Arc<dyn std::any::Any + Send + Sync>) -> u64 {
-    use std::fs;
-    use std::path::Path;
-    let base = std::env::var("NESTGATE_DATA_DIR").unwrap_or_else(|_| {
-        std::env::temp_dir()
-            .join("nestgate")
-            .to_string_lossy()
-            .into_owned()
-    });
-    let snapshot_dir = Path::new(&base).join("snapshots");
-    if snapshot_dir.exists()
-        && let Ok(entries) = fs::read_dir(snapshot_dir)
+    #[cfg(target_os = "linux")]
     {
-        return entries.filter_map(std::result::Result::ok).count() as u64;
+        let cpu_usage_percent =
+            nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);
+        let memory_total = nestgate_core::linux_proc::total_memory_bytes().unwrap_or(0);
+        let memory_used = nestgate_core::linux_proc::used_memory_bytes().unwrap_or(0);
+        let memory_usage_percent = nestgate_core::linux_proc::memory_usage_percent().unwrap_or(0.0);
+        let (disk_total, disk_avail) =
+            nestgate_core::linux_proc::statvfs_space(std::path::Path::new("/")).unwrap_or((0, 0));
+        let disk_used = disk_total.saturating_sub(disk_avail);
+        let disk_usage_percent = if disk_total > 0 {
+            (disk_used as f64 / disk_total as f64) * 100.0
+        } else {
+            0.0
+        };
+        ResourceUsage {
+            memory_used_bytes: memory_used,
+            memory_total_bytes: memory_total,
+            memory_usage_percent,
+            cpu_usage_percent,
+            disk_used_bytes: disk_used,
+            disk_total_bytes: disk_total,
+            disk_usage_percent,
+        }
     }
-
-    0
+    #[cfg(not(target_os = "linux"))]
+    {
+        ResourceUsage {
+            memory_used_bytes: 0,
+            memory_total_bytes: 0,
+            memory_usage_percent: 0.0,
+            cpu_usage_percent: 0.0,
+            disk_used_bytes: 0,
+            disk_total_bytes: 0,
+            disk_usage_percent: 0.0,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -403,9 +385,12 @@ mod tests {
         // Verify version data
         assert!(!result.0.data.version.version.is_empty());
 
-        // Verify resource data
-        assert!(result.0.data.resources.memory_total_bytes > 0);
-        assert!(result.0.data.resources.disk_total_bytes > 0);
+        // Verify resource data (real /proc + statvfs on Linux only)
+        #[cfg(target_os = "linux")]
+        {
+            assert!(result.0.data.resources.memory_total_bytes > 0);
+            assert!(result.0.data.resources.disk_total_bytes > 0);
+        }
         assert!(result.0.data.resources.cpu_usage_percent >= 0.0);
         assert!(result.0.data.resources.cpu_usage_percent <= 100.0);
     }
@@ -472,6 +457,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_get_resource_usage_valid_ranges() {
         let resources = get_resource_usage();
 
@@ -493,6 +479,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_get_resource_usage_consistency() {
         let resources = get_resource_usage();
 

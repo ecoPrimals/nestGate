@@ -350,7 +350,10 @@ impl ServiceDiscoveryConfig {
 /// Production service discovery implementation
 pub struct ProductionServiceDiscovery {
     config: ServiceDiscoveryConfig,
-    #[allow(dead_code)] // Reserved for future advanced discovery features
+    #[allow(
+        dead_code,
+        reason = "Structural placeholder until capability registry replaces unit type"
+    )]
     discovery_manager: (), // Placeholder for capability registry
 }
 

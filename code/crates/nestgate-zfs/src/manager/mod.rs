@@ -71,7 +71,6 @@ pub struct ZfsManager {
     pub config: ZfsConfig,
     /// Optional orchestrator client (placeholder for future implementation)
     #[cfg(feature = "orchestrator")]
-    #[allow(dead_code)] // Future orchestrator integration
     orchestrator_enabled: bool,
 }
 impl std::fmt::Debug for ZfsManager {

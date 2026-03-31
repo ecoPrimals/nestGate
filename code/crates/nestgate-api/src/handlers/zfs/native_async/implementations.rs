@@ -268,10 +268,7 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
                 backend: "zpool".to_string(),
                 message: e.to_string(),
             })?;
-        Ok(pools
-            .iter()
-            .find(|p| p.name == name)
-            .map(|p| zfs_pool_to_info(p)))
+        Ok(pools.iter().find(|p| p.name == name).map(zfs_pool_to_info))
     }
 
     async fn create_pool(&self, _config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
@@ -292,7 +289,6 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
         })
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn list_datasets(&self, pool_name: Option<&str>) -> UniversalZfsResult<Vec<DatasetInfo>> {
         if !zfs_usable(&self.ops).await {
             return Err(Self::not_available_err());
@@ -326,11 +322,10 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
         Ok(datasets
             .iter()
             .find(|d| d.name == name)
-            .map(|d| zfs_dataset_to_info(d)))
+            .map(zfs_dataset_to_info))
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
-    async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+    async fn create_dataset(&self, _config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         if !zfs_usable(&self.ops).await {
             return Err(Self::not_available_err());
         }
@@ -364,7 +359,6 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
         Ok(snaps.iter().map(zfs_snapshot_to_info).collect())
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo> {
         let full_name = snapshot_full_name(config);
         Ok(SnapshotInfo {
@@ -385,7 +379,6 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
         })
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn bulk_create_snapshots(
         &self,
         configs: &[SnapshotConfig],
@@ -397,7 +390,6 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
         Ok(out)
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn clone_dataset(
         &self,
         snapshot_name: &str,
@@ -415,7 +407,6 @@ impl NativeAsyncUniversalZfsService for ProductionZfsService {
     }
 }
 
-#[expect(deprecated, reason = "deprecated API used for backward compatibility")]
 fn snapshot_full_name(config: &SnapshotConfig) -> String {
     if config.name.contains('@') {
         config.name.clone()
@@ -513,7 +504,6 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
         Ok(())
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn list_datasets(&self, pool_name: Option<&str>) -> UniversalZfsResult<Vec<DatasetInfo>> {
         let pool = pool_name.unwrap_or("dev-pool");
         Ok(vec![DatasetInfo {
@@ -543,7 +533,6 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
         }
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         Ok(DatasetInfo {
             name: config.name.clone(),
@@ -574,7 +563,6 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
         }])
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn create_snapshot(&self, config: &SnapshotConfig) -> UniversalZfsResult<SnapshotInfo> {
         let name = snapshot_full_name(config);
         Ok(SnapshotInfo {
@@ -590,7 +578,6 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
         Ok(())
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn bulk_create_snapshots(
         &self,
         configs: &[SnapshotConfig],
@@ -602,7 +589,6 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
         Ok(v)
     }
 
-    #[expect(deprecated, reason = "deprecated API used for backward compatibility")]
     async fn clone_dataset(
         &self,
         snapshot_name: &str,

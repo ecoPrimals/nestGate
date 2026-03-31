@@ -242,7 +242,7 @@ impl MetricsRegistry {
                 Some((rx, tx)),
                 Some(disk_iops),
             ) = (
-                nestgate_platform::linux_proc::global_cpu_usage_percent_from_stat(),
+                nestgate_platform::linux_proc::globalcpu_usage_percent_from_stat(),
                 nestgate_platform::linux_proc::used_memory_bytes(),
                 nestgate_platform::linux_proc::available_memory_bytes(),
                 nestgate_platform::linux_proc::network_rx_tx_bytes_sum(),

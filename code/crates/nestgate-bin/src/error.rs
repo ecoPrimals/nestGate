@@ -260,6 +260,11 @@ impl NestGateBinError {
             operation,
         }
     }
+
+    /// Not yet implemented; returns [`NestGateError::not_implemented`] with operator-facing guidance.
+    pub fn not_implemented(message: impl Into<std::borrow::Cow<'static, str>>) -> NestGateError {
+        NestGateError::not_implemented(message)
+    }
 }
 
 // ==================== SECTION ====================

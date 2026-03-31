@@ -18,7 +18,6 @@ use tracing::{debug, info};
 
 /// S3 object for listing operations
 #[derive(Debug)]
-#[allow(dead_code)] // Future S3 SDK integration
 struct S3Object {
     /// Object key
     key: String,

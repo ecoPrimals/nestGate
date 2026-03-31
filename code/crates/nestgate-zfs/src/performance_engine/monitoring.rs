@@ -49,12 +49,9 @@ type AlertThresholdsArc = Arc<RwLock<AlertThresholds>>;
 #[derive(Debug)]
 /// Realtimeperformancemonitor
 pub struct RealTimePerformanceMonitor {
-    #[allow(dead_code)]
-    pool_metrics: PoolMetricsMap,
-    #[allow(dead_code)]
-    dataset_metrics: DatasetMetricsMap,
-    #[allow(dead_code)]
-    alert_thresholds: AlertThresholdsArc,
+    _pool_metrics: PoolMetricsMap,
+    _dataset_metrics: DatasetMetricsMap,
+    _alert_thresholds: AlertThresholdsArc,
     metrics_cache: MetricsCacheMap,
 }
 
@@ -72,9 +69,9 @@ impl RealTimePerformanceMonitor {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            pool_metrics: Arc::new(RwLock::new(HashMap::new())),
-            dataset_metrics: Arc::new(RwLock::new(HashMap::new())),
-            alert_thresholds: Arc::new(RwLock::new(AlertThresholds {
+            _pool_metrics: Arc::new(RwLock::new(HashMap::new())),
+            _dataset_metrics: Arc::new(RwLock::new(HashMap::new())),
+            _alert_thresholds: Arc::new(RwLock::new(AlertThresholds {
                 cpu_threshold: 80.0,
                 memory_threshold: 90.0,
                 disk_threshold: 85.0,

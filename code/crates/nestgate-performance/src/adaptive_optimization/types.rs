@@ -2,6 +2,10 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 //! Data types and structures for adaptive optimization.
+#![expect(
+    dead_code,
+    reason = "Optimization types are staged for the adaptive engine; unit tests construct them"
+)]
 
 use std::collections::VecDeque;
 use std::sync::atomic::AtomicU64;
@@ -89,7 +93,6 @@ impl Clone for TunableParameter {
 }
 
 /// Tuning action to be performed
-#[allow(dead_code)]
 /// Tuningaction
 pub struct TuningAction {
     parameter_name: String,
@@ -135,7 +138,6 @@ pub struct OptimizationResult {
 }
 
 /// Statistics for adaptive performance monitoring
-#[allow(dead_code)]
 /// Adaptiveperformancestats
 pub struct AdaptivePerformanceStats {
     total_optimizations: AtomicU64,
@@ -145,7 +147,6 @@ pub struct AdaptivePerformanceStats {
 }
 
 /// Statistics for optimization engine
-#[allow(dead_code)]
 /// Optimizationenginestats
 pub struct OptimizationEngineStats {
     decisions_made: AtomicU64,
@@ -154,7 +155,6 @@ pub struct OptimizationEngineStats {
 }
 
 /// Statistics for auto tuner
-#[allow(dead_code)]
 /// Autotunerstats
 pub struct AutoTunerStats {
     parameters_tuned: AtomicU64,

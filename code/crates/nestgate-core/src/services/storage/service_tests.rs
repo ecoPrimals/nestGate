@@ -186,7 +186,7 @@ mod storage_service_tests {
 
         let pools = service.get_pools().await;
         // Verify it's a proper HashMap by accessing it
-        for (name, _pool) in &pools {
+        for name in pools.keys() {
             assert!(!name.is_empty(), "Pool name should not be empty");
         }
     }
@@ -214,7 +214,7 @@ mod storage_service_tests {
 
         let quotas = service.get_quotas().await;
         // Verify it's a proper HashMap
-        for (name, _quota) in &quotas {
+        for name in quotas.keys() {
             assert!(!name.is_empty(), "Quota name should not be empty");
         }
     }
@@ -243,7 +243,7 @@ mod storage_service_tests {
 
         let cache_configs = service.get_cache_configs().await;
         // Verify it's a proper HashMap
-        for (name, _config) in &cache_configs {
+        for name in cache_configs.keys() {
             assert!(!name.is_empty(), "Cache config name should not be empty");
         }
     }

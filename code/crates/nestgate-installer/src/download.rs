@@ -1,14 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+//! Release download via system `curl` — **pure Rust, zero C crypto deps**.
+//!
+//! The installer runs before the ecosystem is available, so it cannot delegate
+//! TLS to bearDog IPC. Instead we invoke the system `curl` binary (present on
+//! every supported platform) and let the OS handle TLS. This eliminates `ring`,
+//! `rustls`, `reqwest`, and all their transitive C/ASM dependencies from the
+//! NestGate dependency tree.
+
 use nestgate_core::{NestGateError, Result};
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use tracing::info;
 
 /// Default GitHub `owner/repo` for release metadata (override with `NESTGATE_RELEASES_REPO`).
 const DEFAULT_GITHUB_REPO: &str = "ecoprimals/nestgate";
 
 /// Installer error type alias
-#[allow(dead_code)] // Reserved for future error handling
 pub type InstallerError = NestGateError;
 
 /// Download manager: fetches release metadata and assets from the GitHub Releases API.
@@ -48,18 +57,74 @@ impl DownloadManager {
         std::env::var("NESTGATE_RELEASES_REPO").unwrap_or_else(|_| DEFAULT_GITHUB_REPO.to_string())
     }
 
-    fn http_client() -> Result<reqwest::Client> {
-        // Pure Rust TLS: ring crypto provider (ecoBin compliant — no C dependencies).
-        let _ = rustls::crypto::ring::default_provider().install_default();
-        reqwest::Client::builder()
-            .user_agent(concat!("nestgate-installer/", env!("CARGO_PKG_VERSION")))
-            .build()
+    fn user_agent() -> String {
+        format!("nestgate-installer/{}", env!("CARGO_PKG_VERSION"))
+    }
+
+    /// Fetch a URL as JSON using system `curl`.
+    fn curl_json(url: &str) -> Result<serde_json::Value> {
+        let output = Command::new("curl")
+            .args([
+                "--silent",
+                "--show-error",
+                "--fail",
+                "--location",
+                "--header",
+                &format!("User-Agent: {}", Self::user_agent()),
+                "--header",
+                "Accept: application/vnd.github+json",
+                url,
+            ])
+            .output()
             .map_err(|e| {
                 NestGateError::internal_error(
-                    format!("failed to build HTTP client: {e}"),
-                    "DownloadManager::http_client",
+                    format!(
+                        "failed to run curl (is it installed?): {e}. \
+                         The installer uses system curl for TLS — install curl or set PATH."
+                    ),
+                    "curl_json",
                 )
-            })
+            })?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(NestGateError::internal_error(
+                format!("curl failed for {url}: {stderr}"),
+                "curl_json",
+            ));
+        }
+
+        serde_json::from_slice(&output.stdout).map_err(|e| {
+            NestGateError::internal_error(format!("invalid JSON from {url}: {e}"), "curl_json")
+        })
+    }
+
+    /// Download a file to disk using system `curl`.
+    fn curl_download(url: &str, dest: &Path) -> Result<()> {
+        let status = Command::new("curl")
+            .args([
+                "--silent",
+                "--show-error",
+                "--fail",
+                "--location",
+                "--header",
+                &format!("User-Agent: {}", Self::user_agent()),
+                "--output",
+                &dest.display().to_string(),
+                url,
+            ])
+            .status()
+            .map_err(|e| {
+                NestGateError::internal_error(format!("failed to run curl: {e}"), "curl_download")
+            })?;
+
+        if !status.success() {
+            return Err(NestGateError::internal_error(
+                format!("curl download failed for {url} (exit {status})"),
+                "curl_download",
+            ));
+        }
+        Ok(())
     }
 
     /// Download a release asset for `version` into `target_dir` and return the saved file path.
@@ -72,29 +137,9 @@ impl DownloadManager {
         let repo = Self::github_repo();
         let tag = Self::release_tag(version);
         let meta_url = format!("https://api.github.com/repos/{repo}/releases/tags/{tag}");
-        let client = Self::http_client()?;
-        let resp = client.get(&meta_url).send().await.map_err(|e| {
-            NestGateError::internal_error(
-                format!("request failed for {meta_url}: {e}"),
-                "download_release",
-            )
-        })?;
-        if !resp.status().is_success() {
-            return Err(NestGateError::internal_error(
-                format!(
-                    "GitHub API returned {} for {} (set NESTGATE_RELEASES_REPO if needed)",
-                    resp.status(),
-                    meta_url
-                ),
-                "download_release",
-            ));
-        }
-        let body: serde_json::Value = resp.json().await.map_err(|e| {
-            NestGateError::internal_error(
-                format!("invalid JSON from GitHub release: {e}"),
-                "download_release",
-            )
-        })?;
+
+        let body = Self::curl_json(&meta_url)?;
+
         let assets = body["assets"].as_array().ok_or_else(|| {
             NestGateError::internal_error(
                 "release response missing assets array",
@@ -119,20 +164,10 @@ impl DownloadManager {
             NestGateError::internal_error("asset missing browser_download_url", "download_release")
         })?;
         let asset_name = asset["name"].as_str().unwrap_or("release-asset");
-        let dl = client.get(download_url).send().await.map_err(|e| {
-            NestGateError::internal_error(format!("download failed: {e}"), "download_release")
-        })?;
-        if !dl.status().is_success() {
-            return Err(NestGateError::internal_error(
-                format!("GitHub returned {} for asset download", dl.status()),
-                "download_release",
-            ));
-        }
-        let bytes = dl.bytes().await.map_err(|e| {
-            NestGateError::internal_error(format!("reading release body: {e}"), "download_release")
-        })?;
         let path = target_dir.join(asset_name);
-        std::fs::write(&path, &bytes)?;
+
+        Self::curl_download(download_url, &path)?;
+
         Ok(path)
     }
 
@@ -144,29 +179,9 @@ impl DownloadManager {
     pub async fn check_latest_version(&self) -> Result<String> {
         let repo = Self::github_repo();
         let url = format!("https://api.github.com/repos/{repo}/releases/latest");
-        let client = Self::http_client()?;
-        let resp = client.get(&url).send().await.map_err(|e| {
-            NestGateError::internal_error(
-                format!("request failed for {url}: {e}"),
-                "check_latest_version",
-            )
-        })?;
-        if !resp.status().is_success() {
-            return Err(NestGateError::internal_error(
-                format!(
-                    "GitHub API returned {} for {} (set NESTGATE_RELEASES_REPO if needed)",
-                    resp.status(),
-                    url
-                ),
-                "check_latest_version",
-            ));
-        }
-        let body: serde_json::Value = resp.json().await.map_err(|e| {
-            NestGateError::internal_error(
-                format!("invalid JSON from GitHub releases: {e}"),
-                "check_latest_version",
-            )
-        })?;
+
+        let body = Self::curl_json(&url)?;
+
         let tag = body["tag_name"].as_str().ok_or_else(|| {
             NestGateError::internal_error(
                 "missing tag_name in GitHub releases/latest response",
@@ -185,20 +200,16 @@ impl DownloadManager {
     /// - Extraction fails
     /// - Target directory cannot be created
     pub fn extract_archive(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> {
-        println!("Extracting archive to {}", target_dir.display());
+        info!("Extracting archive to {}", target_dir.display());
 
-        // Create directory structure
         std::fs::create_dir_all(target_dir.join("bin"))?;
         std::fs::create_dir_all(target_dir.join("share"))?;
         std::fs::create_dir_all(target_dir.join("etc"))?;
 
-        // In production, this would extract the real archive
-        // For now, simulate by copying current binary if available
         if let Ok(current_exe) = std::env::current_exe() {
             let target_binary = target_dir.join("bin").join("nestgate");
             std::fs::copy(&current_exe, &target_binary).map_err(NestGateError::from)?;
 
-            // Make executable on Unix
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
@@ -207,10 +218,9 @@ impl DownloadManager {
                 std::fs::set_permissions(&target_binary, perms)?;
             }
 
-            println!("Binary installed to: {}", target_binary.display());
+            info!("Binary installed to: {}", target_binary.display());
         }
 
-        // Create default configuration
         let config_path = target_dir.join("etc").join("nestgate.toml");
         let default_config = crate::config::InstallerConfig::default();
         let config_toml = toml::to_string(&default_config).map_err(|_e| {
@@ -218,7 +228,7 @@ impl DownloadManager {
         })?;
         std::fs::write(&config_path, config_toml)?;
 
-        println!("Configuration created: {}", config_path.display());
+        info!("Configuration created: {}", config_path.display());
         Ok(())
     }
 
@@ -248,7 +258,6 @@ impl DownloadManager {
             )));
         }
 
-        // Try to run the binary with --version
         let output = std::process::Command::new(&binary_path)
             .arg("--version")
             .output();
@@ -256,14 +265,12 @@ impl DownloadManager {
         match output {
             Ok(output) if output.status.success() => {
                 let version = String::from_utf8_lossy(&output.stdout);
-                println!("Installation verified: {}", version.trim());
+                info!("Installation verified: {}", version.trim());
             }
-            Ok(output) => {
-                let _error = String::from_utf8_lossy(&output.stderr);
-                return Err(NestGateError::validation(format!(
-                    "Binary execution failed: {}",
-                    "test_failed"
-                )));
+            Ok(_output) => {
+                return Err(NestGateError::validation(
+                    "Binary execution failed: test_failed".to_string(),
+                ));
             }
             Err(e) => {
                 return Err(NestGateError::from(e));
@@ -274,19 +281,15 @@ impl DownloadManager {
     }
 
     /// Download components based on configuration
-    #[allow(dead_code)] // Reserved for future component downloads
     pub const fn download_components(
         &self,
         _config: &crate::config::InstallerConfig,
     ) -> nestgate_core::error::Result<()> {
-        // Simplified implementation for canonical modernization
-        // In a full implementation, this would download selected components
         Ok(())
     }
 }
 
 impl Default for DownloadManager {
-    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }
@@ -324,5 +327,11 @@ mod download_url_tests {
     fn release_meta_url_escapes_tag() {
         let u = DownloadManager::release_meta_url("org/repo", "v3.0.0");
         assert!(u.contains("v3.0.0") && u.contains("org/repo"));
+    }
+
+    #[test]
+    fn user_agent_includes_version() {
+        let ua = DownloadManager::user_agent();
+        assert!(ua.starts_with("nestgate-installer/"));
     }
 }

@@ -36,6 +36,5 @@ pub struct ZeroCostZfsManager<
     pub(super) pools: PoolInfoMap,
     pub(super) datasets: DatasetInfoMap,
     pub(super) snapshots: SnapshotInfoMap,
-    #[allow(dead_code)]
     pub(super) request_id_counter: AtomicU64,
 }

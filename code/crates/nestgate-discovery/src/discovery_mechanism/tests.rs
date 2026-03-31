@@ -4,8 +4,10 @@
 //! Unit tests for discovery mechanism
 
 use super::*;
+#[cfg(feature = "mdns")]
 use std::time::Duration;
 
+#[cfg(feature = "mdns")]
 #[tokio::test]
 async fn test_mdns_discovery_creation() {
     let discovery = DiscoveryBuilder::new()
@@ -17,6 +19,7 @@ async fn test_mdns_discovery_creation() {
     assert_eq!(discovery.mechanism_name(), "mdns");
 }
 
+#[cfg(feature = "mdns")]
 #[tokio::test]
 async fn test_auto_detect_defaults_to_mdns() {
     // When no discovery env vars set, should default to mDNS
@@ -27,6 +30,18 @@ async fn test_auto_detect_defaults_to_mdns() {
     assert_eq!(discovery.mechanism_name(), "mdns");
 }
 
+#[cfg(all(
+    not(feature = "mdns"),
+    not(feature = "kubernetes"),
+    not(feature = "consul")
+))]
+#[tokio::test]
+async fn test_auto_detect_errors_when_no_discovery_backend_enabled() {
+    let discovery = DiscoveryBuilder::new().detect();
+    assert!(discovery.is_err());
+}
+
+#[cfg(feature = "mdns")]
 #[tokio::test]
 async fn test_mdns_announce_and_find() {
     let discovery = DiscoveryBuilder::new().build_mdns().unwrap();

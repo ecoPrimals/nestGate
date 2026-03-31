@@ -10,9 +10,6 @@
 use crate::config::environment::{EnvironmentConfig, Port};
 use std::str::FromStr;
 
-#[allow(dead_code)]
-type Result<T> = std::result::Result<T, nestgate_types::error::NestGateError>;
-
 // ==================== PORT VALIDATION ERROR TESTS ====================
 
 #[test]

@@ -189,7 +189,8 @@ jobs:
         echo "💥 Running chaos engineering tests..."
         # Simulate various failure scenarios
         echo "Testing graceful degradation under resource constraints..."
-        RUST_LOG=debug cargo test --test chaos_test -- --nocapture || true
+        # `chaos_test` is not a root integration test binary (see tests/chaos_test_*.rs); keep a real target name.
+        RUST_LOG=debug cargo test --test chaos_test_25_28_final -- --nocapture || true
         echo "✅ Chaos tests completed!"
 
   # ========================================

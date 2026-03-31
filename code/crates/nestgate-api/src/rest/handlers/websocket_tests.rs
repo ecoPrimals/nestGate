@@ -186,18 +186,18 @@ fn test_system_event_serialization() {
 // ==================== REAL-TIME METRIC GENERATOR TESTS ====================
 
 #[test]
-fn test_generate_realtime_cpu_usage() {
-    let usage = generate_realtime_cpu_usage();
+fn test_generate_realtimecpu_usage() {
+    let usage = generate_realtimecpu_usage();
 
     assert!(usage >= 0.0);
     assert!(usage <= 100.0);
 }
 
 #[test]
-fn test_generate_realtime_cpu_usage_multiple() {
+fn test_generate_realtimecpu_usage_multiple() {
     // Generate multiple values to check variation
     // No sleep needed - RNG is concurrent-safe and each call is independent
-    let values: Vec<f64> = (0..10).map(|_| generate_realtime_cpu_usage()).collect();
+    let values: Vec<f64> = (0..10).map(|_| generate_realtimecpu_usage()).collect();
 
     // All should be valid percentages
     for val in &values {
@@ -434,11 +434,11 @@ fn test_multiple_log_entries_different() {
 }
 
 #[test]
-fn test_cpu_usage_not_exceeds_max() {
+fn testcpu_usage_not_exceeds_max() {
     // Generate many values to ensure max cap works
     // No sleep - testing bounds checking, not timing
     for _ in 0..20 {
-        let usage = generate_realtime_cpu_usage();
+        let usage = generate_realtimecpu_usage();
         assert!(usage <= 95.0, "CPU usage should not exceed 95%");
     }
 }

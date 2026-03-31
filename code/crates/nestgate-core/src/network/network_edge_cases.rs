@@ -60,16 +60,18 @@ mod network_retry_edge_cases {
 
     #[test]
     fn test_rapid_retry_config_creation() {
-        let configs: Vec<_> = (0..1000)
-            .map(|i| RetryConfig {
+        let mut count = 0usize;
+        for i in 0..1000 {
+            let _ = RetryConfig {
                 max_attempts: (i % 10) as u32,
                 initial_delay: Duration::from_millis(100),
                 max_delay: Duration::from_secs(30),
                 backoff_multiplier: 2.0,
                 jitter: i % 2 == 0,
-            })
-            .collect();
-        assert_eq!(configs.len(), 1000);
+            };
+            count += 1;
+        }
+        assert_eq!(count, 1000);
     }
 
     #[test]

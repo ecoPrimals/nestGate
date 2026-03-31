@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 /// Systemmetrics
 pub struct SystemMetrics {
     /// CPU usage percentage (0.0 to 100.0)
-    #[allow(dead_code)]
     pub cpu_usage: f64,
     /// Memory used in bytes
     pub memory_used: u64,

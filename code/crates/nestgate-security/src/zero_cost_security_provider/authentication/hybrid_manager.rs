@@ -11,7 +11,7 @@
 
 use super::config::AuthenticationConfig;
 use super::security_primal::call_security_primal;
-use crate::crypto::jwt_rustcrypto::JwtClaims;
+use crate::crypto::jwt_claims::JwtClaims;
 use crate::zero_cost_security_provider::types::{
     AuthMethod, ZeroCostAuthToken, ZeroCostCredentials,
 };
@@ -37,8 +37,7 @@ pub struct HybridAuthenticationManager {
 struct CachedToken {
     token: ZeroCostAuthToken,
     created_at: SystemTime,
-    #[allow(dead_code)]
-    last_validated: SystemTime,
+    _last_validated: SystemTime,
 }
 
 impl HybridAuthenticationManager {
@@ -226,7 +225,7 @@ impl HybridAuthenticationManager {
                         CachedToken {
                             token: token.clone(),
                             created_at: SystemTime::now(),
-                            last_validated: SystemTime::now(),
+                            _last_validated: SystemTime::now(),
                         },
                     );
                 }
@@ -291,7 +290,7 @@ impl HybridAuthenticationManager {
                         CachedToken {
                             token: token.clone(),
                             created_at: SystemTime::now(),
-                            last_validated: SystemTime::now(),
+                            _last_validated: SystemTime::now(),
                         },
                     );
 
@@ -320,7 +319,7 @@ impl HybridAuthenticationManager {
                     CachedToken {
                         token: token.clone(),
                         created_at: SystemTime::now(),
-                        last_validated: SystemTime::now(),
+                        _last_validated: SystemTime::now(),
                     },
                 );
 

@@ -278,15 +278,17 @@ mod recovery_performance_tests {
 
     #[test]
     fn test_rapid_config_creation() {
-        let configs: Vec<_> = (0..1000)
-            .map(|i| CircuitBreakerConfig {
+        let mut count = 0usize;
+        for i in 0..1000 {
+            let _ = CircuitBreakerConfig {
                 failure_threshold: i % 10,
                 success_threshold: 3,
                 timeout: Duration::from_secs(60),
                 window_size: Duration::from_secs(60),
-            })
-            .collect();
-        assert_eq!(configs.len(), 1000);
+            };
+            count += 1;
+        }
+        assert_eq!(count, 1000);
     }
 
     #[test]
@@ -298,8 +300,12 @@ mod recovery_performance_tests {
             window_size: Duration::from_secs(60),
         };
 
-        let configs: Vec<_> = (0..1000).map(|_| config.clone()).collect();
-        assert_eq!(configs.len(), 1000);
+        let mut count = 0usize;
+        for _ in 0..1000 {
+            let _ = config.clone();
+            count += 1;
+        }
+        assert_eq!(count, 1000);
     }
 }
 

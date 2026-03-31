@@ -5,6 +5,10 @@
 //!
 //! Real storage operations using the universal storage system.
 //! Replaces mock data with actual storage backend integration.
+#![expect(
+    dead_code,
+    reason = "ProductionStorageHandler keeps StorageDetector and get_detector for future scanning; tests exercise them"
+)]
 
 use crate::error::Result;
 use axum::response::Json;
@@ -19,7 +23,6 @@ use tracing::{info, warn};
 #[derive(Debug, Clone)]
 /// Handler for ProductionStorage requests
 pub struct ProductionStorageHandler {
-    #[expect(dead_code, reason = "StorageDetector reserved for future storage detection features")]
     detector: StorageDetector,
 }
 
@@ -41,7 +44,6 @@ impl ProductionStorageHandler {
     }
 
     /// Get storage detector for scanning available storage
-    #[expect(dead_code, reason = "Planned for future storage scanning features")]
     async fn get_detector(&mut self) -> Result<&mut StorageDetector> {
         Ok(&mut self.detector)
     }

@@ -62,7 +62,6 @@ pub enum FindingSeverity {
 /// Production Readiness Validator
 pub struct ProductionReadinessValidator {
     /// Real ZFS operations handler
-    #[allow(dead_code)]
     real_ops: RealZfsOperations,
 }
 /// Real ZFS operations (placeholder for actual implementation)

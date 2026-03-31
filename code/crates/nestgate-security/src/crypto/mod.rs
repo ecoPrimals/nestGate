@@ -73,7 +73,7 @@ pub mod delegate;
 ///
 /// The `JwtClaims` type is a pure data structure — signing and verification
 /// are delegated to the crypto provider via [`delegate::CryptoDelegate`].
-pub mod jwt_rustcrypto;
+pub mod jwt_claims;
 
 #[cfg(test)]
 mod tests;

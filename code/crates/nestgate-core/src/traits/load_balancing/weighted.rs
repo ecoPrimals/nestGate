@@ -327,7 +327,7 @@ mod tests {
         ServiceRequest {
             service_id: "svc".to_string(),
             action: "ping".to_string(),
-            parameters: Default::default(),
+            parameters: HashMap::default(),
             timeout_seconds: Some(5),
         }
     }

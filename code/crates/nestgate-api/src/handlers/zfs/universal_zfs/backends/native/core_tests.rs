@@ -161,8 +161,8 @@ mod native_core_tests {
     async fn test_is_available() {
         // This test will pass or fail depending on whether ZFS is installed
         let available = NativeZfsService::is_available().await;
-        // We just check that it returns a boolean
-        assert!(available || !available);
+        // Smoke: call returns `bool` (value depends on whether ZFS is installed).
+        let _: bool = available;
     }
 
     // ==================== INTEGRATION TESTS ====================

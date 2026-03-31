@@ -88,16 +88,17 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     
+    # `ultimate_performance_mastery` was never a registered bench; nestgate-core ships Criterion benches (see its Cargo.toml).
     - name: 🚀 Ultimate Performance Benchmarks
       run: |
-        cargo bench --bench ultimate_performance_mastery
+        cargo bench -p nestgate-core --bench working_performance_benchmark
         echo "✅ ZERO-COST ABSTRACTIONS VALIDATED"
     
     - name: 📊 Performance Regression Check
       run: |
         # Store benchmark results
         mkdir -p benchmark-results
-        cargo bench --bench ultimate_performance_mastery -- --save-baseline current
+        cargo bench -p nestgate-core --bench working_performance_benchmark -- --save-baseline current
         echo "✅ PERFORMANCE BASELINE ESTABLISHED"
     
     - name: 💾 Upload Performance Results

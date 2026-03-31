@@ -69,10 +69,13 @@ pub struct HardwareProfile {
 }
 /// System introspection subsystem
 #[derive(Debug)]
-#[allow(dead_code)]
 /// Systemintrospection
 pub struct SystemIntrospection {
     capabilities: Option<SystemCapabilities>,
+    #[allow(
+        dead_code,
+        reason = "Populated when heuristic scoring is wired into tuning recommendations"
+    )]
     hardware_profile: Option<HardwareProfile>,
     config: SharedIntrospectionConfig,
 }

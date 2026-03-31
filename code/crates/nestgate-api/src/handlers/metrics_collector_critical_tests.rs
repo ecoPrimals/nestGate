@@ -22,19 +22,19 @@ mod metrics_collector_critical_tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![],
             system_metrics: SystemMetrics {
-                _cpu_usage: 25.5,
+                cpu_usage: 25.5,
                 memory_usage: 60.0,
                 memory_total: 16_000_000_000,
                 memory_available: 6_400_000_000,
                 network_io: NetworkIOMetrics {
-                    bytes_sent: 1000000,
-                    bytes_received: 2000000,
+                    bytes_sent: 1_000_000,
+                    bytes_received: 2_000_000,
                     packets_sent: 1000,
                     packets_received: 2000,
                 },
                 disk_io: DiskIOMetrics {
-                    read_bytes: 50000000,
-                    write_bytes: 30000000,
+                    read_bytes: 50_000_000,
+                    write_bytes: 30_000_000,
                     read_operations: 500,
                     write_operations: 300,
                 },
@@ -42,7 +42,7 @@ mod metrics_collector_critical_tests {
             arc_hit_ratio: 0.95,
             l2arc_hit_ratio: 0.85,
             compression_ratio: 2.5,
-            total_throughput: 1000000.0,
+            total_throughput: 1_000_000.0,
             average_read_latency: 5.5,
             average_write_latency: 8.2,
         };
@@ -58,7 +58,7 @@ mod metrics_collector_critical_tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![],
             system_metrics: SystemMetrics {
-                _cpu_usage: 10.0,
+                cpu_usage: 10.0,
                 memory_usage: 50.0,
                 memory_total: 8_000_000_000,
                 memory_available: 4_000_000_000,
@@ -78,7 +78,7 @@ mod metrics_collector_critical_tests {
             arc_hit_ratio: 0.90,
             l2arc_hit_ratio: 0.80,
             compression_ratio: 2.0,
-            total_throughput: 500000.0,
+            total_throughput: 500_000.0,
             average_read_latency: 10.0,
             average_write_latency: 15.0,
         };
@@ -94,7 +94,7 @@ mod metrics_collector_critical_tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![],
             system_metrics: SystemMetrics {
-                _cpu_usage: 15.0,
+                cpu_usage: 15.0,
                 memory_usage: 40.0,
                 memory_total: 4_000_000_000,
                 memory_available: 2_400_000_000,
@@ -114,7 +114,7 @@ mod metrics_collector_critical_tests {
             arc_hit_ratio: 0.92,
             l2arc_hit_ratio: 0.82,
             compression_ratio: 1.8,
-            total_throughput: 750000.0,
+            total_throughput: 750_000.0,
             average_read_latency: 7.5,
             average_write_latency: 12.0,
         };
@@ -196,7 +196,7 @@ mod metrics_collector_critical_tests {
     #[test]
     fn test_system_metrics_creation() {
         let system = SystemMetrics {
-            _cpu_usage: 30.0,
+            cpu_usage: 30.0,
             memory_usage: 65.0,
             memory_total: 32_000_000_000,
             memory_available: 11_200_000_000,
@@ -221,7 +221,7 @@ mod metrics_collector_critical_tests {
     #[test]
     fn test_system_metrics_memory_calculation() {
         let system = SystemMetrics {
-            _cpu_usage: 20.0,
+            cpu_usage: 20.0,
             memory_usage: 50.0,
             memory_total: 16_000_000_000,
             memory_available: 8_000_000_000,
@@ -404,7 +404,7 @@ mod metrics_collector_critical_tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![pool1, pool2],
             system_metrics: SystemMetrics {
-                _cpu_usage: 35.0,
+                cpu_usage: 35.0,
                 memory_usage: 55.0,
                 memory_total: 16_000_000_000,
                 memory_available: 7_200_000_000,
@@ -440,7 +440,7 @@ mod metrics_collector_critical_tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![],
             system_metrics: SystemMetrics {
-                _cpu_usage: 25.0,
+                cpu_usage: 25.0,
                 memory_usage: 50.0,
                 memory_total: 8_000_000_000,
                 memory_available: 4_000_000_000,

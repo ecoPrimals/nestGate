@@ -39,8 +39,9 @@ clap = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 console = "0.15"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-webpki-roots-no-provider"] }
-rustls = { version = "0.23", default-features = false, features = ["std", "tls12", "ring"] }
+# TLS: delegated to system curl (download.rs) — eliminates ring/rustls/reqwest C deps.
+# BearDog provides pure-Rust crypto for the ecosystem; the installer runs before the
+# ecosystem is available, so it uses the system TLS stack via curl.
 dialoguer = { version = "0.11", features = ["completion"] }
 
 [features]

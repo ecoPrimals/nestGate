@@ -90,7 +90,6 @@ impl ZfsDatasetManager {
     }
 
     /// Create a dataset with fallback for testing/development environments
-    #[allow(dead_code)] // Planned feature for enhanced resilience
     async fn create_with_fallback(
         &self,
         name: &str,
@@ -205,34 +204,42 @@ impl ZfsDatasetManager {
         Ok(())
     }
 
-    /// Delete a dataset
+    /// Delete (destroy) a ZFS dataset.
+    ///
+    /// Runs `zfs destroy <name>`. The caller is responsible for confirming
+    /// the operation — this will permanently remove the dataset and its data.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn delete_dataset(&self, name: &str) -> Result<()> {
+    /// Returns an error if the `zfs destroy` command fails or is unavailable.
+    pub async fn delete_dataset(&self, name: &str) -> Result<()> {
         info!("Deleting dataset: {}", name);
 
-        // Mock mode - return success for development
-        tracing::debug!("Mock mode: simulating dataset deletion for {}", name);
+        let output = tokio::process::Command::new("zfs")
+            .args(["destroy", name])
+            .output()
+            .await
+            .map_err(|e| {
+                crate::error::ZfsErrorBuilder::command_error("zfs destroy", &e.to_string())
+            })?;
 
-        // Real implementation would use zfs destroy command
-        // For now, just return success to avoid permission issues
+        if !output.status.success() {
+            return Err(crate::error::ZfsErrorBuilder::command_error(
+                "zfs destroy",
+                &String::from_utf8_lossy(&output.stderr),
+            ));
+        }
+
+        info!("Destroyed dataset: {}", name);
         Ok(())
     }
 
-    /// Destroy a dataset (alias for `delete_dataset`)
+    /// Destroy a dataset (alias for [`delete_dataset`]).
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn destroy_dataset(&self, name: &str) -> Result<()> {
-        self.delete_dataset(name)
+    /// Same as [`delete_dataset`].
+    pub async fn destroy_dataset(&self, name: &str) -> Result<()> {
+        self.delete_dataset(name).await
     }
 }

@@ -136,7 +136,7 @@ mod auth_handler_tests {
         let response = TokenValidationResponse {
             valid: true,
             username: Some("testuser".to_string()),
-            expires_at: Some(1234567890),
+            expires_at: Some(1_234_567_890),
         };
 
         assert!(response.valid);
@@ -148,7 +148,7 @@ mod auth_handler_tests {
         assert!(response.expires_at.is_some());
         assert_eq!(
             response.expires_at.expect("Authentication failed"),
-            1234567890
+            1_234_567_890
         );
     }
 
@@ -334,7 +334,7 @@ mod auth_handler_tests {
             if pwd.len() >= 8 {
                 // For valid passwords, check complexity
                 let is_complex = has_digit || has_upper || has_lower;
-                assert!(is_complex || !is_complex); // Just verify we can check
+                let _: bool = is_complex;
             }
         }
     }

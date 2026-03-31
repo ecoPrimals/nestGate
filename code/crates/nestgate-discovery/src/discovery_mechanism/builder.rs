@@ -6,7 +6,9 @@
 //! Provides a builder pattern for creating discovery mechanisms with
 //! configuration options like timeouts, caching, and auto-detection.
 
-use super::{DiscoveryMechanism, mdns};
+use super::DiscoveryMechanism;
+#[cfg(feature = "mdns")]
+use super::mdns;
 use nestgate_types::error::Result;
 use std::time::Duration;
 
@@ -67,9 +69,12 @@ impl DiscoveryBuilder {
     /// Auto-detect best available discovery mechanism
     ///
     /// Detection order (by preference):
-    /// 1. Kubernetes (if `KUBERNETES_SERVICE_HOST` set)
-    /// 2. Consul (if `NESTGATE_CONSUL_URL`, `CONSUL_HTTP_ADDR`, or `NESTGATE_CONSUL_HTTP_ADDR` set)
-    /// 3. mDNS (default fallback)
+    /// 1. Kubernetes (if `KUBERNETES_SERVICE_HOST` set and the `kubernetes` feature is enabled)
+    /// 2. Consul (if `NESTGATE_CONSUL_URL`, `CONSUL_HTTP_ADDR`, or `NESTGATE_CONSUL_HTTP_ADDR` set and the `consul` feature is enabled)
+    /// 3. mDNS (fallback when the `mdns` feature is enabled)
+    ///
+    /// If no backend matches the environment **and** no optional backend feature is enabled that
+    /// could satisfy detection, returns a configuration error from `nestgate_types::error`.
     pub fn detect(self) -> Result<Box<dyn DiscoveryMechanism>> {
         // Check for kubernetes
         if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
@@ -92,11 +97,22 @@ impl DiscoveryBuilder {
             tracing::info!("Consul detected but feature not enabled, falling back");
         }
 
-        // Default to mDNS
-        Ok(Box::new(mdns::MdnsDiscovery::new(&self)?))
+        // Default to mDNS when the feature is enabled (standalone / dev)
+        #[cfg(feature = "mdns")]
+        {
+            Ok(Box::new(mdns::MdnsDiscovery::new(&self)?))
+        }
+        #[cfg(not(feature = "mdns"))]
+        {
+            Err(nestgate_types::error::NestGateError::configuration_error(
+                "discovery_backend",
+                "No discovery backend available: enable the `mdns`, `consul`, or `kubernetes` crate feature, or configure environment for an enabled backend",
+            ))
+        }
     }
 
-    /// Build mDNS discovery (default)
+    /// Build mDNS discovery (requires the `mdns` feature)
+    #[cfg(feature = "mdns")]
     pub fn build_mdns(self) -> Result<Box<dyn DiscoveryMechanism>> {
         Ok(Box::new(mdns::MdnsDiscovery::new(&self)?))
     }
@@ -144,6 +160,7 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(feature = "mdns")]
     #[test]
     fn build_mdns_produces_mechanism() -> Result<()> {
         let mech = DiscoveryBuilder::new().build_mdns()?;

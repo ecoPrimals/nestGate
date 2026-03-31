@@ -103,13 +103,13 @@ mod tests {
     fn test_snapshot_info_creation() {
         let snapshot = SnapshotInfo {
             name: "tank/data@snap1".to_string(),
-            creation_time: 1234567890,
+            creation_time: 1_234_567_890,
             used: 50,
             referenced: 100,
             properties: HashMap::new(),
         };
         assert_eq!(snapshot.name, "tank/data@snap1");
-        assert_eq!(snapshot.creation_time, 1234567890);
+        assert_eq!(snapshot.creation_time, 1_234_567_890);
     }
 
     #[test]
@@ -118,7 +118,7 @@ mod tests {
             name: "tank/data".to_string(),
             mountpoint: Some("/mnt/data".to_string()),
             compression: true,
-            quota: Some(1000000),
+            quota: Some(1_000_000),
             reservation: None,
             properties: HashMap::new(),
         };

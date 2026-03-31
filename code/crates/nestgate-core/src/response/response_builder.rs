@@ -191,12 +191,6 @@ impl ResponseBuilder {
             "Streaming response would be implemented here",
         )
     }
-
-    /// Helper method to create error JSON
-    #[expect(dead_code, reason = "framework placeholder")] // Framework method - intentionally unused
-    const fn error_json(message: String) -> Json<ErrorMessage> {
-        Json(ErrorMessage { error: message })
-    }
 }
 
 /// Paginated response structure
@@ -220,11 +214,6 @@ pub struct PaginationMetadata {
     pub total: u64,
     /// Total Pages
     pub total_pages: u32,
-}
-/// Simple error message structure
-#[derive(Debug, Serialize, Deserialize)]
-struct ErrorMessage {
-    error: String,
 }
 #[cfg(test)]
 mod tests {

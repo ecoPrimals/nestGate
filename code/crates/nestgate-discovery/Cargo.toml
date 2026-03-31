@@ -35,5 +35,6 @@ tempfile = { workspace = true }
 default = []
 dev-stubs = []
 # Optional discovery backends (referenced by `cfg(feature = "...")` in discovery_mechanism)
+mdns = []
 consul = []
 kubernetes = []

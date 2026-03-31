@@ -1,16 +1,16 @@
 # NestGate - Sovereign Storage & Permanence Primal
 
 **Version**: 4.7.0-dev  
-**Build**: 25/25 workspace members compiling, 0 errors  
-**Tests**: 8,384 lib tests passing, 0 failures  
-**Coverage**: 80.95% line (workspace `--lib`, llvm-cov)  
-**Clippy**: ZERO warnings — full workspace `cargo clippy --workspace --lib`  
+**Build**: All workspace members — `cargo check --workspace --all-features --all-targets` (0 errors)  
+**Tests**: 8,376 lib tests passing, 0 failures (workspace `--lib`)  
+**Coverage**: 80.95% line (workspace `--lib`, llvm-cov) — last full measurement; re-run to refresh  
+**Clippy**: ZERO warnings — `cargo clippy --workspace --all-features --all-targets`  
 **Docs**: Zero warnings (`cargo doc --workspace --no-deps`)  
 **Production TODO/FIXME**: Zero  
 **Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
-**TLS crypto**: `ring` provider (Pure Rust; `aws-lc-rs` eliminated — ecoBin compliant)  
+**TLS/crypto**: Delegated to bearDog via IPC; installer uses system `curl` (zero C crypto deps)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-**File size**: All production files under 800 lines  
+**File size**: All production `.rs` files under 1,000 lines (max 879)  
 **Last Updated**: March 31, 2026
 
 ---
@@ -51,7 +51,7 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ## Architecture
 
 ```
-nestgate/ (25 workspace members)
+nestgate/ (24 workspace members: 22 code/crates + tools/unwrap-migrator + fuzz)
 │
 │  Foundation Layer (zero internal deps, compiles first)
 ├── nestgate-types       Error types, result aliases, unified enums
@@ -61,14 +61,14 @@ nestgate/ (25 workspace members)
 │  Domain Layer (depends on types/platform)
 ├── nestgate-config      Config, constants, defaults, canonical modernization
 ├── nestgate-storage     Universal + temporal storage abstractions
-├── nestgate-rpc         JSON-RPC + tarpc IPC layer (isomorphic UDS/TCP)
-├── nestgate-discovery   Capability-based peer discovery (env + songBird IPC)
+├── nestgate-rpc         JSON-RPC + tarpc IPC layer (isomorphic UDS/TCP, storage.sock symlink)
+├── nestgate-discovery   Capability-based peer discovery (env + songBird IPC; mDNS behind feature gate)
 ├── nestgate-security    Crypto delegation (bearDog IPC), JWT, certs, zero-cost auth
 ├── nestgate-observe     Observability, diagnostics, event system
 ├── nestgate-cache       Multi-tier cache, UUID cache, cache math
 │
 │  Integration Layer
-├── nestgate-core        Traits, network, services, adapters (re-exports all above)
+├── nestgate-core        Traits, network, services, adapters (re-exports primal_self_knowledge)
 ├── nestgate-canonical   Canonical modernization patterns
 │
 │  Application Layer
@@ -77,7 +77,7 @@ nestgate/ (25 workspace members)
 ├── nestgate-zfs         ZFS integration (adaptive)
 ├── nestgate-network     Network storage (admin router; HTTP shed to songBird)
 ├── nestgate-automation  Storage-specific automation (tiering, lifecycle)
-├── nestgate-installer   Platform installer (ring TLS, ecoBin compliant)
+├── nestgate-installer   Platform installer (system curl, ecoBin compliant)
 ├── nestgate-middleware  Middleware stack
 ├── nestgate-nas         NAS integration
 ├── nestgate-fsmonitor   Filesystem monitoring
@@ -86,7 +86,7 @@ nestgate/ (25 workspace members)
 
 The core was decomposed across two phases from a 295K-line monolith (488s check)
 into 13 focused crates that compile in parallel. `nestgate-core` re-exports all
-extracted modules for zero downstream breakage. Core is now ~52K lines with 24
+extracted modules for zero downstream breakage (including `primal_self_knowledge` from `nestgate-discovery`). Core is now ~52K lines with 24
 core-only modules and 44 dependencies (down from 51).
 
 ### Key Design Patterns
@@ -111,18 +111,19 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 
 | Area | Status |
 |------|--------|
-| Build | 25/25 workspace members, 0 errors |
-| Clippy | ZERO warnings; full workspace `--lib` clean |
-| Format | Clean |
-| Tests | 8,384 lib tests passing, 0 failures |
-| Coverage | 80.95% line (llvm-cov) — wateringHole 80% minimum met |
+| Build | `cargo check --workspace --all-features --all-targets` — 0 errors |
+| Clippy | ZERO warnings (`cargo clippy --workspace --all-features --all-targets`) |
+| Format | Clean (`cargo fmt --check`) |
+| Tests | 8,376 lib tests passing, 0 failures |
+| Coverage | 80.95% line (llvm-cov) — wateringHole 80% minimum met; not re-measured Mar 31 |
 | Docs | Zero warnings (`cargo doc --workspace --no-deps`) |
 | Production TODO/FIXME | Zero |
-| Production unwrap/expect | Zero |
+| Production unwrap/expect | Zero in library `src/` (`#[cfg(test)]` / integration tests may use unwrap; clippy warns workspace-wide) |
 | Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
-| TLS crypto | `ring` provider (Pure Rust; `aws-lc-rs` eliminated) |
+| TLS/crypto | Delegated to bearDog IPC; installer uses system `curl` (zero C crypto deps; ring/rustls/reqwest eliminated) |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
-| File size (production < 800) | All compliant |
+| File size (production < 1000) | All compliant (max 879 lines) |
+| http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
 | Env-var race conditions | Fixed (temp-env + serial_test) |
 
 ### Compliance (wateringHole)
@@ -130,16 +131,16 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Standard | Status |
 |----------|--------|
 | UniBin | Pass — single `nestgate` binary |
-| ecoBin | Pass — pure Rust application code, socket-only default, `ring` crypto (no C deps in app) |
+| ecoBin | Pass — pure Rust application code, socket-only default, zero C crypto deps (ring/rustls/reqwest eliminated) |
 | JSON-RPC 2.0 | Pass |
 | tarpc | Pass — wired into daemon (feature-gated) |
-| Semantic naming | Pass — `health.*`, `storage.*`, `crypto.*`, `capabilities.*` |
+| Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `nat.*`, `beacon.*`, `capabilities.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — 80.95% line (wateringHole minimum met) |
-| File size (<1000) | Pass |
-| Sovereignty | Pass — capability-based discovery, zero hardcoded primals |
-| Discovery | Env vars + songBird IPC (mDNS stack removed — delegated to songBird) |
-| Crypto delegation | Pass — bearDog IPC via `CryptoDelegate`, local crypto being shed |
+| File size (<1000 production) | Pass (max 879 lines) |
+| Sovereignty | Pass — capability-based discovery, zero hardcoded primals, storage.sock symlink |
+| Discovery | Env vars + songBird IPC (mDNS behind `mdns` feature gate — delegated to biomeOS/songBird) |
+| Crypto delegation | Pass — bearDog IPC via capability-based `SecurityProviderClient` |
 
 ### Platform Support
 
@@ -168,8 +169,8 @@ cargo build --release
 # Run all tests
 cargo test --workspace
 
-# Linting (must pass with zero warnings)
-cargo clippy --all-targets --all-features -- -D warnings
+# Linting (must pass with zero warnings; matches STATUS.md ground truth)
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 # Format
 cargo fmt --all
@@ -188,8 +189,8 @@ cargo doc --no-deps --workspace
 - **HTTP**: Axum
 - **Serialization**: Serde, serde_json
 - **Concurrency**: DashMap, std::sync::LazyLock, pin-project
-- **Security**: RustCrypto stack (AES-256-GCM, ed25519-dalek, hmac, argon2, sha2)
-- **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0)
+- **Security**: Delegated to bearDog via IPC; local JWT via RustCrypto (hmac, sha2)
+- **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0, storage.sock capability symlink)
 - **CLI**: Clap 4 (derive mode)
 - **Discovery**: Environment variables + songBird IPC (capability-based)
 
@@ -231,11 +232,10 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 80.95%)
-2. Complete ancestral overstep shed (local crypto → bearDog IPC, MCP → biomeOS)
-3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
-4. Wire `data.*` and `nat.*` semantic router routes
-5. Cross-gate replication (multi-node data orchestration)
+1. Push test coverage toward 90% target (currently 80.95% last measured)
+2. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
+3. Cross-gate replication (multi-node data orchestration)
+4. Profile and optimize `.clone()` hotspots in RPC layer with real benchmark data
 
 For details: See [STATUS.md](./STATUS.md).
 

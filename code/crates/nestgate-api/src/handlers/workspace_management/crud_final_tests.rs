@@ -75,11 +75,13 @@ mod workspace_manager_final_tests {
 
     #[test]
     fn test_workspace_manager_lifecycle() {
-        let manager = WorkspaceManager::new();
-        let cloned = manager.clone();
-        assert!(format!("{manager:?}").contains("WorkspaceManager"));
-        assert!(format!("{cloned:?}").contains("WorkspaceManager"));
-        drop(manager);
+        let cloned = {
+            let manager = WorkspaceManager::new();
+            let cloned = manager.clone();
+            assert!(format!("{manager:?}").contains("WorkspaceManager"));
+            assert!(format!("{cloned:?}").contains("WorkspaceManager"));
+            cloned
+        };
         assert!(format!("{cloned:?}").contains("WorkspaceManager"));
     }
 }

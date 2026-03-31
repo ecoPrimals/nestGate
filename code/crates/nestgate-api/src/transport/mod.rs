@@ -11,12 +11,12 @@
 //! - **Primary**: Unix sockets (port-free, 100x faster than HTTP)
 //! - **Secondary**: HTTP/REST (optional fallback for debugging)
 //! - **Protocol**: JSON-RPC 2.0 (universal, simple, compatible)
-//! - **Security**: BearDog integration (hardware-backed, sovereign)
+//! - **Security**: Capability-based security provider (hardware-backed, sovereign)
 //!
 //! ## Key Principles
 //!
 //! 1. **Primal Self-Knowledge**: Only knows NestGate identity
-//! 2. **Runtime Discovery**: Discovers BearDog via socket scanning
+//! 2. **Runtime Discovery**: Discovers security provider via capability scan
 //! 3. **Capability-Based**: No hardcoded endpoints or ports
 //! 4. **Agnostic**: Works with any security provider
 //!
@@ -48,6 +48,8 @@ pub use handlers::{NestGateRpcHandler, StorageBackend};
 pub use jsonrpc::{
     JsonRpcError, JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, RpcMethodHandler,
 };
+#[allow(deprecated)]
 pub use security::BearDogClient;
+pub use security::SecurityProviderClient;
 pub use server::TransportServer;
 pub use unix_socket::UnixSocketListener;

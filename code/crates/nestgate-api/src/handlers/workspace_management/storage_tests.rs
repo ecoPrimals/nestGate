@@ -21,64 +21,82 @@ mod validation_tests {
     #[tokio::test]
     async fn test_delete_workspace_with_empty_id() {
         let result = delete_workspace(axum::extract::Path(String::new())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_delete_workspace_with_slash_in_id() {
         let result = delete_workspace(axum::extract::Path("ws/123".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_delete_workspace_with_space_in_id() {
         let result = delete_workspace(axum::extract::Path("ws 123".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_get_workspace_status_with_empty_id() {
         let result = get_workspace_status(axum::extract::Path(String::new())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_get_workspace_status_with_slash_in_id() {
         let result = get_workspace_status(axum::extract::Path("ws/456".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_get_workspace_status_with_space_in_id() {
         let result = get_workspace_status(axum::extract::Path("ws 456".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_cleanup_workspace_with_empty_id() {
         let result = cleanup_workspace(axum::extract::Path(String::new())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_cleanup_workspace_with_slash_in_id() {
         let result = cleanup_workspace(axum::extract::Path("ws/789".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_cleanup_workspace_with_space_in_id() {
         let result = cleanup_workspace(axum::extract::Path("ws 789".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 }
 
@@ -94,8 +112,7 @@ mod delete_tests {
         let result = delete_workspace(axum::extract::Path("ws-test-123".to_string())).await;
 
         // Should either succeed (if ZFS available) or fail with INTERNAL_SERVER_ERROR
-        if result.is_ok() {
-            let response = result.expect("Result should be Ok");
+        if let Ok(response) = result {
             let value = response.0;
             assert!(value.get("status").is_some());
             assert!(value.get("workspace_id").is_some());
@@ -110,8 +127,8 @@ mod delete_tests {
         let result = delete_workspace(axum::extract::Path("../etc/passwd".to_string())).await;
 
         // Should reject due to slash in ID
-        if result.is_err() {
-            assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        if let Err(e) = result {
+            assert_eq!(e, StatusCode::BAD_REQUEST);
         }
     }
 }
@@ -128,8 +145,7 @@ mod status_tests {
         let result = get_workspace_status(axum::extract::Path("ws-status-test".to_string())).await;
 
         // Will fail without ZFS, but validates the flow
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
 
             // Verify response structure
@@ -143,8 +159,7 @@ mod status_tests {
     async fn test_get_workspace_status_response_structure() {
         let result = get_workspace_status(axum::extract::Path("ws-struct-test".to_string())).await;
 
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
 
             // Check for expected keys
@@ -172,8 +187,7 @@ mod cleanup_tests {
         let result = cleanup_workspace(axum::extract::Path("ws-cleanup-test".to_string())).await;
 
         // Will fail without ZFS but validates the structure
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
 
             assert!(value.get("status").is_some());
@@ -186,8 +200,7 @@ mod cleanup_tests {
     async fn test_cleanup_workspace_returns_actions() {
         let result = cleanup_workspace(axum::extract::Path("ws-actions-test".to_string())).await;
 
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
 
             // Should have actions array
@@ -211,8 +224,7 @@ mod scale_tests {
     async fn test_scale_workspace_with_valid_id() {
         let result = scale_workspace(axum::extract::Path("ws-scale-test".to_string())).await;
 
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
 
             assert!(value.get("status").is_some());
@@ -225,8 +237,7 @@ mod scale_tests {
     async fn test_scale_workspace_provides_recommendations() {
         let result = scale_workspace(axum::extract::Path("ws-recommend-test".to_string())).await;
 
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
 
             // Should provide scaling recommendations
@@ -256,18 +267,24 @@ mod integration_tests {
 
         // 1. Try to get status with invalid ID
         let status_result = get_workspace_status(axum::extract::Path(String::new())).await;
-        assert!(status_result.is_err());
-        assert_eq!(status_result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e1) = status_result else {
+            panic!("expected error");
+        };
+        assert_eq!(e1, StatusCode::BAD_REQUEST);
 
         // 2. Try to cleanup with invalid ID
         let cleanup_result = cleanup_workspace(axum::extract::Path("ws/invalid".to_string())).await;
-        assert!(cleanup_result.is_err());
-        assert_eq!(cleanup_result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e2) = cleanup_result else {
+            panic!("expected error");
+        };
+        assert_eq!(e2, StatusCode::BAD_REQUEST);
 
         // 3. Try to delete with invalid ID
         let delete_result = delete_workspace(axum::extract::Path("ws 123".to_string())).await;
-        assert!(delete_result.is_err());
-        assert_eq!(delete_result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e3) = delete_result else {
+            panic!("expected error");
+        };
+        assert_eq!(e3, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
@@ -357,8 +374,7 @@ mod error_handling_tests {
         let result = delete_workspace(axum::extract::Path("ws-nonexistent".to_string())).await;
 
         // Should either succeed (dataset doesn't exist) or fail with INTERNAL_SERVER_ERROR
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
 
             // Response should indicate success even if dataset didn't exist

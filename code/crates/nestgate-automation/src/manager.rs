@@ -39,19 +39,17 @@ pub struct DatasetPerformance {
 #[derive(Debug)]
 /// Manager for `IntelligentDataset` operations
 pub struct IntelligentDatasetManager {
-    #[allow(dead_code)]
-    config: AutomationConfig,
+    _config: AutomationConfig,
     analyzer: Arc<DatasetAnalyzer>,
-    #[allow(dead_code)]
-    performance_cache: PerformanceCache,
+    _performance_cache: PerformanceCache,
 }
 impl IntelligentDatasetManager {
     #[must_use]
     pub fn new(config: AutomationConfig) -> Self {
         Self {
-            config,
+            _config: config,
             analyzer: Arc::new(DatasetAnalyzer::new()),
-            performance_cache: Arc::new(RwLock::new(HashMap::new())),
+            _performance_cache: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 

@@ -34,7 +34,6 @@ pub struct DatasetInfo {
 
 /// ZFS Dataset Manager - handles dataset operations
 #[derive(Debug)]
-#[allow(dead_code)] // Some fields are planned features not yet fully implemented
 /// Manager for `ZfsDataset` operations
 pub struct ZfsDatasetManager {
     pub(super) config: Arc<ZfsConfig>,

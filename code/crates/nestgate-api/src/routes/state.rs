@@ -170,17 +170,4 @@ impl AppState {
         // ZFS manager already initialized in constructor
         self
     }
-
-    /// Initialize ZFS manager with graceful fallback
-    #[expect(dead_code, reason = "ZFS init hook reserved for production wiring")]
-    fn try_init_zfs_manager(
-        &self,
-    ) -> Result<Option<ZfsManager>, Box<dyn std::error::Error + Send + Sync>> {
-        // Check if ZFS is available first
-        #[cfg(feature = "dev-stubs")]
-        let manager = ProductionZfsManager::new(ZfsConfig::default());
-        #[cfg(not(feature = "dev-stubs"))]
-        let manager = ProductionZfsManager::new();
-        Ok(Some(manager))
-    }
 }

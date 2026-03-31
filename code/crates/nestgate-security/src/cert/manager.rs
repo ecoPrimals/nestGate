@@ -13,10 +13,8 @@ use nestgate_types::{NestGateError, Result};
 
 /// Certificate manager that uses the universal adapter for ecosystem integration
 pub struct CertificateManager {
-    #[allow(dead_code)]
-    adapter: PrimalAgnosticAdapter, // Updated type
-    #[allow(dead_code)]
-    config: NestGateCanonicalConfig,
+    _adapter: PrimalAgnosticAdapter,
+    _config: NestGateCanonicalConfig,
 }
 impl CertificateManager {
     /// Create a new certificate manager
@@ -63,7 +61,10 @@ impl CertificateManager {
             })?;
 
         let adapter = PrimalAgnosticAdapter::new(adapter_url);
-        Ok(Self { adapter, config })
+        Ok(Self {
+            _adapter: adapter,
+            _config: config,
+        })
     }
 
     /// Get certificate information

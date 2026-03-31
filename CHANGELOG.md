@@ -9,6 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 12: Ancestral overstep elimination, deep debt evolution & doc cleanup (March 31, 2026)
+
+**Tests**: 8,376 lib tests passing, 0 failures  
+**Clippy**: ZERO warnings  
+**Format**: Clean  
+**ring/rustls/reqwest**: ELIMINATED from Cargo.lock  
+**Max production file**: 879 lines
+
+#### Removed
+- **ring/rustls/reqwest** from entire dependency tree — installer rewritten to use system `curl` for HTTPS downloads (zero C crypto deps, ecoBin compliant)
+- **nestgate-mcp** directory — AI/MCP delegated to biomeOS via `capability.call`
+- **nestgate-network** removed as dependency from nestgate-api, nestgate-bin, nestgate-nas (crate remains for admin router)
+- Module-level `#![allow(dead_code)]` from 4 crates — narrowed to item-level with documented reasons
+- Hardcoded port fallbacks (8084, 9091) — replaced with centralized `runtime_fallback_ports` constants
+
+#### Changed
+- **NG-01 resolved**: `unix_adapter.rs` storage backed by filesystem (`get_storage_base_path()/datasets/`) instead of in-memory HashMap
+- **IPC routes wired**: `data.*`, `nat.*`, `beacon.*`, `health.liveness`, `health.readiness`, `capabilities.list` all functional
+- **mDNS feature-gated**: Discovery backends behind `mdns` feature gate — production uses biomeOS/songBird
+- **BearDog → SecurityProviderClient**: Capability-based naming, `#[deprecated]` compat aliases
+- **Cert validator/generate_self_signed**: Return `not_implemented` error (delegation to security provider) instead of silent stubs
+- **Legacy env vars** (`NESTGATE_BEARDOG_URL` etc.) deprecated; `NESTGATE_CAPABILITY_*` vars take priority
+- **K8s discovery**: Hardcoded `127.0.0.1:8001` replaced with required env var (`KUBERNETES_SERVICE_HOST`)
+- **println!** → `tracing::info!` in service.rs and download.rs (CLI user-facing output kept)
+- **jwt_rustcrypto.rs** renamed to `jwt_claims.rs` (honest about actual content)
+- **Cache paths**: XDG/env-var resolution via `resolve_cache_base()` instead of hardcoded `/tmp/nestgate_hot_cache`
+- **CPU metrics tests**: Fixed for multi-core systems (`cpu <= 100% * num_cpus`)
+
+#### Added
+- **storage.sock capability symlink** with install/remove/guard lifecycle pattern
+- **Filesystem-backed storage** for all `storage.*` operations (path-traversal sanitized)
+- **health.readiness** endpoint checking storage backend availability
+- `#![forbid(unsafe_code)]` on nestgate-observe and nestgate-env-process-shim (now all 22 crates)
+
+#### Refactored (smart domain-driven decomposition)
+- `health.rs` (785L) → `health/` package (mod.rs + types.rs + reporting.rs + monitoring.rs + tests.rs)
+- `cache/types.rs` (858L) → `cache/types/` package (mod.rs + tier.rs + policy.rs + stats.rs + entry.rs + tests.rs)
+- `pool/manager.rs` (832L) → `pool/` package (manager.rs + discovery.rs + status.rs + operations.rs)
+
+### Session 11: Ancestral overstep audit & deep debt execution (March 31, 2026)
+
+(Merged into Session 12 — same day, continuous execution)
+
 ### Session 10: Deprecated trait excision, flaky test fix, idiomacy & cleanup (March 30, 2026)
 
 **Clippy**: ZERO production warnings  
@@ -565,10 +608,10 @@ parallel compilation:
 
 ## Active Goals
 
-- Push coverage from 74.3% toward 90% target
-- Wire `data.*` and `nat.*` semantic router routes
-- Complete sysinfo optional feature gating
-- Evolve remaining dev stubs to production implementations
+- Push coverage from ~80% toward 90% target
+- Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
+- Cross-gate replication (multi-node data orchestration)
+- Profile and optimize `.clone()` hotspots in RPC layer
 
 ---
 
@@ -744,5 +787,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: March 30, 2026  
+**Last Updated**: March 31, 2026  
 **Current Version**: 4.7.0-dev

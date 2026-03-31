@@ -50,14 +50,13 @@ use serde::{Deserialize, Serialize};
 /// NAS service implementation using canonical configuration
 #[derive(Debug)]
 pub struct NasService {
-    #[allow(dead_code)]
-    config: NasConfig,
+    _config: NasConfig,
 }
 impl NasService {
     /// Create a new NAS service with canonical configuration
     #[must_use]
     pub const fn new(config: NasConfig) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     /// Start the NAS service

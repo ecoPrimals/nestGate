@@ -45,7 +45,7 @@ async fn test_get_current_metrics_has_timestamp() {
 }
 
 #[tokio::test]
-async fn test_get_current_metrics_has_valid_cpu_usage() {
+async fn test_get_current_metrics_has_validcpu_usage() {
     let collector = RealTimeMetricsCollector::new();
 
     let metrics = collector.get_current_metrics().await.unwrap();
@@ -92,8 +92,7 @@ async fn test_get_current_metrics_has_valid_active_connections() {
 
     let metrics = collector.get_current_metrics().await.unwrap();
 
-    // Active connections should be non-negative
-    assert!(metrics.active_connections >= 0);
+    let _ = metrics.active_connections;
 }
 
 #[tokio::test]
@@ -269,7 +268,7 @@ async fn test_metrics_structure_completeness() {
     assert!(metrics.memory_usage >= 0.0 && metrics.memory_usage <= 100.0);
     assert!(metrics.disk_io >= 0.0);
     assert!(metrics.network_throughput >= 0.0);
-    assert!(metrics.active_connections >= 0);
+    let _ = metrics.active_connections;
     assert!(metrics.response_time_ms >= 0.0);
 }
 

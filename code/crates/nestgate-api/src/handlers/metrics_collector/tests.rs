@@ -43,7 +43,7 @@ fn metrics_types_serialize_roundtrip() {
         timestamp: SystemTime::UNIX_EPOCH,
         pool_metrics: vec![],
         system_metrics: SystemMetrics {
-            _cpu_usage: 1.0,
+            cpu_usage: 1.0,
             memory_usage: 50.0,
             memory_total: 8,
             memory_available: 4,

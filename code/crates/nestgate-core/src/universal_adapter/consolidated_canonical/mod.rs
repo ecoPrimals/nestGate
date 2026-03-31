@@ -70,10 +70,8 @@ pub use types::{CapabilityRequest, CapabilityResponse, ServiceCapability, Servic
 #[derive(Debug)]
 #[expect(deprecated, reason = "migration in progress")] // Uses deprecated config types
 pub struct ConsolidatedCanonicalAdapter {
-    /// Unique service identifier
-    #[expect(dead_code, reason = "framework placeholder")]
-    // Framework field - intentionally unused
-    service_id: Uuid,
+    /// Unique service identifier (reserved for future request routing and telemetry).
+    _service_id: Uuid,
 
     /// Adapter configuration
     config: CanonicalAdapterConfig,
@@ -81,18 +79,15 @@ pub struct ConsolidatedCanonicalAdapter {
     /// Our registered capabilities
     our_capabilities: Arc<RwLock<Vec<ServiceCapability>>>,
 
-    /// Discovered external capabilities (lock-free for concurrent discovery)
-    #[expect(dead_code, reason = "framework placeholder")]
-    // Framework field - intentionally unused
-    discovered_capabilities: Arc<DashMap<String, Vec<ServiceCapability>>>,
+    /// Discovered external capabilities (lock-free for concurrent discovery).
+    _discovered_capabilities: Arc<DashMap<String, Vec<ServiceCapability>>>,
 
     /// Active requests being processed (lock-free for concurrent request tracking)
     active_requests: Arc<DashMap<String, CapabilityRequest>>,
 
     /// HTTP client for network operations (`dev-stubs` only; production path is a placeholder).
     #[cfg(feature = "dev-stubs")]
-    #[expect(dead_code, reason = "framework placeholder")]
-    client: crate::http_client_stub::Client,
+    _client: crate::http_client_stub::Client,
 
     #[cfg(not(feature = "dev-stubs"))]
     _http_client_placeholder: (),
@@ -103,10 +98,8 @@ pub struct ConsolidatedCanonicalAdapter {
     /// Performance statistics
     stats: Arc<RwLock<AdapterStats>>,
 
-    /// Service registry for discovery (lock-free for concurrent registration)
-    #[expect(dead_code, reason = "framework placeholder")]
-    // Framework field - intentionally unused
-    service_registry: Arc<DashMap<String, ServiceRegistration>>,
+    /// Service registry for discovery (lock-free for concurrent registration).
+    _service_registry: Arc<DashMap<String, ServiceRegistration>>,
 }
 
 // ==================== IMPLEMENTATION ====================
@@ -132,18 +125,18 @@ impl ConsolidatedCanonicalAdapter {
             })?;
 
         Ok(Self {
-            service_id: Uuid::new_v4(),
+            _service_id: Uuid::new_v4(),
             config,
             our_capabilities: Arc::new(RwLock::new(Vec::new())),
-            discovered_capabilities: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
+            _discovered_capabilities: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
             active_requests: Arc::new(DashMap::new()), // ✅ FIXED: Was incorrectly RwLock<HashMap>
             #[cfg(feature = "dev-stubs")]
-            client,
+            _client: client,
             #[cfg(not(feature = "dev-stubs"))]
             _http_client_placeholder: (),
             health_status: Arc::new(RwLock::new(AdapterHealthStatus::default())),
             stats: Arc::new(RwLock::new(AdapterStats::default())),
-            service_registry: Arc::new(DashMap::new()),
+            _service_registry: Arc::new(DashMap::new()),
         })
     }
 

@@ -32,7 +32,10 @@ use tracing::{debug, info, warn};
 /// let auth_endpoint = helper.endpoint_for("security", "AUTH_SERVICE_PORT", 5000).await?;
 /// ```
 pub struct DiscoveryOrEnv {
-    #[allow(dead_code)] // Reserved for future async discovery integration
+    #[allow(
+        dead_code,
+        reason = "Reserved for capability-based resolution; endpoint helpers use cache/env only for now"
+    )]
     discovery: Arc<PrimalDiscovery>,
     cache: Arc<RwLock<EndpointCache>>,
     config: MigrationConfig,
@@ -72,7 +75,10 @@ struct CachedEndpoint {
 
 #[derive(Debug, Clone, PartialEq)]
 enum EndpointSource {
-    #[allow(dead_code)] // Reserved for future async discovery
+    #[allow(
+        dead_code,
+        reason = "Forward-compatible source tag; not yet written to cache"
+    )]
     Discovery,
     Environment,
     Default,

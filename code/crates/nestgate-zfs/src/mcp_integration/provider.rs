@@ -106,6 +106,7 @@ impl ZfsMcpStorageProvider {
                 .zfs_manager
                 .dataset_manager
                 .delete_dataset(&mount_info.dataset_path)
+                .await
             {
                 Ok(()) => {
                     info!("Successfully removed ZFS mount: {}", mount_id);
@@ -197,6 +198,7 @@ impl ZfsMcpStorageProvider {
                 .zfs_manager
                 .dataset_manager
                 .delete_dataset(&volume_info.dataset_path)
+                .await
             {
                 Ok(()) => {
                     info!("Successfully removed ZFS volume: {}", volume_id);

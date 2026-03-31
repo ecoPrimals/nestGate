@@ -269,10 +269,9 @@ mod workspace_error_path_tests {
 
     fn validate_workspace_quota(quota: Option<i64>) -> Result<(), String> {
         match quota {
-            None => Ok(()), // No quota is valid
             Some(q) if q <= 0 => Err("Quota must be positive".to_string()),
             Some(q) if q > 1_000_000_000_000 => Err("Quota too large".to_string()), // 1TB limit
-            Some(_) => Ok(()),
+            None | Some(_) => Ok(()),
         }
     }
 

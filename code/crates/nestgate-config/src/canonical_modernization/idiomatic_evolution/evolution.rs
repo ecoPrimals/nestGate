@@ -150,9 +150,13 @@ impl MigrationManager {
 
     /// Validate the migration manager state.
     ///
+    /// This is a **framework hook**: there is no additional invariant checking yet.
+    /// Completed migrations are already consistent by construction; future versions may
+    /// verify ordering, pending/failed queues, or external migration state.
+    ///
     /// # Errors
     ///
-    /// Returns an error if validation fails (currently infallible).
+    /// Reserved for when real validation is implemented. Today this always succeeds.
     pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }
@@ -194,13 +198,17 @@ impl CompatibilityChecker {
         Self::default()
     }
 
-    /// Validates an item against compatibility rules
+    /// Validates an item against compatibility rules.
+    ///
+    /// This is a **framework hook** for [`super::IdiomaticEvolutionSystem::apply_evolution`] and
+    /// [`super::IdiomaticEvolutionSystem::validate`]. No rule engine is wired yet: `_compatibility_rules`
+    /// and `validation_errors` are not consulted, and this method always succeeds so the
+    /// evolution pipeline remains composable until real checks exist.
     ///
     /// # Errors
     ///
-    /// Returns an error if validation fails
+    /// Reserved for when rules are enforced. Today this always succeeds.
     pub const fn validate<T>(&self, _item: &T) -> nestgate_types::error::Result<()> {
-        // Placeholder validation logic
         Ok(())
     }
 
@@ -255,21 +263,28 @@ impl ModernizationEngine {
         Self::default()
     }
 
-    /// Applies modernization patterns to an item
+    /// Applies modernization patterns to an item.
+    ///
+    /// This is a **framework hook** for [`super::IdiomaticEvolutionSystem::apply_evolution`]. Pattern
+    /// catalogs in `_available_patterns` / `_applied_patterns` are not applied yet; the value is
+    /// returned unchanged so callers can build on a stable `Result` boundary until real transforms
+    /// are implemented.
     ///
     /// # Errors
     ///
-    /// Returns an error if pattern application fails
+    /// Reserved for when application can fail. Today this always returns `Ok(item)`.
     pub const fn apply_patterns<T>(&self, item: T) -> nestgate_types::error::Result<T> {
-        // Placeholder pattern application
         Ok(item)
     }
 
-    /// Validates the modernization engine state
+    /// Validates the modernization engine state.
+    ///
+    /// This is a **framework hook**: no engine-level invariants are checked beyond what the type
+    /// system already guarantees. Future versions may validate pattern catalogs or applied state.
     ///
     /// # Errors
     ///
-    /// Returns an error if validation fails
+    /// Reserved for when validation is implemented. Today this always succeeds.
     pub const fn validate(&self) -> nestgate_types::error::Result<()> {
         Ok(())
     }

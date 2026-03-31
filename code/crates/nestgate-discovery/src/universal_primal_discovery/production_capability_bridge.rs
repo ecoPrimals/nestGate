@@ -43,7 +43,10 @@ pub struct CapabilityAwareDiscovery {
     /// New capability-based discovery
     capability_discovery: Arc<CapabilityDiscoveryManager>,
     /// Configuration for backward compatibility and future extension
-    #[allow(dead_code)] // Reserved for backward compatibility (will be used in v0.12+)
+    #[allow(
+        dead_code,
+        reason = "Carried for migration parity; hot paths use capability_discovery only"
+    )]
     config: Arc<NestGateCanonicalConfig>,
 }
 

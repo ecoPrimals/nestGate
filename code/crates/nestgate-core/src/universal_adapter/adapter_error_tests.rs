@@ -353,7 +353,6 @@ mod adapter_integration_tests {
 
     #[test]
     fn test_adapter_lifecycle() {
-        #[allow(dead_code)]
         enum AdapterState {
             /// Uninitialized
             Uninitialized,
@@ -361,8 +360,6 @@ mod adapter_integration_tests {
             Initializing,
             /// Ready
             Ready,
-            /// Error
-            Error,
         }
 
         let state = AdapterState::Uninitialized;

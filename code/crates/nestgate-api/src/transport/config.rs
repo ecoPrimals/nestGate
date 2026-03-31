@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 ///
 /// - `NESTGATE_FAMILY_ID`: Family identifier (default: "default")
 /// - `NESTGATE_SOCKET_PATH`: Unix socket path (default: `/tmp/nestgate-{family}.sock`)
-/// - `NESTGATE_SECURITY_PROVIDER`: `BearDog` socket path (default: `/tmp/beardog-{family}-default.sock`)
+/// - `NESTGATE_SECURITY_PROVIDER`: Security provider socket path (discovered at runtime)
 /// - `NESTGATE_HTTP_PORT`: Optional HTTP fallback port (default: None)
 ///
 /// ## Examples
@@ -29,7 +29,7 @@ use std::path::{Path, PathBuf};
 /// // With explicit values
 /// let config = TransportConfig::new("nat0")
 ///     .with_socket_path("/tmp/nestgate-nat0.sock")
-///     .with_security_provider("/tmp/beardog-nat0-default.sock");
+///     .with_security_provider("/run/user/1000/security-nat0.sock");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransportConfig {
@@ -39,7 +39,7 @@ pub struct TransportConfig {
     /// Unix socket path for primary transport
     pub socket_path: PathBuf,
 
-    /// Security provider (`BearDog`) socket path
+    /// Security provider socket path (capability-based, not primal-specific)
     pub security_provider: PathBuf,
 
     /// Optional HTTP fallback port
@@ -62,8 +62,10 @@ impl TransportConfig {
         let socket_path = std::env::var("NESTGATE_SOCKET_PATH")
             .unwrap_or_else(|_| format!("/tmp/nestgate-{family_id}.sock"));
 
+        let security_slug =
+            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "security".to_string());
         let security_provider = std::env::var("NESTGATE_SECURITY_PROVIDER")
-            .unwrap_or_else(|_| format!("/tmp/beardog-{family_id}-default.sock"));
+            .unwrap_or_else(|_| format!("/tmp/{security_slug}-{family_id}-default.sock"));
 
         let http_port = std::env::var("NESTGATE_HTTP_PORT")
             .ok()
@@ -86,9 +88,13 @@ impl TransportConfig {
     #[must_use]
     pub fn new(family_id: impl Into<String>) -> Self {
         let family_id = family_id.into();
+        let security_slug =
+            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "security".to_string());
         Self {
             socket_path: PathBuf::from(format!("/tmp/nestgate-{family_id}.sock")),
-            security_provider: PathBuf::from(format!("/tmp/beardog-{family_id}-default.sock")),
+            security_provider: PathBuf::from(format!(
+                "/tmp/{security_slug}-{family_id}-default.sock"
+            )),
             family_id,
             http_port: None,
             verbose: false,

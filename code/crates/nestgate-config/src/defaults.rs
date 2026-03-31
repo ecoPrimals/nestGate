@@ -191,16 +191,6 @@ pub mod urls {
         use crate::defaults_v2_config::DefaultsV2Config;
         DefaultsV2Config::from_env().health_url()
     }
-
-    /// Legacy function (kept for compatibility) - will be removed
-    #[allow(dead_code)]
-    fn health_url_old() -> String {
-        let port = std::env::var("NESTGATE_HEALTH_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(super::network::DEFAULT_HEALTH_PORT);
-        format!("http://{}:{}/health", env_helpers::hostname(), port)
-    }
 }
 
 /// **STORAGE DEFAULTS**

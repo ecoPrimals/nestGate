@@ -34,7 +34,7 @@ fn push_dataset_count_alert(alerts: &mut Vec<Alert>, total_datasets: usize) {
     });
 }
 
-fn push_cpu_usage_alert(alerts: &mut Vec<Alert>, current_cpu: f64) {
+fn pushcpu_usage_alert(alerts: &mut Vec<Alert>, current_cpu: f64) {
     alerts.push(Alert {
         id: "alert_002".to_string(),
         name: "High CPU Usage".to_string(),
@@ -92,46 +92,56 @@ fn push_memory_usage_alert(alerts: &mut Vec<Alert>, current_memory: f64) {
     });
 }
 
-fn push_storage_usage_alert(alerts: &mut Vec<Alert>, total_datasets: usize) {
-    let total_used = (total_datasets as u64) * 2 * 1024 * 1024 * 1024;
-    let total_available = (total_datasets as u64) * 10 * 1024 * 1024 * 1024;
-    let usage_percent = if total_available > 0 {
-        (total_used as f64 / total_available as f64) * 100.0
-    } else {
-        0.0
-    };
-
-    if usage_percent <= 80.0 {
+fn push_storage_usage_alert(alerts: &mut Vec<Alert>) {
+    #[cfg(not(target_os = "linux"))]
+    {
         return;
     }
+    #[cfg(target_os = "linux")]
+    {
+        let Ok((total_bytes, avail_bytes)) =
+            nestgate_core::linux_proc::statvfs_space(std::path::Path::new("/"))
+        else {
+            return;
+        };
+        if total_bytes == 0 {
+            return;
+        }
+        let used = total_bytes.saturating_sub(avail_bytes);
+        let usage_percent = (used as f64 / total_bytes as f64) * 100.0;
 
-    alerts.push(Alert {
-        id: "alert_004".to_string(),
-        name: "High Storage Usage".to_string(),
-        description: format!("Storage usage is at {usage_percent:.1}%"),
-        message: format!("High storage usage alert: {usage_percent:.1}%"),
-        severity: if usage_percent > 95.0 {
-            AlertSeverity::Critical
-        } else {
-            AlertSeverity::Warning
-        },
-        status: AlertStatus::Active,
-        created_at: chrono::Utc::now() - chrono::Duration::minutes(15),
-        triggered_at: chrono::Utc::now() - chrono::Duration::minutes(12),
-        conditions: vec![AlertCondition {
-            metric_name: "storage_usage_percent".to_string(),
-            operator: ComparisonOperator::GreaterThan,
-            threshold: 80.0,
-            duration_seconds: 300,
-            currentvalue: usage_percent,
-        }],
-        suggested_actions: vec![
-            "Clean up old snapshots".to_string(),
-            "Enable compression on datasets".to_string(),
-            "Add additional storage capacity".to_string(),
-            "Archive old data".to_string(),
-        ],
-    });
+        if usage_percent <= 80.0 {
+            return;
+        }
+
+        alerts.push(Alert {
+            id: "alert_004".to_string(),
+            name: "High Storage Usage".to_string(),
+            description: format!("Storage usage is at {usage_percent:.1}%"),
+            message: format!("High storage usage alert: {usage_percent:.1}%"),
+            severity: if usage_percent > 95.0 {
+                AlertSeverity::Critical
+            } else {
+                AlertSeverity::Warning
+            },
+            status: AlertStatus::Active,
+            created_at: chrono::Utc::now() - chrono::Duration::minutes(15),
+            triggered_at: chrono::Utc::now() - chrono::Duration::minutes(12),
+            conditions: vec![AlertCondition {
+                metric_name: "storage_usage_percent".to_string(),
+                operator: ComparisonOperator::GreaterThan,
+                threshold: 80.0,
+                duration_seconds: 300,
+                currentvalue: usage_percent,
+            }],
+            suggested_actions: vec![
+                "Clean up old snapshots".to_string(),
+                "Enable compression on datasets".to_string(),
+                "Add additional storage capacity".to_string(),
+                "Archive old data".to_string(),
+            ],
+        });
+    }
 }
 
 fn push_resolved_network_example(alerts: &mut Vec<Alert>) {
@@ -179,7 +189,7 @@ pub async fn get_alerts(
 
     // ecoBin v3.0: `/proc/stat` on Linux; `sysinfo` fallback when `/proc` parse fails.
     #[cfg(target_os = "linux")]
-    let current_cpu = nestgate_core::linux_proc::global_cpu_usage_percent_from_stat()
+    let current_cpu = nestgate_core::linux_proc::globalcpu_usage_percent_from_stat()
         .unwrap_or_else(|| {
             let mut sys = sysinfo::System::new_all();
             sys.refresh_cpu();
@@ -192,7 +202,7 @@ pub async fn get_alerts(
         f64::from(sys.global_cpu_info().cpu_usage())
     };
     if current_cpu > 80.0 {
-        push_cpu_usage_alert(&mut alerts, current_cpu);
+        pushcpu_usage_alert(&mut alerts, current_cpu);
     }
 
     #[cfg(target_os = "linux")]
@@ -211,7 +221,7 @@ pub async fn get_alerts(
         push_memory_usage_alert(&mut alerts, current_memory);
     }
 
-    push_storage_usage_alert(&mut alerts, total_datasets);
+    push_storage_usage_alert(&mut alerts);
 
     if !alerts.is_empty() {
         push_resolved_network_example(&mut alerts);

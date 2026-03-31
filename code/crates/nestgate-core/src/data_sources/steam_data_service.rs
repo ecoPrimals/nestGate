@@ -309,8 +309,7 @@ pub struct SaveDataFederation {
     /// Federation nodes
     sync_targets: Arc<RwLock<Vec<FederationNode>>>,
     /// Conflict resolution strategy
-    #[expect(dead_code, reason = "framework placeholder")]
-    conflict_resolution: ConflictResolution,
+    _conflict_resolution: ConflictResolution,
     /// Encryption configuration (placeholder)
     _encryption_config: (),
 }
@@ -321,7 +320,7 @@ impl SaveDataFederation {
     pub fn new(conflict_resolution: ConflictResolution) -> Self {
         Self {
             sync_targets: Arc::new(RwLock::new(Vec::new())),
-            conflict_resolution,
+            _conflict_resolution: conflict_resolution,
             _encryption_config: (),
         }
     }
@@ -368,13 +367,14 @@ impl SaveDataFederation {
         // 3. Handle conflicts using the resolution strategy
         // 4. Return success/failure status
 
-        for node in nodes.iter().filter(|n| n.healthy) {
-            debug!("Syncing to node: {} ({})", node.id, node.endpoint);
-            // Placeholder for actual sync implementation
-            // This would involve HTTP requests to federation nodes
+        let has_healthy = nodes.iter().any(|n| n.healthy);
+        if !has_healthy {
+            return Ok(());
         }
 
-        Ok(())
+        Err(NestGateError::not_implemented(
+            "Steam federation save sync is not implemented; remove or disable healthy federation nodes until the sync transport is wired",
+        ))
     }
 
     /// Get federation status

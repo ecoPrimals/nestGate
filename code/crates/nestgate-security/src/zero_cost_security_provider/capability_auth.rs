@@ -6,7 +6,7 @@
 //! JWT signing and verification are delegated to the crypto capability
 //! provider discovered at runtime. No local crypto, no external HTTP calls.
 
-use crate::crypto::jwt_rustcrypto::JwtClaims;
+use crate::crypto::jwt_claims::JwtClaims;
 use crate::zero_cost_security_provider::types::ZeroCostAuthToken;
 use nestgate_discovery::capabilities::discovery::CapabilityDiscovery;
 use nestgate_types::{NestGateError, Result};
@@ -76,7 +76,6 @@ pub struct RevokeTokenRequest {
 /// Delegates JWT operations to the crypto capability provider (bearDog)
 /// discovered at runtime via JSON-RPC IPC.
 pub struct CapabilityAuthClient {
-    #[allow(dead_code)]
     discovery: CapabilityDiscovery,
     timeout: Duration,
 }

@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
+//! Storage probe helpers are exercised in unit tests and reserved for future handler wiring.
+#![expect(
+    dead_code,
+    reason = "Probe helpers not yet called from production handlers; tests cover them"
+)]
+
 use nestgate_zfs::numeric::f64_to_u64_saturating;
 use std::process::Command;
 
@@ -11,7 +17,6 @@ use super::types::{StorageDataset, StorageMetrics, StoragePool, StorageSnapshot}
 /// These functions are kept for future storage integration and testing purposes.
 ///
 /// Collect real storage pools from system
-#[expect(dead_code, reason = "Reserved for future real storage integration")]
 pub(super) fn collect_real_storage_pools()
 -> Result<Vec<StoragePool>, Box<dyn std::error::Error + Send + Sync>> {
     use std::str;
@@ -146,7 +151,6 @@ pub(super) fn parse_size_string(size_str: &str) -> Option<u64> {
 }
 
 /// Collect real storage datasets (important directories) from system
-#[expect(dead_code, reason = "Reserved for future real storage integration")]
 fn collect_real_storage_datasets() -> Vec<StorageDataset> {
     // Mock implementation for datasets
     let mut datasets = Vec::new();
@@ -231,7 +235,6 @@ fn create_fallback_home_dataset() -> StorageDataset {
 }
 
 /// Collect real ZFS snapshots from system
-#[expect(dead_code, reason = "Reserved for future ZFS integration")]
 async fn collect_real_zfs_snapshots()
 -> Result<Vec<StorageSnapshot>, Box<dyn std::error::Error + Send + Sync>> {
     let output = tokio::process::Command::new("zfs")
@@ -298,7 +301,6 @@ async fn collect_real_zfs_snapshots()
 }
 
 /// Parse bandwidth unit values
-#[expect(dead_code, reason = "Utility function for bandwidth calculations")]
 pub(super) fn parse_bandwidth_unit(value: &str) -> Option<f64> {
     if value == "-" || value.is_empty() {
         return Some(0.0);
@@ -317,7 +319,6 @@ pub(super) fn parse_bandwidth_unit(value: &str) -> Option<f64> {
 }
 
 /// Collect fallback storage metrics
-#[expect(dead_code, reason = "Reserved for fallback metrics implementation")]
 async fn collect_fallback_storage_metrics() -> StorageMetrics {
     // Get basic disk space information from system
     let (total_storage, used_storage, available_storage) = match tokio::process::Command::new("df")
@@ -474,7 +475,7 @@ mod tests {
         let m = collect_fallback_storage_metrics().await;
         assert_eq!(m.total_pools, 0);
         assert_eq!(m.health_status, "SYSTEM_STORAGE");
-        assert!(m.total_storage > 0 || m.used_storage > 0 || m.available_storage >= 0);
+        assert!(m.total_storage > 0 || m.used_storage > 0 || m.available_storage > 0);
         assert_eq!(m.iops, 50.0);
         assert_eq!(m.bandwidth_mbps, 25.0);
     }
@@ -482,14 +483,11 @@ mod tests {
     #[tokio::test]
     async fn collect_real_zfs_snapshots_runs() {
         let result = collect_real_zfs_snapshots().await;
-        match result {
-            Ok(snaps) => {
-                for s in snaps.iter().take(3) {
-                    assert!(!s.name.is_empty());
-                    assert!(!s.dataset.is_empty());
-                }
+        if let Ok(snaps) = result {
+            for s in snaps.iter().take(3) {
+                assert!(!s.name.is_empty());
+                assert!(!s.dataset.is_empty());
             }
-            Err(_) => {}
         }
     }
 }

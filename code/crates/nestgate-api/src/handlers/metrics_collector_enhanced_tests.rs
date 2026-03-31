@@ -48,7 +48,7 @@ mod tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![],
             system_metrics: SystemMetrics {
-                _cpu_usage: 50.0,
+                cpu_usage: 50.0,
                 memory_usage: 60.0,
                 memory_total: 16_000_000_000,
                 memory_available: 8_000_000_000,
@@ -83,7 +83,7 @@ mod tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![],
             system_metrics: SystemMetrics {
-                _cpu_usage: 45.0,
+                cpu_usage: 45.0,
                 memory_usage: 70.0,
                 memory_total: 32_000_000_000,
                 memory_available: 10_000_000_000,
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn test_system_metrics_creation() {
         let system = SystemMetrics {
-            _cpu_usage: 65.0,
+            cpu_usage: 65.0,
             memory_usage: 80.0,
             memory_total: 64_000_000_000,
             memory_available: 12_000_000_000,
@@ -220,7 +220,7 @@ mod tests {
     #[test]
     fn test_system_metrics_serialization() {
         let system = SystemMetrics {
-            _cpu_usage: 55.0,
+            cpu_usage: 55.0,
             memory_usage: 70.0,
             memory_total: 32_000_000_000,
             memory_available: 9_600_000_000,
@@ -763,7 +763,7 @@ mod tests {
             timestamp: SystemTime::now(),
             pool_metrics: vec![pool1, pool2],
             system_metrics: SystemMetrics {
-                _cpu_usage: 60.0,
+                cpu_usage: 60.0,
                 memory_usage: 75.0,
                 memory_total: 64_000_000_000,
                 memory_available: 16_000_000_000,
@@ -775,7 +775,7 @@ mod tests {
                 },
                 disk_io: DiskIOMetrics {
                     read_bytes: 500_000,
-                    write_bytes: 300000,
+                    write_bytes: 300_000,
                     read_operations: 5000,
                     write_operations: 3000,
                 },

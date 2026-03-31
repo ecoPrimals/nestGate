@@ -31,13 +31,14 @@ fn dataset_info_serde_roundtrip() {
     assert_eq!(back.properties.get("a"), Some(&"b".to_string()));
 }
 
-#[test]
-fn new_for_testing_builds_manager() {
+#[tokio::test]
+async fn new_for_testing_builds_manager() {
     let m = ZfsDatasetManager::new_for_testing();
-    m.delete_dataset("any")
-        .expect("test: mock delete_dataset succeeds");
-    m.destroy_dataset("any")
-        .expect("test: mock destroy_dataset succeeds");
+    // delete/destroy now run real `zfs destroy` — expect failure on non-existent dataset
+    let err = m.delete_dataset("nonexistent-test-dataset").await;
+    assert!(err.is_err(), "delete of nonexistent dataset should fail");
+    let err = m.destroy_dataset("nonexistent-test-dataset").await;
+    assert!(err.is_err(), "destroy of nonexistent dataset should fail");
 }
 
 #[test]

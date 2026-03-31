@@ -18,11 +18,10 @@ use crate::dev_stubs::zfs::ZeroCostZfsOperations;
 ///
 /// High-performance ZFS service implementation with zero-cost abstractions.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "Inner field used for ZFS operations")]
 /// Service implementation for `ZeroCostNativeZfs`
 pub struct ZeroCostNativeZfsService<const MAX_POOLS: usize> {
     /// ZFS operations interface
-    inner: ZeroCostZfsOperations,
+    _inner: ZeroCostZfsOperations,
 }
 
 #[cfg(feature = "dev-stubs")]
@@ -39,7 +38,7 @@ impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            inner: ZeroCostZfsOperations::new(),
+            _inner: ZeroCostZfsOperations::new(),
         }
     }
 }
@@ -69,15 +68,14 @@ impl<const MAX_POOLS: usize> ZeroCostNativeZfsService<MAX_POOLS> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "dev-stubs")))]
 mod tests {
     use super::ZeroCostNativeZfsService;
 
     #[test]
     fn production_placeholder_new_and_default() {
-        let a = ZeroCostNativeZfsService::<4>::new();
-        let b = ZeroCostNativeZfsService::<4>;
-        drop((a, b));
+        let _a = ZeroCostNativeZfsService::<4>::new();
+        let _b = ZeroCostNativeZfsService::<4>;
     }
 }
 
@@ -87,8 +85,7 @@ mod dev_stubs_tests {
 
     #[test]
     fn dev_stubs_new_and_default() {
-        let a = ZeroCostNativeZfsService::<8>::new();
-        let b = ZeroCostNativeZfsService::<8>::default();
-        drop((a, b));
+        let _a = ZeroCostNativeZfsService::<8>::new();
+        let _b = ZeroCostNativeZfsService::<8>::default();
     }
 }

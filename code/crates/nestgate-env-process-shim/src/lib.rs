@@ -9,6 +9,8 @@
 //! they are `unsafe`, so higher edition crates can depend on this crate to perform the same
 //! operations without an `unsafe` block (see Rust edition guide: newly unsafe functions).
 
+#![forbid(unsafe_code)]
+
 use std::ffi::OsStr;
 
 /// Delegates to [`std::env::set_var`].

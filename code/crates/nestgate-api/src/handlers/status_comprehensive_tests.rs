@@ -16,13 +16,13 @@ fn test_system_status_creation() {
         status: "healthy".to_string(),
         version: "2.0.0".to_string(),
         uptime: 3600,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     assert_eq!(status.status, "healthy");
     assert_eq!(status.version, "2.0.0");
     assert_eq!(status.uptime, 3600);
-    assert_eq!(status.timestamp, 1698505200);
+    assert_eq!(status.timestamp, 1_698_505_200);
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn test_system_status_starting() {
         status: "starting".to_string(),
         version: "2.0.0".to_string(),
         uptime: 0,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     assert_eq!(status.status, "starting");
@@ -45,7 +45,7 @@ fn test_system_status_long_uptime() {
         status: "healthy".to_string(),
         version: "2.0.0".to_string(),
         uptime: one_day_seconds,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     assert_eq!(status.uptime, 86400);
@@ -59,7 +59,7 @@ fn test_system_status_serialization() {
         status: "healthy".to_string(),
         version: "1.0.0".to_string(),
         uptime: 1000,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     let json = serde_json::to_string(&status).expect("Serialization failed");
@@ -81,7 +81,7 @@ fn test_system_status_deserialization() {
     assert_eq!(status.status, "healthy");
     assert_eq!(status.uptime, 500);
     assert_eq!(status.version, "1.5.0");
-    assert_eq!(status.timestamp, 1698505200);
+    assert_eq!(status.timestamp, 1_698_505_200);
 }
 
 // ==================== UPTIME CALCULATION TESTS ====================
@@ -112,7 +112,7 @@ fn test_uptime_one_day() {
 
 #[test]
 fn test_uptime_one_week() {
-    let uptime_seconds: u64 = 604800;
+    let uptime_seconds: u64 = 604_800;
     assert_eq!(uptime_seconds / 86400, 7); // 7 days
 }
 
@@ -173,7 +173,7 @@ fn test_status_serialization_roundtrip() {
         status: "healthy".to_string(),
         version: "1.2.3".to_string(),
         uptime: 12345,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     let json = serde_json::to_string(&original).expect("Serialization failed");
@@ -226,7 +226,7 @@ fn test_zero_uptime() {
         status: "starting".to_string(),
         version: "1.0.0".to_string(),
         uptime: 0,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     assert_eq!(status.uptime, 0);
@@ -238,7 +238,7 @@ fn test_maximum_uptime() {
         status: "healthy".to_string(),
         version: "1.0.0".to_string(),
         uptime: u64::MAX,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     assert_eq!(status.uptime, u64::MAX);
@@ -250,7 +250,7 @@ fn test_empty_version() {
         status: "healthy".to_string(),
         version: String::new(),
         uptime: 100,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     assert!(status.version.is_empty());
@@ -262,7 +262,7 @@ fn test_empty_status() {
         status: String::new(),
         version: "1.0.0".to_string(),
         uptime: 100,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     assert!(status.status.is_empty());
@@ -274,9 +274,9 @@ fn test_timestamp_validation() {
         status: "healthy".to_string(),
         version: "1.0.0".to_string(),
         uptime: 1000,
-        timestamp: 1698505200,
+        timestamp: 1_698_505_200,
     };
 
     // Verify timestamp is reasonable (after year 2000)
-    assert!(status.timestamp > 946684800); // Jan 1, 2000
+    assert!(status.timestamp > 946_684_800); // Jan 1, 2000
 }

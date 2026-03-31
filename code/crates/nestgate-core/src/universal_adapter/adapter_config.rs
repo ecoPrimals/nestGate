@@ -238,10 +238,10 @@ impl Default for AdapterDiscoveryConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::hardcoding::runtime_fallback_ports;
 
     #[test]
     fn test_config_new() {
-        use crate::constants::hardcoding::runtime_fallback_ports;
         let config = AdapterDiscoveryConfig::new();
         // Runtime config uses 127.0.0.1 (IpAddr format) instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
@@ -252,7 +252,6 @@ mod tests {
 
     #[test]
     fn test_config_set_get_discovery_endpoint() {
-        use crate::constants::hardcoding::runtime_fallback_ports;
         let mut config = AdapterDiscoveryConfig::new();
 
         let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::HTTP);
@@ -275,7 +274,6 @@ mod tests {
 
     #[test]
     fn test_config_adapter_endpoint() {
-        use crate::constants::hardcoding::runtime_fallback_ports;
         let mut config = AdapterDiscoveryConfig::new();
 
         // Runtime config uses 127.0.0.1 instead of "localhost"
@@ -335,8 +333,6 @@ mod tests {
     fn test_config_from_env_with_no_vars() {
         // This test runs without setting env vars, should get defaults
         let config = AdapterDiscoveryConfig::from_env();
-
-        use crate::constants::hardcoding::runtime_fallback_ports;
         // Runtime config uses 127.0.0.1 instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
         assert_eq!(config.get_port(), &runtime_fallback_ports::HTTP.to_string());
@@ -355,7 +351,6 @@ mod tests {
 
     #[test]
     fn test_config_all_discovery_endpoints() {
-        use crate::constants::hardcoding::runtime_fallback_ports;
         let mut config = AdapterDiscoveryConfig::new();
 
         let orch_endpoint = format!("http://orch:{}", runtime_fallback_ports::HTTP);

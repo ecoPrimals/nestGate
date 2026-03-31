@@ -18,7 +18,6 @@ workspace = true
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
-nestgate-network = { path = "../nestgate-network" }
 nestgate-api = { path = "../nestgate-api" }
 
 

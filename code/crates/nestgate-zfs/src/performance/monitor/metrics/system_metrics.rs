@@ -16,7 +16,7 @@ impl ZfsPerformanceMonitor {
 
         // Read memory information
         let memory_info = Self::get_memory_info().await;
-        let cpu_usage = Self::get_cpu_usage().await;
+        let cpu_usage = Self::getcpu_usage().await;
         let disk_io = Self::get_disk_io_stats().await;
 
         Ok(SystemPerformanceMetrics {
@@ -67,7 +67,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get CPU usage percentage
-    pub(crate) async fn get_cpu_usage() -> f64 {
+    pub(crate) async fn getcpu_usage() -> f64 {
         if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await
             && let Some(line) = content.lines().next()
             && line.starts_with("cpu ")

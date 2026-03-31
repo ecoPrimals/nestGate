@@ -44,7 +44,7 @@ mod metrics_collector_tests {
     #[test]
     fn test_system_metrics_creation() {
         let metrics = SystemMetrics {
-            _cpu_usage: 45.5,
+            cpu_usage: 45.5,
             memory_usage: 50.0,                   // percentage
             memory_total: 8192 * 1024 * 1024,     // bytes
             memory_available: 6144 * 1024 * 1024, // bytes
@@ -62,7 +62,7 @@ mod metrics_collector_tests {
             },
         };
 
-        assert!(metrics._cpu_usage >= 0.0 && metrics._cpu_usage <= 100.0);
+        assert!(metrics.cpu_usage >= 0.0 && metrics.cpu_usage <= 100.0);
         assert!(metrics.memory_usage >= 0.0 && metrics.memory_usage <= 100.0);
         assert!(metrics.memory_total > 0);
         assert!(metrics.memory_available <= metrics.memory_total);
@@ -71,7 +71,7 @@ mod metrics_collector_tests {
     #[test]
     fn test_system_metrics_ratios() {
         let metrics = SystemMetrics {
-            _cpu_usage: 75.0,
+            cpu_usage: 75.0,
             memory_usage: 75.0, // 75% usage
             memory_total: 8000 * 1024 * 1024,
             memory_available: 2000 * 1024 * 1024,
@@ -98,7 +98,7 @@ mod metrics_collector_tests {
     #[test]
     fn test_system_metrics_serialization() {
         let metrics = SystemMetrics {
-            _cpu_usage: 50.0,
+            cpu_usage: 50.0,
             memory_usage: 50.0,
             memory_total: 8192 * 1024 * 1024,
             memory_available: 4096 * 1024 * 1024,
@@ -124,7 +124,7 @@ mod metrics_collector_tests {
     #[test]
     fn test_system_metrics_deserialization() {
         let json = r#"{
-            "_cpu_usage": 60.5,
+            "cpu_usage": 60.5,
             "memory_usage": 62.5,
             "memory_total": 8589934592,
             "memory_available": 6442450944,
@@ -144,8 +144,8 @@ mod metrics_collector_tests {
 
         let metrics: SystemMetrics = serde_json::from_str(json).expect("Should deserialize");
         // Verify metrics deserialized correctly
-        assert!(metrics._cpu_usage > 0.0);
-        assert_eq!(metrics._cpu_usage, 60.5);
+        assert!(metrics.cpu_usage > 0.0);
+        assert_eq!(metrics.cpu_usage, 60.5);
     }
 
     // ==================== APPLICATION METRICS TESTS ====================
@@ -229,7 +229,7 @@ mod metrics_collector_tests {
         let snapshot = MetricsSnapshot {
             timestamp: SystemTime::now(),
             system: SystemMetrics {
-                _cpu_usage: 50.0,
+                cpu_usage: 50.0,
                 memory_usage: 50.0,
                 memory_total: 8192 * 1024 * 1024,
                 memory_available: 4096 * 1024 * 1024,
@@ -257,7 +257,7 @@ mod metrics_collector_tests {
             },
         };
 
-        assert!(snapshot.system._cpu_usage > 0.0);
+        assert!(snapshot.system.cpu_usage > 0.0);
         assert!(snapshot.application.total_requests > 0);
     }
 
@@ -269,7 +269,7 @@ mod metrics_collector_tests {
         let snapshot = MetricsSnapshot {
             timestamp: now,
             system: SystemMetrics {
-                _cpu_usage: 50.0,
+                cpu_usage: 50.0,
                 memory_usage: 50.0,
                 memory_total: 8192 * 1024 * 1024,
                 memory_available: 4096 * 1024 * 1024,
@@ -322,7 +322,7 @@ mod metrics_collector_tests {
     fn test_metrics_aggregation_over_time() {
         let snapshots = [
             SystemMetrics {
-                _cpu_usage: 50.0,
+                cpu_usage: 50.0,
                 memory_usage: 50.0,
                 memory_total: 8192 * 1024 * 1024,
                 memory_available: 4096 * 1024 * 1024,
@@ -340,7 +340,7 @@ mod metrics_collector_tests {
                 },
             },
             SystemMetrics {
-                _cpu_usage: 50.0,
+                cpu_usage: 50.0,
                 memory_usage: 50.0,
                 memory_total: 8192 * 1024 * 1024,
                 memory_available: 4096 * 1024 * 1024,
@@ -358,7 +358,7 @@ mod metrics_collector_tests {
                 },
             },
             SystemMetrics {
-                _cpu_usage: 50.0,
+                cpu_usage: 50.0,
                 memory_usage: 50.0,
                 memory_total: 8192 * 1024 * 1024,
                 memory_available: 4096 * 1024 * 1024,
@@ -377,7 +377,7 @@ mod metrics_collector_tests {
             },
         ];
 
-        let avg_cpu = snapshots.iter().map(|s| s._cpu_usage).sum::<f64>() / snapshots.len() as f64;
+        let avg_cpu = snapshots.iter().map(|s| s.cpu_usage).sum::<f64>() / snapshots.len() as f64;
 
         assert_eq!(avg_cpu, 50.0); // (50 + 50 + 50) / 3 = 50
     }
@@ -395,9 +395,9 @@ mod metrics_collector_tests {
     // ==================== ERROR HANDLING TESTS ====================
 
     #[test]
-    fn test_invalid_cpu_usage() {
+    fn test_invalidcpu_usage() {
         let metrics = SystemMetrics {
-            _cpu_usage: 150.0,
+            cpu_usage: 150.0,
             memory_usage: 50.0,
             memory_total: 8192 * 1024 * 1024,
             memory_available: 4096 * 1024 * 1024,
@@ -416,7 +416,7 @@ mod metrics_collector_tests {
         };
 
         // Structure allows it, but validation should happen elsewhere
-        assert_eq!(metrics._cpu_usage, 150.0); // Test that we can create metrics with values > 100
+        assert_eq!(metrics.cpu_usage, 150.0); // Test that we can create metrics with values > 100
     }
 
     #[test]
@@ -440,7 +440,7 @@ mod metrics_collector_tests {
     #[test]
     fn test_metrics_serialization_performance() {
         let metrics = SystemMetrics {
-            _cpu_usage: 50.0,
+            cpu_usage: 50.0,
             memory_usage: 50.0,
             memory_total: 8192 * 1024 * 1024,
             memory_available: 4096 * 1024 * 1024,

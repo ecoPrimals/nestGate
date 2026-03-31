@@ -273,7 +273,6 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
 /// Individual network connection with zero-copy capabilities.
 ///
 /// **✅ 100% SAFE** - Uses safe concurrent queues (zero unsafe code)
-#[allow(dead_code)]
 pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,
     remote_addr: SocketAddr,

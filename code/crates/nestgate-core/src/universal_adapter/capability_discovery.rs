@@ -358,12 +358,12 @@ mod tests {
             .await
             .expect("Failed to register provider 2");
 
-        // Should find both providers
-        let providers = discovery
+        // Should find both
+        let discovered = discovery
             .discover(CapabilityType::networking())
             .await
             .expect("Failed to discover networking providers");
-        assert_eq!(providers.len(), 2);
+        assert_eq!(discovered.len(), 2);
     }
 
     #[tokio::test]
@@ -599,13 +599,13 @@ mod tests {
             .await
             .expect("Failed to register second provider");
 
-        // Should only find one provider with the new endpoint
-        let providers = discovery
+        // Should only find one with the new endpoint
+        let discovered = discovery
             .discover(CapabilityType::networking())
             .await
             .expect("Failed to discover networking capability");
-        assert_eq!(providers.len(), 1);
+        assert_eq!(discovered.len(), 1);
         // ✅ MIGRATED: Endpoint now uses ServiceDiscoveryConfig
-        assert!(providers[0].endpoint.contains("127.0.0.1:9090"));
+        assert!(discovered[0].endpoint.contains("127.0.0.1:9090"));
     }
 }

@@ -266,12 +266,8 @@ impl ZeroCostZfsOperations {
 /// ZFS performance optimization service.
 ///
 /// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
-#[expect(
-    dead_code,
-    reason = "Dev-stub optimizer type retained for ZFS stub API surface"
-)]
 #[derive(Debug, Clone)]
-/// Performanceoptimizer
+#[allow(dead_code)]
 pub struct PerformanceOptimizer;
 
 impl Default for PerformanceOptimizer {
@@ -281,6 +277,7 @@ impl Default for PerformanceOptimizer {
     }
 }
 
+#[allow(dead_code)]
 impl PerformanceOptimizer {
     /// Create a new performance optimizer instance
     #[must_use]
@@ -296,10 +293,6 @@ impl PerformanceOptimizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[expect(
-        dead_code,
-        reason = "Stub method exercised only in tests; kept for API completeness"
-    )]
     pub fn optimize_performance(&self) -> Result<(), ZfsError> {
         info!("Running ZFS performance optimization");
         Ok(())
@@ -311,10 +304,6 @@ impl PerformanceOptimizer {
 /// Calculates confidence scores for ZFS operations and predictions.
 ///
 /// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
-#[expect(
-    dead_code,
-    reason = "Dev-stub calculator type retained for ZFS stub API surface"
-)]
 #[derive(Debug, Clone)]
 /// Confidencecalculator
 pub struct ConfidenceCalculator;

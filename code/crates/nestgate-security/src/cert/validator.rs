@@ -9,10 +9,8 @@ use nestgate_types::{NestGateError, Result};
 /// Unified certificate validation for the `NestGate` ecosystem
 /// Certificate validator that uses the universal adapter for ecosystem integration
 pub struct CertificateValidator {
-    #[allow(dead_code)]
-    adapter: PrimalAgnosticAdapter, // Updated type
-    #[allow(dead_code)]
-    config: NestGateCanonicalConfig,
+    _adapter: PrimalAgnosticAdapter,
+    _config: NestGateCanonicalConfig,
 }
 impl CertificateValidator {
     /// Create a new certificate validator
@@ -59,34 +57,35 @@ impl CertificateValidator {
             })?;
 
         let adapter = PrimalAgnosticAdapter::new(adapter_url);
-        Ok(Self { adapter, config })
+        Ok(Self {
+            _adapter: adapter,
+            _config: config,
+        })
     }
 
-    /// Validate a certificate
+    /// Validate a certificate.
+    ///
+    /// Cryptographic verification is delegated to the security provider (`crypto.validate_cert` IPC);
+    /// this type does not perform local X.509 parsing or trust decisions.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub const fn validate_certificate(&self, cert_data: &[u8]) -> Result<bool> {
-        // Use the universal adapter for certificate validation
-        // This is a simplified validation for the modernization
-        Ok(!cert_data.is_empty())
+    /// Returns [`NestGateError::not_implemented`] until that IPC path is wired.
+    pub fn validate_certificate(&self, _cert_data: &[u8]) -> Result<bool> {
+        Err(NestGateError::not_implemented(
+            "Certificate validation delegated to security provider via crypto.validate_cert IPC",
+        ))
     }
 
     /// Check if certificate is expired
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub const fn is_certificate_expired(&self, _cert_data: &[u8]) -> Result<bool> {
-        // Simplified expiration check
-        Ok(false)
+    /// Returns [`NestGateError::not_implemented`] until expiration is read via the security provider.
+    pub fn is_certificate_expired(&self, _cert_data: &[u8]) -> Result<bool> {
+        Err(NestGateError::not_implemented(
+            "Certificate validation delegated to security provider via crypto.validate_cert IPC",
+        ))
     }
 }
 
@@ -126,26 +125,38 @@ mod tests {
     }
 
     #[test]
-    fn validate_certificate_empty_is_false() {
+    fn validate_certificate_returns_not_implemented() {
         temp_env::with_var(
             "NESTGATE_ADAPTER_ENDPOINT",
             Some("http://localhost/adapter"),
             || {
                 let v = CertificateValidator::new(NestGateCanonicalConfig::default()).unwrap();
-                assert!(!v.validate_certificate(&[]).unwrap());
-                assert!(v.validate_certificate(b"x").unwrap());
+                let e = v
+                    .validate_certificate(&[])
+                    .expect_err("delegated validation");
+                match e {
+                    NestGateError::NotImplemented { .. } => {}
+                    ref other => panic!("unexpected {other:?}"),
+                }
+                let e = v
+                    .validate_certificate(b"x")
+                    .expect_err("delegated validation");
+                assert!(matches!(e, NestGateError::NotImplemented { .. }));
             },
         );
     }
 
     #[test]
-    fn is_certificate_expired_returns_false_in_stub() {
+    fn is_certificate_expired_returns_not_implemented() {
         temp_env::with_var(
             "NESTGATE_ADAPTER_ENDPOINT",
             Some("http://localhost/adapter"),
             || {
                 let v = CertificateValidator::new(NestGateCanonicalConfig::default()).unwrap();
-                assert!(!v.is_certificate_expired(b"any").unwrap());
+                let e = v
+                    .is_certificate_expired(b"any")
+                    .expect_err("delegated expiration check");
+                assert!(matches!(e, NestGateError::NotImplemented { .. }));
             },
         );
     }
@@ -159,7 +170,7 @@ mod tests {
             ],
             || {
                 let v = create_default_certificate_validator().unwrap();
-                assert!(v.validate_certificate(b"x").unwrap());
+                assert!(v.validate_certificate(b"x").is_err());
             },
         );
     }

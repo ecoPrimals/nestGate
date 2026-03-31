@@ -16,7 +16,7 @@ use std::collections::HashMap;
 // use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 // use tokio::sync::RwLock;
-use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -245,6 +245,31 @@ impl CacheManager {
         &self.stats
     }
 
+    /// Snapshot in the public [`super::types::CacheStats`] shape (tier counts, byte sizes, hits/misses).
+    #[must_use]
+    pub fn snapshot_public_stats(&self) -> super::types::CacheStats {
+        fn tier_bytes(tier: &std::collections::HashMap<String, CacheEntry>) -> u64 {
+            tier.values().map(|e| e.data.len() as u64).sum()
+        }
+        let mut out = super::types::CacheStats {
+            hits: self.stats.hits,
+            misses: self.stats.misses,
+            hot_tier_items: self.hot_tier.len(),
+            warm_tier_items: self.warm_tier.len(),
+            cold_tier_items: self.cold_tier.len(),
+            hot_tier_size_bytes: tier_bytes(&self.hot_tier),
+            warm_tier_size_bytes: tier_bytes(&self.warm_tier),
+            cold_tier_size_bytes: tier_bytes(&self.cold_tier),
+            hot_tier_evictions: self.stats.evictions,
+            ..Default::default()
+        };
+        let hr = out.hit_ratio();
+        out.efficiency_metrics.moving_hit_ratio = hr;
+        out.efficiency_metrics.peak_hit_ratio = hr;
+        out.efficiency_metrics.effectiveness_score = hr * 100.0;
+        out
+    }
+
     /// Perform cache maintenance
     ///
     /// # Errors
@@ -380,39 +405,6 @@ impl CacheManager {
         tier.iter()
             .min_by_key(|(_, entry)| entry.last_accessed)
             .map(|(key, _)| key.clone())
-    }
-
-    /// Get cache path for a key
-    #[allow(dead_code)] // Framework method - intentionally unused
-    fn get_cache_path(&self, key: &str) -> std::path::PathBuf {
-        let filename = format!("{key}.cache");
-        if let Some(cache_dir) = &self.config.cache_dir {
-            cache_dir.join(filename)
-        } else {
-            std::env::temp_dir().join(filename)
-        }
-    }
-
-    /// Load cache data from disk
-    #[allow(dead_code)] // Framework method - intentionally unused
-    async fn load_from_disk(&self, path: &std::path::Path) -> Result<Vec<u8>> {
-        tokio::fs::read(path)
-            .await
-            .map_err(|e| NestGateError::io_error(e.to_string()))
-    }
-
-    /// Save cache data to disk
-    #[allow(dead_code)] // Framework method - intentionally unused
-    async fn save_to_disk(&self, key: &str, data: &[u8]) -> Result<()> {
-        let cache_path = self.get_cache_path(key);
-
-        if let Some(parent) = cache_path.parent() {
-            let _ = tokio::fs::create_dir_all(parent).await;
-        }
-
-        tokio::fs::write(&cache_path, data)
-            .await
-            .map_err(|e| NestGateError::io_error(e.to_string()))
     }
 
     /// Reset cache statistics

@@ -332,8 +332,7 @@ where
 /// RAII guard for pooled connections
 pub struct PooledConnectionGuard<T> {
     connection: T,
-    #[expect(dead_code, reason = "framework placeholder")] // Used for RAII cleanup semantics
-    pool: Arc<UniversalConnectionPool<T>>,
+    _pool: Arc<UniversalConnectionPool<T>>,
     _permit: tokio::sync::OwnedSemaphorePermit,
 }
 impl<T> PooledConnectionGuard<T> {
@@ -345,7 +344,7 @@ impl<T> PooledConnectionGuard<T> {
     ) -> Self {
         Self {
             connection,
-            pool,
+            _pool: pool,
             _permit: permit,
         }
     }

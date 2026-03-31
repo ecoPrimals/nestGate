@@ -30,10 +30,113 @@
 //! - **Buildable**: Creates directories, cleans old sockets
 //! - **Secure**: Prefers XDG runtime directory over /tmp
 //! - **Atomic-Ready**: Supports multiple instances with unique paths
+//!
+//! ## Capability-domain symlink (`storage.sock`)
+//!
+//! Per `CAPABILITY_BASED_DISCOVERY_STANDARD`, after the primary socket (e.g. `nestgate.sock`) is
+//! bound, a `storage.sock` symlink is created in the same directory so peers can discover the
+//! storage endpoint by capability. See [`install_storage_capability_symlink`] and
+//! [`StorageCapabilitySymlinkGuard`] (Unix only).
 
 use nestgate_types::error::{NestGateError, Result};
 use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
+
+/// Capability-domain socket name for storage discovery (symlink beside the bound socket).
+pub const STORAGE_CAPABILITY_SOCK_NAME: &str = "storage.sock";
+
+/// Create `storage.sock` → `<primary-socket-file>` in the same directory (Unix only).
+///
+/// Failure is logged and ignored so binding the primary socket always wins.
+#[cfg(unix)]
+pub fn install_storage_capability_symlink(socket_path: &Path) {
+    use std::os::unix::fs::symlink;
+
+    let Some(parent) = socket_path.parent() else {
+        warn!(
+            "storage capability symlink: no parent directory for {}",
+            socket_path.display()
+        );
+        return;
+    };
+    let Some(target_name) = socket_path.file_name() else {
+        warn!(
+            "storage capability symlink: no file name in {}",
+            socket_path.display()
+        );
+        return;
+    };
+
+    let link_path = parent.join(STORAGE_CAPABILITY_SOCK_NAME);
+    if link_path.exists()
+        && let Err(e) = std::fs::remove_file(&link_path)
+    {
+        warn!(
+            "storage capability symlink: could not remove existing {}: {e}",
+            link_path.display()
+        );
+        return;
+    }
+
+    match symlink(target_name, &link_path) {
+        Ok(()) => info!(
+            "storage capability symlink: {} -> {}",
+            link_path.display(),
+            target_name.to_string_lossy()
+        ),
+        Err(e) => warn!(
+            "storage capability symlink: failed to create {} -> {}: {e}",
+            link_path.display(),
+            target_name.to_string_lossy()
+        ),
+    }
+}
+
+/// Remove the `storage.sock` capability symlink if present (Unix only). Ignores non-symlinks.
+#[cfg(unix)]
+pub fn remove_storage_capability_symlink(socket_path: &Path) {
+    let Some(parent) = socket_path.parent() else {
+        return;
+    };
+    let link_path = parent.join(STORAGE_CAPABILITY_SOCK_NAME);
+    if !link_path.exists() {
+        return;
+    }
+    if let Ok(m) = std::fs::symlink_metadata(&link_path)
+        && m.file_type().is_symlink()
+        && let Err(e) = std::fs::remove_file(&link_path)
+    {
+        warn!(
+            "storage capability symlink: failed to remove {}: {e}",
+            link_path.display()
+        );
+    }
+}
+
+/// Installs the storage capability symlink on construction and removes it on drop (Unix only).
+#[cfg(unix)]
+pub struct StorageCapabilitySymlinkGuard {
+    socket_path: PathBuf,
+}
+
+#[cfg(unix)]
+impl StorageCapabilitySymlinkGuard {
+    /// Install [`install_storage_capability_symlink`] for `socket_path`.
+    #[must_use]
+    pub fn new(socket_path: &Path) -> Self {
+        install_storage_capability_symlink(socket_path);
+        Self {
+            socket_path: socket_path.to_path_buf(),
+        }
+    }
+}
+
+#[cfg(unix)]
+impl Drop for StorageCapabilitySymlinkGuard {
+    fn drop(&mut self) {
+        remove_storage_capability_symlink(&self.socket_path);
+    }
+}
 
 /// Socket configuration with standardized fallback logic
 #[derive(Debug, Clone)]
@@ -281,621 +384,5 @@ impl SocketConfig {
 }
 
 #[cfg(test)]
-mod tests {
-
-    use super::*;
-    use nestgate_platform::env_process;
-    use std::fs;
-    use std::os::unix::net::UnixListener;
-    use std::path::PathBuf;
-    use std::sync::Mutex;
-
-    /// Keys read by [`SocketConfig::from_environment`]. Serialized to avoid parallel test races.
-    const FROM_ENV_KEYS: &[&str] = &[
-        "NESTGATE_SOCKET",
-        "NESTGATE_FAMILY_ID",
-        "NESTGATE_NODE_ID",
-        "BIOMEOS_SOCKET_DIR",
-        "XDG_RUNTIME_DIR",
-    ];
-
-    static FROM_ENV_MUTEX: Mutex<()> = Mutex::new(());
-
-    fn snapshot_from_env() -> Vec<(String, Option<String>)> {
-        FROM_ENV_KEYS
-            .iter()
-            .map(|&k| (k.to_string(), std::env::var(k).ok()))
-            .collect()
-    }
-
-    fn restore_from_env(snapshot: &[(String, Option<String>)]) {
-        for (key, val) in snapshot {
-            match val {
-                Some(v) => env_process::set_var(key, v),
-                None => env_process::remove_var(key),
-            }
-        }
-    }
-
-    /// Clears socket-related env vars, runs `f`, then restores previous values via `env_process`.
-    fn with_isolated_from_env<R>(f: impl FnOnce() -> R) -> R {
-        let _guard = FROM_ENV_MUTEX.lock().expect("from_environment test mutex");
-        let snap = snapshot_from_env();
-        for &k in FROM_ENV_KEYS {
-            env_process::remove_var(k);
-        }
-        let out = f();
-        restore_from_env(&snap);
-        out
-    }
-
-    // ========================================================================
-    // UNIT TESTS - Pure Logic via resolve() (no env var races)
-    // ========================================================================
-
-    #[test]
-    fn test_explicit_socket_path_has_highest_priority() {
-        // Uses resolve() directly - no env var pollution between parallel tests
-        let config = SocketConfig::resolve(
-            "test".to_string(),
-            "default".to_string(),
-            Some("/tmp/explicit.sock".to_string()),
-            None,
-            None,
-        )
-        .unwrap();
-
-        assert_eq!(config.socket_path, PathBuf::from("/tmp/explicit.sock"));
-        assert_eq!(config.family_id, "test");
-        assert_eq!(config.source, SocketConfigSource::Environment);
-    }
-
-    #[test]
-    fn test_biomeos_dir_second_priority() {
-        let config = SocketConfig::resolve(
-            "biotest".to_string(),
-            "default".to_string(),
-            None,
-            Some("/tmp/biomeos-test-dir".to_string()),
-            None,
-        )
-        .unwrap();
-
-        assert_eq!(
-            config.socket_path,
-            PathBuf::from("/tmp/biomeos-test-dir/nestgate.sock")
-        );
-        assert_eq!(config.source, SocketConfigSource::BiomeOSDirectory);
-    }
-
-    #[test]
-    fn test_fallback_without_overrides() {
-        // No socket override, no biomeOS dir -> falls through to XDG or /tmp
-        let config = SocketConfig::resolve(
-            "fallback".to_string(),
-            "node42".to_string(),
-            None,
-            None,
-            None,
-        )
-        .unwrap();
-
-        let path_str = config.socket_path.to_str().unwrap();
-        assert!(
-            path_str.contains("nestgate"),
-            "Socket path should contain 'nestgate'"
-        );
-        assert_eq!(config.family_id, "fallback");
-        assert_eq!(config.node_id, "node42");
-    }
-
-    #[test]
-    fn test_explicit_override_beats_biomeos_dir() {
-        // Both provided - explicit should win
-        let config = SocketConfig::resolve(
-            "test".to_string(),
-            "default".to_string(),
-            Some("/tmp/override.sock".to_string()),
-            Some("/tmp/biomeos-dir".to_string()),
-            None,
-        )
-        .unwrap();
-
-        assert_eq!(config.socket_path, PathBuf::from("/tmp/override.sock"));
-        assert_eq!(config.source, SocketConfigSource::Environment);
-    }
-
-    #[test]
-    fn test_multi_instance_unique_sockets() {
-        // Pure logic test - no env vars
-        let config1 = SocketConfig::resolve(
-            "multi".to_string(),
-            "instance1".to_string(),
-            None,
-            None,
-            None,
-        )
-        .unwrap();
-
-        let config2 = SocketConfig::resolve(
-            "multi".to_string(),
-            "instance2".to_string(),
-            None,
-            None,
-            None,
-        )
-        .unwrap();
-
-        assert_eq!(config1.node_id, "instance1");
-        assert_eq!(config2.node_id, "instance2");
-        assert_eq!(config1.family_id, "multi");
-        assert_eq!(config2.family_id, "multi");
-    }
-
-    #[test]
-    fn test_prepare_creates_parent_directory() {
-        let test_dir = "/tmp/nestgate-test-prepare-dir";
-        let test_socket = format!("{}/test.sock", test_dir);
-
-        // Remove test dir if it exists
-        let _ = fs::remove_dir_all(test_dir);
-
-        let config = SocketConfig {
-            socket_path: PathBuf::from(&test_socket),
-            family_id: "test".to_string(),
-            node_id: "node1".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        assert!(config.prepare_socket_path().is_ok());
-        assert!(
-            Path::new(test_dir).exists(),
-            "Parent directory should exist"
-        );
-
-        // Cleanup
-        let _ = fs::remove_dir_all(test_dir);
-    }
-
-    #[test]
-    fn test_prepare_removes_old_socket() {
-        let test_socket = "/tmp/nestgate-test-old-socket.sock";
-
-        // Create old socket file
-        fs::write(test_socket, "old socket data").unwrap();
-        assert!(Path::new(test_socket).exists());
-
-        let config = SocketConfig {
-            socket_path: PathBuf::from(test_socket),
-            family_id: "test".to_string(),
-            node_id: "node1".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        assert!(config.prepare_socket_path().is_ok());
-
-        assert!(
-            !Path::new(test_socket).exists(),
-            "Old socket should be removed"
-        );
-    }
-
-    #[test]
-    fn test_socket_path_str() {
-        let config = SocketConfig {
-            socket_path: PathBuf::from("/tmp/test.sock"),
-            family_id: "test".to_string(),
-            node_id: "node1".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        assert_eq!(config.socket_path_str(), "/tmp/test.sock");
-    }
-
-    #[test]
-    fn test_config_source_equality() {
-        assert_eq!(
-            SocketConfigSource::Environment,
-            SocketConfigSource::Environment
-        );
-        assert_ne!(
-            SocketConfigSource::Environment,
-            SocketConfigSource::XdgRuntime
-        );
-        assert_ne!(
-            SocketConfigSource::XdgRuntime,
-            SocketConfigSource::TempDirectory
-        );
-    }
-
-    // ========================================================================
-    // E2E TESTS - Full Lifecycle (using resolve, no env var races)
-    // ========================================================================
-
-    #[test]
-    fn test_e2e_socket_creation_and_binding() {
-        let test_socket = "/tmp/nestgate-e2e-bind-test.sock";
-
-        let config = SocketConfig::resolve(
-            "e2e".to_string(),
-            "default".to_string(),
-            Some(test_socket.to_string()),
-            None,
-            None,
-        )
-        .unwrap();
-        assert!(config.prepare_socket_path().is_ok());
-
-        let listener_result = UnixListener::bind(&config.socket_path);
-        assert!(
-            listener_result.is_ok(),
-            "Should be able to bind to prepared socket"
-        );
-
-        drop(listener_result);
-        let _ = fs::remove_file(test_socket);
-    }
-
-    #[test]
-    fn test_e2e_socket_rebind_after_crash() {
-        let test_socket = "/tmp/nestgate-e2e-rebind-test.sock";
-
-        let config = SocketConfig::resolve(
-            "rebind".to_string(),
-            "default".to_string(),
-            Some(test_socket.to_string()),
-            None,
-            None,
-        )
-        .unwrap();
-
-        // First bind
-        assert!(config.prepare_socket_path().is_ok());
-        let listener1 = UnixListener::bind(&config.socket_path).unwrap();
-
-        // Simulate crash
-        drop(listener1);
-
-        // Second bind (restart)
-        assert!(config.prepare_socket_path().is_ok());
-        let listener2 = UnixListener::bind(&config.socket_path);
-        assert!(listener2.is_ok(), "Should be able to rebind after cleanup");
-
-        drop(listener2);
-        let _ = fs::remove_file(test_socket);
-    }
-
-    // ========================================================================
-    // CHAOS TESTS - Concurrent (using resolve - thread-safe, no shared env)
-    // ========================================================================
-
-    #[test]
-    fn test_chaos_concurrent_config_creation() {
-        use std::thread;
-
-        let handles: Vec<_> = (0..10)
-            .map(|i| {
-                thread::spawn(move || {
-                    let family_id = format!("chaos{}", i);
-                    let node_id = format!("node{}", i);
-
-                    // resolve() is pure - no env var races
-                    let config =
-                        SocketConfig::resolve(family_id.clone(), node_id.clone(), None, None, None);
-                    assert!(config.is_ok(), "Config creation should succeed");
-                    let config = config.unwrap();
-
-                    assert_eq!(config.family_id, family_id);
-                    assert_eq!(config.node_id, node_id);
-
-                    config
-                })
-            })
-            .collect();
-
-        let configs: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
-
-        assert_eq!(configs.len(), 10, "Should create 10 configs");
-
-        let family_ids: std::collections::HashSet<_> =
-            configs.iter().map(|c| c.family_id.clone()).collect();
-        assert_eq!(
-            family_ids.len(),
-            10,
-            "All family IDs should be unique (no env var races with resolve())"
-        );
-    }
-
-    #[test]
-    fn test_chaos_rapid_prepare_calls() {
-        let test_socket = "/tmp/nestgate-chaos-rapid.sock";
-
-        let config = SocketConfig {
-            socket_path: PathBuf::from(test_socket),
-            family_id: "rapid".to_string(),
-            node_id: "test".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        for _ in 0..100 {
-            assert!(config.prepare_socket_path().is_ok());
-        }
-
-        let _ = fs::remove_file(test_socket);
-    }
-
-    // ========================================================================
-    // FAULT INJECTION TESTS - Error Scenarios
-    // ========================================================================
-
-    #[test]
-    fn test_fault_readonly_filesystem_graceful_failure() {
-        let config = SocketConfig {
-            socket_path: PathBuf::from("/proc/nestgate-readonly-test.sock"),
-            family_id: "fault".to_string(),
-            node_id: "readonly".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        let result = config.prepare_socket_path();
-
-        if let Err(e) = result {
-            let error_msg = format!("{}", e);
-            assert!(!error_msg.is_empty(), "Error message should not be empty");
-        }
-    }
-
-    #[test]
-    fn test_fault_invalid_socket_path() {
-        let config = SocketConfig {
-            socket_path: PathBuf::from("/dev/null/invalid/path/socket.sock"),
-            family_id: "fault".to_string(),
-            node_id: "invalid".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        let result = config.prepare_socket_path();
-        assert!(result.is_err(), "Should fail on invalid path");
-    }
-
-    #[test]
-    fn test_fault_socket_as_directory() {
-        let test_dir = "/tmp/nestgate-fault-dir-as-socket";
-        let _ = fs::create_dir_all(test_dir);
-
-        let config = SocketConfig {
-            socket_path: PathBuf::from(test_dir),
-            family_id: "fault".to_string(),
-            node_id: "dir".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        let _ = config.prepare_socket_path();
-        let _ = fs::remove_dir_all(test_dir);
-    }
-
-    #[test]
-    fn test_fault_missing_parent_directory_auto_created() {
-        let test_path = "/tmp/nestgate-fault-test-deep/nested/dir/socket.sock";
-        let _ = fs::remove_dir_all("/tmp/nestgate-fault-test-deep");
-
-        let config = SocketConfig {
-            socket_path: PathBuf::from(test_path),
-            family_id: "fault".to_string(),
-            node_id: "deep".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-
-        assert!(
-            config.prepare_socket_path().is_ok(),
-            "Should create missing parent directories"
-        );
-        assert!(Path::new("/tmp/nestgate-fault-test-deep/nested/dir").exists());
-
-        let _ = fs::remove_dir_all("/tmp/nestgate-fault-test-deep");
-    }
-
-    #[test]
-    fn test_unicode_in_family_id() {
-        let config = SocketConfig::resolve(
-            "unicode_🍄🐸".to_string(),
-            "default".to_string(),
-            Some("/tmp/nestgate-unicode-🦀.sock".to_string()),
-            None,
-            None,
-        )
-        .unwrap();
-
-        assert_eq!(config.family_id, "unicode_🍄🐸");
-        assert!(config.socket_path.to_str().unwrap().contains("unicode-"));
-    }
-
-    #[test]
-    fn test_resolve_xdg_runtime_uses_biomeos_sock_when_dir_exists() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let config = SocketConfig::resolve(
-            "fam".to_string(),
-            "node".to_string(),
-            None,
-            None,
-            Some(dir.path().to_string_lossy().into_owned()),
-        )
-        .expect("resolve");
-
-        assert_eq!(config.source, SocketConfigSource::XdgRuntime);
-        assert!(config.socket_path.ends_with("biomeos/nestgate.sock"));
-    }
-
-    #[test]
-    fn test_resolve_empty_xdg_skips_tier3_and_uses_tmp() {
-        let config = SocketConfig::resolve(
-            "e".to_string(),
-            "n".to_string(),
-            None,
-            None,
-            Some(String::new()),
-        )
-        .expect("resolve");
-        assert_eq!(config.source, SocketConfigSource::TempDirectory);
-        assert!(
-            config
-                .socket_path
-                .to_string_lossy()
-                .contains("nestgate-e-n.sock")
-        );
-    }
-
-    #[test]
-    fn log_summary_covers_all_sources() {
-        for (source, path) in [
-            (
-                SocketConfigSource::Environment,
-                PathBuf::from("/tmp/a.sock"),
-            ),
-            (
-                SocketConfigSource::BiomeOSDirectory,
-                PathBuf::from("/tmp/biomeos/nestgate.sock"),
-            ),
-            (
-                SocketConfigSource::XdgRuntime,
-                PathBuf::from("/run/user/1/biomeos/nestgate.sock"),
-            ),
-            (
-                SocketConfigSource::TempDirectory,
-                PathBuf::from("/tmp/nestgate-x-y.sock"),
-            ),
-        ] {
-            let c = SocketConfig {
-                socket_path: path,
-                family_id: "f".to_string(),
-                node_id: "n".to_string(),
-                source,
-            };
-            c.log_summary();
-        }
-    }
-
-    // ========================================================================
-    // from_environment + env_process (serialized; restores prior env)
-    // ========================================================================
-
-    #[test]
-    fn from_environment_respects_nestgate_socket() {
-        with_isolated_from_env(|| {
-            env_process::set_var("NESTGATE_SOCKET", "/tmp/nestgate-from-env-explicit.sock");
-            env_process::set_var("NESTGATE_FAMILY_ID", "fam-env");
-            env_process::set_var("NESTGATE_NODE_ID", "node-env");
-
-            let cfg = SocketConfig::from_environment().expect("from_environment");
-            assert_eq!(
-                cfg.socket_path,
-                PathBuf::from("/tmp/nestgate-from-env-explicit.sock")
-            );
-            assert_eq!(cfg.family_id, "fam-env");
-            assert_eq!(cfg.node_id, "node-env");
-            assert_eq!(cfg.source, SocketConfigSource::Environment);
-        });
-    }
-
-    #[test]
-    fn from_environment_default_family_standalone_when_unset() {
-        with_isolated_from_env(|| {
-            let cfg = SocketConfig::from_environment().expect("from_environment");
-            assert_eq!(cfg.family_id, "standalone");
-            assert!(!cfg.node_id.is_empty());
-        });
-    }
-
-    #[test]
-    fn from_environment_biomeos_dir_when_no_socket_override() {
-        with_isolated_from_env(|| {
-            env_process::set_var("BIOMEOS_SOCKET_DIR", "/tmp/nestgate-biomeos-from-env");
-            env_process::set_var("NESTGATE_FAMILY_ID", "bf");
-
-            let cfg = SocketConfig::from_environment().expect("from_environment");
-            assert_eq!(
-                cfg.socket_path,
-                PathBuf::from("/tmp/nestgate-biomeos-from-env/nestgate.sock")
-            );
-            assert_eq!(cfg.source, SocketConfigSource::BiomeOSDirectory);
-        });
-    }
-
-    #[test]
-    fn from_environment_xdg_runtime_when_dir_exists() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        with_isolated_from_env(|| {
-            env_process::set_var("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref());
-
-            let cfg = SocketConfig::from_environment().expect("from_environment");
-            assert_eq!(cfg.source, SocketConfigSource::XdgRuntime);
-            assert!(cfg.socket_path.ends_with("biomeos/nestgate.sock"));
-        });
-    }
-
-    #[test]
-    fn from_environment_socket_beats_biomeos_and_xdg() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        with_isolated_from_env(|| {
-            env_process::set_var("NESTGATE_SOCKET", "/tmp/only-this.sock");
-            env_process::set_var("BIOMEOS_SOCKET_DIR", "/tmp/ignored-biomeos");
-            env_process::set_var("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref());
-
-            let cfg = SocketConfig::from_environment().expect("from_environment");
-            assert_eq!(cfg.socket_path, PathBuf::from("/tmp/only-this.sock"));
-            assert_eq!(cfg.source, SocketConfigSource::Environment);
-        });
-    }
-
-    // ========================================================================
-    // Additional resolve / edge cases
-    // ========================================================================
-
-    #[test]
-    fn resolve_empty_string_override_still_tier1_environment() {
-        let cfg = SocketConfig::resolve(
-            "a".to_string(),
-            "b".to_string(),
-            Some(String::new()),
-            None,
-            None,
-        )
-        .expect("resolve");
-        assert_eq!(cfg.source, SocketConfigSource::Environment);
-        assert_eq!(cfg.socket_path, PathBuf::from(""));
-    }
-
-    #[test]
-    fn resolve_xdg_nonexistent_path_skips_tier3() {
-        let cfg = SocketConfig::resolve(
-            "fam".to_string(),
-            "nod".to_string(),
-            None,
-            None,
-            Some("/nonexistent/nestgate-xdg-999999999999999".to_string()),
-        )
-        .expect("resolve");
-        assert_eq!(cfg.source, SocketConfigSource::TempDirectory);
-        assert!(
-            cfg.socket_path
-                .to_string_lossy()
-                .contains("nestgate-fam-nod.sock")
-        );
-    }
-
-    #[test]
-    fn socket_path_str_empty_when_non_utf8() {
-        use std::ffi::OsString;
-        use std::os::unix::ffi::OsStringExt;
-
-        let bytes = b"/tmp/\xFF\xFE.sock".to_vec();
-        let os = OsString::from_vec(bytes);
-        let cfg = SocketConfig {
-            socket_path: PathBuf::from(os),
-            family_id: "x".to_string(),
-            node_id: "y".to_string(),
-            source: SocketConfigSource::TempDirectory,
-        };
-        assert_eq!(cfg.socket_path_str(), "");
-    }
-}
+#[path = "socket_config_tests.rs"]
+mod tests;

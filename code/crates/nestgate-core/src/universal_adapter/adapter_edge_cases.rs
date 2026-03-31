@@ -133,7 +133,7 @@ mod adapter_cache_edge_cases {
     #[test]
     fn test_cache_miss() {
         let cache: HashMap<String, String> = HashMap::new();
-        assert!(cache.get("key").is_none());
+        assert!(!cache.contains_key("key"));
     }
 
     #[test]
@@ -148,7 +148,7 @@ mod adapter_cache_edge_cases {
         let mut cache = HashMap::new();
         cache.insert("key".to_string(), "value".to_string());
         cache.remove("key");
-        assert!(cache.get("key").is_none());
+        assert!(!cache.contains_key("key"));
     }
 
     #[test]
@@ -257,8 +257,12 @@ mod adapter_performance_tests {
             state.insert(format!("key{i}"), format!("value{i}"));
         }
 
-        let clones: Vec<_> = (0..100).map(|_| state.clone()).collect();
-        assert_eq!(clones.len(), 100);
+        let mut count = 0usize;
+        for _ in 0..100 {
+            let _ = state.clone();
+            count += 1;
+        }
+        assert_eq!(count, 100);
     }
 
     #[test]
@@ -304,10 +308,10 @@ mod adapter_boundary_conditions {
     #[test]
     fn test_maximum_capabilities() {
         let mut capabilities = HashMap::new();
-        for i in 0..100000 {
+        for i in 0..100_000 {
             capabilities.insert(format!("cap{i}"), format!("handler{i}"));
         }
-        assert_eq!(capabilities.len(), 100000);
+        assert_eq!(capabilities.len(), 100_000);
     }
 
     #[test]

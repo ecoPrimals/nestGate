@@ -109,7 +109,7 @@ impl PerformanceDashboard {
         let mut insights = Vec::new();
         
         // CPU usage insights
-        if current_metrics.system_metrics._cpu_usage > 90.0 {
+        if current_metrics.system_metrics.cpu_usage > 90.0 {
             insights.push(PerformanceInsight {
                 title: "High CPU Usage".to_string(),
                 description: format!("CPU usage is at self.base_url% - consider scaling resources"),
@@ -119,7 +119,7 @@ impl PerformanceDashboard {
                 impact_score: 9.0,
                 timestamp: SystemTime::now(),
             });
-        } else if current_metrics.system_metrics._cpu_usage > 75.0 {
+        } else if current_metrics.system_metrics.cpu_usage > 75.0 {
             insights.push(PerformanceInsight {
                 title: "Elevated CPU Usage".to_string(),
                 description: format!("CPU usage is at self.base_url%"),
@@ -186,12 +186,12 @@ impl PerformanceDashboard {
         let mut weighted_score = 0.0f64;
 
         // CPU health component (weight: 25%)
-        let cpu_score = if current_metrics.system_metrics._cpu_usage < 50.0 {
+        let cpu_score = if current_metrics.system_metrics.cpu_usage < 50.0 {
             100.0
-        } else if current_metrics.system_metrics._cpu_usage < 70.0 {
-            90.0 - (current_metrics.system_metrics._cpu_usage - 50.0) * 2.0
-        } else if current_metrics.system_metrics._cpu_usage < 90.0 {
-            50.0 - (current_metrics.system_metrics._cpu_usage - 70.0) * 1.5
+        } else if current_metrics.system_metrics.cpu_usage < 70.0 {
+            90.0 - (current_metrics.system_metrics.cpu_usage - 50.0) * 2.0
+        } else if current_metrics.system_metrics.cpu_usage < 90.0 {
+            50.0 - (current_metrics.system_metrics.cpu_usage - 70.0) * 1.5
         } else {
             10.0
         };
@@ -285,7 +285,7 @@ impl PerformanceDashboard {
         let mut recent_alerts = Vec::new();
 
         // Check for critical conditions
-        if current_metrics.system_metrics._cpu_usage > 95.0 {
+        if current_metrics.system_metrics.cpu_usage > 95.0 {
             critical_alerts += 1;
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),
@@ -328,7 +328,7 @@ impl PerformanceDashboard {
         }
 
         // Check for warning conditions
-        if current_metrics.system_metrics._cpu_usage > 80.0 && current_metrics.system_metrics._cpu_usage <= 95.0 {
+        if current_metrics.system_metrics.cpu_usage > 80.0 && current_metrics.system_metrics.cpu_usage <= 95.0 {
             warning_alerts += 1;
             recent_alerts.push(AlertInfo {
                 id: uuid::Uuid::new_v4().to_string(),

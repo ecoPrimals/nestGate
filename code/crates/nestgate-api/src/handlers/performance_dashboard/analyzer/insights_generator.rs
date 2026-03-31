@@ -61,7 +61,7 @@ impl InsightsGenerator {
         let mut insights = Vec::new();
         
         // CPU insights
-        if system_resources._cpu_usage_percent > 90.0 {
+        if system_resources.cpu_usage_percent > 90.0 {
             insights.push(PerformanceInsight {
                 title: "Critical CPU Utilization".to_string(),
                 description: format!("CPU usage is at self.base_url% - immediate attention required"),
@@ -71,7 +71,7 @@ impl InsightsGenerator {
                 impact_score: 9.5,
                 timestamp: std::time::SystemTime::now(),
             });
-        } else if system_resources._cpu_usage_percent > 75.0 {
+        } else if system_resources.cpu_usage_percent > 75.0 {
             insights.push(PerformanceInsight {
                 title: "High CPU Usage".to_string(),
                 description: format!("CPU usage is at self.base_url% - monitor closely"),
@@ -364,7 +364,7 @@ impl InsightsGenerator {
         let mut insights = Vec::new();
         
         // High CPU + High I/O correlation
-        if system_resources._cpu_usage_percent > 80.0 && (io_analysis.read_iops + io_analysis.write_iops) > 8000.0 {
+        if system_resources.cpu_usage_percent > 80.0 && (io_analysis.read_iops + io_analysis.write_iops) > 8000.0 {
             insights.push(PerformanceInsight {
                 title: "CPU-I/O Performance Correlation".to_string(),
                 description: format!("High CPU ({:.1}%) correlates with high I/O (self.base_url IOPS) - potential system strain"),

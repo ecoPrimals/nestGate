@@ -8,27 +8,46 @@
 ## Quick Metrics
 
 ```
-Build:              25/25 workspace members compiling (0 errors)
-Clippy:             ZERO WARNINGS — cargo clippy --workspace --lib
+Build:              ALL workspace members — cargo check --workspace --all-features --all-targets (0 errors)
+Clippy:             ZERO WARNINGS — cargo clippy --workspace --all-features --all-targets
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               ZERO WARNINGS — cargo doc --workspace --no-deps
-Tests:              8,384 lib tests passing, 0 failures
-Coverage:           80.95% line (cargo llvm-cov --workspace --lib)
-Files > 800 lines:  0 (production)
-Unwrap/Expect:      ZERO in production code
+Tests:              8,376 lib tests passing, 0 failures (workspace `--lib`; last summed Mar 31, 2026)
+Coverage:           80.95% line (cargo llvm-cov --workspace --lib) — last full measurement; re-run to refresh
+Files > 1000 lines: 0 (production; max 879 lines — metrics.rs; large modules smart-refactored)
+Unwrap/Expect:      ZERO in production library code (#[cfg(test)] and integration tests may use unwrap/expect)
 TODO/FIXME:         ZERO in .rs files
-Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (except env_process_shim bridge)
+Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (except env_process_shim bridge)
 println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
-TLS crypto:         ring provider (Pure Rust; aws-lc-rs eliminated — ecoBin compliant)
+TLS/crypto:         Delegated to bearDog via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
+Discovery:          Environment variables + songBird IPC (mDNS behind `mdns` feature gate; delegated to biomeOS/songBird)
+MCP:                Not a workspace member — use biomeOS `capability.call` / songBird instead
+IPC routes:         storage.*, data.*, nat.*, beacon.*, health.*, capabilities.* all wired
+Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
+Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery (single import path)
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
-Workspace members:  25 (23 code/crates + tools/unwrap-migrator + fuzz)
+Workspace members:  24 (22 code/crates + tools/unwrap-migrator + fuzz)
+Archived:           infant_discovery_demo example; mDNS integration tests (discovery shed to biomeOS/songBird)
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
+
+---
+
+## Ground truth refresh (Mar 31, 2026)
+
+Measured with `cargo check` / `cargo clippy` / `cargo fmt --check` / `cargo test --lib` as above.
+
+- **Production file size**: All production `.rs` files under **1,000** lines (max 879 — `metrics.rs`). Smart-refactored: `health.rs` 785→package, `types.rs` 858→package, `pool/manager.rs` 832→package.
+- **Workspace**: **24** members compile with `--all-features --all-targets`. MCP, ring, rustls, reqwest all eliminated.
+- **Discovery**: mDNS behind `mdns` feature gate; production discovery is env-driven + songBird IPC.
+- **IPC routes**: `data.*`, `nat.*`, `beacon.*` wired as aliases/handlers in unix_adapter.rs. `storage.sock` capability symlink auto-managed.
+- **Hardcoding**: Port fallbacks centralized via `runtime_fallback_ports`. Legacy env vars (`NESTGATE_BEARDOG_URL`) deprecated in favor of `NESTGATE_CAPABILITY_*`.
+- **Coverage**: Figure unchanged since last llvm-cov run (80.95% line); not re-measured this session.
 
 ---
 
@@ -449,16 +468,19 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 | Area | Status |
 |------|--------|
-| Production unwrap/expect | CLEAN |
+| Production unwrap/expect | CLEAN (library `src/`; tests may use unwrap/expect) |
 | Production TODO/FIXME | CLEAN |
 | unsafe blocks | EVOLVED (safe alternatives everywhere except env-process-shim) |
 | Hardcoded primal names | CLEAN (DEFAULT_SERVICE_NAME + env config) |
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
-| `ring` dependency | ELIMINATED (aws-lc-rs TLS provider) |
+| TLS/crypto | Delegated to bearDog IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
-| Coverage gap to 90% | ~10 pp remaining (~80% current) |
-| Semantic router | COMPILED & WIRED (`data.*`, `nat.*` routes pending) |
-| `#[allow(dead_code)]` | ~95 instances remaining (down from 137+), incremental pruning |
+| Coverage gap to 90% | ~10 pp remaining (~80% current; last measured 80.95% line) |
+| Semantic router | COMPILED & WIRED — `data.*`, `nat.*`, `beacon.*` routes all active |
+| `#[allow(dead_code)]` | 1 production module-level (RPC manager, documented rationale); item-level with reasons |
+| MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
+| mDNS in-tree | Feature-gated behind `mdns` — biomeOS/songBird for production discovery |
+| Capability symlink | `storage.sock` → `nestgate.sock` auto-managed with guard pattern |
 
 ### Coverage
 
@@ -474,13 +496,13 @@ Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary ent
 
 ```
 Production:    Pure Rust; platform via rustix + /proc parsing
-Crypto:        100% RustCrypto
-TLS:           aws-lc-rs (no ring)
-HTTP client:   Pure Rust (tokio TcpStream for discovery bootstrap)
+Crypto:        Delegated to bearDog via IPC; local JWT uses RustCrypto (hmac, sha2)
+TLS:           ELIMINATED from dep tree — installer uses system curl; bearDog provides ecosystem TLS
+HTTP client:   Pure Rust (tokio TcpStream bootstrap; reqwest/rustls/ring all removed)
 No direct libc: uzers used instead
 Hostname:      rustix::system::uname (gethostname eliminated)
 Tokio:         Minimal features (9 specific, not "full")
-Discovery:     mDNS (mdns-sd), Consul/K8s (pure-Rust HTTP, feature-gated)
+Discovery:     Env vars + songBird IPC (mDNS feature-gated, not default)
 sysinfo:       Optional, non-Linux only
 ```
 
@@ -488,19 +510,18 @@ sysinfo:       Optional, non-Linux only
 
 ## Architecture
 
-High-level layout; full member list is `[workspace].members` in root `Cargo.toml` (25 packages).
+High-level layout; full member list is `[workspace].members` in root `Cargo.toml` (**24** packages). MCP is not a workspace member (delegated to biomeOS `capability.call`).
 
 ```
-nestGate/ (25 workspace members)
+nestGate/ (24 workspace members)
 ├── nestgate-types / nestgate-platform / nestgate-env-process-shim  Foundation
 ├── nestgate-config / nestgate-storage / nestgate-rpc / nestgate-discovery
 ├── nestgate-security / nestgate-observe / nestgate-cache
-├── nestgate-core       Traits, network, services, adapters (re-exports)
+├── nestgate-core       Traits, network, services, adapters (re-exports; primal_self_knowledge from nestgate-discovery)
 ├── nestgate-canonical  Canonical modernization
 ├── nestgate-api        REST + JSON-RPC API server
 ├── nestgate-bin        CLI binary (unibin)
 ├── nestgate-zfs        ZFS integration (adaptive)
-├── nestgate-mcp        MCP provider
 ├── nestgate-network    Network storage
 ├── nestgate-automation Automation engine (lifecycle/, analysis, types)
 ├── nestgate-installer  Platform installer (real GitHub releases download)
@@ -519,14 +540,14 @@ nestGate/ (25 workspace members)
 | Standard | Status |
 |----------|--------|
 | UniBin | PASS |
-| ecoBin | PASS (pure Rust; no ring; sysinfo optional non-Linux only) |
+| ecoBin | PASS (pure Rust app code; ring/rustls/reqwest eliminated; sysinfo optional non-Linux only) |
 | JSON-RPC 2.0 | PASS |
 | tarpc | PASS (feature-gated, version aligned) |
-| Semantic naming | PASS (JSON-RPC server, IPC) |
-| File size (<800 production) | PASS (0 production files over 800) |
-| Sovereignty | EVOLVED (env-driven, capability-based) |
-| mDNS Discovery | EVOLVED |
-| Crypto delegation | EVOLVED |
+| Semantic naming | PASS (storage.*, data.*, nat.*, beacon.*, health.*, capabilities.*) |
+| File size (<1000 production) | PASS (max 879 lines) |
+| Sovereignty | PASS (capability-based discovery, storage.sock symlink, zero hardcoded primals) |
+| mDNS Discovery | Feature-gated (`mdns`); production via biomeOS/songBird |
+| Crypto delegation | PASS — bearDog IPC via SecurityProviderClient |
 | scyBorg license | DOCUMENTED (LICENSING.md) |
 
 ---
@@ -567,4 +588,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: March 30, 2026
+**Latest**: March 31, 2026

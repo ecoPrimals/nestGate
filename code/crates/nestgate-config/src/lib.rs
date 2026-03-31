@@ -45,7 +45,6 @@
 #![allow(clippy::struct_field_names)]
 // Prefer explicit `match`/`if let` for env parsing in several modules; `map_or_else` is not always clearer.
 #![allow(clippy::option_if_let_else)]
-
 #[cfg(test)]
 pub use nestgate_platform::env_process;
 

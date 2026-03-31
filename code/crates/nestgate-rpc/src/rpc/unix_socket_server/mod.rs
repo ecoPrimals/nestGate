@@ -253,6 +253,9 @@ impl JsonRpcUnixServer {
             )
         })?;
 
+        #[cfg(unix)]
+        crate::rpc::socket_config::install_storage_capability_symlink(&self.socket_path);
+
         info!("═══════════════════════════════════════════════════════════");
         info!("✅ NestGate ready!");
         info!("   Socket: {}", self.socket_path.display());
@@ -294,6 +297,8 @@ impl JsonRpcUnixServer {
 
 impl Drop for JsonRpcUnixServer {
     fn drop(&mut self) {
+        #[cfg(unix)]
+        crate::rpc::socket_config::remove_storage_capability_symlink(&self.socket_path);
         // Clean up socket file
         if self.socket_path.exists()
             && let Err(e) = std::fs::remove_file(&self.socket_path)

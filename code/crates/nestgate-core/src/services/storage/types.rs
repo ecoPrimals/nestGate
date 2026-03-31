@@ -443,19 +443,18 @@ mod tests {
     #[test]
     fn test_cache_config_usage() {
         // Simple test using local struct instead of complex import
-        #[allow(dead_code)]
         struct TestCacheConfig {
             cache_directory: String,
             cache_size_bytes: u64,
             max_entries: u64,
-            cold_tier_unlimited: bool,
+            _cold_tier_unlimited: bool,
         }
 
         let cache = TestCacheConfig {
             cache_directory: "/tmp/test-cache".to_string(),
             cache_size_bytes: 1000 * 1024 * 1024, // 1000 MB in bytes
             max_entries: 10000,
-            cold_tier_unlimited: false,
+            _cold_tier_unlimited: false,
         };
         // **CANONICAL MODERNIZATION** - Updated test for canonical CacheStorageConfig
         let half_size = cache.cache_size_bytes / 2;

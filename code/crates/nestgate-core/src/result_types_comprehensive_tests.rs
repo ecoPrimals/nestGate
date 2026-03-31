@@ -13,13 +13,17 @@ mod result_types_tests {
     use nestgate_types::{network_result, storage_result, validation_result};
     use std::io;
 
+    fn err_validation_i32() -> Result<i32> {
+        Err(NestGateError::validation("error"))
+    }
+
     // ==================== Result Type Alias Tests ====================
 
     #[test]
     fn test_result_type_ok() {
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.ok(), Some(42));
     }
 
     #[test]
@@ -32,7 +36,7 @@ mod result_types_tests {
     fn test_canonical_result_type() {
         let result: CanonicalResult<String> = Ok("success".to_string());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert_eq!(result.ok().as_deref(), Some("success"));
     }
 
     #[test]
@@ -64,7 +68,7 @@ mod result_types_tests {
 
         let result = async_operation().await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "async success");
+        assert_eq!(result.ok().as_deref(), Some("async success"));
     }
 
     #[tokio::test]
@@ -88,7 +92,7 @@ mod result_types_tests {
 
         let result = factory();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "connected");
+        assert_eq!(result.ok().as_deref(), Some("connected"));
     }
 
     #[test]
@@ -177,7 +181,7 @@ mod result_types_tests {
         let ok_result: std::result::Result<i32, io::Error> = Ok(42);
         let canonical: Result<i32> = ok_result.to_canonical();
         assert!(canonical.is_ok());
-        assert_eq!(canonical.unwrap(), 42);
+        assert_eq!(canonical.ok(), Some(42));
     }
 
     #[test]
@@ -196,7 +200,7 @@ mod result_types_tests {
         let ok_result: std::result::Result<i32, io::Error> = Ok(100);
         let with_context = ok_result.with_context(|| "Should not be called".to_string());
         assert!(with_context.is_ok());
-        assert_eq!(with_context.unwrap(), 100);
+        assert_eq!(with_context.ok(), Some(100));
     }
 
     // ==================== Macro Tests ====================
@@ -206,7 +210,7 @@ mod result_types_tests {
         let result: std::result::Result<i32, io::Error> = Ok(42);
         let validated = validation_result!(result);
         assert!(validated.is_ok());
-        assert_eq!(validated.unwrap(), 42);
+        assert_eq!(validated.ok(), Some(42));
     }
 
     #[test]
@@ -222,7 +226,7 @@ mod result_types_tests {
         let result: std::result::Result<String, io::Error> = Ok("data".to_string());
         let network_res = network_result!(result);
         assert!(network_res.is_ok());
-        assert_eq!(network_res.unwrap(), "data");
+        assert_eq!(network_res.ok().as_deref(), Some("data"));
     }
 
     #[test]
@@ -238,7 +242,7 @@ mod result_types_tests {
         let result: std::result::Result<Vec<u8>, io::Error> = Ok(vec![1, 2, 3]);
         let storage_res = storage_result!(result);
         assert!(storage_res.is_ok());
-        assert_eq!(storage_res.unwrap(), vec![1, 2, 3]);
+        assert_eq!(storage_res.ok(), Some(vec![1, 2, 3]));
     }
 
     #[test]
@@ -271,7 +275,7 @@ mod result_types_tests {
         let result = step1().and_then(step2).and_then(step3);
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Result: 20");
+        assert_eq!(result.ok().as_deref(), Some("Result: 20"));
     }
 
     #[test]
@@ -301,7 +305,7 @@ mod result_types_tests {
         let result: Result<i32> = Ok(42);
         let mapped = result.map(|x| x * 2);
         assert!(mapped.is_ok());
-        assert_eq!(mapped.unwrap(), 84);
+        assert_eq!(mapped.ok(), Some(84));
     }
 
     #[test]
@@ -323,19 +327,19 @@ mod result_types_tests {
         let result: Result<i32> = Err(NestGateError::validation("error"));
         let recovered: Result<i32> = result.or(Ok(100));
         assert!(recovered.is_ok());
-        assert_eq!(recovered.unwrap(), 100);
+        assert_eq!(recovered.ok(), Some(100));
     }
 
     #[test]
     fn test_result_unwrap_or() {
-        let result: Result<i32> = Err(NestGateError::validation("error"));
+        let result = err_validation_i32();
         let value = result.unwrap_or(999);
         assert_eq!(value, 999);
     }
 
     #[test]
     fn test_result_unwrap_or_else() {
-        let result: Result<i32> = Err(NestGateError::validation("error"));
+        let result = err_validation_i32();
         let value = result.unwrap_or(888);
         assert_eq!(value, 888);
     }
@@ -346,23 +350,21 @@ mod result_types_tests {
     fn test_result_with_vec() {
         let result: Result<Vec<String>> = Ok(vec!["a".to_string(), "b".to_string()]);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 2);
+        assert_eq!(result.ok().map(|v| v.len()), Some(2));
     }
 
     #[test]
     fn test_result_with_option() {
         let result: Result<Option<i32>> = Ok(Some(42));
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), Some(42));
+        assert_eq!(result.ok(), Some(Some(42)));
     }
 
     #[test]
     fn test_result_with_nested_result() {
         let result: Result<Result<i32>> = Ok(Ok(42));
         assert!(result.is_ok());
-        let inner = result.unwrap();
-        assert!(inner.is_ok());
-        assert_eq!(inner.unwrap(), 42);
+        assert_eq!(result.flatten().ok(), Some(42));
     }
 
     #[test]
@@ -379,9 +381,11 @@ mod result_types_tests {
         });
 
         assert!(result.is_ok());
-        let data = result.unwrap();
-        assert_eq!(data.value, 42);
-        assert_eq!(data.name, "test");
+        let expected = CustomData {
+            value: 42,
+            name: "test".to_string(),
+        };
+        assert_eq!(result.ok(), Some(expected));
     }
 
     // ==================== Error Conversion Tests ====================
@@ -422,21 +426,21 @@ mod result_types_tests {
     fn test_result_with_empty_string() {
         let result: Result<String> = Ok(String::new());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "");
+        assert_eq!(result.ok().as_deref(), Some(""));
     }
 
     #[test]
     fn test_result_with_zero() {
         let result: Result<i32> = Ok(0);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 0);
+        assert_eq!(result.ok(), Some(0));
     }
 
     #[test]
     fn test_result_with_none() {
         let result: Result<Option<i32>> = Ok(None);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), None);
+        assert_eq!(result.ok(), Some(None));
     }
 
     #[test]

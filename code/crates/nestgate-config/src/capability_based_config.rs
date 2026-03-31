@@ -149,19 +149,15 @@ pub enum DiscoveryMethod {
     Environment,
 
     /// mDNS/Zeroconf discovery
-    #[allow(dead_code)]
     MDns,
 
     /// DNS Service Discovery
-    #[allow(dead_code)]
     DnsSd,
 
     /// Consul service registry
-    #[allow(dead_code)]
     Consul,
 
     /// Kubernetes service discovery
-    #[allow(dead_code)]
     Kubernetes,
 }
 

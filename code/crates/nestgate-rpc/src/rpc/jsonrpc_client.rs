@@ -25,16 +25,16 @@
 //! use serde_json::json;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! // Connect to Songbird's JSON-RPC service
-//! let mut client = JsonRpcClient::connect_unix("/primal/songbird").await?;
+//! // Connect to the orchestration provider's JSON-RPC service
+//! let mut client = JsonRpcClient::connect_unix("/primal/orchestration").await?;
 //!
-//! // Ask Songbird to resolve a primal's endpoint
+//! // Ask the orchestrator to resolve a capability
 //! let response = client.call("ipc.resolve", json!({
-//!     "primal": "beardog"
+//!     "capability": "security"
 //! })).await?;
 //!
 //! let endpoint = response["endpoint"].as_str().unwrap_or("");
-//! println!("BearDog is at: {}", endpoint);
+//! println!("Security provider at: {}", endpoint);
 //! # Ok(())
 //! # }
 //! ```
@@ -201,10 +201,10 @@ impl JsonRpcClient {
     /// use serde_json::json;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut client = JsonRpcClient::connect_unix("/primal/songbird").await?;
+    /// let mut client = JsonRpcClient::connect_unix("/primal/orchestration").await?;
     ///
     /// let result = client.call("ipc.resolve", json!({
-    ///     "primal": "beardog"
+    ///     "capability": "security"
     /// })).await?;
     ///
     /// println!("Endpoint: {}", result["endpoint"]);
@@ -306,13 +306,13 @@ impl JsonRpcClient {
     /// }
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut client = JsonRpcClient::connect_unix("/primal/songbird").await?;
+    /// let mut client = JsonRpcClient::connect_unix("/primal/orchestration").await?;
     ///
     /// let info: ServiceInfo = client.call_typed("ipc.resolve", json!({
-    ///     "primal": "beardog"
+    ///     "capability": "security"
     /// })).await?;
     ///
-    /// println!("BearDog endpoint: {}", info.endpoint);
+    /// println!("Security endpoint: {}", info.endpoint);
     /// # Ok(())
     /// # }
     /// ```
@@ -369,7 +369,7 @@ mod tests {
         let request = JsonRpcRequest {
             jsonrpc: Arc::from("2.0"),
             method: Arc::from("ipc.resolve"),
-            params: json!({"primal": "beardog"}),
+            params: json!({"capability": "security"}),
             id: 1,
         };
 

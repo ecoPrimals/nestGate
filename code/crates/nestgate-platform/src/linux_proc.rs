@@ -139,7 +139,7 @@ pub fn memory_usage_percent() -> Option<f64> {
 
 /// Instantaneous global CPU busy percentage from the aggregate `cpu` line in `/proc/stat`.
 #[must_use]
-pub fn global_cpu_usage_percent_from_stat() -> Option<f64> {
+pub fn globalcpu_usage_percent_from_stat() -> Option<f64> {
     #[cfg(target_os = "linux")]
     {
         let content = std::fs::read_to_string("/proc/stat").ok()?;

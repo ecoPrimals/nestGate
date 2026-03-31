@@ -45,9 +45,12 @@ mod tests {
 
     #[test]
     fn test_multiple_managers() {
-        let managers: Vec<WorkspaceManager> = (0..10).map(|_| WorkspaceManager::new()).collect();
-
-        assert_eq!(managers.len(), 10);
+        let mut n = 0;
+        for _ in 0..10 {
+            let _ = WorkspaceManager::new();
+            n += 1;
+        }
+        assert_eq!(n, 10);
     }
 
     #[test]
@@ -70,27 +73,28 @@ mod tests {
 
     #[test]
     fn test_workspace_manager_clone_independence() {
-        let manager1 = WorkspaceManager::new();
-        let manager2 = manager1.clone();
+        let manager2 = {
+            let manager1 = WorkspaceManager::new();
+            let manager2 = manager1.clone();
+            assert!(format!("{:?}", manager1).contains("WorkspaceManager"));
+            manager2
+        };
 
-        drop(manager1);
-
-        // manager2 should still be valid
+        // manager2 should still be valid after manager1 went out of scope
         let debug = format!("{:?}", manager2);
         assert!(debug.contains("WorkspaceManager"));
     }
 
     #[test]
     fn test_workspace_manager_multiple_clones() {
-        let manager = WorkspaceManager::new();
-        let clone1 = manager.clone();
-        let clone2 = manager.clone();
-        let clone3 = manager.clone();
+        let (clone2, clone3) = {
+            let manager = WorkspaceManager::new();
+            let clone2 = manager.clone();
+            let clone3 = manager.clone();
+            assert!(format!("{:?}", manager).contains("WorkspaceManager"));
+            (clone2, clone3)
+        };
 
-        drop(manager);
-        drop(clone1);
-
-        // clone2 and clone3 should still be valid
         let _ = format!("{:?}", clone2);
         let _ = format!("{:?}", clone3);
     }
@@ -363,13 +367,8 @@ mod tests {
 
     #[test]
     fn test_workspace_manager_hash_map_value() {
-        use std::collections::HashMap;
-
-        let mut map = HashMap::new();
-        map.insert("manager1", WorkspaceManager::new());
-        map.insert("manager2", WorkspaceManager::new());
-
-        assert_eq!(map.len(), 2);
+        let names = [WorkspaceManager::new(), WorkspaceManager::new()];
+        assert_eq!(names.len(), 2);
     }
 
     #[test]
@@ -386,12 +385,8 @@ mod tests {
     #[test]
     fn test_workspace_manager_pattern_matching() {
         let manager = WorkspaceManager::new();
-
-        match manager {
-            ref m => {
-                let _ = format!("{:?}", m);
-            }
-        }
+        let m = &manager;
+        let _ = format!("{:?}", m);
     }
 
     #[test]

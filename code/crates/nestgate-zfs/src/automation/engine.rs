@@ -27,13 +27,14 @@ use super::{
     actions, lifecycle, tier_evaluation,
     types::{
         AutomationPolicy, AutomationStatus, DatasetLifecycle, DatasetMetadata, PolicyConditions,
-        PolicyPriority, TierRule,
+        PolicyPriority,
     },
 };
 use crate::config::DatasetAutomationConfig;
 use crate::error::ZfsResult as Result;
 use crate::types::StorageTier;
 use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+use nestgate_core::NestGateError;
 use nestgate_core::error::NestGateUnifiedError;
 // Migration engine placeholder - not yet implemented
 // use crate::migration::MigrationEngine;
@@ -277,17 +278,6 @@ impl DatasetAutomation {
         Ok(())
     }
 
-    /// Check if dataset matches any of the tier rule patterns
-    #[allow(dead_code)] // Helper method for pattern matching
-    fn matches_pattern(&self, dataset_name: &str, patterns: &[TierRule]) -> bool {
-        for rule in patterns {
-            if rule.condition == "*" || dataset_name.contains(&rule.condition) {
-                return true;
-            }
-        }
-        false
-    }
-
     /// Update lifecycle tracking
     async fn update_lifecycle_tracking(
         &self,
@@ -349,6 +339,17 @@ impl DatasetAutomation {
             .map_err(|e| {
                 NestGateUnifiedError::storage_error(format!("Tier evaluation failed: {e}"))
             })
+    }
+
+    /// Reserved for orchestrated tier migration; the migration engine is not wired yet.
+    pub async fn migrate_dataset_to_tier(
+        &self,
+        _dataset_name: &str,
+        _target_tier: crate::types::StorageTier,
+    ) -> Result<()> {
+        Err(NestGateError::not_implemented(
+            "ZFS tier migration engine not yet wired; coordinate with migration IPC or use native ZFS tooling",
+        ))
     }
 }
 

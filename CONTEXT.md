@@ -22,14 +22,14 @@ by importing this crate graph.
 | **Version** | 4.7.0-dev |
 | **Language** | Rust 2024 edition; 100% Rust application code |
 | **License** | AGPL-3.0-only (code); CC-BY-SA 4.0 (documentation) |
-| **Architecture** | 25 workspace members: `code/crates/*`, `tools/unwrap-migrator`, fuzz targets |
+| **Architecture** | 24 workspace members: 22 `code/crates/*` + `tools/unwrap-migrator` + fuzz targets |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
-| **TLS** | No OpenSSL, no ring; **rustls** + **aws-lc-rs** |
+| **TLS/crypto** | Delegated to bearDog via IPC; installer uses system `curl` (ring/rustls/reqwest eliminated) |
 | **Unsafe** | None in normal crates; **env-process-shim** bridge is the documented exception |
 | **Lint / format** | Workspace `clippy` with `--all-features -D warnings` (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | Zero warnings (`cargo doc --workspace --no-deps`) |
-| **Tests** | 1,509 library tests passing (106 suites), 0 failures |
+| **Tests** | 8,376 library tests passing, 0 failures |
 | **Coverage** | ~80% line (llvm-cov) — wateringHole 80% minimum met |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
 | **Specs** | 16 specification documents under `specs/` |
@@ -40,7 +40,7 @@ by importing this crate graph.
 `nestgate-zfs`, `nestgate-network`, `nestgate-discovery`, `nestgate-security`,
 `nestgate-cache`, `nestgate-observe`, `nestgate-storage`, `nestgate-performance`,
 `nestgate-automation`, `nestgate-canonical`, `nestgate-fsmonitor`,
-`nestgate-installer`, `nestgate-mcp`, `nestgate-middleware`, `nestgate-nas`,
+`nestgate-installer`, `nestgate-middleware`, `nestgate-nas`,
 `nestgate-platform`, `nestgate-bin`, `nestgate-env-process-shim`.
 
 ### Canonical trait surface (high level)
@@ -59,8 +59,9 @@ networking, and service lifecycle across the adapter stack.
 
 - Expose storage and workspace lifecycle operations over JSON-RPC (and optionally tarpc).
 - Discover and advertise capabilities at runtime without hard-wiring peer primals.
-- Integrate observability, caching, ZFS-specific paths, NAS/middleware surfaces, and
-  MCP-oriented tooling as named workspace crates (see crate list above).
+- Integrate observability, caching, ZFS-specific paths, and NAS/middleware surfaces
+  as named workspace crates (see crate list above). MCP is delegated to biomeOS via
+  `capability.call`.
 
 ## What This Does Not Do
 

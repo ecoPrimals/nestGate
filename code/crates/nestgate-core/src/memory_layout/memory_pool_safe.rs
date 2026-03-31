@@ -454,6 +454,12 @@ mod tests {
 
     #[test]
     fn test_safe_pool_different_data_types() -> TestResult {
+        #[derive(Debug, PartialEq)]
+        struct CustomStruct {
+            id: u32,
+            name: String,
+        }
+
         // Test with String
         let string_pool: SafeMemoryPool<String, 4> = SafeMemoryPool::new();
         let h1 = string_pool
@@ -469,12 +475,6 @@ mod tests {
         assert_eq!(vec_pool.deallocate(h2), Some(vec![1, 2, 3]));
 
         // Test with custom struct
-        #[derive(Debug, PartialEq)]
-        struct CustomStruct {
-            id: u32,
-            name: String,
-        }
-
         let struct_pool: SafeMemoryPool<CustomStruct, 4> = SafeMemoryPool::new();
         let custom = CustomStruct {
             id: 1,

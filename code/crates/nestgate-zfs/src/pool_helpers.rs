@@ -70,7 +70,6 @@ pub fn parse_size_with_units(size_str: &str) -> Option<u64> {
 ///
 /// * `Ok(HashMap)` - Map of property names to values
 /// * `Err` - If the command fails to execute
-#[allow(dead_code)]
 pub async fn get_pool_properties(pool_name: &str) -> Result<HashMap<String, String>> {
     let output = TokioCommand::new("zpool")
         .args(["get", "all", "-H", "-p", pool_name])
@@ -104,7 +103,6 @@ pub async fn get_pool_properties(pool_name: &str) -> Result<HashMap<String, Stri
 ///
 /// This is a development helper that ensures at least one pool exists.
 /// Not intended for production use.
-#[allow(dead_code)]
 pub fn ensure_default_pool() -> Result<()> {
     info!("Checking for default pool (development mode)");
     // This is a stub for development - in production, pools are managed externally

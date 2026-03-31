@@ -453,7 +453,7 @@ pub mod constants {
 │
 ├── 🔧 Specialized Services
 │   ├── nestgate-automation ✅  # Workflow with unified patterns
-│   ├── nestgate-mcp ✅         # MCP with consolidated integration
+│   ├── (nestgate-mcp removed)   # MCP delegated to biomeOS capability.call
 │   ├── nestgate-performance ✅ # Metrics with domain constants
 │   ├── nestgate-installer ✅   # Deployment with unified config
 │   └── nestgate-middleware ✅  # HTTP with consolidated error handling

@@ -7,6 +7,12 @@
 
 use super::metrics::*;
 
+fn num_cpus() -> usize {
+    std::thread::available_parallelism()
+        .map(std::num::NonZero::get)
+        .unwrap_or(1)
+}
+
 #[tokio::test]
 async fn test_system_metrics_collector_creation() {
     let collector = SystemMetricsCollector::new(60);
@@ -22,9 +28,11 @@ async fn test_collect_metrics_success() {
     let metrics = result.expect("Test setup failed");
 
     assert!(metrics.cpu_usage_percent >= 0.0);
+    // Multi-core systems can report >100% (one core = 100%)
     assert!(
-        metrics.cpu_usage_percent <= 100.0,
-        "CPU usage should be 0-100%"
+        metrics.cpu_usage_percent <= 100.0 * num_cpus() as f64,
+        "CPU usage {:.1}% exceeds per-core maximum",
+        metrics.cpu_usage_percent,
     );
     // On Linux, memory_usage_bytes reads /proc/meminfo; on other platforms it's 0.
     #[cfg(target_os = "linux")]
@@ -43,7 +51,7 @@ async fn test_system_metrics_structure() {
         .expect("Test setup failed");
 
     assert!(metrics.cpu_usage_percent >= 0.0);
-    assert!(metrics.cpu_usage_percent <= 100.0);
+    assert!(metrics.cpu_usage_percent <= 100.0 * num_cpus() as f64);
 }
 
 #[test]
@@ -154,7 +162,7 @@ fn test_metrics_deserialization() {
 
     let metrics = metrics.expect("Test setup failed");
     assert_eq!(metrics.cpu_usage_percent, 45.5);
-    assert_eq!(metrics.memory_usage_bytes, 1073741824);
+    assert_eq!(metrics.memory_usage_bytes, 1_073_741_824);
 }
 
 #[test]

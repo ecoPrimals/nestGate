@@ -115,7 +115,6 @@ pub struct ZfsPoolSetup {
     /// Existing ZFS pools
     existing_pools: Vec<String>,
     /// Configuration
-    #[allow(dead_code)]
     config: PoolSetupConfig,
     /// Device scanner
     scanner: DeviceScanner,

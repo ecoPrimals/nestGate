@@ -53,7 +53,7 @@ fn create_snapshot_request_serde() {
 #[test]
 fn zfs_handler_impl_default_matches_new() {
     assert!(format!("{:?}", ZfsHandlerImpl::new()).contains("ZfsHandlerImpl"));
-    let _ = ZfsHandlerImpl::default();
+    let _ = ZfsHandlerImpl;
 }
 
 fn sample_pool(name: &str, health: &str) -> ZeroCostPoolInfo {

@@ -8,6 +8,22 @@ use nestgate_core::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
+#[cfg(target_os = "linux")]
+fn read_arcstats_text() -> Option<String> {
+    std::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").ok()
+}
+
+#[cfg(target_os = "linux")]
+fn arcstats_named_u64(content: &str, name: &str) -> u64 {
+    for line in content.lines() {
+        let f: Vec<&str> = line.split_whitespace().collect();
+        if f.len() >= 3 && f[0] == name {
+            return f[2].parse().unwrap_or(0);
+        }
+    }
+    0
+}
+
 /// Advanced cache analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Cacheanalytics
@@ -60,7 +76,7 @@ pub struct ArcStats {
     pub miss_ratio: f64,
 }
 impl ArcStats {
-    /// Collect ARC statistics
+    /// Collect ARC statistics from `/proc/spl/kstat/zfs/arcstats` when ZFS is present; otherwise zeros.
     ///
     /// # Errors
     ///
@@ -68,13 +84,44 @@ impl ArcStats {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub const fn collect() -> Result<Self> {
-        // In a real implementation, this would collect from ZFS
-        Ok(Self {
-            size: 1024 * 1024 * 1024, // 1GB
-            hit_ratio: 0.85,
-            miss_ratio: 0.15,
-        })
+    pub fn collect() -> Result<Self> {
+        #[cfg(target_os = "linux")]
+        {
+            let Some(content) = read_arcstats_text() else {
+                return Ok(Self {
+                    size: 0,
+                    hit_ratio: 0.0,
+                    miss_ratio: 0.0,
+                });
+            };
+            let hits = arcstats_named_u64(&content, "hits");
+            let misses = arcstats_named_u64(&content, "misses");
+            let size = arcstats_named_u64(&content, "size");
+            let total = hits.saturating_add(misses);
+            let hit_ratio = if total > 0 {
+                hits as f64 / total as f64
+            } else {
+                0.0
+            };
+            let miss_ratio = if total > 0 {
+                misses as f64 / total as f64
+            } else {
+                0.0
+            };
+            Ok(Self {
+                size,
+                hit_ratio,
+                miss_ratio,
+            })
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            Ok(Self {
+                size: 0,
+                hit_ratio: 0.0,
+                miss_ratio: 0.0,
+            })
+        }
     }
 }
 
@@ -90,7 +137,7 @@ pub struct L2arcStats {
     pub miss_ratio: f64,
 }
 impl L2arcStats {
-    /// Collect L2ARC statistics
+    /// Collect L2ARC statistics from `/proc/spl/kstat/zfs/arcstats` when ZFS is present; otherwise zeros.
     ///
     /// # Errors
     ///
@@ -98,13 +145,44 @@ impl L2arcStats {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub const fn collect() -> Result<Self> {
-        // In a real implementation, this would collect from ZFS
-        Ok(Self {
-            size: 2048 * 1024 * 1024, // 2GB
-            hit_ratio: 0.65,
-            miss_ratio: 0.35,
-        })
+    pub fn collect() -> Result<Self> {
+        #[cfg(target_os = "linux")]
+        {
+            let Some(content) = read_arcstats_text() else {
+                return Ok(Self {
+                    size: 0,
+                    hit_ratio: 0.0,
+                    miss_ratio: 0.0,
+                });
+            };
+            let l2_hits = arcstats_named_u64(&content, "l2_hits");
+            let l2_misses = arcstats_named_u64(&content, "l2_misses");
+            let size = arcstats_named_u64(&content, "l2_asize");
+            let total = l2_hits.saturating_add(l2_misses);
+            let hit_ratio = if total > 0 {
+                l2_hits as f64 / total as f64
+            } else {
+                0.0
+            };
+            let miss_ratio = if total > 0 {
+                l2_misses as f64 / total as f64
+            } else {
+                0.0
+            };
+            Ok(Self {
+                size,
+                hit_ratio,
+                miss_ratio,
+            })
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            Ok(Self {
+                size: 0,
+                hit_ratio: 0.0,
+                miss_ratio: 0.0,
+            })
+        }
     }
 }
 
@@ -147,7 +225,7 @@ impl CacheEfficiency {
         Self {
             overall_efficiency,
             arc_efficiency: arc_stats.hit_ratio,
-            l2arc_efficiency: 75.0, // Placeholder - would be calculated from L2ARC stats
+            l2arc_efficiency: l2arc_stats.hit_ratio,
         }
     }
 }
@@ -163,7 +241,7 @@ mod tests {
         let eff = CacheEfficiency::calculate(&arc, &l2);
         assert!(eff.overall_efficiency >= 0.0);
         assert_eq!(eff.arc_efficiency, arc.hit_ratio);
-        assert_eq!(eff.l2arc_efficiency, 75.0);
+        assert_eq!(eff.l2arc_efficiency, l2.hit_ratio);
         let d = CacheEfficiency::default();
         assert_eq!(d.overall_efficiency, 0.0);
         let n = CacheEfficiency::new();

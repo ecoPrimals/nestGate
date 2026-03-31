@@ -3,21 +3,22 @@
 
 #![cfg(feature = "dev-stubs")]
 
-//! HTTP client façade backed by the pure-Rust discovery HTTP stack.
+//! Minimal pure-Rust HTTP client façade for dev-stub call sites.
 //!
-//! NestGate does not depend on `reqwest`. Call sites historically aliased this module as
-//! `reqwest`; types below mirror a small subset of that API while delegating to
-//! [`crate::discovery_mechanism::http::DiscoveryHttpClient`].
+//! NestGate does not depend on `reqwest`. Call sites historically aliased this module
+//! as `reqwest`; types below mirror a small subset of that API while using a
+//! self-contained `tokio::net::TcpStream`-based HTTP/1.1 implementation.
 //!
-//! For ecosystem HTTP to arbitrary URLs, prefer delegating to a network-capability primal
-//! via JSON-RPC when appropriate; this client remains the supported bootstrap path for
-//! discovery (Consul/Kubernetes HTTP APIs) and internal compatibility.
+//! **Overstep guidance**: For ecosystem HTTP to arbitrary URLs, prefer delegating to a
+//! network-capability primal (songBird) via JSON-RPC `network.*` IPC. This client
+//! exists only for dev-stub compilation and local bootstrap paths.
 
-use crate::discovery_mechanism::http::{DiscoveryHttpClient, HttpResponse};
 use crate::error::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
 
 /// HTTP header map compatible with minimal `reqwest::header::HeaderMap` usage.
 pub mod header {
@@ -91,22 +92,23 @@ impl std::fmt::Display for StatusCode {
     }
 }
 
-/// Successful HTTP response (delegates to discovery [`HttpResponse`]).
+/// Successful HTTP response.
 pub struct Response {
-    inner: HttpResponse,
+    status_code: u16,
+    body: Vec<u8>,
 }
 
 impl Response {
     /// HTTP status.
     #[must_use]
     pub const fn status(&self) -> StatusCode {
-        StatusCode(self.inner.status)
+        StatusCode(self.status_code)
     }
 
     /// Whether the response is successful (2xx).
     #[must_use]
     pub fn is_success(&self) -> bool {
-        self.inner.is_success()
+        (200..300).contains(&self.status_code)
     }
 
     /// Deserialize JSON body.
@@ -115,13 +117,15 @@ impl Response {
     ///
     /// Returns an error if the body is not valid JSON for `T`.
     pub fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
-        self.inner.json()
+        serde_json::from_slice(&self.body).map_err(|e| {
+            crate::NestGateError::api_error(format!("http_client_stub: JSON deserialize: {e}"))
+        })
     }
 }
 
 /// In-flight request (GET or POST + JSON).
 pub struct RequestBuilder {
-    client: DiscoveryHttpClient,
+    config: Arc<ClientConfig>,
     url: String,
     kind: RequestKind,
     extra_headers: Vec<(String, String)>,
@@ -160,43 +164,152 @@ impl RequestBuilder {
     ///
     /// Returns an error if the request fails or (for POST) no JSON body was set.
     pub async fn send(self) -> Result<Response> {
-        let mut client = self.client;
-        for (k, v) in self.extra_headers {
-            client = client.with_header(k, v);
-        }
-
-        let inner = match self.kind {
-            RequestKind::Get => client.get(&self.url).await?,
-            RequestKind::Post => {
-                let body = self.json_body.ok_or_else(|| {
-                    crate::NestGateError::api_error(
-                        "http_client_stub: POST requires `.json(...)` before `send()`",
-                    )
-                })?;
-                client.post_json_bytes(&self.url, &body).await?
-            }
+        let method = match self.kind {
+            RequestKind::Get => "GET",
+            RequestKind::Post => "POST",
         };
 
-        Ok(Response { inner })
+        let body = match self.kind {
+            RequestKind::Get => None,
+            RequestKind::Post => Some(self.json_body.ok_or_else(|| {
+                crate::NestGateError::api_error(
+                    "http_client_stub: POST requires `.json(...)` before `send()`",
+                )
+            })?),
+        };
+
+        let mut headers = self.config.default_headers.clone();
+        for (k, v) in self.extra_headers {
+            headers.insert(k, v);
+        }
+
+        execute_http(
+            method,
+            &self.url,
+            &headers,
+            body.as_deref(),
+            self.config.timeout,
+        )
+        .await
     }
 }
 
-/// HTTP client backed by [`DiscoveryHttpClient`].
+/// Minimal HTTP/1.1 request over `TcpStream`. Self-contained — no external HTTP crate.
+async fn execute_http(
+    method: &str,
+    url: &str,
+    headers: &HashMap<String, String>,
+    body: Option<&[u8]>,
+    timeout: Duration,
+) -> Result<Response> {
+    let (host, port, path) = parse_url(url)?;
+    let addr = format!("{host}:{port}");
+
+    let stream = tokio::time::timeout(timeout, TcpStream::connect(&addr))
+        .await
+        .map_err(|_| crate::NestGateError::network_error("http_client_stub: connect timeout"))?
+        .map_err(|e| {
+            crate::NestGateError::network_error(format!("http_client_stub: connect: {e}"))
+        })?;
+
+    let mut buf = Vec::with_capacity(512);
+    buf.extend_from_slice(format!("{method} {path} HTTP/1.1\r\nHost: {host}\r\n").as_bytes());
+    for (k, v) in headers {
+        buf.extend_from_slice(format!("{k}: {v}\r\n").as_bytes());
+    }
+    if let Some(b) = body {
+        buf.extend_from_slice(
+            format!(
+                "Content-Type: application/json\r\nContent-Length: {}\r\n",
+                b.len()
+            )
+            .as_bytes(),
+        );
+    }
+    buf.extend_from_slice(b"Connection: close\r\n\r\n");
+    if let Some(b) = body {
+        buf.extend_from_slice(b);
+    }
+
+    let (mut reader, mut writer) = stream.into_split();
+    writer.write_all(&buf).await.map_err(|e| {
+        crate::NestGateError::network_error(format!("http_client_stub: write: {e}"))
+    })?;
+    writer.shutdown().await.ok();
+
+    let mut response_buf = Vec::with_capacity(4096);
+    tokio::time::timeout(timeout, reader.read_to_end(&mut response_buf))
+        .await
+        .map_err(|_| crate::NestGateError::network_error("http_client_stub: read timeout"))?
+        .map_err(|e| crate::NestGateError::network_error(format!("http_client_stub: read: {e}")))?;
+
+    parse_http_response(&response_buf)
+}
+
+fn parse_url(url: &str) -> Result<(String, u16, String)> {
+    let stripped = url.strip_prefix("http://").ok_or_else(|| {
+        crate::NestGateError::api_error("http_client_stub: only http:// supported")
+    })?;
+
+    let (host_port, path) = stripped.split_once('/').map_or_else(
+        || (stripped, "/".to_string()),
+        |(hp, p)| (hp, format!("/{p}")),
+    );
+
+    let (host, port) = host_port.split_once(':').map_or_else(
+        || (host_port.to_string(), 80),
+        |(h, p)| (h.to_string(), p.parse().unwrap_or(80)),
+    );
+
+    Ok((host, port, path))
+}
+
+fn parse_http_response(raw: &[u8]) -> Result<Response> {
+    let header_end = raw
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .ok_or_else(|| {
+            crate::NestGateError::network_error("http_client_stub: malformed response")
+        })?;
+
+    let header_str = std::str::from_utf8(&raw[..header_end]).map_err(|e| {
+        crate::NestGateError::network_error(format!("http_client_stub: header decode: {e}"))
+    })?;
+
+    let status_line = header_str.lines().next().unwrap_or("");
+    let status_code = status_line
+        .split_whitespace()
+        .nth(1)
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or(0);
+
+    let body = raw[header_end + 4..].to_vec();
+
+    Ok(Response { status_code, body })
+}
+
+/// Minimal HTTP client. Self-contained pure-Rust implementation over `TcpStream`.
 #[derive(Debug, Clone)]
 pub struct Client {
-    inner: Arc<DiscoveryHttpClient>,
+    config: Arc<ClientConfig>,
+}
+
+#[derive(Debug, Clone)]
+struct ClientConfig {
+    timeout: Duration,
+    default_headers: HashMap<String, String>,
 }
 
 impl Client {
     /// Create a client with default timeout (30s).
     #[must_use]
     pub fn new() -> Self {
-        Self::builder()
-            .timeout(Duration::from_secs(30))
-            .build()
-            .unwrap_or_else(|_| Self {
-                inner: Arc::new(DiscoveryHttpClient::new(Duration::from_secs(30))),
-            })
+        Self {
+            config: Arc::new(ClientConfig {
+                timeout: Duration::from_secs(30),
+                default_headers: HashMap::new(),
+            }),
+        }
     }
 
     /// Builder for custom timeout and default headers.
@@ -212,7 +325,7 @@ impl Client {
     #[must_use]
     pub fn get(&self, url: impl AsRef<str>) -> RequestBuilder {
         RequestBuilder {
-            client: (*self.inner).clone(),
+            config: Arc::clone(&self.config),
             url: url.as_ref().to_string(),
             kind: RequestKind::Get,
             extra_headers: Vec::new(),
@@ -224,7 +337,7 @@ impl Client {
     #[must_use]
     pub fn post(&self, url: impl AsRef<str>) -> RequestBuilder {
         RequestBuilder {
-            client: (*self.inner).clone(),
+            config: Arc::clone(&self.config),
             url: url.as_ref().to_string(),
             kind: RequestKind::Post,
             extra_headers: Vec::new(),
@@ -247,7 +360,7 @@ pub struct ClientBuilder {
 }
 
 impl ClientBuilder {
-    /// Set request timeout (connect + read for discovery client).
+    /// Set request timeout.
     #[must_use]
     pub fn timeout(self, duration: Duration) -> Self {
         Self {
@@ -269,12 +382,11 @@ impl ClientBuilder {
     ///
     /// This always succeeds; errors are reserved for future validation.
     pub fn build(self) -> Result<Client> {
-        let mut inner = DiscoveryHttpClient::new(self.timeout);
-        for (k, v) in self.default_headers {
-            inner = inner.with_header(k, v);
-        }
         Ok(Client {
-            inner: Arc::new(inner),
+            config: Arc::new(ClientConfig {
+                timeout: self.timeout,
+                default_headers: self.default_headers,
+            }),
         })
     }
 }

@@ -89,17 +89,19 @@ jobs:
         if: matrix.coverage
         run: cargo install cargo-tarpaulin
       
+      # nestgate-zfs Cargo.toml has no `test-utils` feature (was stale); default features match CI.
       - name: Run unit tests
-        run: cargo test --lib --features test-utils -- --nocapture
+        run: cargo test --lib -- --nocapture
         working-directory: code/crates/nestgate-zfs
         env:
           RUST_LOG: debug
       
+      # Use only features declared on nestgate-zfs (`test-utils` / `integration-tests` never existed).
       - name: Generate coverage report
         if: matrix.coverage
         run: |
           cargo tarpaulin --out Xml --output-dir target/coverage \
-            --features test-utils,integration-tests \
+            --all-features \
             --exclude-files "benches/*" "tests/*"
         working-directory: code/crates/nestgate-zfs
       
@@ -145,6 +147,7 @@ jobs:
           sudo truncate -s 1G /tmp/zfs-test.img
           sudo zpool create testpool /tmp/zfs-test.img
         
+      # This crate has no `tests/integration_tests.rs` or `integration-tests` feature; run all integration test binaries.
       - name: Run integration tests
         run: |
           if [ "${{ matrix.test-mode }}" = "real-zfs" ]; then
@@ -153,7 +156,7 @@ jobs:
           else
             export ZFS_AVAILABLE=false
           fi
-          cargo test --test integration_tests --features integration-tests -- --nocapture
+          cargo test --tests -- --nocapture
         working-directory: code/crates/nestgate-zfs
         env:
           RUST_LOG: debug
@@ -184,11 +187,11 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-stress-${{ hashFiles('**/Cargo.lock') }}
       
+      # No `stress-tests` feature or `stress_tests` module; scheduled stress run uses full integration suite in release.
       - name: Run stress tests
         run: |
           export TEST_TIMEOUT=1800  # 30 minutes for stress tests
-          cargo test --test integration_tests --features stress-tests \
-            stress_tests:: --release -- --nocapture --test-threads=1
+          cargo test --tests --release -- --nocapture --test-threads=1
         working-directory: code/crates/nestgate-zfs
         env:
           RUST_LOG: info
@@ -213,8 +216,9 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
       
+      # Criterion code in `benches/performance_benchmarks.rs` is behind the `benchmark` feature (see crate Cargo.toml).
       - name: Run benchmarks
-        run: cargo bench --bench performance_benchmarks
+        run: cargo bench --bench performance_benchmarks --features benchmark
         working-directory: code/crates/nestgate-zfs
       
       - name: Archive benchmark results
@@ -263,7 +267,7 @@ jobs:
       - name: Run miri
         run: |
           cargo miri setup
-          cargo miri test --lib --features test-utils
+          cargo miri test --lib
         working-directory: code/crates/nestgate-zfs
         env:
           MIRIFLAGS: -Zmiri-disable-isolation

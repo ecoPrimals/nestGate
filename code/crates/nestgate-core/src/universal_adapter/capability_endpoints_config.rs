@@ -183,26 +183,26 @@ mod tests {
     #[test]
     fn test_builder_pattern() {
         let orch_endpoint = test_endpoint("orchestration", 8080);
-        let sec_endpoint = test_endpoint("security", 8081);
+        let security_endpoint = test_endpoint("security", 8081);
         let ai_endpoint = test_endpoint("ai", 8082);
         let net_endpoint = test_endpoint("networking", 8083);
-        let svc_endpoint = test_endpoint("service", 8084);
+        let service_endpoint = test_endpoint("service", 8084);
 
         let config = CapabilityEndpointsConfig::from_env()
             .with_orchestration_endpoint(orch_endpoint.clone())
-            .with_security_endpoint(sec_endpoint.clone())
+            .with_security_endpoint(security_endpoint.clone())
             .with_ai_endpoint(ai_endpoint.clone())
             .with_networking_endpoint(net_endpoint.clone())
-            .with_service_endpoint(svc_endpoint.clone());
+            .with_service_endpoint(service_endpoint.clone());
 
         assert_eq!(
             config.orchestration_endpoint(),
             Some(orch_endpoint.as_str())
         );
-        assert_eq!(config.security_endpoint(), Some(sec_endpoint.as_str()));
+        assert_eq!(config.security_endpoint(), Some(security_endpoint.as_str()));
         assert_eq!(config.ai_endpoint(), Some(ai_endpoint.as_str()));
         assert_eq!(config.networking_endpoint(), Some(net_endpoint.as_str()));
-        assert_eq!(config.service_endpoint(), Some(svc_endpoint.as_str()));
+        assert_eq!(config.service_endpoint(), Some(service_endpoint.as_str()));
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]

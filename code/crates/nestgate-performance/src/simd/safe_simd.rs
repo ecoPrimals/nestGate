@@ -107,29 +107,6 @@ impl SafeSimdArraySum {
         // Compiler auto-vectorizes this to SIMD
         data.iter().copied().sum()
     }
-
-    /// **100% SAFE** chunked sum for explicit vectorization
-    ///
-    /// Uses chunking pattern that compiler recognizes and vectorizes.
-    /// Slightly more explicit than `iter().sum()` but still 100% safe.
-    #[inline]
-    #[allow(dead_code)]
-    fn sum_chunked_safe(&self, data: &[f32]) -> f32 {
-        /// Chunk Size
-        const CHUNK_SIZE: usize = 8; // Optimal for AVX2
-
-        // SAFE: chunks_exact is bounds-checked
-        let chunks = data.chunks_exact(CHUNK_SIZE);
-        let remainder = chunks.remainder();
-
-        // Process chunks - compiler vectorizes this
-        let chunk_sum: f32 = chunks.map(|chunk| chunk.iter().copied().sum::<f32>()).sum();
-
-        // Add remainder
-        let remainder_sum: f32 = remainder.iter().copied().sum();
-
-        chunk_sum + remainder_sum
-    }
 }
 
 /// **100% SAFE SIMD ARRAY MULTIPLICATION**
@@ -189,36 +166,6 @@ impl SafeSimdArrayMultiply {
         // SAFE: zip ensures we don't go out of bounds
         // Compiler auto-vectorizes to SIMD multiply instructions
         left.iter().zip(right.iter()).map(|(l, r)| l * r).collect()
-    }
-
-    /// **100% SAFE** chunked multiplication for explicit vectorization
-    #[inline]
-    #[allow(dead_code)]
-    fn multiply_chunked_safe(&self, left: &[f32], right: &[f32]) -> Vec<f32> {
-        /// Chunk Size
-        const CHUNK_SIZE: usize = 8;
-
-        let mut result = Vec::with_capacity(left.len());
-
-        // SAFE: chunks_exact with matching sizes
-        let chunks_left = left.chunks_exact(CHUNK_SIZE);
-        let chunks_right = right.chunks_exact(CHUNK_SIZE);
-        let remainder_left = chunks_left.remainder();
-        let remainder_right = chunks_right.remainder();
-
-        // Process chunks - compiler vectorizes
-        for (chunk_l, chunk_r) in chunks_left.zip(chunks_right) {
-            for (l, r) in chunk_l.iter().zip(chunk_r.iter()) {
-                result.push(l * r);
-            }
-        }
-
-        // Process remainder
-        for (l, r) in remainder_left.iter().zip(remainder_right.iter()) {
-            result.push(l * r);
-        }
-
-        result
     }
 }
 
@@ -331,9 +278,6 @@ mod tests {
 
         let sum = processor.sum_safe(&data);
         assert_eq!(sum, 36.0);
-
-        let chunked_sum = processor.sum_chunked_safe(&data);
-        assert_eq!(chunked_sum, 36.0);
     }
 
     #[test]

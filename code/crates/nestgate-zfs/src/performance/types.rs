@@ -144,7 +144,6 @@ impl Default for DiskIoStats {
 
 /// ZFS performance monitor
 #[derive(Debug)]
-#[allow(dead_code)] // Fields used in comprehensive performance monitoring
 /// Zfsperformancemonitor
 pub struct ZfsPerformanceMonitor {
     // config removed - using shared ZfsConfig instead

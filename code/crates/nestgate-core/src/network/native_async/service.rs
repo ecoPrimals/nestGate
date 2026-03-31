@@ -24,9 +24,7 @@ pub struct NativeAsyncNetworkService {
     /// Connections
     pub connections: HashMap<String, String>,
     service_id: String,
-    #[expect(dead_code, reason = "framework placeholder")]
-    // Framework field - intentionally unused
-    state: UnifiedServiceState,
+    _state: UnifiedServiceState,
 }
 /// Configuration for native async network service
 /// Configuration for native async network service
@@ -102,7 +100,7 @@ impl NativeAsyncNetworkService {
             config,
             connections: HashMap::new(),
             service_id: uuid::Uuid::new_v4().to_string(),
-            state: UnifiedServiceState::Stopped,
+            _state: UnifiedServiceState::Stopped,
         }
     }
 }
@@ -169,18 +167,27 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
         Ok(())
     }
 
-    /// Stop
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
     async fn stop(&self) -> crate::Result<()> {
+        tracing::debug!(
+            "NativeAsyncNetworkService::stop — lifecycle management delegated to songBird"
+        );
         Ok(())
     }
 
-    /// Restart
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
     async fn restart(&self) -> crate::Result<()> {
+        tracing::debug!(
+            "NativeAsyncNetworkService::restart — lifecycle management delegated to songBird"
+        );
         Ok(())
     }
 
-    /// Updates  Config
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
     async fn update_config(&self, _config: Self::Config) -> crate::Result<()> {
+        tracing::debug!(
+            "NativeAsyncNetworkService::update_config — lifecycle management delegated to songBird"
+        );
         Ok(())
     }
 
@@ -198,8 +205,11 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
         })
     }
 
-    /// Validates  Config
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
     async fn validate_config(&self, _config: &Self::Config) -> crate::Result<Vec<String>> {
+        tracing::debug!(
+            "NativeAsyncNetworkService::validate_config — lifecycle management delegated to songBird"
+        );
         Ok(vec![])
     }
 

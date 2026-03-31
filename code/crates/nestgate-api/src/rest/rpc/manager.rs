@@ -9,7 +9,14 @@
 // Core management implementation for the unified RPC system.
 
 //! Manager module
-#![allow(dead_code)] // Stub RPC stack: fields reserved until full connection/security wiring lands
+//! **Stub RPC stack:** `UnifiedRpcManager` holds connection pool, security, load balancer,
+//! health monitor, stream registry, metrics, and service map types so the public API and tests
+//! can compile while transport, real pooling, and background tasks are still placeholders.
+//! Many fields exist only to preserve shape for upcoming wiring (e.g. `ConnectionPool` entries
+//! never added, `ConnectionHealthMonitor` not polled). Module-level `dead_code` keeps this
+//! skeleton visible without annotating every unused struct field and passthrough helper; remove
+//! it once the stack is exercised end-to-end.
+#![allow(dead_code)]
 
 use super::config::{
     ConnectionPoolConfig, HealthMonitoringConfig, LoadBalancingConfig, NestGateRpcConfig,
@@ -155,6 +162,10 @@ impl UnifiedRpcManager {
 
     /// Initialize security capability
     ///
+    /// Intentional passthrough until bearDog IPC integration is wired: real security
+    /// initialization is delegated to bearDog via `crypto.*` IPC. Returning `Ok(())`
+    /// avoids blocking startup when this hook is invoked during bring-up.
+    ///
     /// # Errors
     ///
     /// This function will return an error if:
@@ -165,7 +176,9 @@ impl UnifiedRpcManager {
         &self,
         _endpoint: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // Stub implementation
+        tracing::info!(
+            "Security capability initialization deferred — delegated to bearDog via crypto.* IPC"
+        );
         Ok(())
     }
 
@@ -421,22 +434,24 @@ impl ConnectionHealthMonitor {
     }
 }
 
-// Placeholder implementations for other components
-/// Universal security layer for RPC operations
+/// Passthrough security layer — accepts all requests until the security
+/// capability provider is wired via capability-based discovery.
 #[derive(Debug, Clone)]
-/// Universalsecuritylayer
 pub struct UniversalSecurityLayer;
-/// Load balancer for RPC services
+
+/// Passthrough load balancer — round-robin is handled by the caller until
+/// a real LB strategy is wired.
 #[derive(Debug, Clone)]
-/// Loadbalancer
 pub struct LoadBalancer;
-/// Stream registry for managing bidirectional streams
+
+/// Passthrough stream registry — channels are created on demand until
+/// persistent stream management is wired.
 #[derive(Debug, Clone)]
-/// Streamregistry
 pub struct StreamRegistry;
-/// Metrics collector for RPC operations
+
+/// No-op metrics collector — request recording is a no-op until a real
+/// metrics sink (Prometheus, OpenTelemetry) is integrated.
 #[derive(Debug, Clone)]
-/// Metricscollector
 pub struct MetricsCollector;
 impl UniversalSecurityLayer {
     /// Create a new universal security layer

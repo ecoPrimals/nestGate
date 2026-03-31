@@ -106,7 +106,7 @@ pub struct MigrationSchedule {
 /// Migrationperformancelimits
 pub struct MigrationPerformanceLimits {
     /// Maximum CPU usage during migration (%)
-    pub max_cpu_usage: f64,
+    pub maxcpu_usage: f64,
     /// Maximum memory usage during migration (%)
     pub max_memory_usage: f64,
     /// Maximum IO impact (%)
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn test_migration_performance_limits_default() {
         let limits = MigrationPerformanceLimits::default();
-        assert_eq!(limits.max_cpu_usage, 0.0);
+        assert_eq!(limits.maxcpu_usage, 0.0);
         assert_eq!(limits.max_memory_usage, 0.0);
         assert_eq!(limits.max_io_impact, 0.0);
     }

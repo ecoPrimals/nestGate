@@ -447,19 +447,6 @@ impl ProductionLoadBalancer {
     }
 }
 
-impl ProductionCommunicationProvider {
-    #[expect(dead_code, reason = "framework placeholder")] // Framework method - intentionally unused
-    async fn list_active_connections(&self) -> Result<Vec<(String, bool)>> {
-        // Production connection listing
-        let connections = vec![
-            ("connection_1".to_string(), true),
-            ("connection_2".to_string(), false),
-            ("connection_3".to_string(), true),
-        ];
-        Ok(connections)
-    }
-}
-
 // ==================== TESTS ====================
 
 #[cfg(test)]

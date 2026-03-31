@@ -311,7 +311,6 @@ fn demo_performance_monitoring() -> impl std::future::Future<Output = Result<()>
 }
 
 /// Helper function to demonstrate error handling
-#[allow(dead_code)]
 fn demonstrate_error_handling() -> impl std::future::Future<Output = Result<()>> + Send {
     use nestgate_core::error::NestGateError;
 

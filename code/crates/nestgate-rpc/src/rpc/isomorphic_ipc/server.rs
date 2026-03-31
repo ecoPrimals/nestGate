@@ -217,6 +217,10 @@ impl IsomorphicIpcServer {
 
         info!("✅ Unix socket bound: {}", socket_path.display());
 
+        #[cfg(unix)]
+        let _storage_capability_symlink_guard =
+            crate::rpc::socket_config::StorageCapabilitySymlinkGuard::new(&socket_path);
+
         // Accept connections
         loop {
             match listener.accept().await {

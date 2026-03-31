@@ -124,15 +124,18 @@ impl ZfsManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn destroy_dataset(&self, name: &str) -> Result<()> {
+    pub async fn destroy_dataset(&self, name: &str) -> Result<()> {
         info!("Destroying dataset: {}", name);
 
-        self.dataset_manager.destroy_dataset(name).map_err(|_e| {
-            create_zfs_error(
-                "Failed to destroy dataset: error details".to_string(),
-                ZfsOperation::DatasetCreate,
-            )
-        })?;
+        self.dataset_manager
+            .destroy_dataset(name)
+            .await
+            .map_err(|_e| {
+                create_zfs_error(
+                    "Failed to destroy dataset: error details".to_string(),
+                    ZfsOperation::DatasetCreate,
+                )
+            })?;
 
         Ok(())
     }

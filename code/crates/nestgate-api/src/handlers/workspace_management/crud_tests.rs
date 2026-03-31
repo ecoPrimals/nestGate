@@ -23,7 +23,7 @@ mod helper_tests {
     fn test_parse_size_with_bytes() {
         assert_eq!(parse_size("1024"), 1024);
         assert_eq!(parse_size("0"), 0);
-        assert_eq!(parse_size("999999"), 999999);
+        assert_eq!(parse_size("999999"), 999_999);
     }
 
     #[test]
@@ -92,8 +92,10 @@ mod validation_tests {
     #[tokio::test]
     async fn test_get_workspace_with_invalid_id_empty() {
         let result = get_workspace(axum::extract::Path(String::new())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
@@ -124,29 +126,37 @@ mod validation_tests {
             axum::Json(config),
         )
         .await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_delete_workspace_with_invalid_id_empty() {
         let result = delete_workspace(axum::extract::Path(String::new())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_delete_workspace_with_invalid_id_path_traversal() {
         let result = delete_workspace(axum::extract::Path("../etc/passwd".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
     async fn test_delete_workspace_with_invalid_id_slash() {
         let result = delete_workspace(axum::extract::Path("ws/123".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 }
 
@@ -166,8 +176,8 @@ mod creation_tests {
         let result = create_workspace(axum::Json(request)).await;
 
         // We expect an error since ZFS won't be available, but it shouldn't be BAD_REQUEST
-        if result.is_err() {
-            assert_eq!(result.unwrap_err(), StatusCode::INTERNAL_SERVER_ERROR);
+        if let Err(e) = result {
+            assert_eq!(e, StatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -183,8 +193,8 @@ mod creation_tests {
         let result = create_workspace(axum::Json(request)).await;
 
         // Will fail in test environment (no ZFS)
-        if result.is_err() {
-            assert_eq!(result.unwrap_err(), StatusCode::INTERNAL_SERVER_ERROR);
+        if let Err(e) = result {
+            assert_eq!(e, StatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -195,8 +205,10 @@ mod creation_tests {
         });
 
         let result = create_workspace(axum::Json(request)).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
@@ -207,8 +219,10 @@ mod creation_tests {
         });
 
         let result = create_workspace(axum::Json(request)).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
@@ -221,8 +235,8 @@ mod creation_tests {
         let result = create_workspace(axum::Json(request)).await;
 
         // Will fail in test environment (no ZFS)
-        if result.is_err() {
-            assert_eq!(result.unwrap_err(), StatusCode::INTERNAL_SERVER_ERROR);
+        if let Err(e) = result {
+            assert_eq!(e, StatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 }
@@ -246,9 +260,7 @@ mod update_tests {
         .await;
 
         // Will fail in test environment (no ZFS/workspace doesn't exist)
-        if result.is_err() {
-            // Could be BAD_REQUEST if all updates fail
-            let status = result.unwrap_err();
+        if let Err(status) = result {
             assert!(
                 status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
             );
@@ -267,8 +279,7 @@ mod update_tests {
         )
         .await;
 
-        if result.is_err() {
-            let status = result.unwrap_err();
+        if let Err(status) = result {
             assert!(
                 status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
             );
@@ -287,8 +298,7 @@ mod update_tests {
         )
         .await;
 
-        if result.is_err() {
-            let status = result.unwrap_err();
+        if let Err(status) = result {
             assert!(
                 status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
             );
@@ -309,8 +319,7 @@ mod update_tests {
         )
         .await;
 
-        if result.is_err() {
-            let status = result.unwrap_err();
+        if let Err(status) = result {
             assert!(
                 status == StatusCode::BAD_REQUEST || status == StatusCode::INTERNAL_SERVER_ERROR
             );
@@ -328,8 +337,7 @@ mod update_tests {
         .await;
 
         // Empty config should be rejected
-        if result.is_err() {
-            let status = result.unwrap_err();
+        if let Err(status) = result {
             assert_eq!(status, StatusCode::BAD_REQUEST);
         }
     }
@@ -347,8 +355,7 @@ mod integration_tests {
         let result = get_workspaces().await;
 
         // Should return either success (empty list) or error
-        if result.is_ok() {
-            let response = result.unwrap();
+        if let Ok(response) = result {
             let value = response.0;
             assert!(value.get("status").is_some());
         }
@@ -369,18 +376,24 @@ mod integration_tests {
             "name": ""
         });
         let result = create_workspace(axum::Json(invalid_create)).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e1) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e1, StatusCode::BAD_REQUEST);
 
         // 3. Try to get with invalid ID
         let result = get_workspace(axum::extract::Path(String::new())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e2) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e2, StatusCode::BAD_REQUEST);
 
         // 4. Try to delete with invalid ID
         let result = delete_workspace(axum::extract::Path("../path".to_string())).await;
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
+        let Err(e3) = result else {
+            panic!("expected error");
+        };
+        assert_eq!(e3, StatusCode::BAD_REQUEST);
     }
 }
 

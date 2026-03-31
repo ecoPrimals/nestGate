@@ -46,7 +46,8 @@
     clippy::field_reassign_with_default,
     clippy::no_effect_underscore_binding,
     clippy::items_after_statements,
-    clippy::uninlined_format_args
+    clippy::uninlined_format_args,
+    dead_code
 )]
 
 //! Performance optimization and monitoring for `NestGate`

@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tracing::info;
 
 use crate::cli::ServiceAction;
-use crate::error::BinResult;
+use crate::error::{BinResult, NestGateBinError};
 
 /// Compute HTTP bind address and port for standalone mode (CLI + runtime defaults).
 ///
@@ -75,11 +75,9 @@ impl ServiceManager {
             ServiceAction::Logs {
                 lines: _,
                 follow: _,
-            } => {
-                // Placeholder for logs functionality
-                println!("✅ Logs functionality not yet implemented");
-                Ok(())
-            }
+            } => Err(NestGateBinError::not_implemented(
+                "Log viewing not yet implemented — use journalctl -u nestgate or check $NESTGATE_LOG_DIR",
+            )),
         }
     }
 
@@ -91,12 +89,12 @@ impl ServiceManager {
         listen: Option<SocketAddr>,
         config: Option<&str>,
     ) -> BinResult<()> {
-        println!("\n╔════════════════════════════════════════════════════════════╗");
-        println!("║                                                            ║");
-        println!("║  🏠 NestGate v{:<47}║", env!("CARGO_PKG_VERSION"));
-        println!("║     Universal ZFS & Storage Management                    ║");
-        println!("║                                                            ║");
-        println!("╚════════════════════════════════════════════════════════════╝\n");
+        info!("\n╔════════════════════════════════════════════════════════════╗");
+        info!("║                                                            ║");
+        info!("║  🏠 NestGate v{:<47}║", env!("CARGO_PKG_VERSION"));
+        info!("║     Universal ZFS & Storage Management                    ║");
+        info!("║                                                            ║");
+        info!("╚════════════════════════════════════════════════════════════╝\n");
 
         // Check if Unix socket mode is requested (biomeOS ecosystem mode)
         let socket_requested =
@@ -129,11 +127,11 @@ impl ServiceManager {
         // Log configuration
         socket_config.log_summary();
 
-        println!("✅ Configuration validated");
-        println!("🔌 Socket path: {}", socket_config.socket_path.display());
-        println!("👪 Family ID: {}", socket_config.family_id);
-        println!("🆔 Node ID: {}", socket_config.node_id);
-        println!(
+        info!("✅ Configuration validated");
+        info!("🔌 Socket path: {}", socket_config.socket_path.display());
+        info!("👪 Family ID: {}", socket_config.family_id);
+        info!("🆔 Node ID: {}", socket_config.node_id);
+        info!(
             "📍 Source: {}",
             match socket_config.source {
                 nestgate_core::rpc::SocketConfigSource::Environment => "NESTGATE_SOCKET env var",
@@ -155,34 +153,34 @@ impl ServiceManager {
             handler,
         ));
 
-        println!("\n✅ JSON-RPC Unix Socket Server ready (isomorphic IPC)");
-        println!("\n📊 Available RPC Methods:");
-        println!("  Health & Discovery:");
-        println!("    • health");
-        println!("    • discover_capabilities");
-        println!("  Storage:");
-        println!("    • storage.store(family_id, key, value)");
-        println!("    • storage.retrieve(family_id, key)");
-        println!("    • storage.delete(family_id, key)");
-        println!("    • storage.list(family_id, prefix?)");
-        println!("    • storage.store_blob(family_id, key, data_base64)");
-        println!("    • storage.retrieve_blob(family_id, key)");
-        println!("    • storage.exists(family_id, key)");
-        println!("  Model Cache:");
-        println!("    • model.register(model_id, metadata)");
-        println!("    • model.exists(model_id)");
-        println!("    • model.locate(model_id)");
-        println!("    • model.metadata(model_id)");
-        println!("  Templates:");
-        println!("    • templates.store(template)");
-        println!("    • templates.retrieve(template_id, version?)");
-        println!("    • templates.list(filters?)");
-        println!("    • templates.community_top(niche_type?, limit?)");
-        println!("  Audit:");
-        println!("    • audit.store_execution(audit)");
-        println!("\n🔐 Security: BearDog genetic key validation (when available)");
-        println!("🎯 Mode: Ecosystem (atomic architecture)");
-        println!("\nPress Ctrl+C to stop\n");
+        info!("\n✅ JSON-RPC Unix Socket Server ready (isomorphic IPC)");
+        info!("\n📊 Available RPC Methods:");
+        info!("  Health & Discovery:");
+        info!("    • health");
+        info!("    • discover_capabilities");
+        info!("  Storage:");
+        info!("    • storage.store(family_id, key, value)");
+        info!("    • storage.retrieve(family_id, key)");
+        info!("    • storage.delete(family_id, key)");
+        info!("    • storage.list(family_id, prefix?)");
+        info!("    • storage.store_blob(family_id, key, data_base64)");
+        info!("    • storage.retrieve_blob(family_id, key)");
+        info!("    • storage.exists(family_id, key)");
+        info!("  Model Cache:");
+        info!("    • model.register(model_id, metadata)");
+        info!("    • model.exists(model_id)");
+        info!("    • model.locate(model_id)");
+        info!("    • model.metadata(model_id)");
+        info!("  Templates:");
+        info!("    • templates.store(template)");
+        info!("    • templates.retrieve(template_id, version?)");
+        info!("    • templates.list(filters?)");
+        info!("    • templates.community_top(niche_type?, limit?)");
+        info!("  Audit:");
+        info!("    • audit.store_execution(audit)");
+        info!("\n🔐 Security: capability-based provider (when available)");
+        info!("🎯 Mode: Ecosystem (atomic architecture)");
+        info!("\nPress Ctrl+C to stop\n");
 
         server.start().await.map_err(|e| {
             crate::error::NestGateBinError::runtime_error(
@@ -278,29 +276,29 @@ impl ServiceManager {
             );
         }
 
-        println!("✅ Service started successfully");
+        info!("✅ Service started successfully");
         // ✅ MIGRATED: Display actual bind address (was hardcoded 127.0.0.1)
         let display_host = if bind_host == bind_all_ipv4 {
             "localhost".to_string() // User-friendly display for 0.0.0.0
         } else {
             bind_host.clone()
         };
-        println!("🌐 HTTP API: http://{display_host}:{http_port}");
-        println!("🔍 Health check: http://{display_host}:{http_port}/health");
-        println!("\nHTTP Endpoints:");
-        println!("  GET  /health - Service health check");
-        println!("  POST /jsonrpc - JSON-RPC endpoint");
-        println!("  GET  /api/v1/protocol/capabilities - Protocol discovery");
-        println!("  GET  /api/v1/storage/pools - List storage pools");
-        println!("  GET  /api/v1/storage/datasets - List datasets");
-        println!("  GET  /api/v1/storage/metrics - Storage metrics");
-        println!("\nRPC Protocols:");
-        println!("  HTTP/REST  - Port {http_port} (~5ms latency) ✅");
-        println!("  JSON-RPC   - Port {http_port} (~2ms latency) ✅");
-        println!("  tarpc      - Port {tarpc_port} (~50μs latency) 🚧 Coming soon");
-        println!("🔐 Security: JWT authentication");
-        println!("🎯 Mode: Standalone (development/testing)");
-        println!("\nPress Ctrl+C to stop\n");
+        info!("🌐 HTTP API: http://{display_host}:{http_port}");
+        info!("🔍 Health check: http://{display_host}:{http_port}/health");
+        info!("\nHTTP Endpoints:");
+        info!("  GET  /health - Service health check");
+        info!("  POST /jsonrpc - JSON-RPC endpoint");
+        info!("  GET  /api/v1/protocol/capabilities - Protocol discovery");
+        info!("  GET  /api/v1/storage/pools - List storage pools");
+        info!("  GET  /api/v1/storage/datasets - List datasets");
+        info!("  GET  /api/v1/storage/metrics - Storage metrics");
+        info!("\nRPC Protocols:");
+        info!("  HTTP/REST  - Port {http_port} (~5ms latency) ✅");
+        info!("  JSON-RPC   - Port {http_port} (~2ms latency) ✅");
+        info!("  tarpc      - Port {tarpc_port} (~50μs latency) 🚧 Coming soon");
+        info!("🔐 Security: JWT authentication");
+        info!("🎯 Mode: Standalone (development/testing)");
+        info!("\nPress Ctrl+C to stop\n");
 
         // Start the HTTP server
         axum::serve(listener, app).await.map_err(|e| {
@@ -337,7 +335,7 @@ impl ServiceManager {
         // Clean up shutdown channel
         self.shutdown_tx = None;
 
-        println!("✅ NestGate service stopped successfully");
+        info!("✅ NestGate service stopped successfully");
 
         Ok(())
     }
@@ -366,9 +364,9 @@ impl ServiceManager {
 
         let runtime_config = nestgate_core::config::runtime::get_config();
 
-        println!("🔍 NestGate Service Status:");
-        println!("  Version: {}", env!("CARGO_PKG_VERSION"));
-        println!("  Port: {}", runtime_config.network.api_port);
+        info!("🔍 NestGate Service Status:");
+        info!("  Version: {}", env!("CARGO_PKG_VERSION"));
+        info!("  Port: {}", runtime_config.network.api_port);
 
         // ✅ REAL: Check if socket is alive
         let socket_alive = if let Ok(config) = nestgate_core::rpc::SocketConfig::from_environment()
@@ -376,18 +374,18 @@ impl ServiceManager {
             let path = &config.socket_path;
             if path.exists() {
                 if tokio::net::UnixStream::connect(path).await.is_ok() {
-                    println!("  Socket: ✅ ALIVE ({})", path.display());
+                    info!("  Socket: ✅ ALIVE ({})", path.display());
                     true
                 } else {
-                    println!("  Socket: ❌ STALE ({})", path.display());
+                    info!("  Socket: ❌ STALE ({})", path.display());
                     false
                 }
             } else {
-                println!("  Socket: ℹ️  Not found (daemon not running?)");
+                info!("  Socket: ℹ️  Not found (daemon not running?)");
                 false
             }
         } else {
-            println!("  Socket: ℹ️  Not configured");
+            info!("  Socket: ℹ️  Not configured");
             false
         };
 
@@ -395,16 +393,16 @@ impl ServiceManager {
         let cpu_count = std::thread::available_parallelism()
             .map(std::num::NonZero::get)
             .unwrap_or(1);
-        println!("  CPU Cores: {cpu_count}");
+        info!("  CPU Cores: {cpu_count}");
 
         // ✅ REAL: Storage backend detection
         let caps = nestgate_core::services::storage::capabilities::detect_backend();
-        println!("  Backend: {:?}", caps.backend_type);
+        info!("  Backend: {:?}", caps.backend_type);
 
         if socket_alive {
-            println!("  Status: ✅ Running");
+            info!("  Status: ✅ Running");
         } else {
-            println!("  Status: ⏸️  Stopped");
+            info!("  Status: ⏸️  Stopped");
         }
 
         Ok(())
@@ -463,9 +461,9 @@ pub async fn run_daemon(
 async fn run_socket_only_daemon() -> BinResult<()> {
     use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
 
-    println!("\n╔══════════════════════════════════════════════════════════════════════╗");
-    println!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
-    println!("╚══════════════════════════════════════════════════════════════════════╝\n");
+    info!("\n╔══════════════════════════════════════════════════════════════════════╗");
+    info!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
+    info!("╚══════════════════════════════════════════════════════════════════════╝\n");
 
     // Get socket configuration with 4-tier fallback (biomeOS standard)
     let socket_config = SocketConfig::from_environment().map_err(|e| {
@@ -475,17 +473,16 @@ async fn run_socket_only_daemon() -> BinResult<()> {
         )
     })?;
 
-    println!("✅ Socket-only mode activated");
-    println!("   • No HTTP server (avoids port conflicts)");
-    println!("   • No external dependencies (DB, Redis, etc.)");
-    println!("   • Pure Unix socket JSON-RPC communication");
-    println!("   • Perfect for atomic patterns (Tower + NestGate)");
-    println!();
+    info!("✅ Socket-only mode activated");
+    info!("   • No HTTP server (avoids port conflicts)");
+    info!("   • No external dependencies (DB, Redis, etc.)");
+    info!("   • Pure Unix socket JSON-RPC communication");
+    info!("   • Perfect for atomic patterns (Tower + NestGate)");
 
     // Log socket configuration
     socket_config.log_summary();
 
-    println!("📦 Initializing persistent storage backend...");
+    info!("📦 Initializing persistent storage backend...");
     let handler = legacy_ecosystem_rpc_handler(&socket_config.family_id).map_err(|e| {
         crate::error::NestGateBinError::service_init_error(
             format!("Failed to create JSON-RPC handler: {e}"),
@@ -496,33 +493,30 @@ async fn run_socket_only_daemon() -> BinResult<()> {
         socket_config.family_id.clone(),
         handler,
     ));
-    println!("✅ Storage backend initialized");
-    println!();
+    info!("✅ Storage backend initialized");
 
-    println!("📊 Available JSON-RPC Methods:");
-    println!("   Health & Discovery:");
-    println!("     • health");
-    println!("     • discover_capabilities");
-    println!("   Storage:");
-    println!("     • storage.store(family_id, key, value)");
-    println!("     • storage.retrieve(family_id, key)");
-    println!("     • storage.delete(family_id, key)");
-    println!("     • storage.list(family_id, prefix?)");
-    println!("     • storage.exists(family_id, key)");
-    println!("   Blob Storage:");
-    println!("     • storage.store_blob(family_id, key, data_base64)");
-    println!("     • storage.retrieve_blob(family_id, key)");
-    println!("   Model Cache:");
-    println!("     • model.register(model_id, metadata)");
-    println!("     • model.exists(model_id)");
-    println!("     • model.locate(model_id)");
-    println!("     • model.metadata(model_id)");
-    println!();
-    println!("🎯 Mode: NUCLEUS Integration (socket-only)");
-    println!("🔐 Security: Local Unix socket (no network exposure)");
-    println!("⚡ Performance: Zero-copy, no TCP overhead");
-    println!();
-    println!("Press Ctrl+C to stop\n");
+    info!("📊 Available JSON-RPC Methods:");
+    info!("   Health & Discovery:");
+    info!("     • health");
+    info!("     • discover_capabilities");
+    info!("   Storage:");
+    info!("     • storage.store(family_id, key, value)");
+    info!("     • storage.retrieve(family_id, key)");
+    info!("     • storage.delete(family_id, key)");
+    info!("     • storage.list(family_id, prefix?)");
+    info!("     • storage.exists(family_id, key)");
+    info!("   Blob Storage:");
+    info!("     • storage.store_blob(family_id, key, data_base64)");
+    info!("     • storage.retrieve_blob(family_id, key)");
+    info!("   Model Cache:");
+    info!("     • model.register(model_id, metadata)");
+    info!("     • model.exists(model_id)");
+    info!("     • model.locate(model_id)");
+    info!("     • model.metadata(model_id)");
+    info!("🎯 Mode: NUCLEUS Integration (socket-only)");
+    info!("🔐 Security: Local Unix socket (no network exposure)");
+    info!("⚡ Performance: Zero-copy, no TCP overhead");
+    info!("Press Ctrl+C to stop\n");
 
     server.start().await.map_err(|e| {
         crate::error::NestGateBinError::runtime_error(
@@ -591,7 +585,7 @@ mod service_manager_tests {
     use std::net::SocketAddr;
 
     #[tokio::test]
-    async fn execute_logs_is_ok_without_network() {
+    async fn execute_logs_returns_not_implemented_with_guidance() {
         let mut m = ServiceManager::new();
         let r = m
             .execute(ServiceAction::Logs {
@@ -599,7 +593,7 @@ mod service_manager_tests {
                 follow: false,
             })
             .await;
-        assert!(r.is_ok());
+        assert!(r.is_err());
     }
 
     #[tokio::test]

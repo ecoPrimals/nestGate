@@ -77,13 +77,12 @@ pub struct AzureBackend {
 /// **DESIGN**: Enables capability-based configuration while maintaining
 /// clean separation between our abstractions and Azure SDK specifics.
 ///
-/// **EVOLUTION NOTE**: Fields marked with `allow(dead_code)` are part of planned
-/// Azure SDK integration for audit, metrics, and dynamic reconfiguration.
+/// **EVOLUTION NOTE**: Reserved fields support planned Azure SDK integration for audit,
+/// metrics, and dynamic reconfiguration.
 struct AzureClientWrapper {
     /// Storage account discovered via capability system or environment
     account: String,
     /// Optional connection string (reserved for Azure SDK client initialization)
-    #[allow(dead_code)] // Will be used in Azure SDK integration
     connection_string: Option<String>,
     /// Configuration source (capability discovery vs environment)
     config_source: ConfigSource,
@@ -102,7 +101,6 @@ enum ConfigSource {
     /// Fallback to environment variables
     Environment,
     /// Explicit configuration (for testing/future use)
-    #[allow(dead_code)]
     Explicit {
         /// Storage account
         account: String,

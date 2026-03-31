@@ -59,8 +59,8 @@ pub struct PoolMetrics {
 /// System-wide performance and resource utilization metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
-    /// CPU usage percentage (currently unused, prefixed with _)
-    pub _cpu_usage: f64,
+    /// CPU usage percentage (0.0 to 100.0)
+    pub cpu_usage: f64,
     /// Memory usage percentage (0.0 to 100.0)
     pub memory_usage: f64,
     /// Total system memory in bytes

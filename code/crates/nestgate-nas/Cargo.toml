@@ -13,7 +13,6 @@ workspace = true
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
-nestgate-network = { path = "../nestgate-network" }
 
 tracing = { workspace = true }
 serde_json = { workspace = true }

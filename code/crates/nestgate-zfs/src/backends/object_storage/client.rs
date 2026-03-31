@@ -11,7 +11,6 @@ use super::config::ConfigSource;
 ///
 /// **DESIGN**: Abstracts S3-compatible API without hardcoding any vendor.
 /// Works with ANY service that implements S3-compatible protocol.
-#[allow(dead_code)] // Fields used for future telemetry/debugging features
 pub struct ObjectStorageClient {
     /// Discovered endpoint (runtime configuration)
     pub(super) endpoint: String,

@@ -34,7 +34,6 @@ type SnapshotInfoCache = Arc<RwLock<HashMap<String, SnapshotInfo>>>;
 #[derive(Debug)]
 /// Manager for `ZfsSnapshot` operations
 pub struct ZfsSnapshotManager {
-    #[allow(dead_code)]
     config: ZfsConfig,
     dataset_manager: Arc<ZfsDatasetManager>,
     /// Snapshot policies
@@ -51,7 +50,6 @@ pub struct ZfsSnapshotManager {
 
     /// Shutdown signal
     shutdown_tx: Option<mpsc::Sender<()>>,
-    #[allow(dead_code)]
     background_tasks: Vec<tokio::task::JoinHandle<()>>,
 }
 

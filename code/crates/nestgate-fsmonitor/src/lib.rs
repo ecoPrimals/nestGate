@@ -88,8 +88,7 @@ pub trait FsEventHandler: Send + Sync + std::fmt::Debug {
 /// File system monitor service
 #[derive(Debug)]
 pub struct FsMonitor {
-    #[allow(dead_code)]
-    config: FsMonitorConfig,
+    _config: FsMonitorConfig,
     handlers: Vec<Box<dyn FsEventHandler>>,
 }
 impl FsMonitor {
@@ -97,7 +96,7 @@ impl FsMonitor {
     #[must_use]
     pub fn new(config: FsMonitorConfig) -> Self {
         Self {
-            config,
+            _config: config,
             handlers: Vec::new(),
         }
     }
@@ -130,17 +129,6 @@ impl FsMonitor {
     /// - Network or I/O errors occur
     pub const fn stop(&self) -> Result<(), FsMonitorError> {
         // Implementation would go here
-        Ok(())
-    }
-
-    /// Process a file system event
-    #[allow(dead_code)]
-    fn process_event(&self, event: &FsEvent) -> Result<(), FsMonitorError> {
-        for handler in &self.handlers {
-            if handler.handles_event_type(&event.event_type) {
-                handler.handle_event(event)?;
-            }
-        }
         Ok(())
     }
 }

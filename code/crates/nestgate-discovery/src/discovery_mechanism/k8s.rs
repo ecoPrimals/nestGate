@@ -21,7 +21,7 @@
 use super::http::DiscoveryHttpClient;
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
 use crate::self_knowledge::SelfKnowledge;
-use nestgate_types::error::Result;
+use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
@@ -71,34 +71,35 @@ struct K8sServiceList {
 ///
 /// Order: `KUBERNETES_API_PROXY`, `NESTGATE_KUBERNETES_API_PROXY`,
 /// `NESTGATE_CAPABILITY_KUBERNETES_API_ENDPOINT`, in-cluster
-/// `KUBERNETES_SERVICE_HOST` + `KUBERNETES_SERVICE_PORT`, then
-/// `NESTGATE_K8S_LOCAL_PROXY_URL`. Last resort: warn and use
-/// `http://127.0.0.1:8001` (typical `kubectl proxy`); override via
-/// `NESTGATE_K8S_LOCAL_PROXY_URL`.
-fn resolve_kubernetes_api_server_url() -> String {
+/// `KUBERNETES_SERVICE_HOST` + `KUBERNETES_SERVICE_PORT` (both required), then
+/// `NESTGATE_K8S_LOCAL_PROXY_URL`. If none apply, returns a configuration error
+/// (no loopback default).
+fn resolve_kubernetes_api_server_url() -> Result<String> {
     if let Ok(url) = std::env::var("KUBERNETES_API_PROXY") {
-        return url;
+        return Ok(url);
     }
     if let Ok(url) = std::env::var("NESTGATE_KUBERNETES_API_PROXY") {
-        return url;
+        return Ok(url);
     }
     if let Ok(url) = std::env::var("NESTGATE_CAPABILITY_KUBERNETES_API_ENDPOINT") {
-        return url;
+        return Ok(url);
     }
     if let Ok(host) = std::env::var("KUBERNETES_SERVICE_HOST") {
-        let port = std::env::var("KUBERNETES_SERVICE_PORT").unwrap_or_else(|_| "8001".to_string());
-        return format!("http://{host}:{port}");
+        let port = std::env::var("KUBERNETES_SERVICE_PORT").map_err(|_| {
+            NestGateError::configuration_error(
+                "KUBERNETES_SERVICE_PORT",
+                "KUBERNETES_SERVICE_PORT not set — K8s discovery requires in-cluster environment",
+            )
+        })?;
+        return Ok(format!("http://{host}:{port}"));
     }
     if let Ok(url) = std::env::var("NESTGATE_K8S_LOCAL_PROXY_URL") {
-        return url;
+        return Ok(url);
     }
-    tracing::warn!(
-        "Kubernetes API URL not configured (set KUBERNETES_API_PROXY, \
-         NESTGATE_KUBERNETES_API_PROXY, NESTGATE_CAPABILITY_KUBERNETES_API_ENDPOINT, \
-         in-cluster KUBERNETES_SERVICE_HOST, or NESTGATE_K8S_LOCAL_PROXY_URL). \
-         Using development default http://127.0.0.1:8001 — set NESTGATE_K8S_LOCAL_PROXY_URL to override."
-    );
-    "http://127.0.0.1:8001".to_string()
+    Err(NestGateError::configuration_error(
+        "KUBERNETES_SERVICE_HOST",
+        "KUBERNETES_SERVICE_HOST not set — K8s discovery requires in-cluster environment",
+    ))
 }
 
 /// Kubernetes discovery mechanism (pure-Rust HTTP via kubectl proxy or mesh)
@@ -114,7 +115,7 @@ impl KubernetesDiscovery {
     /// Create a new Kubernetes discovery instance.
     ///
     /// Resolves the API URL via `resolve_kubernetes_api_server_url` (see that function for
-    /// `NESTGATE_*` / capability env vars and the configurable last-resort proxy default).
+    /// `NESTGATE_*` / capability env vars and in-cluster requirements).
     ///
     /// # Errors
     ///
@@ -124,7 +125,7 @@ impl KubernetesDiscovery {
             .or_else(|_| std::env::var("POD_NAMESPACE"))
             .unwrap_or_else(|_| "default".to_string());
 
-        let api_server = resolve_kubernetes_api_server_url();
+        let api_server = resolve_kubernetes_api_server_url()?;
 
         let token =
             std::fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/token").ok();

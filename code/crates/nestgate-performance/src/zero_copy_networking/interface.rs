@@ -27,7 +27,6 @@ pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
 /// Individual network connection with zero-copy capabilities
 ///
 /// **✅ 100% SAFE** - Uses safe concurrent queues (zero unsafe code)
-#[allow(dead_code)]
 /// Zerocopyconnection
 pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,

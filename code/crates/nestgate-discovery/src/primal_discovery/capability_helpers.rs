@@ -35,7 +35,7 @@
 //! let orchestration = discover_orchestration().await?;
 //! println!("Orchestration at: {}", orchestration.endpoint);
 //!
-//! // Discover security service (e.g., BearDog)
+//! // Discover security capability provider
 //! let security = discover_security().await?;
 //! println!("Security at: {}", security.endpoint);
 //!
@@ -146,7 +146,7 @@ pub async fn discover_orchestration() -> Result<DiscoveredService> {
     ))
 }
 
-/// Discover security service (e.g., `BearDog`).
+/// Discover whichever primal provides the "security" capability.
 ///
 /// **Priority**:
 /// 1. `NESTGATE_CAPABILITY_SECURITY` env var (set by songBird discovery)

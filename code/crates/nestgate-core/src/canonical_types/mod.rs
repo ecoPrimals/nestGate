@@ -68,10 +68,9 @@ mod tests {
     /// Parses  Service Type
     fn parse_service_type(service_type: &str) -> ServiceType {
         match service_type {
-            "storage" => ServiceType::Storage,
             "network" => ServiceType::Network,
             "security" => ServiceType::Security,
-            _ => ServiceType::Storage, // Default fallback
+            _ => ServiceType::Storage, // Default (includes "storage" and unknown)
         }
     }
 

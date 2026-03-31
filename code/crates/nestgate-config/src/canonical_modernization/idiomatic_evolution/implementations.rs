@@ -117,18 +117,24 @@ impl CollectionEvolution {
 /// Configuration evolution utilities
 pub struct ConfigEvolution;
 impl ConfigEvolution {
-    /// Apply modern configuration patterns to a config object
+    /// Apply modern configuration patterns to a config object.
+    ///
+    /// **Framework hook:** returns `config` unchanged. There are no config-type-specific
+    /// transforms in this crate yet; this preserves a stable call site for pipelines and tests.
     pub const fn apply_config_patterns<T>(config: T) -> T {
-        config // Placeholder for config-specific patterns
+        config
     }
 }
 
 /// Service evolution utilities
 pub struct ServiceEvolution;
 impl ServiceEvolution {
-    /// Modernize service configuration with modern patterns
+    /// Modernize service configuration with modern patterns.
+    ///
+    /// **Framework hook:** returns `config` unchanged. Service-specific normalization (timeouts,
+    /// feature flags, etc.) is not implemented here yet.
     pub const fn modernize_service_config<T>(config: T) -> T {
-        config // Placeholder for service-specific patterns
+        config
     }
 }
 

@@ -45,7 +45,6 @@ pub struct AutoConfigurator {
     /// Configuration preferences and constraints
     config: ConfiguratorSettings,
     /// Detected storage systems to work with
-    #[allow(dead_code)] // Used in full implementation (placeholder methods for now)
     available_storage: Vec<DetectedStorage>,
 }
 

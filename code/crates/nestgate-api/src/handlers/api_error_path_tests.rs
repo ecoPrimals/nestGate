@@ -130,8 +130,7 @@ mod api_authentication_tests {
     #[test]
     fn test_malformed_jwt() {
         let jwt = "not.a.jwt";
-        let parts: Vec<&str> = jwt.split('.').collect();
-        assert_eq!(parts.len(), 3); // JWT has 3 parts
+        assert_eq!(jwt.split('.').count(), 3); // JWT has 3 parts
     }
 
     #[test]
@@ -211,7 +210,7 @@ mod api_rate_limiting_tests {
     fn test_rate_limit_headers() {
         let remaining = 45;
         let limit = 100;
-        let reset_time = 1234567890;
+        let reset_time = 1_234_567_890;
 
         assert!(remaining <= limit);
         assert!(reset_time > 0);

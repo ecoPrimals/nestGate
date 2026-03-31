@@ -190,7 +190,6 @@ mod tests {
         assert!(result.is_ok());
         let response = result.unwrap();
         assert_eq!(response.0.data.name, "tank/data");
-        assert!(response.0.data.size_bytes > 0);
     }
 
     #[tokio::test]

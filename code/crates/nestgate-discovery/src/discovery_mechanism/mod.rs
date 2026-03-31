@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! # Discovery Mechanism Abstraction
+//! # Discovery mechanism abstraction
 //!
 //! **Vendor-agnostic service discovery for the infant discovery pattern.**
 //!
-//! This module provides a pluggable discovery mechanism that works across
-//! different infrastructure: bare metal (mDNS), cloud (consul/etcd), or
-//! orchestrated (Kubernetes).
+//! Per the PRIMAL responsibility matrix, **runtime peer discovery is not NestGate’s domain**:
+//! production deployments delegate discovery to **biomeOS** and **songBird**. The types here are
+//! optional building blocks for standalone binaries, tests, and local development only.
+//!
+//! Each backend (`mdns`, `consul`, `kubernetes`) is behind a crate feature so default builds do not
+//! pull in unused discovery code.
 //!
 //! ## Philosophy
 //!
@@ -37,8 +40,8 @@
 //!
 //! ```rust,ignore
 //! // Full example requires DiscoveryBuilder, SelfKnowledge with SocketAddr endpoints
-//! use nestgate_core::discovery_mechanism::{DiscoveryBuilder, MdnsDiscovery};
-//! use nestgate_core::self_knowledge::SelfKnowledge;
+//! use nestgate_discovery::discovery_mechanism::{DiscoveryBuilder, MdnsDiscovery};
+//! use nestgate_discovery::self_knowledge::SelfKnowledge;
 //! let discovery = DiscoveryBuilder::default().detect()?;
 //! let self_knowledge = SelfKnowledge::builder().with_id("nestgate").build()?;
 //! ```
@@ -54,6 +57,7 @@ use std::pin::Pin;
 pub mod builder;
 /// Minimal pure-Rust HTTP client for discovery bootstrap (no external deps)
 pub mod http;
+#[cfg(feature = "mdns")]
 pub mod mdns;
 pub mod testing;
 
@@ -68,6 +72,7 @@ mod tests;
 
 // Re-exports for backward compatibility
 pub use builder::DiscoveryBuilder;
+#[cfg(feature = "mdns")]
 pub use mdns::MdnsDiscovery;
 
 #[cfg(feature = "consul")]

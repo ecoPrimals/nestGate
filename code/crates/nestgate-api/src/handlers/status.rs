@@ -75,13 +75,13 @@ mod tests {
             status: "healthy".to_string(),
             version: "1.0.0".to_string(),
             uptime: 3600,
-            timestamp: 1234567890,
+            timestamp: 1_234_567_890,
         };
 
         assert_eq!(status.status, "healthy");
         assert_eq!(status.version, "1.0.0");
         assert_eq!(status.uptime, 3600);
-        assert_eq!(status.timestamp, 1234567890);
+        assert_eq!(status.timestamp, 1_234_567_890);
     }
 
     #[test]
@@ -90,7 +90,7 @@ mod tests {
             status: "healthy".to_string(),
             version: "1.0.0".to_string(),
             uptime: 3600,
-            timestamp: 1234567890,
+            timestamp: 1_234_567_890,
         };
 
         let serialized = serde_json::to_string(&status);

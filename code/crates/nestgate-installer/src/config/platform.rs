@@ -2,7 +2,6 @@
 // Copyright (c) 2025 ecoPrimals Collective
 
 //! Platform-specific installation settings, component selection, and system integration
-#![allow(dead_code)] // Reserved serde schema types for future installer features
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;

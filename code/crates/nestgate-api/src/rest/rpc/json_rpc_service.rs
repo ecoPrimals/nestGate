@@ -7,6 +7,10 @@
 // Provides orchestration and service coordination capabilities.
 
 //! Json Rpc Service module
+#![expect(
+    dead_code,
+    reason = "JSON-RPC request/response types and dev stream handle reserved for orchestration RPC wiring"
+)]
 
 use super::{
     RpcConnectionType, RpcError, RpcStreamEvent, UnifiedRpcRequest, UnifiedRpcResponse,
@@ -19,7 +23,6 @@ use tracing::{debug, info};
 use uuid::Uuid;
 
 /// JSON RPC request format for orchestration
-#[expect(dead_code, reason = "Reserved for future JSON RPC implementation")]
 #[derive(Debug, serde::Serialize)]
 struct JsonRpcRequest {
     jsonrpc: String,
@@ -28,7 +31,6 @@ struct JsonRpcRequest {
     _params: serde_json::Value,
 }
 #[derive(Debug, Serialize, Deserialize)]
-#[expect(dead_code, reason = "JSON-RPC response types used as wire format")]
 struct JsonRpcResponse {
     jsonrpc: String,
     id: Uuid,
@@ -45,10 +47,6 @@ struct JsonRpcError {
     data: Option<serde_json::Value>,
 }
 #[derive(Debug, Clone)]
-#[expect(
-    dead_code,
-    reason = "Development stream handle; fields used conditionally"
-)]
 struct StreamHandle {
     stream_id: Uuid,
     sender: mpsc::Sender<RpcStreamEvent>,

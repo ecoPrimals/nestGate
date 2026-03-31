@@ -101,14 +101,13 @@ mod integration_tests {
 
     #[test]
     fn test_simd_constants() {
+        // Verify constants are sensible - compile-time validation
+        const _: () = assert!(MIN_BATCH_SIZE < DEFAULT_BATCH_SIZE);
+        const _: () = assert!(DEFAULT_BATCH_SIZE < MAX_BATCH_SIZE);
+
         assert_eq!(DEFAULT_BATCH_SIZE, 32);
         assert_eq!(MAX_BATCH_SIZE, 1024);
         assert_eq!(MIN_BATCH_SIZE, 4);
-
-        // Verify constants are sensible - compile-time validation
-        const _: () = assert!(MIN_BATCH_SIZE < DEFAULT_BATCH_SIZE);
-        ///  
-        const _: () = assert!(DEFAULT_BATCH_SIZE < MAX_BATCH_SIZE);
     }
 
     #[test]

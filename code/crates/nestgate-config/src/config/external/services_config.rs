@@ -22,8 +22,9 @@
 //! ```
 //!
 //! ### Environment Variables:
-//! - **Legacy (supported)**: `NESTGATE_SONGBIRD_URL`, `NESTGATE_BEARDOG_URL`, etc.
-//! - **New (preferred)**: `NESTGATE_CAPABILITY_ORCHESTRATION`, `NESTGATE_CAPABILITY_SECURITY`, etc.
+//! - **Preferred**: `NESTGATE_CAPABILITY_ORCHESTRATION`, `NESTGATE_CAPABILITY_SECURITY`, etc.
+//! - **Legacy (deprecated)**: `NESTGATE_SONGBIRD_URL`, `NESTGATE_BEARDOG_URL`, etc. — used only when
+//!   the matching `NESTGATE_CAPABILITY_*` is unset (logged at `warn`).
 //!
 //! ### Migration Timeline:
 //! - **v0.11.x**: Both patterns supported (backward compatibility)
@@ -48,12 +49,16 @@ pub struct ServicesConfig {
     metrics_url: Option<String>,
     config_url: Option<String>,
 
-    // ⚠️ DEPRECATED: Primal-specific URLs (use capability-based discovery instead)
-    // Kept for backward compatibility only
+    // ⚠️ DEPRECATED: Primal-specific URL mirrors — prefer `capabilities` / `get_capability_url`.
+    /// Deprecated mirror of orchestration URL; use `NESTGATE_CAPABILITY_ORCHESTRATION` / `get_capability_url("orchestration")`.
     songbird_url: Option<String>,
+    /// Deprecated mirror of compute URL; use `NESTGATE_CAPABILITY_COMPUTE` / `get_capability_url("compute")`.
     toadstool_url: Option<String>,
+    /// Deprecated mirror of security URL; use `NESTGATE_CAPABILITY_SECURITY` / `get_capability_url("security")`.
     beardog_url: Option<String>,
+    /// Deprecated mirror of AI URL; use `NESTGATE_CAPABILITY_AI` / `get_capability_url("ai")`.
     squirrel_url: Option<String>,
+    /// Deprecated mirror of ecosystem URL; use `NESTGATE_CAPABILITY_ECOSYSTEM` / `get_capability_url("ecosystem")`.
     biomeos_url: Option<String>,
 
     // Capability-based service URLs (NESTGATE_CAPABILITY_*)
@@ -99,18 +104,60 @@ impl ServicesConfig {
         config.metrics_url = std::env::var("NESTGATE_METRICS_URL").ok();
         config.config_url = std::env::var("NESTGATE_CONFIG_URL").ok();
 
-        // Legacy primal services (deprecated, but supported for backward compatibility)
-        config.songbird_url = std::env::var("NESTGATE_SONGBIRD_URL").ok();
-        config.toadstool_url = std::env::var("NESTGATE_TOADSTOOL_URL").ok();
-        config.beardog_url = std::env::var("NESTGATE_BEARDOG_URL").ok();
-        config.squirrel_url = std::env::var("NESTGATE_SQUIRREL_URL").ok();
-        config.biomeos_url = std::env::var("NESTGATE_BIOMEOS_URL").ok();
-
-        // Scan for capability-based NESTGATE_CAPABILITY_* entries (NEW)
+        // Capability-first: scan NESTGATE_CAPABILITY_* before any legacy primal URLs
         for (key, value) in std::env::vars() {
             if let Some(name) = key.strip_prefix("NESTGATE_CAPABILITY_") {
                 config.capabilities.insert(name.to_lowercase(), value);
             }
+        }
+
+        // Legacy primal URLs — only when the matching capability is unset; warn on use
+        Self::merge_legacy_capability(
+            &mut config,
+            "orchestration",
+            "NESTGATE_SONGBIRD_URL",
+            |c, url| {
+                c.songbird_url = Some(url);
+            },
+        );
+        Self::merge_legacy_capability(&mut config, "security", "NESTGATE_BEARDOG_URL", |c, url| {
+            c.beardog_url = Some(url);
+        });
+        Self::merge_legacy_capability(&mut config, "ai", "NESTGATE_SQUIRREL_URL", |c, url| {
+            c.squirrel_url = Some(url);
+        });
+        Self::merge_legacy_capability(
+            &mut config,
+            "compute",
+            "NESTGATE_TOADSTOOL_URL",
+            |c, url| {
+                c.toadstool_url = Some(url);
+            },
+        );
+        Self::merge_legacy_capability(
+            &mut config,
+            "ecosystem",
+            "NESTGATE_BIOMEOS_URL",
+            |c, url| {
+                c.biomeos_url = Some(url);
+            },
+        );
+
+        // Mirror resolved capability URLs into deprecated fields when set via capability env only
+        if config.songbird_url.is_none() {
+            config.songbird_url = config.capabilities.get("orchestration").cloned();
+        }
+        if config.beardog_url.is_none() {
+            config.beardog_url = config.capabilities.get("security").cloned();
+        }
+        if config.squirrel_url.is_none() {
+            config.squirrel_url = config.capabilities.get("ai").cloned();
+        }
+        if config.toadstool_url.is_none() {
+            config.toadstool_url = config.capabilities.get("compute").cloned();
+        }
+        if config.biomeos_url.is_none() {
+            config.biomeos_url = config.capabilities.get("ecosystem").cloned();
         }
 
         // Scan for dynamic NESTGATE_EXTERNAL_* entries
@@ -120,39 +167,36 @@ impl ServicesConfig {
             }
         }
 
-        // Map legacy primal names to capabilities (automatic migration)
-        if let Some(url) = &config.songbird_url {
-            config
-                .capabilities
-                .entry("orchestration".to_string())
-                .or_insert_with(|| url.clone());
-        }
-        if let Some(url) = &config.beardog_url {
-            config
-                .capabilities
-                .entry("security".to_string())
-                .or_insert_with(|| url.clone());
-        }
-        if let Some(url) = &config.squirrel_url {
-            config
-                .capabilities
-                .entry("ai".to_string())
-                .or_insert_with(|| url.clone());
-        }
-        if let Some(url) = &config.toadstool_url {
-            config
-                .capabilities
-                .entry("compute".to_string())
-                .or_insert_with(|| url.clone());
-        }
-        if let Some(url) = &config.biomeos_url {
-            config
-                .capabilities
-                .entry("ecosystem".to_string())
-                .or_insert_with(|| url.clone());
-        }
-
         config
+    }
+
+    /// If `capability` is not in `capabilities`, read `legacy_var` and merge with a deprecation warning.
+    fn merge_legacy_capability(
+        config: &mut Self,
+        capability: &str,
+        legacy_var: &str,
+        mut set_field: impl FnMut(&mut Self, String),
+    ) {
+        if config.capabilities.contains_key(capability) {
+            return;
+        }
+        if let Ok(url) = std::env::var(legacy_var) {
+            tracing::warn!(
+                legacy = legacy_var,
+                preferred = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase()),
+                "using deprecated environment variable; prefer NESTGATE_CAPABILITY_*"
+            );
+            config
+                .capabilities
+                .insert(capability.to_string(), url.clone());
+            set_field(config, url);
+        }
+    }
+
+    /// Same as [`Self::from_env`] — captures environment at initialization time.
+    #[must_use]
+    pub fn from_environment() -> Self {
+        Self::from_env()
     }
 
     // Core service accessors with defaults
@@ -278,10 +322,7 @@ impl ServicesConfig {
     /// Gets Songbird Url
     ///
     /// **⚠️ DEPRECATED**: Use `get_capability_url("orchestration")` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use get_capability_url(\"orchestration\") for capability-based discovery"
-    )]
+    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
     #[must_use]
     pub fn get_songbird_url(&self) -> Option<&str> {
         self.songbird_url.as_deref()
@@ -302,10 +343,7 @@ impl ServicesConfig {
     /// Gets Beardog Url
     ///
     /// **⚠️ DEPRECATED**: Use `get_capability_url("security")` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use get_capability_url(\"security\") for capability-based discovery"
-    )]
+    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
     #[must_use]
     pub fn get_beardog_url(&self) -> Option<&str> {
         self.beardog_url.as_deref()
@@ -314,10 +352,7 @@ impl ServicesConfig {
     /// Gets Squirrel Url
     ///
     /// **⚠️ DEPRECATED**: Use `get_capability_url("ai")` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use get_capability_url(\"ai\") for capability-based discovery"
-    )]
+    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
     #[must_use]
     pub fn get_squirrel_url(&self) -> Option<&str> {
         self.squirrel_url.as_deref()
@@ -326,10 +361,7 @@ impl ServicesConfig {
     /// Gets Biomeos Url
     ///
     /// **⚠️ DEPRECATED**: Use `get_capability_url("ecosystem")` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use get_capability_url(\"ecosystem\") for capability-based discovery"
-    )]
+    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
     #[must_use]
     pub fn get_biomeos_url(&self) -> Option<&str> {
         self.biomeos_url.as_deref()

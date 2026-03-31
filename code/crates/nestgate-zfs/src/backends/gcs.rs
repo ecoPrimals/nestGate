@@ -76,14 +76,13 @@ pub struct GcsBackend {
 /// **DESIGN**: Enables capability-based configuration while maintaining
 /// clean separation between our abstractions and GCS SDK specifics.
 ///
-/// **EVOLUTION NOTE**: Fields marked with `allow(dead_code)` are part of planned
-/// GCS SDK integration (v0.2.0) for audit, metrics, and dynamic reconfiguration.
+/// **EVOLUTION NOTE**: Reserved fields support planned GCS SDK integration (v0.2.0) for audit,
+/// metrics, and dynamic reconfiguration.
 struct GcsClientWrapper {
     /// GCP project ID discovered via capability system or environment
     project_id: String,
     /// Optional credentials path for service account
     /// **PLANNED**: GCS SDK client initialization (v0.2.0)
-    #[allow(dead_code)] // Planned for GCS SDK integration
     credentials_path: Option<String>,
     /// Configuration source (capability discovery vs environment)
     config_source: ConfigSource,
@@ -103,7 +102,6 @@ enum ConfigSource {
     /// Fallback to environment variables
     Environment,
     /// Explicit configuration (for testing/future use)
-    #[allow(dead_code)]
     Explicit {
         /// Project ID
         project_id: String,

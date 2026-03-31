@@ -89,9 +89,9 @@ type GeneratedClient = crate::rpc::tarpc_types::NestGateRpcClient;
 /// ```
 #[derive(Clone)]
 pub struct NestGateRpcClient {
-    /// Original endpoint string (reserved for debug logging and error context).
-    #[allow(dead_code)]
-    endpoint: String,
+    /// Original endpoint string for debug logging, error context, and test assertions.
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) endpoint: String,
 
     /// Parsed socket address
     addr: SocketAddr,

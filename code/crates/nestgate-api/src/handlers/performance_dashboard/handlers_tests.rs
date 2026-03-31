@@ -192,10 +192,12 @@ async fn test_get_overview_has_alert_summary() {
 
     let overview = dashboard.get_overview().await.unwrap();
 
-    // Alert summary should be present
-    assert!(overview.alert_summary.critical_alerts >= 0);
-    assert!(overview.alert_summary.warning_alerts >= 0);
-    assert!(overview.alert_summary.info_alerts >= 0);
+    // Alert summary should be present (field access smoke test)
+    let _ = (
+        overview.alert_summary.critical_alerts,
+        overview.alert_summary.warning_alerts,
+        overview.alert_summary.info_alerts,
+    );
 }
 
 #[test]

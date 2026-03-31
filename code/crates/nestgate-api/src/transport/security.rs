@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! **BEARDOG SECURITY INTEGRATION**
+//! **CAPABILITY-BASED SECURITY PROVIDER CLIENT**
 //!
-//! `BearDog` client for hardware-backed security and authentication.
+//! Client for discovering and communicating with whichever primal provides
+//! the "security" capability at runtime (hardware-backed crypto, identity,
+//! tokens, certificates). NestGate has no compile-time knowledge of *which*
+//! primal fills this role.
 
 use nestgate_core::capability_discovery::CapabilityDiscovery;
 use nestgate_core::error::{NestGateError, Result};
@@ -14,13 +17,9 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 use tracing::{info, warn};
 
-/// **BEARDOG CLIENT**
+/// Client for whichever primal provides the "security" capability.
 ///
-/// Client for communicating with `BearDog` security provider via Unix sockets.
-///
-/// ## `BearDog` Integration
-///
-/// `BearDog` provides:
+/// Capabilities offered by the discovered provider:
 /// - Hardware-backed encryption/decryption
 /// - Sovereign identity management
 /// - Token generation and validation
@@ -28,27 +27,31 @@ use tracing::{info, warn};
 ///
 /// ## Runtime Discovery
 ///
-/// The client discovers `BearDog` via:
-/// 1. `NESTGATE_SECURITY_PROVIDER` environment variable
-/// 2. Socket scanning: `/tmp/beardog-{family}-*.sock`
-/// 3. Fallback: `/tmp/beardog-default-default.sock`
-pub struct BearDogClient {
+/// 1. `NESTGATE_SECURITY_PROVIDER` environment variable (explicit path)
+/// 2. Capability discovery via IPC gateway ("security" capability)
+/// 3. Socket scan: `{NESTGATE_SECURITY_SLUG}-{family}-*.sock` (slug defaults
+///    to `"security"` — override via env to match your provider's convention)
+pub struct SecurityProviderClient {
     socket_path: PathBuf,
     connected: bool,
 }
 
-impl BearDogClient {
-    /// Create new `BearDog` client
+/// Backwards-compatible alias for code still referencing the old name.
+#[deprecated(since = "0.3.0", note = "Use SecurityProviderClient — primal-agnostic")]
+pub type BearDogClient = SecurityProviderClient;
+
+impl SecurityProviderClient {
+    /// Create a new security provider client for the given socket path.
     ///
     /// # Errors
     ///
-    /// Returns error if socket path is invalid
+    /// Returns error if the socket path is empty.
     pub fn new(socket_path: impl AsRef<Path>) -> Result<Self> {
         let socket_path = socket_path.as_ref().to_path_buf();
 
         if socket_path.as_os_str().is_empty() {
             return Err(NestGateError::api_error(
-                "BearDog socket path cannot be empty",
+                "Security provider socket path cannot be empty",
             ));
         }
 
@@ -58,18 +61,18 @@ impl BearDogClient {
         })
     }
 
-    /// Discover security provider via capability-based discovery or runtime socket scanning.
+    /// Discover the security provider via capability-based discovery or
+    /// runtime socket scanning.
     ///
     /// **Discovery order**:
     /// 1. `NESTGATE_SECURITY_PROVIDER` environment variable
     /// 2. Capability discovery (IPC gateway + "security" capability)
-    /// 3. Socket scan fallback: `/tmp/beardog-{family}-*.sock`, etc.
+    /// 3. Socket scan: `{NESTGATE_SECURITY_SLUG}-{family}-*.sock`
     ///
     /// # Errors
     ///
-    /// Returns error if security provider cannot be discovered
+    /// Returns error if no security provider can be discovered.
     pub async fn discover(family_id: &str) -> Result<Self> {
-        // 1. Environment variable first
         if let Ok(socket_path) = std::env::var("NESTGATE_SECURITY_PROVIDER") {
             info!(
                 "Found security provider via NESTGATE_SECURITY_PROVIDER: {}",
@@ -78,12 +81,10 @@ impl BearDogClient {
             return Self::new(socket_path);
         }
 
-        // 2. Capability discovery (IPC gateway + "security" capability)
         if let Ok(ipc) = CapabilityDiscovery::discover_orchestration_ipc().await {
             let mut discovery = CapabilityDiscovery::new(ipc);
             if let Ok(endpoint) = discovery.find("security").await {
                 let ep = endpoint.endpoint;
-                // Endpoint may be Unix socket path or URL; use as path if it looks like one
                 if ep.starts_with('/') && std::path::Path::new(&ep).exists() {
                     info!("Found security provider via capability discovery: {}", ep);
                     return Self::new(ep);
@@ -91,9 +92,8 @@ impl BearDogClient {
             }
         }
 
-        // 3. Scan for security provider sockets via env or XDG runtime
         let security_slug =
-            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "beardog".to_string());
+            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "security".to_string());
 
         let socket_dirs = Self::candidate_socket_dirs();
         for dir in &socket_dirs {
@@ -167,7 +167,7 @@ impl BearDogClient {
                 }
             }
             return Err(NestGateError::network_error(
-                "No matching BearDog socket for glob pattern",
+                "No matching security provider socket for glob pattern",
             ));
         }
 
@@ -183,40 +183,44 @@ impl BearDogClient {
         }
     }
 
-    /// Connect to `BearDog`
+    /// Connect to the security provider.
     ///
     /// # Errors
     ///
-    /// Returns error if connection fails
+    /// Returns error if the socket does not exist or connection fails.
     pub async fn connect(&mut self) -> Result<()> {
         if !self.socket_path.exists() {
             return Err(NestGateError::network_error(format!(
-                "BearDog socket not found: {}",
+                "Security provider socket not found: {}",
                 self.socket_path.display()
             )));
         }
 
-        // Test connection
         let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
-            NestGateError::network_error(format!("Failed to connect to BearDog: {e}"))
+            NestGateError::network_error(format!("Failed to connect to security provider: {e}"))
         })?;
 
         self.connected = true;
-        info!("✅ Connected to BearDog: {}", self.socket_path.display());
+        info!(
+            "Connected to security provider: {}",
+            self.socket_path.display()
+        );
         Ok(())
     }
 
-    /// Encrypt data using `BearDog`
+    /// Encrypt data via the security provider.
     ///
     /// # Errors
     ///
-    /// Returns error if encryption fails
+    /// Returns error if not connected or encryption fails.
     pub async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>> {
         if !self.connected {
-            return Err(NestGateError::security_error("Not connected to BearDog"));
+            return Err(NestGateError::security_error(
+                "Not connected to security provider",
+            ));
         }
 
-        let request = BearDogRequest {
+        let request = SecurityProviderRequest {
             method: "encrypt".to_string(),
             data: plaintext.to_vec(),
         };
@@ -225,17 +229,19 @@ impl BearDogClient {
         Ok(response.data)
     }
 
-    /// Decrypt data using `BearDog`
+    /// Decrypt data via the security provider.
     ///
     /// # Errors
     ///
-    /// Returns error if decryption fails
+    /// Returns error if not connected or decryption fails.
     pub async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>> {
         if !self.connected {
-            return Err(NestGateError::security_error("Not connected to BearDog"));
+            return Err(NestGateError::security_error(
+                "Not connected to security provider",
+            ));
         }
 
-        let request = BearDogRequest {
+        let request = SecurityProviderRequest {
             method: "decrypt".to_string(),
             data: ciphertext.to_vec(),
         };
@@ -244,17 +250,19 @@ impl BearDogClient {
         Ok(response.data)
     }
 
-    /// Generate authentication token
+    /// Generate an authentication token.
     ///
     /// # Errors
     ///
-    /// Returns error if token generation fails
+    /// Returns error if not connected or token generation fails.
     pub async fn generate_token(&self, identity: &str) -> Result<String> {
         if !self.connected {
-            return Err(NestGateError::security_error("Not connected to BearDog"));
+            return Err(NestGateError::security_error(
+                "Not connected to security provider",
+            ));
         }
 
-        let request = BearDogRequest {
+        let request = SecurityProviderRequest {
             method: "generate_token".to_string(),
             data: identity.as_bytes().to_vec(),
         };
@@ -264,17 +272,19 @@ impl BearDogClient {
             .map_err(|e| NestGateError::security_error(format!("Invalid token: {e}")))
     }
 
-    /// Validate authentication token
+    /// Validate an authentication token.
     ///
     /// # Errors
     ///
-    /// Returns error if validation fails
+    /// Returns error if not connected or validation fails.
     pub async fn validate_token(&self, token: &str) -> Result<bool> {
         if !self.connected {
-            return Err(NestGateError::security_error("Not connected to BearDog"));
+            return Err(NestGateError::security_error(
+                "Not connected to security provider",
+            ));
         }
 
-        let request = BearDogRequest {
+        let request = SecurityProviderRequest {
             method: "validate_token".to_string(),
             data: token.as_bytes().to_vec(),
         };
@@ -283,7 +293,10 @@ impl BearDogClient {
         Ok(!response.data.is_empty() && response.data[0] == 1)
     }
 
-    async fn send_request(&self, request: &BearDogRequest) -> Result<BearDogResponse> {
+    async fn send_request(
+        &self,
+        request: &SecurityProviderRequest,
+    ) -> Result<SecurityProviderResponse> {
         let mut stream = UnixStream::connect(&self.socket_path)
             .await
             .map_err(|e| NestGateError::network_error(format!("Failed to connect: {e}")))?;
@@ -297,21 +310,20 @@ impl BearDogClient {
             .await
             .map_err(|e| NestGateError::network_error(format!("Failed to send request: {e}")))?;
 
-        // Read response
         let mut buffer = vec![0u8; 65536];
         let n = stream
             .read(&mut buffer)
             .await
             .map_err(|e| NestGateError::network_error(format!("Failed to read response: {e}")))?;
 
-        // Deserialize response
-        let response: BearDogResponse = serde_json::from_slice(&buffer[..n]).map_err(|e| {
-            NestGateError::api_error(format!("Failed to deserialize response: {e}"))
-        })?;
+        let response: SecurityProviderResponse =
+            serde_json::from_slice(&buffer[..n]).map_err(|e| {
+                NestGateError::api_error(format!("Failed to deserialize response: {e}"))
+            })?;
 
         if !response.success {
             return Err(NestGateError::security_error(format!(
-                "BearDog error: {}",
+                "Security provider error: {}",
                 response
                     .error
                     .unwrap_or_else(|| "Unknown error".to_string())
@@ -321,7 +333,7 @@ impl BearDogClient {
         Ok(response)
     }
 
-    /// Check if connected to `BearDog`
+    /// Check if connected to the security provider.
     #[must_use]
     pub const fn is_connected(&self) -> bool {
         self.connected
@@ -335,17 +347,17 @@ impl BearDogClient {
 }
 
 // ============================================================================
-// BearDog Protocol Types
+// Security Provider Protocol Types
 // ============================================================================
 
 #[derive(Debug, Serialize, Deserialize)]
-struct BearDogRequest {
+struct SecurityProviderRequest {
     method: String,
     data: Vec<u8>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct BearDogResponse {
+struct SecurityProviderResponse {
     success: bool,
     data: Vec<u8>,
     #[serde(default)]
@@ -362,7 +374,7 @@ mod tests {
     use tokio::net::UnixListener;
 
     #[test]
-    fn beardog_protocol_types_serde_roundtrip() {
+    fn security_protocol_types_serde_roundtrip() {
         let req = json!({
             "method": "encrypt",
             "data": [1u8, 2, 3]
@@ -384,8 +396,8 @@ mod tests {
     #[test]
     fn test_client_creation() {
         let temp_dir = TempDir::new().unwrap();
-        let socket_path = temp_dir.path().join("beardog.sock");
-        let client = BearDogClient::new(&socket_path);
+        let socket_path = temp_dir.path().join("security.sock");
+        let client = SecurityProviderClient::new(&socket_path);
         assert!(client.is_ok());
         let c = client.unwrap();
         assert_eq!(c.socket_path(), socket_path);
@@ -394,15 +406,13 @@ mod tests {
 
     #[test]
     fn test_client_empty_path() {
-        let result = BearDogClient::new("");
+        let result = SecurityProviderClient::new("");
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_discover_fallback() {
-        // Should fail gracefully when BearDog is not available
-        let result = BearDogClient::discover("test").await;
-        // In test environment, BearDog won't be available
+        let result = SecurityProviderClient::discover("test").await;
         assert!(result.is_err());
     }
 
@@ -411,13 +421,15 @@ mod tests {
         temp_env::async_with_vars(
             [(
                 "NESTGATE_SECURITY_PROVIDER",
-                Some("/tmp/nestgate-test-beardog-not-created.sock"),
+                Some("/tmp/nestgate-test-security-not-created.sock"),
             )],
             async {
-                let c = BearDogClient::discover("fam").await.expect("env path");
+                let c = SecurityProviderClient::discover("fam")
+                    .await
+                    .expect("env path");
                 assert_eq!(
                     c.socket_path(),
-                    std::path::Path::new("/tmp/nestgate-test-beardog-not-created.sock")
+                    std::path::Path::new("/tmp/nestgate-test-security-not-created.sock")
                 );
             },
         )
@@ -428,7 +440,7 @@ mod tests {
     async fn connect_errors_when_socket_missing() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("nope.sock");
-        let mut c = BearDogClient::new(&path).unwrap();
+        let mut c = SecurityProviderClient::new(&path).unwrap();
         assert!(c.connect().await.is_err());
         assert!(!c.is_connected());
     }
@@ -437,24 +449,22 @@ mod tests {
     async fn encrypt_decrypt_errors_when_not_connected() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("x.sock");
-        let c = BearDogClient::new(&path).unwrap();
+        let c = SecurityProviderClient::new(&path).unwrap();
         assert!(c.encrypt(b"hi").await.is_err());
         assert!(c.decrypt(b"hi").await.is_err());
         assert!(c.generate_token("id").await.is_err());
         assert!(c.validate_token("t").await.is_err());
     }
 
-    /// Minimal BearDog-compatible responder (JSON request in, JSON response out).
-    /// `connect()` opens a short-lived socket; RPC methods open a new connection each time.
-    /// Stops when `accept` idles past `idle` (so the task terminates and tests do not hang).
-    async fn run_mock_beardog(
+    /// Minimal security-provider-compatible mock responder for testing.
+    async fn run_mock_security_provider(
         path: std::path::PathBuf,
         on_success: bool,
         token_bytes: Vec<u8>,
         idle: Duration,
     ) {
         let _ = tokio::fs::remove_file(&path).await;
-        let listener = UnixListener::bind(&path).expect("bind mock beardog");
+        let listener = UnixListener::bind(&path).expect("bind mock security provider");
         loop {
             let accept_fut = listener.accept();
             let Ok(accept_result) = tokio::time::timeout(idle, accept_fut).await else {
@@ -509,9 +519,9 @@ mod tests {
     #[tokio::test]
     async fn connect_encrypt_roundtrip_with_mock_server() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("bd.sock");
+        let path = dir.path().join("sec.sock");
         let path_clone = path.clone();
-        let server = tokio::spawn(run_mock_beardog(
+        let server = tokio::spawn(run_mock_security_provider(
             path_clone,
             true,
             vec![],
@@ -520,7 +530,7 @@ mod tests {
 
         tokio::time::sleep(Duration::from_millis(20)).await;
 
-        let mut c = BearDogClient::new(&path).unwrap();
+        let mut c = SecurityProviderClient::new(&path).unwrap();
         c.connect().await.expect("connect");
         assert!(c.is_connected());
         let out = c.encrypt(b"plain").await.expect("encrypt");
@@ -532,9 +542,9 @@ mod tests {
     #[tokio::test]
     async fn send_request_returns_security_error_when_success_false() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("bd2.sock");
+        let path = dir.path().join("sec2.sock");
         let path_clone = path.clone();
-        let server = tokio::spawn(run_mock_beardog(
+        let server = tokio::spawn(run_mock_security_provider(
             path_clone,
             false,
             vec![],
@@ -543,10 +553,16 @@ mod tests {
 
         tokio::time::sleep(Duration::from_millis(20)).await;
 
-        let mut c = BearDogClient::new(&path).unwrap();
+        let mut c = SecurityProviderClient::new(&path).unwrap();
         c.connect().await.unwrap();
-        let err = c.encrypt(b"x").await.expect_err("expect BearDog err");
-        assert!(err.to_string().contains("mock failure") || err.to_string().contains("BearDog"));
+        let err = c
+            .encrypt(b"x")
+            .await
+            .expect_err("expect security provider err");
+        assert!(
+            err.to_string().contains("mock failure")
+                || err.to_string().contains("Security provider")
+        );
 
         let _ = server.await;
     }
@@ -554,9 +570,9 @@ mod tests {
     #[tokio::test]
     async fn validate_token_interprets_first_byte() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("bd3.sock");
+        let path = dir.path().join("sec3.sock");
         let path_clone = path.clone();
-        let server = tokio::spawn(run_mock_beardog(
+        let server = tokio::spawn(run_mock_security_provider(
             path_clone,
             true,
             vec![1],
@@ -565,7 +581,7 @@ mod tests {
 
         tokio::time::sleep(Duration::from_millis(20)).await;
 
-        let mut c = BearDogClient::new(&path).unwrap();
+        let mut c = SecurityProviderClient::new(&path).unwrap();
         c.connect().await.unwrap();
         assert!(c.validate_token("any").await.unwrap());
 
@@ -575,7 +591,7 @@ mod tests {
     #[tokio::test]
     async fn discover_finds_socket_via_glob_under_tmp() {
         let dir = TempDir::new().unwrap();
-        let sock_name = "beardog-globfam-zz.sock";
+        let sock_name = "security-globfam-zz.sock";
         let path = dir.path().join(sock_name);
         let _ = tokio::fs::remove_file(&path).await;
         let _listener = UnixListener::bind(&path).expect("bind for discover");
@@ -585,10 +601,10 @@ mod tests {
             vec![
                 ("NESTGATE_SECURITY_PROVIDER", None::<&str>),
                 ("XDG_RUNTIME_DIR", Some(dir.path().to_str().unwrap())),
-                ("NESTGATE_SECURITY_SLUG", Some("beardog")),
+                ("NESTGATE_SECURITY_SLUG", Some("security")),
             ],
             async move {
-                let c = BearDogClient::discover("globfam")
+                let c = SecurityProviderClient::discover("globfam")
                     .await
                     .expect("glob discover");
                 assert_eq!(c.socket_path(), path_clone);

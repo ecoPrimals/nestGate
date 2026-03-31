@@ -116,19 +116,31 @@ impl NestGateRpcService {
         let dataset_count = g.datasets.len();
         let used_space: u64 = g.datasets.values().map(|d| d.size_bytes).sum();
         let object_count: u64 = g.datasets.values().map(|d| d.object_count).sum();
+        let compression_sum: f64 = g.datasets.values().map(|d| d.compression_ratio).sum();
+        let avg_compression_ratio = if dataset_count > 0 {
+            #[allow(clippy::cast_precision_loss)]
+            {
+                compression_sum / dataset_count as f64
+            }
+        } else {
+            1.0
+        };
 
+        // In-process store only: no fabricated capacity ceiling or IOPS/latency — those are
+        // not tracked here. `total_capacity_bytes` matches committed dataset bytes; no separate
+        // "free pool" exists in this implementation.
         StorageMetrics {
-            total_capacity_bytes: 1024 * 1024 * 1024 * 1024, // 1TB placeholder
+            total_capacity_bytes: used_space,
             used_space_bytes: used_space,
-            available_space_bytes: (1024 * 1024 * 1024 * 1024_u64).saturating_sub(used_space),
+            available_space_bytes: 0,
             dataset_count,
             object_count,
-            avg_compression_ratio: 1.5,
-            dedup_ratio: 1.2,
+            avg_compression_ratio,
+            dedup_ratio: 1.0,
             read_ops_per_sec: 0.0,
             write_ops_per_sec: 0.0,
-            avg_read_latency_ms: 0.1,
-            avg_write_latency_ms: 0.2,
+            avg_read_latency_ms: 0.0,
+            avg_write_latency_ms: 0.0,
         }
     }
 }

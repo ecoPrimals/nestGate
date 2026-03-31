@@ -324,13 +324,13 @@ fn test_hardware_tuning_config_new() {
     let config = HardwareTuningConfig {
         enabled: true,
         auto_optimize: false,
-        max_cpu_usage_percent: 80,
+        maxcpu_usage_percent: 80,
         max_memory_usage_percent: 90,
     };
 
     assert!(config.enabled);
     assert!(!config.auto_optimize);
-    assert_eq!(config.max_cpu_usage_percent, 80);
+    assert_eq!(config.maxcpu_usage_percent, 80);
 }
 
 // ==================== ERROR PATH TESTS ====================

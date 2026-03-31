@@ -171,6 +171,42 @@ async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: 
 // HELPER FUNCTIONS
 // ==================== SECTION ====================
 
+#[cfg(target_os = "linux")]
+fn arcstats_named(content: &str, name: &str) -> u64 {
+    for line in content.lines() {
+        let f: Vec<&str> = line.split_whitespace().collect();
+        if f.len() >= 3 && f[0] == name {
+            return f[2].parse().unwrap_or(0);
+        }
+    }
+    0
+}
+
+/// ARC hit ratio (0–1), current size, target `c` from `/proc/spl/kstat/zfs/arcstats` when present.
+fn zfs_arc_snapshot() -> (f64, u64, u64) {
+    #[cfg(target_os = "linux")]
+    {
+        let Ok(content) = std::fs::read_to_string("/proc/spl/kstat/zfs/arcstats") else {
+            return (0.0, 0, 0);
+        };
+        let hits = arcstats_named(&content, "hits");
+        let misses = arcstats_named(&content, "misses");
+        let size = arcstats_named(&content, "size");
+        let c = arcstats_named(&content, "c");
+        let total = hits.saturating_add(misses);
+        let ratio = if total > 0 {
+            hits as f64 / total as f64
+        } else {
+            0.0
+        };
+        (ratio, size, c)
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        (0.0, 0, 0)
+    }
+}
+
 /// Get current system metrics
 #[expect(
     clippy::unused_async,
@@ -178,9 +214,10 @@ async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: 
 )]
 async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> {
     let total_datasets = state.zfs_engines.len() as u32;
-    let total_snapshots = 0_u32;
+    let total_snapshots = super::zfs::helpers::get_snapshot_count_from_engine_impl() as u32;
+    // No aggregated ZFS-used-bytes path on this REST surface; report 0 instead of inventing totals.
     let total_used_bytes = 0_u64;
-    let overall_compression_ratio = 1.0;
+    let (arc_hit_ratio, arc_size, arc_target) = zfs_arc_snapshot();
 
     let load_average = std::fs::read_to_string("/proc/loadavg")
         .ok()
@@ -200,41 +237,46 @@ async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> 
         })
         .map_or(0, |s| s as u64);
 
+    let cpu_usage_percent =
+        nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);
+    let memory_usage_percent = nestgate_core::linux_proc::memory_usage_percent().unwrap_or(0.0);
+
     Ok(SystemMetrics {
-        cpu_usage_percent: generate_realtime_cpu_usage(),
-        memory_usage_percent: generate_realtime_memory_usage(),
+        cpu_usage_percent,
+        memory_usage_percent,
         load_average,
         uptime_seconds,
         timestamp: chrono::Utc::now(),
         disk_io: DiskIoMetrics {
-            read_bytes_per_sec: generate_realtime_disk_read() * 1024.0 * 1024.0, // Convert MB to bytes
-            write_bytes_per_sec: generate_realtime_disk_write() * 1024.0 * 1024.0,
-            read_ops_per_sec: generate_realtime_read_iops() as f64,
-            write_ops_per_sec: generate_realtime_write_iops() as f64,
-            read_mbps: generate_realtime_disk_read(),
-            write_mbps: generate_realtime_disk_write(),
-            read_iops: generate_realtime_read_iops() as f64,
-            write_iops: generate_realtime_write_iops() as f64,
-            avg_queue_depth: generate_realtime_queue_depth(),
+            // Per-second I/O is not computed here (would require sampled /proc deltas).
+            read_bytes_per_sec: 0.0,
+            write_bytes_per_sec: 0.0,
+            read_ops_per_sec: 0.0,
+            write_ops_per_sec: 0.0,
+            read_mbps: 0.0,
+            write_mbps: 0.0,
+            read_iops: 0.0,
+            write_iops: 0.0,
+            avg_queue_depth: 0.0,
         },
         network_io: NetworkIoMetrics {
-            bytes_sent: (generate_realtime_network_tx() as f64 * 1024.0 * 1024.0) as u64, // Convert MB to bytes
-            bytes_received: (generate_realtime_network_rx() as f64 * 1024.0 * 1024.0) as u64,
-            packets_sent: generate_realtime_network_tx_packets(),
-            packets_received: generate_realtime_network_rx_packets(),
-            rx_bytes_per_sec: generate_realtime_network_rx() as f64,
-            tx_bytes_per_sec: generate_realtime_network_tx() as f64,
-            rx_packets_per_sec: generate_realtime_network_rx_packets() as f64,
-            tx_packets_per_sec: generate_realtime_network_tx_packets() as f64,
+            bytes_sent: 0,
+            bytes_received: 0,
+            packets_sent: 0,
+            packets_received: 0,
+            rx_bytes_per_sec: 0.0,
+            tx_bytes_per_sec: 0.0,
+            rx_packets_per_sec: 0.0,
+            tx_packets_per_sec: 0.0,
         },
         zfs_metrics: ZfsMetrics {
-            arc_hit_ratio: generate_realtime_cache_hit_ratio(),
-            arc_size_bytes: 2_147_483_648, // 2GB
-            arc_target_size_bytes: 2_147_483_648,
-            read_throughput_mbps: 100.0,
-            write_throughput_mbps: 50.0,
-            compression_ratio: overall_compression_ratio,
-            deduplication_ratio: 1.2,
+            arc_hit_ratio,
+            arc_size_bytes: arc_size,
+            arc_target_size_bytes: arc_target,
+            read_throughput_mbps: 0.0,
+            write_throughput_mbps: 0.0,
+            compression_ratio: 1.0,
+            deduplication_ratio: 1.0,
             total_datasets,
             total_snapshots,
             total_used_bytes,
@@ -373,8 +415,8 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             "System metrics refreshed".to_string(),
             serde_json::json!({
                 "datasets": dataset_count,
-                "cpu_usage": generate_realtime_cpu_usage(),
-                "memory_usage": generate_realtime_memory_usage()
+                "cpu_usage": nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0),
+                "memory_usage": nestgate_core::linux_proc::memory_usage_percent().unwrap_or(0.0)
             }),
         ),
         "threshold_exceeded" => (
@@ -382,7 +424,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
             serde_json::json!({
                 "metric": "cpu_usage_percent",
                 "threshold": 80.0,
-                "currentvalue": generate_realtime_cpu_usage()
+                "currentvalue": nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0)
             }),
         ),
         _ => (
@@ -401,8 +443,9 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
     }
 }
 
-// Real-time metric generators (with more variation than historical)
-pub(crate) fn generate_realtime_cpu_usage() -> f64 {
+// Test-only hash-based generators (production WebSocket metrics use `/proc` + `linux_proc`).
+#[cfg(test)]
+pub(crate) fn generate_realtimecpu_usage() -> f64 {
     let mut hasher = DefaultHasher::new();
     chrono::Utc::now().timestamp_millis().hash(&mut hasher);
     let seed = hasher.finish();
@@ -413,6 +456,7 @@ pub(crate) fn generate_realtime_cpu_usage() -> f64 {
 }
 
 /// Generate Realtime Memory Usage
+#[cfg(test)]
 pub(crate) fn generate_realtime_memory_usage() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 1).hash(&mut hasher);
@@ -424,6 +468,7 @@ pub(crate) fn generate_realtime_memory_usage() -> f64 {
 }
 
 /// Generate Realtime Disk Read
+#[cfg(test)]
 pub(crate) fn generate_realtime_disk_read() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 2).hash(&mut hasher);
@@ -435,6 +480,7 @@ pub(crate) fn generate_realtime_disk_read() -> f64 {
 }
 
 /// Generate Realtime Disk Write
+#[cfg(test)]
 pub(crate) fn generate_realtime_disk_write() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 3).hash(&mut hasher);
@@ -446,16 +492,19 @@ pub(crate) fn generate_realtime_disk_write() -> f64 {
 }
 
 /// Generate Realtime Read Iops
+#[cfg(test)]
 pub(crate) fn generate_realtime_read_iops() -> u64 {
     (generate_realtime_disk_read() * 120.0) as u64
 }
 
 /// Generate Realtime Write Iops
+#[cfg(test)]
 pub(crate) fn generate_realtime_write_iops() -> u64 {
     (generate_realtime_disk_write() * 110.0) as u64
 }
 
 /// Generate Realtime Queue Depth
+#[cfg(test)]
 pub(crate) fn generate_realtime_queue_depth() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 4).hash(&mut hasher);
@@ -467,6 +516,7 @@ pub(crate) fn generate_realtime_queue_depth() -> f64 {
 }
 
 /// Generate Realtime Network Rx
+#[cfg(test)]
 pub(crate) fn generate_realtime_network_rx() -> u64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 5).hash(&mut hasher);
@@ -478,21 +528,25 @@ pub(crate) fn generate_realtime_network_rx() -> u64 {
 }
 
 /// Generate Realtime Network Tx
+#[cfg(test)]
 pub(crate) fn generate_realtime_network_tx() -> u64 {
     generate_realtime_network_rx() / 2
 }
 
 /// Generate Realtime Network Rx Packets
+#[cfg(test)]
 pub(crate) fn generate_realtime_network_rx_packets() -> u64 {
     generate_realtime_network_rx() / 1400
 }
 
 /// Generate Realtime Network Tx Packets
+#[cfg(test)]
 pub(crate) fn generate_realtime_network_tx_packets() -> u64 {
     generate_realtime_network_tx() / 1400
 }
 
 /// Generate Realtime Cache Hit Ratio
+#[cfg(test)]
 pub(crate) fn generate_realtime_cache_hit_ratio() -> f64 {
     let mut hasher = DefaultHasher::new();
     (chrono::Utc::now().timestamp_millis() + 6).hash(&mut hasher);

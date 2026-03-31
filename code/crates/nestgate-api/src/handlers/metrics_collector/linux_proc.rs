@@ -13,7 +13,7 @@ pub(super) async fn collect_real_system_metrics() -> Result<SystemMetrics> {
     debug!("💻 Collecting real system metrics from /proc and system interfaces");
 
     // Collect CPU usage from /proc/stat
-    let cpu_usage = get_real_cpu_usage().await?;
+    let cpu_usage = get_realcpu_usage().await?;
 
     // Collect memory information from /proc/meminfo
     let (memory_usage, memory_total, memory_available) = get_real_memory_info().await?;
@@ -25,7 +25,7 @@ pub(super) async fn collect_real_system_metrics() -> Result<SystemMetrics> {
     let disk_io = get_real_disk_io().await?;
 
     Ok(SystemMetrics {
-        _cpu_usage: cpu_usage,
+        cpu_usage,
         memory_usage,
         memory_total,
         memory_available,
@@ -35,7 +35,7 @@ pub(super) async fn collect_real_system_metrics() -> Result<SystemMetrics> {
 }
 
 /// Get real CPU usage from /proc/stat
-async fn get_real_cpu_usage() -> Result<f64> {
+async fn get_realcpu_usage() -> Result<f64> {
     match tokio::fs::read_to_string("/proc/stat").await {
         Ok(content) => {
             if let Some(cpu_line) = content.lines().next() {
@@ -59,12 +59,12 @@ async fn get_real_cpu_usage() -> Result<f64> {
                     }
                 }
             }
-            warn!("⚠️ Could not parse /proc/stat, using fallback");
-            Ok(15.0) // Conservative fallback
+            warn!("⚠️ Could not parse /proc/stat; reporting 0% CPU");
+            Ok(0.0)
         }
         Err(e) => {
-            warn!("⚠️ Could not read /proc/stat: {}, using fallback", e);
-            Ok(20.0) // Safe fallback for non-Linux systems
+            warn!("⚠️ Could not read /proc/stat: {}; reporting 0% CPU", e);
+            Ok(0.0)
         }
     }
 }
@@ -115,12 +115,12 @@ async fn get_real_memory_info() -> Result<(f64, u64, u64)> {
                 return Ok((memory_usage_percent, mem_total, mem_available));
             }
 
-            warn!("⚠️ Could not parse memory info, using fallback");
-            Ok((60.0, 8 * 1024 * 1024 * 1024, 3 * 1024 * 1024 * 1024)) // 8GB total, 3GB available
+            warn!("⚠️ Could not parse memory info; reporting zeros");
+            Ok((0.0, 0, 0))
         }
         Err(e) => {
-            warn!("⚠️ Could not read /proc/meminfo: {}, using fallback", e);
-            Ok((50.0, 16 * 1024 * 1024 * 1024, 8 * 1024 * 1024 * 1024)) // Fallback values
+            warn!("⚠️ Could not read /proc/meminfo: {}; reporting zeros", e);
+            Ok((0.0, 0, 0))
         }
     }
 }
@@ -169,12 +169,15 @@ async fn get_real_network_io() -> Result<NetworkIOMetrics> {
             })
         }
         Err(e) => {
-            warn!("⚠️ Could not read /proc/net/dev: {}, using fallback", e);
+            warn!(
+                "⚠️ Could not read /proc/net/dev: {}; reporting zero counters",
+                e
+            );
             Ok(NetworkIOMetrics {
-                bytes_received: 1024 * 1024 * 100, // 100MB fallback
-                bytes_sent: 1024 * 1024 * 50,      // 50MB fallback
-                packets_received: 50000,
-                packets_sent: 30000,
+                bytes_received: 0,
+                bytes_sent: 0,
+                packets_received: 0,
+                packets_sent: 0,
             })
         }
     }

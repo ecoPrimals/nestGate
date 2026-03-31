@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn test_system_metrics_creation() {
         let metrics = SystemMetrics {
-            _cpu_usage: 45.5,
+            cpu_usage: 45.5,
             memory_usage: 65.0,
             memory_total: 16_000_000_000,
             memory_available: 5_600_000_000,
@@ -376,7 +376,7 @@ mod tests {
     /// Creates  Test System Metrics
     fn create_test_system_metrics() -> SystemMetrics {
         SystemMetrics {
-            _cpu_usage: 45.5,
+            cpu_usage: 45.5,
             memory_usage: 65.0,
             memory_total: 16_000_000_000,
             memory_available: 5_600_000_000,

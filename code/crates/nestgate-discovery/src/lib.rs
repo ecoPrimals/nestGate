@@ -53,7 +53,11 @@
 
 pub mod capabilities;
 pub mod capability_discovery;
+/// Optional discovery mechanism implementations (see crate-level note: production discovery is delegated).
+pub mod discovery_mechanism;
 pub mod infant_discovery;
 pub mod primal_discovery;
+pub mod primal_self_knowledge;
+pub mod self_knowledge;
 pub mod service_discovery;
 pub mod universal_primal_discovery;

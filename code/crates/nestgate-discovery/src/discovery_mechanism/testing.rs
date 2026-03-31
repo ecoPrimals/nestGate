@@ -21,8 +21,8 @@ use tokio::sync::RwLock;
 /// # Example
 ///
 /// ```rust,ignore
-/// use nestgate_core::discovery_mechanism::testing::MockDiscovery;
-/// use nestgate_core::discovery_mechanism::{DiscoveryMechanism, ServiceInfo};
+/// use nestgate_discovery::discovery_mechanism::testing::MockDiscovery;
+/// use nestgate_discovery::discovery_mechanism::{DiscoveryMechanism, ServiceInfo};
 /// use nestgate_core::self_knowledge::SelfKnowledge;
 ///
 /// # async fn example() -> anyhow::Result<()> {

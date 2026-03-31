@@ -39,7 +39,7 @@ pub async fn get_metrics(
         total_read_bytes,
         total_written_bytes,
     ): (f64, f64, f64, f64, f64, f64) = {
-        let cpu = nestgate_core::linux_proc::global_cpu_usage_percent_from_stat().unwrap_or(0.0);
+        let cpu = nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);
         let mem_used = nestgate_core::linux_proc::used_memory_bytes().unwrap_or(0) as f64;
         let mem_total = (nestgate_core::linux_proc::used_memory_bytes().unwrap_or(1)
             + nestgate_core::linux_proc::available_memory_bytes().unwrap_or(1))

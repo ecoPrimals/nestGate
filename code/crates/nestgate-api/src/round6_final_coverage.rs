@@ -54,7 +54,7 @@ mod round6_tests {
     fn r6_extremely_long_pool_name_roundtrips() {
         let long = "p".repeat(2048);
         let r = CreatePoolRequest {
-            name: long.clone(),
+            name: long,
             _devices: vec![],
         };
         let v = serde_json::to_string(&r).unwrap();

@@ -108,8 +108,6 @@ fn test_recovery_state_machine() {
 
 #[tokio::test]
 async fn test_health_monitoring_lifecycle() {
-    let mut monitor = HealthMonitor::default();
-
     #[derive(Debug)]
     struct SimpleHealthCheck;
 
@@ -125,6 +123,8 @@ async fn test_health_monitoring_lifecycle() {
             "simple_service"
         }
     }
+
+    let mut monitor = HealthMonitor::default();
 
     // Register
     monitor.register(Box::new(SimpleHealthCheck));
@@ -226,7 +226,9 @@ async fn test_concurrent_health_checks() {
 
     for i in 0..5 {
         #[derive(Debug)]
-        struct NumberedHealthCheck(#[allow(dead_code)] usize);
+        struct NumberedHealthCheck {
+            _n: usize,
+        }
 
         impl HealthCheckDyn for NumberedHealthCheck {
             fn check_health(
@@ -241,7 +243,7 @@ async fn test_concurrent_health_checks() {
             }
         }
 
-        monitor.register(Box::new(NumberedHealthCheck(i)));
+        monitor.register(Box::new(NumberedHealthCheck { _n: i }));
     }
 
     // All checks should complete concurrently

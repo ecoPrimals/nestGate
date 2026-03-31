@@ -5,8 +5,6 @@
 /// Utility functions for certificate generation, parsing, and manipulation.
 use super::types::{Certificate, CertificateType};
 use nestgate_types::{NestGateError, Result};
-#[cfg(feature = "dev-stubs")]
-use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 // CLEANED: Removed unused imports as part of canonical modernization
 // use std::net::SocketAddr;
@@ -34,42 +32,30 @@ pub fn parse_system_time(s: &str) -> Result<SystemTime> {
 /// Certificate utility functions
 pub struct CertUtils;
 impl CertUtils {
-    /// Generate self-signed certificate for development/testing
+    /// Self-signed PEM generation is not implemented in this crate.
+    ///
+    /// Real certificate material is delegated to the security provider (bearDog) via
+    /// `crypto.generate_cert` IPC.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Always returns [`NestGateError::not_implemented`] until that integration exists.
     pub fn generate_self_signed() -> Result<String> {
-        // Simplified certificate generation for development
-        // Real implementation would use proper cryptographic libraries like ring or rustls
-
-        let cert_template = r"-----BEGIN CERTIFICATE-----
-MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVTMQswCQYD
-VQQIDAJOSjEQMA0GA1UEBwwGTmVzdEdhcGUxEzARBgNVBAoMCk5lc3RHYXRFIENB
-MRMwEQYDVQQDDApOZXN0R2F0ZSBDQTEXMBUGA1UECgwOTmVzdEdhdGUgU3lzdGVt
-MRcwFQYDVQQDDA5OZXN0R2F0ZSBTZXJ2ZXIwHhcNMjQwMTAxMDAwMDAwWhcNMjUw
-MTAxMDAwMDAwWjBrMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExEDAOBgNVBAcM
-B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
------END CERTIFICATE-----";
-
-        Ok(cert_template.to_string())
+        Err(NestGateError::not_implemented(
+            "Certificate generation delegated to security provider via crypto.generate_cert IPC",
+        ))
     }
 
-    /// Generate certificate fingerprint
+    /// Stub fingerprint for structural use only — real SHA-256 fingerprinting delegated to bearDog.
     #[must_use]
     pub fn calculate_fingerprint(cert_data: &[u8]) -> String {
-        // Simplified fingerprint calculation
-        // Real implementation would use SHA-256 hash
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
         let mut hasher = DefaultHasher::new();
         cert_data.hash(&mut hasher);
         let hash = hasher.finish();
-        format!("sha256:{hash:x}")
+        format!("stub:{hash:x}")
     }
 
     /// Parse certificate subject from PEM data
@@ -261,7 +247,7 @@ B05lc3RHYXBLMREWDQYDVQQKDAZOZXN0R2F0ZTERDw0GA1UEAwwITmVzdEdhdGU=
 /// **Note**: This is developmental and should not be used in production yet.
 #[cfg(feature = "dev-stubs")]
 pub mod modern {
-    use super::{Certificate, HashMap, Result, SystemTime, format_system_time, parse_system_time};
+    use super::{Certificate, Result, format_system_time};
 
     /// Modern certificate generation with automatic endpoint discovery
     ///
@@ -304,131 +290,6 @@ pub mod modern {
             metadata: std::collections::HashMap::new(),
         })
     }
-
-    #[allow(dead_code)]
-    fn generate_certificate_modern(config: &CertificateConfig) -> Certificate {
-        // Modern implementation with dynamic discovery
-
-        // Generate a self-signed certificate for development/testing
-        // In production, this would integrate with a proper CA or use Let's Encrypt
-        tracing::info!(
-            "Generating modern certificate for principal: {}",
-            config.principal
-        );
-
-        let mut metadata = HashMap::new();
-        metadata.insert("generator".to_string(), "nestgate-cert-utils".to_string());
-        metadata.insert("version".to_string(), "2.0.0".to_string());
-        metadata.insert("created_at".to_string(), chrono::Utc::now().to_rfc3339());
-
-        // For development, create a basic certificate structure
-        // Production implementation would use proper certificate generation libraries
-        Certificate {
-            id: format!("cert-{}", config.principal),
-            cert_type: crate::cert::types::CertificateType::Server,
-            principal: config.principal.clone(),
-            issuer: format!("NestGate-CA-{}", config.principal),
-            serial_number: format!("{:x}", 12345),
-            not_before: chrono::Utc::now().timestamp().to_string(),
-            not_after: (chrono::Utc::now() + chrono::Duration::days(365))
-                .timestamp()
-                .to_string(),
-            data: vec![1, 2, 3, 4], // Placeholder - would be actual certificate data
-            fingerprint: format!("{:x}", 67890), // Placeholder fingerprint
-            metadata,
-        }
-    }
-
-    #[allow(dead_code)]
-    fn validate_certificate_against_capabilities(
-        cert: &Certificate,
-        capabilities: &std::collections::HashMap<String, String>,
-    ) -> bool {
-        // Modern validation implementation with comprehensive checks
-        tracing::debug!("Validating certificate against capabilities");
-
-        // 1. Check certificate expiration
-        let _now = chrono::Utc::now();
-        if let Ok(not_after_time) = parse_system_time(&cert.not_after)
-            && not_after_time < SystemTime::now()
-        {
-            tracing::warn!("Certificate expired at: {:?}", cert.not_after);
-            return false;
-        }
-
-        if let Ok(not_before_time) = parse_system_time(&cert.not_before)
-            && not_before_time > SystemTime::now()
-        {
-            tracing::warn!("Certificate not yet valid until: {:?}", cert.not_before);
-            return false;
-        }
-
-        // 2. Validate required capabilities
-        if let Some(required_subject) = capabilities.get("required_subject")
-            && !cert.principal.contains(required_subject)
-        {
-            tracing::warn!(
-                "Certificate subject '{}' does not match required '{}'",
-                cert.principal,
-                required_subject
-            );
-            return false;
-        }
-
-        // 3. Check for required extensions (SANs, key usage, etc.) via metadata
-        if let Some(required_san) = capabilities.get("required_san") {
-            let has_required_san = cert
-                .metadata
-                .values()
-                .any(|value| value.contains(required_san));
-            if !has_required_san {
-                tracing::warn!("Certificate missing required SAN: {}", required_san);
-                return false;
-            }
-        }
-
-        // 4. Validate certificate data (simplified for development)
-        if cert.data.is_empty() {
-            tracing::warn!("Certificate has empty data");
-            return false;
-        }
-
-        // 5. Check certificate chain if required
-        if capabilities
-            .get("require_ca_validation")
-            .is_some_and(|v| v == "true")
-        {
-            // In production, this would validate against trusted CA roots
-            tracing::debug!("CA validation required but simplified for development");
-        }
-
-        tracing::info!(
-            "Certificate validation successful for principal: {}",
-            cert.principal
-        );
-        true
-    }
-
-    #[allow(dead_code)]
-    struct CertificateConfig {
-        principal: String,
-        endpoints: Vec<String>,
-        bind_endpoint: std::net::IpAddr,
-    }
-
-    impl Default for CertificateConfig {
-        /// Returns the default instance
-        fn default() -> Self {
-            Self {
-                principal: "nestgate".to_string(),
-                endpoints: vec![],
-                // **Integration:** Prefer `nestgate_core::safe_operations::safe_parse_ip` for shared validation when this crate can depend on core.
-                bind_endpoint: nestgate_config::constants::canonical_defaults::network::LOCALHOST
-                    .parse()
-                    .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)),
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -437,18 +298,9 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    fn test_generate_self_signed() {
-        let cert = CertUtils::generate_self_signed().unwrap_or_else(|e| {
-            tracing::error!(
-                "Expect failed ({}): {:?}",
-                "Failed to generate certificate",
-                e
-            );
-            // Return a default test certificate for testing
-            "-----BEGIN CERTIFICATE-----\nTEST_CERT_DATA\n-----END CERTIFICATE-----".to_string()
-        });
-        assert!(cert.contains("-----BEGIN CERTIFICATE-----"));
-        assert!(cert.contains("-----END CERTIFICATE-----"));
+    fn test_generate_self_signed_delegated_not_implemented() {
+        let err = CertUtils::generate_self_signed().expect_err("expected delegation stub");
+        assert!(matches!(err, NestGateError::NotImplemented(_)));
     }
 
     #[test]
@@ -551,7 +403,7 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
         let fp1 = CertUtils::calculate_fingerprint(b"abc");
         let fp2 = CertUtils::calculate_fingerprint(b"abc");
         assert_eq!(fp1, fp2);
-        assert!(fp1.starts_with("sha256:"));
+        assert!(fp1.starts_with("stub:"));
     }
 
     #[test]

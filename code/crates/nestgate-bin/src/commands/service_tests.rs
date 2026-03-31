@@ -78,7 +78,7 @@ async fn test_execute_logs_action() {
     };
 
     let result = manager.execute(action).await;
-    assert!(result.is_ok());
+    assert!(result.is_err());
 }
 
 #[tokio::test(flavor = "multi_thread")]

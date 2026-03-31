@@ -474,12 +474,11 @@ impl JsonRpcServer {
             "discovery.capability.register",
             |params, _ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
-                #[expect(dead_code, reason = "JSON-RPC params struct; metadata optional for discovery announce")]
                 struct Params {
                     capability: String,
                     endpoint: String,
                     #[serde(default)]
-                    metadata: Option<HashMap<String, String>>,
+                    _metadata: Option<HashMap<String, String>>,
                 }
 
                 let p: Params = params.parse()?;

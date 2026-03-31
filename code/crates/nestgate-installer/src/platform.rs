@@ -90,7 +90,6 @@ impl PlatformInfo {
 }
 
 /// Not wired into the wizard yet; kept for a future “add install dir to PATH” step.
-#[allow(dead_code)]
 pub fn add_to_path(install_path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
@@ -167,7 +166,6 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
 }
 
 /// Optional post-install UX; not invoked by the current installer flow.
-#[allow(dead_code)]
 pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
     #[cfg(unix)]
     {

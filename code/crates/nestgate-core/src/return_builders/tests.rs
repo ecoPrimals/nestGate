@@ -7,19 +7,6 @@ mod return_builder_tests {
 
     use serde_json::Value as JsonValue;
 
-    // Simple replacement for removed UniversalResponseStatus
-    #[derive(Debug, PartialEq)]
-    #[allow(dead_code)]
-    /// Status values for Response
-    pub enum ResponseStatus {
-        /// Success
-        Success,
-        /// Error
-        Error,
-        /// Pending
-        Pending,
-    }
-
     #[test]
     fn test_success_response_builder() -> Result<(), Box<dyn std::error::Error>> {
         // ✅ CATCHES STATUS FIELD MUTATIONS
@@ -99,14 +86,14 @@ mod return_builder_tests {
         let consensus_nodes = vec!["node1".to_string(), "node2".to_string()];
         let grant = crate::return_builders::build_access_grant(
             &permissions, // Zero-copy: pass by reference instead of cloning
-            1234567890,
+            1_234_567_890,
             "test_proof_data",
             &consensus_nodes, // Zero-copy: pass by reference instead of cloning
             0.85,
         );
 
         assert_eq!(grant.permissions, permissions);
-        assert_eq!(grant.valid_until, 1234567890);
+        assert_eq!(grant.valid_until, 1_234_567_890);
         assert_eq!(grant.consensus_nodes, consensus_nodes);
         // Use the actual fields that exist in AccessGrant
         assert_eq!(grant.confidence_score, 0.85);

@@ -299,25 +299,7 @@ pub async fn get_dataset_stats(
 
     match engine_opt {
         Some(_engine) => {
-            let dataset_stats = DatasetStats {
-                name: dataset_name,
-                size_bytes: 1024 * 1024 * 1024,
-                used_bytes: 512 * 1024 * 1024,
-                available_bytes: 512 * 1024 * 1024,
-                files_written: 500,
-                files_read: 1500,
-                cow_operations: 100,
-                blocks_copied: 200,
-                compression_ratio: Some(1.5),
-                compression_space_saved: Some(256 * 1024 * 1024),
-                deduplication_ratio: 1.2,
-                checksums_computed: 1000,
-                checksums_verified: 1000,
-                read_throughput: 100.0,
-                write_throughput: 80.0,
-                avg_latency_ms: 2.5,
-                snapshot_count: 3,
-            };
+            let dataset_stats = helpers::dataset_stats_for_name(&dataset_name);
             Ok(Json(DataResponse::new(dataset_stats)))
         }
         None => Err(Json(DataError::new(

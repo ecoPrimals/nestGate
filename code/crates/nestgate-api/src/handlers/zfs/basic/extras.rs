@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! Placeholder analytics and property endpoints (future integration).
+//! Honest 501 endpoints for ZFS features not yet wired.
+//!
+//! Each handler returns `501 NOT IMPLEMENTED` with a JSON body describing
+//! what it *will* do once the backing ZFS integration is complete.
 
 use crate::routes::AppState;
 use axum::{
@@ -9,116 +12,82 @@ use axum::{
     http::StatusCode,
     response::Json,
 };
-use std::collections::HashMap;
+use serde_json::{Value, json};
 use tracing::info;
 
-/// Get performance analytics (placeholder for future implementation)
+fn not_implemented(feature: &str) -> (StatusCode, Json<Value>) {
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        Json(json!({
+            "status": "not_implemented",
+            "feature": feature,
+            "message": format!("{feature} is not yet wired to a real ZFS backend"),
+        })),
+    )
+}
+
+/// Performance analytics — not yet backed by real ZFS metrics.
 pub async fn get_performance_analytics(
     State(_state): State<AppState>,
-) -> Result<Json<HashMap<String, serde_json::Value>>, StatusCode> {
-    info!("API: Getting performance analytics");
-
-    let mut analytics = HashMap::new();
-    analytics.insert(
-        "status".to_string(),
-        serde_json::Value::String("available".to_string()),
-    );
-    analytics.insert(
-        "message".to_string(),
-        serde_json::Value::String("Performance analytics integration pending".to_string()),
-    );
-
-    Ok(Json(analytics))
+) -> (StatusCode, Json<Value>) {
+    info!("API: get_performance_analytics — not implemented");
+    not_implemented("zfs.performance_analytics")
 }
 
-/// Trigger optimization (placeholder for future implementation)
-pub async fn trigger_optimization(
-    State(_state): State<AppState>,
-) -> Result<StatusCode, StatusCode> {
-    info!("API: Triggering ZFS optimization");
-
-    info!("ZFS optimization triggered");
-    Ok(StatusCode::ACCEPTED)
+/// Trigger optimization — not yet backed by a real ZFS optimizer.
+pub async fn trigger_optimization(State(_state): State<AppState>) -> (StatusCode, Json<Value>) {
+    info!("API: trigger_optimization — not implemented");
+    not_implemented("zfs.optimization")
 }
 
-/// Delete dataset (placeholder for future implementation)
+/// Delete dataset — not yet wired to `zfs destroy`.
 pub async fn delete_dataset(
     State(_state): State<AppState>,
     Path(dataset_name): Path<String>,
-) -> Result<StatusCode, StatusCode> {
-    info!("API: Deleting dataset: {}", dataset_name);
-
-    info!("Dataset {} deleted", dataset_name);
-    Ok(StatusCode::OK)
+) -> (StatusCode, Json<Value>) {
+    info!("API: delete_dataset({dataset_name}) — not implemented");
+    not_implemented("zfs.delete_dataset")
 }
 
-/// Get dataset properties (placeholder for future implementation)
+/// Get dataset properties — not yet backed by `zfs get`.
 pub async fn get_dataset_properties(
     State(_state): State<AppState>,
     Path(dataset_name): Path<String>,
-) -> Result<Json<HashMap<String, String>>, StatusCode> {
-    info!("API: Getting properties for dataset: {}", dataset_name);
-
-    let mut properties = HashMap::new();
-    properties.insert("compression".to_string(), "lz4".to_string());
-    properties.insert("recordsize".to_string(), "128K".to_string());
-
-    Ok(Json(properties))
+) -> (StatusCode, Json<Value>) {
+    info!("API: get_dataset_properties({dataset_name}) — not implemented");
+    not_implemented("zfs.dataset_properties.get")
 }
 
-/// Set dataset properties (placeholder for future implementation)
+/// Set dataset properties — not yet backed by `zfs set`.
 pub async fn set_dataset_properties(
     State(_state): State<AppState>,
     Path(dataset_name): Path<String>,
-    Json(properties): Json<HashMap<String, String>>,
-) -> Result<StatusCode, StatusCode> {
-    info!("API: Setting properties for dataset: {}", dataset_name);
-    info!("Properties: {:?}", properties);
-
-    info!("Properties set for dataset {}", dataset_name);
-    Ok(StatusCode::OK)
+    Json(_properties): Json<std::collections::HashMap<String, String>>,
+) -> (StatusCode, Json<Value>) {
+    info!("API: set_dataset_properties({dataset_name}) — not implemented");
+    not_implemented("zfs.dataset_properties.set")
 }
 
-/// Delete snapshot (placeholder for future implementation)
+/// Delete snapshot — not yet wired to `zfs destroy`.
 pub async fn delete_snapshot(
     State(_state): State<AppState>,
     Path(snapshot_name): Path<String>,
-) -> Result<StatusCode, StatusCode> {
-    info!("API: Deleting snapshot: {}", snapshot_name);
-
-    info!("Snapshot {} deleted", snapshot_name);
-    Ok(StatusCode::OK)
+) -> (StatusCode, Json<Value>) {
+    info!("API: delete_snapshot({snapshot_name}) — not implemented");
+    not_implemented("zfs.delete_snapshot")
 }
 
-/// Get pool status (placeholder for future implementation)
-pub async fn get_pool_status(
-    State(_state): State<AppState>,
-) -> Result<Json<HashMap<String, String>>, StatusCode> {
-    info!("API: Getting ZFS pool status");
-
-    let mut status = HashMap::new();
-    status.insert("overall_health".to_string(), "ONLINE".to_string());
-    status.insert("total_pools".to_string(), "2".to_string());
-    status.insert("healthy_pools".to_string(), "2".to_string());
-
-    Ok(Json(status))
+/// Pool status — not yet backed by `zpool status`.
+pub async fn get_pool_status(State(_state): State<AppState>) -> (StatusCode, Json<Value>) {
+    info!("API: get_pool_status — not implemented");
+    not_implemented("zfs.pool_status")
 }
 
-/// Predict tier (placeholder for future implementation)
+/// Tier prediction — not yet backed by a real ML/heuristic model.
 pub async fn predict_tier(
     State(_state): State<AppState>,
-    Json(request): Json<HashMap<String, String>>,
-) -> Result<Json<HashMap<String, String>>, StatusCode> {
-    info!("API: Predicting optimal tier");
-    info!("Request: {:?}", request);
-
-    let mut response = HashMap::new();
-    response.insert("recommended_tier".to_string(), "hot".to_string());
-    response.insert("confidence".to_string(), "0.85".to_string());
-    response.insert(
-        "reasoning".to_string(),
-        "High access frequency detected".to_string(),
-    );
-
-    Ok(Json(response))
+    Json(_request): Json<std::collections::HashMap<String, String>>,
+) -> (StatusCode, Json<Value>) {
+    info!("API: predict_tier — not implemented");
+    not_implemented("zfs.predict_tier")
 }

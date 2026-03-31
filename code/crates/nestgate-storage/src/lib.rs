@@ -16,7 +16,8 @@
     clippy::missing_const_for_fn,
     clippy::needless_pass_by_value,
     clippy::unnecessary_wraps,
-    clippy::unused_self
+    clippy::unused_self,
+    dead_code
 )]
 #![cfg_attr(
     test,

@@ -27,10 +27,8 @@ use tracing::warn;
 #[derive(Debug)]
 /// Manager for Tier operations
 pub struct TierManager {
-    #[allow(dead_code)]
-    config: ZfsConfig,
-    #[allow(dead_code)]
-    pool_manager: Arc<ZfsPoolManager>,
+    _config: ZfsConfig,
+    _pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
     tier_stats: TierStatsMap,
 }
@@ -81,8 +79,8 @@ impl TierManager {
         tier_stats.insert(StorageTier::Cache, TierStats::default());
 
         let manager = Self {
-            config: config.clone(),
-            pool_manager,
+            _config: config.clone(),
+            _pool_manager: pool_manager,
             dataset_manager,
             tier_stats: Arc::new(RwLock::new(tier_stats)),
         };
@@ -267,8 +265,8 @@ impl TierManager {
         let tier_stats = Arc::new(RwLock::new(tier_stats_inner));
 
         Self {
-            config: ZfsConfig::default(),
-            pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
+            _config: ZfsConfig::default(),
+            _pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
             dataset_manager: Arc::new({
                 let config = ZfsConfig::default();
                 let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));

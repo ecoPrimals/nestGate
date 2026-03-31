@@ -4,6 +4,7 @@
 //
 // This module provides optimization recommendations for the storage system.
 
+use nestgate_core::NestGateError;
 use nestgate_core::Result;
 use nestgate_core::universal_traits::compute::OptimizationRecommendation;
 
@@ -30,9 +31,10 @@ impl OptimizationEngineInterface {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub const fn get_recommendations(&self) -> Result<Vec<OptimizationRecommendation>> {
-        // Stub implementation - would generate real recommendations
-        Ok(vec![])
+    pub fn get_recommendations(&self) -> Result<Vec<OptimizationRecommendation>> {
+        Err(NestGateError::not_implemented(
+            "Performance recommendations engine not yet wired",
+        ))
     }
 }
 

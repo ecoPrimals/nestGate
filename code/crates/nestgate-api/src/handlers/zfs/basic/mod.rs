@@ -28,7 +28,5 @@ pub use pools::{create_pool, delete_pool, get_pool, list_pools};
 pub use snapshots::{create_snapshot, list_snapshots};
 pub use types::{
     CreateDatasetRequest, CreatePoolRequest, CreateSnapshotRequest, ZfsHealthResponse,
+    evaluate_zfs_health,
 };
-
-/// Used by health checks and tests.
-pub(crate) use types::evaluate_zfs_health;

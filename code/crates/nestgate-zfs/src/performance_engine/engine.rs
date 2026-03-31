@@ -527,7 +527,6 @@ impl PerformanceOptimizationEngine {
 
     /// Optimize ARC settings
     /// Optimize ARC (Adaptive Replacement Cache) settings
-    #[allow(dead_code)] // Development/experimental feature
     fn optimize_arc_settings(&self) -> Result<AppliedOptimization> {
         info!("🧠 Optimizing ARC settings");
 

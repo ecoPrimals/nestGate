@@ -13,6 +13,7 @@
 
 use super::types::{DatasetLifecycle, LifecycleStage};
 use crate::types::StorageTier;
+use nestgate_core::NestGateError;
 use nestgate_core::error::CanonicalResult as Result;
 use std::time::SystemTime;
 use tracing::{debug, info, warn};
@@ -119,21 +120,13 @@ fn execute_compression_action(dataset_name: &str) -> Result<ActionResult> {
 /// Execute Migration Action
 fn execute_migration_action(dataset_name: &str, target_tier: StorageTier) -> Result<ActionResult> {
     info!(
-        "Migrating dataset '{}' to {:?} tier",
+        "Migrating dataset '{}' to {:?} tier (not wired)",
         dataset_name, target_tier
     );
 
-    // Simulate migration operation
-    // In a real implementation, this would coordinate with the migration engine
-    let success = true;
-    let message = "Successfully migrated to error details tier".to_string();
-
-    Ok(ActionResult {
-        action: "migrate_to_error details".to_string().to_lowercase(),
-        success,
-        message,
-        timestamp: SystemTime::now(),
-    })
+    Err(NestGateError::not_implemented(
+        "ZFS tier migration engine not yet wired; use zfs send/recv or native pool tools until automation coordinates with the migration IPC",
+    ))
 }
 
 /// Execute Snapshot Action
@@ -230,7 +223,12 @@ fn apply_new_dataset_rules(dataset_name: &str) -> Result<()> {
     debug!("Applying rules for new dataset: {}", dataset_name);
 
     // For new datasets, ensure hot tier placement and optimal properties
-    execute_migration_action(dataset_name, StorageTier::Hot)?;
+    if let Err(e) = execute_migration_action(dataset_name, StorageTier::Hot) {
+        warn!(
+            "Skipping tier migration for new dataset {} (not implemented): {}",
+            dataset_name, e
+        );
+    }
     execute_optimization_action(
         dataset_name,
         &DatasetLifecycle {
@@ -255,7 +253,12 @@ fn apply_active_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) 
 
     // For active datasets, monitor performance and maintain optimal tier
     if lifecycle.current_tier != StorageTier::Hot && lifecycle.access_count > 100 {
-        execute_migration_action(dataset_name, StorageTier::Hot)?;
+        if let Err(e) = execute_migration_action(dataset_name, StorageTier::Hot) {
+            warn!(
+                "Skipping tier migration for active dataset {} (not implemented): {}",
+                dataset_name, e
+            );
+        }
     }
 
     // Create periodic snapshots for active datasets
@@ -270,7 +273,12 @@ async fn apply_aging_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecy
 
     // For aging datasets, prepare for migration to cold storage
     if lifecycle.current_tier == StorageTier::Hot {
-        execute_migration_action(dataset_name, StorageTier::Warm)?;
+        if let Err(e) = execute_migration_action(dataset_name, StorageTier::Warm) {
+            warn!(
+                "Skipping tier migration for aging dataset {} (not implemented): {}",
+                dataset_name, e
+            );
+        }
     }
 
     // Apply compression to save space
@@ -284,7 +292,12 @@ async fn apply_archived_dataset_rules(dataset_name: &str) -> Result<()> {
     debug!("Applying rules for archived dataset: {}", dataset_name);
 
     // For archived datasets, ensure cold storage and maximum compression
-    execute_migration_action(dataset_name, StorageTier::Cold)?;
+    if let Err(e) = execute_migration_action(dataset_name, StorageTier::Cold) {
+        warn!(
+            "Skipping tier migration for archived dataset {} (not implemented): {}",
+            dataset_name, e
+        );
+    }
     execute_compression_action(dataset_name)?;
 
     Ok(())
@@ -305,6 +318,7 @@ mod tests {
     use super::*;
     use crate::automation::types::DatasetLifecycle;
     use crate::types::StorageTier;
+    use nestgate_core::NestGateError;
     use std::time::SystemTime;
 
     fn lifecycle(
@@ -332,9 +346,6 @@ mod tests {
         let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 0);
         for action in [
             "compress",
-            "migrate_to_cold",
-            "migrate_to_warm",
-            "migrate_to_hot",
             "create_snapshot",
             "optimize_properties",
             "update_access_time",
@@ -343,6 +354,19 @@ mod tests {
         ] {
             let r = execute_lifecycle_action(ds, &lc, action).expect("test: known action executes");
             assert!(r.success, "action={action} msg={}", r.message);
+        }
+    }
+
+    #[test]
+    fn execute_lifecycle_action_migration_returns_not_implemented() {
+        let ds = "tank/data/app";
+        let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 0);
+        for action in ["migrate_to_cold", "migrate_to_warm", "migrate_to_hot"] {
+            let err = execute_lifecycle_action(ds, &lc, action).expect_err("migration not wired");
+            assert!(
+                matches!(err, NestGateError::NotImplemented(_)),
+                "action={action} err={err:?}"
+            );
         }
     }
 

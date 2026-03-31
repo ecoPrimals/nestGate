@@ -13,26 +13,21 @@ use uuid::Uuid;
 ///
 /// TarPC-based RPC service implementation for high-performance communication.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "Endpoint field used for service configuration")]
 /// Service implementation for `TarpcRpc`
 pub struct TarpcRpcService {
     /// Connection address
-    endpoint: String,
+    _endpoint: String,
 }
 #[derive(Debug, Clone)]
-#[expect(
-    dead_code,
-    reason = "Development stream handle; fields used conditionally"
-)]
 struct StreamHandle {
-    stream_id: Uuid,
-    sender: mpsc::Sender<super::RpcStreamEvent>,
+    _stream_id: Uuid,
+    _sender: mpsc::Sender<super::RpcStreamEvent>,
 }
 impl TarpcRpcService {
     /// Create a new tarpc RPC service
     pub fn new(endpoint: &str) -> Self {
         let service = Self {
-            endpoint: endpoint.to_string(),
+            _endpoint: endpoint.to_string(),
         };
 
         info!(
@@ -83,8 +78,8 @@ impl TarpcRpcService {
         let (response_tx, response_rx) = mpsc::channel(100);
 
         let _handle = StreamHandle {
-            stream_id,
-            sender: response_tx,
+            _stream_id: stream_id,
+            _sender: response_tx,
         };
 
         let (tx, _rx) = mpsc::channel(100);

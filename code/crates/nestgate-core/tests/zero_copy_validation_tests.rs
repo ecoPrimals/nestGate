@@ -198,12 +198,18 @@ mod memory_efficiency_tests {
     fn test_enum_size_optimization() {
         use std::mem::size_of;
 
-        #[allow(dead_code)]
         enum OptimizedEnum {
             Small(u8),
             Medium(u16),
             Large(Box<[u8; 1000]>),
         }
+
+        // Touch variants so the enum is not dead code in test builds without `dead_code` allow.
+        let _ = (
+            OptimizedEnum::Small(0),
+            OptimizedEnum::Medium(0),
+            OptimizedEnum::Large(Box::new([0u8; 1000])),
+        );
 
         // Size should be close to largest variant + discriminant
         // Box keeps it small

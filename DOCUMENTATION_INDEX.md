@@ -1,9 +1,9 @@
 # NestGate Documentation Index
 
-**Last Updated**: March 30, 2026  
+**Last Updated**: March 31, 2026  
 **Version**: 4.7.0-dev
 
-Paths linked below exist in this repository as of March 30, 2026.
+Paths linked below exist in this repository as of March 31, 2026.
 
 ---
 
@@ -51,17 +51,15 @@ Session archives, planning docs, stale examples, old specs, and historical repor
 
 ```
 nestgate/
-├── code/crates/                    # 25 workspace members (see Cargo.toml)
-│   ├── nestgate-core/              # Core functionality
-│   │   ├── src/rpc/                # JSON-RPC 2.0 + Isomorphic IPC
-│   │   ├── src/crypto/             # AES-256-GCM encryption
-│   │   └── src/services/storage/   # Universal storage backend
-│   ├── nestgate-bin/               # CLI binary (unibin)
+├── code/crates/                    # 22 crates (24 workspace members total incl tools + fuzz)
+│   ├── nestgate-core/              # Core traits, services, adapters
+│   ├── nestgate-rpc/               # JSON-RPC 2.0 + tarpc IPC (storage.sock symlink)
+│   ├── nestgate-security/          # Crypto delegation (bearDog IPC)
+│   ├── nestgate-bin/               # CLI binary (UniBin)
 │   │   └── src/commands/           # CLI command implementations
-│   ├── nestgate-api/               # API server
-│   ├── nestgate-zfs/               # ZFS integration
-│   ├── nestgate-mcp/               # MCP provider
-│   └── ...                         # Additional crates
+│   ├── nestgate-api/               # REST + JSON-RPC API server
+│   ├── nestgate-zfs/               # ZFS integration (adaptive)
+│   └── ...                         # 16 additional crates
 ├── docs/                           # Documentation (api, architecture, guides)
 ├── tests/                          # Integration tests
 ├── benches/                        # Performance benchmarks
@@ -80,6 +78,6 @@ nestgate/
 
 ---
 
-**Status**: Documentation cleaned and updated March 30, 2026.  
+**Status**: Documentation cleaned and updated March 31, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: March 30, 2026
+**Last Updated**: March 31, 2026

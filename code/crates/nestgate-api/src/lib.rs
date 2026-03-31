@@ -108,7 +108,7 @@ pub mod nestgate_rpc_service;
 /// **Features**:
 /// - Unix sockets (100x faster than HTTP, port-free)
 /// - JSON-RPC 2.0 protocol (universal, compatible)
-/// - BearDog integration (hardware-backed security)
+/// - Capability-based security provider integration (hardware-backed)
 /// - Optional HTTP fallback (debugging only)
 ///
 /// **Evolution**: January 2026 - TRUE PRIMAL transport implementation

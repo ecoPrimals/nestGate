@@ -4,11 +4,11 @@
 
 NestGate is in active development. Current metrics:
 
-- **Build**: 25/25 workspace members, 0 errors
-- **Tests**: 1,509 lib tests passing (106 suites), 0 failures
+- **Build**: 24/24 workspace members, 0 errors
+- **Tests**: 8,376 lib tests passing, 0 failures
 - **Coverage**: ~80% line (llvm-cov)
-- **Clippy**: ZERO errors — full workspace `cargo clippy --workspace --all-targets -- -D warnings` clean
-- **Safety**: `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`
+- **Clippy**: ZERO warnings — full workspace `cargo clippy --workspace --all-targets -- -D warnings` clean
+- **Safety**: `#![forbid(unsafe_code)]` on all 22 crate roots except `nestgate-env-process-shim`
 
 See [STATUS.md](./STATUS.md) for full metrics.
 
@@ -117,22 +117,16 @@ mod tests {
 
 ### Environment Variable Isolation
 
-Tests that mutate environment variables MUST use save/restore patterns:
+Tests that mutate environment variables MUST use `temp_env` + `serial_test`:
 
 ```rust
 #[test]
+#[serial_test::serial]
 fn test_with_env_vars() {
-    let orig = std::env::var("NESTGATE_API_PORT").ok();
-
-    std::env::set_var("NESTGATE_API_PORT", "9999");
-    // ... test logic ...
-
-    // Restore
-    if let Some(v) = orig {
-        std::env::set_var("NESTGATE_API_PORT", v);
-    } else {
-        std::env::remove_var("NESTGATE_API_PORT");
-    }
+    temp_env::with_var("NESTGATE_API_PORT", Some("9999"), || {
+        // ... test logic ...
+        // Environment is automatically restored when the closure returns
+    });
 }
 ```
 
@@ -184,4 +178,4 @@ The `tools/` directory is excluded from coverage — it contains development too
 
 ---
 
-**Last Updated**: March 30, 2026
+**Last Updated**: March 31, 2026

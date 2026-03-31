@@ -113,47 +113,57 @@ impl ServicesConfig {
     /// Currently returns Ok always (no validation failures), but signature
     /// includes Result for future validation additions.
     pub fn from_environment() -> Result<Self> {
-        let mut capabilities = HashMap::new();
+        let mut discovered_capabilities = HashMap::new();
 
-        // Modern capability-based configuration (PREFERRED)
+        // Capability-based configuration (primary)
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_SECURITY") {
-            capabilities.insert("security".to_string(), url);
+            discovered_capabilities.insert("security".to_string(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_ORCHESTRATION") {
-            capabilities.insert("orchestration".to_string(), url);
+            discovered_capabilities.insert("orchestration".to_string(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_NETWORKING") {
-            capabilities.insert("networking".to_string(), url);
+            discovered_capabilities.insert("networking".to_string(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_AI") {
-            capabilities.insert("ai".to_string(), url);
+            discovered_capabilities.insert("ai".to_string(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_COMPUTE") {
-            capabilities.insert("compute".to_string(), url);
+            discovered_capabilities.insert("compute".to_string(), url);
         }
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_ECOSYSTEM") {
-            capabilities.insert("ecosystem".to_string(), url);
+            discovered_capabilities.insert("ecosystem".to_string(), url);
         }
 
-        // Legacy support (backwards compatibility) - DEPRECATED
+        // Legacy primal env vars — only when the matching capability is unset
+        for (capability, legacy_var) in [
+            ("security", "NESTGATE_BEARDOG_URL"),
+            ("orchestration", "NESTGATE_SONGBIRD_URL"),
+            ("ai", "NESTGATE_SQUIRREL_URL"),
+            ("compute", "NESTGATE_TOADSTOOL_URL"),
+            ("ecosystem", "NESTGATE_BIOMEOS_URL"),
+        ] {
+            if discovered_capabilities.contains_key(capability) {
+                continue;
+            }
+            if let Ok(url) = env::var(legacy_var) {
+                tracing::warn!(
+                    legacy = legacy_var,
+                    preferred = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase()),
+                    "using deprecated environment variable; prefer NESTGATE_CAPABILITY_*"
+                );
+                discovered_capabilities.insert(capability.to_string(), url);
+            }
+        }
+
         #[allow(deprecated)]
         let config = Self {
-            discovered_capabilities: capabilities.clone(),
-            beardog_url: env::var("NESTGATE_BEARDOG_URL")
-                .ok()
-                .or_else(|| capabilities.get("security").cloned()),
-            songbird_url: env::var("NESTGATE_SONGBIRD_URL")
-                .ok()
-                .or_else(|| capabilities.get("orchestration").cloned()),
-            squirrel_url: env::var("NESTGATE_SQUIRREL_URL")
-                .ok()
-                .or_else(|| capabilities.get("ai").cloned()),
-            toadstool_url: env::var("NESTGATE_TOADSTOOL_URL")
-                .ok()
-                .or_else(|| capabilities.get("compute").cloned()),
-            biomeos_url: env::var("NESTGATE_BIOMEOS_URL")
-                .ok()
-                .or_else(|| capabilities.get("ecosystem").cloned()),
+            discovered_capabilities: discovered_capabilities.clone(),
+            beardog_url: discovered_capabilities.get("security").cloned(),
+            songbird_url: discovered_capabilities.get("orchestration").cloned(),
+            squirrel_url: discovered_capabilities.get("ai").cloned(),
+            toadstool_url: discovered_capabilities.get("compute").cloned(),
+            biomeos_url: discovered_capabilities.get("ecosystem").cloned(),
             discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -192,15 +202,16 @@ impl ServicesConfig {
     /// let beardog_url = services.beardog_url.clone();
     /// // Couples to specific primal - vendor lock-in!
     /// ```
+    /// Resolve a service URL by capability — **primary API** for capability-first access.
+    ///
+    /// Prefers `discovered_capabilities`, then legacy field mirrors (e.g. `beardog_url` for `"security"`).
     #[must_use]
     #[allow(deprecated)]
-    pub fn get_capability_url(&self, capability: &str) -> Option<String> {
-        // First try the modern capabilities map (PREFERRED)
+    pub fn resolve_by_capability(&self, capability: &str) -> Option<String> {
         if let Some(url) = self.discovered_capabilities.get(capability) {
             return Some(url.clone());
         }
 
-        // Fall back to legacy fields for backwards compatibility
         match capability {
             "security" => self.beardog_url.clone(),
             "networking" | "orchestration" => self.songbird_url.clone(),
@@ -211,13 +222,20 @@ impl ServicesConfig {
         }
     }
 
+    /// Same as [`Self::resolve_by_capability`] — kept for existing call sites.
+    #[must_use]
+    #[allow(deprecated)]
+    pub fn get_capability_url(&self, capability: &str) -> Option<String> {
+        self.resolve_by_capability(capability)
+    }
+
     /// Check if a capability is configured.
     ///
     /// Returns `true` if any service providing this capability is known.
     #[must_use]
     pub fn has_capability(&self, capability: &str) -> bool {
         self.discovered_capabilities.contains_key(capability)
-            || self.get_capability_url(capability).is_some()
+            || self.resolve_by_capability(capability).is_some()
     }
 
     /// List all configured capabilities.
@@ -241,6 +259,9 @@ impl ServicesConfig {
         if self.toadstool_url.is_some() && !caps.contains(&"compute".to_string()) {
             caps.push("compute".to_string());
         }
+        if self.biomeos_url.is_some() && !caps.contains(&"ecosystem".to_string()) {
+            caps.push("ecosystem".to_string());
+        }
 
         caps.sort();
         caps
@@ -260,29 +281,29 @@ impl ServicesConfig {
     pub fn capability_url_or_local(&self, capability: &str) -> String {
         use std::env;
 
-        // ✅ MIGRATED: Environment-driven service port mapping with centralized defaults
         use crate::constants::get_api_port;
+        use crate::constants::hardcoding::runtime_fallback_ports;
 
         let port = match capability {
             "security" => env::var("NESTGATE_SECURITY_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8084), // Security service standard
+                .unwrap_or(runtime_fallback_ports::HTTP),
             "networking" | "orchestration" => env::var("NESTGATE_ORCHESTRATION_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(9091), // Orchestration standard (Prometheus admin)
+                .unwrap_or(runtime_fallback_ports::METRICS),
             _ => env::var("NESTGATE_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or_else(get_api_port), // Centralized API port
+                .unwrap_or_else(get_api_port),
         };
 
         // ✅ SOVEREIGNTY: Environment-driven host with compile-time constant fallback
         let host = env::var("NESTGATE_SERVICE_HOST")
             .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string());
 
-        self.get_capability_url(capability)
+        self.resolve_by_capability(capability)
             .unwrap_or_else(|| format!("http://{host}:{port}"))
     }
 }

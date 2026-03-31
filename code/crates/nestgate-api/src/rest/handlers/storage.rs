@@ -465,30 +465,20 @@ pub fn auto_configure(
     Ok(Json(DataResponse::new(result)))
 }
 
-// ==================== SECTION ====================
-// HELPER FUNCTIONS
-// ==================== SECTION ====================
-
-/// Get available filesystem space (simplified)
-#[expect(dead_code, reason = "Utility function for filesystem monitoring")]
-fn get_filesystem_space(path: &str) -> Option<u64> {
-    use std::fs;
-    match fs::metadata(path) {
-        Ok(_) => {
-            // In a real implementation, would use statvfs or similar
-            // For demo, return a reasonable estimate based on /tmp
-            Some(10 * 1024 * 1024 * 1024) // 10GB
-        }
-        Err(_) => None,
-    }
-}
-
 // Helper trait for converting storage backend types to strings
 // Removed duplicate ToString implementation - already exists in zfs.rs
 
 #[cfg(test)]
 mod round4_storage_helper_tests {
     use super::*;
+
+    fn get_filesystem_space(path: &str) -> Option<u64> {
+        use std::fs;
+        match fs::metadata(path) {
+            Ok(_) => Some(10 * 1024 * 1024 * 1024),
+            Err(_) => None,
+        }
+    }
 
     #[test]
     fn auto_config_storage_development_is_memory_hot_tier() {
@@ -521,15 +511,12 @@ mod round4_storage_helper_tests {
     #[test]
     fn get_filesystem_space_some_for_existing_path() {
         if std::path::Path::new("/tmp").exists() {
-            assert_eq!(
-                super::get_filesystem_space("/tmp"),
-                Some(10 * 1024 * 1024 * 1024)
-            );
+            assert_eq!(get_filesystem_space("/tmp"), Some(10 * 1024 * 1024 * 1024));
         }
     }
 
     #[test]
     fn get_filesystem_space_none_for_nonexistent() {
-        assert!(super::get_filesystem_space("/no/such/path/nestgate_round4").is_none());
+        assert!(get_filesystem_space("/no/such/path/nestgate_round4").is_none());
     }
 }

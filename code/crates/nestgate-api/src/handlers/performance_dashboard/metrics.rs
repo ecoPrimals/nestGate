@@ -29,8 +29,7 @@ pub struct RealTimeMetricsCollector {
     /// Metrics cache for performance
     metrics_cache: Arc<tokio::sync::RwLock<HashMap<String, RealTimeMetrics>>>,
     /// Background collection task handle
-    #[expect(dead_code, reason = "Reserved for future task management")]
-    collection_task: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
+    _collection_task: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
 }
 impl RealTimeMetricsCollector {
     /// Create a new metrics collector
@@ -38,7 +37,7 @@ impl RealTimeMetricsCollector {
     pub fn new() -> Self {
         Self {
             metrics_cache: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
-            collection_task: Arc::new(tokio::sync::Mutex::new(None)),
+            _collection_task: Arc::new(tokio::sync::Mutex::new(None)),
         }
     }
 
@@ -143,7 +142,7 @@ impl RealTimeMetricsCollector {
         debug!("💻 Collecting real system metrics");
 
         // Get CPU usage
-        let cpu_usage = Self::get_cpu_usage().await.unwrap_or(25.0);
+        let cpu_usage = Self::getcpu_usage().await.unwrap_or(25.0);
 
         // Get memory information
         let (memory_usage, memory_total, _memory_available) = Self::get_memory_info().await?;
@@ -291,7 +290,7 @@ impl RealTimeMetricsCollector {
     }
 
     /// Get CPU usage from /proc/stat
-    async fn get_cpu_usage() -> Result<f64> {
+    async fn getcpu_usage() -> Result<f64> {
         if let Ok(content) = tokio::fs::read_to_string("/proc/stat").await
             && let Some(cpu_line) = content.lines().next()
         {
@@ -632,19 +631,19 @@ mod tests {
         );
         assert_eq!(
             RealTimeMetricsCollector::parse_size_string("1M"),
-            Some(1 * 1_024 * 1_024)
+            Some(1_024 * 1_024)
         );
         assert_eq!(
             RealTimeMetricsCollector::parse_size_string("1G"),
-            Some(1 * 1_024_u64 * 1_024 * 1_024)
+            Some(1_024_u64 * 1_024 * 1_024)
         );
         assert_eq!(
             RealTimeMetricsCollector::parse_size_string("1T"),
-            Some(1 * 1_024_u64 * 1_024 * 1_024 * 1_024)
+            Some(1_024_u64 * 1_024 * 1_024 * 1_024)
         );
         assert_eq!(
             RealTimeMetricsCollector::parse_size_string("1P"),
-            Some(1 * 1_024_u64 * 1_024 * 1_024 * 1_024 * 1_024)
+            Some(1_024_u64 * 1_024 * 1_024 * 1_024 * 1_024)
         );
     }
 
@@ -759,8 +758,8 @@ mod tests {
 
     #[cfg(target_os = "linux")]
     #[tokio::test]
-    async fn get_cpu_usage_reads_proc_stat() {
-        let cpu = RealTimeMetricsCollector::get_cpu_usage().await;
+    async fn getcpu_usage_reads_proc_stat() {
+        let cpu = RealTimeMetricsCollector::getcpu_usage().await;
         assert!(cpu.is_ok());
         let v = cpu.unwrap();
         assert!((0.0..=100.0).contains(&v));
@@ -772,7 +771,7 @@ mod tests {
         let m = RealTimeMetricsCollector::get_memory_info().await;
         assert!(m.is_ok());
         let (pct, total, avail) = m.unwrap();
-        assert!(pct >= 0.0 && pct <= 100.0);
+        assert!((0.0..=100.0).contains(&pct));
         assert!(total > 0);
         assert!(avail <= total);
     }
@@ -803,8 +802,8 @@ mod tests {
         let a = RealTimeMetricsCollector::collect_arc_statistics().await;
         assert!(a.is_ok());
         let (arc, l2) = a.unwrap();
-        assert!(arc >= 0.0 && arc <= 100.0);
-        assert!(l2 >= 0.0 && l2 <= 100.0);
+        assert!((0.0..=100.0).contains(&arc));
+        assert!((0.0..=100.0).contains(&l2));
     }
 
     #[tokio::test]

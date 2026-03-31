@@ -12,6 +12,10 @@ mod core_coverage_boost_tests {
     use crate::response::ApiResponse;
     use std::collections::HashMap;
 
+    fn err_internal_i32() -> Result<i32> {
+        Err(NestGateError::internal("error".to_string()))
+    }
+
     // ==================== BASIC ERROR TESTS ====================
 
     #[test]
@@ -110,7 +114,7 @@ mod core_coverage_boost_tests {
     fn test_result_ok_map() {
         let result: Result<i32> = Ok(42);
         let mapped = result.map(|x| x * 2);
-        assert_eq!(mapped.unwrap(), 84);
+        assert_eq!(mapped.ok(), Some(84));
     }
 
     #[test]
@@ -130,21 +134,20 @@ mod core_coverage_boost_tests {
                 Err(NestGateError::validation_error("too small"))
             }
         });
-        assert_eq!(chained.unwrap(), 20);
+        assert_eq!(chained.ok(), Some(20));
     }
 
     #[test]
     fn test_result_or_else_recovery() {
         let result: Result<i32> = Err(NestGateError::internal("error".to_string()));
         let recovered: Result<i32> = result.or(Ok(100));
-        assert_eq!(recovered.unwrap(), 100);
+        assert_eq!(recovered.ok(), Some(100));
     }
 
     #[test]
     fn test_result_unwrap_or() {
         // Test error recovery with unwrap_or
-        let error = NestGateError::internal("error".to_string());
-        let result: Result<i32> = Err(error);
+        let result = err_internal_i32();
         let value = result.unwrap_or(100);
         assert_eq!(value, 100);
     }
@@ -374,7 +377,7 @@ mod core_coverage_boost_tests {
         // Also test with actual Result to ensure error context propagation
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.ok(), Some(42));
     }
 
     // ==================== API RESPONSE REQUEST ID ====================

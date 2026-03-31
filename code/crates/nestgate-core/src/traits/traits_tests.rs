@@ -64,10 +64,9 @@ impl std::error::Error for TestError {}
 // ==================== MOCK SERVICE IMPLEMENTATION ====================
 
 /// Mock service implementation for testing CanonicalService trait
-#[allow(dead_code)]
 struct MockService {
-    config: TestConfig,
-    started: bool,
+    _config: TestConfig,
+    _started: bool,
     health: TestHealth,
     metrics: TestMetrics,
 }
@@ -76,8 +75,8 @@ impl MockService {
     /// Creates a new instance
     fn new() -> Self {
         Self {
-            config: TestConfig::default(),
-            started: false,
+            _config: TestConfig::default(),
+            _started: false,
             health: TestHealth {
                 status: "healthy".to_string(),
                 uptime_seconds: 0,

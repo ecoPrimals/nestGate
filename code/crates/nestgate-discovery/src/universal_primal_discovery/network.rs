@@ -92,7 +92,10 @@ pub struct InterfaceInfo {
 #[derive(Debug)]
 /// Networkdiscovery
 pub struct NetworkDiscovery {
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "Held for canonical migration; discovery uses runtime config paths"
+    )]
     canonical_primary: NestGateCanonicalConfig,
     #[allow(deprecated)]
     legacy_discovery: NetworkDiscoveryConfig,

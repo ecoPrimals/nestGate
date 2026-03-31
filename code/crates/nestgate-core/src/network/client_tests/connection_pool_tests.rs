@@ -7,6 +7,7 @@
 //! Sections: CONNECTION POOL TESTS, CONNECTION POOL ADVANCED TESTS
 
 use super::super::client::*;
+use crate::constants::hardcoding::{addresses, ports};
 
 // ==================== CONNECTION POOL TESTS ====================
 #[test]
@@ -24,7 +25,6 @@ async fn test_connection_pool_get_connection() {
     let config = ClientConfig::<30000>::default();
     let pool = ConnectionPool::new(config);
 
-    use crate::constants::hardcoding::{addresses, ports};
     let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
@@ -37,7 +37,6 @@ async fn test_connection_pool_return_connection() {
     let config = ClientConfig::<30000>::default();
     let pool = ConnectionPool::new(config);
 
-    use crate::constants::hardcoding::{addresses, ports};
     let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
@@ -53,7 +52,6 @@ async fn test_connection_pool_reuse() {
     let config = ClientConfig::<30000>::default();
     let pool = ConnectionPool::new(config);
 
-    use crate::constants::hardcoding::{addresses, ports};
     let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 

@@ -9,7 +9,7 @@ use nestgate_core::error::{NestGateError, Result};
 use nestgate_core::unified_enums::StorageTier;
 use tracing::{info, warn};
 
-use crate::types::prediction::{AccessPattern, DataPattern, FileAnalysis, FileType, SizeCategory};
+use crate::types::prediction::{AccessPattern, DataPattern, FileAnalysis, SizeCategory};
 
 use super::file_analyzer::FileAnalyzer;
 use super::pattern_analyzer::PatternAnalyzer;
@@ -19,8 +19,7 @@ use super::types::{DatasetAnalysis, FileCharacteristics};
 #[derive(Debug)]
 pub struct DatasetAnalyzer {
     pub(super) file_analyzer: FileAnalyzer,
-    #[allow(dead_code)]
-    pattern_analyzer: PatternAnalyzer,
+    _pattern_analyzer: PatternAnalyzer,
 }
 
 impl DatasetAnalyzer {
@@ -28,7 +27,7 @@ impl DatasetAnalyzer {
     pub fn new() -> Self {
         Self {
             file_analyzer: FileAnalyzer::new(),
-            pattern_analyzer: PatternAnalyzer::new(),
+            _pattern_analyzer: PatternAnalyzer::new(),
         }
     }
 
@@ -180,31 +179,6 @@ impl DatasetAnalyzer {
             peak_access_times: vec![9, 10, 11, 14, 15, 16],
             read_write_ratio: 3.0,
         })
-    }
-
-    #[allow(dead_code)]
-    fn generate_recommendations(
-        &self,
-        file_path: &str,
-        size: u64,
-        _file_type: &FileType,
-    ) -> Result<Vec<String>> {
-        let mut recommendations = Vec::with_capacity(10);
-
-        if file_path.is_empty() {
-            recommendations.push("No file path provided for recommendations".to_string());
-            return Ok(recommendations);
-        }
-
-        let large_files = i32::from(size > 100 * 1024 * 1024);
-
-        if large_files > 0 {
-            recommendations.push("Consider moving large files to cold storage tier".to_string());
-        }
-
-        let recommendations = vec!["No recommendations available".to_string()];
-
-        Ok(recommendations)
     }
 }
 

@@ -287,7 +287,10 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 }
 
 impl InMemoryServiceRegistry {
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "Reserved for requirement-aware lookup; registry currently matches by capability only"
+    )]
     fn service_matches_requirements(
         &self,
         registration: &UniversalServiceRegistration,

@@ -231,7 +231,7 @@ mod expanded_metrics_tests {
     #[test]
     fn test_system_metrics_normal_load() {
         let system = SystemMetrics {
-            _cpu_usage: 45.0,
+            cpu_usage: 45.0,
             memory_usage: 60.0,
             memory_total: 32_000_000_000,     // 32GB
             memory_available: 12_800_000_000, // 12.8GB
@@ -246,7 +246,7 @@ mod expanded_metrics_tests {
     #[test]
     fn test_system_metrics_high_memory_pressure() {
         let system = SystemMetrics {
-            _cpu_usage: 85.0,
+            cpu_usage: 85.0,
             memory_usage: 95.0,
             memory_total: 16_000_000_000,
             memory_available: 800_000_000, // Only 800MB available
@@ -265,7 +265,7 @@ mod expanded_metrics_tests {
         let used = total - available;
 
         let system = SystemMetrics {
-            _cpu_usage: 50.0,
+            cpu_usage: 50.0,
             memory_usage: (used as f64 / total as f64) * 100.0,
             memory_total: total,
             memory_available: available,
@@ -425,7 +425,7 @@ mod expanded_metrics_tests {
     /// Creates  Test System Metrics
     fn create_test_system_metrics() -> SystemMetrics {
         SystemMetrics {
-            _cpu_usage: 50.0,
+            cpu_usage: 50.0,
             memory_usage: 60.0,
             memory_total: 16_000_000_000,
             memory_available: 6_400_000_000,

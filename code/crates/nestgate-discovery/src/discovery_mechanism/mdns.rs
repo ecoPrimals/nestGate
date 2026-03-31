@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-//! mDNS-based discovery (default, works everywhere)
+//! mDNS-style discovery (optional, standalone / development)
 //!
-//! This module provides a simplified in-memory mDNS implementation.
-//! Production would use actual mDNS protocol (avahi-daemon, dns-sd).
+//! **Production discovery belongs to biomeOS and songBird**; this in-memory registry exists only for
+//! local tooling and tests when the `mdns` crate feature is enabled.
+//!
+//! This module provides a simplified in-memory implementation. A full mDNS stack would use the
+//! multicast DNS protocol (for example via avahi or dns-sd).
 
 use super::{Capability, DiscoveryBuilder, DiscoveryMechanism, ServiceInfo};
 use crate::self_knowledge::SelfKnowledge;
@@ -33,11 +36,9 @@ type ServiceRegistry = Arc<DashMap<String, ServiceInfo>>;
 /// Fields are reserved for future use when full mDNS protocol is needed.
 pub struct MdnsDiscovery {
     /// Query timeout (reserved for future mDNS protocol implementation)
-    #[allow(dead_code)]
-    timeout: Duration,
+    _timeout: Duration,
     /// Cache duration (reserved for future mDNS protocol implementation)
-    #[allow(dead_code)]
-    cache_duration: Duration,
+    _cache_duration: Duration,
     /// In-memory service registry (lock-free)
     registry: ServiceRegistry,
     /// Our announced service ID
@@ -48,8 +49,8 @@ impl MdnsDiscovery {
     /// Create new mDNS discovery (lock-free registry)
     pub fn new(builder: &DiscoveryBuilder) -> Result<Self> {
         Ok(Self {
-            timeout: builder.timeout,
-            cache_duration: builder.cache_duration,
+            _timeout: builder.timeout,
+            _cache_duration: builder.cache_duration,
             registry: Arc::new(DashMap::new()),
             announced_service_id: Arc::new(RwLock::new(None)),
         })

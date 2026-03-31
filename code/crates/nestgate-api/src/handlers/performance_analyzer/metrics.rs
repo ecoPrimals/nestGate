@@ -32,7 +32,7 @@ impl SystemMetricsCollector {
     /// - Network or I/O errors occur
     pub async fn collect_metrics(&self) -> Result<SystemMetrics, MetricsError> {
         Ok(SystemMetrics {
-            cpu_usage_percent: self.get_cpu_usage().await?,
+            cpu_usage_percent: self.getcpu_usage().await?,
             memory_usage_bytes: self.get_memory_usage().await?,
             disk_io_metrics: self.get_disk_io_metrics().await?,
             network_metrics: self.get_network_metrics().await?,
@@ -45,7 +45,7 @@ impl SystemMetricsCollector {
         clippy::unused_async,
         reason = "async signature required by collect_metrics"
     )]
-    async fn get_cpu_usage(&self) -> Result<f64, MetricsError> {
+    async fn getcpu_usage(&self) -> Result<f64, MetricsError> {
         #[cfg(target_os = "linux")]
         {
             match std::fs::read_to_string("/proc/loadavg") {

@@ -19,11 +19,6 @@ mod tests {
 
     // ==================== HELPER FUNCTIONS ====================
 
-    #[allow(dead_code)]
-    fn create_test_monitor() -> ZfsPerformanceMonitor {
-        ZfsPerformanceMonitor::new_for_testing()
-    }
-
     /// Creates  Test Pool Manager
     fn create_test_pool_manager() -> Arc<ZfsPoolManager> {
         Arc::new(ZfsPoolManager::new_production(ZfsConfig::default()))
@@ -221,18 +216,18 @@ pool        alloc   free   read  write   read  write
     // ==================== CPU USAGE TESTS ====================
 
     #[tokio::test]
-    async fn test_get_cpu_usage_basic() {
-        let cpu_usage = ZfsPerformanceMonitor::get_cpu_usage().await;
+    async fn test_getcpu_usage_basic() {
+        let cpu_usage = ZfsPerformanceMonitor::getcpu_usage().await;
 
         assert!(cpu_usage >= 0.0);
         assert!(cpu_usage <= 100.0);
     }
 
     #[tokio::test]
-    async fn test_get_cpu_usage_multiple_calls() {
-        let usage1 = ZfsPerformanceMonitor::get_cpu_usage().await;
+    async fn test_getcpu_usage_multiple_calls() {
+        let usage1 = ZfsPerformanceMonitor::getcpu_usage().await;
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-        let usage2 = ZfsPerformanceMonitor::get_cpu_usage().await;
+        let usage2 = ZfsPerformanceMonitor::getcpu_usage().await;
 
         // Both should be valid percentages
         assert!((0.0..=100.0).contains(&usage1));

@@ -20,19 +20,21 @@ pub struct SystemMetricsCollector;
 
 impl SystemMetricsCollector {
     #[must_use]
-    pub fn new() -> Self { Self
-    , /// Collect comprehensive system resource metrics
-    /// Function description
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// Collect comprehensive system resource metrics
     ///
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-        pub async fn collect_system_resources(&self) -> Result<SystemResourceMetrics>  {
+    pub async fn collect_system_resources(&self) -> Result<SystemResourceMetrics> {
         debug!("🖥️ Collecting comprehensive system resource metrics");
         
         // Collect all system metrics in parallel
         let (cpu_usage, memory_info, network_interfaces, load_average) = tokio::try_join!(
-            Self::get_cpu_usage(),
+            Self::getcpu_usage(),
             Self::get_memory_info(),
             Self::get_network_interfaces(),
             Self::get_load_average()
@@ -41,14 +43,28 @@ impl SystemMetricsCollector {
         let arc_stats = Self::get_arc_statistics().await.unwrap_or_default();
         let l2arc_stats = Self::get_l2arc_statistics().await.unwrap_or_default();
 
+        #[cfg(target_os = "linux")]
+        let (disk_total_gb, disk_used_gb) =
+            nestgate_core::linux_proc::statvfs_space(std::path::Path::new("/"))
+                .map(|(total, avail)| {
+                    let used = total.saturating_sub(avail);
+                    (
+                        (total / (1024 * 1024 * 1024)) as u32,
+                        (used / (1024 * 1024 * 1024)) as u32,
+                    )
+                })
+                .unwrap_or((0, 0));
+        #[cfg(not(target_os = "linux"))]
+        let (disk_total_gb, disk_used_gb) = (0u32, 0u32);
+
         Ok(SystemResourceMetrics {
             timestamp: std::time::SystemTime::now(),
             cpu_cores: nestgate_core::linux_proc::logical_cpu_count(),
             cpu_usage_percent: cpu_usage,
             memory_total_gb: (memory_info.total_bytes / (1024 * 1024 * 1024)) as u32,
             memory_used_gb: (memory_info.used_bytes / (1024 * 1024 * 1024)) as u32,
-            disk_total_gb: 1000, // Would be calculated from real disk info
-            disk_used_gb: 650,   // Would be calculated from real disk info
+            disk_total_gb,
+            disk_used_gb,
             network_interfaces,
             load_average,
             arc_stats,
@@ -56,7 +72,7 @@ impl SystemMetricsCollector {
     }
 
     /// Get real CPU usage from /proc/stat
-    async fn get_cpu_usage() -> Result<f64> {
+    async fn getcpu_usage() -> Result<f64> {
         match tokio::fs::read_to_string("/proc/stat").await {
             Ok(content) => {
                 if let Some(cpu_line) = content.lines().next() {

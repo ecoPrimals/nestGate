@@ -287,11 +287,11 @@ mod status_additional_tests {
             os_version: "6.16.3".to_string(),
             architecture: "x86_64".to_string(),
             cpu_cores: 128,
-            total_memory_bytes: 1048576, // 1TB
+            total_memory_bytes: 1_048_576, // 1 MiB
         };
 
         assert_eq!(info.cpu_cores, 128);
-        assert_eq!(info.total_memory_bytes, 1048576);
+        assert_eq!(info.total_memory_bytes, 1_048_576);
     }
 
     // ==================== STATUS TRANSITIONS TESTS ====================

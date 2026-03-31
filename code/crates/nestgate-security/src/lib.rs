@@ -26,8 +26,7 @@
 pub mod universal_adapter {
     /// Lightweight endpoint holder for security flows that only need a resolved adapter URL.
     pub struct PrimalAgnosticAdapter {
-        #[allow(dead_code)]
-        endpoint: String,
+        _endpoint: String,
     }
 
     impl PrimalAgnosticAdapter {
@@ -36,7 +35,9 @@ pub mod universal_adapter {
             tracing::debug!(
                 "feature pending: full universal adapter integration; using local endpoint holder"
             );
-            Self { endpoint }
+            Self {
+                _endpoint: endpoint,
+            }
         }
     }
 }

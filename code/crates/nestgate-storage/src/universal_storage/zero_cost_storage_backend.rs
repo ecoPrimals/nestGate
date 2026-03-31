@@ -130,7 +130,6 @@ impl<const MAX_OPS: usize, const MAX_SIZE_MB: usize, const TIMEOUT_SECS: u64>
     }
 
     /// Get full path for relative path
-    #[allow(dead_code)] // Framework method - intentionally unused
     fn full_path(&self, path: &str) -> PathBuf {
         self.config.base_path.join(path)
     }

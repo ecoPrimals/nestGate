@@ -37,7 +37,7 @@ mod performance_analytics_tests {
         };
 
         assert_eq!(response.metrics.len(), 2);
-        assert!(response.metrics.get("cpu_usage").is_some());
+        assert!(response.metrics.contains_key("cpu_usage"));
     }
 
     #[test]

@@ -304,7 +304,6 @@ fn test_pool_and_compression_combination() {
 
 #[test]
 fn test_multiple_configurations() {
-    #[allow(dead_code)]
     struct PoolConfig {
         name: String,
         pool_type: PoolType,

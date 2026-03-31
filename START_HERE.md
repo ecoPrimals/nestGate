@@ -3,13 +3,13 @@
 ## Current Status
 
 ```
-Build:       25/25 workspace members compiling (0 errors)
-Tests:       1,509 lib tests passing (106 suites), 0 failures
+Build:       24/24 workspace members compiling (0 errors)
+Tests:       8,376 lib tests passing, 0 failures
 Coverage:    ~80% line (llvm-cov) — wateringHole 80% minimum met
-Clippy:      ZERO errors — full workspace --all-features -D warnings clean
+Clippy:      ZERO warnings — full workspace --all-features -D warnings clean
 Docs:        ZERO warnings (cargo doc --workspace --no-deps)
-Unsafe:      #![forbid(unsafe_code)] on all crate roots except env-process-shim
-ring:        Eliminated — TLS via aws-lc-rs (no ring in cargo tree)
+Unsafe:      #![forbid(unsafe_code)] on all 22 crate roots except env-process-shim
+Crypto:      Delegated to bearDog IPC; installer uses system curl (ring/rustls/reqwest eliminated)
 sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
 Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -60,10 +60,9 @@ curl http://localhost:8085/health
 NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem. It provides:
 
 - **Universal storage** — Works on 6+ platforms out of the box
-- **Capability-based discovery** — Discovers other primals at runtime by capability
+- **Capability-based discovery** — Discovers other primals at runtime by capability (storage.sock symlink)
 - **Isomorphic IPC** — Auto-adapts Unix sockets or TCP based on platform
-- **JSON-RPC 2.0 + tarpc** — Dual IPC with semantic method naming
-- **MCP provider** — Exposes storage via Model Context Protocol
+- **JSON-RPC 2.0 + tarpc** — Dual IPC with semantic method naming (storage.*, data.*, nat.*, beacon.*)
 - **ZFS integration** — Adaptive backend, graceful fallback to standard filesystem
 
 ### NEST Atomic Composition
@@ -79,17 +78,16 @@ NEST Atomic = TOWER + nestgate + squirrel
 ## Architecture
 
 ```
-nestgate/ (25 workspace members — see README Architecture)
+nestgate/ (24 workspace members — see README Architecture)
 ├── nestgate-types … nestgate-platform … (foundation)
 ├── nestgate-config, nestgate-storage, nestgate-rpc, nestgate-discovery, …
 ├── nestgate-core       Traits, network, services, adapters
 ├── nestgate-api        REST + JSON-RPC API server
-├── nestgate-bin        CLI binary (unibin)
+├── nestgate-bin        CLI binary (UniBin)
 ├── nestgate-zfs        ZFS integration (adaptive)
-├── nestgate-mcp        MCP provider
 ├── nestgate-network    Network storage
 ├── nestgate-automation Automation engine
-├── nestgate-installer  Platform installer
+├── nestgate-installer  Platform installer (system curl, ecoBin compliant)
 ├── nestgate-canonical  Canonical types
 ├── nestgate-middleware Middleware stack
 ├── nestgate-nas        NAS integration
@@ -168,4 +166,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: March 30, 2026
+**Last Updated**: March 31, 2026

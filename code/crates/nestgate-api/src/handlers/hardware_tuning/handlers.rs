@@ -26,15 +26,14 @@ use nestgate_core::{NestGateError, Result};
 ///
 /// Uses `/proc` and optional `nvidia-smi` for resource discovery; benchmarks remain lightweight stubs.
 #[derive(Debug, Clone)]
-#[expect(dead_code, reason = "Fields used for configuration and monitoring")]
 /// Handler for `RealHardwareTuning` requests
 pub struct RealHardwareTuningHandler {
     /// Hardware tuning configuration
-    config: HardwareTuningConfig,
+    _config: HardwareTuningConfig,
     /// System metrics collector for performance monitoring
     metrics_collector: SystemMetricsCollector,
     /// Hardware monitoring services
-    monitors: HardwareMonitors,
+    _monitors: HardwareMonitors,
 }
 
 impl Default for RealHardwareTuningHandler {
@@ -49,13 +48,13 @@ impl RealHardwareTuningHandler {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            config: HardwareTuningConfig::default(),
+            _config: HardwareTuningConfig::default(),
             metrics_collector: SystemMetricsCollector {
                 cpu_monitor: CpuMonitor,
                 memory_monitor: MemoryMonitor,
                 gpu_monitor: Some(GpuMonitor),
             },
-            monitors: HardwareMonitors {
+            _monitors: HardwareMonitors {
                 cpu: CpuMonitor,
                 memory: MemoryMonitor,
                 gpu: Some(GpuMonitor),

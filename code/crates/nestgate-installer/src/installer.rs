@@ -408,7 +408,6 @@ impl NestGateInstaller {
 
     // Helper methods
 
-    #[allow(dead_code)]
     fn is_installed(&self) -> bool {
         self.get_installation_info().is_ok()
     }
@@ -438,7 +437,6 @@ impl NestGateInstaller {
             .unwrap_or(false)
     }
 
-    #[allow(dead_code)]
     fn setup_system_integration(&self, config: &InstallerConfig) -> Result<()> {
         // Note: domains field doesn't exist in canonical config - using system config instead
         let system_config = &config.base_config.system;

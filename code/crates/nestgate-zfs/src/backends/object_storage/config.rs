@@ -7,7 +7,6 @@
 
 /// Configuration source for object storage
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Variants/fields used for future telemetry features
 pub enum ConfigSource {
     /// Discovered via capability system (preferred)
     CapabilityDiscovered {
@@ -22,7 +21,6 @@ pub enum ConfigSource {
 
 /// Storage capability types
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Variants/fields used for capability discovery system
 pub enum StorageCapability {
     /// S3-compatible API
     S3Compatible {

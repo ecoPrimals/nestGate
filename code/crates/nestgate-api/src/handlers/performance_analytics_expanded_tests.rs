@@ -64,7 +64,7 @@ mod expanded_performance_tests {
     fn test_performance_metrics_response_extreme_values() {
         let mut metrics = HashMap::new();
         metrics.insert("very_low".to_string(), 0.0);
-        metrics.insert("very_high".to_string(), 999999.99);
+        metrics.insert("very_high".to_string(), 999_999.99);
         metrics.insert("negative".to_string(), -100.0);
 
         let response = PerformanceMetricsResponse {
@@ -73,7 +73,7 @@ mod expanded_performance_tests {
         };
 
         assert_eq!(response.metrics["very_low"], 0.0);
-        assert_eq!(response.metrics["very_high"], 999999.99);
+        assert_eq!(response.metrics["very_high"], 999_999.99);
         assert_eq!(response.metrics["negative"], -100.0);
     }
 

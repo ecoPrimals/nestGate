@@ -53,7 +53,7 @@ impl SystemMetricsCollector {
     /// - Network or I/O errors occur
     pub async fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics> {
         // Collect real metrics from system
-        let cpu_usage = self.get_cpu_usage()?;
+        let cpu_usage = self.getcpu_usage()?;
         let memory_usage = self.get_memory_usage()?;
         let gpu_usage = self.get_gpu_usage().unwrap_or(0.0);
 
@@ -72,7 +72,7 @@ impl SystemMetricsCollector {
     }
 
     /// Gets Cpu Usage
-    fn get_cpu_usage(&self) -> Result<f64> {
+    fn getcpu_usage(&self) -> Result<f64> {
         // Read CPU usage from /proc/stat
         match std::fs::read_to_string("/proc/stat") {
             Ok(content) => {
