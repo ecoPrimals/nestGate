@@ -466,7 +466,7 @@ mod tests {
     fn test_performance_alert_empty_message() {
         let alert = PerformanceAlert {
             id: "empty_test".to_string(),
-            message: "".to_string(),
+            message: String::new(),
             severity: "info".to_string(),
             timestamp: std::time::SystemTime::now(),
         };

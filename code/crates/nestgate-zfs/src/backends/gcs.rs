@@ -86,8 +86,6 @@ struct GcsClientWrapper {
     #[allow(dead_code)] // Planned for GCS SDK integration
     credentials_path: Option<String>,
     /// Configuration source (capability discovery vs environment)
-    /// **PLANNED**: Audit logging, metrics, and dynamic reconfiguration (v0.2.0)
-    #[allow(dead_code)] // Planned for audit trail and dynamic config
     config_source: ConfigSource,
 }
 
@@ -99,8 +97,7 @@ enum ConfigSource {
     /// Discovered via `NestGate` capability system (preferred)
     CapabilityDiscovered {
         /// Service descriptor from discovery
-        /// **PLANNED**: Service health monitoring and failover (v0.2.0)
-        #[allow(dead_code)] // Planned for service tracking
+        /// Service descriptor from discovery
         service_id: String,
     },
     /// Fallback to environment variables

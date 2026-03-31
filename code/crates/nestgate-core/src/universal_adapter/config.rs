@@ -217,7 +217,7 @@ mod tests {
         assert_ne!(error, local);
 
         // Test cloning
-        let cloned = noop.clone();
+        let cloned = noop;
         assert_eq!(cloned, FallbackBehavior::NoOp);
     }
 
@@ -233,7 +233,7 @@ mod tests {
         assert_ne!(scan, config);
 
         // Test cloning
-        let cloned = env.clone();
+        let cloned = env;
         assert_eq!(cloned, DiscoveryMethod::Environment);
     }
 

@@ -424,7 +424,7 @@ mod tests {
         let config = NetworkTraitsConfig::default();
         let service = DefaultService::new(config);
         // Service created successfully
-        assert!(format!("{:?}", service).contains("DefaultService"));
+        assert!(format!("{service:?}").contains("DefaultService"));
     }
 
     #[tokio::test]

@@ -393,7 +393,7 @@ mod tests {
         // Allocate multiple strings
         let handles: Vec<_> = (0..5)
             .map(|i| {
-                pool.allocate(format!("String {}", i))
+                pool.allocate(format!("String {i}"))
                     .context("allocation failed")
             })
             .collect::<Result<_, _>>()?;

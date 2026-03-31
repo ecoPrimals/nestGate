@@ -105,7 +105,7 @@ fn test_pool_handler_delete_pool_tank() {
 #[test]
 fn test_pool_handler_delete_pool_empty_name() {
     let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_delete_pool("".to_string());
+    let result = handler.handle_delete_pool(String::new());
 
     assert!(result.is_err());
     assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
@@ -335,7 +335,7 @@ fn test_request_clone() {
         metadata: Arc::new(HashMap::new()),
     };
 
-    let cloned = request.clone();
+    let cloned = request;
     assert_eq!(cloned.request_id.as_ref(), "clone-test");
 }
 
@@ -349,7 +349,7 @@ fn test_response_clone() {
         metadata: HashMap::new(),
     };
 
-    let cloned = response.clone();
+    let cloned = response;
     assert_eq!(cloned.request_id.as_ref(), "resp-clone");
     assert_eq!(cloned.processing_time_ms, 10);
 }

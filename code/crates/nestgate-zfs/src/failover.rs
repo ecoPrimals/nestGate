@@ -76,6 +76,41 @@ pub enum PoolState {
     Unknown, // State cannot be determined
 }
 
+/// Parses stdout from `zpool import` for pool names (`pool:` lines).
+pub(crate) fn parse_zpool_import_list_stdout(stdout: &str) -> Vec<String> {
+    let mut pools = Vec::new();
+    for line in stdout.lines() {
+        if line.trim_start().starts_with("pool:")
+            && let Some(pool_name) = line.split("pool:").nth(1)
+        {
+            let pool_name = pool_name.trim().to_string();
+            pools.push(pool_name);
+        }
+    }
+    pools
+}
+
+/// Collects importable pools that appear in `known_pools` with `original_owner == failed_node_id`.
+pub(crate) fn orphaned_pools_from_known_registry(
+    available_pools: &[String],
+    known_pools: &HashMap<String, PoolMetadata>,
+    failed_node_id: &str,
+) -> Vec<String> {
+    let mut orphaned_pools = Vec::new();
+    for pool_name in available_pools {
+        if let Some(metadata) = known_pools.get(pool_name) {
+            if metadata.original_owner == failed_node_id {
+                info!(
+                    "Pool {} was owned by failed node {}",
+                    pool_name, failed_node_id
+                );
+                orphaned_pools.push(pool_name.clone());
+            }
+        }
+    }
+    orphaned_pools
+}
+
 // Deprecated FailoverConfig removed - use CanonicalZfsConfig::default().pools.failover instead
 
 /// **CANONICAL FAILOVER CONFIGURATION**
@@ -297,16 +332,7 @@ impl PoolTakeoverManager {
 
         // Note: zpool import returns non-zero when no pools available, which is normal
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let mut pools = Vec::new();
-
-        for line in stdout.lines() {
-            if line.trim_start().starts_with("pool:")
-                && let Some(pool_name) = line.split("pool:").nth(1)
-            {
-                let pool_name = pool_name.trim().to_string();
-                pools.push(pool_name);
-            }
-        }
+        let pools = parse_zpool_import_list_stdout(&stdout);
 
         debug!("Discovered {} importable pools: {:?}", pools.len(), pools);
         Ok(pools)
@@ -319,22 +345,15 @@ impl PoolTakeoverManager {
         failed_node_id: &str,
     ) -> Result<Vec<String>> {
         let known_pools = self.known_pools.read().await;
-        let mut orphaned_pools = Vec::new();
+        let mut orphaned_pools =
+            orphaned_pools_from_known_registry(available_pools, &known_pools, failed_node_id);
 
         for pool_name in available_pools {
-            if let Some(metadata) = known_pools.get(pool_name) {
-                if metadata.original_owner == failed_node_id {
-                    info!(
-                        "Pool {} was owned by failed node {}",
-                        pool_name, failed_node_id
-                    );
-                    orphaned_pools.push(pool_name.clone());
-                }
-            } else {
-                // Unknown pool - could be orphaned, check metadata on disk
-                if self.check_pool_ownership(pool_name, failed_node_id).await? {
-                    orphaned_pools.push(pool_name.clone());
-                }
+            if known_pools.contains_key(pool_name) {
+                continue;
+            }
+            if self.check_pool_ownership(pool_name, failed_node_id).await? {
+                orphaned_pools.push(pool_name.clone());
             }
         }
 
@@ -511,6 +530,23 @@ impl NodeHealthMonitor {
     }
 }
 
+#[cfg(test)]
+impl NodeHealthMonitor {
+    pub(crate) async fn test_set_node_heartbeat_time(&self, node_id: &str, t: SystemTime) {
+        let mut nodes = self.known_nodes.write().await;
+        if let Some(n) = nodes.get_mut(node_id) {
+            n.last_heartbeat = t;
+        }
+    }
+
+    pub(crate) async fn test_set_node_alive(&self, node_id: &str, alive: bool) {
+        let mut nodes = self.known_nodes.write().await;
+        if let Some(n) = nodes.get_mut(node_id) {
+            n.is_alive = alive;
+        }
+    }
+}
+
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
@@ -531,6 +567,7 @@ pub type FailoverNotificationConfigCanonical =
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[tokio::test]
     async fn test_pool_takeover_manager_creation() {
@@ -647,5 +684,212 @@ mod tests {
         assert_eq!(c.max_takeover_attempts, 3);
         assert_eq!(c.failback_delay_secs, 60);
         assert!(c.notification_config.is_none());
+    }
+
+    #[test]
+    fn parse_zpool_import_list_stdout_empty_and_whitespace() {
+        assert!(parse_zpool_import_list_stdout("").is_empty());
+        assert!(parse_zpool_import_list_stdout("  \n\t\n").is_empty());
+    }
+
+    #[test]
+    fn parse_zpool_import_list_stdout_extracts_pool_lines() {
+        let sample = r"
+  pool: tank
+     id: 123
+  pool: backup_store
+";
+        let pools = parse_zpool_import_list_stdout(sample);
+        assert_eq!(pools, vec!["tank".to_string(), "backup_store".to_string()]);
+    }
+
+    #[test]
+    fn parse_zpool_import_list_stdout_trims_names_and_ignores_non_pool_lines() {
+        let sample = "pool:  mypool  \nnotpool: x\n   pool: other\n";
+        let pools = parse_zpool_import_list_stdout(sample);
+        assert_eq!(pools, vec!["mypool".to_string(), "other".to_string()]);
+    }
+
+    #[test]
+    fn orphaned_pools_from_known_registry_matches_owner_only() {
+        let mut known = HashMap::new();
+        known.insert(
+            "p1".to_string(),
+            PoolMetadata {
+                name: "p1".into(),
+                original_owner: "node-a".into(),
+                last_seen: SystemTime::UNIX_EPOCH,
+                import_guid: None,
+                state: PoolFailoverState::Active,
+            },
+        );
+        known.insert(
+            "p2".to_string(),
+            PoolMetadata {
+                name: "p2".into(),
+                original_owner: "node-b".into(),
+                last_seen: SystemTime::UNIX_EPOCH,
+                import_guid: None,
+                state: PoolFailoverState::Active,
+            },
+        );
+        let available = vec!["p1".into(), "p2".into(), "missing".into()];
+        let out = orphaned_pools_from_known_registry(&available, &known, "node-a");
+        assert_eq!(out, vec!["p1".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn detect_failed_nodes_empty_registry() {
+        let monitor = NodeHealthMonitor::new(CanonicalFailoverConfig::default());
+        let failed = monitor.detect_failed_nodes().await.unwrap();
+        assert!(failed.is_empty());
+    }
+
+    #[tokio::test]
+    async fn detect_failed_nodes_skips_when_heartbeat_recent() {
+        let monitor = NodeHealthMonitor::new(CanonicalFailoverConfig::default());
+        monitor.update_node_heartbeat("n1").await;
+        let failed = monitor.detect_failed_nodes().await.unwrap();
+        assert!(failed.is_empty());
+    }
+
+    #[tokio::test]
+    async fn detect_failed_nodes_skips_future_heartbeat() {
+        let monitor = NodeHealthMonitor::new(CanonicalFailoverConfig::default());
+        monitor.update_node_heartbeat("n1").await;
+        let future = SystemTime::now() + Duration::from_secs(3600);
+        monitor.test_set_node_heartbeat_time("n1", future).await;
+        let failed = monitor.detect_failed_nodes().await.unwrap();
+        assert!(failed.is_empty());
+    }
+
+    #[tokio::test]
+    async fn detect_failed_nodes_skips_when_marked_not_alive() {
+        let mut config = CanonicalFailoverConfig::default();
+        config.node_failure_timeout_secs = 10;
+        let monitor = NodeHealthMonitor::new(config);
+        monitor.update_node_heartbeat("n1").await;
+        monitor.test_set_node_alive("n1", false).await;
+        monitor
+            .test_set_node_heartbeat_time("n1", SystemTime::now() - Duration::from_secs(1000))
+            .await;
+        let failed = monitor.detect_failed_nodes().await.unwrap();
+        assert!(failed.is_empty());
+    }
+
+    #[tokio::test]
+    async fn update_pool_metadata_updates_existing_entry() {
+        let config = ZfsConfig::default();
+        let failover_config = CanonicalFailoverConfig::default();
+        let manager = PoolTakeoverManager::new(config, failover_config, "owner-1".to_string());
+
+        manager
+            .update_pool_metadata("pool-x", PoolFailoverState::Active)
+            .await;
+        manager
+            .update_pool_metadata("pool-x", PoolFailoverState::Failed)
+            .await;
+
+        let status = manager.get_pool_status().await;
+        assert_eq!(status["pool-x"].state, PoolFailoverState::Failed);
+        assert_eq!(status["pool-x"].original_owner, "owner-1");
+    }
+
+    #[test]
+    fn pool_failover_state_serde_all_variants() {
+        for state in [
+            PoolFailoverState::Active,
+            PoolFailoverState::Orphaned,
+            PoolFailoverState::Failed,
+            PoolFailoverState::Unknown,
+        ] {
+            let j = serde_json::to_string(&state).unwrap();
+            let back: PoolFailoverState = serde_json::from_str(&j).unwrap();
+            assert_eq!(back, state);
+        }
+    }
+
+    #[test]
+    fn pool_state_serde_all_variants() {
+        for state in [
+            PoolState::Online,
+            PoolState::Degraded,
+            PoolState::Offline,
+            PoolState::Faulted,
+            PoolState::Removed,
+            PoolState::Unavail,
+            PoolState::Orphaned,
+            PoolState::Failed,
+            PoolState::Unknown,
+        ] {
+            let j = serde_json::to_string(&state).unwrap();
+            let back: PoolState = serde_json::from_str(&j).unwrap();
+            assert_eq!(back, state);
+        }
+    }
+
+    #[test]
+    fn canonical_failover_config_serde_with_notification() {
+        let c = CanonicalFailoverConfig {
+            notification_config: Some(FailoverNotificationConfig {
+                email_enabled: true,
+                email_recipients: vec!["a@b.c".into()],
+                webhook_enabled: false,
+                webhook_url: None,
+                slack_enabled: false,
+                slack_webhook: None,
+            }),
+            ..CanonicalFailoverConfig::default()
+        };
+        let j = serde_json::to_string(&c).unwrap();
+        let back: CanonicalFailoverConfig = serde_json::from_str(&j).unwrap();
+        assert!(back.notification_config.as_ref().unwrap().email_enabled);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_failover_notification_config_roundtrip() {
+        let n = FailoverNotificationConfig {
+            email_enabled: false,
+            email_recipients: vec![],
+            webhook_enabled: true,
+            webhook_url: Some("https://hooks.example/1".into()),
+            slack_enabled: true,
+            slack_webhook: Some("https://slack.example".into()),
+        };
+        let j = serde_json::to_string(&n).unwrap();
+        let back: FailoverNotificationConfig = serde_json::from_str(&j).unwrap();
+        assert!(back.webhook_enabled && back.slack_enabled);
+    }
+
+    #[tokio::test]
+    async fn verify_pool_import_invokes_zpool_status() {
+        let config = ZfsConfig::default();
+        let manager =
+            PoolTakeoverManager::new(config, CanonicalFailoverConfig::default(), "n".into());
+        let _ = manager
+            .verify_pool_import("___nonexistent_pool_nestgate_test___")
+            .await;
+    }
+
+    #[tokio::test]
+    async fn export_pool_invokes_zpool_export() {
+        let config = ZfsConfig::default();
+        let manager =
+            PoolTakeoverManager::new(config, CanonicalFailoverConfig::default(), "n".into());
+        let _ = manager
+            .export_pool("___nonexistent_pool_nestgate_export_test___")
+            .await;
+    }
+
+    #[tokio::test]
+    async fn attempt_pool_takeover_runs_discovery_pipeline() {
+        let config = ZfsConfig::default();
+        let manager = PoolTakeoverManager::new(
+            config,
+            CanonicalFailoverConfig::default(),
+            "local-node".into(),
+        );
+        let _ = manager.attempt_pool_takeover("failed-peer").await;
     }
 }

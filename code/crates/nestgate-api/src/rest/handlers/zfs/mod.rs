@@ -7,7 +7,7 @@
 //! providing clean data access for management and other management systems.
 
 mod dataset_handlers;
-mod helpers;
+pub(crate) mod helpers;
 mod snapshot_handlers;
 
 // Re-export all public handlers for backward compatibility
@@ -280,7 +280,7 @@ mod tests {
                 .0
                 .data
                 .get("success")
-                .and_then(|v| v.as_bool())
+                .and_then(serde_json::Value::as_bool)
                 .unwrap_or(false)
         );
     }

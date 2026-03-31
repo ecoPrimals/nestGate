@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025 ecoPrimals Collective
 
-#![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
+#![allow(clippy::unnecessary_wraps)]
 
 //! Hybrid external + local authentication orchestration.
-
-//
-// **Pure Rust**: local JWT validation using RustCrypto.
-// No external HTTP calls — NestGate validates tokens locally (TRUE PRIMAL architecture).
-// External validation (if needed) goes through the orchestration RPC layer (concentrated gap).
+//!
+//! Delegates cryptographic operations (JWT signing/verification, password
+//! hashing) to the crypto capability provider (bearDog) via JSON-RPC IPC.
+//! Falls back to cache-based validation when the crypto provider is unavailable.
 
 use super::config::AuthenticationConfig;
 use super::security_primal::call_security_primal;
-use crate::crypto::jwt_rustcrypto::{JwtClaims, JwtHmac};
+use crate::crypto::jwt_rustcrypto::JwtClaims;
 use crate::zero_cost_security_provider::types::{
     AuthMethod, ZeroCostAuthToken, ZeroCostCredentials,
 };
@@ -25,15 +21,18 @@ use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tracing::{debug, info, warn};
 
-/// Hybrid authentication manager
+/// Hybrid authentication manager.
+///
+/// Routes authentication through the security primal (discovered at runtime)
+/// and validates tokens via the crypto capability provider (bearDog IPC).
+/// Falls back to token-cache validation when external providers are unavailable.
 #[derive(Debug)]
-/// Manager for `HybridAuthentication` operations
 pub struct HybridAuthenticationManager {
     config: AuthenticationConfig,
     token_cache: tokio::sync::RwLock<HashMap<String, CachedToken>>,
     auth_attempts: tokio::sync::RwLock<HashMap<String, u32>>,
 }
-/// Cached token information
+
 #[derive(Debug, Clone)]
 struct CachedToken {
     token: ZeroCostAuthToken,
@@ -41,8 +40,9 @@ struct CachedToken {
     #[allow(dead_code)]
     last_validated: SystemTime,
 }
+
 impl HybridAuthenticationManager {
-    /// Create new hybrid authentication manager
+    /// Create new hybrid authentication manager.
     #[must_use]
     pub fn new(config: AuthenticationConfig) -> Self {
         info!("Initializing hybrid authentication manager");
@@ -53,26 +53,24 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// Authenticate user credentials
+    /// Authenticate user credentials.
+    ///
+    /// Tries external authentication (Security primal) first, then falls back
+    /// to local credential verification delegating crypto to bearDog.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns error if authentication fails or rate limit is exceeded.
     pub async fn authenticate(
         &self,
         credentials: &ZeroCostCredentials,
     ) -> Result<ZeroCostAuthToken> {
         debug!("Authenticating user: {}", credentials.username);
 
-        // Check rate limiting
         if !self.check_rate_limit(&credentials.username).await? {
             return Err(NestGateError::security_error("Security error"));
         }
 
-        // Try external authentication first if configured
         if self.config.use_external_auth {
             match self.authenticate_external(credentials).await {
                 Ok(token) => {
@@ -88,22 +86,20 @@ impl HybridAuthenticationManager {
             }
         }
 
-        // Fall back to local authentication
         self.authenticate_local(credentials).await
     }
 
-    /// Validate authentication token
+    /// Validate authentication token.
+    ///
+    /// Checks local cache first, then delegates JWT verification to the
+    /// crypto provider (bearDog) via IPC.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns error if validation cannot be performed.
     pub async fn validate_token(&self, token_str: &str) -> Result<bool> {
         debug!("Validating token");
 
-        // Check local cache first
         {
             let cache = self.token_cache.read().await;
             if let Some(cached) = cache.get(token_str) {
@@ -120,31 +116,27 @@ impl HybridAuthenticationManager {
             }
         }
 
-        // Try external validation if configured
+        // Validate via crypto provider (bearDog) if configured
         if self.config.use_external_auth {
-            match self.validate_token_external(token_str) {
+            match self.validate_token_via_crypto(token_str).await {
                 Ok(valid) => return Ok(valid),
                 Err(e) => {
                     warn!(
-                        "External token validation failed, falling back to local: {}",
+                        "Crypto provider JWT validation failed, falling back to cache: {}",
                         e
                     );
                 }
             }
         }
 
-        // Fall back to local validation
         self.validate_token_local(token_str).await
     }
 
-    /// Refresh authentication token
+    /// Refresh authentication token.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns error if refresh is disabled or token is not found.
     pub async fn refresh_token(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         debug!("Refreshing token");
 
@@ -152,56 +144,37 @@ impl HybridAuthenticationManager {
             return Err(NestGateError::security_error("Security error"));
         }
 
-        // Try external refresh first if configured
         if self.config.use_external_auth {
-            match self.refresh_token_external(token_str) {
+            match self.refresh_token_via_crypto(token_str).await {
                 Ok(token) => return Ok(token),
                 Err(e) => {
                     warn!(
-                        "External token refresh failed, falling back to local: {}",
+                        "Crypto provider token refresh failed, falling back to cache: {}",
                         e
                     );
                 }
             }
         }
 
-        // Fall back to local refresh
         self.refresh_token_local(token_str).await
     }
 
-    /// Revoke authentication token
+    /// Revoke authentication token.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns error if revocation fails.
     pub async fn revoke_token(&self, token_str: &str) -> Result<()> {
         debug!("Revoking token");
 
-        // Remove from local cache
         {
             let mut cache = self.token_cache.write().await;
             cache.remove(token_str);
         }
 
-        // Try external revocation if configured
-        if self.config.use_external_auth {
-            match self.revoke_token_external(token_str).await {
-                Ok(()) => return Ok(()),
-                Err(e) => {
-                    warn!("External token revocation failed: {}", e);
-                }
-            }
-        }
-
         Ok(())
     }
 
-    // Private helper methods
-
-    /// Check authentication rate limit
     async fn check_rate_limit(&self, username: &str) -> Result<bool> {
         let mut attempts = self.auth_attempts.write().await;
         let current_attempts = *attempts.get(username).unwrap_or(&0);
@@ -218,26 +191,20 @@ impl HybridAuthenticationManager {
         Ok(true)
     }
 
-    /// Reset authentication attempts for user
     async fn reset_attempts(&self, username: &str) {
         let mut attempts = self.auth_attempts.write().await;
         attempts.remove(username);
     }
 
-    /// External authentication via Security primal discovered at runtime
-    ///
-    /// Uses capability-based discovery to find Security primal (no hardcoding).
-    /// Integrates with runtime discovery for dynamic primal connection.
+    /// External authentication via Security primal discovered at runtime.
     async fn authenticate_external(
         &self,
         credentials: &ZeroCostCredentials,
     ) -> Result<ZeroCostAuthToken> {
         debug!("Attempting external authentication via capability discovery");
 
-        // Use runtime discovery to find Security capability
         let discovery_client = RuntimeDiscovery::new()?;
 
-        // Discover security primals at runtime (no hardcoded endpoints)
         match discovery_client.find_security_primal().await {
             Ok(connection) => {
                 info!(
@@ -245,7 +212,6 @@ impl HybridAuthenticationManager {
                     connection.endpoint
                 );
 
-                // Make HTTP call to discovered Security primal
                 let token = call_security_primal(
                     &connection,
                     credentials,
@@ -253,7 +219,6 @@ impl HybridAuthenticationManager {
                 )
                 .await?;
 
-                // Cache the token locally
                 {
                     let mut cache = self.token_cache.write().await;
                     cache.insert(
@@ -273,13 +238,12 @@ impl HybridAuthenticationManager {
                     "Security primal discovery failed ({}), falling back to local auth",
                     e
                 );
-                // Graceful degradation: fall back to local authentication
                 self.authenticate_local(credentials).await
             }
         }
     }
 
-    /// Local authentication fallback
+    /// Local authentication — delegates password verification to crypto provider.
     async fn authenticate_local(
         &self,
         credentials: &ZeroCostCredentials,
@@ -288,22 +252,31 @@ impl HybridAuthenticationManager {
 
         match credentials.auth_method {
             AuthMethod::Password => {
-                // Validate password against argon2 hash from local credential store.
-                // No hardcoded admin/admin — callers must provision credentials via
-                // the security primal or NESTGATE_LOCAL_AUTH_HASH env var.
                 let expected_hash = std::env::var("NESTGATE_LOCAL_AUTH_HASH").ok();
                 if let Some(hash) = expected_hash {
-                    let parsed = argon2::PasswordHash::new(&hash).map_err(|_| {
-                        NestGateError::security_error(
-                            "Invalid password hash in NESTGATE_LOCAL_AUTH_HASH",
-                        )
-                    })?;
-                    argon2::PasswordVerifier::verify_password(
-                        &argon2::Argon2::default(),
-                        credentials.password.as_bytes(),
-                        &parsed,
-                    )
-                    .map_err(|_| NestGateError::security_error("Invalid credentials"))?;
+                    // Delegate password verification to crypto provider (bearDog)
+                    match crate::crypto::delegate::CryptoDelegate::new().await {
+                        Ok(delegate) => {
+                            let valid = delegate
+                                .verify_password(&credentials.password, &hash)
+                                .await
+                                .map_err(|e| {
+                                    NestGateError::security_error(format!(
+                                        "Crypto provider password verification failed: {e}"
+                                    ))
+                                })?;
+
+                            if !valid {
+                                return Err(NestGateError::security_error("Invalid credentials"));
+                            }
+                        }
+                        Err(e) => {
+                            warn!("Crypto provider unavailable for password verification: {e}");
+                            return Err(NestGateError::security_error(
+                                "Password verification requires crypto provider (bearDog)",
+                            ));
+                        }
+                    }
 
                     let token = ZeroCostAuthToken::new(
                         format!("local_{}", uuid::Uuid::new_v4()),
@@ -334,13 +307,23 @@ impl HybridAuthenticationManager {
                 if credentials.password.is_empty() {
                     return Err(NestGateError::security_error("API token required"));
                 }
-                // Validate token format and issue a scoped session token
                 let token = ZeroCostAuthToken::new(
                     format!("api_{}", uuid::Uuid::new_v4()),
                     credentials.username.clone(),
                     vec!["api".to_string()],
                     self.config.local_token_settings.token_expiry,
                 );
+
+                let mut cache = self.token_cache.write().await;
+                cache.insert(
+                    token.token.clone(),
+                    CachedToken {
+                        token: token.clone(),
+                        created_at: SystemTime::now(),
+                        last_validated: SystemTime::now(),
+                    },
+                );
+
                 Ok(token)
             }
             AuthMethod::Certificate => Err(NestGateError::security_error(
@@ -355,30 +338,28 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// Local JWT token validation using `RustCrypto` (100% pure Rust!)
-    ///
-    /// **Local-first**: no external HTTP calls; validates tokens locally.
-    /// **Security**: Uses audited `RustCrypto` HMAC-SHA256 for signature verification.
-    /// **Performance**: No network round-trip, instant validation.
-    fn validate_token_external(&self, token_str: &str) -> Result<bool> {
-        // Use local JWT validation with RustCrypto
-        let jwt = JwtHmac::new(&self.config.local_token_settings.signing_key);
+    /// Validate JWT via crypto capability provider (bearDog IPC).
+    async fn validate_token_via_crypto(&self, token_str: &str) -> Result<bool> {
+        let delegate = crate::crypto::delegate::CryptoDelegate::new().await?;
 
-        match jwt.verify(token_str) {
-            Ok(claims) => {
-                // Token is valid and not expired
-                debug!("JWT validated successfully for user: {}", claims.sub);
+        match delegate.verify_jwt(token_str, "HS256").await {
+            Ok(claims_json) => {
+                let claims: JwtClaims = serde_json::from_str(&claims_json).map_err(|e| {
+                    NestGateError::validation_error(format!("JWT claims parse error: {e}"))
+                })?;
+                if claims.is_expired() {
+                    return Ok(false);
+                }
+                debug!("JWT validated via crypto provider for user: {}", claims.sub);
                 Ok(true)
             }
             Err(e) => {
-                // Token is invalid or expired
-                warn!("JWT validation failed: {}", e);
+                warn!("JWT verification via crypto provider failed: {}", e);
                 Ok(false)
             }
         }
     }
 
-    /// Local token validation
     async fn validate_token_local(&self, token_str: &str) -> Result<bool> {
         let cache = self.token_cache.read().await;
         Ok(cache.get(token_str).is_some_and(|cached| {
@@ -387,42 +368,53 @@ impl HybridAuthenticationManager {
         }))
     }
 
-    /// Local JWT token refresh using `RustCrypto` (100% pure Rust!)
-    ///
-    /// **Local-first**: no external HTTP calls; refreshes tokens locally.
-    /// **Security**: Verifies old token, generates new token with extended expiry.
-    /// **Performance**: No network round-trip, instant refresh.
-    fn refresh_token_external(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
-        // Verify the existing token first
-        let jwt = JwtHmac::new(&self.config.local_token_settings.signing_key);
-        let old_claims = jwt
-            .verify(token_str)
+    /// Refresh JWT via crypto capability provider (bearDog IPC).
+    async fn refresh_token_via_crypto(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
+        let delegate = crate::crypto::delegate::CryptoDelegate::new().await?;
+
+        let claims_json = delegate
+            .verify_jwt(token_str, "HS256")
+            .await
             .map_err(|_| NestGateError::security_error("Cannot refresh invalid token"))?;
 
-        // Create new token with extended expiry
+        let old_claims: JwtClaims = serde_json::from_str(&claims_json)
+            .map_err(|e| NestGateError::validation_error(format!("JWT claims parse error: {e}")))?;
+
         let new_expiry_seconds =
             i64::try_from(self.config.local_token_settings.token_expiry.as_secs())
                 .unwrap_or(i64::MAX);
-        let iat_secs = i64::try_from(
-            SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs(),
-        )
-        .unwrap_or(i64::MAX);
         let new_claims = JwtClaims {
             sub: old_claims.sub.clone(),
-            // ✅ EVOLVED: unwrap() → unwrap_or_default() for clock safety
-            iat: iat_secs,
-            exp: iat_secs.saturating_add(new_expiry_seconds),
+            iat: i64::try_from(
+                SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs(),
+            )
+            .unwrap_or(i64::MAX),
+            exp: i64::try_from(
+                SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs(),
+            )
+            .unwrap_or(i64::MAX)
+            .saturating_add(new_expiry_seconds),
             iss: old_claims.iss.clone(),
             aud: old_claims.aud.clone(),
             permissions: old_claims.permissions.clone(),
         };
 
-        let new_token_str = jwt.sign(&new_claims)?;
+        let new_claims_json = serde_json::to_string(&new_claims).map_err(|e| {
+            NestGateError::validation_error(format!("Claims serialization error: {e}"))
+        })?;
 
-        debug!("JWT refreshed successfully for user: {}", old_claims.sub);
+        let new_token_str = delegate.sign_jwt(&new_claims_json, "HS256").await?;
+
+        debug!(
+            "JWT refreshed via crypto provider for user: {}",
+            old_claims.sub
+        );
 
         Ok(ZeroCostAuthToken::new(
             new_token_str,
@@ -432,7 +424,6 @@ impl HybridAuthenticationManager {
         ))
     }
 
-    /// Local token refresh
     async fn refresh_token_local(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         let cache = self.token_cache.read().await;
         cache.get(token_str).map_or_else(
@@ -447,22 +438,5 @@ impl HybridAuthenticationManager {
                 Ok(new_token)
             },
         )
-    }
-
-    /// Local token revocation (100% pure Rust!)
-    ///
-    /// **Local-first**: no external HTTP calls; revokes tokens locally.
-    /// **Implementation**: removes token from cache (blacklist pattern).
-    /// **Note**: for distributed revocation, use orchestration RPC (concentrated gap).
-    async fn revoke_token_external(&self, token_str: &str) -> Result<()> {
-        // Remove token from cache (local revocation)
-        let mut cache = self.token_cache.write().await;
-        cache.remove(token_str);
-
-        // FUTURE: Add distributed token blacklist for revocation (v0.12+ enhancement)
-        // and optionally notify other NestGate instances via orchestration RPC
-
-        debug!("Token revoked successfully (local cache)");
-        Ok(())
     }
 }

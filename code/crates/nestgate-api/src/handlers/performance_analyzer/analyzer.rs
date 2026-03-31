@@ -43,13 +43,36 @@ impl PerformanceAnalyzer {
         })
     }
 
-    /// Calculate Overall Score
+    /// Calculate Overall Score from live metrics.
     fn calculate_overall_score(&self, metrics: &SystemMetrics) -> f64 {
-        // Weighted performance score calculation
         let cpu_score = (100.0 - metrics.cpu_usage_percent).max(0.0);
-        let memory_score = 75.0; // Placeholder calculation
-        let disk_score = 80.0; // Placeholder calculation
-        let network_score = 85.0; // Placeholder calculation
+
+        let memory_score = if metrics.memory_usage_bytes == 0 {
+            100.0
+        } else {
+            // Heuristic: penalise above 80% of a reasonable ceiling (16 GiB).
+            let usage_ratio = metrics.memory_usage_bytes as f64 / (16.0 * 1024.0 * 1024.0 * 1024.0);
+            (100.0 - usage_ratio * 100.0).clamp(0.0, 100.0)
+        };
+
+        let disk = &metrics.disk_io_metrics;
+        let total_disk_ops = u64::from(disk.read_ops_per_sec + disk.write_ops_per_sec);
+        let disk_score = if total_disk_ops == 0 {
+            100.0
+        } else {
+            // Higher IOPS → more load → lower score (100 at 0 ops, 0 at 10 000+)
+            (100.0 - (total_disk_ops as f64 / 100.0)).clamp(0.0, 100.0)
+        };
+
+        let net = &metrics.network_metrics;
+        let total_net = net.rx_bytes_per_sec.saturating_add(net.tx_bytes_per_sec);
+        let network_score = if total_net == 0 {
+            100.0
+        } else {
+            // ~1 GiB/s → score 0
+            let utilisation = total_net as f64 / (1024.0 * 1024.0 * 1024.0);
+            (100.0 - utilisation * 100.0).clamp(0.0, 100.0)
+        };
 
         cpu_score * 0.3 + memory_score * 0.3 + disk_score * 0.2 + network_score * 0.2
     }

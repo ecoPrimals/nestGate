@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn test_performance_trend_clone() {
         let trend = PerformanceTrend::Stable;
-        let cloned = trend.clone();
+        let cloned = trend;
         assert!(matches!(cloned, PerformanceTrend::Stable));
     }
 

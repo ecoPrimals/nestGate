@@ -31,9 +31,9 @@ fuzz_target!(|input: FuzzAdapter| {
     }
 
     // Validate service name doesn't contain dangerous patterns
-    assert!(!input.service_name.contains("/"));
-    assert!(!input.service_name.contains("\\"));
-    assert!(!input.service_name.contains("\0"));
+    assert!(!input.service_name.contains('/'));
+    assert!(!input.service_name.contains('\\'));
+    assert!(!input.service_name.contains('\0'));
 
     // Test capability validation
     for capability in &input.capabilities {
@@ -43,7 +43,7 @@ fuzz_target!(|input: FuzzAdapter| {
 
     // Test metadata validation
     for (key, value) in &input.metadata {
-        assert!(!key.contains("\0"));
-        assert!(!value.contains("\0"));
+        assert!(!key.contains('\0'));
+        assert!(!value.contains('\0'));
     }
 });

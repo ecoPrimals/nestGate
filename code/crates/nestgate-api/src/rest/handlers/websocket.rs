@@ -177,37 +177,34 @@ async fn handle_events_websocket(mut socket: WebSocket, state: ApiState, query: 
     reason = "cfg(test) awaits this helper; metrics assembly is synchronous"
 )]
 async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> {
-    // Get ZFS metrics from engines
-    let mut total_datasets = 0;
-    let total_snapshots = 0;
-    let mut total_used_bytes = 0;
-    let mut _total_available_bytes = 0;
-    let mut compression_ratios = Vec::new();
-    for _entry in state.zfs_engines.iter() {
-        // Placeholder stats - _engine is now just a String
-        total_datasets += 1;
-        // Use available stats instead of cow_stats
-        total_used_bytes += 1024 * 1024; // Placeholder - 1MB per dataset
-        _total_available_bytes += 1024 * 1024 * 1024; // 1GB per dataset
+    let total_datasets = state.zfs_engines.len() as u32;
+    let total_snapshots = 0_u32;
+    let total_used_bytes = 0_u64;
+    let overall_compression_ratio = 1.0;
 
-        // Access compression stats directly (not optional in ModernZfsStats)
-        {
-            // Placeholder compression stats
-            compression_ratios.push(2.5); // Placeholder compression ratio
-        }
-    }
+    let load_average = std::fs::read_to_string("/proc/loadavg")
+        .ok()
+        .and_then(|c| {
+            c.split_whitespace()
+                .next()
+                .and_then(|s| s.parse::<f64>().ok())
+        })
+        .unwrap_or(0.0);
 
-    let overall_compression_ratio = if compression_ratios.is_empty() {
-        1.0
-    } else {
-        compression_ratios.iter().sum::<f64>() / (compression_ratios.len() as f64)
-    };
+    let uptime_seconds = std::fs::read_to_string("/proc/uptime")
+        .ok()
+        .and_then(|c| {
+            c.split_whitespace()
+                .next()
+                .and_then(|s| s.parse::<f64>().ok())
+        })
+        .map_or(0, |s| s as u64);
 
     Ok(SystemMetrics {
         cpu_usage_percent: generate_realtime_cpu_usage(),
         memory_usage_percent: generate_realtime_memory_usage(),
-        load_average: 0.5,    // Placeholder value
-        uptime_seconds: 3600, // Placeholder value
+        load_average,
+        uptime_seconds,
         timestamp: chrono::Utc::now(),
         disk_io: DiskIoMetrics {
             read_bytes_per_sec: generate_realtime_disk_read() * 1024.0 * 1024.0, // Convert MB to bytes
@@ -239,7 +236,7 @@ async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> 
             compression_ratio: overall_compression_ratio,
             deduplication_ratio: 1.2,
             total_datasets,
-            total_snapshots: total_snapshots.try_into().unwrap_or(0),
+            total_snapshots,
             total_used_bytes,
         },
     })

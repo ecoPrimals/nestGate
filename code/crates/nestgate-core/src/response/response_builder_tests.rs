@@ -312,7 +312,7 @@ fn test_paginated_response_structure() {
         },
     ];
     let response = PaginatedResponse {
-        data: data.clone(),
+        data,
         pagination: PaginationMetadata {
             page: 1,
             per_page: 10,

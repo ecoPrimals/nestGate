@@ -16,14 +16,14 @@ mod storage_handler_tests {
     fn test_storage_handler_creation() {
         let handler = StorageHandler::new();
         // Verify handler is created
-        assert!(std::ptr::addr_of!(handler) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(handler).is_null());
     }
 
     #[test]
     fn test_storage_handler_default() {
         let handler = StorageHandler;
         // Verify default implementation
-        assert!(std::ptr::addr_of!(handler) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(handler).is_null());
     }
 
     #[test]

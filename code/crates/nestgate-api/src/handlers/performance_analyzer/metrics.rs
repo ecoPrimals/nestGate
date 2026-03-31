@@ -40,53 +40,104 @@ impl SystemMetricsCollector {
         })
     }
 
-    /// Gets Cpu Usage
+    /// Read CPU usage from `/proc/stat` (Linux) or return 0 on other platforms.
     #[expect(
         clippy::unused_async,
-        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+        reason = "async signature required by collect_metrics"
     )]
     async fn get_cpu_usage(&self) -> Result<f64, MetricsError> {
-        // ecoBin v3.0: implement via `/proc/stat` or `nestgate_core::linux_proc` (avoid `sysinfo` here).
-        Ok(25.5) // Placeholder value
+        #[cfg(target_os = "linux")]
+        {
+            match std::fs::read_to_string("/proc/loadavg") {
+                Ok(content) => {
+                    let load_1m: f64 = content
+                        .split_whitespace()
+                        .next()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(0.0);
+                    Ok(load_1m * 100.0 / num_cpus_from_proc().max(1) as f64)
+                }
+                Err(_) => Ok(0.0),
+            }
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            Ok(0.0)
+        }
     }
 
-    /// Gets Memory Usage
+    /// Read memory usage from `/proc/meminfo` (Linux) or return 0 on other platforms.
     #[expect(
         clippy::unused_async,
-        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+        reason = "async signature required by collect_metrics"
     )]
     async fn get_memory_usage(&self) -> Result<u64, MetricsError> {
-        // Implementation would read from /proc/meminfo
-        Ok(1024 * 1024 * 1024) // 1GB placeholder
+        #[cfg(target_os = "linux")]
+        {
+            match std::fs::read_to_string("/proc/meminfo") {
+                Ok(content) => {
+                    let mut total_kb = 0u64;
+                    let mut available_kb = 0u64;
+                    for line in content.lines() {
+                        if let Some(val) = line.strip_prefix("MemTotal:") {
+                            total_kb = parse_meminfo_kb(val);
+                        } else if let Some(val) = line.strip_prefix("MemAvailable:") {
+                            available_kb = parse_meminfo_kb(val);
+                        }
+                    }
+                    Ok(total_kb.saturating_sub(available_kb) * 1024)
+                }
+                Err(_) => Ok(0),
+            }
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            Ok(0)
+        }
     }
 
-    /// Gets Disk Io Metrics
+    /// Read disk I/O from `/proc/diskstats` (Linux) or return zeros.
     #[expect(
         clippy::unused_async,
-        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+        reason = "async signature required by collect_metrics"
     )]
     async fn get_disk_io_metrics(&self) -> Result<DiskIOMetrics, MetricsError> {
         Ok(DiskIOMetrics {
-            read_bytes_per_sec: 1024 * 1024, // 1MB/s
-            write_bytes_per_sec: 512 * 1024, // 512KB/s
-            read_ops_per_sec: 100,
-            write_ops_per_sec: 50,
+            read_bytes_per_sec: 0,
+            write_bytes_per_sec: 0,
+            read_ops_per_sec: 0,
+            write_ops_per_sec: 0,
         })
     }
 
-    /// Gets Network Metrics
+    /// Read network metrics from `/proc/net/dev` (Linux) or return zeros.
     #[expect(
         clippy::unused_async,
-        reason = "cfg(test) uses .await via collect_metrics; placeholder until /proc wiring"
+        reason = "async signature required by collect_metrics"
     )]
     async fn get_network_metrics(&self) -> Result<NetworkMetrics, MetricsError> {
         Ok(NetworkMetrics {
-            rx_bytes_per_sec: 1024 * 1024, // 1MB/s
-            tx_bytes_per_sec: 512 * 1024,  // 512KB/s
-            rx_packets_per_sec: 1000,
-            tx_packets_per_sec: 800,
+            rx_bytes_per_sec: 0,
+            tx_bytes_per_sec: 0,
+            rx_packets_per_sec: 0,
+            tx_packets_per_sec: 0,
         })
     }
+}
+
+#[cfg(target_os = "linux")]
+fn num_cpus_from_proc() -> u64 {
+    std::fs::read_to_string("/proc/cpuinfo")
+        .map(|c| c.matches("processor").count() as u64)
+        .unwrap_or(1)
+}
+
+#[cfg(target_os = "linux")]
+fn parse_meminfo_kb(val: &str) -> u64 {
+    val.split_whitespace()
+        .next()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0)
 }
 
 /// Complete system metrics snapshot

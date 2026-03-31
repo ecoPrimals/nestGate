@@ -489,14 +489,7 @@ mod tests {
             .await
             .expect("test: random record");
         let stats = lb.get_stats().await.expect("test: random stats");
-        assert!(
-            stats
-                .service_stats
-                .get("z")
-                .map(|x| x.requests)
-                .unwrap_or(0)
-                >= 1
-        );
+        assert!(stats.service_stats.get("z").map_or(0, |x| x.requests) >= 1);
         assert!(lb.update_weights(&[]).await.is_err());
     }
 }

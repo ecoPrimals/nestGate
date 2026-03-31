@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn production_placeholder_new_and_default() {
         let a = ZeroCostNativeZfsService::<4>::new();
-        let b = ZeroCostNativeZfsService::<4>::default();
+        let b = ZeroCostNativeZfsService::<4>;
         drop((a, b));
     }
 }

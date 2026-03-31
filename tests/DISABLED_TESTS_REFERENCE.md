@@ -49,10 +49,10 @@ See [README.md](README.md) for the full category list and `cargo test --workspac
 
 | Metric | Value |
 |--------|--------|
-| Passing | 11,707 |
+| Passing (lib) | 8,384 |
 | Failed | 0 |
-| Ignored | 563 |
-| Workspace coverage (all features) | ~74.3% |
+| Ignored | 64 |
+| Workspace coverage (lib) | 80.95% |
 
 Re-run tests and `cargo llvm-cov --workspace --all-features` after large changes; numbers drift with the tree.
 

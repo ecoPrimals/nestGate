@@ -3,9 +3,11 @@
 
 #![forbid(unsafe_code)]
 
-//! Primal discovery, capability resolution, and service registry for `NestGate`.
+//! Thin capability discovery client for `NestGate`.
 //!
-//! Extracted from nestgate-core to enable parallel compilation.
+//! Discovery of peers is delegated to songBird IPC; this crate retains only
+//! the types and runtime helpers needed for capability-based peer lookup via
+//! environment variables and JSON-RPC IPC.
 
 #![cfg_attr(
     test,
@@ -51,16 +53,7 @@
 
 pub mod capabilities;
 pub mod capability_discovery;
-pub mod capability_resolver;
-pub mod discovery;
-pub mod discovery_mechanism;
 pub mod infant_discovery;
 pub mod primal_discovery;
-pub mod primal_self_knowledge;
-pub mod self_knowledge;
 pub mod service_discovery;
-pub mod unified_capabilities;
 pub mod universal_primal_discovery;
-
-#[cfg(test)]
-mod round6_discovery_coverage;

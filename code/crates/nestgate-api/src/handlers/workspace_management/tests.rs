@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn test_workspace_manager_thread_safe() {
         let manager = WorkspaceManager::new();
-        let _clone = manager.clone();
+        let _clone = manager;
 
         // WorkspaceManager should be Send + Sync
         fn assert_send<T: Send>() {}

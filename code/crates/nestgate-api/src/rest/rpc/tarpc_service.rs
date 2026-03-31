@@ -52,18 +52,13 @@ impl TarpcRpcService {
         &self,
         request: super::UnifiedRpcRequest,
     ) -> Result<super::UnifiedRpcResponse, super::RpcError> {
-        debug!("📞 tarpc call to security: {}", request.method);
+        debug!("tarpc call to security: {}", request.method);
 
-        // Placeholder implementation
-        Ok(super::UnifiedRpcResponse {
-            request_id: request.id,
-            success: true,
-            data: None,
-            error: None,
-            _metadata: std::collections::HashMap::new(),
-            timestamp: chrono::Utc::now(),
-            metrics: super::ResponseMetrics::default(),
-        })
+        Err(super::RpcError::ServiceUnavailable(format!(
+            "tarpc security service not yet wired for method '{}'. \
+             Use JSON-RPC IPC via Unix socket instead.",
+            request.method
+        )))
     }
 
     /// Start a bidirectional stream
@@ -145,13 +140,14 @@ mod tests {
     }
 
     #[test]
-    fn execute_request_returns_success_response() {
+    fn execute_request_returns_service_unavailable() {
         let svc = TarpcRpcService::new("tcp://127.0.0.1:0");
         let req = sample_request("ping");
-        let resp = svc.execute_request(req).unwrap();
-        assert!(resp.success);
-        assert_eq!(resp.request_id, Uuid::nil());
-        assert!(resp.error.is_none());
+        let result = svc.execute_request(req);
+        assert!(
+            result.is_err(),
+            "tarpc service not yet wired — should return error"
+        );
     }
 
     #[test]

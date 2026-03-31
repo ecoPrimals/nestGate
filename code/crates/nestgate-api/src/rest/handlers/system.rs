@@ -182,14 +182,9 @@ pub async fn system_status(State(state): State<ApiState>) -> Json<DataResponse<S
     // Count datasets and snapshots
     let datasets_count = state.zfs_engines.len() as u32;
 
-    let mut snapshots_count = 0;
-    for _entry in state.zfs_engines.iter() {
-        // Placeholder stats - _engine is now just a String
-        snapshots_count += 5; // Placeholder snapshot count
-    }
+    let snapshots_count = super::zfs::helpers::get_snapshot_count_from_engine_impl();
 
-    // Count storage backends (simplified)
-    let storage_backends_count = 2; // Memory + Filesystem (for demo)
+    let storage_backends_count = u32::from(!state.zfs_engines.is_empty());
 
     let system_status = SystemStatusInfo {
         health: health_data,
@@ -298,14 +293,18 @@ fn get_resource_usage() -> ResourceUsage {
     }
 }
 
-/// Get snapshot count from a ZFS _engine
+/// Get snapshot count from a ZFS engine.
 #[expect(dead_code, reason = "Utility function for snapshot monitoring")]
 fn get_engine_snapshot_count(_engine: &Arc<dyn std::any::Any + Send + Sync>) -> u64 {
-    // In a real implementation, this would query the _engine's snapshot manager
-    // For now, we'll estimate based on available snapshot _metadata
     use std::fs;
     use std::path::Path;
-    let snapshot_dir = Path::new("/tmp/nestgate/snapshots");
+    let base = std::env::var("NESTGATE_DATA_DIR").unwrap_or_else(|_| {
+        std::env::temp_dir()
+            .join("nestgate")
+            .to_string_lossy()
+            .into_owned()
+    });
+    let snapshot_dir = Path::new(&base).join("snapshots");
     if snapshot_dir.exists()
         && let Ok(entries) = fs::read_dir(snapshot_dir)
     {
@@ -429,7 +428,8 @@ mod tests {
         let result = system_status(State(state)).await;
 
         assert_eq!(result.0.data.datasets_count, 3);
-        assert!(result.0.data.snapshots_count > 0); // Placeholder generates snapshots
+        // Snapshot count comes from filesystem scan — 0 in test environments
+        assert_eq!(result.0.data.snapshots_count, 0);
     }
 
     #[test]
@@ -530,8 +530,8 @@ mod tests {
         let state = create_test_api_state();
         let result = system_status(State(state)).await;
 
-        // Should report at least one storage backend
-        assert!(result.0.data.storage_backends_count > 0);
+        // Empty test state has no engines → 0 backends
+        assert_eq!(result.0.data.storage_backends_count, 0);
     }
 
     #[test]

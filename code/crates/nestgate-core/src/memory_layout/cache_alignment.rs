@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn test_cache_aligned_alignment() {
         let aligned = CacheAligned::new([0u8; 32]);
-        let ptr = aligned.get() as *const _ as usize;
+        let ptr = std::ptr::from_ref(aligned.get()) as usize;
         assert_eq!(ptr % 64, 0, "Should be 64-byte aligned");
     }
 

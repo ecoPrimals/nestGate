@@ -3,15 +3,10 @@
 
 //! Discovery backend implementations
 //!
-//! This module provides concrete implementations of the DiscoveryBackend trait
-//! for various service discovery mechanisms.
+//! mDNS/Consul/K8s backends have been removed — peer discovery is delegated
+//! to songBird IPC.  The in-memory backend remains for testing and local dev.
 
 /// In-memory backend for testing and local development
 pub mod memory;
 
-/// mDNS backend for local network discovery
-pub mod mdns;
-
-// Re-exports
-pub use mdns::MdnsDiscoveryBackend;
 pub use memory::InMemoryDiscoveryBackend;

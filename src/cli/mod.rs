@@ -182,9 +182,11 @@ pub mod commands {
     pub async fn execute(cli: &Cli) -> nestgate_core::Result<()> {
         match &cli.command {
             None => {
-                // No subcommand: default to daemon mode
+                // No subcommand: default to daemon mode with config-derived defaults
                 tracing::info!("🏰 No subcommand provided, starting daemon mode");
-                commands::daemon::run(8080, "127.0.0.1", false, false).await
+                let port = nestgate_config::constants::ports::get_api_port();
+                let bind = nestgate_config::constants::network_defaults::get_bind_address();
+                commands::daemon::run(port, &bind, false, false).await
             }
             Some(Commands::Daemon { port, bind, dev, enable_http }) => {
                 commands::daemon::run(*port, bind, *dev, !*enable_http).await

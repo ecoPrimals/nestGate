@@ -307,9 +307,9 @@ mod tests {
 
         for i in 0..100 {
             let handle = pool
-                .allocate(format!("Value {}", i))
+                .allocate(format!("Value {i}"))
                 .expect("Allocation failed");
-            assert_eq!(handle.value().as_str(), &format!("Value {}", i));
+            assert_eq!(handle.value().as_str(), &format!("Value {i}"));
         }
 
         assert_eq!(pool.available(), 8);

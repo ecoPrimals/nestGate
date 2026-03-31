@@ -136,7 +136,7 @@ mod storage_mock_tests {
             health: PoolHealth::Online,
             tier: crate::canonical_types::storage::StorageTier::Hot,
             properties: HashMap::new(),
-            datasets: datasets.clone(),
+            datasets,
             last_updated: SystemTime::now(),
         };
 

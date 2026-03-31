@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn jsonrpc_response_error_constructor_roundtrip() {
         let e = JsonRpcError::method_not_found();
-        let r = JsonRpcResponse::error(Value::from(42), e.clone());
+        let r = JsonRpcResponse::error(Value::from(42), e);
         assert!(r.result.is_none());
         assert_eq!(r.error.as_ref().map(|x| x.code), Some(-32601));
         assert_eq!(r.id, Value::from(42));

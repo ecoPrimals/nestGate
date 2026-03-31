@@ -15,6 +15,7 @@ nestgate-config = { path = "../nestgate-config" }
 
 anyhow = { workspace = true }
 base64 = { workspace = true }
+bytes = { workspace = true }
 chrono = { workspace = true }
 bincode = { workspace = true }
 futures = { workspace = true }

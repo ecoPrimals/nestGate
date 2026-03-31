@@ -265,7 +265,7 @@ mod result_types_tests {
 
         /// Step3
         fn step3(x: i32) -> Result<String> {
-            Ok(format!("Result: {}", x))
+            Ok(format!("Result: {x}"))
         }
 
         let result = step1().and_then(step2).and_then(step3);
@@ -454,7 +454,7 @@ mod result_types_tests {
             Ok(())
         }
 
-        let result = op1().and_then(|_| op2()).and_then(|_| op3());
+        let result = op1().and_then(|()| op2()).and_then(|()| op3());
         assert!(result.is_ok());
     }
 
@@ -473,7 +473,7 @@ mod result_types_tests {
             Ok(())
         }
 
-        let result = op1().and_then(|_| op2()).and_then(|_| op3());
+        let result = op1().and_then(|()| op2()).and_then(|()| op3());
         assert!(result.is_err());
     }
 }

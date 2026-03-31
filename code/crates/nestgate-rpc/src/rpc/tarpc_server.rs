@@ -38,6 +38,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::SystemTime;
 
+use bytes::Bytes;
 use futures_util::StreamExt;
 use tarpc::context::Context;
 use tarpc::server::Channel;
@@ -63,7 +64,9 @@ fn byte_len_u64(len: usize) -> u64 {
     u64::try_from(len).unwrap_or(u64::MAX)
 }
 
-type StoredObjectPayload = (Vec<u8>, HashMap<String, String>);
+/// Object payload stored in the in-memory store. Uses `Bytes` for
+/// refcounted zero-copy cloning on retrieval.
+type StoredObjectPayload = (Bytes, HashMap<String, String>);
 
 /// In-process dataset/object store (replaces `nestgate-core` `StorageManagerService` until wired).
 #[derive(Default)]
@@ -237,7 +240,7 @@ impl NestGateRpc for NestGateRpcService {
             compressed: false,
             metadata: meta.clone(),
         };
-        g.objects.insert((dataset, key), (data, meta));
+        g.objects.insert((dataset, key), (Bytes::from(data), meta));
 
         let object_count = byte_len_u64(
             g.objects
@@ -279,7 +282,7 @@ impl NestGateRpc for NestGateRpcService {
         let lookup = (dataset.clone(), key.clone());
         g.objects
             .get(&lookup)
-            .map(|(b, _)| b.clone())
+            .map(|(b, _)| b.to_vec())
             .ok_or(NestGateRpcError::ObjectNotFound { dataset, key })
     }
 

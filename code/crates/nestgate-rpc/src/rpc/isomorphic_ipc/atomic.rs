@@ -6,46 +6,46 @@
 //! **Phase 3: Deployment Coordination - Atomic Compositions**
 //!
 //! This module provides support for atomic primal compositions, specifically
-//! the **NEST Atomic** (TOWER + nestgate + squirrel).
+//! the **NEST Atomic** (TOWER + `NestGate`).
 //!
 //! ## Atomic Compositions
 //!
-//! **NEST** = TOWER + storage gateway + AI integration (roles; peers resolved at runtime)
-//! - **TOWER** = device + network capability layers (which primal hosts them is discovered)
-//! - **Storage gateway** = universal storage + discovery (this stack)
-//! - **AI integration** = MCP / model orchestration (discovered by capability)
+//! **NEST Atomic** = TOWER + `NestGate` (storage/permanence)
+//! - **TOWER** = bearDog (crypto/security) + songBird (network/TLS/discovery)
+//! - **`NestGate`** = universal storage, ZFS, permanence (this primal)
 //!
-//! Combined: Complete storage + compute + AI + networking stack
+//! Squirrel (AI/MCP) is a **meta-tier overlay** that augments any atomic
+//! composition dynamically via biomeOS Neural API capability routing — it is
+//! not a member of any single atomic. When `NestGate` needs AI/MCP capabilities,
+//! it discovers them at runtime via `capability.call` through biomeOS.
 //!
 //! ## Architecture
 //!
 //! ```text
-//! ┌─────────────────────────────────────────────────────────────┐
-//! │                    NEST ATOMIC LAUNCHER                      │
-//! ├─────────────────────────────────────────────────────────────┤
-//! │                                                              │
-//! │  TOWER (foundational device + networking)                   │
-//! │    ├─ Device / security capabilities (discovered)          │
-//! │    └─ Network federation (discovered)                      │
-//! │                                                              │
-//! │  Storage gateway (this primal’s role)                        │
-//! │    ├─ Universal storage (ZFS, ext4, tmpfs)                  │
-//! │    └─ Primal discovery & service metadata                   │
-//! │                                                              │
-//! │  AI / MCP integration (discovered peers)                     │
-//! │    ├─ MCP (Model Context Protocol)                          │
-//! │    └─ AI model orchestration                                │
-//! │                                                              │
-//! └─────────────────────────────────────────────────────────────┘
+//! NEST ATOMIC COMPOSITION
+//!
+//!   TOWER (foundational device + networking)
+//!     bearDog: crypto, key management, lineage
+//!     songBird: TLS, HTTP transport, discovery registry
+//!
+//!   NestGate (storage / permanence — this primal)
+//!     Universal storage (ZFS, ext4, tmpfs)
+//!     JSON-RPC on UDS (primary surface)
+//!     Self-knowledge + capability-based peer discovery
+//!
+//!   [Dynamic overlays discovered at runtime via biomeOS]
+//!     Squirrel: AI/MCP (meta-tier, not atomic member)
+//!     Any capability provider via Neural API routing
 //! ```
 //!
 //! ## Deep Debt Principles
 //!
-//! - ✅ **Runtime Discovery**: Each primal discovers others via isomorphic IPC
-//! - ✅ **Zero Hardcoding**: No hardcoded ports, paths, or endpoints
-//! - ✅ **Platform Agnostic**: Works on all platforms (Linux, macOS, FreeBSD, Android)
-//! - ✅ **Self-Knowledge**: Each primal only knows itself, discovers others
-//! - ✅ **Capability-Based**: Adapts to available platform capabilities
+//! - **Runtime Discovery**: Each primal discovers others via isomorphic IPC
+//! - **Zero Hardcoding**: No hardcoded ports, paths, or endpoints
+//! - **Platform Agnostic**: Works on all platforms (Linux, macOS, FreeBSD, Android)
+//! - **Self-Knowledge**: Each primal only knows itself, discovers others
+//! - **Capability-Based**: Adapts to available platform capabilities
+//! - **Sovereignty**: `NestGate` delegates crypto to bearDog, network to songBird
 
 use anyhow::{Context, Result};
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;

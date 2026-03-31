@@ -71,7 +71,7 @@ fn test_request_body_sizes() {
 #[test]
 fn test_request_body_string_content_types() {
     let json_body = r#"{"key":"value"}"#;
-    let xml_body = r#"<root><key>value</key></root>"#;
+    let xml_body = r"<root><key>value</key></root>";
     let plain_body = "plain text content";
 
     let body1 = RequestBody::Json(json_body);

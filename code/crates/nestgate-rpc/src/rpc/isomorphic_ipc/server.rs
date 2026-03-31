@@ -93,8 +93,9 @@ use super::tcp_fallback::{RpcHandler, TcpFallbackServer};
 /// - Falls back to TCP if platform constraints detected
 /// - Same protocol (JSON-RPC 2.0) on both transports
 pub struct IsomorphicIpcServer {
-    /// Service name (for socket paths and discovery files)
-    service_name: String,
+    /// Service name (for socket paths and discovery files). `Arc<str>` for
+    /// zero-copy cloning when passed to fallback transports.
+    service_name: Arc<str>,
     /// RPC handler (shared between Unix and TCP servers)
     handler: Arc<dyn RpcHandler>,
 }
@@ -120,9 +121,9 @@ impl IsomorphicIpcServer {
     /// ));
     /// # }
     /// ```
-    pub fn new(service_name: String, handler: Arc<dyn RpcHandler>) -> Self {
+    pub fn new(service_name: impl Into<Arc<str>>, handler: Arc<dyn RpcHandler>) -> Self {
         Self {
-            service_name,
+            service_name: service_name.into(),
             handler,
         }
     }
@@ -322,7 +323,7 @@ impl IsomorphicIpcServer {
     /// **PROTOCOL**: Same JSON-RPC 2.0 as Unix sockets (transparent to clients)
     async fn start_tcp_fallback(self: Arc<Self>) -> Result<()> {
         let tcp_server = Arc::new(TcpFallbackServer::new(
-            self.service_name.clone(),
+            Arc::clone(&self.service_name),
             self.handler.clone(),
         ));
 

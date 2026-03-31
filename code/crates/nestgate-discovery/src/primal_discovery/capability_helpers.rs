@@ -45,7 +45,6 @@
 //! # }
 //! ```
 
-use crate::discovery_mechanism::{DiscoveryBuilder, ServiceInfo};
 use nestgate_config::constants::hardcoding::runtime_fallback_ports as fallback_ports;
 use nestgate_config::constants::{get_api_port, get_dev_port};
 use nestgate_types::error::{NestGateError, Result};
@@ -106,16 +105,6 @@ pub enum DiscoverySource {
 }
 
 impl DiscoveredService {
-    /// Create from `ServiceInfo` (discovery)
-    fn from_service_info(info: ServiceInfo) -> Self {
-        Self {
-            name: info.name.clone(),
-            endpoint: info.endpoint.clone(),
-            capabilities: info.capabilities,
-            source: DiscoverySource::Discovery,
-        }
-    }
-
     /// Create from environment variable
     fn from_env(capability: &str, endpoint: String) -> Self {
         Self {
@@ -139,63 +128,78 @@ impl DiscoveredService {
 
 // ==================== HIGH-LEVEL DISCOVERY FUNCTIONS ====================
 
-/// Discover orchestration service (e.g., Songbird)
+/// Discover orchestration service (e.g., Songbird).
 ///
 /// **Priority**:
-/// 1. Discovery (mDNS/Consul/k8s)
-/// 2. `NESTGATE_CAPABILITY_ORCHESTRATION` environment variable
-/// 3. `NESTGATE_SONGBIRD_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://{NESTGATE_ORCHESTRATION_HOST or fallback}:{NESTGATE_API_PORT}`
+/// 1. `NESTGATE_CAPABILITY_ORCHESTRATION` env var (set by songBird discovery)
+/// 2. `NESTGATE_SONGBIRD_URL` (deprecated, backward compat)
+/// 3. Development default fallback
 ///
 /// # Errors
 ///
-/// Returns error only if all discovery methods fail and no fallback is available.
+/// Infallible — always falls back to a development default.
 pub async fn discover_orchestration() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("orchestration", "SONGBIRD", get_api_port).await
+    Ok(discover_capability_with_legacy(
+        "orchestration",
+        "SONGBIRD",
+        get_api_port,
+    ))
 }
 
-/// Discover security service (e.g., `BearDog`)
+/// Discover security service (e.g., `BearDog`).
 ///
 /// **Priority**:
-/// 1. Discovery (mDNS/Consul/k8s)
-/// 2. `NESTGATE_CAPABILITY_SECURITY` environment variable
-/// 3. `NESTGATE_BEARDOG_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://{NESTGATE_SECURITY_HOST or fallback}:{NESTGATE_DEV_PORT}`
+/// 1. `NESTGATE_CAPABILITY_SECURITY` env var (set by songBird discovery)
+/// 2. `NESTGATE_BEARDOG_URL` (deprecated, backward compat)
+/// 3. Development default fallback
 pub async fn discover_security() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("security", "BEARDOG", get_dev_port).await
+    Ok(discover_capability_with_legacy(
+        "security",
+        "BEARDOG",
+        get_dev_port,
+    ))
 }
 
-/// Discover compute service (e.g., `ToadStool`)
+/// Discover compute service (e.g., `ToadStool`).
 ///
 /// **Priority**:
-/// 1. Discovery (mDNS/Consul/k8s)
-/// 2. `NESTGATE_CAPABILITY_COMPUTE` environment variable
-/// 3. `NESTGATE_TOADSTOOL_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://{NESTGATE_COMPUTE_HOST or fallback}:{NESTGATE_COMPUTE_PORT or canonical}`
+/// 1. `NESTGATE_CAPABILITY_COMPUTE` env var (set by songBird discovery)
+/// 2. `NESTGATE_TOADSTOOL_URL` (deprecated, backward compat)
+/// 3. Development default fallback
 pub async fn discover_compute() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("compute", "TOADSTOOL", default_port_compute).await
+    Ok(discover_capability_with_legacy(
+        "compute",
+        "TOADSTOOL",
+        default_port_compute,
+    ))
 }
 
-/// Discover AI service (e.g., Squirrel)
+/// Discover AI service (e.g., Squirrel).
 ///
 /// **Priority**:
-/// 1. Discovery (mDNS/Consul/k8s)
-/// 2. `NESTGATE_CAPABILITY_AI` environment variable
-/// 3. `NESTGATE_SQUIRREL_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://{NESTGATE_AI_HOST or fallback}:{NESTGATE_AI_PORT or canonical}`
+/// 1. `NESTGATE_CAPABILITY_AI` env var (set by songBird discovery)
+/// 2. `NESTGATE_SQUIRREL_URL` (deprecated, backward compat)
+/// 3. Development default fallback
 pub async fn discover_ai() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("ai", "SQUIRREL", default_port_ai).await
+    Ok(discover_capability_with_legacy(
+        "ai",
+        "SQUIRREL",
+        default_port_ai,
+    ))
 }
 
-/// Discover ecosystem service (e.g., `BiomeOS`)
+/// Discover ecosystem service (e.g., `BiomeOS`).
 ///
 /// **Priority**:
-/// 1. Discovery (mDNS/Consul/k8s)
-/// 2. `NESTGATE_CAPABILITY_ECOSYSTEM` environment variable
-/// 3. `NESTGATE_BIOMEOS_URL` (deprecated, backward compat)
-/// 4. Last-resort default: `http://{NESTGATE_ECOSYSTEM_HOST or fallback}:{NESTGATE_ECOSYSTEM_PORT or canonical}`
+/// 1. `NESTGATE_CAPABILITY_ECOSYSTEM` env var (set by songBird discovery)
+/// 2. `NESTGATE_BIOMEOS_URL` (deprecated, backward compat)
+/// 3. Development default fallback
 pub async fn discover_ecosystem() -> Result<DiscoveredService> {
-    discover_capability_with_legacy("ecosystem", "BIOMEOS", default_port_ecosystem).await
+    Ok(discover_capability_with_legacy(
+        "ecosystem",
+        "BIOMEOS",
+        default_port_ecosystem,
+    ))
 }
 
 // ==================== CORE DISCOVERY LOGIC ====================
@@ -203,32 +207,13 @@ pub async fn discover_ecosystem() -> Result<DiscoveredService> {
 /// Discover any service by capability
 ///
 /// **Priority**:
-/// 1. Discovery (mDNS/Consul/k8s)
-/// 2. `NESTGATE_CAPABILITY_{CAPABILITY}` environment variable
-/// 3. Error (no last-resort default for arbitrary capabilities)
-///
-/// # Example
-///
-/// ```rust,ignore
-/// use nestgate_core::primal_discovery::capability_helpers::*;
-///
-/// # async fn example() -> anyhow::Result<()> {
-/// // Discover storage capability
-/// let storage = discover_capability("storage").await?;
-/// # Ok(())
-/// # }
-/// ```
+/// 1. `NESTGATE_CAPABILITY_{CAPABILITY}` environment variable (set by songBird or operator)
+/// 2. Error (no fallback for arbitrary capabilities)
 ///
 /// # Errors
 ///
-/// Returns error if capability not found via discovery or environment.
+/// Returns error if capability not found via environment.
 pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> {
-    // Try discovery first
-    if let Ok(service) = try_discovery(capability).await {
-        return Ok(service);
-    }
-
-    // Try capability-based environment variable
     let env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
     if let Ok(endpoint) = std::env::var(&env_var) {
         tracing::info!(
@@ -239,27 +224,20 @@ pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> 
         return Ok(DiscoveredService::from_env(capability, endpoint));
     }
 
-    // No fallback for arbitrary capabilities
     Err(NestGateError::network_error(format!(
-        "Capability '{capability}' not found via discovery or environment. Set {env_var} or use service discovery."
+        "Capability '{capability}' not found. Set {env_var} or configure peer discovery."
     )))
 }
 
-/// Discover capability with legacy environment variable support
+/// Discover capability with legacy environment variable support.
 ///
-/// Internal helper that provides backward compatibility with deprecated
-/// primal-specific environment variables.
-async fn discover_capability_with_legacy(
+/// Checks env vars in order: capability-based, legacy primal-specific, then
+/// falls back to development default.
+fn discover_capability_with_legacy(
     capability: &str,
     legacy_name: &str,
     default_port: impl FnOnce() -> u16,
-) -> Result<DiscoveredService> {
-    // Try discovery first
-    if let Ok(service) = try_discovery(capability).await {
-        return Ok(service);
-    }
-
-    // Try capability-based environment variable (NEW)
+) -> DiscoveredService {
     let capability_env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
     if let Ok(endpoint) = std::env::var(&capability_env_var) {
         tracing::info!(
@@ -267,62 +245,30 @@ async fn discover_capability_with_legacy(
             capability,
             endpoint
         );
-        return Ok(DiscoveredService::from_env(capability, endpoint));
+        return DiscoveredService::from_env(capability, endpoint);
     }
 
-    // Try legacy primal-specific environment variable (DEPRECATED)
     let legacy_env_var = format!("NESTGATE_{legacy_name}_URL");
     if let Ok(endpoint) = std::env::var(&legacy_env_var) {
         tracing::warn!(
-            "Using deprecated environment variable '{}'. Please migrate to '{}'",
+            "Using deprecated '{}'. Migrate to '{}'",
             legacy_env_var,
             capability_env_var
         );
-        return Ok(DiscoveredService::from_env(capability, endpoint));
+        return DiscoveredService::from_env(capability, endpoint);
     }
 
-    // Last-resort default for development
     let host = fallback_host_for_capability(capability);
     let default_endpoint = format!("http://{}:{}", host, default_port());
     tracing::warn!(
-        "No discovery or environment configuration for '{}' capability. Using development default: {}. \
-         In production, use service discovery or set {} environment variable.",
+        "No environment configuration for '{}'. Using development default: {}. \
+         Set {} for production.",
         capability,
         default_endpoint,
         capability_env_var
     );
 
-    Ok(DiscoveredService::from_default(
-        capability,
-        default_endpoint,
-    ))
-}
-
-/// Try to discover service via discovery mechanism
-async fn try_discovery(capability: &str) -> Result<DiscoveredService> {
-    // Auto-detect discovery mechanism
-    let discovery = DiscoveryBuilder::default().detect()?;
-
-    // Query by capability
-    let services = discovery.find_by_capability(capability.to_string()).await?;
-
-    // Return first service found
-    services.first().map_or_else(
-        || {
-            Err(NestGateError::network_error(format!(
-                "No service found providing '{capability}' capability"
-            )))
-        },
-        |service| {
-            tracing::info!(
-                "Discovered '{}' capability via discovery: {} at {}",
-                capability,
-                service.name,
-                service.endpoint
-            );
-            Ok(DiscoveredService::from_service_info(service.clone()))
-        },
-    )
+    DiscoveredService::from_default(capability, default_endpoint)
 }
 
 // ==================== UTILITY FUNCTIONS ====================
@@ -338,7 +284,7 @@ async fn try_discovery(capability: &str) -> Result<DiscoveredService> {
 /// use nestgate_core::primal_discovery::capability_helpers::*;
 ///
 /// # async fn example() -> anyhow::Result<()> {
-/// if is_capability_available("orchestration").await {
+/// if is_capability_available("orchestration") {
 ///     let service = discover_orchestration().await?;
 ///     // Use service
 /// } else {
@@ -347,13 +293,8 @@ async fn try_discovery(capability: &str) -> Result<DiscoveredService> {
 /// # Ok(())
 /// # }
 /// ```
-pub async fn is_capability_available(capability: &str) -> bool {
-    // Try discovery
-    if try_discovery(capability).await.is_ok() {
-        return true;
-    }
-
-    // Try environment
+#[must_use]
+pub fn is_capability_available(capability: &str) -> bool {
     let env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
     std::env::var(&env_var).is_ok()
 }
@@ -410,8 +351,8 @@ mod tests {
         // SAFETY: single-threaded test context.
         nestgate_platform::env_process::set_var("NESTGATE_CAPABILITY_CUSTOM", "http://custom:5555");
 
-        assert!(is_capability_available("custom").await);
-        assert!(!is_capability_available("nonexistent").await);
+        assert!(is_capability_available("custom"));
+        assert!(!is_capability_available("nonexistent"));
 
         // SAFETY: single-threaded test context.
         nestgate_platform::env_process::remove_var("NESTGATE_CAPABILITY_CUSTOM");

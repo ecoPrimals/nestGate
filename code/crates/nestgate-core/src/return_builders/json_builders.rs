@@ -118,7 +118,7 @@ mod tests {
         let resp = build_api_success("payload");
         assert!(resp.success);
         assert_eq!(resp.status, ResponseStatus::Success);
-        assert_eq!(resp.data.as_deref(), Some("payload"));
+        assert_eq!(resp.data, Some("payload"));
         assert!(resp.error.is_none());
         assert!(resp.metadata.is_some());
         assert!(!resp.request_id.is_empty());

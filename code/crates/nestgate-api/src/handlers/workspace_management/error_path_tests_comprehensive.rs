@@ -322,15 +322,14 @@ mod workspace_error_path_tests {
         }
 
         // Check if it's algorithm with level (e.g., "gzip-6")
-        if let Some((base, level)) = algo.split_once('-') {
-            if valid_algorithms.contains(&base) {
-                if let Ok(level_num) = level.parse::<u8>() {
-                    match base {
-                        "gzip" if (1..=9).contains(&level_num) => return Ok(()),
-                        "zstd" if (1..=19).contains(&level_num) => return Ok(()),
-                        _ => {}
-                    }
-                }
+        if let Some((base, level)) = algo.split_once('-')
+            && valid_algorithms.contains(&base)
+            && let Ok(level_num) = level.parse::<u8>()
+        {
+            match base {
+                "gzip" if (1..=9).contains(&level_num) => return Ok(()),
+                "zstd" if (1..=19).contains(&level_num) => return Ok(()),
+                _ => {}
             }
         }
 

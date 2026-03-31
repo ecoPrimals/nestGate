@@ -364,6 +364,7 @@ const fn capability_name(capability: &PrimalCapability) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn test_builder_defaults() {
@@ -397,13 +398,14 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_discovery_from_env() {
         let orig = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
         crate::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
 
         let config = CapabilityConfigBuilder::new().build().unwrap();
-
         let result = config.discover(PrimalCapability::Storage).await;
+
         match orig {
             Some(v) => crate::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
             None => crate::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
@@ -425,6 +427,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn discover_rejects_invalid_endpoint_env() {
         let orig = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
         crate::env_process::set_var(
@@ -447,6 +450,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn discover_local_fallback_succeeds_without_capability_env() {
         let orig_cap = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
         let orig_host = std::env::var("NESTGATE_FALLBACK_HOST").ok();
@@ -482,6 +486,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn discover_fail_fast_without_env() {
         let orig = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
         crate::env_process::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT");
@@ -503,6 +508,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn discover_graceful_degradation_still_errors_without_env() {
         let orig = std::env::var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT").ok();
         crate::env_process::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");

@@ -17,13 +17,11 @@ fn into_api_response_ok_and_err() {
     let ok: ApiResponse<i32> = Ok::<i32, std::convert::Infallible>(7).into_api_response();
     assert!(ok.success);
     let err: ApiResponse<i32> =
-        Result::<i32, std::io::Error>::Err(std::io::Error::new(std::io::ErrorKind::Other, "boom"))
-            .into_api_response();
+        Result::<i32, std::io::Error>::Err(std::io::Error::other("boom")).into_api_response();
     assert!(!err.success);
 
-    let masked: ApiResponse<i32> =
-        Result::<i32, std::io::Error>::Err(std::io::Error::new(std::io::ErrorKind::Other, "x"))
-            .into_api_response_with_message("user-visible");
+    let masked: ApiResponse<i32> = Result::<i32, std::io::Error>::Err(std::io::Error::other("x"))
+        .into_api_response_with_message("user-visible");
     assert_eq!(masked.error.as_deref(), Some("user-visible"));
 }
 
@@ -37,7 +35,7 @@ fn into_success_response_serializes_payload() {
 
 #[test]
 fn into_unified_error_response_display() {
-    let e = std::io::Error::new(std::io::ErrorKind::Other, "io fail");
+    let e = std::io::Error::other("io fail");
     let u = e.to_unified_error_response("svc");
     assert_eq!(u.component, "svc");
     assert!(!u.message.is_empty());

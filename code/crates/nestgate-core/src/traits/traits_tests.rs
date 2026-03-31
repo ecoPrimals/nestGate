@@ -137,7 +137,7 @@ impl CanonicalService for MockService {
     }
 
     /// Service Id
-    fn service_id(&self) -> &str {
+    fn service_id(&self) -> &'static str {
         "mock-service"
     }
 }

@@ -47,7 +47,7 @@ mod auth_handler_tests {
     #[test]
     fn test_auth_credentials_empty_username() {
         let creds = AuthCredentials {
-            username: "".to_string(),
+            username: String::new(),
             password: "password123".to_string(),
         };
         assert!(creds.username.is_empty());
@@ -58,7 +58,7 @@ mod auth_handler_tests {
     fn test_auth_credentials_empty_password() {
         let creds = AuthCredentials {
             username: "testuser".to_string(),
-            password: "".to_string(),
+            password: String::new(),
         };
         assert!(!creds.username.is_empty());
         assert!(creds.password.is_empty());
@@ -423,14 +423,14 @@ mod auth_handler_tests {
             password: "password123".to_string(),
         };
         assert!(!creds.username.is_empty());
-        assert!(!creds.username.chars().all(|c: char| c.is_ascii()));
+        assert!(!creds.username.is_ascii());
     }
 
     #[test]
     fn test_very_long_username() {
         let long_username = "a".repeat(256);
         let creds = AuthCredentials {
-            username: long_username.clone(),
+            username: long_username,
             password: "password123".to_string(),
         };
         assert_eq!(creds.username.len(), 256);
@@ -441,7 +441,7 @@ mod auth_handler_tests {
         let long_password = "SecurePass1!".repeat(50);
         let creds = AuthCredentials {
             username: "testuser".to_string(),
-            password: long_password.clone(),
+            password: long_password,
         };
         assert!(creds.password.len() > 100);
     }

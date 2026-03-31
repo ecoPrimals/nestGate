@@ -16,7 +16,7 @@ use super::types::{
 #[test]
 fn test_storage_handler_new_and_default() {
     let _ = StorageHandler::new();
-    let _ = StorageHandler::default();
+    let _ = StorageHandler;
 }
 
 #[test]

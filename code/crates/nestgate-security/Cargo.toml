@@ -15,17 +15,9 @@ nestgate-config = { path = "../nestgate-config" }
 nestgate-discovery = { path = "../nestgate-discovery" }
 nestgate-rpc = { path = "../nestgate-rpc" }
 
-# Crypto (RustCrypto stack)
-aes-gcm = { workspace = true }
-argon2 = { workspace = true, features = ["std"] }
+# Encoding utilities (crypto operations delegated to bearDog via IPC)
 base64 = { workspace = true }
-ed25519-dalek = { workspace = true }
-getrandom = { workspace = true }
 hex = { workspace = true }
-hmac = { workspace = true }
-md5 = { workspace = true }
-rand = { workspace = true }
-sha2 = { workspace = true }
 
 # Core utilities
 chrono = { workspace = true }

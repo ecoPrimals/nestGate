@@ -409,7 +409,7 @@ mod production_handler_tests {
         let single = CreatePoolRequest {
             name: "pool1".to_string(),
             devices: vec!["/dev/sda".to_string()],
-            raid_type: "".to_string(),
+            raid_type: String::new(),
         };
         assert_eq!(single.devices.len(), 1);
 

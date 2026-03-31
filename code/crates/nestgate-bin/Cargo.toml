@@ -20,7 +20,7 @@ workspace = true
 nestgate-core = { path = "../nestgate-core" }
 nestgate-network = { path = "../nestgate-network" }
 nestgate-api = { path = "../nestgate-api" }
-nestgate-mcp = { path = "../nestgate-mcp" }
+
 
 tokio = { workspace = true }
 tracing = { workspace = true }

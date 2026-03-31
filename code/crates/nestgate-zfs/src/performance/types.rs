@@ -174,27 +174,6 @@ pub struct ZfsPerformanceMonitor {
     pub alert_sender: Option<mpsc::Sender<Alert>>,
 }
 
-/// Performance monitoring configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Configuration for  `RemovedPerformance`
-pub struct _RemovedPerformanceConfig {
-    /// Metrics collection interval in seconds
-    pub collection_interval: u64,
-    /// Analysis interval in seconds
-    pub analysis_interval: u64,
-    /// Alert check interval in seconds
-    pub alert_interval: u64,
-    /// History retention period in hours
-    pub history_retention_hours: u64,
-    /// Maximum history entries to keep
-    pub max_history_entries: usize,
-    /// Enable real-time alerting
-    pub enable_alerting: bool,
-    /// Enable trend analysis
-    pub enable_trend_analysis: bool,
-    /// Prometheus metrics endpoint
-    pub prometheus_endpoint: Option<String>,
-}
 /// Current performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Currentperformancemetrics
@@ -510,27 +489,24 @@ pub(crate) struct PoolProperties {
     /// Dedup Ratio
     pub dedup_ratio: f64,
 }
-#[allow(dead_code)] // Development/testing structure - intentionally unused
+#[cfg(test)]
 pub(crate) struct LocalMemoryInfo {
     available_mb: u64,
     used_mb: u64,
 }
-#[allow(dead_code)] // Performance analysis methods
+#[cfg(test)]
 impl LocalMemoryInfo {
-    /// Create new memory info
-    #[allow(dead_code)] // Development/testing method
     pub const fn new(available_mb: u64, used_mb: u64) -> Self {
         Self {
             available_mb,
             used_mb,
         }
     }
-    /// Get total memory
+
     pub const fn total_mb(&self) -> u64 {
         self.available_mb + self.used_mb
     }
 
-    /// Get memory usage percentage
     pub fn usage_percentage(&self) -> f64 {
         if self.total_mb() == 0 {
             0.0

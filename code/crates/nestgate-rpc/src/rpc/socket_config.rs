@@ -284,9 +284,50 @@ impl SocketConfig {
 mod tests {
 
     use super::*;
+    use nestgate_platform::env_process;
     use std::fs;
     use std::os::unix::net::UnixListener;
     use std::path::PathBuf;
+    use std::sync::Mutex;
+
+    /// Keys read by [`SocketConfig::from_environment`]. Serialized to avoid parallel test races.
+    const FROM_ENV_KEYS: &[&str] = &[
+        "NESTGATE_SOCKET",
+        "NESTGATE_FAMILY_ID",
+        "NESTGATE_NODE_ID",
+        "BIOMEOS_SOCKET_DIR",
+        "XDG_RUNTIME_DIR",
+    ];
+
+    static FROM_ENV_MUTEX: Mutex<()> = Mutex::new(());
+
+    fn snapshot_from_env() -> Vec<(String, Option<String>)> {
+        FROM_ENV_KEYS
+            .iter()
+            .map(|&k| (k.to_string(), std::env::var(k).ok()))
+            .collect()
+    }
+
+    fn restore_from_env(snapshot: &[(String, Option<String>)]) {
+        for (key, val) in snapshot {
+            match val {
+                Some(v) => env_process::set_var(key, v),
+                None => env_process::remove_var(key),
+            }
+        }
+    }
+
+    /// Clears socket-related env vars, runs `f`, then restores previous values via `env_process`.
+    fn with_isolated_from_env<R>(f: impl FnOnce() -> R) -> R {
+        let _guard = FROM_ENV_MUTEX.lock().expect("from_environment test mutex");
+        let snap = snapshot_from_env();
+        for &k in FROM_ENV_KEYS {
+            env_process::remove_var(k);
+        }
+        let out = f();
+        restore_from_env(&snap);
+        out
+    }
 
     // ========================================================================
     // UNIT TESTS - Pure Logic via resolve() (no env var races)
@@ -732,5 +773,129 @@ mod tests {
             };
             c.log_summary();
         }
+    }
+
+    // ========================================================================
+    // from_environment + env_process (serialized; restores prior env)
+    // ========================================================================
+
+    #[test]
+    fn from_environment_respects_nestgate_socket() {
+        with_isolated_from_env(|| {
+            env_process::set_var("NESTGATE_SOCKET", "/tmp/nestgate-from-env-explicit.sock");
+            env_process::set_var("NESTGATE_FAMILY_ID", "fam-env");
+            env_process::set_var("NESTGATE_NODE_ID", "node-env");
+
+            let cfg = SocketConfig::from_environment().expect("from_environment");
+            assert_eq!(
+                cfg.socket_path,
+                PathBuf::from("/tmp/nestgate-from-env-explicit.sock")
+            );
+            assert_eq!(cfg.family_id, "fam-env");
+            assert_eq!(cfg.node_id, "node-env");
+            assert_eq!(cfg.source, SocketConfigSource::Environment);
+        });
+    }
+
+    #[test]
+    fn from_environment_default_family_standalone_when_unset() {
+        with_isolated_from_env(|| {
+            let cfg = SocketConfig::from_environment().expect("from_environment");
+            assert_eq!(cfg.family_id, "standalone");
+            assert!(!cfg.node_id.is_empty());
+        });
+    }
+
+    #[test]
+    fn from_environment_biomeos_dir_when_no_socket_override() {
+        with_isolated_from_env(|| {
+            env_process::set_var("BIOMEOS_SOCKET_DIR", "/tmp/nestgate-biomeos-from-env");
+            env_process::set_var("NESTGATE_FAMILY_ID", "bf");
+
+            let cfg = SocketConfig::from_environment().expect("from_environment");
+            assert_eq!(
+                cfg.socket_path,
+                PathBuf::from("/tmp/nestgate-biomeos-from-env/nestgate.sock")
+            );
+            assert_eq!(cfg.source, SocketConfigSource::BiomeOSDirectory);
+        });
+    }
+
+    #[test]
+    fn from_environment_xdg_runtime_when_dir_exists() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        with_isolated_from_env(|| {
+            env_process::set_var("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref());
+
+            let cfg = SocketConfig::from_environment().expect("from_environment");
+            assert_eq!(cfg.source, SocketConfigSource::XdgRuntime);
+            assert!(cfg.socket_path.ends_with("biomeos/nestgate.sock"));
+        });
+    }
+
+    #[test]
+    fn from_environment_socket_beats_biomeos_and_xdg() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        with_isolated_from_env(|| {
+            env_process::set_var("NESTGATE_SOCKET", "/tmp/only-this.sock");
+            env_process::set_var("BIOMEOS_SOCKET_DIR", "/tmp/ignored-biomeos");
+            env_process::set_var("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref());
+
+            let cfg = SocketConfig::from_environment().expect("from_environment");
+            assert_eq!(cfg.socket_path, PathBuf::from("/tmp/only-this.sock"));
+            assert_eq!(cfg.source, SocketConfigSource::Environment);
+        });
+    }
+
+    // ========================================================================
+    // Additional resolve / edge cases
+    // ========================================================================
+
+    #[test]
+    fn resolve_empty_string_override_still_tier1_environment() {
+        let cfg = SocketConfig::resolve(
+            "a".to_string(),
+            "b".to_string(),
+            Some(String::new()),
+            None,
+            None,
+        )
+        .expect("resolve");
+        assert_eq!(cfg.source, SocketConfigSource::Environment);
+        assert_eq!(cfg.socket_path, PathBuf::from(""));
+    }
+
+    #[test]
+    fn resolve_xdg_nonexistent_path_skips_tier3() {
+        let cfg = SocketConfig::resolve(
+            "fam".to_string(),
+            "nod".to_string(),
+            None,
+            None,
+            Some("/nonexistent/nestgate-xdg-999999999999999".to_string()),
+        )
+        .expect("resolve");
+        assert_eq!(cfg.source, SocketConfigSource::TempDirectory);
+        assert!(
+            cfg.socket_path
+                .to_string_lossy()
+                .contains("nestgate-fam-nod.sock")
+        );
+    }
+
+    #[test]
+    fn socket_path_str_empty_when_non_utf8() {
+        use std::ffi::OsString;
+        use std::os::unix::ffi::OsStringExt;
+
+        let bytes = b"/tmp/\xFF\xFE.sock".to_vec();
+        let os = OsString::from_vec(bytes);
+        let cfg = SocketConfig {
+            socket_path: PathBuf::from(os),
+            family_id: "x".to_string(),
+            node_id: "y".to_string(),
+            source: SocketConfigSource::TempDirectory,
+        };
+        assert_eq!(cfg.socket_path_str(), "");
     }
 }

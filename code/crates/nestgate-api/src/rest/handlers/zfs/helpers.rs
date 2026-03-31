@@ -87,9 +87,15 @@ pub fn create_storage_backend(
     }
 }
 
-/// Get snapshot count from ZFS _engine
+/// Get snapshot count from ZFS engine.
 pub fn get_snapshot_count_from_engine_impl() -> u64 {
-    let snapshot_dir = Path::new("/tmp/nestgate/snapshots");
+    let base = std::env::var("NESTGATE_DATA_DIR").unwrap_or_else(|_| {
+        std::env::temp_dir()
+            .join("nestgate")
+            .to_string_lossy()
+            .into_owned()
+    });
+    let snapshot_dir = Path::new(&base).join("snapshots");
     if snapshot_dir.exists()
         && let Ok(entries) = fs::read_dir(snapshot_dir)
     {

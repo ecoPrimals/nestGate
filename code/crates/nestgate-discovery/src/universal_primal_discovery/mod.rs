@@ -56,10 +56,7 @@ pub mod fallbacks;
 pub mod introspection;
 /// Introspection configuration
 pub mod introspection_config;
-/// **NEW**: Migration bridge to self-knowledge pattern (Dec 3, 2025)
-///
-/// Provides integration between old hardcoded discovery and new capability-based system.
-pub mod migration_to_self_knowledge;
+// migration_to_self_knowledge removed — discovery delegated to songBird IPC
 /// Network discovery (addresses, ports, interfaces)
 pub mod network;
 /// Network discovery configuration

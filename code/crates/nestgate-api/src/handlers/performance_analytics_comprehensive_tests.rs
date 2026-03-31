@@ -202,7 +202,7 @@ mod performance_analytics_tests {
     #[allow(deprecated)]
     fn test_analysis_config_default() {
         let config = AnalysisConfig::default();
-        assert!(std::ptr::addr_of!(config) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(config).is_null());
     }
 
     // ==================== ANALYZER STATE TESTS ====================

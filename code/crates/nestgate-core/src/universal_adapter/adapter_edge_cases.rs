@@ -10,7 +10,7 @@
 mod adapter_query_edge_cases {
     #[test]
     fn test_empty_query() {
-        let query = String::from("");
+        let query = String::new();
         assert!(query.is_empty());
     }
 
@@ -72,7 +72,7 @@ mod adapter_routing_edge_cases {
     fn test_many_routes() {
         let mut routes = HashMap::new();
         for i in 0..1000 {
-            routes.insert(format!("cap{}", i), format!("handler{}", i));
+            routes.insert(format!("cap{i}"), format!("handler{i}"));
         }
         assert_eq!(routes.len(), 1000);
     }
@@ -98,7 +98,7 @@ mod adapter_routing_edge_cases {
     fn test_route_lookup_performance() {
         let mut routes = HashMap::new();
         for i in 0..1000 {
-            routes.insert(format!("cap{}", i), format!("handler{}", i));
+            routes.insert(format!("cap{i}"), format!("handler{i}"));
         }
 
         for i in 0..10000 {
@@ -155,7 +155,7 @@ mod adapter_cache_edge_cases {
     fn test_cache_size_limits() {
         let mut cache = HashMap::new();
         for i in 0..1000 {
-            cache.insert(format!("key{}", i), format!("value{}", i));
+            cache.insert(format!("key{i}"), format!("value{i}"));
         }
         assert_eq!(cache.len(), 1000);
     }
@@ -196,7 +196,7 @@ mod adapter_concurrent_operations {
             let cache_clone = Arc::clone(&cache);
             let handle = thread::spawn(move || {
                 let mut c = cache_clone.write().unwrap();
-                c.insert(format!("key{}", i), format!("value{}", i));
+                c.insert(format!("key{i}"), format!("value{i}"));
             });
             handles.push(handle);
         }
@@ -213,7 +213,7 @@ mod adapter_concurrent_operations {
     fn test_concurrent_routing_lookups() {
         let mut routes = HashMap::new();
         for i in 0..100 {
-            routes.insert(format!("cap{}", i), format!("handler{}", i));
+            routes.insert(format!("cap{i}"), format!("handler{i}"));
         }
         let routes = Arc::new(routes);
 
@@ -242,7 +242,7 @@ mod adapter_performance_tests {
     fn test_rapid_capability_lookups() {
         let mut capabilities = HashMap::new();
         for i in 0..1000 {
-            capabilities.insert(format!("cap{}", i), i);
+            capabilities.insert(format!("cap{i}"), i);
         }
 
         for i in 0..10000 {
@@ -254,7 +254,7 @@ mod adapter_performance_tests {
     fn test_adapter_state_cloning() {
         let mut state = HashMap::new();
         for i in 0..100 {
-            state.insert(format!("key{}", i), format!("value{}", i));
+            state.insert(format!("key{i}"), format!("value{i}"));
         }
 
         let clones: Vec<_> = (0..100).map(|_| state.clone()).collect();
@@ -265,7 +265,7 @@ mod adapter_performance_tests {
     fn test_large_capability_set() {
         let mut capabilities = HashMap::new();
         for i in 0..10000 {
-            capabilities.insert(format!("cap{}", i), format!("handler{}", i));
+            capabilities.insert(format!("cap{i}"), format!("handler{i}"));
         }
         assert_eq!(capabilities.len(), 10000);
     }
@@ -274,7 +274,7 @@ mod adapter_performance_tests {
     fn test_batch_capability_registration() {
         let mut capabilities = HashMap::new();
         let batch: Vec<_> = (0..1000)
-            .map(|i| (format!("cap{}", i), format!("handler{}", i)))
+            .map(|i| (format!("cap{i}"), format!("handler{i}")))
             .collect();
 
         for (cap, handler) in batch {
@@ -305,7 +305,7 @@ mod adapter_boundary_conditions {
     fn test_maximum_capabilities() {
         let mut capabilities = HashMap::new();
         for i in 0..100000 {
-            capabilities.insert(format!("cap{}", i), format!("handler{}", i));
+            capabilities.insert(format!("cap{i}"), format!("handler{i}"));
         }
         assert_eq!(capabilities.len(), 100000);
     }
@@ -322,14 +322,14 @@ mod adapter_boundary_conditions {
     #[test]
     fn test_empty_capability_name() {
         let mut capabilities = HashMap::new();
-        capabilities.insert("".to_string(), "handler".to_string());
+        capabilities.insert(String::new(), "handler".to_string());
         assert!(capabilities.contains_key(""));
     }
 
     #[test]
     fn test_empty_handler_name() {
         let mut capabilities = HashMap::new();
-        capabilities.insert("cap".to_string(), "".to_string());
-        assert_eq!(capabilities.get("cap"), Some(&"".to_string()));
+        capabilities.insert("cap".to_string(), String::new());
+        assert_eq!(capabilities.get("cap"), Some(&String::new()));
     }
 }

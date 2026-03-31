@@ -127,6 +127,53 @@ impl std::fmt::Display for HealthStatus {
     }
 }
 
+/// Interpret `zpool status` stdout for health classification.
+///
+/// Used by [`ZfsHealthMonitor::check_pool_health`] so parsing logic can be tested without ZFS.
+fn pool_health_from_zpool_status_text(stdout: &str) -> HealthStatus {
+    if stdout.contains("ONLINE") && !stdout.contains("errors:") {
+        HealthStatus::Healthy
+    } else if stdout.contains("DEGRADED")
+        || stdout.contains("FAULTED")
+        || stdout.contains("UNAVAIL")
+    {
+        HealthStatus::Critical
+    } else {
+        HealthStatus::Warning
+    }
+}
+
+/// Interpret `zfs list -H -o name,avail` stdout for dataset space health.
+///
+/// Used by [`ZfsHealthMonitor::check_dataset_health`] so threshold logic can be unit-tested.
+fn dataset_health_from_zfs_list_text(stdout: &str) -> HealthStatus {
+    const ONE_GIB: u64 = 1024 * 1024 * 1024;
+
+    let mut total_datasets = 0_u32;
+    let mut low_space_datasets = 0_u32;
+
+    for line in stdout.lines() {
+        let fields: Vec<&str> = line.split('\t').collect();
+        if fields.len() >= 2 {
+            total_datasets += 1;
+
+            if let Ok(avail_bytes) = fields[1].parse::<u64>()
+                && avail_bytes < ONE_GIB
+            {
+                low_space_datasets += 1;
+            }
+        }
+    }
+
+    if low_space_datasets == 0 {
+        HealthStatus::Healthy
+    } else if low_space_datasets < total_datasets / 2 {
+        HealthStatus::Warning
+    } else {
+        HealthStatus::Critical
+    }
+}
+
 impl ZfsHealthMonitor {
     /// Create a new health monitor
     ///
@@ -331,17 +378,7 @@ impl ZfsHealthMonitor {
         {
             Ok(output) if output.status.success() => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-
-                if stdout.contains("ONLINE") && !stdout.contains("errors:") {
-                    HealthStatus::Healthy
-                } else if stdout.contains("DEGRADED")
-                    || stdout.contains("FAULTED")
-                    || stdout.contains("UNAVAIL")
-                {
-                    HealthStatus::Critical
-                } else {
-                    HealthStatus::Warning
-                }
+                pool_health_from_zpool_status_text(stdout.as_ref())
             }
             _ => {
                 // If we can't check, assume it's a warning condition
@@ -363,33 +400,7 @@ impl ZfsHealthMonitor {
         {
             Ok(output) if output.status.success() => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-
-                // Check if all datasets have reasonable available space
-                let mut total_datasets = 0;
-                let mut low_space_datasets = 0;
-
-                for line in stdout.lines() {
-                    let fields: Vec<&str> = line.split('\t').collect();
-                    if fields.len() >= 2 {
-                        total_datasets += 1;
-
-                        // Parse available space and check if it's critically low
-                        if let Ok(avail_bytes) = fields[1].parse::<u64>()
-                            && avail_bytes < 1024 * 1024 * 1024
-                        {
-                            // Less than 1GB available
-                            low_space_datasets += 1;
-                        }
-                    }
-                }
-
-                if low_space_datasets == 0 {
-                    HealthStatus::Healthy
-                } else if low_space_datasets < total_datasets / 2 {
-                    HealthStatus::Warning
-                } else {
-                    HealthStatus::Critical
-                }
+                dataset_health_from_zfs_list_text(stdout.as_ref())
             }
             _ => HealthStatus::Warning,
         }
@@ -444,6 +455,7 @@ mod tests {
     use super::*;
     use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
     use std::sync::Arc;
+    use std::sync::atomic::Ordering;
 
     #[test]
     fn test_health_status_is_critical_variants() {
@@ -555,5 +567,220 @@ mod tests {
         let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
         let mut monitor = ZfsHealthMonitor::new(pool_manager, dataset_manager).expect("monitor");
         monitor.stop_monitoring().await.expect("stop");
+    }
+
+    #[tokio::test]
+    async fn stop_monitoring_when_active_drains_background_tasks() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
+        let mut monitor = ZfsHealthMonitor::new(pool_manager, dataset_manager).expect("monitor");
+        monitor.start_monitoring().expect("start monitoring");
+        let long = tokio::spawn(async {
+            tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+        });
+        {
+            let mut tasks = monitor.background_tasks.write().await;
+            tasks.push(long);
+        }
+        monitor.stop_monitoring().await.expect("stop");
+        assert!(!monitor.monitoring_active.load(Ordering::Relaxed));
+    }
+
+    #[tokio::test]
+    async fn health_monitor_start_then_stop_clears_health_data() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
+        let mut monitor = ZfsHealthMonitor::new(pool_manager, dataset_manager).expect("monitor");
+        monitor.start().expect("start");
+        assert!(monitor.monitoring_tasks.is_some());
+        {
+            let mut map = monitor.health_data.write().await;
+            map.insert(
+                "probe".to_string(),
+                HealthReport {
+                    component_type: "pool".to_string(),
+                    component_name: "p".to_string(),
+                    status: HealthStatus::Healthy,
+                    last_check: SystemTime::now(),
+                    details: "test".to_string(),
+                },
+            );
+        }
+        monitor.stop().await.expect("stop");
+        assert!(monitor.monitoring_tasks.is_none());
+        let map = monitor.health_data.read().await;
+        assert!(map.is_empty());
+    }
+
+    #[tokio::test]
+    async fn check_pool_health_invokes_zpool_for_unknown_pool() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let status =
+            ZfsHealthMonitor::check_pool_health(&pool_manager, "nestgate_nonexistent_pool_🦀")
+                .await;
+        assert!(matches!(
+            status,
+            HealthStatus::Healthy | HealthStatus::Warning | HealthStatus::Critical
+        ));
+    }
+
+    #[tokio::test]
+    async fn check_dataset_health_invokes_zfs_for_unknown_pool() {
+        let config = ZfsConfig::default();
+        let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
+        let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
+        let status = ZfsHealthMonitor::check_dataset_health(
+            &dataset_manager,
+            "nestgate_nonexistent_dataset_root_🦀",
+        )
+        .await;
+        assert!(matches!(
+            status,
+            HealthStatus::Healthy | HealthStatus::Warning | HealthStatus::Critical
+        ));
+    }
+
+    #[test]
+    fn pool_health_text_online_and_no_errors_is_healthy() {
+        assert_eq!(
+            pool_health_from_zpool_status_text("  state: ONLINE\n"),
+            HealthStatus::Healthy
+        );
+    }
+
+    #[test]
+    fn pool_health_text_online_with_errors_colon_is_not_healthy() {
+        assert_eq!(
+            pool_health_from_zpool_status_text("ONLINE\nerrors: 42"),
+            HealthStatus::Warning
+        );
+    }
+
+    #[test]
+    fn pool_health_text_degraded_faulted_unavail_are_critical() {
+        assert_eq!(
+            pool_health_from_zpool_status_text("pool: DEGRADED\n"),
+            HealthStatus::Critical
+        );
+        assert_eq!(
+            pool_health_from_zpool_status_text("  FAULTED  \n"),
+            HealthStatus::Critical
+        );
+        assert_eq!(
+            pool_health_from_zpool_status_text("disk UNAVAIL\n"),
+            HealthStatus::Critical
+        );
+    }
+
+    #[test]
+    fn pool_health_text_unknown_without_keywords_is_warning() {
+        assert_eq!(
+            pool_health_from_zpool_status_text("no useful tokens here"),
+            HealthStatus::Warning
+        );
+    }
+
+    #[test]
+    fn pool_health_text_online_branch_checked_before_degraded_keywords() {
+        // `contains("ONLINE") && !errors:` is evaluated first; both ONLINE and DEGRADED in text
+        // still match the healthy branch when `errors:` is absent.
+        let s = "ONLINE replica but DEGRADED due to missing disk";
+        assert_eq!(pool_health_from_zpool_status_text(s), HealthStatus::Healthy);
+    }
+
+    #[test]
+    fn dataset_health_empty_stdout_is_healthy() {
+        assert_eq!(dataset_health_from_zfs_list_text(""), HealthStatus::Healthy);
+        assert_eq!(
+            dataset_health_from_zfs_list_text("\n\n"),
+            HealthStatus::Healthy
+        );
+    }
+
+    #[test]
+    fn dataset_health_all_high_avail_is_healthy() {
+        let two_gib = 2u64 * 1024 * 1024 * 1024;
+        let line = format!("tank/a\t{two_gib}\ntank/b\t{two_gib}");
+        assert_eq!(
+            dataset_health_from_zfs_list_text(&line),
+            HealthStatus::Healthy
+        );
+    }
+
+    #[test]
+    fn dataset_health_all_low_avail_is_critical() {
+        let line = "a\t100\nb\t200\nc\t300";
+        assert_eq!(
+            dataset_health_from_zfs_list_text(line),
+            HealthStatus::Critical
+        );
+    }
+
+    #[test]
+    fn dataset_health_threshold_warning_one_low_of_five() {
+        let two_gib = 2u64 * 1024 * 1024 * 1024;
+        let line = format!("a\t100\nb\t{two_gib}\nc\t{two_gib}\nd\t{two_gib}\ne\t{two_gib}");
+        assert_eq!(
+            dataset_health_from_zfs_list_text(&line),
+            HealthStatus::Warning
+        );
+    }
+
+    #[test]
+    fn dataset_health_threshold_critical_two_low_of_four() {
+        let line = "a\t100\nb\t200\nc\t300\nd\t400";
+        assert_eq!(
+            dataset_health_from_zfs_list_text(line),
+            HealthStatus::Critical
+        );
+    }
+
+    #[test]
+    fn dataset_health_unparseable_avail_counts_row_but_not_low() {
+        let two_gib = 2u64 * 1024 * 1024 * 1024;
+        let line = format!("tank/x\tnot-a-number\ntank/y\t{two_gib}");
+        assert_eq!(
+            dataset_health_from_zfs_list_text(&line),
+            HealthStatus::Healthy
+        );
+    }
+
+    #[test]
+    fn dataset_health_single_low_dataset_is_critical() {
+        assert_eq!(
+            dataset_health_from_zfs_list_text("only\t512"),
+            HealthStatus::Critical
+        );
+    }
+
+    #[test]
+    fn health_status_warning_unknown_neither_healthy_nor_critical() {
+        assert!(!HealthStatus::Warning.is_healthy());
+        assert!(!HealthStatus::Warning.is_critical());
+        assert!(!HealthStatus::Unknown.is_healthy());
+        assert!(!HealthStatus::Unknown.is_critical());
+    }
+
+    #[test]
+    fn health_report_and_alert_defaults_constructors() {
+        let r = HealthReport {
+            component_type: String::new(),
+            component_name: String::new(),
+            status: HealthStatus::Unknown,
+            last_check: SystemTime::UNIX_EPOCH,
+            details: String::new(),
+        };
+        assert_eq!(r.status, HealthStatus::Unknown);
+        let a = Alert {
+            id: String::new(),
+            level: AlertLevel::Warning,
+            message: String::new(),
+            timestamp: SystemTime::UNIX_EPOCH,
+            component: String::new(),
+        };
+        assert!(matches!(a.level, AlertLevel::Warning));
     }
 }

@@ -125,11 +125,11 @@ mod edge_cases {
     fn test_edge_error_special_characters() {
         let err =
             NestGateError::internal_error("Error with 'quotes' and \"double quotes\"", "test");
-        let err_str = format!("{}", err);
+        let err_str = format!("{err}");
         assert!(err_str.contains("quotes"));
 
         let err2 = NestGateError::internal_error("Error\nwith\nnewlines", "test");
-        let err_str2 = format!("{}", err2);
+        let err_str2 = format!("{err2}");
         assert!(err_str2.contains("Error"));
     }
 
@@ -140,8 +140,8 @@ mod edge_cases {
 
         for i in 0..100 {
             let handle = tokio::spawn(async move {
-                let err = NestGateError::internal_error(format!("Error {}", i), "concurrent_test");
-                format!("{}", err)
+                let err = NestGateError::internal_error(format!("Error {i}"), "concurrent_test");
+                format!("{err}")
             });
             handles.push(handle);
         }
@@ -149,7 +149,7 @@ mod edge_cases {
         // All should complete successfully
         for (i, handle) in handles.into_iter().enumerate() {
             let result = handle.await.expect("Task should complete");
-            assert!(result.contains(&format!("Error {}", i)) || result.contains("concurrent_test"));
+            assert!(result.contains(&format!("Error {i}")) || result.contains("concurrent_test"));
         }
     }
 
@@ -176,7 +176,7 @@ mod edge_cases {
     fn test_edge_very_long_error_message() {
         let long_msg = "x".repeat(10000);
         let err = NestGateError::internal_error(long_msg, "test");
-        let err_str = format!("{}", err);
+        let err_str = format!("{err}");
         assert!(!err_str.is_empty());
     }
 

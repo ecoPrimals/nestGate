@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025 ecoPrimals Collective
+
 // **ADVANCED PERFORMANCE OPTIMIZATIONS**
 //! Advanced Optimizations functionality and utilities.
 // Cutting-edge performance optimization techniques for maximum throughput

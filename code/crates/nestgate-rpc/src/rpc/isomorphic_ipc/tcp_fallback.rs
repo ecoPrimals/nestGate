@@ -72,8 +72,8 @@ pub trait RpcHandler: Send + Sync {
 /// Provides JSON-RPC 2.0 over TCP when Unix sockets are unavailable.
 #[derive(Clone)]
 pub struct TcpFallbackServer {
-    /// Service name (for discovery file)
-    service_name: String,
+    /// Service name (for discovery file). `Arc<str>` for zero-copy sharing.
+    service_name: Arc<str>,
     /// RPC handler (shared with Unix socket server)
     handler: Arc<dyn RpcHandler>,
 }
@@ -85,9 +85,9 @@ impl TcpFallbackServer {
     ///
     /// * `service_name` - Name of service (for discovery file)
     /// * `handler` - RPC handler (same as Unix socket handler)
-    pub fn new(service_name: String, handler: Arc<dyn RpcHandler>) -> Self {
+    pub fn new(service_name: impl Into<Arc<str>>, handler: Arc<dyn RpcHandler>) -> Self {
         Self {
-            service_name,
+            service_name: service_name.into(),
             handler,
         }
     }

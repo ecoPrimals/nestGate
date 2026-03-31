@@ -474,7 +474,7 @@ mod tests {
     #[test]
     fn migration_detects_async_trait_attribute() {
         assert!(has_async_trait_usage(
-            r#"#[async_trait] impl Foo for Bar { async fn x() {} }"#
+            r"#[async_trait] impl Foo for Bar { async fn x() {} }"
         ));
         assert!(has_async_trait_usage("use async_trait::async_trait;"));
         assert!(!has_async_trait_usage("fn plain() {}"));
@@ -499,7 +499,7 @@ mod tests {
             checksum: "abc".to_string(),
             metadata: m,
         };
-        let sm2 = sm.clone();
+        let sm2 = sm;
         assert_eq!(sm2.size, 42);
         assert_eq!(sm2.metadata.get("a").map(String::as_str), Some("b"));
     }
@@ -564,7 +564,7 @@ mod tests {
             uptime: std::time::Duration::from_secs(1),
             last_check: std::time::SystemTime::UNIX_EPOCH,
         };
-        let h2 = h.clone();
+        let h2 = h;
         assert!(matches!(h2.status, ServiceStatus::Degraded));
 
         let m = ServiceMetrics {

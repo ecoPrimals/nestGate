@@ -140,9 +140,12 @@ pub async fn create_dataset(
         properties.is_none_or(|p| p.checksum)
     );
 
+    let temp_dir = std::env::var("NESTGATE_TEMP_DIR")
+        .unwrap_or_else(|_| std::env::temp_dir().to_string_lossy().into_owned());
     if let Err(e) = tokio::fs::write(
         format!(
-            "/tmp/nestgate_dataset_{}_welcome.txt",
+            "{}/nestgate_dataset_{}_welcome.txt",
+            temp_dir,
             request.name.replace('/', "_")
         ),
         welcome_content,

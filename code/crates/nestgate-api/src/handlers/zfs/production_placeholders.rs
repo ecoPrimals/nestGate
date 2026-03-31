@@ -271,9 +271,9 @@ mod tests {
 
     #[tokio::test]
     async fn placeholder_types_construct() {
-        let _ = ZfsConfig::default();
-        let _ = ProductionZfsManager::new(ZfsConfig::default());
+        let _ = ZfsConfig;
+        let _ = ProductionZfsManager::new(ZfsConfig);
         let _ = ZeroCostZfsOperations::new();
-        let _ = ZfsHandlerImpl::default();
+        let _ = ZfsHandlerImpl;
     }
 }

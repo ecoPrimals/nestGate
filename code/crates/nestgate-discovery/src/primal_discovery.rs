@@ -242,13 +242,13 @@ impl PrimalInfo {
 }
 
 impl PrimalDiscovery {
-    /// Create new discovery system with default mDNS backend (lock-free discovered map)
+    /// Create new discovery system with environment-based backend (lock-free discovered map)
     #[must_use]
     pub fn new(self_knowledge: SelfKnowledge) -> Self {
         Self {
             self_knowledge,
             discovered: Arc::new(DashMap::new()),
-            backend: Arc::new(MDnsBackend::default()),
+            backend: Arc::new(EnvironmentBackend),
         }
     }
 
@@ -323,95 +323,27 @@ pub trait DiscoveryBackend: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Result<PrimalInfo>> + Send + '_>>;
 }
 
-/// Production discovery backend using `discovery_mechanism`
+/// Environment + IPC discovery backend.
 ///
-/// This integrates with the unified discovery system (`discovery_mechanism.rs`)
-/// which supports mDNS, Consul, and Kubernetes backends.
+/// Discovers peers via `NESTGATE_<CAPABILITY>_ENDPOINT` environment variables.
+/// In production, songBird provides these via its discovery registry; in dev,
+/// they are set manually or default to loopback.
 #[derive(Default)]
-struct ProductionBackend {
-    discovery: Option<Arc<dyn crate::discovery_mechanism::DiscoveryMechanism>>,
-}
+struct EnvironmentBackend;
 
-impl ProductionBackend {
-    /// Create new backend with auto-detected discovery mechanism
-    fn new() -> Self {
-        let discovery = crate::discovery_mechanism::DiscoveryBuilder::default()
-            .detect()
-            .ok();
-
-        if discovery.is_none() {
-            tracing::warn!("No discovery mechanism detected, discovery will use fallbacks");
-        }
-
-        Self {
-            discovery: discovery.map(Arc::from),
-        }
-    }
-
-    /// Convert `primal_discovery` `SelfKnowledge` to `discovery_mechanism` `SelfKnowledge`
-    fn convert_self_knowledge(knowledge: &SelfKnowledge) -> crate::self_knowledge::SelfKnowledge {
-        crate::self_knowledge::SelfKnowledge::builder()
-            .with_id(&knowledge.name)
-            .with_name(&knowledge.name)
-            .with_capabilities(knowledge.capabilities.clone())
-            .build()
-            .unwrap_or_else(|e| {
-                tracing::error!("Failed to build self-knowledge: {}", e);
-                // Return minimal valid self-knowledge (no unwrap - manual construction)
-                crate::self_knowledge::SelfKnowledge::builder()
-                    .with_id("unknown")
-                    .with_name("unknown")
-                    .build()
-                    .unwrap_or_else(|e2| {
-                        tracing::error!("Minimal self-knowledge build failed: {}", e2);
-                        crate::self_knowledge::SelfKnowledge {
-                            id: crate::self_knowledge::PrimalId::new("unknown"),
-                            name: "unknown".to_string(),
-                            version: "0.0.0".to_string(),
-                            capabilities: vec![],
-                            endpoints: std::collections::HashMap::new(),
-                            resources: crate::self_knowledge::ResourceInfo::default(),
-                            health: crate::self_knowledge::HealthStatus::default(),
-                            last_updated: std::time::SystemTime::now(),
-                        }
-                    })
-            })
-    }
-
-    /// Convert `discovery_mechanism` `ServiceInfo` to `PrimalInfo`
-    fn convert_service_info(service: crate::discovery_mechanism::ServiceInfo) -> PrimalInfo {
-        PrimalInfo {
-            name: service.name,
-            capabilities: service.capabilities,
-            endpoints: vec![], // Will be populated from endpoint string
-            metadata: service.metadata,
-            last_seen: Instant::now(),
-        }
-    }
-}
-
-impl DiscoveryBackend for ProductionBackend {
+impl DiscoveryBackend for EnvironmentBackend {
     fn announce(
         &self,
         knowledge: &SelfKnowledge,
     ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-        let discovery = self.discovery.clone();
-        let knowledge = knowledge.clone();
+        let name = knowledge.name.clone();
+        let caps = knowledge.capabilities.clone();
         Box::pin(async move {
             tracing::info!(
-                "Announcing {} with capabilities: {:?}",
-                knowledge.name,
-                knowledge.capabilities
+                "Announcing {} with capabilities: {:?} (registration delegated to songBird)",
+                name,
+                caps,
             );
-
-            if let Some(discovery) = &discovery {
-                let self_knowledge = Self::convert_self_knowledge(&knowledge);
-                discovery.announce(&self_knowledge).await?;
-                tracing::info!("Successfully announced via discovery mechanism");
-            } else {
-                tracing::warn!("No discovery mechanism available, announcement is local only");
-            }
-
             Ok(())
         })
     }
@@ -420,82 +352,27 @@ impl DiscoveryBackend for ProductionBackend {
         &self,
         capability: &str,
     ) -> Pin<Box<dyn Future<Output = Result<PrimalInfo>> + Send + '_>> {
-        let discovery = self.discovery.clone();
         let capability = capability.to_string();
         Box::pin(async move {
-            if let Some(discovery) = &discovery {
-                // Query discovery mechanism
-                let services = discovery.find_by_capability(capability.clone()).await?;
-
-                // Return first service found
-                if let Some(service) = services.first() {
-                    tracing::info!(
-                        "Discovered primal for capability '{}': {} at {}",
-                        capability,
-                        service.name,
-                        service.endpoint
-                    );
-                    return Ok(Self::convert_service_info(service.clone()));
-                }
-
-                Err(NestGateError::network_error(format!(
-                    "No primal found providing capability: {capability}"
-                )))
-            } else {
-                // Fallback: Try environment variable
-                let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
-                if let Ok(endpoint) = std::env::var(&env_var) {
-                    tracing::info!(
-                        "Discovered primal for capability '{}' from environment: {}",
-                        capability,
-                        endpoint
-                    );
-
-                    return Ok(PrimalInfo {
-                        name: capability.clone(),
-                        capabilities: vec![capability.clone()],
-                        endpoints: vec![],
-                        metadata: HashMap::new(),
-                        last_seen: Instant::now(),
-                    });
-                }
-
-                Err(NestGateError::network_error(format!(
-                    "No discovery mechanism available and no environment fallback for capability: {capability}"
-                )))
+            let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
+            if let Ok(endpoint) = std::env::var(&env_var) {
+                tracing::info!(
+                    "Discovered '{}' capability from environment: {}",
+                    capability,
+                    endpoint,
+                );
+                return Ok(PrimalInfo {
+                    name: capability.clone(),
+                    capabilities: vec![capability],
+                    endpoints: vec![],
+                    metadata: HashMap::new(),
+                    last_seen: Instant::now(),
+                });
             }
-        })
-    }
-}
 
-/// mDNS/DNS-SD discovery backend (legacy, uses `ProductionBackend`)
-#[derive(Default)]
-struct MDnsBackend {
-    _marker: std::marker::PhantomData<()>,
-}
-
-impl DiscoveryBackend for MDnsBackend {
-    fn announce(
-        &self,
-        knowledge: &SelfKnowledge,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-        let knowledge = knowledge.clone();
-        Box::pin(async move {
-            // Delegate to production backend
-            let backend = ProductionBackend::new();
-            backend.announce(&knowledge).await
-        })
-    }
-
-    fn discover(
-        &self,
-        capability: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<PrimalInfo>> + Send + '_>> {
-        let capability = capability.to_string();
-        Box::pin(async move {
-            // Delegate to production backend
-            let backend = ProductionBackend::new();
-            backend.discover(&capability).await
+            Err(NestGateError::network_error(format!(
+                "No endpoint for capability '{capability}'. Set {env_var} or use songBird discovery."
+            )))
         })
     }
 }

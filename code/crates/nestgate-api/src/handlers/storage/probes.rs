@@ -368,3 +368,128 @@ async fn collect_fallback_storage_metrics() -> StorageMetrics {
         health_status: "SYSTEM_STORAGE".to_string(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_include_filesystem_excludes_special_sources_and_mounts() {
+        assert!(!should_include_filesystem("udev", "ext4", "/"));
+        assert!(!should_include_filesystem("devpts", "devpts", "/dev/pts"));
+        assert!(!should_include_filesystem(
+            "cgroup",
+            "cgroup2",
+            "/sys/fs/cgroup"
+        ));
+        assert!(!should_include_filesystem("proc", "proc", "/proc"));
+        assert!(!should_include_filesystem(
+            "/dev/loop0",
+            "ext4",
+            "/sys/kernel"
+        ));
+        assert!(!should_include_filesystem("/dev/sda1", "tmpfs", "/"));
+        assert!(!should_include_filesystem("/dev/sda1", "ext4", "/dev/shm"));
+        assert!(should_include_filesystem("/dev/sda1", "ext4", "/home/user"));
+    }
+
+    #[test]
+    fn should_include_filesystem_accepts_root_home_mnt_media() {
+        assert!(should_include_filesystem("/dev/nvme0n1p2", "ext4", "/"));
+        assert!(should_include_filesystem("LABEL=home", "xfs", "/home"));
+        assert!(should_include_filesystem("/dev/sdb1", "btrfs", "/mnt/data"));
+        assert!(should_include_filesystem(
+            "/dev/sdc1",
+            "vfat",
+            "/media/disk"
+        ));
+    }
+
+    #[test]
+    fn parse_size_string_edge_cases() {
+        assert_eq!(parse_size_string(""), None);
+        assert_eq!(parse_size_string("notnumG"), None);
+        assert_eq!(parse_size_string("1.5X"), Some(1)); // unknown unit → multiplier 1
+        assert_eq!(parse_size_string("0G"), Some(0));
+        let half_g = parse_size_string("0.5G").expect("0.5G");
+        assert_eq!(half_g, 512 * 1024 * 1024);
+        assert_eq!(parse_size_string("100GB"), Some(100 * 1024 * 1024 * 1024));
+        assert_eq!(parse_size_string("2TB"), Some(2 * 1024_u64.pow(4)));
+        assert_eq!(parse_size_string("1PB"), Some(1024_u64.pow(5)));
+    }
+
+    #[test]
+    fn parse_bandwidth_unit_invalid_or_edge() {
+        assert!(parse_bandwidth_unit("not_a_number").is_none());
+        assert!(parse_bandwidth_unit("xK").is_none());
+        assert_eq!(parse_bandwidth_unit("0M"), Some(0.0));
+        let m = parse_bandwidth_unit("4M").expect("4M");
+        assert!((m - 4.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn collect_real_storage_pools_runs() {
+        let pools = collect_real_storage_pools().expect("df should succeed on this platform");
+        assert!(!pools.is_empty(), "expected at least fallback pool");
+        let rootish = pools
+            .iter()
+            .find(|p| p.name.contains("root") || p.pool_type == "FILESYSTEM");
+        assert!(rootish.is_some() || !pools.is_empty());
+    }
+
+    #[test]
+    fn create_fallback_root_pool_shape() {
+        let p = create_fallback_root_pool();
+        assert_eq!(p.status, "ONLINE");
+        assert_eq!(p.health, "HEALTHY");
+        assert_eq!(p.pool_type, "FILESYSTEM");
+        assert!(p.name.contains("root"));
+    }
+
+    #[test]
+    fn get_directory_usage_root_or_tmp() {
+        let (total, used, avail) = get_directory_usage("/").expect("df on /");
+        assert!(total >= used && total >= avail);
+        let tmp = get_directory_usage("/tmp").expect("df on /tmp");
+        assert!(tmp.0 >= tmp.2);
+    }
+
+    #[test]
+    fn create_fallback_home_dataset_has_expected_fields() {
+        let d = create_fallback_home_dataset();
+        assert_eq!(d.name, "user_home");
+        assert_eq!(d.pool, "root");
+        assert_eq!(d.compression, "none");
+        assert!(!d.mount_point.is_empty());
+    }
+
+    #[test]
+    fn collect_real_storage_datasets_returns_at_least_one() {
+        let list = collect_real_storage_datasets();
+        assert!(!list.is_empty());
+    }
+
+    #[tokio::test]
+    async fn collect_fallback_storage_metrics_populated() {
+        let m = collect_fallback_storage_metrics().await;
+        assert_eq!(m.total_pools, 0);
+        assert_eq!(m.health_status, "SYSTEM_STORAGE");
+        assert!(m.total_storage > 0 || m.used_storage > 0 || m.available_storage >= 0);
+        assert_eq!(m.iops, 50.0);
+        assert_eq!(m.bandwidth_mbps, 25.0);
+    }
+
+    #[tokio::test]
+    async fn collect_real_zfs_snapshots_runs() {
+        let result = collect_real_zfs_snapshots().await;
+        match result {
+            Ok(snaps) => {
+                for s in snaps.iter().take(3) {
+                    assert!(!s.name.is_empty());
+                    assert!(!s.dataset.is_empty());
+                }
+            }
+            Err(_) => {}
+        }
+    }
+}

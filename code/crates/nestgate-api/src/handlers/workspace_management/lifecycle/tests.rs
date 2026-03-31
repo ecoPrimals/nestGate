@@ -44,7 +44,7 @@ fn migration_strategy_roundtrips_json() {
 
 #[tokio::test]
 async fn backup_workspace_invalid_id_returns_bad_request() {
-    let r = backup_workspace(Path("".to_string()), Json(sample_backup_config())).await;
+    let r = backup_workspace(Path(String::new()), Json(sample_backup_config())).await;
     assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     let r = backup_workspace(Path("bad/id".to_string()), Json(sample_backup_config())).await;
     assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
@@ -52,7 +52,7 @@ async fn backup_workspace_invalid_id_returns_bad_request() {
 
 #[tokio::test]
 async fn restore_workspace_invalid_id_returns_bad_request() {
-    let r = restore_workspace(Path("".to_string()), Json(sample_restore_config())).await;
+    let r = restore_workspace(Path(String::new()), Json(sample_restore_config())).await;
     assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
 }
 

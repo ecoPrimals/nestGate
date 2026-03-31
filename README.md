@@ -1,18 +1,17 @@
-# NestGate - Universal Storage & Discovery Primal
+# NestGate - Sovereign Storage & Permanence Primal
 
 **Version**: 4.7.0-dev  
 **Build**: 25/25 workspace members compiling, 0 errors  
-**Tests**: 1,509 lib tests passing (106 test suites), 0 failures  
-**Coverage**: ~80% line (workspace `--lib`, llvm-cov)  
-**Clippy**: ZERO errors — full workspace `cargo clippy --workspace --all-targets --all-features -- -D warnings` clean  
+**Tests**: 8,384 lib tests passing, 0 failures  
+**Coverage**: 80.95% line (workspace `--lib`, llvm-cov)  
+**Clippy**: ZERO warnings — full workspace `cargo clippy --workspace --lib`  
 **Docs**: Zero warnings (`cargo doc --workspace --no-deps`)  
 **Production TODO/FIXME**: Zero  
 **Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
-**ring dependency**: Eliminated — TLS via `aws-lc-rs` (no `ring` in `cargo tree`)  
+**TLS crypto**: `ring` provider (Pure Rust; `aws-lc-rs` eliminated — ecoBin compliant)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-**Binary (musl)**: ~4.7MB static (`x86_64-unknown-linux-musl`)  
 **File size**: All production files under 800 lines  
-**Last Updated**: March 30, 2026
+**Last Updated**: March 31, 2026
 
 ---
 
@@ -57,14 +56,14 @@ nestgate/ (25 workspace members)
 │  Foundation Layer (zero internal deps, compiles first)
 ├── nestgate-types       Error types, result aliases, unified enums
 ├── nestgate-platform    env_process, linux_proc, OS abstractions (rustix/uzers)
-├── nestgate-env-process-shim  Safe env mutation (tests; isolates `set_var` / `remove_var`)
+├── nestgate-env-process-shim  Safe env mutation (tests; isolates set_var / remove_var)
 │
 │  Domain Layer (depends on types/platform)
 ├── nestgate-config      Config, constants, defaults, canonical modernization
 ├── nestgate-storage     Universal + temporal storage abstractions
-├── nestgate-rpc         JSON-RPC + tarpc IPC layer
-├── nestgate-discovery   Primal discovery, capabilities, service registry
-├── nestgate-security    Crypto (RustCrypto), JWT, certs, zero-cost auth
+├── nestgate-rpc         JSON-RPC + tarpc IPC layer (isomorphic UDS/TCP)
+├── nestgate-discovery   Capability-based peer discovery (env + songBird IPC)
+├── nestgate-security    Crypto delegation (bearDog IPC), JWT, certs, zero-cost auth
 ├── nestgate-observe     Observability, diagnostics, event system
 ├── nestgate-cache       Multi-tier cache, UUID cache, cache math
 │
@@ -74,12 +73,11 @@ nestgate/ (25 workspace members)
 │
 │  Application Layer
 ├── nestgate-api         REST + JSON-RPC API server
-├── nestgate-bin         CLI binary (unibin)
+├── nestgate-bin         CLI binary (UniBin)
 ├── nestgate-zfs         ZFS integration (adaptive)
-├── nestgate-mcp         MCP provider
-├── nestgate-network     Network storage
-├── nestgate-automation  Automation engine
-├── nestgate-installer   Platform installer
+├── nestgate-network     Network storage (admin router; HTTP shed to songBird)
+├── nestgate-automation  Storage-specific automation (tiering, lifecycle)
+├── nestgate-installer   Platform installer (ring TLS, ecoBin compliant)
 ├── nestgate-middleware  Middleware stack
 ├── nestgate-nas         NAS integration
 ├── nestgate-fsmonitor   Filesystem monitoring
@@ -101,7 +99,7 @@ core-only modules and 44 dependencies (down from 51).
 
 **Adaptive Backend (Try-Optimize-Fallback)** — Platform-optimized paths with universal fallbacks. Applied to storage detection, service management, filesystem detection, ZFS backend, IPC transport.
 
-**Primal Self-Knowledge** — Runtime capability discovery, zero hardcoding. Capabilities are discovered at runtime via environment variables, mDNS, or capability-based IPC.
+**Primal Self-Knowledge** — Runtime capability discovery, zero hardcoding. Capabilities are discovered at runtime via environment variables and songBird IPC.
 
 **Capability-Based Discovery** — NestGate discovers other primals by capability (e.g., "crypto", "security"), not by hardcoded names or ports. Any primal providing a capability works.
 
@@ -114,15 +112,15 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Area | Status |
 |------|--------|
 | Build | 25/25 workspace members, 0 errors |
-| Clippy | ZERO errors; full workspace `--all-features -D warnings` clean |
+| Clippy | ZERO warnings; full workspace `--lib` clean |
 | Format | Clean |
-| Tests | 1,457 lib tests passing, 0 failures, 48 ignored |
-| Coverage | 80.25% line (llvm-cov) — wateringHole 80% minimum met |
+| Tests | 8,384 lib tests passing, 0 failures |
+| Coverage | 80.95% line (llvm-cov) — wateringHole 80% minimum met |
 | Docs | Zero warnings (`cargo doc --workspace --no-deps`) |
 | Production TODO/FIXME | Zero |
 | Production unwrap/expect | Zero |
 | Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
-| ring | Eliminated — TLS via `aws-lc-rs` provider |
+| TLS crypto | `ring` provider (Pure Rust; `aws-lc-rs` eliminated) |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
 | File size (production < 800) | All compliant |
 | Env-var race conditions | Fixed (temp-env + serial_test) |
@@ -132,16 +130,16 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Standard | Status |
 |----------|--------|
 | UniBin | Pass — single `nestgate` binary |
-| ecoBin | Pass — pure Rust, socket-only default, no `ring` |
+| ecoBin | Pass — pure Rust application code, socket-only default, `ring` crypto (no C deps in app) |
 | JSON-RPC 2.0 | Pass |
 | tarpc | Pass — wired into daemon (feature-gated) |
 | Semantic naming | Pass — `health.*`, `storage.*`, `crypto.*`, `capabilities.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
-| Coverage (80%+) | Pass — 80.25% line (wateringHole minimum met) |
+| Coverage (80%+) | Pass — 80.95% line (wateringHole minimum met) |
 | File size (<1000) | Pass |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals |
-| mDNS Discovery | Pass — real mdns-sd with cache fallback |
-| Crypto delegation | Pass — capability-based, compiles clean |
+| Discovery | Env vars + songBird IPC (mDNS stack removed — delegated to songBird) |
+| Crypto delegation | Pass — bearDog IPC via `CryptoDelegate`, local crypto being shed |
 
 ### Platform Support
 
@@ -193,7 +191,7 @@ cargo doc --no-deps --workspace
 - **Security**: RustCrypto stack (AES-256-GCM, ed25519-dalek, hmac, argon2, sha2)
 - **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0)
 - **CLI**: Clap 4 (derive mode)
-- **Discovery**: mdns-sd, capability-based IPC
+- **Discovery**: Environment variables + songBird IPC (capability-based)
 
 ### Configuration
 
@@ -233,9 +231,9 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
-2. Warm/cold tier data cycling (NVMe SSD warm, HDD cold)
-3. Push test coverage toward 90% target (currently 80.25%)
+1. Push test coverage toward 90% target (currently 80.95%)
+2. Complete ancestral overstep shed (local crypto → bearDog IPC, MCP → biomeOS)
+3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 4. Wire `data.*` and `nat.*` semantic router routes
 5. Cross-gate replication (multi-node data orchestration)
 
@@ -254,4 +252,4 @@ free use rights for personal, educational, and non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: March 30, 2026
+**Latest**: March 31, 2026

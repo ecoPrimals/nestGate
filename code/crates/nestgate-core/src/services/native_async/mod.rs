@@ -49,40 +49,6 @@ mod tests {
     use anyhow::Result;
     use std::time::SystemTime;
 
-    #[cfg(test)]
-    /// Mock service info for testing
-    #[derive(Debug, Clone)]
-    #[allow(dead_code)]
-    struct MockServiceInfo {
-        id: String,
-        name: String,
-        version: String,
-        endpoints: Vec<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for MockServiceInfo {
-        /// Returns the default instance with environment-driven configuration
-        fn default() -> Self {
-            use crate::config::environment::EnvironmentConfig;
-
-            // Load from environment for consistency with production
-            let env_config =
-                EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
-
-            Self {
-                id: "test-service-123".to_string(),
-                name: "test-service".to_string(),
-                version: "1.0.0".to_string(),
-                endpoints: vec![format!(
-                    "http://{}:{}",
-                    env_config.network.host,
-                    env_config.network.port.get()
-                )],
-            }
-        }
-    }
-
     #[tokio::test]
     async fn test_production_load_balancer() {
         let balancer = ProductionLoadBalancer::default();
@@ -213,32 +179,17 @@ mod tests {
         println!("✅ Load balancer compile-time specialization working perfectly!");
     }
 
-    // Mock types for testing
-    #[allow(dead_code)]
-    struct ServiceRequest {
-        service_name: String,
-        data: Vec<u8>,
-    }
-
     struct NativeAsyncService {
         name: String,
     }
 
-    #[allow(dead_code)]
     impl NativeAsyncService {
-        /// Creates a new instance
         fn new(name: String) -> Self {
             Self { name }
         }
 
-        /// Gets Config
         fn get_config(&self) -> String {
             format!("config_for_{}", self.name)
-        }
-
-        /// Processes data
-        fn process(&self, _data: &str) -> String {
-            format!("processed_by_{}", self.name)
         }
     }
 

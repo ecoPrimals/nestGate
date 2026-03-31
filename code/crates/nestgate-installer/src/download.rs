@@ -49,8 +49,8 @@ impl DownloadManager {
     }
 
     fn http_client() -> Result<reqwest::Client> {
-        // reqwest uses rustls-tls-webpki-roots-no-provider; install aws-lc-rs as process default (no `ring`).
-        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+        // Pure Rust TLS: ring crypto provider (ecoBin compliant — no C dependencies).
+        let _ = rustls::crypto::ring::default_provider().install_default();
         reqwest::Client::builder()
             .user_agent(concat!("nestgate-installer/", env!("CARGO_PKG_VERSION")))
             .build()

@@ -17,7 +17,7 @@ mod network_connection_failures {
         };
 
         assert!(error.to_string().contains("Connection refused"));
-        assert!(format!("{:?}", error).contains("ConnectionFailed"));
+        assert!(format!("{error:?}").contains("ConnectionFailed"));
     }
 
     #[test]
@@ -368,7 +368,7 @@ mod network_protocol_edge_cases {
         ];
 
         for method in methods {
-            let display = format!("{:?}", method);
+            let display = format!("{method:?}");
             assert!(!display.is_empty());
         }
     }

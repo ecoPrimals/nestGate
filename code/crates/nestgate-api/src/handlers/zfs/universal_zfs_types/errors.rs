@@ -389,7 +389,7 @@ mod universal_zfs_error_tests {
             UniversalZfsError::invalid_input("bad"),
             UniversalZfsError::not_found("/p"),
             UniversalZfsError::circuit_breaker_open("cb"),
-            UniversalZfsError::rate_limit_exceeded("rl", Some(rli.clone())),
+            UniversalZfsError::rate_limit_exceeded("rl", Some(rli)),
             UniversalZfsError::internal("in"),
             UniversalZfsError::PoolOperationFailed {
                 message: "p".to_string(),

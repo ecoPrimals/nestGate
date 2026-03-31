@@ -46,7 +46,7 @@ async fn test_health_monitor_detects_degradation() {
             Box::pin(async { Ok(HealthStatus::Warning) })
         }
 
-        fn component_name(&self) -> &str {
+        fn component_name(&self) -> &'static str {
             "degraded_service"
         }
     }
@@ -121,7 +121,7 @@ async fn test_health_monitoring_lifecycle() {
             Box::pin(async { Ok(HealthStatus::Healthy) })
         }
 
-        fn component_name(&self) -> &str {
+        fn component_name(&self) -> &'static str {
             "simple_service"
         }
     }
@@ -189,7 +189,7 @@ async fn test_health_check_timeout_handling() {
             })
         }
 
-        fn component_name(&self) -> &str {
+        fn component_name(&self) -> &'static str {
             "slow_service"
         }
     }
@@ -236,7 +236,7 @@ async fn test_concurrent_health_checks() {
                 Box::pin(async { Ok(HealthStatus::Healthy) })
             }
 
-            fn component_name(&self) -> &str {
+            fn component_name(&self) -> &'static str {
                 "numbered"
             }
         }

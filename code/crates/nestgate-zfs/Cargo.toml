@@ -34,7 +34,7 @@ benchmark_broken_needs_fix = []
 [dependencies]
 nestgate-core = { path = "../nestgate-core" }
 nestgate-automation = { path = "../nestgate-automation" }
-nestgate-mcp = { path = "../nestgate-mcp" }
+
 
 futures = { workspace = true }
 serde_json = { workspace = true }

@@ -267,7 +267,7 @@ mod tests {
             "http://a:8080/discovery".to_string(),
             "http://b:9090/discovery".to_string(),
         ];
-        let discovery = ServiceDiscoveryConfig::with_endpoints(endpoints.clone());
+        let discovery = ServiceDiscoveryConfig::with_endpoints(endpoints);
         let config = DiscoveryRuntimeConfig::new().with_service_discovery(discovery);
 
         let result = config.get_discovery_endpoints();

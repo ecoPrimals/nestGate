@@ -301,7 +301,7 @@ fn test_generate_realtime_network_tx_packets() {
 fn test_generate_realtime_cache_hit_ratio() {
     let ratio = generate_realtime_cache_hit_ratio();
 
-    assert!(ratio >= 0.0 && ratio <= 1.0);
+    assert!((0.0..=1.0).contains(&ratio));
 }
 
 #[test]
@@ -470,7 +470,7 @@ fn test_cache_hit_ratio_bounds() {
     for _ in 0..20 {
         let ratio = generate_realtime_cache_hit_ratio();
         assert!(
-            ratio >= 0.70 && ratio <= 0.99,
+            (0.70..=0.99).contains(&ratio),
             "Cache hit ratio should be between 0.70 and 0.99, got {}",
             ratio
         );

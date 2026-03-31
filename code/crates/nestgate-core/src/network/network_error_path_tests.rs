@@ -12,26 +12,26 @@ mod network_error_creation_tests {
     #[test]
     fn test_network_connection_error() {
         let err = NestGateError::network_error("Connection refused");
-        let display = format!("{}", err);
+        let display = format!("{err}");
         assert!(display.contains("Connection") || display.contains("network"));
     }
 
     #[test]
     fn test_network_timeout_error() {
         let err = NestGateError::network_error("Connection timeout");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_network_dns_error() {
         let err = NestGateError::network_error("DNS resolution failed");
-        assert!(!format!("{:?}", err).is_empty());
+        assert!(!format!("{err:?}").is_empty());
     }
 
     #[test]
     fn test_network_unreachable_error() {
         let err = NestGateError::network_error("Network unreachable");
-        let debug_str = format!("{:?}", err);
+        let debug_str = format!("{err:?}");
         assert!(!debug_str.is_empty());
     }
 }
@@ -103,7 +103,7 @@ mod network_timeout_tests {
     #[test]
     fn test_timeout_error_creation() {
         let err = NestGateError::network_error("Operation timed out after 30s");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
@@ -138,7 +138,7 @@ mod network_connection_pool_tests {
     #[test]
     fn test_pool_exhausted_error() {
         let err = NestGateError::network_error("Connection pool exhausted");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
@@ -186,7 +186,7 @@ mod network_circuit_breaker_tests {
         ];
 
         for state in states {
-            assert!(!format!("{:?}", state).is_empty());
+            assert!(!format!("{state:?}").is_empty());
         }
     }
 
@@ -210,7 +210,7 @@ mod network_circuit_breaker_tests {
     #[test]
     fn test_circuit_breaker_error() {
         let err = NestGateError::network_error("Circuit breaker open");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 }
 
@@ -276,37 +276,37 @@ mod network_edge_cases {
     #[test]
     fn test_empty_host_error() {
         let err = NestGateError::network_error("Empty host");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_invalid_port_error() {
         let err = NestGateError::network_error("Invalid port: 99999");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_malformed_url_error() {
         let err = NestGateError::network_error("Malformed URL");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_ssl_certificate_error() {
         let err = NestGateError::network_error("SSL certificate verification failed");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_protocol_version_mismatch() {
         let err = NestGateError::network_error("Protocol version mismatch");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_connection_reset_error() {
         let err = NestGateError::network_error("Connection reset by peer");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 }
 
@@ -324,7 +324,7 @@ mod network_concurrent_errors {
         for i in 0..5 {
             let errors_clone = Arc::clone(&errors);
             let handle = thread::spawn(move || {
-                let err = NestGateError::network_error(format!("Error from thread {}", i));
+                let err = NestGateError::network_error(format!("Error from thread {i}"));
                 errors_clone.lock().unwrap().push(err);
             });
             handles.push(handle);
@@ -343,7 +343,7 @@ mod network_concurrent_errors {
         let err = Arc::new(NestGateError::network_error("shared error"));
         let err_clone = Arc::clone(&err);
 
-        let handle = thread::spawn(move || format!("{}", err_clone));
+        let handle = thread::spawn(move || format!("{err_clone}"));
 
         let result = handle.join().unwrap();
         assert!(!result.is_empty());
@@ -358,7 +358,7 @@ mod network_performance_tests {
     fn test_network_error_creation_performance() {
         let start = std::time::Instant::now();
         for i in 0..1000 {
-            let _ = NestGateError::network_error(format!("Error {}", i));
+            let _ = NestGateError::network_error(format!("Error {i}"));
         }
         let duration = start.elapsed();
         // Should create 1000 errors quickly (< 50ms)
@@ -368,12 +368,12 @@ mod network_performance_tests {
     #[test]
     fn test_error_formatting_performance() {
         let errors: Vec<_> = (0..100)
-            .map(|i| NestGateError::network_error(format!("Error {}", i)))
+            .map(|i| NestGateError::network_error(format!("Error {i}")))
             .collect();
 
         let start = std::time::Instant::now();
         for err in &errors {
-            let _ = format!("{}", err);
+            let _ = format!("{err}");
         }
         let duration = start.elapsed();
         // Should format 100 errors quickly (< 10ms)

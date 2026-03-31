@@ -26,7 +26,7 @@ fuzz_target!(|input: FuzzPath| {
     // Validate path doesn't contain dangerous patterns
     assert!(!input.path.contains("../../../"));
     assert!(!input.path.contains("..\\..\\..\\"));
-    assert!(!input.path.contains("\0"));
+    assert!(!input.path.contains('\0'));
 
     // Test path components
     let _components: Vec<_> = path_buf.components().collect();

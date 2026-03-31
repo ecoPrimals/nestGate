@@ -17,5 +17,5 @@ fn test_http_client_error_to_nestgate_error_conversion() {
     };
 
     let nestgate_error: NestGateError = http_error.into();
-    assert!(format!("{:?}", nestgate_error).contains("test"));
+    assert!(format!("{nestgate_error:?}").contains("test"));
 }

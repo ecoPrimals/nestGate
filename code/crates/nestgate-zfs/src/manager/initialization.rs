@@ -237,68 +237,28 @@ impl ZfsManager {
             orchestrator_endpoint
         );
 
-        // Create MCP health status for service registration
-        let health_status = nestgate_mcp::McpHealthStatus::healthy().with_details({
-            let mut details = std::collections::HashMap::new();
-            details.insert("service_type".to_string(), "storage".to_string());
-            details.insert(
-                "capabilities".to_string(),
-                "dataset_management,snapshot_operations,tier_management".to_string(),
-            );
-            details.insert("endpoint".to_string(), {
-                // ✅ SELF-KNOWLEDGE: ZFS primal knows its own endpoint
-                // This should come from ZFS's own configuration, not environment guessing
-                // 
-                // PHILOSOPHY: Each primal has self-knowledge. ZFS service endpoint
-                // should be defined in ZFS configuration, not discovered from generic env vars.
-                //
-                // MIGRATION: Use ZFS's actual bind address from its configuration
-
-                if let Ok(zfs_endpoint) = std::env::var("NESTGATE_ZFS_ENDPOINT") {
-                    // Explicit ZFS endpoint provided (production)
-                    zfs_endpoint
-                } else if let (Ok(host), Ok(port)) = (
-                    std::env::var("NESTGATE_ZFS_HOST"),
-                    std::env::var("NESTGATE_ZFS_PORT").and_then(|s| s.parse::<u16>().map_err(|_| std::env::VarError::NotPresent))
-                ) {
-                    // Legacy: Separate host/port (deprecated)
-                    tracing::warn!(
-                        "Using legacy NESTGATE_ZFS_HOST/PORT. Consider using NESTGATE_ZFS_ENDPOINT instead."
-                    );
-                    format!("{host}:{port}")
-                } else {
-                    // **Development default**: loopback when `NESTGATE_ZFS_BIND_ADDRESS` is unset.
-                    // Override via `NESTGATE_ZFS_ENDPOINT` or bind env vars for real deployments.
-                    let bind_addr = std::env::var("NESTGATE_ZFS_BIND_ADDRESS")
-                        .unwrap_or_else(|_| {
-                            tracing::warn!(
-                                "NESTGATE_ZFS_BIND_ADDRESS unset; using {} as development default. \
-                                 Set NESTGATE_ZFS_ENDPOINT or bind address env vars for production.",
-                                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4
-                            );
-                            nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4
-                                .to_string()
-                        });
-                    let bind_port = nestgate_core::constants::hardcoding::get_zfs_bind_port();
-
-                    tracing::debug!(
-                        "ZFS endpoint from self-knowledge: {}:{}",
-                        bind_addr,
-                        bind_port
-                    );
-
-                    format!("{bind_addr}:{bind_port}")
-                }
+        let endpoint = std::env::var("NESTGATE_ZFS_ENDPOINT").unwrap_or_else(|_| {
+            let bind_addr = std::env::var("NESTGATE_ZFS_BIND_ADDRESS").unwrap_or_else(|_| {
+                tracing::warn!(
+                    "NESTGATE_ZFS_BIND_ADDRESS unset; using {} as development default. \
+                     Set NESTGATE_ZFS_ENDPOINT for production.",
+                    nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4
+                );
+                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()
             });
-            details.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
-            details
+            let bind_port = nestgate_core::constants::hardcoding::get_zfs_bind_port();
+            format!("{bind_addr}:{bind_port}")
         });
 
-        // Log service registration info (orchestrator integration simplified)
-        info!(
-            "🔗 ZFS service ready for orchestration: {}",
-            serde_json::to_string(&health_status).unwrap_or_default()
-        );
+        let health_payload = serde_json::json!({
+            "is_healthy": true,
+            "service_type": "storage",
+            "capabilities": "dataset_management,snapshot_operations,tier_management",
+            "endpoint": endpoint,
+            "version": env!("CARGO_PKG_VERSION"),
+        });
+
+        info!("ZFS service ready for orchestration: {}", health_payload);
 
         // Note: Full orchestrator client integration would be implemented here
         // For now, we maintain service sovereignty and continue without external dependencies

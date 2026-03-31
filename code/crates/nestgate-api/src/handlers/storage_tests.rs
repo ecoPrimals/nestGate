@@ -21,7 +21,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_storage_handler_default() {
-        let handler = StorageHandler::default();
+        let handler = StorageHandler;
         // Verify default constructor works
         assert_eq!(
             std::mem::size_of_val(&handler),

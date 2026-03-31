@@ -450,6 +450,18 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_storage_tier_custom_ext() {
+        let custom = StorageTier::Custom("edge-cache".to_string());
+        assert_eq!(custom.priority(), 5);
+        assert_eq!(custom.typical_access_time(), Duration::from_millis(50));
+    }
+
+    #[test]
+    fn test_storage_tier_default_is_hot() {
+        assert_eq!(StorageTier::default(), StorageTier::Hot);
+    }
+
     // ==================== CachePolicy Tests ====================
 
     #[test]
@@ -469,6 +481,20 @@ mod tests {
     fn test_cache_policy_equality() {
         assert_eq!(CachePolicy::None, CachePolicy::None);
         assert_ne!(CachePolicy::None, CachePolicy::ReadOnly);
+    }
+
+    #[test]
+    fn test_cache_policy_serde_roundtrip() {
+        for policy in [
+            CachePolicy::None,
+            CachePolicy::ReadOnly,
+            CachePolicy::WriteThrough,
+            CachePolicy::WriteBack,
+        ] {
+            let json = serde_json::to_string(&policy).expect("serialize CachePolicy");
+            let back: CachePolicy = serde_json::from_str(&json).expect("deserialize CachePolicy");
+            assert_eq!(policy, back);
+        }
     }
 
     // ==================== CacheStats Tests ====================
@@ -599,6 +625,48 @@ mod tests {
         assert_eq!(*avg, Duration::from_micros(12525));
     }
 
+    #[test]
+    fn test_cache_stats_record_access_time_tier_not_in_defaults() {
+        let mut stats = CacheStats::default();
+        assert!(!stats.tier_access_times.contains_key(&StorageTier::Cold));
+        stats.record_access_time(StorageTier::Cold, Duration::from_millis(3));
+        assert_eq!(
+            *stats
+                .tier_access_times
+                .get(&StorageTier::Cold)
+                .expect("cold tier inserted"),
+            Duration::from_millis(3)
+        );
+    }
+
+    #[test]
+    fn test_cache_stats_serde_roundtrip() {
+        let stats = CacheStats {
+            hits: 1,
+            misses: 2,
+            hot_tier_items: 3,
+            warm_tier_items: 4,
+            cold_tier_items: 5,
+            hot_tier_size_bytes: 6,
+            warm_tier_size_bytes: 7,
+            cold_tier_size_bytes: 8,
+            hot_tier_evictions: 9,
+            warm_tier_evictions: 10,
+            cold_tier_evictions: 11,
+            tier_access_times: HashMap::from([(StorageTier::Hot, Duration::from_nanos(1))]),
+            efficiency_metrics: EfficiencyMetrics::default(),
+        };
+        let json = serde_json::to_string(&stats).expect("serialize CacheStats");
+        let back: CacheStats = serde_json::from_str(&json).expect("deserialize CacheStats");
+        assert_eq!(stats.hits, back.hits);
+        assert_eq!(stats.misses, back.misses);
+        assert_eq!(stats.tier_access_times, back.tier_access_times);
+        assert_eq!(
+            stats.efficiency_metrics.moving_hit_ratio,
+            back.efficiency_metrics.moving_hit_ratio
+        );
+    }
+
     // ==================== EfficiencyMetrics Tests ====================
 
     #[test]
@@ -657,6 +725,28 @@ mod tests {
         assert_eq!(metrics.last_operations.len(), 1000);
     }
 
+    #[test]
+    fn test_efficiency_metrics_serde_roundtrip() {
+        let mut metrics = EfficiencyMetrics::default();
+        metrics.update_hit();
+        metrics.update_miss();
+        let json = serde_json::to_string(&metrics).expect("serialize EfficiencyMetrics");
+        let back: EfficiencyMetrics = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(metrics.moving_hit_ratio, back.moving_hit_ratio);
+        assert_eq!(metrics.peak_hit_ratio, back.peak_hit_ratio);
+        assert_eq!(metrics.effectiveness_score, back.effectiveness_score);
+    }
+
+    #[test]
+    fn test_efficiency_metrics_consistency_bonus_at_100_operations() {
+        let mut metrics = EfficiencyMetrics::default();
+        for _ in 0..100 {
+            metrics.update_hit();
+        }
+        assert_eq!(metrics.last_operations.len(), 100);
+        assert!((metrics.effectiveness_score - 100.0).abs() < f64::EPSILON);
+    }
+
     // ==================== CacheEntry Tests ====================
 
     #[test]
@@ -671,6 +761,33 @@ mod tests {
         assert_eq!(entry.access_count, 0);
         assert_eq!(entry.tier, StorageTier::Hot);
         assert!(entry.ttl.is_none());
+    }
+
+    #[test]
+    fn test_cache_entry_new_empty_data() {
+        let entry = CacheEntry::new("k".to_string(), Vec::new(), StorageTier::Warm);
+        assert_eq!(entry.size, 0);
+        assert!(entry.data.is_empty());
+    }
+
+    #[test]
+    fn test_cache_entry_is_expired_past_ttl() {
+        let mut entry = CacheEntry::new("key".to_string(), vec![1], StorageTier::Hot);
+        entry.created_at = chrono::DateTime::from_timestamp(0, 0).expect("epoch");
+        entry.ttl = Some(Duration::from_secs(1));
+        assert!(entry.is_expired());
+    }
+
+    #[test]
+    fn test_cache_entry_serde_roundtrip() {
+        let entry = CacheEntry::new("k".to_string(), vec![0, 255], StorageTier::Cool);
+        let json = serde_json::to_string(&entry).expect("serialize CacheEntry");
+        let back: CacheEntry = serde_json::from_str(&json).expect("deserialize CacheEntry");
+        assert_eq!(entry.key, back.key);
+        assert_eq!(entry.data, back.data);
+        assert_eq!(entry.size, back.size);
+        assert_eq!(entry.tier, back.tier);
+        assert_eq!(entry.ttl, back.ttl);
     }
 
     #[test]

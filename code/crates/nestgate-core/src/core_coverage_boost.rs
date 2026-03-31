@@ -163,7 +163,7 @@ mod core_coverage_boost_tests {
         let error1 = NestGateError::internal("test".to_string());
         let error2 = error1.clone();
 
-        assert_eq!(format!("{}", error1), format!("{}", error2));
+        assert_eq!(format!("{error1}"), format!("{}", error2));
     }
 
     // ==================== ERROR DEBUG AND DISPLAY ====================
@@ -178,7 +178,7 @@ mod core_coverage_boost_tests {
         ];
 
         for error in errors {
-            let debug = format!("{:?}", error);
+            let debug = format!("{error:?}");
             assert!(!debug.is_empty());
         }
     }
@@ -193,7 +193,7 @@ mod core_coverage_boost_tests {
         ];
 
         for error in errors {
-            let display = format!("{}", error);
+            let display = format!("{error}");
             assert!(!display.is_empty());
         }
     }
@@ -209,7 +209,7 @@ mod core_coverage_boost_tests {
     #[test]
     fn test_very_long_error_messages() {
         let long_msg = "error ".repeat(1000);
-        let error = NestGateError::internal(long_msg.clone());
+        let error = NestGateError::internal(long_msg);
         assert!(error.to_string().contains("error"));
     }
 
@@ -233,8 +233,8 @@ mod core_coverage_boost_tests {
         ];
 
         for error in errors {
-            let _ = format!("{}", error);
-            let _ = format!("{:?}", error);
+            let _ = format!("{error}");
+            let _ = format!("{error:?}");
         }
     }
 

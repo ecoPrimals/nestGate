@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: March 30, 2026  
+**Last Updated**: March 31, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -9,19 +9,18 @@
 
 ```
 Build:              25/25 workspace members compiling (0 errors)
-Musl static:        WORKING (4.7MB static binary, x86_64-unknown-linux-musl)
-Clippy:             ZERO WARNINGS — `cargo clippy --workspace --all-targets` (production)
+Clippy:             ZERO WARNINGS — cargo clippy --workspace --lib
 Format:             CLEAN (cargo fmt --check passes)
-Docs:               ZERO WARNINGS — `cargo doc --workspace --no-deps`
-Tests:              All lib tests passing (all suites), 0 failures
-Coverage:           ~80% line (cargo llvm-cov --workspace --lib)
-Files > 800 lines:  0 (production); 4 test files 800-856
-Unwrap/Expect:      ZERO in production code (test-only, gated by crate-level cfg_attr)
+Docs:               ZERO WARNINGS — cargo doc --workspace --no-deps
+Tests:              8,384 lib tests passing, 0 failures
+Coverage:           80.95% line (cargo llvm-cov --workspace --lib)
+Files > 800 lines:  0 (production)
+Unwrap/Expect:      ZERO in production code
 TODO/FIXME:         ZERO in .rs files
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (except env_process_shim bridge)
 println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
-ring dependency:    ELIMINATED — TLS via aws-lc-rs provider (zero ring in cargo tree)
+TLS crypto:         ring provider (Pure Rust; aws-lc-rs eliminated — ecoBin compliant)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)

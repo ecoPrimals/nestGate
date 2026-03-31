@@ -609,4 +609,133 @@ mod tests {
         let state: ComplianceState = Arc::new(RwLock::new(manager));
         assert!(Arc::strong_count(&state) == 1);
     }
+
+    /// Violations with no framework controls: score treats total_controls as zero → 100.0.
+    #[test]
+    fn test_calculate_compliance_score_violations_without_framework_controls() {
+        let mut manager = ComplianceManager::new();
+        manager.record_violation(create_test_violation());
+        assert_eq!(manager.calculate_compliance_score(), 100.0);
+    }
+
+    #[test]
+    fn test_calculate_compliance_score_medium_severity_weight() {
+        let mut manager = ComplianceManager::new();
+        let framework = RegulatoryFramework {
+            id: "fw".to_string(),
+            name: "FW".to_string(),
+            framework_type: RegulatoryType::SOX,
+            required_controls: vec![ComplianceControl {
+                id: "c1".to_string(),
+                name: "C1".to_string(),
+                description: "d".to_string(),
+                control_type: ControlType::Detective,
+                implementation_status: ImplementationStatus::FullyImplemented,
+                last_assessment: None,
+                next_assessment_due: None,
+            }],
+            audit_frequency_days: 365,
+            last_audit: None,
+            compliance_status: ComplianceStatus::Compliant,
+        };
+        manager.add_regulatory_framework(framework);
+
+        let mut v = create_test_violation();
+        v.severity = ViolationSeverity::Medium;
+        manager.record_violation(v);
+
+        let score = manager.calculate_compliance_score();
+        assert!((0.0..100.0).contains(&score));
+    }
+
+    #[test]
+    fn test_calculate_compliance_score_clamps_to_zero() {
+        let mut manager = ComplianceManager::new();
+        let framework = RegulatoryFramework {
+            id: "fw".to_string(),
+            name: "FW".to_string(),
+            framework_type: RegulatoryType::PCIDSS,
+            required_controls: vec![ComplianceControl {
+                id: "only".to_string(),
+                name: "Only".to_string(),
+                description: "d".to_string(),
+                control_type: ControlType::Preventive,
+                implementation_status: ImplementationStatus::FullyImplemented,
+                last_assessment: None,
+                next_assessment_due: None,
+            }],
+            audit_frequency_days: 180,
+            last_audit: None,
+            compliance_status: ComplianceStatus::NonCompliant,
+        };
+        manager.add_regulatory_framework(framework);
+
+        let mut v = create_test_violation();
+        v.severity = ViolationSeverity::Critical; // weight 10 vs 1 control → raw score negative
+        manager.record_violation(v);
+
+        assert_eq!(manager.calculate_compliance_score(), 0.0);
+    }
+
+    #[test]
+    fn test_add_regulatory_framework_inserts_by_id() {
+        let mut manager = ComplianceManager::new();
+        let fw = RegulatoryFramework {
+            id: "custom-fw".to_string(),
+            name: "Custom".to_string(),
+            framework_type: RegulatoryType::ISO27001,
+            required_controls: vec![],
+            audit_frequency_days: 90,
+            last_audit: None,
+            compliance_status: ComplianceStatus::Unknown,
+        };
+        manager.add_regulatory_framework(fw);
+        assert_eq!(manager.regulatory_frameworks.len(), 1);
+        assert!(manager.regulatory_frameworks.contains_key("custom-fw"));
+    }
+
+    #[test]
+    fn test_check_access_compliance_no_policies() {
+        let manager = ComplianceManager::new();
+        assert!(!manager.check_access_compliance(&["read".to_string()], 9));
+    }
+
+    #[test]
+    fn test_check_access_compliance_empty_required_permissions() {
+        let mut manager = ComplianceManager::new();
+        let mut policy = create_test_access_policy();
+        policy.required_permissions.clear();
+        policy.min_clearance_level = 1;
+        manager.add_access_policy(policy);
+
+        assert!(manager.check_access_compliance(&[], 2));
+    }
+
+    #[test]
+    fn test_generate_compliance_report_counts_critical_violations() {
+        let mut manager = ComplianceManager::new();
+        let mut crit = create_test_violation();
+        crit.id = "c1".to_string();
+        crit.severity = ViolationSeverity::Critical;
+        manager.record_violation(crit);
+
+        let mut high = create_test_violation();
+        high.id = "h1".to_string();
+        high.severity = ViolationSeverity::High;
+        manager.record_violation(high);
+
+        let report = manager.generate_compliance_report();
+        assert_eq!(report.critical_violations, 1);
+        assert_eq!(report.total_violations, 2);
+    }
+
+    #[test]
+    fn test_check_data_retention_no_matching_data_types() {
+        let mut manager = ComplianceManager::new();
+        let mut policy = create_test_retention_policy();
+        policy.data_types = vec!["only-this".to_string()];
+        manager.add_retention_policy(policy);
+
+        assert!(!manager.check_data_retention("other_type", 1));
+    }
 }

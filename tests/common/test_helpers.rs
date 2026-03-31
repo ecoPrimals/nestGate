@@ -53,12 +53,7 @@ pub async fn create_test_nas_server() -> Result<nestgate_nas::NasServer> {
     nestgate_nas::NasServer::new(config).await
 }
 
-/// **CONSOLIDATED**: Create test MCP adapter with standardized configuration
-/// Replaces MCP adapter creation helpers
-pub async fn create_test_mcp_adapter() -> Result<nestgate_mcp::adapter::McpAdapter> {
-    let config = nestgate_mcp::config::UnifiedUnifiedMcpConfig::default();
-    nestgate_mcp::adapter::McpAdapter::new(config).await
-}
+// MCP adapter creation removed — MCP protocol is delegated to biomeOS via capability.call
 
 // ==================== MOCK SERVICE HELPERS ====================
 
@@ -388,13 +383,11 @@ pub mod integration {
             
         let zfs_manager = create_test_zfs_manager().await?;
         let nas_server = create_test_nas_server().await?;
-        let mcp_adapter = create_test_mcp_adapter().await?;
         
         Ok(TestEnvironment {
             config,
             zfs_manager: Some(zfs_manager),
             nas_server: Some(nas_server),
-            mcp_adapter: Some(mcp_adapter),
         })
     }
     
@@ -403,7 +396,7 @@ pub mod integration {
         pub config: UnifiedTestConfig,
         pub zfs_manager: Option<nestgate_zfs::ZfsManager>,
         pub nas_server: Option<nestgate_nas::NasServer>,
-        pub mcp_adapter: Option<nestgate_mcp::adapter::McpAdapter>,
+        // MCP adapter removed — protocol delegated to biomeOS capability.call
     }
     
     impl TestEnvironment {

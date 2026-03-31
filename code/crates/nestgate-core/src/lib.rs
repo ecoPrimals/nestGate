@@ -103,15 +103,9 @@ pub use nestgate_rpc::rpc;
 
 pub use nestgate_discovery::capabilities;
 pub use nestgate_discovery::capability_discovery;
-pub use nestgate_discovery::capability_resolver;
-pub use nestgate_discovery::discovery;
-pub use nestgate_discovery::discovery_mechanism;
 pub use nestgate_discovery::infant_discovery;
 pub use nestgate_discovery::primal_discovery;
-pub use nestgate_discovery::primal_self_knowledge;
-pub use nestgate_discovery::self_knowledge;
 pub use nestgate_discovery::service_discovery;
-pub use nestgate_discovery::unified_capabilities;
 pub use nestgate_discovery::universal_primal_discovery;
 
 // ==================== CORE-ONLY MODULES ====================
@@ -188,7 +182,8 @@ pub mod universal_traits;
 pub use nestgate_cache::cache_math;
 /// Consensus algorithm mathematics
 pub mod consensus_math;
-/// Validation predicate functions
+/// Validation predicate functions (test-only — extracted for mutation testing)
+#[cfg(test)]
 pub mod validation_predicates;
 
 // ==================== CANONICAL RE-EXPORTS ====================

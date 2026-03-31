@@ -18,7 +18,10 @@ use serde_json::Value;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::time::Instant;
 use tracing::debug;
+
+static PROCESS_START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
 
 fn self_primal_name() -> String {
     std::env::var("NESTGATE_SERVICE_NAME").unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_string())
@@ -203,10 +206,9 @@ impl NestGateRpcHandler {
     }
 }
 
-/// Get system uptime in seconds
-const fn get_uptime_seconds() -> u64 {
-    // Placeholder - implement proper uptime tracking
-    0
+/// Get system uptime in seconds (monotonic, process-scoped).
+fn get_uptime_seconds() -> u64 {
+    PROCESS_START.get_or_init(Instant::now).elapsed().as_secs()
 }
 
 // ============================================================================

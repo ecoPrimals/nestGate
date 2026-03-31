@@ -12,25 +12,25 @@ mod adapter_error_creation_tests {
     #[test]
     fn test_adapter_initialization_error() {
         let err = NestGateError::internal_error("Adapter init failed", "adapter");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_capability_not_found() {
         let err = NestGateError::internal_error("Capability not found", "adapter");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_primal_unavailable() {
         let err = NestGateError::internal_error("Primal unavailable", "adapter");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_routing_error() {
         let err = NestGateError::internal_error("Routing failed", "adapter");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 }
 
@@ -41,7 +41,7 @@ mod capability_query_tests {
     /// Query Capability
     fn query_capability(name: &str, available: bool) -> Result<String> {
         if available && !name.is_empty() {
-            Ok(format!("capability-{}", name))
+            Ok(format!("capability-{name}"))
         } else {
             Err(NestGateError::internal_error("Query failed", "adapter"))
         }
@@ -76,7 +76,7 @@ mod adapter_routing_tests {
         /// Route
         fn route(primal: &str, available: bool) -> Result<String> {
             if available {
-                Ok(format!("routed-to-{}", primal))
+                Ok(format!("routed-to-{primal}"))
             } else {
                 Err(NestGateError::internal_error("Routing failed", "adapter"))
             }
@@ -180,7 +180,7 @@ mod adapter_discovery_tests {
                 if Some(i) == fail_at {
                     return Err(NestGateError::internal_error("Partial failure", "adapter"));
                 }
-                results.push(format!("cap-{}", i));
+                results.push(format!("cap-{i}"));
             }
             Ok(results)
         }
@@ -197,31 +197,31 @@ mod adapter_edge_cases {
     #[test]
     fn test_empty_primal_name() {
         let err = NestGateError::validation_error("Empty primal name");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_invalid_capability_format() {
         let err = NestGateError::validation_error("Invalid capability format");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_circular_dependency() {
         let err = NestGateError::internal_error("Circular dependency detected", "adapter");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_adapter_overload() {
         let err = NestGateError::internal_error("Adapter overloaded", "adapter");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 
     #[test]
     fn test_version_mismatch() {
         let err = NestGateError::internal_error("Version mismatch", "adapter");
-        assert!(!format!("{}", err).is_empty());
+        assert!(!format!("{err}").is_empty());
     }
 }
 
@@ -238,7 +238,7 @@ mod adapter_concurrent_tests {
         for i in 0..5 {
             let results_clone = Arc::clone(&results);
             let handle = thread::spawn(move || {
-                let query_result = format!("result-{}", i);
+                let query_result = format!("result-{i}");
                 results_clone.lock().unwrap().push(query_result);
             });
             handles.push(handle);
@@ -280,7 +280,7 @@ mod adapter_performance_tests {
     fn test_query_performance() {
         let start = std::time::Instant::now();
         for i in 0..1000 {
-            let _ = format!("capability-{}", i);
+            let _ = format!("capability-{i}");
         }
         let duration = start.elapsed();
         // Should complete quickly (< 5ms)
@@ -291,7 +291,7 @@ mod adapter_performance_tests {
     fn test_error_creation_performance() {
         let start = std::time::Instant::now();
         for i in 0..100 {
-            let _ = NestGateError::internal_error(format!("Error {}", i), "adapter");
+            let _ = NestGateError::internal_error(format!("Error {i}"), "adapter");
         }
         let duration = start.elapsed();
         // Should create errors quickly (< 10ms)
@@ -322,7 +322,7 @@ mod adapter_integration_tests {
 
         /// Route Capability
         fn route_capability(cap: String) -> Result<String> {
-            Ok(format!("routed-{}", cap))
+            Ok(format!("routed-{cap}"))
         }
 
         let result = discover_capability()
@@ -339,7 +339,7 @@ mod adapter_integration_tests {
         fn query_batch(capabilities: Vec<String>) -> Result<HashMap<String, String>> {
             let mut results = HashMap::new();
             for cap in capabilities {
-                results.insert(cap.clone(), format!("{}-endpoint", cap));
+                results.insert(cap.clone(), format!("{cap}-endpoint"));
             }
             Ok(results)
         }

@@ -25,7 +25,7 @@
 //! - **Phase 3** (Week 3): Deprecate environment-only discovery
 //! - **Phase 4** (Week 4): Remove deprecated code
 
-use crate::universal_primal_discovery::backends::{InMemoryDiscoveryBackend, MdnsDiscoveryBackend};
+use crate::universal_primal_discovery::backends::InMemoryDiscoveryBackend;
 use crate::universal_primal_discovery::capability_based_discovery::{
     CapabilityDiscoveryManager, DiscoveryQuery, PeerDescriptor, PrimalCapability,
 };
@@ -197,14 +197,7 @@ impl CapabilityAwareDiscovery {
         manager.add_backend(Arc::new(InMemoryDiscoveryBackend::new()));
         info!("Added in-memory discovery backend");
 
-        // Add mDNS for local network discovery
-        if std::env::var("NESTGATE_LOCAL_DISCOVERY")
-            .map(|v| v == "true")
-            .unwrap_or(false)
-        {
-            manager.add_backend(Arc::new(MdnsDiscoveryBackend::new()));
-            info!("Added mDNS discovery backend");
-        }
+        // mDNS removed — local network discovery delegated to songBird IPC
 
         // FUTURE: Add Kubernetes backend when deploying to k8s (auto-detected via env)
         // if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {

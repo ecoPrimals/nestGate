@@ -188,7 +188,7 @@ mod tests {
         let connection = NetworkConnection {
             connection_id: "conn-123".to_string(),
             protocol: "http".to_string(),
-            local_endpoint: format!("{}:{}", LOCALHOST, DEFAULT_API_PORT),
+            local_endpoint: format!("{LOCALHOST}:{DEFAULT_API_PORT}"),
             established_at: Utc::now(),
             status: ConnectionStatus::Connected,
             metadata: HashMap::new(),

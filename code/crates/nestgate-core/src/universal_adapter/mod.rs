@@ -613,7 +613,7 @@ mod tests {
     /// Helper to create test endpoint
     /// ✅ MIGRATED: Replaces hardcoded endpoints with configurable ones
     fn test_endpoint(service: &str, port: u16) -> String {
-        format!("http://{}:{}", service, port)
+        format!("http://{service}:{port}")
     }
 
     #[tokio::test]

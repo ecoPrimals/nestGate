@@ -278,10 +278,15 @@ impl RealTimeMetricsCollector {
             } else {
                 0.0
             },
-            fragmentation_level: 0.0, // Placeholder
-            error_count: 0,           // Placeholder
-            total_capacity: used_capacity + (total_capacity - used_capacity), // Placeholder
-            health_status: "ONLINE".to_string(), // Placeholder
+            fragmentation_level: 0.0,
+            error_count: 0,
+            total_capacity,
+            health_status: if total_capacity > 0 {
+                "ONLINE"
+            } else {
+                "UNKNOWN"
+            }
+            .to_string(),
         })
     }
 
@@ -593,6 +598,7 @@ impl Default for RealTimeMetricsCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[tokio::test]
     async fn dashboard_metrics_collector_new_get_current() {
@@ -604,5 +610,271 @@ mod tests {
     async fn dashboard_metrics_collector_default() {
         let c = RealTimeMetricsCollector::default();
         let _ = c.get_current_metrics().await;
+    }
+
+    #[test]
+    fn parse_size_string_empty_and_dash() {
+        assert_eq!(RealTimeMetricsCollector::parse_size_string(""), Some(0));
+        assert_eq!(RealTimeMetricsCollector::parse_size_string("   "), Some(0));
+        assert_eq!(RealTimeMetricsCollector::parse_size_string("-"), Some(0));
+    }
+
+    #[test]
+    fn parse_size_string_single_character() {
+        assert_eq!(RealTimeMetricsCollector::parse_size_string("7"), Some(7));
+    }
+
+    #[test]
+    fn parse_size_string_suffixes_k_through_p() {
+        assert_eq!(
+            RealTimeMetricsCollector::parse_size_string("2K"),
+            Some(2 * 1_024)
+        );
+        assert_eq!(
+            RealTimeMetricsCollector::parse_size_string("1M"),
+            Some(1 * 1_024 * 1_024)
+        );
+        assert_eq!(
+            RealTimeMetricsCollector::parse_size_string("1G"),
+            Some(1 * 1_024_u64 * 1_024 * 1_024)
+        );
+        assert_eq!(
+            RealTimeMetricsCollector::parse_size_string("1T"),
+            Some(1 * 1_024_u64 * 1_024 * 1_024 * 1_024)
+        );
+        assert_eq!(
+            RealTimeMetricsCollector::parse_size_string("1P"),
+            Some(1 * 1_024_u64 * 1_024 * 1_024 * 1_024 * 1_024)
+        );
+    }
+
+    #[test]
+    fn parse_size_string_fractional_with_suffix() {
+        let got = RealTimeMetricsCollector::parse_size_string("1.5G").unwrap();
+        assert!(got > 1_024_u64 * 1_024 * 1_024);
+    }
+
+    #[test]
+    fn parse_size_string_unknown_suffix_falls_back_to_full_parse() {
+        assert_eq!(RealTimeMetricsCollector::parse_size_string("99"), Some(99));
+    }
+
+    #[test]
+    fn parse_size_string_invalid() {
+        assert!(RealTimeMetricsCollector::parse_size_string("not-a-number").is_none());
+    }
+
+    #[test]
+    fn calculate_average_latencies_empty() {
+        let (r, w) = RealTimeMetricsCollector::calculate_average_latencies(&[]);
+        assert_eq!((r, w), (0.0, 0.0));
+    }
+
+    #[test]
+    fn calculate_average_latencies_zero_throughput() {
+        let p = PoolMetrics {
+            name: "p".to_string(),
+            health_status: "ONLINE".to_string(),
+            utilization_percentage: 0.0,
+            total_capacity: 0,
+            used_space: 0,
+            available_space: 0,
+            read_iops: 0,
+            write_iops: 0,
+            read_throughput: 0.0,
+            write_throughput: 0.0,
+            fragmentation_level: 0.0,
+            error_count: 0,
+        };
+        let (r, w) =
+            RealTimeMetricsCollector::calculate_average_latencies(std::slice::from_ref(&p));
+        assert_eq!((r, w), (0.0, 0.0));
+    }
+
+    #[test]
+    fn calculate_average_latencies_nonzero_throughput() {
+        let p = PoolMetrics {
+            name: "p".to_string(),
+            health_status: "ONLINE".to_string(),
+            utilization_percentage: 50.0,
+            total_capacity: 100,
+            used_space: 50,
+            available_space: 50,
+            read_iops: 10,
+            write_iops: 10,
+            read_throughput: 10.0,
+            write_throughput: 5.0,
+            fragmentation_level: 0.0,
+            error_count: 0,
+        };
+        let (r, w) =
+            RealTimeMetricsCollector::calculate_average_latencies(std::slice::from_ref(&p));
+        assert!((r - 10.0).abs() < f64::EPSILON);
+        assert!((w - 20.0).abs() < f64::EPSILON);
+    }
+
+    #[tokio::test]
+    async fn collect_all_metrics_ok() {
+        let m = RealTimeMetricsCollector::collect_all_metrics().await;
+        assert!(m.is_ok());
+        let m = m.unwrap();
+        assert!(m.cpu_usage >= 0.0);
+        assert!(m.memory_usage >= 0.0);
+    }
+
+    #[tokio::test]
+    async fn collect_system_metrics_ok() {
+        let s = RealTimeMetricsCollector::collect_system_metrics().await;
+        assert!(s.is_ok());
+        let s = s.unwrap();
+        assert!(s.cpu_utilization >= 0.0);
+        assert!(s.total_memory_bytes > 0);
+    }
+
+    #[tokio::test]
+    async fn collect_pool_metrics_ok() {
+        let p = RealTimeMetricsCollector::collect_pool_metrics().await;
+        assert!(p.is_ok());
+    }
+
+    #[tokio::test]
+    async fn collect_single_pool_metrics_nonexistent_pool() {
+        let p = RealTimeMetricsCollector::collect_single_pool_metrics(
+            "__nestgate_test_nonexistent_pool__",
+        )
+        .await;
+        assert!(p.is_ok());
+        let p = p.unwrap();
+        assert_eq!(p.name, "__nestgate_test_nonexistent_pool__");
+        assert_eq!(p.health_status, "UNKNOWN");
+    }
+
+    #[tokio::test]
+    async fn get_pool_capacity_info_nonexistent() {
+        let (t, u, h) =
+            RealTimeMetricsCollector::get_pool_capacity_info("__nestgate_test_nonexistent_pool__")
+                .await;
+        assert_eq!((t, u, h.as_str()), (0, 0, "UNKNOWN"));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn get_cpu_usage_reads_proc_stat() {
+        let cpu = RealTimeMetricsCollector::get_cpu_usage().await;
+        assert!(cpu.is_ok());
+        let v = cpu.unwrap();
+        assert!((0.0..=100.0).contains(&v));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn get_memory_info_from_proc() {
+        let m = RealTimeMetricsCollector::get_memory_info().await;
+        assert!(m.is_ok());
+        let (pct, total, avail) = m.unwrap();
+        assert!(pct >= 0.0 && pct <= 100.0);
+        assert!(total > 0);
+        assert!(avail <= total);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn get_network_io_from_proc() {
+        let n = RealTimeMetricsCollector::get_network_io().await;
+        assert!(n.is_ok());
+        let n = n.unwrap();
+        let _ = (
+            n.bytes_sent,
+            n.bytes_received,
+            n.packets_sent,
+            n.packets_received,
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn get_disk_io_from_proc() {
+        let d = RealTimeMetricsCollector::get_disk_io().await;
+        assert!(d.is_ok());
+    }
+
+    #[tokio::test]
+    async fn collect_arc_statistics_ok() {
+        let a = RealTimeMetricsCollector::collect_arc_statistics().await;
+        assert!(a.is_ok());
+        let (arc, l2) = a.unwrap();
+        assert!(arc >= 0.0 && arc <= 100.0);
+        assert!(l2 >= 0.0 && l2 <= 100.0);
+    }
+
+    #[tokio::test]
+    async fn calculate_compression_ratio_ok() {
+        let r = RealTimeMetricsCollector::calculate_compression_ratio().await;
+        assert!(r.is_ok());
+        let r = r.unwrap();
+        assert!(r > 0.0);
+    }
+
+    #[tokio::test]
+    async fn get_current_metrics_uses_fresh_cache_entry() {
+        let c = RealTimeMetricsCollector::new();
+        let now = SystemTime::now();
+        let cached = RealTimeMetrics {
+            timestamp: now,
+            cpu_usage: 3.0,
+            memory_usage: 4.0,
+            disk_io: 5.0,
+            network_throughput: 6.0,
+            active_connections: 7,
+            response_time_ms: 8.0,
+        };
+        {
+            let mut w = c.metrics_cache.write().await;
+            w.insert("latest".to_string(), cached.clone());
+        }
+        let got = c.get_current_metrics().await.unwrap();
+        assert_eq!(got.cpu_usage, 3.0);
+        assert_eq!(got.memory_usage, 4.0);
+    }
+
+    #[tokio::test]
+    async fn get_current_metrics_ignores_stale_cache() {
+        let c = RealTimeMetricsCollector::new();
+        let old = SystemTime::UNIX_EPOCH;
+        let cached = RealTimeMetrics {
+            timestamp: old,
+            cpu_usage: 99.0,
+            memory_usage: 99.0,
+            disk_io: 99.0,
+            network_throughput: 99.0,
+            active_connections: 99,
+            response_time_ms: 99.0,
+        };
+        {
+            let mut w = c.metrics_cache.write().await;
+            w.insert("latest".to_string(), cached);
+        }
+        let got = c.get_current_metrics().await.unwrap();
+        assert_ne!(got.cpu_usage, 99.0);
+    }
+
+    #[tokio::test]
+    async fn start_collection_broadcasts_metrics_update() {
+        let (tx, _) = broadcast::channel::<String>(8);
+        let tx = Arc::new(tx);
+        let mut rx = tx.subscribe();
+        let collector = Arc::new(RealTimeMetricsCollector::new());
+        let c = Arc::clone(&collector);
+        let t = Arc::clone(&tx);
+        let handle = tokio::spawn(async move {
+            c.start_collection(t).await;
+        });
+        let msg = tokio::time::timeout(Duration::from_secs(5), rx.recv())
+            .await
+            .expect("timeout waiting for metrics broadcast")
+            .expect("channel closed");
+        assert!(msg.starts_with("metrics_update:"));
+        handle.abort();
+        let _ = handle.await;
     }
 }

@@ -38,20 +38,25 @@ fn attach_core_routes(router: Router<AppState>) -> Router<AppState> {
         .route(
             "/hardware/tune",
             post(|| async {
-                axum::response::Json(serde_json::json!({
-                    "status": "success",
-                    "message": "Hardware tuning not implemented yet"
-                }))
+                (
+                    axum::http::StatusCode::NOT_IMPLEMENTED,
+                    axum::response::Json(serde_json::json!({
+                        "error": "not_implemented",
+                        "message": "Hardware tuning is not yet available"
+                    })),
+                )
             }),
         )
         .route(
             "/hardware/config",
             get(|| async {
-                axum::response::Json(serde_json::json!({
-                    "status": "success",
-                    "config": {},
-                    "message": "Hardware config not implemented yet"
-                }))
+                (
+                    axum::http::StatusCode::NOT_IMPLEMENTED,
+                    axum::response::Json(serde_json::json!({
+                        "error": "not_implemented",
+                        "message": "Hardware configuration is not yet available"
+                    })),
+                )
             }),
         )
         .route("/api/v1/communication/stats", get(get_communication_stats))
