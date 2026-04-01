@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // This module provides canonical error handling for ZFS operations, integrating
@@ -183,10 +183,6 @@ pub enum ZfsOperation {
 
 // CANONICAL MODERNIZATION: Remove duplicate type aliases
 // All ZFS errors now use the unified nestgate_core error system
-
-// REMOVED DUPLICATES:
-// - pub type ZfsResult<T> = std::result::Result<T, crate::types::ZfsError>;
-// - pub type Result<T> = nestgate_core::error::Result<T, ZfsError>;
 
 // ==================== TESTS ====================
 

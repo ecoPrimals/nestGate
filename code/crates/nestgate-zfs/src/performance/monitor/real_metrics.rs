@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // This module provides actual system metrics collection instead of mock data.
@@ -8,7 +8,6 @@
 //! Real Metrics module
 
 use std::collections::HashMap;
-// use std::time::SystemTime; // Unused currently
 use tokio::process::Command;
 use tracing::{debug, warn};
 

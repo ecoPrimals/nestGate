@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **RETURN BUILDERS MODULE SYSTEM**
 // Breaking down the large return_builders.rs (898 lines) into focused modules
@@ -12,8 +12,8 @@
 /// field assignment mutations.
 // Response builder functions
 pub mod response_builders;
-// Mock data builders for testing (dev-stubs only)
-#[cfg(feature = "dev-stubs")]
+// Mock data builders for testing / dev-stubs only
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod mock_builders;
 // Configuration and utility builders
 /// Configuration builder utilities for type-safe config construction
@@ -26,6 +26,6 @@ pub mod json_builders;
 pub mod tests;
 // Re-export all public builder functions for backward compatibility
 pub use json_builders::build_json_response;
-#[cfg(feature = "dev-stubs")]
+#[cfg(any(test, feature = "dev-stubs"))]
 pub use mock_builders::{build_access_grant, build_mock_resource_allocation};
 pub use response_builders::{build_error_response, build_success_response};

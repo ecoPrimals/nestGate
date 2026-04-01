@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use crate::rest::models::CachedResponse;
 use crate::zfs::types::PoolConfig;
@@ -676,9 +676,11 @@ impl ApiHandlerMigrationGuide {
 }
 
 /// **PERFORMANCE BENCHMARKING**
-/// Tools for measuring API handler performance improvements
+/// Tools for measuring API handler performance improvements (test / dev-stubs only; uses simulated delays).
+#[cfg(any(test, feature = "dev-stubs"))]
 pub struct ApiHandlerBenchmark;
 
+#[cfg(any(test, feature = "dev-stubs"))]
 impl ApiHandlerBenchmark {
     /// Benchmark API handler operations
     pub async fn benchmark_api_operations(requests: u32) -> Duration {

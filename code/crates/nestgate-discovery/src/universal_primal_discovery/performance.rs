@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Performance Discovery Module
 /// Handles performance-related discovery operations including:
@@ -12,7 +12,7 @@ use nestgate_types::error::Result;
 /// Handles performance testing configuration, benchmarks, and optimization
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 // 🚀 ECOSYSTEM UNIFICATION: Import unified types
 
 /// Test type enumeration
@@ -100,13 +100,15 @@ pub struct TestResult {
     /// Timestamp
     pub timestamp: std::time::Instant,
 }
-/// Enhanced Performance Test Runner with unified configuration
+/// Enhanced Performance Test Runner with unified configuration (test / dev-stubs only).
+#[cfg(any(test, feature = "dev-stubs"))]
 #[derive(Debug)]
 /// Performancetestrunner
 pub struct PerformanceTestRunner {
     /// Configuration for
     pub config: nestgate_config::config::canonical_primary::PerformanceConfig,
 }
+#[cfg(any(test, feature = "dev-stubs"))]
 impl PerformanceTestRunner {
     /// Create new performance test runner
     #[must_use]
@@ -127,13 +129,9 @@ impl PerformanceTestRunner {
     pub async fn discover_optimal_timeout(&self) -> Result<OptimalTimeout> {
         let mut latencies = Vec::new();
 
-        // Run multiple test iterations to gather latency data
+        // Run multiple test iterations to gather latency data (no artificial delay).
         for _ in 0..self.config.testing.test_iterations {
-            let start = Instant::now();
-
-            // Simulate test operation
-            tokio::time::sleep(Duration::from_millis(10)).await;
-
+            let start = std::time::Instant::now();
             let latency = start.elapsed();
             latencies.push(latency);
         }
@@ -239,12 +237,22 @@ impl PerformanceDiscovery {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration> {
-        // Use default performance test config for discovery
-        let config = nestgate_config::config::canonical_primary::PerformanceConfig::default();
-        let runner = PerformanceTestRunner::new(config);
+        let config: PerformanceTestConfig = PerformanceTestConfig::default();
 
-        let optimal = runner.discover_optimal_timeout().await?;
-        Ok(optimal.timeout)
+        #[cfg(any(test, feature = "dev-stubs"))]
+        {
+            let runner = PerformanceTestRunner::new(config);
+            let optimal = runner.discover_optimal_timeout().await?;
+            Ok(optimal.timeout)
+        }
+
+        #[cfg(not(any(test, feature = "dev-stubs")))]
+        {
+            std::future::ready(Ok(Duration::from_secs(
+                config.testing.baseline_timeout_seconds,
+            )))
+            .await
+        }
     }
 
     /// Discover performance characteristics

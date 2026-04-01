@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Simplified, unified installer configuration using canonical patterns
 
@@ -12,23 +12,11 @@ use std::path::PathBuf;
 
 // Re-export specialized modules
 pub mod execution;
-// Migration module removed - migration complete
 pub mod platform;
+/// Pre-install, post-install, and health-check validation settings.
 pub mod validation;
 
-// pub use execution::*; // Currently unused
-// pub use migration::*; // Currently unused
-// Unused platform imports commented out to fix clippy warnings
-// pub use platform::{
-//     ComponentSettings, DeploymentSettings, InstallationSettings, PackageManagementSettings,
-//     PostInstallSettings, SystemIntegrationSettings,
-// };
-// Unused imports: DeploymentMode, PlatformType, SystemRequirements
-// pub use validation::ValidationSettings; // Unused
-// Unused imports: HealthCheckSettings, PostInstallValidationSettings, PreInstallCheckSettings
-
-// Re-export implementation methods
-// pub use execution::implementation::*; // Currently unused
+// Re-exports trimmed: use `execution`, `platform`, and `validation` modules directly.
 
 /// Installer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,15 +81,20 @@ pub struct InstallerExtensions {
     /// Enable verbose output
     pub verbose: bool,
 }
+/// How the installer drives user interaction and defaults.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum InstallMode {
+    /// Prompt-driven installation.
     #[default]
     Interactive,
+    /// Non-interactive installation with defaults or supplied config.
     Silent,
+    /// User-defined components and paths.
     Custom,
 }
 // ==================== SECTION ====================
 
+/// Preset [`InstallerConfig`] constructors for common environments.
 pub mod installer_config_factory {
     use super::InstallerConfig;
     // CANONICAL MODERNIZATION: Use canonical config builder instead of missing builders module

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -98,22 +98,6 @@ pub use service::RealNetworkService as NetworkService;
 pub use types::{NetworkConfig, NetworkConfigBuilder};
 // Removed: Universal orchestration modules (delegated to orchestration primal via capability discovery)
 // ==================== SECTION ====================
-
-// **DEPRECATED CODE REMOVED**
-//
-// The following deprecated compatibility layers have been eliminated:
-// - `real_network_service.rs` (893 lines) - Deprecated compatibility layer
-//
-// **Migration Path**:
-// All functionality has been migrated to the modular system:
-// - Use `service::NetworkService` for main network operations
-// - Use `types::NetworkConfig` for configuration
-// - Use `handlers::*` for protocol-specific operations
-//
-// **Performance Impact**:
-// - Removed 893 lines of deprecated code
-// - Eliminated compatibility overhead
-// - Improved compile times and memory usage
 
 // ==================== CONFIGURATION FUNCTIONS ====================
 

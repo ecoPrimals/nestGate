@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // This module provides integration between ZFS storage management and the
@@ -41,7 +41,6 @@ pub use nestgate_core::canonical_types::StorageTier;
 pub use nestgate_core::traits::native_async::ServiceHealth;
 
 // Remove references to deleted discovery module
-// pub use nestgate_automation::discovery::EcosystemDiscovery;
 
 // Re-export main engine
 pub use engine::DatasetAutomation;

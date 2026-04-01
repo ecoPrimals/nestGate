@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![allow(
     dead_code,
@@ -136,9 +136,7 @@ fn test_l2arc_stats_construction() {
 fn test_l2arc_stats_collect() {
     let result = L2arcStats::collect();
     assert!(result.is_ok());
-
-    let stats = result.unwrap();
-    assert!(stats.size > 0);
+    // L2ARC size may be 0 on systems without an L2ARC device — only assert the call succeeds
 }
 
 #[test]

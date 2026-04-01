@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Native Async Final Services - Module Re-export
 /// This file was split into the `native_async`/ module to maintain file size compliance

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // Configuration for hot/warm/cold storage tiers, performance profiles, and migration rules.
@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // Migration module not yet implemented - using local types
-// use super::migration::{CapacityLimits, MigrationRules};
 use crate::automation::policies::MigrationRules;
 
 // Temporary local definition until migration module is implemented

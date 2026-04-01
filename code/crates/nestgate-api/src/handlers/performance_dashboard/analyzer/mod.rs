@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // This module handles performance analysis and trend detection with real ZFS metrics.
 // Split into logical sub-modules to maintain code organization and comply with file size limits.
 
-// Note: error module moved to nestgate-core
-// use crate::error::ApiResult; // DEPRECATED: Now using canonical Result<T>
+// Note: error module moved to nestgate-core; ApiResult deprecated — use canonical `Result<T>`.
 //! Analyzer module
 
 use nestgate_core::canonical_modernization::canonical_constants;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
 
@@ -108,9 +108,6 @@ pub mod zero_cost_zfs_handler;
 pub mod zero_cost_zfs_operations;
 
 // Configuration and management
-// ⚠️ REMOVED: canonical_zfs_config was deprecated and removed in v0.11.0 (November 2025)
-// Use types::ZfsStorageConfig or types::CanonicalZfsConfig instead
-// pub mod canonical_zfs_config; // REMOVED - use types::ZfsStorageConfig
 pub mod health;
 #[cfg(test)]
 mod health_tests;

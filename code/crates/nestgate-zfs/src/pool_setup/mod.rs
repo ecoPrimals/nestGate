@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // Comprehensive ZFS pool setup with device detection, validation, and creation
@@ -29,15 +29,13 @@ pub use validation::{PoolSetupValidator, ValidationResult};
 // Tests
 #[cfg(test)]
 mod config_tests;
-// #[cfg(test)]
-// mod creation_tests;  // Disabled: Tests non-existent types (PoolName, VdevType)
+// creation_tests disabled: referenced non-existent types (PoolName, VdevType); restore when aligned.
 #[cfg(test)]
 mod device_detection_tests;
 #[cfg(test)]
 mod tests;
 
-// #[cfg(test)]
-// mod comprehensive_tests;  // Disabled: Uses outdated API (49 errors) - needs refactoring to match current types
+// comprehensive_tests disabled: outdated API; refactor to current types before re-enabling.
 #[cfg(test)]
 mod pool_setup_tests;
 #[cfg(test)]

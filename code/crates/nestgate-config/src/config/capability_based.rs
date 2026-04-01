@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Capability-Based Configuration System
 //!
@@ -364,7 +364,7 @@ const fn capability_name(capability: &PrimalCapability) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+    use temp_env::async_with_vars;
 
     #[test]
     fn test_builder_defaults() {
@@ -398,22 +398,22 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_discovery_from_env() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
-        crate::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "127.0.0.1:9000");
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
-        let result = config.discover(PrimalCapability::Storage).await;
-
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
-            None => crate::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
-        }
-        assert!(result.is_ok());
-        let service = result.unwrap();
-        assert_eq!(service.capability, PrimalCapability::Storage);
-        assert_eq!(service.endpoint.port(), 9000);
+        async_with_vars(
+            vec![(
+                "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
+                Some("127.0.0.1:9000"),
+            )],
+            async {
+                let config = CapabilityConfigBuilder::new().build().unwrap();
+                let result = config.discover(PrimalCapability::Storage).await;
+                assert!(result.is_ok());
+                let service = result.unwrap();
+                assert_eq!(service.capability, PrimalCapability::Storage);
+                assert_eq!(service.endpoint.port(), 9000);
+            },
+        )
+        .await;
     }
 
     #[test]
@@ -427,105 +427,77 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn discover_rejects_invalid_endpoint_env() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
-        crate::env_process::set_var(
-            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
-            "not-a-socket-address",
-        );
-
-        let config = CapabilityConfigBuilder::new()
-            .with_retry_attempts(1)
-            .build()
-            .unwrap();
-        let result = config.discover(PrimalCapability::Storage).await;
-
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
-            None => crate::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
-        }
-
-        assert!(result.is_err());
+        async_with_vars(
+            vec![(
+                "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
+                Some("not-a-socket-address"),
+            )],
+            async {
+                let config = CapabilityConfigBuilder::new()
+                    .with_retry_attempts(1)
+                    .build()
+                    .unwrap();
+                let result = config.discover(PrimalCapability::Storage).await;
+                assert!(result.is_err());
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
-    #[serial]
     async fn discover_local_fallback_succeeds_without_capability_env() {
-        let orig_cap = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
-        let orig_host = std::env::var("NESTGATE_FALLBACK_HOST").ok();
-        let orig_port = std::env::var("NESTGATE_FALLBACK_PORT").ok();
-
-        crate::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT");
-        crate::env_process::set_var("NESTGATE_FALLBACK_HOST", "127.0.0.1");
-        crate::env_process::set_var("NESTGATE_FALLBACK_PORT", "9753");
-
-        let config = CapabilityConfigBuilder::new()
-            .with_retry_attempts(1)
-            .with_fallback_mode(FallbackMode::LocalFallback)
-            .build()
-            .unwrap();
-
-        let result = config.discover(PrimalCapability::Storage).await;
-
-        match orig_cap {
-            Some(v) => crate::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v),
-            None => crate::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
-        }
-        match orig_host {
-            Some(v) => crate::env_process::set_var("NESTGATE_FALLBACK_HOST", v),
-            None => crate::env_process::remove_var("NESTGATE_FALLBACK_HOST"),
-        }
-        match orig_port {
-            Some(v) => crate::env_process::set_var("NESTGATE_FALLBACK_PORT", v),
-            None => crate::env_process::remove_var("NESTGATE_FALLBACK_PORT"),
-        }
-
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().endpoint.port(), 9753);
+        async_with_vars(
+            vec![
+                ("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", None::<&str>),
+                ("NESTGATE_FALLBACK_HOST", Some("127.0.0.1")),
+                ("NESTGATE_FALLBACK_PORT", Some("9753")),
+            ],
+            async {
+                let config = CapabilityConfigBuilder::new()
+                    .with_retry_attempts(1)
+                    .with_fallback_mode(FallbackMode::LocalFallback)
+                    .build()
+                    .unwrap();
+                let result = config.discover(PrimalCapability::Storage).await;
+                assert!(result.is_ok());
+                assert_eq!(result.unwrap().endpoint.port(), 9753);
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
-    #[serial]
     async fn discover_fail_fast_without_env() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
-        crate::env_process::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT");
-
-        let config = CapabilityConfigBuilder::new()
-            .with_retry_attempts(1)
-            .with_fallback_mode(FallbackMode::FailFast)
-            .build()
-            .unwrap();
-
-        let result = config.discover(PrimalCapability::Security).await;
-
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", v),
-            None => crate::env_process::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT"),
-        }
-
-        assert!(result.is_err());
+        async_with_vars(
+            vec![("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", None::<&str>)],
+            async {
+                let config = CapabilityConfigBuilder::new()
+                    .with_retry_attempts(1)
+                    .with_fallback_mode(FallbackMode::FailFast)
+                    .build()
+                    .unwrap();
+                let result = config.discover(PrimalCapability::Security).await;
+                assert!(result.is_err());
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
-    #[serial]
     async fn discover_graceful_degradation_still_errors_without_env() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT").ok();
-        crate::env_process::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");
-
-        let config = CapabilityConfigBuilder::new()
-            .with_retry_attempts(1)
-            .with_fallback_mode(FallbackMode::GracefulDegradation)
-            .build()
-            .unwrap();
-
-        let result = config.discover(PrimalCapability::Analytics).await;
-
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v),
-            None => crate::env_process::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT"),
-        }
-
-        assert!(result.is_err());
+        async_with_vars(
+            vec![("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", None::<&str>)],
+            async {
+                let config = CapabilityConfigBuilder::new()
+                    .with_retry_attempts(1)
+                    .with_fallback_mode(FallbackMode::GracefulDegradation)
+                    .build()
+                    .unwrap();
+                let result = config.discover(PrimalCapability::Analytics).await;
+                assert!(result.is_err());
+            },
+        )
+        .await;
     }
 }

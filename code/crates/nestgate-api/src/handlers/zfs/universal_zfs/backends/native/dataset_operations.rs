@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // Contains all dataset-related operations for the native ZFS backend.
@@ -212,6 +212,6 @@ pub(super) fn parse_dataset_type(type_str: &str) -> DatasetType {
     match type_str {
         "volume" => DatasetType::Volume,
         "snapshot" | "bookmark" => DatasetType::Snapshot, // Bookmarks treated as snapshots
-        "filesystem" | _ => DatasetType::Filesystem,
+        _ => DatasetType::Filesystem,
     }
 }

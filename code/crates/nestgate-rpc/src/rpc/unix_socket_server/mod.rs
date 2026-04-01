@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -93,6 +93,7 @@
 
 mod audit_handlers;
 mod nat_handlers;
+mod session_handlers;
 mod storage_handlers;
 mod template_handlers;
 
@@ -157,9 +158,8 @@ pub(crate) struct StorageState {
 }
 
 impl StorageState {
-    /// Create new storage state (templates/audit; core storage via integration when available).
+    /// Create new storage state (templates/audit; filesystem-backed storage via dataset paths).
     pub(crate) fn new() -> Result<Self> {
-        tracing::debug!("feature pending: StorageManagerService wiring for Unix JSON-RPC storage");
         Ok(Self {
             templates: crate::rpc::template_storage::TemplateStorage::new(),
             audits: crate::rpc::audit_storage::AuditStorage::new(),
@@ -412,23 +412,26 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "discover_capabilities" | "discover.capabilities" => {
             model_cache_handlers::discover_capabilities()
         }
-        // Storage operations
+        // Storage operations (filesystem-backed, durable)
         "storage.store" | "storage.put" => {
-            storage_handlers::storage_store(request.params.as_ref(), state)
+            storage_handlers::storage_store(request.params.as_ref(), state).await
         }
         "storage.retrieve" | "storage.get" => {
-            storage_handlers::storage_retrieve(request.params.as_ref(), state)
+            storage_handlers::storage_retrieve(request.params.as_ref(), state).await
         }
         "storage.exists" => storage_handlers::storage_exists(request.params.as_ref(), state),
-        "storage.delete" => storage_handlers::storage_delete(request.params.as_ref(), state),
+        "storage.delete" => storage_handlers::storage_delete(request.params.as_ref(), state).await,
         "storage.list" => storage_handlers::storage_list(request.params.as_ref(), state).await,
         "storage.stats" => storage_handlers::storage_stats(request.params.as_ref(), state).await,
         "storage.store_blob" => {
-            storage_handlers::storage_store_blob(request.params.as_ref(), state)
+            storage_handlers::storage_store_blob(request.params.as_ref(), state).await
         }
         "storage.retrieve_blob" => {
-            storage_handlers::storage_retrieve_blob(request.params.as_ref(), state)
+            storage_handlers::storage_retrieve_blob(request.params.as_ref(), state).await
         }
+        // Game session persistence (convenience over storage.*)
+        "session.save" => session_handlers::session_save(request.params.as_ref(), state).await,
+        "session.load" => session_handlers::session_load(request.params.as_ref(), state).await,
         // Model cache operations (extracted to model_cache_handlers.rs)
         "model.register" => model_cache_handlers::model_register(request.params.as_ref()),
         "model.exists" => model_cache_handlers::model_exists(request.params.as_ref()),

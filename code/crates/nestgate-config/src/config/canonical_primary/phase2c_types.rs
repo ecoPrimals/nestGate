@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **PHASE 2C SUPPORTING TYPES**
 //! Supporting types and enums for the Phase 2C configuration unification enhancements.

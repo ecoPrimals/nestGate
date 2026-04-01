@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
+use nestgate_core::error::utilities::safe_env_var_or_default;
 use serde_json::{Value, json};
 use tracing::{info, warn};
 
@@ -11,7 +12,6 @@ pub async fn list_workspace_backups(
 ) -> Result<Json<Value>, StatusCode> {
     info!("📋 Listing backups for workspace: {}", workspace_id);
 
-    use nestgate_core::error::utilities::safe_env_var_or_default;
     let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
 
     let backup_pattern = format!("workspace_{workspace_id}_");
@@ -22,12 +22,18 @@ pub async fn list_workspace_backups(
             while let Ok(Some(entry)) = entries.next_entry().await {
                 if let Some(file_name) = entry.file_name().to_str()
                     && file_name.starts_with(&backup_pattern)
-                    && file_name.ends_with(".zfs")
+                    && std::path::Path::new(file_name)
+                        .extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("zfs"))
                 {
                     // Extract backup name from filename
                     let backup_name = file_name
                         .strip_prefix(&backup_pattern)
-                        .and_then(|s| s.strip_suffix(".zfs"))
+                        .and_then(|rest| {
+                            std::path::Path::new(rest)
+                                .file_stem()
+                                .and_then(|stem| stem.to_str())
+                        })
                         .unwrap_or("unknown");
 
                     if let Ok(metadata) = entry.metadata().await {

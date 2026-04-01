@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Infant Discovery Architecture Implementation
 //!
@@ -28,10 +28,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-// Sub-modules would be implemented here in a full implementation
-// pub mod capability_discovery;
-// pub mod connection_manager;
-// pub mod sovereignty_layer;
+// Sub-modules (capability_discovery, connection_manager, sovereignty_layer) would live here in a full implementation.
 
 /// Errors from infant discovery (in-crate; former `zero_cost` types lived in `nestgate-core`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

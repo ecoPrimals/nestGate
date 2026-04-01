@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -35,7 +35,7 @@ impl UniversalStorageBridge {
     }
 
     /// Detect and set the best available storage backend
-    pub async fn detect_best_backend(&mut self) -> UniversalZfsResult<String> {
+    pub fn detect_best_backend(&mut self) -> UniversalZfsResult<String> {
         info!("🔍 Detecting best available storage backend");
 
         // Try backends in order of preference: ZFS -> Filesystem -> Others
@@ -61,10 +61,10 @@ impl UniversalStorageBridge {
     }
 
     /// Translate ZFS pool operations to universal storage operations
-    pub async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
+    pub fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         debug!("🔍 Listing pools via universal storage");
 
-        let backend = self.get_active_backend().await?;
+        let backend = self.get_active_backend()?;
 
         match backend.as_str() {
             "zfs" => self.list_zfs_pools(),
@@ -216,13 +216,13 @@ impl UniversalStorageBridge {
     }
 
     /// Get the currently active storage backend
-    async fn get_active_backend(&self) -> UniversalZfsResult<String> {
+    fn get_active_backend(&self) -> UniversalZfsResult<String> {
         if let Some(backend) = &self.preferred_backend {
             Ok(backend.clone())
         } else {
             // Auto-detect if not already set
             let mut bridge = self.clone();
-            bridge.detect_best_backend().await
+            bridge.detect_best_backend()
         }
     }
 
@@ -284,10 +284,10 @@ impl UniversalStorageBridge {
     }
 
     /// Create a dataset (directory) via universal storage
-    pub async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+    pub fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         info!("🏗️ Creating dataset: {}", config.name);
 
-        let backend = self.get_active_backend().await?;
+        let backend = self.get_active_backend()?;
 
         match backend.as_str() {
             "zfs" => self.create_zfs_dataset(config),
@@ -375,7 +375,7 @@ mod tests {
     #[tokio::test]
     async fn test_universal_storage_bridge_detect_best_backend() {
         let mut bridge = UniversalStorageBridge::new().unwrap();
-        let result = bridge.detect_best_backend().await;
+        let result = bridge.detect_best_backend();
         assert!(result.is_ok());
         // Either zfs or filesystem depending on system
         let backend = result.unwrap();
@@ -385,7 +385,7 @@ mod tests {
     #[tokio::test]
     async fn test_universal_storage_bridge_list_pools() {
         let bridge = UniversalStorageBridge::new().unwrap();
-        let result = bridge.list_pools().await;
+        let result = bridge.list_pools();
         assert!(result.is_ok());
         let pools = result.unwrap();
         // Pools may be empty in restricted test environments (sandbox, no zfs/df)
@@ -395,7 +395,7 @@ mod tests {
     #[tokio::test]
     async fn test_universal_storage_bridge_create_dataset_filesystem() {
         let mut bridge = UniversalStorageBridge::new().unwrap();
-        bridge.detect_best_backend().await.ok();
+        bridge.detect_best_backend().ok();
 
         let temp_path =
             std::env::temp_dir().join(format!("nestgate_test_dataset_{}", uuid::Uuid::new_v4()));
@@ -408,7 +408,7 @@ mod tests {
             properties: HashMap::new(),
         };
 
-        let result = bridge.create_dataset(&config).await;
+        let result = bridge.create_dataset(&config);
         if let Ok(dataset) = result {
             assert_eq!(dataset.name, config.name);
             assert_eq!(dataset.dataset_type, DatasetType::Filesystem);

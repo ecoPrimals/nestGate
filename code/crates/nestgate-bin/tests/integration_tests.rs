@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![allow(
     unused,
@@ -201,13 +201,9 @@ async fn test_gui_binary_exists() -> std::result::Result<(), Box<dyn std::error:
         return Ok(());
     }
 
-    let orig = std::env::var("DISPLAY").ok();
-    nestgate_core::env_process::set_var("DISPLAY", ":0");
-    let display = std::env::var("DISPLAY").unwrap_or_default();
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("DISPLAY", v),
-        None => nestgate_core::env_process::remove_var("DISPLAY"),
-    }
+    let display = temp_env::with_var("DISPLAY", Some(":0"), || {
+        std::env::var("DISPLAY").unwrap_or_default()
+    });
     assert!(!display.is_empty() || display == ":0");
     println!("✅ GUI binary configuration test complete");
     Ok(())
@@ -229,32 +225,23 @@ mod cli_tests {
         ];
 
         for (key, value) in test_cases {
-            let orig = std::env::var(key).ok();
-            nestgate_core::env_process::set_var(key, &value);
-            let retrieved = std::env::var(key).unwrap_or_else(|e| {
-                tracing::error!("Unwrap failed: {:?}", e);
-                String::new()
+            temp_env::with_var(key, Some(value.as_str()), || {
+                let retrieved = std::env::var(key).unwrap_or_else(|e| {
+                    tracing::error!("Unwrap failed: {:?}", e);
+                    String::new()
+                });
+                assert_eq!(retrieved, value);
             });
-            match orig {
-                Some(v) => nestgate_core::env_process::set_var(key, v),
-                None => nestgate_core::env_process::remove_var(key),
-            }
-            assert_eq!(retrieved, value);
         }
         Ok(())
     }
 
     #[test]
     fn test_service_name_generation() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let orig = std::env::var("NESTGATE_SERVICE_NAME").ok();
-        nestgate_core::env_process::remove_var("NESTGATE_SERVICE_NAME");
-
-        let default_prefix = "nestgate";
-        match orig {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_SERVICE_NAME", v),
-            None => {}
-        }
-        assert!(default_prefix.starts_with("nestgate"));
+        temp_env::with_var_unset("NESTGATE_SERVICE_NAME", || {
+            let default_prefix = "nestgate";
+            assert!(default_prefix.starts_with("nestgate"));
+        });
         Ok(())
     }
 }
@@ -274,25 +261,21 @@ mod configuration_tests {
     }
     #[test]
     fn test_configuration_precedence() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let orig = std::env::var("NESTGATE_PORT").ok();
-        nestgate_core::env_process::set_var("NESTGATE_PORT", "9090");
-
-        let port = std::env::var("NESTGATE_PORT").map_err(|e| {
-            tracing::error!(
-                "Environment variable '{}' not found: {}",
-                "NESTGATE_PORT",
-                e
-            );
-            std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                format!("Missing environment variable: {}", e),
-            )
+        temp_env::with_var("NESTGATE_PORT", Some("9090"), || {
+            let port = std::env::var("NESTGATE_PORT").map_err(|e| {
+                tracing::error!(
+                    "Environment variable '{}' not found: {}",
+                    "NESTGATE_PORT",
+                    e
+                );
+                std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!("Missing environment variable: {}", e),
+                )
+            })?;
+            assert_eq!(port, "9090");
+            Ok::<(), std::io::Error>(())
         })?;
-        match orig {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_PORT", v),
-            None => nestgate_core::env_process::remove_var("NESTGATE_PORT"),
-        }
-        assert_eq!(port, "9090");
         Ok(())
     }
 }
@@ -302,114 +285,53 @@ mod integration_mode_tests {
 
     #[test]
     fn test_standalone_mode_configuration() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let orig_o = std::env::var("NESTGATE_ORCHESTRATION_URL").ok();
-        let orig_s = std::env::var("NESTGATE_SECURITY_URL").ok();
-        let orig_oe = std::env::var("ORCHESTRATION_ENDPOINT").ok();
-        let orig_se = std::env::var("SECURITY_ENDPOINT").ok();
-        nestgate_core::env_process::remove_var("NESTGATE_ORCHESTRATION_URL");
-        nestgate_core::env_process::remove_var("NESTGATE_SECURITY_URL");
-        nestgate_core::env_process::remove_var("ORCHESTRATION_ENDPOINT");
-        nestgate_core::env_process::remove_var("SECURITY_ENDPOINT");
-
-        let oe_unset = std::env::var("ORCHESTRATION_ENDPOINT").is_err();
-        let se_unset = std::env::var("SECURITY_ENDPOINT").is_err();
-
-        match orig_o {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_ORCHESTRATION_URL", v),
-            None => {}
-        }
-        match orig_s {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_SECURITY_URL", v),
-            None => {}
-        }
-        match orig_oe {
-            Some(v) => nestgate_core::env_process::set_var("ORCHESTRATION_ENDPOINT", v),
-            None => {}
-        }
-        match orig_se {
-            Some(v) => nestgate_core::env_process::set_var("SECURITY_ENDPOINT", v),
-            None => {}
-        }
-        assert!(
-            oe_unset,
-            "ORCHESTRATION_ENDPOINT should be unset in standalone mode"
-        );
-        assert!(
-            se_unset,
-            "SECURITY_ENDPOINT should be unset in standalone mode"
+        temp_env::with_vars(
+            vec![
+                ("NESTGATE_ORCHESTRATION_URL", None::<&str>),
+                ("NESTGATE_SECURITY_URL", None::<&str>),
+                ("ORCHESTRATION_ENDPOINT", None::<&str>),
+                ("SECURITY_ENDPOINT", None::<&str>),
+            ],
+            || {
+                assert!(
+                    std::env::var("ORCHESTRATION_ENDPOINT").is_err(),
+                    "ORCHESTRATION_ENDPOINT should be unset in standalone mode"
+                );
+                assert!(
+                    std::env::var("SECURITY_ENDPOINT").is_err(),
+                    "SECURITY_ENDPOINT should be unset in standalone mode"
+                );
+            },
         );
         Ok(())
     }
     #[test]
-    #[ignore] // Env var pollution when run in parallel; ORCHESTRATION/SECURITY_ENDPOINT shared
     fn test_ecosystem_mode_configuration() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let orig_oe = std::env::var("ORCHESTRATION_ENDPOINT").ok();
-        let orig_se = std::env::var("SECURITY_ENDPOINT").ok();
-        nestgate_core::env_process::remove_var("ORCHESTRATION_ENDPOINT");
-        nestgate_core::env_process::remove_var("SECURITY_ENDPOINT");
-        nestgate_core::env_process::set_var(
-            "ORCHESTRATION_ENDPOINT",
-            format!(
-                "http://{}:{}",
-                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::runtime_fallback_ports::ORCHESTRATION
-            ),
+        let expected_oe = format!(
+            "http://{}:{}",
+            nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
+            nestgate_core::constants::hardcoding::runtime_fallback_ports::ORCHESTRATION
         );
-        nestgate_core::env_process::set_var(
-            "SECURITY_ENDPOINT",
-            format!(
-                "http://{}:{}",
-                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP
-            ),
+        let expected_se = format!(
+            "http://{}:{}",
+            nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
+            nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP
         );
-
-        let oe_val = std::env::var("ORCHESTRATION_ENDPOINT").map_err(|e| {
-            tracing::error!(
-                "Environment variable '{}' not found: {}",
-                "ORCHESTRATION_ENDPOINT",
-                e
-            );
-            std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                format!("Missing environment variable: {}", e),
-            )
-        })?;
-        let se_val = std::env::var("SECURITY_ENDPOINT").map_err(|e| {
-            tracing::error!(
-                "Environment variable '{}' not found: {}",
-                "SECURITY_ENDPOINT",
-                e
-            );
-            std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                format!("Missing environment variable: {}", e),
-            )
-        })?;
-
-        match orig_oe {
-            Some(v) => nestgate_core::env_process::set_var("ORCHESTRATION_ENDPOINT", v),
-            None => nestgate_core::env_process::remove_var("ORCHESTRATION_ENDPOINT"),
-        }
-        match orig_se {
-            Some(v) => nestgate_core::env_process::set_var("SECURITY_ENDPOINT", v),
-            None => nestgate_core::env_process::remove_var("SECURITY_ENDPOINT"),
-        }
-        assert_eq!(
-            oe_val,
-            format!(
-                "http://{}:{}",
-                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::runtime_fallback_ports::ORCHESTRATION
-            )
-        );
-        assert_eq!(
-            se_val,
-            format!(
-                "http://{}:{}",
-                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
-                nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP
-            )
+        temp_env::with_vars(
+            vec![
+                ("ORCHESTRATION_ENDPOINT", Some(expected_oe.as_str())),
+                ("SECURITY_ENDPOINT", Some(expected_se.as_str())),
+            ],
+            || {
+                let oe_val = std::env::var("ORCHESTRATION_ENDPOINT").unwrap_or_else(|e| {
+                    panic!("ORCHESTRATION_ENDPOINT: {e}");
+                });
+                let se_val = std::env::var("SECURITY_ENDPOINT").unwrap_or_else(|e| {
+                    panic!("SECURITY_ENDPOINT: {e}");
+                });
+                assert_eq!(oe_val, expected_oe);
+                assert_eq!(se_val, expected_se);
+            },
         );
         Ok(())
     }

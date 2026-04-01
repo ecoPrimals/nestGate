@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **CONSOLIDATED CONSTANTS MODULE**
 //!
@@ -88,7 +88,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_network_constants_urls() {
         with_vars(
             vec![

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! HTTP Client Implementation
 //!
@@ -13,7 +13,7 @@ use super::config::ClientConfig;
 use super::pool::ConnectionPool;
 use super::request::{Request, Response};
 use super::types::Endpoint;
-use crate::error::Result;
+use crate::error::{NestGateError, Result};
 
 // ==================== HTTP CLIENT ====================
 
@@ -83,19 +83,23 @@ impl HttpClient {
         const MAX_ATTEMPTS: usize = 3;
         const BASE_DELAY_MS: u64 = 100;
 
+        let mut last_err = None;
         for attempt in 0..MAX_ATTEMPTS {
             match self.send_request_once(endpoint, request).await {
                 Ok(response) => return Ok(response),
-                Err(e) if attempt == MAX_ATTEMPTS - 1 => return Err(e),
-                Err(_) => {
-                    // Exponential backoff
-                    let delay = Duration::from_millis(BASE_DELAY_MS * (1 << attempt));
-                    tokio::time::sleep(delay).await;
+                Err(e) => {
+                    last_err = Some(e);
+                    if attempt < MAX_ATTEMPTS - 1 {
+                        let delay = Duration::from_millis(BASE_DELAY_MS * (1 << attempt));
+                        tokio::time::sleep(delay).await;
+                    }
                 }
             }
         }
 
-        unreachable!("Loop returns or errors before reaching here")
+        Err(last_err.unwrap_or_else(|| {
+            NestGateError::network_error("HTTP request failed: no attempts made")
+        }))
     }
 
     /// Send a single request attempt (no retry)

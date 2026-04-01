@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Auto Configurator module
 //!
@@ -19,9 +19,7 @@ use nestgate_types::error::Result;
 pub mod enums;
 pub mod types;
 
-// Method implementations in separate modules (coming next phase)
-// pub mod analysis;
-// pub mod configuration;
+// Method implementations in separate modules (analysis, configuration) — next phase.
 // ==================== RE-EXPORTS ====================
 
 // Re-export all public types for backward compatibility

@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // ==================== SECTION: CANONICAL ERROR TYPES ====================
 
 // CANONICAL MODERNIZATION: Consolidate installer error types
-// REMOVED DUPLICATES:
-// - pub type InstallerResult<T> = Result<T>;
-// OLD: pub type InstallResult<T> = IdioResult<T, NestGateError>; (deprecated)
-
 // USE CANONICAL TYPES:
 //! Error module
 
 pub use nestgate_core::error::{NestGateError, Result};
 
-// Convenience aliases for installer operations
+/// [`Result`] specialized with the canonical [`NestGateError`] for installer operations.
 pub type InstallerResult<T> = Result<T>;
 
 // ==================== SECTION ====================

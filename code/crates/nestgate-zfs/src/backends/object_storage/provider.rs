@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **STORAGE PROVIDER DETECTION**
 //!
@@ -27,7 +27,10 @@ pub enum StorageProvider {
 }
 
 impl StorageProvider {
-    /// Detect provider from endpoint
+    /// Detect provider from endpoint.
+    ///
+    /// Treats `localhost:9000` as a MinIO-oriented hint: that host/port matches the well-known
+    /// default MinIO API port in local development (not a universal S3 rule).
     #[must_use]
     pub fn detect_from_endpoint(endpoint: &str) -> Self {
         if endpoint.contains("amazonaws.com") || endpoint.contains("s3.") {

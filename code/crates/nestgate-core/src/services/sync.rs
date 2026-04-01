@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
-// use crate::universal_storage::ConflictResolution; // Module doesn't exist
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

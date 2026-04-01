@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Agnostic Configuration Module
 //!
@@ -436,7 +436,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_config_builder_with_environment() {
         temp_env::with_var("NESTGATE_API_PORT", Some("9999"), || {
             let config = ConfigBuilder::new()

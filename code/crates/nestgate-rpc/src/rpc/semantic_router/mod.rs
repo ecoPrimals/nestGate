@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # Semantic Method Router - TRUE PRIMAL Compliance
 //!
@@ -52,6 +52,13 @@
 //! - `storage.dataset.list` → `list_datasets`
 //! - `storage.dataset.delete` → `delete_dataset`
 //!
+//! ### Data Domain (`data.*` — live feeds, NOT storage)
+//! - `data.ncbi_search` → NCBI database search
+//! - `data.ncbi_fetch` → NCBI record fetch
+//! - `data.noaa_ghcnd` → NOAA weather station data
+//! - `data.iris_stations` → IRIS seismic station listing
+//! - `data.iris_events` → IRIS seismic event listing
+//!
 //! ### Discovery Domain (`discovery.*`)
 //! - `discovery.announce` → register service metadata
 //! - `discovery.query` → find services by capability
@@ -92,6 +99,7 @@ use tracing::{debug, warn};
 // Domain modules
 pub mod capabilities;
 pub mod crypto;
+pub mod data;
 pub mod discovery;
 pub mod health;
 pub mod metadata;
@@ -178,6 +186,13 @@ impl SemanticRouter {
             "storage.dataset.get" => storage::dataset_get(self, params).await,
             "storage.dataset.list" => storage::dataset_list(self, params).await,
             "storage.dataset.delete" => storage::dataset_delete(self, params).await,
+
+            // ==================== DATA DOMAIN (live feeds, not storage) ====================
+            "data.ncbi_search" => data::data_ncbi_search(self, params),
+            "data.ncbi_fetch" => data::data_ncbi_fetch(self, params),
+            "data.noaa_ghcnd" => data::data_noaa_ghcnd(self, params),
+            "data.iris_stations" => data::data_iris_stations(self, params),
+            "data.iris_events" => data::data_iris_events(self, params),
 
             // ==================== DISCOVERY DOMAIN ====================
             "discovery.announce" => discovery::discovery_announce(self, params),

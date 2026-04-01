@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use chrono::Utc;
 
@@ -51,7 +51,7 @@ impl SystemMetricsCollector {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics> {
+    pub fn collect_current_metrics(&self) -> Result<LiveHardwareMetrics> {
         // Collect real metrics from system
         let cpu_usage = self.getcpu_usage()?;
         let memory_usage = self.get_memory_usage()?;

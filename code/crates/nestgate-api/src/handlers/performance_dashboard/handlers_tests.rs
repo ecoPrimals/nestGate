@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Tests for performance dashboard handlers
 
@@ -26,11 +26,11 @@ fn create_test_dashboard() -> PerformanceDashboard {
     )
 }
 
-#[test]
-fn test_performance_dashboard_creation() {
+#[tokio::test]
+async fn test_performance_dashboard_creation() {
     let dashboard = create_test_dashboard();
 
-    assert!(dashboard.state.lock().is_ok());
+    let _guard = dashboard.state.lock().await;
 }
 
 #[test]
@@ -57,11 +57,11 @@ fn test_dashboard_has_optimization_engine() {
     assert!(Arc::strong_count(&dashboard.optimization_engine) >= 1);
 }
 
-#[test]
-fn test_dashboard_state_initialization() {
+#[tokio::test]
+async fn test_dashboard_state_initialization() {
     let dashboard = create_test_dashboard();
 
-    let state = dashboard.state.lock().unwrap();
+    let state = dashboard.state.lock().await;
     // State should be initialized (default)
     assert!(format!("{state:?}").contains("DashboardState"));
 }

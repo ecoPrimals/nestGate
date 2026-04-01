@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **HARDWARE TUNING HANDLERS - DEVELOPMENT STUBS**
 //!
@@ -299,7 +299,7 @@ impl RealHardwareTuningHandler {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn get_live_hardware_metrics(&self) -> Result<LiveHardwareMetrics> {
-        let metrics = self.metrics_collector.collect_current_metrics().await?;
+        let metrics = self.metrics_collector.collect_current_metrics()?;
         info!(
             "Collected live hardware metrics: CPU {}%, Memory {}%",
             metrics.cpu_usage, metrics.memory_usage

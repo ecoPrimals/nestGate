@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -21,17 +21,7 @@
 //
 // ## Usage
 //
-// ```rust
-// use nestgate_installer::installer::NestGateInstaller;
-// use nestgate_installer::config::InstallerConfig;
-//
-// # fn example() -> anyhow::Result<()> {
-// let config = InstallerConfig::default();
-// let installer = NestGateInstaller::new(config).await?;
-// installer.install().await?;
-// # Ok(())
-// # }
-// ```
+// See `NestGateInstaller` and `InstallerConfig` in this crate; run the installation wizard or `install()` as documented on those types.
 
 //! Installer module
 
@@ -49,6 +39,7 @@ use crate::platform::PlatformInfo;
 use crate::wizard::InstallationWizard;
 // Migration utilities no longer needed - using canonical configurations
 
+/// Metadata recorded about a completed or in-progress installation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationInfo {
     /// Version
@@ -67,6 +58,7 @@ pub struct InstallationInfo {
     pub features: Vec<String>,
 }
 
+/// Orchestrates download, platform detection, and install steps for NestGate.
 pub struct NestGateInstaller {
     platform: PlatformInfo,
     install_dir: Option<PathBuf>,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Storage JSON-RPC Handlers
 //!
@@ -11,10 +11,45 @@ use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tracing::debug;
 
 use super::StorageState;
+
+/// Build the filesystem path for a key in a family's dataset.
+///
+/// Layout matches `nestgate-core` `operations::objects`: `{base}/datasets/{family}/{key}`.
+fn dataset_key_path(family_id: &str, key: &str) -> PathBuf {
+    get_storage_base_path()
+        .join("datasets")
+        .join(family_id)
+        .join(key)
+}
+
+/// Build the filesystem path for a binary blob.
+///
+/// Blobs are stored separately under `{base}/datasets/{family}/_blobs/{key}` so list
+/// operations can distinguish JSON objects from raw blobs.
+fn blob_key_path(family_id: &str, key: &str) -> PathBuf {
+    get_storage_base_path()
+        .join("datasets")
+        .join(family_id)
+        .join("_blobs")
+        .join(key)
+}
+
+/// Ensure all parent directories of `path` exist.
+async fn ensure_parent_dirs(path: &Path) -> Result<()> {
+    if let Some(parent) = path.parent() {
+        tokio::fs::create_dir_all(parent).await.map_err(|e| {
+            NestGateError::io_error(format!(
+                "Failed to create directories {}: {e}",
+                parent.display()
+            ))
+        })?;
+    }
+    Ok(())
+}
 
 /// Resolve `family_id` from params, falling back to the server's socket-scoped family.
 ///
@@ -34,8 +69,8 @@ pub fn resolve_family_id<'a>(params: &'a Value, state: &'a StorageState) -> Resu
     ))
 }
 
-/// storage.store - Store key-value data
-pub(super) fn storage_store(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+/// storage.store - Store key-value data (filesystem-backed, durable)
+pub(super) async fn storage_store(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -56,23 +91,30 @@ pub(super) fn storage_store(params: Option<&Value>, state: &StorageState) -> Res
 
     let family_id = resolve_family_id(params, state)?;
 
-    // ✅ ENHANCED LOGGING: Input validation
-    let data_str = serde_json::to_string(data).unwrap_or_else(|_| "<invalid>".to_string());
+    let bytes = serde_json::to_vec_pretty(data)
+        .map_err(|e| NestGateError::io_error(format!("Failed to serialize value: {e}")))?;
+
     debug!(
-        "📝 storage.store called: family_id='{}', key='{}', value_size={} bytes",
+        "storage.store: family_id='{}', key='{}', value_size={} bytes",
         family_id,
         key,
-        data_str.len()
+        bytes.len()
     );
 
-    let _ = (state, data);
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (storage.store)",
-    ))
+    let object_path = dataset_key_path(family_id, key);
+    ensure_parent_dirs(&object_path).await?;
+    tokio::fs::write(&object_path, &bytes)
+        .await
+        .map_err(|e| NestGateError::io_error(format!("Failed to write {family_id}/{key}: {e}")))?;
+
+    Ok(json!({"status": "stored", "key": key, "family_id": family_id}))
 }
 
-/// storage.retrieve - Retrieve data by key
-pub(super) fn storage_retrieve(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+/// storage.retrieve - Retrieve data by key (filesystem-backed, durable)
+pub(super) async fn storage_retrieve(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
@@ -81,48 +123,53 @@ pub(super) fn storage_retrieve(params: Option<&Value>, state: &StorageState) -> 
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let family_id = resolve_family_id(params, state)?;
 
-    debug!(
-        "📖 storage.retrieve called: family_id='{}', key='{}'",
-        family_id, key
-    );
+    debug!("storage.retrieve: family_id='{}', key='{}'", family_id, key);
 
-    let _ = state;
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (storage.retrieve)",
-    ))
+    let object_path = dataset_key_path(family_id, key);
+    if !object_path.exists() {
+        return Ok(json!({"value": null, "data": null, "key": key}));
+    }
+
+    let bytes = tokio::fs::read(&object_path)
+        .await
+        .map_err(|e| NestGateError::io_error(format!("Failed to read {family_id}/{key}: {e}")))?;
+    let value: Value = serde_json::from_slice(&bytes)
+        .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()));
+
+    Ok(json!({"value": value, "data": value, "key": key, "family_id": family_id}))
 }
 
-/// storage.exists - Check if data exists by key
-///
-/// Modern idiomatic Rust: Efficient existence check without data transfer
-/// Deep Debt Principle #1: Standard API pattern, no unnecessary data retrieval
+/// storage.exists - Check if data exists by key (filesystem-backed)
 pub(super) fn storage_exists(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    params["key"]
+    let key = params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    resolve_family_id(params, state)?;
-    let _ = state;
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (storage.exists)",
-    ))
+    let family_id = resolve_family_id(params, state)?;
+
+    let object_path = dataset_key_path(family_id, key);
+    Ok(json!({"exists": object_path.exists(), "key": key, "family_id": family_id}))
 }
 
-/// storage.delete - Delete data by key
-pub(super) fn storage_delete(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+/// storage.delete - Delete data by key (filesystem-backed)
+pub(super) async fn storage_delete(params: Option<&Value>, state: &StorageState) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    params["key"]
+    let key = params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    resolve_family_id(params, state)?;
-    let _ = state;
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (storage.delete)",
-    ))
+    let family_id = resolve_family_id(params, state)?;
+
+    let object_path = dataset_key_path(family_id, key);
+    if object_path.exists() {
+        tokio::fs::remove_file(&object_path).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to delete {family_id}/{key}: {e}"))
+        })?;
+    }
+    Ok(json!({"status": "deleted", "key": key, "family_id": family_id}))
 }
 
 /// storage.list - List all keys with optional prefix
@@ -176,43 +223,77 @@ pub(super) async fn storage_stats(params: Option<&Value>, state: &StorageState) 
     }))
 }
 
-/// `storage.store_blob` - Store binary blob (base64 encoded)
-pub(super) fn storage_store_blob(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+/// `storage.store_blob` - Store binary blob (base64 encoded, filesystem-backed)
+pub(super) async fn storage_store_blob(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    params["key"]
+    let key = params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
     let blob_base64 = params["blob"].as_str().ok_or_else(|| {
         NestGateError::invalid_input_with_field("blob", "blob (base64 string) required")
     })?;
-    resolve_family_id(params, state)?;
+    let family_id = resolve_family_id(params, state)?;
 
-    // Decode base64
     let blob_data = STANDARD.decode(blob_base64).map_err(|e| {
         NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {e}"))
     })?;
 
-    let _ = (state, blob_data);
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (storage.store_blob)",
-    ))
+    debug!(
+        "storage.store_blob: family_id='{}', key='{}', blob_size={} bytes",
+        family_id,
+        key,
+        blob_data.len()
+    );
+
+    let blob_path = blob_key_path(family_id, key);
+    ensure_parent_dirs(&blob_path).await?;
+    tokio::fs::write(&blob_path, &blob_data)
+        .await
+        .map_err(|e| {
+            NestGateError::io_error(format!("Failed to write blob {family_id}/{key}: {e}"))
+        })?;
+
+    Ok(json!({
+        "status": "stored",
+        "key": key,
+        "family_id": family_id,
+        "size": blob_data.len()
+    }))
 }
 
-/// `storage.retrieve_blob` - Retrieve binary blob (base64 encoded)
-pub(super) fn storage_retrieve_blob(params: Option<&Value>, state: &StorageState) -> Result<Value> {
+/// `storage.retrieve_blob` - Retrieve binary blob (base64 encoded, filesystem-backed)
+pub(super) async fn storage_retrieve_blob(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
 
-    params["key"]
+    let key = params["key"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    resolve_family_id(params, state)?;
-    let _ = state;
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (storage.retrieve_blob)",
-    ))
+    let family_id = resolve_family_id(params, state)?;
+
+    let blob_path = blob_key_path(family_id, key);
+    if !blob_path.exists() {
+        return Ok(json!({"blob": null, "key": key}));
+    }
+
+    let blob_data = tokio::fs::read(&blob_path).await.map_err(|e| {
+        NestGateError::io_error(format!("Failed to read blob {family_id}/{key}: {e}"))
+    })?;
+
+    Ok(json!({
+        "blob": STANDARD.encode(&blob_data),
+        "key": key,
+        "family_id": family_id,
+        "size": blob_data.len()
+    }))
 }
 
 /// Recursively list all file keys under a dataset directory.
@@ -253,7 +334,6 @@ fn list_keys_recursive<'a>(
 mod tests {
 
     use super::*;
-    use nestgate_types::error::NestGateError;
     use serde_json::json;
 
     async fn mock_state(family_id: Option<&str>) -> StorageState {
@@ -300,7 +380,7 @@ mod tests {
     #[tokio::test]
     async fn storage_store_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_store(None, &state);
+        let result = storage_store(None, &state).await;
         assert!(result.is_err());
     }
 
@@ -308,14 +388,14 @@ mod tests {
     async fn storage_store_requires_key() {
         let state = mock_state(Some("test")).await;
         let params = Some(json!({"family_id": "test", "dataset": "ds"}));
-        let result = storage_store(params.as_ref(), &state);
+        let result = storage_store(params.as_ref(), &state).await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn storage_retrieve_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_retrieve(None, &state);
+        let result = storage_retrieve(None, &state).await;
         assert!(result.is_err());
     }
 
@@ -329,7 +409,7 @@ mod tests {
     #[tokio::test]
     async fn storage_delete_requires_params() {
         let state = mock_state(Some("test")).await;
-        let result = storage_delete(None, &state);
+        let result = storage_delete(None, &state).await;
         assert!(result.is_err());
     }
 
@@ -350,31 +430,41 @@ mod tests {
             "key": "hello",
             "value": "world"
         }));
-        let store_result = storage_store(store_params.as_ref(), &state);
-        assert!(
-            matches!(store_result, Err(NestGateError::NotImplemented(_))),
-            "expected NotImplemented for storage.store: {:?}",
-            store_result
-        );
+        let store_result = storage_store(store_params.as_ref(), &state).await;
+        assert!(store_result.is_ok(), "store failed: {store_result:?}");
+        assert_eq!(store_result.unwrap()["status"], "stored");
 
         let retrieve_params = Some(json!({
             "family_id": &family_id,
             "key": "hello"
         }));
-        let retrieve_result = storage_retrieve(retrieve_params.as_ref(), &state);
+        let retrieve_result = storage_retrieve(retrieve_params.as_ref(), &state).await;
         assert!(
-            matches!(retrieve_result, Err(NestGateError::NotImplemented(_))),
-            "expected NotImplemented for storage.retrieve: {:?}",
-            retrieve_result
+            retrieve_result.is_ok(),
+            "retrieve failed: {retrieve_result:?}"
         );
+        assert_eq!(retrieve_result.unwrap()["value"], "world");
+
+        let exists_params = json!({"family_id": &family_id, "key": "hello"});
+        let exists_result = storage_exists(Some(&exists_params), &state);
+        assert!(exists_result.is_ok());
+        assert_eq!(exists_result.unwrap()["exists"], true);
 
         let delete_params = json!({"family_id": &family_id, "key": "hello"});
-        let delete_result = storage_delete(Some(&delete_params), &state);
-        assert!(
-            matches!(delete_result, Err(NestGateError::NotImplemented(_))),
-            "expected NotImplemented for storage.delete: {:?}",
-            delete_result
+        let delete_result = storage_delete(Some(&delete_params), &state).await;
+        assert!(delete_result.is_ok(), "delete failed: {delete_result:?}");
+        assert_eq!(delete_result.unwrap()["status"], "deleted");
+
+        let gone = storage_exists(
+            Some(&json!({"family_id": &family_id, "key": "hello"})),
+            &state,
         );
+        assert_eq!(gone.unwrap()["exists"], false);
+
+        // Cleanup
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
     }
 
     #[tokio::test]
@@ -383,23 +473,21 @@ mod tests {
         let family_id = format!("test-list-{}", uuid::Uuid::new_v4());
 
         let p1 = json!({"family_id": &family_id, "key": "a", "value": "1"});
-        let s1 = storage_store(Some(&p1), &state);
-        assert!(matches!(s1, Err(NestGateError::NotImplemented(_))));
+        assert!(storage_store(Some(&p1), &state).await.is_ok());
         let p2 = json!({"family_id": &family_id, "key": "b", "value": "2"});
-        let s2 = storage_store(Some(&p2), &state);
-        assert!(matches!(s2, Err(NestGateError::NotImplemented(_))));
+        assert!(storage_store(Some(&p2), &state).await.is_ok());
 
-        // listing still walks the filesystem under datasets/{family_id} (no core wiring yet)
         let list_params = json!({"family_id": &family_id});
         let list_result = storage_list(Some(&list_params), &state).await;
         assert!(list_result.is_ok());
         let keys = list_result.unwrap();
         let key_arr = keys["keys"].as_array().expect("keys array");
-        assert!(
-            key_arr.is_empty(),
-            "without successful store, list should be empty; got {:?}",
-            key_arr
-        );
+        assert_eq!(key_arr.len(), 2, "expected 2 keys; got {key_arr:?}");
+
+        // Cleanup
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
     }
 
     #[tokio::test]
@@ -408,18 +496,52 @@ mod tests {
         let family_id = format!("test-nested-{}", uuid::Uuid::new_v4());
 
         let store_p = json!({"family_id": &family_id, "key": "deep/path/key", "value": "nested"});
-        let store_result = storage_store(Some(&store_p), &state);
-        assert!(
-            matches!(store_result, Err(NestGateError::NotImplemented(_))),
-            "nested store: {:?}",
-            store_result
-        );
+        let store_result = storage_store(Some(&store_p), &state).await;
+        assert!(store_result.is_ok(), "nested store: {store_result:?}");
 
         let retrieve_p = json!({"family_id": &family_id, "key": "deep/path/key"});
-        let retrieve_result = storage_retrieve(Some(&retrieve_p), &state);
-        assert!(matches!(
-            retrieve_result,
-            Err(NestGateError::NotImplemented(_))
-        ));
+        let retrieve_result = storage_retrieve(Some(&retrieve_p), &state).await;
+        assert!(retrieve_result.is_ok());
+        assert_eq!(retrieve_result.unwrap()["value"], "nested");
+
+        let list_p = json!({"family_id": &family_id, "prefix": "deep/"});
+        let list_result = storage_list(Some(&list_p), &state).await;
+        assert!(list_result.is_ok());
+        let keys = list_result.unwrap()["keys"].as_array().unwrap().clone();
+        assert!(keys.iter().any(|k| k == "deep/path/key"));
+
+        // Cleanup
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn storage_blob_round_trip() {
+        let state = mock_state(Some("test-blob")).await;
+        let family_id = format!("test-blob-{}", uuid::Uuid::new_v4());
+        let raw_data = b"binary payload \x00\xff\xfe";
+        let encoded = base64::engine::general_purpose::STANDARD.encode(raw_data);
+
+        let store_p = json!({"family_id": &family_id, "key": "binfile", "blob": encoded});
+        let store_result = storage_store_blob(Some(&store_p), &state).await;
+        assert!(store_result.is_ok(), "blob store: {store_result:?}");
+
+        let retrieve_p = json!({"family_id": &family_id, "key": "binfile"});
+        let retrieve_result = storage_retrieve_blob(Some(&retrieve_p), &state).await;
+        assert!(retrieve_result.is_ok());
+        let blob_b64 = retrieve_result.unwrap()["blob"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let decoded = base64::engine::general_purpose::STANDARD
+            .decode(&blob_b64)
+            .unwrap();
+        assert_eq!(decoded, raw_data);
+
+        // Cleanup
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
     }
 }

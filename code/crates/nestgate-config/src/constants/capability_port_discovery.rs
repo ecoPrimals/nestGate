@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Modern Capability-Based Port Discovery
 //!
@@ -292,7 +292,7 @@ pub fn discover_tarpc_port_sync() -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use temp_env::with_vars;
+    use temp_env::{with_var, with_var_unset, with_vars};
 
     #[test]
     fn test_extract_port_from_url() {
@@ -309,7 +309,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_sync_discovery_defaults() {
         with_vars(
             vec![
@@ -328,7 +327,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_sync_discovery_from_env() {
         with_vars(
             vec![
@@ -343,24 +341,21 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_sync_discovery_invalid_env() {
-        temp_env::with_var("NESTGATE_API_PORT", Some("invalid"), || {
+        with_var("NESTGATE_API_PORT", Some("invalid"), || {
             assert_eq!(discover_api_port_sync(), 8080);
         });
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_async_discovery_fallback() {
-        temp_env::with_var_unset("NESTGATE_API_PORT", || {
+        with_var_unset("NESTGATE_API_PORT", || {
             let port = discover_api_port().unwrap();
             assert_eq!(port, 8080);
         });
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_async_discovery_from_env() {
         with_vars(vec![("NESTGATE_API_PORT", Some("9000"))], || {
             let port = discover_api_port().unwrap();
@@ -377,42 +372,48 @@ mod tests {
 
     #[test]
     fn test_discover_metrics_port_default() {
-        crate::env_process::remove_var("NESTGATE_METRICS_PORT");
-        let port = discover_metrics_port().unwrap();
-        assert_eq!(port, 9090);
+        with_var_unset("NESTGATE_METRICS_PORT", || {
+            let port = discover_metrics_port().unwrap();
+            assert_eq!(port, 9090);
+        });
     }
 
     #[test]
     fn test_discover_health_port_default() {
-        crate::env_process::remove_var("NESTGATE_HEALTH_PORT");
-        let port = discover_health_port().unwrap();
-        assert_eq!(port, 8082);
+        with_var_unset("NESTGATE_HEALTH_PORT", || {
+            let port = discover_health_port().unwrap();
+            assert_eq!(port, 8082);
+        });
     }
 
     #[test]
     fn test_discover_admin_port_default() {
-        crate::env_process::remove_var("NESTGATE_ADMIN_PORT");
-        let port = discover_admin_port().unwrap();
-        assert_eq!(port, 8081);
+        with_var_unset("NESTGATE_ADMIN_PORT", || {
+            let port = discover_admin_port().unwrap();
+            assert_eq!(port, 8081);
+        });
     }
 
     #[test]
     fn test_discover_storage_port_default() {
-        crate::env_process::remove_var("NESTGATE_STORAGE_PORT");
-        let port = discover_storage_port().unwrap();
-        assert_eq!(port, 8083);
+        with_var_unset("NESTGATE_STORAGE_PORT", || {
+            let port = discover_storage_port().unwrap();
+            assert_eq!(port, 8083);
+        });
     }
 
     #[test]
     fn test_discover_tarpc_port_default() {
-        crate::env_process::remove_var("NESTGATE_TARPC_PORT");
-        let port = discover_tarpc_port().unwrap();
-        assert_eq!(port, 8091);
+        with_var_unset("NESTGATE_TARPC_PORT", || {
+            let port = discover_tarpc_port().unwrap();
+            assert_eq!(port, 8091);
+        });
     }
 
     #[test]
     fn test_tarpc_port_sync_default() {
-        crate::env_process::remove_var("NESTGATE_TARPC_PORT");
-        assert_eq!(discover_tarpc_port_sync(), 8091);
+        with_var_unset("NESTGATE_TARPC_PORT", || {
+            assert_eq!(discover_tarpc_port_sync(), 8091);
+        });
     }
 }

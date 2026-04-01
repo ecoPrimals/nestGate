@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **PERFORMANCE DASHBOARD HANDLERS**
 // This module contains the main PerformanceDashboard struct and HTTP handler functions.
@@ -22,8 +22,9 @@ use axum::{
 use futures::Stream;
 use nestgate_core::Result;
 use serde::Deserialize;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, SystemTime};
+use tokio::sync::Mutex;
 
 /// **PERFORMANCE DASHBOARD**
 ///
@@ -83,7 +84,7 @@ impl PerformanceDashboard {
         // Collect current metrics (simplified for demo)
         let health_score: f32 =
             ((100.0 - current_metrics.cpu_usage - current_metrics.memory_usage) / 2.0) as f32;
-        let health_score = health_score.max(0.0).min(100.0);
+        let health_score = health_score.clamp(0.0, 100.0);
 
         let dashboard_overview = DashboardOverview {
             timestamp: SystemTime::now(),

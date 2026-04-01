@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **UNIVERSAL ZFS SERVICE - CANONICAL MODERNIZED**
 //!
@@ -29,7 +29,6 @@ pub mod universal_storage_bridge;
 
 // Re-export main production types
 pub use backends::NativeZfsService;
-// pub use backends::RemoteZfsService;  // HTTP removed
 pub use config::{CircuitBreakerConfig, RetryPolicy, ZfsBackend, ZfsServiceConfig};
 pub use factory::ZfsServiceFactory;
 pub use fail_safe::FailSafeZfsService;

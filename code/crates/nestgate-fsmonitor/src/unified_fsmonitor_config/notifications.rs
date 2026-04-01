@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Notification and alerting configuration - extracted from monolithic config
 /// Handles all notification channels, formatting, throttling, and routing

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Connection Pool Management
 //!
@@ -223,10 +223,6 @@ impl Connection {
             "External HTTP deprecated. Use orchestration RPC via discover_orchestration()",
         ))
 
-        // REMOVED: Previous HTTP client code (lines 204-248)
-        // Reason: concentrated-gap architecture
-        // Migration: orchestration layer for external HTTP; tarpc for primal-to-primal
-
         /*let mut req_builder = self.client.request(method, &url);
 
         // Add headers
@@ -338,7 +334,6 @@ mod tests {
         let endpoint = Endpoint::from_url("http://localhost:8080").unwrap();
         let mut conn = Connection::new(endpoint);
 
-        std::thread::sleep(Duration::from_millis(10));
         conn.mark_used();
 
         assert_eq!(conn.request_count, 1);

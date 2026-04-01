@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **ZFS STUB IMPLEMENTATION - DEVELOPMENT ONLY**
 //!
@@ -32,7 +32,7 @@
 //! This module is only available with the `dev-stubs` feature flag.
 //! Production builds will NOT include this code.
 
-#![cfg(feature = "dev-stubs")]
+#![cfg(any(test, feature = "dev-stubs"))]
 
 // Module declarations
 mod config;

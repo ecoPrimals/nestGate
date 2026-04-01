@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
     /// Default development host
     pub const DEFAULT_DEV_HOST: &str = crate::constants::hardcoding::addresses::LOCALHOST_IPV4;

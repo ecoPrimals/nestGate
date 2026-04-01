@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 #![allow(
     dead_code,
     missing_docs,
@@ -226,14 +226,15 @@ fn test_backend_unavailable() {
     assert_eq!(available.unwrap().0, "secondary");
 }
 
-#[test]
-fn test_backend_timeout() {
-    use std::time::{Duration, Instant};
+#[tokio::test(start_paused = true)]
+async fn test_backend_timeout() {
+    use std::time::Duration;
+    use tokio::time;
 
-    let start = Instant::now();
+    let start = time::Instant::now();
     let timeout = Duration::from_millis(100);
 
-    std::thread::sleep(Duration::from_millis(150));
+    time::advance(Duration::from_millis(150)).await;
 
     let elapsed = start.elapsed();
     assert!(elapsed > timeout, "Should detect timeout");

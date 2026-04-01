@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Removed unused import: NestGateError
 //! Storage Detector module
@@ -118,7 +118,7 @@ impl StorageDetector {
         if self.config.enable_performance_profiling {
             let profiler = profiling::PerformanceProfiler::new();
             for storage in &mut detected_storage {
-                storage.performance_profile = profiler.profile_performance(storage).await?;
+                storage.performance_profile = profiler.profile_performance(storage)?;
             }
         }
 

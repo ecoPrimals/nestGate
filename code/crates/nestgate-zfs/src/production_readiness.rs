@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -405,6 +405,18 @@ impl ProductionReadinessValidator {
                 .push("Install ZFS kernel modules and utilities".to_string());
         }
 
+        if !report.real_hardware_detected {
+            report.findings.push(ReadinessFinding {
+                category: "Hardware Detection".to_string(),
+                description: "Running in mock/virtual mode — not real hardware".to_string(),
+                severity: FindingSeverity::Warning,
+                blocking: false,
+            });
+            report
+                .recommendations
+                .push("Run on real hardware for production workloads".to_string());
+        }
+
         if !report.mock_dependencies.is_empty() {
             report.findings.push(ReadinessFinding {
                 category: "Mock Dependencies".to_string(),
@@ -418,6 +430,42 @@ impl ProductionReadinessValidator {
             report
                 .recommendations
                 .push("Disable mock mode for production: unset NESTGATE_MOCK_MODE".to_string());
+        }
+
+        if !report.performance_validated {
+            report.findings.push(ReadinessFinding {
+                category: "Performance".to_string(),
+                description: "Performance validation failed — insufficient resources".to_string(),
+                severity: FindingSeverity::Warning,
+                blocking: false,
+            });
+            report
+                .recommendations
+                .push("Ensure sufficient memory and CPU for production workloads".to_string());
+        }
+
+        if !report.security_validated {
+            report.findings.push(ReadinessFinding {
+                category: "Security".to_string(),
+                description: "Security validation failed — encryption not available".to_string(),
+                severity: FindingSeverity::Error,
+                blocking: true,
+            });
+            report
+                .recommendations
+                .push("Enable ZFS encryption support for secure mode".to_string());
+        }
+
+        if !report.configuration_validated {
+            report.findings.push(ReadinessFinding {
+                category: "Configuration".to_string(),
+                description: "Required directories could not be created".to_string(),
+                severity: FindingSeverity::Error,
+                blocking: true,
+            });
+            report
+                .recommendations
+                .push("Verify NESTGATE_DATA_DIR and NESTGATE_CONFIG_DIR are writable".to_string());
         }
 
         // Add general production recommendations

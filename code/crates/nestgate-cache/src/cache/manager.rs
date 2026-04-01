@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![allow(deprecated)] // Implements and tests the deprecated `UnifiedCacheConfig` compatibility layer.
 #![expect(
@@ -11,13 +11,10 @@
 
 //! Manager module
 
-use std::collections::HashMap;
-// CLEANED: Removed unused imports as part of canonical modernization
-// use std::sync::Arc;
-use std::time::{Duration, SystemTime};
-// use tokio::sync::RwLock;
 use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::{Duration, SystemTime};
 use tracing::debug;
 
 /// Cache configuration

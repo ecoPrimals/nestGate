@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 13: Deep debt evolution, concurrency hardening & testing modernization (April 1, 2026)
+
+**Tests**: 1,531 lib tests passing, 0 failures; full integration suite green  
+**Clippy**: ZERO warnings  
+**Format**: Clean  
+**Max production file**: ~500 lines (smart-refactored)
+
+#### Fixed (concurrency — production bugs)
+- **CRITICAL**: `BidirectionalStreamManager::broadcast_to_all_streams` — tokio::Mutex guard no longer held across `.await` (was serializing all stream sends)
+- **HIGH**: Load balancers (`RandomLoadBalancer`, `WeightedRandomLoadBalancer`) — replaced `std::sync::Mutex<StdRng>` with `parking_lot::Mutex` (non-poisoning, no blocking async runtime)
+- **MEDIUM**: `PerformanceDashboard` — `std::sync::Mutex<DashboardState>` → `tokio::sync::Mutex` (consistent async primitives)
+- **Race condition**: Rate-limit test used `static AtomicUsize` shared across parallel tests → replaced with per-test local `RateLimiter`
+- **ZFS cache tests**: Fixed 5 tests that assumed non-zero ARC/L2ARC stats (environment-specific failures)
+
+#### Removed
+- **Commented-out code**: 40+ files cleaned — zero `//` code lines remaining (imports, mods, pub items, function bodies)
+- **Production sleep stubs**: Removed fake delays in `DevelopmentZfsService::list_pools`, `PerformanceProfiler`, gated `ApiHandlerBenchmark` and `PerformanceTestRunner` behind `#[cfg(any(test, feature = "dev-stubs"))]`
+- **CLEANED/REMOVED migration banners**: Stale "MIGRATION COMPLETE" comments and historical removal notes cleaned from 20+ files
+- **Dead features**: `benchmark_broken_needs_fix` (nestgate-zfs), stale `mock-metrics` (nestgate-core), vestigial `sse` (nestgate-api)
+- **Blocking sleeps in tests**: `thread::sleep` eliminated from all test code — replaced with `tokio::time::advance` (paused time) or removed
+
+#### Changed
+- **Default bind**: `0.0.0.0` → `127.0.0.1` (secure-by-default; public binding requires explicit config)
+- **Default port**: Hardcoded `3000` fallback → `0` (ephemeral, OS-assigned — primals don't assume ports)
+- **nestgate-api allow block**: 31 → 18 suppressions — fixed `unused_async`, `manual_clamp`, `items_after_statements`, `doc_markdown`, `uninlined_format_args`, `case_sensitive_file_extension_comparisons`, `wildcard_in_or_patterns`
+- **nestgate-installer lib.rs**: 400+ line `//` comment block → proper `//!` doc comments; fake code examples removed; `missing_docs` now warned
+- **Copyright**: `2025` → `2025-2026` across 1,571 source files
+- **Test isolation**: Migrated `env::set_var` tests to `temp_env`, removed `#[serial]` where env was the only reason; hardcoded `/tmp` paths → `tempdir()`
+- **Rustdoc**: Fixed broken intra-doc links in `nestgate-zfs/dataset/create.rs`; stale tarpc module docs updated
+- **Production readiness validator**: Comprehensive findings for all sub-checks (was missing hardware, performance, security, configuration findings)
+
+#### Refactored (smart domain-driven decomposition)
+- `metrics.rs` (879L) → `metrics/` package (mod.rs + metrics_system.rs + metrics_zfs.rs)
+- `unix_adapter.rs` (856L) → `unix_adapter/` package (mod.rs + unix_adapter_handlers.rs + tests.rs)
+
+#### Gated
+- `mock_builders.rs` behind `#[cfg(any(test, feature = "dev-stubs"))]`
+- `response::testing` module behind `#[cfg(any(test, feature = "dev-stubs"))]`
+- `nestgate-api/dev_stubs` module behind `#[cfg(any(test, feature = "dev-stubs"))]`
+
 ### Session 12: Ancestral overstep elimination, deep debt evolution & doc cleanup (March 31, 2026)
 
 **Tests**: 8,376 lib tests passing, 0 failures  

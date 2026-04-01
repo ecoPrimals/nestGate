@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::platform::SystemRequirements;
 /// Pre-install checks, post-install validation, health monitoring, and system requirements validation
 use serde::{Deserialize, Serialize};
 // Migration utilities no longer needed - using canonical configurations
 
+/// Aggregates validation toggles for requirements, pre/post checks, and health probes.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ValidationSettings {
     /// System requirements
@@ -17,6 +18,7 @@ pub struct ValidationSettings {
     /// Health monitoring
     pub health_checks: HealthCheckSettings,
 }
+/// Which pre-install checks run before copying binaries or configuring services.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreInstallCheckSettings {
     /// Check system requirements
@@ -40,6 +42,7 @@ pub struct PreInstallCheckSettings {
     /// Validate checksums during installation
     pub validate_checksums: bool,
 }
+/// Post-install smoke tests and configuration validation switches.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostInstallValidationSettings {
     /// Validate service installation
@@ -51,6 +54,7 @@ pub struct PostInstallValidationSettings {
     /// Run smoke tests
     pub run_smoke_tests: bool,
 }
+/// Periodic health check behavior after installation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckSettings {
     /// Enable health checks

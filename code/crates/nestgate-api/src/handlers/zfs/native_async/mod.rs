@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Async ZFS adapter behind the `dev-stubs` feature (`ProductionZfsService` uses real
 //! [`nestgate_zfs::command::ZfsOperations`] when ZFS is present).

@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Certificate Utility Functions
 /// Utility functions for certificate generation, parsing, and manipulation.
 use super::types::{Certificate, CertificateType};
 use nestgate_types::{NestGateError, Result};
 use std::time::{Duration, SystemTime};
-// CLEANED: Removed unused imports as part of canonical modernization
-// use std::net::SocketAddr;
-// **MIGRATED**: Using canonical config instead of deprecated unified_types
 
 /// Convert `SystemTime` to a string representation
 #[must_use]

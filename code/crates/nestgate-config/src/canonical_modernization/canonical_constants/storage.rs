@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
     /// Small file threshold (1MB)
     pub const SMALL_FILE_BYTES: u64 = 1024 * 1024;

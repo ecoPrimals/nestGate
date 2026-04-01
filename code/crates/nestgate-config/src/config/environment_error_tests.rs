@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive Error Path Tests for Environment Configuration
 //!
@@ -96,7 +96,6 @@ fn test_port_from_string_with_whitespace() {
 // ==================== ENVIRONMENT VARIABLE ERROR TESTS ====================
 
 #[test]
-#[serial_test::serial]
 fn test_missing_required_env_var() {
     // Isolate from a polluted host env (e.g. invalid `NESTGATE_PORT` or
     // `NESTGATE_MAX_CONNECTIONS` left by a prior test).
@@ -176,7 +175,6 @@ async fn test_environment_config_with_partial_values() {
 // ==================== CONCURRENT ACCESS TESTS ====================
 
 #[test]
-#[serial_test::serial]
 fn test_concurrent_config_access() {
     use std::sync::Arc;
     use std::thread;
@@ -216,7 +214,6 @@ fn test_concurrent_config_access() {
 // ==================== DEFAULT VALUE TESTS ====================
 
 #[test]
-#[serial_test::serial]
 fn test_config_has_sensible_defaults() {
     temp_env::with_vars(
         vec![
@@ -253,7 +250,6 @@ fn test_port_serialization_roundtrip() {
 }
 
 #[test]
-#[serial_test::serial]
 fn test_config_clone_independence() {
     temp_env::with_var("NESTGATE_PORT", Some("8080"), || {
         let Ok(config1) = EnvironmentConfig::from_env() else {
@@ -294,7 +290,6 @@ fn test_environment_config_is_send_sync() {
 // ==================== INTEGRATION ERROR TESTS ====================
 
 #[test]
-#[serial_test::serial]
 fn test_config_survives_corrupted_environment() {
     temp_env::with_vars(
         vec![

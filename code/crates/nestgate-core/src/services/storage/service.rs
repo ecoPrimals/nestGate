@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -7,6 +7,7 @@
 )]
 
 use super::types::{CacheConfig, StoragePool, StorageQuota, StorageServiceStats};
+use crate::Result;
 use crate::error::NestGateError;
 use crate::services::storage::config::{StorageServiceConfig, ZfsConfig};
 use std::collections::HashMap;
@@ -18,8 +19,6 @@ use std::time::SystemTime;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
-// use crate::universal_storage::canonical_storage::{CanonicalStorageManager, FilesystemBackend};
-use crate::Result;
 
 // Type aliases for complex storage types to satisfy clippy
 type StoragePoolMap = Arc<RwLock<HashMap<String, StoragePool>>>;

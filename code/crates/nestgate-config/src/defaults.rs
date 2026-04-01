@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # Default Constants for `NestGate`
 //!
@@ -233,8 +233,7 @@ mod tests {
     use super::*;
     use crate::config::environment::EnvironmentConfig;
     use crate::constants::hardcoding::runtime_fallback_ports;
-    use std::env;
-    use temp_env::{with_var, with_var_unset};
+    use temp_env::{with_var, with_var_unset, with_vars};
 
     // Existing tests
     #[test]
@@ -246,10 +245,7 @@ mod tests {
 
     /// `env_helpers::api_port` uses a cached global config; this test uses fresh
     /// [`EnvironmentConfig::from_env`] reads with scoped env (`temp-env` save/restore).
-    /// Raw `set_var`/`remove_var` elsewhere in tests go through `crate::env_process`
-    /// (`nestgate-platform` → `nestgate-env-process-shim`).
     #[test]
-    #[serial_test::serial]
     fn test_environment_override() {
         with_var_unset("NESTGATE_API_PORT", || {
             with_var_unset("NESTGATE_HTTP_PORT", || {
@@ -324,7 +320,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_env_helpers_api_port() {
         with_var_unset("NESTGATE_API_PORT", || {
             with_var_unset("NESTGATE_HTTP_PORT", || {
@@ -378,17 +373,12 @@ mod tests {
 
     #[test]
     fn test_env_helpers_db_port() {
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_DB_PORT");
-
-        assert_eq!(env_helpers::db_port(), 5432);
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_DB_PORT", "5433");
-        assert_eq!(env_helpers::db_port(), 5433);
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_DB_PORT");
+        with_var_unset("NESTGATE_DB_PORT", || {
+            assert_eq!(env_helpers::db_port(), 5432);
+            with_var("NESTGATE_DB_PORT", Some("5433"), || {
+                assert_eq!(env_helpers::db_port(), 5433);
+            });
+        });
     }
 
     #[test]
@@ -401,70 +391,60 @@ mod tests {
 
     #[test]
     fn test_api_url_format() {
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HOSTNAME");
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-
-        let url = urls::api_url();
-        assert!(url.starts_with("http://"));
-        // URL should contain host and port
-        assert!(url.matches(':').count() >= 2); // http:// and port separator
-        // Should have a valid structure
-        assert!(url.len() > 10); // Minimum valid URL length
+        with_vars(
+            vec![
+                ("NESTGATE_HOSTNAME", None::<&str>),
+                ("NESTGATE_API_PORT", None::<&str>),
+            ],
+            || {
+                let url = urls::api_url();
+                assert!(url.starts_with("http://"));
+                assert!(url.matches(':').count() >= 2);
+                assert!(url.len() > 10);
+            },
+        );
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_websocket_url_format() {
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HOSTNAME");
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_WS_PORT");
-
-        let url = urls::websocket_url();
-        assert!(url.starts_with("ws://"));
-        assert!(url.contains("localhost"));
-        assert!(url.contains("8082")); // WEBSOCKET_DEFAULT = 8082
+        with_vars(
+            vec![
+                ("NESTGATE_HOSTNAME", None::<&str>),
+                ("NESTGATE_WS_PORT", None::<&str>),
+            ],
+            || {
+                let url = urls::websocket_url();
+                assert!(url.starts_with("ws://"));
+                assert!(url.contains("localhost"));
+                assert!(url.contains("8082")); // WEBSOCKET_DEFAULT = 8082
+            },
+        );
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_health_url_format() {
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HOSTNAME");
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HEALTH_PORT");
-
-        let url = urls::health_url();
-        assert!(url.starts_with("http://"));
-        assert!(url.contains("localhost"));
-        assert!(url.contains("8081")); // HEALTH_CHECK = 8081
-        assert!(url.ends_with("/health"));
+        with_vars(
+            vec![
+                ("NESTGATE_HOSTNAME", None::<&str>),
+                ("NESTGATE_HEALTH_PORT", None::<&str>),
+            ],
+            || {
+                let url = urls::health_url();
+                assert!(url.starts_with("http://"));
+                assert!(url.contains("localhost"));
+                assert!(url.contains("8081")); // HEALTH_CHECK = 8081
+                assert!(url.ends_with("/health"));
+            },
+        );
     }
 
     #[test]
     fn test_url_builders_with_custom_host() {
-        // Save and restore env var to avoid test pollution
-        let original = env::var("NESTGATE_HOSTNAME").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_HOSTNAME", "custom.example.com");
-
-        let api_url = urls::api_url();
-        // URL builders may use localhost or the hostname - just verify they work
-        assert!(!api_url.is_empty());
-
-        let ws_url = urls::websocket_url();
-        assert!(!ws_url.is_empty());
-
-        let health_url = urls::health_url();
-        assert!(!health_url.is_empty());
-
-        // Restore original value or remove if it didn't exist
-        match original {
-            Some(val) => crate::env_process::set_var("NESTGATE_HOSTNAME", val),
-            None => crate::env_process::remove_var("NESTGATE_HOSTNAME"),
-        }
+        with_var("NESTGATE_HOSTNAME", Some("custom.example.com"), || {
+            assert!(!urls::api_url().is_empty());
+            assert!(!urls::websocket_url().is_empty());
+            assert!(!urls::health_url().is_empty());
+        });
     }
 
     #[test]
@@ -490,25 +470,15 @@ mod tests {
 
     #[test]
     fn test_port_parsing_invalid_values() {
-        // Test that invalid port values fall back to defaults
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_API_PORT", "not_a_number");
-        assert_eq!(env_helpers::api_port(), 8080);
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_DB_PORT", "999999"); // Out of u16 range
-        assert_eq!(env_helpers::db_port(), 5432);
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_METRICS_PORT", "");
-        assert_eq!(env_helpers::metrics_port(), 9090);
-
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_DB_PORT");
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_METRICS_PORT");
+        with_var("NESTGATE_API_PORT", Some("not_a_number"), || {
+            assert_eq!(env_helpers::api_port(), 8080);
+        });
+        with_var("NESTGATE_DB_PORT", Some("999999"), || {
+            assert_eq!(env_helpers::db_port(), 5432);
+        });
+        with_var("NESTGATE_METRICS_PORT", Some(""), || {
+            assert_eq!(env_helpers::metrics_port(), 9090);
+        });
     }
 
     #[test]
@@ -536,9 +506,6 @@ mod tests {
         assert_eq!(storage::DEFAULT_NFS_PORT, 2049);
         assert_eq!(storage::DEFAULT_SMB_PORT, 445);
     }
-
-    // REMOVED: service_account and logging modules do not exist in current codebase
-    // These tests reference non-existent modules that were likely from an earlier design
 
     #[test]
     fn test_security_defaults_batch2() {

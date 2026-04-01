@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
-use std::collections::HashMap;
-// CLEANED: Removed unused Future import as part of canonical modernization
-// use std::future::Future;
 /// Extracted from `native_async_final_services.rs` to maintain file size compliance
 /// Contains data structures, enums, and type definitions for native async services
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::SystemTime;
 // UniversalResponseStatus removed - use canonical response types
 

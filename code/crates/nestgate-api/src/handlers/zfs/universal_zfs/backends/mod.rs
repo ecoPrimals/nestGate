@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **ZFS BACKENDS - PRODUCTION & TEST**
 //!
@@ -17,11 +17,9 @@ pub mod native;
 /// Native real ZFS operations with production implementations
 pub mod native_real;
 // Remote ZFS service disabled - HTTP removed per Concentrated Gap Architecture
-// pub mod remote;
 
 // Re-exports for production use
 pub use native::NativeZfsService;
-// pub use remote::RemoteZfsService;  // HTTP removed
 // Note: native_real uses NativeZfsService internally - no separate export needed
 
 use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;

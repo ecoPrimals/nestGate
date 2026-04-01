@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **CANONICAL MODERNIZATION SYSTEM**
 //! Module definitions and exports.
@@ -16,7 +16,6 @@ pub mod canonical_constants;
 #[cfg(test)]
 mod canonical_constants_tests;
 // Constants consolidation system - disabled for compilation compatibility
-// pub mod constants_consolidation;
 /// Builder patterns for canonical configurations
 pub mod builders;
 /// Idiomatic evolution patterns and utilities for code modernization
@@ -24,7 +23,6 @@ pub mod idiomatic_evolution;
 /// Unified enumerations providing standardized enum types
 pub mod unified_enums;
 /// ⚠️ REMOVED: unified_types was migrated to config::canonical_primary (November 2025)
-// pub mod unified_types; // REMOVED - use config::canonical_primary
 /// Zero-cost trait implementations providing high-performance abstractions
 pub mod zero_cost_traits;
 // ==================== SECTION ====================
@@ -44,4 +42,3 @@ pub use canonical_constants::*;
 pub use crate::config::canonical_primary::service::ServiceConfig as UnifiedServiceConfig;
 // Re-export from unified_enums - only enums that actually exist
 pub use nestgate_types::unified_enums::service_types::{UnifiedServiceState, UnifiedServiceType};
-// pub use zero_cost_traits::*; // Unused import

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // Pure data layer handlers for storage backend operations.
@@ -243,7 +243,7 @@ pub async fn scan_storage(
 ///
 /// Returns [`Json`] containing [`DataError`] when the requested backend
 /// type does not support benchmarking or when the response cannot be built.
-pub async fn benchmark_storage(
+pub fn benchmark_storage(
     State(_state): State<ApiState>,
     Json(request): Json<BenchmarkStorageRequest>,
 ) -> Result<Json<DataResponse<BenchmarkResults>>, Json<DataError>> {

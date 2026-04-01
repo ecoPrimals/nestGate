@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Dataset create and destroy operations.
 
@@ -234,11 +234,11 @@ impl ZfsDatasetManager {
         Ok(())
     }
 
-    /// Destroy a dataset (alias for [`delete_dataset`]).
+    /// Destroy a dataset (alias for [`Self::delete_dataset`]).
     ///
     /// # Errors
     ///
-    /// Same as [`delete_dataset`].
+    /// Same as [`Self::delete_dataset`].
     pub async fn destroy_dataset(&self, name: &str) -> Result<()> {
         self.delete_dataset(name).await
     }

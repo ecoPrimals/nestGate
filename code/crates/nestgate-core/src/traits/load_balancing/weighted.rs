@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # Weighted Load Balancing Algorithms
 //! Weighted functionality and utilities.
@@ -163,7 +163,7 @@ impl LoadBalancer for WeightedRoundRobinLoadBalancer {
 /// Weighted random load balancer
 pub struct WeightedRandomLoadBalancer {
     weights: Arc<parking_lot::RwLock<HashMap<String, f64>>>,
-    rng: Arc<std::sync::Mutex<StdRng>>,
+    rng: Arc<parking_lot::Mutex<StdRng>>,
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl WeightedRandomLoadBalancer {
@@ -175,7 +175,7 @@ impl WeightedRandomLoadBalancer {
     pub fn new() -> Self {
         Self {
             weights: Arc::new(parking_lot::RwLock::new(HashMap::new())),
-            rng: Arc::new(std::sync::Mutex::new(StdRng::from_entropy())),
+            rng: Arc::new(parking_lot::Mutex::new(StdRng::from_entropy())),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
                 algorithm: "weighted_random".to_string(),
                 ..LoadBalancerStats::default()
@@ -218,32 +218,17 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
             .sum();
 
         if total_weight <= 0.0 {
-            // Fallback to uniform random if no valid weights
-            let mut rng = self.rng.lock().map_err(|_| {
-                NestGateError::LoadBalancer(Box::new(
-                    crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                        message: "Random number generator lock poisoned".into(),
-                        available_services: Some(services.len()),
-                        algorithm: Some("weighted_random".into()),
-                    },
-                ))
-            })?;
-            let index = rng.gen_range(0..services.len());
+            let index = {
+                let mut rng = self.rng.lock();
+                rng.gen_range(0..services.len())
+            };
             return Ok(services[index].clone());
         }
 
-        // Generate random number in [0, total_weight)
-        let mut rng = self.rng.lock().map_err(|_| {
-            NestGateError::LoadBalancer(Box::new(
-                crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "Random number generator lock poisoned".into(),
-                    available_services: Some(services.len()),
-                    algorithm: Some("weighted_random".into()),
-                },
-            ))
-        })?;
-        let random_weight = rng.r#gen::<f64>() * total_weight;
-        drop(rng);
+        let random_weight = {
+            let mut rng = self.rng.lock();
+            rng.r#gen::<f64>() * total_weight
+        };
 
         // Find the service corresponding to this weight
         let mut cumulative_weight = 0.0;

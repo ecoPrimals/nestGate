@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! NestGate RPC Service — tarpc + JSON-RPC interface.
 //!
@@ -42,7 +42,7 @@ pub(crate) fn nestgate_capabilities_vec() -> Vec<String> {
 
 // ==================== TARPC SERVICE TRAIT ====================
 
-/// NestGate RPC service trait — defines storage operations for inter-primal communication.
+/// `NestGate` RPC service trait — defines storage operations for inter-primal communication.
 ///
 /// Follows the same pattern as Songbird's `SongbirdRpc` trait.
 #[tarpc::service]

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # tarpc Server for `NestGate`
 //!
 //! Primal-to-primal RPC server implementation.
 //!
-//! `serve_tarpc()` is implemented but not yet wired into nestgate-bin daemon startup.
-//! Enable via `tarpc-server` feature flag. Protocol capabilities advertise
-//! the port for discovery; no server listens until wired.
+//! `serve_tarpc()` is wired into `nestgate-bin` daemon startup behind the
+//! `tarpc-server` feature flag (default-enabled). Protocol capabilities advertise
+//! the port for discovery.
 //!
 //! ## Design
 //! - tarpc primary for primal-to-primal communication
 //! - Zero unsafe blocks, modern async/await
 //! - Self-knowledge: exposes only storage capabilities
 //! - Runtime discovery: registers with discovery system
-//! - Lock-free concurrent access using `DashMap`
-//! - No lock contention under high load
+//! - Concurrent access via `tokio::sync::RwLock`
+//! - Read-biased `RwLock` for concurrent access
 //! - Better multi-primal scalability
 //!
 //! ## Usage
@@ -68,7 +68,7 @@ fn byte_len_u64(len: usize) -> u64 {
 /// refcounted zero-copy cloning on retrieval.
 type StoredObjectPayload = (Bytes, HashMap<String, String>);
 
-/// In-process dataset/object store (replaces `nestgate-core` `StorageManagerService` until wired).
+/// In-process dataset/object store for tarpc path (filesystem persistence via unix socket handlers).
 #[derive(Default)]
 pub(crate) struct InnerStore {
     datasets: HashMap<String, DatasetInfo>,

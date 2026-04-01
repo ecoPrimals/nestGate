@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **OPTIMIZED API HANDLERS MODULE**
 //!
@@ -103,8 +103,6 @@ pub mod load_testing;
 /// Real-time metrics collection and aggregation system.
 pub mod metrics_collector;
 // Stub tests reference undefined types (`ApplicationMetrics`, etc.); restore when aligned with collector API.
-// #[cfg(test)]
-// mod metrics_collector_comprehensive_tests;
 #[cfg(test)]
 mod metrics_collector_critical_tests;
 #[cfg(test)]

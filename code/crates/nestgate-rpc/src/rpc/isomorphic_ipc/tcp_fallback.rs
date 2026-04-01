@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -110,7 +110,6 @@ impl TcpFallbackServer {
         let bind_addr = std::env::var("NESTGATE_IPC_BIND_ADDRESS")
             .unwrap_or_else(|_| LOCALHOST_IPV4.to_string());
         let bind_socket = format!("{bind_addr}:0");
-        info!("   Bind: {} (ephemeral port)", bind_socket);
 
         // Bind to configurable address:0 (ephemeral port, OS assigns)
         let listener = TcpListener::bind(&bind_socket)
@@ -121,7 +120,10 @@ impl TcpFallbackServer {
             .local_addr()
             .context("Failed to get local address")?;
 
-        info!("✅ TCP IPC listening on {}", local_addr);
+        info!(
+            "✅ TCP IPC listening on {} (resolved from bind pattern {} — ephemeral port)",
+            local_addr, bind_socket
+        );
 
         // Write discovery file for clients
         self.write_tcp_discovery_file(&local_addr)?;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Platform-specific installation settings, component selection, and system integration
 use serde::{Deserialize, Serialize};
@@ -8,6 +8,7 @@ use std::path::PathBuf;
 // Type alias to reduce complexity
 type ComponentConfigMap = HashMap<String, HashMap<String, String>>;
 
+/// Top-level paths, mode flags, and directories for an install run.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallationSettings {
     /// Installation mode
@@ -29,6 +30,7 @@ pub struct InstallationSettings {
     /// Enable verbose output
     pub verbose: bool,
 }
+/// Selected components, dependency graph, and per-component options.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentSettings {
     /// Component selection
@@ -42,6 +44,7 @@ pub struct ComponentSettings {
     /// Enable component validation
     pub validate_components: bool,
 }
+/// Boolean flags for which product components to install.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentSelection {
     /// Install API component
@@ -67,6 +70,7 @@ pub struct ComponentSelection {
     /// Custom components
     pub custom_components: Vec<String>,
 }
+/// Service user, autostart, firewall, and desktop integration options.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemIntegrationSettings {
     /// Install as system service
@@ -86,6 +90,7 @@ pub struct SystemIntegrationSettings {
     /// Desktop integration
     pub desktop_integration: bool,
 }
+/// Package manager channel, repositories, and dependency lists.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PackageManagementSettings {
     /// Package manager type
@@ -200,6 +205,7 @@ pub struct SystemRequirements {
     /// Optional dependencies
     pub optional_packages: Vec<String>,
 }
+/// Optional cgroup-style limits for CPU, memory, disk, and network.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceConstraints {
     /// CPU limit

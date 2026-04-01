@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **CAPABILITY-BASED SECURITY PROVIDER CLIENT**
 //!
 //! Client for discovering and communicating with whichever primal provides
 //! the "security" capability at runtime (hardware-backed crypto, identity,
-//! tokens, certificates). NestGate has no compile-time knowledge of *which*
+//! tokens, certificates). `NestGate` has no compile-time knowledge of *which*
 //! primal fills this role.
 
 use nestgate_core::capability_discovery::CapabilityDiscovery;

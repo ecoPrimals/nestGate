@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **ORCHESTRATION TRAITS - CANONICAL MODERNIZED**
 //! Orchestration trait definitions for universal providers

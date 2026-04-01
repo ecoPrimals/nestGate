@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **WORKSPACE MANAGEMENT MODULE**
 //!
@@ -58,21 +58,12 @@ pub mod templates;
 pub use crud::{
     create_workspace, delete_workspace, get_workspace, get_workspaces, update_workspace_config,
 };
-// pub use lifecycle::{
-//     backup_workspace, migrate_workspace, restore_workspace, schedule_cleanup,
-//     update_workspace_lifecycle,
-// };
 pub use teams::{create_team, get_teams};
-// pub use lifecycle::{BackupConfig, MigrationConfig, MigrationStrategy, RestoreConfig};
 
 // Team management
 pub use secrets::create_workspace_secret;
 
-// Collaboration features (stub implementations) - commented out until implemented
-// pub use collaboration::{add_collaborator, get_collaborators, remove_collaborator};
-
-// Template management - commented out until implemented
-// pub use templates::create_from_template;
+// Collaboration and template exports removed until those modules are implemented.
 
 /// **WORKSPACE MANAGER**
 ///

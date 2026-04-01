@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Capability-Based Primal Discovery Framework
 //!
@@ -48,7 +48,6 @@ pub use capability_helpers::{
 pub use runtime_discovery::{PrimalConnection, RuntimeDiscovery};
 
 // HTTP removed - use Songbird via capability discovery for external HTTP
-// use crate::http_client_stub as reqwest;
 use dashmap::DashMap;
 use std::collections::HashMap;
 use std::future::Future;

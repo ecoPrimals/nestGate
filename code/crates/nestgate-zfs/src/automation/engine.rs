@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // This module contains the core DatasetAutomation engine that orchestrates
@@ -37,7 +37,6 @@ use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::NestGateError;
 use nestgate_core::error::NestGateUnifiedError;
 // Migration engine placeholder - not yet implemented
-// use crate::migration::MigrationEngine;
 
 /// Intelligent dataset automation engine
 #[derive(Debug)]

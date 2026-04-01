@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::ZfsHealthMonitor;
 use super::reporting::{dataset_health_from_zfs_list_text, pool_health_from_zpool_status_text};

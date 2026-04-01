@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use crate::capability_resolver::types::CapabilityResolver;
 use crate::unified_capabilities::{CapabilityMapper, UnifiedCapability};

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![cfg_attr(
     test,
@@ -281,21 +281,18 @@ mod auth_handler_tests {
 
     #[tokio::test]
     async fn test_rate_limiting_under_threshold() {
-        reset_request_count();
-        let user_id = "user123";
-        let result = check_rate_limit(user_id, 10);
+        let limiter = RateLimiter::new();
+        let result = limiter.check(10);
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_rate_limiting_exceeded() {
-        reset_request_count();
-        let user_id = "user123";
-        // Simulate many requests
+        let limiter = RateLimiter::new();
         for _ in 0..100 {
-            let _ = record_request(user_id);
+            let _ = limiter.record();
         }
-        let result = check_rate_limit(user_id, 50);
+        let result = limiter.check(50);
         assert!(result.is_err());
     }
 
@@ -551,24 +548,29 @@ fn is_session_expired(session: &Session) -> bool {
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-static REQUEST_COUNT: AtomicUsize = AtomicUsize::new(0);
-
-fn reset_request_count() {
-    REQUEST_COUNT.store(0, Ordering::SeqCst);
+struct RateLimiter {
+    count: AtomicUsize,
 }
 
-fn check_rate_limit(_user_id: &str, limit: u32) -> std::result::Result<(), ApiError> {
-    let count = REQUEST_COUNT.load(Ordering::SeqCst);
-    if count > limit as usize {
-        Err(ApiError::InvalidRequest("Rate limit exceeded".to_string()))
-    } else {
+impl RateLimiter {
+    const fn new() -> Self {
+        Self {
+            count: AtomicUsize::new(0),
+        }
+    }
+
+    fn check(&self, limit: u32) -> std::result::Result<(), ApiError> {
+        if self.count.load(Ordering::SeqCst) > limit as usize {
+            Err(ApiError::InvalidRequest("Rate limit exceeded".to_string()))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn record(&self) -> std::result::Result<(), ApiError> {
+        self.count.fetch_add(1, Ordering::SeqCst);
         Ok(())
     }
-}
-
-fn record_request(_user_id: &str) -> std::result::Result<(), ApiError> {
-    REQUEST_COUNT.fetch_add(1, Ordering::SeqCst);
-    Ok(())
 }
 
 fn check_permission(_user: &str, _required: &str) -> std::result::Result<(), ApiError> {

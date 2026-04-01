@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Types module
 
-use std::collections::HashMap;
-// CLEANED: Removed unused Duration import as part of canonical modernization
-// use std::time::Duration;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::SystemTime;
 use uuid::Uuid;
 
 // **MIGRATED**: Using canonical types instead of deprecated unified_types
 use crate::canonical_types::storage::StorageTier;
 pub use crate::config::canonical_primary::StorageConfig as CacheConfig;
-// CLEANED: Removed unused StorageOperation import as part of canonical modernization
 
 // **CANONICAL CACHE TYPES** - Consolidated from unified_types
 #[derive(Debug, Clone, Serialize, Deserialize)]

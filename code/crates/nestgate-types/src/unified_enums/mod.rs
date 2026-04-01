@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unified Enums module
 //!
@@ -69,9 +69,6 @@ pub use service_types::UnifiedHealthStatus;
 
 // **COMPATIBILITY ALIASES** for external crates
 pub use storage_access_types::UnifiedTierType as StorageTier;
-
-// Remove duplicate import - use service_types::UnifiedServiceState directly
-// pub use service_types::UnifiedServiceState;
 
 // Key unified enums for easy access
 pub use message_event_types::{UnifiedAlertSeverity, UnifiedMessageType};

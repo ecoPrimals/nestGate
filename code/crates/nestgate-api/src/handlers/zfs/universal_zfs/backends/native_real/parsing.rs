@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // Zero-copy parsing utilities for ZFS command output.
@@ -16,8 +16,7 @@ use crate::handlers::zfs::universal_zfs_types::{
 };
 
 // Import zero-copy utilities
-// Note: zero_copy lines function moved to utilities
-// use nestgate_core::zero_copy::lines_zero_copy; // Module doesn't exist
+// Note: zero_copy lines function moved to utilities; `lines_zero_copy` module does not exist.
 
 /// Parse zpool list output into `PoolInfo` structures
 pub fn parse_zpool_list(output: &str) -> UniversalZfsResult<Vec<PoolInfo>> {
@@ -161,7 +160,7 @@ pub fn parse_dataset_list(output: &str) -> UniversalZfsResult<Vec<DatasetInfo>> 
             let dataset_type = match dataset_type_str {
                 "volume" => DatasetType::Volume,
                 "snapshot" => DatasetType::Snapshot,
-                "filesystem" | _ => DatasetType::Filesystem,
+                _ => DatasetType::Filesystem,
             };
 
             datasets.push(DatasetInfo {

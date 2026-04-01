@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **TEST UTILITIES AND MOCK BUILDERS**
 //!
@@ -20,7 +20,7 @@
 //! - From: `nestgate-core/src/return_builders/mock_builders.rs`
 //! - From: `nestgate-core/src/config/canonical_primary/domains/test_canonical/mocking.rs`
 
-#![cfg(feature = "dev-stubs")]
+#![cfg(any(test, feature = "dev-stubs"))]
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

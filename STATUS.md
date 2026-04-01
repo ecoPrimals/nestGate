@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: March 31, 2026  
+**Last Updated**: April 1, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,9 +12,9 @@ Build:              ALL workspace members — cargo check --workspace --all-feat
 Clippy:             ZERO WARNINGS — cargo clippy --workspace --all-features --all-targets
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               ZERO WARNINGS — cargo doc --workspace --no-deps
-Tests:              8,376 lib tests passing, 0 failures (workspace `--lib`; last summed Mar 31, 2026)
+Tests:              1,531 lib tests passing, 0 failures + full integration suite green (workspace; Apr 1, 2026)
 Coverage:           80.95% line (cargo llvm-cov --workspace --lib) — last full measurement; re-run to refresh
-Files > 1000 lines: 0 (production; max 879 lines — metrics.rs; large modules smart-refactored)
+Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored metrics/ and unix_adapter/ packages)
 Unwrap/Expect:      ZERO in production library code (#[cfg(test)] and integration tests may use unwrap/expect)
 TODO/FIXME:         ZERO in .rs files
 Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (except env_process_shim bridge)
@@ -38,15 +38,19 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ---
 
-## Ground truth refresh (Mar 31, 2026)
+## Ground truth refresh (Apr 1, 2026)
 
-Measured with `cargo check` / `cargo clippy` / `cargo fmt --check` / `cargo test --lib` as above.
+Measured with `cargo check` / `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
 
-- **Production file size**: All production `.rs` files under **1,000** lines (max 879 — `metrics.rs`). Smart-refactored: `health.rs` 785→package, `types.rs` 858→package, `pool/manager.rs` 832→package.
-- **Workspace**: **24** members compile with `--all-features --all-targets`. MCP, ring, rustls, reqwest all eliminated.
-- **Discovery**: mDNS behind `mdns` feature gate; production discovery is env-driven + songBird IPC.
-- **IPC routes**: `data.*`, `nat.*`, `beacon.*` wired as aliases/handlers in unix_adapter.rs. `storage.sock` capability symlink auto-managed.
-- **Hardcoding**: Port fallbacks centralized via `runtime_fallback_ports`. Legacy env vars (`NESTGATE_BEARDOG_URL`) deprecated in favor of `NESTGATE_CAPABILITY_*`.
+- **Production file size**: All production `.rs` files under **1,000** lines (max ~500 after smart refactoring). `metrics.rs` (879) split into `metrics/` package; `unix_adapter.rs` (856) split into `unix_adapter/` package.
+- **Workspace**: **24** members compile clean with zero clippy warnings. MCP, ring, rustls, reqwest all eliminated.
+- **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async.
+- **Testing**: Zero `thread::sleep` in tests. Hardcoded `/tmp` paths replaced with `tempdir()`. env::set_var tests migrated to `temp_env`. Serial markers removed where only env isolation was needed. Race condition in rate-limit test fixed (static → local state).
+- **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Env var → capability config → numeric defaults hierarchy documented.
+- **Stubs**: Production mock builders gated behind `#[cfg(any(test, feature = "dev-stubs"))]`. Production sleep stubs removed.
+- **Copyright**: 2025-2026 across all 1,571 source files. SPDX on all .rs files.
+- **Allow block**: nestgate-api reduced from 31→18 suppressions (42% fewer). nestgate-installer `missing_docs` now warned.
+- **Commented-out code**: Zero. Removed from 40+ files.
 - **Coverage**: Figure unchanged since last llvm-cov run (80.95% line); not re-measured this session.
 
 ---

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -215,12 +215,13 @@ impl ObjectStorageBackend {
     fn should_use_path_style(endpoint: &str) -> bool {
         let endpoint_lower = endpoint.to_lowercase();
 
-        // MinIO and local endpoints typically require path-style
+        // MinIO and local endpoints typically require path-style. `:9000` and `localhost` match
+        // the well-known MinIO default API port / local dev convention (not universal for all S3 providers).
         endpoint_lower.contains("min.io")
             || endpoint_lower.contains("minio")
             || endpoint_lower.contains("localhost")
             || endpoint_lower.contains("127.0.0.1")
-            || endpoint_lower.contains(":9000") // Default MinIO port
+            || endpoint_lower.contains(":9000")
     }
 
     /// Get full bucket name with prefix

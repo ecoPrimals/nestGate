@@ -115,6 +115,7 @@ tokio = { version = "1.0", features = [
     "rt-multi-thread",
     "signal",
     "sync",
+    "test-util",
     "time",
 ] }
 tokio-test = "0.4"

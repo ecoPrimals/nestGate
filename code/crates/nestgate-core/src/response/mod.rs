@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Response Module System
 // This module system breaks down the large response.rs file into manageable,
@@ -247,8 +247,6 @@ pub mod middleware {
 /// Validation utilities for responses ensuring data integrity and consistency.
 pub mod validation {
     use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
-    // CLEANED: Removed unused Result import as part of canonical modernization
-    // use crate::Result;
     /// Validate API response structure
     pub fn validate_api_response<T>(response: &ApiResponse<T>) -> std::result::Result<(), String> {
         if response.success && response.data.is_none() {
@@ -289,7 +287,7 @@ pub mod validation {
 
 // ==================== SECTION ====================
 
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 /// Testing utilities for response types.
 ///
 /// This module provides test helpers, builders, and mock responses

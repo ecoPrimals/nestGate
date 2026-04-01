@@ -43,7 +43,7 @@ async fn test_capability_config_has_endpoints() -> Result<()> {
     for endpoint in &knowledge.endpoints {
         assert!(!endpoint.protocol.is_empty());
         assert!(!endpoint.address.is_empty());
-        assert!(endpoint.port > 0);
+        // Port 0 is valid — means ephemeral (OS-assigned at bind time)
     }
 
     Ok(())

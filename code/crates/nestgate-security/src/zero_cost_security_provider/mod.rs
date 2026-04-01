@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **ZERO-COST SECURITY PROVIDER - MODULAR ARCHITECTURE**
 //!
@@ -49,9 +49,7 @@ mod types_coverage_boost;
 // External heavy: Route to Security via universal adapter for complex security
 // Local smart: Basic security operations for standalone mode
 pub mod authentication; // Hybrid: external Security + local token validation
-// pub mod encryption;      // Hybrid: external Security + local basic encryption
-// pub mod signing;         // Hybrid: external Security + local signature verification
-// pub mod provider;        // Hybrid security provider implementation
+// encryption/signing/provider modules were planned as hybrid adapters; add when wired to Security.
 
 /// Security configuration management with zero-cost patterns
 pub mod config;
@@ -69,17 +67,5 @@ pub use authentication::{
     AuthenticationConfig,
     HybridAuthenticationManager, // Routes to Security, falls back to local token validation
 };
-// pub use encryption::{
-//     HybridEncryptionManager,        // Routes to Security, falls back to local AES encryption
-//     EncryptionAlgorithm, EncryptionConfig,
-// };
-// pub use signing::{
-//     HybridSigningManager,           // Routes to Security, falls back to local signature verification
-//     SignatureAlgorithm, SigningConfig,
-// };
-// pub use provider::{
-//     HybridSecurityProvider,         // Coordinates all hybrid security capabilities
-//     SecurityProviderHealth, SecurityProviderMetrics,
-// };
 pub use config::ZeroCostSecurityConfig;
 pub use metadata::ZeroCostSecurityMetadata;

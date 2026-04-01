@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
-
-//
-// **MIGRATION COMPLETE**: This module now uses canonical modernization patterns.
-// Legacy fragmented config structs have been replaced with canonical equivalents.
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Config module
 
@@ -292,8 +288,7 @@ pub struct HealthMonitoringConfig {
 }
 
 /// **CANONICAL MODERNIZATION** - Use canonical metrics configuration
-// Note: CanonicalMetricsConfig moved or renamed
-// pub use nestgate_core::CanonicalMetricsConfig as MetricsConfig;
+// Note: CanonicalMetricsConfig moved or renamed; wire `MetricsConfig` from canonical types when needed.
 // ==================== SECTION ====================
 /// Stream configuration
 #[derive(Debug, Clone, Default)]

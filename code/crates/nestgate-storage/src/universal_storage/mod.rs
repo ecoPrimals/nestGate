@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **UNIVERSAL STORAGE SYSTEM**
 //!
@@ -76,7 +76,6 @@ pub mod storage_detector;
 pub mod storage_detector_config;
 // Enterprise storage operations module does not exist on disk.
 // Enterprise capabilities are provided via universal storage adapter.
-// pub mod enterprise;
 
 // ==================== MODERN VENDOR-AGNOSTIC STORAGE ====================
 
@@ -112,21 +111,6 @@ pub use auto_configurator::AutoConfigurator;
 
 // Storage detection utilities
 pub use storage_detector::{DetectedStorage, StorageDetector};
-
-// ==================== UNIFICATION COMPLETE ====================
-
-// **DEPRECATED MODULES REMOVED** - Eliminated as part of unification cleanup
-// - unified_storage_traits.rs: Deprecated trait definitions removed
-// - backends: Consolidated into canonical storage traits
-// - consolidated_types: Merged into unified storage system
-// - types.rs: Fragmented type definitions eliminated
-// - traits.rs: Fragmented trait definitions eliminated
-
-// **MIGRATION COMPLETE**:
-// All storage interfaces have been successfully migrated to the canonical system.
-// **Integration:** New backends should implement `nestgate_core::traits::canonical::CanonicalStorage`
-// and `nestgate_core::traits::unified_storage::UnifiedStorage` when `nestgate-storage` can depend on
-// `nestgate-core` without creating a dependency cycle (or via shared traits in `nestgate-types`).
 
 #[cfg(test)]
 mod tests {

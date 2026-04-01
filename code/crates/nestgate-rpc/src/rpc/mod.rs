@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # 🚀 RPC Module for `NestGate`
 //!
@@ -98,7 +98,6 @@ pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 pub use orchestrator_registration::OrchestratorRegistration;
 pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
-// pub use songbird_registration::SongbirdRegistration; // REMOVED: Deprecated module removed
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};

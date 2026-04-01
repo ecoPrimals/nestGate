@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # Load Balancing Algorithm Implementations
 //! Algorithms functionality and utilities.
@@ -219,7 +219,7 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
 
 /// Random load balancer
 pub struct RandomLoadBalancer {
-    rng: Arc<std::sync::Mutex<StdRng>>,
+    rng: Arc<parking_lot::Mutex<StdRng>>,
     stats: Arc<parking_lot::RwLock<LoadBalancerStats>>,
 }
 impl RandomLoadBalancer {
@@ -230,7 +230,7 @@ impl RandomLoadBalancer {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            rng: Arc::new(std::sync::Mutex::new(StdRng::from_entropy())),
+            rng: Arc::new(parking_lot::Mutex::new(StdRng::from_entropy())),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
                 algorithm: "random".to_string(),
                 ..LoadBalancerStats::default()
@@ -263,18 +263,11 @@ impl LoadBalancer for RandomLoadBalancer {
             )));
         }
 
-        let mut rng = self.rng.lock().map_err(|_| {
-            NestGateError::LoadBalancer(Box::new(
-                crate::error::variants::core_errors::LoadBalancerErrorDetails {
-                    message: "Random number generator lock poisoned".into(),
-                    available_services: Some(services.len()),
-                    algorithm: Some("random".into()),
-                },
-            ))
-        })?;
-        let index = rng.gen_range(0..services.len());
+        let index = {
+            let mut rng = self.rng.lock();
+            rng.gen_range(0..services.len())
+        };
         let selected = services[index].clone();
-        drop(rng);
 
         let mut stats = self.stats.write();
         stats.total_requests += 1;

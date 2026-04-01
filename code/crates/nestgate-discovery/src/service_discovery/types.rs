@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Universal Service Discovery Types
 /// Extracted from `universal_service_discovery.rs` to maintain file size compliance

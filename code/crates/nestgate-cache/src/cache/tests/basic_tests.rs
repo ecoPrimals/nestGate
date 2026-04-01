@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![allow(
     deprecated,
@@ -21,9 +21,69 @@
 
 use crate::cache::multi_tier::SimpleCacheConfig;
 use crate::cache::*;
+use std::path::PathBuf;
+
+fn temp_single_cache_dir() -> (tempfile::TempDir, PathBuf) {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let cache_path = dir.path().join("cache");
+    (dir, cache_path)
+}
+
+/// Multi-tier layout used by `test_multi_tier_creation`.
+fn temp_multi_tier_config_creation() -> (tempfile::TempDir, MultiTierCacheConfig) {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let base = dir.path();
+    let config = MultiTierCacheConfig {
+        hot_tier_config: SimpleCacheConfig {
+            max_size: 100,
+            ttl: std::time::Duration::from_secs(300),
+            cache_dir: base.join("hot").to_string_lossy().into_owned(),
+        },
+        warm_tier_config: SimpleCacheConfig {
+            max_size: 500,
+            ttl: std::time::Duration::from_secs(3600),
+            cache_dir: base.join("warm").to_string_lossy().into_owned(),
+        },
+        cold_tier_config: SimpleCacheConfig {
+            max_size: 1000,
+            ttl: std::time::Duration::from_secs(86400),
+            cache_dir: base.join("cold").to_string_lossy().into_owned(),
+        },
+        promotion_threshold: 10,
+        demotion_threshold: 2,
+    };
+    (dir, config)
+}
+
+/// Multi-tier layout used by comprehensive multi-tier cache tests.
+fn temp_multi_tier_config_ops() -> (tempfile::TempDir, MultiTierCacheConfig) {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let base = dir.path();
+    let config = MultiTierCacheConfig {
+        hot_tier_config: SimpleCacheConfig {
+            max_size: 10,
+            ttl: std::time::Duration::from_secs(60),
+            cache_dir: base.join("hot").to_string_lossy().into_owned(),
+        },
+        warm_tier_config: SimpleCacheConfig {
+            max_size: 50,
+            ttl: std::time::Duration::from_secs(300),
+            cache_dir: base.join("warm").to_string_lossy().into_owned(),
+        },
+        cold_tier_config: SimpleCacheConfig {
+            max_size: 100,
+            ttl: std::time::Duration::from_secs(3600),
+            cache_dir: base.join("cold").to_string_lossy().into_owned(),
+        },
+        promotion_threshold: 10,
+        demotion_threshold: 2,
+    };
+    (dir, config)
+}
 
 #[tokio::test]
 async fn test_cache_system_operations() -> nestgate_types::Result<()> {
+    let (_td, cache_path) = temp_single_cache_dir();
     let cache_config = nestgate_config::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
@@ -32,7 +92,7 @@ async fn test_cache_system_operations() -> nestgate_types::Result<()> {
         warm_tier_size: Some(500),
         cold_tier_unlimited: Some(false),
         ttl_seconds: Some(300),
-        cache_dir: Some("/tmp/nestgate_cache_test".to_string().into()),
+        cache_dir: Some(cache_path),
         policy: Some("lru".to_string()),
         cache_settings: std::collections::HashMap::new(),
     };
@@ -60,6 +120,7 @@ async fn test_cache_system_operations() -> nestgate_types::Result<()> {
 
 #[tokio::test]
 async fn test_single_tier_creation() -> nestgate_types::Result<()> {
+    let (_td, cache_path) = temp_single_cache_dir();
     let cache_config = nestgate_config::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
@@ -68,7 +129,7 @@ async fn test_single_tier_creation() -> nestgate_types::Result<()> {
         warm_tier_size: None,
         cold_tier_unlimited: None,
         ttl_seconds: Some(300),
-        cache_dir: Some("/tmp/nestgate_cache_single".to_string().into()),
+        cache_dir: Some(cache_path),
         policy: Some("lru".to_string()),
         cache_settings: std::collections::HashMap::new(),
     };
@@ -89,25 +150,7 @@ async fn test_single_tier_creation() -> nestgate_types::Result<()> {
 
 #[tokio::test]
 async fn test_multi_tier_creation() -> nestgate_types::Result<()> {
-    let config = MultiTierCacheConfig {
-        hot_tier_config: SimpleCacheConfig {
-            max_size: 100,
-            ttl: std::time::Duration::from_secs(300),
-            cache_dir: "/tmp/nestgate_cache_multi/hot".to_string(),
-        },
-        warm_tier_config: SimpleCacheConfig {
-            max_size: 500,
-            ttl: std::time::Duration::from_secs(3600),
-            cache_dir: "/tmp/nestgate_cache_multi/warm".to_string(),
-        },
-        cold_tier_config: SimpleCacheConfig {
-            max_size: 1000,
-            ttl: std::time::Duration::from_secs(86400),
-            cache_dir: "/tmp/nestgate_cache_multi/cold".to_string(),
-        },
-        promotion_threshold: 10,
-        demotion_threshold: 2,
-    };
+    let (_td, config) = temp_multi_tier_config_creation();
 
     let cache = CacheSystem::multi_tier(config)?;
 
@@ -125,6 +168,7 @@ async fn test_multi_tier_creation() -> nestgate_types::Result<()> {
 
 #[tokio::test]
 async fn test_cache_miss() -> nestgate_types::Result<()> {
+    let (_td, cache_path) = temp_single_cache_dir();
     let cache_config = nestgate_config::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
@@ -133,7 +177,7 @@ async fn test_cache_miss() -> nestgate_types::Result<()> {
         warm_tier_size: None,
         cold_tier_unlimited: None,
         ttl_seconds: Some(300),
-        cache_dir: Some("/tmp/nestgate_cache_miss".to_string().into()),
+        cache_dir: Some(cache_path),
         policy: Some("lru".to_string()),
         cache_settings: std::collections::HashMap::new(),
     };
@@ -149,6 +193,7 @@ async fn test_cache_miss() -> nestgate_types::Result<()> {
 
 #[tokio::test]
 async fn test_cache_overwrite() -> nestgate_types::Result<()> {
+    let (_td, cache_path) = temp_single_cache_dir();
     let cache_config = nestgate_config::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
@@ -157,7 +202,7 @@ async fn test_cache_overwrite() -> nestgate_types::Result<()> {
         warm_tier_size: None,
         cold_tier_unlimited: None,
         ttl_seconds: Some(300),
-        cache_dir: Some("/tmp/nestgate_cache_overwrite".to_string().into()),
+        cache_dir: Some(cache_path),
         policy: Some("lru".to_string()),
         cache_settings: std::collections::HashMap::new(),
     };
@@ -179,6 +224,7 @@ async fn test_cache_overwrite() -> nestgate_types::Result<()> {
 
 #[tokio::test]
 async fn test_cache_multiple_keys() -> nestgate_types::Result<()> {
+    let (_td, cache_path) = temp_single_cache_dir();
     let cache_config = nestgate_config::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
@@ -187,7 +233,7 @@ async fn test_cache_multiple_keys() -> nestgate_types::Result<()> {
         warm_tier_size: None,
         cold_tier_unlimited: None,
         ttl_seconds: Some(300),
-        cache_dir: Some("/tmp/nestgate_cache_multiple".to_string().into()),
+        cache_dir: Some(cache_path),
         policy: Some("lru".to_string()),
         cache_settings: std::collections::HashMap::new(),
     };
@@ -218,6 +264,7 @@ async fn test_cache_multiple_keys() -> nestgate_types::Result<()> {
 
 #[tokio::test]
 async fn test_clear_cache() -> nestgate_types::Result<()> {
+    let (_td, cache_path) = temp_single_cache_dir();
     let cache_config = nestgate_config::config::canonical_primary::CacheConfig {
         enabled: true,
         size_bytes: 1024 * 1024, // 1MB
@@ -226,7 +273,7 @@ async fn test_clear_cache() -> nestgate_types::Result<()> {
         warm_tier_size: None,
         cold_tier_unlimited: None,
         ttl_seconds: Some(300),
-        cache_dir: Some("/tmp/nestgate_cache_clear".to_string().into()),
+        cache_dir: Some(cache_path),
         policy: Some("lru".to_string()),
         cache_settings: std::collections::HashMap::new(),
     };
@@ -253,10 +300,11 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_cache_manager_basic_operations() {
+        let (_td, cache_path) = super::temp_single_cache_dir();
         let config = manager::UnifiedCacheConfig {
             max_size: 1000,
             ttl_seconds: Some(300),
-            cache_dir: Some("/tmp/nestgate_cache_manager".to_string().into()),
+            cache_dir: Some(cache_path),
             eviction_policy: "lru".to_string(),
         };
 
@@ -278,10 +326,11 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_cache_manager_overwrite() {
+        let (_td, cache_path) = super::temp_single_cache_dir();
         let config = manager::UnifiedCacheConfig {
             max_size: 1000,
             ttl_seconds: Some(300),
-            cache_dir: Some("/tmp/nestgate_cache_overwrite2".to_string().into()),
+            cache_dir: Some(cache_path),
             eviction_policy: "lru".to_string(),
         };
 
@@ -300,10 +349,11 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_cache_manager_multiple_entries() {
+        let (_td, cache_path) = super::temp_single_cache_dir();
         let config = manager::UnifiedCacheConfig {
             max_size: 1000,
             ttl_seconds: Some(300),
-            cache_dir: Some("/tmp/nestgate_cache_multiple2".to_string().into()),
+            cache_dir: Some(cache_path),
             eviction_policy: "lru".to_string(),
         };
 
@@ -327,10 +377,11 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_cache_manager_clear() {
+        let (_td, cache_path) = super::temp_single_cache_dir();
         let config = manager::UnifiedCacheConfig {
             max_size: 1000,
             ttl_seconds: Some(300),
-            cache_dir: Some("/tmp/nestgate_cache_clear2".to_string().into()),
+            cache_dir: Some(cache_path),
             eviction_policy: "lru".to_string(),
         };
 
@@ -402,25 +453,7 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_multi_tier_cache_tier_promotion() {
-        let config = MultiTierCacheConfig {
-            hot_tier_config: SimpleCacheConfig {
-                max_size: 10,
-                ttl: std::time::Duration::from_secs(60),
-                cache_dir: "/tmp/nestgate_multi_tier_promotion/hot".to_string(),
-            },
-            warm_tier_config: SimpleCacheConfig {
-                max_size: 50,
-                ttl: std::time::Duration::from_secs(300),
-                cache_dir: "/tmp/nestgate_multi_tier_promotion/warm".to_string(),
-            },
-            cold_tier_config: SimpleCacheConfig {
-                max_size: 100,
-                ttl: std::time::Duration::from_secs(3600),
-                cache_dir: "/tmp/nestgate_multi_tier_promotion/cold".to_string(),
-            },
-            promotion_threshold: 10,
-            demotion_threshold: 2,
-        };
+        let (_td, config) = super::temp_multi_tier_config_ops();
 
         let mut cache = MultiTierCache::new(config).expect("Cache operation failed");
 
@@ -442,25 +475,7 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_multi_tier_cache_multiple_entries() {
-        let config = MultiTierCacheConfig {
-            hot_tier_config: SimpleCacheConfig {
-                max_size: 10,
-                ttl: std::time::Duration::from_secs(60),
-                cache_dir: "/tmp/nestgate_multi_tier_multiple/hot".to_string(),
-            },
-            warm_tier_config: SimpleCacheConfig {
-                max_size: 50,
-                ttl: std::time::Duration::from_secs(300),
-                cache_dir: "/tmp/nestgate_multi_tier_multiple/warm".to_string(),
-            },
-            cold_tier_config: SimpleCacheConfig {
-                max_size: 100,
-                ttl: std::time::Duration::from_secs(3600),
-                cache_dir: "/tmp/nestgate_multi_tier_multiple/cold".to_string(),
-            },
-            promotion_threshold: 10,
-            demotion_threshold: 2,
-        };
+        let (_td, config) = super::temp_multi_tier_config_ops();
 
         let mut cache = MultiTierCache::new(config).expect("Cache operation failed");
 
@@ -486,25 +501,7 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_multi_tier_cache_clear() {
-        let config = MultiTierCacheConfig {
-            hot_tier_config: SimpleCacheConfig {
-                max_size: 10,
-                ttl: std::time::Duration::from_secs(60),
-                cache_dir: "/tmp/nestgate_multi_tier_clear/hot".to_string(),
-            },
-            warm_tier_config: SimpleCacheConfig {
-                max_size: 50,
-                ttl: std::time::Duration::from_secs(300),
-                cache_dir: "/tmp/nestgate_multi_tier_clear/warm".to_string(),
-            },
-            cold_tier_config: SimpleCacheConfig {
-                max_size: 100,
-                ttl: std::time::Duration::from_secs(3600),
-                cache_dir: "/tmp/nestgate_multi_tier_clear/cold".to_string(),
-            },
-            promotion_threshold: 10,
-            demotion_threshold: 2,
-        };
+        let (_td, config) = super::temp_multi_tier_config_ops();
 
         let mut cache = MultiTierCache::new(config).expect("Cache operation failed");
 
@@ -540,25 +537,7 @@ mod cache_comprehensive_tests {
 
     #[tokio::test]
     async fn test_multi_tier_cache_stats() {
-        let config = MultiTierCacheConfig {
-            hot_tier_config: SimpleCacheConfig {
-                max_size: 10,
-                ttl: std::time::Duration::from_secs(60),
-                cache_dir: "/tmp/nestgate_multi_tier_stats/hot".to_string(),
-            },
-            warm_tier_config: SimpleCacheConfig {
-                max_size: 50,
-                ttl: std::time::Duration::from_secs(300),
-                cache_dir: "/tmp/nestgate_multi_tier_stats/warm".to_string(),
-            },
-            cold_tier_config: SimpleCacheConfig {
-                max_size: 100,
-                ttl: std::time::Duration::from_secs(3600),
-                cache_dir: "/tmp/nestgate_multi_tier_stats/cold".to_string(),
-            },
-            promotion_threshold: 10,
-            demotion_threshold: 2,
-        };
+        let (_td, config) = super::temp_multi_tier_config_ops();
 
         let mut cache = MultiTierCache::new(config).expect("Cache operation failed");
 

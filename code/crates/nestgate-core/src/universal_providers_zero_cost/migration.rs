@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Migration guide from `Arc<dyn>` to zero-cost patterns
 pub const ZERO_COST_MIGRATION_GUIDE: &str = r"

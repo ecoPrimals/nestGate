@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **REST API MODULE**
 //!
@@ -34,8 +34,6 @@ use crate::rest::handlers::{
 };
 
 // Re-export commonly used types (removed glob exports to avoid ambiguity)
-// pub use handlers::*;  // Commented out to avoid ambiguous re-exports
-// pub use models::*;    // Commented out to avoid ambiguous re-exports
 pub use rpc::{RpcError, RpcStreamEvent, UnifiedRpcManager, UnifiedRpcRequest, UnifiedRpcResponse};
 
 // Re-export API router function (remove duplicate export)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Canonical Types Module
 //!
@@ -21,9 +21,5 @@ pub use service_types::*;
 pub use storage_types::*;
 
 // Type alias for backward compatibility
-// Note: This type alias is commented out temporarily to resolve module path issues.
-// The canonical configuration system is available via nestgate_core but the exact
-// module path needs to be verified.
-// #[allow(deprecated)]
-// pub type SecurityConfigCanonical =
-//     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+// Note: `SecurityConfigCanonical` was removed temporarily to resolve module path issues.
+// The canonical configuration system is available via nestgate_core; verify the exact path before reintroducing the alias.

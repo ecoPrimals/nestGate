@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Authentication module: configuration, hybrid external/local orchestration,
 //! Security primal IPC, JWT validation (`RustCrypto`), and standalone token helpers.

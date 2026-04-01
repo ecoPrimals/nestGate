@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
+#![cfg(any(test, feature = "dev-stubs"))]
 
 //! Mock Builders for Return Types
 //!
-//! **⚠️ DEVELOPMENT/TEST ONLY**: This module is only available with `dev-stubs` feature
-
-#![cfg(any(test, feature = "dev-stubs"))]
+//! **⚠️ DEVELOPMENT/TEST ONLY**: Available only under `cfg(test)` or the `dev-stubs` feature.
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Handles file system monitoring configuration, event detection, and notification
 /// **ECOSYSTEM UNIFICATION**: This module now uses the unified type system from nestgate-core
@@ -30,5 +30,3 @@ pub enum FsEventType {
     /// Metadata changed
     MetadataChanged,
 }
-// **DEPRECATED IMPLEMENTATION REMOVED**
-// FileSystemConfig struct has been removed - use UnifiedFsMonitorConfig from unified_fsmonitor_config.rs instead

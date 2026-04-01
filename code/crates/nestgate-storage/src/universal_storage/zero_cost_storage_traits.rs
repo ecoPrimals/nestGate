@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// **ZERO-COST NATIVE ASYNC STORAGE TRAITS**
 ///
@@ -11,7 +11,6 @@
 /// - Compile-time optimization through const generics
 /// - Zero runtime overhead for trait dispatch
 /// - 30-50% throughput improvement over `async_trait`
-// use crate::canonical_modernization::canonical_constants::{network::limits, performance::timeouts};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
@@ -19,11 +18,7 @@ use std::time::SystemTime;
 
 use crate::universal_storage::consolidated_types::{StorageItem, StorageRequest, StorageResponse};
 
-// Re-use existing storage types
-// use super::unified_storage_traits::{
-//     UnifiedStorageItem, UnifiedStorageMetadata, UnifiedStorageRequest, UnifiedStorageResponse,
-// };
-// Removed unused imports: UnifiedStorageType, UnifiedStorageCapability
+// Re-use `unified_storage_traits` when those types are needed again.
 /// Storage metadata for zero-cost traits.
 /// **Integration:** Align fields with `nestgate_core::traits::unified_storage::StorageMetadata` when shared.
 #[derive(Debug, Clone, Serialize, Deserialize)]

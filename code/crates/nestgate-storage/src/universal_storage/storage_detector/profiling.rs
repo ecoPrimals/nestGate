@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Removed unused import: NestGateError
 //
@@ -13,16 +13,10 @@
 use super::types::{DetectedStorage, PerformanceProfile};
 use nestgate_types::error::Result;
 use nestgate_types::unified_enums::storage_types::UnifiedStorageType;
-use std::time::{Duration, Instant};
-use tokio::time::sleep;
 
-/// Performance profiler for storage systems
-pub struct PerformanceProfiler {
-    /// Number of benchmark iterations
-    iterations: u32,
-    /// Size of test data for benchmarks (bytes)
-    test_data_size: usize,
-}
+/// Performance profiler for storage systems (type-based estimates; no simulated I/O delays).
+pub struct PerformanceProfiler;
+
 impl Default for PerformanceProfiler {
     /// Returns the default instance
     fn default() -> Self {
@@ -34,22 +28,12 @@ impl PerformanceProfiler {
     /// Create new performance profiler with default settings
     #[must_use]
     pub const fn new() -> Self {
-        Self {
-            iterations: 100,
-            test_data_size: 4096, // 4KB test blocks
-        }
-    }
-
-    /// Create profiler with custom settings
-    #[must_use]
-    pub const fn with_settings(iterations: u32, test_data_size: usize) -> Self {
-        Self {
-            iterations,
-            test_data_size,
-        }
+        Self
     }
 
     /// Profile performance characteristics of a storage system
+    ///
+    /// Uses the same type-based estimates as [`Self::quick_assessment`] (no simulated I/O delays).
     ///
     /// # Errors
     ///
@@ -63,104 +47,8 @@ impl PerformanceProfiler {
     /// # Errors
     ///
     /// This function will return an error if the operation fails.
-    pub async fn profile_performance(
-        &self,
-        storage: &DetectedStorage,
-    ) -> Result<PerformanceProfile> {
-        let profile = PerformanceProfile {
-            read_throughput_mbps: self.benchmark_read_throughput(storage).await?,
-            write_throughput_mbps: self.benchmark_write_throughput(storage).await?,
-            read_latency_us: self.benchmark_read_latency(storage).await?,
-            write_latency_us: self.benchmark_write_latency(storage).await?,
-            iops: self.benchmark_iops(storage).await?,
-            supports_parallel_io: self.test_parallel_io(storage),
-            optimal_block_size: self.find_optimal_block_size(storage).await?,
-        };
-
-        Ok(profile)
-    }
-
-    /// Benchmark sequential read throughput
-    async fn benchmark_read_throughput(&self, storage: &DetectedStorage) -> Result<f64> {
-        // Simulate read throughput benchmark
-        let start = Instant::now();
-
-        // Mock read operations
-        for _ in 0..self.iterations {
-            // Simulate I/O delay based on storage type
-            let delay_us = match storage.storage_type {
-                UnifiedStorageType::Local => 100,    // Fast local storage
-                UnifiedStorageType::Network => 1000, // Network latency
-                UnifiedStorageType::Cloud => 2000,   // Cloud latency
-                _ => 500,
-            };
-
-            sleep(Duration::from_micros(delay_us)).await;
-        }
-
-        let elapsed = start.elapsed();
-        let total_bytes = (self.iterations as usize) * self.test_data_size;
-        let throughput_mbps = total_bytes as f64 / (1024.0 * 1024.0) / elapsed.as_secs_f64();
-
-        Ok(throughput_mbps)
-    }
-
-    /// Benchmark sequential write throughput
-    async fn benchmark_write_throughput(&self, storage: &DetectedStorage) -> Result<f64> {
-        // Similar to read throughput but typically slower
-        let read_throughput = self.benchmark_read_throughput(storage).await?;
-
-        // Write is typically 70-80% of read performance
-        Ok(read_throughput * 0.75)
-    }
-
-    /// Benchmark random read latency
-    async fn benchmark_read_latency(&self, _storage: &DetectedStorage) -> Result<f64> {
-        let mut total_latency = Duration::new(0, 0);
-
-        for _ in 0..self.iterations {
-            let start = Instant::now();
-
-            // Simulate random read operation
-            sleep(Duration::from_micros(100)).await;
-
-            total_latency += start.elapsed();
-        }
-
-        let avg_latency_us = total_latency.as_micros() as f64 / f64::from(self.iterations.max(1));
-        Ok(avg_latency_us)
-    }
-
-    /// Benchmark random write latency
-    async fn benchmark_write_latency(&self, storage: &DetectedStorage) -> Result<f64> {
-        // Write latency is typically higher than read latency
-        let read_latency = self.benchmark_read_latency(storage).await?;
-        Ok(read_latency * 1.5)
-    }
-
-    /// Benchmark Input/Output Operations Per Second
-    async fn benchmark_iops(&self, storage: &DetectedStorage) -> Result<u32> {
-        let start = Instant::now();
-        let operations = 1000u32;
-
-        // Simulate I/O operations
-        for _ in 0..operations {
-            // Simulate operation based on storage type
-            let delay_us = match storage.storage_type {
-                UnifiedStorageType::Local => 50,    // Fast local IOPS
-                UnifiedStorageType::Network => 200, // Network overhead
-                UnifiedStorageType::Cloud => 500,   // Cloud latency
-                _ => 100,
-            };
-
-            sleep(Duration::from_micros(delay_us)).await;
-        }
-
-        let elapsed = start.elapsed();
-        #[allow(clippy::cast_possible_truncation)] // Mock IOPS fits in u32 for simulation
-        let iops = (f64::from(operations) / elapsed.as_secs_f64()) as u32;
-
-        Ok(iops)
+    pub fn profile_performance(&self, storage: &DetectedStorage) -> Result<PerformanceProfile> {
+        self.quick_assessment(storage)
     }
 
     /// Test if storage supports parallel I/O operations
@@ -168,27 +56,6 @@ impl PerformanceProfiler {
         // Most modern storage systems support parallel I/O
         // In a real implementation, this would test concurrent operations
         true
-    }
-
-    /// Find optimal block size for this storage system
-    async fn find_optimal_block_size(&self, storage: &DetectedStorage) -> Result<u32> {
-        // Test different block sizes and find the best performing one
-        let test_sizes: [usize; 5] = [1024, 4096, 8192, 16384, 65536]; // 1KB to 64KB
-        let mut best_throughput = 0.0f64;
-        let mut optimal_size = 4096u32;
-
-        for &size in &test_sizes {
-            // Create a temporary profiler with this block size
-            let profiler = Self::with_settings(10, size);
-            let throughput = profiler.benchmark_read_throughput(storage).await?;
-
-            if throughput > best_throughput {
-                best_throughput = throughput;
-                optimal_size = u32::try_from(size).unwrap_or(4096);
-            }
-        }
-
-        Ok(optimal_size)
     }
 
     /// Quick performance assessment (faster than full profiling)
@@ -236,7 +103,7 @@ impl PerformanceProfiler {
             }
         }
 
-        profile.supports_parallel_io = true;
+        profile.supports_parallel_io = self.test_parallel_io(storage);
         profile.optimal_block_size = 4096;
 
         Ok(profile)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Service Discovery Configuration
 //!
@@ -150,10 +150,6 @@ mod tests {
     use super::*;
     use temp_env::with_vars;
 
-    // NOTE: Some tests manipulate environment variables and may interfere
-    // with each other when run in parallel. Run with `--test-threads=1` for
-    // deterministic results, or use `cargo test -- --ignored` for env-dependent tests.
-
     #[test]
     fn test_default_discovery_config_values() {
         // Test default values without relying on env var state
@@ -178,7 +174,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_discovery_config_from_env_host_and_port() {
         with_vars(
             vec![
@@ -227,7 +222,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_endpoints_from_env() {
         with_vars(
             vec![(

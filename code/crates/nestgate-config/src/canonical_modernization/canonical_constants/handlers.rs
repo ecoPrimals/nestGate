@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
     /// Default handler timeout in seconds (30 seconds)
     pub const DEFAULT_HANDLER_TIMEOUT_SECS: u64 = 30;

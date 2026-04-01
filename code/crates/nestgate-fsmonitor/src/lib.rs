@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
 
@@ -132,18 +132,6 @@ impl FsMonitor {
         Ok(())
     }
 }
-
-// ==================== MIGRATION COMPLETE ====================
-//
-// All deprecated FSMonitor configuration structures have been removed.
-// Use the canonical configuration system instead:
-//
-// ```rust
-// use nestgate_core::config::canonical_primary::{NestGateCanonicalConfig, FsMonitorConfig};
-//
-// let config = NestGateCanonicalConfig::default();
-// let fsmonitor_config = config.services.fsmonitor;
-// ```
 
 // ==================== CONVENIENCE FUNCTIONS ====================
 

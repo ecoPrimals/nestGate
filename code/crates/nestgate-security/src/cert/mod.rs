@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Cert module
 
@@ -9,8 +9,6 @@ use serde::{Deserialize, Serialize};
 //
 // ## Example
 // ```rust
-// use crate::cert::CertificateConfig;
-// let config = CertificateConfig::default();
 // ```
 // Certificate configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

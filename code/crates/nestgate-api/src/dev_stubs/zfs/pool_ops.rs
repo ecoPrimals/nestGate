@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **ZFS Pool Operations (Development Stubs)**
 //!
@@ -8,7 +8,7 @@
 //! **Extracted**: November 19, 2025 - From `dev_stubs/zfs.rs`\
 //! **Lines**: ~350 (from original 1,015-line file)
 
-#![cfg(feature = "dev-stubs")]
+#![cfg(any(test, feature = "dev-stubs"))]
 
 use super::config::ProductionZfsManager;
 use super::types::{ZeroCostPoolInfo, ZfsError};

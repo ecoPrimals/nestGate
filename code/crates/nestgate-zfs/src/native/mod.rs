@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Native ZFS Backend Implementation
 //!
@@ -70,7 +70,6 @@ pub use crate::types::{
     SnapshotInfo, ZfsCommand, ZfsError,
 };
 
-// use crate::canonical_zfs_config::CanonicalZfsConfig; // Module not yet implemented
 use crate::config::ZfsConfig as CanonicalZfsConfig; // Using ZfsConfig as canonical
 use nestgate_core::{NestGateError, Result};
 

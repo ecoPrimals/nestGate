@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // Handles scheduling and execution of snapshot policies including
@@ -21,7 +21,6 @@ use nestgate_core::{NestGateError, Result as CoreResult};
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
 use super::types::{SnapshotInfo, SnapshotOperation, SnapshotOperationStatus};
-// use crate::config::canonical_primary::NestGateCanonicalConfigSource; // Module not yet implemented
 use std::time::Duration;
 use tracing::debug;
 use tracing::error;

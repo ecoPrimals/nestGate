@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -118,17 +118,6 @@ pub enum NasError {
     #[error("Permission error: {0}")]
     Permission(String),
 }
-// ==================== MIGRATION COMPLETE ====================
-//
-// All deprecated NAS configuration structures have been removed.
-// Use the canonical configuration system instead:
-//
-// ```rust
-// use nestgate_core::config::canonical_primary::{NestGateCanonicalConfig, NasConfig};
-//
-// let config = NestGateCanonicalConfig::default();
-// let nas_config = config.services.nas;
-// ```
 
 // ==================== CONVENIENCE FUNCTIONS ====================
 

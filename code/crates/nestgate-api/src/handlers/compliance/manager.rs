@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // Compliance manager implementation
@@ -175,7 +175,7 @@ impl ComplianceManager {
             .sum::<f32>();
 
         let score = (violation_weight / total_controls).mul_add(-100.0, 100.0);
-        score.max(0.0).min(100.0)
+        score.clamp(0.0, 100.0)
     }
 }
 

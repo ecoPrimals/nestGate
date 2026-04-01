@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Network hosts, ports, and bind addresses (environment-driven).
+//!
+//! # Configuration hierarchy
+//!
+//! Resolution order for effective network settings:
+//!
+//! 1. **Environment variables** (`NESTGATE_API_PORT`, `NESTGATE_BIND_ADDRESS`, etc.) — always win when set.
+//! 2. **Capability config** — next (runtime discovery and advertised endpoints).
+//! 3. **Numeric / string defaults in this module** — last resort for local development only; production should set env or capability config.
+//!
+//! Primal code should not assume fixed ports on other nodes; peers are discovered at runtime.
 
 use std::sync::{Arc, OnceLock};
 
@@ -37,7 +47,9 @@ pub struct NetworkConstants {
 }
 
 impl Default for NetworkConstants {
-    /// Returns the default instance
+    /// Returns the default instance.
+    ///
+    /// See the module-level documentation for the env → capability → default hierarchy.
     fn default() -> Self {
         Self {
             // Hosts (default to localhost for security)
@@ -46,7 +58,7 @@ impl Default for NetworkConstants {
             health_host: env_or("NESTGATE_HEALTH_HOST", "127.0.0.1"),
             admin_host: env_or("NESTGATE_ADMIN_HOST", "127.0.0.1"),
 
-            // Ports
+            // Ports (defaults: development last resort; see module docs)
             api_port: env_or_parse("NESTGATE_API_PORT", 8080),
             http_port: env_or_parse("NESTGATE_HTTP_PORT", 8080),
             https_port: env_or_parse("NESTGATE_HTTPS_PORT", 8443),
@@ -57,8 +69,8 @@ impl Default for NetworkConstants {
             health_port: env_or_parse("NESTGATE_HEALTH_PORT", 8081),
             admin_port: env_or_parse("NESTGATE_ADMIN_PORT", 9000),
 
-            // Addresses
-            bind_address: env_or("NESTGATE_BIND_ADDRESS", "0.0.0.0"),
+            // Addresses (bind to loopback by default; expose publicly via env/config)
+            bind_address: env_or("NESTGATE_BIND_ADDRESS", "127.0.0.1"),
             localhost_ipv4: "127.0.0.1".to_string(),
             localhost_ipv6: "::1".to_string(),
             bind_all_ipv4: "0.0.0.0".to_string(),
@@ -147,7 +159,7 @@ impl NetworkConstants {
 
     // Address getters
 
-    /// Returns the bind address for server sockets (read from `NESTGATE_BIND_ADDRESS` or default "0.0.0.0")
+    /// Returns the bind address for server sockets (read from `NESTGATE_BIND_ADDRESS` or default `127.0.0.1`)
     #[must_use]
     pub fn bind_address(&self) -> &str {
         &self.bind_address

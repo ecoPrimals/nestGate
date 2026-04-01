@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Additional comprehensive tests for performance monitoring
 //! Created: November 22, 2025 - P1 Test Coverage Expansion

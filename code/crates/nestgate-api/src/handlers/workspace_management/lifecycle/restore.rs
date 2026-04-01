@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
 use serde_json::{Value, json};
 use tokio::process::Command;
 use tracing::{error, info, warn};
+
+use nestgate_core::error::utilities::safe_env_var_or_default;
 
 use super::types::RestoreConfig;
 
@@ -27,7 +29,6 @@ pub async fn restore_workspace(
 
     let target_workspace = config.target_workspace_id.as_ref().unwrap_or(&workspace_id);
     let dataset_name = format!("nestpool/workspaces/{target_workspace}");
-    use nestgate_core::error::utilities::safe_env_var_or_default;
     let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
     let backup_file = format!(
         "{}/workspace_{}_{}.zfs",

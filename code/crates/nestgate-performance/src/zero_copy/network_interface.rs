@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **Zero-Copy Network Interface**
 //!
@@ -68,7 +68,7 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
 
         // Create zero-copy connection with configurable local endpoint
         let local_addr_str =
-            std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "0.0.0.0:0".to_string());
+            std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "127.0.0.1:0".to_string());
         let local_addr: SocketAddr = local_addr_str.parse().map_err(|e| {
             NestGateError::network_error(format!(
                 "Failed to parse local endpoint '{}': {}",

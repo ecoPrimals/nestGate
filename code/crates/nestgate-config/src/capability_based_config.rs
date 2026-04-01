@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -246,7 +246,7 @@ impl CapabilityConfig {
         let mut endpoints = Vec::new();
 
         // Primary API endpoint
-        let api_port = Self::resolve_port_from_env("NESTGATE_API_PORT", 3000)?;
+        let api_port = Self::resolve_port_from_env("NESTGATE_API_PORT", 0)?;
         let api_addr = Self::resolve_address_from_env("NESTGATE_API_HOST", "0.0.0.0")?;
 
         endpoints.push(ServiceEndpoint {

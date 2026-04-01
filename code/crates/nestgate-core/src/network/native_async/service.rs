@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Service module
 
+use crate::error::CanonicalResult as Result;
 use std::collections::HashMap;
 use std::future::Future;
-// use crate::error::idiomatic_evolution // DEPRECATED::{NetworkError, NetworkResult};
-use crate::error::CanonicalResult as Result;
 // CANONICAL MODERNIZATION: Migrated from deprecated ServiceRegistration
 use crate::canonical_modernization::unified_enums::{UnifiedHealthStatus, UnifiedServiceState};
 use crate::service_discovery::types::UniversalServiceRegistration as ServiceRegistration;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
-// CLEANED: Removed unused Duration import as part of canonical modernization
-// Removed unused Uuid import
 
 /// Native async network service implementation
 /// Native async network service implementation

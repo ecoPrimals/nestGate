@@ -1,109 +1,139 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Tests for `JsonRpcUnixServer` and `handle_request` dispatch.
-//!
-//! Several storage-related tests are `#[ignore]`: they need full
-//! `nestgate-core` `StorageManagerService` wiring and/or a matching dev storage backend.
-//! Run with `cargo test -p nestgate-rpc --lib -- --ignored` when that environment is available.
 
 use super::*;
 
 use crate::rpc::isomorphic_ipc::RpcHandler;
+use nestgate_config::config::storage_paths::get_storage_base_path;
+
+/// Cleanup a test family's dataset directory after a test.
+async fn cleanup_family(family_id: &str) {
+    let _ =
+        tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(family_id)).await;
+}
 
 #[tokio::test]
-#[ignore = "storage handlers require nestgate-core StorageManagerService wiring"]
 async fn test_storage_store_retrieve() {
-    let state = StorageState::new().expect("Failed to create test storage state");
+    let mut state = StorageState::new().expect("storage state");
+    let family_id = format!("test-sr-{}", uuid::Uuid::new_v4());
+    state.family_id = Some(family_id.clone());
 
     let store_params = json!({
         "key": "test_key",
         "data": {"value": "test_data"},
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    let result = storage_handlers::storage_store(Some(&store_params), &state).unwrap();
-    assert_eq!(result["success"], true);
+    let result = storage_handlers::storage_store(Some(&store_params), &state)
+        .await
+        .unwrap();
+    assert_eq!(result["status"], "stored");
 
     let retrieve_params = json!({
         "key": "test_key",
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    let result = storage_handlers::storage_retrieve(Some(&retrieve_params), &state).unwrap();
+    let result = storage_handlers::storage_retrieve(Some(&retrieve_params), &state)
+        .await
+        .unwrap();
     assert_eq!(result["data"]["value"], "test_data");
+
+    cleanup_family(&family_id).await;
 }
 
 #[tokio::test]
-#[ignore = "storage handlers require nestgate-core StorageManagerService wiring"]
 async fn test_storage_delete() {
-    let state = StorageState::new().expect("Failed to create test storage state");
+    let mut state = StorageState::new().expect("storage state");
+    let family_id = format!("test-del-{}", uuid::Uuid::new_v4());
+    state.family_id = Some(family_id.clone());
 
     let store_params = json!({
         "key": "delete_key",
         "data": {"value": "delete_me"},
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    storage_handlers::storage_store(Some(&store_params), &state).unwrap();
+    storage_handlers::storage_store(Some(&store_params), &state)
+        .await
+        .unwrap();
 
     let delete_params = json!({
         "key": "delete_key",
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    let result = storage_handlers::storage_delete(Some(&delete_params), &state).unwrap();
-    assert_eq!(result["success"], true);
+    let result = storage_handlers::storage_delete(Some(&delete_params), &state)
+        .await
+        .unwrap();
+    assert_eq!(result["status"], "deleted");
 
     let retrieve_params = json!({
         "key": "delete_key",
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    let result = storage_handlers::storage_retrieve(Some(&retrieve_params), &state);
-    assert!(result.is_err());
+    let result = storage_handlers::storage_retrieve(Some(&retrieve_params), &state)
+        .await
+        .unwrap();
+    assert!(result["value"].is_null());
+
+    cleanup_family(&family_id).await;
 }
 
 #[tokio::test]
-#[ignore = "list keys count does not match development storage backend (assertions fail)"]
 async fn test_storage_list() {
-    let state = StorageState::new().expect("Failed to create test storage state");
+    let mut state = StorageState::new().expect("storage state");
+    let family_id = format!("test-list-{}", uuid::Uuid::new_v4());
+    state.family_id = Some(family_id.clone());
 
     for i in 0..5 {
         let params = json!({
             "key": format!("key_{}", i),
             "data": {"index": i},
-            "family_id": "test_family"
+            "family_id": &family_id
         });
-        storage_handlers::storage_store(Some(&params), &state).unwrap();
+        storage_handlers::storage_store(Some(&params), &state)
+            .await
+            .unwrap();
     }
 
-    let list_params = json!({"family_id": "test_family"});
+    let list_params = json!({"family_id": &family_id});
     let result = storage_handlers::storage_list(Some(&list_params), &state)
         .await
         .unwrap();
     assert_eq!(result["keys"].as_array().unwrap().len(), 5);
+
+    cleanup_family(&family_id).await;
 }
 
 #[tokio::test]
-#[ignore = "key_count does not match development storage backend (assertions fail)"]
 async fn test_storage_stats() {
-    let state = StorageState::new().expect("Failed to create test storage state");
+    let mut state = StorageState::new().expect("storage state");
+    let family_id = format!("test-stats-{}", uuid::Uuid::new_v4());
+    state.family_id = Some(family_id.clone());
 
     let store_params = json!({
         "key": "stats_key",
         "data": {"value": "stats"},
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    storage_handlers::storage_store(Some(&store_params), &state).unwrap();
+    storage_handlers::storage_store(Some(&store_params), &state)
+        .await
+        .unwrap();
 
-    let stats_params = json!({"family_id": "test_family"});
+    let stats_params = json!({"family_id": &family_id});
     let result = storage_handlers::storage_stats(Some(&stats_params), &state)
         .await
         .unwrap();
     assert_eq!(result["key_count"], 1);
     assert_eq!(result["blob_count"], 0);
+
+    cleanup_family(&family_id).await;
 }
 
 #[tokio::test]
-#[ignore = "storage handlers require nestgate-core StorageManagerService wiring"]
 async fn test_blob_storage() {
-    let state = StorageState::new().expect("Failed to create test storage state");
+    let mut state = StorageState::new().expect("storage state");
+    let family_id = format!("test-blob-{}", uuid::Uuid::new_v4());
+    state.family_id = Some(family_id.clone());
 
     let test_data = b"Hello, World!";
     use base64::Engine;
@@ -112,21 +142,27 @@ async fn test_blob_storage() {
     let store_params = json!({
         "key": "test_blob",
         "blob": blob_base64,
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    let result = storage_handlers::storage_store_blob(Some(&store_params), &state).unwrap();
-    assert_eq!(result["success"], true);
+    let result = storage_handlers::storage_store_blob(Some(&store_params), &state)
+        .await
+        .unwrap();
+    assert_eq!(result["status"], "stored");
     assert_eq!(result["size"], test_data.len());
 
     let retrieve_params = json!({
         "key": "test_blob",
-        "family_id": "test_family"
+        "family_id": &family_id
     });
-    let result = storage_handlers::storage_retrieve_blob(Some(&retrieve_params), &state).unwrap();
+    let result = storage_handlers::storage_retrieve_blob(Some(&retrieve_params), &state)
+        .await
+        .unwrap();
     let retrieved_blob = base64::engine::general_purpose::STANDARD
         .decode(result["blob"].as_str().unwrap())
         .unwrap();
     assert_eq!(retrieved_blob, test_data);
+
+    cleanup_family(&family_id).await;
 }
 
 #[tokio::test]
@@ -457,45 +493,52 @@ async fn handle_request_discover_capabilities_dot_alias_matches_discover_capabil
 }
 
 #[tokio::test]
-async fn handle_request_storage_get_put_aliases_match_retrieve_store_errors() {
-    let state = StorageState::new().expect("storage state");
+async fn handle_request_storage_get_put_aliases_match_retrieve_store() {
+    let mut state = StorageState::new().expect("storage state");
+    let family_id = format!("test-aliases-{}", uuid::Uuid::new_v4());
+    state.family_id = Some(family_id.clone());
+
     let get_alias = JsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "storage.get".into(),
-        params: Some(json!({"key": "k", "family_id": "f"})),
+        params: Some(json!({"key": "k", "family_id": &family_id})),
         id: Some(json!(1)),
     };
     let retrieve = JsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "storage.retrieve".into(),
-        params: Some(json!({"key": "k", "family_id": "f"})),
+        params: Some(json!({"key": "k", "family_id": &family_id})),
         id: Some(json!(2)),
     };
     let rg = handle_request(get_alias, &state).await;
     let rr = handle_request(retrieve, &state).await;
+    // Both should succeed with null value (key doesn't exist yet)
+    assert!(rg.error.is_none());
+    assert!(rr.error.is_none());
     assert_eq!(
-        rg.error.as_ref().map(|e| e.code),
-        rr.error.as_ref().map(|e| e.code)
+        rg.result.as_ref().unwrap()["value"],
+        rr.result.as_ref().unwrap()["value"]
     );
 
     let put_alias = JsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "storage.put".into(),
-        params: Some(json!({"key": "k", "data": {}, "family_id": "f"})),
+        params: Some(json!({"key": "k", "data": {}, "family_id": &family_id})),
         id: Some(json!(3)),
     };
     let store = JsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "storage.store".into(),
-        params: Some(json!({"key": "k", "data": {}, "family_id": "f"})),
+        params: Some(json!({"key": "k2", "data": {}, "family_id": &family_id})),
         id: Some(json!(4)),
     };
     let rp = handle_request(put_alias, &state).await;
     let rs = handle_request(store, &state).await;
-    assert_eq!(
-        rp.error.as_ref().map(|e| e.code),
-        rs.error.as_ref().map(|e| e.code)
-    );
+    // Both should succeed
+    assert!(rp.error.is_none());
+    assert!(rs.error.is_none());
+
+    cleanup_family(&family_id).await;
 }
 
 #[tokio::test]
@@ -580,33 +623,43 @@ async fn handle_request_storage_stats_dispatch() {
 }
 
 #[tokio::test]
-async fn handle_request_storage_store_blob_returns_internal_error() {
-    let state = StorageState::new().expect("storage state");
+async fn handle_request_storage_store_blob_succeeds() {
+    let mut state = StorageState::new().expect("storage state");
+    let family_id = format!("test-blob-dispatch-{}", uuid::Uuid::new_v4());
+    state.family_id = Some(family_id.clone());
+
     let req = JsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "storage.store_blob".into(),
         params: Some(json!({
             "key": "k",
             "blob": "YQ==",
-            "family_id": "fam-blob"
+            "family_id": &family_id
         })),
         id: Some(json!(1)),
     };
     let resp = handle_request(req, &state).await;
-    assert_eq!(resp.error.as_ref().map(|e| e.code), Some(-32603));
+    assert!(resp.error.is_none());
+    assert_eq!(
+        resp.result.as_ref().and_then(|v| v.get("status")),
+        Some(&json!("stored"))
+    );
+
+    cleanup_family(&family_id).await;
 }
 
 #[tokio::test]
-async fn handle_request_storage_retrieve_blob_returns_internal_error() {
+async fn handle_request_storage_retrieve_blob_null_for_missing_key() {
     let state = StorageState::new().expect("storage state");
     let req = JsonRpcRequest {
         jsonrpc: "2.0".into(),
         method: "storage.retrieve_blob".into(),
-        params: Some(json!({"key": "k", "family_id": "fam-blob2"})),
+        params: Some(json!({"key": "nonexistent", "family_id": "fam-blob2"})),
         id: Some(json!(2)),
     };
     let resp = handle_request(req, &state).await;
-    assert_eq!(resp.error.as_ref().map(|e| e.code), Some(-32603));
+    assert!(resp.error.is_none());
+    assert!(resp.result.as_ref().unwrap()["blob"].is_null());
 }
 
 #[tokio::test]

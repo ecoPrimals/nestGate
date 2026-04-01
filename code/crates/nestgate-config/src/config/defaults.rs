@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::defaults_config::NetworkDefaultsConfig;
 
@@ -249,6 +249,7 @@ impl TimeoutDefaults {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use temp_env::with_var_unset;
 
     // NetworkPortDefaults tests - verify non-zero defaults (actual values are env-driven)
     #[test]
@@ -322,45 +323,40 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_network_port_defaults_get_api_port_default() {
-        temp_env::with_var_unset("NESTGATE_API_PORT", || {
+        with_var_unset("NESTGATE_API_PORT", || {
             let port = NetworkPortDefaults::get_api_port();
             assert_eq!(port, 3000);
         });
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_network_port_defaults_get_http_port_default() {
-        temp_env::with_var_unset("NESTGATE_HTTP_PORT", || {
+        with_var_unset("NESTGATE_HTTP_PORT", || {
             let port = NetworkPortDefaults::get_http_port();
             assert_eq!(port, 8080);
         });
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_network_port_defaults_get_metrics_port_default() {
-        temp_env::with_var_unset("NESTGATE_METRICS_PORT", || {
+        with_var_unset("NESTGATE_METRICS_PORT", || {
             let port = NetworkPortDefaults::get_metrics_port();
             assert_eq!(port, 9090);
         });
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_network_port_defaults_get_health_port_default() {
-        temp_env::with_var_unset("NESTGATE_HEALTH_PORT", || {
+        with_var_unset("NESTGATE_HEALTH_PORT", || {
             let port = NetworkPortDefaults::get_health_port();
             assert_eq!(port, 8081);
         });
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_network_port_defaults_get_orchestrator_port_default() {
-        temp_env::with_var_unset("NESTGATE_ORCHESTRATOR_PORT", || {
+        with_var_unset("NESTGATE_ORCHESTRATOR_PORT", || {
             let port = NetworkPortDefaults::get_orchestrator_port();
             assert_eq!(port, 8090);
         });
@@ -406,54 +402,33 @@ mod tests {
 
     #[test]
     fn test_network_address_defaults_get_bind_address_default() {
-        let orig = std::env::var("NESTGATE_BIND_ADDRESS").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_BIND_ADDRESS");
-        let addr = NetworkAddressDefaults::get_bind_address();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_BIND_ADDRESS", v),
-            None => {}
-        }
-        assert_eq!(addr, "127.0.0.1");
+        with_var_unset("NESTGATE_BIND_ADDRESS", || {
+            assert_eq!(NetworkAddressDefaults::get_bind_address(), "127.0.0.1");
+        });
     }
 
     #[test]
     fn test_network_address_defaults_get_development_bind_address_default() {
-        let orig = std::env::var("NESTGATE_DEV_BIND_ADDRESS").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_DEV_BIND_ADDRESS");
-        let addr = NetworkAddressDefaults::get_development_bind_address();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_DEV_BIND_ADDRESS", v),
-            None => {}
-        }
-        assert_eq!(addr, "0.0.0.0");
+        with_var_unset("NESTGATE_DEV_BIND_ADDRESS", || {
+            assert_eq!(
+                NetworkAddressDefaults::get_development_bind_address(),
+                "0.0.0.0"
+            );
+        });
     }
 
     #[test]
     fn test_network_address_defaults_get_hostname_default() {
-        let orig = std::env::var("NESTGATE_HOSTNAME").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HOSTNAME");
-        let host = NetworkAddressDefaults::get_hostname();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_HOSTNAME", v),
-            None => {}
-        }
-        assert_eq!(host, "localhost");
+        with_var_unset("NESTGATE_HOSTNAME", || {
+            assert_eq!(NetworkAddressDefaults::get_hostname(), "localhost");
+        });
     }
 
     #[test]
     fn test_network_address_defaults_get_external_hostname_default() {
-        let orig = std::env::var("NESTGATE_EXTERNAL_HOSTNAME").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_EXTERNAL_HOSTNAME");
-        let host = NetworkAddressDefaults::get_external_hostname();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_EXTERNAL_HOSTNAME", v),
-            None => {}
-        }
-        assert_eq!(host, "localhost");
+        with_var_unset("NESTGATE_EXTERNAL_HOSTNAME", || {
+            assert_eq!(NetworkAddressDefaults::get_external_hostname(), "localhost");
+        });
     }
 
     #[test]
@@ -487,15 +462,9 @@ mod tests {
 
     #[test]
     fn test_timeout_defaults_get_connection_timeout_ms_default() {
-        let orig = std::env::var("NESTGATE_CONNECTION_TIMEOUT_MS").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_CONNECTION_TIMEOUT_MS");
-        let timeout = TimeoutDefaults::get_connection_timeout_ms();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_CONNECTION_TIMEOUT_MS", v),
-            None => {}
-        }
-        assert_eq!(timeout, 3000);
+        with_var_unset("NESTGATE_CONNECTION_TIMEOUT_MS", || {
+            assert_eq!(TimeoutDefaults::get_connection_timeout_ms(), 3000);
+        });
     }
 
     #[test]
@@ -518,14 +487,4 @@ mod tests {
         assert!(timeout > 1, "Health check timeout should be > 1 second");
         assert!(timeout < 30, "Health check timeout should be < 30 seconds");
     }
-
-    // ==================== CONFIG STRUCTURE MIGRATION COMPLETE ====================
-    // Old tests removed - replaced by comprehensive tests in canonical_primary module
-    // See: code/crates/nestgate-core/src/config/canonical_primary/mod.rs
-    //
-    // The canonical config structure now provides:
-    // - Environment-driven configuration (from_env)
-    // - Validation and type safety
-    // - Domain-specific organization (network, storage, services)
-    // - Comprehensive test coverage in the canonical_primary module
 }

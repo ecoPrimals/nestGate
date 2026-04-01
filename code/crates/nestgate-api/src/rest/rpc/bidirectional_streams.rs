@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
@@ -175,17 +175,21 @@ impl BidirectionalStreamManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn broadcast_to_all_streams(&self, event: RpcStreamEvent) -> Result<(), RpcError> {
-        let streams = self.active_streams.lock().await;
+        let senders: Vec<(Uuid, mpsc::Sender<RpcStreamEvent>)> = {
+            let streams = self.active_streams.lock().await;
+            streams
+                .iter()
+                .map(|(id, s)| (*id, s.sender.clone()))
+                .collect()
+        };
+        // Guard dropped — sends proceed without holding the lock
         let mut failed_streams = Vec::new();
-
-        for (stream_id, stream) in streams.iter() {
-            if stream.sender.send(event.clone()).await.is_err() {
+        for (stream_id, sender) in &senders {
+            if sender.send(event.clone()).await.is_err() {
                 failed_streams.push(*stream_id);
             }
         }
 
-        // Clean up failed streams
-        drop(streams);
         if !failed_streams.is_empty() {
             let mut streams = self.active_streams.lock().await;
             for stream_id in failed_streams {

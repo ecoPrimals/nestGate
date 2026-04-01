@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! `dev-stubs` async ZFS adapter: uses [`nestgate_zfs::command::ZfsOperations`] when ZFS is present,
 //! and returns explicit unavailability when the kernel/userspace stack is missing or disabled.
 
 use std::collections::HashMap;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, DatasetType, HealthCheck, HealthStatus, PoolCapacity, PoolConfig,
@@ -462,7 +462,6 @@ impl NativeAsyncUniversalZfsService for DevelopmentZfsService {
     }
 
     async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        tokio::time::sleep(Duration::from_millis(1)).await;
         Ok(vec![PoolInfo {
             name: "dev-pool".to_string(),
             health: PoolHealth::Online,

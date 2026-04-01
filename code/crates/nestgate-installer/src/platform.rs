@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
 // This module provides cross-platform system detection and validation
@@ -25,6 +25,7 @@ use std::path::{Path, PathBuf};
 mod service_detection;
 pub use service_detection::{ServiceManager, UniversalServiceDetector};
 
+/// Detected OS, CPU architecture, service manager, and binary naming rules.
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
     /// Os
@@ -83,6 +84,7 @@ impl PlatformInfo {
         self.service_manager.name()
     }
 
+    /// Returns `name` with the platform binary extension appended (for example `.exe` on Windows).
     #[must_use]
     pub fn get_binary_name(&self, name: &str) -> String {
         format!("{}{}", name, self.binary_extension)

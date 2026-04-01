@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::{Diagnostic, DiagnosticLevel, SystemMetrics};
 use nestgate_types::unified_enums::UnifiedHealthStatus as HealthStatus;

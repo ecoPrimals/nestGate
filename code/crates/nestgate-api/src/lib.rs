@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Copyright (c) 2025 ecoPrimals Collective
+// Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
 #![allow(
@@ -13,26 +13,14 @@
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::must_use_candidate,
-    clippy::return_self_not_must_use,
-    clippy::unnecessary_wraps,
-    clippy::unused_self,
-    clippy::unused_async,
     clippy::needless_pass_by_value,
     clippy::option_if_let_else,
     clippy::similar_names,
-    clippy::items_after_statements,
     clippy::type_complexity,
     clippy::module_inception,
     clippy::too_long_first_doc_paragraph,
-    clippy::used_underscore_binding,
     clippy::implicit_hasher,
-    clippy::pub_underscore_fields,
-    clippy::wildcard_in_or_patterns,
-    clippy::manual_clamp,
-    clippy::doc_markdown,
-    clippy::uninlined_format_args,
-    clippy::case_sensitive_file_extension_comparisons
+    clippy::pub_underscore_fields
 )]
 #![cfg_attr(
     test,
@@ -54,6 +42,14 @@
         clippy::assertions_on_constants,
         clippy::no_effect_underscore_binding,
         clippy::field_reassign_with_default,
+        // Test / bench code: same style cleanups as lib, deferred to avoid huge test-only diffs
+        clippy::uninlined_format_args,
+        clippy::doc_markdown,
+        clippy::used_underscore_binding,
+        clippy::items_after_statements,
+        clippy::unnecessary_wraps,
+        clippy::unused_async,
+        clippy::manual_clamp,
     )
 )]
 
@@ -122,7 +118,7 @@ pub mod transport;
 /// **Consolidated**: November 10, 2025
 /// - Replaces: `handlers/zfs_stub.rs`
 /// - Replaces: `handlers/hardware_tuning/stub_helpers.rs`
-#[cfg(feature = "dev-stubs")]
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod dev_stubs;
 
 // Re-export commonly used types
