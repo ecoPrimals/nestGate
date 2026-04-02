@@ -167,7 +167,6 @@ async fn test_fault_invalid_socket_path() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn test_fault_conflicting_config() {
     temp_env::async_with_vars(
         [

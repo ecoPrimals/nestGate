@@ -165,30 +165,77 @@ async fn spawn_local_tarpc_server() -> (SocketAddr, tokio::task::JoinHandle<()>)
 }
 
 #[tokio::test]
-async fn discovery_and_metadata_methods_via_router_match_direct_handlers() {
+async fn discovery_methods_return_self_knowledge() {
     let router = test_router();
-    for method in [
-        "discovery.announce",
-        "discovery.query",
-        "discovery.list",
-        "metadata.store",
-        "metadata.retrieve",
-        "metadata.search",
-    ] {
-        let err = router
-            .call_method(method, json!({}))
-            .await
-            .expect_err(method);
-        match err {
-            NestGateError::NotImplemented { .. } => {}
-            other => panic!("{method}: expected NotImplemented, got {other:?}"),
-        }
-    }
+
+    let announce = router
+        .call_method("discovery.announce", json!({}))
+        .await
+        .expect("discovery.announce");
+    assert_eq!(announce["status"], "registered_locally");
+
+    let list = router
+        .call_method("discovery.list", json!({}))
+        .await
+        .expect("discovery.list");
+    assert!(list["services"].as_array().is_some());
+
     let cap = router
         .call_method("discovery.capabilities", json!({}))
         .await
-        .expect("capabilities");
+        .expect("discovery.capabilities");
     assert!(cap.get("capabilities").is_some());
+
+    // query requires a capability param; missing should error
+    router
+        .call_method("discovery.query", json!({}))
+        .await
+        .expect_err("discovery.query missing param");
+    // query with valid param returns Ok
+    let query = router
+        .call_method("discovery.query", json!({"capability": "storage"}))
+        .await
+        .expect("discovery.query");
+    assert!(query["providers"].as_array().is_some());
+}
+
+#[tokio::test]
+async fn metadata_methods_wire_through_backend() {
+    let router = test_router();
+
+    // Store succeeds
+    let stored = router
+        .call_method(
+            "metadata.store",
+            json!({"name": "test-svc", "capabilities": ["storage"]}),
+        )
+        .await
+        .expect("metadata.store");
+    assert_eq!(stored["status"], "stored");
+
+    // Retrieve succeeds after store
+    let retrieved = router
+        .call_method("metadata.retrieve", json!({"name": "test-svc"}))
+        .await
+        .expect("metadata.retrieve");
+    assert_eq!(retrieved["name"], "test-svc");
+
+    // Search by capability
+    let searched = router
+        .call_method("metadata.search", json!({"capability": "storage"}))
+        .await
+        .expect("metadata.search");
+    assert_eq!(searched["count"], 1);
+
+    // Missing name errors
+    router
+        .call_method("metadata.retrieve", json!({}))
+        .await
+        .expect_err("metadata.retrieve missing name");
+    router
+        .call_method("metadata.search", json!({}))
+        .await
+        .expect_err("metadata.search missing capability");
 }
 
 #[tokio::test]

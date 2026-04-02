@@ -50,18 +50,18 @@ fn diagnostic_builders_resolve_and_age() {
     assert!(info.age_seconds() <= 1);
 }
 
-#[test]
-fn diagnostics_manager_empty_is_healthy() {
+#[tokio::test]
+async fn diagnostics_manager_empty_is_healthy() {
     let mgr = DiagnosticsManager::new();
-    assert!(mgr.get_diagnostics().unwrap().is_empty());
+    assert!(mgr.get_diagnostics().await.unwrap().is_empty());
     assert_eq!(
-        mgr.calculate_health_status().unwrap(),
+        mgr.calculate_health_status().await.unwrap(),
         nestgate_types::unified_enums::UnifiedHealthStatus::Healthy
     );
-    assert!(mgr.get_unresolved_diagnostics().unwrap().is_empty());
-    assert!(mgr.get_metrics().unwrap().memory_total > 0);
-    assert!(mgr.update_metrics(SystemMetrics::default()).is_ok());
-    assert!(mgr.clear_resolved().unwrap() == 0);
+    assert!(mgr.get_unresolved_diagnostics().await.unwrap().is_empty());
+    assert!(mgr.get_metrics().await.unwrap().memory_total > 0);
+    assert!(mgr.update_metrics(SystemMetrics::default()).await.is_ok());
+    assert!(mgr.clear_resolved().await.unwrap() == 0);
 }
 
 #[test]
@@ -71,50 +71,54 @@ fn diagnostics_subscribe_channel_exists() {
     assert!(rx.try_recv().is_err());
 }
 
-#[test]
-fn diagnostics_clear_resolved_removes_resolved_entries() {
+#[tokio::test]
+async fn diagnostics_clear_resolved_removes_resolved_entries() {
     let mgr = DiagnosticsManager::new();
     let mut d = Diagnostic::info(ComponentType::System, "note".into());
     d.resolve();
-    mgr.add_diagnostic(d).unwrap();
-    assert_eq!(mgr.clear_resolved().unwrap(), 1);
-    assert!(mgr.get_diagnostics().unwrap().is_empty());
+    mgr.add_diagnostic(d).await.unwrap();
+    assert_eq!(mgr.clear_resolved().await.unwrap(), 1);
+    assert!(mgr.get_diagnostics().await.unwrap().is_empty());
 }
 
-#[test]
-fn diagnostics_unresolved_info_only_stays_healthy() {
+#[tokio::test]
+async fn diagnostics_unresolved_info_only_stays_healthy() {
     let mgr = DiagnosticsManager::new();
     mgr.add_diagnostic(Diagnostic::info(ComponentType::Application, "i".into()))
+        .await
         .unwrap();
     assert_eq!(
-        mgr.calculate_health_status().unwrap(),
+        mgr.calculate_health_status().await.unwrap(),
         nestgate_types::unified_enums::UnifiedHealthStatus::Healthy
     );
 }
 
-#[test]
-fn diagnostics_manager_unresolved_severity_order() {
+#[tokio::test]
+async fn diagnostics_manager_unresolved_severity_order() {
     let mgr = DiagnosticsManager::new();
     mgr.add_diagnostic(Diagnostic::warning(ComponentType::Storage, "w".into()))
+        .await
         .unwrap();
     assert_eq!(
-        mgr.calculate_health_status().unwrap(),
+        mgr.calculate_health_status().await.unwrap(),
         nestgate_types::unified_enums::UnifiedHealthStatus::Warning
     );
 
     let mgr = DiagnosticsManager::new();
     mgr.add_diagnostic(Diagnostic::error(ComponentType::Cache, "e".into()))
+        .await
         .unwrap();
     assert_eq!(
-        mgr.calculate_health_status().unwrap(),
+        mgr.calculate_health_status().await.unwrap(),
         nestgate_types::unified_enums::UnifiedHealthStatus::Error
     );
 
     let mgr = DiagnosticsManager::new();
     mgr.add_diagnostic(Diagnostic::critical(ComponentType::Memory, "c".into()))
+        .await
         .unwrap();
     assert_eq!(
-        mgr.calculate_health_status().unwrap(),
+        mgr.calculate_health_status().await.unwrap(),
         nestgate_types::unified_enums::UnifiedHealthStatus::Critical
     );
 }

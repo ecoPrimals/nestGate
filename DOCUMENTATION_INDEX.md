@@ -1,9 +1,9 @@
 # NestGate Documentation Index
 
-**Last Updated**: March 31, 2026  
+**Last Updated**: April 2, 2026  
 **Version**: 4.7.0-dev
 
-Paths linked below exist in this repository as of March 31, 2026.
+Paths linked below exist in this repository as of April 2, 2026.
 
 ---
 

@@ -9,6 +9,9 @@ use tracing::{debug, info};
 use crate::rest::models::{Alert, AlertCondition, AlertSeverity, AlertStatus, ComparisonOperator};
 use crate::rest::{ApiState, DataError, DataResponse};
 
+const CPU_ALERT_THRESHOLD_PERCENT: f64 = 80.0;
+const MEMORY_ALERT_THRESHOLD_PERCENT: f64 = 85.0;
+
 fn push_dataset_count_alert(alerts: &mut Vec<Alert>, total_datasets: usize) {
     alerts.push(Alert {
         id: "alert_001".to_string(),
@@ -51,7 +54,7 @@ fn pushcpu_usage_alert(alerts: &mut Vec<Alert>, current_cpu: f64) {
         conditions: vec![AlertCondition {
             metric_name: "cpu_usage_percent".to_string(),
             operator: ComparisonOperator::GreaterThan,
-            threshold: 80.0,
+            threshold: CPU_ALERT_THRESHOLD_PERCENT,
             duration_seconds: 300,
             currentvalue: current_cpu,
         }],
@@ -80,7 +83,7 @@ fn push_memory_usage_alert(alerts: &mut Vec<Alert>, current_memory: f64) {
         conditions: vec![AlertCondition {
             metric_name: "memory_usage_percent".to_string(),
             operator: ComparisonOperator::GreaterThan,
-            threshold: 85.0,
+            threshold: MEMORY_ALERT_THRESHOLD_PERCENT,
             duration_seconds: 300,
             currentvalue: current_memory,
         }],
@@ -188,36 +191,54 @@ pub async fn get_alerts(
     }
 
     // ecoBin v3.0: `/proc/stat` on Linux; `sysinfo` fallback when `/proc` parse fails.
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "sysinfo"))]
     let current_cpu = nestgate_core::linux_proc::globalcpu_usage_percent_from_stat()
         .unwrap_or_else(|| {
             let mut sys = sysinfo::System::new_all();
             sys.refresh_cpu();
             f64::from(sys.global_cpu_info().cpu_usage())
         });
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(all(target_os = "linux", not(feature = "sysinfo")))]
+    let current_cpu = nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);
+    #[cfg(all(not(target_os = "linux"), feature = "sysinfo"))]
     let current_cpu = {
         let mut sys = sysinfo::System::new_all();
         sys.refresh_cpu();
         f64::from(sys.global_cpu_info().cpu_usage())
     };
-    if current_cpu > 80.0 {
+    #[cfg(all(not(target_os = "linux"), not(feature = "sysinfo")))]
+    let current_cpu = 0.0;
+    if current_cpu > CPU_ALERT_THRESHOLD_PERCENT {
         pushcpu_usage_alert(&mut alerts, current_cpu);
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", feature = "sysinfo"))]
     let current_memory = nestgate_core::linux_proc::memory_usage_percent().unwrap_or_else(|| {
         let mut sys = sysinfo::System::new_all();
         sys.refresh_memory();
-        (sys.used_memory() as f64 / sys.total_memory() as f64) * 100.0
+        let total = sys.total_memory();
+        if total == 0 {
+            0.0
+        } else {
+            (sys.used_memory() as f64 / total as f64) * 100.0
+        }
     });
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(all(target_os = "linux", not(feature = "sysinfo")))]
+    let current_memory = nestgate_core::linux_proc::memory_usage_percent().unwrap_or(0.0);
+    #[cfg(all(not(target_os = "linux"), feature = "sysinfo"))]
     let current_memory = {
         let mut sys = sysinfo::System::new_all();
         sys.refresh_memory();
-        (sys.used_memory() as f64 / sys.total_memory() as f64) * 100.0
+        let total = sys.total_memory();
+        if total == 0 {
+            0.0
+        } else {
+            (sys.used_memory() as f64 / total as f64) * 100.0
+        }
     };
-    if current_memory > 85.0 {
+    #[cfg(all(not(target_os = "linux"), not(feature = "sysinfo")))]
+    let current_memory = 0.0;
+    if current_memory > MEMORY_ALERT_THRESHOLD_PERCENT {
         push_memory_usage_alert(&mut alerts, current_memory);
     }
 

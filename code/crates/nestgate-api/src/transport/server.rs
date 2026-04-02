@@ -319,7 +319,16 @@ mod tests {
         let server = TransportServer::new(config, TestHandler).unwrap();
         let s = server.clone();
         let handle = tokio::spawn(async move { s.start().await });
-        tokio::time::sleep(std::time::Duration::from_millis(80)).await;
+
+        // Wait for the socket to appear (listener bound) instead of sleeping
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(3);
+        while !sock.exists() {
+            if tokio::time::Instant::now() >= deadline {
+                panic!("server socket not created within deadline");
+            }
+            tokio::task::yield_now().await;
+        }
+
         server.shutdown();
         let out = tokio::time::timeout(std::time::Duration::from_secs(3), handle)
             .await

@@ -15,6 +15,8 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 
+const DEFAULT_METRICS_HISTORY_SIZE: usize = 100;
+
 /// Metric value types for custom metrics
 #[derive(Debug, Clone)]
 pub enum MetricValue {
@@ -73,6 +75,9 @@ impl Default for PerformanceMetrics {
 }
 
 #[cfg(all(not(feature = "mock-metrics"), feature = "sysinfo"))]
+const ESTIMATED_BASELINE_DISK_IOPS: f64 = 100.0;
+
+#[cfg(all(not(feature = "mock-metrics"), feature = "sysinfo"))]
 fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> PerformanceMetrics {
     use sysinfo::{Disks, Networks, System};
 
@@ -90,7 +95,7 @@ fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> PerformanceM
         .sum();
 
     let disks = Disks::new_with_refreshed_list();
-    let disk_iops: f64 = disks.len() as f64 * 100.0; // Estimated baseline per-disk IOPS
+    let disk_iops: f64 = disks.len() as f64 * ESTIMATED_BASELINE_DISK_IOPS; // Estimated baseline per-disk IOPS
 
     PerformanceMetrics {
         timestamp: SystemTime::now(),
@@ -138,7 +143,7 @@ impl MetricsRegistry {
     pub fn new() -> Self {
         Self {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
-            max_history: 100, // Default max history
+            max_history: DEFAULT_METRICS_HISTORY_SIZE, // Default max history
             custom_metrics: Arc::new(RwLock::new(HashMap::new())),
         }
     }

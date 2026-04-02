@@ -92,6 +92,7 @@
 //! ```
 
 mod audit_handlers;
+mod data_handlers;
 mod nat_handlers;
 mod session_handlers;
 mod storage_handlers;
@@ -432,6 +433,12 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         // Game session persistence (convenience over storage.*)
         "session.save" => session_handlers::session_save(request.params.as_ref(), state).await,
         "session.load" => session_handlers::session_load(request.params.as_ref(), state).await,
+        // Data domain (live feeds, not storage — stubs until nestgate-core data_sources wired)
+        "data.ncbi_search" => data_handlers::data_ncbi_search(request.params.as_ref()),
+        "data.ncbi_fetch" => data_handlers::data_ncbi_fetch(request.params.as_ref()),
+        "data.noaa_ghcnd" => data_handlers::data_noaa_ghcnd(request.params.as_ref()),
+        "data.iris_stations" => data_handlers::data_iris_stations(request.params.as_ref()),
+        "data.iris_events" => data_handlers::data_iris_events(request.params.as_ref()),
         // Model cache operations (extracted to model_cache_handlers.rs)
         "model.register" => model_cache_handlers::model_register(request.params.as_ref()),
         "model.exists" => model_cache_handlers::model_exists(request.params.as_ref()),

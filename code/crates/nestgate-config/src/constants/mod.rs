@@ -90,6 +90,7 @@ pub mod sovereignty_helpers;
 pub mod sovereignty_helpers_config;
 pub mod system;
 pub mod system_config;
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod testing;
 pub mod timeouts;
 /// Timeout configuration with environment-driven defaults.
@@ -154,6 +155,7 @@ pub use timeouts_config::{SharedTimeoutsConfig, TimeoutsConfig};
 // For buffer sizes, use domain-specific constants from canonical_defaults:
 // - network::NETWORK_BUFFER_SIZE (8192 bytes) for network I/O
 // - canonical_defaults::performance::DEFAULT_BUFFER_SIZE (4096 bytes) for disk/general I/O
+#[cfg(any(test, feature = "dev-stubs"))]
 pub use testing::*;
 
 // Single source of truth modules:

@@ -103,7 +103,7 @@ impl ResilientService {
         Self {
             service_info,
             fault_injector: FaultInjector::new(chaos_config),
-            retry_attempts: 3,
+            retry_attempts: 5,
         }
     }
 

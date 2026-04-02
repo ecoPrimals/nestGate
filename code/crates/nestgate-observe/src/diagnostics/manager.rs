@@ -2,24 +2,23 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::{Diagnostic, DiagnosticLevel, SystemMetrics};
+use nestgate_types::Result;
 use nestgate_types::unified_enums::UnifiedHealthStatus as HealthStatus;
-use nestgate_types::{NestGateError, Result};
-/// Diagnostics Management
-/// This module contains the main `DiagnosticsManager` for coordinating system diagnostics.
-use std::sync::{Arc, RwLock};
-use tokio::sync::broadcast;
+use std::sync::Arc;
+use tokio::sync::{RwLock, broadcast};
 
-/// Main diagnostics manager
+/// Main diagnostics manager.
+///
+/// All lock operations are async-aware (`tokio::sync::RwLock`) so this type
+/// is safe to use from Tokio task handlers without blocking worker threads.
 pub struct DiagnosticsManager {
-    /// Stored diagnostics
     diagnostics: Arc<RwLock<Vec<Diagnostic>>>,
-    /// Event broadcaster for diagnostic events
     event_sender: broadcast::Sender<Diagnostic>,
-    /// System metrics cache
     metrics: Arc<RwLock<SystemMetrics>>,
 }
+
 impl DiagnosticsManager {
-    /// Create a new diagnostics manager
+    /// Create a new diagnostics manager.
     #[must_use]
     pub fn new() -> Self {
         let (event_sender, _) = broadcast::channel(1000);
@@ -31,76 +30,52 @@ impl DiagnosticsManager {
         }
     }
 
-    /// Add a diagnostic entry
+    /// Add a diagnostic entry.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn add_diagnostic(&self, diagnostic: Diagnostic) -> Result<()> {
-        let mut diagnostics = self.diagnostics.write().map_err(|_| {
-            NestGateError::internal_error(
-                "Failed to acquire diagnostics write lock",
-                "diagnostics_manager",
-            )
-        })?;
+    /// Returns error if internal state is corrupted.
+    pub async fn add_diagnostic(&self, diagnostic: Diagnostic) -> Result<()> {
+        let mut diagnostics = self.diagnostics.write().await;
         diagnostics.push(diagnostic);
         Ok(())
     }
 
-    /// Get all diagnostics
+    /// Get all diagnostics.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn get_diagnostics(&self) -> Result<Vec<Diagnostic>> {
-        let diagnostics = self.diagnostics.read().map_err(|_| {
-            NestGateError::internal_error(
-                "Failed to acquire diagnostics read lock",
-                "diagnostics_manager",
-            )
-        })?;
-
+    /// Returns error if internal state is corrupted.
+    pub async fn get_diagnostics(&self) -> Result<Vec<Diagnostic>> {
+        let diagnostics = self.diagnostics.read().await;
         Ok(diagnostics.clone())
     }
 
-    /// Get unresolved diagnostics
+    /// Get unresolved diagnostics.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn get_unresolved_diagnostics(&self) -> Result<Vec<Diagnostic>> {
-        let diagnostics = self.get_diagnostics()?;
+    /// Returns error if internal state is corrupted.
+    pub async fn get_unresolved_diagnostics(&self) -> Result<Vec<Diagnostic>> {
+        let diagnostics = self.get_diagnostics().await?;
         Ok(diagnostics
             .into_iter()
             .filter(super::diagnostic::Diagnostic::is_unresolved)
             .collect())
     }
 
-    /// Calculate overall health status
+    /// Calculate overall health status from unresolved diagnostics.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn calculate_health_status(&self) -> Result<HealthStatus> {
-        let diagnostics = self.get_unresolved_diagnostics()?;
+    /// Returns error if diagnostics cannot be read.
+    pub async fn calculate_health_status(&self) -> Result<HealthStatus> {
+        let diagnostics = self.get_unresolved_diagnostics().await?;
 
         if diagnostics.is_empty() {
             return Ok(HealthStatus::Healthy);
         }
 
-        // Find the highest severity level
         let mut has_critical = false;
         let mut has_error = false;
         let mut has_warning = false;
@@ -125,71 +100,48 @@ impl DiagnosticsManager {
         }
     }
 
-    /// Subscribe to diagnostic events
+    /// Subscribe to diagnostic events.
     #[must_use]
     pub fn subscribe(&self) -> broadcast::Receiver<Diagnostic> {
         self.event_sender.subscribe()
     }
 
-    /// Update system metrics
+    /// Update system metrics.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub const fn update_metrics(&self, _metrics: SystemMetrics) -> Result<()> {
-        // Implementation would update internal metrics storage
-        // For now, this is a placeholder that accepts metrics
+    /// Returns error if internal state is corrupted.
+    pub async fn update_metrics(&self, metrics: SystemMetrics) -> Result<()> {
+        let mut m = self.metrics.write().await;
+        *m = metrics;
         Ok(())
     }
 
-    /// Get current system metrics
+    /// Get current system metrics.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn get_metrics(&self) -> Result<SystemMetrics> {
-        let metrics = self.metrics.read().map_err(|_| {
-            NestGateError::internal_error(
-                "Failed to acquire metrics read lock",
-                "diagnostics_manager",
-            )
-        })?;
-
+    /// Returns error if internal state is corrupted.
+    pub async fn get_metrics(&self) -> Result<SystemMetrics> {
+        let metrics = self.metrics.read().await;
         Ok(metrics.clone())
     }
 
-    /// Clear all resolved diagnostics
+    /// Clear all resolved diagnostics, returning how many were cleared.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn clear_resolved(&self) -> Result<usize> {
-        let mut diagnostics = self.diagnostics.write().map_err(|_| {
-            NestGateError::internal_error(
-                "Failed to acquire diagnostics write lock",
-                "diagnostics_manager",
-            )
-        })?;
-
+    /// Returns error if internal state is corrupted.
+    pub async fn clear_resolved(&self) -> Result<usize> {
+        let mut diagnostics = self.diagnostics.write().await;
         let original_count = diagnostics.len();
         diagnostics.retain(super::diagnostic::Diagnostic::is_unresolved);
         let cleared_count = original_count - diagnostics.len();
-
         Ok(cleared_count)
     }
 }
 
 impl Default for DiagnosticsManager {
-    /// Returns the default instance
     fn default() -> Self {
         Self::new()
     }

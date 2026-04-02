@@ -37,6 +37,8 @@
 //! ```
 
 use crate::config::capability_discovery;
+use crate::constants::hardcoding::runtime_fallback_ports;
+use crate::constants::{DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT};
 use nestgate_types::error::NestGateError;
 use nestgate_types::error::Result;
 use std::collections::HashMap;
@@ -71,6 +73,9 @@ pub struct ConfigBuilder {
 }
 
 impl ConfigBuilder {
+    const DEFAULT_WEBSOCKET_PORT: u16 = 8081;
+    const DEFAULT_FALLBACK_PORT: u16 = 8000;
+
     /// Create a new configuration builder
     #[must_use]
     pub fn new() -> Self {
@@ -233,12 +238,12 @@ impl ConfigBuilder {
 
     fn default_port(&self, service: &str) -> u16 {
         match service {
-            "api" => 8080,
-            "metrics" => 9090,
-            "health" => 8082,
-            "websocket" => 8081,
-            "storage" => 5000,
-            _ => 8000,
+            "api" => DEFAULT_API_PORT,
+            "metrics" => DEFAULT_METRICS_PORT,
+            "health" => DEFAULT_HEALTH_PORT,
+            "websocket" => Self::DEFAULT_WEBSOCKET_PORT,
+            "storage" => runtime_fallback_ports::STORAGE,
+            _ => Self::DEFAULT_FALLBACK_PORT,
         }
     }
 }

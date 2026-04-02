@@ -408,12 +408,11 @@ mod tests {
 
         store.store_service(meta).await.unwrap();
 
-        // Wait a bit
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        let before = store.get_service("example-primal").await.unwrap().last_seen;
 
-        // Update heartbeat
         store.update_heartbeat("example-primal").await.unwrap();
 
-        // Last seen should be updated (implementation detail)
+        let after = store.get_service("example-primal").await.unwrap().last_seen;
+        assert!(after >= before, "heartbeat should advance last_seen");
     }
 }

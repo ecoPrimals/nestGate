@@ -235,15 +235,42 @@ impl ObjectStorageBackend {
     pub(super) fn dataset_prefix(pool_name: &str, dataset_name: &str) -> String {
         format!("{pool_name}/{dataset_name}")
     }
+
+    /// Create a backend from explicit config values without reading the environment.
+    ///
+    /// Preferred for tests: avoids process-global env mutation, runs concurrently.
+    #[cfg(test)]
+    pub(crate) fn from_config(endpoint: &str, region: &str, bucket_prefix: &str) -> Self {
+        Self {
+            client: Arc::new(ObjectStorageClient::new(
+                endpoint.to_owned(),
+                region.to_owned(),
+                ConfigSource::CapabilityDiscovered {
+                    service_id: "test-injected".to_owned(),
+                    capability: super::config::StorageCapability::S3Compatible {
+                        version: "2006-03-01".to_owned(),
+                    },
+                },
+                Self::should_use_path_style(endpoint),
+            )),
+            bucket_prefix: bucket_prefix.to_owned(),
+            pools: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::ObjectStorageBackend;
-    use serial_test::serial;
 
     #[test]
-    #[serial]
+    fn from_config_creates_backend_without_env() {
+        let backend =
+            ObjectStorageBackend::from_config("https://s3.example.com", "us-east-1", "nestgate");
+        assert_eq!(backend.bucket_name("pool1"), "nestgate-pool1");
+    }
+
+    #[test]
     fn new_fails_when_no_object_storage_configured() {
         temp_env::with_vars(
             [
@@ -256,7 +283,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn new_succeeds_with_endpoint_discovery_env() {
         temp_env::with_var(
             "OBJECT_STORAGE_ENDPOINT",
@@ -268,7 +294,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn from_environment_requires_credentials() {
         temp_env::with_vars(
             [
@@ -281,7 +306,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn from_environment_succeeds_with_full_env() {
         temp_env::with_vars(
             [

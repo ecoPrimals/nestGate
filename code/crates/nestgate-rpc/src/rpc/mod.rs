@@ -65,10 +65,12 @@
 pub mod audit_storage;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
+pub mod metadata_backend;
 #[cfg(any(feature = "dev-stubs", test))]
 pub mod orchestrator_registration;
 pub mod semantic_router;
 pub mod socket_config;
+pub mod storage_backend;
 // songbird_registration removed in v2.3.0
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
 pub(crate) mod model_cache_handlers;
@@ -94,10 +96,12 @@ pub use audit_storage::{
     NodeOutcome, NodeStatus,
 };
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
+pub use metadata_backend::{InMemoryMetadataBackend, MetadataBackend, ServiceRecord};
 #[cfg(any(feature = "dev-stubs", test))]
 pub use orchestrator_registration::OrchestratorRegistration;
 pub use semantic_router::SemanticRouter;
 pub use socket_config::{SocketConfig, SocketConfigSource};
+pub use storage_backend::{InMemoryStorageBackend, StorageBackend};
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};

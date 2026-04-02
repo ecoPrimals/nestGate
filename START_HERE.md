@@ -4,13 +4,14 @@
 
 ```
 Build:       24/24 workspace members compiling (0 errors)
-Tests:       8,376 lib tests passing, 0 failures
+Tests:       8,555 lib / 12,105 total passing, 0 failures
 Coverage:    ~80% line (llvm-cov) — wateringHole 80% minimum met
 Clippy:      ZERO warnings — full workspace --all-features -D warnings clean
 Docs:        ZERO warnings (cargo doc --workspace --no-deps)
 Unsafe:      #![forbid(unsafe_code)] on all 22 crate roots except env-process-shim
-Crypto:      Delegated to bearDog IPC; installer uses system curl (ring/rustls/reqwest eliminated)
+Crypto:      Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest eliminated)
 sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
+Serial:      ZERO #[serial] outside chaos tests
 Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```

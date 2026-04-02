@@ -43,6 +43,15 @@ pub(super) fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Res
             "crypto.generate_nonce",
             "crypto.hash",
             "crypto.verify_hash",
+            "session.save",
+            "session.load",
+            "session.list",
+            "session.delete",
+            "data.ncbi_search",
+            "data.ncbi_fetch",
+            "data.noaa_ghcnd",
+            "data.iris_stations",
+            "data.iris_events",
             "capabilities.list"
         ]
     }))

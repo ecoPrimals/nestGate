@@ -128,13 +128,16 @@ async fn stop_monitoring_when_active_drains_background_tasks() {
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config, pool_manager.clone()));
     let mut monitor = ZfsHealthMonitor::new(pool_manager, dataset_manager).expect("monitor");
     monitor.start_monitoring().expect("start monitoring");
-    let long = tokio::spawn(async {
-        tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+    let stop = Arc::new(tokio::sync::Notify::new());
+    let stop_rx = Arc::clone(&stop);
+    let long = tokio::spawn(async move {
+        stop_rx.notified().await;
     });
     {
         let mut tasks = monitor.background_tasks.write().await;
         tasks.push(long);
     }
+    stop.notify_one();
     monitor.stop_monitoring().await.expect("stop");
     assert!(!monitor.monitoring_active.load(Ordering::Relaxed));
 }

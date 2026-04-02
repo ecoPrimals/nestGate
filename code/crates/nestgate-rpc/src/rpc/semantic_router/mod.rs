@@ -91,6 +91,7 @@
 //! - `CAPABILITY_MAPPINGS.md`
 
 use crate::rpc::NestGateRpcClient;
+use crate::rpc::metadata_backend::{InMemoryMetadataBackend, MetadataBackend};
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
 use std::sync::Arc;
@@ -114,30 +115,35 @@ mod tests;
 /// implementations, enabling Neural API integration and capability-based
 /// discovery.
 pub struct SemanticRouter {
-    /// Internal RPC client for delegation
+    /// Internal RPC client for delegation (storage, health, etc.)
     pub(crate) client: Arc<NestGateRpcClient>,
+    /// Metadata backend for service registration / lookup
+    pub(crate) metadata: Arc<dyn MetadataBackend>,
 }
 
 impl SemanticRouter {
-    /// Create new semantic router
+    /// Create new semantic router with default in-memory metadata backend.
     ///
     /// # Arguments
     /// * `client` - Internal RPC client for method delegation
-    ///
-    /// # Example
-    /// ```rust,ignore
-    /// use nestgate_core::rpc::{SemanticRouter, NestGateRpcClient};
-    /// use std::sync::Arc;
-    ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = NestGateRpcClient::new("tarpc://localhost:8091")?;
-    /// let router = SemanticRouter::new(Arc::new(client));
-    /// # Ok(())
-    /// # }
-    /// ```
     pub fn new(client: Arc<NestGateRpcClient>) -> Self {
-        debug!("🌐 Creating semantic method router (TRUE PRIMAL compliance)");
-        Self { client }
+        debug!("Creating semantic method router");
+        Self {
+            client,
+            metadata: Arc::new(InMemoryMetadataBackend::new()),
+        }
+    }
+
+    /// Create a semantic router with a custom metadata backend.
+    ///
+    /// Use this at daemon startup to inject `nestgate-core`'s
+    /// `ServiceMetadataStore`-backed implementation.
+    pub fn with_metadata_backend(
+        client: Arc<NestGateRpcClient>,
+        metadata: Arc<dyn MetadataBackend>,
+    ) -> Self {
+        debug!("Creating semantic method router (custom metadata backend)");
+        Self { client, metadata }
     }
 
     /// Route semantic method call to internal implementation
@@ -211,9 +217,9 @@ impl SemanticRouter {
             "capabilities.list" => capabilities::capabilities_list(self, params),
 
             // ==================== METADATA DOMAIN ====================
-            "metadata.store" => metadata::metadata_store(self, params),
-            "metadata.retrieve" => metadata::metadata_retrieve(self, params),
-            "metadata.search" => metadata::metadata_search(self, params),
+            "metadata.store" => metadata::metadata_store(self, params).await,
+            "metadata.retrieve" => metadata::metadata_retrieve(self, params).await,
+            "metadata.search" => metadata::metadata_search(self, params).await,
 
             // ==================== CRYPTO DOMAIN ====================
             "crypto.encrypt" => crypto::crypto_encrypt(self, params),

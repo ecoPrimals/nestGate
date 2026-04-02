@@ -30,6 +30,7 @@ uuid = { workspace = true }
 nestgate-platform = { path = "../nestgate-platform" }
 tokio-test = { workspace = true }
 tempfile = { workspace = true }
+temp-env = { workspace = true }
 
 [features]
 default = []

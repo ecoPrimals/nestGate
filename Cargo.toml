@@ -50,7 +50,7 @@ fastrand.workspace = true
 criterion.workspace = true
 rstest.workspace = true
 test-log = "0.2.18"
-temp-env = "0.3.6"
+temp-env = { version = "0.3.6", features = ["async_closure"] }
 portpicker = "0.1.1"
 base64.workspace = true
 bytes = { workspace = true }
@@ -122,7 +122,7 @@ tokio-test = "0.4"
 
 # Error handling and utilities
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = "2.0"
 
 # Serialization
 serde = { version = "1.0", features = ["derive", "rc"] }
@@ -161,7 +161,7 @@ rustix = { version = "0.38", default-features = false, features = ["std", "fs", 
 etcetera = "0.8"
 
 # Encoding utilities (crypto ops delegated to bearDog via IPC)
-base64 = "0.21"
+base64 = "0.22"
 sha2 = "0.10"
 hmac = "0.12"
 hex = "0.4"
@@ -174,6 +174,7 @@ fastrand = "2.0"
 url = "2.5"
 
 # Async utilities
+async-trait = "0.1"
 futures = "0.3"
 futures-util = "0.3"
 async-recursion = "1.1"

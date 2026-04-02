@@ -424,7 +424,6 @@ impl CapabilityInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
     use std::net::{IpAddr, Ipv4Addr};
 
     #[test]
@@ -535,7 +534,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn from_env_reads_capabilities() {
         temp_env::with_vars(
             [

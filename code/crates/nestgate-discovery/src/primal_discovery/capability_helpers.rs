@@ -305,18 +305,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_with_env_var() {
-        // SAFETY: single-threaded test context.
-        nestgate_platform::env_process::set_var("NESTGATE_CAPABILITY_TEST", "http://test:1234");
+        temp_env::async_with_vars(
+            [("NESTGATE_CAPABILITY_TEST", Some("http://test:1234"))],
+            async {
+                let result = discover_capability("test").await;
+                assert!(result.is_ok());
 
-        let result = discover_capability("test").await;
-        assert!(result.is_ok());
-
-        let service = result.unwrap();
-        assert_eq!(service.endpoint, "http://test:1234");
-        assert_eq!(service.source, DiscoverySource::Environment);
-
-        // SAFETY: single-threaded test context.
-        nestgate_platform::env_process::remove_var("NESTGATE_CAPABILITY_TEST");
+                let service = result.unwrap();
+                assert_eq!(service.endpoint, "http://test:1234");
+                assert_eq!(service.source, DiscoverySource::Environment);
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -332,29 +332,29 @@ mod tests {
 
     #[tokio::test]
     async fn test_legacy_env_var_backward_compat() {
-        // SAFETY: single-threaded test context.
-        nestgate_platform::env_process::set_var("NESTGATE_BEARDOG_URL", "http://legacy:9999");
+        temp_env::async_with_vars(
+            [("NESTGATE_BEARDOG_URL", Some("http://legacy:9999"))],
+            async {
+                let result = discover_security().await;
+                assert!(result.is_ok());
 
-        let result = discover_security().await;
-        assert!(result.is_ok());
-
-        let service = result.unwrap();
-        assert_eq!(service.endpoint, "http://legacy:9999");
-        assert_eq!(service.source, DiscoverySource::Environment);
-
-        // SAFETY: single-threaded test context.
-        nestgate_platform::env_process::remove_var("NESTGATE_BEARDOG_URL");
+                let service = result.unwrap();
+                assert_eq!(service.endpoint, "http://legacy:9999");
+                assert_eq!(service.source, DiscoverySource::Environment);
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
     async fn test_is_capability_available() {
-        // SAFETY: single-threaded test context.
-        nestgate_platform::env_process::set_var("NESTGATE_CAPABILITY_CUSTOM", "http://custom:5555");
-
-        assert!(is_capability_available("custom"));
-        assert!(!is_capability_available("nonexistent"));
-
-        // SAFETY: single-threaded test context.
-        nestgate_platform::env_process::remove_var("NESTGATE_CAPABILITY_CUSTOM");
+        temp_env::async_with_vars(
+            [("NESTGATE_CAPABILITY_CUSTOM", Some("http://custom:5555"))],
+            async {
+                assert!(is_capability_available("custom"));
+                assert!(!is_capability_available("nonexistent"));
+            },
+        )
+        .await;
     }
 }

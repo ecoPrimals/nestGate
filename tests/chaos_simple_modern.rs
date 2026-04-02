@@ -117,17 +117,16 @@ async fn test_chaos_monitoring() -> Result<(), Box<dyn std::error::Error>> {
 
     // Introduce controlled chaos
     for i in 0..3 {
-        // Small async yield to simulate chaos events without blocking
+        // Small async yield to simulate chaos events
         tokio::task::yield_now().await;
-
-        // Simulate minimal processing time (1ms) for chaos event
+        // Ensure measurable elapsed time even on fast schedulers
+        tokio::time::sleep(std::time::Duration::from_micros(1)).await;
 
         let elapsed = start_time.elapsed();
         info!("Chaos iteration {}: elapsed {:?}", i + 1, elapsed);
 
-        // Verify monitoring can track chaos events (with generous tolerance)
         assert!(
-            elapsed.as_micros() > 0,
+            elapsed.as_nanos() > 0,
             "Expected time to elapse during chaos monitoring, got: {:?}",
             elapsed
         );

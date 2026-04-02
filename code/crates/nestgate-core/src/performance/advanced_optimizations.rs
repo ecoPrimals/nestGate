@@ -173,12 +173,17 @@ pub struct PoolBlockGuard<'a, const BLOCK_SIZE: usize, const POOL_SIZE: usize> {
 }
 
 impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> PoolBlockGuard<'_, BLOCK_SIZE, POOL_SIZE> {
-    /// Get mutable slice to the allocated block
+    /// Get mutable slice to the allocated block.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the slot is unexpectedly empty (invariant: guard is only
+    /// created for occupied slots).
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
-        match self.slot_guard.as_mut() {
-            Some(block) => block.as_mut(),
-            None => unreachable!("pool slot must hold allocated block"),
-        }
+        self.slot_guard
+            .as_mut()
+            .expect("PoolBlockGuard invariant: slot must hold an allocated block")
+            .as_mut()
     }
 }
 

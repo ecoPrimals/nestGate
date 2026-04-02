@@ -159,7 +159,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[serial_test::serial]
     fn test_config_guard_isolation() {
         temp_env::with_var_unset("NESTGATE_API_PORT", || {
             temp_env::with_var("NESTGATE_API_PORT", Some("7777"), || {
@@ -171,7 +170,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_concurrent_config_isolation() {
         let _guard1 = TestConfigGuard::with_port(8888);
         let config1 = get_test_config();
@@ -185,7 +183,6 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_config_from_env() {
         temp_env::with_var("NESTGATE_API_PORT", Some("6666"), || {
             let _guard = TestConfigGuard::from_test_env();

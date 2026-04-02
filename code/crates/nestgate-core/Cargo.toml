@@ -25,6 +25,9 @@ nestgate-platform = { path = "../nestgate-platform" }
 nestgate-observe = { path = "../nestgate-observe", default-features = false }
 nestgate-cache = { path = "../nestgate-cache" }
 
+# Async trait for StorageBackend impl
+async-trait = { workspace = true }
+
 # Error handling
 anyhow = { workspace = true }
 thiserror = { workspace = true }

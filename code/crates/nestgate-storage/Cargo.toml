@@ -19,10 +19,14 @@ parking_lot = { workspace = true }
 rustix = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sysinfo = { workspace = true }
+sysinfo = { workspace = true, optional = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
+
+[features]
+default = ["sysinfo"]
+sysinfo = ["dep:sysinfo"]
 
 [dev-dependencies]
 anyhow = { workspace = true }

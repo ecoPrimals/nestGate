@@ -36,8 +36,11 @@ pub struct SecurityProviderClient {
     connected: bool,
 }
 
-/// Backwards-compatible alias for code still referencing the old name.
-#[deprecated(since = "0.3.0", note = "Use SecurityProviderClient — primal-agnostic")]
+/// Backwards-compatible alias (scheduled for removal).
+#[deprecated(
+    since = "0.3.0",
+    note = "Use `SecurityProviderClient` — primal-agnostic"
+)]
 pub type BearDogClient = SecurityProviderClient;
 
 impl SecurityProviderClient {
@@ -368,6 +371,7 @@ struct SecurityProviderResponse {
 mod tests {
     use super::*;
     use serde_json::json;
+    use std::sync::Arc;
     use std::time::Duration;
     use tempfile::TempDir;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -463,8 +467,21 @@ mod tests {
         token_bytes: Vec<u8>,
         idle: Duration,
     ) {
+        run_mock_security_provider_signaled(path, on_success, token_bytes, idle, None).await;
+    }
+
+    async fn run_mock_security_provider_signaled(
+        path: std::path::PathBuf,
+        on_success: bool,
+        token_bytes: Vec<u8>,
+        idle: Duration,
+        ready: Option<Arc<tokio::sync::Notify>>,
+    ) {
         let _ = tokio::fs::remove_file(&path).await;
         let listener = UnixListener::bind(&path).expect("bind mock security provider");
+        if let Some(n) = ready {
+            n.notify_one();
+        }
         loop {
             let accept_fut = listener.accept();
             let Ok(accept_result) = tokio::time::timeout(idle, accept_fut).await else {
@@ -516,19 +533,32 @@ mod tests {
         }
     }
 
+    /// Spawn the mock server and wait for it to be ready (listener bound).
+    async fn spawn_mock_server(
+        path: &std::path::Path,
+        on_success: bool,
+        token_bytes: Vec<u8>,
+        idle: Duration,
+    ) -> tokio::task::JoinHandle<()> {
+        let ready = Arc::new(tokio::sync::Notify::new());
+        let path_owned = path.to_path_buf();
+        let r = Arc::clone(&ready);
+        let handle = tokio::spawn(run_mock_security_provider_signaled(
+            path_owned,
+            on_success,
+            token_bytes,
+            idle,
+            Some(r),
+        ));
+        ready.notified().await;
+        handle
+    }
+
     #[tokio::test]
     async fn connect_encrypt_roundtrip_with_mock_server() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("sec.sock");
-        let path_clone = path.clone();
-        let server = tokio::spawn(run_mock_security_provider(
-            path_clone,
-            true,
-            vec![],
-            Duration::from_millis(400),
-        ));
-
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        let server = spawn_mock_server(&path, true, vec![], Duration::from_millis(400)).await;
 
         let mut c = SecurityProviderClient::new(&path).unwrap();
         c.connect().await.expect("connect");
@@ -543,15 +573,7 @@ mod tests {
     async fn send_request_returns_security_error_when_success_false() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("sec2.sock");
-        let path_clone = path.clone();
-        let server = tokio::spawn(run_mock_security_provider(
-            path_clone,
-            false,
-            vec![],
-            Duration::from_millis(400),
-        ));
-
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        let server = spawn_mock_server(&path, false, vec![], Duration::from_millis(400)).await;
 
         let mut c = SecurityProviderClient::new(&path).unwrap();
         c.connect().await.unwrap();
@@ -571,15 +593,7 @@ mod tests {
     async fn validate_token_interprets_first_byte() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("sec3.sock");
-        let path_clone = path.clone();
-        let server = tokio::spawn(run_mock_security_provider(
-            path_clone,
-            true,
-            vec![1],
-            Duration::from_millis(400),
-        ));
-
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        let server = spawn_mock_server(&path, true, vec![1], Duration::from_millis(400)).await;
 
         let mut c = SecurityProviderClient::new(&path).unwrap();
         c.connect().await.unwrap();

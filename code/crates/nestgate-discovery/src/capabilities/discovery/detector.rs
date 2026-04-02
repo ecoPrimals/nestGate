@@ -35,14 +35,33 @@ pub struct ServiceDetector {
 }
 
 impl ServiceDetector {
-    /// Create a new service detector
+    /// Create a new service detector.
+    ///
+    /// Default scan ports come from `nestgate-config` fallback constants and can
+    /// be overridden with `NESTGATE_DISCOVERY_SCAN_PORTS` (comma-separated).
     #[must_use]
     pub fn new(registry: Arc<CapabilityRegistry>) -> Self {
+        use nestgate_config::constants::hardcoding::runtime_fallback_ports as fp;
+
+        let scan_ports = std::env::var("NESTGATE_DISCOVERY_SCAN_PORTS")
+            .ok()
+            .map_or_else(
+                || {
+                    vec![
+                        fp::API,
+                        fp::API_ALT,
+                        fp::EXTENDED_SERVICES,
+                        fp::DISCOVERY_SERVICE,
+                    ]
+                },
+                |s| s.split(',').filter_map(|p| p.trim().parse().ok()).collect(),
+            );
+
         Self {
             registry,
             interval: Duration::from_secs(30),
             tasks: Vec::new(),
-            scan_ports: vec![3000, 3001, 3002, 3010], // Default discovery ports
+            scan_ports,
         }
     }
 

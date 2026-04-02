@@ -84,6 +84,10 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
     /// # Panics
     ///
     /// Panics if CAPACITY > 64 (bitmap limitation for this implementation)
+    #[expect(
+        clippy::panic,
+        reason = "constructor validates const-generic invariant"
+    )]
     pub fn new() -> Self {
         assert!(
             CAPACITY > 0 && CAPACITY < 64,
@@ -95,9 +99,9 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
             for _ in 0..CAPACITY {
                 vec.push(MutexOption::new(None));
             }
-            vec.into_boxed_slice()
-                .try_into()
-                .unwrap_or_else(|_| unreachable!())
+            vec.into_boxed_slice().try_into().unwrap_or_else(|_| {
+                panic!("Vec capacity equals CAPACITY ({CAPACITY}); conversion is infallible")
+            })
         };
 
         // All bits set = all slots free
@@ -192,38 +196,42 @@ impl<T, const CAPACITY: usize> Clone for SafeMemoryPool<T, CAPACITY> {
 }
 
 impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
-    /// Get immutable reference to value (locks the slot for the duration of the guard)
+    /// Get immutable reference to value (locks the slot for the duration of the guard).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the slot is unexpectedly empty — indicates a pool invariant violation.
     pub fn value(&self) -> MappedMutexGuard<'_, T> {
-        MutexGuard::map(
-            self.pool.slots[self.slot].lock(),
-            |opt: &mut Option<T>| match opt.as_mut() {
-                Some(v) => v,
-                None => unreachable!("Pool handle points to empty slot - this is a bug"),
-            },
-        )
+        MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
+            opt.as_mut()
+                .expect("PoolHandle invariant: slot must be occupied")
+        })
     }
 
-    /// Get mutable reference to value
+    /// Get mutable reference to value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the slot is unexpectedly empty — indicates a pool invariant violation.
     pub fn value_mut(&mut self) -> MappedMutexGuard<'_, T> {
-        MutexGuard::map(
-            self.pool.slots[self.slot].lock(),
-            |opt: &mut Option<T>| match opt.as_mut() {
-                Some(v) => v,
-                None => unreachable!("Pool handle points to empty slot - this is a bug"),
-            },
-        )
+        MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
+            opt.as_mut()
+                .expect("PoolHandle invariant: slot must be occupied")
+        })
     }
 
-    /// Take ownership of value, consuming the handle
+    /// Take ownership of value, consuming the handle.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the slot is unexpectedly empty — indicates a pool invariant violation.
     #[must_use]
     pub fn into_inner(self) -> T {
         let value = {
             let mut guard = self.pool.slots[self.slot].lock();
-            let taken = guard.take();
-            match taken {
-                Some(v) => v,
-                None => unreachable!("Pool handle points to empty slot - this is a bug"),
-            }
+            guard
+                .take()
+                .expect("PoolHandle invariant: slot must be occupied")
         };
 
         let mask = 1u64 << self.slot;

@@ -119,6 +119,47 @@ pub async fn list_datasets(
     Ok(datasets)
 }
 
+/// Get a single dataset by name.
+///
+/// # Errors
+///
+/// Returns error if dataset does not exist or metadata cannot be read.
+pub async fn get_dataset(
+    config: &StorageServiceConfig,
+    name: &str,
+) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
+    let base_path = PathBuf::from(&config.base_path);
+    let dataset_path = base_path.join("datasets").join(name);
+
+    let metadata = tokio::fs::metadata(&dataset_path).await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            NestGateError::not_found(format!("dataset {name}"))
+        } else {
+            NestGateError::io_error(format!("Failed to read dataset {name}: {e}"))
+        }
+    })?;
+
+    let modified = metadata
+        .modified()
+        .map_err(|e| NestGateError::io_error(format!("Failed to get modification time: {e}")))?;
+    let modified_at = modified
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+
+    Ok(crate::rpc::tarpc_types::DatasetInfo {
+        name: name.to_string(),
+        description: None,
+        created_at: modified_at,
+        modified_at,
+        size_bytes: 0,
+        object_count: 0,
+        compression_ratio: 1.0,
+        params: crate::rpc::tarpc_types::DatasetParams::default(),
+        status: "active".to_string(),
+    })
+}
+
 /// Delete a dataset and all its objects
 ///
 /// # Errors

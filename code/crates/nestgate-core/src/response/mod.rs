@@ -293,7 +293,7 @@ pub mod validation {
 /// This module provides test helpers, builders, and mock responses
 /// for comprehensive testing of API response patterns.
 pub mod testing {
-    use super::*;
+    use super::{ApiResponse, SuccessResponse, UnifiedErrorResponse};
 
     /// Create a test API response with mock data
     pub fn mock_api_response<T: serde::Serialize>(data: T) -> ApiResponse<T> {

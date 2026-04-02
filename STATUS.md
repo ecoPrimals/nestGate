@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 1, 2026  
+**Last Updated**: April 2, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,18 +12,19 @@ Build:              ALL workspace members — cargo check --workspace --all-feat
 Clippy:             ZERO WARNINGS — cargo clippy --workspace --all-features --all-targets
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               ZERO WARNINGS — cargo doc --workspace --no-deps
-Tests:              1,531 lib tests passing, 0 failures + full integration suite green (workspace; Apr 1, 2026)
-Coverage:           80.95% line (cargo llvm-cov --workspace --lib) — last full measurement; re-run to refresh
-Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored metrics/ and unix_adapter/ packages)
-Unwrap/Expect:      ZERO in production library code (#[cfg(test)] and integration tests may use unwrap/expect)
+Tests (lib):        8,555 passing, 0 failures
+Tests (total):      12,105 passing, 0 failures (--workspace --all-features; 49 duplicates removed)
+Coverage:           ~80% line (cargo llvm-cov --workspace --lib) — re-run to refresh
+Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
+Unwrap/Expect:      ZERO in production library code
 TODO/FIXME:         ZERO in .rs files
 Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (except env_process_shim bridge)
 println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
-TLS/crypto:         Delegated to bearDog via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
-Discovery:          Environment variables + songBird IPC (mDNS behind `mdns` feature gate; delegated to biomeOS/songBird)
+TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
+Discovery:          Environment variables + capability IPC (mDNS behind `mdns` feature gate; delegated to biomeOS/songBird)
 MCP:                Not a workspace member — use biomeOS `capability.call` / songBird instead
-IPC routes:         storage.*, data.*, nat.*, beacon.*, health.*, capabilities.* all wired
+IPC routes:         storage.*, data.*, session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.*, capabilities.* all wired
 Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -32,26 +33,28 @@ Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  24 (22 code/crates + tools/unwrap-migrator + fuzz)
-Archived:           infant_discovery_demo example; mDNS integration tests (discovery shed to biomeOS/songBird)
+Serial tests:       ZERO outside chaos suite — all env tests use temp_env closures
+Numeric casts:      ZERO raw `as` casts in production — all use try_from with saturating fallbacks
+Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
 
 ---
 
-## Ground truth refresh (Apr 1, 2026)
+## Ground truth refresh (Apr 2, 2026)
 
-Measured with `cargo check` / `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
+Measured with `cargo check` / `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace --all-features`.
 
-- **Production file size**: All production `.rs` files under **1,000** lines (max ~500 after smart refactoring). `metrics.rs` (879) split into `metrics/` package; `unix_adapter.rs` (856) split into `unix_adapter/` package.
+- **Production file size**: All production `.rs` files under **1,000** lines (max ~500 after smart refactoring).
 - **Workspace**: **24** members compile clean with zero clippy warnings. MCP, ring, rustls, reqwest all eliminated.
-- **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async.
-- **Testing**: Zero `thread::sleep` in tests. Hardcoded `/tmp` paths replaced with `tempdir()`. env::set_var tests migrated to `temp_env`. Serial markers removed where only env isolation was needed. Race condition in rate-limit test fixed (static → local state).
-- **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Env var → capability config → numeric defaults hierarchy documented.
-- **Stubs**: Production mock builders gated behind `#[cfg(any(test, feature = "dev-stubs"))]`. Production sleep stubs removed.
-- **Copyright**: 2025-2026 across all 1,571 source files. SPDX on all .rs files.
-- **Allow block**: nestgate-api reduced from 31→18 suppressions (42% fewer). nestgate-installer `missing_docs` now warned.
-- **Commented-out code**: Zero. Removed from 40+ files.
-- **Coverage**: Figure unchanged since last llvm-cov run (80.95% line); not re-measured this session.
+- **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
+- **Testing**: Zero `thread::sleep` or `tokio::time::sleep` in tests (except chaos). All `#[serial]` markers removed from non-chaos tests. `temp_env` closures provide isolation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
+- **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
+- **Stubs**: Production mock builders gated behind `#[cfg(any(test, feature = "dev-stubs"))]`. Crypto/data stubs return structured delegation guidance. `orchestrator_integration` feature-gated.
+- **Numeric safety**: All `as` casts replaced with `try_from().unwrap_or(MAX)` or `saturating_*` operations. Custom `unix_secs()` helper for timestamp conversions.
+- **Dependency injection**: `StorageBackend` and `MetadataBackend` traits in RPC layer allow `nestgate-core`'s filesystem-backed storage to back tarpc/semantic router (NG-01 resolved).
+- **Copyright**: 2025-2026 across all source files. SPDX on all .rs files.
+- **Coverage**: ~80% line; not re-measured this session.
 
 ---
 

@@ -137,6 +137,7 @@ pub mod snapshot;
 
 // Integration modules
 pub mod mcp_integration;
+#[cfg(feature = "orchestrator")]
 pub mod orchestrator_integration;
 pub mod pool_setup;
 

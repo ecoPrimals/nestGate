@@ -553,7 +553,6 @@ impl ZeroCostZfsOperations for GcsBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
 
     #[test]
     fn tier_mapping_and_storage_class_names() {
@@ -601,45 +600,46 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
-    async fn gcs_backend_from_environment_no_external_apis() {
-        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "nestgate-gcs-test");
-        nestgate_core::env_process::set_var("GCS_BUCKET_PREFIX", "test-nestgate");
-        nestgate_core::env_process::set_var("GCS_LOCATION", "US-WEST1");
-        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
-        nestgate_core::env_process::remove_var("GCS_CREDENTIALS_PATH");
-
-        let backend = GcsBackend::new().await.expect("env-based backend");
+    async fn gcs_backend_from_config_no_external_apis() {
+        let backend = GcsBackend::from_discovered_config_for_test(
+            "env-test",
+            "nestgate-gcs-test",
+            None,
+            "test-nestgate",
+            "US-WEST1",
+        )
+        .await
+        .expect("config-injected backend");
         assert_eq!(backend.bucket_prefix, "test-nestgate");
         assert_eq!(backend.location, "US-WEST1");
-
-        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
-        nestgate_core::env_process::remove_var("GCS_BUCKET_PREFIX");
-        nestgate_core::env_process::remove_var("GCS_LOCATION");
     }
 
     #[tokio::test]
-    #[serial]
-    async fn gcs_backend_uses_google_cloud_project_alias() {
-        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
-        nestgate_core::env_process::set_var("GOOGLE_CLOUD_PROJECT", "alias-proj");
-        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
-
-        let backend = GcsBackend::new()
-            .await
-            .expect("GOOGLE_CLOUD_PROJECT should satisfy project id");
+    async fn gcs_backend_accepts_project_id_via_config() {
+        let backend = GcsBackend::from_discovered_config_for_test(
+            "alias-test",
+            "alias-proj",
+            None,
+            "nestgate",
+            "US",
+        )
+        .await
+        .expect("project id via config injection");
         assert_eq!(backend.bucket_prefix, "nestgate");
-
-        nestgate_core::env_process::remove_var("GOOGLE_CLOUD_PROJECT");
     }
 
     #[tokio::test]
-    #[serial]
     async fn gcs_operations_in_memory_round_trip() {
-        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "inmem-proj");
-        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
+        let backend = GcsBackend::from_discovered_config_for_test(
+            "inmem-test",
+            "inmem-proj",
+            None,
+            "nestgate",
+            "US",
+        )
+        .await
+        .expect("backend");
 
-        let backend = GcsBackend::new().await.expect("backend");
         let pool = backend
             .create_pool("test-pool", &[])
             .await
@@ -666,10 +666,8 @@ mod tests {
             props
                 .custom
                 .get("config_source")
-                .map_or(false, |s| s.contains("environment"))
+                .map_or(false, |s| s.contains("capability"))
         );
-
-        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
     }
 
     #[tokio::test]
@@ -695,12 +693,17 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn gcs_pools_list_and_empty_datasets() {
-        nestgate_core::env_process::set_var("GCS_PROJECT_ID", "list-proj");
-        nestgate_core::env_process::remove_var("GOOGLE_APPLICATION_CREDENTIALS");
+        let backend = GcsBackend::from_discovered_config_for_test(
+            "list-test",
+            "list-proj",
+            None,
+            "nestgate",
+            "US",
+        )
+        .await
+        .expect("backend");
 
-        let backend = GcsBackend::new().await.expect("backend");
         backend.create_pool("pool1", &[]).await.unwrap();
         backend.create_pool("pool2", &[]).await.unwrap();
         let pools = backend.list_pools().await.expect("list pools");
@@ -709,7 +712,5 @@ mod tests {
         let p = &pools[0];
         let datasets = backend.list_datasets(p).await.expect("list datasets");
         assert!(datasets.is_empty());
-
-        nestgate_core::env_process::remove_var("GCS_PROJECT_ID");
     }
 }

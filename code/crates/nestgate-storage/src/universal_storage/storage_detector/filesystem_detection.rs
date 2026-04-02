@@ -169,10 +169,14 @@ pub trait FilesystemDetector: Send + Sync {
 
 /// Sysinfo-based universal filesystem detector
 ///
-/// **UNIVERSAL**: Works on all platforms using sysinfo crate
-// ecoBin v3.0: `sysinfo` here is a non-Linux / fallback path; Linux uses [`LinuxProcFilesystemDetector`].
+/// **UNIVERSAL**: Works on all platforms using sysinfo crate.
+///
+/// ecoBin v3.0: `sysinfo` is a non-Linux / fallback path; Linux uses [`LinuxProcFilesystemDetector`].
+/// Gated behind `feature = "sysinfo"` so pure-Rust builds can opt out.
+#[cfg(feature = "sysinfo")]
 pub struct SysinfoFilesystemDetector;
 
+#[cfg(feature = "sysinfo")]
 impl FilesystemDetector for SysinfoFilesystemDetector {
     fn discover(
         &self,
@@ -209,7 +213,7 @@ impl FilesystemDetector for SysinfoFilesystemDetector {
                 };
 
                 debug!(
-                    "✅ Discovered filesystem via sysinfo: {} at {:?}",
+                    "Discovered filesystem via sysinfo: {} at {:?}",
                     device, mount_point
                 );
                 discovered.push(filesystem);
@@ -220,7 +224,7 @@ impl FilesystemDetector for SysinfoFilesystemDetector {
     }
 
     fn is_available(&self) -> bool {
-        true // sysinfo is always available
+        true
     }
 
     fn name(&self) -> &'static str {
@@ -344,10 +348,20 @@ impl UniversalFilesystemDetector {
             };
         }
 
-        // Fallback to universal sysinfo detector
-        debug!("✅ Using universal sysinfo detector");
-        Self {
-            detector: Box::new(SysinfoFilesystemDetector),
+        #[cfg(feature = "sysinfo")]
+        {
+            debug!("Using universal sysinfo detector");
+            Self {
+                detector: Box::new(SysinfoFilesystemDetector),
+            }
+        }
+
+        #[cfg(not(feature = "sysinfo"))]
+        {
+            debug!("No sysinfo feature; falling back to Linux proc detector");
+            Self {
+                detector: Box::new(linux_detector),
+            }
         }
     }
 
@@ -515,7 +529,7 @@ mod tests {
     }
 
     #[test]
-    // ecoBin v3.0: sysinfo-only coverage; production Linux path is `LinuxProcFilesystemDetector`.
+    #[cfg(feature = "sysinfo")]
     fn test_sysinfo_detector_always_available() {
         let detector = SysinfoFilesystemDetector;
         assert!(

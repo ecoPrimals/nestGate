@@ -139,6 +139,23 @@ pub(super) async fn handle_health_readiness(
     }))
 }
 
+/// Resolve the session directory, using `family_id` from `params` for path consistency
+/// with the `unix_socket_server` session handlers.
+fn resolve_session_dir(state: &StorageState, params: Option<&Value>) -> std::path::PathBuf {
+    let params = params.unwrap_or(&Value::Null);
+    let family = params
+        .get("family_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("default");
+    // Layout: {base}/datasets/{family}/_sessions/
+    state
+        .dataset_dir
+        .parent()
+        .unwrap_or(&state.dataset_dir)
+        .join(family)
+        .join("_sessions")
+}
+
 pub(super) async fn handle_session_save(
     state: &StorageState,
     request: &JsonRpcRequest,
@@ -156,7 +173,7 @@ pub(super) async fn handle_session_save(
         .or_else(|| params.get("state"))
         .ok_or((-32602, Cow::Borrowed("Missing 'data' or 'state' parameter")))?;
 
-    let dir = state.session_dir();
+    let dir = resolve_session_dir(state, request.params.as_ref());
     tokio::fs::create_dir_all(&dir)
         .await
         .map_err(|e| (-32603, Cow::Owned(format!("mkdir: {e}"))))?;
@@ -166,7 +183,13 @@ pub(super) async fn handle_session_save(
     tokio::fs::write(&path, &bytes)
         .await
         .map_err(|e| (-32603, Cow::Owned(format!("write: {e}"))))?;
-    Ok(json!({"status": "saved", "session_id": session_id, "size": bytes.len()}))
+    let family = params
+        .get("family_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("default");
+    Ok(
+        json!({"status": "saved", "session_id": session_id, "family_id": family, "size": bytes.len()}),
+    )
 }
 
 pub(super) async fn handle_session_load(
@@ -182,15 +205,68 @@ pub(super) async fn handle_session_load(
         .and_then(|v| v.as_str())
         .ok_or((-32602, Cow::Borrowed("Missing 'session_id' parameter")))?;
 
-    let path = state.session_dir().join(format!("{session_id}.json"));
+    let dir = resolve_session_dir(state, request.params.as_ref());
+    let path = dir.join(format!("{session_id}.json"));
     if !path.exists() {
         return Ok(json!({"data": null, "session_id": session_id, "found": false}));
     }
     let bytes = tokio::fs::read(&path)
         .await
         .map_err(|e| (-32603, Cow::Owned(format!("read: {e}"))))?;
-    let data: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
-    Ok(json!({"data": data, "session_id": session_id, "found": true, "size": bytes.len()}))
+    let data: Value = serde_json::from_slice(&bytes)
+        .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()));
+    let family = params
+        .get("family_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("default");
+    Ok(
+        json!({"data": data, "session_id": session_id, "family_id": family, "found": true, "size": bytes.len()}),
+    )
+}
+
+pub(super) async fn handle_session_list(
+    state: &StorageState,
+    request: &JsonRpcRequest,
+) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
+    let dir = resolve_session_dir(state, request.params.as_ref());
+    if !dir.exists() {
+        return Ok(json!({"sessions": []}));
+    }
+    let mut entries = tokio::fs::read_dir(&dir)
+        .await
+        .map_err(|e| (-32603, Cow::Owned(format!("readdir: {e}"))))?;
+    let mut ids = Vec::new();
+    while let Ok(Some(entry)) = entries.next_entry().await {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if let Some(id) = name.strip_suffix(".json") {
+            ids.push(id.to_string());
+        }
+    }
+    Ok(json!({"sessions": ids}))
+}
+
+pub(super) async fn handle_session_delete(
+    state: &StorageState,
+    request: &JsonRpcRequest,
+) -> std::result::Result<Value, (i32, Cow<'static, str>)> {
+    let params = request
+        .params
+        .as_ref()
+        .ok_or((-32602, Cow::Borrowed("Missing params")))?;
+    let session_id = params
+        .get("session_id")
+        .and_then(|v| v.as_str())
+        .ok_or((-32602, Cow::Borrowed("Missing 'session_id' parameter")))?;
+    let dir = resolve_session_dir(state, request.params.as_ref());
+    let path = dir.join(format!("{session_id}.json"));
+    if !path.exists() {
+        return Ok(json!({"deleted": false, "session_id": session_id, "reason": "not found"}));
+    }
+    tokio::fs::remove_file(&path)
+        .await
+        .map_err(|e| (-32603, Cow::Owned(format!("rm: {e}"))))?;
+    Ok(json!({"deleted": true, "session_id": session_id}))
 }
 
 pub(super) async fn handle_nat_store(

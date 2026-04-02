@@ -358,53 +358,43 @@ async fn test_integration_atomic_deployment_scenario() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn test_integration_development_scenario() {
-    let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
-    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
-    nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
-
-    let socket_requested =
-        std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-
-    if let Some(v) = orig_sock {
-        nestgate_core::env_process::set_var("NESTGATE_SOCKET", v);
-    }
-    if let Some(v) = orig_fid {
-        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v);
-    }
-    assert!(
-        !socket_requested,
-        "Development mode should use HTTP (no socket vars)"
-    );
+    temp_env::async_with_vars(
+        [
+            ("NESTGATE_SOCKET", None::<&str>),
+            ("NESTGATE_FAMILY_ID", None::<&str>),
+        ],
+        async {
+            let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
+                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+            assert!(
+                !socket_requested,
+                "Development mode should use HTTP (no socket vars)"
+            );
+        },
+    )
+    .await;
 }
 
 #[tokio::test]
 async fn test_integration_multi_instance_scenario() {
-    // Simulate multiple NestGate instances
     let instances = vec![("nat0", "nest1"), ("nat0", "nest2"), ("lan0", "nest1")];
 
     for (family, node) in instances {
-        let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-        let orig_nid = std::env::var("NESTGATE_NODE_ID").ok();
-        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", family);
-        nestgate_core::env_process::set_var("NESTGATE_NODE_ID", node);
-
-        let config = nestgate_core::rpc::SocketConfig::from_environment();
-
-        match orig_fid {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-            None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-        }
-        match orig_nid {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_NODE_ID", v),
-            None => nestgate_core::env_process::remove_var("NESTGATE_NODE_ID"),
-        }
-        assert!(config.is_ok());
-        let config = config.unwrap();
-        assert_eq!(config.family_id, family);
-        assert_eq!(config.node_id, node);
+        temp_env::async_with_vars(
+            [
+                ("NESTGATE_FAMILY_ID", Some(family)),
+                ("NESTGATE_NODE_ID", Some(node)),
+            ],
+            async move {
+                let config = nestgate_core::rpc::SocketConfig::from_environment();
+                assert!(config.is_ok());
+                let config = config.unwrap();
+                assert_eq!(config.family_id, family);
+                assert_eq!(config.node_id, node);
+            },
+        )
+        .await;
     }
 }
 
@@ -416,57 +406,45 @@ async fn test_integration_multi_instance_scenario() {
 async fn test_performance_mode_detection_speed() {
     use std::time::Instant;
 
-    let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "perf");
-
-    let start = Instant::now();
-    for _ in 0..10_000 {
-        let _mode =
-            std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-    }
-    let duration = start.elapsed();
-
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    println!(
-        "Mode detection: 10,000 iterations in {:?} ({} ns/op)",
-        duration,
-        duration.as_nanos() / 10_000
-    );
-    assert!(
-        duration.as_millis() < 100,
-        "Mode detection should be fast: {:?}",
-        duration
-    );
+    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some("perf"))], async {
+        let start = Instant::now();
+        for _ in 0..10_000 {
+            let _mode = std::env::var("NESTGATE_SOCKET").is_ok()
+                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+        }
+        let duration = start.elapsed();
+        println!(
+            "Mode detection: 10,000 iterations in {:?} ({} ns/op)",
+            duration,
+            duration.as_nanos() / 10_000
+        );
+        assert!(
+            duration.as_millis() < 100,
+            "Mode detection should be fast: {duration:?}",
+        );
+    })
+    .await;
 }
 
 #[tokio::test]
 async fn test_performance_config_creation_speed() {
     use std::time::Instant;
 
-    let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "perf");
-
-    let start = Instant::now();
-    for _ in 0..1_000 {
-        let _config = nestgate_core::rpc::SocketConfig::from_environment().unwrap();
-    }
-    let duration = start.elapsed();
-
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    println!(
-        "Config creation: 1,000 iterations in {:?} ({} μs/op)",
-        duration,
-        duration.as_micros() / 1_000
-    );
-    assert!(
-        duration.as_secs() < 1,
-        "Config creation should be fast: {:?}",
-        duration
-    );
+    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some("perf"))], async {
+        let start = Instant::now();
+        for _ in 0..1_000 {
+            let _config = nestgate_core::rpc::SocketConfig::from_environment().unwrap();
+        }
+        let duration = start.elapsed();
+        println!(
+            "Config creation: 1,000 iterations in {:?} ({} μs/op)",
+            duration,
+            duration.as_micros() / 1_000
+        );
+        assert!(
+            duration.as_secs() < 1,
+            "Config creation should be fast: {duration:?}",
+        );
+    })
+    .await;
 }

@@ -2,16 +2,17 @@
 
 **Version**: 4.7.0-dev  
 **Build**: All workspace members — `cargo check --workspace --all-features --all-targets` (0 errors)  
-**Tests**: 8,376 lib tests passing, 0 failures (workspace `--lib`)  
-**Coverage**: 80.95% line (workspace `--lib`, llvm-cov) — last full measurement; re-run to refresh  
+**Tests**: 8,555 lib / 12,105 total passing, 0 failures  
+**Coverage**: ~80% line (llvm-cov) — re-run to refresh  
 **Clippy**: ZERO warnings — `cargo clippy --workspace --all-features --all-targets`  
 **Docs**: Zero warnings (`cargo doc --workspace --no-deps`)  
 **Production TODO/FIXME**: Zero  
 **Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
-**TLS/crypto**: Delegated to bearDog via IPC; installer uses system `curl` (zero C crypto deps)  
+**TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (zero C crypto deps)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-**File size**: All production `.rs` files under 1,000 lines (max 879)  
-**Last Updated**: March 31, 2026
+**File size**: All production `.rs` files under 1,000 lines  
+**`#[serial]`**: Zero outside chaos tests — all env tests use `temp_env` closures  
+**Last Updated**: April 2, 2026
 
 ---
 
@@ -114,8 +115,8 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | Build | `cargo check --workspace --all-features --all-targets` — 0 errors |
 | Clippy | ZERO warnings (`cargo clippy --workspace --all-features --all-targets`) |
 | Format | Clean (`cargo fmt --check`) |
-| Tests | 8,376 lib tests passing, 0 failures |
-| Coverage | 80.95% line (llvm-cov) — wateringHole 80% minimum met; not re-measured Mar 31 |
+| Tests | 8,555 lib / 12,105 total passing, 0 failures |
+| Coverage | ~80% line (llvm-cov) — wateringHole 80% minimum met |
 | Docs | Zero warnings (`cargo doc --workspace --no-deps`) |
 | Production TODO/FIXME | Zero |
 | Production unwrap/expect | Zero in library `src/` (`#[cfg(test)]` / integration tests may use unwrap; clippy warns workspace-wide) |
@@ -124,7 +125,7 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
 | File size (production < 1000) | All compliant (max 879 lines) |
 | http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
-| Env-var race conditions | Fixed (temp-env + serial_test) |
+| Env-var race conditions | Fixed (temp-env closures; zero `#[serial]` outside chaos) |
 
 ### Compliance (wateringHole)
 
@@ -133,8 +134,8 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | UniBin | Pass — single `nestgate` binary |
 | ecoBin | Pass — pure Rust application code, socket-only default, zero C crypto deps (ring/rustls/reqwest eliminated) |
 | JSON-RPC 2.0 | Pass |
-| tarpc | Pass — wired into daemon (feature-gated) |
-| Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `nat.*`, `beacon.*`, `capabilities.*` |
+| tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
+| Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — 80.95% line (wateringHole minimum met) |
 | File size (<1000 production) | Pass (max 879 lines) |
@@ -188,8 +189,8 @@ cargo doc --no-deps --workspace
 - **Async Runtime**: Tokio
 - **HTTP**: Axum
 - **Serialization**: Serde, serde_json
-- **Concurrency**: DashMap, std::sync::LazyLock, pin-project
-- **Security**: Delegated to bearDog via IPC; local JWT via RustCrypto (hmac, sha2)
+- **Concurrency**: DashMap, tokio::sync, parking_lot, std::sync::LazyLock, pin-project
+- **Security**: Delegated to security capability provider via IPC; local JWT via RustCrypto (hmac, sha2)
 - **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0, storage.sock capability symlink)
 - **CLI**: Clap 4 (derive mode)
 - **Discovery**: Environment variables + songBird IPC (capability-based)
@@ -252,4 +253,4 @@ free use rights for personal, educational, and non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: March 31, 2026
+**Latest**: April 2, 2026

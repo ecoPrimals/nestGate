@@ -102,14 +102,6 @@ impl StorageState {
         Ok(self.dataset_dir.join(format!("{key}.json")))
     }
 
-    /// Session directory for game session persistence.
-    fn session_dir(&self) -> PathBuf {
-        self.dataset_dir
-            .parent()
-            .unwrap_or(&self.dataset_dir)
-            .join("_sessions")
-    }
-
     /// NAT traversal info is stored under the `_nat` sub-directory.
     fn nat_dir(&self) -> PathBuf {
         self.dataset_dir
@@ -153,6 +145,8 @@ impl UnixSocketRpcHandler {
             "storage.exists" => unix_adapter_handlers::handle_storage_exists(state, &request),
             "session.save" => unix_adapter_handlers::handle_session_save(state, &request).await,
             "session.load" => unix_adapter_handlers::handle_session_load(state, &request).await,
+            "session.list" => unix_adapter_handlers::handle_session_list(state, &request).await,
+            "session.delete" => unix_adapter_handlers::handle_session_delete(state, &request).await,
 
             "health" | "health.check" => Ok(json!({
                 "status": "healthy",

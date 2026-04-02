@@ -59,6 +59,7 @@ pub mod builder;
 pub mod http;
 #[cfg(feature = "mdns")]
 pub mod mdns;
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod testing;
 
 #[cfg(feature = "consul")]

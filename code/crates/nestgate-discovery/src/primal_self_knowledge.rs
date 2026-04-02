@@ -296,8 +296,9 @@ impl PrimalSelfKnowledge {
         // Get API endpoint from environment
         let api_host = std::env::var("NESTGATE_API_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
 
-        let api_port_str =
-            std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| "3000".to_string());
+        let api_port_str = std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| {
+            nestgate_config::constants::hardcoding::runtime_fallback_ports::API.to_string()
+        });
 
         let api_port = api_port_str
             .parse()

@@ -210,21 +210,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_registration_disabled() {
-        // SAFETY: single-threaded test — no concurrent env readers.
-        nestgate_platform::env_process::set_var("NESTGATE_DISABLE_ORCHESTRATOR", "true");
+        temp_env::async_with_vars([("NESTGATE_DISABLE_ORCHESTRATOR", Some("true"))], async {
+            let self_knowledge = SelfKnowledge::builder()
+                .with_id("test")
+                .with_name("nestgate")
+                .with_capability("storage")
+                .build()
+                .unwrap();
 
-        let self_knowledge = SelfKnowledge::builder()
-            .with_id("test")
-            .with_name("nestgate")
-            .with_capability("storage")
-            .build()
-            .unwrap();
-
-        let registration = OrchestratorRegistration::new(self_knowledge).unwrap();
-        assert!(!registration.enabled);
-
-        // SAFETY: single-threaded test — no concurrent env readers.
-        nestgate_platform::env_process::remove_var("NESTGATE_DISABLE_ORCHESTRATOR");
+            let registration = OrchestratorRegistration::new(self_knowledge).unwrap();
+            assert!(!registration.enabled);
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -245,17 +242,18 @@ mod tests {
 
     #[test]
     fn orchestrator_enabled_register_and_discovery_stub() {
-        nestgate_platform::env_process::remove_var("NESTGATE_DISABLE_ORCHESTRATOR");
-        let sk = SelfKnowledge::builder()
-            .with_name("nestgate")
-            .build()
-            .expect("knowledge");
-        let reg = OrchestratorRegistration::new(sk).expect("reg");
-        assert!(reg.enabled);
-        reg.register();
-        reg.start_health_reporting();
-        assert_eq!(reg.discovery().mechanism_name(), "stub");
-        assert!(reg.orchestrator().is_none());
+        temp_env::with_var("NESTGATE_DISABLE_ORCHESTRATOR", None::<&str>, || {
+            let sk = SelfKnowledge::builder()
+                .with_name("nestgate")
+                .build()
+                .expect("knowledge");
+            let reg = OrchestratorRegistration::new(sk).expect("reg");
+            assert!(reg.enabled);
+            reg.register();
+            reg.start_health_reporting();
+            assert_eq!(reg.discovery().mechanism_name(), "stub");
+            assert!(reg.orchestrator().is_none());
+        });
     }
 
     #[test]

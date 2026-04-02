@@ -507,6 +507,42 @@ impl StorageManagerService {
         super::operations::objects::delete_object(&self.config, dataset, key).await
     }
 
+    /// Get a single dataset by name.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if dataset not found.
+    pub async fn get_dataset(&self, name: &str) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
+        super::operations::datasets::get_dataset(&self.config, name).await
+    }
+
+    /// List objects in a dataset with optional prefix filter and limit.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if the dataset directory cannot be read.
+    pub async fn list_objects(
+        &self,
+        dataset: &str,
+        prefix: Option<&str>,
+        limit: Option<usize>,
+    ) -> Result<Vec<crate::rpc::tarpc_types::ObjectInfo>> {
+        super::operations::objects::list_objects(&self.config, dataset, prefix, limit).await
+    }
+
+    /// Get object metadata without reading the body.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if object not found.
+    pub async fn get_object_metadata(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
+        super::operations::objects::get_object_metadata(&self.config, dataset, key).await
+    }
+
     /// Delete a dataset and all its objects
     ///
     /// # Errors
@@ -519,6 +555,83 @@ impl StorageManagerService {
 
 // Note: Default trait is intentionally not implemented for StorageManagerService
 // Use StorageManagerService::new().await instead for proper async initialization
+
+// ---------------------------------------------------------------------------
+// StorageBackend implementation — resolves NG-01
+// ---------------------------------------------------------------------------
+
+#[async_trait::async_trait]
+impl nestgate_rpc::rpc::storage_backend::StorageBackend for StorageManagerService {
+    async fn create_dataset(
+        &self,
+        name: &str,
+        params: crate::rpc::tarpc_types::DatasetParams,
+    ) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
+        self.create_dataset(name, params).await
+    }
+
+    async fn list_datasets(&self) -> Result<Vec<crate::rpc::tarpc_types::DatasetInfo>> {
+        self.list_datasets().await
+    }
+
+    async fn get_dataset(&self, name: &str) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
+        Self::get_dataset(self, name).await
+    }
+
+    async fn delete_dataset(&self, name: &str) -> Result<crate::rpc::tarpc_types::OperationResult> {
+        Self::delete_dataset(self, name).await?;
+        Ok(crate::rpc::tarpc_types::OperationResult {
+            success: true,
+            message: format!("Dataset {name} deleted successfully"),
+            metadata: std::collections::HashMap::new(),
+        })
+    }
+
+    async fn store_object(
+        &self,
+        dataset: &str,
+        key: &str,
+        data: Vec<u8>,
+        _metadata: Option<std::collections::HashMap<String, String>>,
+    ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
+        self.store_object(dataset, key, data).await
+    }
+
+    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Vec<u8>> {
+        let (bytes, _info) = Self::retrieve_object(self, dataset, key).await?;
+        Ok(bytes.to_vec())
+    }
+
+    async fn get_object_metadata(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
+        Self::get_object_metadata(self, dataset, key).await
+    }
+
+    async fn list_objects(
+        &self,
+        dataset: &str,
+        prefix: Option<&str>,
+        limit: Option<usize>,
+    ) -> Result<Vec<crate::rpc::tarpc_types::ObjectInfo>> {
+        Self::list_objects(self, dataset, prefix, limit).await
+    }
+
+    async fn delete_object(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> Result<crate::rpc::tarpc_types::OperationResult> {
+        Self::delete_object(self, dataset, key).await?;
+        Ok(crate::rpc::tarpc_types::OperationResult {
+            success: true,
+            message: format!("Object {dataset}/{key} deleted successfully"),
+            metadata: std::collections::HashMap::new(),
+        })
+    }
+}
 
 #[cfg(test)]
 mod tests {

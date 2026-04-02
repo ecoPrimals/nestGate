@@ -204,27 +204,27 @@ impl ServicesConfig {
     /// ```
     /// Resolve a service URL by capability — **primary API** for capability-first access.
     ///
-    /// Prefers `discovered_capabilities`, then legacy field mirrors (e.g. `beardog_url` for `"security"`).
+    /// Looks up only the `discovered_capabilities` map (populated from both
+    /// modern `NESTGATE_CAPABILITY_*` and legacy env vars at init time).
+    /// Legacy primal-specific fields are no longer consulted directly.
     #[must_use]
-    #[allow(deprecated)]
     pub fn resolve_by_capability(&self, capability: &str) -> Option<String> {
-        if let Some(url) = self.discovered_capabilities.get(capability) {
-            return Some(url.clone());
-        }
-
-        match capability {
-            "security" => self.beardog_url.clone(),
-            "networking" | "orchestration" => self.songbird_url.clone(),
-            "ai" | "intelligence" => self.squirrel_url.clone(),
-            "compute" => self.toadstool_url.clone(),
-            "os" | "system" | "ecosystem" => self.biomeos_url.clone(),
-            _ => None,
-        }
+        self.discovered_capabilities
+            .get(capability)
+            .cloned()
+            .or_else(|| {
+                // Capability aliases for backward-compatible queries
+                match capability {
+                    "networking" => self.discovered_capabilities.get("orchestration").cloned(),
+                    "intelligence" => self.discovered_capabilities.get("ai").cloned(),
+                    "os" | "system" => self.discovered_capabilities.get("ecosystem").cloned(),
+                    _ => None,
+                }
+            })
     }
 
     /// Same as [`Self::resolve_by_capability`] — kept for existing call sites.
     #[must_use]
-    #[allow(deprecated)]
     pub fn get_capability_url(&self, capability: &str) -> Option<String> {
         self.resolve_by_capability(capability)
     }
@@ -234,35 +234,17 @@ impl ServicesConfig {
     /// Returns `true` if any service providing this capability is known.
     #[must_use]
     pub fn has_capability(&self, capability: &str) -> bool {
-        self.discovered_capabilities.contains_key(capability)
-            || self.resolve_by_capability(capability).is_some()
+        self.resolve_by_capability(capability).is_some()
     }
 
     /// List all configured capabilities.
     ///
     /// Returns a sorted list of capability types that have providers configured.
+    /// All capabilities (including those from legacy env vars) are unified into
+    /// `discovered_capabilities` at init time, so no legacy field inspection is needed.
     #[must_use]
-    #[allow(deprecated)]
     pub fn available_capabilities(&self) -> Vec<String> {
         let mut caps: Vec<String> = self.discovered_capabilities.keys().cloned().collect();
-
-        // Add capabilities from legacy fields
-        if self.beardog_url.is_some() && !caps.contains(&"security".to_string()) {
-            caps.push("security".to_string());
-        }
-        if self.songbird_url.is_some() && !caps.contains(&"orchestration".to_string()) {
-            caps.push("orchestration".to_string());
-        }
-        if self.squirrel_url.is_some() && !caps.contains(&"ai".to_string()) {
-            caps.push("ai".to_string());
-        }
-        if self.toadstool_url.is_some() && !caps.contains(&"compute".to_string()) {
-            caps.push("compute".to_string());
-        }
-        if self.biomeos_url.is_some() && !caps.contains(&"ecosystem".to_string()) {
-            caps.push("ecosystem".to_string());
-        }
-
         caps.sort();
         caps
     }

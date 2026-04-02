@@ -62,7 +62,10 @@ impl Default for NetworkDiscoveryConfig {
             EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 
         let start_port = env_config.network.port.get();
-        let end_port = 9090; // Admin/management port range end
+        let end_port = std::env::var("NESTGATE_DISCOVERY_PORT_END")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS);
 
         Self {
             scan_timeout: Duration::from_secs(5),
@@ -358,7 +361,7 @@ impl NetworkDiscovery {
         let base_port: u16 = std::env::var("NESTGATE_CAPABILITY_BASE_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(9090); // Default admin/capability port
+            .unwrap_or(nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS);
         let offset = u16::try_from(capability.len().rem_euclid(100)).unwrap_or(0);
         let capability_port = base_port.saturating_add(offset);
 

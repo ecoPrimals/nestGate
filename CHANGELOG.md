@@ -9,6 +9,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 14: Deep debt completion, trait injection, full concurrency modernization (April 2, 2026)
+
+**Tests**: 8,555 lib / 12,105 total passing, 0 failures  
+**Clippy**: ZERO warnings  
+**Format**: Clean
+
+#### Added
+- `StorageBackend` trait + `InMemoryStorageBackend` — dependency injection for tarpc/semantic router (NG-01 resolved)
+- `MetadataBackend` trait + `InMemoryMetadataBackend` — metadata operations via trait injection
+- `session.list`, `session.delete` IPC handlers (NG-02 expanded)
+- `data.*` handlers wired into unix socket server (NG-03 resolved)
+- `deny.toml` for supply chain auditing (C-FFI deny list per ecoBin v3.0)
+- `discovery.*` handlers return structured self-knowledge JSON (capability-based)
+- `get_dataset`, `list_objects`, `get_object_metadata` operations on `StorageManagerService`
+- `NESTGATE_DISCOVERY_SCAN_PORTS` and `NESTGATE_DISCOVERY_PORT_END` env-var overrides
+- `runtime_fallback_ports` central constants module for all default ports
+
+#### Changed
+- `DiagnosticsManager` — `std::sync::RwLock` → `tokio::sync::RwLock` (all methods now async)
+- tarpc `NestGateRpcService` accepts `Arc<dyn StorageBackend>` (filesystem-backed in production)
+- `SemanticRouter` accepts `Arc<dyn MetadataBackend>` (pluggable metadata store)
+- `sysinfo` feature-gated in `nestgate-api` and `nestgate-storage` (Linux uses pure-Rust `/proc`)
+- `thiserror` 1.0 → 2.0, `base64` 0.21 → 0.22 (workspace-wide)
+- `BearDogClient` deprecated alias updated with delegation guidance
+- `resolve_by_capability` simplified — only consults `discovered_capabilities` map
+- All hardcoded ports replaced with `runtime_fallback_ports` + env-var overrides
+- Crypto/data stubs return structured not-implemented guidance instead of generic errors
+- Health handler thresholds extracted to named constants
+
+#### Fixed
+- All numeric `as` casts → safe `try_from` with saturating fallbacks (`unix_secs()` helper)
+- `unreachable!()` replaced with documented `panic!` / `expect` with invariant messages
+- 11 `#[serial]` tests refactored — `temp_env` closures, config injection, `Notify` signaling
+- Mock server tests use `tokio::sync::Notify` for readiness (no sleep-based waits)
+- Socket server tests use existence-polling with `yield_now()` (deterministic startup)
+- GCS backend tests use config-injected constructor (no global env mutation)
+- ZFS health monitor test uses `Notify` signal instead of 1-hour sleep
+
+#### Removed
+- **~17,400 lines of dead test code**: 9 orphan `tests/unit/` files, 9 orphan `tests/` subdirectories (`comprehensive_integration/`, `comprehensive_suite/`, `dashmap/`, `e2e/`, `ecosystem/`, `fault/`, `penetration_testing/`, `test_utils/`, `unibin/`, `fixtures/`), duplicate `tests/mod.rs` (49 tests already run via `tests/lib.rs`)
+- `tests/unit/todo_implementation_tests.rs` (dead code — not referenced by any runner)
+- `code/crates/nestgate-api/src/routes/storage/` (empty placeholder module, unreferenced)
+- `async-recursion` dependency (iterative `collect_objects` rewrite)
+
+#### Gated
+- `orchestrator_integration` module behind `#[cfg(feature = "orchestrator")]`
+- `testing` modules in `nestgate-discovery` and `nestgate-config` behind `cfg(test | dev-stubs)`
+- `sysinfo` crate behind optional cargo feature in `nestgate-api` and `nestgate-storage`
+
 ### Session 13: Deep debt evolution, concurrency hardening & testing modernization (April 1, 2026)
 
 **Tests**: 1,531 lib tests passing, 0 failures; full integration suite green  
