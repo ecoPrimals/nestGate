@@ -128,7 +128,7 @@ mod status_additional_tests {
 
     #[tokio::test]
     async fn test_health_check_concurrent() {
-        use futures::future::join_all;
+        use futures_util::future::join_all;
 
         let tasks = (0..10)
             .map(|_| tokio::spawn(async { health_check() }))
@@ -201,7 +201,7 @@ mod status_additional_tests {
 
     #[tokio::test]
     async fn test_concurrent_status_queries() {
-        use futures::future::join_all;
+        use futures_util::future::join_all;
 
         let tasks = (0..20)
             .map(|_| {

@@ -10,6 +10,65 @@ use nestgate_core::Result;
 use std::collections::HashMap;
 use std::time::SystemTime;
 
+/// Build `zfs create` argv for pool creation: `create <name> <devices...>` (no execution).
+pub fn build_pool_create_zfs_args<'a>(name: &'a str, devices: &[&'a str]) -> Vec<&'a str> {
+    let mut args = vec!["create", name];
+    args.extend_from_slice(devices);
+    args
+}
+
+/// Build `ZeroCostPoolInfo` from `zfs get -H -p` tabular properties.
+pub fn zero_cost_pool_from_zfs_properties(
+    name: &str,
+    properties: &HashMap<String, String>,
+    created_at: SystemTime,
+) -> ZeroCostPoolInfo {
+    let size: u64 = properties
+        .get("size")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    let used: u64 = properties
+        .get("allocated")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    let available = size.saturating_sub(used);
+
+    ZeroCostPoolInfo {
+        name: name.to_string(),
+        size,
+        used,
+        available,
+        health: properties
+            .get("health")
+            .map_or("UNKNOWN".to_string(), std::string::ToString::to_string),
+        properties: properties.clone(),
+        created_at,
+    }
+}
+
+/// Parse one `zfs list -H` line (`name\tsize\tused\tavail\thealth`).
+pub fn parse_pool_list_line(line: &str, created_at: SystemTime) -> Option<ZeroCostPoolInfo> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() < 5 {
+        return None;
+    }
+    let name = parts[0].to_string();
+    let size = parts[1].parse().unwrap_or(0);
+    let used = parts[2].parse().unwrap_or(0);
+    let available = parts[3].parse().unwrap_or(0);
+    let health = parts[4].to_string();
+
+    Some(ZeroCostPoolInfo {
+        name: name.clone(),
+        size,
+        used,
+        available,
+        health,
+        properties: HashMap::new(),
+        created_at,
+    })
+}
+
 impl<
     const MAX_POOLS: usize,
     const MAX_DATASETS: usize,
@@ -29,8 +88,7 @@ impl<
             ));
         }
 
-        let mut args = vec!["create", name];
-        args.extend(devices);
+        let args = build_pool_create_zfs_args(name, devices);
 
         self.execute_zfs_command(&args).await?;
 
@@ -40,27 +98,7 @@ impl<
 
         let properties = self.parse_pool_properties(&properties_output);
 
-        let size: u64 = properties
-            .get("size")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-        let used: u64 = properties
-            .get("allocated")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-        let available = size.saturating_sub(used);
-
-        let pool_info = ZeroCostPoolInfo {
-            name: name.to_string(),
-            size,
-            used,
-            available,
-            health: properties
-                .get("health")
-                .map_or("UNKNOWN".to_string(), std::string::ToString::to_string),
-            properties: properties.clone(),
-            created_at: SystemTime::now(),
-        };
+        let pool_info = zero_cost_pool_from_zfs_properties(name, &properties, SystemTime::now());
 
         {
             let mut pools_map = self.pools.write().await;
@@ -88,32 +126,8 @@ impl<
 
         {
             let mut pools_map = self.pools.write().await;
-            let pool_info = ZeroCostPoolInfo {
-                name: pool.name.clone(),
-                size: properties
-                    .get("size")
-                    .and_then(|s| s.parse::<u64>().ok())
-                    .unwrap_or(0),
-                used: properties
-                    .get("allocated")
-                    .and_then(|s| s.parse::<u64>().ok())
-                    .unwrap_or(0),
-                available: properties
-                    .get("size")
-                    .and_then(|s| s.parse::<u64>().ok())
-                    .unwrap_or(0)
-                    .saturating_sub(
-                        properties
-                            .get("allocated")
-                            .and_then(|s| s.parse::<u64>().ok())
-                            .unwrap_or(0),
-                    ),
-                health: properties
-                    .get("health")
-                    .map_or("UNKNOWN".to_string(), std::string::ToString::to_string),
-                properties: properties.clone(),
-                created_at: SystemTime::now(),
-            };
+            let pool_info =
+                zero_cost_pool_from_zfs_properties(&pool.name, &properties, SystemTime::now());
             pools_map.insert(pool.name.clone(), pool_info);
         }
 
@@ -128,24 +142,8 @@ impl<
         let mut pools = Vec::with_capacity(MAX_POOLS);
 
         for line in output.lines() {
-            let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 5 {
-                let name = parts[0].to_string();
-                let size = parts[1].parse().unwrap_or(0);
-                let used = parts[2].parse().unwrap_or(0);
-                let available = parts[3].parse().unwrap_or(0);
-                let health = parts[4].to_string();
-
-                pools.push(ZeroCostPoolInfo {
-                    name: name.clone(),
-                    size,
-                    used,
-                    available,
-                    health,
-                    properties: HashMap::new(), // Would be populated on demand
-                    created_at: SystemTime::now(), // Approximation
-                });
-
+            if let Some(p) = parse_pool_list_line(line, SystemTime::now()) {
+                pools.push(p);
                 if pools.len() >= MAX_POOLS {
                     break;
                 }

@@ -145,7 +145,7 @@ async fn test_canonical_performance_patterns() -> Result<()> {
         format!("task_{}", i)
     });
 
-    let results: Vec<String> = futures::future::join_all(tasks).await;
+    let results: Vec<String> = futures_util::future::join_all(tasks).await;
     let elapsed = start.elapsed();
 
     assert_eq!(results.len(), 10);

@@ -561,4 +561,76 @@ mod tests {
         let json = serde_json::to_string(&event);
         assert!(json.is_ok());
     }
+
+    #[tokio::test]
+    async fn test_create_storage_events_stream_receives_event() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("stream_storage_events");
+        let (_tx, mut rx) = manager
+            .create_bidirectional_stream(request)
+            .await
+            .expect("stream");
+        let event = tokio::time::timeout(std::time::Duration::from_secs(15), rx.recv()).await;
+        assert!(event.is_ok());
+        let ev = event.unwrap().expect("event");
+        assert_eq!(ev.event_type, "storage_event");
+    }
+
+    #[tokio::test]
+    async fn test_create_system_logs_stream_receives_event() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("stream_system_logs");
+        let (_tx, mut rx) = manager
+            .create_bidirectional_stream(request)
+            .await
+            .expect("stream");
+        let event = tokio::time::timeout(std::time::Duration::from_secs(6), rx.recv()).await;
+        assert!(event.is_ok());
+        let ev = event.unwrap().expect("event");
+        assert_eq!(ev.event_type, "system_log");
+    }
+
+    #[tokio::test]
+    async fn test_create_performance_data_stream_receives_event() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("stream_performance_data");
+        let (_tx, mut rx) = manager
+            .create_bidirectional_stream(request)
+            .await
+            .expect("stream");
+        let event = tokio::time::timeout(std::time::Duration::from_secs(8), rx.recv()).await;
+        assert!(event.is_ok());
+        let ev = event.unwrap().expect("event");
+        assert_eq!(ev.event_type, "performance_data");
+    }
+
+    #[tokio::test]
+    async fn test_broadcast_to_all_streams_delivers_to_active() {
+        let manager = BidirectionalStreamManager::new();
+        let request = make_request("stream_realtime_metrics");
+        let (_tx, _rx) = manager
+            .create_bidirectional_stream(request)
+            .await
+            .expect("stream");
+        let sid = manager.get_active_streams_info().await[0].0;
+        let evt = RpcStreamEvent {
+            stream_id: sid,
+            event_type: "broadcast_test".into(),
+            data: serde_json::json!({}),
+            timestamp: chrono::Utc::now(),
+        };
+        manager
+            .broadcast_to_all_streams(evt)
+            .await
+            .expect("broadcast");
+    }
+
+    #[tokio::test]
+    async fn test_set_global_event_sender() {
+        let manager = BidirectionalStreamManager::new();
+        let (tx, _rx) = mpsc::channel::<RpcStreamEvent>(4);
+        manager.set_global_event_sender(tx).await;
+        // Smoke: default path stores sender without panic
+        let _ = manager.get_active_stream_count().await;
+    }
 }

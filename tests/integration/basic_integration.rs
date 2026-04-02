@@ -49,7 +49,7 @@ async fn test_concurrent_operations() -> Result<()> {
         .collect();
 
     // Wait for all tasks
-    let results: Vec<_> = futures::future::join_all(handles).await;
+    let results: Vec<_> = futures_util::future::join_all(handles).await;
 
     // Verify all completed successfully
     assert_eq!(results.len(), 5);

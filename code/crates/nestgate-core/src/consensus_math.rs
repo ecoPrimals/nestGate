@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(
+    clippy::too_long_first_doc_paragraph,
+    reason = "Banner documents mutation-testing context for consensus arithmetic helpers."
+)]
+
 /// 🧮 **CONSENSUS MATH MODULE** 🧮
 /// Pure arithmetic functions for consensus calculations.
 /// Extracted from complex business logic to enable precise testing

@@ -184,7 +184,7 @@ async fn test_concurrent_storage_pool_requests() {
         handles.push(handle);
     }
 
-    let results = futures::future::join_all(handles).await;
+    let results = futures_util::future::join_all(handles).await;
 
     for result in results {
         assert!(result.is_ok(), "Task should complete");
@@ -204,7 +204,7 @@ async fn test_concurrent_storage_dataset_requests() {
         handles.push(handle);
     }
 
-    let results = futures::future::join_all(handles).await;
+    let results = futures_util::future::join_all(handles).await;
 
     for result in results {
         assert!(result.is_ok(), "Task should complete");

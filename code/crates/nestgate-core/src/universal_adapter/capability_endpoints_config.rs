@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(
+    clippy::too_long_first_doc_paragraph,
+    reason = "Struct-level docs describe env centralization; first paragraph spans multiple concerns intentionally."
+)]
+
 // HashMap removed - unused import
 use std::env;
 use std::sync::Arc;

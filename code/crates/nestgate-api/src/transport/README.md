@@ -11,7 +11,7 @@
 Complete implementation of TRUE PRIMAL transport architecture for NestGate:
 - **Unix Sockets**: Port-free IPC (100x faster than HTTP)
 - **JSON-RPC 2.0**: Universal, simple protocol
-- **BearDog Integration**: Hardware-backed security
+- **Security provider**: Capability-based, hardware-backed crypto (runtime discovery)
 - **HTTP Fallback**: Optional (debugging only)
 
 ---
@@ -25,7 +25,7 @@ transport/
 ├── unix_socket.rs   - Unix socket listener
 ├── jsonrpc.rs       - JSON-RPC 2.0 protocol
 ├── handlers.rs      - RPC method implementations
-├── security.rs      - BearDog client integration
+├── security.rs      - Security provider client (capability discovery)
 ├── server.rs        - Main transport server
 └── README.md        - This file
 ```
@@ -137,15 +137,15 @@ async fn call_rpc(method: &str, params: serde_json::Value) -> Result<serde_json:
 
 ---
 
-## 🔐 Security (BearDog Integration)
+## 🔐 Security (capability-based provider)
 
 ### Discovery
 
 ```rust
-use nestgate_api::transport::BearDogClient;
+use nestgate_api::transport::SecurityProviderClient;
 
 // Automatic discovery
-let mut client = BearDogClient::discover("nat0").await?;
+let mut client = SecurityProviderClient::discover("nat0").await?;
 client.connect().await?;
 
 // Encrypt/decrypt
@@ -203,7 +203,7 @@ Total:           25 tests (all passing)
 ### ✅ TRUE PRIMAL Compliant
 
 1. **Primal Self-Knowledge**: Only knows NestGate identity
-2. **Runtime Discovery**: Discovers BearDog via socket scanning
+2. **Runtime Discovery**: Discovers the security provider via capability scan and socket patterns
 3. **Capability-Based**: No hardcoded endpoints or ports
 4. **Agnostic**: Works with any security provider
 

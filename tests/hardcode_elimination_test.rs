@@ -223,8 +223,7 @@ fn is_explicitly_allowed_url(url: &str, line: &str) -> bool {
     line.contains("const") ||
     line.contains("unwrap_or(") ||
     url.contains("example.com") || // Documentation examples only
-    url.contains(nestgate_core::constants::TEST_HOSTNAME) && line.contains("unwrap_or")
-    // Localhost with fallback
+    url.contains("localhost") && line.contains("unwrap_or")
 }
 
 #[test]
@@ -255,7 +254,7 @@ fn test_whitelist_validation() -> Result<(), Box<dyn std::error::Error>> {
 
     // URLs
     assert!(is_explicitly_allowed_url(
-        nestgate_core::constants::TEST_API_BASE,
+        "http://localhost:8080",
         "env::var(\"API_URL\").unwrap_or(\"http://localhost:8080\")"
     ));
     assert!(!is_explicitly_allowed_url(

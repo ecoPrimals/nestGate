@@ -178,7 +178,7 @@ async fn test_chaos_concurrent_mode_detection() {
         })
         .collect();
 
-    let results = futures::future::join_all(handles).await;
+    let results = futures_util::future::join_all(handles).await;
 
     // All should succeed
     assert_eq!(results.len(), 20);

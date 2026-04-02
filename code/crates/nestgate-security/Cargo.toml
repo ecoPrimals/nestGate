@@ -18,6 +18,7 @@ nestgate-rpc = { path = "../nestgate-rpc" }
 # Encoding utilities (crypto operations delegated to bearDog via IPC)
 base64 = { workspace = true }
 hex = { workspace = true }
+sha2 = { workspace = true }
 
 # Core utilities
 chrono = { workspace = true }

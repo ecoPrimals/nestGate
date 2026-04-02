@@ -3,15 +3,16 @@
 ## Current Status
 
 ```
-Build:       24/24 workspace members compiling (0 errors)
-Tests:       8,555 lib / 12,105 total passing, 0 failures
-Coverage:    ~80% line (llvm-cov) — wateringHole 80% minimum met
-Clippy:      ZERO warnings — full workspace --all-features -D warnings clean
-Docs:        ZERO warnings (cargo doc --workspace --no-deps)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-02)
+Tests:       PASS — cargo test --workspace, 0 failures (~8,555 lib / ~12,105 total last recorded — STATUS.md)
+Coverage:    ~80% line (llvm-cov) — wateringHole 80% min met; 90% target pending
+Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-02)
+Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on all 22 crate roots except env-process-shim
-Crypto:      Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest eliminated)
+Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
 sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
-Serial:      ZERO #[serial] outside chaos tests
+Serial:      Some #[serial] in config/discovery tests (env isolation); see README
+Debt markers: none in production library sources (wateringHole; see STATUS.md)
 Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 ```
@@ -167,4 +168,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: March 31, 2026
+**Last Updated**: April 2, 2026

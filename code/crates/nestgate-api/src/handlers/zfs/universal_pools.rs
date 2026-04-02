@@ -33,8 +33,9 @@ use crate::dev_stubs::zfs::PoolOperations;
 pub struct CreateUniversalPoolRequest {
     /// Pool name to create
     pub name: String,
-    /// Device paths for the pool (prefixed with _ as currently unused)
-    pub _devices: Vec<String>,
+    /// Device paths for the pool
+    #[serde(default, alias = "_devices")]
+    pub devices: Vec<String>,
     /// Optional pool properties to set during creation
     pub properties: Option<HashMap<String, String>>,
 }
@@ -138,21 +139,16 @@ pub async fn get_universal_storage_health(State(state): State<AppState>) -> impl
 /// **CREATE UNIVERSAL POOL**
 ///
 /// API endpoint to create a new universal storage pool with specified configuration.
-pub async fn create_universal_pool(
+pub fn create_universal_pool(
     State(state): State<AppState>,
     Json(request): Json<CreateUniversalPoolRequest>,
 ) -> impl IntoResponse {
     info!("🛠️ Creating universal storage pool: {}", request.name);
 
     // Use ZFS manager directly
-    let _devices: Vec<&str> = request
-        ._devices
-        .iter()
-        .map(std::string::String::as_str)
-        .collect();
     match state
         .zfs_manager
-        .create_pool(&request.name, request._devices.clone(), None)
+        .create_pool(&request.name, request.devices.clone(), None)
     {
         Ok(()) => {
             info!("✅ Successfully created pool: {}", request.name);
@@ -174,7 +170,7 @@ pub async fn create_universal_pool(
 /// **DESTROY UNIVERSAL POOL**
 ///
 /// API endpoint to destroy an existing universal storage pool.
-pub async fn destroy_universal_pool(
+pub fn destroy_universal_pool(
     State(state): State<AppState>,
     Path(pool_name): Path<String>,
 ) -> impl IntoResponse {

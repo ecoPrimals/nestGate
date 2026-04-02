@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(
+    clippy::too_long_first_doc_paragraph,
+    reason = "Deprecated NetworkServiceConfig retains a long migration narrative in docs."
+)]
+
 //! Service module
 
 use crate::error::CanonicalResult as Result;

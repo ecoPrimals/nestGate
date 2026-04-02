@@ -648,4 +648,41 @@ mod tests {
         let s = PolicyScheduler::new(dm, policies, queue);
         s.process_policies().await.expect("process");
     }
+
+    /// `Minutes(1)` uses a 60s window where `secs % 60 < 60` is always true, so execution is deterministic.
+    #[tokio::test]
+    async fn process_policies_enabled_minutes_policy_runs_execute_and_retention_paths() {
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let mut map = HashMap::new();
+        map.insert(
+            "every_minute".into(),
+            SnapshotPolicy {
+                name: "min".into(),
+                enabled: true,
+                frequency: ScheduleFrequency::Minutes(1),
+                dataset_patterns: vec!["*".into()],
+                ..SnapshotPolicy::default()
+            },
+        );
+        let policies: SnapshotPolicyMap = Arc::new(RwLock::new(map));
+        let queue = Arc::new(RwLock::new(Vec::new()));
+        let s = PolicyScheduler::new(dm, policies, queue);
+        s.process_policies().await.expect("process");
+    }
+
+    #[test]
+    fn should_execute_minutes_one_is_always_within_window() {
+        let policy = SnapshotPolicy {
+            frequency: ScheduleFrequency::Minutes(1),
+            ..SnapshotPolicy::default()
+        };
+        assert!(PolicyScheduler::should_execute_policy(&policy));
+    }
+
+    #[test]
+    fn matches_pattern_bare_star_prefix_suffix_edge_cases() {
+        assert!(PolicyScheduler::matches_pattern("ab", "a*"));
+        assert!(PolicyScheduler::matches_pattern("ba", "*a"));
+        assert!(!PolicyScheduler::matches_pattern("x", "a*"));
+    }
 }

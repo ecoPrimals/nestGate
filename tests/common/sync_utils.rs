@@ -334,7 +334,7 @@ pub async fn wait_all_with_timeout<F, Fut>(futures: Vec<Fut>, timeout: Duration)
 where
     Fut: Future<Output = F> + Send,
 {
-    tokio::time::timeout(timeout, futures::future::join_all(futures))
+    tokio::time::timeout(timeout, futures_util::future::join_all(futures))
         .await
         .context("Timeout waiting for all futures to complete")
 }

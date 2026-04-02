@@ -175,7 +175,7 @@ mod async_pattern_tests {
 
         let handles: Vec<_> = (0..5).map(|i| tokio::spawn(operation(i))).collect();
 
-        let results: Vec<_> = futures::future::join_all(handles).await;
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
         assert_eq!(results.len(), 5);
 
         for (i, result) in results.into_iter().enumerate() {

@@ -547,4 +547,63 @@ mod tests {
             },
         );
     }
+
+    #[test]
+    fn resolve_capability_errors_when_missing() {
+        let cfg = CapabilityConfig {
+            capabilities: HashMap::new(),
+            fallbacks: None,
+            discovery_backends: vec![],
+        };
+        assert!(cfg.resolve_capability("unknown-cap").is_err());
+    }
+
+    #[test]
+    fn get_endpoint_errors_when_capability_has_no_socket() {
+        let mut cfg = CapabilityConfig {
+            capabilities: HashMap::new(),
+            fallbacks: None,
+            discovery_backends: vec![],
+        };
+        cfg.register_capability(CapabilityInfo {
+            id: "metrics".to_string(),
+            primary_endpoint: None,
+            additional_endpoints: vec![],
+            metadata: HashMap::new(),
+            health_check: None,
+        });
+        assert!(cfg.get_endpoint("metrics").is_err());
+        assert!(cfg.get_capability_url("metrics").is_err());
+    }
+
+    #[test]
+    fn capability_info_primary_endpoint_errors_when_no_endpoints() {
+        let info = CapabilityInfo {
+            id: "empty".to_string(),
+            primary_endpoint: None,
+            additional_endpoints: vec![],
+            metadata: HashMap::new(),
+            health_check: None,
+        };
+        assert!(info.primary_endpoint().is_err());
+    }
+
+    #[test]
+    fn available_capabilities_lists_keys() {
+        let mut cfg = CapabilityConfig {
+            capabilities: HashMap::new(),
+            fallbacks: None,
+            discovery_backends: vec![],
+        };
+        cfg.register_capability(CapabilityInfo {
+            id: "a".to_string(),
+            primary_endpoint: Some(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 1)),
+            additional_endpoints: vec![],
+            metadata: HashMap::new(),
+            health_check: None,
+        });
+        let mut keys = cfg.available_capabilities();
+        keys.sort();
+        assert_eq!(keys, vec!["a".to_string()]);
+    }
 }

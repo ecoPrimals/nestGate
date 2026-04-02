@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(
+    clippy::too_long_first_doc_paragraph,
+    reason = "Builder docs bundle purpose and testability notes in one opening block."
+)]
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 /// **RETURN BUILDERS - CONFIG BUILDERS MODULE**

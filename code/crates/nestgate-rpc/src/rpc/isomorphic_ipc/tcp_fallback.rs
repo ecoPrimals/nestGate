@@ -130,6 +130,38 @@ impl TcpFallbackServer {
 
         info!("   Status: READY ✅ (isomorphic TCP fallback active)");
 
+        self.accept_loop(listener).await
+    }
+
+    /// Start TCP JSON-RPC listener on a fixed address (e.g. `UniBin` `daemon --port` / `--listen`).
+    ///
+    /// Same newline-delimited JSON-RPC 2.0 protocol as [`Self::start`]. Use alongside Unix
+    /// socket IPC when both transports are desired.
+    pub async fn start_bound(self: Arc<Self>, addr: SocketAddr) -> Result<()> {
+        info!("🌐 Starting TCP JSON-RPC listener (isomorphic IPC, fixed address)");
+        info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
+
+        let listener = TcpListener::bind(addr)
+            .await
+            .with_context(|| format!("Failed to bind TCP JSON-RPC listener on {addr}"))?;
+
+        let local_addr = listener
+            .local_addr()
+            .context("Failed to get local address after bind")?;
+
+        info!(
+            "✅ TCP JSON-RPC listening on {} (requested {})",
+            local_addr, addr
+        );
+
+        self.write_tcp_discovery_file(&local_addr)?;
+
+        info!("   Status: READY ✅ (TCP JSON-RPC alongside Unix socket when enabled)");
+
+        self.accept_loop(listener).await
+    }
+
+    async fn accept_loop(self: Arc<Self>, listener: TcpListener) -> Result<()> {
         // Accept connections (same pattern as Unix socket server)
         loop {
             match listener.accept().await {
@@ -333,18 +365,19 @@ mod tests {
     #[test]
     fn write_tcp_discovery_file_writes_tcp_prefix_line() {
         let dir = tempfile::tempdir().expect("tempdir");
-        nestgate_platform::env_process::set_var(
+        temp_env::with_var(
             "XDG_RUNTIME_DIR",
-            dir.path().to_string_lossy().as_ref(),
+            Some(dir.path().to_string_lossy().as_ref()),
+            || {
+                let handler = Arc::new(MockHandler);
+                let server = TcpFallbackServer::new("ng_tcp_cov".to_string(), handler);
+                let addr: SocketAddr = "127.0.0.1:55055".parse().unwrap();
+                server.write_tcp_discovery_file(&addr).expect("write");
+                let path = dir.path().join("ng_tcp_cov-ipc-port");
+                let contents = std::fs::read_to_string(&path).expect("read discovery");
+                assert!(contents.trim().starts_with("tcp:"));
+            },
         );
-        let handler = Arc::new(MockHandler);
-        let server = TcpFallbackServer::new("ng_tcp_cov".to_string(), handler);
-        let addr: SocketAddr = "127.0.0.1:55055".parse().unwrap();
-        server.write_tcp_discovery_file(&addr).expect("write");
-        let path = dir.path().join("ng_tcp_cov-ipc-port");
-        let contents = std::fs::read_to_string(&path).expect("read discovery");
-        assert!(contents.trim().starts_with("tcp:"));
-        nestgate_platform::env_process::remove_var("XDG_RUNTIME_DIR");
     }
 
     #[test]

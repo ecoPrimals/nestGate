@@ -10,7 +10,7 @@
 //!
 //! **Old Way** (hardcoded):
 //! ```rust,ignore
-//! let beardog_url = "http://localhost:3000"; // ❌ Hardcoded!
+//! let security_url = "http://localhost:3000"; // ❌ Hardcoded!
 //! ```
 //!
 //! **New Way** (discovered):
@@ -31,7 +31,7 @@
 //! use nestgate_core::primal_discovery::capability_helpers::*;
 //!
 //! # async fn example() -> anyhow::Result<()> {
-//! // Discover orchestration service (e.g., Songbird)
+//! // Discover orchestration capability provider
 //! let orchestration = discover_orchestration().await?;
 //! println!("Orchestration at: {}", orchestration.endpoint);
 //!
@@ -128,76 +128,60 @@ impl DiscoveredService {
 
 // ==================== HIGH-LEVEL DISCOVERY FUNCTIONS ====================
 
-/// Discover orchestration service (e.g., Songbird).
+/// Discover orchestration capability provider.
 ///
 /// **Priority**:
-/// 1. `NESTGATE_CAPABILITY_ORCHESTRATION` env var (set by songBird discovery)
-/// 2. `NESTGATE_SONGBIRD_URL` (deprecated, backward compat)
-/// 3. Development default fallback
+/// 1. `NESTGATE_CAPABILITY_ORCHESTRATION` (from peer discovery or operator)
+/// 2. Development default fallback
 ///
 /// # Errors
 ///
 /// Infallible — always falls back to a development default.
 pub async fn discover_orchestration() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_legacy(
+    Ok(discover_capability_with_default(
         "orchestration",
-        "SONGBIRD",
         get_api_port,
     ))
 }
 
-/// Discover whichever primal provides the "security" capability.
+/// Discover whichever peer provides the `security` capability.
 ///
 /// **Priority**:
-/// 1. `NESTGATE_CAPABILITY_SECURITY` env var (set by songBird discovery)
-/// 2. `NESTGATE_BEARDOG_URL` (deprecated, backward compat)
-/// 3. Development default fallback
+/// 1. `NESTGATE_CAPABILITY_SECURITY`
+/// 2. Development default fallback
 pub async fn discover_security() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_legacy(
-        "security",
-        "BEARDOG",
-        get_dev_port,
-    ))
+    Ok(discover_capability_with_default("security", get_dev_port))
 }
 
-/// Discover compute service (e.g., `ToadStool`).
+/// Discover compute capability provider.
 ///
 /// **Priority**:
-/// 1. `NESTGATE_CAPABILITY_COMPUTE` env var (set by songBird discovery)
-/// 2. `NESTGATE_TOADSTOOL_URL` (deprecated, backward compat)
-/// 3. Development default fallback
+/// 1. `NESTGATE_CAPABILITY_COMPUTE`
+/// 2. Development default fallback
 pub async fn discover_compute() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_legacy(
+    Ok(discover_capability_with_default(
         "compute",
-        "TOADSTOOL",
         default_port_compute,
     ))
 }
 
-/// Discover AI service (e.g., Squirrel).
+/// Discover AI capability provider.
 ///
 /// **Priority**:
-/// 1. `NESTGATE_CAPABILITY_AI` env var (set by songBird discovery)
-/// 2. `NESTGATE_SQUIRREL_URL` (deprecated, backward compat)
-/// 3. Development default fallback
+/// 1. `NESTGATE_CAPABILITY_AI`
+/// 2. Development default fallback
 pub async fn discover_ai() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_legacy(
-        "ai",
-        "SQUIRREL",
-        default_port_ai,
-    ))
+    Ok(discover_capability_with_default("ai", default_port_ai))
 }
 
-/// Discover ecosystem service (e.g., `BiomeOS`).
+/// Discover ecosystem capability provider.
 ///
 /// **Priority**:
-/// 1. `NESTGATE_CAPABILITY_ECOSYSTEM` env var (set by songBird discovery)
-/// 2. `NESTGATE_BIOMEOS_URL` (deprecated, backward compat)
-/// 3. Development default fallback
+/// 1. `NESTGATE_CAPABILITY_ECOSYSTEM`
+/// 2. Development default fallback
 pub async fn discover_ecosystem() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_legacy(
+    Ok(discover_capability_with_default(
         "ecosystem",
-        "BIOMEOS",
         default_port_ecosystem,
     ))
 }
@@ -229,13 +213,9 @@ pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> 
     )))
 }
 
-/// Discover capability with legacy environment variable support.
-///
-/// Checks env vars in order: capability-based, legacy primal-specific, then
-/// falls back to development default.
-fn discover_capability_with_legacy(
+/// Resolve a known capability: `NESTGATE_CAPABILITY_{CAPABILITY}` or development default.
+fn discover_capability_with_default(
     capability: &str,
-    legacy_name: &str,
     default_port: impl FnOnce() -> u16,
 ) -> DiscoveredService {
     let capability_env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
@@ -244,16 +224,6 @@ fn discover_capability_with_legacy(
             "Discovered '{}' capability from environment: {}",
             capability,
             endpoint
-        );
-        return DiscoveredService::from_env(capability, endpoint);
-    }
-
-    let legacy_env_var = format!("NESTGATE_{legacy_name}_URL");
-    if let Ok(endpoint) = std::env::var(&legacy_env_var) {
-        tracing::warn!(
-            "Using deprecated '{}'. Migrate to '{}'",
-            legacy_env_var,
-            capability_env_var
         );
         return DiscoveredService::from_env(capability, endpoint);
     }
@@ -331,15 +301,29 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_legacy_env_var_backward_compat() {
+    async fn test_primal_name_url_env_vars_are_not_used() {
         temp_env::async_with_vars(
             [("NESTGATE_BEARDOG_URL", Some("http://legacy:9999"))],
             async {
                 let result = discover_security().await;
                 assert!(result.is_ok());
-
                 let service = result.unwrap();
-                assert_eq!(service.endpoint, "http://legacy:9999");
+                assert_eq!(service.source, DiscoverySource::Default);
+                assert!(service.endpoint.contains("127.0.0.1"));
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_discover_security_from_capability_env() {
+        temp_env::async_with_vars(
+            [("NESTGATE_CAPABILITY_SECURITY", Some("http://sec:7777"))],
+            async {
+                let result = discover_security().await;
+                assert!(result.is_ok());
+                let service = result.unwrap();
+                assert_eq!(service.endpoint, "http://sec:7777");
                 assert_eq!(service.source, DiscoverySource::Environment);
             },
         )

@@ -608,7 +608,7 @@ async fn test_concurrent_health_checks() {
         handles.push(handle);
     }
 
-    let results: Vec<_> = futures::future::join_all(handles)
+    let results: Vec<_> = futures_util::future::join_all(handles)
         .await
         .into_iter()
         .map(|r| r.unwrap())

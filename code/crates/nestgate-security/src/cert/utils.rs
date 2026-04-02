@@ -43,16 +43,11 @@ impl CertUtils {
         ))
     }
 
-    /// Stub fingerprint for structural use only — real SHA-256 fingerprinting delegated to bearDog.
+    /// SHA-256 fingerprint of the raw certificate bytes (lowercase hex, 64 characters).
     #[must_use]
     pub fn calculate_fingerprint(cert_data: &[u8]) -> String {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher = DefaultHasher::new();
-        cert_data.hash(&mut hasher);
-        let hash = hasher.finish();
-        format!("stub:{hash:x}")
+        use sha2::{Digest, Sha256};
+        hex::encode(Sha256::digest(cert_data))
     }
 
     /// Parse certificate subject from PEM data
@@ -400,7 +395,11 @@ MIICWjCCAcMCAg38MA0GCSqGSIb3DQEBBQUAMHsxCzAJBgNVBAYTAlVT
         let fp1 = CertUtils::calculate_fingerprint(b"abc");
         let fp2 = CertUtils::calculate_fingerprint(b"abc");
         assert_eq!(fp1, fp2);
-        assert!(fp1.starts_with("stub:"));
+        assert_eq!(fp1.len(), 64);
+        assert_eq!(
+            fp1,
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
     }
 
     #[test]

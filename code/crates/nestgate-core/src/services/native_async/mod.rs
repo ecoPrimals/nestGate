@@ -30,6 +30,7 @@ pub use types::{
 
 pub use production::{ProductionCommunicationProvider, ProductionLoadBalancer};
 
+#[cfg(any(test, feature = "dev-stubs"))]
 pub use crate::services::native_async::development::{
     DevelopmentLoadBalancer, DevelopmentServiceLoadBalancer,
 };

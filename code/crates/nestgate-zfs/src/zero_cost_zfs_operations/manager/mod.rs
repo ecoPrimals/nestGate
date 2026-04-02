@@ -13,6 +13,12 @@ mod snapshot_ops;
 mod trait_impl;
 mod validation;
 
+pub use dataset_ops::{build_dataset_create_zfs_args, parse_dataset_list_line};
+pub use pool_ops::{
+    build_pool_create_zfs_args, parse_pool_list_line, zero_cost_pool_from_zfs_properties,
+};
+pub use snapshot_ops::{build_snapshot_zfs_path, parse_snapshot_list_line};
+
 #[cfg(test)]
 mod test_helpers;
 #[cfg(test)]

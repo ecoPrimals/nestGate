@@ -4,12 +4,12 @@
 
 NestGate is in active development. Current metrics:
 
-- **Build**: 24/24 workspace members, 0 errors
-- **Tests**: 8,555 lib / 12,105 total passing, 0 failures
-- **Coverage**: ~80% line (llvm-cov)
-- **Clippy**: ZERO warnings — full workspace `cargo clippy --workspace --all-targets -- -D warnings` clean
+- **Build**: 24/24 workspace members, 0 errors (`cargo check --workspace --all-features --all-targets`)
+- **Tests**: `cargo test --workspace` — 0 failures (approximate counts in STATUS.md)
+- **Coverage**: ~80% line (llvm-cov); 90% org target not yet
+- **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
 - **Safety**: `#![forbid(unsafe_code)]` on all 22 crate roots except `nestgate-env-process-shim`
-- **Serial tests**: Zero `#[serial]` outside chaos suite
+- **Serial tests**: Some `#[serial]` remain for env-mutation tests; prefer `temp_env` where possible
 
 See [STATUS.md](./STATUS.md) for full metrics.
 

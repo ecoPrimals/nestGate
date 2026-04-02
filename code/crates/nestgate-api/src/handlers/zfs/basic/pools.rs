@@ -74,12 +74,12 @@ pub async fn create_pool(
     Json(request): Json<CreatePoolRequest>,
 ) -> Result<Json<ZeroCostPoolInfo>, StatusCode> {
     info!(
-        "API: Creating pool '{}' with _devices: {:?}",
-        request.name, request._devices
+        "API: Creating pool '{}' with devices: {:?}",
+        request.name, request.devices
     );
 
     match get_zfs_service(&state).await {
-        Ok(service) => match service.create_pool(&request.name, request._devices.clone(), None) {
+        Ok(service) => match service.create_pool(&request.name, request.devices.clone(), None) {
             Ok(()) => {
                 info!("Pool created successfully: {}", request.name);
                 Ok(Json(ZeroCostPoolInfo {

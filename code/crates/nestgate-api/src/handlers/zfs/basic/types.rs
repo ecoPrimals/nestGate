@@ -13,7 +13,8 @@ pub struct CreatePoolRequest {
     /// Name of the ZFS pool to create
     pub name: String,
     /// List of device paths to use for the pool
-    pub _devices: Vec<String>,
+    #[serde(default, alias = "_devices")]
+    pub devices: Vec<String>,
 }
 
 /// **ZFS API REQUEST - CREATE DATASET**
@@ -49,6 +50,7 @@ pub struct ZfsHealthResponse {
 }
 
 /// Build [`ZfsHealthResponse`] from a pool listing (health endpoint and unit tests).
+#[must_use]
 pub fn evaluate_zfs_health(pools: Vec<ZeroCostPoolInfo>) -> ZfsHealthResponse {
     let mut issues = Vec::new();
     let mut healthy = true;

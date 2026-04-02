@@ -126,7 +126,7 @@ impl PerformanceTestRunner {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_optimal_timeout(&self) -> Result<OptimalTimeout> {
+    pub fn discover_optimal_timeout(&self) -> Result<OptimalTimeout> {
         let mut latencies = Vec::new();
 
         // Run multiple test iterations to gather latency data (no artificial delay).
@@ -236,22 +236,19 @@ impl PerformanceDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration> {
+    pub fn discover_optimal_timeout(&self, _service_name: &str) -> Result<Duration> {
         let config: PerformanceTestConfig = PerformanceTestConfig::default();
 
         #[cfg(any(test, feature = "dev-stubs"))]
         {
             let runner = PerformanceTestRunner::new(config);
-            let optimal = runner.discover_optimal_timeout().await?;
+            let optimal = runner.discover_optimal_timeout()?;
             Ok(optimal.timeout)
         }
 
         #[cfg(not(any(test, feature = "dev-stubs")))]
         {
-            std::future::ready(Ok(Duration::from_secs(
-                config.testing.baseline_timeout_seconds,
-            )))
-            .await
+            Ok(Duration::from_secs(config.testing.baseline_timeout_seconds))
         }
     }
 

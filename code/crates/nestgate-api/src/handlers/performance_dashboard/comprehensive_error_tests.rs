@@ -44,7 +44,7 @@ async fn test_concurrent_dashboard_overview_requests() {
         handles.push(handle);
     }
 
-    let results: Vec<_> = futures::future::join_all(handles).await;
+    let results: Vec<_> = futures_util::future::join_all(handles).await;
 
     // All concurrent requests should succeed
     for result in results {
@@ -285,7 +285,7 @@ async fn test_dashboard_rapid_successive_calls() {
         handles.push(handle);
     }
 
-    let results = futures::future::join_all(handles).await;
+    let results = futures_util::future::join_all(handles).await;
 
     // All should complete successfully
     let success_count = results

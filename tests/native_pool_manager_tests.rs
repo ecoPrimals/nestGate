@@ -645,7 +645,7 @@ async fn test_concurrent_pool_queries() {
         handles.push(handle);
     }
 
-    let results: Vec<_> = futures::future::join_all(handles)
+    let results: Vec<_> = futures_util::future::join_all(handles)
         .await
         .into_iter()
         .map(|r| r.unwrap())

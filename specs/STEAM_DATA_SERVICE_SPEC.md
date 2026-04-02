@@ -251,16 +251,16 @@ impl SteamSaveDataFederation {
 
 ### **Access Control Integration** 🔑
 ```rust
-// Integration with BearDog for access control
+// Integration with the discovered security capability provider
 pub struct SteamAccessControl {
-    pub beardog_integration: BearDogClient,
+    pub security_provider: SecurityProviderClient,
     pub access_policies: Vec<SteamAccessPolicy>,
 }
 
 impl SteamAccessControl {
     pub async fn authorize_save_access(&self, user_id: &str, app_id: u32) -> Result<bool> {
-        // 1. BearDog: Verify user identity and permissions
-        let authorized = self.beardog_integration.authorize_user(user_id, &format!("steam:{}:saves", app_id)).await?;
+        // 1. Security provider: Verify user identity and permissions
+        let authorized = self.security_provider.authorize_user(user_id, &format!("steam:{}:saves", app_id)).await?;
         
         if authorized {
             // 2. NestGate: Grant access to save data

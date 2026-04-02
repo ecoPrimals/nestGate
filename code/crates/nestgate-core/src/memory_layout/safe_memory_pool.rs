@@ -201,6 +201,10 @@ impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
     /// # Panics
     ///
     /// Panics if the slot is unexpectedly empty — indicates a pool invariant violation.
+    #[expect(
+        clippy::expect_used,
+        reason = "structural invariant: PoolHandle only exists for occupied slots"
+    )]
     pub fn value(&self) -> MappedMutexGuard<'_, T> {
         MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
             opt.as_mut()
@@ -213,6 +217,10 @@ impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
     /// # Panics
     ///
     /// Panics if the slot is unexpectedly empty — indicates a pool invariant violation.
+    #[expect(
+        clippy::expect_used,
+        reason = "structural invariant: PoolHandle only exists for occupied slots"
+    )]
     pub fn value_mut(&mut self) -> MappedMutexGuard<'_, T> {
         MutexGuard::map(self.pool.slots[self.slot].lock(), |opt: &mut Option<T>| {
             opt.as_mut()
@@ -226,6 +234,10 @@ impl<T, const CAPACITY: usize> PoolHandle<T, CAPACITY> {
     ///
     /// Panics if the slot is unexpectedly empty — indicates a pool invariant violation.
     #[must_use]
+    #[expect(
+        clippy::expect_used,
+        reason = "structural invariant: PoolHandle only exists for occupied slots"
+    )]
     pub fn into_inner(self) -> T {
         let value = {
             let mut guard = self.pool.slots[self.slot].lock();

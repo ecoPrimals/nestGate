@@ -77,6 +77,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_zero_cost_provider_composition() {
         // Test that providers can be composed at compile-time
         let cache = ZeroCostMemoryCache::<128>::new();

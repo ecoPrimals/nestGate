@@ -193,7 +193,7 @@ mod disk_failure_tests {
         disk.disable_failure();
 
         // Collect results
-        let results: Vec<_> = futures::future::join_all(handles).await;
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
 
         let successes = results
             .iter()
@@ -336,7 +336,7 @@ mod disk_failure_tests {
         });
 
         // Collect results
-        let results: Vec<_> = futures::future::join_all(handles).await;
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
 
         let successes = results
             .iter()

@@ -357,7 +357,7 @@ mod tests {
             })
             .collect();
 
-        let ports: Vec<u16> = futures::future::join_all(handles)
+        let ports: Vec<u16> = futures_util::future::join_all(handles)
             .await
             .into_iter()
             .map(|r| r.unwrap())

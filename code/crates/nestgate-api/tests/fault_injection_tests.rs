@@ -361,7 +361,7 @@ async fn test_fault_request_during_high_cpu() {
     // Simulate high CPU with busy work
     let busy_work = tokio::spawn(async {
         for _ in 0..1000000 {
-            let _ = format!("{}", rand::random::<u64>());
+            let _ = format!("{}", fastrand::u64(..));
         }
     });
 

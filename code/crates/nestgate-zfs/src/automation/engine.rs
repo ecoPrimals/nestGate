@@ -216,8 +216,20 @@ impl DatasetAutomation {
                     for action in &lifecycle_rule.actions {
                         match actions::execute_lifecycle_action(dataset_name, lifecycle, action) {
                             Ok(action_result) => {
+                                let success = action_result.success;
+                                let msg = action_result.message.clone();
                                 actions_taken.push(action_result);
-                                info!("✅ Applied action '{}' to dataset {}", action, dataset_name);
+                                if success {
+                                    info!(
+                                        "✅ Applied action '{}' to dataset {}",
+                                        action, dataset_name
+                                    );
+                                } else {
+                                    warn!(
+                                        "Action '{}' did not succeed for dataset {}: {}",
+                                        action, dataset_name, msg
+                                    );
+                                }
                             }
                             Err(e) => {
                                 warn!(

@@ -146,7 +146,7 @@ impl RustCompressor {
                 let mut encoder = lz4::EncoderBuilder::new().build(writer)?;
                 std::io::copy(reader, &mut encoder)?;
                 encoder.finish().1?;
-                Ok(0) // Size tracking TODO
+                Ok(0) // Tracked: return encoded byte count when Phase 1 streaming work lands (see progress table below)
             }
             CompressionAlgorithm::Zstd(level) => {
                 let mut encoder = zstd::stream::Encoder::new(writer, level)?;
@@ -201,6 +201,8 @@ mod tests {
 - [ ] Document API
 
 **Deliverable**: Pure Rust compression that matches or exceeds ZFS compression performance
+
+**Tracking (spec snippet vs implementation):** The illustrative `compress_stream` LZ4 branch returns `Ok(0)` until the encoder exposes a written-byte count; resolve when Phase 1 is marked complete in the progress table at the end of this document.
 
 ---
 

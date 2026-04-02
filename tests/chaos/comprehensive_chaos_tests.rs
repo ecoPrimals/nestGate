@@ -114,7 +114,7 @@ async fn chaos_test_request_storm() {
         handles.push(handle);
     }
 
-    let results: Vec<_> = futures::future::join_all(handles).await;
+    let results: Vec<_> = futures_util::future::join_all(handles).await;
     assert_eq!(results.len(), 100, "All requests should complete");
 
     // Verify all completed (true concurrent test)

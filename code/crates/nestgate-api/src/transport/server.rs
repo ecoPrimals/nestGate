@@ -323,9 +323,10 @@ mod tests {
         // Wait for the socket to appear (listener bound) instead of sleeping
         let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(3);
         while !sock.exists() {
-            if tokio::time::Instant::now() >= deadline {
-                panic!("server socket not created within deadline");
-            }
+            assert!(
+                tokio::time::Instant::now() < deadline,
+                "server socket not created within deadline"
+            );
             tokio::task::yield_now().await;
         }
 

@@ -26,6 +26,8 @@ mod tests {
     use crate::rest::models::{CloneSnapshotRequest, CreateSnapshotRequest};
     use crate::rest::models::{CreateDatasetRequest, DatasetProperties, DatasetType};
     use axum::extract::{Path, Query, State};
+    use axum::http::StatusCode;
+    use axum::response::IntoResponse;
     use std::collections::HashMap;
 
     async fn create_test_state_with_dataset(name: &str) -> crate::rest::ApiState {
@@ -202,9 +204,10 @@ mod tests {
             order: None,
             filter: None,
         };
-        let result =
-            list_snapshots(State(state), Path("tank/data".to_string()), Query(query)).await;
-        assert!(result.is_ok());
+        let response = list_snapshots(State(state), Path("tank/data".to_string()), Query(query))
+            .await
+            .into_response();
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
@@ -217,24 +220,26 @@ mod tests {
             properties: HashMap::new(),
             tags: None,
         };
-        let result = create_snapshot(
+        let response = create_snapshot(
             State(state),
             Path("tank/data".to_string()),
             axum::Json(request),
         )
-        .await;
-        assert!(result.is_ok());
+        .await
+        .into_response();
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
     async fn test_delete_snapshot() {
         let state = create_test_state_with_dataset("tank/data").await;
-        let result = delete_snapshot(
+        let response = delete_snapshot(
             State(state),
             Path(("tank/data".to_string(), "snap1".to_string())),
         )
-        .await;
-        assert!(result.is_ok());
+        .await
+        .into_response();
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[tokio::test]
@@ -246,15 +251,14 @@ mod tests {
             properties: None,
             description: None,
         };
-        let result = clone_snapshot(
+        let response = clone_snapshot(
             State(state),
             Path(("tank/data".to_string(), "snap1".to_string())),
             axum::Json(request),
         )
-        .await;
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert_eq!(err.0.code, "400");
+        .await
+        .into_response();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]
@@ -266,22 +270,14 @@ mod tests {
             properties: None,
             description: None,
         };
-        let result = clone_snapshot(
+        let response = clone_snapshot(
             State(state),
             Path(("tank/data".to_string(), "snap1".to_string())),
             axum::Json(request),
         )
-        .await;
-        assert!(result.is_ok());
-        let response = result.unwrap();
-        assert!(
-            response
-                .0
-                .data
-                .get("success")
-                .and_then(serde_json::Value::as_bool)
-                .unwrap_or(false)
-        );
+        .await
+        .into_response();
+        assert_eq!(response.status(), StatusCode::NOT_IMPLEMENTED);
     }
 
     #[test]

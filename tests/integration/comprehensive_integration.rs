@@ -82,7 +82,7 @@ async fn test_parallel_execution() -> Result<()> {
         })
     });
 
-    let results = futures::future::join_all(tasks).await;
+    let results = futures_util::future::join_all(tasks).await;
 
     // Verify all tasks completed
     assert_eq!(results.len(), 10);

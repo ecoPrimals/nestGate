@@ -8,7 +8,7 @@ use crate::handlers::dashboard_types::DashboardConfig;
 use crate::handlers::performance_analyzer::{AnalyzerConfig, PerformanceAnalyzer};
 use crate::handlers::performance_dashboard::metrics::RealTimeMetricsCollector;
 use crate::handlers::performance_dashboard::optimizer::OptimizationEngineInterface;
-use axum::extract::Path;
+use axum::extract::{Path, Query};
 use std::sync::Arc;
 
 /// Creates  Test Dashboard
@@ -324,4 +324,41 @@ async fn test_get_overview_metric_snapshot_fields() {
     assert!(snapshot.response_time_ms > 0.0);
     assert!(snapshot.error_rate_percent >= 0.0);
     assert!(snapshot.network_throughput_bps > 0);
+}
+
+#[tokio::test]
+async fn test_get_dashboard_overview_handler_with_query_params() {
+    let dashboard = Arc::new(create_test_dashboard());
+    let response = get_dashboard_overview(
+        dashboard,
+        Query(DashboardQuery {
+            range: Some("24h".to_string()),
+            refresh: Some(30),
+        }),
+    )
+    .await
+    .expect("handler");
+    let body = response.0;
+    assert!(body.success);
+    let overview = body.data.expect("overview data");
+    assert!(overview.health_score >= 0.0);
+}
+
+#[tokio::test]
+async fn test_get_dashboard_overview_handler_none_query() {
+    let dashboard = Arc::new(create_test_dashboard());
+    let response = get_dashboard_overview(
+        dashboard,
+        Query(DashboardQuery {
+            range: None,
+            refresh: None,
+        }),
+    )
+    .await
+    .expect("handler");
+    let body = response.0;
+    assert!(body.success);
+    let overview = body.data.expect("overview data");
+    let cap = &overview.capacity_forecast;
+    assert!(cap.projected_usage_in_30_days > 0.0);
 }

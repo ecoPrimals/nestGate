@@ -140,7 +140,10 @@ async fn test_chaos_request_flooding() -> Result<(), Box<dyn std::error::Error>>
     }
 
     // Wait for all tasks to complete
-    let results: Result<Vec<_>, _> = futures::future::join_all(tasks).await.into_iter().collect();
+    let results: Result<Vec<_>, _> = futures_util::future::join_all(tasks)
+        .await
+        .into_iter()
+        .collect();
 
     assert!(results.is_ok(), "All tasks should complete successfully");
     assert_eq!(
@@ -242,7 +245,7 @@ async fn test_chaos_clock_skew() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Wait for all time-based scenarios to complete
-    let results: Vec<_> = futures::future::join_all(tasks)
+    let results: Vec<_> = futures_util::future::join_all(tasks)
         .await
         .into_iter()
         .collect::<Result<_, _>>()?;
@@ -390,7 +393,7 @@ async fn test_chaos_comprehensive_stress() -> Result<(), Box<dyn std::error::Err
         })
         .collect();
 
-    let network_results: Vec<_> = futures::future::join_all(network_tasks)
+    let network_results: Vec<_> = futures_util::future::join_all(network_tasks)
         .await
         .into_iter()
         .collect::<Result<_, _>>()?;
@@ -434,7 +437,7 @@ async fn test_chaos_comprehensive_stress() -> Result<(), Box<dyn std::error::Err
         .collect();
 
     // Wait for all concurrent tasks
-    let concurrent_results: Vec<_> = futures::future::join_all(concurrent_tasks)
+    let concurrent_results: Vec<_> = futures_util::future::join_all(concurrent_tasks)
         .await
         .into_iter()
         .collect::<Result<_, _>>()?;

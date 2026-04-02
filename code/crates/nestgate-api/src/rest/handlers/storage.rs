@@ -34,6 +34,10 @@ use nestgate_core::universal_storage::AutoConfigurator;
 ///
 /// Returns [`Json`] containing [`DataError`] when the response cannot be
 /// built (reserved for future storage-detector failures).
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn list_backends(
     State(state): State<ApiState>,
     Query(query): Query<ListQuery>,
@@ -156,6 +160,10 @@ pub async fn list_backends(
 ///
 /// Returns [`Json`] containing [`DataError`] when the response cannot be
 /// built (reserved for future scan failures).
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn scan_storage(
     State(state): State<ApiState>,
     Json(request): Json<ScanStorageRequest>,
@@ -243,6 +251,10 @@ pub async fn scan_storage(
 ///
 /// Returns [`Json`] containing [`DataError`] when the requested backend
 /// type does not support benchmarking or when the response cannot be built.
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub fn benchmark_storage(
     State(_state): State<ApiState>,
     Json(request): Json<BenchmarkStorageRequest>,
@@ -428,6 +440,10 @@ fn cost_estimate_for_use_case(use_case: &str) -> CostEstimate {
 /// # Errors
 ///
 /// Returns [`Json<DataError>`] when the auto-configurator state cannot be initialized or validation fails.
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub fn auto_configure(
     State(state): State<ApiState>,
     Json(request): Json<AutoConfigInput>,

@@ -398,6 +398,94 @@ mod tests {
         let _ = PoolCreator::default();
         let _ = PoolCreator::new();
     }
+
+    #[tokio::test]
+    async fn dry_run_mirror_topology_two_devices_ok() {
+        let creator = PoolCreator::new_dry_run();
+        let config = PoolSetupConfig {
+            pool_name: "mirror-pool".to_string(),
+            devices: vec!["/dev/sda".to_string(), "/dev/sdb".to_string()],
+            topology: PoolTopology::Mirror,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+        let r = creator.create_pool_safe(&config).await.expect("dry run");
+        assert!(r.success);
+        assert_eq!(r.topology, PoolTopology::Mirror);
+        assert_eq!(r.devices_used.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn dry_run_raidz1_topology_ok() {
+        let creator = PoolCreator::new_dry_run();
+        let config = PoolSetupConfig {
+            pool_name: "raid-pool".to_string(),
+            devices: vec![
+                "/dev/sda".to_string(),
+                "/dev/sdb".to_string(),
+                "/dev/sdc".to_string(),
+            ],
+            topology: PoolTopology::RaidZ1,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+        let r = creator.create_pool_safe(&config).await.expect("dry run");
+        assert!(r.success);
+        assert_eq!(r.topology, PoolTopology::RaidZ1);
+    }
+
+    #[tokio::test]
+    async fn dry_run_raidz2_topology_ok() {
+        let creator = PoolCreator::new_dry_run();
+        let config = PoolSetupConfig {
+            pool_name: "raidz2-pool".to_string(),
+            devices: vec![
+                "/dev/sda".to_string(),
+                "/dev/sdb".to_string(),
+                "/dev/sdc".to_string(),
+                "/dev/sdd".to_string(),
+            ],
+            topology: PoolTopology::RaidZ2,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+        let r = creator.create_pool_safe(&config).await.expect("dry run");
+        assert!(r.success);
+        assert_eq!(r.topology, PoolTopology::RaidZ2);
+    }
+
+    #[tokio::test]
+    async fn dry_run_raidz3_topology_ok() {
+        let creator = PoolCreator::new_dry_run();
+        let config = PoolSetupConfig {
+            pool_name: "raidz3-pool".to_string(),
+            devices: vec![
+                "/dev/sda".to_string(),
+                "/dev/sdb".to_string(),
+                "/dev/sdc".to_string(),
+                "/dev/sdd".to_string(),
+                "/dev/sde".to_string(),
+            ],
+            topology: PoolTopology::RaidZ3,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+        let r = creator.create_pool_safe(&config).await.expect("dry run");
+        assert!(r.success);
+        assert_eq!(r.topology, PoolTopology::RaidZ3);
+    }
 }
 
 #[cfg(test)]
@@ -456,5 +544,29 @@ mod round3_validation_tests {
         assert!(!validate_zfs_create_args(&c));
         c.properties = HashMap::from([("k".into(), "".into())]);
         assert!(!validate_zfs_create_args(&c));
+    }
+
+    #[test]
+    fn raidz_topologies_accept_multiple_devices() {
+        for (topo, n) in [
+            (PoolTopology::RaidZ1, 3usize),
+            (PoolTopology::RaidZ2, 4usize),
+            (PoolTopology::RaidZ3, 5usize),
+        ] {
+            let devices: Vec<String> = (0..n)
+                .map(|i| format!("/dev/sd{}", (b'a' + i as u8) as char))
+                .collect();
+            let c = PoolSetupConfig {
+                pool_name: "p".into(),
+                devices,
+                topology: topo,
+                properties: HashMap::new(),
+                tier_mappings: HashMap::new(),
+                redundancy: RedundancyLevel::None,
+                device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+                create_tiers: false,
+            };
+            assert!(validate_zfs_create_args(&c));
+        }
     }
 }

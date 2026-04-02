@@ -10,6 +10,33 @@ use nestgate_core::Result;
 use std::collections::HashMap;
 use std::time::SystemTime;
 
+/// Full ZFS snapshot identifier: `pool/dataset@snap`.
+pub fn build_snapshot_zfs_path(dataset_path: &str, snapshot_name: &str) -> String {
+    format!("{dataset_path}@{snapshot_name}")
+}
+
+/// Parse one `zfs list -t snapshot -H` line (`name\tused`).
+pub fn parse_snapshot_list_line(
+    line: &str,
+    created_at: SystemTime,
+) -> Option<ZeroCostSnapshotInfo> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let full_name = parts[0].to_string();
+    let (ds_path, snap_name) = full_name.split_once('@')?;
+    let size = parts[1].parse().unwrap_or(0);
+
+    Some(ZeroCostSnapshotInfo {
+        name: snap_name.to_string(),
+        dataset: ds_path.to_string(),
+        size,
+        created_at,
+        properties: HashMap::new(),
+    })
+}
+
 impl<
     const MAX_POOLS: usize,
     const MAX_DATASETS: usize,
@@ -19,7 +46,7 @@ impl<
 {
     pub(super) async fn snapshot_create(
         &self,
-        _dataset: &ZeroCostDatasetInfo,
+        dataset: &ZeroCostDatasetInfo,
         name: &str,
     ) -> Result<ZeroCostSnapshotInfo> {
         if !self.can_create_more_snapshots().await {
@@ -29,8 +56,8 @@ impl<
             ));
         }
 
-        let dataset_path = "dataset.name().to_string()".to_string();
-        let snapshot_path = format!("{dataset_path}@snapshot_name");
+        let dataset_path = format!("{}/{}", dataset.pool, dataset.name);
+        let snapshot_path = build_snapshot_zfs_path(&dataset_path, name);
 
         self.execute_zfs_command(&["snapshot", &snapshot_path])
             .await?;
@@ -48,7 +75,7 @@ impl<
 
         let snapshot_info = ZeroCostSnapshotInfo {
             name: name.to_string(),
-            dataset: dataset_path,
+            dataset: dataset_path.clone(),
             size,
             created_at: SystemTime::now(),
             properties: properties.clone(),
@@ -63,9 +90,9 @@ impl<
 
     pub(super) async fn snapshot_list(
         &self,
-        _dataset: &ZeroCostDatasetInfo,
+        dataset: &ZeroCostDatasetInfo,
     ) -> Result<Vec<ZeroCostSnapshotInfo>> {
-        let dataset_path = "dataset.name().to_string()".to_string();
+        let dataset_path = format!("{}/{}", dataset.pool, dataset.name);
 
         let output = self
             .execute_zfs_command(&[
@@ -83,23 +110,10 @@ impl<
         let mut snapshots = Vec::with_capacity(MAX_SNAPSHOTS);
 
         for line in output.lines() {
-            let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 2 {
-                let full_name = parts[0].to_string();
-                if let Some((ds_path, snap_name)) = full_name.split_once('@') {
-                    let size = parts[1].parse().unwrap_or(0);
-
-                    snapshots.push(ZeroCostSnapshotInfo {
-                        name: snap_name.to_string(),
-                        dataset: ds_path.to_string(),
-                        size,
-                        created_at: SystemTime::now(), // Approximation
-                        properties: HashMap::new(),    // Would be populated on demand
-                    });
-
-                    if snapshots.len() >= MAX_SNAPSHOTS {
-                        break;
-                    }
+            if let Some(s) = parse_snapshot_list_line(line, SystemTime::now()) {
+                snapshots.push(s);
+                if snapshots.len() >= MAX_SNAPSHOTS {
+                    break;
                 }
             }
         }

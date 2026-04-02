@@ -134,11 +134,12 @@ impl ZeroCostZfsOperations {
     /// - Network or I/O errors occur
     pub fn create_pool(
         &self,
-        _name: &str,
-        _devices: &[String],
+        name: &str,
+        devices: &[String],
     ) -> Result<ZeroCostPoolInfo, ZfsError> {
+        let _ = devices;
         Ok(ZeroCostPoolInfo {
-            name: _name.to_string(),
+            name: name.to_string(),
             health: "ONLINE".to_string(),
             size: 1_000_000_000_000,
             allocated: 0,
@@ -154,13 +155,13 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn list_datasets(&self, _pool: &str) -> Result<Vec<ZeroCostDatasetInfo>, ZfsError> {
+    pub fn list_datasets(&self, pool: &str) -> Result<Vec<ZeroCostDatasetInfo>, ZfsError> {
         Ok(vec![ZeroCostDatasetInfo {
-            name: format!("{_pool}/dataset1"),
+            name: format!("{pool}/dataset1"),
             used: 100_000_000,
             available: 900_000_000,
             referenced: 100_000_000,
-            mountpoint: format!("/{_pool}/dataset1"),
+            mountpoint: format!("/{pool}/dataset1"),
             mounted: true,
         }])
     }
@@ -175,16 +176,16 @@ impl ZeroCostZfsOperations {
     /// - Network or I/O errors occur
     pub fn create_dataset(
         &self,
-        _pool: &str,
-        _name: &str,
+        pool: &str,
+        name: &str,
         _tier: nestgate_core::canonical_types::StorageTier,
     ) -> Result<ZeroCostDatasetInfo, ZfsError> {
         Ok(ZeroCostDatasetInfo {
-            name: format!("{_pool}/{_name}"),
+            name: format!("{pool}/{name}"),
             used: 0,
             available: 1_000_000_000,
             referenced: 0,
-            mountpoint: format!("/{_pool}/{_name}"),
+            mountpoint: format!("/{pool}/{name}"),
             mounted: true,
         })
     }
@@ -197,9 +198,9 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn list_snapshots(&self, _dataset: &str) -> Result<Vec<ZeroCostSnapshotInfo>, ZfsError> {
+    pub fn list_snapshots(&self, dataset: &str) -> Result<Vec<ZeroCostSnapshotInfo>, ZfsError> {
         Ok(vec![ZeroCostSnapshotInfo {
-            name: format!("{_dataset}@snapshot1"),
+            name: format!("{dataset}@snapshot1"),
             used: 50_000_000,
             referenced: 50_000_000,
             creation_time: "2024-01-01T00:00:00Z".to_string(),
@@ -216,11 +217,11 @@ impl ZeroCostZfsOperations {
     /// - Network or I/O errors occur
     pub fn create_snapshot(
         &self,
-        _dataset: &str,
-        _name: &str,
+        dataset: &str,
+        name: &str,
     ) -> Result<ZeroCostSnapshotInfo, ZfsError> {
         Ok(ZeroCostSnapshotInfo {
-            name: format!("{_dataset}@{_name}"),
+            name: format!("{dataset}@{name}"),
             used: 0,
             referenced: 0,
             creation_time: chrono::Utc::now().to_rfc3339(),
@@ -237,12 +238,12 @@ impl ZeroCostZfsOperations {
     /// - Network or I/O errors occur
     pub fn set_dataset_properties(
         &self,
-        _dataset: &str,
-        _properties: &HashMap<String, String>,
+        dataset: &str,
+        properties: &HashMap<String, String>,
     ) -> Result<(), ZfsError> {
         info!(
             "Setting properties for dataset {}: {:?}",
-            _dataset, _properties
+            dataset, properties
         );
         Ok(())
     }
@@ -255,8 +256,8 @@ impl ZeroCostZfsOperations {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn destroy_snapshot(&self, _snapshot: &str) -> Result<(), ZfsError> {
-        info!("Destroying snapshot: {}", _snapshot);
+    pub fn destroy_snapshot(&self, snapshot: &str) -> Result<(), ZfsError> {
+        info!("Destroying snapshot: {}", snapshot);
         Ok(())
     }
 }
@@ -293,9 +294,8 @@ impl PerformanceOptimizer {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn optimize_performance(&self) -> Result<(), ZfsError> {
+    pub fn optimize_performance(&self) {
         info!("Running ZFS performance optimization");
-        Ok(())
     }
 }
 
@@ -610,14 +610,13 @@ mod tests {
     #[test]
     fn test_performance_optimizer_new() {
         let optimizer = PerformanceOptimizer::new();
-        let result = optimizer.optimize_performance();
-        assert!(result.is_ok());
+        optimizer.optimize_performance();
     }
 
     #[test]
     fn test_performance_optimizer_default() {
         let optimizer = PerformanceOptimizer;
-        assert!(optimizer.optimize_performance().is_ok());
+        optimizer.optimize_performance();
     }
 
     #[test]

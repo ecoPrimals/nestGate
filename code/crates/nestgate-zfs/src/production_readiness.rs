@@ -664,6 +664,22 @@ mod tests {
     }
 
     #[test]
+    fn validate_security_passes_when_secure_mode_unparseable() {
+        temp_env::with_var("NESTGATE_SECURE_MODE", Some("not-a-bool"), || {
+            let v = ProductionReadinessValidator::new();
+            assert!(v.validate_security().expect("result"));
+        });
+    }
+
+    #[test]
+    fn validate_min_memory_mb_invalid_env_falls_back_to_default() {
+        temp_env::with_var("NESTGATE_MIN_MEMORY_MB", Some("not-a-number"), || {
+            let v = ProductionReadinessValidator::new();
+            assert!(v.validate_performance().expect("result"));
+        });
+    }
+
+    #[test]
     fn validate_configuration_succeeds_with_writable_temp_directories() {
         let tmp = tempfile::tempdir().expect("tempdir");
         let data = tmp.path().join("data");
@@ -702,5 +718,156 @@ mod tests {
         let a = RealZfsOperations::is_available().await;
         let b = RealZfsOperations::is_available().await;
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn generate_findings_adds_zfs_availability_when_zfs_false() {
+        let v = ProductionReadinessValidator::new();
+        let mut report = ProductionReadinessReport {
+            ready_for_production: false,
+            zfs_available: false,
+            real_hardware_detected: true,
+            mock_dependencies: vec![],
+            performance_validated: true,
+            security_validated: true,
+            configuration_validated: true,
+            findings: vec![],
+            recommendations: vec![],
+        };
+        v.generate_findings_and_recommendations(&mut report)
+            .expect("findings");
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|f| f.category == "ZFS Availability" && f.blocking)
+        );
+    }
+
+    #[test]
+    fn generate_findings_adds_hardware_warning_when_not_real() {
+        let v = ProductionReadinessValidator::new();
+        let mut report = ProductionReadinessReport {
+            ready_for_production: false,
+            zfs_available: true,
+            real_hardware_detected: false,
+            mock_dependencies: vec![],
+            performance_validated: true,
+            security_validated: true,
+            configuration_validated: true,
+            findings: vec![],
+            recommendations: vec![],
+        };
+        v.generate_findings_and_recommendations(&mut report)
+            .expect("findings");
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|f| f.category == "Hardware Detection" && !f.blocking)
+        );
+    }
+
+    #[test]
+    fn generate_findings_adds_performance_when_validation_fails() {
+        let v = ProductionReadinessValidator::new();
+        let mut report = ProductionReadinessReport {
+            ready_for_production: false,
+            zfs_available: true,
+            real_hardware_detected: true,
+            mock_dependencies: vec![],
+            performance_validated: false,
+            security_validated: true,
+            configuration_validated: true,
+            findings: vec![],
+            recommendations: vec![],
+        };
+        v.generate_findings_and_recommendations(&mut report)
+            .expect("findings");
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|f| f.category == "Performance" && !f.blocking)
+        );
+    }
+
+    #[test]
+    fn generate_findings_adds_security_when_validation_fails() {
+        let v = ProductionReadinessValidator::new();
+        let mut report = ProductionReadinessReport {
+            ready_for_production: false,
+            zfs_available: true,
+            real_hardware_detected: true,
+            mock_dependencies: vec![],
+            performance_validated: true,
+            security_validated: false,
+            configuration_validated: true,
+            findings: vec![],
+            recommendations: vec![],
+        };
+        v.generate_findings_and_recommendations(&mut report)
+            .expect("findings");
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|f| f.category == "Security" && f.blocking)
+        );
+    }
+
+    #[test]
+    fn generate_findings_adds_configuration_when_validation_fails() {
+        let v = ProductionReadinessValidator::new();
+        let mut report = ProductionReadinessReport {
+            ready_for_production: false,
+            zfs_available: true,
+            real_hardware_detected: true,
+            mock_dependencies: vec![],
+            performance_validated: true,
+            security_validated: true,
+            configuration_validated: false,
+            findings: vec![],
+            recommendations: vec![],
+        };
+        v.generate_findings_and_recommendations(&mut report)
+            .expect("findings");
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|f| f.category == "Configuration" && f.blocking)
+        );
+    }
+
+    #[test]
+    fn check_zfs_availability_matches_proc_path() {
+        let v = ProductionReadinessValidator::new();
+        let expected = std::path::Path::new("/proc/spl/kstat/zfs").exists();
+        assert_eq!(v.check_zfs_availability().expect("zfs"), expected);
+    }
+
+    #[test]
+    fn generate_findings_adds_mock_dependencies_when_mock_list_nonempty() {
+        let v = ProductionReadinessValidator::new();
+        let mut report = ProductionReadinessReport {
+            ready_for_production: false,
+            zfs_available: true,
+            real_hardware_detected: true,
+            mock_dependencies: vec!["Mock mode enabled".into()],
+            performance_validated: true,
+            security_validated: true,
+            configuration_validated: true,
+            findings: vec![],
+            recommendations: vec![],
+        };
+        v.generate_findings_and_recommendations(&mut report)
+            .expect("findings");
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|f| f.category == "Mock Dependencies" && f.blocking)
+        );
     }
 }

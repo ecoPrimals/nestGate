@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![allow(clippy::unused_async)] // Stub async surface; production orchestration discovery lives in biomeOS
+
 // Removed unused import for pedantic perfection
 // Commented out until available: CapabilityCategory, CapabilityRequest
 /// **ORCHESTRATION CAPABILITY DISCOVERY**
@@ -11,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 /// Orchestration capability types that can be discovered
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-/// Types of OrchestrationCapability
+/// Types of `OrchestrationCapability`
 pub enum OrchestrationCapabilityType {
     /// Service mesh for microservices communication
     ServiceMesh,

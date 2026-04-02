@@ -355,4 +355,18 @@ mod tests {
         let v = m.get_all_tier_status().await.expect("all");
         assert_eq!(v.len(), 4);
     }
+
+    #[tokio::test]
+    async fn refresh_tier_stats_updates_internal_map() {
+        let m = TierManager::new_for_testing();
+        m.refresh_tier_stats().await.expect("refresh");
+        let statuses = m.get_all_tier_status().await.expect("all");
+        assert_eq!(statuses.len(), 4);
+        for s in statuses {
+            assert!(matches!(
+                s.tier,
+                StorageTier::Hot | StorageTier::Warm | StorageTier::Cold | StorageTier::Cache
+            ));
+        }
+    }
 }

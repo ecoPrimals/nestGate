@@ -68,7 +68,7 @@ pub struct Cli {
 
 /// Read port from environment with fallback chain (`UniBin` compliance)
 /// Priority: `NESTGATE_API_PORT` → `NESTGATE_HTTP_PORT` → `NESTGATE_PORT` → default
-fn port_from_env_or_default() -> u16 {
+pub(crate) fn port_from_env_or_default() -> u16 {
     std::env::var("NESTGATE_API_PORT")
         .or_else(|_| std::env::var("NESTGATE_HTTP_PORT"))
         .or_else(|_| std::env::var("NESTGATE_PORT"))
@@ -93,11 +93,11 @@ pub enum Commands {
     #[command(name = "daemon", alias = "server")]
     #[command(about = "Run NestGate daemon (server mode)")]
     Daemon {
-        /// Port to bind to (ignored in socket-only mode)
-        /// Reads from: `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT`
-        #[arg(short, long, default_value_t = port_from_env_or_default())]
-        port: u16,
-        /// Bind address (ignored in socket-only mode)
+        /// Port for TCP JSON-RPC listener (alongside Unix socket). When omitted, reads from
+        /// `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT`, then default.
+        #[arg(short, long)]
+        port: Option<u16>,
+        /// Bind address for TCP JSON-RPC (`bind:port`; `--listen host:port` overrides).
         /// Reads from: `NESTGATE_BIND`, `NESTGATE_BIND_ADDRESS`, or `NESTGATE_HOST`
         #[arg(long, default_value_t = bind_from_env_or_default())]
         bind: String,
@@ -365,7 +365,7 @@ impl Cli {
                 }
                 crate::commands::service::run_daemon(
                     port,
-                    &bind,
+                    bind.as_str(),
                     listen,
                     dev,
                     enable_http,
@@ -579,11 +579,22 @@ mod cli_parse_tests {
             Commands::Daemon {
                 family_id,
                 enable_http,
+                port,
                 ..
             } => {
                 assert_eq!(family_id.as_deref(), Some("fam-a"));
                 assert!(enable_http);
+                assert!(port.is_none());
             }
+            _ => panic!("daemon"),
+        }
+    }
+
+    #[test]
+    fn daemon_parses_explicit_port_for_tcp_jsonrpc() {
+        let cli = Cli::try_parse_from(["nestgate", "daemon", "--port", "9443"]).expect("parse");
+        match cli.command {
+            Commands::Daemon { port, .. } => assert_eq!(port, Some(9443)),
             _ => panic!("daemon"),
         }
     }

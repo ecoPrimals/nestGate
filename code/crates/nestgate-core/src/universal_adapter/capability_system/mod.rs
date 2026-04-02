@@ -5,6 +5,10 @@
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
+#![expect(
+    clippy::too_long_first_doc_paragraph,
+    reason = "Module overview is intentionally detailed for capability-discovery architecture."
+)]
 
 //! **UNIVERSAL CAPABILITY SYSTEM**
 //! Capability System functionality and utilities.

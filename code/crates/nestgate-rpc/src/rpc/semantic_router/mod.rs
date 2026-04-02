@@ -53,11 +53,9 @@
 //! - `storage.dataset.delete` → `delete_dataset`
 //!
 //! ### Data Domain (`data.*` — live feeds, NOT storage)
-//! - `data.ncbi_search` → NCBI database search
-//! - `data.ncbi_fetch` → NCBI record fetch
-//! - `data.noaa_ghcnd` → NOAA weather station data
-//! - `data.iris_stations` → IRIS seismic station listing
-//! - `data.iris_events` → IRIS seismic event listing
+//! - `data.*` → delegate to whichever primal advertises the `"data"` capability
+//!   (resolved at runtime via capability discovery, not by name). `NestGate` routes
+//!   these method names but does not fetch data itself.
 //!
 //! ### Discovery Domain (`discovery.*`)
 //! - `discovery.announce` → register service metadata
@@ -84,6 +82,12 @@
 //! ### Capabilities Domain (`capabilities.*`)
 //! - `capabilities.list` → supported semantic method names
 //!
+//! ### Session Domain (`session.*`)
+//! - `session.save` → persist session state (storage + metadata index)
+//! - `session.load` → load session JSON by id
+//! - `session.list` → list session index entries (`session/` prefix in metadata)
+//! - `session.delete` → remove session blob and index entry
+//!
 //! ## References
 //!
 //! - `wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md` v2.0
@@ -91,7 +95,9 @@
 //! - `CAPABILITY_MAPPINGS.md`
 
 use crate::rpc::NestGateRpcClient;
-use crate::rpc::metadata_backend::{InMemoryMetadataBackend, MetadataBackend};
+use crate::rpc::metadata_backend::{
+    FileMetadataBackend, InMemoryMetadataBackend, MetadataBackend, default_metadata_base_dir,
+};
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
 use std::sync::Arc;
@@ -104,6 +110,7 @@ pub mod data;
 pub mod discovery;
 pub mod health;
 pub mod metadata;
+pub mod session;
 pub mod storage;
 
 #[cfg(test)]
@@ -122,16 +129,27 @@ pub struct SemanticRouter {
 }
 
 impl SemanticRouter {
-    /// Create new semantic router with default in-memory metadata backend.
+    /// Create new semantic router with the default file-backed metadata backend
+    /// ([`FileMetadataBackend`] under [`default_metadata_base_dir`]), falling back to
+    /// in-memory storage only if the on-disk path cannot be created.
     ///
     /// # Arguments
     /// * `client` - Internal RPC client for method delegation
     pub fn new(client: Arc<NestGateRpcClient>) -> Self {
         debug!("Creating semantic method router");
-        Self {
-            client,
-            metadata: Arc::new(InMemoryMetadataBackend::new()),
-        }
+        let metadata: Arc<dyn MetadataBackend> = match FileMetadataBackend::new(
+            default_metadata_base_dir(),
+        ) {
+            Ok(b) => Arc::new(b),
+            Err(e) => {
+                warn!(
+                    error = %e,
+                    "file metadata backend unavailable; using in-memory metadata (lost on restart)"
+                );
+                Arc::new(InMemoryMetadataBackend::new())
+            }
+        };
+        Self { client, metadata }
     }
 
     /// Create a semantic router with a custom metadata backend.
@@ -201,15 +219,15 @@ impl SemanticRouter {
             "data.iris_events" => data::data_iris_events(self, params),
 
             // ==================== DISCOVERY DOMAIN ====================
-            "discovery.announce" => discovery::discovery_announce(self, params),
-            "discovery.query" => discovery::discovery_query(self, params),
-            "discovery.list" => discovery::discovery_list(self, params),
-            "discovery.capabilities" => discovery::discovery_capabilities(self, params),
+            "discovery.announce" => discovery::discovery_announce(self, &params),
+            "discovery.query" => discovery::discovery_query(self, &params),
+            "discovery.list" => discovery::discovery_list(self, &params),
+            "discovery.capabilities" => discovery::discovery_capabilities(self, &params),
 
             // ==================== HEALTH DOMAIN ====================
             "health.check" => health::health_check(self, params).await,
             "health.liveness" => health::health_liveness(self, params).await,
-            "health.readiness" => health::health_ready(self, params).await,
+            "health.readiness" => health::health_readiness(self, params).await,
             "health.metrics" => health::health_metrics(self, params).await,
             "health.info" => health::health_info(self, params).await,
 
@@ -228,6 +246,12 @@ impl SemanticRouter {
             "crypto.generate_nonce" => crypto::crypto_generate_nonce(self, params),
             "crypto.hash" => crypto::crypto_hash(self, params),
             "crypto.verify_hash" => crypto::crypto_verify_hash(self, params),
+
+            // ==================== SESSION DOMAIN ====================
+            "session.save" => session::session_save(self, params).await,
+            "session.load" => session::session_load(self, params).await,
+            "session.list" => session::session_list(self, params).await,
+            "session.delete" => session::session_delete(self, params).await,
 
             // Unknown method
             _ => {

@@ -19,7 +19,7 @@ use axum::{
     response::sse::{Event, KeepAlive},
     response::{Json, Sse},
 };
-use futures::Stream;
+use futures_util::Stream;
 use nestgate_core::Result;
 use serde::Deserialize;
 use std::sync::Arc;

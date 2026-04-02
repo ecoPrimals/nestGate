@@ -356,23 +356,23 @@ mod performance_discovery_tests {
         drop(d3);
     }
 
-    #[tokio::test]
-    async fn test_discover_optimal_timeout() {
+    #[test]
+    fn test_discover_optimal_timeout() {
         let discovery = PerformanceDiscovery::new();
-        let result = discovery.discover_optimal_timeout("test-service").await;
+        let result = discovery.discover_optimal_timeout("test-service");
 
         assert!(result.is_ok());
         let timeout = result.unwrap();
         assert!(timeout.as_secs() > 0 || timeout.as_millis() > 0);
     }
 
-    #[tokio::test]
-    async fn test_discover_optimal_timeout_various_services() {
+    #[test]
+    fn test_discover_optimal_timeout_various_services() {
         let discovery = PerformanceDiscovery::new();
         let services = vec!["api", "web", "db", "cache", "metrics"];
 
         for service in services {
-            let result = discovery.discover_optimal_timeout(service).await;
+            let result = discovery.discover_optimal_timeout(service);
             assert!(result.is_ok(), "Failed for service: {}", service);
         }
     }
@@ -444,12 +444,12 @@ mod performance_test_runner_tests {
         drop(runner);
     }
 
-    #[tokio::test]
-    async fn test_runner_discover_optimal_timeout() {
+    #[test]
+    fn test_runner_discover_optimal_timeout() {
         let config = PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
 
-        let result = runner.discover_optimal_timeout().await;
+        let result = runner.discover_optimal_timeout();
         assert!(result.is_ok());
 
         let optimal = result.unwrap();
@@ -499,36 +499,35 @@ mod performance_test_runner_tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_runner_multiple_discoveries() {
+    #[test]
+    fn test_runner_multiple_discoveries() {
         let config = PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
 
-        // Run multiple discoveries
         for _ in 0..3 {
-            let result = runner.discover_optimal_timeout().await;
+            let result = runner.discover_optimal_timeout();
             assert!(result.is_ok());
         }
     }
 
-    #[tokio::test]
-    async fn test_runner_optimal_timeout_bounds() {
+    #[test]
+    fn test_runner_optimal_timeout_bounds() {
         let config = PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
 
-        let optimal = runner.discover_optimal_timeout().await.unwrap();
+        let optimal = runner.discover_optimal_timeout().unwrap();
 
         // Timeout should be reasonable
         assert!(optimal.timeout < Duration::from_secs(3600)); // Less than 1 hour
         assert!(optimal.timeout > Duration::ZERO);
     }
 
-    #[tokio::test]
-    async fn test_runner_confidence_level() {
+    #[test]
+    fn test_runner_confidence_level() {
         let config = PerformanceConfig::default();
         let runner = PerformanceTestRunner::new(config);
 
-        let optimal = runner.discover_optimal_timeout().await.unwrap();
+        let optimal = runner.discover_optimal_timeout().unwrap();
 
         // ✅ MODERN: Confidence should be between 0 and 1 (with epsilon)
         assert!(optimal.confidence >= -1e-9);
@@ -544,12 +543,11 @@ mod performance_test_runner_tests {
 mod performance_integration_tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_full_performance_discovery_workflow() {
+    #[test]
+    fn test_full_performance_discovery_workflow() {
         let discovery = PerformanceDiscovery::new();
 
-        // Discover timeout
-        let timeout_result = discovery.discover_optimal_timeout("api").await;
+        let timeout_result = discovery.discover_optimal_timeout("api");
         assert!(timeout_result.is_ok());
 
         // Discover performance characteristics
@@ -560,24 +558,26 @@ mod performance_integration_tests {
         assert!(characteristics.contains_key("cpu_cores"));
     }
 
-    #[tokio::test]
-    async fn test_concurrent_performance_discoveries() {
-        use std::sync::Arc;
+    #[test]
+    fn test_concurrent_performance_discoveries() {
+        use std::thread;
 
-        let discovery = Arc::new(PerformanceDiscovery::new());
+        let handles: Vec<_> = (0..3)
+            .map(|i| {
+                thread::spawn(move || {
+                    let discovery = PerformanceDiscovery::new();
+                    if i < 2 {
+                        let _ = discovery.discover_optimal_timeout(&format!("service{i}"));
+                    } else {
+                        let _ = discovery.discover_performance();
+                    }
+                })
+            })
+            .collect();
 
-        let d1 = discovery.clone();
-        let d2 = discovery.clone();
-        let d3 = discovery.clone();
-
-        let handle1 = tokio::spawn(async move { d1.discover_optimal_timeout("service1").await });
-
-        let handle2 = tokio::spawn(async move { d2.discover_optimal_timeout("service2").await });
-
-        let handle3 = tokio::spawn(async move { d3.discover_performance() });
-
-        let results = tokio::try_join!(handle1, handle2, handle3);
-        assert!(results.is_ok());
+        for handle in handles {
+            handle.join().expect("thread should not panic");
+        }
     }
 
     #[test]
@@ -623,25 +623,25 @@ mod performance_integration_tests {
 mod performance_edge_cases {
     use super::*;
 
-    #[tokio::test]
-    async fn test_timeout_with_empty_service_name() {
+    #[test]
+    fn test_timeout_with_empty_service_name() {
         let discovery = PerformanceDiscovery::new();
-        let result = discovery.discover_optimal_timeout("").await;
+        let result = discovery.discover_optimal_timeout("");
         assert!(result.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_timeout_with_long_service_name() {
+    #[test]
+    fn test_timeout_with_long_service_name() {
         let discovery = PerformanceDiscovery::new();
         let long_name = "a".repeat(1000);
-        let result = discovery.discover_optimal_timeout(&long_name).await;
+        let result = discovery.discover_optimal_timeout(&long_name);
         assert!(result.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_timeout_with_special_chars() {
+    #[test]
+    fn test_timeout_with_special_chars() {
         let discovery = PerformanceDiscovery::new();
-        let result = discovery.discover_optimal_timeout("service@#$%").await;
+        let result = discovery.discover_optimal_timeout("service@#$%");
         assert!(result.is_ok());
     }
 

@@ -295,3 +295,74 @@ impl<'a> DetectionEngine<'a> {
     // Previously: analyze_block_device(), get_filesystem_stats()
     // Now handled by: UniversalFilesystemDetector in filesystem_detection.rs
 }
+
+#[cfg(test)]
+mod detection_placeholder_tests {
+    #![allow(clippy::field_reassign_with_default)]
+    use super::{DetectionConfig, DetectionEngine};
+
+    #[test]
+    fn detect_cloud_storage_returns_empty_when_disabled() {
+        let mut config = DetectionConfig::default();
+        config.enable_cloud_detection = false;
+        let engine = DetectionEngine::new(&config);
+        let v = engine.detect_cloud_storage().expect("detect_cloud_storage");
+        assert!(v.is_empty(), "expected empty when cloud detection disabled");
+    }
+
+    #[test]
+    fn detect_network_shares_returns_empty_when_disabled() {
+        let mut config = DetectionConfig::default();
+        config.enable_network_detection = false;
+        let engine = DetectionEngine::new(&config);
+        let v = engine
+            .detect_network_shares()
+            .expect("detect_network_shares");
+        assert!(
+            v.is_empty(),
+            "expected empty when network detection disabled"
+        );
+    }
+
+    /// Placeholder cloud detectors (S3, Azure, GCS) return no results until real SDK wiring exists.
+    #[test]
+    fn detect_cloud_storage_placeholders_return_empty() {
+        let mut config = DetectionConfig::default();
+        config.enable_cloud_detection = true;
+        let engine = DetectionEngine::new(&config);
+        let v = engine.detect_cloud_storage().expect("detect_cloud_storage");
+        assert!(
+            v.is_empty(),
+            "placeholder cloud detection should return an empty list"
+        );
+    }
+
+    /// Placeholder network detectors (SMB, NFS, iSCSI) return no results until implemented.
+    #[test]
+    fn detect_network_shares_placeholders_return_empty() {
+        let mut config = DetectionConfig::default();
+        config.enable_network_detection = true;
+        let engine = DetectionEngine::new(&config);
+        let v = engine
+            .detect_network_shares()
+            .expect("detect_network_shares");
+        assert!(
+            v.is_empty(),
+            "placeholder network share detection should return an empty list"
+        );
+    }
+
+    /// Placeholder tmpfs and ramdisk paths return no results until implemented.
+    #[test]
+    fn detect_memory_storage_placeholders_return_empty() {
+        let config = DetectionConfig::default();
+        let engine = DetectionEngine::new(&config);
+        let v = engine
+            .detect_memory_storage()
+            .expect("detect_memory_storage");
+        assert!(
+            v.is_empty(),
+            "placeholder memory storage detection should return an empty list"
+        );
+    }
+}

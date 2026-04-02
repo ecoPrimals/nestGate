@@ -12,12 +12,12 @@ use std::collections::HashMap;
 fn create_pool_request_roundtrip_json() {
     let r = CreatePoolRequest {
         name: "tank".to_string(),
-        _devices: vec!["/dev/sdb".to_string()],
+        devices: vec!["/dev/sdb".to_string()],
     };
     let v = serde_json::to_value(&r).unwrap();
     let back: CreatePoolRequest = serde_json::from_value(v).unwrap();
     assert_eq!(back.name, "tank");
-    assert_eq!(back._devices.len(), 1);
+    assert_eq!(back.devices.len(), 1);
 }
 
 #[test]

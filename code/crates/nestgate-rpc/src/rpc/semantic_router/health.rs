@@ -3,30 +3,34 @@
 
 //! Health domain semantic methods
 //!
-//! Handles health.* semantic method routing for health checks and metrics.
+//! Handles `health.*` semantic method routing per `wateringHole/PRIMAL_IPC_PROTOCOL` and
+//! `SEMANTIC_METHOD_NAMING_STANDARD`: triad `health.check` / `health.liveness` /
+//! `health.readiness`, plus optional `health.metrics` and `health.info`.
 
 use super::SemanticRouter;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
-/// Route health.check → `health_check`
+/// Route `health.check` → full `HealthStatus` JSON from tarpc `health()` (all fields).
 pub(super) async fn health_check(router: &SemanticRouter, _params: Value) -> Result<Value> {
     let health = router.client.health().await?;
 
-    Ok(json!({
-        "status": health.status,
-        "uptime_seconds": health.uptime_seconds,
-        "version": health.version
-    }))
+    serde_json::to_value(&health).map_err(|e| {
+        NestGateError::internal_error(
+            format!("Failed to serialize health: {e}"),
+            "semantic_router",
+        )
+    })
 }
 
-/// Route health.liveness → minimal alive signal (orchestrator / kube probes)
+/// Route `health.liveness` → minimal alive probe (cheap RPC; does **not** call full `health()`).
 pub(super) async fn health_liveness(router: &SemanticRouter, _params: Value) -> Result<Value> {
-    let health = router.client.health().await?;
+    // `version()` proves the process responds without `calculate_metrics()` (used by `health()`).
+    router.client.version().await?;
 
     Ok(json!({
         "alive": true,
-        "status": health.status
+        "status": "ok"
     }))
 }
 
@@ -54,13 +58,18 @@ pub(super) async fn health_info(router: &SemanticRouter, _params: Value) -> Resu
     })
 }
 
-/// Route health.readiness → readiness check
-pub(super) async fn health_ready(router: &SemanticRouter, _params: Value) -> Result<Value> {
+/// Route `health.readiness` → whether backends are reachable and ready (uses full `health()` so
+/// storage/metrics path is exercised, not just process liveness).
+pub(super) async fn health_readiness(router: &SemanticRouter, _params: Value) -> Result<Value> {
     let health = router.client.health().await?;
+    let ready = health.status == "healthy";
 
     Ok(json!({
-        "ready": health.status == "healthy",
-        "status": health.status
+        "ready": ready,
+        "status": health.status,
+        "backends": {
+            "storage": if ready { "ready" } else { "not_ready" }
+        }
     }))
 }
 
@@ -85,6 +94,34 @@ mod tests {
         assert!(health_liveness(&r, json!({})).await.is_err());
         assert!(health_metrics(&r, json!({})).await.is_err());
         assert!(health_info(&r, json!({})).await.is_err());
-        assert!(health_ready(&r, json!({})).await.is_err());
+        assert!(health_readiness(&r, json!({})).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn health_handlers_succeed_with_live_tarpc_server() {
+        use super::super::tests::spawn_local_tarpc_server;
+        use crate::rpc::NestGateRpcClient;
+
+        let (addr, server_handle) = spawn_local_tarpc_server().await;
+        let client = Arc::new(NestGateRpcClient::new(&format!("tarpc://{addr}")).expect("client"));
+        let r = SemanticRouter::new(client);
+
+        let check = health_check(&r, json!({})).await.expect("health_check");
+        assert_eq!(check["status"], "healthy");
+
+        let live = health_liveness(&r, json!({})).await.expect("liveness");
+        assert_eq!(live["alive"], true);
+
+        let ready = health_readiness(&r, json!({})).await.expect("readiness");
+        assert_eq!(ready["ready"], true);
+        assert_eq!(ready["backends"]["storage"], "ready");
+
+        let metrics = health_metrics(&r, json!({})).await.expect("metrics");
+        assert!(metrics.is_object());
+
+        let info = health_info(&r, json!({})).await.expect("info");
+        assert!(info.get("version").is_some());
+
+        server_handle.abort();
     }
 }

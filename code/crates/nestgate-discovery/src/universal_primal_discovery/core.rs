@@ -102,17 +102,13 @@ impl UniversalPrimalDiscovery {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn discover_optimal_timeout(
+    pub fn discover_optimal_timeout(
         &self,
         service_name: &str,
         _operation: &str,
     ) -> Result<Duration> {
-        // Delegate to performance discovery subsystem
-        let optimal_timeout = self
-            .performance_discovery
+        self.performance_discovery
             .discover_optimal_timeout(service_name)
-            .await?;
-        Ok(optimal_timeout)
     }
 
     /// **PRIMAL DISCOVERY**: Discover system limits through introspection

@@ -591,15 +591,15 @@ impl nestgate_rpc::rpc::storage_backend::StorageBackend for StorageManagerServic
         &self,
         dataset: &str,
         key: &str,
-        data: Vec<u8>,
+        data: bytes::Bytes,
         _metadata: Option<std::collections::HashMap<String, String>>,
     ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
         self.store_object(dataset, key, data).await
     }
 
-    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Vec<u8>> {
+    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<bytes::Bytes> {
         let (bytes, _info) = Self::retrieve_object(self, dataset, key).await?;
-        Ok(bytes.to_vec())
+        Ok(bytes)
     }
 
     async fn get_object_metadata(

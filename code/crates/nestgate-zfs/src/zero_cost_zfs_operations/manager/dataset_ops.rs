@@ -12,6 +12,83 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
+/// Build `zfs create` arguments for a tier and dataset path (no process execution).
+pub fn build_dataset_create_zfs_args<'a>(
+    tier: &StorageTier,
+    dataset_path: &'a str,
+) -> Vec<&'a str> {
+    let mut args: Vec<&str> = vec!["create"];
+    match tier {
+        StorageTier::Hot => {
+            args.extend_from_slice(&["-o", "compression=lz4", "-o", "sync=always"]);
+        }
+        StorageTier::Warm => {
+            args.extend_from_slice(&["-o", "compression=gzip", "-o", "sync=standard"]);
+        }
+        StorageTier::Cold => {
+            args.extend_from_slice(&["-o", "compression=gzip-9", "-o", "sync=disabled"]);
+        }
+        StorageTier::Cache => {
+            args.extend_from_slice(&[
+                "-o",
+                "compression=lz4",
+                "-o",
+                "sync=always",
+                "-o",
+                "primarycache=all",
+            ]);
+        }
+        StorageTier::Archive => {
+            args.extend_from_slice(&[
+                "-o",
+                "compression=gzip-9",
+                "-o",
+                "sync=disabled",
+                "-o",
+                "atime=off",
+            ]);
+        }
+    }
+    args.push(dataset_path);
+    args
+}
+
+/// Parse one `zfs list -H` line (`name\tused\tavail\tmountpoint`) for datasets under `pool_name`.
+pub fn parse_dataset_list_line(
+    line: &str,
+    pool_name: &str,
+    created_at: SystemTime,
+) -> Option<ZeroCostDatasetInfo> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() < 4 || parts[0] == pool_name {
+        return None;
+    }
+    let full_name = parts[0].to_string();
+    let name = full_name
+        .strip_prefix(&format!("{pool_name}/"))
+        .unwrap_or(&full_name)
+        .to_string();
+    let used = parts[1].parse().unwrap_or(0);
+    let available = parts[2].parse().unwrap_or(0);
+    let size = used + available;
+    let mount_point = if parts[3] != "-" && parts[3] != "none" {
+        Some(PathBuf::from(parts[3]))
+    } else {
+        None
+    };
+
+    Some(ZeroCostDatasetInfo {
+        name,
+        pool: pool_name.to_string(),
+        tier: StorageTier::Warm,
+        size,
+        used,
+        properties: HashMap::new(),
+        mount_point,
+        created_at,
+    })
+}
+
 impl<
     const MAX_POOLS: usize,
     const MAX_DATASETS: usize,
@@ -32,36 +109,8 @@ impl<
             ));
         }
 
-        let dataset_path = "dataset.name().to_string()".to_string();
-
-        let mut args = vec!["create"];
-
-        match tier {
-            StorageTier::Hot => {
-                args.extend(&["-o", "compression=lz4"]);
-                args.extend(&["-o", "sync=always"]);
-            }
-            StorageTier::Warm => {
-                args.extend(&["-o", "compression=gzip"]);
-                args.extend(&["-o", "sync=standard"]);
-            }
-            StorageTier::Cold => {
-                args.extend(&["-o", "compression=gzip-9"]);
-                args.extend(&["-o", "sync=disabled"]);
-            }
-            StorageTier::Cache => {
-                args.extend(&["-o", "compression=lz4"]);
-                args.extend(&["-o", "sync=always"]);
-                args.extend(&["-o", "primarycache=all"]);
-            }
-            StorageTier::Archive => {
-                args.extend(&["-o", "compression=gzip-9"]);
-                args.extend(&["-o", "sync=disabled"]);
-                args.extend(&["-o", "atime=off"]);
-            }
-        }
-
-        args.push(&dataset_path);
+        let dataset_path = format!("{}/{}", pool.name, name);
+        let args = build_dataset_create_zfs_args(&tier, &dataset_path);
 
         self.execute_zfs_command(&args).await?;
 
@@ -122,33 +171,8 @@ impl<
         let mut datasets = Vec::with_capacity(MAX_DATASETS);
 
         for line in output.lines() {
-            let parts: Vec<&str> = line.split('\t').collect();
-            if parts.len() >= 4 && parts[0] != pool.name {
-                let full_name = parts[0].to_string();
-                let name = full_name
-                    .strip_prefix(&format!("{}/", pool.name))
-                    .unwrap_or(&full_name)
-                    .to_string();
-                let used = parts[1].parse().unwrap_or(0);
-                let available = parts[2].parse().unwrap_or(0);
-                let size = used + available;
-                let mount_point = if parts[3] != "-" && parts[3] != "none" {
-                    Some(PathBuf::from(parts[3]))
-                } else {
-                    None
-                };
-
-                datasets.push(ZeroCostDatasetInfo {
-                    name,
-                    pool: pool.name.clone(),
-                    tier: StorageTier::Warm, // Default, would be determined from properties
-                    size,
-                    used,
-                    properties: HashMap::new(), // Would be populated on demand
-                    mount_point,
-                    created_at: SystemTime::now(), // Approximation
-                });
-
+            if let Some(info) = parse_dataset_list_line(line, &pool.name, SystemTime::now()) {
+                datasets.push(info);
                 if datasets.len() >= MAX_DATASETS {
                     break;
                 }

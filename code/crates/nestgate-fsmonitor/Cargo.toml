@@ -15,7 +15,6 @@ workspace = true
 nestgate-core = { path = "../nestgate-core" }
 
 notify = "6.1"
-futures = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

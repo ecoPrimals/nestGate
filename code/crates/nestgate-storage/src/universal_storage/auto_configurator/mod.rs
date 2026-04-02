@@ -27,11 +27,16 @@ pub use enums::{
     CrossTierRedundancyStrategy, PerformanceTier, RedundancyLevel, RedundancyStrategy,
     StorageUseCase, ZfsFeature,
 };
+#[allow(
+    deprecated,
+    reason = "OptimalStorageConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+)]
+pub use types::OptimalStorageConfig;
 pub use types::{
     ConfiguratorSettings, CostEstimation, ExpectedPerformanceProfile, ImplementationPhase,
-    ImplementationPlan, ImplementationStep, OptimalStorageConfig, OptimizedConfiguration,
-    RedundancyConfiguration, RedundancyOption, StorageLandscapeAnalysis, StorageMapping,
-    StorageRequirements, TierConfiguration, TieringRule, ZfsFeatureMapping,
+    ImplementationPlan, ImplementationStep, OptimizedConfiguration, RedundancyConfiguration,
+    RedundancyOption, StorageLandscapeAnalysis, StorageMapping, StorageRequirements,
+    TierConfiguration, TieringRule, ZfsFeatureMapping,
 };
 
 // ==================== AUTO CONFIGURATOR ====================
@@ -97,6 +102,10 @@ impl AutoConfigurator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
+    #[allow(
+        deprecated,
+        reason = "Returns OptimalStorageConfig (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+    )]
     pub fn create_optimal_config(
         &self,
         requirements: StorageRequirements,

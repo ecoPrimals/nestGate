@@ -62,6 +62,8 @@ pub enum ZeroCostError {
     SecurityError,
     /// Storageerror
     StorageError,
+    /// Deprecated zero-cost file storage; use `UnifiedStorage` instead
+    DeprecatedStorage,
     /// Invalidrequest
     InvalidRequest,
     /// Systemoverload
@@ -120,6 +122,10 @@ impl std::fmt::Display for ZeroCostError {
             Self::CacheError => write!(f, "Cache operation failed"),
             Self::SecurityError => write!(f, "Security validation failed"),
             Self::StorageError => write!(f, "Storage operation failed"),
+            Self::DeprecatedStorage => write!(
+                f,
+                "ZeroCostFileStorage is deprecated; use nestgate_core::traits::unified_storage::UnifiedStorage"
+            ),
             Self::InvalidRequest => write!(f, "Invalid request format"),
             Self::SystemOverload => write!(f, "System capacity exceeded"),
         }
@@ -168,6 +174,10 @@ mod tests {
         assert_eq!(
             ZeroCostError::StorageError.to_string(),
             "Storage operation failed"
+        );
+        assert_eq!(
+            ZeroCostError::DeprecatedStorage.to_string(),
+            "ZeroCostFileStorage is deprecated; use nestgate_core::traits::unified_storage::UnifiedStorage"
         );
         assert_eq!(
             ZeroCostError::InvalidRequest.to_string(),

@@ -8,23 +8,23 @@
 ## Quick Metrics
 
 ```
-Build:              ALL workspace members — cargo check --workspace --all-features --all-targets (0 errors)
-Clippy:             ZERO WARNINGS — cargo clippy --workspace --all-features --all-targets
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-02
+Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-02
 Format:             CLEAN (cargo fmt --check passes)
-Docs:               ZERO WARNINGS — cargo doc --workspace --no-deps
-Tests (lib):        8,555 passing, 0 failures
-Tests (total):      12,105 passing, 0 failures (--workspace --all-features; 49 duplicates removed)
-Coverage:           ~80% line (cargo llvm-cov --workspace --lib) — re-run to refresh
+Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
+Tests (lib):        ~8,555 passing, 0 failures (approximate; re-run cargo test)
+Tests (total):      ~12,105 passing, 0 failures (approximate; --workspace)
+Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
 Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code
-TODO/FIXME:         ZERO in .rs files
+Inline markers:     none in committed production `.rs` (wateringHole policy — re-verify after large edits)
 Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (except env_process_shim bridge)
 println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
 TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
 Discovery:          Environment variables + capability IPC (mDNS behind `mdns` feature gate; delegated to biomeOS/songBird)
 MCP:                Not a workspace member — use biomeOS `capability.call` / songBird instead
-IPC routes:         storage.*, data.*, session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.*, capabilities.* all wired
+IPC routes:         storage.*, data.* (delegation; not capability-advertised), session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.* wired
 Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -33,20 +33,22 @@ Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  24 (22 code/crates + tools/unwrap-migrator + fuzz)
-Serial tests:       ZERO outside chaos suite — all env tests use temp_env closures
+Serial tests:       Some #[serial] in nestgate-config / nestgate-discovery tests (env isolation); temp_env used broadly
 Numeric casts:      ZERO raw `as` casts in production — all use try_from with saturating fallbacks
 Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
 
+**Note:** The fossil placeholder `tests/mdns_discovery_integration_tests.rs` was removed April 2026; mDNS removal and delegation are documented in `CHANGELOG.md` and project handoffs.
+
 ---
 
 ## Ground truth refresh (Apr 2, 2026)
 
-Measured with `cargo check` / `cargo clippy --workspace --all-targets -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace --all-features`.
+Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
 
 - **Production file size**: All production `.rs` files under **1,000** lines (max ~500 after smart refactoring).
-- **Workspace**: **24** members compile clean with zero clippy warnings. MCP, ring, rustls, reqwest all eliminated.
+- **Workspace**: **24** members; clippy with `-D warnings` passes as of 2026-04-02. MCP, ring, rustls, reqwest eliminated from typical app paths.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
 - **Testing**: Zero `thread::sleep` or `tokio::time::sleep` in tests (except chaos). All `#[serial]` markers removed from non-chaos tests. `temp_env` closures provide isolation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
@@ -165,7 +167,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets -- -D warn
 
 ### Zero-copy evolution
 - `Cow<'static, str>` migration completed for `core_errors.rs` error types
-- TODO(zero-copy) resolved — constructors accept `impl Into<Cow<'static, str>>`
+- Zero-copy constructor cleanup resolved — constructors accept `impl Into<Cow<'static, str>>`
 - Zero allocation on hot error paths with static string literals
 
 ---
@@ -358,8 +360,8 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets -- -D warn
 - Fixed 8 doc warnings: unresolved links, empty code blocks, unclosed HTML tags (`<T>`, `<u8>`)
 - `cargo doc --workspace --no-deps` now produces 0 warnings
 
-**TODO/FIXME removal (wateringHole §13):**
-- Removed all TODO/FIXME from production `.rs` files (azure.rs, model_cache_handlers.rs,
+**Debt marker removal (wateringHole §13):**
+- Removed migration/debt markers from production `.rs` files (azure.rs, model_cache_handlers.rs,
   security.rs, server.rs, dev_stubs/zfs/types.rs)
 - Implemented glob pattern socket scanning in transport/security.rs
 - Implemented HTTP fallback server in transport/server.rs
@@ -476,14 +478,14 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets -- -D warn
 | Area | Status |
 |------|--------|
 | Production unwrap/expect | CLEAN (library `src/`; tests may use unwrap/expect) |
-| Production TODO/FIXME | CLEAN |
+| Production inline markers (wateringHole §13) | CLEAN |
 | unsafe blocks | EVOLVED (safe alternatives everywhere except env-process-shim) |
 | Hardcoded primal names | CLEAN (DEFAULT_SERVICE_NAME + env config) |
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
 | TLS/crypto | Delegated to bearDog IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
 | Coverage gap to 90% | ~10 pp remaining (~80% current; last measured 80.95% line) |
-| Semantic router | COMPILED & WIRED — `data.*`, `nat.*`, `beacon.*` routes all active |
+| Semantic router | COMPILED & WIRED — `data.*` delegates; `nat.*`, `beacon.*` routes active; `discovery` overstep modules deprecated |
 | `#[allow(dead_code)]` | 1 production module-level (RPC manager, documented rationale); item-level with reasons |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
 | mDNS in-tree | Feature-gated behind `mdns` — biomeOS/songBird for production discovery |
@@ -551,7 +553,7 @@ nestGate/ (24 workspace members)
 | JSON-RPC 2.0 | PASS |
 | tarpc | PASS (feature-gated, version aligned) |
 | Semantic naming | PASS (storage.*, data.*, nat.*, beacon.*, health.*, capabilities.*) |
-| File size (<1000 production) | PASS (max 879 lines) |
+| File size (<1000 production) | PASS (max ~500 lines after smart refactors) |
 | Sovereignty | PASS (capability-based discovery, storage.sock symlink, zero hardcoded primals) |
 | mDNS Discovery | Feature-gated (`mdns`); production via biomeOS/songBird |
 | Crypto delegation | PASS — bearDog IPC via SecurityProviderClient |
@@ -595,4 +597,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: March 31, 2026
+**Latest**: April 2, 2026

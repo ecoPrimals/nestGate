@@ -175,7 +175,11 @@ pub trait NestGateRpc {
 
     // ==================== HEALTH & MONITORING ====================
 
-    /// Get health status
+    /// Get health status (full snapshot; used by semantic `health.check` and `health.readiness`).
+    ///
+    /// Semantic `health.liveness` and `health.readiness` are composed in
+    /// [`crate::rpc::semantic_router::SemanticRouter`] (liveness uses `version()` to avoid
+    /// heavy metrics; readiness uses this call to validate storage backends).
     ///
     /// # Returns
     /// Current health status of `NestGate`

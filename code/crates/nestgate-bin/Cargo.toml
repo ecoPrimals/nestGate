@@ -33,7 +33,6 @@ clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-futures = { workspace = true }
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde-transport-json"] }
 
 [dev-dependencies]

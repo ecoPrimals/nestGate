@@ -44,12 +44,12 @@ pub trait StorageBackend: Send + Sync {
         &self,
         dataset: &str,
         key: &str,
-        data: Vec<u8>,
+        data: Bytes,
         metadata: Option<HashMap<String, String>>,
     ) -> Result<ObjectInfo>;
 
     /// Retrieve an object's raw bytes from a dataset.
-    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Vec<u8>>;
+    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Bytes>;
 
     /// Get object metadata without the body.
     async fn get_object_metadata(&self, dataset: &str, key: &str) -> Result<ObjectInfo>;
@@ -169,7 +169,7 @@ impl StorageBackend for InMemoryStorageBackend {
         &self,
         dataset: &str,
         key: &str,
-        data: Vec<u8>,
+        data: Bytes,
         metadata: Option<HashMap<String, String>>,
     ) -> Result<ObjectInfo> {
         let mut g = self.inner.write().await;
@@ -193,10 +193,8 @@ impl StorageBackend for InMemoryStorageBackend {
             compressed: false,
             metadata: meta.clone(),
         };
-        g.objects.insert(
-            (dataset.to_string(), key.to_string()),
-            (Bytes::from(data), meta),
-        );
+        g.objects
+            .insert((dataset.to_string(), key.to_string()), (data, meta));
 
         let object_count = byte_len(g.objects.keys().filter(|(d, _)| d == dataset).count());
         let used_bytes: u64 = g
@@ -213,11 +211,11 @@ impl StorageBackend for InMemoryStorageBackend {
         Ok(info)
     }
 
-    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Vec<u8>> {
+    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Bytes> {
         let g = self.inner.read().await;
         g.objects
             .get(&(dataset.to_string(), key.to_string()))
-            .map(|(b, _)| b.to_vec())
+            .map(|(b, _)| b.clone())
             .ok_or_else(|| {
                 nestgate_types::error::NestGateError::storage_not_found(format!(
                     "object {dataset}/{key}",
@@ -326,11 +324,11 @@ mod tests {
             .await
             .expect("create");
         backend
-            .store_object("ds", "k1", vec![1, 2, 3], None)
+            .store_object("ds", "k1", Bytes::from(vec![1, 2, 3]), None)
             .await
             .expect("store");
         let data = backend.retrieve_object("ds", "k1").await.expect("get");
-        assert_eq!(data, vec![1, 2, 3]);
+        assert_eq!(data.as_ref(), [1u8, 2, 3]);
         let meta = backend.get_object_metadata("ds", "k1").await.expect("meta");
         assert_eq!(meta.size_bytes, 3);
         let listed = backend.list_objects("ds", None, None).await.expect("list");

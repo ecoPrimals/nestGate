@@ -277,7 +277,7 @@ async fn test_adapter_concurrent_performance() -> Result<()> {
         .collect();
 
     // Wait for all adapters to complete
-    let results: Vec<_> = futures::future::join_all(handles).await;
+    let results: Vec<_> = futures_util::future::join_all(handles).await;
     let total_time = start.elapsed();
 
     // Verify all adapters completed successfully

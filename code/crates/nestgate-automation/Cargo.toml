@@ -20,7 +20,6 @@ nestgate-core = { path = "../nestgate-core" }
 
 serde_json = { workspace = true }
 tracing = { workspace = true }
-futures = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }

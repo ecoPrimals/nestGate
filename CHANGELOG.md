@@ -9,10 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 15: Deep debt II — TCP/RPC parity, health triad, discovery scope, persistence (April 2, 2026)
+
+**Tests**: ~8,555 lib / ~12,105 total passing, 0 failures (re-run `cargo test --workspace` to refresh)  
+**Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS (as of 2026-04-02)  
+**Format**: Clean
+
+#### Added
+- `nestgate server` / `daemon` (aliases): `--port` wired to TCP JSON-RPC alongside Unix socket (dual transport)
+- `storage.sock` domain symlink per capability discovery standard (install lifecycle aligned with Session 12 pattern)
+- `FileMetadataBackend` with XDG-backed disk persistence for semantic router metadata
+- Real `StorageBackend` persistence for `session.*` IPC handlers (list/delete and related paths)
+- Coverage tests across evolved RPC, transport, metadata, and discovery-scoped modules
+
+#### Changed
+- Health triad aligned to wateringHole: `health.liveness`, `health.readiness`, `health.check` semantics and responses consistent across transports
+- `data.*` handlers evolved to delegation pattern; removed from advertised capability surface (routing unchanged)
+- Production mocks: automation actions return honest results; snapshot REST surfaces **501 Not Implemented** where appropriate; `DevLoadBalancer` gated behind dev/test configuration
+- `nestgate-discovery`: **deprecated** overstep modules (`service_discovery`, `discovery_mechanism`, `orchestration`) — callers migrate to capability IPC / biomeOS songBird
+
+#### Fixed
+- Flaky `tcp_fallback` test: `temp_env` scoping corrected so env mutations do not leak across parallel tests
+
+---
+
 ### Session 14: Deep debt completion, trait injection, full concurrency modernization (April 2, 2026)
 
 **Tests**: 8,555 lib / 12,105 total passing, 0 failures  
-**Clippy**: ZERO warnings  
+**Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS (as of 2026-04-02)  
 **Format**: Clean
 
 #### Added
@@ -27,18 +51,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `runtime_fallback_ports` central constants module for all default ports
 
 #### Changed
+- README, STATUS, CONTRIBUTING, QUICK_REFERENCE, START_HERE, CONTEXT — metrics wording aligned with verification commands; removed inaccurate “zero inline markers / zero `#[serial]`” claims
 - `DiagnosticsManager` — `std::sync::RwLock` → `tokio::sync::RwLock` (all methods now async)
 - tarpc `NestGateRpcService` accepts `Arc<dyn StorageBackend>` (filesystem-backed in production)
 - `SemanticRouter` accepts `Arc<dyn MetadataBackend>` (pluggable metadata store)
 - `sysinfo` feature-gated in `nestgate-api` and `nestgate-storage` (Linux uses pure-Rust `/proc`)
 - `thiserror` 1.0 → 2.0, `base64` 0.21 → 0.22 (workspace-wide)
-- `BearDogClient` deprecated alias updated with delegation guidance
+- Removed `BearDogClient` type alias; use `SecurityProviderClient` directly
 - `resolve_by_capability` simplified — only consults `discovered_capabilities` map
 - All hardcoded ports replaced with `runtime_fallback_ports` + env-var overrides
 - Crypto/data stubs return structured not-implemented guidance instead of generic errors
 - Health handler thresholds extracted to named constants
 
 #### Fixed
+- `nestgate-rpc`: clippy `-D warnings` (metadata session routing, doc backticks, extension check)
 - All numeric `as` casts → safe `try_from` with saturating fallbacks (`unix_secs()` helper)
 - `unreachable!()` replaced with documented `panic!` / `expect` with invariant messages
 - 11 `#[serial]` tests refactored — `temp_env` closures, config injection, `Notify` signaling
@@ -542,7 +568,7 @@ parallel compilation:
   - SHA-256 checksum calculation for data integrity
   - Fixed 2 ignored tests (recursion + Unicode)
   - Integrated tarpc capability discovery
-  - Resolved 22/29 TODO markers (76%)
+  - Resolved 22/29 tracked inline markers (76%)
 - ✅ **Hardcoding Evolution** (+4 points)
   - Zero production hardcodes
   - XDG-compliant storage paths
@@ -601,7 +627,7 @@ parallel compilation:
 
 ### Fixed
 - 2 ignored tests now passing
-- 22/29 TODO markers resolved/clarified
+- 22/29 tracked inline markers resolved/clarified
 
 ---
 
@@ -876,5 +902,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: March 31, 2026  
+**Last Updated**: April 2, 2026  
 **Current Version**: 4.7.0-dev

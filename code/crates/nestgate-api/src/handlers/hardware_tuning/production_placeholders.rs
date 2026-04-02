@@ -5,6 +5,11 @@
 //!
 //! Handlers for production builds where `dev-stubs` is not enabled: routes compile and return
 //! `501 Not Implemented` with a minimal structured body (no hardcoded external URLs).
+//!
+//! These responses are **intentional**: they implement the delegation pattern when the full
+//! hardware-tuning HTTP implementation is not compiled in. They are not placeholders left to be
+//! “filled in” later; clients should enable `dev-stubs` or use the appropriate integration path
+//! when that surface is required.
 
 use axum::{http::StatusCode, response::Json};
 use serde_json::json;

@@ -4,7 +4,7 @@
 //! Metadata domain semantic methods
 //!
 //! **Integration:** Metadata operations are delegated to the injected
-//! [`MetadataBackend`] implementation. At daemon startup, `nestgate-core`'s
+//! [`MetadataBackend`](crate::rpc::metadata_backend::MetadataBackend) implementation. At daemon startup, `nestgate-core`'s
 //! `ServiceMetadataStore` is wired as the backend; standalone / test mode
 //! uses the in-memory default.
 
@@ -91,13 +91,17 @@ pub(super) async fn metadata_search(router: &SemanticRouter, params: Value) -> R
 mod tests {
     use super::*;
     use crate::rpc::NestGateRpcClient;
+    use crate::rpc::metadata_backend::InMemoryMetadataBackend;
     use crate::rpc::semantic_router::SemanticRouter;
     use serde_json::json;
     use std::sync::Arc;
 
     fn router() -> SemanticRouter {
         let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
-        SemanticRouter::new(Arc::new(client))
+        SemanticRouter::with_metadata_backend(
+            Arc::new(client),
+            Arc::new(InMemoryMetadataBackend::new()),
+        )
     }
 
     #[tokio::test]

@@ -255,7 +255,7 @@ mod performance_analytics_tests {
 
     #[tokio::test]
     async fn test_concurrent_performance_queries() {
-        use futures::future::join_all;
+        use futures_util::future::join_all;
 
         let tasks = (0..5)
             .map(|_| {

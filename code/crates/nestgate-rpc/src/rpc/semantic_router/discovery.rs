@@ -4,9 +4,9 @@
 //! Discovery domain semantic methods
 //!
 //! Each primal starts with self-knowledge only and discovers peers at runtime.
-//! NestGate's discovery surface provides:
+//! `NestGate`'s discovery surface provides:
 //!
-//! - `discovery.capabilities` — NestGate's own capabilities (always available)
+//! - `discovery.capabilities` — `NestGate`'s own capabilities (always available)
 //! - `discovery.announce` — register service metadata (requires discovery backend)
 //! - `discovery.query` — find services by capability (requires discovery backend)
 //! - `discovery.list` — list known services (requires discovery backend)
@@ -18,7 +18,7 @@ use super::SemanticRouter;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
-/// NestGate's self-knowledge: capabilities this primal provides.
+/// `NestGate`'s self-knowledge: capabilities this primal provides.
 const SELF_CAPABILITIES: &[&str] = &[
     "storage",
     "session",
@@ -37,7 +37,7 @@ const SELF_CAPABILITIES: &[&str] = &[
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result<Value> for uniform dispatch"
 )]
-pub(super) fn discovery_announce(_router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) fn discovery_announce(_router: &SemanticRouter, params: &Value) -> Result<Value> {
     let name = params["name"].as_str().unwrap_or("unknown");
     let capabilities = params["capabilities"]
         .as_array()
@@ -66,7 +66,7 @@ pub(super) fn discovery_announce(_router: &SemanticRouter, params: Value) -> Res
 /// Route `discovery.query` — find services by capability.
 ///
 /// Returns self-knowledge matches when queried for capabilities this primal provides.
-pub(super) fn discovery_query(_router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) fn discovery_query(_router: &SemanticRouter, params: &Value) -> Result<Value> {
     let capability = params["capability"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("capability", "string required"))?;
@@ -98,7 +98,7 @@ pub(super) fn discovery_query(_router: &SemanticRouter, params: Value) -> Result
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result<Value> for uniform dispatch"
 )]
-pub(super) fn discovery_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn discovery_list(_router: &SemanticRouter, _params: &Value) -> Result<Value> {
     Ok(json!({
         "services": [{
             "name": "nestgate",
@@ -117,7 +117,7 @@ pub(super) fn discovery_list(_router: &SemanticRouter, _params: Value) -> Result
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result<Value> for uniform dispatch"
 )]
-pub(super) fn discovery_capabilities(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn discovery_capabilities(_router: &SemanticRouter, _params: &Value) -> Result<Value> {
     Ok(json!({
         "primal": "nestgate",
         "capabilities": SELF_CAPABILITIES,
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn discovery_capabilities_returns_self_knowledge() {
         let r = router();
-        let v = discovery_capabilities(&r, json!({})).expect("ok");
+        let v = discovery_capabilities(&r, &json!({})).expect("ok");
         let caps = v["capabilities"].as_array().expect("array");
         assert!(caps.len() >= 4);
         assert!(caps.iter().any(|c| c == "storage"));
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn discovery_query_returns_self_for_known_capability() {
         let r = router();
-        let v = discovery_query(&r, json!({"capability": "storage"})).expect("ok");
+        let v = discovery_query(&r, &json!({"capability": "storage"})).expect("ok");
         let providers = v["providers"].as_array().expect("providers");
         assert_eq!(providers.len(), 1);
         assert_eq!(providers[0]["name"], "nestgate");
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn discovery_query_returns_empty_for_unknown_capability() {
         let r = router();
-        let v = discovery_query(&r, json!({"capability": "quantum_computing"})).expect("ok");
+        let v = discovery_query(&r, &json!({"capability": "quantum_computing"})).expect("ok");
         let providers = v["providers"].as_array().expect("providers");
         assert!(providers.is_empty());
     }
@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn discovery_list_returns_self() {
         let r = router();
-        let v = discovery_list(&r, json!({})).expect("ok");
+        let v = discovery_list(&r, &json!({})).expect("ok");
         let services = v["services"].as_array().expect("services");
         assert_eq!(services.len(), 1);
         assert_eq!(services[0]["name"], "nestgate");
@@ -179,7 +179,7 @@ mod tests {
         let r = router();
         let v = discovery_announce(
             &r,
-            json!({"name": "test-service", "capabilities": ["compute"]}),
+            &json!({"name": "test-service", "capabilities": ["compute"]}),
         )
         .expect("ok");
         assert_eq!(v["status"], "registered_locally");
@@ -188,7 +188,7 @@ mod tests {
     #[test]
     fn discovery_query_requires_capability_param() {
         let r = router();
-        let e = discovery_query(&r, json!({})).expect_err("missing capability");
+        let e = discovery_query(&r, &json!({})).expect_err("missing capability");
         assert!(!e.to_string().is_empty());
     }
 }

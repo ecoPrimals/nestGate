@@ -269,7 +269,7 @@ mod async_failure_tests {
     #[tokio::test]
     async fn test_stream_empty() {
         // Test consuming empty stream
-        use futures::stream::{self, StreamExt};
+        use futures_util::stream::{self, StreamExt};
 
         let stream = stream::empty::<i32>();
         let items: Vec<_> = stream.collect().await;
@@ -279,7 +279,7 @@ mod async_failure_tests {
     #[tokio::test]
     async fn test_stream_error_propagation() {
         // Test error propagation in streams
-        use futures::stream::{self, StreamExt};
+        use futures_util::stream::{self, StreamExt};
 
         let stream = stream::iter(vec![Ok::<i32, &str>(1), Err("error"), Ok(2)]);
         let errors: Vec<&str> = stream
@@ -406,7 +406,7 @@ mod async_failure_tests {
             tokio::spawn(async { Ok(3) }),
         ];
 
-        let results = futures::future::join_all(handles).await;
+        let results = futures_util::future::join_all(handles).await;
         assert_eq!(results.len(), 3);
     }
 

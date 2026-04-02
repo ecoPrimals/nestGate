@@ -277,11 +277,11 @@ fn test_with_cache_no_etag() {
 }
 
 #[test]
-fn test_stream_placeholder() {
-    let response = ResponseBuilder::stream_placeholder();
+fn test_streaming_not_implemented() {
+    let response = ResponseBuilder::streaming_not_implemented();
     let response = response.into_response();
 
-    assert_eq!(response.status(), axum::http::StatusCode::OK);
+    assert_eq!(response.status(), axum::http::StatusCode::NOT_IMPLEMENTED);
 }
 
 #[test]

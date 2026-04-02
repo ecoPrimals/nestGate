@@ -96,7 +96,10 @@ pub use audit_storage::{
     NodeOutcome, NodeStatus,
 };
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
-pub use metadata_backend::{InMemoryMetadataBackend, MetadataBackend, ServiceRecord};
+pub use metadata_backend::{
+    FileMetadataBackend, InMemoryMetadataBackend, MetadataBackend, ServiceRecord,
+    default_metadata_base_dir,
+};
 #[cfg(any(feature = "dev-stubs", test))]
 pub use orchestrator_registration::OrchestratorRegistration;
 pub use semantic_router::SemanticRouter;

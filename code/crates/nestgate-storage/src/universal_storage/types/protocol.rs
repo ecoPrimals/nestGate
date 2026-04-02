@@ -6,8 +6,12 @@
 //! Defines the protocol for communicating with storage backends,
 //! including all request and response types.
 
+#[allow(
+    deprecated,
+    reason = "StorageResourceConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+)]
+use super::config::StorageResourceConfig;
 use super::{
-    config::StorageResourceConfig,
     events::StorageEventType,
     items::{StorageItem, StorageMetadata},
 };
@@ -43,9 +47,12 @@ pub enum UniversalStorageRequest {
         filter: Option<String>,
     },
     /// Create a new storage resource
+    #[allow(
+        deprecated,
+        reason = "Variant carries StorageResourceConfig (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+    )]
     CreateResource {
         /// Resource configuration
-        #[allow(deprecated)]
         config: Box<StorageResourceConfig>,
     },
     /// Get resource metadata

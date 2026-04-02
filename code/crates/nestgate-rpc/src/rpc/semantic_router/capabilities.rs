@@ -30,10 +30,10 @@ pub(super) fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Res
             "discovery.list",
             "discovery.capabilities",
             "health.check",
-            "health.metrics",
-            "health.info",
             "health.liveness",
             "health.readiness",
+            "health.metrics",
+            "health.info",
             "metadata.store",
             "metadata.retrieve",
             "metadata.search",
@@ -47,11 +47,6 @@ pub(super) fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Res
             "session.load",
             "session.list",
             "session.delete",
-            "data.ncbi_search",
-            "data.ncbi_fetch",
-            "data.noaa_ghcnd",
-            "data.iris_stations",
-            "data.iris_events",
             "capabilities.list"
         ]
     }))

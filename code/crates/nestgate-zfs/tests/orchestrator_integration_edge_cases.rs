@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![cfg(feature = "orchestrator")]
 #![allow(
     dead_code,
     unused_doc_comments,

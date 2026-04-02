@@ -32,6 +32,7 @@ pub mod results;
 pub mod serialization;
 /// Service safety utilities and health checking
 pub mod services;
+/// Test utilities for safe operation validation
 #[cfg(any(test, feature = "dev-stubs"))]
 pub mod testing;
 /// Thread safety utilities and synchronization patterns

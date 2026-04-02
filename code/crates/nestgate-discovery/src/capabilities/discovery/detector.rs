@@ -161,6 +161,7 @@ impl Drop for ServiceDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[tokio::test]
     async fn test_detector_creation() {
@@ -343,5 +344,48 @@ mod tests {
         // Probing a definitely closed port should error
         let result = ServiceDetector::probe_port(1).await; // Port 1 typically requires root
         assert!(result.is_err());
+    }
+
+    #[test]
+    #[serial]
+    fn detector_scan_ports_from_env_parses_csv_skips_invalid() {
+        temp_env::with_var(
+            "NESTGATE_DISCOVERY_SCAN_PORTS",
+            Some("4000, 4001 , invalid-token, 5000"),
+            || {
+                let registry = Arc::new(CapabilityRegistry::new());
+                let detector = ServiceDetector::new(registry);
+                assert_eq!(detector.scan_ports, vec![4000, 4001, 5000]);
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn detector_scan_ports_env_only_invalid_tokens_yields_empty() {
+        temp_env::with_var("NESTGATE_DISCOVERY_SCAN_PORTS", Some("bad, , x"), || {
+            let registry = Arc::new(CapabilityRegistry::new());
+            let detector = ServiceDetector::new(registry);
+            assert!(detector.scan_ports.is_empty());
+        });
+    }
+
+    #[tokio::test]
+    async fn detector_start_with_empty_scan_ports_spawns_no_tasks() {
+        let registry = Arc::new(CapabilityRegistry::new());
+        let mut detector = ServiceDetector::new(registry).with_scan_ports(vec![]);
+        detector.start().expect("start");
+        assert!(detector.tasks.is_empty());
+        detector.stop();
+    }
+
+    #[tokio::test]
+    async fn detector_start_spawns_one_task_per_port_then_stop() {
+        let registry = Arc::new(CapabilityRegistry::new());
+        let mut detector = ServiceDetector::new(registry).with_scan_ports(vec![65534]);
+        detector.start().expect("start");
+        assert_eq!(detector.tasks.len(), 1);
+        detector.stop();
+        assert!(detector.tasks.is_empty());
     }
 }

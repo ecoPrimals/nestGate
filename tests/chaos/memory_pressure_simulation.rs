@@ -185,7 +185,7 @@ mod memory_pressure_tests {
             handles.push(handle);
         }
 
-        let results: Vec<_> = futures::future::join_all(handles).await;
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
 
         let successes = results
             .iter()

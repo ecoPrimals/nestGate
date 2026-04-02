@@ -32,6 +32,8 @@ tokio-test = { workspace = true }
 tempfile = { workspace = true }
 
 [features]
-default = []
+# Include sysinfo so `gather_performance_metrics_sysinfo` is built and unit-tested; nestgate-core
+# uses `default-features = false` and only enables sysinfo on non-Linux targets.
+default = ["sysinfo"]
 sysinfo = ["dep:sysinfo"]
 mock-metrics = []

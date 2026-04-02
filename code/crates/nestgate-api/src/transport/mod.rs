@@ -48,8 +48,6 @@ pub use handlers::{NestGateRpcHandler, StorageBackend};
 pub use jsonrpc::{
     JsonRpcError, JsonRpcHandler, JsonRpcRequest, JsonRpcResponse, RpcMethodHandler,
 };
-#[allow(deprecated)]
-pub use security::BearDogClient;
 pub use security::SecurityProviderClient;
 pub use server::TransportServer;
 pub use unix_socket::UnixSocketListener;

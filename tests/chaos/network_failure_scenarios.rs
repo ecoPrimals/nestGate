@@ -157,7 +157,7 @@ async fn test_chaos_packet_loss() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             // Wait for all packets
-            futures::future::join_all(packet_tasks).await;
+            futures_util::future::join_all(packet_tasks).await;
 
             let successful_count = successful.load(Ordering::SeqCst);
             let success_rate = (successful_count * 100) / 10;

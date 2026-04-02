@@ -36,13 +36,6 @@ pub struct SecurityProviderClient {
     connected: bool,
 }
 
-/// Backwards-compatible alias (scheduled for removal).
-#[deprecated(
-    since = "0.3.0",
-    note = "Use `SecurityProviderClient` — primal-agnostic"
-)]
-pub type BearDogClient = SecurityProviderClient;
-
 impl SecurityProviderClient {
     /// Create a new security provider client for the given socket path.
     ///

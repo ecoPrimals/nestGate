@@ -500,4 +500,72 @@ mod tests {
         )
         .await;
     }
+
+    #[tokio::test]
+    async fn discover_second_call_uses_cache_without_rediscovering_env() {
+        async_with_vars(
+            vec![(
+                "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
+                Some("127.0.0.1:18080"),
+            )],
+            async {
+                let config = CapabilityConfigBuilder::new()
+                    .with_retry_attempts(1)
+                    .build()
+                    .unwrap();
+                let a = config
+                    .discover(PrimalCapability::Orchestration)
+                    .await
+                    .expect("first discover");
+                let b = config
+                    .discover(PrimalCapability::Orchestration)
+                    .await
+                    .expect("cached discover");
+                assert_eq!(a.endpoint, b.endpoint);
+                assert_eq!(a.endpoint.port(), 18080);
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn local_fallback_ignores_invalid_fallback_port_env() {
+        async_with_vars(
+            vec![
+                ("NESTGATE_CAPABILITY_MONITORING_ENDPOINT", None::<&str>),
+                ("NESTGATE_FALLBACK_HOST", Some("127.0.0.1")),
+                ("NESTGATE_FALLBACK_PORT", Some("not-a-number")),
+            ],
+            async {
+                let config = CapabilityConfigBuilder::new()
+                    .with_retry_attempts(1)
+                    .with_fallback_mode(FallbackMode::LocalFallback)
+                    .build()
+                    .unwrap();
+                let svc = config
+                    .discover(PrimalCapability::Monitoring)
+                    .await
+                    .expect("local fallback with default port");
+                assert_eq!(svc.endpoint.port(), 8080);
+                assert_eq!(
+                    svc.metadata.get("mode"),
+                    Some(&"local_fallback".to_string())
+                );
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn capability_config_accessor_getters() {
+        let c = CapabilityConfigBuilder::new()
+            .with_discovery_timeout(Duration::from_millis(2500))
+            .with_retry_attempts(2)
+            .with_fallback_mode(FallbackMode::LocalFallback)
+            .build()
+            .unwrap();
+        assert_eq!(c.discovery_timeout(), Duration::from_millis(2500));
+        assert_eq!(c.retry_attempts(), 2);
+        assert_eq!(c.fallback_mode(), FallbackMode::LocalFallback);
+    }
 }

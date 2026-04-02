@@ -452,4 +452,75 @@ mod device_detection_unit_tests {
         );
         assert_eq!(DeviceScanner::filter_available(&all).len(), 1);
     }
+
+    #[test]
+    fn parse_size_string_empty_and_plain_numeric() {
+        let s = DeviceScanner::new(DeviceDetectionConfig::default());
+        assert_eq!(s.test_parse_size_string("").expect("empty"), 0);
+        assert_eq!(s.test_parse_size_string("4096").expect("plain"), 4096);
+    }
+
+    #[test]
+    fn parse_size_string_extended_units() {
+        let s = DeviceScanner::new(DeviceDetectionConfig::default());
+        assert_eq!(s.test_parse_size_string("2KB").expect("KB"), 2048);
+        assert_eq!(
+            s.test_parse_size_string("1gb").expect("gb"),
+            1024_u64.pow(3)
+        );
+        assert_eq!(
+            s.test_parse_size_string("1pb").expect("pb"),
+            1024_u64.pow(5)
+        );
+    }
+
+    #[test]
+    fn parse_size_string_errors() {
+        let s = DeviceScanner::new(DeviceDetectionConfig::default());
+        assert!(s.test_parse_size_string("10XB").is_err());
+        assert!(s.test_parse_size_string("xyz").is_err());
+        assert!(s.test_parse_size_string("12.5ZZ").is_err());
+    }
+
+    #[test]
+    fn classify_speed_sata_tiers_and_nvme_default() {
+        let s = DeviceScanner::new(DeviceDetectionConfig::default());
+        assert_eq!(
+            s.test_classify_device_speed(&DeviceType::SataSsd, "Samsung Enterprise SSD"),
+            SpeedClass::Fast
+        );
+        assert_eq!(
+            s.test_classify_device_speed(&DeviceType::SataSsd, "consumer sata"),
+            SpeedClass::Medium
+        );
+        assert_eq!(
+            s.test_classify_device_speed(&DeviceType::NvmeSsd, "Generic NVMe"),
+            SpeedClass::Fast
+        );
+        assert_eq!(
+            s.test_classify_device_speed(&DeviceType::OptaneMemory, "Intel Optane"),
+            SpeedClass::UltraFast
+        );
+    }
+
+    #[test]
+    fn should_include_device_respects_loop_flag() {
+        let mut cfg = DeviceDetectionConfig::default();
+        cfg.include_loop_devices = false;
+        let s = DeviceScanner::new(cfg);
+        let loop_dev = StorageDevice {
+            device_path: "/dev/loop0".into(),
+            model: "loop".into(),
+            size_bytes: 1,
+            device_type: DeviceType::Unknown,
+            speed_class: SpeedClass::Medium,
+            in_use: false,
+            current_use: None,
+        };
+        assert!(!s.should_include_device(&loop_dev));
+        let mut cfg2 = DeviceDetectionConfig::default();
+        cfg2.include_loop_devices = true;
+        let s2 = DeviceScanner::new(cfg2);
+        assert!(s2.should_include_device(&loop_dev));
+    }
 }

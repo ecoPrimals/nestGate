@@ -179,6 +179,10 @@ impl<const BLOCK_SIZE: usize, const POOL_SIZE: usize> PoolBlockGuard<'_, BLOCK_S
     ///
     /// Panics if the slot is unexpectedly empty (invariant: guard is only
     /// created for occupied slots).
+    #[expect(
+        clippy::expect_used,
+        reason = "structural invariant: guard is only created for occupied slots"
+    )]
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         self.slot_guard
             .as_mut()

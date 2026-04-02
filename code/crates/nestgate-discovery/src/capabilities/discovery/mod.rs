@@ -70,6 +70,12 @@
 //! ```
 
 pub mod detector;
+#[deprecated(
+    since = "0.3.0",
+    note = "Service registry and orchestration discovery are Songbird/biomeOS concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
+)]
+/// Orchestration capability taxonomy and discovery helpers; orchestration classification belongs in biomeOS.
+pub mod orchestration;
 pub mod registry;
 pub mod resolver;
 pub mod service_descriptor;

@@ -34,8 +34,8 @@
 //! ## Capability-domain symlink (`storage.sock`)
 //!
 //! Per `CAPABILITY_BASED_DISCOVERY_STANDARD`, after the primary socket (e.g. `nestgate.sock`) is
-//! bound, a `storage.sock` symlink is created in the same directory so peers can discover the
-//! storage endpoint by capability. See [`install_storage_capability_symlink`] and
+//! bound under `.../biomeos/`, a `storage.sock` symlink is created in the same directory so peers
+//! can discover the storage endpoint by capability. See [`install_storage_capability_symlink`] and
 //! [`StorageCapabilitySymlinkGuard`] (Unix only).
 
 use nestgate_types::error::{NestGateError, Result};
@@ -45,26 +45,47 @@ use tracing::{debug, info, warn};
 /// Capability-domain socket name for storage discovery (symlink beside the bound socket).
 pub const STORAGE_CAPABILITY_SOCK_NAME: &str = "storage.sock";
 
+/// `true` when `socket_path` is `.../biomeos/<file>` (`CAPABILITY_BASED_DISCOVERY` domain layout).
+#[cfg(unix)]
+#[must_use]
+pub fn socket_parent_is_biomeos_standard_dir(socket_path: &Path) -> bool {
+    socket_path
+        .parent()
+        .is_some_and(|p| p.file_name() == Some(std::ffi::OsStr::new("biomeos")))
+}
+
 /// Create `storage.sock` → `<primary-socket-file>` in the same directory (Unix only).
 ///
-/// Failure is logged and ignored so binding the primary socket always wins.
+/// Only runs when the socket lives under a directory named `biomeos/` (e.g.
+/// `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`). Otherwise returns `false` (no log noise).
+///
+/// Returns `true` if the symlink was created; pass that to [`remove_storage_capability_symlink`]
+/// on shutdown. Failure to create the symlink is logged as a warning and returns `false`.
 #[cfg(unix)]
-pub fn install_storage_capability_symlink(socket_path: &Path) {
+pub fn install_storage_capability_symlink(socket_path: &Path) -> bool {
     use std::os::unix::fs::symlink;
+
+    if !socket_parent_is_biomeos_standard_dir(socket_path) {
+        debug!(
+            "storage capability symlink: skipped (socket not under biomeos/): {}",
+            socket_path.display()
+        );
+        return false;
+    }
 
     let Some(parent) = socket_path.parent() else {
         warn!(
             "storage capability symlink: no parent directory for {}",
             socket_path.display()
         );
-        return;
+        return false;
     };
     let Some(target_name) = socket_path.file_name() else {
         warn!(
             "storage capability symlink: no file name in {}",
             socket_path.display()
         );
-        return;
+        return false;
     };
 
     let link_path = parent.join(STORAGE_CAPABILITY_SOCK_NAME);
@@ -75,26 +96,38 @@ pub fn install_storage_capability_symlink(socket_path: &Path) {
             "storage capability symlink: could not remove existing {}: {e}",
             link_path.display()
         );
-        return;
+        return false;
     }
 
     match symlink(target_name, &link_path) {
-        Ok(()) => info!(
-            "storage capability symlink: {} -> {}",
-            link_path.display(),
-            target_name.to_string_lossy()
-        ),
-        Err(e) => warn!(
-            "storage capability symlink: failed to create {} -> {}: {e}",
-            link_path.display(),
-            target_name.to_string_lossy()
-        ),
+        Ok(()) => {
+            info!(
+                "storage capability symlink: {} -> {}",
+                link_path.display(),
+                target_name.to_string_lossy()
+            );
+            true
+        }
+        Err(e) => {
+            warn!(
+                "storage capability symlink: failed to create {} -> {}: {e}",
+                link_path.display(),
+                target_name.to_string_lossy()
+            );
+            false
+        }
     }
 }
 
-/// Remove the `storage.sock` capability symlink if present (Unix only). Ignores non-symlinks.
+/// Remove the `storage.sock` capability symlink if we created it (Unix only).
+///
+/// When `installed` is `false`, does nothing. Otherwise removes the symlink if it exists and is a
+/// symlink.
 #[cfg(unix)]
-pub fn remove_storage_capability_symlink(socket_path: &Path) {
+pub fn remove_storage_capability_symlink(socket_path: &Path, installed: bool) {
+    if !installed {
+        return;
+    }
     let Some(parent) = socket_path.parent() else {
         return;
     };
@@ -117,6 +150,7 @@ pub fn remove_storage_capability_symlink(socket_path: &Path) {
 #[cfg(unix)]
 pub struct StorageCapabilitySymlinkGuard {
     socket_path: PathBuf,
+    installed: bool,
 }
 
 #[cfg(unix)]
@@ -124,9 +158,10 @@ impl StorageCapabilitySymlinkGuard {
     /// Install [`install_storage_capability_symlink`] for `socket_path`.
     #[must_use]
     pub fn new(socket_path: &Path) -> Self {
-        install_storage_capability_symlink(socket_path);
+        let installed = install_storage_capability_symlink(socket_path);
         Self {
             socket_path: socket_path.to_path_buf(),
+            installed,
         }
     }
 }
@@ -134,7 +169,7 @@ impl StorageCapabilitySymlinkGuard {
 #[cfg(unix)]
 impl Drop for StorageCapabilitySymlinkGuard {
     fn drop(&mut self) {
-        remove_storage_capability_symlink(&self.socket_path);
+        remove_storage_capability_symlink(&self.socket_path, self.installed);
     }
 }
 

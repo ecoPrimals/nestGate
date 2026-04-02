@@ -17,6 +17,10 @@
 
 pub mod cache_alignment;
 
+#[expect(
+    clippy::too_long_first_doc_paragraph,
+    reason = "Submodule banner highlights safe replacement of legacy unsafe pool; kept verbose intentionally."
+)]
 /// 100% SAFE memory pool - proof that Rust can be FAST AND SAFE!
 /// **Performance**: Same as unsafe version, with zero unsafe blocks
 /// **Coverage**: 99.27% (1 uncovered line out of 359 total lines)

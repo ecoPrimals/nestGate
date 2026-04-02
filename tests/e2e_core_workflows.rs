@@ -284,7 +284,7 @@ async fn test_e2e_concurrent_operations() -> Result<(), Box<dyn std::error::Erro
     }
 
     // Wait for all concurrent operations
-    let results: Vec<_> = futures::future::join_all(tasks)
+    let results: Vec<_> = futures_util::future::join_all(tasks)
         .await
         .into_iter()
         .collect::<Result<_, _>>()?;

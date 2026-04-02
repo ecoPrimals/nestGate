@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(deprecated)] // Builders and adapters intentionally use deprecated configs defined in this crate.
 #![allow(clippy::missing_errors_doc)]
 // Result returns delegate to `CacheManager` / `MultiTierCache`; see those types.
 
@@ -306,6 +305,10 @@ impl CacheBuilder {
     /// Enable multi-tier caching
     // LINTING FIX: Add underscore prefix for unused parameter
     #[must_use]
+    #[allow(
+        deprecated,
+        reason = "Constructs MultiTierCacheConfig (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+    )]
     pub fn with_multi_tier(mut self, _config: NestGateCanonicalConfig) -> Self {
         self.multi_tier = true;
         // Convert NestGateCanonicalConfig to MultiTierCacheConfig
@@ -335,6 +338,10 @@ impl CacheBuilder {
 
     /// Enable multi-tier caching with default configuration
     #[must_use]
+    #[allow(
+        deprecated,
+        reason = "Uses MultiTierCacheConfig::default() (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+    )]
     pub fn enable_multi_tier(mut self) -> Self {
         self.multi_tier = true;
         self.multi_tier_config = Some(MultiTierCacheConfig::default());

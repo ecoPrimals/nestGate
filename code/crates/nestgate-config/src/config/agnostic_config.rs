@@ -416,6 +416,7 @@ pub fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn test_config_builder_with_defaults() {
@@ -494,5 +495,144 @@ mod tests {
 
         config.enable_feature("test_feature");
         assert!(config.is_feature_enabled("test_feature"));
+    }
+
+    #[test]
+    fn build_fails_without_port_sources() {
+        let err = ConfigBuilder::new().build();
+        assert!(err.is_err(), "expected missing port discovery to fail");
+    }
+
+    #[test]
+    fn build_succeeds_with_ports_only_endpoints_empty_without_endpoint_sources() {
+        let config = ConfigBuilder::new()
+            .with_default("api_port", "8080")
+            .with_default("metrics_port", "9090")
+            .with_default("health_port", "8082")
+            .build()
+            .expect("ports from custom defaults should be enough to build");
+
+        assert!(config.api_endpoint().is_none());
+        assert!(config.storage_endpoint().is_none());
+        assert_eq!(config.api_port(), 8080);
+    }
+
+    #[test]
+    #[serial]
+    fn invalid_api_port_env_falls_through_to_safe_defaults() {
+        temp_env::with_vars(
+            vec![
+                ("NESTGATE_API_PORT", Some("not-a-u16")),
+                ("NESTGATE_METRICS_PORT", Some("also-bad")),
+                ("NESTGATE_HEALTH_PORT", Some("xyz")),
+            ],
+            || {
+                let config = ConfigBuilder::new()
+                    .with_environment_fallback()
+                    .with_safe_defaults()
+                    .build()
+                    .expect("ports should fall back to safe defaults when env parse fails");
+
+                assert_eq!(config.api_port(), DEFAULT_API_PORT);
+                assert_eq!(config.metrics_port(), DEFAULT_METRICS_PORT);
+                assert_eq!(config.health_port(), DEFAULT_HEALTH_PORT);
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn capability_endpoint_env_resolves_without_other_flags() {
+        temp_env::with_var(
+            "NESTGATE_CAPABILITY_HTTP_API_ENDPOINT",
+            Some("http://cap.example:9999"),
+            || {
+                let config = ConfigBuilder::new()
+                    .with_default("api_port", "9999")
+                    .with_default("metrics_port", "9090")
+                    .with_default("health_port", "8082")
+                    .build()
+                    .expect("capability endpoint env should supply api endpoint");
+
+                assert_eq!(
+                    config.api_endpoint().as_deref(),
+                    Some("http://cap.example:9999")
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn api_endpoint_built_from_nestgate_api_host_when_endpoint_missing() {
+        temp_env::with_vars(
+            vec![
+                ("NESTGATE_API_PORT", Some("8080")),
+                ("NESTGATE_API_HOST", Some("10.0.0.42")),
+            ],
+            || {
+                let config = ConfigBuilder::new()
+                    .with_environment_fallback()
+                    .with_default("api_port", "8080")
+                    .with_default("metrics_port", "9090")
+                    .with_default("health_port", "8082")
+                    .build()
+                    .expect("custom ports should allow build when endpoint omitted");
+
+                assert_eq!(
+                    config.api_endpoint().as_deref(),
+                    Some("http://10.0.0.42:8080")
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn migrate_port_returns_hardcoded_fallback_when_isolated() {
+        // `migrate_port` only sets `{service}_port`; `build` still resolves metrics/health ports.
+        temp_env::with_vars(
+            vec![
+                ("NESTGATE_API_ENDPOINT", None::<&str>),
+                ("NESTGATE_API_PORT", None::<&str>),
+                ("NESTGATE_METRICS_PORT", Some("9090")),
+                ("NESTGATE_HEALTH_PORT", Some("8082")),
+            ],
+            || {
+                let port = migrate_port("api", 4242).expect("migrate_port");
+                assert_eq!(port, 4242);
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn migrate_endpoint_returns_hardcoded_fallback_when_isolated() {
+        temp_env::with_vars(
+            vec![
+                ("NESTGATE_API_ENDPOINT", None::<&str>),
+                ("NESTGATE_API_PORT", Some("8080")),
+                ("NESTGATE_METRICS_PORT", Some("9090")),
+                ("NESTGATE_HEALTH_PORT", Some("8082")),
+            ],
+            || {
+                let ep = migrate_endpoint("api", "http://migrate.example:7777")
+                    .expect("migrate_endpoint");
+                assert_eq!(ep, "http://migrate.example:7777");
+            },
+        );
+    }
+
+    #[test]
+    fn default_port_unknown_service_is_fallback_8000() {
+        let b = ConfigBuilder::new();
+        assert_eq!(
+            b.default_port("websocket"),
+            ConfigBuilder::DEFAULT_WEBSOCKET_PORT
+        );
+        assert_eq!(
+            b.default_port("nosuch"),
+            ConfigBuilder::DEFAULT_FALLBACK_PORT
+        );
     }
 }

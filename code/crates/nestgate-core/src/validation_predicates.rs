@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(
+    clippy::too_long_first_doc_paragraph,
+    reason = "Intro banner is intentionally verbose for mutation-testing documentation; shorten in a follow-up."
+)]
+
 /// 🔍 **VALIDATION PREDICATES MODULE** 🔍
 /// Pure boolean predicate functions for validation logic.
 /// Extracted from complex validation chains to enable precise testing

@@ -108,6 +108,8 @@ use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
+#[cfg(unix)]
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
 use tracing::{debug, error, info, warn};
@@ -187,6 +189,9 @@ pub struct JsonRpcUnixServer {
     /// Family ID for primal identification (used in future multi-primal features)
     family_id: String,
     state: StorageState,
+    /// Set in [`JsonRpcUnixServer::serve`] when `storage.sock` was installed (biomeOS layout only).
+    #[cfg(unix)]
+    storage_capability_symlink_installed: AtomicBool,
 }
 
 impl JsonRpcUnixServer {
@@ -234,6 +239,8 @@ impl JsonRpcUnixServer {
             socket_path,
             family_id: family_id.to_string(),
             state,
+            #[cfg(unix)]
+            storage_capability_symlink_installed: AtomicBool::new(false),
         })
     }
 
@@ -255,7 +262,12 @@ impl JsonRpcUnixServer {
         })?;
 
         #[cfg(unix)]
-        crate::rpc::socket_config::install_storage_capability_symlink(&self.socket_path);
+        {
+            let installed =
+                crate::rpc::socket_config::install_storage_capability_symlink(&self.socket_path);
+            self.storage_capability_symlink_installed
+                .store(installed, Ordering::SeqCst);
+        }
 
         info!("═══════════════════════════════════════════════════════════");
         info!("✅ NestGate ready!");
@@ -299,7 +311,11 @@ impl JsonRpcUnixServer {
 impl Drop for JsonRpcUnixServer {
     fn drop(&mut self) {
         #[cfg(unix)]
-        crate::rpc::socket_config::remove_storage_capability_symlink(&self.socket_path);
+        crate::rpc::socket_config::remove_storage_capability_symlink(
+            &self.socket_path,
+            self.storage_capability_symlink_installed
+                .load(Ordering::SeqCst),
+        );
         // Clean up socket file
         if self.socket_path.exists()
             && let Err(e) = std::fs::remove_file(&self.socket_path)

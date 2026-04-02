@@ -26,9 +26,6 @@
 //!     // Connect to ANY primal offering security capability
 //!     let client = SecurityClient::new(&security_url)?;
 //! }
-//!
-//! // ❌ WRONG: Hardcoded primal name (vendor lock-in)
-//! let beardog_url = services.beardog_url.clone(); // DEPRECATED!
 //! ```
 
 use nestgate_types::error::Result;
@@ -43,57 +40,18 @@ use std::env;
 ///
 /// # Environment Variables
 ///
-/// **Modern (capability-based)**:
+/// **Capability-based** (set one or more as needed):
 /// - `NESTGATE_CAPABILITY_SECURITY` - Security capability provider URL
 /// - `NESTGATE_CAPABILITY_ORCHESTRATION` - Orchestration provider URL
 /// - `NESTGATE_CAPABILITY_NETWORKING` - Networking provider URL
 /// - `NESTGATE_CAPABILITY_AI` - AI/intelligence provider URL
 /// - `NESTGATE_CAPABILITY_COMPUTE` - Compute provider URL
 /// - `NESTGATE_CAPABILITY_ECOSYSTEM` - Ecosystem/OS provider URL
-///
-/// **Legacy (backwards compatibility, deprecated)**:
-/// - `NESTGATE_BEARDOG_URL` → Use `NESTGATE_CAPABILITY_SECURITY`
-/// - `NESTGATE_SONGBIRD_URL` → Use `NESTGATE_CAPABILITY_ORCHESTRATION`
-/// - `NESTGATE_SQUIRREL_URL` → Use `NESTGATE_CAPABILITY_AI`
-/// - `NESTGATE_TOADSTOOL_URL` → Use `NESTGATE_CAPABILITY_COMPUTE`
-/// - `NESTGATE_BIOMEOS_URL` → Use `NESTGATE_CAPABILITY_ECOSYSTEM`
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ServicesConfig {
     /// Capability URLs indexed by capability name (e.g., "security", "ai", "compute")
-    /// This replaces individual fields like `beardog_url`, `songbird_url`, etc.
     #[serde(default)]
     pub discovered_capabilities: HashMap<String, String>,
-
-    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
-    #[deprecated(since = "0.2.0", note = "Use get_capability_url(\"security\") instead")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub beardog_url: Option<String>,
-
-    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
-    #[deprecated(
-        since = "0.2.0",
-        note = "Use get_capability_url(\"orchestration\") instead"
-    )]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub songbird_url: Option<String>,
-
-    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
-    #[deprecated(since = "0.2.0", note = "Use get_capability_url(\"ai\") instead")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub squirrel_url: Option<String>,
-
-    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
-    #[deprecated(since = "0.2.0", note = "Use get_capability_url(\"compute\") instead")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub toadstool_url: Option<String>,
-
-    /// Legacy field for backwards compatibility (⚠️ deprecated, use capabilities map)
-    #[deprecated(
-        since = "0.2.0",
-        note = "Use get_capability_url(\"ecosystem\") instead"
-    )]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub biomeos_url: Option<String>,
 
     /// Service discovery enabled (default: true)
     pub discovery_enabled: bool,
@@ -105,8 +63,7 @@ pub struct ServicesConfig {
 impl ServicesConfig {
     /// Load services configuration from environment variables.
     ///
-    /// Prefers modern capability-based environment variables, falls back to
-    /// legacy primal-specific variables for backwards compatibility.
+    /// Reads `NESTGATE_CAPABILITY_*` variables into [`Self::discovered_capabilities`].
     ///
     /// # Errors
     ///
@@ -115,7 +72,6 @@ impl ServicesConfig {
     pub fn from_environment() -> Result<Self> {
         let mut discovered_capabilities = HashMap::new();
 
-        // Capability-based configuration (primary)
         if let Ok(url) = env::var("NESTGATE_CAPABILITY_SECURITY") {
             discovered_capabilities.insert("security".to_string(), url);
         }
@@ -135,35 +91,8 @@ impl ServicesConfig {
             discovered_capabilities.insert("ecosystem".to_string(), url);
         }
 
-        // Legacy primal env vars — only when the matching capability is unset
-        for (capability, legacy_var) in [
-            ("security", "NESTGATE_BEARDOG_URL"),
-            ("orchestration", "NESTGATE_SONGBIRD_URL"),
-            ("ai", "NESTGATE_SQUIRREL_URL"),
-            ("compute", "NESTGATE_TOADSTOOL_URL"),
-            ("ecosystem", "NESTGATE_BIOMEOS_URL"),
-        ] {
-            if discovered_capabilities.contains_key(capability) {
-                continue;
-            }
-            if let Ok(url) = env::var(legacy_var) {
-                tracing::warn!(
-                    legacy = legacy_var,
-                    preferred = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase()),
-                    "using deprecated environment variable; prefer NESTGATE_CAPABILITY_*"
-                );
-                discovered_capabilities.insert(capability.to_string(), url);
-            }
-        }
-
-        #[allow(deprecated)]
-        let config = Self {
-            discovered_capabilities: discovered_capabilities.clone(),
-            beardog_url: discovered_capabilities.get("security").cloned(),
-            songbird_url: discovered_capabilities.get("orchestration").cloned(),
-            squirrel_url: discovered_capabilities.get("ai").cloned(),
-            toadstool_url: discovered_capabilities.get("compute").cloned(),
-            biomeos_url: discovered_capabilities.get("ecosystem").cloned(),
+        Ok(Self {
+            discovered_capabilities,
             discovery_enabled: env::var("NESTGATE_DISCOVERY_ENABLED")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -173,9 +102,7 @@ impl ServicesConfig {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(8083), // Safe default for discovery service
-        };
-
-        Ok(config)
+        })
     }
 
     /// Get service URL by capability type.
@@ -197,16 +124,11 @@ impl ServicesConfig {
     /// // ✅ CORRECT: Capability-based
     /// let security_url = services.get_capability_url("security");
     /// // Discovers ANY primal offering security (BearDog, custom, etc.)
-    ///
-    /// // ❌ WRONG: Primal name hardcoding
-    /// let beardog_url = services.beardog_url.clone();
-    /// // Couples to specific primal - vendor lock-in!
     /// ```
     /// Resolve a service URL by capability — **primary API** for capability-first access.
     ///
-    /// Looks up only the `discovered_capabilities` map (populated from both
-    /// modern `NESTGATE_CAPABILITY_*` and legacy env vars at init time).
-    /// Legacy primal-specific fields are no longer consulted directly.
+    /// Looks up the `discovered_capabilities` map (populated from `NESTGATE_CAPABILITY_*`
+    /// at init time).
     #[must_use]
     pub fn resolve_by_capability(&self, capability: &str) -> Option<String> {
         self.discovered_capabilities
@@ -240,8 +162,6 @@ impl ServicesConfig {
     /// List all configured capabilities.
     ///
     /// Returns a sorted list of capability types that have providers configured.
-    /// All capabilities (including those from legacy env vars) are unified into
-    /// `discovered_capabilities` at init time, so no legacy field inspection is needed.
     #[must_use]
     pub fn available_capabilities(&self) -> Vec<String> {
         let mut caps: Vec<String> = self.discovered_capabilities.keys().cloned().collect();

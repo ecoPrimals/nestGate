@@ -15,8 +15,11 @@ use super::types::{DatasetLifecycle, LifecycleStage};
 use crate::types::StorageTier;
 use nestgate_core::NestGateError;
 use nestgate_core::error::CanonicalResult as Result;
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, info, warn};
+
+/// Message returned for lifecycle actions that are not yet connected to ZFS operations.
+pub const NOT_WIRED_TO_ZFS_MSG: &str = "Not yet wired to ZFS operations";
 
 /// Result of executing a lifecycle action
 #[derive(Debug, Clone)]
@@ -101,20 +104,46 @@ pub async fn apply_automatic_stage_rules(
 }
 
 // Individual action implementations
+
+fn not_wired_action_result(action: &str) -> ActionResult {
+    ActionResult {
+        action: action.to_string(),
+        success: false,
+        message: NOT_WIRED_TO_ZFS_MSG.to_string(),
+        timestamp: SystemTime::now(),
+    }
+}
+
 fn execute_compression_action(dataset_name: &str) -> Result<ActionResult> {
     info!("Applying compression to dataset: {}", dataset_name);
 
-    // Simulate compression operation
-    // In a real implementation, this would execute ZFS compression commands
-    let success = true;
-    let message = "Compression applied successfully".to_string();
-
-    Ok(ActionResult {
-        action: "compress".to_string(),
-        success,
-        message,
-        timestamp: SystemTime::now(),
-    })
+    let timestamp = SystemTime::now();
+    match std::process::Command::new("zfs")
+        .args(["set", "compression=lz4", dataset_name])
+        .output()
+    {
+        Ok(out) if out.status.success() => Ok(ActionResult {
+            action: "compress".to_string(),
+            success: true,
+            message: "Compression property set to lz4".to_string(),
+            timestamp,
+        }),
+        Ok(out) => Ok(ActionResult {
+            action: "compress".to_string(),
+            success: false,
+            message: format!(
+                "zfs set compression failed: {}",
+                String::from_utf8_lossy(&out.stderr).trim()
+            ),
+            timestamp,
+        }),
+        Err(e) => Ok(ActionResult {
+            action: "compress".to_string(),
+            success: false,
+            message: format!("failed to run zfs: {e}"),
+            timestamp,
+        }),
+    }
 }
 
 /// Execute Migration Action
@@ -133,16 +162,40 @@ fn execute_migration_action(dataset_name: &str, target_tier: StorageTier) -> Res
 fn execute_snapshot_action(dataset_name: &str) -> Result<ActionResult> {
     info!("Creating snapshot for dataset: {}", dataset_name);
 
-    // Simulate snapshot creation
-    let success = true;
-    let message = "Snapshot created successfully".to_string();
+    let timestamp = SystemTime::now();
+    let secs = timestamp
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let snapshot_name = format!("nestgate-auto-{secs}");
+    let full_snap = format!("{dataset_name}@{snapshot_name}");
 
-    Ok(ActionResult {
-        action: "create_snapshot".to_string(),
-        success,
-        message,
-        timestamp: SystemTime::now(),
-    })
+    match std::process::Command::new("zfs")
+        .args(["snapshot", &full_snap])
+        .output()
+    {
+        Ok(out) if out.status.success() => Ok(ActionResult {
+            action: "create_snapshot".to_string(),
+            success: true,
+            message: format!("Snapshot created: {full_snap}"),
+            timestamp,
+        }),
+        Ok(out) => Ok(ActionResult {
+            action: "create_snapshot".to_string(),
+            success: false,
+            message: format!(
+                "zfs snapshot failed: {}",
+                String::from_utf8_lossy(&out.stderr).trim()
+            ),
+            timestamp,
+        }),
+        Err(e) => Ok(ActionResult {
+            action: "create_snapshot".to_string(),
+            success: false,
+            message: format!("failed to run zfs: {e}"),
+            timestamp,
+        }),
+    }
 }
 
 /// Execute Optimization Action
@@ -155,17 +208,10 @@ fn execute_optimization_action(
         dataset_name, lifecycle.lifecycle_stage
     );
 
-    // Simulate property optimization based on lifecycle stage
-    let success = true;
-    let message = format!(
-        "Properties optimized for {:?} stage",
-        lifecycle.lifecycle_stage
-    );
-
     Ok(ActionResult {
         action: "optimize_properties".to_string(),
-        success,
-        message,
+        success: false,
+        message: NOT_WIRED_TO_ZFS_MSG.to_string(),
         timestamp: SystemTime::now(),
     })
 }
@@ -174,48 +220,21 @@ fn execute_optimization_action(
 fn execute_access_time_update(dataset_name: &str) -> Result<ActionResult> {
     debug!("Updating access time for dataset: {}", dataset_name);
 
-    // Simulate access time update
-    let success = true;
-    let message = "Access time updated".to_string();
-
-    Ok(ActionResult {
-        action: "update_access_time".to_string(),
-        success,
-        message,
-        timestamp: SystemTime::now(),
-    })
+    Ok(not_wired_action_result("update_access_time"))
 }
 
 /// Execute Archive Action
 fn execute_archive_action(dataset_name: &str) -> Result<ActionResult> {
     info!("Archiving dataset: {}", dataset_name);
 
-    // Simulate archival process
-    let success = true;
-    let message = "Dataset archived successfully".to_string();
-
-    Ok(ActionResult {
-        action: "archive".to_string(),
-        success,
-        message,
-        timestamp: SystemTime::now(),
-    })
+    Ok(not_wired_action_result("archive"))
 }
 
 /// Execute Cleanup Action
 fn execute_cleanup_action(dataset_name: &str) -> Result<ActionResult> {
     info!("Cleaning up temporary files for dataset: {}", dataset_name);
 
-    // Simulate cleanup operation
-    let success = true;
-    let message = "Temporary files cleaned up".to_string();
-
-    Ok(ActionResult {
-        action: "cleanup_temp_files".to_string(),
-        success,
-        message,
-        timestamp: SystemTime::now(),
-    })
+    Ok(not_wired_action_result("cleanup_temp_files"))
 }
 
 // Automatic stage rules implementation
@@ -341,20 +360,41 @@ mod tests {
     }
 
     #[test]
-    fn execute_lifecycle_action_known_actions_succeed() {
+    fn execute_lifecycle_action_not_wired_returns_honest_failure() {
         let ds = "tank/data/app";
         let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 0);
         for action in [
-            "compress",
-            "create_snapshot",
             "optimize_properties",
             "update_access_time",
             "archive",
             "cleanup_temp_files",
         ] {
             let r = execute_lifecycle_action(ds, &lc, action).expect("test: known action executes");
-            assert!(r.success, "action={action} msg={}", r.message);
+            assert!(
+                !r.success && r.message == NOT_WIRED_TO_ZFS_MSG,
+                "action={action} msg={}",
+                r.message
+            );
         }
+    }
+
+    #[test]
+    fn execute_lifecycle_action_compress_and_snapshot_invoke_zfs_cli() {
+        let ds = "tank/data/app";
+        let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 0);
+        let compress = execute_lifecycle_action(ds, &lc, "compress").expect("compress");
+        let snapshot = execute_lifecycle_action(ds, &lc, "create_snapshot").expect("snapshot");
+        // Without a real pool/dataset these typically fail honestly; with ZFS they may succeed.
+        assert!(
+            compress.success || compress.message.contains("zfs"),
+            "compress: {}",
+            compress.message
+        );
+        assert!(
+            snapshot.success || snapshot.message.contains("zfs"),
+            "snapshot: {}",
+            snapshot.message
+        );
     }
 
     #[test]
@@ -433,12 +473,12 @@ mod tests {
     }
 
     #[test]
-    fn execute_optimize_properties_includes_stage_in_message() {
+    fn execute_optimize_properties_not_wired() {
         let ds = "tank/opt";
         let lc = lifecycle(ds, LifecycleStage::Active, StorageTier::Hot, 1);
         let r = execute_lifecycle_action(ds, &lc, "optimize_properties")
             .expect("test: optimize_properties");
-        assert!(r.success);
-        assert!(r.message.contains("Active") || r.message.contains("stage"));
+        assert!(!r.success);
+        assert_eq!(r.message, NOT_WIRED_TO_ZFS_MSG);
     }
 }

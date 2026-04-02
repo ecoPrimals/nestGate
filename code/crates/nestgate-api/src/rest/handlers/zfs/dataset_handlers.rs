@@ -26,6 +26,10 @@ use super::helpers;
 ///
 /// Returns [`Json`] containing [`DataError`] when listing or serializing
 /// datasets fails.
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn list_datasets(
     State(state): State<ApiState>,
     Query(query): Query<ListQuery>,
@@ -89,6 +93,10 @@ pub async fn list_datasets(
 ///
 /// Returns [`Json`] containing [`DataError`] when validation fails or the
 /// dataset already exists.
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn create_dataset(
     State(state): State<ApiState>,
     Json(request): Json<CreateDatasetRequest>,
@@ -166,6 +174,10 @@ pub async fn create_dataset(
 
 /// Get a specific ZFS dataset
 /// GET /api/v1/zfs/datasets/:dataset
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn get_dataset(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -189,6 +201,10 @@ pub async fn get_dataset(
 
 /// Update dataset properties
 /// PUT /api/v1/zfs/datasets/:dataset
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn update_dataset(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -215,6 +231,10 @@ pub async fn update_dataset(
 
 /// Delete a ZFS dataset
 /// DELETE /api/v1/zfs/datasets/:dataset
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn delete_dataset(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -239,6 +259,10 @@ pub async fn delete_dataset(
 
 /// Get dataset properties
 /// GET /api/v1/zfs/datasets/:dataset/properties
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn get_dataset_properties(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -262,6 +286,10 @@ pub async fn get_dataset_properties(
 
 /// Set dataset properties
 /// PUT /api/v1/zfs/datasets/:dataset/properties
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn set_dataset_properties(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -287,6 +315,10 @@ pub async fn set_dataset_properties(
 
 /// Get dataset statistics
 /// GET /api/v1/zfs/datasets/:dataset/stats
+#[deprecated(
+    since = "0.2.0",
+    note = "Use JSON-RPC via nestgate-rpc semantic router"
+)]
 pub async fn get_dataset_stats(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,

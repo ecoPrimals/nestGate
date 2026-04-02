@@ -143,7 +143,7 @@ cargo run --package unwrap-migrator -- --analyze --verbose
 #    ⚠️  Unwrap calls: 234
 #    📝 Expect calls: 87
 #    💥 Panic calls: 12
-#    📋 TODO calls: 9
+#    📋 todo!() macro occurrences: 9
 #    🚫 Unimplemented calls: 0
 # 🎯 Risk Assessment: 🟠 HIGH
 ```

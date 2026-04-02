@@ -498,7 +498,7 @@ mod metrics_collector_tests {
 
     #[tokio::test]
     async fn test_concurrent_metrics_collection() {
-        use futures::future::join_all;
+        use futures_util::future::join_all;
 
         let collector = MetricsCollector::new();
         let tasks = (0..10)

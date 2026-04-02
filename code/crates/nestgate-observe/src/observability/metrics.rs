@@ -454,4 +454,30 @@ mod tests {
         assert_eq!(m.custom_metrics.get("t"), Some(&0.0));
         Ok(())
     }
+
+    /// `sysinfo` fallback snapshot builder (non-mock); used when Linux `/proc` parsing is unavailable.
+    #[cfg(all(not(feature = "mock-metrics"), feature = "sysinfo"))]
+    #[test]
+    fn gather_performance_metrics_sysinfo_returns_sane_snapshot() {
+        let custom = CustomMetricsMap::new();
+        let m = super::gather_performance_metrics_sysinfo(&custom);
+        assert!(m.cpu_usage >= 0.0);
+        assert!(m.cpu_usage <= 100.0);
+        assert!(m.memory_usage > 0 || m.memory_available > 0 || m.disk_iops >= 0.0);
+        assert!(m.network_bytes_per_sec >= 0.0);
+    }
+
+    /// Non-mock `get_current_metrics` must return finite gauges from the OS (Linux `/proc` or sysinfo fallback).
+    #[cfg(not(feature = "mock-metrics"))]
+    #[tokio::test]
+    async fn non_mock_get_current_metrics_uses_real_collection_path() -> nestgate_types::Result<()>
+    {
+        let registry = MetricsRegistry::new();
+        let m = registry.get_current_metrics().await?;
+        assert!(m.cpu_usage.is_finite());
+        assert!(m.disk_iops.is_finite());
+        assert!(m.network_bytes_per_sec.is_finite());
+        assert!(m.memory_usage <= u64::MAX);
+        Ok(())
+    }
 }

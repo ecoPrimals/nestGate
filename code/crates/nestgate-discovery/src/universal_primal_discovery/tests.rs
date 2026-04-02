@@ -194,16 +194,12 @@ async fn test_discover_available_port_async() {
     }
 }
 
-/// Async test for timeout discovery
-#[tokio::test]
-async fn test_discover_optimal_timeout_async() {
+#[test]
+fn test_discover_optimal_timeout_sync() {
     let discovery = UniversalPrimalDiscovery::new();
     let service_name = "test-service";
 
-    // Attempt discovery
-    let result = discovery
-        .discover_optimal_timeout(service_name, "test-operation")
-        .await;
+    let result = discovery.discover_optimal_timeout(service_name, "test-operation");
 
     // Result should be Ok or Err, but not panic
     match result {
@@ -343,9 +339,7 @@ async fn test_comprehensive_discovery_workflow() {
     // Test multiple discoveries don't interfere
     let _addr_result = discovery.discover_bind_address("service-a");
     let _port_result = discovery.discover_available_port("service-b", 9000).await;
-    let _timeout_result = discovery
-        .discover_optimal_timeout("service-c", "operation")
-        .await;
+    let _timeout_result = discovery.discover_optimal_timeout("service-c", "operation");
 
     // All should complete without panic
 }
@@ -368,7 +362,7 @@ async fn test_concurrent_discoveries() {
     });
 
     let handle3 = tokio::spawn(async move {
-        let _ = discovery3.discover_optimal_timeout("service-3", "op").await;
+        let _ = discovery3.discover_optimal_timeout("service-3", "op");
     });
 
     // All tasks should complete

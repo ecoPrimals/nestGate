@@ -9,8 +9,14 @@ use super::{
     DevelopmentZfsManager, EnterpriseZfsManager, HighPerformanceZfsManager, ProductionZfsManager,
     TestingZfsManager, ZeroCostZfsManager,
 };
+use super::{
+    build_dataset_create_zfs_args, build_pool_create_zfs_args, build_snapshot_zfs_path,
+    parse_dataset_list_line, parse_pool_list_line, parse_snapshot_list_line,
+    zero_cost_pool_from_zfs_properties,
+};
 use nestgate_core::canonical_types::StorageTier;
 use std::collections::HashMap;
+use std::time::SystemTime;
 
 #[test]
 fn parse_pool_properties_tab_and_trim() {
@@ -267,6 +273,109 @@ async fn create_snapshot_errors_when_max_snapshots_reached_before_zfs() {
 fn zero_cost_zfs_operations_can_create_pool_trait_default() {
     let m = TestingZfsManager::new();
     assert!(ZeroCostZfsOperations::can_create_pool(&m));
+}
+
+#[test]
+fn build_dataset_create_zfs_args_hot_includes_lz4_and_sync_always() {
+    let args = build_dataset_create_zfs_args(&StorageTier::Hot, "tank/ds");
+    assert_eq!(
+        args,
+        vec![
+            "create",
+            "-o",
+            "compression=lz4",
+            "-o",
+            "sync=always",
+            "tank/ds"
+        ]
+    );
+}
+
+#[test]
+fn build_dataset_create_zfs_args_archive_includes_atime_off() {
+    let args = build_dataset_create_zfs_args(&StorageTier::Archive, "z/root");
+    assert!(args.contains(&"atime=off"));
+    assert_eq!(args.last().copied(), Some("z/root"));
+}
+
+#[test]
+fn build_dataset_create_zfs_args_cache_includes_primarycache() {
+    let args = build_dataset_create_zfs_args(&StorageTier::Cache, "c/cache");
+    assert!(args.contains(&"primarycache=all"));
+}
+
+#[test]
+fn parse_dataset_list_line_skips_pool_row_and_short_lines() {
+    let t = SystemTime::UNIX_EPOCH;
+    assert!(parse_dataset_list_line("tank\t0\t0\t-", "tank", t).is_none());
+    assert!(parse_dataset_list_line("tank/ds\t1", "tank", t).is_none());
+    let ds = parse_dataset_list_line("tank/ds\t10\t90\t/mnt", "tank", t).expect("row");
+    assert_eq!(ds.name, "ds");
+    assert_eq!(ds.pool, "tank");
+    assert_eq!(ds.size, 100);
+    assert_eq!(ds.mount_point, Some(std::path::PathBuf::from("/mnt")));
+}
+
+#[test]
+fn parse_dataset_list_line_none_mountpoint() {
+    let t = SystemTime::UNIX_EPOCH;
+    let ds = parse_dataset_list_line("tank/ds\t0\t0\tnone", "tank", t).expect("row");
+    assert!(ds.mount_point.is_none());
+}
+
+#[test]
+fn build_pool_create_zfs_args_orders_create_name_devices() {
+    let args = build_pool_create_zfs_args("tank", &["/dev/sda", "/dev/sdb"]);
+    assert_eq!(args, vec!["create", "tank", "/dev/sda", "/dev/sdb"]);
+}
+
+#[test]
+fn zero_cost_pool_from_zfs_properties_computes_available() {
+    let mut p = HashMap::new();
+    p.insert("size".into(), "1000".into());
+    p.insert("allocated".into(), "250".into());
+    p.insert("health".into(), "ONLINE".into());
+    let info = zero_cost_pool_from_zfs_properties("tank", &p, SystemTime::UNIX_EPOCH);
+    assert_eq!(info.size, 1000);
+    assert_eq!(info.used, 250);
+    assert_eq!(info.available, 750);
+    assert_eq!(info.health, "ONLINE");
+}
+
+#[test]
+fn zero_cost_pool_from_zfs_properties_unknown_health_when_missing() {
+    let info = zero_cost_pool_from_zfs_properties("z", &HashMap::new(), SystemTime::UNIX_EPOCH);
+    assert_eq!(info.health, "UNKNOWN");
+}
+
+#[test]
+fn parse_pool_list_line_requires_five_columns() {
+    assert!(parse_pool_list_line("a\tb", SystemTime::UNIX_EPOCH).is_none());
+    let p =
+        parse_pool_list_line("tank\t1000\t100\t900\tONLINE", SystemTime::UNIX_EPOCH).expect("pool");
+    assert_eq!(p.name, "tank");
+    assert_eq!(p.health, "ONLINE");
+}
+
+#[test]
+fn build_snapshot_zfs_path_joins_with_at() {
+    assert_eq!(
+        build_snapshot_zfs_path("tank/data", "snap1"),
+        "tank/data@snap1"
+    );
+}
+
+#[test]
+fn parse_snapshot_list_line_splits_dataset_and_name() {
+    let s = parse_snapshot_list_line("tank/ds@snap\t42", SystemTime::UNIX_EPOCH).expect("snap");
+    assert_eq!(s.dataset, "tank/ds");
+    assert_eq!(s.name, "snap");
+    assert_eq!(s.size, 42);
+}
+
+#[test]
+fn parse_snapshot_list_line_requires_at_separator() {
+    assert!(parse_snapshot_list_line("nope\t1", SystemTime::UNIX_EPOCH).is_none());
 }
 
 #[test]

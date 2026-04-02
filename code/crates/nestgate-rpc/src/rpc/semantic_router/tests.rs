@@ -4,6 +4,7 @@
 //! Unit tests for semantic router
 
 use super::SemanticRouter;
+use crate::rpc::metadata_backend::InMemoryMetadataBackend;
 use crate::rpc::{NestGateRpcClient, NestGateRpcService, serve_tarpc};
 use nestgate_types::error::NestGateError;
 use serde_json::json;
@@ -39,7 +40,7 @@ fn test_semantic_method_names() {
 fn test_router() -> SemanticRouter {
     let client =
         Arc::new(NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("valid endpoint"));
-    SemanticRouter::new(client)
+    SemanticRouter::with_metadata_backend(client, Arc::new(InMemoryMetadataBackend::new()))
 }
 
 #[tokio::test]
@@ -52,6 +53,13 @@ async fn capabilities_list_includes_self_and_storage_methods() {
     let methods = v["methods"].as_array().expect("methods array");
     assert!(methods.iter().any(|m| m == "capabilities.list"));
     assert!(methods.iter().any(|m| m == "storage.put"));
+    assert!(
+        methods
+            .iter()
+            .filter_map(|m| m.as_str())
+            .all(|s| !s.starts_with("data.")),
+        "NestGate must not advertise data.* in capabilities.list (storage primal; data is delegated)"
+    );
 }
 
 #[tokio::test]
@@ -70,9 +78,38 @@ async fn crypto_methods_return_not_implemented() {
             .await
             .expect_err(method);
         match err {
-            NestGateError::NotImplemented { .. } => {}
+            NestGateError::NotImplemented(_) => {}
             other => panic!("expected NotImplemented for {method}, got {other:?}"),
         }
+    }
+}
+
+#[tokio::test]
+async fn data_methods_return_delegation_not_implemented() {
+    let router = test_router();
+    for method in [
+        "data.ncbi_search",
+        "data.ncbi_fetch",
+        "data.noaa_ghcnd",
+        "data.iris_stations",
+        "data.iris_events",
+    ] {
+        let err = router
+            .call_method(method, json!({}))
+            .await
+            .expect_err(method);
+        let NestGateError::NotImplemented(details) = err else {
+            panic!("expected NotImplemented for {method}, got {err:?}");
+        };
+        let msg = details.feature.as_ref();
+        assert!(
+            msg.contains("data capability providers"),
+            "unexpected message for {method}: {msg}"
+        );
+        assert!(
+            msg.contains("discovery.query") && msg.contains("NESTGATE_CAPABILITY_DATA"),
+            "delegation hint missing for {method}: {msg}"
+        );
     }
 }
 
@@ -146,7 +183,7 @@ async fn unknown_semantic_method_is_not_found() {
 }
 
 /// Reserve a free localhost TCP port, release it, then start [`serve_tarpc`] on that address.
-async fn spawn_local_tarpc_server() -> (SocketAddr, tokio::task::JoinHandle<()>) {
+pub(crate) async fn spawn_local_tarpc_server() -> (SocketAddr, tokio::task::JoinHandle<()>) {
     let addr = {
         let l = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
         l.local_addr().expect("addr")
@@ -256,12 +293,14 @@ async fn health_semantic_methods_with_live_tarpc_server() {
         .await
         .expect("liveness");
     assert_eq!(live["alive"], true);
+    assert_eq!(live["status"], "ok");
 
     let ready = router
         .call_method("health.readiness", json!({}))
         .await
         .expect("readiness");
     assert_eq!(ready["ready"], true);
+    assert_eq!(ready["backends"]["storage"], "ready");
 
     let metrics = router
         .call_method("health.metrics", json!({}))

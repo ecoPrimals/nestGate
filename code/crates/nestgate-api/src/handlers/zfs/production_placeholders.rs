@@ -6,7 +6,10 @@
 //! Handlers for production builds where `dev-stubs` is not enabled: routes compile and return
 //! `501 Not Implemented` with a structured body (no fake documentation URLs or placeholder copy).
 //!
-//! For interactive ZFS over HTTP, enable the `dev-stubs` feature or call `nestgate_zfs` from your integration layer.
+//! These `501` responses are **intentional**: they are the correct behavior for routes whose
+//! backing implementation is not present in this build (delegation pattern), not stubs awaiting
+//! implementation. For interactive ZFS over HTTP, enable the `dev-stubs` feature or call
+//! `nestgate_zfs` from your integration layer.
 
 use axum::{extract::Path, http::StatusCode, response::Json};
 use serde_json::json;

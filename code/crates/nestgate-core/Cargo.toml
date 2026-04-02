@@ -55,7 +55,6 @@ regex = { workspace = true }
 
 # Async runtime
 tokio = { workspace = true }
-futures = { workspace = true }
 futures-util = { workspace = true }
 
 # Concurrency
@@ -84,7 +83,6 @@ tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "
 tokio-serde = { workspace = true, features = ["bincode"] }
 bincode = { workspace = true }
 jsonrpsee = { workspace = true }
-pin-project = { workspace = true }
 
 # Non-Linux: enable sysinfo fallback in nestgate-observe metrics (Linux uses pure-Rust `/proc` only).
 [target.'cfg(not(target_os = "linux"))'.dependencies]

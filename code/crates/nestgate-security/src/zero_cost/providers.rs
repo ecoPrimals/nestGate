@@ -180,6 +180,10 @@ impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
 }
 
 /// File system storage provider - zero-cost
+#[deprecated(
+    since = "0.9.0",
+    note = "Use nestgate_core::traits::unified_storage::UnifiedStorage with const generics for zero-cost patterns"
+)]
 pub struct ZeroCostFileStorage {
     base_path: String,
 }
@@ -238,33 +242,42 @@ impl ZeroCostFileStorage {
     }
 }
 
-#[allow(deprecated)] // Example provider for zero-cost patterns demonstration
+#[allow(deprecated)] // Implements deprecated `ZeroCostStorageProvider`
 impl ZeroCostStorageProvider<String, Vec<u8>> for ZeroCostFileStorage {
     /// Store
     fn store(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
-        // In a real implementation, this would write to filesystem
-        // For demo purposes, we simulate success
-        Ok(())
+        Err(ZeroCostError::DeprecatedStorage)
     }
 
     /// Retrieve
     fn retrieve(&self, _key: &String) -> Option<Vec<u8>> {
-        // In a real implementation, this would read from filesystem
-        // For demo purposes, we return dummy data
-        Some(vec![1, 2, 3, 4])
+        None
     }
 
     /// Deletes resource
     fn delete(&self, _key: &String) -> bool {
-        // In a real implementation, this would delete from filesystem
-        // For demo purposes, we simulate success
-        true
+        false
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[allow(deprecated)]
+    #[test]
+    fn test_file_storage_operations() {
+        let storage = ZeroCostFileStorage::new("/tmp".to_string());
+
+        assert_eq!(
+            storage.store("test_key".to_string(), vec![1, 2, 3]),
+            Err(ZeroCostError::DeprecatedStorage)
+        );
+
+        assert!(storage.retrieve(&"test_key".to_string()).is_none());
+
+        assert!(!storage.delete(&"test_key".to_string()));
+    }
 
     #[test]
     fn test_memory_cache_creation() {
@@ -285,23 +298,6 @@ mod tests {
         let provider = ZeroCostJwtProvider::new([0u8; 32]);
         assert!(provider.validate(&"jwt_token_test".to_string()));
         assert!(!provider.validate(&"invalid_token".to_string()));
-    }
-
-    #[test]
-    fn test_file_storage_operations() {
-        let storage = ZeroCostFileStorage::new("/tmp".to_string());
-
-        // Test store operation
-        let result = storage.store("test_key".to_string(), vec![1, 2, 3]);
-        assert!(result.is_ok());
-
-        // Test retrieve operation
-        let data = storage.retrieve(&"test_key".to_string());
-        assert!(data.is_some());
-
-        // Test delete operation
-        let deleted = storage.delete(&"test_key".to_string());
-        assert!(deleted);
     }
 
     #[test]

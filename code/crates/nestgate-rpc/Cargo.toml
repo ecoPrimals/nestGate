@@ -19,11 +19,10 @@ base64 = { workspace = true }
 bytes = { workspace = true }
 chrono = { workspace = true }
 bincode = { workspace = true }
-futures = { workspace = true }
+etcetera = { workspace = true }
 futures-util = { workspace = true }
 rustix = { workspace = true }
 jsonrpsee = { workspace = true }
-pin-project = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }

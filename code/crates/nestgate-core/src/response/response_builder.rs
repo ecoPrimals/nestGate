@@ -12,6 +12,7 @@ use axum::{
     response::{IntoResponse, Json},
 };
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::HashMap;
 
 /// Response builder for creating standardized HTTP responses
@@ -181,12 +182,20 @@ impl ResponseBuilder {
         (StatusCode::OK, headers, Json(data))
     }
 
-    /// Create a streaming response placeholder
+    /// Response when streaming is not implemented for this route.
+    /// Returns JSON-RPC 2.0 error payload with HTTP 501 Not Implemented (not a fake success body).
     #[must_use]
-    pub fn stream_placeholder() -> impl IntoResponse {
+    pub fn streaming_not_implemented() -> impl IntoResponse {
         (
-            StatusCode::OK,
-            "Streaming response would be implemented here",
+            StatusCode::NOT_IMPLEMENTED,
+            Json(json!({
+                "jsonrpc": "2.0",
+                "error": {
+                    "code": -32000,
+                    "message": "Streaming is not implemented"
+                },
+                "id": null
+            })),
         )
     }
 }

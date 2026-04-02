@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use tracing::info;
 
-use crate::cli::ServiceAction;
+use crate::cli::{ServiceAction, port_from_env_or_default};
 use crate::error::{BinResult, NestGateBinError};
 
 /// Compute HTTP bind address and port for standalone mode (CLI + runtime defaults).
@@ -42,6 +42,28 @@ pub(crate) fn resolve_standalone_http_bind(
             (addr.to_string(), addr.port(), host)
         },
     )
+}
+
+/// Resolve TCP JSON-RPC listen address for socket-only daemon when `--port` and/or `--listen`
+/// are set (`--listen` wins per `UniBin` v1.2).
+fn tcp_jsonrpc_listen_addr(
+    port: Option<u16>,
+    bind: &str,
+    listen: Option<SocketAddr>,
+) -> Result<Option<SocketAddr>, NestGateBinError> {
+    match (listen, port) {
+        (Some(addr), _) => Ok(Some(addr)),
+        (None, Some(p)) => {
+            let s = format!("{bind}:{p}");
+            s.parse().map(Some).map_err(|e| {
+                NestGateBinError::service_init_error(
+                    format!("Invalid TCP JSON-RPC bind address {s}: {e}"),
+                    Some("tcp-jsonrpc-bind".into()),
+                )
+            })
+        }
+        (None, None) => Ok(None),
+    }
 }
 
 /// Service manager for CLI lifecycle operations.
@@ -427,7 +449,7 @@ impl Default for ServiceManager {
 /// - HTTP mode (optional - requires --enable-http flag)
 /// - Multi-family support (--family-id flag or `NESTGATE_FAMILY_ID` env var)
 pub async fn run_daemon(
-    port: u16,
+    port: Option<u16>,
     bind: &str,
     listen: Option<SocketAddr>,
     dev: bool,
@@ -441,25 +463,29 @@ pub async fn run_daemon(
     }
 
     if enable_http {
+        let resolved_port = port.unwrap_or_else(port_from_env_or_default);
         info!("Starting NestGate with HTTP server (optional mode)");
-        info!("   Port: {}, Bind: {}, Dev: {}", port, bind, dev);
+        info!("   Port: {}, Bind: {}, Dev: {}", resolved_port, bind, dev);
 
         let manager = ServiceManager::new();
         manager
-            .start_service(Some(port), Some(bind), listen, None)
+            .start_service(Some(resolved_port), Some(bind), listen, None)
             .await
     } else {
         info!("Starting NestGate in socket-only mode (TRUE ecoBin - default)");
-        run_socket_only_daemon().await
+        let tcp_addr = tcp_jsonrpc_listen_addr(port, bind, listen)?;
+        run_socket_only_daemon(tcp_addr).await
     }
 }
 
-/// Run `NestGate` in socket-only mode (TRUE ecoBin default - no HTTP dependencies).
+/// Run `NestGate` in socket-only mode (TRUE ecoBin default - no HTTP REST).
 ///
 /// Uses [`nestgate_core::rpc::IsomorphicIpcServer`] with the ecosystem JSON-RPC handler
-/// (same surface as the legacy Unix server; TCP fallback when Unix is unavailable).
-async fn run_socket_only_daemon() -> BinResult<()> {
-    use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
+/// (same surface as the legacy Unix server; optional fixed-port TCP via [`nestgate_core::rpc::TcpFallbackServer::start_bound`]).
+async fn run_socket_only_daemon(tcp_jsonrpc_addr: Option<SocketAddr>) -> BinResult<()> {
+    use nestgate_core::rpc::{
+        IsomorphicIpcServer, SocketConfig, TcpFallbackServer, legacy_ecosystem_rpc_handler,
+    };
 
     info!("\n╔══════════════════════════════════════════════════════════════════════╗");
     info!("║   🔌 NestGate Unix Socket-Only Mode - NUCLEUS Integration           ║");
@@ -474,9 +500,12 @@ async fn run_socket_only_daemon() -> BinResult<()> {
     })?;
 
     info!("✅ Socket-only mode activated");
-    info!("   • No HTTP server (avoids port conflicts)");
+    info!("   • No HTTP REST server (avoids REST port conflicts)");
     info!("   • No external dependencies (DB, Redis, etc.)");
-    info!("   • Pure Unix socket JSON-RPC communication");
+    info!("   • Primary: Unix socket JSON-RPC");
+    if let Some(addr) = tcp_jsonrpc_addr {
+        info!("   • Also: TCP JSON-RPC on {addr} (newline-delimited JSON-RPC 2.0)");
+    }
     info!("   • Perfect for atomic patterns (Tower + NestGate)");
 
     // Log socket configuration
@@ -491,9 +520,21 @@ async fn run_socket_only_daemon() -> BinResult<()> {
     })?;
     let server = Arc::new(IsomorphicIpcServer::new(
         socket_config.family_id.clone(),
-        handler,
+        handler.clone(),
     ));
     info!("✅ Storage backend initialized");
+
+    if let Some(addr) = tcp_jsonrpc_addr {
+        let tcp = Arc::new(TcpFallbackServer::new(
+            socket_config.family_id.clone(),
+            handler,
+        ));
+        tokio::spawn(async move {
+            if let Err(e) = tcp.start_bound(addr).await {
+                tracing::error!("TCP JSON-RPC listener exited: {e}");
+            }
+        });
+    }
 
     info!("📊 Available JSON-RPC Methods:");
     info!("   Health & Discovery:");
@@ -513,9 +554,19 @@ async fn run_socket_only_daemon() -> BinResult<()> {
     info!("     • model.exists(model_id)");
     info!("     • model.locate(model_id)");
     info!("     • model.metadata(model_id)");
-    info!("🎯 Mode: NUCLEUS Integration (socket-only)");
-    info!("🔐 Security: Local Unix socket (no network exposure)");
-    info!("⚡ Performance: Zero-copy, no TCP overhead");
+    info!("🎯 Mode: NUCLEUS Integration (socket-only + optional TCP JSON-RPC)");
+    if tcp_jsonrpc_addr.is_some() {
+        info!("🔐 Security: Unix socket + TCP JSON-RPC on configured bind (see logs above)");
+    } else {
+        info!("🔐 Security: Local Unix socket (no TCP listener unless --port / --listen)");
+    }
+    if tcp_jsonrpc_addr.is_some() {
+        info!(
+            "⚡ Performance: Unix socket primary; TCP JSON-RPC available for remote-friendly clients"
+        );
+    } else {
+        info!("⚡ Performance: Zero-copy Unix path; no TCP listener");
+    }
     info!("Press Ctrl+C to stop\n");
 
     server.start().await.map_err(|e| {
@@ -683,6 +734,70 @@ mod service_manager_tests {
         assert_eq!(port, 7777);
         assert_eq!(host, "10.0.0.1");
         assert_eq!(addr, "10.0.0.1:7777");
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_none_when_no_port_or_listen() {
+        assert_eq!(
+            super::tcp_jsonrpc_listen_addr(None, "127.0.0.1", None).unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_port_and_bind() {
+        let a = super::tcp_jsonrpc_listen_addr(Some(9090), "127.0.0.1", None)
+            .unwrap()
+            .expect("addr");
+        assert_eq!(a, "127.0.0.1:9090".parse().unwrap());
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_listen_wins_over_port() {
+        let listen: SocketAddr = "10.0.0.2:7777".parse().unwrap();
+        assert_eq!(
+            super::tcp_jsonrpc_listen_addr(Some(1111), "127.0.0.1", Some(listen)).unwrap(),
+            Some(listen)
+        );
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_ipv6_loopback_with_port() {
+        // `bind` must be a valid `SocketAddr::parse` fragment; bare `::1` needs brackets.
+        let a = super::tcp_jsonrpc_listen_addr(Some(4000), "[::1]", None)
+            .unwrap()
+            .expect("addr");
+        assert_eq!(a, "[::1]:4000".parse().unwrap());
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_listen_ipv6_overrides_bind_and_port() {
+        let listen: SocketAddr = "[::1]:8080".parse().unwrap();
+        assert_eq!(
+            super::tcp_jsonrpc_listen_addr(Some(9999), "127.0.0.1", Some(listen)).unwrap(),
+            Some(listen)
+        );
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_invalid_bind_returns_error() {
+        assert!(super::tcp_jsonrpc_listen_addr(Some(80), "!!!not-a-valid-host!!!", None).is_err());
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_explicit_wildcard_bind() {
+        let a = super::tcp_jsonrpc_listen_addr(Some(5555), "0.0.0.0", None)
+            .unwrap()
+            .expect("addr");
+        assert_eq!(a, "0.0.0.0:5555".parse().unwrap());
+    }
+
+    #[test]
+    fn tcp_jsonrpc_listen_addr_port_zero_is_valid_socket() {
+        let a = super::tcp_jsonrpc_listen_addr(Some(0), "127.0.0.1", None)
+            .unwrap()
+            .expect("addr");
+        assert_eq!(a.port(), 0);
     }
 }
 

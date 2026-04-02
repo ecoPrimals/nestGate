@@ -34,7 +34,7 @@ mod round6_tests {
     fn r6_create_pool_explicit_empty_devices() {
         let v = json!({"name": "tank", "_devices": []});
         let r: CreatePoolRequest = serde_json::from_value(v).unwrap();
-        assert!(r._devices.is_empty());
+        assert!(r.devices.is_empty());
     }
 
     #[test]
@@ -55,7 +55,7 @@ mod round6_tests {
         let long = "p".repeat(2048);
         let r = CreatePoolRequest {
             name: long,
-            _devices: vec![],
+            devices: vec![],
         };
         let v = serde_json::to_string(&r).unwrap();
         let back: CreatePoolRequest = serde_json::from_str(&v).unwrap();

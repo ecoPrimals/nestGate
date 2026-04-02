@@ -215,6 +215,24 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn storage_put_missing_key_errors() {
+        let r = router();
+        let e = storage_put(&r, json!({"dataset": "d", "data": "YQ=="}))
+            .await
+            .expect_err("missing key");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn storage_put_missing_data_errors() {
+        let r = router();
+        let e = storage_put(&r, json!({"dataset": "d", "key": "k"}))
+            .await
+            .expect_err("missing data");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
     async fn storage_put_invalid_base64_errors() {
         let r = router();
         let e = storage_put(
@@ -232,6 +250,15 @@ mod tests {
         let e = storage_get(&r, json!({"dataset": "d"}))
             .await
             .expect_err("missing key");
+        assert!(!e.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn storage_get_missing_dataset_errors() {
+        let r = router();
+        let e = storage_get(&r, json!({"key": "k"}))
+            .await
+            .expect_err("missing dataset");
         assert!(!e.to_string().is_empty());
     }
 

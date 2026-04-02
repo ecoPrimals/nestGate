@@ -133,7 +133,7 @@ mod integration_tests_week2 {
         // Test multiple concurrent operations coordinating correctly
         let handles: Vec<_> = (0..5).map(|i| tokio::spawn(async move { i * 2 })).collect();
 
-        let results: Vec<_> = futures::future::join_all(handles)
+        let results: Vec<_> = futures_util::future::join_all(handles)
             .await
             .into_iter()
             .filter_map(|r| r.ok())
@@ -306,7 +306,7 @@ mod integration_tests_week2 {
     #[tokio::test]
     async fn test_stream_error_recovery() {
         // Test error recovery in async streams
-        use futures::stream::{self, StreamExt};
+        use futures_util::stream::{self, StreamExt};
 
         let stream = stream::iter(vec![Ok(1), Err("error"), Ok(2)]);
         let results: Vec<_> = stream.filter_map(|r| async move { r.ok() }).collect().await;

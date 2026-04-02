@@ -585,6 +585,48 @@ impl PrimalSelfKnowledge {
 mod tests {
     use super::*;
 
+    #[test]
+    fn endpoint_url_without_path_suffix() {
+        let endpoint = Endpoint {
+            protocol: "https".to_string(),
+            address: "10.0.0.1".to_string(),
+            port: 443,
+            path: None,
+            health_path: None,
+        };
+        assert_eq!(endpoint.url(), "https://10.0.0.1:443");
+        assert!(endpoint.health_url().is_none());
+    }
+
+    #[tokio::test]
+    async fn discover_primal_errors_when_not_configured() {
+        temp_env::async_with_vars(
+            [
+                ("KUBERNETES_SERVICE_HOST", None::<&str>),
+                ("SONGBIRD_HOST", None::<&str>),
+                ("SONGBIRD_PORT", None::<&str>),
+            ],
+            async {
+                let mut primal = PrimalSelfKnowledge::initialize().await.expect("initialize");
+                let err = primal
+                    .discover_primal("songbird")
+                    .await
+                    .expect_err("no discovery source");
+                assert!(
+                    err.to_string().contains("not discovered"),
+                    "unexpected: {err}"
+                );
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn discovered_primals_map_starts_empty() {
+        let primal = PrimalSelfKnowledge::initialize().await.expect("initialize");
+        assert!(primal.discovered_primals().is_empty());
+    }
+
     #[tokio::test]
     async fn test_primal_initialization() {
         let primal = PrimalSelfKnowledge::initialize().await;

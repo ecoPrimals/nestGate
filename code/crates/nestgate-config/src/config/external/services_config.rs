@@ -22,14 +22,13 @@
 //! ```
 //!
 //! ### Environment Variables:
-//! - **Preferred**: `NESTGATE_CAPABILITY_ORCHESTRATION`, `NESTGATE_CAPABILITY_SECURITY`, etc.
-//! - **Legacy (deprecated)**: `NESTGATE_SONGBIRD_URL`, `NESTGATE_BEARDOG_URL`, etc. — used only when
-//!   the matching `NESTGATE_CAPABILITY_*` is unset (logged at `warn`).
+//! - **Supported**: `NESTGATE_CAPABILITY_ORCHESTRATION`, `NESTGATE_CAPABILITY_SECURITY`, etc.
+//! - Primal-name URL variables (`NESTGATE_*_URL` keyed to a specific product name) are **not** read;
+//!   configure peers only via `NESTGATE_CAPABILITY_*` or programmatic `with_capability`.
 //!
-//! ### Migration Timeline:
-//! - **v0.11.x**: Both patterns supported (backward compatibility)
-//! - **v0.12.x**: Deprecation warnings for primal-specific methods
-//! - **v0.13.x**: Primal-specific methods may be removed
+//! ### Deprecated accessors:
+//! - Primal-named getters (`get_songbird_url`, etc.) remain for compatibility but mirror capability
+//!   data when populated from `NESTGATE_CAPABILITY_*` or builders; prefer `get_capability_url()`.
 //!
 //! Use `get_capability_url()` for new code.
 
@@ -104,44 +103,12 @@ impl ServicesConfig {
         config.metrics_url = std::env::var("NESTGATE_METRICS_URL").ok();
         config.config_url = std::env::var("NESTGATE_CONFIG_URL").ok();
 
-        // Capability-first: scan NESTGATE_CAPABILITY_* before any legacy primal URLs
+        // Capability URLs: NESTGATE_CAPABILITY_<NAME> (name is lowercased for lookup)
         for (key, value) in std::env::vars() {
             if let Some(name) = key.strip_prefix("NESTGATE_CAPABILITY_") {
                 config.capabilities.insert(name.to_lowercase(), value);
             }
         }
-
-        // Legacy primal URLs — only when the matching capability is unset; warn on use
-        Self::merge_legacy_capability(
-            &mut config,
-            "orchestration",
-            "NESTGATE_SONGBIRD_URL",
-            |c, url| {
-                c.songbird_url = Some(url);
-            },
-        );
-        Self::merge_legacy_capability(&mut config, "security", "NESTGATE_BEARDOG_URL", |c, url| {
-            c.beardog_url = Some(url);
-        });
-        Self::merge_legacy_capability(&mut config, "ai", "NESTGATE_SQUIRREL_URL", |c, url| {
-            c.squirrel_url = Some(url);
-        });
-        Self::merge_legacy_capability(
-            &mut config,
-            "compute",
-            "NESTGATE_TOADSTOOL_URL",
-            |c, url| {
-                c.toadstool_url = Some(url);
-            },
-        );
-        Self::merge_legacy_capability(
-            &mut config,
-            "ecosystem",
-            "NESTGATE_BIOMEOS_URL",
-            |c, url| {
-                c.biomeos_url = Some(url);
-            },
-        );
 
         // Mirror resolved capability URLs into deprecated fields when set via capability env only
         if config.songbird_url.is_none() {
@@ -168,29 +135,6 @@ impl ServicesConfig {
         }
 
         config
-    }
-
-    /// If `capability` is not in `capabilities`, read `legacy_var` and merge with a deprecation warning.
-    fn merge_legacy_capability(
-        config: &mut Self,
-        capability: &str,
-        legacy_var: &str,
-        mut set_field: impl FnMut(&mut Self, String),
-    ) {
-        if config.capabilities.contains_key(capability) {
-            return;
-        }
-        if let Ok(url) = std::env::var(legacy_var) {
-            tracing::warn!(
-                legacy = legacy_var,
-                preferred = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase()),
-                "using deprecated environment variable; prefer NESTGATE_CAPABILITY_*"
-            );
-            config
-                .capabilities
-                .insert(capability.to_string(), url.clone());
-            set_field(config, url);
-        }
     }
 
     /// Same as [`Self::from_env`] — captures environment at initialization time.
@@ -519,6 +463,7 @@ impl Default for ServicesConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn test_services_config_new() {
@@ -632,5 +577,129 @@ mod tests {
         assert!(config.get_health_url().contains("127.0.0.1"));
         assert!(config.get_metrics_url().contains("127.0.0.1"));
         assert!(config.get_config_url().contains("127.0.0.1"));
+    }
+
+    #[test]
+    #[serial]
+    fn from_env_capability_vars_lowercased_and_resolve_get_capability_url() {
+        temp_env::with_vars(
+            vec![
+                (
+                    "NESTGATE_CAPABILITY_ORCHESTRATION",
+                    Some("http://orch-cap:9000"),
+                ),
+                ("NESTGATE_CAPABILITY_SECURITY", Some("https://sec-cap:8443")),
+                ("NESTGATE_CAPABILITY_AI", Some("http://ai-cap:7000")),
+            ],
+            || {
+                let config = ServicesConfig::from_env();
+                assert_eq!(
+                    config.get_capability_url("orchestration"),
+                    Some("http://orch-cap:9000".to_string())
+                );
+                assert_eq!(
+                    config.get_capability_url("security"),
+                    Some("https://sec-cap:8443".to_string())
+                );
+                assert_eq!(
+                    config.get_capability_url("ai"),
+                    Some("http://ai-cap:7000".to_string())
+                );
+                assert!(config.get_capability_url("unknown").is_none());
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_env_capability_mirrors_into_deprecated_fields_when_primal_urls_unset() {
+        temp_env::with_vars(
+            vec![
+                (
+                    "NESTGATE_CAPABILITY_ORCHESTRATION",
+                    Some("http://mirror-orch:1"),
+                ),
+                ("NESTGATE_CAPABILITY_SECURITY", Some("http://mirror-sec:2")),
+                ("NESTGATE_CAPABILITY_COMPUTE", Some("http://mirror-comp:3")),
+                ("NESTGATE_CAPABILITY_ECOSYSTEM", Some("http://mirror-eco:4")),
+            ],
+            || {
+                let config = ServicesConfig::from_env();
+                assert_eq!(config.get_songbird_url(), Some("http://mirror-orch:1"));
+                assert_eq!(config.get_beardog_url(), Some("http://mirror-sec:2"));
+                assert_eq!(config.get_toadstool_url(), Some("http://mirror-comp:3"));
+                assert_eq!(config.get_biomeos_url(), Some("http://mirror-eco:4"));
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_env_capability_mixed_case_prefix_still_maps_to_lowercase_key() {
+        temp_env::with_var(
+            "NESTGATE_CAPABILITY_STORAGE",
+            Some("http://store:5000"),
+            || {
+                let config = ServicesConfig::from_env();
+                assert_eq!(
+                    config.get_capability_url("storage"),
+                    Some("http://store:5000".to_string())
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_env_external_services_lowercased() {
+        temp_env::with_var(
+            "NESTGATE_EXTERNAL_MY_SERVICE",
+            Some("https://external.example/api"),
+            || {
+                let config = ServicesConfig::from_env();
+                assert_eq!(
+                    config.get_external_service("my_service"),
+                    Some("https://external.example/api")
+                );
+                assert!(config.get_external_service("MY_SERVICE").is_none());
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn from_env_capability_does_not_override_explicit_core_url_when_set() {
+        temp_env::with_vars(
+            vec![
+                (
+                    "NESTGATE_DISCOVERY_URL",
+                    Some("http://explicit-discovery:1111"),
+                ),
+                (
+                    "NESTGATE_CAPABILITY_ORCHESTRATION",
+                    Some("http://cap-only:2222"),
+                ),
+            ],
+            || {
+                let config = ServicesConfig::from_env();
+                assert_eq!(config.get_discovery_url(), "http://explicit-discovery:1111");
+                assert_eq!(
+                    config.get_capability_url("orchestration"),
+                    Some("http://cap-only:2222".to_string())
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn get_all_capabilities_returns_configured_map() {
+        temp_env::with_var("NESTGATE_CAPABILITY_FOO", Some("http://foo:1"), || {
+            let config = ServicesConfig::from_env();
+            assert_eq!(
+                config.get_all_capabilities().get("foo"),
+                Some(&"http://foo:1".to_string())
+            );
+        });
     }
 }

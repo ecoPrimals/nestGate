@@ -63,22 +63,25 @@ impl RealHardwareTuningHandler {
     }
 
     /// Register with system service manager
-    async fn register_with_system(&self, _service_name: &str) -> Result<()> {
+    #[expect(
+        clippy::missing_const_for_fn,
+        reason = "Instance stub; not meaningful as const fn on this handler type"
+    )]
+    fn register_with_system(&self, _service_name: &str) {
         // Stub implementation
-        Ok(())
     }
 
     /// Get available system resources from `/proc` (CPU, RAM) and best-effort GPU detection.
-    async fn get_system_resources(&self) -> Result<ComputeResources> {
+    fn get_system_resources(&self) -> Result<ComputeResources> {
         linux_proc::compute_resources_from_proc()
     }
 
     /// Allocate system resources (clamped to what [`Self::get_system_resources`] reports).
-    async fn allocate_system_resources(
+    fn allocate_system_resources(
         &self,
         request: &ComputeResourceRequest,
     ) -> Result<ComputeAllocation> {
-        let avail = self.get_system_resources().await?;
+        let avail = self.get_system_resources()?;
         Ok(ComputeAllocation {
             cpu_cores: request.cpu_cores.min(avail.available_cpu),
             memory_gb: request.memory_gb.min(avail.available_memory_gb),
@@ -87,16 +90,13 @@ impl RealHardwareTuningHandler {
     }
 
     /// Analyze system profile from detected CPU and memory characteristics.
-    pub async fn get_derived_system_profile(&self) -> Result<SystemProfile> {
-        let metrics = self.get_live_hardware_metrics().await?;
-        self.analyze_system_profile(&metrics).await
+    pub fn get_derived_system_profile(&self) -> Result<SystemProfile> {
+        let metrics = self.get_live_hardware_metrics()?;
+        self.analyze_system_profile(&metrics)
     }
 
     /// Analyze system profile from detected CPU and memory characteristics.
-    async fn analyze_system_profile(
-        &self,
-        _metrics: &LiveHardwareMetrics,
-    ) -> Result<SystemProfile> {
+    fn analyze_system_profile(&self, _metrics: &LiveHardwareMetrics) -> Result<SystemProfile> {
         let cpu = self.detect_cpu_info()?;
         let mem = self.detect_memory_info()?;
         Ok(SystemProfile {
@@ -108,9 +108,9 @@ impl RealHardwareTuningHandler {
     }
 
     /// Apply tuning optimizations (no privileged kernel changes here; reports live metrics before/after sampling).
-    async fn apply_tuning_optimizations(&self, profile: &SystemProfile) -> Result<TuningResult> {
-        let before_metrics = self.get_live_hardware_metrics().await?;
-        let after_metrics = self.get_live_hardware_metrics().await?;
+    fn apply_tuning_optimizations(&self, profile: &SystemProfile) -> Result<TuningResult> {
+        let before_metrics = self.get_live_hardware_metrics()?;
+        let after_metrics = self.get_live_hardware_metrics()?;
         Ok(TuningResult {
             profile_name: profile.cpu_profile.clone(),
             optimizations_applied: vec![
@@ -125,15 +125,18 @@ impl RealHardwareTuningHandler {
     }
 
     /// Release system resources
-    async fn release_system_resources(&self, _allocation_id: &str) -> Result<()> {
+    #[expect(
+        clippy::missing_const_for_fn,
+        reason = "Instance stub; not meaningful as const fn on this handler type"
+    )]
+    fn release_system_resources(&self, _allocation_id: &str) {
         // Stub implementation
-        Ok(())
     }
 
     /// Run CPU benchmark
-    async fn run_cpu_benchmark(&self) -> Result<BenchmarkResult> {
+    fn run_cpu_benchmark(&self) -> BenchmarkResult {
         // Stub implementation
-        Ok(BenchmarkResult {
+        BenchmarkResult {
             benchmark_type: "cpu_intensive".to_string(),
             score: 85.0,
             duration_ms: 5000,
@@ -149,13 +152,13 @@ impl RealHardwareTuningHandler {
                 temperature: 0.0,
                 power_consumption: 0.0,
             },
-        })
+        }
     }
 
     /// Run memory benchmark
-    async fn run_memory_benchmark(&self) -> Result<BenchmarkResult> {
+    fn run_memory_benchmark(&self) -> BenchmarkResult {
         // Stub implementation
-        Ok(BenchmarkResult {
+        BenchmarkResult {
             benchmark_type: "memory_intensive".to_string(),
             score: 78.0,
             duration_ms: 3000,
@@ -171,13 +174,13 @@ impl RealHardwareTuningHandler {
                 temperature: 0.0,
                 power_consumption: 0.0,
             },
-        })
+        }
     }
 
     /// Run GPU benchmark
-    async fn run_gpu_benchmark(&self) -> Result<BenchmarkResult> {
+    fn run_gpu_benchmark(&self) -> BenchmarkResult {
         // Stub implementation
-        Ok(BenchmarkResult {
+        BenchmarkResult {
             benchmark_type: "gpu_intensive".to_string(),
             score: 92.0,
             duration_ms: 8000,
@@ -193,13 +196,13 @@ impl RealHardwareTuningHandler {
                 temperature: 0.0,
                 power_consumption: 0.0,
             },
-        })
+        }
     }
 
     /// Run I/O benchmark
-    async fn run_io_benchmark(&self) -> Result<BenchmarkResult> {
+    fn run_io_benchmark(&self) -> BenchmarkResult {
         // Stub implementation
-        Ok(BenchmarkResult {
+        BenchmarkResult {
             benchmark_type: "io_intensive".to_string(),
             score: 73.0,
             duration_ms: 4000,
@@ -215,7 +218,7 @@ impl RealHardwareTuningHandler {
                 temperature: 0.0,
                 power_consumption: 0.0,
             },
-        })
+        }
     }
 
     /// Register tuning service with real system capabilities
@@ -240,8 +243,7 @@ impl RealHardwareTuningHandler {
         info!("Detected system capabilities: {:?}", capabilities);
 
         // Register with system service manager
-        self.register_with_system(&registration.service_name)
-            .await?;
+        self.register_with_system(&registration.service_name);
 
         Ok(())
     }
@@ -254,7 +256,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn request_compute_resources(
+    pub fn request_compute_resources(
         &self,
         request: &ComputeResourceRequest,
     ) -> Result<ComputeAllocation> {
@@ -264,7 +266,7 @@ impl RealHardwareTuningHandler {
         );
 
         // Check available system resources
-        let available_resources = self.get_system_resources().await?;
+        let available_resources = self.get_system_resources()?;
 
         if available_resources.available_cpu < request.cpu_cores {
             return Err(NestGateError::storage_error(format!(
@@ -281,7 +283,7 @@ impl RealHardwareTuningHandler {
         }
 
         // Allocate real system resources
-        let allocation = self.allocate_system_resources(request).await?;
+        let allocation = self.allocate_system_resources(request)?;
 
         info!(
             "Successfully allocated resources: allocation_id = {}",
@@ -298,7 +300,7 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn get_live_hardware_metrics(&self) -> Result<LiveHardwareMetrics> {
+    pub fn get_live_hardware_metrics(&self) -> Result<LiveHardwareMetrics> {
         let metrics = self.metrics_collector.collect_current_metrics()?;
         info!(
             "Collected live hardware metrics: CPU {}%, Memory {}%",
@@ -315,17 +317,17 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn auto_tune(&self) -> Result<TuningResult> {
+    pub fn auto_tune(&self) -> Result<TuningResult> {
         info!("Starting real hardware auto-tuning");
 
         // Collect baseline metrics
-        let baseline_metrics = self.get_live_hardware_metrics().await?;
+        let baseline_metrics = self.get_live_hardware_metrics()?;
 
         // Analyze system characteristics
-        let system_profile = self.analyze_system_profile(&baseline_metrics).await?;
+        let system_profile = self.analyze_system_profile(&baseline_metrics)?;
 
         // Apply real tuning optimizations
-        let tuning_result = self.apply_tuning_optimizations(&system_profile).await?;
+        let tuning_result = self.apply_tuning_optimizations(&system_profile)?;
 
         info!(
             "Auto-tuning completed: profile = {}",
@@ -342,17 +344,17 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult> {
+    pub fn benchmark(&self, benchmark_name: &str) -> Result<BenchmarkResult> {
         info!("Running real benchmark: {}", benchmark_name);
 
         let start_time = Utc::now();
 
         // Run actual benchmark based on type
         let benchmark_result = match benchmark_name {
-            "cpu_intensive" => self.run_cpu_benchmark().await?,
-            "memory_intensive" => self.run_memory_benchmark().await?,
-            "gpu_intensive" => self.run_gpu_benchmark().await?,
-            "io_intensive" => self.run_io_benchmark().await?,
+            "cpu_intensive" => self.run_cpu_benchmark(),
+            "memory_intensive" => self.run_memory_benchmark(),
+            "gpu_intensive" => self.run_gpu_benchmark(),
+            "io_intensive" => self.run_io_benchmark(),
             _ => {
                 return Err(NestGateError::validation("hardware_tuning"));
             }
@@ -376,11 +378,11 @@ impl RealHardwareTuningHandler {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub async fn release_allocation(&self, allocation_id: &str) -> Result<()> {
+    pub fn release_allocation(&self, allocation_id: &str) -> Result<()> {
         info!("Releasing resource allocation: {}", allocation_id);
 
         // Release actual system resources
-        self.release_system_resources(allocation_id).await?;
+        self.release_system_resources(allocation_id);
 
         Ok(())
     }
@@ -508,7 +510,7 @@ mod tests {
     #[tokio::test]
     async fn test_live_metrics_collection() -> Result<()> {
         let handler = RealHardwareTuningHandler::new();
-        let metrics = handler.get_live_hardware_metrics().await?;
+        let metrics = handler.get_live_hardware_metrics()?;
 
         // Test that metrics are reasonable
         assert!(metrics.cpu_usage >= 0.0 && metrics.cpu_usage <= 100.0);

@@ -15,15 +15,18 @@
 //! - `nestgate-rpc`: rpc (JSON-RPC + tarpc)
 //! - `nestgate-discovery`: discovery, capabilities, service_discovery
 
-#![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
-// `#[cfg(test)]` modules use permissive test patterns; `cargo clippy -p nestgate-core --lib` does not set `cfg(test)`.
 #![allow(
     deprecated,
-    missing_docs,
+    reason = "Crate re-exports and legacy modules still surface deprecated aliases; migrate call sites to canonical_primary (e.g. CanonicalNetworkConfig) per type #[deprecated] notes."
+)]
+// Workspace enables pedantic/nursery clippy; child modules in separate files do not inherit a parent
+// module's `#!allow`, so these stay crate-level until fixed or replaced with per-file allows.
+// Lint hygiene (nestgate-core#lints): shrink this allow list as modules gain targeted attributes.
+#![allow(
+    clippy::module_name_repetitions,
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
-    clippy::module_name_repetitions,
     clippy::struct_excessive_bools,
     clippy::struct_field_names,
     clippy::cast_precision_loss,
@@ -37,7 +40,6 @@
     clippy::unused_self,
     clippy::unused_async,
     clippy::implicit_hasher,
-    clippy::too_long_first_doc_paragraph,
     clippy::doc_overindented_list_items,
     clippy::doc_markdown,
     clippy::float_cmp,
@@ -50,6 +52,7 @@
     clippy::single_char_pattern,
     clippy::cast_possible_wrap
 )]
+// `#[cfg(test)]` modules use permissive test patterns; `cargo clippy -p nestgate-core --lib` does not set `cfg(test)`.
 #![cfg_attr(
     test,
     allow(

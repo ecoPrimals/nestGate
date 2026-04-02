@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(deprecated)] // Implements and tests the deprecated `UnifiedCacheConfig` compatibility layer.
 #![expect(
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
@@ -48,7 +47,10 @@ pub struct UnifiedCacheConfig {
     /// Eviction Policy
     pub eviction_policy: String,
 }
-#[allow(deprecated)]
+#[allow(
+    deprecated,
+    reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+)]
 impl Default for UnifiedCacheConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -134,14 +136,21 @@ pub struct CacheManager {
     hot_tier: HashMap<String, CacheEntry>,
     warm_tier: HashMap<String, CacheEntry>,
     cold_tier: HashMap<String, CacheEntry>,
-    #[allow(deprecated)]
+    #[allow(
+        deprecated,
+        reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+    )]
     config: UnifiedCacheConfig,
     stats: CacheStats,
 }
+
+#[allow(
+    deprecated,
+    reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+)]
 impl CacheManager {
     /// Create new cache manager with configuration
     #[must_use]
-    #[allow(deprecated)]
     pub fn new(config: UnifiedCacheConfig) -> Self {
         Self {
             hot_tier: HashMap::new(),
@@ -425,6 +434,10 @@ impl CacheManager {
     }
 }
 
+#[allow(
+    deprecated,
+    reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
+)]
 impl Default for CacheManager {
     /// Returns the default instance
     fn default() -> Self {
@@ -447,7 +460,10 @@ impl Default for CacheManager {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
+#[allow(
+    deprecated,
+    reason = "Alias bridges deprecated UnifiedCacheConfig to canonical_primary network config for gradual migration"
+)]
 /// Type alias for Unifiedcacheconfigcanonical
 pub type UnifiedCacheConfigCanonical =
     nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -459,6 +475,7 @@ pub type UnifiedCacheConfigCanonical =
 #[cfg(test)]
 mod tests {
     #![allow(
+        deprecated,
         clippy::unwrap_used,
         clippy::expect_used,
         clippy::panic,

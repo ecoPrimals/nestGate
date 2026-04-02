@@ -8,7 +8,6 @@
 //! Extracted from nestgate-core to enable parallel compilation.
 
 #![warn(missing_docs)]
-#![allow(deprecated)] // `StorageResourceConfig` / `OptimalStorageConfig`: migration to canonical config is ongoing
 #![allow(clippy::struct_excessive_bools)]
 // Config/detection structs intentionally use many feature flags
 // Stub pipelines and `Option`/`Result` carriers for `?` trigger pedantic style lints; kept for API stability.

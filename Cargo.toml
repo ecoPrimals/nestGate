@@ -13,15 +13,11 @@ categories = ["network-programming", "filesystem", "web-programming"]
 [dependencies]
 nestgate-core = { path = "code/crates/nestgate-core" }
 nestgate-canonical = { path = "code/crates/nestgate-canonical" }
-tokio = { workspace = true }
-serde_json = { workspace = true }
-chrono = { workspace = true, features = ["serde"], optional = true }
-uuid = { workspace = true, features = ["v4", "serde"], optional = true }
-# libc removed - evolved to pure Rust (uzers) in Phase 2
-clap = { workspace = true, features = ["derive", "cargo", "env"] }
-tracing = { workspace = true }
 
 [dev-dependencies]
+tokio = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
 tokio-test = { workspace = true }
 rand = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
@@ -36,7 +32,7 @@ axum = { workspace = true }
 axum-test = { workspace = true }
 serde = { workspace = true }
 regex = { workspace = true }
-futures = { workspace = true }
+futures-util = { workspace = true }
 # Concurrent test infrastructure
 dashmap = { workspace = true }
 serial_test = { workspace = true }
@@ -61,8 +57,6 @@ default = []
 dev-stubs = ["nestgate-core/dev-stubs", "nestgate-zfs/dev-stubs"]
 # Streaming RPC - enable enhanced streaming capabilities
 streaming-rpc = []
-chrono = ["dep:chrono"]
-uuid = ["dep:uuid"]
 
 [workspace]
 resolver = "2"
@@ -175,7 +169,6 @@ url = "2.5"
 
 # Async utilities
 async-trait = "0.1"
-futures = "0.3"
 futures-util = "0.3"
 async-recursion = "1.1"
 
@@ -205,9 +198,6 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 tarpc = { version = "0.34", features = ["tokio1", "serde-transport"] }
 bincode = "1.3"
 jsonrpsee = { version = "0.26.0", features = ["server"] }
-pin-project = "1.1"
-
-
 # Testing utilities
 axum-test = "15.0"
 mockall = "0.13"

@@ -183,7 +183,7 @@ fn test_transport_module_exports() {
     // Verify all exports are accessible
     let _ = TransportConfig::new("test");
     let _ = NestGateRpcHandler::new();
-    // BearDogClient, TransportServer, etc. are also exported
+    // SecurityProviderClient, TransportServer, etc. are also exported
 }
 
 #[test]

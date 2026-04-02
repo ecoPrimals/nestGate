@@ -1,17 +1,25 @@
 # NestGate - Sovereign Storage & Permanence Primal
 
 **Version**: 4.7.0-dev  
-**Build**: All workspace members — `cargo check --workspace --all-features --all-targets` (0 errors)  
-**Tests**: 8,555 lib / 12,105 total passing, 0 failures  
-**Coverage**: ~80% line (llvm-cov) — re-run to refresh  
-**Clippy**: ZERO warnings — `cargo clippy --workspace --all-features --all-targets`  
-**Docs**: Zero warnings (`cargo doc --workspace --no-deps`)  
-**Production TODO/FIXME**: Zero  
+
+**Verification (as of 2026-04-02)**  
+- **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors)  
+- **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
+- **Tests**: `cargo test --workspace` — PASS (0 failures)  
+- **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
+
+**Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
+- **Tests (last recorded)**: ~8,555 lib / ~12,105 total — run `cargo test --workspace` to refresh counts  
+- **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
+
+**Technical debt (honest)**  
+- **Open debt markers**: none in production `.rs` (wateringHole; re-verify after large edits)  
+- **Deprecated APIs**: Some call sites still use deprecated types while migrating to canonical APIs  
 **Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
-**TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (zero C crypto deps)  
+**TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack in-tree)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 **File size**: All production `.rs` files under 1,000 lines  
-**`#[serial]`**: Zero outside chaos tests — all env tests use `temp_env` closures  
+**`#[serial]`**: Some tests in `nestgate-config` and `nestgate-discovery` still use `serial_test::serial` for env isolation (alongside `temp_env` where applicable); not limited to chaos tests  
 **Last Updated**: April 2, 2026
 
 ---
@@ -108,24 +116,24 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics.
+See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-02).
 
 | Area | Status |
 |------|--------|
-| Build | `cargo check --workspace --all-features --all-targets` — 0 errors |
-| Clippy | ZERO warnings (`cargo clippy --workspace --all-features --all-targets`) |
-| Format | Clean (`cargo fmt --check`) |
-| Tests | 8,555 lib / 12,105 total passing, 0 failures |
-| Coverage | ~80% line (llvm-cov) — wateringHole 80% minimum met |
-| Docs | Zero warnings (`cargo doc --workspace --no-deps`) |
-| Production TODO/FIXME | Zero |
-| Production unwrap/expect | Zero in library `src/` (`#[cfg(test)]` / integration tests may use unwrap; clippy warns workspace-wide) |
+| Build | `cargo check --workspace --all-features --all-targets` — PASS |
+| Clippy | `cargo clippy --workspace --all-features -- -D warnings` — PASS |
+| Format | `cargo fmt --check` — expected clean on main |
+| Tests | `cargo test --workspace` — PASS (0 failures) |
+| Coverage | ~80% line (llvm-cov) — wateringHole 80% minimum met; 90% target pending |
+| Docs | `cargo doc --workspace --no-deps` — builds without rustdoc warnings in normal runs |
+| Migration / deprecation notes | Some deprecated APIs; migration in progress — not blocking |
+| Production unwrap/expect | Zero in library `src/` per project rules; tests/integration may use unwrap; clippy `unwrap_used` warns workspace-wide |
 | Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
-| TLS/crypto | Delegated to bearDog IPC; installer uses system `curl` (zero C crypto deps; ring/rustls/reqwest eliminated) |
+| TLS/crypto | Delegated to bearDog IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
-| File size (production < 1000) | All compliant (max 879 lines) |
+| File size (production < 1000) | All compliant (max ~879 lines last measured) |
 | http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
-| Env-var race conditions | Fixed (temp-env closures; zero `#[serial]` outside chaos) |
+| Env-var isolation | `temp_env` + targeted `#[serial]` where env mutation still requires serialization |
 
 ### Compliance (wateringHole)
 
@@ -137,7 +145,7 @@ See [STATUS.md](./STATUS.md) for measured metrics.
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
 | Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
-| Coverage (80%+) | Pass — 80.95% line (wateringHole minimum met) |
+| Coverage (80%+) | Pass — ~80% line last measured (wateringHole 80% minimum met; 90% target not yet) |
 | File size (<1000 production) | Pass (max 879 lines) |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, storage.sock symlink |
 | Discovery | Env vars + songBird IPC (mDNS behind `mdns` feature gate — delegated to biomeOS/songBird) |
@@ -170,8 +178,8 @@ cargo build --release
 # Run all tests
 cargo test --workspace
 
-# Linting (must pass with zero warnings; matches STATUS.md ground truth)
-cargo clippy --workspace --all-targets --all-features -- -D warnings
+# Linting (CI-style: deny warnings; matches STATUS.md)
+cargo clippy --workspace --all-features -- -D warnings
 
 # Format
 cargo fmt --all
@@ -182,6 +190,15 @@ cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
 # Documentation
 cargo doc --no-deps --workspace
 ```
+
+### Root package feature flags (`nestgate` workspace package)
+
+The repository root package is mainly for integration tests. Its `[features]` are:
+
+- **`dev-stubs`** — enables dev/stub code in `nestgate-core` and `nestgate-zfs` for tests.
+- **`streaming-rpc`** — reserved for streaming RPC work (see root `Cargo.toml`).
+
+Other workspace crates define their own features (for example `mdns`, `sysinfo`, per-crate `dev-stubs`). Check each crate’s `Cargo.toml` for the authoritative list.
 
 ### Key Technologies
 
@@ -233,7 +250,7 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 80.95% last measured)
+1. Push test coverage toward 90% target (currently ~80% line last measured)
 2. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 3. Cross-gate replication (multi-node data orchestration)
 4. Profile and optimize `.clone()` hotspots in RPC layer with real benchmark data

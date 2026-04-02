@@ -14,7 +14,15 @@ use tokio::process::Command;
 use tracing::error;
 use tracing::info;
 use tracing::warn;
-// Removed unused tracing import
+
+fn is_valid_workspace_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 255
+        && id
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == '.')
+        && !id.contains("..")
+}
 
 /// Delete workspace storage (CORE STORAGE FUNCTION)
 ///
@@ -24,8 +32,7 @@ use tracing::warn;
 /// or `StatusCode::INTERNAL_SERVER_ERROR` if storage deletion fails.
 pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("🗑️ Deleting workspace storage: {}", workspace_id);
-    // Validate workspace ID format
-    if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
+    if !is_valid_workspace_id(&workspace_id) {
         warn!("❌ Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
@@ -95,8 +102,7 @@ pub async fn get_workspace_status(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("📊 Getting workspace storage status: {}", workspace_id);
-    // Validate workspace ID
-    if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
+    if !is_valid_workspace_id(&workspace_id) {
         warn!("❌ Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
@@ -189,8 +195,7 @@ pub async fn cleanup_workspace(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("🧹 Cleaning up workspace storage: {}", workspace_id);
-    // Validate workspace ID
-    if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
+    if !is_valid_workspace_id(&workspace_id) {
         warn!("❌ Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }

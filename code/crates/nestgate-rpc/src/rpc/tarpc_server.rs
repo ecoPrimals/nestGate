@@ -39,6 +39,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::SystemTime;
 
+use bytes::Bytes;
 use futures_util::StreamExt;
 use tarpc::context::Context;
 use tarpc::server::Channel;
@@ -53,11 +54,23 @@ use nestgate_config::config::capability_discovery::{self, DiscoverySource};
 use nestgate_config::constants::ports::{self, default_tarpc_client_endpoint};
 use nestgate_types::error::{NestGateError, Result};
 
+/// Semantic `NestGate` RPC API version (`VersionInfo::api_version`).
+const NESTGATE_RPC_API_VERSION: &str = "1.0";
+
+/// Wire-format protocol identifiers (`VersionInfo::protocol_versions`). Must stay aligned with
+/// `ProtocolInfo::version` for each protocol in [`NestGateRpcService::protocols`].
+const TARPC_WIRE_VERSION: &str = "0.34";
+const PROTOCOL_VERSION_TARPC: &str = "tarpc-0.34";
+const JSONRPC_WIRE_VERSION: &str = "2.0";
+const PROTOCOL_VERSION_JSONRPC: &str = "jsonrpc-2.0";
+const HTTP_WIRE_VERSION: &str = "1.1";
+
 /// `NestGate` RPC service implementation.
 ///
 /// Delegates all storage operations to the injected [`StorageBackend`]. In
 /// production this is `CoreStorageBackend` (filesystem-backed via
-/// `StorageManagerService`); in tests it is [`InMemoryStorageBackend`].
+/// `StorageManagerService`); in tests it is
+/// [`InMemoryStorageBackend`](crate::rpc::storage_backend::InMemoryStorageBackend).
 #[derive(Clone)]
 pub struct NestGateRpcService {
     pub(crate) start_time: SystemTime,
@@ -199,7 +212,7 @@ impl NestGateRpc for NestGateRpcService {
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
         debug!("RPC: store_object({}/{}) → backend", dataset, key);
         self.backend
-            .store_object(&dataset, &key, data, metadata)
+            .store_object(&dataset, &key, Bytes::from(data), metadata)
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -214,6 +227,7 @@ impl NestGateRpc for NestGateRpcService {
         self.backend
             .retrieve_object(&dataset, &key)
             .await
+            .map(|b| b.to_vec())
             .map_err(|e| rpc_err(&e))
     }
 
@@ -368,7 +382,7 @@ impl NestGateRpc for NestGateRpcService {
 
         HealthStatus {
             status: String::from("healthy"),
-            version: String::from("0.2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
             uptime_seconds: self.uptime_seconds(),
             total_datasets: metrics.dataset_count,
             total_objects: metrics.object_count,
@@ -386,9 +400,12 @@ impl NestGateRpc for NestGateRpcService {
         debug!("RPC: version()");
 
         VersionInfo {
-            version: String::from("0.2.0"),
-            api_version: String::from("1.0"),
-            protocol_versions: vec![String::from("tarpc-0.34"), String::from("jsonrpc-2.0")],
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            api_version: NESTGATE_RPC_API_VERSION.to_string(),
+            protocol_versions: vec![
+                PROTOCOL_VERSION_TARPC.to_string(),
+                PROTOCOL_VERSION_JSONRPC.to_string(),
+            ],
             build_info: Some(String::from("NestGate Storage Primal")),
         }
     }
@@ -402,21 +419,21 @@ impl NestGateRpc for NestGateRpcService {
         vec![
             ProtocolInfo {
                 protocol: String::from("tarpc"),
-                version: String::from("0.34"),
+                version: TARPC_WIRE_VERSION.to_string(),
                 endpoint: format!("tarpc://{rpc_addr}"),
                 priority: 1,
                 enabled: true,
             },
             ProtocolInfo {
                 protocol: String::from("jsonrpc"),
-                version: String::from("2.0"),
+                version: JSONRPC_WIRE_VERSION.to_string(),
                 endpoint: format!("http://{api_addr}/rpc"),
                 priority: 2,
                 enabled: false,
             },
             ProtocolInfo {
                 protocol: String::from("http"),
-                version: String::from("1.1"),
+                version: HTTP_WIRE_VERSION.to_string(),
                 endpoint: format!("http://{api_addr}"),
                 priority: 3,
                 enabled: false,
@@ -501,7 +518,7 @@ mod tests {
             .expect("Failed to create service");
         let health = service.health(Context::current()).await;
         assert_eq!(health.status, "healthy");
-        assert_eq!(health.version, "0.2.0");
+        assert_eq!(health.version, env!("CARGO_PKG_VERSION"));
     }
 
     #[tokio::test]
@@ -510,7 +527,7 @@ mod tests {
             .await
             .expect("Failed to create service");
         let version = service.version(Context::current()).await;
-        assert_eq!(version.version, "0.2.0");
+        assert_eq!(version.version, env!("CARGO_PKG_VERSION"));
         assert_eq!(version.api_version, "1.0");
     }
 

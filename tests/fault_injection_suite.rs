@@ -332,7 +332,7 @@ async fn test_network_communication_fault_handling() -> Result<(), Box<dyn std::
             }));
         }
 
-        futures::future::join_all(handles).await;
+        futures_util::future::join_all(handles).await;
         let acquired = acquired_count.load(Ordering::SeqCst);
 
         let is_throttled = acquired <= 2;

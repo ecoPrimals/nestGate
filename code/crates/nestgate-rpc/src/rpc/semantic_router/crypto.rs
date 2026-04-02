@@ -3,7 +3,7 @@
 
 //! Crypto domain semantic methods
 //!
-//! NestGate does NOT perform cryptographic operations locally.
+//! `NestGate` does NOT perform cryptographic operations locally.
 //! Per `ecoBin` v3.0, crypto is delegated to whichever primal advertises
 //! the `"security"` capability (discovered at runtime via capability-based
 //! discovery, not by name).
