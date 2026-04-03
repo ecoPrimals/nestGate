@@ -1,5 +1,6 @@
-> **Historical**: This document was written in November 3, 2025. Current architecture
-> and patterns may differ. See root-level docs and `specs/` for current specifications.
+> **ARCHIVED**: Written November 2025 (~1,319 tests, 41% coverage). As of April 2026 the
+> suite has **~12,240 tests at ~80% coverage**. For current testing guidance see
+> [`tests/README.md`](../../tests/README.md) and [`STATUS.md`](../../STATUS.md).
 
 # 🧪 NestGate Testing Guide
 **Version**: 1.0  

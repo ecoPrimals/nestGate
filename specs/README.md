@@ -1,6 +1,6 @@
 # NestGate Specifications
 
-**Last Updated**: April 2, 2026
+**Last Updated**: April 3, 2026
 
 Architectural specifications for nestGate — the storage and discovery primal
 in the ecoPrimals ecosystem.

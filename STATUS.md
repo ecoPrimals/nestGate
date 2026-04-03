@@ -32,7 +32,7 @@ Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  24 (22 code/crates + tools/unwrap-migrator + fuzz)
-Serial tests:       Some #[serial] in nestgate-config / nestgate-discovery tests (env isolation); temp_env used broadly
+Serial tests:       #[serial] only on env-var-dependent tests in nestgate-config / nestgate-discovery (temp_env closures for isolation elsewhere)
 Numeric casts:      ZERO raw `as` casts in production — all use try_from with saturating fallbacks
 Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
