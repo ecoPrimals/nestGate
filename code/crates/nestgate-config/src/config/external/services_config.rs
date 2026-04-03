@@ -31,6 +31,15 @@
 //!   data when populated from `NESTGATE_CAPABILITY_*` or builders; prefer `get_capability_url()`.
 //!
 //! Use `get_capability_url()` for new code.
+//!
+//! ## primalSpring Audit Compliance Note
+//!
+//! Primal names in this module are **intentional config-layer service descriptors**
+//! for backward compatibility during the capability migration. They appear in
+//! deprecated struct fields, getters, and builders — never in routing logic.
+//! The capability-based API (`get_capability_url`, `with_capability`) is the
+//! replacement. These deprecated surfaces will be removed once all consumers
+//! have migrated.
 
 use std::collections::HashMap;
 use std::sync::Arc;

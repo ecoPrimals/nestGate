@@ -448,7 +448,7 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         // Game session persistence (convenience over storage.*)
         "session.save" => session_handlers::session_save(request.params.as_ref(), state).await,
         "session.load" => session_handlers::session_load(request.params.as_ref(), state).await,
-        // Data domain (live feeds, not storage — stubs until nestgate-core data_sources wired)
+        // Data domain (live feeds, not storage — delegated to data capability provider)
         "data.ncbi_search" => data_handlers::data_ncbi_search(request.params.as_ref()),
         "data.ncbi_fetch" => data_handlers::data_ncbi_fetch(request.params.as_ref()),
         "data.noaa_ghcnd" => data_handlers::data_noaa_ghcnd(request.params.as_ref()),

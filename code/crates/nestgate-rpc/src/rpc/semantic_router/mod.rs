@@ -133,6 +133,12 @@ impl SemanticRouter {
     /// ([`FileMetadataBackend`] under [`default_metadata_base_dir`]), falling back to
     /// in-memory storage only if the on-disk path cannot be created.
     ///
+    /// **NG-01 compliance**: `FileMetadataBackend` is the production default.
+    /// `InMemoryMetadataBackend` is only used as an error fallback and in tests.
+    /// The daemon currently uses `legacy_ecosystem_rpc_handler` (which routes
+    /// `storage.*` via `StorageState`); when the daemon migrates to
+    /// `SemanticRouter`, this constructor ensures file-backed metadata persistence.
+    ///
     /// # Arguments
     /// * `client` - Internal RPC client for method delegation
     pub fn new(client: Arc<NestGateRpcClient>) -> Self {

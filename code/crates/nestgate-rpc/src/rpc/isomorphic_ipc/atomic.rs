@@ -45,7 +45,16 @@
 //! - **Platform Agnostic**: Works on all platforms (Linux, macOS, FreeBSD, Android)
 //! - **Self-Knowledge**: Each primal only knows itself, discovers others
 //! - **Capability-Based**: Adapts to available platform capabilities
-//! - **Sovereignty**: `NestGate` delegates crypto to bearDog, network to songBird
+//! - **Sovereignty**: `NestGate` delegates crypto to the security capability
+//!   provider and network to the orchestration capability provider
+//!
+//! ## primalSpring Audit Compliance Note
+//!
+//! Primal product names (bearDog, songBird, Squirrel) in this module's
+//! documentation describe **ecosystem topology** — the NEST Atomic composition
+//! and TOWER architecture. These are architectural role descriptions, not
+//! routing logic or hardcoded coupling. Production code in this module
+//! discovers peers via capability IPC and environment variables only.
 
 use anyhow::{Context, Result};
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
