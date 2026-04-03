@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! # NestGate Chaos Testing Framework
 //!
 //! **PRODUCTION-READY CHAOS ENGINEERING** for validating system resilience

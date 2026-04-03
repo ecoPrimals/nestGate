@@ -190,7 +190,7 @@ fn test_transport_module_exports() {
 fn test_config_builder_pattern() {
     let config = TransportConfig::new("builder_test")
         .with_socket_path("/tmp/test.sock")
-        .with_security_provider("/tmp/beardog.sock")
+        .with_security_provider("/tmp/security-provider.sock")
         .with_http_fallback(8080)
         .with_verbose();
 

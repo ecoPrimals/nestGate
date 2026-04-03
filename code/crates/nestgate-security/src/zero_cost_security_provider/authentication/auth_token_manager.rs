@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Token management with crypto operations delegated to bearDog IPC.
+//! Token management with crypto operations delegated to the crypto capability provider.
 //!
 //! Token creation uses UUIDs for unique identifiers and delegates
 //! HMAC signing to the crypto capability provider when available.
@@ -9,7 +9,7 @@
 use crate::zero_cost_security_provider::types::ZeroCostAuthToken;
 use std::time::Duration;
 
-/// Token manager that delegates crypto operations to bearDog.
+/// Token manager that delegates crypto operations to the crypto capability provider.
 pub struct AuthTokenManager {
     signing_key: String,
 }
@@ -23,9 +23,9 @@ impl AuthTokenManager {
 
     /// Create a new authentication token for a user.
     ///
-    /// Generates a UUID-based token. HMAC signing is delegated to bearDog
-    /// when available; falls back to unsigned tokens when the crypto
-    /// provider is unavailable (standalone mode).
+    /// Generates a UUID-based token. HMAC signing is delegated to the crypto
+    /// capability provider when available; falls back to unsigned tokens when
+    /// the provider is unavailable (standalone mode).
     #[must_use]
     pub fn create_token(
         &self,
@@ -40,7 +40,7 @@ impl AuthTokenManager {
     /// Validate a token's structure.
     ///
     /// Checks that the token string is non-empty and well-formed.
-    /// Full cryptographic verification requires the crypto provider (bearDog).
+    /// Full cryptographic verification requires the crypto capability provider.
     #[must_use]
     pub const fn validate_token_signature(&self, token: &str) -> bool {
         !token.is_empty()
@@ -48,7 +48,7 @@ impl AuthTokenManager {
 
     /// Creates a workspace secret by requesting random bytes from the crypto provider.
     ///
-    /// Falls back to a UUID-based secret when bearDog is unavailable.
+    /// Falls back to a UUID-based secret when the crypto provider is unavailable.
     ///
     /// # Errors
     ///

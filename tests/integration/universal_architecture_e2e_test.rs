@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Universal Architecture E2E Test
 //! 
 //! This test validates universal architecture E2E functionality using canonical patterns

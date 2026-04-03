@@ -4,7 +4,7 @@
 //! Remote ZFS HTTP client — **DEPRECATED**.
 //!
 //! HTTP transport was removed per Concentrated Gap Architecture.
-//! Remote ZFS operations now flow through Unix sockets via Songbird gateway.
+//! Remote ZFS operations now flow through Unix sockets via the orchestration gateway.
 //! This module is retained only so existing `use` paths compile; all methods
 //! return `RemoteError` directing callers to the Unix transport.
 
@@ -31,13 +31,13 @@ impl HttpClient {
 
     fn removed() -> UniversalZfsResult<serde_json::Value> {
         Err(UniversalZfsError::RemoteError(
-            "HTTP removed — use Unix sockets via Songbird gateway".to_string(),
+            "HTTP removed — use Unix sockets via the orchestration gateway".to_string(),
         ))
     }
 
     pub async fn health_check(&self) -> UniversalZfsResult<()> {
         Err(UniversalZfsError::RemoteError(
-            "HTTP removed — use Unix sockets via Songbird gateway".to_string(),
+            "HTTP removed — use Unix sockets via the orchestration gateway".to_string(),
         ))
     }
 

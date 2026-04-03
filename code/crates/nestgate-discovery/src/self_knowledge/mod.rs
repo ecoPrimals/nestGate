@@ -116,7 +116,7 @@ pub struct PrimalId(String);
 impl PrimalId {
     /// Create a new primal ID
     ///
-    /// **Convention**: Use the primal's name (e.g., "nestgate", "orchestrator", "beardog")
+    /// **Convention**: Use the primal's name (e.g., "nestgate", "orchestrator")
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }

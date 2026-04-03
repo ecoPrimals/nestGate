@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 use axum::Router;
 use axum_test::TestServer;
 /// Unified Test Error Handling Framework

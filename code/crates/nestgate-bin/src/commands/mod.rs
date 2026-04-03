@@ -6,9 +6,11 @@
 
 //! Commands module
 
+pub(crate) mod bind;
 pub mod config;
 pub mod discover;
 pub mod doctor;
+pub(crate) mod env;
 pub mod monitor;
 pub mod service;
 pub mod storage;

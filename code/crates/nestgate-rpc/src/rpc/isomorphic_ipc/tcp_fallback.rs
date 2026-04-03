@@ -44,7 +44,7 @@
 //!
 //! ## Reference
 //!
-//! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)
+//! Pattern validated in orchestration provider v3.33.0
 
 use anyhow::{Context, Result};
 use nestgate_config::constants::hardcoding::addresses::LOCALHOST_IPV4;

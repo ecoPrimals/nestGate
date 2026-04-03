@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Memory Pressure Simulation Chaos Tests
 //!
 //! Tests system behavior under memory pressure:

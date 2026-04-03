@@ -71,7 +71,7 @@ pub mod orchestrator_registration;
 pub mod semantic_router;
 pub mod socket_config;
 pub mod storage_backend;
-// songbird_registration removed in v2.3.0
+// Legacy primal-specific registration removed in v2.3.0; use capability-based IPC
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
 pub(crate) mod model_cache_handlers;
 pub mod tarpc_client;
@@ -108,7 +108,8 @@ pub use storage_backend::{InMemoryStorageBackend, StorageBackend};
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
-#[allow(deprecated)] // Re-export legacy Unix JSON-RPC surface until callers use Songbird IPC.
+#[allow(deprecated)]
+// Re-export legacy Unix JSON-RPC surface until callers use orchestration IPC.
 pub use unix_socket_server::{
     JsonRpcUnixServer, LegacyUnixJsonRpcHandler, legacy_ecosystem_rpc_handler,
 };

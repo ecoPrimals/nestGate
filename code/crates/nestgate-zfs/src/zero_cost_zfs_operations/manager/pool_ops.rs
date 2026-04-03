@@ -153,3 +153,20 @@ impl<
         Ok(pools)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::TestingZfsManager;
+
+    #[tokio::test]
+    async fn test_can_create_more_pools_false_when_pool_capacity_full() {
+        let m = TestingZfsManager::new();
+        m.test_insert_pool_entry("p0".into()).await;
+        m.test_insert_pool_entry("p1".into()).await;
+        assert_eq!(m.test_pool_map_len().await, 2);
+        assert!(
+            !m.test_can_create_more_pools().await,
+            "TestingZfsManager allows at most 2 pools"
+        );
+    }
+}

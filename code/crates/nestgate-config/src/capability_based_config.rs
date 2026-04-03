@@ -84,7 +84,7 @@ pub struct PrimalIdentity {
     /// Unique identifier (generated, not hardcoded)
     pub id: String,
 
-    /// Primal type (e.g., "nestgate", "beardog", "songbird")
+    /// Primal type (e.g., "nestgate")
     pub primal_type: String,
 
     /// Version

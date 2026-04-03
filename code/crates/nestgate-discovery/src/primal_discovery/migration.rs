@@ -6,7 +6,7 @@
 // Provides gradual migration from hardcoded values to capability-based discovery
 // with robust fallback chains.
 
-// HTTP removed - use Songbird via capability discovery for external HTTP
+// HTTP removed — use orchestration / network capability discovery for external HTTP
 use crate::primal_discovery::PrimalDiscovery;
 use nestgate_types::error::{NestGateError, Result};
 use std::collections::HashMap;

@@ -37,6 +37,38 @@
 // Consolidation: `ServiceRegistry` / `PrimalCapability` may be shared from `nestgate-types`.
 use nestgate_types::error::{NestGateError, Result};
 use std::env;
+use std::sync::OnceLock;
+
+/// Capability identifiers passed to [`CapabilityPortResolver::resolve_service_port`].
+///
+/// Callers (for example `nestgate-discovery` at startup) register a resolver that maps these
+/// strings to listening ports. `NestGate` config stays free of any dependency on the discovery crate.
+pub mod capability_ids {
+    /// HTTP API gateway (REST/OpenAPI).
+    pub const API_GATEWAY: &str = "api.gateway";
+    /// Prometheus-style metrics / observability scrape endpoint.
+    pub const OBSERVABILITY_METRICS: &str = "observability.metrics";
+    /// ZFS-backed storage service.
+    pub const STORAGE_ZFS: &str = "storage.zfs";
+}
+
+/// Injected runtime resolver: maps a capability string to a TCP port (primal self-knowledge).
+///
+/// Implementations live outside `nestgate-config` (for example in `nestgate-discovery`) and are
+/// registered once at process startup via [`register_capability_resolver`].
+pub trait CapabilityPortResolver: Send + Sync {
+    /// Returns the listening port for `capability`, or `None` if unknown.
+    fn resolve_service_port(&self, capability: &str) -> Option<u16>;
+}
+
+static CAPABILITY_RESOLVER: OnceLock<Box<dyn CapabilityPortResolver>> = OnceLock::new();
+
+/// Register the global capability port resolver (typically once at startup).
+///
+/// If a resolver was already registered, this call is ignored (first registration wins).
+pub fn register_capability_resolver(resolver: Box<dyn CapabilityPortResolver>) {
+    let _ = CAPABILITY_RESOLVER.set(resolver);
+}
 
 // ==================== MODERN DISCOVERY FUNCTIONS ====================
 
@@ -193,22 +225,40 @@ pub fn discover_tarpc_port() -> Result<u16> {
 
 /// Try to discover API service (returns Err if not found, doesn't panic)
 fn try_discover_api_service() -> Result<String> {
+    if let Some(resolver) = CAPABILITY_RESOLVER.get()
+        && let Some(port) = resolver.resolve_service_port(capability_ids::API_GATEWAY)
+        && port > 0
+    {
+        return Ok(format!("http://localhost:{port}"));
+    }
     Err(NestGateError::network_error(
-        "Capability-based API discovery unavailable (nestgate-core decoupled)",
+        "Capability discovery: no API gateway port from resolver",
     ))
 }
 
 /// Try to discover metrics service (returns Err if not found)
 fn try_discover_metrics_service() -> Result<String> {
+    if let Some(resolver) = CAPABILITY_RESOLVER.get()
+        && let Some(port) = resolver.resolve_service_port(capability_ids::OBSERVABILITY_METRICS)
+        && port > 0
+    {
+        return Ok(format!("http://localhost:{port}"));
+    }
     Err(NestGateError::network_error(
-        "Capability-based metrics discovery unavailable (nestgate-core decoupled)",
+        "Capability discovery: no metrics port from resolver",
     ))
 }
 
 /// Try to discover storage service (returns Err if not found)
 fn try_discover_storage_service() -> Result<String> {
+    if let Some(resolver) = CAPABILITY_RESOLVER.get()
+        && let Some(port) = resolver.resolve_service_port(capability_ids::STORAGE_ZFS)
+        && port > 0
+    {
+        return Ok(format!("http://localhost:{port}"));
+    }
     Err(NestGateError::network_error(
-        "Capability-based storage discovery unavailable (nestgate-core decoupled)",
+        "Capability discovery: no storage port from resolver",
     ))
 }
 
@@ -288,6 +338,9 @@ pub fn discover_tarpc_port_sync() -> u16 {
 }
 
 // ==================== TESTS ====================
+//
+// Resolver injection is covered in integration tests (separate binaries so `OnceLock` registration
+// does not leak across tests): `tests/capability_port_discovery_*.rs`.
 
 #[cfg(test)]
 mod tests {

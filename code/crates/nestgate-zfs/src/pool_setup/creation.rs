@@ -486,6 +486,29 @@ mod tests {
         assert!(r.success);
         assert_eq!(r.topology, PoolTopology::RaidZ3);
     }
+
+    /// Non-existent block devices: dry run still succeeds; `device_exists` returns false.
+    #[tokio::test]
+    async fn dry_run_with_nonexistent_devices_still_ok() {
+        let creator = PoolCreator::new_dry_run();
+        let ghost = "/tmp/nestgate-no-such-block-device-000";
+        let config = PoolSetupConfig {
+            pool_name: "ghost-pool".to_string(),
+            devices: vec![ghost.to_string()],
+            topology: PoolTopology::Single,
+            properties: HashMap::new(),
+            tier_mappings: HashMap::new(),
+            redundancy: RedundancyLevel::None,
+            device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
+            create_tiers: false,
+        };
+        let r = creator
+            .create_pool_safe(&config)
+            .await
+            .expect("dry run with ghost device");
+        assert!(r.success);
+        assert_eq!(r.devices_used, vec![ghost.to_string()]);
+    }
 }
 
 #[cfg(test)]

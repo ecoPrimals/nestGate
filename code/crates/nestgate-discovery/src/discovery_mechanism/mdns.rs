@@ -3,7 +3,7 @@
 
 //! mDNS-style discovery (optional, standalone / development)
 //!
-//! **Production discovery belongs to biomeOS and songBird**; this in-memory registry exists only for
+//! **Production discovery belongs to the ecosystem platform and orchestration provider**; this in-memory registry exists only for
 //! local tooling and tests when the `mdns` crate feature is enabled.
 //!
 //! This module provides a simplified in-memory implementation. A full mDNS stack would use the

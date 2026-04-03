@@ -10,7 +10,7 @@
 //!
 //! - **Azure**: Azure Blob Storage
 //! - **GCS**: Google Cloud Storage  
-//! - **Object Storage**: Universal S3-compatible storage (via Songbird gateway)
+//! - **Object Storage**: Universal S3-compatible storage (via orchestration gateway)
 //! - **Native**: Local ZFS pools (default)
 //!
 //! ## Architecture
@@ -23,7 +23,7 @@
 //! ```rust,ignore
 //! use nestgate_zfs::backends::object_storage::ObjectStorageBackend;
 //!
-//! // Create object storage backend (via Songbird gateway)
+//! // Create object storage backend (via orchestration gateway)
 //! let backend = ObjectStorageBackend::new(config).await?;
 //! let pool = backend.create_pool("tank", &[]).await?;
 //! ```

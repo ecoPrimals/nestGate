@@ -64,6 +64,13 @@
 /// Authentication handlers delegate to `nestgate-security` (`HybridAuthenticationManager`).
 pub mod auth;
 
+/// **PRODUCTION AUTH HANDLERS**
+///
+/// Production authentication using `nestgate-core` security (`AuthManager`).
+pub mod auth_production;
+#[cfg(test)]
+mod auth_production_tests;
+
 /// **AI-FIRST EXAMPLE MODULE**
 ///
 /// AI-powered example handlers and demonstrations.

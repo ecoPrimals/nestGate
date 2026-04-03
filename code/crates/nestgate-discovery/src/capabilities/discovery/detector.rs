@@ -165,11 +165,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_detector_creation() {
-        let registry = Arc::new(CapabilityRegistry::new());
-        let detector = ServiceDetector::new(registry);
+        temp_env::async_with_vars([("NESTGATE_DISCOVERY_SCAN_PORTS", None::<&str>)], async {
+            let registry = Arc::new(CapabilityRegistry::new());
+            let detector = ServiceDetector::new(registry);
 
-        assert_eq!(detector.interval, Duration::from_secs(30));
-        assert_eq!(detector.scan_ports, vec![3000, 3001, 3002, 3010]);
+            assert_eq!(detector.interval, Duration::from_secs(30));
+            assert_eq!(detector.scan_ports, vec![3000, 3001, 3002, 3010]);
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -287,15 +290,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_detector_default_ports() {
-        let registry = Arc::new(CapabilityRegistry::new());
-        let detector = ServiceDetector::new(registry);
+        temp_env::async_with_vars([("NESTGATE_DISCOVERY_SCAN_PORTS", None::<&str>)], async {
+            let registry = Arc::new(CapabilityRegistry::new());
+            let detector = ServiceDetector::new(registry);
 
-        // Should have default discovery ports
-        assert!(!detector.scan_ports.is_empty());
-        assert!(detector.scan_ports.contains(&3000));
-        assert!(detector.scan_ports.contains(&3001));
-        assert!(detector.scan_ports.contains(&3002));
-        assert!(detector.scan_ports.contains(&3010));
+            assert!(!detector.scan_ports.is_empty());
+            assert!(detector.scan_ports.contains(&3000));
+            assert!(detector.scan_ports.contains(&3001));
+            assert!(detector.scan_ports.contains(&3002));
+            assert!(detector.scan_ports.contains(&3010));
+        })
+        .await;
     }
 
     #[tokio::test]

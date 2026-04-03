@@ -4,7 +4,7 @@
 //! Crypto module tests — type serialization and delegate integration.
 //!
 //! Local crypto implementations have been removed; all cryptographic operations
-//! are delegated to the crypto capability provider (bearDog) via `CryptoDelegate`.
+//! are delegated to the crypto capability provider via `CryptoDelegate`.
 
 #[cfg(test)]
 mod crypto_tests {

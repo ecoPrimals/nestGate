@@ -6,7 +6,7 @@
 //! Hybrid external + local authentication orchestration.
 //!
 //! Delegates cryptographic operations (JWT signing/verification, password
-//! hashing) to the crypto capability provider (bearDog) via JSON-RPC IPC.
+//! hashing) to the crypto capability provider via JSON-RPC IPC.
 //! Falls back to cache-based validation when the crypto provider is unavailable.
 
 use super::config::AuthenticationConfig;
@@ -24,7 +24,7 @@ use tracing::{debug, info, warn};
 /// Hybrid authentication manager.
 ///
 /// Routes authentication through the security primal (discovered at runtime)
-/// and validates tokens via the crypto capability provider (bearDog IPC).
+/// and validates tokens via the crypto capability provider IPC.
 /// Falls back to token-cache validation when external providers are unavailable.
 #[derive(Debug)]
 pub struct HybridAuthenticationManager {
@@ -55,7 +55,7 @@ impl HybridAuthenticationManager {
     /// Authenticate user credentials.
     ///
     /// Tries external authentication (Security primal) first, then falls back
-    /// to local credential verification delegating crypto to bearDog.
+    /// to local credential verification delegating crypto to the capability provider.
     ///
     /// # Errors
     ///
@@ -91,7 +91,7 @@ impl HybridAuthenticationManager {
     /// Validate authentication token.
     ///
     /// Checks local cache first, then delegates JWT verification to the
-    /// crypto provider (bearDog) via IPC.
+    /// crypto capability provider via IPC.
     ///
     /// # Errors
     ///
@@ -115,7 +115,7 @@ impl HybridAuthenticationManager {
             }
         }
 
-        // Validate via crypto provider (bearDog) if configured
+        // Validate via crypto capability provider if configured
         if self.config.use_external_auth {
             match self.validate_token_via_crypto(token_str).await {
                 Ok(valid) => return Ok(valid),
@@ -253,7 +253,7 @@ impl HybridAuthenticationManager {
             AuthMethod::Password => {
                 let expected_hash = std::env::var("NESTGATE_LOCAL_AUTH_HASH").ok();
                 if let Some(hash) = expected_hash {
-                    // Delegate password verification to crypto provider (bearDog)
+                    // Delegate password verification to crypto capability provider
                     match crate::crypto::delegate::CryptoDelegate::new().await {
                         Ok(delegate) => {
                             let valid = delegate
@@ -272,7 +272,7 @@ impl HybridAuthenticationManager {
                         Err(e) => {
                             warn!("Crypto provider unavailable for password verification: {e}");
                             return Err(NestGateError::security_error(
-                                "Password verification requires crypto provider (bearDog)",
+                                "Password verification requires crypto capability provider",
                             ));
                         }
                     }
@@ -337,7 +337,7 @@ impl HybridAuthenticationManager {
         }
     }
 
-    /// Validate JWT via crypto capability provider (bearDog IPC).
+    /// Validate JWT via crypto capability provider IPC.
     async fn validate_token_via_crypto(&self, token_str: &str) -> Result<bool> {
         let delegate = crate::crypto::delegate::CryptoDelegate::new().await?;
 
@@ -367,7 +367,7 @@ impl HybridAuthenticationManager {
         }))
     }
 
-    /// Refresh JWT via crypto capability provider (bearDog IPC).
+    /// Refresh JWT via crypto capability provider IPC.
     async fn refresh_token_via_crypto(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
         let delegate = crate::crypto::delegate::CryptoDelegate::new().await?;
 

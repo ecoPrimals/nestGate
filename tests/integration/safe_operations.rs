@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! **SAFE OPERATIONS INTEGRATION TESTS**
 //!
 //! Tests for panic-free alternatives to unwrap() and other unsafe operations

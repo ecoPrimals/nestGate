@@ -154,7 +154,7 @@ pub mod config;
 
 // Development and testing
 // NOTE: byob module removed (HTTP dependencies eliminated per Concentrated Gap Architecture)
-// Workspace coordination now via Unix sockets through Songbird gateway
+// Workspace coordination now via Unix sockets through the orchestration gateway
 /// Development environment configuration and helpers
 ///
 /// This module provides development-time helpers and configurations for working

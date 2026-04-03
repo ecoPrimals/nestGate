@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! # Advanced Chaos Resilience Tests (Tests 18-25)
 //!
 //! Additional chaos engineering scenarios for comprehensive system resilience testing

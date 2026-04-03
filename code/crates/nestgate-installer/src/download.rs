@@ -4,7 +4,7 @@
 //! Release download via system `curl` — **pure Rust, zero C crypto deps**.
 //!
 //! The installer runs before the ecosystem is available, so it cannot delegate
-//! TLS to bearDog IPC. Instead we invoke the system `curl` binary (present on
+//! TLS to the security capability provider. Instead we invoke the system `curl` binary (present on
 //! every supported platform) and let the OS handle TLS. This eliminates `ring`,
 //! `rustls`, `reqwest`, and all their transitive C/ASM dependencies from the
 //! NestGate dependency tree.

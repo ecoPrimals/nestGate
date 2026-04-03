@@ -214,6 +214,7 @@ impl ConsolidatedDomainConfigs {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_consolidated_config_creation() {
@@ -232,5 +233,38 @@ mod tests {
         let config = ConsolidatedDomainConfigs::default();
         assert!(config.validate_for_environment("production").is_ok());
         assert!(config.validate_for_environment("dev").is_ok());
+    }
+
+    #[test]
+    fn consolidated_domain_configs_default_equals_new() {
+        let a = ConsolidatedDomainConfigs::default();
+        let b = ConsolidatedDomainConfigs::new();
+        assert_eq!(
+            serde_json::to_string(&a).expect("serialize a"),
+            serde_json::to_string(&b).expect("serialize b")
+        );
+    }
+
+    #[test]
+    fn consolidated_domain_configs_serde_roundtrip() {
+        let original = ConsolidatedDomainConfigs::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: ConsolidatedDomainConfigs = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+
+    #[test]
+    fn merge_domain_json_overrides_api_patch() {
+        let mut c = ConsolidatedDomainConfigs::default();
+        let mut overrides = HashMap::new();
+        overrides.insert(
+            "api".to_string(),
+            serde_json::json!({ "server": { "port": 9443 } }),
+        );
+        c.merge_domain_json_overrides(overrides);
+        assert_eq!(c.api.server.port, 9443);
     }
 }

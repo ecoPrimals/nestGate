@@ -5,20 +5,20 @@
 //!
 //! **Standardized Socket Management** for atomic architecture
 //!
-//! Implements the biomeOS socket configuration standard with robust
-//! fallback logic and comprehensive error handling.
+//! Implements the ecosystem Unix socket layout with robust fallback logic and comprehensive error handling.
+//! `BIOMEOS_SOCKET_DIR` is the **standard shared-socket directory name** in the wateringHole ecosystem (protocol-level; not a coupling to a specific primal).
 //!
 //! ## Configuration Priority (4-tier)
 //!
 //! 1. **`NESTGATE_SOCKET`** env var (explicit override, highest priority)
-//! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate.sock` (biomeOS standard)
+//! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate.sock` (ecosystem standard layout)
 //! 3. **`$XDG_RUNTIME_DIR/biomeos/nestgate.sock`** (preferred; reads the actual `XDG_RUNTIME_DIR` env var)
 //! 4. **Temp Directory**: `/tmp/nestgate-{family}-{node}.sock` (fallback, least secure)
 //!
 //! ## Environment Variables
 //!
 //! - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
-//! - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional, e.g., `$XDG_RUNTIME_DIR/biomeos`)
+//! - `BIOMEOS_SOCKET_DIR`: ecosystem shared socket directory (optional, e.g., `$XDG_RUNTIME_DIR/biomeos`)
 //! - `XDG_RUNTIME_DIR`: Base runtime path (optional; tier 3 uses `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`)
 //! - `NESTGATE_FAMILY_ID`: Family identifier (optional; default: `standalone` per wateringHole)
 //! - `NESTGATE_NODE_ID`: Node identifier for multi-instance (optional; default: system hostname)
@@ -67,7 +67,7 @@ pub fn install_storage_capability_symlink(socket_path: &Path) -> bool {
 
     if !socket_parent_is_biomeos_standard_dir(socket_path) {
         debug!(
-            "storage capability symlink: skipped (socket not under biomeos/): {}",
+            "storage capability symlink: skipped (socket not under ecosystem standard biomeos/ parent): {}",
             socket_path.display()
         );
         return false;
@@ -191,7 +191,7 @@ pub struct SocketConfig {
 pub enum SocketConfigSource {
     /// Explicit environment variable (`NESTGATE_SOCKET`)
     Environment,
-    /// biomeOS shared socket directory (`BIOMEOS_SOCKET_DIR`)
+    /// Ecosystem shared socket directory via `BIOMEOS_SOCKET_DIR` (standard wateringHole path)
     BiomeOSDirectory,
     /// `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`
     XdgRuntime,
@@ -235,12 +235,12 @@ impl SocketConfig {
             });
         }
 
-        // Tier 2: biomeOS shared directory (biomeOS standard)
+        // Tier 2: `BIOMEOS_SOCKET_DIR` (ecosystem standard shared-socket directory)
         if let Some(biomeos_dir) = biomeos_socket_dir {
             let socket_path = PathBuf::from(biomeos_dir).join("nestgate.sock");
 
             info!(
-                "🔌 Using biomeOS socket directory: {} (family: {}, node: {})",
+                "🔌 Using ecosystem socket directory (BIOMEOS_SOCKET_DIR): {} (family: {}, node: {})",
                 socket_path.display(),
                 family_id,
                 node_id
@@ -262,7 +262,7 @@ impl SocketConfig {
             let socket_path = PathBuf::from(dir).join("biomeos").join("nestgate.sock");
 
             info!(
-                "🔌 Using XDG runtime directory with biomeOS standard: {} (family: {}, node: {})",
+                "🔌 Using XDG runtime directory with ecosystem socket layout: {} (family: {}, node: {})",
                 socket_path.display(),
                 family_id,
                 node_id
@@ -301,7 +301,7 @@ impl SocketConfig {
     /// # Environment Variables
     ///
     /// - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
-    /// - `BIOMEOS_SOCKET_DIR`: biomeOS shared socket directory (optional)
+    /// - `BIOMEOS_SOCKET_DIR`: ecosystem shared socket directory (optional; standard wateringHole path)
     /// - `NESTGATE_FAMILY_ID`: Family identifier (defaults to `standalone` per wateringHole)
     /// - `NESTGATE_NODE_ID`: Node identifier (defaults to system hostname)
     ///
@@ -323,6 +323,7 @@ impl SocketConfig {
         });
 
         let socket_override = std::env::var("NESTGATE_SOCKET").ok();
+        // Standard ecosystem shared-socket directory (protocol name retained for compatibility).
         let biomeos_socket_dir = std::env::var("BIOMEOS_SOCKET_DIR").ok();
         let xdg_runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok();
 
@@ -409,7 +410,8 @@ impl SocketConfig {
             "  Source:    {}",
             match self.source {
                 SocketConfigSource::Environment => "NESTGATE_SOCKET env var (explicit)",
-                SocketConfigSource::BiomeOSDirectory => "BIOMEOS_SOCKET_DIR (biomeOS standard)",
+                SocketConfigSource::BiomeOSDirectory =>
+                    "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
                 SocketConfigSource::XdgRuntime => "$XDG_RUNTIME_DIR/biomeos/nestgate.sock",
                 SocketConfigSource::TempDirectory => "/tmp fallback (insecure)",
             }

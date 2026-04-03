@@ -11,19 +11,19 @@
 //! # In scope (NUCLEUS-aligned)
 //!
 //! - **Self-knowledge** — who this primal is and what it can do (`primal_self_knowledge`, `self_knowledge`).
-//! - **Capability-based peer lookup** — environment-driven and JSON-RPC IPC paths toward Songbird and peers.
-//! - **Thin client for Songbird** — types and helpers that query or follow the ecosystem registry via IPC,
+//! - **Capability-based peer lookup** — environment-driven and JSON-RPC IPC paths toward the orchestration provider and peers.
+//! - **Thin registry client** — types and helpers that query or follow the ecosystem registry via IPC,
 //!   without embedding a full registry implementation in `NestGate`.
 //!
-//! # Out of scope (Songbird / biomeOS)
+//! # Out of scope (orchestration / ecosystem platform)
 //!
 //! These concerns remain in this crate only as transitional, deprecated surfaces:
 //!
-//! - **Full service registry** — universal in-process registries belong in Songbird.
-//! - **Multi-backend discovery** (mDNS, Consul, Kubernetes, HTTP bootstrap) — platform discovery belongs in Songbird.
-//! - **Orchestration capability taxonomy** — biomeOS owns orchestration classification and routing.
+//! - **Full service registry** — universal in-process registries belong with the orchestration provider.
+//! - **Multi-backend discovery** (mDNS, Consul, Kubernetes, HTTP bootstrap) — platform discovery belongs with the orchestration provider.
+//! - **Orchestration capability taxonomy** — ecosystem orchestration layer owns orchestration classification and routing.
 //!
-//! Peer and service discovery at production scale are delegated to **Songbird** IPC and **biomeOS**; `NestGate`
+//! Peer and service discovery at production scale are delegated to the **orchestration provider** IPC and the **ecosystem platform**; `NestGate`
 //! keeps the minimal glue needed for storage operations and capability-aware calls over existing transports.
 
 #![cfg_attr(
@@ -71,9 +71,9 @@ pub mod capabilities;
 pub mod capability_discovery;
 #[deprecated(
     since = "0.3.0",
-    note = "Service registry and orchestration discovery are Songbird/biomeOS concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
+    note = "Service registry and orchestration discovery are orchestration-provider concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
 )]
-/// Optional discovery mechanism implementations (mDNS, Consul, K8s, HTTP); generic platform discovery belongs in Songbird.
+/// Optional discovery mechanism implementations (mDNS, Consul, K8s, HTTP); generic platform discovery belongs with the orchestration provider.
 pub mod discovery_mechanism;
 pub mod infant_discovery;
 pub mod primal_discovery;
@@ -81,8 +81,8 @@ pub mod primal_self_knowledge;
 pub mod self_knowledge;
 #[deprecated(
     since = "0.3.0",
-    note = "Service registry and orchestration discovery are Songbird/biomeOS concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
+    note = "Service registry and orchestration discovery are orchestration-provider concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
 )]
-/// Universal service registry patterns; full registry belongs in Songbird.
+/// Universal service registry patterns; full registry belongs with the orchestration provider.
 pub mod service_discovery;
 pub mod universal_primal_discovery;

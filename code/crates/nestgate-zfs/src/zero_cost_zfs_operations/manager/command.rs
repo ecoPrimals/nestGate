@@ -61,3 +61,43 @@ impl<
         properties
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::TestingZfsManager;
+
+    #[test]
+    fn parse_pool_properties_tab_separated_key_value_lines() {
+        let m = TestingZfsManager::new();
+        let out = "size\t12345\nallocated\t100\nhealth\tONLINE\n";
+        let map = m.test_parse_pool_properties(out);
+        assert_eq!(map.get("size").expect("size key"), "12345");
+        assert_eq!(map.get("allocated").expect("allocated key"), "100");
+        assert_eq!(map.get("health").expect("health key"), "ONLINE");
+    }
+
+    #[test]
+    fn parse_pool_properties_empty_string_yields_empty_map() {
+        let m = TestingZfsManager::new();
+        assert!(m.test_parse_pool_properties("").is_empty());
+    }
+
+    #[test]
+    fn parse_pool_properties_skips_lines_without_tab() {
+        let m = TestingZfsManager::new();
+        let map = m.test_parse_pool_properties("no tab here\nkey\tvalue\n");
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get("key").expect("key"), "value");
+    }
+
+    #[test]
+    fn parse_pool_properties_multiple_distinct_properties() {
+        let m = TestingZfsManager::new();
+        let out = "a\t1\nb\t2\nc\t3\n";
+        let map = m.test_parse_pool_properties(out);
+        assert_eq!(map.len(), 3);
+        assert_eq!(map.get("a").expect("a"), "1");
+        assert_eq!(map.get("b").expect("b"), "2");
+        assert_eq!(map.get("c").expect("c"), "3");
+    }
+}

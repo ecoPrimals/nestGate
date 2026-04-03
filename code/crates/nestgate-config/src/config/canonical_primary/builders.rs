@@ -90,6 +90,37 @@ mod tests {
 
     #[test]
     fn canonical_config_builder_new_build() {
-        let _: NestGateCanonicalConfig = CanonicalConfigBuilder::new().build();
+        let built = CanonicalConfigBuilder::<1000, 65536, 30000, 8080>::new().build();
+        let _: NestGateCanonicalConfig<1000, 65536, 30000, 8080> = built;
+    }
+
+    #[test]
+    fn canonical_config_builder_default() {
+        let b = CanonicalConfigBuilder::<1000, 65536, 30000, 8080>::default();
+        let _ = b.build();
+    }
+
+    #[test]
+    fn canonical_config_builder_with_system() {
+        let sys = SystemConfig::<1000, 65536>::default();
+        let expected_id = sys.instance_id.clone();
+        let cfg = CanonicalConfigBuilder::<1000, 65536, 30000, 8080>::new()
+            .with_system(sys)
+            .build();
+        assert_eq!(cfg.system.instance_id, expected_id);
+        assert_eq!(SystemConfig::<1000, 65536>::max_connections(), 1000);
+    }
+
+    #[test]
+    fn canonical_config_builder_with_storage_chain() {
+        let storage = StorageConfig::default();
+        let security = SecurityConfig::default();
+        let net = CanonicalNetworkConfig::default();
+        let cfg = CanonicalConfigBuilder::<1000, 65536, 30000, 8080>::new()
+            .with_network(net)
+            .with_storage(storage)
+            .with_security(security)
+            .build();
+        assert!(cfg.validate().is_ok());
     }
 }

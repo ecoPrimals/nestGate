@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 #![allow(
     unused,
     dead_code,
@@ -114,24 +117,24 @@ async fn test_primal_announce_self() -> Result<()> {
 async fn test_primal_discover_from_environment() -> Result<()> {
     use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 
-    let orig_host = std::env::var("BEARDOG_HOST").ok();
-    let orig_port = std::env::var("BEARDOG_PORT").ok();
-    nestgate_core::env_process::set_var("BEARDOG_HOST", "beardog.local");
-    nestgate_core::env_process::set_var("BEARDOG_PORT", "4000");
+    let orig_host = std::env::var("SECURITY_PROVIDER_HOST").ok();
+    let orig_port = std::env::var("SECURITY_PROVIDER_PORT").ok();
+    nestgate_core::env_process::set_var("SECURITY_PROVIDER_HOST", "security.local");
+    nestgate_core::env_process::set_var("SECURITY_PROVIDER_PORT", "4000");
 
     let mut primal = PrimalSelfKnowledge::initialize().await?;
-    let discovered = primal.discover_primal("beardog").await?;
+    let discovered = primal.discover_primal("security_provider").await?;
 
     match orig_host {
-        Some(v) => nestgate_core::env_process::set_var("BEARDOG_HOST", v),
-        None => nestgate_core::env_process::remove_var("BEARDOG_HOST"),
+        Some(v) => nestgate_core::env_process::set_var("SECURITY_PROVIDER_HOST", v),
+        None => nestgate_core::env_process::remove_var("SECURITY_PROVIDER_HOST"),
     }
     match orig_port {
-        Some(v) => nestgate_core::env_process::set_var("BEARDOG_PORT", v),
-        None => nestgate_core::env_process::remove_var("BEARDOG_PORT"),
+        Some(v) => nestgate_core::env_process::set_var("SECURITY_PROVIDER_PORT", v),
+        None => nestgate_core::env_process::remove_var("SECURITY_PROVIDER_PORT"),
     }
-    assert_eq!(discovered.identity.primal_type, "beardog");
-    assert_eq!(discovered.primary_endpoint.address, "beardog.local");
+    assert_eq!(discovered.identity.primal_type, "security_provider");
+    assert_eq!(discovered.primary_endpoint.address, "security.local");
     assert_eq!(discovered.primary_endpoint.port, 4000);
 
     Ok(())
@@ -141,25 +144,25 @@ async fn test_primal_discover_from_environment() -> Result<()> {
 async fn test_primal_discovery_caching() -> Result<()> {
     use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 
-    let orig_host = std::env::var("SONGBIRD_HOST").ok();
-    let orig_port = std::env::var("SONGBIRD_PORT").ok();
-    nestgate_core::env_process::set_var("SONGBIRD_HOST", "songbird.local");
-    nestgate_core::env_process::set_var("SONGBIRD_PORT", "5000");
+    let orig_host = std::env::var("ORCHESTRATION_PROVIDER_HOST").ok();
+    let orig_port = std::env::var("ORCHESTRATION_PROVIDER_PORT").ok();
+    nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_HOST", "orchestration.local");
+    nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_PORT", "5000");
 
     let mut primal = PrimalSelfKnowledge::initialize().await?;
 
-    let _ = primal.discover_primal("songbird").await?;
+    let _ = primal.discover_primal("orchestration_provider").await?;
 
     match orig_host {
-        Some(v) => nestgate_core::env_process::set_var("SONGBIRD_HOST", v),
-        None => nestgate_core::env_process::remove_var("SONGBIRD_HOST"),
+        Some(v) => nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_HOST", v),
+        None => nestgate_core::env_process::remove_var("ORCHESTRATION_PROVIDER_HOST"),
     }
     match orig_port {
-        Some(v) => nestgate_core::env_process::set_var("SONGBIRD_PORT", v),
-        None => nestgate_core::env_process::remove_var("SONGBIRD_PORT"),
+        Some(v) => nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_PORT", v),
+        None => nestgate_core::env_process::remove_var("ORCHESTRATION_PROVIDER_PORT"),
     }
     let discovered = primal.discovered_primals();
-    assert!(discovered.contains_key("songbird"));
+    assert!(discovered.contains_key("orchestration_provider"));
     Ok(())
 }
 

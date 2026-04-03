@@ -182,3 +182,109 @@ impl<
         Ok(datasets)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{build_dataset_create_zfs_args, parse_dataset_list_line};
+    use nestgate_core::canonical_types::StorageTier;
+    use std::path::PathBuf;
+    use std::time::SystemTime;
+
+    #[test]
+    fn build_dataset_create_zfs_args_covers_all_storage_tiers() {
+        assert_eq!(
+            build_dataset_create_zfs_args(&StorageTier::Hot, "p/ds"),
+            vec![
+                "create",
+                "-o",
+                "compression=lz4",
+                "-o",
+                "sync=always",
+                "p/ds",
+            ]
+        );
+        assert_eq!(
+            build_dataset_create_zfs_args(&StorageTier::Warm, "p/ds"),
+            vec![
+                "create",
+                "-o",
+                "compression=gzip",
+                "-o",
+                "sync=standard",
+                "p/ds",
+            ]
+        );
+        assert_eq!(
+            build_dataset_create_zfs_args(&StorageTier::Cold, "p/ds"),
+            vec![
+                "create",
+                "-o",
+                "compression=gzip-9",
+                "-o",
+                "sync=disabled",
+                "p/ds",
+            ]
+        );
+        assert_eq!(
+            build_dataset_create_zfs_args(&StorageTier::Cache, "p/ds"),
+            vec![
+                "create",
+                "-o",
+                "compression=lz4",
+                "-o",
+                "sync=always",
+                "-o",
+                "primarycache=all",
+                "p/ds",
+            ]
+        );
+        assert_eq!(
+            build_dataset_create_zfs_args(&StorageTier::Archive, "p/ds"),
+            vec![
+                "create",
+                "-o",
+                "compression=gzip-9",
+                "-o",
+                "sync=disabled",
+                "-o",
+                "atime=off",
+                "p/ds",
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_dataset_list_line_pool_qualified_child_name() {
+        let t = SystemTime::UNIX_EPOCH;
+        let ds = parse_dataset_list_line("pool/child\t10\t90\t/mnt", "pool", t)
+            .expect("pool-qualified dataset row");
+        assert_eq!(ds.name, "child");
+        assert_eq!(ds.pool, "pool");
+        assert_eq!(ds.size, 100);
+        assert_eq!(ds.mount_point, Some(PathBuf::from("/mnt")));
+    }
+
+    #[test]
+    fn parse_dataset_list_line_non_pool_qualified_first_column() {
+        let t = SystemTime::UNIX_EPOCH;
+        let ds = parse_dataset_list_line("standalone\t1\t2\t-", "tank", t).expect("row");
+        assert_eq!(ds.name, "standalone");
+        assert_eq!(ds.pool, "tank");
+    }
+
+    #[test]
+    fn parse_dataset_list_line_bad_numeric_fields_default_to_zero() {
+        let t = SystemTime::UNIX_EPOCH;
+        let ds = parse_dataset_list_line("tank/ds\tnotnum\talsobad\t-", "tank", t)
+            .expect("row with bad numbers still parses");
+        assert_eq!(ds.used, 0);
+        assert_eq!(ds.size, 0);
+    }
+
+    #[test]
+    fn parse_dataset_list_line_empty_mountpoint_field() {
+        let t = SystemTime::UNIX_EPOCH;
+        let ds = parse_dataset_list_line("tank/ds\t1\t2\t", "tank", t).expect("row");
+        assert_eq!(ds.mount_point, Some(PathBuf::new()));
+    }
+}

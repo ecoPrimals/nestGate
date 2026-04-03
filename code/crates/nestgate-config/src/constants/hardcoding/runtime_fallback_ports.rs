@@ -37,7 +37,7 @@ pub const STORAGE_DISCOVERY: u16 = 8084;
 pub const COMPUTE: u16 = 8085;
 /// Extended services port fallback
 pub const EXTENDED_SERVICES: u16 = 3002;
-/// Ecosystem / `BiomeOS`-style service port fallback (dev bootstrap; prefer discovery)
+/// Ecosystem orchestration service port fallback (dev bootstrap; prefer discovery)
 pub const ECOSYSTEM: u16 = 6000;
 /// Service discovery registry port fallback
 pub const DISCOVERY_SERVICE: u16 = 3010;

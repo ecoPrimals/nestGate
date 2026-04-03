@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(clippy::unused_async)] // Stub async surface; production orchestration discovery lives in biomeOS
+#![allow(clippy::unused_async)] // Stub async surface; production orchestration discovery lives with the ecosystem orchestration layer
 
 // Removed unused import for pedantic perfection
 // Commented out until available: CapabilityCategory, CapabilityRequest

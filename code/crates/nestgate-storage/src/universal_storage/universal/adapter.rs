@@ -8,6 +8,9 @@
 use super::protocol::DiscoveredProtocol;
 use nestgate_types::error::{NestGateError, Result};
 use std::sync::Arc;
+use std::time::Duration;
+
+const HTTP_IO_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Universal storage adapter
 ///
@@ -54,10 +57,10 @@ impl UniversalStorageAdapter {
         // For now, this is a placeholder that demonstrates the concept
 
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => self.http_read(key),
+            super::TransportProtocol::Http { .. } => self.http_read(key).await,
             super::TransportProtocol::UnixSocket { .. } => self.fs_read(key).await,
             _ => Err(NestGateError::not_implemented(
-                "Transport not yet implemented",
+                "Transport not supported by universal adapter (use HTTP with http:// endpoint, or Unix socket mapped to a filesystem root)",
             )),
         }
     }
@@ -69,10 +72,10 @@ impl UniversalStorageAdapter {
     /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn write(&self, key: &str, data: &[u8]) -> Result<()> {
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => self.http_write(key, data),
+            super::TransportProtocol::Http { .. } => self.http_write(key, data).await,
             super::TransportProtocol::UnixSocket { .. } => self.fs_write(key, data).await,
             _ => Err(NestGateError::not_implemented(
-                "Transport not yet implemented",
+                "Transport not supported by universal adapter (use HTTP with http:// endpoint, or Unix socket mapped to a filesystem root)",
             )),
         }
     }
@@ -84,10 +87,10 @@ impl UniversalStorageAdapter {
     /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn delete(&self, key: &str) -> Result<()> {
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => self.http_delete(key),
+            super::TransportProtocol::Http { .. } => self.http_delete(key).await,
             super::TransportProtocol::UnixSocket { .. } => self.fs_delete(key).await,
             _ => Err(NestGateError::not_implemented(
-                "Transport not yet implemented",
+                "Transport not supported by universal adapter (use HTTP with http:// endpoint, or Unix socket mapped to a filesystem root)",
             )),
         }
     }
@@ -99,40 +102,35 @@ impl UniversalStorageAdapter {
     /// Returns an error if the transport is unsupported or if filesystem I/O fails.
     pub async fn list(&self, prefix: &str) -> Result<Vec<String>> {
         match &self.protocol.transport {
-            super::TransportProtocol::Http { .. } => self.http_list(prefix),
+            super::TransportProtocol::Http { .. } => self.http_list(prefix).await,
             super::TransportProtocol::UnixSocket { .. } => self.fs_list(prefix).await,
             _ => Err(NestGateError::not_implemented(
-                "Transport not yet implemented",
+                "Transport not supported by universal adapter (use HTTP with http:// endpoint, or Unix socket mapped to a filesystem root)",
             )),
         }
     }
 
     // ==================== HTTP Operations ====================
-    // HTTP transport requires an async HTTP client (reqwest/hyper).
-    // Until wired, operations return not_implemented to avoid misleading callers.
+    // Plain HTTP/1.1 object GET/PUT/DELETE via `http_minimal` (no TLS).
 
-    fn http_read(&self, _key: &str) -> Result<Vec<u8>> {
-        Err(NestGateError::not_implemented(
-            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
-        ))
+    async fn http_read(&self, key: &str) -> Result<Vec<u8>> {
+        let url = super::http_minimal::object_url(&self.endpoint, key)?;
+        super::http_minimal::http_get_object(&url, HTTP_IO_TIMEOUT).await
     }
 
-    fn http_write(&self, _key: &str, _data: &[u8]) -> Result<()> {
-        Err(NestGateError::not_implemented(
-            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
-        ))
+    async fn http_write(&self, key: &str, data: &[u8]) -> Result<()> {
+        let url = super::http_minimal::object_url(&self.endpoint, key)?;
+        super::http_minimal::http_put_object(&url, data, HTTP_IO_TIMEOUT).await
     }
 
-    fn http_delete(&self, _key: &str) -> Result<()> {
-        Err(NestGateError::not_implemented(
-            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
-        ))
+    async fn http_delete(&self, key: &str) -> Result<()> {
+        let url = super::http_minimal::object_url(&self.endpoint, key)?;
+        super::http_minimal::http_delete_object(&url, HTTP_IO_TIMEOUT).await
     }
 
-    fn http_list(&self, _prefix: &str) -> Result<Vec<String>> {
-        Err(NestGateError::not_implemented(
-            "HTTP storage transport not yet wired — use Unix socket or filesystem transport",
-        ))
+    async fn http_list(&self, prefix: &str) -> Result<Vec<String>> {
+        let url = super::http_minimal::list_url(&self.endpoint, prefix)?;
+        super::http_minimal::http_list_prefix(&url, HTTP_IO_TIMEOUT).await
     }
 
     // ==================== Filesystem Operations ====================
@@ -232,23 +230,29 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn http_write_returns_not_implemented() -> Result<()> {
-        let adapter = http_object_adapter(ObjectAddressing::PathBased, "http://localhost:9000");
+    async fn http_write_uses_minimal_http_client() -> Result<()> {
+        // Port 1 is typically closed — expect a connection-level error from the minimal client.
+        let adapter = http_object_adapter(ObjectAddressing::PathBased, "http://127.0.0.1:1");
         let err = adapter
             .write("k", b"data")
             .await
-            .expect_err("HTTP write not yet wired");
-        assert!(err.to_string().to_lowercase().contains("not"));
+            .expect_err("no listener on :1");
+        let msg = err.to_string().to_lowercase();
+        assert!(
+            msg.contains("connect") || msg.contains("network") || msg.contains("refused"),
+            "unexpected error: {err}"
+        );
         Ok(())
     }
 
     #[tokio::test]
-    async fn http_read_returns_not_implemented() -> Result<()> {
-        let adapter = http_object_adapter(ObjectAddressing::PathBased, "http://localhost:9000");
-        let err = adapter.read("obj").await.expect_err("HTTP not yet wired");
+    async fn http_read_uses_minimal_http_client() -> Result<()> {
+        let adapter = http_object_adapter(ObjectAddressing::PathBased, "http://127.0.0.1:1");
+        let err = adapter.read("obj").await.expect_err("no listener on :1");
+        let msg = err.to_string().to_lowercase();
         assert!(
-            err.to_string().to_lowercase().contains("not")
-                && err.to_string().to_lowercase().contains("implemented")
+            msg.contains("connect") || msg.contains("network") || msg.contains("refused"),
+            "unexpected error: {err}"
         );
         Ok(())
     }
@@ -267,9 +271,10 @@ mod tests {
         );
         let adapter = UniversalStorageAdapter::new("127.0.0.1:9999", protocol);
         let err = adapter.read("k").await.expect_err("tcp unsupported");
+        let msg = err.to_string().to_lowercase();
         assert!(
-            err.to_string().to_lowercase().contains("not implemented")
-                || err.to_string().contains("not yet implemented")
+            msg.contains("not supported") || msg.contains("not implemented"),
+            "unexpected error: {err}"
         );
         Ok(())
     }

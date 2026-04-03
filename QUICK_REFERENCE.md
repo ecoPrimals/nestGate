@@ -1,12 +1,12 @@
 # NestGate - Quick Reference
 
 **Version**: 4.7.0-dev  
-**Tests**: `cargo test --workspace` — PASS, 0 failures (counts ~8,555 lib / ~12,105 total — see STATUS.md)  
+**Tests**: `cargo test --all` — PASS, 0 failures (~12,270 total — see STATUS.md)  
 **Coverage**: ~80% line (llvm-cov); target 90%  
-**Clippy**: PASS — `cargo clippy --workspace --all-features -- -D warnings` (as of 2026-04-02)  
+**Clippy**: PASS — `cargo clippy --workspace --all-features -- -D warnings` (as of 2026-04-03)  
 **Crates**: 24 workspace members (22 under `code/crates/` + `tools/unwrap-migrator` + `fuzz`)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: April 2, 2026
+**Last Updated**: April 3, 2026
 
 ---
 
@@ -108,8 +108,8 @@ export NESTGATE_ZPOOL_BINARY=/usr/sbin/zpool
 export NESTGATE_DISCOVERY_ENABLED=true
 export NESTGATE_CAPABILITY_CRYPTO_ENDPOINT=...    # Override crypto provider
 export NESTGATE_CAPABILITY_SECURITY_ENDPOINT=...  # Override security provider
-export NESTGATE_SECURITY_PROVIDER=...             # BearDog override
-export SONGBIRD_IPC_PATH=...                      # Songbird socket override
+export NESTGATE_SECURITY_PROVIDER=...             # Security capability provider override
+export NESTGATE_ORCHESTRATION_IPC_PATH=...      # Optional orchestration/capability IPC socket override
 ```
 
 **Logging**:
@@ -222,4 +222,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: March 31, 2026
+**Last Updated**: April 3, 2026

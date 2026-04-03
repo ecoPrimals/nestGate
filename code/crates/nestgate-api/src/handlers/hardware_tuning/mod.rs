@@ -16,8 +16,7 @@ pub mod handlers;
 /// Axum JSON handlers backed by the same `/proc` logic as [`handlers::RealHardwareTuningHandler`].
 #[cfg(feature = "dev-stubs")]
 pub mod handlers_production;
-/// `/proc`-based resource helpers (shared with production route helpers).
-#[cfg(feature = "dev-stubs")]
+/// `/proc`-based resource helpers (production hardware tuning shims and dev-stubs).
 pub mod linux_proc;
 
 // Production: Placeholder handlers

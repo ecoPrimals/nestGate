@@ -151,3 +151,80 @@ impl StorageLifecycleConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_lifecycle_config_default_values() {
+        let c = StorageLifecycleConfig::default();
+        assert!(c.data_lifecycle.enabled);
+        assert!(c.retention.enabled);
+        assert_eq!(
+            c.retention.duration,
+            std::time::Duration::from_secs(365 * 24 * 3600)
+        );
+        assert!(!c.archival.enabled);
+        assert_eq!(
+            c.archival.after,
+            std::time::Duration::from_secs(90 * 24 * 3600)
+        );
+        assert!(!c.purging.enabled);
+        assert_eq!(
+            c.purging.after,
+            std::time::Duration::from_secs(7 * 365 * 24 * 3600)
+        );
+        assert!(!c.compliance.enabled);
+    }
+
+    #[test]
+    fn storage_lifecycle_constructors_match_default() {
+        let d = StorageLifecycleConfig::default();
+        let ser = serde_json::to_string(&d).expect("serialize");
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageLifecycleConfig::production_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageLifecycleConfig::development_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageLifecycleConfig::high_performance()).expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageLifecycleConfig::cloud_native()).expect("serialize")
+        );
+    }
+
+    #[test]
+    fn storage_lifecycle_merge_is_identity() {
+        let a = StorageLifecycleConfig::default();
+        let b = StorageLifecycleConfig {
+            data_lifecycle: DataLifecycleConfig { enabled: false },
+            ..StorageLifecycleConfig::default()
+        };
+        assert_eq!(a.merge(b).data_lifecycle.enabled, true);
+    }
+
+    #[test]
+    fn storage_lifecycle_validate_succeeds() {
+        assert!(StorageLifecycleConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn storage_lifecycle_serde_roundtrip() {
+        let original = StorageLifecycleConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: StorageLifecycleConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+}

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! ZFS Integration Tests
 //! 
 //! This test validates ZFS integration functionality using canonical patterns

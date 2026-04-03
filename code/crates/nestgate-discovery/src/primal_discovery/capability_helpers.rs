@@ -191,7 +191,7 @@ pub async fn discover_ecosystem() -> Result<DiscoveredService> {
 /// Discover any service by capability
 ///
 /// **Priority**:
-/// 1. `NESTGATE_CAPABILITY_{CAPABILITY}` environment variable (set by songBird or operator)
+/// 1. `NESTGATE_CAPABILITY_{CAPABILITY}` environment variable (set by the orchestration provider or operator)
 /// 2. Error (no fallback for arbitrary capabilities)
 ///
 /// # Errors
@@ -303,7 +303,7 @@ mod tests {
     #[tokio::test]
     async fn test_primal_name_url_env_vars_are_not_used() {
         temp_env::async_with_vars(
-            [("NESTGATE_BEARDOG_URL", Some("http://legacy:9999"))],
+            [("NESTGATE_LEGACY_PRIMAL_URL", Some("http://legacy:9999"))],
             async {
                 let result = discover_security().await;
                 assert!(result.is_ok());

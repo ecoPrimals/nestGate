@@ -10,7 +10,7 @@
 //! - **TRUE PRIMAL**: External primals use semantic names (`storage.put`)
 //! - **Internal Flexibility**: Internal code uses descriptive names (`store_object`)
 //! - **Zero Breaking Changes**: Existing code continues to work
-//! - **Neural API Ready**: biomeOS can route by capability
+//! - **Neural API Ready**: the ecosystem orchestration layer can route by capability
 //!
 //! ## Architecture
 //!

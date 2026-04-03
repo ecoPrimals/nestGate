@@ -5,6 +5,10 @@
 use crate::universal_adapter::PrimalAgnosticAdapter;
 use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_types::{NestGateError, Result};
+use x509_parser::pem::parse_x509_pem;
+use x509_parser::prelude::*;
+use x509_parser::time::ASN1Time;
+
 /// Certificate Validator
 /// Unified certificate validation for the `NestGate` ecosystem
 /// Certificate validator that uses the universal adapter for ecosystem integration
@@ -52,7 +56,7 @@ impl CertificateValidator {
                 NestGateError::configuration_error(
                     "adapter_endpoint",
                     "Certificate validator requires NESTGATE_ADAPTER_ENDPOINT or NESTGATE_API_URL to be set. \
-                     No hardcoded defaults for sovereignty compliance."
+                     No hardcoded defaults for sovereignty compliance.",
                 )
             })?;
 
@@ -65,28 +69,78 @@ impl CertificateValidator {
 
     /// Validate a certificate.
     ///
-    /// Cryptographic verification is delegated to the security provider (`crypto.validate_cert` IPC);
-    /// this type does not perform local X.509 parsing or trust decisions.
+    /// Performs **local structural checks** only: PEM/DER decoding and validity window
+    /// (`notBefore` / `notAfter` vs current time). Returns `Ok(true)` when the object parses
+    /// as X.509 and the current time falls within the validity interval.
     ///
-    /// # Errors
-    ///
-    /// Returns [`NestGateError::not_implemented`] until that IPC path is wired.
-    pub fn validate_certificate(&self, _cert_data: &[u8]) -> Result<bool> {
-        Err(NestGateError::not_implemented(
-            "Certificate validation delegated to security provider via crypto.validate_cert IPC",
-        ))
+    /// **Not performed here:** signature verification, chain building, revocation, or trust store
+    /// evaluation — those remain the responsibility of the security capability provider
+    /// (`crypto.validate_cert` IPC).
+    pub fn validate_certificate(&self, cert_data: &[u8]) -> Result<bool> {
+        let Some(valid_now) = x509_valid_now(cert_data) else {
+            return Ok(false);
+        };
+        Ok(valid_now)
     }
 
     /// Check if certificate is expired
     ///
+    /// Uses the same PEM/DER parsing as [`Self::validate_certificate`] and compares
+    /// `notAfter` to the current time.
+    ///
     /// # Errors
     ///
-    /// Returns [`NestGateError::not_implemented`] until expiration is read via the security provider.
-    pub fn is_certificate_expired(&self, _cert_data: &[u8]) -> Result<bool> {
-        Err(NestGateError::not_implemented(
-            "Certificate validation delegated to security provider via crypto.validate_cert IPC",
-        ))
+    /// Returns a validation error if the data is not a parseable X.509 certificate.
+    pub fn is_certificate_expired(&self, cert_data: &[u8]) -> Result<bool> {
+        let expired = x509_expired(cert_data).ok_or_else(|| {
+            NestGateError::validation_error(
+                "certificate: could not parse PEM or DER as X.509 for expiration check",
+            )
+        })?;
+        Ok(expired)
     }
+}
+
+/// First PEM `CERTIFICATE` block or raw DER: `true` if validity window contains "now".
+fn x509_valid_now(cert_data: &[u8]) -> Option<bool> {
+    let mut rest = cert_data;
+    while !rest.is_empty() {
+        if let Ok((rem, pem)) = parse_x509_pem(rest) {
+            if pem.label == "CERTIFICATE"
+                && let Ok((_, cert)) = parse_x509_certificate(&pem.contents)
+            {
+                return Some(cert.validity().is_valid());
+            }
+            rest = rem;
+        } else {
+            break;
+        }
+    }
+    parse_x509_certificate(cert_data)
+        .ok()
+        .map(|(_, cert)| cert.validity().is_valid())
+}
+
+/// `Ok(true)` if expired, `Ok(false)` if still valid, `None` if unparseable.
+fn x509_expired(cert_data: &[u8]) -> Option<bool> {
+    let mut rest = cert_data;
+    while !rest.is_empty() {
+        if let Ok((rem, pem)) = parse_x509_pem(rest) {
+            if pem.label == "CERTIFICATE"
+                && let Ok((_, cert)) = parse_x509_certificate(&pem.contents)
+            {
+                let now = ASN1Time::now();
+                return Some(now > cert.validity().not_after);
+            }
+            rest = rem;
+        } else {
+            break;
+        }
+    }
+    parse_x509_certificate(cert_data).ok().map(|(_, cert)| {
+        let now = ASN1Time::now();
+        now > cert.validity().not_after
+    })
 }
 
 /// Create a default certificate validator
@@ -125,38 +179,31 @@ mod tests {
     }
 
     #[test]
-    fn validate_certificate_returns_not_implemented() {
+    fn validate_certificate_rejects_garbage() {
         temp_env::with_var(
             "NESTGATE_ADAPTER_ENDPOINT",
             Some("http://localhost/adapter"),
             || {
-                let v = CertificateValidator::new(NestGateCanonicalConfig::default()).unwrap();
-                let e = v
-                    .validate_certificate(&[])
-                    .expect_err("delegated validation");
-                match e {
-                    NestGateError::NotImplemented { .. } => {}
-                    ref other => panic!("unexpected {other:?}"),
-                }
-                let e = v
-                    .validate_certificate(b"x")
-                    .expect_err("delegated validation");
-                assert!(matches!(e, NestGateError::NotImplemented { .. }));
+                let v = CertificateValidator::new(NestGateCanonicalConfig::default())
+                    .expect("validator new");
+                assert!(!v.validate_certificate(&[]).expect("structural result"));
+                assert!(!v.validate_certificate(b"x").expect("structural result"));
             },
         );
     }
 
     #[test]
-    fn is_certificate_expired_returns_not_implemented() {
+    fn is_certificate_expired_errors_on_garbage() {
         temp_env::with_var(
             "NESTGATE_ADAPTER_ENDPOINT",
             Some("http://localhost/adapter"),
             || {
-                let v = CertificateValidator::new(NestGateCanonicalConfig::default()).unwrap();
+                let v = CertificateValidator::new(NestGateCanonicalConfig::default())
+                    .expect("validator new");
                 let e = v
-                    .is_certificate_expired(b"any")
-                    .expect_err("delegated expiration check");
-                assert!(matches!(e, NestGateError::NotImplemented { .. }));
+                    .is_certificate_expired(b"not-a-cert")
+                    .expect_err("parse should fail");
+                assert!(matches!(e, NestGateError::Validation(_)));
             },
         );
     }
@@ -169,8 +216,8 @@ mod tests {
                 ("NESTGATE_API_URL", Some("https://example.com/")),
             ],
             || {
-                let v = create_default_certificate_validator().unwrap();
-                assert!(v.validate_certificate(b"x").is_err());
+                let v = create_default_certificate_validator().expect("default validator");
+                assert!(!v.validate_certificate(b"x").expect("structural"));
             },
         );
     }

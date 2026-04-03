@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! **ZFS PRODUCTION SHIMS**
+//! **ZFS PRODUCTION HANDLERS (no `dev-stubs`)**
 //!
-//! Handlers for production builds where `dev-stubs` is not enabled: routes compile and return
-//! `501 Not Implemented` with a structured body (no fake documentation URLs or placeholder copy).
-//!
-//! These `501` responses are **intentional**: they are the correct behavior for routes whose
-//! backing implementation is not present in this build (delegation pattern), not stubs awaiting
-//! implementation. For interactive ZFS over HTTP, enable the `dev-stubs` feature or call
-//! `nestgate_zfs` from your integration layer.
+//! Delegates read-only ZFS HTTP routes to [`nestgate_zfs::command::ZfsOperations`] when `zpool` /
+//! `zfs` userland is available. When tools are missing, returns `503` with a structured
+//! `zfs_unavailable` body. Mutating routes that are not wired through this layer yet return
+//! `501` with an explicit message.
 
 use axum::{extract::Path, http::StatusCode, response::Json};
+use nestgate_zfs::command::ZfsOperations;
+use nestgate_zfs::native::{get_zfs_version, is_zfs_available, is_zpool_available};
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -51,7 +50,8 @@ impl ZeroCostZfsOperations {
 
 /// Placeholder ZFS handler implementation for production builds
 ///
-/// This exists solely to allow compilation. All methods return "not implemented".
+/// Retained for type compatibility with [`crate::handlers::handler_types`]; HTTP entry points in
+/// this module delegate to `nestgate_zfs` where implemented.
 #[derive(Debug, Clone)]
 /// Zfshandlerimpl
 pub struct ZfsHandlerImpl;
@@ -71,205 +71,338 @@ impl Default for ZfsHandlerImpl {
     }
 }
 
-/// Response body when the ZFS HTTP surface is not compiled in (production without `dev-stubs`).
-fn zfs_endpoint_disabled() -> (StatusCode, Json<serde_json::Value>) {
+fn zfs_unavailable(message: impl std::fmt::Display) -> (StatusCode, Json<serde_json::Value>) {
     (
-        StatusCode::NOT_IMPLEMENTED,
+        StatusCode::SERVICE_UNAVAILABLE,
         Json(json!({
-            "error": "not_implemented",
-            "feature": "zfs_http",
-            "details": null,
+            "status": "error",
+            "error": "zfs_unavailable",
+            "message": message.to_string(),
         })),
     )
 }
 
-// Re-export placeholders with same names as dev-stubs handlers
+fn zfs_operation_failed(message: impl std::fmt::Display) -> (StatusCode, Json<serde_json::Value>) {
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(json!({
+            "status": "error",
+            "error": "zfs_operation_failed",
+            "message": message.to_string(),
+        })),
+    )
+}
+
+fn not_implemented_http(message: impl std::fmt::Display) -> (StatusCode, Json<serde_json::Value>) {
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        Json(json!({
+            "status": "error",
+            "error": "not_implemented",
+            "message": message.to_string(),
+        })),
+    )
+}
 
 /// List universal storage pools
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
-/// Returns `NOT_IMPLEMENTED` with helpful error message directing users to use `nestgate_zfs` crate directly.
 pub async fn list_universal_pools() -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; install ZFS userland tools to list pools.",
+        );
+    }
+    let ops = ZfsOperations::new();
+    match ops.list_pools().await {
+        Ok(pools) => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "pools": pools,
+            })),
+        ),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Create a new storage pool
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn create_pool(
     _body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP pool creation is not implemented; use the CLI or nestgate-zfs pool setup APIs.",
+    )
 }
 
 /// Get universal pool information
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
-pub async fn get_universal_pool(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+pub async fn get_universal_pool(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    let pool_name = path.0;
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; install ZFS userland tools to query pool status.",
+        );
+    }
+    let ops = ZfsOperations::new();
+    match ops.pool_status(&pool_name).await {
+        Ok(status) => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "pool": pool_name,
+                "pool_status": status,
+            })),
+        ),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Delete a storage pool
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn delete_pool(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP pool destruction is not implemented for safety; use `zpool destroy` or automation APIs.",
+    )
 }
 
 /// Trigger storage optimization
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn trigger_optimization(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http("Storage optimization trigger is not implemented over HTTP yet.")
 }
 
 /// List storage datasets
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn list_datasets() -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to list datasets.",
+        );
+    }
+    let ops = ZfsOperations::new();
+    match ops.list_datasets(None).await {
+        Ok(datasets) => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "datasets": datasets,
+            })),
+        ),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Create a new dataset
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn create_dataset(
     _body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP dataset creation is not implemented; use nestgate-zfs or `zfs create` directly.",
+    )
 }
 
 /// Get dataset information
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
-pub async fn get_dataset(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+pub async fn get_dataset(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    let name = path.0;
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to query datasets.",
+        );
+    }
+    let ops = ZfsOperations::new();
+    match ops.list_datasets(None).await {
+        Ok(datasets) => {
+            if let Some(ds) = datasets.into_iter().find(|d| d.name == name) {
+                (
+                    StatusCode::OK,
+                    Json(json!({
+                        "status": "success",
+                        "dataset": ds,
+                    })),
+                )
+            } else {
+                (
+                    StatusCode::NOT_FOUND,
+                    Json(json!({
+                        "status": "error",
+                        "error": "dataset_not_found",
+                        "message": format!("No dataset named {name:?}"),
+                    })),
+                )
+            }
+        }
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Delete a dataset
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn delete_dataset(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP dataset destruction is not implemented; use `zfs destroy` or nestgate-zfs dataset APIs.",
+    )
 }
 
 /// Get dataset properties
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn get_dataset_properties(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP dataset property listing is not implemented; use `zfs get` or extend nestgate-zfs::command.",
+    )
 }
 
 /// Set dataset properties
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn set_dataset_properties(
     _path: Path<String>,
     _body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP dataset property updates are not implemented; use `zfs set` or nestgate-zfs.",
+    )
 }
 
-/// List storage snapshots
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
+/// List storage snapshots (all datasets when the underlying `zfs list` supports it).
 pub async fn list_snapshots() -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to list snapshots.",
+        );
+    }
+    let ops = ZfsOperations::new();
+    match ops.list_snapshots(None).await {
+        Ok(snapshots) => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "snapshots": snapshots,
+            })),
+        ),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Create a storage snapshot
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn create_snapshot(
     _body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP snapshot creation is not implemented; use `zfs snapshot` or nestgate-zfs::command::ZfsOperations::create_snapshot.",
+    )
 }
 
 /// Delete a snapshot
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn delete_snapshot(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http(
+        "HTTP snapshot deletion is not implemented; use `zfs destroy` for snapshots.",
+    )
 }
 
 /// Get universal storage health status
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn get_universal_storage_health() -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; cannot assess storage health.",
+        );
+    }
+    let ops = ZfsOperations::new();
+    match ops.list_pools().await {
+        Ok(pools) => {
+            let unhealthy: Vec<&str> = pools
+                .iter()
+                .filter(|p| {
+                    let h = p.health.to_ascii_lowercase();
+                    !(h.contains("online") || h == "ok" || h == "healthy")
+                })
+                .map(|p| p.name.as_str())
+                .collect();
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "status": "success",
+                    "pool_count": pools.len(),
+                    "pools_unhealthy": unhealthy,
+                    "pools": pools,
+                })),
+            )
+        }
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Get pool status
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
-pub async fn get_pool_status(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+pub async fn get_pool_status(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    get_universal_pool(path).await
 }
 
 /// Get performance analytics
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn get_performance_analytics() -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http("ZFS performance analytics over HTTP is not implemented yet.")
 }
 
 /// Predict storage tier
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
 pub async fn predict_tier(
     _body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    not_implemented_http("Storage tier prediction over HTTP is not implemented yet.")
 }
 
 /// Get ZFS health status
-///
-/// **Note**: ZFS API endpoints are disabled in production builds without `dev-stubs` feature.
-#[expect(
-    clippy::unused_async,
-    reason = "Axum route expects async handler for consistent method routing"
-)]
 pub async fn get_zfs_health() -> (StatusCode, Json<serde_json::Value>) {
-    zfs_endpoint_disabled()
+    if !is_zfs_available().await {
+        return zfs_unavailable("zfs is not available on this system");
+    }
+    match get_zfs_version().await {
+        Ok(version) => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "zfs_version": version,
+            })),
+        ),
+        Err(e) => zfs_unavailable(e),
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use axum::extract::Path;
-
-    fn assert_not_implemented_json(body: &serde_json::Value) {
-        assert_eq!(body["error"].as_str(), Some("not_implemented"));
-        assert_eq!(body["feature"].as_str(), Some("zfs_http"));
-        assert!(body["details"].is_null());
-    }
+    use nestgate_zfs::native::is_zpool_available;
 
     #[tokio::test]
-    async fn list_universal_pools_not_implemented() {
+    async fn list_universal_pools_delegates_or_reports_unavailable() {
         let (code, Json(v)) = list_universal_pools().await;
-        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
-        assert_not_implemented_json(&v);
+        if is_zpool_available().await {
+            assert_eq!(code, StatusCode::OK);
+            assert_eq!(v["status"], "success");
+            assert!(v.get("pools").is_some());
+        } else {
+            assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+            assert_eq!(v["error"], "zfs_unavailable");
+        }
     }
 
     #[tokio::test]
     async fn create_pool_not_implemented() {
         let (code, Json(v)) = create_pool(Json(HashMap::new())).await;
         assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
-        assert_not_implemented_json(&v);
+        assert_eq!(v["error"], "not_implemented");
     }
 
     #[tokio::test]
-    async fn get_universal_pool_not_implemented() {
-        let (code, Json(v)) = get_universal_pool(Path("p".to_string())).await;
-        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
-        assert_not_implemented_json(&v);
+    async fn get_universal_pool_delegates_or_unavailable() {
+        let (code, Json(v)) = get_universal_pool(Path("nonexistent_pool_xyz".to_string())).await;
+        if is_zpool_available().await {
+            assert_ne!(code, StatusCode::SERVICE_UNAVAILABLE);
+            if code == StatusCode::OK {
+                assert_eq!(v["status"], "success");
+            } else {
+                assert_eq!(v["error"], "zfs_operation_failed");
+            }
+        } else {
+            assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
+            assert_eq!(v["error"], "zfs_unavailable");
+        }
     }
 
     #[tokio::test]
     async fn predict_tier_not_implemented() {
-        let (code, _) = predict_tier(Json(HashMap::new())).await;
+        let (code, Json(v)) = predict_tier(Json(HashMap::new())).await;
         assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
+        assert_eq!(v["error"], "not_implemented");
     }
 
     #[tokio::test]

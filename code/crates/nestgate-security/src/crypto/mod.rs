@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Cryptographic types and bearDog IPC delegation.
+//! Cryptographic types and security provider IPC delegation.
 //!
 //! `NestGate` does not perform cryptographic operations locally — it delegates
-//! all crypto to the `bearDog` primal (or any provider advertising the `"crypto"`
-//! capability) via JSON-RPC IPC.
+//! all crypto to whichever primal advertises the `"crypto"` capability via
+//! JSON-RPC IPC.
 //!
 //! # Architecture
 //!
@@ -63,7 +63,7 @@ impl Default for EncryptionParams {
     }
 }
 
-/// Capability-based crypto delegation to bearDog (or any compatible provider).
+/// Capability-based crypto delegation to the security provider (any primal advertising `"crypto"`).
 ///
 /// Discovers a primal providing `"crypto"` capability at runtime and delegates
 /// all cryptographic operations via JSON-RPC semantic methods.

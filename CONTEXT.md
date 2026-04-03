@@ -25,11 +25,11 @@ by importing this crate graph.
 | **Architecture** | 24 workspace members: 22 `code/crates/*` + `tools/unwrap-migrator` + fuzz targets |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
-| **TLS/crypto** | Delegated to bearDog via IPC; installer uses system `curl` (ring/rustls/reqwest eliminated) |
+| **TLS/crypto** | Delegated to security capability provider via IPC; installer uses system `curl` (ring/rustls/reqwest eliminated) |
 | **Unsafe** | None in normal crates; **env-process-shim** bridge is the documented exception |
 | **Lint / format** | Workspace `cargo clippy --workspace --all-features -- -D warnings` (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean in routine runs |
-| **Tests** | `cargo test --workspace` — 0 failures (approx. ~8,500+ lib tests; see STATUS.md) |
+| **Tests** | `cargo test --all` — ~12,270 passing, 0 failures (see STATUS.md) |
 | **Coverage** | ~80% line (llvm-cov) — wateringHole 80% minimum met |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
 | **Specs** | 16 specification documents under `specs/` |

@@ -31,9 +31,9 @@
 //! // Announce ourselves to the ecosystem
 //! primal.announce_self()?;
 //!
-//! // Discover another primal at runtime
-//! let songbird = primal.discover_primal("songbird").await?;
-//! println!("Found songbird at: {}", songbird.primary_endpoint());
+//! // Discover another primal at runtime by capability
+//! let peer = primal.discover_primal("orchestration_provider").await?;
+//! println!("Found peer at: {}", peer.primary_endpoint());
 //! # Ok(())
 //! # }
 //! ```
@@ -603,13 +603,13 @@ mod tests {
         temp_env::async_with_vars(
             [
                 ("KUBERNETES_SERVICE_HOST", None::<&str>),
-                ("SONGBIRD_HOST", None::<&str>),
-                ("SONGBIRD_PORT", None::<&str>),
+                ("ORCHESTRATION_PROVIDER_HOST", None::<&str>),
+                ("ORCHESTRATION_PROVIDER_PORT", None::<&str>),
             ],
             async {
                 let mut primal = PrimalSelfKnowledge::initialize().await.expect("initialize");
                 let err = primal
-                    .discover_primal("songbird")
+                    .discover_primal("orchestration_provider")
                     .await
                     .expect_err("no discovery source");
                 assert!(

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Error Recovery and Resilience Tests
 //!
 //! High-value tests for error handling, recovery patterns, and fault tolerance.

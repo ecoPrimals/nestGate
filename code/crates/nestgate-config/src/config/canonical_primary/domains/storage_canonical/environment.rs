@@ -133,3 +133,101 @@ impl StorageEnvironmentConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn storage_environment_config_default_values() {
+        let c = StorageEnvironmentConfig::default();
+        assert_eq!(c.development.backend_type, "filesystem");
+        assert_eq!(c.staging.backend_type, "zfs");
+        assert_eq!(c.production.performance_mode, "high_performance");
+        assert!(!c.deployment.auto_provision);
+        assert!(c.deployment.resource_limits.is_empty());
+        assert!(!c.runtime.hot_reload);
+        assert!(!c.runtime.dynamic_scaling);
+        assert!(c.features.feature_flags.is_empty());
+    }
+
+    #[test]
+    fn storage_environment_constructors_match_default() {
+        let d = StorageEnvironmentConfig::default();
+        let ser = serde_json::to_string(&d).expect("serialize");
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEnvironmentConfig::production_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEnvironmentConfig::development_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEnvironmentConfig::high_performance())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEnvironmentConfig::cloud_native()).expect("serialize")
+        );
+    }
+
+    #[test]
+    fn storage_environment_merge_keeps_self() {
+        let mut other = StorageEnvironmentConfig::default();
+        other.development.backend_type = "s3".to_string();
+        let merged = StorageEnvironmentConfig::default().merge(other);
+        assert_eq!(merged.development.backend_type, "filesystem");
+    }
+
+    #[test]
+    fn storage_environment_validate_succeeds() {
+        assert!(StorageEnvironmentConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn storage_environment_serde_roundtrip() {
+        let mut original = StorageEnvironmentConfig::default();
+        original
+            .deployment
+            .resource_limits
+            .insert("cpu".to_string(), "4".to_string());
+        original
+            .features
+            .feature_flags
+            .insert("tiered".to_string(), true);
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: StorageEnvironmentConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(
+            original.deployment.resource_limits,
+            parsed.deployment.resource_limits
+        );
+        assert_eq!(
+            original.features.feature_flags,
+            parsed.features.feature_flags
+        );
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+
+    #[test]
+    fn deployment_runtime_feature_defaults() {
+        let d = DeploymentStorageConfig {
+            auto_provision: true,
+            resource_limits: HashMap::new(),
+        };
+        assert!(d.auto_provision);
+        let r = RuntimeStorageConfig {
+            hot_reload: true,
+            dynamic_scaling: true,
+        };
+        assert!(r.hot_reload && r.dynamic_scaling);
+    }
+}

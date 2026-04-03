@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Modern Network Failure Chaos Testing - NO SLEEPS!
 //!
 //! Tests real network behavior using:

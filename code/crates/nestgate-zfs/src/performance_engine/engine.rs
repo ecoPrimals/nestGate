@@ -11,7 +11,6 @@
 
 //! Engine module
 
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
@@ -29,9 +28,9 @@ use tracing::warn;
 
 use super::monitoring::RealTimePerformanceMonitor;
 use super::types::{
-    AlertResponse, AppliedOptimization, ArcStatistics, BottleneckSeverity, OptimizationState,
-    OptimizationType, PerformanceAlert, PerformanceEngineConfig, PerformanceOptimizationResult,
-    SystemMemoryUsage, ZfsBottleneck, ZfsBottleneckType, ZfsPerformanceMetrics, ZfsTuningResult,
+    AlertResponse, AppliedOptimization, BottleneckSeverity, OptimizationState, OptimizationType,
+    PerformanceAlert, PerformanceEngineConfig, PerformanceOptimizationResult, ZfsBottleneck,
+    ZfsBottleneckType, ZfsPerformanceMetrics, ZfsTuningResult,
 };
 
 /// Real-time Performance Optimization Engine
@@ -745,28 +744,5 @@ mod engine_tests {
         a.merge_with(b);
         assert!((a.performance_improvement - 3.0).abs() < f64::EPSILON);
         assert_eq!(a.recommendations.len(), 2);
-    }
-}
-
-// Default implementation for ZfsPerformanceMetrics
-impl Default for ZfsPerformanceMetrics {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self {
-            timestamp: std::time::SystemTime::now(),
-            pool_metrics: HashMap::new(),
-            dataset_metrics: HashMap::new(),
-            system_memory: SystemMemoryUsage {
-                total: 16 * 1024 * 1024 * 1024,
-                used: 8 * 1024 * 1024 * 1024,
-                available: 8 * 1024 * 1024 * 1024,
-            },
-            arc_stats: ArcStatistics {
-                size: 4 * 1024 * 1024 * 1024,
-                target_size: 8 * 1024 * 1024 * 1024,
-                hit_ratio: 0.85,
-                miss_ratio: 0.15,
-            },
-        }
     }
 }

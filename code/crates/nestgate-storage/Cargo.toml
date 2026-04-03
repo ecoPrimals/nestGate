@@ -25,7 +25,8 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 
 [features]
-default = ["sysinfo"]
+default = []
+# ecoBin v3: sysinfo is a non-Linux fallback. Linux uses /proc via rustix (nestgate-platform).
 sysinfo = ["dep:sysinfo"]
 
 [dev-dependencies]

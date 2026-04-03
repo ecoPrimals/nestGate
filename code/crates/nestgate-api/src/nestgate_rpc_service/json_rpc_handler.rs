@@ -3,7 +3,7 @@
 
 //! JSON-RPC 2.0 handler that wraps the tarpc service for HTTP access.
 //!
-//! Songbird can use this for initial discovery before escalating to tarpc.
+//! Orchestration and other capability peers can use this for initial discovery before escalating to tarpc.
 
 use tarpc::context::Context;
 

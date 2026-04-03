@@ -121,3 +121,44 @@ impl<
         Ok(snapshots)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::parse_snapshot_list_line;
+    use std::time::SystemTime;
+
+    #[test]
+    fn parse_snapshot_list_line_accepts_extra_tab_separated_fields() {
+        let t = SystemTime::UNIX_EPOCH;
+        let s = parse_snapshot_list_line("pool/ds@snap\t1024\t2048\t2025-01-01", t)
+            .expect("normal snapshot list line should parse");
+        assert_eq!(s.dataset, "pool/ds");
+        assert_eq!(s.name, "snap");
+        assert_eq!(s.size, 1024);
+        assert_eq!(s.created_at, t);
+    }
+
+    #[test]
+    fn parse_snapshot_list_line_returns_none_when_too_few_fields() {
+        assert!(
+            parse_snapshot_list_line("only_one_field", SystemTime::UNIX_EPOCH).is_none(),
+            "expected fewer than two tab fields to yield None"
+        );
+        assert!(
+            parse_snapshot_list_line("x", SystemTime::UNIX_EPOCH).is_none(),
+            "single token without tab should yield None"
+        );
+    }
+
+    #[test]
+    fn parse_snapshot_list_line_non_numeric_used_becomes_zero() {
+        let s = parse_snapshot_list_line("pool/ds@snap\tnot_a_number", SystemTime::UNIX_EPOCH)
+            .expect("line with @ should parse; bad size coerces to 0");
+        assert_eq!(s.size, 0);
+    }
+
+    #[test]
+    fn parse_snapshot_list_line_empty_line_is_none() {
+        assert!(parse_snapshot_list_line("", SystemTime::UNIX_EPOCH).is_none());
+    }
+}

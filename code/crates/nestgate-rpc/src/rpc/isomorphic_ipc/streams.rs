@@ -38,7 +38,7 @@
 //!
 //! ## Reference
 //!
-//! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)
+//! Pattern validated in orchestration provider v3.33.0
 
 use anyhow::Result;
 use std::pin::Pin;

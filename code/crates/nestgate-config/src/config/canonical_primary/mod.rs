@@ -414,3 +414,184 @@ pub type DevelopmentConfig = NestGateCanonicalConfig<100, 8192, 60_000, 3000>;
 
 /// Production configuration with production-optimized settings
 pub type ProductionConfig = NestGateCanonicalConfig<5000, 262_144, 10000, 443>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::constants::hardcoding::runtime_fallback_ports;
+    use serial_test::serial;
+    use temp_env::with_vars;
+
+    type StdCanonical = NestGateCanonicalConfig<1000, 65536, 30000, 8080>;
+
+    #[test]
+    fn nest_gate_canonical_config_default() {
+        let c = StdCanonical::default();
+        assert_eq!(c.environment, Environment::Development);
+        assert!(c.validate().is_ok());
+    }
+
+    #[test]
+    fn nest_gate_canonical_config_serde_roundtrip() {
+        let original = StdCanonical::default();
+        let json = serde_json::to_string(&original).expect("serialize NestGateCanonicalConfig");
+        let parsed: StdCanonical =
+            serde_json::from_str(&json).expect("deserialize NestGateCanonicalConfig");
+        assert_eq!(original.environment, parsed.environment);
+        assert_eq!(original.network.api.port, parsed.network.api.port);
+        assert_eq!(original.security.auth.enabled, parsed.security.auth.enabled);
+    }
+
+    #[test]
+    fn nest_gate_canonical_config_with_overrides_port() {
+        let c = StdCanonical::default();
+        let updated = c.with_overrides(ConfigOverrides {
+            environment: None,
+            domain_overrides: None,
+            network_overrides: Some(NetworkOverrides {
+                api_port: Some(9100),
+                bind_address: None,
+                timeout_ms: None,
+                workers: None,
+            }),
+            security_overrides: None,
+            performance_overrides: None,
+        });
+        assert_eq!(updated.network.api.port, 9100);
+        assert_eq!(updated.api.port, 9100);
+        assert_eq!(updated.domains.api.server.port, 9100);
+    }
+
+    #[test]
+    fn with_overrides_environment_and_network_bind_timeout_workers() {
+        let c = StdCanonical::default();
+        let updated = c.with_overrides(ConfigOverrides {
+            environment: Some(Environment::Staging),
+            domain_overrides: None,
+            network_overrides: Some(NetworkOverrides {
+                api_port: Some(7443),
+                bind_address: Some("192.0.2.1".to_string()),
+                timeout_ms: Some(12_000),
+                workers: Some(8),
+            }),
+            security_overrides: None,
+            performance_overrides: None,
+        });
+        assert_eq!(updated.environment, Environment::Staging);
+        assert_eq!(updated.network.api.port, 7443);
+        assert_eq!(updated.domains.api.server.bind_address, "192.0.2.1");
+        assert_eq!(
+            updated.network.api.request_timeout,
+            std::time::Duration::from_millis(12_000)
+        );
+        assert_eq!(updated.domains.api.server.workers, Some(8));
+    }
+
+    #[test]
+    fn with_overrides_security_and_performance() {
+        let c = StdCanonical::default();
+        let updated = c.with_overrides(ConfigOverrides {
+            environment: None,
+            domain_overrides: None,
+            network_overrides: None,
+            security_overrides: Some(SecurityOverrides {
+                tls_enabled: Some(true),
+                require_auth: Some(true),
+                dev_mode_bypass: Some(true),
+                cert_path: Some("/tmp/nestgate-test.pem".to_string()),
+            }),
+            performance_overrides: Some(PerformanceOverrides {
+                max_connections: Some(2048),
+                buffer_size: Some(4096),
+                cache_size: Some(128),
+                optimization_level: Some(OptimizationLevel::Performance),
+            }),
+        });
+        assert!(updated.security.auth.enabled);
+        assert!(updated.network.api.security.auth_enabled);
+        assert!(updated.system.debug_mode);
+        assert_eq!(updated.network.api.tls.cert_path, "/tmp/nestgate-test.pem");
+        assert_eq!(updated.performance.max_connections, 2048);
+        assert_eq!(updated.performance.buffer_size, 4096);
+        assert_eq!(updated.network.api.performance.cache_size, 128);
+        assert!(
+            updated
+                .performance
+                .performance_settings
+                .contains_key("optimization_level")
+        );
+    }
+
+    #[test]
+    fn validate_production_warns_on_default_http_port_and_firewall() {
+        let mut c = StdCanonical::default();
+        c.environment = Environment::Production;
+        c.network.api.port = runtime_fallback_ports::HTTP;
+        c.network.security.firewall_enabled = false;
+        let warnings = c.validate().expect("validate");
+        let joined = warnings.join(" ");
+        assert!(joined.contains("8080") || joined.contains("Port"));
+        assert!(joined.contains("Firewall") || joined.contains("firewall"));
+    }
+
+    #[test]
+    fn validate_development_warns_when_auth_enabled() {
+        let mut c = StdCanonical::default();
+        c.environment = Environment::Development;
+        c.security.auth.enabled = true;
+        c.network.api.security.auth_enabled = true;
+        let warnings = c.validate().expect("validate");
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.contains("Authentication") && w.contains("development"))
+        );
+    }
+
+    #[test]
+    fn validate_for_environment_rejects_port_8080_in_production() {
+        let mut c = StdCanonical::default();
+        c.network.api.port = 8080;
+        let err = c
+            .validate_for_environment(Environment::Production)
+            .expect_err("production must reject 8080");
+        let msg = err.to_string();
+        assert!(msg.contains("8080") || msg.contains("Port"));
+    }
+
+    #[test]
+    fn validate_for_environment_accepts_non_8080_in_production() {
+        let mut c = StdCanonical::default();
+        c.network.api.port = 8443;
+        c.validate_for_environment(Environment::Production)
+            .expect("8443 allowed in production");
+    }
+
+    #[test]
+    #[serial]
+    fn from_environment_sets_production_and_port() {
+        let c = with_vars(
+            vec![
+                ("NESTGATE_ENVIRONMENT", Some("production")),
+                ("NESTGATE_API_PORT", Some("9090")),
+            ],
+            || StdCanonical::from_environment().expect("from_environment"),
+        );
+        assert_eq!(c.environment, Environment::Production);
+        assert_eq!(c.network.api.port, 9090);
+        assert_eq!(c.api.port, 9090);
+    }
+
+    #[test]
+    #[serial]
+    fn from_environment_unknown_env_string_defaults_to_development() {
+        let c = with_vars(
+            vec![
+                ("NESTGATE_ENVIRONMENT", Some("custom-lab")),
+                ("NESTGATE_API_PORT", None::<&str>),
+            ],
+            || StdCanonical::from_environment().expect("from_environment"),
+        );
+        assert_eq!(c.environment, Environment::Development);
+    }
+}

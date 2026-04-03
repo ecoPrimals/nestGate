@@ -10,7 +10,7 @@
 //! self-contained `tokio::net::TcpStream`-based HTTP/1.1 implementation.
 //!
 //! **Overstep guidance**: For ecosystem HTTP to arbitrary URLs, prefer delegating to a
-//! network-capability primal (songBird) via JSON-RPC `network.*` IPC. This client
+//! network-capability provider via JSON-RPC `network.*` IPC. This client
 //! exists only for dev-stub compilation and local bootstrap paths.
 
 use crate::error::Result;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 /// Test utilities for common operations
 use crate::common::config::UnifiedTestConfig;
 use nestgate_core::config::canonical_primary::CanonicalTestConfig as CleanTestConfig;

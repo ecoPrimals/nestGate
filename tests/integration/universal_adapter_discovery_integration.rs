@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Integration tests for UniversalAdapter + Discovery subsystems
 //! 
 //! Tests critical cross-module interactions between:

@@ -169,26 +169,26 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
         Ok(())
     }
 
-    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to the orchestration layer.
     async fn stop(&self) -> crate::Result<()> {
         tracing::debug!(
-            "NativeAsyncNetworkService::stop — lifecycle management delegated to songBird"
+            "NativeAsyncNetworkService::stop — lifecycle management delegated to orchestration layer"
         );
         Ok(())
     }
 
-    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to the orchestration layer.
     async fn restart(&self) -> crate::Result<()> {
         tracing::debug!(
-            "NativeAsyncNetworkService::restart — lifecycle management delegated to songBird"
+            "NativeAsyncNetworkService::restart — lifecycle management delegated to orchestration layer"
         );
         Ok(())
     }
 
-    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to the orchestration layer.
     async fn update_config(&self, _config: Self::Config) -> crate::Result<()> {
         tracing::debug!(
-            "NativeAsyncNetworkService::update_config — lifecycle management delegated to songBird"
+            "NativeAsyncNetworkService::update_config — lifecycle management delegated to orchestration layer"
         );
         Ok(())
     }
@@ -207,10 +207,10 @@ impl crate::traits::canonical::CanonicalService for NativeAsyncNetworkService {
         })
     }
 
-    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to songBird.
+    /// Passthrough for the minimal admin HTTP surface: lifecycle management is delegated to the orchestration layer.
     async fn validate_config(&self, _config: &Self::Config) -> crate::Result<Vec<String>> {
         tracing::debug!(
-            "NativeAsyncNetworkService::validate_config — lifecycle management delegated to songBird"
+            "NativeAsyncNetworkService::validate_config — lifecycle management delegated to orchestration layer"
         );
         Ok(vec![])
     }

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! # Comprehensive Chaos Testing - FULLY MODERNIZED
 //!
 //! Advanced chaos engineering tests to validate system resilience under various failure modes

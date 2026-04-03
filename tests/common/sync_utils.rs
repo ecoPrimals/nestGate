@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Modern Synchronization Utilities for Tests
 //!
 //! This module provides proper synchronization primitives to replace `sleep()` calls in tests.

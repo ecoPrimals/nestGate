@@ -40,6 +40,7 @@ pub mod adapter;
 pub mod authentication;
 pub mod discovery;
 pub mod features;
+mod http_minimal;
 pub mod operations;
 pub mod protocol;
 pub mod transport;

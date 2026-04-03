@@ -150,3 +150,86 @@ impl StorageCachingConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_caching_config_default_matches_documented_defaults() {
+        let c = StorageCachingConfig::default();
+        assert!(c.enabled);
+        assert_eq!(c.cache.size, 1024 * 1024 * 1024);
+        assert_eq!(c.cache.ttl, std::time::Duration::from_secs(3600));
+        assert!(matches!(c.eviction, CacheEvictionPolicy::Lru));
+        assert!(c.consistency.enabled);
+        assert!(c.performance.enabled);
+        assert!(!c.monitoring.enabled);
+    }
+
+    #[test]
+    fn storage_caching_constructors_match_default() {
+        let d = StorageCachingConfig::default();
+        assert_eq!(
+            serde_json::to_string(&d).expect("serialize default"),
+            serde_json::to_string(&StorageCachingConfig::production_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            serde_json::to_string(&d).expect("serialize default"),
+            serde_json::to_string(&StorageCachingConfig::development_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            serde_json::to_string(&d).expect("serialize default"),
+            serde_json::to_string(&StorageCachingConfig::high_performance()).expect("serialize")
+        );
+        assert_eq!(
+            serde_json::to_string(&d).expect("serialize default"),
+            serde_json::to_string(&StorageCachingConfig::cloud_native()).expect("serialize")
+        );
+    }
+
+    #[test]
+    fn storage_caching_merge_is_identity() {
+        let a = StorageCachingConfig::default();
+        let b = StorageCachingConfig {
+            enabled: false,
+            ..StorageCachingConfig::default()
+        };
+        assert_eq!(a.merge(b).enabled, true);
+    }
+
+    #[test]
+    fn storage_caching_validate_succeeds() {
+        assert!(StorageCachingConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn storage_caching_serde_roundtrip() {
+        let original = StorageCachingConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize StorageCachingConfig");
+        let parsed: StorageCachingConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+
+    #[test]
+    fn cache_eviction_policy_variants_roundtrip() {
+        for policy in [
+            CacheEvictionPolicy::Lru,
+            CacheEvictionPolicy::Lfu,
+            CacheEvictionPolicy::Fifo,
+            CacheEvictionPolicy::Random,
+        ] {
+            let json = serde_json::to_string(&policy).expect("serialize policy");
+            let p: CacheEvictionPolicy = serde_json::from_str(&json).expect("deserialize policy");
+            assert_eq!(
+                serde_json::to_string(&policy).expect("serialize"),
+                serde_json::to_string(&p).expect("serialize again")
+            );
+        }
+    }
+}

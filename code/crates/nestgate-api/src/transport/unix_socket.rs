@@ -7,12 +7,12 @@
 //!
 //! ## Migration to Universal IPC Architecture
 //!
-//! **Connection logic has moved to Songbird** (Universal IPC Layer)
+//! **Connection logic has moved to the orchestration provider** (Universal IPC Layer)
 //!
 //! ### Why This Change?
 //!
-//! - **Separation of Concerns**: `NestGate` = Storage, Songbird = Communication
-//! - **True Universality**: Songbird abstracts platform differences (Unix/Windows/etc.)
+//! - **Separation of Concerns**: `NestGate` = Storage, orchestration layer = Communication
+//! - **True Universality**: The orchestration IPC layer abstracts platform differences (Unix/Windows/etc.)
 //! - **Single Responsibility**: Each primal owns its domain
 //!
 //! ### Migration Path
@@ -25,13 +25,14 @@
 //! listener.bind()?;
 //! ```
 //!
-//! **After (Songbird Universal IPC)**:
+//! **After (Universal IPC via Orchestration Provider)**:
 //! ```rust,ignore
-//! use songbird::ipc;
-//!
-//! // Register with Songbird (works on ALL platforms!)
-//! let endpoint = ipc::register("nestgate-api").await?;
-//! ipc::listen(endpoint).await?;
+//! // Register with the orchestration provider via JSON-RPC (works on ALL platforms!)
+//! let client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
+//! client.call("ipc.register", json!({
+//!     "service_id": "nestgate-api",
+//!     "capabilities": ["storage", "zfs"],
+//! })).await?;
 //! ```
 //!
 //! ### References
@@ -47,24 +48,25 @@ use tracing::{info, warn};
 
 /// **UNIX SOCKET LISTENER**
 ///
-/// **⚠️ DEPRECATED**: Use `songbird::ipc` instead (Universal IPC Architecture)
+/// **⚠️ DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
 ///
 /// Listens for connections on a Unix socket and handles JSON-RPC requests.
 ///
 /// ## Migration
 ///
-/// Replace with Songbird's Universal IPC:
+/// Replace with the orchestration provider's Universal IPC:
 /// ```rust,ignore
 /// // Old:
 /// let listener = UnixSocketListener::new("/tmp/api.sock")?;
 ///
-/// // New:
-/// let endpoint = songbird::ipc::register("nestgate-api").await?;
+/// // New: register via JSON-RPC over discovered orchestration socket
+/// let client = JsonRpcClient::connect_unix("/run/primal/orchestration.sock").await?;
+/// client.call("ipc.register", json!({"primal": "nestgate-api"})).await?;
 /// ```
 #[deprecated(
     since = "2.3.0",
-    note = "Connection logic moved to Songbird IPC SERVICE. \
-            Call /primal/songbird via JSON-RPC - DO NOT import songbird code! \
+    note = "Connection logic moved to orchestration provider's IPC SERVICE. \
+            Call via JSON-RPC over discovered socket - DO NOT import peer primal code! \
             See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md for service-based integration."
 )]
 pub struct UnixSocketListener {

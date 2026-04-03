@@ -6,7 +6,7 @@
 //! Exposes NestGate storage capabilities via high-performance RPC protocols
 //! for inter-primal communication.
 //!
-//! ## Protocol escalation (same pattern as Songbird)
+//! ## Protocol escalation (same pattern as the orchestration layer)
 //!
 //! - **JSON-RPC** for universal access (HTTP-based)
 //! - **tarpc** for high-performance binary RPC (native Rust)
@@ -44,7 +44,7 @@ pub(crate) fn nestgate_capabilities_vec() -> Vec<String> {
 
 /// `NestGate` RPC service trait — defines storage operations for inter-primal communication.
 ///
-/// Follows the same pattern as Songbird's `SongbirdRpc` trait.
+/// Follows the same tarpc service trait pattern used across the ecosystem orchestration layer.
 #[tarpc::service]
 pub trait NestGateRpc {
     /// List available storage pools

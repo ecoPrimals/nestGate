@@ -47,7 +47,7 @@ impl SelfKnowledgeBuilder {
     ///
     /// **Required**: This must be set before calling [`build()`](Self::build).
     ///
-    /// **Convention**: Use lowercase primal name (e.g., "nestgate", "orchestrator", "beardog")
+    /// **Convention**: Use lowercase primal name (e.g., "nestgate", "orchestrator")
     #[must_use]
     pub fn with_id(mut self, id: impl Into<String>) -> Self {
         self.id = Some(id.into());

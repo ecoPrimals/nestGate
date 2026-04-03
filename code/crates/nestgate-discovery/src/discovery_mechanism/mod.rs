@@ -6,7 +6,7 @@
 //! **Vendor-agnostic service discovery for the infant discovery pattern.**
 //!
 //! Per the PRIMAL responsibility matrix, **runtime peer discovery is not NestGate’s domain**:
-//! production deployments delegate discovery to **biomeOS** and **songBird**. The types here are
+//! production deployments delegate discovery to the **ecosystem platform** and **orchestration provider**. The types here are
 //! optional building blocks for standalone binaries, tests, and local development only.
 //!
 //! Each backend (`mdns`, `consul`, `kubernetes`) is behind a crate feature so default builds do not

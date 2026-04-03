@@ -31,7 +31,7 @@ pub struct CertUtils;
 impl CertUtils {
     /// Self-signed PEM generation is not implemented in this crate.
     ///
-    /// Real certificate material is delegated to the security provider (bearDog) via
+    /// Real certificate material is delegated to the security capability provider via
     /// `crypto.generate_cert` IPC.
     ///
     /// # Errors

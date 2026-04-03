@@ -13,7 +13,7 @@ use uuid::Uuid;
 /// Service registration information for orchestrator integration
 ///
 /// This structure contains all the information needed to register a ZFS service
-/// with an orchestrator (like Songbird or Kubernetes service discovery).
+/// with an orchestrator (capability-based orchestration provider or Kubernetes service discovery).
 ///
 /// # Fields
 ///

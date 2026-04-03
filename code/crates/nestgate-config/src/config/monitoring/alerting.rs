@@ -188,3 +188,86 @@ impl AlertThresholds {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::notifications::{EmailConfig, NotificationConfig};
+    use super::*;
+
+    #[test]
+    fn alert_config_and_thresholds_default() {
+        let a = AlertConfig::default();
+        assert!(!a.enabled);
+        let t = AlertThresholds::default();
+        assert_eq!(t.cpu_threshold, 80.0);
+        assert_eq!(t.memory_threshold, 85.0);
+        assert_eq!(t.disk_threshold, 90.0);
+        assert_eq!(t.latency_threshold, 1000.0);
+        assert_eq!(t.error_rate_threshold, 5.0);
+    }
+
+    #[test]
+    fn alert_thresholds_is_threshold_exceeded_and_get_threshold() {
+        let t = AlertThresholds::default();
+        assert!(t.is_threshold_exceeded("cpu", 81.0));
+        assert!(!t.is_threshold_exceeded("cpu", 80.0));
+        assert_eq!(t.get_threshold("cpu"), Some(80.0));
+        assert_eq!(t.get_threshold("unknown"), None);
+    }
+
+    #[test]
+    fn alert_thresholds_set_threshold_and_validate_errors() {
+        let mut t = AlertThresholds::default();
+        assert!(t.set_threshold("cpu", -1.0).is_err());
+        assert!(t.set_threshold("cpu", 101.0).is_err());
+        assert!(t.set_threshold("unknown", 1.0).is_err());
+        t.set_threshold("latency", 500.0).expect("set latency");
+        assert_eq!(t.latency_threshold, 500.0);
+        assert!(
+            AlertThresholds {
+                cpu_threshold: -1.0,
+                ..AlertThresholds::default()
+            }
+            .validate()
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn alert_config_validate_disabled_without_notifications_ok() {
+        let c = AlertConfig::default();
+        assert!(c.validate().is_ok());
+    }
+
+    #[test]
+    fn alert_config_validate_enabled_requires_notifications() {
+        let mut c = AlertConfig::default();
+        c.enabled = true;
+        c.notifications = NotificationConfig::default();
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn alert_config_has_notifications() {
+        let mut c = AlertConfig::default();
+        assert!(!c.has_notifications());
+        c.notifications.email = Some(EmailConfig::default());
+        assert!(c.has_notifications());
+    }
+
+    #[test]
+    fn alert_config_serde_roundtrip() {
+        let original = AlertConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize AlertConfig");
+        let parsed: AlertConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original.enabled, parsed.enabled);
+    }
+
+    #[test]
+    fn alert_thresholds_serde_roundtrip() {
+        let original = AlertThresholds::default();
+        let json = serde_json::to_string(&original).expect("serialize AlertThresholds");
+        let parsed: AlertThresholds = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original.cpu_threshold, parsed.cpu_threshold);
+    }
+}

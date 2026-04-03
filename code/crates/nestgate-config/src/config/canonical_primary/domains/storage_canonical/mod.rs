@@ -330,4 +330,50 @@ mod tests {
         let config = CanonicalStorageConfig::default();
         assert!(!config.has_backend(&StorageBackendType::Zfs));
     }
+
+    #[test]
+    fn canonical_storage_default_populates_all_domains() {
+        let c = CanonicalStorageConfig::default();
+        assert!(c.caching.enabled);
+        assert!(!c.encryption.encryption.enabled);
+        assert!(c.monitoring.metrics.enabled);
+        assert_eq!(c.get_total_capacity(), 0);
+        assert!(c.validate().is_ok());
+    }
+
+    #[test]
+    fn canonical_storage_constructors_validate() {
+        assert!(
+            CanonicalStorageConfig::production_optimized()
+                .validate()
+                .is_ok()
+        );
+        assert!(
+            CanonicalStorageConfig::development_optimized()
+                .validate()
+                .is_ok()
+        );
+        assert!(
+            CanonicalStorageConfig::high_performance()
+                .validate()
+                .is_ok()
+        );
+        assert!(CanonicalStorageConfig::cloud_native().validate().is_ok());
+    }
+
+    #[test]
+    fn canonical_storage_merge_runs() {
+        let a = CanonicalStorageConfig::default();
+        let b = CanonicalStorageConfig::default();
+        let _ = a.merge(b);
+    }
+
+    #[test]
+    fn canonical_storage_serde_roundtrip() {
+        let original = CanonicalStorageConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: CanonicalStorageConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original.get_total_capacity(), parsed.get_total_capacity());
+        assert!(parsed.validate().is_ok());
+    }
 }

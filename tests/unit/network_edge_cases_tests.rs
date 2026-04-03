@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Network Layer Edge Case Tests
 //!
 //! High-value tests for network error handling, timeouts, and edge cases.

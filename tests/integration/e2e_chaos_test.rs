@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 use crate::common::config::{UnifiedTestConfig, TestChaosSettings, ChaosType};
 use tests::canonical_modernization::UnifiedServiceType;
 use nestgate_core::{NestGateError, Result};

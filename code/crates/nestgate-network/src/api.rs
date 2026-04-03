@@ -61,18 +61,18 @@ type ServiceRegistry = Arc<RwLock<HashMap<String, ServiceInstance>>>;
 /// Orchestration orchestrator client for network operations
 ///
 /// NOTE: HTTP removed per Concentrated Gap Architecture
-/// All orchestration now via Songbird gateway using Unix sockets
+/// All orchestration now via the orchestration-provider Unix socket gateway
 #[derive(Debug, Clone)]
 /// Orchestrationcapability
 pub struct OrchestrationCapability {
     /// Base URL for Orchestration orchestrator
     pub base_url: String,
-    // HTTP client removed - use Unix sockets via Songbird
+    // HTTP client removed — use Unix sockets via the orchestration gateway
 }
 impl OrchestrationCapability {
     /// Create a new Orchestration client
     ///
-    /// NOTE: HTTP removed - use Unix sockets via Songbird
+    /// NOTE: HTTP removed — use Unix sockets via the orchestration gateway
     #[must_use]
     pub const fn new(base_url: String) -> Self {
         Self { base_url }
@@ -81,11 +81,11 @@ impl OrchestrationCapability {
     /// Register a service with Orchestration
     ///
     /// ✅ EVOLVED: Returns error instead of panicking via unimplemented!()
-    /// HTTP removed per Concentrated Gap Architecture - use Unix sockets via Songbird
+    /// HTTP removed per Concentrated Gap Architecture — use Unix sockets via the orchestration gateway
     pub fn register_service(&self, service: &ServiceInstance) -> NestGateResult<()> {
         let _ = service;
         Err(NestGateError::network_error(
-            "HTTP removed - use Unix sockets via Songbird gateway for service registration",
+            "HTTP removed — use Unix sockets via the orchestration gateway for service registration",
         ))
     }
 
@@ -95,7 +95,7 @@ impl OrchestrationCapability {
     pub fn allocate_port(&self, service_name: &str, port_type: &str) -> NestGateResult<u16> {
         let _ = (service_name, port_type);
         Err(NestGateError::network_error(
-            "HTTP removed - use Unix sockets via Songbird gateway for port allocation",
+            "HTTP removed — use Unix sockets via the orchestration gateway for port allocation",
         ))
     }
 
@@ -105,7 +105,7 @@ impl OrchestrationCapability {
     pub fn release_port(&self, service_name: &str, port: u16) -> NestGateResult<()> {
         let _ = (service_name, port);
         Err(NestGateError::network_error(
-            "HTTP removed - use Unix sockets via Songbird gateway for port release",
+            "HTTP removed — use Unix sockets via the orchestration gateway for port release",
         ))
     }
 
@@ -119,7 +119,7 @@ impl OrchestrationCapability {
     ) -> NestGateResult<()> {
         let _ = (service_name, status);
         Err(NestGateError::network_error(
-            "HTTP removed - use Unix sockets via Songbird gateway for health reporting",
+            "HTTP removed — use Unix sockets via the orchestration gateway for health reporting",
         ))
     }
 }

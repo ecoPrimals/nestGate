@@ -5,7 +5,7 @@
 //!
 //! **Execution Audit Trail Storage & Management**
 //!
-//! Provides audit trail storage capabilities for biomeOS Collaborative Intelligence,
+//! Provides audit trail storage capabilities for ecosystem collaborative intelligence workflows,
 //! enabling AI learning from execution history and user modifications.
 //!
 //! ## Philosophy

@@ -166,3 +166,119 @@ impl StorageReplicationConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_replication_config_default_values() {
+        let c = StorageReplicationConfig::default();
+        assert!(!c.replication.enabled);
+        assert!(matches!(
+            c.replication.strategy,
+            ReplicationStrategy::Asynchronous
+        ));
+        assert!(c.backup.enabled);
+        assert!(matches!(c.backup.strategy, BackupStrategy::Incremental));
+        assert!(!c.disaster_recovery.enabled);
+        assert!(matches!(
+            c.disaster_recovery.strategy,
+            RecoveryStrategy::Warm
+        ));
+    }
+
+    #[test]
+    fn storage_replication_constructors_match_default() {
+        let d = StorageReplicationConfig::default();
+        let ser = serde_json::to_string(&d).expect("serialize");
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageReplicationConfig::production_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageReplicationConfig::development_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageReplicationConfig::high_performance())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageReplicationConfig::cloud_native()).expect("serialize")
+        );
+    }
+
+    #[test]
+    fn storage_replication_merge_is_identity() {
+        let a = StorageReplicationConfig::default();
+        let b = StorageReplicationConfig {
+            backup: BackupConfig {
+                enabled: false,
+                strategy: BackupStrategy::Full,
+            },
+            ..StorageReplicationConfig::default()
+        };
+        assert_eq!(a.merge(b).backup.enabled, true);
+    }
+
+    #[test]
+    fn storage_replication_validate_succeeds() {
+        assert!(StorageReplicationConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn storage_replication_serde_roundtrip() {
+        let original = StorageReplicationConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: StorageReplicationConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+
+    #[test]
+    fn replication_backup_recovery_enums_roundtrip() {
+        for strat in [
+            ReplicationStrategy::Synchronous,
+            ReplicationStrategy::Asynchronous,
+            ReplicationStrategy::SemiSynchronous,
+        ] {
+            let json = serde_json::to_string(&strat).expect("serialize");
+            let v: ReplicationStrategy = serde_json::from_str(&json).expect("deserialize");
+            assert_eq!(
+                serde_json::to_string(&strat).expect("serialize"),
+                serde_json::to_string(&v).expect("serialize again")
+            );
+        }
+        for strat in [
+            BackupStrategy::Full,
+            BackupStrategy::Incremental,
+            BackupStrategy::Differential,
+        ] {
+            let json = serde_json::to_string(&strat).expect("serialize");
+            let v: BackupStrategy = serde_json::from_str(&json).expect("deserialize");
+            assert_eq!(
+                serde_json::to_string(&strat).expect("serialize"),
+                serde_json::to_string(&v).expect("serialize again")
+            );
+        }
+        for strat in [
+            RecoveryStrategy::Hot,
+            RecoveryStrategy::Warm,
+            RecoveryStrategy::Cold,
+        ] {
+            let json = serde_json::to_string(&strat).expect("serialize");
+            let v: RecoveryStrategy = serde_json::from_str(&json).expect("deserialize");
+            assert_eq!(
+                serde_json::to_string(&strat).expect("serialize"),
+                serde_json::to_string(&v).expect("serialize again")
+            );
+        }
+    }
+}

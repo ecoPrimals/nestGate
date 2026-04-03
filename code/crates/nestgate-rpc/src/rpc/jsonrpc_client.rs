@@ -3,14 +3,14 @@
 
 //! # 🔌 JSON-RPC 2.0 Client for Universal IPC
 //!
-//! **LIGHTWEIGHT JSON-RPC CLIENT FOR SONGBIRD COMMUNICATION**
+//! **LIGHTWEIGHT JSON-RPC CLIENT FOR CAPABILITY-PEER IPC**
 //!
-//! Provides a clean JSON-RPC client for calling Songbird's IPC service
+//! Provides a clean JSON-RPC client for calling peer capability services
 //! and other JSON-RPC endpoints.
 //!
 //! ## Philosophy
 //!
-//! - **Service-Based**: Call Songbird as a SERVICE (not a library!)
+//! - **Service-Based**: Call capability providers as services (not libraries!)
 //! - **Platform-Agnostic**: Works over Unix sockets, Named Pipes, etc.
 //! - **Zero Dependencies**: Just tokio + `serde_json`
 //! - **Modern Async**: Native async/await
@@ -18,7 +18,7 @@
 //!
 //! ## Usage
 //!
-//! ### Call Songbird for IPC Discovery
+//! ### Call the orchestration provider for IPC discovery
 //!
 //! ```rust,ignore
 //! use nestgate_core::rpc::JsonRpcClient;
@@ -26,7 +26,7 @@
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Connect to the orchestration provider's JSON-RPC service
-//! let mut client = JsonRpcClient::connect_unix("/primal/orchestration").await?;
+//! let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
 //!
 //! // Ask the orchestrator to resolve a capability
 //! let response = client.call("ipc.resolve", json!({
@@ -39,20 +39,20 @@
 //! # }
 //! ```
 //!
-//! ### Register With Songbird
+//! ### Register With Orchestration Provider
 //!
 //! ```rust,ignore
 //! use nestgate_core::rpc::JsonRpcClient;
 //! use serde_json::json;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let mut client = JsonRpcClient::connect_unix("/primal/songbird").await?;
+//! let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
 //!
-//! // Register ourselves with Songbird
+//! // Register ourselves with the orchestration provider
 //! let response = client.call("ipc.register", json!({
-//!     "primal": "nestgate",
+//!     "service_id": "nestgate",
 //!     "capabilities": ["storage", "discovery"],
-//!     "endpoint": "/primal/nestgate"
+//!     "endpoint": "/run/capability/storage.sock"
 //! })).await?;
 //!
 //! println!("Registered: {:?}", response);
@@ -129,7 +129,7 @@ impl JsonRpcClient {
     /// Connect to a JSON-RPC service over Unix socket
     ///
     /// # Arguments
-    /// * `path` - Unix socket path (e.g., "/primal/songbird")
+    /// * `path` - Unix socket path (e.g., "/run/capability/orchestration.sock")
     ///
     /// # Errors
     /// Returns error if connection fails
@@ -139,7 +139,7 @@ impl JsonRpcClient {
     /// use nestgate_core::rpc::JsonRpcClient;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = JsonRpcClient::connect_unix("/primal/songbird").await?;
+    /// let client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     /// # Ok(())
     /// # }
     /// ```
@@ -170,7 +170,7 @@ impl JsonRpcClient {
     /// use std::time::Duration;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut client = JsonRpcClient::connect_unix("/primal/songbird").await?;
+    /// let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     /// client.set_timeout(Duration::from_secs(10));
     /// # Ok(())
     /// # }
@@ -201,7 +201,7 @@ impl JsonRpcClient {
     /// use serde_json::json;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut client = JsonRpcClient::connect_unix("/primal/orchestration").await?;
+    /// let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     ///
     /// let result = client.call("ipc.resolve", json!({
     ///     "capability": "security"
@@ -306,7 +306,7 @@ impl JsonRpcClient {
     /// }
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut client = JsonRpcClient::connect_unix("/primal/orchestration").await?;
+    /// let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     ///
     /// let info: ServiceInfo = client.call_typed("ipc.resolve", json!({
     ///     "capability": "security"
@@ -381,7 +381,7 @@ mod tests {
 
     #[test]
     fn test_response_deserialization_success() {
-        let json = r#"{"jsonrpc":"2.0","result":{"endpoint":"/primal/beardog"},"id":1}"#;
+        let json = r#"{"jsonrpc":"2.0","result":{"endpoint":"/capability/security"},"id":1}"#;
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
 
         assert_eq!(response.jsonrpc.as_ref(), "2.0");

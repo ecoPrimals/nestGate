@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-02)
-Tests:       PASS — cargo test --workspace, 0 failures (~8,555 lib / ~12,105 total last recorded — STATUS.md)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-03)
+Tests:       PASS — cargo test --all, 0 failures (~12,270 total last recorded — STATUS.md)
 Coverage:    ~80% line (llvm-cov) — wateringHole 80% min met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-02)
+Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-03)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on all 22 crate roots except env-process-shim
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -136,7 +136,7 @@ NESTGATE_JWT_SECRET=...             # JWT secret
 NESTGATE_STORAGE_PATH=...          # Storage path
 NESTGATE_ZFS_BINARY=...            # ZFS binary override
 NESTGATE_CAPABILITY_CRYPTO_ENDPOINT=...  # Override crypto provider
-SONGBIRD_IPC_PATH=...              # Override Songbird socket
+NESTGATE_ORCHESTRATION_IPC_PATH=...  # Optional capability/orchestration IPC socket override
 RUST_LOG=info                       # Logging level
 ```
 
@@ -168,4 +168,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: April 2, 2026
+**Last Updated**: April 3, 2026

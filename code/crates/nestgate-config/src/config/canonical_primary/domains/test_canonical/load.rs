@@ -73,3 +73,69 @@ impl LoadTestConfig {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn load_test_config_default() {
+        let c = LoadTestConfig::default();
+        assert!(c.scenarios.is_empty());
+        assert_eq!(c.ramp_up.duration, std::time::Duration::from_secs(60));
+        assert_eq!(c.ramp_up.strategy, "linear");
+    }
+
+    #[test]
+    fn load_test_config_constructors_and_merge() {
+        let d = LoadTestConfig::default();
+        assert_eq!(
+            serde_json::to_string(&d).expect("serialize"),
+            serde_json::to_string(&LoadTestConfig::ci_optimized()).expect("serialize")
+        );
+        assert_eq!(
+            serde_json::to_string(&d).expect("serialize"),
+            serde_json::to_string(&LoadTestConfig::development_optimized()).expect("serialize")
+        );
+        let other = LoadTestConfig {
+            scenarios: vec![LoadTestScenario {
+                name: "s".to_string(),
+                weight: 1.0,
+                steps: vec![],
+            }],
+            ramp_up: RampUpConfig::default(),
+        };
+        let merged = d.merge(other);
+        assert!(merged.scenarios.is_empty());
+    }
+
+    #[test]
+    fn load_test_config_serde_roundtrip() {
+        let original = LoadTestConfig {
+            scenarios: vec![LoadTestScenario {
+                name: "read".to_string(),
+                weight: 1.0,
+                steps: vec![LoadTestStep {
+                    name: "step1".to_string(),
+                    method: "GET".to_string(),
+                    url: "/health".to_string(),
+                }],
+            }],
+            ramp_up: RampUpConfig::default(),
+        };
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: LoadTestConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(parsed.scenarios.len(), 1);
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+
+    #[test]
+    fn ramp_up_config_default() {
+        let r = RampUpConfig::default();
+        assert_eq!(r.duration, std::time::Duration::from_secs(60));
+        assert_eq!(r.strategy, "linear");
+    }
+}

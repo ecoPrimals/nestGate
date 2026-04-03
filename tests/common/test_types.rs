@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Common test types and utilities
 //!
 //! This module provides type aliases for test configurations with const generics.

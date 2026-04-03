@@ -296,3 +296,73 @@ async fn perform_replicate_migration(
         "note": "Incremental replication can be performed using the same snapshot base"
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    #![allow(deprecated)]
+
+    use super::*;
+    use axum::extract::{Json, Path};
+
+    fn sample_migration_config(strategy: MigrationStrategy) -> MigrationConfig {
+        MigrationConfig {
+            target_pool: "targetpool".to_string(),
+            target_host: None,
+            strategy,
+            bandwidth_limit: Some(4096),
+        }
+    }
+
+    #[test]
+    fn migration_strategy_serde_roundtrip_all_variants() {
+        for strategy in [
+            MigrationStrategy::Copy,
+            MigrationStrategy::Move,
+            MigrationStrategy::Replicate,
+        ] {
+            let v = serde_json::to_value(&strategy).expect("serialize strategy");
+            let back: MigrationStrategy = serde_json::from_value(v).expect("deserialize strategy");
+            assert_eq!(back, strategy);
+        }
+    }
+
+    #[test]
+    fn migration_config_serde_roundtrip() {
+        let cfg = sample_migration_config(MigrationStrategy::Replicate);
+        let s = serde_json::to_string(&cfg).expect("serialize MigrationConfig");
+        let back: MigrationConfig = serde_json::from_str(&s).expect("deserialize MigrationConfig");
+        assert_eq!(back.target_pool, cfg.target_pool);
+        assert_eq!(back.strategy, MigrationStrategy::Replicate);
+        assert_eq!(back.bandwidth_limit, cfg.bandwidth_limit);
+    }
+
+    #[tokio::test]
+    async fn migrate_workspace_rejects_empty_workspace_id() {
+        let r = migrate_workspace(
+            Path(String::new()),
+            Json(sample_migration_config(MigrationStrategy::Copy)),
+        )
+        .await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    async fn migrate_workspace_rejects_slash_in_workspace_id() {
+        let r = migrate_workspace(
+            Path("x/y".to_string()),
+            Json(sample_migration_config(MigrationStrategy::Copy)),
+        )
+        .await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    async fn migrate_workspace_rejects_space_in_workspace_id() {
+        let r = migrate_workspace(
+            Path("x y".to_string()),
+            Json(sample_migration_config(MigrationStrategy::Copy)),
+        )
+        .await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+}

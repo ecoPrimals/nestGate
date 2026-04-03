@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Phase 3 Advanced Integration Test
 //! 
 //! This test validates Phase 3 advanced integration functionality using canonical patterns

@@ -219,8 +219,8 @@ pub async fn sse_events(
             "status": "operational",
             "uptime_seconds": std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs())
-                .unwrap_or(0),
+                .unwrap_or(std::time::Duration::ZERO)
+                .as_secs(),
             "zfs_available": state.get_zfs_manager().is_some(),
         },
         "timestamp": chrono::Utc::now().to_rfc3339()
@@ -311,4 +311,200 @@ pub async fn sse_health(
         },
         "generated_at": chrono::Utc::now().to_rfc3339()
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::extract::State;
+    use axum::http::StatusCode;
+    use axum::response::IntoResponse;
+    use std::sync::Arc;
+    use std::sync::atomic::Ordering;
+
+    #[tokio::test]
+    async fn app_state_default_matches_new() {
+        let a = AppState::default();
+        let b = AppState::new();
+        assert!(a.get_zfs_manager().is_some());
+        assert!(b.get_zfs_manager().is_some());
+    }
+
+    #[test]
+    fn communication_counters_new_and_json_snapshot() {
+        let c = CommunicationCounters::new();
+        assert_eq!(c.websocket_active.load(Ordering::Relaxed), 0);
+        let snap = c.to_json_snapshot();
+        assert_eq!(
+            snap.get("websocket")
+                .and_then(|w| w.get("active_connections"))
+                .and_then(serde_json::Value::as_u64),
+            Some(0)
+        );
+    }
+
+    #[tokio::test]
+    async fn sse_events_returns_ok_json_and_increments_counter() {
+        let state = AppState::default();
+        let before = state
+            .communication_counters
+            .sse_events_sent
+            .load(Ordering::Relaxed);
+        let resp = sse_events(State(state.clone())).await.into_response();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let after = state
+            .communication_counters
+            .sse_events_sent
+            .load(Ordering::Relaxed);
+        assert_eq!(after, before + 1);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .expect("sse_events body");
+        let v: serde_json::Value = serde_json::from_slice(&body).expect("sse_events json");
+        assert_eq!(
+            v.get("status").and_then(serde_json::Value::as_str),
+            Some("success")
+        );
+        assert!(v.get("events").is_some());
+        assert_eq!(v.get("count").and_then(serde_json::Value::as_u64), Some(1));
+    }
+
+    #[tokio::test]
+    async fn sse_storage_returns_ok_json_and_increments_counter() {
+        let state = AppState::default();
+        let before = state
+            .communication_counters
+            .sse_events_sent
+            .load(Ordering::Relaxed);
+        let resp = sse_storage(State(state.clone())).await.into_response();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let after = state
+            .communication_counters
+            .sse_events_sent
+            .load(Ordering::Relaxed);
+        assert_eq!(after, before + 1);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .expect("sse_storage body");
+        let v: serde_json::Value = serde_json::from_slice(&body).expect("sse_storage json");
+        assert_eq!(
+            v.get("status").and_then(serde_json::Value::as_str),
+            Some("success")
+        );
+        assert!(v.get("storage_events").is_some());
+        assert_eq!(v.get("count").and_then(serde_json::Value::as_u64), Some(1));
+    }
+
+    #[tokio::test]
+    async fn sse_health_returns_ok_json_and_increments_counter() {
+        let state = AppState::default();
+        let before = state
+            .communication_counters
+            .sse_events_sent
+            .load(Ordering::Relaxed);
+        let resp = sse_health(State(state.clone())).await.into_response();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let after = state
+            .communication_counters
+            .sse_events_sent
+            .load(Ordering::Relaxed);
+        assert_eq!(after, before + 1);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .expect("sse_health body");
+        let v: serde_json::Value = serde_json::from_slice(&body).expect("sse_health json");
+        assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));
+        let health = v.get("health").expect("health object");
+        assert_eq!(
+            health.get("overall").and_then(|s| s.as_str()),
+            Some("healthy")
+        );
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[test]
+    fn websocket_active_guard_restores_counter_on_drop() {
+        let counters = CommunicationCounters::new();
+        counters.websocket_active.fetch_add(1, Ordering::Relaxed);
+        assert_eq!(counters.websocket_active.load(Ordering::Relaxed), 1);
+        drop(WebSocketActiveGuard {
+            counters: Arc::clone(&counters),
+        });
+        assert_eq!(counters.websocket_active.load(Ordering::Relaxed), 0);
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[tokio::test]
+    async fn handle_websocket_message_ping_returns_pong() {
+        let state = AppState::default();
+        let msg = serde_json::json!({ "type": "ping" });
+        let out = handle_websocket_message(msg, &state).await;
+        let v: serde_json::Value = serde_json::from_str(&out).expect("ping response json");
+        assert_eq!(v.get("type").and_then(|t| t.as_str()), Some("pong"));
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[tokio::test]
+    async fn handle_websocket_message_get_storage_status_with_manager() {
+        let state = AppState::default();
+        let msg = serde_json::json!({ "type": "get_storage_status" });
+        let out = handle_websocket_message(msg, &state).await;
+        let v: serde_json::Value = serde_json::from_str(&out).expect("storage json");
+        assert_eq!(
+            v.get("type").and_then(|t| t.as_str()),
+            Some("storage_status")
+        );
+        let available = v
+            .pointer("/data/available")
+            .and_then(serde_json::Value::as_bool);
+        assert_eq!(available, Some(true));
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[tokio::test]
+    async fn handle_websocket_message_subscribe_with_channel() {
+        let state = AppState::default();
+        let msg = serde_json::json!({
+            "type": "subscribe",
+            "channel": "alerts"
+        });
+        let out = handle_websocket_message(msg, &state).await;
+        let v: serde_json::Value = serde_json::from_str(&out).expect("subscribe json");
+        assert_eq!(v.get("type").and_then(|t| t.as_str()), Some("subscribed"));
+        assert_eq!(v.get("channel").and_then(|c| c.as_str()), Some("alerts"));
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[tokio::test]
+    async fn handle_websocket_message_subscribe_defaults_channel() {
+        let state = AppState::default();
+        let msg = serde_json::json!({ "type": "subscribe" });
+        let out = handle_websocket_message(msg, &state).await;
+        let v: serde_json::Value = serde_json::from_str(&out).expect("subscribe default json");
+        assert_eq!(v.get("channel").and_then(|c| c.as_str()), Some("general"));
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[tokio::test]
+    async fn handle_websocket_message_unknown_type_returns_error_json() {
+        let state = AppState::default();
+        let msg = serde_json::json!({ "type": "not_a_real_handler" });
+        let out = handle_websocket_message(msg, &state).await;
+        let v: serde_json::Value = serde_json::from_str(&out).expect("unknown type json");
+        assert_eq!(v.get("type").and_then(|t| t.as_str()), Some("error"));
+        let err = v.get("error").and_then(|e| e.as_str()).expect("error text");
+        assert!(err.contains("Unknown message type"));
+    }
+
+    #[cfg(feature = "streaming-rpc")]
+    #[tokio::test]
+    async fn handle_websocket_message_missing_type_defaults_to_unknown() {
+        let state = AppState::default();
+        let msg = serde_json::json!({});
+        let out = handle_websocket_message(msg, &state).await;
+        let v: serde_json::Value = serde_json::from_str(&out).expect("missing type json");
+        assert_eq!(v.get("type").and_then(|t| t.as_str()), Some("error"));
+        let err = v.get("error").and_then(|e| e.as_str()).expect("error text");
+        assert!(err.contains("Unknown message type: unknown"));
+    }
 }

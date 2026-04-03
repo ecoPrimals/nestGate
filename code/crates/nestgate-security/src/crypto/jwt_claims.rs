@@ -5,7 +5,7 @@
 //!
 //! This module provides the `JwtClaims` data structure used across
 //! NestGate's authentication system. Actual JWT signing and verification
-//! are delegated to the crypto provider (bearDog) via
+//! are delegated to the crypto capability provider via
 //! `CryptoDelegate::sign_jwt` and `CryptoDelegate::verify_jwt`
 //! in the `delegate` sibling module.
 
@@ -16,7 +16,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// JWT claims payload.
 ///
 /// Pure data structure — no cryptographic operations. Signing and
-/// verification happen via the crypto capability provider (bearDog IPC).
+/// verification happen via the crypto capability provider IPC.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JwtClaims {
     /// Subject (user ID)

@@ -4,7 +4,7 @@
 //! Discovery backend implementations
 //!
 //! mDNS/Consul/K8s backends have been removed — peer discovery is delegated
-//! to songBird IPC.  The in-memory backend remains for testing and local dev.
+//! to orchestration-provider IPC. The in-memory backend remains for testing and local dev.
 
 /// In-memory backend for testing and local development
 pub mod memory;

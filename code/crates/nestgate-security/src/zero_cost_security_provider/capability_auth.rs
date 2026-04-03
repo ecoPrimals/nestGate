@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Capability-based authentication via crypto provider (bearDog IPC).
+//! Capability-based authentication via crypto provider IPC.
 //!
 //! JWT signing and verification are delegated to the crypto capability
 //! provider discovered at runtime. No local crypto, no external HTTP calls.
@@ -73,7 +73,7 @@ pub struct RevokeTokenRequest {
 
 /// Capability-based authentication client.
 ///
-/// Delegates JWT operations to the crypto capability provider (bearDog)
+/// Delegates JWT operations to the crypto capability provider
 /// discovered at runtime via JSON-RPC IPC.
 pub struct CapabilityAuthClient {
     discovery: CapabilityDiscovery,
@@ -95,7 +95,7 @@ impl CapabilityAuthClient {
         self
     }
 
-    /// Validate token via crypto capability provider (bearDog IPC).
+    /// Validate token via crypto capability provider IPC.
     #[instrument(skip(self, token), fields(token_len = token.len()))]
     pub async fn validate_token(&self, token: &str) -> Result<bool> {
         debug!("Validating JWT token via crypto provider");

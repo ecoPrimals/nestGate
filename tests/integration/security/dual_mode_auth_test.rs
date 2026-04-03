@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Dual Mode Authentication Security Test
 //! 
 //! This test validates dual mode authentication security functionality using canonical patterns

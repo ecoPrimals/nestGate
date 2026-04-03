@@ -200,7 +200,7 @@ impl CapabilityAwareDiscovery {
         manager.add_backend(Arc::new(InMemoryDiscoveryBackend::new()));
         info!("Added in-memory discovery backend");
 
-        // mDNS removed — local network discovery delegated to songBird IPC
+        // mDNS removed — local network discovery delegated to orchestration-provider IPC
 
         // FUTURE: Add Kubernetes backend when deploying to k8s (auto-detected via env)
         // if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {

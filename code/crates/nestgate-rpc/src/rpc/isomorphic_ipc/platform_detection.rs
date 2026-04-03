@@ -30,7 +30,7 @@
 //!
 //! ## Reference
 //!
-//! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)
+//! Pattern validated in orchestration provider v3.33.0
 
 use std::io::ErrorKind;
 use tracing::debug;

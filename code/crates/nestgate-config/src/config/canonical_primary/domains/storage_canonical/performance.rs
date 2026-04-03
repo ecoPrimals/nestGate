@@ -140,3 +140,75 @@ impl StoragePerformanceConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_performance_config_default_values() {
+        let c = StoragePerformanceConfig::default();
+        assert!(c.optimization.enabled);
+        assert!(c.io_optimization.enabled);
+        assert!(c.compression.enabled);
+        assert_eq!(c.compression.algorithm, "lz4");
+        assert!(!c.deduplication.enabled);
+        assert!(c.tuning.auto_tune);
+    }
+
+    #[test]
+    fn storage_performance_constructors_match_default() {
+        let d = StoragePerformanceConfig::default();
+        let ser = serde_json::to_string(&d).expect("serialize");
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StoragePerformanceConfig::production_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StoragePerformanceConfig::development_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StoragePerformanceConfig::high_performance())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StoragePerformanceConfig::cloud_native()).expect("serialize")
+        );
+    }
+
+    #[test]
+    fn storage_performance_merge_keeps_self() {
+        let a = StoragePerformanceConfig::default();
+        let other = StoragePerformanceConfig {
+            compression: CompressionConfig {
+                enabled: false,
+                algorithm: "zstd".to_string(),
+            },
+            ..StoragePerformanceConfig::default()
+        };
+        let merged = a.clone().merge(other);
+        assert!(merged.compression.enabled);
+        assert_eq!(merged.compression.algorithm, "lz4");
+    }
+
+    #[test]
+    fn storage_performance_validate_succeeds() {
+        assert!(StoragePerformanceConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn storage_performance_serde_roundtrip() {
+        let original = StoragePerformanceConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: StoragePerformanceConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+}

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 2, 2026  
+**Last Updated**: April 3, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,12 +8,11 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-02
-Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-02
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-03
+Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-03
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
-Tests (lib):        ~8,555 passing, 0 failures (approximate; re-run cargo test)
-Tests (total):      ~12,105 passing, 0 failures (approximate; --workspace)
+Tests:              ~12,270 passing, 0 failures (cargo test --all)
 Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
 Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code
@@ -22,8 +21,8 @@ Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (except env_pr
 println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
 TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
-Discovery:          Environment variables + capability IPC (mDNS behind `mdns` feature gate; delegated to biomeOS/songBird)
-MCP:                Not a workspace member — use biomeOS `capability.call` / songBird instead
+Discovery:          Environment variables + capability IPC (mDNS behind `mdns` feature gate; delegated to biomeOS)
+MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes:         storage.*, data.* (delegation; not capability-advertised), session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.* wired
 Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
@@ -43,12 +42,12 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ---
 
-## Ground truth refresh (Apr 2, 2026)
+## Ground truth refresh (Apr 3, 2026)
 
-Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
+Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --all`.
 
 - **Production file size**: All production `.rs` files under **1,000** lines (max ~500 after smart refactoring).
-- **Workspace**: **24** members; clippy with `-D warnings` passes as of 2026-04-02. MCP, ring, rustls, reqwest eliminated from typical app paths.
+- **Workspace**: **24** members; clippy with `-D warnings` passes as of 2026-04-03. MCP, ring, rustls, reqwest eliminated from typical app paths.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
 - **Testing**: Zero `thread::sleep` or `tokio::time::sleep` in tests (except chaos). All `#[serial]` markers removed from non-chaos tests. `temp_env` closures provide isolation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
@@ -482,13 +481,13 @@ Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D war
 | unsafe blocks | EVOLVED (safe alternatives everywhere except env-process-shim) |
 | Hardcoded primal names | CLEAN (DEFAULT_SERVICE_NAME + env config) |
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
-| TLS/crypto | Delegated to bearDog IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
+| TLS/crypto | Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
 | Coverage gap to 90% | ~10 pp remaining (~80% current; last measured 80.95% line) |
 | Semantic router | COMPILED & WIRED — `data.*` delegates; `nat.*`, `beacon.*` routes active; `discovery` overstep modules deprecated |
 | `#[allow(dead_code)]` | 1 production module-level (RPC manager, documented rationale); item-level with reasons |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
-| mDNS in-tree | Feature-gated behind `mdns` — biomeOS/songBird for production discovery |
+| mDNS in-tree | Feature-gated behind `mdns` — biomeOS for production discovery |
 | Capability symlink | `storage.sock` → `nestgate.sock` auto-managed with guard pattern |
 
 ### Coverage
@@ -505,13 +504,13 @@ Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary ent
 
 ```
 Production:    Pure Rust; platform via rustix + /proc parsing
-Crypto:        Delegated to bearDog via IPC; local JWT uses RustCrypto (hmac, sha2)
-TLS:           ELIMINATED from dep tree — installer uses system curl; bearDog provides ecosystem TLS
+Crypto:        Delegated to security capability provider via IPC; local JWT uses RustCrypto (hmac, sha2)
+TLS:           ELIMINATED from dep tree — installer uses system curl; security capability provider supplies ecosystem TLS
 HTTP client:   Pure Rust (tokio TcpStream bootstrap; reqwest/rustls/ring all removed)
 No direct libc: uzers used instead
 Hostname:      rustix::system::uname (gethostname eliminated)
 Tokio:         Minimal features (9 specific, not "full")
-Discovery:     Env vars + songBird IPC (mDNS feature-gated, not default)
+Discovery:     Env vars + capability IPC (mDNS feature-gated, not default)
 sysinfo:       Optional, non-Linux only
 ```
 
@@ -555,8 +554,8 @@ nestGate/ (24 workspace members)
 | Semantic naming | PASS (storage.*, data.*, nat.*, beacon.*, health.*, capabilities.*) |
 | File size (<1000 production) | PASS (max ~500 lines after smart refactors) |
 | Sovereignty | PASS (capability-based discovery, storage.sock symlink, zero hardcoded primals) |
-| mDNS Discovery | Feature-gated (`mdns`); production via biomeOS/songBird |
-| Crypto delegation | PASS — bearDog IPC via SecurityProviderClient |
+| mDNS Discovery | Feature-gated (`mdns`); production via biomeOS |
+| Crypto delegation | PASS — SecurityProviderClient |
 | scyBorg license | DOCUMENTED (LICENSING.md) |
 
 ---
@@ -597,4 +596,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 2, 2026
+**Latest**: April 3, 2026

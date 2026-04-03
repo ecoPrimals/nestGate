@@ -150,7 +150,7 @@
 //!
 //! ## Reference
 //!
-//! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)\
+//! Pattern validated in orchestration provider v3.33.0\
 //! Implementation guide: `ISOMORPHIC_IPC_IMPLEMENTATION_PLAN_JAN_31_2026.md`
 //!
 //! **Status**: Phases 1, 2 & 3 Complete ✅ (A++ Grade)

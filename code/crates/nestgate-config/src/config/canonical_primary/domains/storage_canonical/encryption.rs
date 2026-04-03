@@ -139,3 +139,71 @@ impl StorageEncryptionConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_encryption_config_default_values() {
+        let c = StorageEncryptionConfig::default();
+        assert!(!c.encryption.enabled);
+        assert_eq!(c.key_management.provider, "local");
+        assert!(!c.data_encryption.enabled);
+        assert!(c.transit_encryption.enabled);
+        assert_eq!(c.algorithm.algorithm, "AES-256-GCM");
+    }
+
+    #[test]
+    fn storage_encryption_constructors_match_default() {
+        let d = StorageEncryptionConfig::default();
+        let ser = serde_json::to_string(&d).expect("serialize");
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEncryptionConfig::production_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEncryptionConfig::development_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEncryptionConfig::high_performance()).expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageEncryptionConfig::cloud_native()).expect("serialize")
+        );
+    }
+
+    #[test]
+    fn storage_encryption_merge_keeps_self() {
+        let a = StorageEncryptionConfig::default();
+        let other = StorageEncryptionConfig {
+            encryption: EncryptionConfig { enabled: true },
+            ..StorageEncryptionConfig::default()
+        };
+        let merged = a.clone().merge(other);
+        assert!(!merged.encryption.enabled);
+    }
+
+    #[test]
+    fn storage_encryption_validate_succeeds() {
+        assert!(StorageEncryptionConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn storage_encryption_serde_roundtrip() {
+        let original = StorageEncryptionConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: StorageEncryptionConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(original.encryption.enabled, parsed.encryption.enabled);
+        assert_eq!(
+            original.key_management.provider,
+            parsed.key_management.provider
+        );
+        assert_eq!(original.algorithm.algorithm, parsed.algorithm.algorithm);
+    }
+}

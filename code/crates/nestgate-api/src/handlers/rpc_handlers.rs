@@ -100,7 +100,7 @@ pub struct ProtocolCapabilities {
 /// Handle JSON-RPC requests
 ///
 /// This endpoint provides HTTP-based RPC access for inter-primal communication.
-/// Songbird and other primals can use this for initial discovery before
+/// The orchestration provider and other capability peers can use this for initial discovery before
 /// escalating to tarpc for performance.
 ///
 /// # Errors
@@ -162,7 +162,7 @@ pub async fn handle_jsonrpc(
 /// Get protocol capabilities
 ///
 /// This endpoint advertises available protocols for protocol escalation.
-/// Songbird uses this to discover tarpc endpoint for high-performance operations.
+/// Orchestration and integration clients use this to discover the tarpc endpoint for high-performance operations.
 pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
     info!("🔍 Protocol capabilities requested");
 

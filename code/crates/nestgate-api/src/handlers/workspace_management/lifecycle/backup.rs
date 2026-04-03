@@ -153,3 +153,49 @@ pub async fn backup_workspace(
 
     Err(StatusCode::INTERNAL_SERVER_ERROR)
 }
+
+#[cfg(test)]
+mod tests {
+    #![allow(deprecated)]
+
+    use super::*;
+    use axum::extract::{Json, Path};
+
+    fn sample_config() -> BackupConfig {
+        BackupConfig {
+            backup_name: "unit".to_string(),
+            include_snapshots: false,
+            compression_level: 0,
+            encryption_enabled: false,
+            description: Some("test".to_string()),
+        }
+    }
+
+    #[test]
+    fn backup_config_serde_roundtrip() {
+        let cfg = sample_config();
+        let s = serde_json::to_string(&cfg).expect("serialize BackupConfig");
+        let back: BackupConfig = serde_json::from_str(&s).expect("deserialize BackupConfig");
+        assert_eq!(back.backup_name, cfg.backup_name);
+        assert_eq!(back.compression_level, cfg.compression_level);
+        assert_eq!(back.description, cfg.description);
+    }
+
+    #[tokio::test]
+    async fn backup_workspace_rejects_empty_workspace_id() {
+        let r = backup_workspace(Path(String::new()), Json(sample_config())).await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    async fn backup_workspace_rejects_slash_in_workspace_id() {
+        let r = backup_workspace(Path("a/b".to_string()), Json(sample_config())).await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    async fn backup_workspace_rejects_space_in_workspace_id() {
+        let r = backup_workspace(Path("a b".to_string()), Json(sample_config())).await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+}

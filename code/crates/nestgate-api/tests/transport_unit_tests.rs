@@ -107,7 +107,7 @@ fn test_config_new_creates_valid_config() {
 fn test_config_builder_all_options() {
     let config = TransportConfig::new("builder_test")
         .with_socket_path("/custom/path.sock")
-        .with_security_provider("/custom/beardog.sock")
+        .with_security_provider("/custom/security-provider.sock")
         .with_http_fallback(9090)
         .with_verbose();
 
@@ -115,7 +115,7 @@ fn test_config_builder_all_options() {
     assert_eq!(config.socket_path, PathBuf::from("/custom/path.sock"));
     assert_eq!(
         config.security_provider,
-        PathBuf::from("/custom/beardog.sock")
+        PathBuf::from("/custom/security-provider.sock")
     );
     assert_eq!(config.http_port, Some(9090));
     assert!(config.verbose);
@@ -132,7 +132,7 @@ fn test_config_from_env_with_all_vars() {
     // Test builder API instead of env vars to avoid parallel test pollution
     let config = TransportConfig::new("env_family")
         .with_socket_path("/tmp/env-test.sock")
-        .with_security_provider("/tmp/env-beardog.sock")
+        .with_security_provider("/tmp/env-security-provider.sock")
         .with_http_fallback(8888)
         .with_verbose();
 

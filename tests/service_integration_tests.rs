@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 #![allow(
     unused,
     dead_code,
@@ -10,15 +13,7 @@
     clippy::cargo
 )]
 
-//! # 🧪 Service CLI Integration Tests
-//!
-//! Comprehensive testing for Unix socket and HTTP mode service start.
-//!
-//! Test Categories:
-//! - Unit: Mode detection logic
-//! - E2E: Full service lifecycle
-//! - Chaos: Concurrent service starts
-//! - Fault: Error handling and edge cases
+//! Service CLI integration tests: mode detection, lifecycle, concurrency, fault injection.
 
 // ============================================================================
 // UNIT TESTS - Mode Detection Logic
@@ -99,7 +94,10 @@ async fn test_e2e_unix_socket_server_startup() {
     )
     .expect("Socket config should be created");
 
-    assert_eq!(config.socket_path.to_str().unwrap(), test_socket);
+    assert_eq!(
+        config.socket_path.to_str().expect("valid UTF-8 path"),
+        test_socket
+    );
     assert_eq!(config.family_id, "e2e-test");
 
     // Cleanup
@@ -108,21 +106,18 @@ async fn test_e2e_unix_socket_server_startup() {
 
 #[tokio::test]
 async fn test_e2e_http_mode_configuration() {
-    let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
-    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
-    nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
-
-    let socket_requested =
-        std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-
-    if let Some(v) = orig_sock {
-        nestgate_core::env_process::set_var("NESTGATE_SOCKET", v);
-    }
-    if let Some(v) = orig_fid {
-        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v);
-    }
-    assert!(!socket_requested, "Should use HTTP mode");
+    temp_env::async_with_vars(
+        [
+            ("NESTGATE_SOCKET", None::<&str>),
+            ("NESTGATE_FAMILY_ID", None::<&str>),
+        ],
+        async {
+            let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
+                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+            assert!(!socket_requested, "Should use HTTP mode");
+        },
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -216,84 +211,66 @@ async fn test_chaos_rapid_mode_switches() {
 
 #[tokio::test]
 async fn test_fault_invalid_socket_path() {
-    let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
-    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::set_var(
-        "NESTGATE_SOCKET",
-        "/invalid/path/that/does/not/exist/socket.sock",
-    );
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "fault-test");
-
-    let config = nestgate_core::rpc::SocketConfig::from_environment();
-
-    match orig_sock {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_SOCKET", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_SOCKET"),
-    }
-    match orig_fid {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    assert!(config.is_ok());
+    temp_env::async_with_vars(
+        [
+            (
+                "NESTGATE_SOCKET",
+                Some("/invalid/path/that/does/not/exist/socket.sock"),
+            ),
+            ("NESTGATE_FAMILY_ID", Some("fault-test")),
+        ],
+        async {
+            let config = nestgate_core::rpc::SocketConfig::from_environment();
+            assert!(config.is_ok());
+        },
+    )
+    .await;
 }
 
 #[tokio::test]
 async fn test_fault_empty_family_id() {
-    let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "");
-
-    let config = nestgate_core::rpc::SocketConfig::from_environment();
-
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    assert!(config.is_ok());
+    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some(""))], async {
+        let config = nestgate_core::rpc::SocketConfig::from_environment();
+        assert!(config.is_ok());
+    })
+    .await;
 }
 
 #[tokio::test]
 async fn test_fault_malformed_socket_path() {
-    let malformed_paths = vec!["", " ", "relative/path.sock", "../../../etc/passwd"];
+    let malformed_paths = ["", " ", "relative/path.sock", "../../../etc/passwd"];
 
     for path in malformed_paths {
-        let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
-        let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-        nestgate_core::env_process::set_var("NESTGATE_SOCKET", path);
-        nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "malformed");
-
-        let config = nestgate_core::rpc::SocketConfig::from_environment();
-
-        match orig_sock {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_SOCKET", v),
-            None => nestgate_core::env_process::remove_var("NESTGATE_SOCKET"),
-        }
-        match orig_fid {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-            None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-        }
-        assert!(config.is_ok(), "Should create config for path: {}", path);
+        temp_env::async_with_vars(
+            [
+                ("NESTGATE_SOCKET", Some(path)),
+                ("NESTGATE_FAMILY_ID", Some("malformed")),
+            ],
+            async {
+                let config = nestgate_core::rpc::SocketConfig::from_environment();
+                assert!(config.is_ok(), "Should create config for path: {path}");
+            },
+        )
+        .await;
     }
 }
 
 #[tokio::test]
 async fn test_fault_missing_permissions() {
-    let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
-    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::set_var("NESTGATE_SOCKET", "/proc/nestgate-test.sock");
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "permissions");
-
-    let config = nestgate_core::rpc::SocketConfig::from_environment();
-
-    match orig_sock {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_SOCKET", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_SOCKET"),
-    }
-    match orig_fid {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    assert!(config.is_ok(), "Config creation should succeed");
-    let _ = config.unwrap().prepare_socket_path();
+    temp_env::async_with_vars(
+        [
+            ("NESTGATE_SOCKET", Some("/proc/nestgate-test.sock")),
+            ("NESTGATE_FAMILY_ID", Some("permissions")),
+        ],
+        async {
+            let config = nestgate_core::rpc::SocketConfig::from_environment();
+            assert!(config.is_ok(), "Config creation should succeed");
+            let _ = config
+                .expect("config validated above")
+                .prepare_socket_path();
+        },
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -312,17 +289,12 @@ async fn test_fault_unicode_in_family_id() {
 
 #[tokio::test]
 async fn test_fault_very_long_family_id() {
-    let orig = std::env::var("NESTGATE_FAMILY_ID").ok();
     let long_id = "x".repeat(500);
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", &long_id);
-
-    let config = nestgate_core::rpc::SocketConfig::from_environment();
-
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    assert!(config.is_ok(), "Should handle very long family ID");
+    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some(long_id.as_str()))], async {
+        let config = nestgate_core::rpc::SocketConfig::from_environment();
+        assert!(config.is_ok(), "Should handle very long family ID");
+    })
+    .await;
 }
 
 // ============================================================================
@@ -347,10 +319,11 @@ async fn test_integration_atomic_deployment_scenario() {
         None,
     );
 
-    assert!(config.is_ok());
-
-    let config = config.unwrap();
-    assert_eq!(config.socket_path.to_str().unwrap(), socket_path);
+    let config = config.expect("config should resolve for atomic deployment");
+    assert_eq!(
+        config.socket_path.to_str().expect("valid UTF-8 path"),
+        socket_path
+    );
     assert_eq!(config.family_id, family_id);
     assert_eq!(config.node_id, node_id);
 

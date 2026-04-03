@@ -33,7 +33,8 @@ allow = [
 
 [bans]
 multiple-versions = "warn"
-wildcards = "deny"
+# Workspace path deps are inherently unversioned; the deny list below is the real supply-chain gate.
+wildcards = "allow"
 # ecoBin v3: Pure Rust required. C-dependency ban list per wateringHole standard.
 deny = [
     { name = "openssl-sys", reason = "ecoBin: C crypto FFI. Use rustls + RustCrypto.", use-instead = "rustls" },

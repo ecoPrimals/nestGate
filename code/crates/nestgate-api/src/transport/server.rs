@@ -7,10 +7,10 @@
 //!
 //! ## Migration to Universal IPC Architecture
 //!
-//! **Connection logic has moved to Songbird** (Universal IPC Layer)
+//! **Connection logic has moved to the orchestration provider** (Universal IPC Layer)
 //!
 //! `NestGate` now focuses on **metadata storage** and **capability-based discovery**.
-//! All connection handling (Unix sockets, named pipes, etc.) is managed by Songbird.
+//! All connection handling (Unix sockets, named pipes, etc.) is managed by the orchestration IPC layer.
 //!
 //! ### Migration Path
 //!
@@ -22,24 +22,14 @@
 //! server.start().await?;
 //! ```
 //!
-//! **After (Songbird Universal IPC)**:
+//! **After (Universal IPC via Orchestration Provider)**:
 //! ```rust,ignore
-//! use songbird::ipc;
-//! use nestgate::service_metadata;
-//!
-//! // Register with Songbird
-//! let endpoint = ipc::register("nestgate-api").await?;
-//!
-//! // Store metadata in NestGate for discovery
-//! service_metadata::store(ServiceMetadata {
-//!     name: "nestgate-api",
-//!     capabilities: vec!["storage", "zfs"],
-//!     virtual_endpoint: endpoint.path(),
-//!     // ... other metadata
-//! }).await?;
-//!
-//! // Listen for connections via Songbird
-//! ipc::listen(endpoint).await?;
+//! // Register with the orchestration provider via JSON-RPC
+//! let client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
+//! client.call("ipc.register", json!({
+//!     "service_id": "nestgate-api",
+//!     "capabilities": ["storage", "zfs"],
+//! })).await?;
 //! ```
 //!
 //! ### References
@@ -61,20 +51,20 @@ use tracing::{error, info, warn};
 
 /// **TRANSPORT SERVER**
 ///
-/// **⚠️ DEPRECATED**: Use `songbird::ipc` instead (Universal IPC Architecture)
+/// **⚠️ DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
 ///
 /// Dual-mode server supporting Unix sockets (primary) and HTTP (optional fallback).
 ///
 /// ## Migration
 ///
-/// Replace with Songbird's Universal IPC which provides:
+/// Replace with the orchestration provider's Universal IPC which provides:
 /// - Platform-agnostic connection handling
 /// - Automatic endpoint registration
 /// - Metadata storage integration
 /// - Works on ALL platforms (Linux, macOS, Windows, etc.)
 #[deprecated(
     since = "2.3.0",
-    note = "Connection logic moved to Songbird (Universal IPC). Use songbird::ipc::register() and nestgate::service_metadata for discovery. See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md"
+    note = "Connection logic moved to orchestration provider (Universal IPC). Register via JSON-RPC and use nestgate::service_metadata for discovery. See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md"
 )]
 #[derive(Clone)]
 pub struct TransportServer<H> {

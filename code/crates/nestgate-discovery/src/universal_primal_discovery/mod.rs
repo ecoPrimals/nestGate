@@ -56,7 +56,7 @@ pub mod fallbacks;
 pub mod introspection;
 /// Introspection configuration
 pub mod introspection_config;
-// migration_to_self_knowledge removed — discovery delegated to songBird IPC
+// migration_to_self_knowledge removed — discovery delegated to orchestration-provider IPC
 /// Network discovery (addresses, ports, interfaces)
 pub mod network;
 /// Network discovery configuration

@@ -162,9 +162,9 @@ impl UnifiedRpcManager {
 
     /// Initialize security capability
     ///
-    /// Intentional passthrough until bearDog IPC integration is wired: real security
-    /// initialization is delegated to bearDog via `crypto.*` IPC. Returning `Ok(())`
-    /// avoids blocking startup when this hook is invoked during bring-up.
+    /// Intentional passthrough until crypto capability IPC integration is wired: real security
+    /// initialization is delegated to the crypto capability provider via `crypto.*` IPC.
+    /// Returning `Ok(())` avoids blocking startup when this hook is invoked during bring-up.
     ///
     /// # Errors
     ///
@@ -177,7 +177,7 @@ impl UnifiedRpcManager {
         _endpoint: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         tracing::info!(
-            "Security capability initialization deferred — delegated to bearDog via crypto.* IPC"
+            "Security capability initialization deferred — delegated to crypto capability provider via crypto.* IPC"
         );
         Ok(())
     }

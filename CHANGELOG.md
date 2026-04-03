@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 16: Smart refactoring, placeholder evolution, test coverage & doc cleanup (April 3, 2026)
+
+**Tests**: 12,270 total passing, 0 failures  
+**Clippy**: `cargo clippy --all-targets --all-features -- -D warnings` — PASS (as of 2026-04-03)  
+**Format**: Clean  
+**Max production file**: ~500 lines
+
+#### Refactored (smart domain-driven decomposition — 8 files)
+- `production_readiness.rs` (873) → `readiness/` (mod.rs 397, mock_analysis, reporting, tests)
+- `zero_cost_api_handlers.rs` (791) → `zero_cost_api_handlers/` (mod.rs 109, types, pool_handler, dataset_handler, router, migration, serde_helpers)
+- `monitoring.rs` (779) → `monitoring/` (mod.rs 473, types, metrics_collection)
+- `lifecycle/mod.rs` (765) → scheduler, policies, evaluation, tests (mod.rs 259)
+- `template_storage.rs` (752) → `template_storage/` (mod.rs 305, types, operations)
+- `dataset_manager/mutations.rs` (166) → create_destroy (100) + mount_properties (76)
+- `auth_production.rs` (746) → `auth_production/` (7 modules: handler, auth_manager, credential_validation, token_management, session, types, tests)
+- `discovery.rs` (660) → `discovery/` (types, service, capability_registry, tests)
+
+#### Added
+- Workspace template `create` handler — real filesystem storage with safe path validation
+- Certificate validator — `x509-parser` for PEM/DER parsing, validity window, expiry detection
+- Storage adapter HTTP — GET/PUT/DELETE/list via lightweight `TcpStream` helper
+- Tests: `nestgate-env-process-shim` (4 tests), `nestgate-fsmonitor` (+1 integration), `nestgate-middleware` (+3 integration)
+
+#### Changed
+- Root docs (README, STATUS, START_HERE, QUICK_REFERENCE, CONTEXT, DOCUMENTATION_INDEX, CONTRIBUTING) updated with capability-generic language, current test counts, April 3 dates
+- wateringHole handoff created for this session
+
+#### Fixed
+- `CapabilityDiscovery` field visibility after discovery refactoring
+- `auth_production_tests.rs` — `Parts` vs `StatusCode` type mismatch
+- `test_detector_creation` — `temp_env` isolation for env var pollution
+
+#### Removed
+- Stale CI workflows: `production_pipeline.yml`, `ultimate_mastery_pipeline.yml`, `unified-ci.yml` (redundant with `ci.yml`)
+- `tarpaulin.toml` (project uses `llvm-cov`; tarpaulin only in legacy CI)
+- `certs/ipc-test.crt`, `certs/ipc-test.key` (zero references in codebase)
+
+---
+
 ### Session 15: Deep debt II — TCP/RPC parity, health triad, discovery scope, persistence (April 2, 2026)
 
 **Tests**: ~8,555 lib / ~12,105 total passing, 0 failures (re-run `cargo test --workspace` to refresh)  
@@ -902,5 +941,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: April 2, 2026  
+**Last Updated**: April 3, 2026  
 **Current Version**: 4.7.0-dev

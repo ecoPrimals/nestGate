@@ -76,7 +76,7 @@
 //! `health.liveness`, `health.readiness`, `capabilities.list`, …); see
 //! `SEMANTIC_METHOD_NAMING_STANDARD.md`.
 //!
-//! Pattern validated in songbird v3.33.0 (A++ grade, 205/100)
+//! Pattern validated in orchestration provider v3.33.0
 
 use anyhow::Result;
 use serde_json::Value;
@@ -192,7 +192,7 @@ impl IsomorphicIpcServer {
     async fn try_unix_server(&self) -> Result<()> {
         use tokio::net::UnixListener;
 
-        // Prefer production [`SocketConfig`] (NESTGATE_SOCKET / biomeOS / XDG / tmp) so behavior
+        // Prefer production [`SocketConfig`] (NESTGATE_SOCKET / BIOMEOS_SOCKET_DIR / XDG / tmp) so behavior
         // matches [`crate::rpc::unix_socket_server::JsonRpcUnixServer`] and ecosystem clients.
         let socket_path = match crate::rpc::socket_config::SocketConfig::from_environment() {
             Ok(cfg) => {

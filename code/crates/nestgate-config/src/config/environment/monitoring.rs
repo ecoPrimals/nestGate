@@ -67,8 +67,8 @@ impl MonitoringConfig {
 impl Default for MonitoringConfig {
     fn default() -> Self {
         Self {
-            #[allow(clippy::expect_used)]
-            metrics_port: Port::new(9090).expect("Default metrics port"),
+            // 9090 is within the validated Port range (1024–65535).
+            metrics_port: Port::new_unchecked(9090),
             detailed_metrics: true,
             log_level: "info".to_string(),
             tracing_enabled: true,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Comprehensive Test Suite
 //! 
 //! This test validates comprehensive system functionality using canonical patterns

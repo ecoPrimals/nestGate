@@ -4,7 +4,7 @@
 //! Authentication tests.
 //!
 //! Password-based tests that previously used local argon2 now test the error
-//! path when the crypto provider (bearDog) is unavailable. Token-based and
+//! path when the crypto capability provider is unavailable. Token-based and
 //! cache-based auth flows remain fully testable without a crypto provider.
 
 use super::{
@@ -29,7 +29,7 @@ async fn test_password_auth_requires_crypto_provider() -> Result<()> {
 
     nestgate_platform::env_process::remove_var("NESTGATE_LOCAL_AUTH_HASH");
 
-    // Without bearDog running, password auth should fail gracefully
+    // Without crypto capability provider running, password auth should fail gracefully
     assert!(result.is_err());
     Ok(())
 }

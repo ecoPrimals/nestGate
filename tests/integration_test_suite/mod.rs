@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! **COMPREHENSIVE INTEGRATION TEST SUITE - MODULARIZED**
 //!
 //! This module has been refactored from a large monolithic test file (874 lines)

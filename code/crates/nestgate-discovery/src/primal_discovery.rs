@@ -47,7 +47,7 @@ pub use capability_helpers::{
 };
 pub use runtime_discovery::{PrimalConnection, RuntimeDiscovery};
 
-// HTTP removed - use Songbird via capability discovery for external HTTP
+// HTTP removed — use orchestration / network capability discovery for external HTTP
 use dashmap::DashMap;
 use std::collections::HashMap;
 use std::future::Future;
@@ -65,7 +65,7 @@ use nestgate_types::error::{NestGateError, Result};
 /// Each primal knows only itself. This is the foundation of the discovery system.
 #[derive(Debug, Clone)]
 pub struct SelfKnowledge {
-    /// Primal name (e.g., "nestgate", "beardog", "songbird")
+    /// Primal name (e.g., "nestgate")
     pub name: String,
 
     /// Capabilities this primal provides
@@ -263,7 +263,7 @@ impl PrimalDiscovery {
     /// ```rust,ignore
     /// # use nestgate_core::primal_discovery::*;
     /// # async fn example(discovery: &PrimalDiscovery) -> Result<(), Box<dyn std::error::Error>> {
-    /// // Discover security capability (could be beardog or other primal)
+    /// // Discover security capability (any primal advertising it)
     /// let security = discovery.discover_capability("security").await?;
     /// println!("Security primal: {}", security.name);
     /// # Ok(())
@@ -325,7 +325,7 @@ pub trait DiscoveryBackend: Send + Sync {
 /// Environment + IPC discovery backend.
 ///
 /// Discovers peers via `NESTGATE_<CAPABILITY>_ENDPOINT` environment variables.
-/// In production, songBird provides these via its discovery registry; in dev,
+/// In production, the orchestration provider supplies these via its discovery registry; in dev,
 /// they are set manually or default to loopback.
 #[derive(Default)]
 struct EnvironmentBackend;
@@ -339,7 +339,7 @@ impl DiscoveryBackend for EnvironmentBackend {
         let caps = knowledge.capabilities.clone();
         Box::pin(async move {
             tracing::info!(
-                "Announcing {} with capabilities: {:?} (registration delegated to songBird)",
+                "Announcing {} with capabilities: {:?} (registration delegated to orchestration provider)",
                 name,
                 caps,
             );
@@ -370,7 +370,7 @@ impl DiscoveryBackend for EnvironmentBackend {
             }
 
             Err(NestGateError::network_error(format!(
-                "No endpoint for capability '{capability}'. Set {env_var} or use songBird discovery."
+                "No endpoint for capability '{capability}'. Set {env_var} or use capability-based discovery."
             )))
         })
     }

@@ -135,3 +135,68 @@ impl StorageMonitoringConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_monitoring_config_default_values() {
+        let c = StorageMonitoringConfig::default();
+        assert!(c.metrics.enabled);
+        assert!(!c.alerting.enabled);
+        assert!(c.logging.enabled);
+        assert!(c.health_check.enabled);
+        assert!(!c.diagnostics.enabled);
+    }
+
+    #[test]
+    fn storage_monitoring_constructors_match_default() {
+        let d = StorageMonitoringConfig::default();
+        let ser = serde_json::to_string(&d).expect("serialize");
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageMonitoringConfig::production_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageMonitoringConfig::development_optimized())
+                .expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageMonitoringConfig::high_performance()).expect("serialize")
+        );
+        assert_eq!(
+            ser,
+            serde_json::to_string(&StorageMonitoringConfig::cloud_native()).expect("serialize")
+        );
+    }
+
+    #[test]
+    fn storage_monitoring_merge_is_identity() {
+        let a = StorageMonitoringConfig::default();
+        let b = StorageMonitoringConfig {
+            metrics: MetricsStorageConfig { enabled: false },
+            ..StorageMonitoringConfig::default()
+        };
+        assert_eq!(a.merge(b).metrics.enabled, true);
+    }
+
+    #[test]
+    fn storage_monitoring_validate_succeeds() {
+        assert!(StorageMonitoringConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn storage_monitoring_serde_roundtrip() {
+        let original = StorageMonitoringConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize");
+        let parsed: StorageMonitoringConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+}

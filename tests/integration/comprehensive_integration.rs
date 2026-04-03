@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Comprehensive Integration Tests
 //!
 //! End-to-end tests that verify multiple system components working together

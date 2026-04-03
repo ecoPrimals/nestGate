@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! Modern Concurrent Test Synchronization Utilities
 //!
 //! This module provides event-driven synchronization primitives to replace

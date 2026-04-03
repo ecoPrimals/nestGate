@@ -181,7 +181,7 @@ fn discover_socket_dir() -> Option<std::path::PathBuf> {
         return path.parent().map(std::path::Path::to_path_buf);
     }
 
-    // Check biomeOS socket directory
+    // Ecosystem shared socket directory (`BIOMEOS_SOCKET_DIR`; standard wateringHole path name)
     if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
         return Some(std::path::PathBuf::from(dir));
     }

@@ -5,7 +5,7 @@
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
-#![allow(deprecated)] // `JsonRpcUnixServer` retained for legacy re-exports until Songbird IPC migration completes.
+#![allow(deprecated)] // `JsonRpcUnixServer` retained for legacy re-exports until orchestration IPC migration completes.
 
 //! # 🔌 JSON-RPC Unix Socket Server
 //!
@@ -13,12 +13,12 @@
 //!
 //! ## Migration to Universal IPC Architecture
 //!
-//! **Connection logic has moved to Songbird** (Universal IPC Layer)
+//! **Connection logic has moved to the orchestration provider** (Universal IPC Layer)
 //!
 //! ### Why This Change?
 //!
-//! - **Separation of Concerns**: `NestGate` = Storage, Songbird = Communication
-//! - **True Universality**: Songbird abstracts platform differences (Unix/Windows/etc.)
+//! - **Separation of Concerns**: `NestGate` = Storage, orchestration layer = Communication
+//! - **True Universality**: The orchestration IPC layer abstracts platform differences (Unix/Windows/etc.)
 //! - **Single Responsibility**: Each primal owns its domain
 //!
 //! ### Migration Path
@@ -31,15 +31,14 @@
 //! server.serve().await?;
 //! ```
 //!
-//! **After (Songbird Universal IPC)**:
+//! **After (Universal IPC via Orchestration Provider)**:
 //! ```rust,ignore
-//! use songbird::ipc;
-//!
-//! // Register with Songbird (works on ALL platforms!)
-//! let endpoint = ipc::register("myservice").await?;
-//! ipc::listen(endpoint).await?;
-//!
-//! // Songbird stores metadata in NestGate automatically
+//! // Register with the orchestration provider via JSON-RPC (works on ALL platforms!)
+//! let client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
+//! let response = client.call("ipc.register", json!({
+//!     "service_id": "myservice",
+//!     "capabilities": ["storage"],
+//! })).await?;
 //! ```
 //!
 //! ### What `NestGate` Still Provides
@@ -58,14 +57,14 @@
 //!
 //! ## Legacy Documentation (Deprecated)
 //!
-//! **biomeOS IPC Integration** - Native Unix socket communication
+//! **Ecosystem Unix IPC** — native Unix socket communication (`BIOMEOS_SOCKET_DIR` is the standard shared-socket path; see [`crate::rpc::socket_config`])
 //!
 //! Implements JSON-RPC 2.0 server over Unix sockets for efficient
-//! primal-to-primal communication within the biomeOS ecosystem.
+//! capability-peer communication within the ecosystem runtime layout.
 //!
 //! ## Philosophy
 //! - **Self-Knowledge**: Socket path from own environment ($`NESTGATE_FAMILY_ID`)
-//! - **Runtime Discovery**: Discover Songbird via capability system
+//! - **Runtime Discovery**: Discover the orchestration provider via the capability system
 //! - **Zero Hardcoding**: All configuration from environment
 //! - **Memory Safe**: Zero unsafe blocks
 //! - **Modern Async**: Native async/await with tokio
@@ -77,7 +76,7 @@
 //!
 //! ## Environment Variables
 //! - `NESTGATE_FAMILY_ID` (required): Family identifier for socket path
-//! - `SONGBIRD_FAMILY_ID` (optional): For auto-registration
+//! - `NESTGATE_ORCHESTRATION_FAMILY_ID` (optional): For auto-registration with orchestration provider
 //!
 //! ## Usage (Deprecated)
 //! ```rust,ignore
@@ -172,16 +171,16 @@ impl StorageState {
     }
 }
 
-/// JSON-RPC Unix socket server for biomeOS integration
+/// JSON-RPC Unix socket server for ecosystem Unix IPC (standard layout under `BIOMEOS_SOCKET_DIR`; see socket config)
 ///
-/// **⚠️ DEPRECATED**: Use `songbird::ipc` instead (Universal IPC Architecture)
+/// **⚠️ DEPRECATED**: Use the orchestration provider's IPC service instead (Universal IPC Architecture)
 ///
-/// Connection logic has moved to Songbird for true platform universality.
+/// Connection logic has moved to the orchestration provider for true platform universality.
 /// See `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md` for migration guide.
 #[deprecated(
     since = "2.3.0",
-    note = "Connection logic moved to Songbird IPC SERVICE. \
-            Call /primal/songbird via JSON-RPC - DO NOT import songbird code! \
+    note = "Connection logic moved to orchestration provider's IPC SERVICE. \
+            Call via JSON-RPC over discovered socket - DO NOT import peer primal code! \
             See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md for service-based integration."
 )]
 pub struct JsonRpcUnixServer {
@@ -189,7 +188,7 @@ pub struct JsonRpcUnixServer {
     /// Family ID for primal identification (used in future multi-primal features)
     family_id: String,
     state: StorageState,
-    /// Set in [`JsonRpcUnixServer::serve`] when `storage.sock` was installed (biomeOS layout only).
+    /// Set in [`JsonRpcUnixServer::serve`] when `storage.sock` was installed (ecosystem `.../biomeos/` layout only).
     #[cfg(unix)]
     storage_capability_symlink_installed: AtomicBool,
 }

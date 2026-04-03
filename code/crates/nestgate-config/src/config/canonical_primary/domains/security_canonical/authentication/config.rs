@@ -173,42 +173,111 @@ impl AuthenticationConfig {
 #[cfg(test)]
 mod tests {
     use super::super::{AuthenticationMethod, JwtAlgorithm, MfaConfig};
-    use super::AuthenticationConfig;
+    use super::*;
 
     #[test]
-    fn test_authentication_config_default() {
+    fn authentication_config_default() {
         let config = AuthenticationConfig::default();
         assert!(matches!(
             config.primary_method,
             AuthenticationMethod::UsernamePassword
         ));
+        assert!(config.secondary_methods.is_empty());
+        assert!(config.external_providers.is_empty());
     }
 
     #[test]
-    fn test_authentication_method_variants() {
-        let _up = AuthenticationMethod::UsernamePassword;
-        let _oauth = AuthenticationMethod::OAuth2;
+    fn authentication_method_variants() {
         let custom = AuthenticationMethod::Custom("biometric_v2".to_string());
         assert!(matches!(custom, AuthenticationMethod::Custom(_)));
     }
 
     #[test]
-    fn test_mfa_config_default() {
+    fn mfa_config_default() {
         let mfa = MfaConfig::default();
         assert!(!mfa.enabled);
     }
 
     #[test]
-    fn test_authentication_config_validate() {
+    fn authentication_config_validate_ok() {
         let config = AuthenticationConfig::default();
         assert!(config.validate().is_ok());
     }
 
     #[test]
-    fn test_jwt_algorithm_serialization() {
+    fn authentication_config_validate_password_policy_error() {
+        let mut config = AuthenticationConfig::default();
+        config.password_policy.min_length = 20;
+        config.password_policy.max_length = 10;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn authentication_config_validate_mfa_error() {
+        let mut config = AuthenticationConfig::default();
+        config.mfa.enabled = true;
+        config.mfa.required_methods.clear();
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn authentication_config_validate_session_timeout_error() {
+        let mut config = AuthenticationConfig::default();
+        config.session.timeout = Duration::from_secs(30);
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn authentication_config_production_hardened_and_compliance() {
+        let prod = AuthenticationConfig::production_hardened();
+        assert!(matches!(prod.primary_method, AuthenticationMethod::OAuth2));
+        assert!(prod.mfa.enabled);
+        let comp = AuthenticationConfig::compliance_focused();
+        assert!(comp.mfa.enabled);
+    }
+
+    #[test]
+    fn authentication_config_development_optimized() {
+        let dev = AuthenticationConfig::development_optimized();
+        assert!(matches!(
+            dev.primary_method,
+            AuthenticationMethod::UsernamePassword
+        ));
+        assert!(!dev.mfa.enabled);
+        assert!(!dev.lockout.enabled);
+    }
+
+    #[test]
+    fn authentication_config_merge_identity() {
+        let a = AuthenticationConfig::default();
+        let b = AuthenticationConfig::development_optimized();
+        let merged = a.merge(b);
+        assert!(matches!(
+            merged.primary_method,
+            AuthenticationMethod::UsernamePassword
+        ));
+    }
+
+    #[test]
+    fn authentication_config_serde_roundtrip() {
+        let original = AuthenticationConfig::default();
+        let json = serde_json::to_string(&original).expect("serialize AuthenticationConfig");
+        let parsed: AuthenticationConfig =
+            serde_json::from_str(&json).expect("deserialize AuthenticationConfig");
+        assert_eq!(
+            serde_json::to_string(&original).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
+    }
+
+    #[test]
+    fn jwt_algorithm_serde_roundtrip() {
         let alg = JwtAlgorithm::HS256;
-        let json = serde_json::to_string(&alg).unwrap();
-        let parsed: JwtAlgorithm = serde_json::from_str(&json).unwrap();
-        assert_eq!(format!("{alg:?}"), format!("{parsed:?}"));
+        let json = serde_json::to_string(&alg).expect("serialize JwtAlgorithm");
+        let parsed: JwtAlgorithm = serde_json::from_str(&json).expect("deserialize JwtAlgorithm");
+        assert_eq!(
+            serde_json::to_string(&alg).expect("serialize"),
+            serde_json::to_string(&parsed).expect("re-serialize")
+        );
     }
 }

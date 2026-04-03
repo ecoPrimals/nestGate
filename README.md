@@ -2,14 +2,14 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-02)**  
+**Verification (as of 2026-04-03)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors)  
 - **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
 - **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~8,555 lib / ~12,105 total — run `cargo test --workspace` to refresh counts  
+- **Tests (last recorded)**: ~12,270 total passing, 0 failures — run `cargo test --workspace` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
@@ -18,9 +18,9 @@
 **Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
 **TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack in-tree)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-**File size**: All production `.rs` files under 1,000 lines  
+**File size**: All production `.rs` files under 1,000 lines (max ~500 after smart refactoring)  
 **`#[serial]`**: Some tests in `nestgate-config` and `nestgate-discovery` still use `serial_test::serial` for env isolation (alongside `temp_env` where applicable); not limited to chaos tests  
-**Last Updated**: April 2, 2026
+**Last Updated**: April 3, 2026
 
 ---
 
@@ -71,8 +71,8 @@ nestgate/ (24 workspace members: 22 code/crates + tools/unwrap-migrator + fuzz)
 ├── nestgate-config      Config, constants, defaults, canonical modernization
 ├── nestgate-storage     Universal + temporal storage abstractions
 ├── nestgate-rpc         JSON-RPC + tarpc IPC layer (isomorphic UDS/TCP, storage.sock symlink)
-├── nestgate-discovery   Capability-based peer discovery (env + songBird IPC; mDNS behind feature gate)
-├── nestgate-security    Crypto delegation (bearDog IPC), JWT, certs, zero-cost auth
+├── nestgate-discovery   Capability-based peer discovery (env + capability IPC; mDNS behind feature gate)
+├── nestgate-security    Crypto delegation (security capability provider), JWT, certs, zero-cost auth
 ├── nestgate-observe     Observability, diagnostics, event system
 ├── nestgate-cache       Multi-tier cache, UUID cache, cache math
 │
@@ -84,7 +84,7 @@ nestgate/ (24 workspace members: 22 code/crates + tools/unwrap-migrator + fuzz)
 ├── nestgate-api         REST + JSON-RPC API server
 ├── nestgate-bin         CLI binary (UniBin)
 ├── nestgate-zfs         ZFS integration (adaptive)
-├── nestgate-network     Network storage (admin router; HTTP shed to songBird)
+├── nestgate-network     Network storage (admin router)
 ├── nestgate-automation  Storage-specific automation (tiering, lifecycle)
 ├── nestgate-installer   Platform installer (system curl, ecoBin compliant)
 ├── nestgate-middleware  Middleware stack
@@ -108,7 +108,7 @@ core-only modules and 44 dependencies (down from 51).
 
 **Adaptive Backend (Try-Optimize-Fallback)** — Platform-optimized paths with universal fallbacks. Applied to storage detection, service management, filesystem detection, ZFS backend, IPC transport.
 
-**Primal Self-Knowledge** — Runtime capability discovery, zero hardcoding. Capabilities are discovered at runtime via environment variables and songBird IPC.
+**Primal Self-Knowledge** — Runtime capability discovery, zero hardcoding. Capabilities are discovered at runtime via environment variables and capability IPC.
 
 **Capability-Based Discovery** — NestGate discovers other primals by capability (e.g., "crypto", "security"), not by hardcoded names or ports. Any primal providing a capability works.
 
@@ -116,7 +116,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-02).
+See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-03).
 
 | Area | Status |
 |------|--------|
@@ -129,9 +129,9 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Migration / deprecation notes | Some deprecated APIs; migration in progress — not blocking |
 | Production unwrap/expect | Zero in library `src/` per project rules; tests/integration may use unwrap; clippy `unwrap_used` warns workspace-wide |
 | Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
-| TLS/crypto | Delegated to bearDog IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
+| TLS/crypto | Delegated to security capability provider via IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
-| File size (production < 1000) | All compliant (max ~879 lines last measured) |
+| File size (production < 1000) | All compliant (max ~500 lines last measured after smart refactoring) |
 | http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
 | Env-var isolation | `temp_env` + targeted `#[serial]` where env mutation still requires serialization |
 
@@ -146,10 +146,10 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — ~80% line last measured (wateringHole 80% minimum met; 90% target not yet) |
-| File size (<1000 production) | Pass (max 879 lines) |
+| File size (<1000 production) | Pass (max ~500 lines after smart refactoring) |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, storage.sock symlink |
-| Discovery | Env vars + songBird IPC (mDNS behind `mdns` feature gate — delegated to biomeOS/songBird) |
-| Crypto delegation | Pass — bearDog IPC via capability-based `SecurityProviderClient` |
+| Discovery | Env vars + capability IPC (mDNS behind `mdns` feature gate — delegated to biomeOS) |
+| Crypto delegation | Pass — capability-based `SecurityProviderClient` |
 
 ### Platform Support
 
@@ -210,7 +210,7 @@ Other workspace crates define their own features (for example `mdns`, `sysinfo`,
 - **Security**: Delegated to security capability provider via IPC; local JWT via RustCrypto (hmac, sha2)
 - **IPC**: Unix sockets + TCP fallback (JSON-RPC 2.0, storage.sock capability symlink)
 - **CLI**: Clap 4 (derive mode)
-- **Discovery**: Environment variables + songBird IPC (capability-based)
+- **Discovery**: Environment variables + capability IPC (capability-based)
 
 ### Configuration
 
@@ -270,4 +270,4 @@ free use rights for personal, educational, and non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 2, 2026
+**Latest**: April 3, 2026

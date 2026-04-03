@@ -24,7 +24,7 @@
 //! - **Separation of concerns**: storage ≠ connection
 //! - **Orchestration layer**: creates endpoints, handles connections
 //! - **NestGate**: stores metadata, enables discovery
-//! - **Application primals**: use the orchestration IPC API (platform-agnostic)
+//! - **Application services**: use the orchestration IPC API (platform-agnostic)
 //!
 //! ## What NestGate provides
 //!
@@ -50,14 +50,14 @@
 //! let store = ServiceMetadataStore::new().await?;
 //! let now = SystemTime::now();
 //! let meta = ServiceMetadata {
-//!     name: "example-primal".to_string(),
+//!     name: "example-crypto-provider".to_string(),
 //!     version: "1.0.0".to_string(),
 //!     capabilities: vec!["crypto".to_string(), "btsp".to_string()],
-//!     virtual_endpoint: "/primal/example-primal".to_string(),
+//!     virtual_endpoint: "/capability/crypto-provider".to_string(),
 //!     registered_at: now,
 //!     last_seen: now,
 //!     platform: std::env::consts::OS.to_string(),
-//!     native_endpoint: "/tmp/primal-example-primal.sock".to_string(),
+//!     native_endpoint: "/tmp/example-crypto-provider.sock".to_string(),
 //!     metadata: std::collections::HashMap::new(),
 //! };
 //! store.store_service(meta).await?;
@@ -72,17 +72,17 @@
 //! // The orchestration layer registers a service and stores metadata in NestGate:
 //!
 //! // 1. Create platform-specific endpoint (orchestration API)
-//! let endpoint = orchestration::ipc::register("example-primal").await?;
+//! let endpoint = orchestration::ipc::register("example-crypto-provider").await?;
 //!
 //! // 2. Store metadata in NestGate
 //! nestgate::service_metadata::store(ServiceMetadata {
-//!     name: "example-primal",
+//!     name: "example-crypto-provider",
 //!     virtual_endpoint: endpoint.path,
 //!     capabilities: vec!["crypto", "btsp"],
 //!     // ... other metadata
 //! }).await?;
 //!
-//! // 3. Other primals discover via NestGate, connect via orchestration IPC
+//! // 3. Other services discover via NestGate, connect via orchestration IPC
 //! let services = nestgate::find_by_capability("crypto").await?;
 //! let stream = orchestration::ipc::connect(&services[0].virtual_endpoint).await?;
 //! ```
@@ -115,7 +115,7 @@ pub struct ServiceMetadata {
     /// Used for capability-based discovery
     pub capabilities: Vec<String>,
 
-    /// Virtual endpoint (Unix-style path, e.g. `"/primal/example-primal"`)
+    /// Virtual endpoint (Unix-style path, e.g. `"/capability/crypto-provider"`)
     /// Applications use this with the orchestration layer’s `ipc::connect` pattern
     pub virtual_endpoint: String,
 

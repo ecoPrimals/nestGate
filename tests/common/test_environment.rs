@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
 //! **CONFIGURABLE TEST ENVIRONMENT SYSTEM**
 //!
 //! This module provides a centralized, configurable test environment that eliminates
