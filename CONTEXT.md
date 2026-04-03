@@ -11,9 +11,9 @@ zero-knowledge infant discovery. Human-oriented detail lives in the root `README
 ## Role in the Ecosystem
 
 NestGate owns **persistent storage abstraction** and **discovery** for gates and
-sibling primals. Other components (for example BearDog, Songbird, Toadstool,
-barraCuda, coralReef) integrate at runtime via IPC and capabilities rather than
-by importing this crate graph.
+sibling primals. Other ecosystem components (security, network, device, compute,
+and visualization primals) integrate at runtime via IPC and capabilities rather
+than by importing this crate graph.
 
 ## Technical Facts
 
@@ -29,7 +29,7 @@ by importing this crate graph.
 | **Unsafe** | None in normal crates; **env-process-shim** bridge is the documented exception |
 | **Lint / format** | Workspace `cargo clippy --workspace --all-features -- -D warnings` (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean in routine runs |
-| **Tests** | `cargo test --all` — ~12,270 passing, 0 failures (see STATUS.md) |
+| **Tests** | `cargo test --all` — ~12,272 passing, 0 failures (see STATUS.md) |
 | **Coverage** | ~80% line (llvm-cov) — wateringHole 80% minimum met |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
 | **Specs** | 16 specification documents under `specs/` |
@@ -65,15 +65,15 @@ networking, and service lifecycle across the adapter stack.
 
 ## What This Does Not Do
 
-- Does **not** compile or own the WGSL/GPU shader pipeline (that is barraCuda / coralReef).
-- Does **not** replace BearDog for the core cryptographic identity and signing stack.
-- Does **not** act as the hardware/VFIO dispatch layer (see Toadstool and related primals).
+- Does **not** compile or own the WGSL/GPU shader pipeline (delegated to compute capability providers).
+- Does **not** replace the security primal for the core cryptographic identity and signing stack.
+- Does **not** act as the hardware/VFIO dispatch layer (delegated to device capability providers).
 - Does **not** import other primals’ code; coordination is IPC-only at ecosystem boundaries.
 
 ## Related Repositories
 
 - [wateringHole](https://github.com/ecoPrimals/wateringHole) — standards, registry, `PUBLIC_SURFACE_STANDARD.md`, `STANDARDS_AND_EXPECTATIONS.md`
-- [ecoPrimals org](https://github.com/ecoPrimals) — sibling primals and springs (BearDog, Songbird, Toadstool, barraCuda, coralReef, and others)
+- [ecoPrimals org](https://github.com/ecoPrimals) — sibling primals and springs (security, network, device, compute, visualization, and other capability providers)
 
 ## Design Philosophy
 

@@ -1,6 +1,6 @@
 # 🚫 Disabled Tests Reference
 
-**Last Updated**: March 29, 2026  
+**Last Updated**: April 3, 2026  
 **Status**: Active
 
 ---
@@ -20,7 +20,7 @@ find . -name "*.disabled" -type f
 
 ## Ignored tests (`#[ignore]`)
 
-**563** tests are marked `#[ignore]`. They are compiled and shipped with the suite but **not** run by default. Most need real infrastructure, privileged operations, or long-running setup (e.g. e2e, chaos, live storage/network).
+Tests marked `#[ignore]` are compiled and shipped with the suite but **not** run by default. Most need real infrastructure, privileged operations, or long-running setup (e.g. e2e, chaos, live storage/network).
 
 Run them explicitly when your environment matches the test’s assumptions:
 
@@ -49,12 +49,12 @@ See [README.md](README.md) for the full category list and `cargo test --workspac
 
 | Metric | Value |
 |--------|--------|
-| Passing (lib) | 8,376 |
+| Passing (total) | ~12,272 |
 | Failed | 0 |
-| Ignored | 48 |
-| Workspace coverage (lib) | 80.95% |
+| Ignored | ~473 |
+| Workspace coverage (line) | ~80% |
 
-Re-run tests and `cargo llvm-cov --workspace --all-features` after large changes; numbers drift with the tree.
+Re-run `cargo test --workspace` and `cargo llvm-cov` after large changes; numbers drift with the tree.
 
 ---
 

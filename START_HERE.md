@@ -4,7 +4,7 @@
 
 ```
 Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-03)
-Tests:       PASS — cargo test --all, 0 failures (~12,270 total last recorded — STATUS.md)
+Tests:       PASS — cargo test --all, 0 failures (~12,272 total last recorded — STATUS.md)
 Coverage:    ~80% line (llvm-cov) — wateringHole 80% min met; 90% target pending
 Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-03)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
@@ -71,7 +71,7 @@ NestGate is a **storage and discovery primal** in the ecoPrimals ecosystem. It p
 
 ```
 NEST Atomic = TOWER + nestgate + squirrel
-            = (beardog + songbird) + nestgate + squirrel
+            = (security provider + network provider) + nestgate + squirrel
             = Security + Network + Storage + AI
 ```
 

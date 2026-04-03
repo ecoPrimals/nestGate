@@ -9,6 +9,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 18: Stub evolution, smart refactoring, clippy debt & dependency evolution (April 3, 2026)
+
+**Tests**: 12,272 total passing, 0 failures  
+**Clippy**: `cargo clippy --all-targets --all-features -- -D warnings` — PASS  
+**Format**: Clean  
+**Max production file**: ~500 lines  
+**Commit**: 08c78b01
+
+#### Evolved (production stubs → filesystem-backed implementations)
+- `model_cache_handlers.rs`: `model.register`, `model.exists`, `model.locate`, `model.metadata` — filesystem persistence under `_models/{model_id}.json`
+- `nat_handlers.rs`: `nat.store/retrieve_traversal_info`, `beacon.store/retrieve/delete` — filesystem persistence under `_nat_traversal/` and `_known_beacons/`
+- `beacon.list` enhanced to strip `.json` suffix from peer IDs
+
+#### Refactored (smart domain-driven decomposition)
+- `rest/rpc/manager.rs` (739L) → `manager/` (mod.rs 267, types.rs 185, tests.rs 135)
+- `isomorphic_ipc/atomic.rs` (786L) → `atomic/` (mod.rs 357, discovery.rs 114, tests.rs 172)
+
+#### Fixed (clippy debt — auth_production + handlers)
+- `AuthToken::new`, `AuthContext::role` → `const fn`
+- `user_exists`, `add_user`, `add_api_key`, `validate_api_key` — de-asynced (no await)
+- `.map(…).unwrap_or(…)` → `.map_or(…, …)` idiom across auth manager
+- `|p| Permission::new(p)` → `Permission::new` (redundant closure)
+- `"".to_string()` → `String::new()` across auth modules and tests
+- Redundant `.clone()` calls removed in test files
+- Redundant doc comments cleaned from `handler.rs`, `types.rs`
+- `model_exists`, `model_locate` de-asynced; unused constants removed
+- `unwrap_or` with function call → temporary variable pattern for `json!({})` defaults
+- `#[allow(clippy::unnecessary_wraps)]` on handler-dispatch-mandated `Result` returns
+
+#### Changed
+- `sysinfo` removed from `nestgate-installer/Cargo.toml` (was unused; ecoBin compliance)
+- Root docs updated: test counts (12,272), capability-generic language, stale dates fixed
+- QUICK_START.md dates aligned (was March 31/April 2 → April 3)
+- CAPABILITY_MAPPINGS.md dates refreshed
+- CONTEXT.md primal names → capability-generic descriptions
+
+---
+
+### Session 17: primalSpring audit resolution — discovery compliance & delegation alignment (April 3, 2026)
+
+**Tests**: 12,270 total passing, 0 failures  
+**Clippy**: `cargo clippy --all-targets --all-features -- -D warnings` — PASS  
+**Format**: Clean  
+**Commit**: c0e87caa
+
+#### Confirmed (primalSpring audit)
+- 7 non-test files with primal names — all config-layer descriptors or architecture docs, not routing logic
+- NG-01: `FileMetadataBackend` is the production default in `SemanticRouter::new()`
+- NG-03: `data.*` correctly excluded from all capability advertisement surfaces
+
+#### Changed
+- `data_handlers.rs` — generic `not_implemented` → structured delegation errors with `discovery.query` guidance
+- `unix_socket_server/mod.rs` — dispatch table comments aligned to delegation model
+- `services_config.rs` — compliance note documenting primal name references as backward-compat config
+- `SemanticRouter::new()` — NG-01 compliance note added to documentation
+
+---
+
 ### Session 16: Smart refactoring, placeholder evolution, test coverage & doc cleanup (April 3, 2026)
 
 **Tests**: 12,270 total passing, 0 failures  

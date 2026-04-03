@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-03
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
-Tests:              ~12,270 passing, 0 failures (cargo test --all)
+Tests:              ~12,272 passing, 0 failures (cargo test --all)
 Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
 Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code

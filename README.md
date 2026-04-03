@@ -9,7 +9,7 @@
 - **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~12,270 total passing, 0 failures — run `cargo test --workspace` to refresh counts  
+- **Tests (last recorded)**: ~12,272 total passing, 0 failures — run `cargo test --workspace` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
@@ -264,8 +264,9 @@ For details: See [STATUS.md](./STATUS.md).
 AGPL-3.0-only — see [LICENSE](LICENSE) for the full text.
 
 All ecoPrimals software is licensed under the strictest copyleft.
-Humans accessing this software through beardog entropy systems are granted
-free use rights for personal, educational, and non-commercial purposes.
+Humans accessing this software through the ecosystem's security and entropy
+capabilities are granted free use rights for personal, educational, and
+non-commercial purposes.
 
 ---
 
