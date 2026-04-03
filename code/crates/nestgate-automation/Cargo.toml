@@ -9,8 +9,7 @@ keywords = ["zfs", "automation", "ai", "storage", "tier-management"]
 categories = ["development-tools", "automation"]
 
 [features]
-default = ["network-integration"]
-network-integration = ["uuid"]
+default = []
 
 [lints]
 workspace = true
@@ -25,7 +24,6 @@ anyhow = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
 chrono = { workspace = true }
-uuid = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }

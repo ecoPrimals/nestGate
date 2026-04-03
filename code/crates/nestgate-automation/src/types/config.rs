@@ -177,101 +177,12 @@ impl Default for LifecycleConfig {
     }
 }
 
-/// Discovery configuration for ecosystem services
-#[cfg(feature = "network-integration")]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
+/// Canonical network configuration type.
 ///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::DiscoveryConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::DiscoveryConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for Discovery
-pub struct DiscoveryConfig {
-    /// Known Orchestration Endpoints
-    pub knownorchestration_endpoints: Vec<String>,
-    /// Discovery Timeout Ms
-    pub discovery_timeout_ms: u64,
-    /// Health Check Interval Ms
-    pub health_check_interval_ms: u64,
-    /// Multicast Enabled
-    pub multicast_enabled: bool,
-    /// Mdns Enabled
-    pub mdns_enabled: bool,
-}
-#[cfg(feature = "network-integration")]
-impl DiscoveryConfig {
-    #[must_use]
-    pub fn from_automation_config(config: &AutomationConfig) -> Self {
-        Self {
-            knownorchestration_endpoints: vec![
-                // ✅ MIGRATED: Now uses capability-based discovery (not primal names!)
-                config.orchestration_endpoint.clone().unwrap_or_else(|| {
-                    use nestgate_core::config::runtime::{capability_url, get_config};
-                    // Use capability-based discovery, not primal names
-                    capability_url("orchestration")
-                        .or_else(|| capability_url("networking"))
-                        .unwrap_or_else(|| get_config().network.api_base_url())
-                }),
-                std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_1").unwrap_or_else(|_| {
-                    use nestgate_core::config::runtime::get_config;
-                    let cfg = get_config();
-                    format!(
-                        "http://{}:{}",
-                        cfg.network.api_host,
-                        cfg.network.api_port + 1
-                    )
-                }),
-                std::env::var("NESTGATE_ORCHESTRATION_BACKUP_ENDPOINT_2").unwrap_or_else(|_| {
-                    use nestgate_core::config::runtime::get_config;
-                    let cfg = get_config();
-                    format!(
-                        "http://{}:{}",
-                        cfg.network.api_host,
-                        cfg.network.api_port + 2
-                    )
-                }),
-            ],
-            discovery_timeout_ms: 5000,
-            health_check_interval_ms: std::env::var("NESTGATE_HEALTH_CHECK_INTERVAL_MS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(30000),
-            multicast_enabled: true,
-            mdns_enabled: true,
-        }
-    }
-}
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
-/// Type alias for Discoveryconfigcanonical
-pub type DiscoveryConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using DiscoveryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
+/// Discovery and orchestration configuration is handled by
+/// `nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig`.
+/// The former `DiscoveryConfig` struct and `network-integration` feature have been removed
+/// as orchestration concerns are delegated to the network capability provider.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -380,17 +291,6 @@ mod tests {
         };
         assert_eq!(config.hot_retention_days, 7);
         assert!(!config.auto_migration);
-    }
-
-    #[test]
-    #[cfg(feature = "network-integration")]
-    #[allow(deprecated)]
-    fn test_discovery_config_from_automation() {
-        let automation_config = AutomationConfig::default();
-        let discovery = DiscoveryConfig::from_automation_config(&automation_config);
-        assert_eq!(discovery.discovery_timeout_ms, 5000);
-        assert!(discovery.multicast_enabled);
-        assert!(discovery.mdns_enabled);
     }
 
     #[test]

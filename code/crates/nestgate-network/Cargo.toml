@@ -2,7 +2,7 @@
 name = "nestgate-network"
 version = "0.1.0"
 edition = "2024"
-description = "Network protocols and communication for NestGate"
+description = "DEPRECATED — Network concerns delegated to network capability provider via IPC"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoprimals/nestgate"
 keywords = ["networking", "async", "rust", "nestgate"]

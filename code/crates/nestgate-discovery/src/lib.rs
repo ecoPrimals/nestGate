@@ -25,6 +25,15 @@
 //!
 //! Peer and service discovery at production scale are delegated to the **orchestration provider** IPC and the **ecosystem platform**; `NestGate`
 //! keeps the minimal glue needed for storage operations and capability-aware calls over existing transports.
+//!
+//! ## Overstep Reduction Status
+//!
+//! | Module | Status | Lines | Notes |
+//! |--------|--------|-------|-------|
+//! | `discovery_mechanism` | **Deprecated** | ~2,000 | Zero external consumers; mDNS/Consul/K8s belong with orchestration provider |
+//! | `service_discovery` | **Deprecated** | ~3,000 | Still referenced by `capability_resolver`; registry belongs with orchestration provider |
+//! | `capabilities`, `capability_discovery`, `primal_self_knowledge` | **Active** | — | Legitimate NestGate self-knowledge |
+//! | `infant_discovery`, `primal_discovery` | **Active** | — | Legitimate discovery of nearby primals |
 
 #![cfg_attr(
     test,

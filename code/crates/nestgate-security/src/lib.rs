@@ -3,7 +3,22 @@
 
 #![forbid(unsafe_code)]
 
-//! Security, cryptography, certificate management, and zero-cost security providers for `NestGate`.
+//! Security delegation, certificate parsing, and zero-cost security providers for `NestGate`.
+//!
+//! # Delegation Model
+//!
+//! Core cryptographic operations (encrypt, decrypt, sign, verify, hash) are **delegated**
+//! to the security capability provider (bearDog) via `crypto.*` JSON-RPC IPC. This crate
+//! provides:
+//!
+//! - **`CryptoDelegate`** — IPC client that forwards crypto requests to the security provider
+//! - **Certificate parsing** — local X.509 PEM/DER parsing and validity checking (`x509-parser`)
+//! - **Certificate fingerprinting** — local SHA-256 digest of certificate material for identification
+//! - **JWT claims** — claim structure and validation types (signing delegated)
+//! - **Zero-cost security providers** — trait-based auth/security abstractions
+//!
+//! `NestGate` does **not** perform encryption, signing, or key generation locally.
+//! Those operations route through the ecosystem's security capability provider.
 
 #![warn(missing_docs)]
 #![allow(deprecated, clippy::missing_errors_doc)]

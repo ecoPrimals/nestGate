@@ -109,6 +109,11 @@ pub use nestgate_discovery::capability_discovery;
 pub use nestgate_discovery::infant_discovery;
 pub use nestgate_discovery::primal_discovery;
 pub use nestgate_discovery::primal_self_knowledge;
+#[deprecated(
+    since = "4.7.0",
+    note = "Service registry and orchestration discovery are delegated to the orchestration \
+            capability provider via IPC. Use capability-based peer lookup instead."
+)]
 pub use nestgate_discovery::service_discovery;
 pub use nestgate_discovery::universal_primal_discovery;
 

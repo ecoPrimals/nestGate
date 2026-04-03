@@ -2,6 +2,11 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
+#![deprecated(
+    since = "4.7.0",
+    note = "Network concerns are delegated to the network capability provider (songBird) via IPC. \
+            This crate is scheduled for removal. No workspace crates depend on it."
+)]
 #![warn(missing_docs)]
 #![cfg_attr(
     test,
@@ -49,10 +54,16 @@
     clippy::uninlined_format_args
 )]
 
-//! **NESTGATE NETWORK CRATE**
+//! # `nestgate-network` — DEPRECATED
 //!
-//! This crate provides network functionality for the `NestGate` ecosystem,
-//! including connection management, protocol handling, and service discovery.
+//! **This crate is deprecated and scheduled for removal.**
+//!
+//! Network concerns (HTTP server, load balancing, QoS, routing, protocol management)
+//! are delegated to the network capability provider via IPC. `NestGate` is a storage
+//! primal and does not own network infrastructure.
+//!
+//! No workspace crates depend on this crate. It remains as a workspace member only
+//! for historical compilation and test continuity during the migration period.
 
 use std::time::Duration;
 

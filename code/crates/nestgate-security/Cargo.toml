@@ -3,7 +3,7 @@ name = "nestgate-security"
 version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-only"
-description = "Security, cryptography, and certificate management for NestGate"
+description = "Security delegation, certificate parsing, and zero-cost providers for NestGate — crypto operations delegated via IPC"
 repository = "https://github.com/ecoprimals/nestgate"
 
 [lints]

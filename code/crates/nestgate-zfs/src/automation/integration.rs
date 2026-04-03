@@ -40,16 +40,10 @@ pub fn initialize_automation_with_config(
     // Placeholder implementation until automation crate is fully integrated
     Ok(IntelligentDatasetManager)
 }
-/// Check if ecosystem services are available for ZFS automation
-#[cfg(feature = "network-integration")]
-#[must_use]
-pub const fn check_zfs_ecosystem_availability() -> bool {
-    // Default implementation for development - ecosystem always available
-    // Production implementation would check actual automation capabilities
-    true
-}
-#[cfg(not(feature = "network-integration"))]
-/// Checks if ZFS ecosystem is available (stub for non-network builds).
+/// Check if ecosystem services are available for ZFS automation.
+///
+/// Returns `false` — ecosystem availability is determined at runtime via
+/// capability IPC, not compile-time feature flags.
 #[must_use]
 pub const fn check_zfs_ecosystem_availability() -> bool {
     false
@@ -84,10 +78,6 @@ mod tests {
     #[test]
     fn test_check_ecosystem_availability() {
         let available = check_zfs_ecosystem_availability();
-        // Availability depends on features
-        #[cfg(feature = "network-integration")]
-        assert!(available);
-        #[cfg(not(feature = "network-integration"))]
         assert!(!available);
     }
 

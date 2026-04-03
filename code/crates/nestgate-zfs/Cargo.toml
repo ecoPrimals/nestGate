@@ -17,9 +17,8 @@ workspace = true
 default = ["dev-environment-fallbacks"]
 zfs = []
 orchestrator = []
-network-integration = ["nestgate-automation/network-integration"]
-advanced = ["zfs", "network-integration"]
-ai = ["advanced", "network-integration"]
+advanced = ["zfs"]
+ai = ["advanced"]
 performance = ["zfs"]
 dev-environment-fallbacks = []
 # Dev-only ZFS environment helpers (`dev_environment` module); opt-in for stubbed/local workflows.
