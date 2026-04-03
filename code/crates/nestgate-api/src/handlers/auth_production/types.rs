@@ -31,9 +31,8 @@ pub struct AuthResponse {
     pub permissions: Vec<String>,
 }
 
-/// API key creation request
+/// API key creation request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for ApiKey operation
 pub struct ApiKeyRequest {
     /// User identifier
     pub user_id: String,
@@ -41,9 +40,8 @@ pub struct ApiKeyRequest {
     pub name: String,
 }
 
-/// API key response
+/// API key response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Response data for ApiKey operation
 pub struct ApiKeyResponse {
     /// Api Key
     pub api_key: String,
@@ -53,9 +51,8 @@ pub struct ApiKeyResponse {
     pub name: String,
 }
 
-/// User creation request
+/// User creation request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Request parameters for CreateUser operation
 pub struct CreateUserRequest {
     /// User identifier
     pub user_id: String,

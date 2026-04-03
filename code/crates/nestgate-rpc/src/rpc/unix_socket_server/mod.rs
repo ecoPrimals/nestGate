@@ -454,11 +454,11 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "data.noaa_ghcnd" => data_handlers::data_noaa_ghcnd(request.params.as_ref()),
         "data.iris_stations" => data_handlers::data_iris_stations(request.params.as_ref()),
         "data.iris_events" => data_handlers::data_iris_events(request.params.as_ref()),
-        // Model cache operations (extracted to model_cache_handlers.rs)
-        "model.register" => model_cache_handlers::model_register(request.params.as_ref()),
+        // Model cache operations (filesystem-backed via model_cache_handlers.rs)
+        "model.register" => model_cache_handlers::model_register(request.params.as_ref()).await,
         "model.exists" => model_cache_handlers::model_exists(request.params.as_ref()),
         "model.locate" => model_cache_handlers::model_locate(request.params.as_ref()),
-        "model.metadata" => model_cache_handlers::model_metadata(request.params.as_ref()),
+        "model.metadata" => model_cache_handlers::model_metadata(request.params.as_ref()).await,
         // Template operations
         "templates.store" => {
             template_handlers::templates_store(request.params.as_ref(), state).await
@@ -474,21 +474,20 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "audit.store_execution" => {
             audit_handlers::audit_store_execution(request.params.as_ref(), state).await
         }
-        // NAT traversal persistence (relay-assisted coordinated punch protocol)
+        // NAT traversal persistence (filesystem-backed)
         "nat.store_traversal_info" => {
-            nat_handlers::nat_store_traversal_info(request.params.as_ref(), state)
+            nat_handlers::nat_store_traversal_info(request.params.as_ref(), state).await
         }
         "nat.retrieve_traversal_info" => {
-            nat_handlers::nat_retrieve_traversal_info(request.params.as_ref(), state)
+            nat_handlers::nat_retrieve_traversal_info(request.params.as_ref(), state).await
         }
-        // Known beacon persistence
-        "beacon.store" => nat_handlers::beacon_store(request.params.as_ref(), state),
-        "beacon.retrieve" => nat_handlers::beacon_retrieve(request.params.as_ref(), state),
-        // Alias `nat.beacon` uses the same payload shape as `beacon.list`
+        // Known beacon persistence (filesystem-backed)
+        "beacon.store" => nat_handlers::beacon_store(request.params.as_ref(), state).await,
+        "beacon.retrieve" => nat_handlers::beacon_retrieve(request.params.as_ref(), state).await,
         "beacon.list" | "nat.beacon" => {
             nat_handlers::beacon_list(request.params.as_ref(), state).await
         }
-        "beacon.delete" => nat_handlers::beacon_delete(request.params.as_ref(), state),
+        "beacon.delete" => nat_handlers::beacon_delete(request.params.as_ref(), state).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),

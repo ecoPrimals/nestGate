@@ -51,21 +51,15 @@ pub async fn create_user(
         _ => Role::User,
     };
 
-    let permissions: Vec<Permission> = request
-        .permissions
-        .iter()
-        .map(|p| Permission::new(p))
-        .collect();
+    let permissions: Vec<Permission> = request.permissions.iter().map(Permission::new).collect();
 
     let mut manager = handler.get_manager_mut().await;
-    manager
-        .add_user(
-            request.user_id.clone(),
-            request.username.clone(),
-            role,
-            permissions,
-        )
-        .await;
+    manager.add_user(
+        request.user_id.clone(),
+        request.username.clone(),
+        role,
+        permissions,
+    );
 
     info!("User created successfully: {}", request.username);
     Ok(Json(serde_json::json!({
@@ -112,7 +106,7 @@ mod tests {
     async fn test_authenticate_with_empty_username() {
         let handler = ProductionAuthHandler::new();
         let credentials = AuthCredentials {
-            username: "".to_string(),
+            username: String::new(),
             password: "password123".to_string(),
         };
 

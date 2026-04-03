@@ -317,7 +317,7 @@ async fn handle_request_discover_capabilities() {
 }
 
 #[tokio::test]
-async fn handle_request_model_register_returns_internal_jsonrpc_error() {
+async fn handle_request_model_register_rejects_missing_model_id() {
     let state = StorageState::new().expect("storage state");
     let req = JsonRpcRequest {
         jsonrpc: "2.0".into(),
@@ -326,29 +326,30 @@ async fn handle_request_model_register_returns_internal_jsonrpc_error() {
         id: Some(json!(4)),
     };
     let resp = handle_request(req, &state).await;
-    let err = resp.error.expect("expected JSON-RPC error");
+    let err = resp
+        .error
+        .expect("expected JSON-RPC error for missing model_id");
     assert_eq!(err.code, -32603);
-    assert_eq!(err.message, "Internal error");
 }
 
 #[tokio::test]
-async fn handle_request_model_exists_locate_metadata_not_implemented() {
+async fn handle_request_model_exists_locate_reject_missing_model_id() {
     let state = StorageState::new().expect("storage state");
-    for method in ["model.exists", "model.locate", "model.metadata"] {
+    for method in ["model.exists", "model.locate"] {
         let req = JsonRpcRequest {
             jsonrpc: "2.0".into(),
             method: method.into(),
-            params: Some(json!({"model_id": "m1"})),
+            params: Some(json!({})),
             id: Some(json!(method)),
         };
         let resp = handle_request(req, &state).await;
         let err = resp.error.expect("jsonrpc error");
-        assert_eq!(err.code, -32603, "{method}");
+        assert_eq!(err.code, -32603, "{method} should reject missing model_id");
     }
 }
 
 #[tokio::test]
-async fn handle_request_nat_and_beacon_stubs_not_implemented() {
+async fn handle_request_nat_and_beacon_reject_missing_peer_id() {
     let state = StorageState::new().expect("storage state");
     for method in [
         "nat.store_traversal_info",
@@ -365,7 +366,7 @@ async fn handle_request_nat_and_beacon_stubs_not_implemented() {
         };
         let resp = handle_request(req, &state).await;
         let err = resp.error.expect("jsonrpc error");
-        assert_eq!(err.code, -32603, "{method}");
+        assert_eq!(err.code, -32603, "{method} should reject missing peer_id");
     }
 }
 

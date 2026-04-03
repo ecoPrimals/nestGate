@@ -27,7 +27,7 @@ pub struct AuthToken {
 impl AuthToken {
     /// Creates a token with the given classification (classification is reserved for future use).
     #[must_use]
-    pub fn new(token: String, _ty: TokenType) -> Self {
+    pub const fn new(token: String, _ty: TokenType) -> Self {
         Self { token }
     }
 }
@@ -111,7 +111,7 @@ impl AuthContext {
 
     /// Role for authorization hints.
     #[must_use]
-    pub fn role(&self) -> &Role {
+    pub const fn role(&self) -> &Role {
         &self.role
     }
 }
@@ -154,7 +154,7 @@ impl AuthManager {
 
     /// Whether a username is registered.
     #[allow(dead_code)]
-    pub async fn user_exists(&self, username: &str) -> Result<(), String> {
+    pub fn user_exists(&self, username: &str) -> Result<(), String> {
         if self.users.values().any(|u| u.username == username) {
             Ok(())
         } else {
@@ -163,7 +163,7 @@ impl AuthManager {
     }
 
     /// Registers or replaces a user entry.
-    pub async fn add_user(
+    pub fn add_user(
         &mut self,
         user_id: String,
         username: String,
@@ -182,22 +182,14 @@ impl AuthManager {
     }
 
     /// Associates an API key with a user id.
-    pub async fn add_api_key(&mut self, api_key: String, user_id: String) {
+    pub fn add_api_key(&mut self, api_key: String, user_id: String) {
         self.api_keys.insert(api_key, user_id);
     }
 
     /// Validates an API key and returns [`AuthContext`] when known.
-    pub async fn validate_api_key(&self, api_key: &str) -> Result<AuthContext, String> {
-        let user_id = self
-            .api_keys
-            .get(api_key)
-            .cloned()
-            .ok_or_else(|| "invalid api key".to_string())?;
-        let role = self
-            .users
-            .get(&user_id)
-            .map(|u| u.role)
-            .unwrap_or(Role::User);
+    pub fn validate_api_key(&self, api_key: &str) -> Result<AuthContext, String> {
+        let user_id = self.api_keys.get(api_key).ok_or("invalid api key")?.clone();
+        let role = self.users.get(&user_id).map_or(Role::User, |u| u.role);
         Ok(AuthContext { uid: user_id, role })
     }
 }

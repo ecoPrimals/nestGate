@@ -86,7 +86,7 @@ async fn test_authenticate_with_missing_user() {
 async fn test_authenticate_with_empty_username() {
     let handler = ProductionAuthHandler::new();
     let credentials = AuthCredentials {
-        username: "".to_string(),
+        username: String::new(),
         password: "password123".to_string(),
     };
 
@@ -194,14 +194,14 @@ async fn test_auth_response_serialization() {
 async fn test_production_auth_handler_creation() {
     let handler = ProductionAuthHandler::new();
     let manager = handler.get_manager().await;
-    assert!(manager.user_exists("admin").await.is_ok());
+    assert!(manager.user_exists("admin").is_ok());
 }
 
 #[tokio::test]
 async fn test_production_auth_handler_default() {
     let handler = ProductionAuthHandler::default();
     let manager = handler.get_manager().await;
-    assert!(manager.user_exists("admin").await.is_ok());
+    assert!(manager.user_exists("admin").is_ok());
 }
 
 #[tokio::test]
@@ -312,8 +312,8 @@ async fn test_auth_handler_clone() {
     let manager1 = handler1.get_manager().await;
     let manager2 = handler2.get_manager().await;
 
-    assert!(manager1.user_exists("admin").await.is_ok());
-    assert!(manager2.user_exists("admin").await.is_ok());
+    assert!(manager1.user_exists("admin").is_ok());
+    assert!(manager2.user_exists("admin").is_ok());
 }
 
 #[tokio::test]
@@ -480,5 +480,5 @@ async fn test_production_handler_multiple_managers() {
     drop(manager1);
 
     let manager2 = handler.get_manager().await;
-    assert!(manager2.user_exists("admin").await.is_ok());
+    assert!(manager2.user_exists("admin").is_ok());
 }

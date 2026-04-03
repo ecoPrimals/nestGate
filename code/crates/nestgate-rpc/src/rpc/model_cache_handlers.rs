@@ -1,60 +1,127 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
-)]
-
 //! Model Cache JSON-RPC Handlers
 //!
-//! **Integration:** Persistent model metadata belongs in `nestgate-core` `services::storage` when
-//! this RPC surface is linked to the core storage manager.
+//! Filesystem-backed model metadata persistence. Models are stored as JSON
+//! files under `{storage_base}/datasets/_models/{model_id}.json` with optional
+//! model-level metadata at `{storage_base}/datasets/_model_meta/{model_id}.json`.
 
+use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
-use tracing::info;
+use std::path::PathBuf;
+use tracing::{debug, info};
 
-/// Model key prefix for namespace isolation
-const MODEL_KEY_PREFIX: &str = "model:";
-/// Model metadata key prefix
-const MODEL_META_PREFIX: &str = "model_meta:";
+const MODELS_DATASET: &str = "_models";
 
-/// model.register — not implemented until nestgate-core storage is wired.
-pub fn model_register(params: Option<&Value>) -> Result<Value> {
-    tracing::debug!("feature pending: model.register via nestgate-core storage");
-    let _ = (MODEL_KEY_PREFIX, MODEL_META_PREFIX, params);
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (model.register)",
-    ))
+fn model_path(model_id: &str) -> PathBuf {
+    get_storage_base_path()
+        .join("datasets")
+        .join(MODELS_DATASET)
+        .join(format!("{model_id}.json"))
 }
 
-/// model.exists — not implemented until nestgate-core storage is wired.
+fn require_model_id(params: Option<&Value>) -> Result<&str> {
+    params.and_then(|p| p["model_id"].as_str()).ok_or_else(|| {
+        NestGateError::invalid_input_with_field("model_id", "model_id (string) required")
+    })
+}
+
+async fn ensure_dir(path: &std::path::Path) -> Result<()> {
+    if let Some(parent) = path.parent() {
+        tokio::fs::create_dir_all(parent).await.map_err(|e| {
+            NestGateError::io_error(format!(
+                "Failed to create directory {}: {e}",
+                parent.display()
+            ))
+        })?;
+    }
+    Ok(())
+}
+
+/// `model.register` — persist model registration metadata to disk.
+pub async fn model_register(params: Option<&Value>) -> Result<Value> {
+    let params = params
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+    let model_id = params["model_id"].as_str().ok_or_else(|| {
+        NestGateError::invalid_input_with_field("model_id", "model_id (string) required")
+    })?;
+
+    let path = model_path(model_id);
+    ensure_dir(&path).await?;
+
+    let name_default = json!(model_id);
+    let version_default = json!("1.0.0");
+    let meta_default = json!({});
+    let record = json!({
+        "model_id": model_id,
+        "name": params.get("name").unwrap_or(&name_default),
+        "version": params.get("version").unwrap_or(&version_default),
+        "registered_at": chrono::Utc::now().to_rfc3339(),
+        "metadata": params.get("metadata").unwrap_or(&meta_default),
+    });
+
+    let data = serde_json::to_vec_pretty(&record)
+        .map_err(|e| NestGateError::io_error(format!("Failed to serialize model record: {e}")))?;
+    tokio::fs::write(&path, &data)
+        .await
+        .map_err(|e| NestGateError::io_error(format!("Failed to write model file: {e}")))?;
+
+    debug!(model_id, "model.register: persisted");
+
+    Ok(json!({
+        "model_id": model_id,
+        "registered": true,
+        "path": path.display().to_string(),
+    }))
+}
+
+/// `model.exists` — check if a model registration exists on disk.
 pub fn model_exists(params: Option<&Value>) -> Result<Value> {
-    tracing::debug!("feature pending: model.exists via nestgate-core storage");
-    let _ = params;
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (model.exists)",
-    ))
+    let model_id = require_model_id(params)?;
+    let exists = model_path(model_id).exists();
+    debug!(model_id, exists, "model.exists");
+    Ok(json!({ "model_id": model_id, "exists": exists }))
 }
 
-/// model.locate — not implemented until nestgate-core storage is wired.
+/// `model.locate` — return the filesystem path of a registered model.
 pub fn model_locate(params: Option<&Value>) -> Result<Value> {
-    tracing::debug!("feature pending: model.locate via nestgate-core storage");
-    let _ = params;
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (model.locate)",
-    ))
+    let model_id = require_model_id(params)?;
+    let path = model_path(model_id);
+
+    if !path.exists() {
+        return Err(NestGateError::not_found(format!(
+            "model '{model_id}' not registered"
+        )));
+    }
+
+    debug!(model_id, "model.locate: found");
+    Ok(json!({
+        "model_id": model_id,
+        "path": path.display().to_string(),
+    }))
 }
 
-/// model.metadata — not implemented until nestgate-core storage is wired.
-pub fn model_metadata(params: Option<&Value>) -> Result<Value> {
-    tracing::debug!("feature pending: model.metadata via nestgate-core storage");
-    let _ = params;
-    Err(NestGateError::not_implemented(
-        "wire cross-crate dep: nestgate-core storage (model.metadata)",
-    ))
+/// `model.metadata` — retrieve model registration metadata from disk.
+pub async fn model_metadata(params: Option<&Value>) -> Result<Value> {
+    let model_id = require_model_id(params)?;
+    let path = model_path(model_id);
+
+    let data = tokio::fs::read(&path).await.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            NestGateError::not_found(format!("model '{model_id}' not registered"))
+        } else {
+            NestGateError::io_error(format!("Failed to read model file: {e}"))
+        }
+    })?;
+
+    let record: Value = serde_json::from_slice(&data)
+        .map_err(|e| NestGateError::io_error(format!("Corrupted model record: {e}")))?;
+
+    debug!(model_id, "model.metadata: loaded");
+    Ok(record)
 }
 
 /// All JSON-RPC method names supported by the Unix socket server (`unix_socket_server`).
@@ -92,6 +159,7 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
 ];
 
 /// capabilities.list — wateringHole semantic naming; lists all supported method names.
+#[expect(clippy::unnecessary_wraps, reason = "Handler dispatch requires Result")]
 pub fn capabilities_list() -> Result<Value> {
     info!("🔍 capabilities.list called");
     Ok(json!({
@@ -102,6 +170,7 @@ pub fn capabilities_list() -> Result<Value> {
 }
 
 /// `discover_capabilities` - Return all available JSON-RPC methods
+#[expect(clippy::unnecessary_wraps, reason = "Handler dispatch requires Result")]
 pub fn discover_capabilities() -> Result<Value> {
     info!("🔍 discover_capabilities called");
 
@@ -181,21 +250,74 @@ mod tests {
     }
 
     #[test]
-    fn test_model_key_prefix_constants() {
-        assert_eq!(MODEL_KEY_PREFIX, "model:");
-        assert_eq!(MODEL_META_PREFIX, "model_meta:");
+    fn test_model_dataset_constants() {
+        assert_eq!(MODELS_DATASET, "_models");
     }
 
     #[tokio::test]
     async fn test_model_register_missing_params() {
-        let result = model_register(None);
+        let result = model_register(None).await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_model_register_and_exists_roundtrip() {
-        let params = Some(json!({"model_id": "x"}));
-        assert!(model_register(params.as_ref()).is_err());
-        assert!(model_exists(params.as_ref()).is_err());
+        let tmp = tempfile::tempdir().unwrap();
+        temp_env::async_with_vars(
+            [(
+                "NESTGATE_STORAGE_BASE_PATH",
+                Some(tmp.path().to_str().unwrap()),
+            )],
+            async {
+                let params = json!({"model_id": "test-model", "name": "Test Model"});
+                let reg = model_register(Some(&params)).await.unwrap();
+                assert!(reg["registered"].as_bool().unwrap());
+
+                let exists = model_exists(Some(&params)).unwrap();
+                assert!(exists["exists"].as_bool().unwrap());
+
+                let meta = model_metadata(Some(&params)).await.unwrap();
+                assert_eq!(meta["model_id"], "test-model");
+                assert_eq!(meta["name"], "Test Model");
+
+                let loc = model_locate(Some(&params)).unwrap();
+                assert!(loc["path"].as_str().unwrap().contains("test-model"));
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_model_exists_returns_false_for_missing() {
+        let tmp = tempfile::tempdir().unwrap();
+        temp_env::async_with_vars(
+            [(
+                "NESTGATE_STORAGE_BASE_PATH",
+                Some(tmp.path().to_str().unwrap()),
+            )],
+            async {
+                let params = json!({"model_id": "nonexistent"});
+                let result: Result<Value> = model_exists(Some(&params));
+                assert!(!result.unwrap()["exists"].as_bool().unwrap());
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_model_locate_missing_returns_not_found() {
+        let tmp = tempfile::tempdir().unwrap();
+        temp_env::async_with_vars(
+            [(
+                "NESTGATE_STORAGE_BASE_PATH",
+                Some(tmp.path().to_str().unwrap()),
+            )],
+            async {
+                let params = json!({"model_id": "missing"});
+                let result: Result<Value> = model_locate(Some(&params));
+                assert!(result.is_err());
+            },
+        )
+        .await;
     }
 }

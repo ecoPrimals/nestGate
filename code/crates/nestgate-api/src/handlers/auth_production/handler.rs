@@ -8,11 +8,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
 
-/// **PRODUCTION AUTH HANDLER**
-///
 /// Manages real authentication using the security module.
 #[derive(Debug, Clone)]
-/// Handler for ProductionAuth requests
 pub struct ProductionAuthHandler {
     manager: Arc<RwLock<AuthManager>>,
 }

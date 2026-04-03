@@ -80,7 +80,7 @@ async fn test_authenticate_with_missing_user() {
 async fn test_authenticate_with_empty_username() {
     let handler = ProductionAuthHandler::new();
     let credentials = AuthCredentials {
-        username: "".to_string(),
+        username: String::new(),
         password: "password123".to_string(),
     };
 
@@ -97,7 +97,7 @@ async fn test_authenticate_with_empty_password() {
     let handler = ProductionAuthHandler::new();
     let credentials = AuthCredentials {
         username: "testuser".to_string(),
-        password: "".to_string(),
+        password: String::new(),
     };
 
     let status = authenticate(State(handler), Json(credentials))
@@ -126,7 +126,7 @@ async fn test_validate_token_delegates_to_authenticate() {
 async fn test_validate_token_with_empty_token() {
     let handler = ProductionAuthHandler::new();
     let request = TokenValidationRequest {
-        token: "".to_string(),
+        token: String::new(),
     };
 
     let status = validate_token(State(handler), Json(request))
@@ -159,7 +159,7 @@ async fn test_create_api_key_with_empty_name() {
     let handler = ProductionAuthHandler::new();
     let request = ApiKeyRequest {
         user_id: "testuser".to_string(),
-        name: "".to_string(),
+        name: String::new(),
     };
 
     let status = create_api_key(State(handler), Json(request))
@@ -195,7 +195,7 @@ async fn test_revoke_token_with_invalid_token() {
 async fn test_revoke_token_with_empty_token() {
     let handler = ProductionAuthHandler::new();
     let request = TokenRevocationRequest {
-        token: "".to_string(),
+        token: String::new(),
     };
 
     let status = revoke_token(State(handler), Json(request))
@@ -386,7 +386,7 @@ fn test_create_user_request_with_many_permissions() {
         user_id: "power_user".to_string(),
         username: "poweruser".to_string(),
         role: "superadmin".to_string(),
-        permissions: permissions.clone(),
+        permissions,
     };
 
     assert_eq!(request.permissions.len(), 100);
@@ -521,7 +521,7 @@ fn test_auth_response_with_many_permissions() {
         token: Some("token".to_string()),
         user_id: Some("user".to_string()),
         role: "superuser".to_string(),
-        permissions: permissions.clone(),
+        permissions,
     };
 
     assert_eq!(response.permissions.len(), 1000);
@@ -533,7 +533,7 @@ fn test_api_key_request_with_long_name() {
 
     let request = ApiKeyRequest {
         user_id: "user".to_string(),
-        name: long_name.clone(),
+        name: long_name,
     };
 
     assert_eq!(request.name.len(), 1000);
@@ -542,9 +542,9 @@ fn test_api_key_request_with_long_name() {
 #[test]
 fn test_create_user_request_with_empty_strings() {
     let request = CreateUserRequest {
-        user_id: "".to_string(),
-        username: "".to_string(),
-        role: "".to_string(),
+        user_id: String::new(),
+        username: String::new(),
+        role: String::new(),
         permissions: vec![],
     };
 

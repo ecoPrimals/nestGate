@@ -21,9 +21,7 @@ pub async fn create_api_key(
     let api_key = format!("nestgate_{}", uuid::Uuid::new_v4());
 
     let mut manager = handler.get_manager_mut().await;
-    manager
-        .add_api_key(api_key.clone(), request.user_id.clone())
-        .await;
+    manager.add_api_key(api_key.clone(), request.user_id.clone());
 
     info!("API key created for user: {}", request.user_id);
     Ok(Json(ApiKeyResponse {
@@ -43,7 +41,7 @@ pub async fn validate_api_key(
     info!("Validating API key");
 
     let manager = handler.get_manager().await;
-    match manager.validate_api_key(&api_key).await {
+    match manager.validate_api_key(&api_key) {
         Ok(context) => {
             info!("API key valid");
             Ok(Json(serde_json::json!({
