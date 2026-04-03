@@ -28,12 +28,12 @@
 //!
 //! ## Overstep Reduction Status
 //!
-//! | Module | Status | Lines | Notes |
-//! |--------|--------|-------|-------|
-//! | `discovery_mechanism` | **Deprecated** | ~2,000 | Zero external consumers; mDNS/Consul/K8s belong with orchestration provider |
-//! | `service_discovery` | **Deprecated** | ~3,000 | Still referenced by `capability_resolver`; registry belongs with orchestration provider |
-//! | `capabilities`, `capability_discovery`, `primal_self_knowledge` | **Active** | — | Legitimate NestGate self-knowledge |
-//! | `infant_discovery`, `primal_discovery` | **Active** | — | Legitimate discovery of nearby primals |
+//! | Module | Status | Notes |
+//! |--------|--------|-------|
+//! | `discovery_mechanism` | **Removed** | mDNS/Consul/K8s belong with orchestration provider (deleted April 2026) |
+//! | `service_discovery` | **Deprecated** | Still referenced by `capability_resolver`; registry belongs with orchestration provider |
+//! | `capabilities`, `capability_discovery`, `primal_self_knowledge` | **Active** | Legitimate NestGate self-knowledge |
+//! | `infant_discovery`, `primal_discovery` | **Active** | Legitimate discovery of nearby primals |
 
 #![cfg_attr(
     test,
@@ -78,12 +78,9 @@
 
 pub mod capabilities;
 pub mod capability_discovery;
-#[deprecated(
-    since = "0.3.0",
-    note = "Service registry and orchestration discovery are orchestration-provider concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
-)]
-/// Optional discovery mechanism implementations (mDNS, Consul, K8s, HTTP); generic platform discovery belongs with the orchestration provider.
-pub mod discovery_mechanism;
+// discovery_mechanism module REMOVED (April 2026) — mDNS, Consul, K8s, HTTP
+// platform discovery belongs with the orchestration capability provider.
+// Zero in-tree consumers existed at time of removal.
 pub mod infant_discovery;
 pub mod primal_discovery;
 pub mod primal_self_knowledge;

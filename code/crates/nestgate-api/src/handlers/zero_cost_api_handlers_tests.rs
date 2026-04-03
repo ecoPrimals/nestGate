@@ -93,68 +93,30 @@ fn test_zero_cost_pool_handler_const_generics() {
 }
 
 #[test]
-fn test_handle_list_pools() {
+fn test_handle_list_pools_delegates() {
     let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
     let result = handler.handle_list_pools();
-
-    assert!(result.is_ok());
-    let pools = result.unwrap().0;
-    assert_eq!(pools.len(), 2);
-
-    // Check first pool
-    assert_eq!(pools[0]["name"], "tank");
-    assert_eq!(pools[0]["state"], "ONLINE");
-    assert_eq!(pools[0]["health"], "OK");
-
-    // Check second pool
-    assert_eq!(pools[1]["name"], "backup");
-    assert_eq!(pools[1]["state"], "ONLINE");
-}
-
-#[test]
-fn test_handle_get_pool_tank() {
-    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
-    let result = handler.handle_get_pool("tank".to_string());
-
-    assert!(result.is_ok());
-    let pool = result.unwrap().0;
-
-    assert_eq!(pool["name"], "tank");
-    assert_eq!(pool["state"], "ONLINE");
-    assert_eq!(pool["health"], "OK");
-    assert_eq!(pool["size"], "1TB");
-    assert_eq!(pool["used"], "500GB");
-    assert_eq!(pool["available"], "500GB");
-    assert_eq!(pool["compression"], "lz4");
-    assert_eq!(pool["deduplication"], false);
-}
-
-#[test]
-fn test_handle_get_pool_backup() {
-    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
-    let result = handler.handle_get_pool("backup".to_string());
-
-    assert!(result.is_ok());
-    let pool = result.unwrap().0;
-
-    assert_eq!(pool["name"], "backup");
-    assert_eq!(pool["size"], "2TB");
-    assert_eq!(pool["used"], "1TB");
-    assert_eq!(pool["compression"], "zstd");
-    assert_eq!(pool["deduplication"], true);
-}
-
-#[test]
-fn test_handle_get_pool_not_found() {
-    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
-    let result = handler.handle_get_pool("nonexistent".to_string());
-
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), axum::http::StatusCode::NOT_FOUND);
+    assert_eq!(result.unwrap_err(), axum::http::StatusCode::NOT_IMPLEMENTED);
 }
 
 #[test]
-fn test_handle_create_pool() {
+fn test_handle_get_pool_delegates() {
+    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
+    assert_eq!(
+        handler.handle_get_pool("tank".to_string()).unwrap_err(),
+        axum::http::StatusCode::NOT_IMPLEMENTED,
+    );
+    assert_eq!(
+        handler
+            .handle_get_pool("nonexistent".to_string())
+            .unwrap_err(),
+        axum::http::StatusCode::NOT_IMPLEMENTED,
+    );
+}
+
+#[test]
+fn test_handle_create_pool_delegates() {
     use crate::zfs::types::PoolConfig;
 
     let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
@@ -164,67 +126,23 @@ fn test_handle_create_pool() {
         dedup: Some(true),
         encryption: Some(true),
     };
-
-    let result = handler.handle_create_pool(config);
-    assert!(result.is_ok());
-
-    let response = result.unwrap().0;
-    assert_eq!(response["status"], "created");
-    assert_eq!(response["name"], "new_pool");
-    assert_eq!(response["properties"]["compression"], "zstd");
-    assert_eq!(response["properties"]["deduplication"], true);
-    assert_eq!(response["properties"]["encryption"], true);
+    assert_eq!(
+        handler.handle_create_pool(config).unwrap_err(),
+        axum::http::StatusCode::NOT_IMPLEMENTED,
+    );
 }
 
 #[test]
-fn test_handle_create_pool_default_config() {
-    use crate::zfs::types::PoolConfig;
-
+fn test_handle_delete_pool_delegates() {
     let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
-    let config = PoolConfig {
-        raid_level: None,
-        compression: None,
-        dedup: None,
-        encryption: None,
-    };
-
-    let result = handler.handle_create_pool(config);
-    assert!(result.is_ok());
-
-    let response = result.unwrap().0;
-    assert_eq!(response["status"], "created");
-    assert_eq!(response["properties"]["compression"], "lz4");
-    assert_eq!(response["properties"]["deduplication"], false);
-    assert_eq!(response["properties"]["encryption"], false);
-}
-
-#[test]
-fn test_handle_delete_pool_success() {
-    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
-    let result = handler.handle_delete_pool("tank".to_string());
-
-    assert!(result.is_ok());
-    let response = result.unwrap().0;
-    assert_eq!(response["status"], "deleted");
-    assert_eq!(response["name"], "tank");
-}
-
-#[test]
-fn test_handle_delete_pool_not_found() {
-    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
-    let result = handler.handle_delete_pool("nonexistent".to_string());
-
-    assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), axum::http::StatusCode::NOT_FOUND);
-}
-
-#[test]
-fn test_handle_delete_pool_empty_name() {
-    let handler: ZeroCostPoolHandler<100, 5000> = ZeroCostPoolHandler::new();
-    let result = handler.handle_delete_pool(String::new());
-
-    assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), axum::http::StatusCode::BAD_REQUEST);
+    assert_eq!(
+        handler.handle_delete_pool("tank".to_string()).unwrap_err(),
+        axum::http::StatusCode::NOT_IMPLEMENTED,
+    );
+    assert_eq!(
+        handler.handle_delete_pool(String::new()).unwrap_err(),
+        axum::http::StatusCode::NOT_IMPLEMENTED,
+    );
 }
 
 #[tokio::test]

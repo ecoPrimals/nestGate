@@ -103,6 +103,9 @@ impl RealTimeMetricsCollector {
 
     /// Get historical performance data for a specific pool.
     ///
+    /// Requires a time-series store (not yet wired). Returns an empty vec
+    /// until the observability capability provider supplies historical storage.
+    ///
     /// # Errors
     ///
     /// Returns an error if metric retrieval fails.
@@ -111,8 +114,10 @@ impl RealTimeMetricsCollector {
         pool_name: &str,
         _time_range: &DashboardTimeRange,
     ) -> Result<Vec<PoolMetrics>> {
-        // Implementation for getting historical data
-        debug!("Getting historical data for pool: {}", pool_name);
+        debug!(
+            pool = pool_name,
+            "Historical pool metrics require a time-series store — returning empty"
+        );
         Ok(vec![])
     }
 
@@ -173,18 +178,23 @@ impl RealTimeMetricsCollector {
         })
     }
 
-    /// Get metrics for all storage pools.
+    /// Per-pool metrics keyed by pool name.
+    ///
+    /// Returns an empty map until ZFS pool enumeration is wired into the
+    /// real-time collector (live metrics use `/proc/spl/kstat/zfs` instead).
     ///
     /// # Errors
     ///
     /// Returns an error if metric retrieval fails.
     pub fn get_all_pool_metrics(&self) -> Result<HashMap<String, PoolMetrics>> {
-        // Implementation for getting all pool metrics
-        debug!("Getting all pool metrics");
+        debug!("Per-pool metric map requires ZFS pool enumeration — returning empty");
         Ok(HashMap::new())
     }
 
-    /// Get I/O performance historical data.
+    /// I/O performance over time.
+    ///
+    /// Requires a time-series store; returns empty until the observability
+    /// capability provider supplies historical I/O storage.
     ///
     /// # Errors
     ///
@@ -193,23 +203,26 @@ impl RealTimeMetricsCollector {
         &self,
         _time_range: &DashboardTimeRange,
     ) -> Result<Vec<super::types::IOMetricsPoint>> {
-        // Implementation for I/O historical data
-        debug!("Getting I/O historical data");
+        debug!("I/O historical data requires a time-series store — returning empty");
         Ok(vec![])
     }
 
-    /// Get cache performance metrics.
+    /// ZFS ARC / L2ARC cache performance over time.
+    ///
+    /// Point-in-time snapshots are available via [`get_current_metrics`]; historical
+    /// trends require a time-series backend.
     ///
     /// # Errors
     ///
     /// Returns an error if metric retrieval fails.
     pub fn get_cache_metrics(&self) -> Result<Vec<super::types::CacheMetricsPoint>> {
-        // Implementation for cache metrics
-        debug!("Getting cache metrics");
+        debug!("Cache historical metrics require a time-series store — returning empty");
         Ok(vec![])
     }
 
-    /// Get comprehensive historical metrics combining all metric types.
+    /// Comprehensive combined metrics over time.
+    ///
+    /// Requires a time-series store; returns empty until wired.
     ///
     /// # Errors
     ///
@@ -217,12 +230,13 @@ impl RealTimeMetricsCollector {
     pub fn get_comprehensive_historical_data(
         &self,
     ) -> Result<Vec<super::types::ComprehensiveMetricsPoint>> {
-        // Implementation for comprehensive historical data
-        debug!("Getting comprehensive historical data");
+        debug!("Comprehensive historical data requires a time-series store — returning empty");
         Ok(vec![])
     }
 
-    /// Get storage capacity historical data.
+    /// Storage capacity trends over time.
+    ///
+    /// Requires a time-series store; returns empty until wired.
     ///
     /// # Errors
     ///
@@ -231,8 +245,7 @@ impl RealTimeMetricsCollector {
         &self,
         _time_range: &DashboardTimeRange,
     ) -> Result<Vec<super::types::CapacityMetricsPoint>> {
-        // Implementation for capacity historical data
-        debug!("Getting capacity historical data");
+        debug!("Capacity historical data requires a time-series store — returning empty");
         Ok(vec![])
     }
 }

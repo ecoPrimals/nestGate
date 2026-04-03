@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Compile-time configured pool handler and JSON pool CRUD stubs.
+//! Compile-time configured pool handler with request caching.
+//!
+//! Pool CRUD operations delegate to the ZFS REST API (`production_placeholders`).
+//! This handler focuses on the request pipeline (caching, timeouts, rate limits).
 
 use axum::http::StatusCode;
 use axum::response::Json;
@@ -59,126 +62,43 @@ impl<const MAX_REQUESTS: usize, const TIMEOUT_MS: u64>
         TIMEOUT_MS
     }
 
-    /// Handle list pools request - API compatibility method
+    /// List storage pools via the production ZFS REST API.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn handle_list_pools(&self) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
-        // Basic pool listing implementation
-        let pools = vec![
-            serde_json::json!({
-                "name": "tank",
-                "state": "ONLINE",
-                "health": "OK",
-                "size": "1TB",
-                "used": "500GB",
-                "available": "500GB"
-            }),
-            serde_json::json!({
-                "name": "backup",
-                "state": "ONLINE",
-                "health": "OK",
-                "size": "2TB",
-                "used": "1TB",
-                "available": "1TB"
-            }),
-        ];
-        Ok(Json(pools))
+    /// Returns `NOT_IMPLEMENTED` directing callers to the ZFS REST API.
+    pub const fn handle_list_pools(&self) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
+        Err(StatusCode::NOT_IMPLEMENTED)
     }
 
-    /// Handle get pool request - API compatibility method
+    /// Get pool details via the production ZFS REST API.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn handle_get_pool(&self, name: String) -> Result<Json<serde_json::Value>, StatusCode> {
-        // Basic pool retrieval implementation
-        match name.as_str() {
-            "tank" => Ok(Json(serde_json::json!({
-                "name": "tank",
-                "state": "ONLINE",
-                "health": "OK",
-                "size": "1TB",
-                "used": "500GB",
-                "available": "500GB",
-                "compression": "lz4",
-                "deduplication": false,
-                "created": "2024-01-01T00:00:00Z"
-            }))),
-            "backup" => Ok(Json(serde_json::json!({
-                "name": "backup",
-                "state": "ONLINE",
-                "health": "OK",
-                "size": "2TB",
-                "used": "1TB",
-                "available": "1TB",
-                "compression": "zstd",
-                "deduplication": true,
-                "created": "2024-01-15T00:00:00Z"
-            }))),
-            _ => Err(StatusCode::NOT_FOUND),
-        }
+    /// Returns `NOT_IMPLEMENTED` directing callers to the ZFS REST API.
+    pub fn handle_get_pool(&self, _name: String) -> Result<Json<serde_json::Value>, StatusCode> {
+        Err(StatusCode::NOT_IMPLEMENTED)
     }
 
-    /// Handle create pool request - API compatibility method
+    /// Create a pool via the production ZFS REST API.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
+    /// Returns `NOT_IMPLEMENTED` directing callers to the ZFS REST API or CLI.
     pub fn handle_create_pool(
         &self,
-        config: PoolConfig,
+        _config: PoolConfig,
     ) -> Result<Json<serde_json::Value>, StatusCode> {
-        // Basic pool creation implementation with validation
-        // Note: PoolConfig doesn't have name field, so we use a default name
-        let pool_name = "new_pool".to_string();
-
-        // Simulate pool creation
-        Ok(Json(serde_json::json!({
-            "status": "created",
-            "name": pool_name,
-            "message": "Pool created successfully",
-            "properties": {
-                "compression": config.compression.unwrap_or_else(|| "lz4".to_string()),
-                "deduplication": config.dedup.unwrap_or(false),
-                "encryption": config.encryption.unwrap_or(false)
-            }
-        })))
+        Err(StatusCode::NOT_IMPLEMENTED)
     }
 
-    /// Handle delete pool request - API compatibility method
+    /// Delete a pool via the production ZFS REST API.
     ///
     /// # Errors
     ///
-    /// This function will return an error if:
-    /// - The operation fails due to invalid input
-    /// - System resources are unavailable
-    /// - Network or I/O errors occur
-    pub fn handle_delete_pool(&self, name: String) -> Result<Json<serde_json::Value>, StatusCode> {
-        // Basic pool deletion implementation with validation
-        if name.is_empty() {
-            return Err(StatusCode::BAD_REQUEST);
-        }
-
-        // Check if pool exists (basic validation)
-        match name.as_str() {
-            "tank" | "backup" => Ok(Json(serde_json::json!({
-                "status": "deleted",
-                "name": name,
-                "message": "Pool deleted successfully"
-            }))),
-            _ => Err(StatusCode::NOT_FOUND),
-        }
+    /// Returns `NOT_IMPLEMENTED` directing callers to the ZFS REST API or CLI.
+    pub fn handle_delete_pool(&self, _name: String) -> Result<Json<serde_json::Value>, StatusCode> {
+        Err(StatusCode::NOT_IMPLEMENTED)
     }
 
     /// Process request with compile-time limits

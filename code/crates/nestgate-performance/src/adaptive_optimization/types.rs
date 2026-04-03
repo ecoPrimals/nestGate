@@ -41,23 +41,12 @@ pub struct PerformanceSnapshot {
 }
 
 /// Optimization strategy configuration
+#[derive(Clone, Copy)]
 pub struct OptimizationStrategy {
     target_cpu_utilization: f64,
     target_memory_utilization: f64,
     aggressive_tuning: bool,
     learning_rate: f64,
-}
-
-impl Clone for OptimizationStrategy {
-    /// Clone
-    fn clone(&self) -> Self {
-        Self {
-            target_cpu_utilization: self.target_cpu_utilization,
-            target_memory_utilization: self.target_memory_utilization,
-            aggressive_tuning: self.aggressive_tuning,
-            learning_rate: self.learning_rate,
-        }
-    }
 }
 
 /// Optimization decision made by the engine
@@ -73,23 +62,12 @@ pub struct OptimizationDecision {
 }
 
 /// Tunable system parameter
+#[derive(Clone)]
 pub struct TunableParameter {
     name: String,
     current_value: f64,
     suggested_value: f64,
     adjustment_confidence: f64,
-}
-
-impl Clone for TunableParameter {
-    /// Clone
-    fn clone(&self) -> Self {
-        Self {
-            name: self.name.clone(),
-            current_value: self.current_value,
-            suggested_value: self.suggested_value,
-            adjustment_confidence: self.adjustment_confidence,
-        }
-    }
 }
 
 /// Tuning action to be performed
@@ -304,18 +282,19 @@ mod tests {
     }
 
     #[test]
-    fn test_optimization_strategy_clone() {
+    fn test_optimization_strategy_copy() {
         let strategy = OptimizationStrategy {
             target_cpu_utilization: 0.7,
             target_memory_utilization: 0.8,
             aggressive_tuning: true,
             learning_rate: 0.01,
         };
-        let cloned = strategy.clone();
-        assert_eq!(cloned.target_cpu_utilization, 0.7);
-        assert_eq!(cloned.target_memory_utilization, 0.8);
-        assert!(cloned.aggressive_tuning);
-        assert_eq!(cloned.learning_rate, 0.01);
+        let copied = strategy;
+        assert_eq!(copied.target_cpu_utilization, 0.7);
+        assert_eq!(copied.target_memory_utilization, 0.8);
+        assert!(copied.aggressive_tuning);
+        assert_eq!(copied.learning_rate, 0.01);
+        let _ = strategy; // verify original still usable (Copy semantics)
     }
 
     #[test]

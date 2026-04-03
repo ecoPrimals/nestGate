@@ -108,8 +108,8 @@ impl CapabilityDiscovery {
             endpoint, capability_type
         );
 
-        // Mock implementation - in practice this would make HTTP requests
-        // to actual discovery services
+        // URL-based convention: in production this would issue JSON-RPC
+        // discovery requests; for now, derive sub-paths from the base endpoint.
         match capability_type {
             "security" => vec![format!("{endpoint}/security")],
             "ai" => vec![format!("{endpoint}/ai")],

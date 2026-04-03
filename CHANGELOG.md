@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 20: Deep debt, overstep deletion, production stub evolution (April 3, 2026)
+
+**Tests**: 12,240 total passing, 0 failures  
+**Clippy**: PASS  
+**Format**: Clean  
+
+#### Removed (dead overstep code)
+- `nestgate-discovery/src/discovery_mechanism/` — entire module deleted (~2K lines, zero in-tree consumers); mDNS/Consul/K8s belong with orchestration capability provider
+- Removed `mdns`, `consul`, `kubernetes` feature flags from `nestgate-discovery/Cargo.toml`
+- Updated overstep status table in `nestgate-discovery/src/lib.rs`
+
+#### Evolved (production stubs → honest delegation)
+- `pool_handler.rs` CRUD methods: removed hardcoded fake "tank"/"backup" pool data → return `NOT_IMPLEMENTED` directing callers to ZFS REST API
+- `metrics_collector/collector.rs`: empty returns documented with clear "requires time-series store" explanation
+- `capability_registry.rs`: replaced "mock implementation" comment with honest URL-convention description
+
+#### Refactored (idiomatic Rust improvements)
+- `adaptive_optimization/types.rs`: manual `Clone` impls → `#[derive(Clone, Copy)]` and `#[derive(Clone)]`
+- `pool_handler.rs` `handle_list_pools` → `const fn` (clippy `missing_const_for_fn`)
+- Pool handler tests consolidated: 15 hardcoded-data tests → 4 delegation tests
+
+---
+
 ### Session 18: Stub evolution, smart refactoring, clippy debt & dependency evolution (April 3, 2026)
 
 **Tests**: 12,272 total passing, 0 failures  

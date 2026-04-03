@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-03
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
-Tests:              ~12,272 passing, 0 failures (cargo test --all)
+Tests:              ~12,240 passing, 0 failures (cargo test --all)
 Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
 Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code
@@ -21,7 +21,7 @@ Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (except env_pr
 println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
 TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
-Discovery:          Environment variables + capability IPC (mDNS behind `mdns` feature gate; delegated to biomeOS)
+Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes:         storage.*, data.* (delegation; not capability-advertised), session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.* wired
 Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)

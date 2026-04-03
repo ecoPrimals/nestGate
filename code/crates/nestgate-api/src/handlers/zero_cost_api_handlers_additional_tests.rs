@@ -13,111 +13,41 @@ use std::sync::Arc;
 // Pool Handler Tests
 
 #[test]
-fn test_pool_handler_list_pools() {
+fn test_pool_handler_crud_delegates_to_zfs_rest_api() {
     let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_list_pools();
-
-    assert!(result.is_ok());
-    let pools = result.expect("Test setup failed").0;
-    assert_eq!(pools.len(), 2);
-    assert!(pools[0].get("name").is_some());
-}
-
-#[test]
-fn test_pool_handler_get_pool_tank() {
-    let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_get_pool("tank".to_string());
-
-    assert!(result.is_ok());
-    let pool = result.expect("Test setup failed").0;
     assert_eq!(
-        pool.get("name")
-            .and_then(|v: &serde_json::Value| v.as_str()),
-        Some("tank")
+        handler.handle_list_pools().unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
     );
     assert_eq!(
-        pool.get("state")
-            .and_then(|v: &serde_json::Value| v.as_str()),
-        Some("ONLINE")
+        handler.handle_get_pool("tank".to_string()).unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
     );
-}
-
-#[test]
-fn test_pool_handler_get_pool_backup() {
-    let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_get_pool("backup".to_string());
-
-    assert!(result.is_ok());
-    let pool = result.expect("Test setup failed").0;
     assert_eq!(
-        pool.get("name")
-            .and_then(|v: &serde_json::Value| v.as_str()),
-        Some("backup")
+        handler
+            .handle_get_pool("nonexistent".to_string())
+            .unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
     );
-}
-
-#[test]
-fn test_pool_handler_get_pool_not_found() {
-    let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_get_pool("nonexistent".to_string());
-
-    assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), StatusCode::NOT_FOUND);
-}
-
-#[test]
-fn test_pool_handler_create_pool() {
-    let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let config = PoolConfig {
-        raid_level: None,
-        compression: Some("lz4".to_string()),
-        dedup: Some(false),
-        encryption: Some(true),
-    };
-
-    let result = handler.handle_create_pool(config);
-    assert!(result.is_ok());
-
-    let response = result.expect("Test setup failed").0;
     assert_eq!(
-        response
-            .get("status")
-            .and_then(|v: &serde_json::Value| v.as_str()),
-        Some("created")
+        handler
+            .handle_create_pool(PoolConfig {
+                raid_level: None,
+                compression: Some("lz4".to_string()),
+                dedup: Some(false),
+                encryption: Some(true),
+            })
+            .unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED,
     );
-}
-
-#[test]
-fn test_pool_handler_delete_pool_tank() {
-    let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_delete_pool("tank".to_string());
-
-    assert!(result.is_ok());
-    let response = result.expect("Test setup failed").0;
     assert_eq!(
-        response
-            .get("status")
-            .and_then(|v: &serde_json::Value| v.as_str()),
-        Some("deleted")
+        handler.handle_delete_pool("tank".to_string()).unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
     );
-}
-
-#[test]
-fn test_pool_handler_delete_pool_empty_name() {
-    let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_delete_pool(String::new());
-
-    assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), StatusCode::BAD_REQUEST);
-}
-
-#[test]
-fn test_pool_handler_delete_pool_not_found() {
-    let handler = ZeroCostPoolHandler::<100, 5000>::new();
-    let result = handler.handle_delete_pool("nonexistent".to_string());
-
-    assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), StatusCode::NOT_FOUND);
+    assert_eq!(
+        handler.handle_delete_pool(String::new()).unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
+    );
 }
 
 // Const Generic Configuration Tests
@@ -388,8 +318,10 @@ fn test_api_status_error_serialization() {
 #[tokio::test]
 async fn test_pool_handler_default() {
     let handler = ZeroCostPoolHandler::<100, 5000>::default();
-    let result = handler.handle_list_pools();
-    assert!(result.is_ok());
+    assert_eq!(
+        handler.handle_list_pools().unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED,
+    );
 }
 
 #[test]
@@ -427,40 +359,44 @@ fn test_dataset_info_serialization() {
 }
 
 #[test]
-fn test_multiple_pool_handlers_different_configs() {
+fn test_multiple_pool_handlers_all_delegate() {
     let dev = DevelopmentPoolHandler::new();
     let prod = ProductionPoolHandler::new();
     let ent = EnterprisePoolHandler::new();
 
-    // All should list pools successfully
-    assert!(dev.handle_list_pools().is_ok());
-    assert!(prod.handle_list_pools().is_ok());
-    assert!(ent.handle_list_pools().is_ok());
+    assert_eq!(
+        dev.handle_list_pools().unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
+    );
+    assert_eq!(
+        prod.handle_list_pools().unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
+    );
+    assert_eq!(
+        ent.handle_list_pools().unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
+    );
 }
 
 #[test]
-fn test_pool_creation_with_default_config() {
-    let handler = ProductionPoolHandler::new();
-    let config = PoolConfig {
-        raid_level: None,
-        compression: None,
-        dedup: None,
-        encryption: None,
-    };
-
-    let result = handler.handle_create_pool(config);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_pool_handler_get_multiple_pools() {
+fn test_pool_crud_all_delegate() {
     let handler = EnterprisePoolHandler::new();
 
-    let tank = handler.handle_get_pool("tank".to_string());
-    let backup = handler.handle_get_pool("backup".to_string());
-
-    assert!(tank.is_ok());
-    assert!(backup.is_ok());
+    assert_eq!(
+        handler.handle_get_pool("any".to_string()).unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED
+    );
+    assert_eq!(
+        handler
+            .handle_create_pool(PoolConfig {
+                raid_level: None,
+                compression: None,
+                dedup: None,
+                encryption: None,
+            })
+            .unwrap_err(),
+        StatusCode::NOT_IMPLEMENTED,
+    );
 }
 
 #[tokio::test]
