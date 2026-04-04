@@ -2,7 +2,7 @@
 name = "nestgate-automation"
 version = "0.1.0"
 edition = "2024"
-description = "Intelligent automation and ecosystem integration for NestGate storage management"
+description = "DEPRECATED — Automation/orchestration concerns delegated to biomeOS; zero production consumers remain"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoprimals/nestgate"
 keywords = ["zfs", "automation", "ai", "storage", "tier-management"]

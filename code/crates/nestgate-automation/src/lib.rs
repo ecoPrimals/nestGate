@@ -2,10 +2,21 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
+#![deprecated(
+    since = "4.7.0",
+    note = "Automation/orchestration concerns delegated to biomeOS. Zero production consumers remain in the NestGate workspace. This crate will be removed in a future version."
+)]
 
-//! Automation system for intelligent dataset management
+//! **DEPRECATED** — Automation system for intelligent dataset management.
 //!
-//! Provides predictive analytics and automated optimization for storage systems.
+//! This crate provided predictive analytics and automated optimization for storage
+//! systems. As of v4.7.0, all production consumers have been removed:
+//!
+//! - Storage-tier prediction logic is inlined where needed
+//! - Ecosystem/orchestration types belong with biomeOS
+//! - Dataset lifecycle policies are handled by `nestgate-zfs` directly
+//!
+//! The crate remains in the workspace for compilation but has zero importers.
 
 #![warn(missing_docs)]
 #![cfg_attr(

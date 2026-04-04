@@ -27,8 +27,6 @@ path = "../code/crates/nestgate-core"
 [dependencies.nestgate-zfs]
 path = "../code/crates/nestgate-zfs"
 
-[dependencies.nestgate-automation]
-path = "../code/crates/nestgate-automation"
 
 # Working fuzz targets
 [[bin]]

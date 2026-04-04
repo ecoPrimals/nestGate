@@ -17,7 +17,7 @@ workspace = true
 nestgate-core = { path = "../nestgate-core" }
 nestgate-security = { path = "../nestgate-security" }
 nestgate-zfs = { path = "../nestgate-zfs" }
-nestgate-automation = { path = "../nestgate-automation" }
+
 
 axum = { workspace = true }
 tower = { workspace = true }

@@ -39,17 +39,29 @@ mod heuristic_unit_tests {
     }
     #[test]
     fn test_performance_expectation() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        let hot_tier_expectation =
-            nestgate_automation::types::optimization::PerformanceExpectation {
-                expected_iops: 2000,
-                expected_bandwidth_mbps: 500.0,
-                expected_latency_ms: 1.0,
-                expected_availability: 99.99,
-                expected_durability_nines: 11,
-            };
+        #[derive(Debug)]
+        struct PerformanceExpectation {
+            expected_iops: u32,
+            expected_bandwidth_mbps: f64,
+            expected_latency_ms: f64,
+            expected_availability: f64,
+            expected_durability_nines: u32,
+        }
+        let hot_tier_expectation = PerformanceExpectation {
+            expected_iops: 2000,
+            expected_bandwidth_mbps: 500.0,
+            expected_latency_ms: 1.0,
+            expected_availability: 99.99,
+            expected_durability_nines: 11,
+        };
 
         assert_eq!(hot_tier_expectation.expected_latency_ms, 1.0);
         assert_eq!(hot_tier_expectation.expected_bandwidth_mbps, 500.0);
+        let _ = (
+            hot_tier_expectation.expected_iops,
+            hot_tier_expectation.expected_availability,
+            hot_tier_expectation.expected_durability_nines,
+        );
     Ok(())
     }
     Ok(())

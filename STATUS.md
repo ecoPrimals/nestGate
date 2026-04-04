@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 3, 2026  
+**Last Updated**: April 4, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -487,6 +487,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D war
 | Semantic router | COMPILED & WIRED — `data.*` delegates; `nat.*`, `beacon.*` routes active; `discovery` overstep modules deprecated |
 | `#[allow(dead_code)]` | 1 production module-level (RPC manager, documented rationale); item-level with reasons |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
+| Automation in-tree | DEPRECATED — zero production consumers; all deps removed from nestgate-zfs/api/fuzz |
 | mDNS in-tree | Feature-gated behind `mdns` — biomeOS for production discovery |
 | Capability symlink | `storage.sock` → `nestgate.sock` auto-managed with guard pattern |
 
@@ -531,7 +532,7 @@ nestGate/ (24 workspace members)
 ├── nestgate-bin        CLI binary (unibin)
 ├── nestgate-zfs        ZFS integration (adaptive)
 ├── nestgate-network    Network storage
-├── nestgate-automation Automation engine (lifecycle/, analysis, types)
+├── nestgate-automation DEPRECATED — automation/orchestration delegated to biomeOS (zero consumers)
 ├── nestgate-installer  Platform installer (real GitHub releases download)
 ├── nestgate-middleware Middleware stack
 ├── nestgate-nas        NAS integration

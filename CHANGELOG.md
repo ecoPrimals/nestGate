@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 21: Automation overstep shedding & primalSpring audit resolution (April 4, 2026)
+
+**Tests**: 12,240 total passing, 0 failures  
+**Clippy**: PASS  
+**Format**: Clean  
+
+#### Removed (overstep dependency shedding)
+- `nestgate-automation` dependency removed from `nestgate-zfs`, `nestgate-api`, and `fuzz` Cargo.toml — zero production imports existed
+- `PerformanceExpectation` type inlined in the one test that used it (`nestgate-zfs/tests/unit_tests/heuristic_tests.rs`)
+
+#### Deprecated
+- `nestgate-automation` crate — full `#![deprecated]` with biomeOS delegation note; Cargo.toml description updated
+- Crate remains in workspace for compilation but has zero importers
+
+#### Confirmed (primalSpring audit)
+- `nestgate-mcp`: already removed from workspace — no directory, no workspace member, no imports
+- NG-01 (metadata backend wiring): `FileMetadataBackend` fully implemented with multi-tier resolution
+- NG-03 (data.* stubs): pool handlers return honest `NOT_IMPLEMENTED` directing to ZFS REST API
+- Discovery compliance: 192 primal-name refs across 22 files — all config-layer descriptors, documentation, or tests; zero hardcoded routing
+- Test count: 12,240 (audit's 6,607 may reflect `--lib` subset)
+
+---
+
 ### Session 20: Deep debt, overstep deletion, production stub evolution (April 3, 2026)
 
 **Tests**: 12,240 total passing, 0 failures  
