@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 22: Dead code deletion, production mock evolution, `as` cast cleanup (April 4, 2026)
+
+**Tests**: 12,236 total passing, 0 failures  
+**Clippy**: PASS  
+**Format**: Clean  
+
+#### Removed (dead code — orphan files never in module tree)
+- `performance_dashboard/{core,zfs_integration,http_handlers}.rs` (984 lines) — never declared as modules
+- `performance_dashboard/analyzer/` subtree (1,696 lines) — entire directory unlinked
+- `performance_dashboard/endpoints/` subtree (124 lines) — entire directory unlinked
+- `rest/rpc/{universal_rpc_router,capability_based_router,primal_agnostic_rpc}.rs` (1,399 lines)
+- `load_testing/handlers.rs` (115 lines)
+- **Total**: ~4,318 lines of dead code deleted
+
+#### Evolved (production mocks → honest behavior)
+- `credential_validation.rs` `authenticate()`: demo token stub → returns `success: false` (no IdP wired)
+- Removed dead `AuthToken`/`TokenType` types from `auth_manager.rs`
+
+#### Deprecated (automation integration shims)
+- `nestgate-zfs/automation/integration.rs`: shell types (`IntelligentDatasetManager`, `AutomationConfig`) marked `#[deprecated(since = "4.7.0")]` with migration note to `DatasetAutomation`
+
+#### Fixed (idiomatic Rust — `as` cast evolution)
+- `engine.rs`: `count() as u32` / `len() as u32` → `u32::try_from(...).unwrap_or(u32::MAX)`
+- `collector.rs`: `n.get() as u32`, `(mem_total_kb / ...) as u32` → `u32::try_from` with saturating fallback
+
+---
+
 ### Session 21: Automation overstep shedding & primalSpring audit resolution (April 4, 2026)
 
 **Tests**: 12,240 total passing, 0 failures  
@@ -28,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NG-01 (metadata backend wiring): `FileMetadataBackend` fully implemented with multi-tier resolution
 - NG-03 (data.* stubs): pool handlers return honest `NOT_IMPLEMENTED` directing to ZFS REST API
 - Discovery compliance: 192 primal-name refs across 22 files — all config-layer descriptors, documentation, or tests; zero hardcoded routing
-- Test count: 12,240 (audit's 6,607 may reflect `--lib` subset)
+- Test count: 12,236 (audit's 6,607 may reflect `--lib` subset)
 
 ---
 

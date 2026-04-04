@@ -307,8 +307,9 @@ impl DatasetAutomation {
 
         AutomationStatus {
             enabled: self.config.enabled,
-            active_policies: policies.values().filter(|p| p.enabled).count() as u32,
-            tracked_datasets: lifecycle_tracker.len() as u32,
+            active_policies: u32::try_from(policies.values().filter(|p| p.enabled).count())
+                .unwrap_or(u32::MAX),
+            tracked_datasets: u32::try_from(lifecycle_tracker.len()).unwrap_or(u32::MAX),
             total_migrations_performed: lifecycle_tracker
                 .values()
                 .map(|l| l.total_migrations)

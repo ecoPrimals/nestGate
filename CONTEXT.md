@@ -29,7 +29,7 @@ than by importing this crate graph.
 | **Unsafe** | None in normal crates; **env-process-shim** bridge is the documented exception |
 | **Lint / format** | Workspace `cargo clippy --workspace --all-features -- -D warnings` (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean in routine runs |
-| **Tests** | `cargo test --all` — ~12,240 passing, 0 failures (see STATUS.md) |
+| **Tests** | `cargo test --all` — ~12,236 passing, 0 failures (see STATUS.md) |
 | **Coverage** | ~80% line (llvm-cov) — wateringHole 80% minimum met |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
 | **Specs** | 16 specification documents under `specs/` |

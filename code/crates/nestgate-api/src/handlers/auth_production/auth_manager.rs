@@ -10,28 +10,6 @@ use std::collections::HashMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
-/// API token classification (mirrors legacy handler expectations).
-#[derive(Debug, Clone, Copy)]
-pub enum TokenType {
-    /// API key style token
-    ApiKey,
-}
-
-/// Opaque auth token handle returned to clients.
-#[derive(Debug, Clone)]
-pub struct AuthToken {
-    /// Raw token string
-    pub token: String,
-}
-
-impl AuthToken {
-    /// Creates a token with the given classification (classification is reserved for future use).
-    #[must_use]
-    pub const fn new(token: String, _ty: TokenType) -> Self {
-        Self { token }
-    }
-}
-
 /// Role assignment for RBAC-style checks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {

@@ -128,7 +128,7 @@ impl RealTimeMetricsCollector {
     /// Returns an error if system metrics cannot be collected.
     pub fn get_system_resources(&self) -> Result<SystemSnapshot> {
         let cpu_cores = std::thread::available_parallelism()
-            .map(|n| n.get() as u32)
+            .map(|n| u32::try_from(n.get()).unwrap_or(u32::MAX))
             .unwrap_or(1);
 
         let (memory_total_gb, memory_used_gb, cpu_usage) =
@@ -146,9 +146,11 @@ impl RealTimeMetricsCollector {
                             }
                         }
                     }
-                    let total_gb = (mem_total_kb / (1024 * 1024)) as u32;
-                    let used_gb =
-                        ((mem_total_kb.saturating_sub(mem_available_kb)) / (1024 * 1024)) as u32;
+                    let total_gb = u32::try_from(mem_total_kb / (1024 * 1024)).unwrap_or(u32::MAX);
+                    let used_gb = u32::try_from(
+                        mem_total_kb.saturating_sub(mem_available_kb) / (1024 * 1024),
+                    )
+                    .unwrap_or(u32::MAX);
                     (total_gb, used_gb, 0.0)
                 }
                 Err(_) => (0, 0, 0.0),

@@ -3,7 +3,7 @@
 
 //! Credential-based authentication and user provisioning handlers.
 
-use super::auth_manager::{AuthToken, Permission, Role, TokenType};
+use super::auth_manager::{Permission, Role};
 use super::handler::ProductionAuthHandler;
 use super::types::{AuthCredentials, AuthResponse, CreateUserRequest};
 use axum::{extract::State, http::StatusCode, response::Json};
@@ -12,25 +12,28 @@ use tracing::info;
 /// **AUTHENTICATE HANDLER**
 ///
 /// Authenticate user with credentials.
+///
+/// Real credential validation requires an identity-provider capability
+/// (e.g. security capability provider or an external identity provider via capability IPC).
+/// Until wired, returns `UNAUTHORIZED` — callers should not assume
+/// any request is authenticated.
 pub async fn authenticate(
     State(_handler): State<ProductionAuthHandler>,
     Json(credentials): Json<AuthCredentials>,
 ) -> std::result::Result<Json<AuthResponse>, StatusCode> {
-    info!("Authenticating user: {}", credentials.username);
-
-    // For production, this would validate against a real auth backend
-    // For now, create a demo token
-    let token = AuthToken::new(format!("token_{}", credentials.username), TokenType::ApiKey);
+    info!(
+        "Authentication attempted for user: {} — identity provider not yet wired",
+        credentials.username
+    );
 
     let response = AuthResponse {
-        success: true,
-        token: Some(token.token),
-        user_id: Some(credentials.username.clone()),
-        role: "user".to_string(),
-        permissions: vec!["read".to_string(), "write".to_string()],
+        success: false,
+        token: None,
+        user_id: Some(credentials.username),
+        role: String::new(),
+        permissions: vec![],
     };
 
-    info!("Authentication successful for: {}", credentials.username);
     Ok(Json(response))
 }
 
@@ -89,30 +92,17 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_authenticate_with_missing_user() {
+    async fn test_authenticate_returns_unauthenticated() {
         let handler = ProductionAuthHandler::new();
         let credentials = AuthCredentials {
-            username: "nonexistent_user".to_string(),
+            username: "any_user".to_string(),
             password: "password123".to_string(),
         };
 
         let result = authenticate(State(handler), Json(credentials)).await;
-        // In current implementation, all authentications succeed (stub)
-        // In production, this would fail
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_authenticate_with_empty_username() {
-        let handler = ProductionAuthHandler::new();
-        let credentials = AuthCredentials {
-            username: String::new(),
-            password: "password123".to_string(),
-        };
-
-        let result = authenticate(State(handler), Json(credentials)).await;
-        // Currently succeeds, but in production would validate
-        assert!(result.is_ok());
+        let response = result.expect("handler returns Ok with failure payload");
+        assert!(!response.success, "no IdP wired — authentication must not succeed");
+        assert!(response.token.is_none());
     }
 
     #[tokio::test]
