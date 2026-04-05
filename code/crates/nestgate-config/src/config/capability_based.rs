@@ -271,7 +271,7 @@ impl CapabilityConfig {
                 let fallback_host = self
                     .env
                     .get("NESTGATE_FALLBACK_HOST")
-                    .unwrap_or_else(|| "127.0.0.1".to_string());
+                    .unwrap_or_else(|| crate::constants::LOCALHOST.to_string());
                 let fallback_port: u16 = env_parsed(&*self.env, "NESTGATE_FALLBACK_PORT", 8080u16);
 
                 let endpoint_str = format!("{fallback_host}:{fallback_port}");

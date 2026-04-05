@@ -109,10 +109,11 @@ impl ServiceDetector {
 
     /// Probe a single port for service capabilities
     async fn probe_port(port: u16) -> CapabilityResult<ServiceDescriptor> {
+        use nestgate_config::constants::hardcoding::addresses::{LOCALHOST_IPV4, LOCALHOST_NAME};
         use uuid::Uuid;
 
         // Try HTTP/HTTPS first
-        let hosts = vec!["localhost", "127.0.0.1"];
+        let hosts = vec![LOCALHOST_NAME, LOCALHOST_IPV4];
 
         for host in hosts {
             // Try HTTP well-known endpoint for capability discovery

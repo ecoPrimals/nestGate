@@ -16,12 +16,13 @@ mod validation;
 
 pub use types::{DatasetInfo, ZfsDatasetManager};
 
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl ZfsDatasetManager {
     /// Create dataset manager for testing
     ///
     /// **TEST-ONLY**: This constructor is only available in test builds.
     /// Production code must use `ZfsDatasetManager::new()` with proper configuration.
+    #[must_use]
     pub fn new_for_testing() -> Self {
         use crate::config::ZfsConfig;
         use crate::pool::ZfsPoolManager;

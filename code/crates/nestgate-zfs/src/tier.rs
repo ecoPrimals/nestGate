@@ -251,12 +251,13 @@ impl TierManager {
 // ========== TEST-ONLY CONSTRUCTORS ==========
 // Isolated from production code to maintain clear boundaries
 
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl TierManager {
     /// Create tier manager for testing
     ///
     /// **TEST-ONLY**: This constructor is only available in test builds.
     /// Production code must use `TierManager::new()` with proper configuration.
+    #[must_use]
     pub fn new_for_testing() -> Self {
         let mut tier_stats_inner = HashMap::new();
         tier_stats_inner.insert(StorageTier::Hot, TierStats::default());

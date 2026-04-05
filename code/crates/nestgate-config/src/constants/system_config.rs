@@ -62,54 +62,34 @@ impl SystemConfig {
         }
     }
 
-    /// Create configuration from environment variables
+    /// Create configuration from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn nestgate_types::EnvSource) -> Self {
+        use nestgate_types::env_parsed;
+        Self {
+            timeout_ms: env_parsed(env, "NESTGATE_TIMEOUT_MS", Self::DEFAULT_TIMEOUT_MS),
+            max_connections: env_parsed(env, "NESTGATE_MAX_CONNECTIONS", Self::MAX_CONNECTIONS),
+            buffer_size: env_parsed(env, "NESTGATE_BUFFER_SIZE", Self::BUFFER_SIZE),
+            retry_attempts: env_parsed(
+                env,
+                "NESTGATE_RETRY_ATTEMPTS",
+                Self::DEFAULT_RETRY_ATTEMPTS,
+            ),
+            health_check_interval: env_parsed(
+                env,
+                "NESTGATE_HEALTH_CHECK_INTERVAL",
+                Self::DEFAULT_HEALTH_CHECK_INTERVAL,
+            ),
+            api_port: env_parsed(env, "NESTGATE_API_PORT", Self::DEFAULT_API_PORT),
+            bind_host: env.get_or("NESTGATE_BIND_HOST", Self::DEFAULT_BIND_HOST),
+            api_url: env.get("NESTGATE_API_URL"),
+        }
+    }
+
+    /// Create configuration from process environment variables.
     #[must_use]
     pub fn from_env() -> Self {
-        let timeout_ms = std::env::var("NESTGATE_TIMEOUT_MS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_TIMEOUT_MS);
-
-        let max_connections = std::env::var("NESTGATE_MAX_CONNECTIONS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::MAX_CONNECTIONS);
-
-        let buffer_size = std::env::var("NESTGATE_BUFFER_SIZE")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::BUFFER_SIZE);
-
-        let retry_attempts = std::env::var("NESTGATE_RETRY_ATTEMPTS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_RETRY_ATTEMPTS);
-
-        let health_check_interval = std::env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_HEALTH_CHECK_INTERVAL);
-
-        let api_port = std::env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_API_PORT);
-
-        let bind_host = std::env::var("NESTGATE_BIND_HOST")
-            .unwrap_or_else(|_| Self::DEFAULT_BIND_HOST.to_string());
-
-        let api_url = std::env::var("NESTGATE_API_URL").ok();
-
-        Self {
-            timeout_ms,
-            max_connections,
-            buffer_size,
-            retry_attempts,
-            health_check_interval,
-            api_port,
-            bind_host,
-            api_url,
-        }
+        Self::from_env_source(&nestgate_types::ProcessEnv)
     }
 
     // ==================== GETTERS ====================

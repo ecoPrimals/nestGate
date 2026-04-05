@@ -22,7 +22,7 @@ pub mod error;
 pub mod result_types;
 pub mod unified_enums;
 
-pub use env_source::{EnvSource, MapEnv, ProcessEnv, env_parsed};
+pub use env_source::{EnvSource, MapEnv, ProcessEnv, env_parsed, env_var_or_default};
 pub use error::{
     CanonicalResult, ErrorContext, NestGateError, NestGateUnifiedError, Result, ResultExt,
     RetryInfo, TestResult,

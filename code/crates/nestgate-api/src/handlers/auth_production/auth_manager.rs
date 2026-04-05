@@ -53,7 +53,7 @@ impl Permission {
 
     /// Permission label.
     #[must_use]
-    #[allow(dead_code)] // Reserved for future authorization logging / policy surfaces
+    #[expect(dead_code, reason = "reserved for authorization logging")]
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -95,7 +95,7 @@ impl AuthContext {
 }
 
 #[derive(Debug)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "fields used by AuthManager internally")]
 struct UserRecord {
     user_id: String,
     username: String,
@@ -131,7 +131,7 @@ impl AuthManager {
     }
 
     /// Whether a username is registered.
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "reserved for user management API")]
     pub fn user_exists(&self, username: &str) -> Result<(), String> {
         if self.users.values().any(|u| u.username == username) {
             Ok(())

@@ -4,9 +4,12 @@
 //! [`StoragePaths`] aggregate and derived path helpers.
 
 use super::resolve::{
-    resolve_cache_dir, resolve_config_dir, resolve_data_dir, resolve_log_dir, resolve_runtime_dir,
-    resolve_state_dir, resolve_temp_dir,
+    resolve_cache_dir_from_env_source, resolve_config_dir_from_env_source,
+    resolve_data_dir_from_env_source, resolve_log_dir_from_env_source,
+    resolve_runtime_dir_from_env_source, resolve_state_dir_from_env_source,
+    resolve_temp_dir_from_env_source,
 };
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::env;
 use std::path::{Path, PathBuf};
 use tracing::info;
@@ -33,13 +36,19 @@ impl StoragePaths {
     /// Create storage paths from environment with XDG-compliant fallback
     #[must_use]
     pub fn from_environment() -> Self {
-        let data_dir = resolve_data_dir();
-        let config_dir = resolve_config_dir();
-        let cache_dir = resolve_cache_dir();
-        let state_dir = resolve_state_dir();
-        let log_dir = resolve_log_dir();
-        let temp_dir = resolve_temp_dir();
-        let runtime_dir = resolve_runtime_dir();
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_environment`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+        let data_dir = resolve_data_dir_from_env_source(env);
+        let config_dir = resolve_config_dir_from_env_source(env);
+        let cache_dir = resolve_cache_dir_from_env_source(env);
+        let state_dir = resolve_state_dir_from_env_source(env);
+        let log_dir = resolve_log_dir_from_env_source(env);
+        let temp_dir = resolve_temp_dir_from_env_source(env);
+        let runtime_dir = resolve_runtime_dir_from_env_source(env);
 
         info!("📂 Storage paths initialized (XDG-compliant):");
         info!("   Data:    {}", data_dir.display());

@@ -38,7 +38,7 @@
 
 use crate::config::capability_discovery;
 use crate::constants::hardcoding::runtime_fallback_ports;
-use crate::constants::{DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT};
+use crate::constants::{DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT, LOCALHOST};
 use nestgate_types::EnvSource;
 use nestgate_types::ProcessEnv;
 use nestgate_types::error::NestGateError;
@@ -198,10 +198,11 @@ impl ConfigBuilder {
                 .unwrap_or_else(|| {
                     tracing::warn!(
                         "Agnostic safe defaults: no NESTGATE_DEV_HOST, NESTGATE_DISCOVERY_DEV_HOST, \
-                         or NESTGATE_DISCOVERY_FALLBACK_HOST; using 127.0.0.1 for service '{}'.",
+                         or NESTGATE_DISCOVERY_FALLBACK_HOST; using {} for service '{}'.",
+                        LOCALHOST,
                         service
                     );
-                    "127.0.0.1".to_string()
+                    LOCALHOST.to_string()
                 });
             return Ok(format!("http://{}:{}", host, self.default_port(service)));
         }

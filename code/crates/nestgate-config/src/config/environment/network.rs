@@ -8,8 +8,8 @@
 //! **Phase 3: Smart Refactoring** - Extracted from monolithic `environment.rs` (Jan 30, 2026)
 
 use super::{ConfigError, Port};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
-use std::env;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -44,16 +44,29 @@ impl NetworkConfig {
         Self::from_env_with_prefix("NESTGATE")
     }
 
+    /// Load from an injectable environment source (e.g. [`nestgate_types::MapEnv`] in tests).
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self, ConfigError> {
+        Self::from_env_with_prefix_source("NESTGATE", env)
+    }
+
     /// Load from environment with custom prefix
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
+        Self::from_env_with_prefix_source(prefix, &ProcessEnv)
+    }
+
+    /// Load with custom prefix from an injectable [`EnvSource`].
+    pub fn from_env_with_prefix_source(
+        prefix: &str,
+        env: &dyn EnvSource,
+    ) -> Result<Self, ConfigError> {
         Ok(Self {
-            port: Self::env_port_with_alternatives(prefix)?,
-            host: Self::env_host_with_alternatives(prefix),
-            timeout_secs: Self::env_var_or(prefix, "TIMEOUT_SECS", 30)?,
-            max_connections: Self::env_var_or(prefix, "MAX_CONNECTIONS", 1000)?,
-            read_timeout_secs: Self::env_var_or(prefix, "READ_TIMEOUT_SECS", 10)?,
-            write_timeout_secs: Self::env_var_or(prefix, "WRITE_TIMEOUT_SECS", 10)?,
-            keepalive_secs: Self::env_var_or(prefix, "KEEPALIVE_SECS", 60)?,
+            port: Self::env_port_with_alternatives(prefix, env)?,
+            host: Self::env_host_with_alternatives(prefix, env),
+            timeout_secs: Self::env_var_or_from(prefix, "TIMEOUT_SECS", 30, env)?,
+            max_connections: Self::env_var_or_from(prefix, "MAX_CONNECTIONS", 1000, env)?,
+            read_timeout_secs: Self::env_var_or_from(prefix, "READ_TIMEOUT_SECS", 10, env)?,
+            write_timeout_secs: Self::env_var_or_from(prefix, "WRITE_TIMEOUT_SECS", 10, env)?,
+            keepalive_secs: Self::env_var_or_from(prefix, "KEEPALIVE_SECS", 60, env)?,
         })
     }
 
@@ -64,22 +77,22 @@ impl NetworkConfig {
     /// 2. `NESTGATE_BIND_ADDRESS` (alternative)
     /// 3. `NESTGATE_HOST` (original)
     /// 4. Default (127.0.0.1)
-    fn env_host_with_alternatives(prefix: &str) -> String {
+    fn env_host_with_alternatives(prefix: &str, env: &dyn EnvSource) -> String {
         // Try BIND first (common name)
         let bind_var = format!("{prefix}_BIND");
-        if let Ok(val) = env::var(&bind_var) {
+        if let Some(val) = env.get(&bind_var) {
             return val;
         }
 
         // Try BIND_ADDRESS (alternative)
         let bind_address_var = format!("{prefix}_BIND_ADDRESS");
-        if let Ok(val) = env::var(&bind_address_var) {
+        if let Some(val) = env.get(&bind_address_var) {
             return val;
         }
 
         // Try HOST (original)
         let host_var = format!("{prefix}_HOST");
-        if let Ok(val) = env::var(&host_var) {
+        if let Some(val) = env.get(&host_var) {
             return val;
         }
 
@@ -93,10 +106,10 @@ impl NetworkConfig {
     /// 2. `NESTGATE_HTTP_PORT` (alternative)
     /// 3. `NESTGATE_PORT` (original)
     /// 4. Default (8080)
-    fn env_port_with_alternatives(prefix: &str) -> Result<Port, ConfigError> {
+    fn env_port_with_alternatives(prefix: &str, env: &dyn EnvSource) -> Result<Port, ConfigError> {
         // Try API_PORT first (documented name)
         let api_port_var = format!("{prefix}_API_PORT");
-        if let Ok(val) = env::var(&api_port_var) {
+        if let Some(val) = env.get(&api_port_var) {
             return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
                 key: api_port_var,
                 source: Box::new(e),
@@ -105,7 +118,7 @@ impl NetworkConfig {
 
         // Try HTTP_PORT (alternative)
         let http_port_var = format!("{prefix}_HTTP_PORT");
-        if let Ok(val) = env::var(&http_port_var) {
+        if let Some(val) = env.get(&http_port_var) {
             return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
                 key: http_port_var,
                 source: Box::new(e),
@@ -114,7 +127,7 @@ impl NetworkConfig {
 
         // Try PORT (original)
         let port_var = format!("{prefix}_PORT");
-        if let Ok(val) = env::var(&port_var) {
+        if let Some(val) = env.get(&port_var) {
             return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
                 key: port_var,
                 source: Box::new(e),
@@ -131,13 +144,25 @@ impl NetworkConfig {
     where
         T::Err: std::error::Error + Send + Sync + 'static,
     {
+        Self::env_var_or_from(prefix, key, default, &ProcessEnv)
+    }
+
+    fn env_var_or_from<T: FromStr>(
+        prefix: &str,
+        key: &str,
+        default: T,
+        env: &dyn EnvSource,
+    ) -> Result<T, ConfigError>
+    where
+        T::Err: std::error::Error + Send + Sync + 'static,
+    {
         let var_name = format!("{prefix}_{key}");
-        match env::var(&var_name) {
-            Ok(val) => val.parse().map_err(|e| ConfigError::ParseError {
+        match env.get(&var_name) {
+            Some(val) => val.parse().map_err(|e| ConfigError::ParseError {
                 key: var_name,
                 source: Box::new(e),
             }),
-            Err(_) => Ok(default),
+            None => Ok(default),
         }
     }
 

@@ -7,8 +7,8 @@
 //!
 //! **Phase 3: Smart Refactoring** - Extracted from monolithic `environment.rs` (Jan 30, 2026)
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
-use std::env;
 use std::str::FromStr;
 
 use super::ConfigError;
@@ -41,30 +41,48 @@ impl SecurityConfig {
         Self::from_env_with_prefix("NESTGATE")
     }
 
+    /// Load from an injectable environment source (e.g. [`nestgate_types::MapEnv`] in tests).
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self, ConfigError> {
+        Self::from_env_with_prefix_source("NESTGATE", env)
+    }
+
     /// Load from environment with custom prefix
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
+        Self::from_env_with_prefix_source(prefix, &ProcessEnv)
+    }
+
+    /// Load with custom prefix from an injectable [`EnvSource`].
+    pub fn from_env_with_prefix_source(
+        prefix: &str,
+        env: &dyn EnvSource,
+    ) -> Result<Self, ConfigError> {
         Ok(Self {
-            tls_enabled: Self::env_var_or(prefix, "TLS_ENABLED", false)?,
-            tls_cert_path: env::var(format!("{prefix}_TLS_CERT")).ok(),
-            tls_key_path: env::var(format!("{prefix}_TLS_KEY")).ok(),
-            api_key: env::var(format!("{prefix}_API_KEY")).ok(),
-            rate_limit_enabled: Self::env_var_or(prefix, "RATE_LIMIT_ENABLED", true)?,
-            rate_limit_rpm: Self::env_var_or(prefix, "RATE_LIMIT_RPM", 100)?,
+            tls_enabled: Self::env_var_or(prefix, "TLS_ENABLED", false, env)?,
+            tls_cert_path: env.get(&format!("{prefix}_TLS_CERT")),
+            tls_key_path: env.get(&format!("{prefix}_TLS_KEY")),
+            api_key: env.get(&format!("{prefix}_API_KEY")),
+            rate_limit_enabled: Self::env_var_or(prefix, "RATE_LIMIT_ENABLED", true, env)?,
+            rate_limit_rpm: Self::env_var_or(prefix, "RATE_LIMIT_RPM", 100, env)?,
         })
     }
 
     /// Helper to get environment variable or use default
-    fn env_var_or<T: FromStr>(prefix: &str, key: &str, default: T) -> Result<T, ConfigError>
+    fn env_var_or<T: FromStr>(
+        prefix: &str,
+        key: &str,
+        default: T,
+        env: &dyn EnvSource,
+    ) -> Result<T, ConfigError>
     where
         T::Err: std::error::Error + Send + Sync + 'static,
     {
         let var_name = format!("{prefix}_{key}");
-        match env::var(&var_name) {
-            Ok(val) => val.parse().map_err(|e| ConfigError::ParseError {
+        match env.get(&var_name) {
+            Some(val) => val.parse().map_err(|e| ConfigError::ParseError {
                 key: var_name,
                 source: Box::new(e),
             }),
-            Err(_) => Ok(default),
+            None => Ok(default),
         }
     }
 }

@@ -6,6 +6,7 @@
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
 
+use nestgate_core::NestGateError;
 use nestgate_core::Result as CoreResult;
 /// Trend analysis, performance evaluation, and predictive monitoring
 use std::collections::VecDeque;
@@ -34,14 +35,16 @@ impl PerformanceAnalyzer {
     /// - Network or I/O errors occur
     pub async fn analyze_trends(
         metrics_history: &MetricsHistoryQueue,
-    ) -> Result<AnalysisReport, Box<dyn std::error::Error>> {
+    ) -> Result<AnalysisReport, NestGateError> {
         // Analyze performance trends from metrics history
         let history = metrics_history.read().await;
         if history.len() >= 2 {
-            let latest = history.back().ok_or("No latest metrics available")?;
+            let latest = history
+                .back()
+                .ok_or_else(|| NestGateError::internal("No latest metrics available"))?;
             let previous = history
                 .get(history.len() - 2)
-                .ok_or("No previous metrics available")?;
+                .ok_or_else(|| NestGateError::internal("No previous metrics available"))?;
 
             tracing::debug!(
                 "Performance trend: Score {} -> {}, Timestamp {:?} -> {:?}",

@@ -24,11 +24,3 @@ tracing = { workspace = true }
 crossbeam = "0.8"
 dashmap = { workspace = true }
 tokio = { workspace = true }
-
-[features]
-default = ["simd", "zero-copy", "lock-free", "adaptive"]
-simd = []
-zero-copy = []
-lock-free = []
-adaptive = []
-custom-allocators = []

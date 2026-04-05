@@ -7,7 +7,7 @@
 //! endpoints at runtime, following the zero-hardcoding and capability-based
 //! discovery principles from wateringHole.
 
-use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
+use nestgate_config::constants::system::{DEFAULT_SERVICE_NAME, ecosystem_path_segment};
 use std::path::PathBuf;
 use tracing::debug;
 
@@ -28,7 +28,7 @@ pub(super) fn discover_primal_socket(primal_name: &str) -> Option<PathBuf> {
 
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
         let path = PathBuf::from(xdg)
-            .join("biomeos")
+            .join(ecosystem_path_segment())
             .join(format!("{primal_name}.sock"));
         if path.exists() {
             return Some(path);
@@ -45,7 +45,7 @@ pub(super) fn discover_primal_socket(primal_name: &str) -> Option<PathBuf> {
         std::env::var("XDG_RUNTIME_DIR"),
     ) {
         let path = PathBuf::from(xdg)
-            .join("biomeos")
+            .join(ecosystem_path_segment())
             .join(format!("{primal_name}-{family_id}.sock"));
         if path.exists() {
             return Some(path);
@@ -100,11 +100,11 @@ pub(super) fn gather_socket_search_dirs() -> Vec<String> {
     }
 
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        dirs.push(format!("{xdg}/biomeos"));
+        dirs.push(format!("{xdg}/{}", ecosystem_path_segment()));
     }
 
     let uid = uzers::get_current_uid();
-    let xdg_default = format!("/run/user/{uid}/biomeos");
+    let xdg_default = format!("/run/user/{uid}/{}", ecosystem_path_segment());
     if !dirs.contains(&xdg_default) {
         dirs.push(xdg_default);
     }

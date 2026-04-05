@@ -133,7 +133,7 @@ impl Default for ZfsMetrics {
 // ========== TEST-ONLY CONSTRUCTORS ==========
 // Isolated from production code to maintain clear boundaries
 
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl ZfsMetrics {
     /// Create metrics collector for testing
     ///

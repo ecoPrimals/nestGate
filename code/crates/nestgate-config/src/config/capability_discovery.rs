@@ -47,6 +47,7 @@
 //! ✅ **Agnostic**: Works across any deployment environment
 //! ✅ **Fallback Safe**: Graceful degradation to defaults
 
+use crate::constants::system::ecosystem_path_segment;
 use nestgate_types::EnvSource;
 use nestgate_types::ProcessEnv;
 use nestgate_types::error::NestGateError;
@@ -253,13 +254,16 @@ pub fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> R
 
 /// Directory where capability manifests are written for peer discovery.
 ///
-/// Resolution: `$XDG_RUNTIME_DIR/biomeos/nestgate/capabilities/` or
+/// Resolution: `$XDG_RUNTIME_DIR/<ecosystem>/nestgate/capabilities/` (see [`ecosystem_path_segment`]) or
 /// `/tmp/nestgate-capabilities/` as fallback.
 fn capability_manifest_dir() -> std::path::PathBuf {
     if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
         let p = std::path::Path::new(&xdg);
         if p.exists() {
-            return p.join("biomeos").join("nestgate").join("capabilities");
+            return p
+                .join(ecosystem_path_segment())
+                .join("nestgate")
+                .join("capabilities");
         }
     }
     std::path::PathBuf::from("/tmp/nestgate-capabilities")

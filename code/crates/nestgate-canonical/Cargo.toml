@@ -27,10 +27,3 @@ parking_lot = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 tokio = { workspace = true }
-
-[features]
-default = ["unified-config", "zero-cost-patterns"]
-unified-config = []
-zero-cost-patterns = []
-simd-integration = []
-performance-monitoring = []

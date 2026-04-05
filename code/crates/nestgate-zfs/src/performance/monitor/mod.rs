@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! ZFS Performance Monitoring System.
@@ -66,6 +66,7 @@ mod metrics_tests;
 impl ZfsPerformanceMonitor {
     /// Create performance monitor for testing
     #[must_use]
+    #[cfg(any(test, feature = "dev-stubs"))]
     pub fn new_for_testing() -> Self {
         Self {
             pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),

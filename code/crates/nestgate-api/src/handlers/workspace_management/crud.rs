@@ -11,12 +11,20 @@ use axum::{
     extract::{Json, Path},
     http::StatusCode,
 };
-use nestgate_core::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use nestgate_zfs::numeric::f64_to_u64_saturating;
 use serde_json::{Value, json};
 use tokio::process::Command;
 use tracing::{error, info, warn};
 // Removed unused tracing import
+
+fn zfs_executable(env: &dyn EnvSource) -> String {
+    env_var_or_default(env, "NESTGATE_ZFS_BINARY", "zfs")
+}
+
+fn workspace_pool_name(env: &dyn EnvSource) -> String {
+    env_var_or_default(env, "NESTGATE_WORKSPACE_POOL", "zfspool")
+}
 
 /// Get all workspaces with real ZFS integration
 ///
@@ -24,12 +32,20 @@ use tracing::{error, info, warn};
 ///
 /// Returns `StatusCode::INTERNAL_SERVER_ERROR` if ZFS command fails or output cannot be parsed.
 pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
+    get_workspaces_from_env_source(&ProcessEnv).await
+}
+
+/// Like [`get_workspaces`], but uses an injectable [`EnvSource`] (e.g. [`nestgate_types::MapEnv`] in tests).
+pub async fn get_workspaces_from_env_source(
+    env: &dyn EnvSource,
+) -> Result<Json<Value>, StatusCode> {
     info!("📁 Getting all workspaces from ZFS datasets");
-    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
+    let zfs_bin = zfs_executable(env);
+    let pool_name = workspace_pool_name(env);
     let workspaces_path = "self.base_url/workspaces".to_string();
 
     // Query ZFS for workspace datasets
-    let list_output = Command::new("zfs")
+    let list_output = Command::new(&zfs_bin)
         .args([
             "list",
             "-H",
@@ -72,7 +88,7 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
 
                         // Get additional properties
                         let (compression, quota, status) =
-                            get_workspace_properties(full_name).await;
+                            get_workspace_properties(&zfs_bin, full_name).await;
 
                         workspaces.push(json!({
                             "id": workspace_id,
@@ -127,6 +143,14 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
 /// Returns `StatusCode::BAD_REQUEST` if workspace name is missing or invalid,
 /// or `StatusCode::INTERNAL_SERVER_ERROR` if ZFS dataset creation fails.
 pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>, StatusCode> {
+    create_workspace_from_env_source(&ProcessEnv, Json(request)).await
+}
+
+/// Like [`create_workspace`], but uses an injectable [`EnvSource`].
+pub async fn create_workspace_from_env_source(
+    env: &dyn EnvSource,
+    Json(request): Json<Value>,
+) -> Result<Json<Value>, StatusCode> {
     info!("🆕 Creating new workspace: {:?}", request);
     // Extract workspace name from request, using default if not provided
     let workspace_name = request
@@ -138,7 +162,8 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
     let uuid_manager = nestgate_core::uuid_cache::UuidManager::new();
     let workspace_id = uuid_manager.workspace_id();
 
-    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
+    let zfs_bin = zfs_executable(env);
+    let pool_name = workspace_pool_name(env);
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     // Validate workspace name
@@ -186,14 +211,14 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
 
     create_args.push(&dataset_name);
 
-    let create_output = Command::new("zfs").args(&create_args).output().await;
+    let create_output = Command::new(&zfs_bin).args(&create_args).output().await;
 
     match create_output {
         Ok(output) if output.status.success() => {
             info!("✅ Created ZFS dataset: {}", dataset_name);
 
             // Get the created dataset information
-            let dataset_info = get_workspace_details(&workspace_id).await;
+            let dataset_info = get_workspace_details(&zfs_bin, env, &workspace_id).await;
 
             Ok(Json(json!({
                 "status": "success",
@@ -223,6 +248,14 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
 /// Returns `StatusCode::BAD_REQUEST` if workspace ID format is invalid,
 /// or `StatusCode::INTERNAL_SERVER_ERROR` if ZFS command fails or dataset not found.
 pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
+    get_workspace_from_env_source(&ProcessEnv, Path(workspace_id)).await
+}
+
+/// Like [`get_workspace`], but uses an injectable [`EnvSource`].
+pub async fn get_workspace_from_env_source(
+    env: &dyn EnvSource,
+    Path(workspace_id): Path<String>,
+) -> Result<Json<Value>, StatusCode> {
     info!("📋 Getting workspace details: {}", workspace_id);
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') {
@@ -230,11 +263,12 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
+    let zfs_bin = zfs_executable(env);
+    let pool_name = workspace_pool_name(env);
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     // Get comprehensive ZFS properties
-    let props_output = Command::new("zfs")
+    let props_output = Command::new(&zfs_bin)
         .args([
             "get",
             "-H",
@@ -258,7 +292,7 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
             }
 
             // Get snapshot count
-            let snapshot_count = get_snapshot_count(&dataset_name).await;
+            let snapshot_count = get_snapshot_count(&zfs_bin, &dataset_name).await;
 
             // Calculate utilization
             // ✅ FIXED: Replace unwrap_or with .get().map().unwrap_or_default() for safety
@@ -332,12 +366,13 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
 }
 
 async fn workspace_apply_quota(
+    zfs_bin: &str,
     dataset_name: &str,
     quota: &str,
     updated_properties: &mut Vec<String>,
     errors: &mut Vec<String>,
 ) {
-    let quota_result = Command::new("zfs")
+    let quota_result = Command::new(zfs_bin)
         .args(["set", &format!("quota={quota}"), dataset_name])
         .output()
         .await;
@@ -360,12 +395,13 @@ async fn workspace_apply_quota(
 }
 
 async fn workspace_apply_compression(
+    zfs_bin: &str,
     dataset_name: &str,
     compression: &str,
     updated_properties: &mut Vec<String>,
     errors: &mut Vec<String>,
 ) {
-    let compression_result = Command::new("zfs")
+    let compression_result = Command::new(zfs_bin)
         .args(["set", &format!("compression={compression}"), dataset_name])
         .output()
         .await;
@@ -388,13 +424,14 @@ async fn workspace_apply_compression(
 }
 
 async fn workspace_apply_name(
+    zfs_bin: &str,
     dataset_name: &str,
     name: &str,
     updated_properties: &mut Vec<String>,
     errors: &mut Vec<String>,
 ) {
     let prop = format!("org.nestgate:workspace_name={name}");
-    let name_result = Command::new("zfs")
+    let name_result = Command::new(zfs_bin)
         .args(["set", &prop, dataset_name])
         .output()
         .await;
@@ -426,6 +463,15 @@ pub async fn update_workspace_config(
     Path(workspace_id): Path<String>,
     Json(config): Json<Value>,
 ) -> Result<Json<Value>, StatusCode> {
+    update_workspace_config_from_env_source(&ProcessEnv, Path(workspace_id), Json(config)).await
+}
+
+/// Like [`update_workspace_config`], but uses an injectable [`EnvSource`].
+pub async fn update_workspace_config_from_env_source(
+    env: &dyn EnvSource,
+    Path(workspace_id): Path<String>,
+    Json(config): Json<Value>,
+) -> Result<Json<Value>, StatusCode> {
     info!(
         "⚙️ Updating workspace config: {} -> {:?}",
         workspace_id, config
@@ -436,18 +482,27 @@ pub async fn update_workspace_config(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
+    let zfs_bin = zfs_executable(env);
+    let pool_name = workspace_pool_name(env);
     let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
 
     let mut updated_properties = Vec::new();
     let mut errors = Vec::new();
 
     if let Some(quota) = config.get("quota").and_then(|v| v.as_str()) {
-        workspace_apply_quota(&dataset_name, quota, &mut updated_properties, &mut errors).await;
+        workspace_apply_quota(
+            &zfs_bin,
+            &dataset_name,
+            quota,
+            &mut updated_properties,
+            &mut errors,
+        )
+        .await;
     }
 
     if let Some(compression) = config.get("compression").and_then(|v| v.as_str()) {
         workspace_apply_compression(
+            &zfs_bin,
             &dataset_name,
             compression,
             &mut updated_properties,
@@ -457,7 +512,14 @@ pub async fn update_workspace_config(
     }
 
     if let Some(name) = config.get("name").and_then(|v| v.as_str()) {
-        workspace_apply_name(&dataset_name, name, &mut updated_properties, &mut errors).await;
+        workspace_apply_name(
+            &zfs_bin,
+            &dataset_name,
+            name,
+            &mut updated_properties,
+            &mut errors,
+        )
+        .await;
     }
 
     if errors.is_empty() {
@@ -495,6 +557,14 @@ pub async fn update_workspace_config(
 /// Returns `StatusCode::BAD_REQUEST` if workspace ID format is invalid,
 /// or `StatusCode::INTERNAL_SERVER_ERROR` if ZFS deletion fails.
 pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<StatusCode, StatusCode> {
+    delete_workspace_from_env_source(&ProcessEnv, Path(workspace_id)).await
+}
+
+/// Like [`delete_workspace`], but uses an injectable [`EnvSource`].
+pub async fn delete_workspace_from_env_source(
+    env: &dyn EnvSource,
+    Path(workspace_id): Path<String>,
+) -> Result<StatusCode, StatusCode> {
     tracing::info!("Deleting workspace: {}", workspace_id);
 
     // Validate workspace ID format
@@ -503,11 +573,13 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Status
         return Err(StatusCode::BAD_REQUEST);
     }
 
+    let zfs_bin = zfs_executable(env);
+
     // Construct dataset name
     let dataset_name = format!("rpool/workspaces/{workspace_id}");
 
     // First check if dataset exists
-    let check_output = Command::new("zfs")
+    let check_output = Command::new(&zfs_bin)
         .args(["list", "-H", "-o", "name", &dataset_name])
         .output()
         .await;
@@ -528,7 +600,7 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Status
     }
 
     // Delete the ZFS dataset (recursive to handle any child datasets/snapshots)
-    let delete_output = Command::new("zfs")
+    let delete_output = Command::new(&zfs_bin)
         .args(["destroy", "-r", &dataset_name])
         .output()
         .await;
@@ -553,8 +625,8 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Status
 // Helper functions
 
 /// Get additional workspace properties
-async fn get_workspace_properties(dataset_name: &str) -> (String, String, String) {
-    let props_output = Command::new("zfs")
+async fn get_workspace_properties(zfs_bin: &str, dataset_name: &str) -> (String, String, String) {
+    let props_output = Command::new(zfs_bin)
         .args([
             "get",
             "-H",
@@ -587,10 +659,10 @@ async fn get_workspace_properties(dataset_name: &str) -> (String, String, String
 }
 
 /// Get workspace details for a specific workspace ID
-async fn get_workspace_details(_workspace_id: &str) -> Value {
-    let pool_name = safe_env_var_or_default("NESTGATE_WORKSPACE_POOL", "zfspool");
+async fn get_workspace_details(zfs_bin: &str, env: &dyn EnvSource, _workspace_id: &str) -> Value {
+    let pool_name = workspace_pool_name(env);
     let dataset_name = format!("{pool_name}/workspaces/self.base_url");
-    let props_output = Command::new("zfs")
+    let props_output = Command::new(zfs_bin)
         .args([
             "get",
             "-H",
@@ -626,8 +698,8 @@ async fn get_workspace_details(_workspace_id: &str) -> Value {
 }
 
 /// Get snapshot count for a dataset
-async fn get_snapshot_count(dataset_name: &str) -> u32 {
-    let snapshot_output = Command::new("zfs")
+async fn get_snapshot_count(zfs_bin: &str, dataset_name: &str) -> u32 {
+    let snapshot_output = Command::new(zfs_bin)
         .args(["list", "-H", "-t", "snapshot", "-d", "1", dataset_name])
         .output()
         .await;

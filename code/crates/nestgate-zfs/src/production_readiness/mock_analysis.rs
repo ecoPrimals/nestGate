@@ -9,7 +9,9 @@ impl ProductionReadinessValidator {
     /// Detect Real Hardware
     pub(crate) fn detect_real_hardware(&self) -> Result<bool> {
         // Detect if we're running on real hardware vs virtualized environment
-        Ok(!std::env::var("NESTGATE_MOCK_MODE")
+        Ok(!self
+            .env
+            .get("NESTGATE_MOCK_MODE")
             .unwrap_or_default()
             .eq("true"))
     }
@@ -18,7 +20,9 @@ impl ProductionReadinessValidator {
     pub(crate) fn identify_mock_dependencies(&self) -> Result<Vec<String>> {
         let mut mocks = Vec::new();
 
-        if std::env::var("NESTGATE_MOCK_MODE")
+        if self
+            .env
+            .get("NESTGATE_MOCK_MODE")
             .unwrap_or_default()
             .eq("true")
         {

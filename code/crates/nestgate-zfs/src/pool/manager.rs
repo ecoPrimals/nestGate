@@ -95,12 +95,13 @@ impl ZfsPoolManager {
 // ========== TEST-ONLY CONSTRUCTORS ==========
 // Isolated from production code to maintain clear boundaries
 
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl ZfsPoolManager {
     /// Create instance for testing with default configuration
     ///
     /// **TEST-ONLY**: This constructor is only available in test builds.
     /// Production code must use `ZfsPoolManager::new()` or `new_production()`.
+    #[must_use]
     pub fn new_for_testing() -> Self {
         Self {
             config: ZfsConfig::default(),

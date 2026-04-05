@@ -34,6 +34,7 @@
 //! println!("API listening on {}:{}", config.network.host, config.network.port);
 //! ```
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -112,12 +113,21 @@ impl EnvironmentConfig {
     ///
     /// Returns error if required environment variables are missing or invalid
     pub fn from_env() -> Result<Self, ConfigError> {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Load configuration from an injectable environment source (e.g. [`nestgate_types::MapEnv`] in tests).
+    ///
+    /// # Errors
+    ///
+    /// Returns error if required environment variables are missing or invalid
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self, ConfigError> {
         Ok(Self {
-            network: NetworkConfig::from_env()?,
-            storage: StorageConfig::from_env()?,
-            discovery: DiscoveryConfig::from_env()?,
-            monitoring: MonitoringConfig::from_env()?,
-            security: SecurityConfig::from_env()?,
+            network: NetworkConfig::from_env_source(env)?,
+            storage: StorageConfig::from_env_source(env)?,
+            discovery: DiscoveryConfig::from_env_source(env)?,
+            monitoring: MonitoringConfig::from_env_source(env)?,
+            security: SecurityConfig::from_env_source(env)?,
         })
     }
 
@@ -127,12 +137,24 @@ impl EnvironmentConfig {
     ///
     /// Returns error if required environment variables are missing or invalid
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
+        Self::from_env_with_prefix_source(prefix, &ProcessEnv)
+    }
+
+    /// Load configuration with custom prefix from an injectable [`EnvSource`].
+    ///
+    /// # Errors
+    ///
+    /// Returns error if required environment variables are missing or invalid
+    pub fn from_env_with_prefix_source(
+        prefix: &str,
+        env: &dyn EnvSource,
+    ) -> Result<Self, ConfigError> {
         Ok(Self {
-            network: NetworkConfig::from_env_with_prefix(prefix)?,
-            storage: StorageConfig::from_env_with_prefix(prefix)?,
-            discovery: DiscoveryConfig::from_env_with_prefix(prefix)?,
-            monitoring: MonitoringConfig::from_env_with_prefix(prefix)?,
-            security: SecurityConfig::from_env_with_prefix(prefix)?,
+            network: NetworkConfig::from_env_with_prefix_source(prefix, env)?,
+            storage: StorageConfig::from_env_with_prefix_source(prefix, env)?,
+            discovery: DiscoveryConfig::from_env_with_prefix_source(prefix, env)?,
+            monitoring: MonitoringConfig::from_env_with_prefix_source(prefix, env)?,
+            security: SecurityConfig::from_env_with_prefix_source(prefix, env)?,
         })
     }
 

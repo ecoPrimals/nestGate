@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
-#![expect(
+#![allow(
     dead_code,
     missing_docs,
     unused_imports,
@@ -14,7 +14,7 @@
 
 //! Integration tests for configuration and discovery systems
 //!
-//! Tests the integration between capability-based config and service discovery.
+//! All tests use `MapEnv` via `build_with_env` for fully concurrent, isolated execution.
 
 #[cfg(test)]
 mod config_discovery_integration_tests {
@@ -22,50 +22,30 @@ mod config_discovery_integration_tests {
         CapabilityConfigBuilder, FallbackMode, PrimalCapability,
     };
     use nestgate_core::constants::port_defaults::{DEFAULT_API_PORT, DEFAULT_DEV_PORT};
+    use nestgate_types::MapEnv;
+    use std::sync::Arc;
     use std::time::Duration;
 
     #[tokio::test]
     async fn test_multi_service_discovery_workflow() {
-        // Evolved: Save and restore env vars to avoid racing with parallel tests.
-        let storage_key = "NESTGATE_CAPABILITY_STORAGE_ENDPOINT";
-        let security_key = "NESTGATE_CAPABILITY_SECURITY_ENDPOINT";
-        let orchestration_key = "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT";
-
-        let orig_storage = std::env::var(storage_key).ok();
-        let orig_security = std::env::var(security_key).ok();
-        let orig_orchestration = std::env::var(orchestration_key).ok();
-
-        nestgate_core::env_process::set_var(storage_key, "10.0.0.1:9000");
-        nestgate_core::env_process::set_var(security_key, format!("10.0.0.2:{}", DEFAULT_DEV_PORT));
-        nestgate_core::env_process::set_var(
-            orchestration_key,
-            format!("10.0.0.3:{}", DEFAULT_API_PORT),
-        );
+        let env = Arc::new(MapEnv::from([
+            ("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000"),
+            ("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", "10.0.0.2:3000"),
+            (
+                "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
+                "10.0.0.3:8080",
+            ),
+        ]));
 
         let config = CapabilityConfigBuilder::new()
             .with_discovery_timeout(Duration::from_secs(10))
             .with_retry_attempts(3)
-            .build()
+            .build_with_env(env)
             .unwrap();
 
-        // Discover all services
         let storage = config.discover(PrimalCapability::Storage).await;
         let security = config.discover(PrimalCapability::Security).await;
         let orchestration = config.discover(PrimalCapability::Orchestration).await;
-
-        // Restore before assertions to minimise race window
-        match orig_storage {
-            Some(v) => nestgate_core::env_process::set_var(storage_key, v),
-            None => nestgate_core::env_process::remove_var(storage_key),
-        }
-        match orig_security {
-            Some(v) => nestgate_core::env_process::set_var(security_key, v),
-            None => nestgate_core::env_process::remove_var(security_key),
-        }
-        match orig_orchestration {
-            Some(v) => nestgate_core::env_process::set_var(orchestration_key, v),
-            None => nestgate_core::env_process::remove_var(orchestration_key),
-        }
 
         assert!(storage.is_ok(), "Storage discovery should succeed");
         assert!(security.is_ok(), "Security discovery should succeed");
@@ -81,34 +61,25 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_fallback_mode_graceful_degradation() {
-        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_MONITORING_ENDPOINT");
-
+        let env = Arc::new(MapEnv::new());
         let config = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::GracefulDegradation)
-            .build()
+            .build_with_env(env)
             .unwrap();
 
         let result = config.discover(PrimalCapability::Monitoring).await;
-
-        // Should fail gracefully with error
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_fallback_mode_local_fallback() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT").ok();
-        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");
-
+        let env = Arc::new(MapEnv::new());
         let config = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::LocalFallback)
-            .build()
+            .build_with_env(env)
             .unwrap();
 
         let result = config.discover(PrimalCapability::Analytics).await;
-
-        if let Some(v) = orig {
-            nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v);
-        }
         assert!(result.is_ok());
         let service = result.unwrap();
         assert!(service.metadata.contains_key("mode"));
@@ -116,13 +87,11 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_discovery_caching_performance() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
+        let env = Arc::new(MapEnv::from([(
             "NESTGATE_CAPABILITY_COMPUTE_ENDPOINT",
             "192.168.1.100:7000",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
 
         let start = std::time::Instant::now();
         let result1 = config.discover(PrimalCapability::Compute).await;
@@ -131,32 +100,19 @@ mod config_discovery_integration_tests {
         let result2 = config.discover(PrimalCapability::Compute).await;
         let second_duration = start2.elapsed();
 
-        match orig {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT"),
-        }
         assert!(result1.is_ok());
         assert!(result2.is_ok());
         assert!(second_duration <= first_duration + Duration::from_millis(10));
     }
 
     #[tokio::test]
-    #[ignore] // Requires network for capability discovery
     async fn test_concurrent_discovery_requests() {
-        let orig_storage = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
-        let orig_security = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
-            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
-            "10.0.0.1:9000",
-        );
-        nestgate_core::env_process::set_var(
-            "NESTGATE_CAPABILITY_SECURITY_ENDPOINT",
-            format!("10.0.0.2:{}", DEFAULT_DEV_PORT),
-        );
+        let env = Arc::new(MapEnv::from([
+            ("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000"),
+            ("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", "10.0.0.2:3000"),
+        ]));
 
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
 
         let config1 = config.clone();
         let config2 = config.clone();
@@ -167,76 +123,44 @@ mod config_discovery_integration_tests {
             tokio::spawn(async move { config2.discover(PrimalCapability::Security).await });
 
         let (result1, result2) = tokio::join!(handle1, handle2);
-
-        match orig_storage {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
-        }
-        match orig_security {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT"),
-        }
         assert!(result1.unwrap().is_ok());
         assert!(result2.unwrap().is_ok());
     }
 
     #[tokio::test]
     async fn test_discovery_with_invalid_port() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
+        let env = Arc::new(MapEnv::from([(
             "NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT",
             "10.0.0.1:99999",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
         let result = config.discover(PrimalCapability::MachineLearning).await;
-
-        match orig {
-            Some(v) => nestgate_core::env_process::set_var(
-                "NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT",
-                v,
-            ),
-            None => nestgate_core::env_process::remove_var(
-                "NESTGATE_CAPABILITY_MACHINELEARNING_ENDPOINT",
-            ),
-        }
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_discovery_retry_mechanism() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT").ok();
-        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT");
-
+        let env = Arc::new(MapEnv::new());
         let config = CapabilityConfigBuilder::new()
             .with_retry_attempts(3)
-            .build()
+            .build_with_env(env)
             .unwrap();
 
         let start = std::time::Instant::now();
         let result = config.discover(PrimalCapability::DataProcessing).await;
         let duration = start.elapsed();
 
-        if let Some(v) = orig {
-            nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT", v);
-        }
         assert!(result.is_err());
         assert!(duration >= Duration::from_millis(100));
     }
 
     #[tokio::test]
     async fn test_builder_validation() {
-        // Zero retries should be rejected
         let result = CapabilityConfigBuilder::new()
             .with_retry_attempts(0)
             .build();
         assert!(result.is_err());
 
-        // Valid configuration
         let result = CapabilityConfigBuilder::new()
             .with_retry_attempts(1)
             .with_discovery_timeout(Duration::from_secs(1))
@@ -246,36 +170,28 @@ mod config_discovery_integration_tests {
 
     #[tokio::test]
     async fn test_capability_endpoint_format_variations() {
-        let key = "NESTGATE_CAPABILITY_STORAGE_ENDPOINT";
-
-        let orig1 = std::env::var(key).ok();
-        nestgate_core::env_process::set_var(key, format!("127.0.0.1:{}", DEFAULT_API_PORT));
-        let config1 = CapabilityConfigBuilder::new().build().unwrap();
+        let env1 = Arc::new(MapEnv::from([(
+            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
+            "127.0.0.1:8080",
+        )]));
+        let config1 = CapabilityConfigBuilder::new().build_with_env(env1).unwrap();
         let result1 = config1.discover(PrimalCapability::Storage).await;
-        match orig1 {
-            Some(v) => nestgate_core::env_process::set_var(key, v),
-            None => nestgate_core::env_process::remove_var(key),
-        }
         assert!(result1.is_ok());
 
-        let orig2 = std::env::var(key).ok();
-        nestgate_core::env_process::set_var(key, format!("[::1]:{}", DEFAULT_API_PORT));
-        let config2 = CapabilityConfigBuilder::new().build().unwrap();
+        let env2 = Arc::new(MapEnv::from([(
+            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
+            "[::1]:8080",
+        )]));
+        let config2 = CapabilityConfigBuilder::new().build_with_env(env2).unwrap();
         let result2 = config2.discover(PrimalCapability::Storage).await;
-        match orig2 {
-            Some(v) => nestgate_core::env_process::set_var(key, v),
-            None => nestgate_core::env_process::remove_var(key),
-        }
         assert!(result2.is_ok());
 
-        let orig3 = std::env::var(key).ok();
-        nestgate_core::env_process::set_var(key, "0.0.0.0:9000");
-        let config3 = CapabilityConfigBuilder::new().build().unwrap();
+        let env3 = Arc::new(MapEnv::from([(
+            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
+            "0.0.0.0:9000",
+        )]));
+        let config3 = CapabilityConfigBuilder::new().build_with_env(env3).unwrap();
         let result3 = config3.discover(PrimalCapability::Storage).await;
-        match orig3 {
-            Some(v) => nestgate_core::env_process::set_var(key, v),
-            None => nestgate_core::env_process::remove_var(key),
-        }
         assert!(result3.is_ok());
     }
 }

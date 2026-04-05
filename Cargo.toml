@@ -38,6 +38,7 @@ dashmap = { workspace = true }
 serial_test = { workspace = true }
 # once_cell removed: evolved to std::sync::LazyLock
 # Add workspace crates for integration tests
+nestgate-types = { path = "code/crates/nestgate-types" }
 nestgate-zfs = { path = "code/crates/nestgate-zfs" }
 nestgate-nas = { path = "code/crates/nestgate-nas" }
 nestgate-performance = { path = "code/crates/nestgate-performance" }
@@ -54,8 +55,6 @@ bytes = { workspace = true }
 default = []
 # Development stubs - include mock/stub implementations for testing
 dev-stubs = ["nestgate-core/dev-stubs", "nestgate-zfs/dev-stubs"]
-# Streaming RPC - enable enhanced streaming capabilities
-streaming-rpc = []
 
 [workspace]
 resolver = "2"

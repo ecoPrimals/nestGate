@@ -4,6 +4,7 @@
 use super::*;
 use axum::extract::{Json, Path};
 use axum::http::StatusCode;
+use nestgate_types::MapEnv;
 use serde_json::json;
 
 #[test]
@@ -71,7 +72,7 @@ async fn delete_workspace_rejects_invalid_id() {
     assert!(matches!(r2, Err(StatusCode::BAD_REQUEST)));
 }
 
-/// Creates a temp dir with an executable `zfs` script; returns `(dir, PATH` prefix for `temp_env`).
+/// Creates a temp dir with an executable `zfs` script; returns `(dir, absolute path to zfs)`.
 #[cfg(unix)]
 fn fake_zfs_dir_and_path(script: &str) -> (tempfile::TempDir, String) {
     use std::os::unix::fs::PermissionsExt;
@@ -81,12 +82,7 @@ fn fake_zfs_dir_and_path(script: &str) -> (tempfile::TempDir, String) {
     let mut perms = std::fs::metadata(&bin).expect("metadata").permissions();
     perms.set_mode(0o755);
     std::fs::set_permissions(&bin, perms).expect("chmod");
-    let new_path = format!(
-        "{}:{}",
-        dir.path().display(),
-        std::env::var("PATH").unwrap_or_default()
-    );
-    (dir, new_path)
+    (dir, bin.to_string_lossy().into_owned())
 }
 
 /// Covers `get_workspaces` success path, `get_workspace_properties`, and list parsing.
@@ -171,151 +167,117 @@ esac
 #[cfg(unix)]
 #[tokio::test]
 async fn get_workspaces_fake_zfs_lists_datasets() {
-    let (_dir, new_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
-    temp_env::async_with_vars(
-        vec![
-            ("PATH", Some(new_path.as_str())),
-            ("NESTGATE_WORKSPACE_POOL", None::<&str>),
-        ],
-        async {
-            let Json(v) = get_workspaces().await.expect("ok");
-            assert_eq!(v["status"], "success");
-            assert_eq!(v["pool"], "zfspool");
-            let arr = v["workspaces"].as_array().expect("array");
-            assert_eq!(arr.len(), 2);
-            assert_eq!(arr[0]["id"], "ws-active");
-            assert_eq!(arr[0]["status"], "active");
-            assert_eq!(arr[1]["id"], "ws-inactive");
-            assert_eq!(arr[1]["status"], "inactive");
-        },
-    )
-    .await;
+    let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
+    let Json(v) = get_workspaces_from_env_source(&env).await.expect("ok");
+    assert_eq!(v["status"], "success");
+    assert_eq!(v["pool"], "zfspool");
+    let arr = v["workspaces"].as_array().expect("array");
+    assert_eq!(arr.len(), 2);
+    assert_eq!(arr[0]["id"], "ws-active");
+    assert_eq!(arr[0]["status"], "active");
+    assert_eq!(arr[1]["id"], "ws-inactive");
+    assert_eq!(arr[1]["status"], "inactive");
 }
 
 #[cfg(unix)]
 #[tokio::test]
 async fn get_workspace_fake_zfs_healthy_warning_critical_and_name_fallback() {
-    let (_dir, new_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
-    temp_env::async_with_vars(
-        vec![
-            ("PATH", Some(new_path.as_str())),
-            ("NESTGATE_WORKSPACE_POOL", None::<&str>),
-        ],
-        async {
-            let Json(h) = get_workspace(Path("ws-healthy".to_string()))
-                .await
-                .expect("healthy");
-            assert_eq!(h["workspace"]["health_status"], "healthy");
-            assert_eq!(h["workspace"]["name"], "Named WS");
+    let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
+    let Json(h) = get_workspace_from_env_source(&env, Path("ws-healthy".to_string()))
+        .await
+        .expect("healthy");
+    assert_eq!(h["workspace"]["health_status"], "healthy");
+    assert_eq!(h["workspace"]["name"], "Named WS");
 
-            let Json(w) = get_workspace(Path("ws-warn-test".to_string()))
-                .await
-                .expect("warn");
-            assert_eq!(w["workspace"]["health_status"], "warning");
+    let Json(w) = get_workspace_from_env_source(&env, Path("ws-warn-test".to_string()))
+        .await
+        .expect("warn");
+    assert_eq!(w["workspace"]["health_status"], "warning");
 
-            let Json(c) = get_workspace(Path("ws-crit-test".to_string()))
-                .await
-                .expect("crit");
-            assert_eq!(c["workspace"]["health_status"], "critical");
+    let Json(c) = get_workspace_from_env_source(&env, Path("ws-crit-test".to_string()))
+        .await
+        .expect("crit");
+    assert_eq!(c["workspace"]["health_status"], "critical");
 
-            let Json(f) = get_workspace(Path("fallback-ws-id".to_string()))
-                .await
-                .expect("fallback");
-            assert_eq!(f["workspace"]["name"], "fallback ws id");
-        },
-    )
-    .await;
+    let Json(f) = get_workspace_from_env_source(&env, Path("fallback-ws-id".to_string()))
+        .await
+        .expect("fallback");
+    assert_eq!(f["workspace"]["name"], "fallback ws id");
 }
 
 #[cfg(unix)]
 #[tokio::test]
 async fn create_workspace_fake_zfs_succeeds() {
-    let (_dir, new_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
-    temp_env::async_with_vars(
-        vec![
-            ("PATH", Some(new_path.as_str())),
-            ("NESTGATE_WORKSPACE_POOL", None::<&str>),
-        ],
-        async {
-            let req = json!({
-                "name": "ok-ws",
-                "quota": "20G",
-                "compression": "zstd",
-                "recordsize": "256K"
-            });
-            let Json(v) = create_workspace(Json(req)).await.expect("create ok");
-            assert_eq!(v["status"], "success");
-            assert!(v.get("workspace_id").is_some());
-            assert_eq!(v["name"], "ok-ws");
-        },
-    )
-    .await;
+    let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
+    let req = json!({
+        "name": "ok-ws",
+        "quota": "20G",
+        "compression": "zstd",
+        "recordsize": "256K"
+    });
+    let Json(v) = create_workspace_from_env_source(&env, Json(req))
+        .await
+        .expect("create ok");
+    assert_eq!(v["status"], "success");
+    assert!(v.get("workspace_id").is_some());
+    assert_eq!(v["name"], "ok-ws");
 }
 
 #[cfg(unix)]
 #[tokio::test]
 async fn update_workspace_config_fake_zfs_success_empty_and_partial() {
-    let (_dir, new_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
-    temp_env::async_with_vars(
-        vec![
-            ("PATH", Some(new_path.as_str())),
-            ("NESTGATE_WORKSPACE_POOL", None::<&str>),
-        ],
-        async {
-            let Json(empty) = update_workspace_config(Path("ws-1".to_string()), Json(json!({})))
-                .await
-                .expect("empty ok");
-            assert_eq!(empty["status"], "success");
-            let up: Vec<String> = serde_json::from_value(empty["updated_properties"].clone())
-                .expect("updated_properties");
-            assert!(up.is_empty());
-
-            let Json(ok) = update_workspace_config(
-                Path("ws-2".to_string()),
-                Json(json!({ "quota": "10G", "compression": "lz4", "name": "n" })),
-            )
+    let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
+    let Json(empty) =
+        update_workspace_config_from_env_source(&env, Path("ws-1".to_string()), Json(json!({})))
             .await
-            .expect("full ok");
-            assert_eq!(ok["status"], "success");
+            .expect("empty ok");
+    assert_eq!(empty["status"], "success");
+    let up: Vec<String> =
+        serde_json::from_value(empty["updated_properties"].clone()).expect("updated_properties");
+    assert!(up.is_empty());
 
-            let Json(partial) = update_workspace_config(
-                Path("ws-3".to_string()),
-                Json(json!({ "quota": "badquota", "compression": "lz4", "name": "still-ok" })),
-            )
-            .await
-            .expect("partial");
-            assert_eq!(partial["status"], "partial_success");
-            let errs = partial["errors"].as_array().expect("errors");
-            assert!(!errs.is_empty());
+    let Json(ok) = update_workspace_config_from_env_source(
+        &env,
+        Path("ws-2".to_string()),
+        Json(json!({ "quota": "10G", "compression": "lz4", "name": "n" })),
+    )
+    .await
+    .expect("full ok");
+    assert_eq!(ok["status"], "success");
 
-            let all_bad = update_workspace_config(
-                Path("ws-4".to_string()),
-                Json(json!({
-                    "quota": "badquota",
-                    "compression": "badcompression",
-                    "name": "badname"
-                })),
-            )
-            .await;
-            assert!(matches!(all_bad, Err(StatusCode::BAD_REQUEST)));
-        },
+    let Json(partial) = update_workspace_config_from_env_source(
+        &env,
+        Path("ws-3".to_string()),
+        Json(json!({ "quota": "badquota", "compression": "lz4", "name": "still-ok" })),
+    )
+    .await
+    .expect("partial");
+    assert_eq!(partial["status"], "partial_success");
+    let errs = partial["errors"].as_array().expect("errors");
+    assert!(!errs.is_empty());
+
+    let all_bad = update_workspace_config_from_env_source(
+        &env,
+        Path("ws-4".to_string()),
+        Json(json!({
+            "quota": "badquota",
+            "compression": "badcompression",
+            "name": "badname"
+        })),
     )
     .await;
+    assert!(matches!(all_bad, Err(StatusCode::BAD_REQUEST)));
 }
 
 #[cfg(unix)]
 #[tokio::test]
 async fn delete_workspace_fake_zfs_dataset_missing_is_not_found() {
-    let (_dir, new_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
-    temp_env::async_with_vars(
-        vec![
-            ("PATH", Some(new_path.as_str())),
-            ("NESTGATE_WORKSPACE_POOL", None::<&str>),
-        ],
-        async {
-            let r = delete_workspace(Path("missing-ws".to_string())).await;
-            assert!(matches!(r, Err(StatusCode::NOT_FOUND)));
-        },
-    )
-    .await;
+    let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
+    let r = delete_workspace_from_env_source(&env, Path("missing-ws".to_string())).await;
+    assert!(matches!(r, Err(StatusCode::NOT_FOUND)));
 }

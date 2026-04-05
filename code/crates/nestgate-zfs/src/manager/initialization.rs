@@ -30,7 +30,8 @@ use super::ZfsManager;
 
 impl ZfsManager {
     /// Create mock instance for testing
-    #[cfg(test)]
+    #[cfg(any(test, feature = "dev-stubs"))]
+    #[must_use]
     pub fn mock() -> Self {
         use crate::config::ZfsConfig;
         use crate::dataset::ZfsDatasetManager;

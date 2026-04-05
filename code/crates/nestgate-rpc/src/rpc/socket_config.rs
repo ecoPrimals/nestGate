@@ -39,6 +39,7 @@
 //! [`StorageCapabilitySymlinkGuard`] (Unix only).
 
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
 
@@ -49,9 +50,12 @@ pub const STORAGE_CAPABILITY_SOCK_NAME: &str = "storage.sock";
 #[cfg(unix)]
 #[must_use]
 pub fn socket_parent_is_biomeos_standard_dir(socket_path: &Path) -> bool {
-    socket_path
-        .parent()
-        .is_some_and(|p| p.file_name() == Some(std::ffi::OsStr::new("biomeos")))
+    socket_path.parent().is_some_and(|p| {
+        p.file_name()
+            == Some(std::ffi::OsStr::new(
+                nestgate_config::constants::system::ECOSYSTEM_NAME,
+            ))
+    })
 }
 
 /// Create `storage.sock` → `<primary-socket-file>` in the same directory (Unix only).
@@ -259,7 +263,9 @@ impl SocketConfig {
             && !dir.is_empty()
             && Path::new(dir).exists()
         {
-            let socket_path = PathBuf::from(dir).join("biomeos").join("nestgate.sock");
+            let socket_path = PathBuf::from(dir)
+                .join(nestgate_config::constants::system::ecosystem_path_segment())
+                .join("nestgate.sock");
 
             info!(
                 "🔌 Using XDG runtime directory with ecosystem socket layout: {} (family: {}, node: {})",
@@ -310,22 +316,28 @@ impl SocketConfig {
     /// Returns [`NestGateError`] if resolving or normalizing the socket configuration fails
     /// (delegates to [`Self::resolve`]).
     pub fn from_environment() -> Result<Self> {
-        let family_id = std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_environment`], but reads variables from an injectable [`EnvSource`]
+    /// (e.g. [`nestgate_types::MapEnv`] in tests).
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let family_id = env.get("NESTGATE_FAMILY_ID").unwrap_or_else(|| {
             warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");
             "standalone".to_string()
         });
 
-        let node_id = std::env::var("NESTGATE_NODE_ID").unwrap_or_else(|_| {
+        let node_id = env.get("NESTGATE_NODE_ID").unwrap_or_else(|| {
             rustix::system::uname()
                 .nodename()
                 .to_string_lossy()
                 .into_owned()
         });
 
-        let socket_override = std::env::var("NESTGATE_SOCKET").ok();
+        let socket_override = env.get("NESTGATE_SOCKET");
         // Standard ecosystem shared-socket directory (protocol name retained for compatibility).
-        let biomeos_socket_dir = std::env::var("BIOMEOS_SOCKET_DIR").ok();
-        let xdg_runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok();
+        let biomeos_socket_dir = env.get("BIOMEOS_SOCKET_DIR");
+        let xdg_runtime_dir = env.get("XDG_RUNTIME_DIR");
 
         let mut config = Self::resolve(
             family_id,
@@ -335,7 +347,7 @@ impl SocketConfig {
             xdg_runtime_dir,
         )?;
 
-        if std::env::var("NESTGATE_ABSTRACT_SOCKET").is_ok() {
+        if env.get("NESTGATE_ABSTRACT_SOCKET").is_some() {
             info!("📱 Abstract socket mode: using @nestgate as abstract namespace address");
             config.socket_path = PathBuf::from(format!("@nestgate-{}", config.family_id));
             config.source = SocketConfigSource::Environment;

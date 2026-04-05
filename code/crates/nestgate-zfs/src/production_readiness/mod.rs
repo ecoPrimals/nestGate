@@ -10,7 +10,9 @@ mod mock_analysis;
 mod reporting;
 
 use nestgate_core::Result;
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tracing::info;
 
 /// Production readiness assessment report
@@ -66,6 +68,8 @@ pub enum FindingSeverity {
 pub struct ProductionReadinessValidator {
     /// Real ZFS operations handler
     real_ops: RealZfsOperations,
+    /// Injectable environment (use [`ProcessEnv`] in production).
+    env: Arc<dyn EnvSource>,
 }
 /// Real ZFS operations (placeholder for actual implementation)
 #[derive(Debug, Default)]
@@ -265,8 +269,16 @@ impl ProductionReadinessValidator {
     /// Create new production readiness validator
     #[must_use]
     pub fn new() -> Self {
+        Self::new_with_env(Arc::new(ProcessEnv))
+    }
+
+    /// Create a validator that reads configuration from an injectable environment source
+    /// (e.g. [`nestgate_types::MapEnv`] in tests).
+    #[must_use]
+    pub fn new_with_env(env: Arc<dyn EnvSource>) -> Self {
         Self {
             real_ops: RealZfsOperations::default(),
+            env,
         }
     }
 
@@ -333,8 +345,9 @@ impl ProductionReadinessValidator {
     pub(crate) fn validate_performance(&self) -> Result<bool> {
         // Validate performance characteristics
         // Check system resources and ZFS performance metrics
-        let available_memory = std::env::var("NESTGATE_MIN_MEMORY_MB")
-            .ok()
+        let available_memory = self
+            .env
+            .get("NESTGATE_MIN_MEMORY_MB")
             .and_then(|s| s.parse::<u64>().ok())
             .unwrap_or(1024); // Minimum 1GB RAM
 
@@ -346,8 +359,10 @@ impl ProductionReadinessValidator {
     pub(crate) fn validate_security(&self) -> Result<bool> {
         // Validate security configurations
         // Check for secure ZFS configuration
-        let secure_mode = std::env::var("NESTGATE_SECURE_MODE")
-            .unwrap_or_else(|_| "false".to_string())
+        let secure_mode = self
+            .env
+            .get("NESTGATE_SECURE_MODE")
+            .unwrap_or_else(|| "false".to_string())
             .parse::<bool>()
             .unwrap_or(false);
 
@@ -359,9 +374,14 @@ impl ProductionReadinessValidator {
     pub(crate) fn validate_configuration(&self) -> Result<bool> {
         // Validate system configuration
         // Check for required environment variables and configuration
-        let data_dir = std::env::var("NESTGATE_DATA_DIR").unwrap_or_else(|_| "./data".to_string());
-        let config_dir =
-            std::env::var("NESTGATE_CONFIG_DIR").unwrap_or_else(|_| "./config".to_string());
+        let data_dir = self
+            .env
+            .get("NESTGATE_DATA_DIR")
+            .unwrap_or_else(|| "./data".to_string());
+        let config_dir = self
+            .env
+            .get("NESTGATE_CONFIG_DIR")
+            .unwrap_or_else(|| "./config".to_string());
 
         // Verify directories exist or can be created
         let result = std::fs::create_dir_all(&data_dir).is_ok()

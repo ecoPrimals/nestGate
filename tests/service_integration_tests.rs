@@ -15,6 +15,8 @@
 
 //! Service CLI integration tests: mode detection, lifecycle, concurrency, fault injection.
 
+use nestgate_types::{EnvSource, MapEnv};
+
 // ============================================================================
 // UNIT TESTS - Mode Detection Logic
 // ============================================================================
@@ -106,18 +108,10 @@ async fn test_e2e_unix_socket_server_startup() {
 
 #[tokio::test]
 async fn test_e2e_http_mode_configuration() {
-    temp_env::async_with_vars(
-        [
-            ("NESTGATE_SOCKET", None::<&str>),
-            ("NESTGATE_FAMILY_ID", None::<&str>),
-        ],
-        async {
-            let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
-                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-            assert!(!socket_requested, "Should use HTTP mode");
-        },
-    )
-    .await;
+    let env = MapEnv::new();
+    let socket_requested =
+        env.get("NESTGATE_SOCKET").is_some() || env.get("NESTGATE_FAMILY_ID").is_some();
+    assert!(!socket_requested, "Should use HTTP mode");
 }
 
 #[tokio::test]
@@ -211,29 +205,22 @@ async fn test_chaos_rapid_mode_switches() {
 
 #[tokio::test]
 async fn test_fault_invalid_socket_path() {
-    temp_env::async_with_vars(
-        [
-            (
-                "NESTGATE_SOCKET",
-                Some("/invalid/path/that/does/not/exist/socket.sock"),
-            ),
-            ("NESTGATE_FAMILY_ID", Some("fault-test")),
-        ],
-        async {
-            let config = nestgate_core::rpc::SocketConfig::from_environment();
-            assert!(config.is_ok());
-        },
-    )
-    .await;
+    let env = MapEnv::from([
+        (
+            "NESTGATE_SOCKET",
+            "/invalid/path/that/does/not/exist/socket.sock",
+        ),
+        ("NESTGATE_FAMILY_ID", "fault-test"),
+    ]);
+    let config = nestgate_core::rpc::SocketConfig::from_env_source(&env);
+    assert!(config.is_ok());
 }
 
 #[tokio::test]
 async fn test_fault_empty_family_id() {
-    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some(""))], async {
-        let config = nestgate_core::rpc::SocketConfig::from_environment();
-        assert!(config.is_ok());
-    })
-    .await;
+    let env = MapEnv::from([("NESTGATE_FAMILY_ID", "")]);
+    let config = nestgate_core::rpc::SocketConfig::from_env_source(&env);
+    assert!(config.is_ok());
 }
 
 #[tokio::test]
@@ -241,36 +228,26 @@ async fn test_fault_malformed_socket_path() {
     let malformed_paths = ["", " ", "relative/path.sock", "../../../etc/passwd"];
 
     for path in malformed_paths {
-        temp_env::async_with_vars(
-            [
-                ("NESTGATE_SOCKET", Some(path)),
-                ("NESTGATE_FAMILY_ID", Some("malformed")),
-            ],
-            async {
-                let config = nestgate_core::rpc::SocketConfig::from_environment();
-                assert!(config.is_ok(), "Should create config for path: {path}");
-            },
-        )
-        .await;
+        let env = MapEnv::from([
+            ("NESTGATE_SOCKET", path),
+            ("NESTGATE_FAMILY_ID", "malformed"),
+        ]);
+        let config = nestgate_core::rpc::SocketConfig::from_env_source(&env);
+        assert!(config.is_ok(), "Should create config for path: {path}");
     }
 }
 
 #[tokio::test]
 async fn test_fault_missing_permissions() {
-    temp_env::async_with_vars(
-        [
-            ("NESTGATE_SOCKET", Some("/proc/nestgate-test.sock")),
-            ("NESTGATE_FAMILY_ID", Some("permissions")),
-        ],
-        async {
-            let config = nestgate_core::rpc::SocketConfig::from_environment();
-            assert!(config.is_ok(), "Config creation should succeed");
-            let _ = config
-                .expect("config validated above")
-                .prepare_socket_path();
-        },
-    )
-    .await;
+    let env = MapEnv::from([
+        ("NESTGATE_SOCKET", "/proc/nestgate-test.sock"),
+        ("NESTGATE_FAMILY_ID", "permissions"),
+    ]);
+    let config = nestgate_core::rpc::SocketConfig::from_env_source(&env);
+    assert!(config.is_ok(), "Config creation should succeed");
+    let _ = config
+        .expect("config validated above")
+        .prepare_socket_path();
 }
 
 #[tokio::test]
@@ -290,11 +267,9 @@ async fn test_fault_unicode_in_family_id() {
 #[tokio::test]
 async fn test_fault_very_long_family_id() {
     let long_id = "x".repeat(500);
-    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some(long_id.as_str()))], async {
-        let config = nestgate_core::rpc::SocketConfig::from_environment();
-        assert!(config.is_ok(), "Should handle very long family ID");
-    })
-    .await;
+    let env = MapEnv::from([("NESTGATE_FAMILY_ID", long_id.as_str())]);
+    let config = nestgate_core::rpc::SocketConfig::from_env_source(&env);
+    assert!(config.is_ok(), "Should handle very long family ID");
 }
 
 // ============================================================================
@@ -332,21 +307,13 @@ async fn test_integration_atomic_deployment_scenario() {
 
 #[tokio::test]
 async fn test_integration_development_scenario() {
-    temp_env::async_with_vars(
-        [
-            ("NESTGATE_SOCKET", None::<&str>),
-            ("NESTGATE_FAMILY_ID", None::<&str>),
-        ],
-        async {
-            let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
-                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-            assert!(
-                !socket_requested,
-                "Development mode should use HTTP (no socket vars)"
-            );
-        },
-    )
-    .await;
+    let env = MapEnv::new();
+    let socket_requested =
+        env.get("NESTGATE_SOCKET").is_some() || env.get("NESTGATE_FAMILY_ID").is_some();
+    assert!(
+        !socket_requested,
+        "Development mode should use HTTP (no socket vars)"
+    );
 }
 
 #[tokio::test]
@@ -354,20 +321,12 @@ async fn test_integration_multi_instance_scenario() {
     let instances = vec![("nat0", "nest1"), ("nat0", "nest2"), ("lan0", "nest1")];
 
     for (family, node) in instances {
-        temp_env::async_with_vars(
-            [
-                ("NESTGATE_FAMILY_ID", Some(family)),
-                ("NESTGATE_NODE_ID", Some(node)),
-            ],
-            async move {
-                let config = nestgate_core::rpc::SocketConfig::from_environment();
-                assert!(config.is_ok());
-                let config = config.unwrap();
-                assert_eq!(config.family_id, family);
-                assert_eq!(config.node_id, node);
-            },
-        )
-        .await;
+        let env = MapEnv::from([("NESTGATE_FAMILY_ID", family), ("NESTGATE_NODE_ID", node)]);
+        let config = nestgate_core::rpc::SocketConfig::from_env_source(&env);
+        assert!(config.is_ok());
+        let config = config.unwrap();
+        assert_eq!(config.family_id, family);
+        assert_eq!(config.node_id, node);
     }
 }
 
@@ -379,45 +338,40 @@ async fn test_integration_multi_instance_scenario() {
 async fn test_performance_mode_detection_speed() {
     use std::time::Instant;
 
-    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some("perf"))], async {
-        let start = Instant::now();
-        for _ in 0..10_000 {
-            let _mode = std::env::var("NESTGATE_SOCKET").is_ok()
-                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-        }
-        let duration = start.elapsed();
-        println!(
-            "Mode detection: 10,000 iterations in {:?} ({} ns/op)",
-            duration,
-            duration.as_nanos() / 10_000
-        );
-        assert!(
-            duration.as_millis() < 100,
-            "Mode detection should be fast: {duration:?}",
-        );
-    })
-    .await;
+    let env = MapEnv::from([("NESTGATE_FAMILY_ID", "perf")]);
+    let start = Instant::now();
+    for _ in 0..10_000 {
+        let _mode = env.get("NESTGATE_SOCKET").is_some() || env.get("NESTGATE_FAMILY_ID").is_some();
+    }
+    let duration = start.elapsed();
+    println!(
+        "Mode detection: 10,000 iterations in {:?} ({} ns/op)",
+        duration,
+        duration.as_nanos() / 10_000
+    );
+    assert!(
+        duration.as_millis() < 100,
+        "Mode detection should be fast: {duration:?}",
+    );
 }
 
 #[tokio::test]
 async fn test_performance_config_creation_speed() {
     use std::time::Instant;
 
-    temp_env::async_with_vars([("NESTGATE_FAMILY_ID", Some("perf"))], async {
-        let start = Instant::now();
-        for _ in 0..1_000 {
-            let _config = nestgate_core::rpc::SocketConfig::from_environment().unwrap();
-        }
-        let duration = start.elapsed();
-        println!(
-            "Config creation: 1,000 iterations in {:?} ({} μs/op)",
-            duration,
-            duration.as_micros() / 1_000
-        );
-        assert!(
-            duration.as_secs() < 1,
-            "Config creation should be fast: {duration:?}",
-        );
-    })
-    .await;
+    let env = MapEnv::from([("NESTGATE_FAMILY_ID", "perf")]);
+    let start = Instant::now();
+    for _ in 0..1_000 {
+        let _config = nestgate_core::rpc::SocketConfig::from_env_source(&env).unwrap();
+    }
+    let duration = start.elapsed();
+    println!(
+        "Config creation: 1,000 iterations in {:?} ({} μs/op)",
+        duration,
+        duration.as_micros() / 1_000
+    );
+    assert!(
+        duration.as_secs() < 1,
+        "Config creation should be fast: {duration:?}",
+    );
 }

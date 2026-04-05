@@ -32,6 +32,12 @@ pub fn env_parsed<T: std::str::FromStr>(env: &dyn EnvSource, key: &str, default:
     env.get(key).and_then(|v| v.parse().ok()).unwrap_or(default)
 }
 
+/// Returns `env[key]` or `default` when missing (injectable alternative to reading the process env).
+#[must_use]
+pub fn env_var_or_default(env: &dyn EnvSource, key: &str, default: &str) -> String {
+    env.get(key).unwrap_or_else(|| default.to_string())
+}
+
 /// Reads from the real process environment via `std::env::var`.
 #[derive(Debug, Clone, Copy)]
 pub struct ProcessEnv;

@@ -55,11 +55,22 @@ use jsonrpsee::{
 };
 use tracing::{debug, info, warn};
 
+use nestgate_types::NestGateError;
+
 use nestgate_config::config::capability_discovery::DiscoverySource;
 use nestgate_config::constants::ports::default_tarpc_client_endpoint;
 
 use super::tarpc_server::NestGateRpcService;
 use super::tarpc_types::{DatasetParams, NestGateRpc};
+
+/// Maps jsonrpsee method registration failures (`RegisterMethodError`) into [`NestGateError`].
+/// jsonrpsee does not use our error type for `RpcModule::register_*`; we normalize at this boundary.
+#[inline]
+fn map_jsonrpc_registration<T>(
+    result: std::result::Result<T, impl std::fmt::Display>,
+) -> std::result::Result<T, NestGateError> {
+    result.map_err(|e| NestGateError::internal(format!("JSON-RPC registration: {e}")))
+}
 
 /// Registered JSON-RPC method names for `capabilities.list` (static slice avoids per-request `Vec` allocation).
 const JSON_RPC_CAPABILITIES_METHODS: &[&str] = &[
@@ -139,7 +150,7 @@ impl JsonRpcServer {
     /// Build RPC module with all methods registered (used by `start()` and tests)
     pub(crate) fn build_module(
         state: JsonRpcState,
-    ) -> Result<RpcModule<JsonRpcState>, Box<dyn std::error::Error>> {
+    ) -> Result<RpcModule<JsonRpcState>, NestGateError> {
         let mut module = RpcModule::new(state);
         Self::register_storage_methods(&mut module)?;
         Self::register_capability_methods(&mut module)?;
@@ -153,7 +164,7 @@ impl JsonRpcServer {
     ///
     /// Returns an error if the HTTP server fails to bind, the listening address cannot be read,
     /// or JSON-RPC method registration fails.
-    pub async fn start(self) -> Result<(ServerHandle, SocketAddr), Box<dyn std::error::Error>> {
+    pub async fn start(self) -> Result<(ServerHandle, SocketAddr), NestGateError> {
         info!(
             "🚀 Starting NestGate JSON-RPC 2.0 server on {}",
             self.config.addr
@@ -180,165 +191,183 @@ impl JsonRpcServer {
 
     /// Register storage-related JSON-RPC methods
     #[expect(clippy::too_many_lines)] // Method table mirrors JSON-RPC surface; split would obscure routing.
-    fn register_storage_methods(
-        module: &mut RpcModule<JsonRpcState>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn register_storage_methods(module: &mut RpcModule<JsonRpcState>) -> Result<(), NestGateError> {
         // nestgate.createDataset
-        module.register_async_method("storage.dataset.create", |params, ctx, _ext| async move {
-            #[derive(serde::Deserialize)]
-            struct Params {
-                name: String,
-                #[serde(default)]
-                description: Option<String>,
-                #[serde(default)]
-                compression: Option<String>,
-            }
+        map_jsonrpc_registration(module.register_async_method(
+            "storage.dataset.create",
+            |params, ctx, _ext| async move {
+                #[derive(serde::Deserialize)]
+                struct Params {
+                    name: String,
+                    #[serde(default)]
+                    description: Option<String>,
+                    #[serde(default)]
+                    compression: Option<String>,
+                }
 
-            let p: Params = params.parse()?;
-            debug!("JSON-RPC: createDataset({})", p.name);
+                let p: Params = params.parse()?;
+                debug!("JSON-RPC: createDataset({})", p.name);
 
-            let dataset_params = DatasetParams {
-                description: p.description,
-                compression: p.compression,
-                encrypted: false,
-                deduplicated: false,
-                properties: HashMap::new(),
-                quota: None,
-            };
+                let dataset_params = DatasetParams {
+                    description: p.description,
+                    compression: p.compression,
+                    encrypted: false,
+                    deduplicated: false,
+                    properties: HashMap::new(),
+                    quota: None,
+                };
 
-            let state = ctx.as_ref();
-            // Clone service to satisfy tarpc trait's self-consuming methods
-            let service_clone = state.service.clone();
-            let result = service_clone
-                .create_dataset(tarpc::context::current(), p.name, dataset_params)
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                // Clone service to satisfy tarpc trait's self-consuming methods
+                let service_clone = state.service.clone();
+                let result = service_clone
+                    .create_dataset(tarpc::context::current(), p.name, dataset_params)
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "name": result.name,
-                "description": result.description,
-                "created_at": result.created_at,
-                "modified_at": result.modified_at,
-                "size_bytes": result.size_bytes,
-                "object_count": result.object_count,
-                "status": result.status,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "name": result.name,
+                    "description": result.description,
+                    "created_at": result.created_at,
+                    "modified_at": result.modified_at,
+                    "size_bytes": result.size_bytes,
+                    "object_count": result.object_count,
+                    "status": result.status,
+                }))
+            },
+        ))?;
 
         // nestgate.listDatasets
-        module.register_async_method("storage.dataset.list", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: listDatasets()");
+        map_jsonrpc_registration(module.register_async_method(
+            "storage.dataset.list",
+            |_params, ctx, _ext| async move {
+                debug!("JSON-RPC: listDatasets()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let datasets = service_clone
-                .list_datasets(tarpc::context::current())
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let datasets = service_clone
+                    .list_datasets(tarpc::context::current())
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            let results: Vec<serde_json::Value> = datasets
-                .into_iter()
-                .map(|ds| {
-                    serde_json::json!({
-                        "name": ds.name,
-                        "description": ds.description,
-                        "created_at": ds.created_at,
-                        "modified_at": ds.modified_at,
-                        "size_bytes": ds.size_bytes,
-                        "object_count": ds.object_count,
-                        "status": ds.status,
+                let results: Vec<serde_json::Value> = datasets
+                    .into_iter()
+                    .map(|ds| {
+                        serde_json::json!({
+                            "name": ds.name,
+                            "description": ds.description,
+                            "created_at": ds.created_at,
+                            "modified_at": ds.modified_at,
+                            "size_bytes": ds.size_bytes,
+                            "object_count": ds.object_count,
+                            "status": ds.status,
+                        })
                     })
-                })
-                .collect();
+                    .collect();
 
-            Ok::<_, ErrorObjectOwned>(results)
-        })?;
+                Ok::<_, ErrorObjectOwned>(results)
+            },
+        ))?;
 
         // nestgate.getDataset
-        module.register_async_method("storage.dataset.get", |params, ctx, _ext| async move {
-            let name: String = params.one()?;
-            debug!("JSON-RPC: getDataset({})", name);
+        map_jsonrpc_registration(module.register_async_method(
+            "storage.dataset.get",
+            |params, ctx, _ext| async move {
+                let name: String = params.one()?;
+                debug!("JSON-RPC: getDataset({})", name);
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let dataset = service_clone
-                .get_dataset(tarpc::context::current(), name)
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let dataset = service_clone
+                    .get_dataset(tarpc::context::current(), name)
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "name": dataset.name,
-                "description": dataset.description,
-                "created_at": dataset.created_at,
-                "modified_at": dataset.modified_at,
-                "size_bytes": dataset.size_bytes,
-                "object_count": dataset.object_count,
-                "status": dataset.status,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "name": dataset.name,
+                    "description": dataset.description,
+                    "created_at": dataset.created_at,
+                    "modified_at": dataset.modified_at,
+                    "size_bytes": dataset.size_bytes,
+                    "object_count": dataset.object_count,
+                    "status": dataset.status,
+                }))
+            },
+        ))?;
 
         // nestgate.deleteDataset
-        module.register_async_method("storage.dataset.delete", |params, ctx, _ext| async move {
-            let name: String = params.one()?;
-            debug!("JSON-RPC: deleteDataset({})", name);
+        map_jsonrpc_registration(module.register_async_method(
+            "storage.dataset.delete",
+            |params, ctx, _ext| async move {
+                let name: String = params.one()?;
+                debug!("JSON-RPC: deleteDataset({})", name);
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let result = service_clone
-                .delete_dataset(tarpc::context::current(), name)
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let result = service_clone
+                    .delete_dataset(tarpc::context::current(), name)
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "success": result.success,
-                "message": result.message,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "success": result.success,
+                    "message": result.message,
+                }))
+            },
+        ))?;
 
         // nestgate.storeObject
-        module.register_async_method("storage.object.store", |params, ctx, _ext| async move {
-            #[derive(serde::Deserialize)]
-            struct Params {
-                dataset: String,
-                key: String,
-                data: String, // base64 encoded
-                #[serde(default)]
-                metadata: Option<HashMap<String, String>>,
-            }
+        map_jsonrpc_registration(module.register_async_method(
+            "storage.object.store",
+            |params, ctx, _ext| async move {
+                #[derive(serde::Deserialize)]
+                struct Params {
+                    dataset: String,
+                    key: String,
+                    data: String, // base64 encoded
+                    #[serde(default)]
+                    metadata: Option<HashMap<String, String>>,
+                }
 
-            let p: Params = params.parse()?;
-            debug!("JSON-RPC: storeObject({}/{})", p.dataset, p.key);
+                let p: Params = params.parse()?;
+                debug!("JSON-RPC: storeObject({}/{})", p.dataset, p.key);
 
-            // Decode base64 data
-            let data = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &p.data)
-                .map_err(|e| {
-                    ErrorObjectOwned::owned(-32602, format!("Invalid base64 data: {e}"), None::<()>)
-                })?;
+                // Decode base64 data
+                let data =
+                    base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &p.data)
+                        .map_err(|e| {
+                            ErrorObjectOwned::owned(
+                                -32602,
+                                format!("Invalid base64 data: {e}"),
+                                None::<()>,
+                            )
+                        })?;
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let result = service_clone
-                .store_object(
-                    tarpc::context::current(),
-                    p.dataset,
-                    p.key,
-                    data,
-                    p.metadata,
-                )
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let result = service_clone
+                    .store_object(
+                        tarpc::context::current(),
+                        p.dataset,
+                        p.key,
+                        data,
+                        p.metadata,
+                    )
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "key": result.key,
-                "dataset": result.dataset,
-                "size_bytes": result.size_bytes,
-                "created_at": result.created_at,
-                "modified_at": result.modified_at,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "key": result.key,
+                    "dataset": result.dataset,
+                    "size_bytes": result.size_bytes,
+                    "created_at": result.created_at,
+                    "modified_at": result.modified_at,
+                }))
+            },
+        ))?;
 
         // nestgate.retrieveObject
-        module.register_async_method(
+        map_jsonrpc_registration(module.register_async_method(
             "storage.object.retrieve",
             |params, ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
@@ -365,10 +394,10 @@ impl JsonRpcServer {
                     "size_bytes": data.len(),
                 }))
             },
-        )?;
+        ))?;
 
         // nestgate.getObjectMetadata
-        module.register_async_method(
+        map_jsonrpc_registration(module.register_async_method(
             "storage.object.metadata",
             |params, ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
@@ -396,71 +425,77 @@ impl JsonRpcServer {
                     "metadata": info.metadata,
                 }))
             },
-        )?;
+        ))?;
 
         // nestgate.listObjects
-        module.register_async_method("storage.object.list", |params, ctx, _ext| async move {
-            #[derive(serde::Deserialize)]
-            struct Params {
-                dataset: String,
-                #[serde(default)]
-                prefix: Option<String>,
-                #[serde(default)]
-                limit: Option<usize>,
-            }
+        map_jsonrpc_registration(module.register_async_method(
+            "storage.object.list",
+            |params, ctx, _ext| async move {
+                #[derive(serde::Deserialize)]
+                struct Params {
+                    dataset: String,
+                    #[serde(default)]
+                    prefix: Option<String>,
+                    #[serde(default)]
+                    limit: Option<usize>,
+                }
 
-            let p: Params = params.parse()?;
-            debug!(
-                "JSON-RPC: listObjects({}, {:?}, {:?})",
-                p.dataset, p.prefix, p.limit
-            );
+                let p: Params = params.parse()?;
+                debug!(
+                    "JSON-RPC: listObjects({}, {:?}, {:?})",
+                    p.dataset, p.prefix, p.limit
+                );
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let objects = service_clone
-                .list_objects(tarpc::context::current(), p.dataset, p.prefix, p.limit)
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let objects = service_clone
+                    .list_objects(tarpc::context::current(), p.dataset, p.prefix, p.limit)
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            let results: Vec<serde_json::Value> = objects
-                .into_iter()
-                .map(|obj| {
-                    serde_json::json!({
-                        "key": obj.key,
-                        "dataset": obj.dataset,
-                        "size_bytes": obj.size_bytes,
-                        "created_at": obj.created_at,
-                        "modified_at": obj.modified_at,
+                let results: Vec<serde_json::Value> = objects
+                    .into_iter()
+                    .map(|obj| {
+                        serde_json::json!({
+                            "key": obj.key,
+                            "dataset": obj.dataset,
+                            "size_bytes": obj.size_bytes,
+                            "created_at": obj.created_at,
+                            "modified_at": obj.modified_at,
+                        })
                     })
-                })
-                .collect();
+                    .collect();
 
-            Ok::<_, ErrorObjectOwned>(results)
-        })?;
+                Ok::<_, ErrorObjectOwned>(results)
+            },
+        ))?;
 
         // nestgate.deleteObject
-        module.register_async_method("storage.object.delete", |params, ctx, _ext| async move {
-            #[derive(serde::Deserialize)]
-            struct Params {
-                dataset: String,
-                key: String,
-            }
+        map_jsonrpc_registration(module.register_async_method(
+            "storage.object.delete",
+            |params, ctx, _ext| async move {
+                #[derive(serde::Deserialize)]
+                struct Params {
+                    dataset: String,
+                    key: String,
+                }
 
-            let p: Params = params.parse()?;
-            debug!("JSON-RPC: deleteObject({}/{})", p.dataset, p.key);
+                let p: Params = params.parse()?;
+                debug!("JSON-RPC: deleteObject({}/{})", p.dataset, p.key);
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let result = service_clone
-                .delete_object(tarpc::context::current(), p.dataset, p.key)
-                .await
-                .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let result = service_clone
+                    .delete_object(tarpc::context::current(), p.dataset, p.key)
+                    .await
+                    .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "success": result.success,
-                "message": result.message,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "success": result.success,
+                    "message": result.message,
+                }))
+            },
+        ))?;
 
         Ok(())
     }
@@ -468,9 +503,9 @@ impl JsonRpcServer {
     /// Register capability-related JSON-RPC methods
     fn register_capability_methods(
         module: &mut RpcModule<JsonRpcState>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), NestGateError> {
         // nestgate.registerCapability
-        module.register_async_method(
+        map_jsonrpc_registration(module.register_async_method(
             "discovery.capability.register",
             |params, _ctx, _ext| async move {
                 #[derive(serde::Deserialize)]
@@ -506,67 +541,72 @@ impl JsonRpcServer {
                     }
                 }
             },
-        )?;
+        ))?;
 
         // nestgate.discoverCapability
-        module.register_async_method(
-            "discovery.capability.query",
-            |params, _ctx, _ext| async move {
-                let capability: String = params.one()?;
-                debug!("JSON-RPC: discoverCapability({})", capability);
+        map_jsonrpc_registration(
+            module.register_async_method(
+                "discovery.capability.query",
+                |params, _ctx, _ext| async move {
+                    let capability: String = params.one()?;
+                    debug!("JSON-RPC: discoverCapability({})", capability);
 
-                let env_var = format!(
-                    "NESTGATE_{}_ENDPOINT",
-                    capability.to_uppercase().replace('-', "_")
-                );
-                let discovery_default = default_tarpc_client_endpoint();
-                let se =
-                    match nestgate_config::config::capability_discovery::discover_with_fallback(
-                        &capability,
-                        &env_var,
-                        &discovery_default,
-                    ) {
-                        Ok(se) => se,
-                        Err(e) => {
-                            warn!("discovery.capability.query: {}", e);
-                            return Ok::<_, ErrorObjectOwned>(serde_json::json!([]));
-                        }
-                    };
-                if se.source == DiscoverySource::Default {
-                    warn!(
-                        capability = %capability,
-                        endpoint = %se.endpoint,
-                        env_var = %env_var,
-                        "discovery.capability.query using env-derived default tarpc endpoint"
+                    let env_var = format!(
+                        "NESTGATE_{}_ENDPOINT",
+                        capability.to_uppercase().replace('-', "_")
                     );
-                }
-                let raw = se.endpoint.trim();
-                let tarpc_ep: Cow<'_, str> = if raw.starts_with("tarpc://") {
-                    Cow::Borrowed(raw)
-                } else if let Some(r) = raw.strip_prefix("http://") {
-                    Cow::Owned(format!("tarpc://{r}"))
-                } else if let Some(r) = raw.strip_prefix("https://") {
-                    Cow::Owned(format!("tarpc://{r}"))
-                } else {
-                    Cow::Owned(format!("tarpc://{raw}"))
-                };
-                Ok::<_, ErrorObjectOwned>(serde_json::json!([{
-                    "id": format!("discovered-{}", capability),
-                    "capability": capability,
-                    "endpoints": { "tarpc": tarpc_ep },
-                    "status": "discovered",
-                    "metadata": null
-                }]))
-            },
+                    let discovery_default = default_tarpc_client_endpoint();
+                    let se =
+                        match nestgate_config::config::capability_discovery::discover_with_fallback(
+                            &capability,
+                            &env_var,
+                            &discovery_default,
+                        ) {
+                            Ok(se) => se,
+                            Err(e) => {
+                                warn!("discovery.capability.query: {}", e);
+                                return Ok::<_, ErrorObjectOwned>(serde_json::json!([]));
+                            }
+                        };
+                    if se.source == DiscoverySource::Default {
+                        warn!(
+                            capability = %capability,
+                            endpoint = %se.endpoint,
+                            env_var = %env_var,
+                            "discovery.capability.query using env-derived default tarpc endpoint"
+                        );
+                    }
+                    let raw = se.endpoint.trim();
+                    let tarpc_ep: Cow<'_, str> = if raw.starts_with("tarpc://") {
+                        Cow::Borrowed(raw)
+                    } else if let Some(r) = raw.strip_prefix("http://") {
+                        Cow::Owned(format!("tarpc://{r}"))
+                    } else if let Some(r) = raw.strip_prefix("https://") {
+                        Cow::Owned(format!("tarpc://{r}"))
+                    } else {
+                        Cow::Owned(format!("tarpc://{raw}"))
+                    };
+                    Ok::<_, ErrorObjectOwned>(serde_json::json!([{
+                        "id": format!("discovered-{}", capability),
+                        "capability": capability,
+                        "endpoints": { "tarpc": tarpc_ep },
+                        "status": "discovered",
+                        "metadata": null
+                    }]))
+                },
+            ),
         )?;
 
         // capabilities.list — semantic surface discovery
-        module.register_async_method("capabilities.list", |_params, _ctx, _ext| async move {
-            debug!("JSON-RPC: capabilities.list()");
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "methods": JSON_RPC_CAPABILITIES_METHODS
-            }))
-        })?;
+        map_jsonrpc_registration(module.register_async_method(
+            "capabilities.list",
+            |_params, _ctx, _ext| async move {
+                debug!("JSON-RPC: capabilities.list()");
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "methods": JSON_RPC_CAPABILITIES_METHODS
+                }))
+            },
+        ))?;
 
         Ok(())
     }
@@ -574,102 +614,120 @@ impl JsonRpcServer {
     /// Register monitoring JSON-RPC methods
     fn register_monitoring_methods(
         module: &mut RpcModule<JsonRpcState>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), NestGateError> {
         // nestgate.health
-        module.register_async_method("health.check", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: health.check()");
+        map_jsonrpc_registration(module.register_async_method(
+            "health.check",
+            |_params, ctx, _ext| async move {
+                debug!("JSON-RPC: health.check()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let health = service_clone.health(tarpc::context::current()).await;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let health = service_clone.health(tarpc::context::current()).await;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "status": health.status,
-                "uptime_seconds": health.uptime_seconds,
-                "version": health.version,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "status": health.status,
+                    "uptime_seconds": health.uptime_seconds,
+                    "version": health.version,
+                }))
+            },
+        ))?;
 
-        module.register_async_method("health.liveness", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: health.liveness()");
+        map_jsonrpc_registration(module.register_async_method(
+            "health.liveness",
+            |_params, ctx, _ext| async move {
+                debug!("JSON-RPC: health.liveness()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let health = service_clone.health(tarpc::context::current()).await;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let health = service_clone.health(tarpc::context::current()).await;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "alive": true,
-                "status": health.status,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "alive": true,
+                    "status": health.status,
+                }))
+            },
+        ))?;
 
-        module.register_async_method("health.readiness", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: health.readiness()");
+        map_jsonrpc_registration(module.register_async_method(
+            "health.readiness",
+            |_params, ctx, _ext| async move {
+                debug!("JSON-RPC: health.readiness()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let health = service_clone.health(tarpc::context::current()).await;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let health = service_clone.health(tarpc::context::current()).await;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "ready": health.status == "healthy",
-                "status": health.status,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "ready": health.status == "healthy",
+                    "status": health.status,
+                }))
+            },
+        ))?;
 
         // nestgate.metrics
-        module.register_async_method("health.metrics", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: metrics()");
+        map_jsonrpc_registration(module.register_async_method(
+            "health.metrics",
+            |_params, ctx, _ext| async move {
+                debug!("JSON-RPC: metrics()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let metrics = service_clone.metrics(tarpc::context::current()).await;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let metrics = service_clone.metrics(tarpc::context::current()).await;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "total_capacity_bytes": metrics.total_capacity_bytes,
-                "used_space_bytes": metrics.used_space_bytes,
-                "available_space_bytes": metrics.available_space_bytes,
-                "dataset_count": metrics.dataset_count,
-                "object_count": metrics.object_count,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "total_capacity_bytes": metrics.total_capacity_bytes,
+                    "used_space_bytes": metrics.used_space_bytes,
+                    "available_space_bytes": metrics.available_space_bytes,
+                    "dataset_count": metrics.dataset_count,
+                    "object_count": metrics.object_count,
+                }))
+            },
+        ))?;
 
         // nestgate.version (semantic: health.info)
-        module.register_async_method("health.info", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: health.info()");
+        map_jsonrpc_registration(module.register_async_method(
+            "health.info",
+            |_params, ctx, _ext| async move {
+                debug!("JSON-RPC: health.info()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let version = service_clone.version(tarpc::context::current()).await;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let version = service_clone.version(tarpc::context::current()).await;
 
-            Ok::<_, ErrorObjectOwned>(serde_json::json!({
-                "version": version.version,
-                "api_version": version.api_version,
-                "protocol_versions": version.protocol_versions,
-                "build_info": version.build_info,
-            }))
-        })?;
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "version": version.version,
+                    "api_version": version.api_version,
+                    "protocol_versions": version.protocol_versions,
+                    "build_info": version.build_info,
+                }))
+            },
+        ))?;
 
         // nestgate.protocols
-        module.register_async_method("health.protocols", |_params, ctx, _ext| async move {
-            debug!("JSON-RPC: protocols()");
+        map_jsonrpc_registration(module.register_async_method(
+            "health.protocols",
+            |_params, ctx, _ext| async move {
+                debug!("JSON-RPC: protocols()");
 
-            let state = ctx.as_ref();
-            let service_clone = state.service.clone();
-            let protocols = service_clone.protocols(tarpc::context::current()).await;
+                let state = ctx.as_ref();
+                let service_clone = state.service.clone();
+                let protocols = service_clone.protocols(tarpc::context::current()).await;
 
-            let results: Vec<serde_json::Value> = protocols
-                .into_iter()
-                .map(|proto| {
-                    serde_json::json!({
-                        "protocol": proto.protocol,
-                        "version": proto.version,
-                        "enabled": proto.enabled,
+                let results: Vec<serde_json::Value> = protocols
+                    .into_iter()
+                    .map(|proto| {
+                        serde_json::json!({
+                            "protocol": proto.protocol,
+                            "version": proto.version,
+                            "enabled": proto.enabled,
+                        })
                     })
-                })
-                .collect();
+                    .collect();
 
-            Ok::<_, ErrorObjectOwned>(results)
-        })?;
+                Ok::<_, ErrorObjectOwned>(results)
+            },
+        ))?;
 
         Ok(())
     }

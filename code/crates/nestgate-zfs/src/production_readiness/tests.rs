@@ -2,6 +2,8 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::*;
+use nestgate_types::MapEnv;
+use std::sync::Arc;
 
 #[tokio::test]
 async fn test_production_readiness_assessment()
@@ -25,18 +27,22 @@ async fn test_production_readiness_assessment()
 
 #[tokio::test]
 async fn test_mock_detection() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    // Test mock mode detection
-    nestgate_core::env_process::set_var("NESTGATE_MOCK_MODE", "true");
-    let validator = ProductionReadinessValidator::new();
-    let mocks = validator.identify_mock_dependencies()?;
+    let v_true = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_MOCK_MODE",
+        "true",
+    )])));
+    let mocks = v_true.identify_mock_dependencies()?;
     assert!(!mocks.is_empty());
 
-    nestgate_core::env_process::set_var("NESTGATE_MOCK_MODE", "false");
-    let mocks = validator.identify_mock_dependencies()?;
+    let v_false = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_MOCK_MODE",
+        "false",
+    )])));
+    let mocks = v_false.identify_mock_dependencies()?;
     assert!(mocks.is_empty());
 
-    nestgate_core::env_process::remove_var("NESTGATE_MOCK_MODE");
-    let mocks = validator.identify_mock_dependencies()?;
+    let v_unset = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::new()));
+    let mocks = v_unset.identify_mock_dependencies()?;
     assert!(mocks.is_empty()); // Should default to false
 
     Ok(())
@@ -115,62 +121,64 @@ fn real_zfs_operations_default_debug() {
 
 #[test]
 fn validate_performance_fails_when_min_memory_below_threshold() {
-    temp_env::with_var("NESTGATE_MIN_MEMORY_MB", Some("256"), || {
-        let v = ProductionReadinessValidator::new();
-        assert!(!v.validate_performance().expect("result"));
-    });
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_MIN_MEMORY_MB",
+        "256",
+    )])));
+    assert!(!v.validate_performance().expect("result"));
 }
 
 #[test]
 fn validate_performance_passes_when_min_memory_at_default_level() {
-    temp_env::with_var("NESTGATE_MIN_MEMORY_MB", None::<&str>, || {
-        let v = ProductionReadinessValidator::new();
-        assert!(v.validate_performance().expect("result"));
-    });
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::new()));
+    assert!(v.validate_performance().expect("result"));
 }
 
 #[test]
 fn validate_performance_passes_when_min_memory_explicitly_high() {
-    temp_env::with_var("NESTGATE_MIN_MEMORY_MB", Some("2048"), || {
-        let v = ProductionReadinessValidator::new();
-        assert!(v.validate_performance().expect("result"));
-    });
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_MIN_MEMORY_MB",
+        "2048",
+    )])));
+    assert!(v.validate_performance().expect("result"));
 }
 
 #[test]
 fn detect_real_hardware_false_when_mock_mode_enabled() {
-    temp_env::with_var("NESTGATE_MOCK_MODE", Some("true"), || {
-        let v = ProductionReadinessValidator::new();
-        assert!(!v.detect_real_hardware().expect("result"));
-    });
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_MOCK_MODE",
+        "true",
+    )])));
+    assert!(!v.detect_real_hardware().expect("result"));
 }
 
 #[test]
 fn validate_security_passes_when_secure_mode_unset_or_false() {
-    temp_env::with_var("NESTGATE_SECURE_MODE", None::<&str>, || {
-        let v = ProductionReadinessValidator::new();
-        assert!(v.validate_security().expect("result"));
-    });
-    temp_env::with_var("NESTGATE_SECURE_MODE", Some("false"), || {
-        let v = ProductionReadinessValidator::new();
-        assert!(v.validate_security().expect("result"));
-    });
+    let v_unset = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::new()));
+    assert!(v_unset.validate_security().expect("result"));
+    let v_false = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_SECURE_MODE",
+        "false",
+    )])));
+    assert!(v_false.validate_security().expect("result"));
 }
 
 #[test]
 fn validate_security_passes_when_secure_mode_unparseable() {
-    temp_env::with_var("NESTGATE_SECURE_MODE", Some("not-a-bool"), || {
-        let v = ProductionReadinessValidator::new();
-        assert!(v.validate_security().expect("result"));
-    });
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_SECURE_MODE",
+        "not-a-bool",
+    )])));
+    assert!(v.validate_security().expect("result"));
 }
 
 #[test]
 fn validate_min_memory_mb_invalid_env_falls_back_to_default() {
-    temp_env::with_var("NESTGATE_MIN_MEMORY_MB", Some("not-a-number"), || {
-        let v = ProductionReadinessValidator::new();
-        assert!(v.validate_performance().expect("result"));
-    });
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_MIN_MEMORY_MB",
+        "not-a-number",
+    )])));
+    assert!(v.validate_performance().expect("result"));
 }
 
 #[test]
@@ -180,31 +188,27 @@ fn validate_configuration_succeeds_with_writable_temp_directories() {
     let cfg = tmp.path().join("config");
     let data_s = data.to_str().expect("utf8");
     let cfg_s = cfg.to_str().expect("utf8");
-    temp_env::with_vars(
-        [
-            ("NESTGATE_DATA_DIR", Some(data_s)),
-            ("NESTGATE_CONFIG_DIR", Some(cfg_s)),
-        ],
-        || {
-            let v = ProductionReadinessValidator::new();
-            assert!(v.validate_configuration().expect("result"));
-        },
-    );
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([
+        ("NESTGATE_DATA_DIR", data_s),
+        ("NESTGATE_CONFIG_DIR", cfg_s),
+    ])));
+    assert!(v.validate_configuration().expect("result"));
 }
 
 #[test]
 fn assess_production_readiness_with_mock_mode_records_mock_dependency_finding() {
-    temp_env::with_var("NESTGATE_MOCK_MODE", Some("true"), || {
-        let v = ProductionReadinessValidator::new();
-        let report = v.assess_production_readiness().expect("report");
-        assert!(!report.mock_dependencies.is_empty());
-        assert!(
-            report
-                .findings
-                .iter()
-                .any(|f| f.category == "Mock Dependencies" && f.blocking)
-        );
-    });
+    let v = ProductionReadinessValidator::new_with_env(Arc::new(MapEnv::from([(
+        "NESTGATE_MOCK_MODE",
+        "true",
+    )])));
+    let report = v.assess_production_readiness().expect("report");
+    assert!(!report.mock_dependencies.is_empty());
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|f| f.category == "Mock Dependencies" && f.blocking)
+    );
 }
 
 #[tokio::test]

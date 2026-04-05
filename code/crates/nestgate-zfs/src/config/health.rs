@@ -4,6 +4,7 @@
 //
 // Configuration for ZFS health monitoring, alerting, and failure thresholds.
 
+use nestgate_core::constants::LOCALHOST_NAME;
 use serde::{Deserialize, Serialize};
 
 /// Health monitoring configuration
@@ -81,7 +82,7 @@ impl HealthMonitoringConfig {
                         // Development convenience: local endpoints
                         // In production, this code path should never execute
                         let dev_host = std::env::var("NESTGATE_DEV_HOST")
-                            .unwrap_or_else(|_| "localhost".to_string());
+                            .unwrap_or_else(|_| LOCALHOST_NAME.to_string());
                         let dev_port = std::env::var("NESTGATE_DEV_PORT")
                             .ok()
                             .and_then(|s| s.parse().ok())

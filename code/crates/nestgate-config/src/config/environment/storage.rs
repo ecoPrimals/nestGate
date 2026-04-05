@@ -7,8 +7,8 @@
 //!
 //! **Phase 3: Smart Refactoring** - Extracted from monolithic `environment.rs` (Jan 30, 2026)
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
-use std::env;
 use std::str::FromStr;
 
 use super::ConfigError;
@@ -38,36 +38,55 @@ impl StorageConfig {
         Self::from_env_with_prefix("NESTGATE")
     }
 
+    /// Load from an injectable environment source (e.g. [`nestgate_types::MapEnv`] in tests).
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self, ConfigError> {
+        Self::from_env_with_prefix_source("NESTGATE", env)
+    }
+
     /// Load from environment with custom prefix
     pub fn from_env_with_prefix(prefix: &str) -> Result<Self, ConfigError> {
+        Self::from_env_with_prefix_source(prefix, &ProcessEnv)
+    }
+
+    /// Load with custom prefix from an injectable [`EnvSource`].
+    pub fn from_env_with_prefix_source(
+        prefix: &str,
+        env: &dyn EnvSource,
+    ) -> Result<Self, ConfigError> {
         Ok(Self {
-            zfs_pool: Self::env_var_or(prefix, "ZFS_POOL", "tank".to_string())?,
+            zfs_pool: Self::env_var_or(prefix, "ZFS_POOL", "tank".to_string(), env)?,
             data_dir: Self::env_var_or(
                 prefix,
                 "DATA_DIR",
-                crate::config::storage_paths::StoragePaths::from_environment()
+                crate::config::storage_paths::StoragePaths::from_env_source(env)
                     .data_dir()
                     .to_string_lossy()
                     .to_string(),
+                env,
             )?,
-            cache_size_mb: Self::env_var_or(prefix, "CACHE_SIZE_MB", 512)?,
-            compression_enabled: Self::env_var_or(prefix, "COMPRESSION", true)?,
-            snapshot_retention_days: Self::env_var_or(prefix, "SNAPSHOT_RETENTION_DAYS", 30)?,
+            cache_size_mb: Self::env_var_or(prefix, "CACHE_SIZE_MB", 512, env)?,
+            compression_enabled: Self::env_var_or(prefix, "COMPRESSION", true, env)?,
+            snapshot_retention_days: Self::env_var_or(prefix, "SNAPSHOT_RETENTION_DAYS", 30, env)?,
         })
     }
 
     /// Helper to get environment variable or use default
-    fn env_var_or<T: FromStr>(prefix: &str, key: &str, default: T) -> Result<T, ConfigError>
+    fn env_var_or<T: FromStr>(
+        prefix: &str,
+        key: &str,
+        default: T,
+        env: &dyn EnvSource,
+    ) -> Result<T, ConfigError>
     where
         T::Err: std::error::Error + Send + Sync + 'static,
     {
         let var_name = format!("{prefix}_{key}");
-        match env::var(&var_name) {
-            Ok(val) => val.parse().map_err(|e| ConfigError::ParseError {
+        match env.get(&var_name) {
+            Some(val) => val.parse().map_err(|e| ConfigError::ParseError {
                 key: var_name,
                 source: Box::new(e),
             }),
-            Err(_) => Ok(default),
+            None => Ok(default),
         }
     }
 }

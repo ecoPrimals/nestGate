@@ -435,7 +435,7 @@ impl ZfsSnapshotManager {
 // ========== TEST-ONLY CONSTRUCTORS ==========
 // Isolated from production code to maintain clear boundaries
 
-#[cfg(test)]
+#[cfg(any(test, feature = "dev-stubs"))]
 impl ZfsSnapshotManager {
     /// Create snapshot manager for testing
     ///

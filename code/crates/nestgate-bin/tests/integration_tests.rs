@@ -74,6 +74,7 @@
 // }
 // ```
 
+use nestgate_types::{EnvSource, MapEnv};
 use std::process::Command;
 
 #[tokio::test]
@@ -201,9 +202,8 @@ async fn test_gui_binary_exists() -> std::result::Result<(), Box<dyn std::error:
         return Ok(());
     }
 
-    let display = temp_env::with_var("DISPLAY", Some(":0"), || {
-        std::env::var("DISPLAY").unwrap_or_default()
-    });
+    let env = MapEnv::from([("DISPLAY", ":0")]);
+    let display = env.get("DISPLAY").unwrap_or_default();
     assert!(!display.is_empty() || display == ":0");
     println!("✅ GUI binary configuration test complete");
     Ok(())
@@ -211,6 +211,7 @@ async fn test_gui_binary_exists() -> std::result::Result<(), Box<dyn std::error:
 
 #[cfg(test)]
 mod cli_tests {
+    use nestgate_types::{EnvSource, MapEnv};
 
     #[test]
     fn test_environment_variable_parsing() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -225,29 +226,26 @@ mod cli_tests {
         ];
 
         for (key, value) in test_cases {
-            temp_env::with_var(key, Some(value.as_str()), || {
-                let retrieved = std::env::var(key).unwrap_or_else(|e| {
-                    tracing::error!("Unwrap failed: {:?}", e);
-                    String::new()
-                });
-                assert_eq!(retrieved, value);
-            });
+            let env = MapEnv::from([(key, value.as_str())]);
+            let retrieved = env.get(key).unwrap_or_default();
+            assert_eq!(retrieved, value);
         }
         Ok(())
     }
 
     #[test]
     fn test_service_name_generation() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        temp_env::with_var_unset("NESTGATE_SERVICE_NAME", || {
-            let default_prefix = "nestgate";
-            assert!(default_prefix.starts_with("nestgate"));
-        });
+        let env = MapEnv::new();
+        assert!(env.get("NESTGATE_SERVICE_NAME").is_none());
+        let default_prefix = "nestgate";
+        assert!(default_prefix.starts_with("nestgate"));
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod configuration_tests {
+    use nestgate_types::{EnvSource, MapEnv};
 
     #[test]
     fn test_default_configurationvalues() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -261,47 +259,29 @@ mod configuration_tests {
     }
     #[test]
     fn test_configuration_precedence() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        temp_env::with_var("NESTGATE_PORT", Some("9090"), || {
-            let port = std::env::var("NESTGATE_PORT").map_err(|e| {
-                tracing::error!(
-                    "Environment variable '{}' not found: {}",
-                    "NESTGATE_PORT",
-                    e
-                );
-                std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    format!("Missing environment variable: {}", e),
-                )
-            })?;
-            assert_eq!(port, "9090");
-            Ok::<(), std::io::Error>(())
-        })?;
+        let env = MapEnv::from([("NESTGATE_PORT", "9090")]);
+        let port = env
+            .get("NESTGATE_PORT")
+            .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "NESTGATE_PORT"))?;
+        assert_eq!(port, "9090");
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod integration_mode_tests {
+    use nestgate_types::{EnvSource, MapEnv};
 
     #[test]
     fn test_standalone_mode_configuration() -> std::result::Result<(), Box<dyn std::error::Error>> {
-        temp_env::with_vars(
-            vec![
-                ("NESTGATE_ORCHESTRATION_URL", None::<&str>),
-                ("NESTGATE_SECURITY_URL", None::<&str>),
-                ("ORCHESTRATION_ENDPOINT", None::<&str>),
-                ("SECURITY_ENDPOINT", None::<&str>),
-            ],
-            || {
-                assert!(
-                    std::env::var("ORCHESTRATION_ENDPOINT").is_err(),
-                    "ORCHESTRATION_ENDPOINT should be unset in standalone mode"
-                );
-                assert!(
-                    std::env::var("SECURITY_ENDPOINT").is_err(),
-                    "SECURITY_ENDPOINT should be unset in standalone mode"
-                );
-            },
+        let env = MapEnv::new();
+        assert!(
+            env.get("ORCHESTRATION_ENDPOINT").is_none(),
+            "ORCHESTRATION_ENDPOINT should be unset in standalone mode"
+        );
+        assert!(
+            env.get("SECURITY_ENDPOINT").is_none(),
+            "SECURITY_ENDPOINT should be unset in standalone mode"
         );
         Ok(())
     }
@@ -317,22 +297,12 @@ mod integration_mode_tests {
             nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4,
             nestgate_core::constants::hardcoding::runtime_fallback_ports::HTTP
         );
-        temp_env::with_vars(
-            vec![
-                ("ORCHESTRATION_ENDPOINT", Some(expected_oe.as_str())),
-                ("SECURITY_ENDPOINT", Some(expected_se.as_str())),
-            ],
-            || {
-                let oe_val = std::env::var("ORCHESTRATION_ENDPOINT").unwrap_or_else(|e| {
-                    panic!("ORCHESTRATION_ENDPOINT: {e}");
-                });
-                let se_val = std::env::var("SECURITY_ENDPOINT").unwrap_or_else(|e| {
-                    panic!("SECURITY_ENDPOINT: {e}");
-                });
-                assert_eq!(oe_val, expected_oe);
-                assert_eq!(se_val, expected_se);
-            },
-        );
+        let env = MapEnv::from([
+            ("ORCHESTRATION_ENDPOINT", expected_oe.as_str()),
+            ("SECURITY_ENDPOINT", expected_se.as_str()),
+        ]);
+        assert_eq!(env.get("ORCHESTRATION_ENDPOINT").expect("oe"), expected_oe);
+        assert_eq!(env.get("SECURITY_ENDPOINT").expect("se"), expected_se);
         Ok(())
     }
 }

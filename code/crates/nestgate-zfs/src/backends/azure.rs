@@ -621,17 +621,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_pool_properties() {
-        let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
-        nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
-        let backend = AzureBackend::new().unwrap();
+        // Construct directly (no process env) so parallel tests cannot race on AZURE_STORAGE_ACCOUNT.
+        let backend = AzureBackend {
+            client: Arc::new(AzureClientWrapper {
+                account: "teststorage".to_string(),
+                connection_string: None,
+                config_source: ConfigSource::Environment,
+            }),
+            container_prefix: "nestgate".to_string(),
+            pools: Arc::new(RwLock::new(HashMap::new())),
+        };
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
 
         let props = backend.get_pool_properties(&pool).await;
 
-        match orig {
-            Some(v) => nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", v),
-            None => nestgate_core::env_process::remove_var("AZURE_STORAGE_ACCOUNT"),
-        }
         assert!(props.is_ok(), "Should get pool properties");
         let props = props.unwrap();
         assert!(!props.account.is_empty());

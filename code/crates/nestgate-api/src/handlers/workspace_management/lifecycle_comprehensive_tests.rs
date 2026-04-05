@@ -12,7 +12,7 @@ mod workspace_lifecycle_tests {
     // ==================== BACKUP CONFIG TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_backup_config_creation() {
         let config = BackupConfig {
             backup_name: "workspace-backup-001".to_string(),
@@ -30,7 +30,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_backup_config_compression_levels() {
         for level in 0..=9 {
             let config = BackupConfig {
@@ -46,7 +46,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_backup_config_serialization() {
         let config = BackupConfig {
             backup_name: "test-backup".to_string(),
@@ -62,7 +62,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_backup_config_deserialization() {
         let json = r#"{
             "backup_name": "deserialized-backup",
@@ -81,7 +81,7 @@ mod workspace_lifecycle_tests {
     // ==================== RESTORE CONFIG TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_restore_config_creation() {
         let config = RestoreConfig {
             backup_name: "backup-to-restore".to_string(),
@@ -97,7 +97,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_restore_config_force_flag() {
         let config_no_force = RestoreConfig {
             backup_name: "backup".to_string(),
@@ -118,7 +118,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_restore_config_serialization() {
         let config = RestoreConfig {
             backup_name: "test-restore".to_string(),
@@ -135,7 +135,7 @@ mod workspace_lifecycle_tests {
     // ==================== MIGRATION CONFIG TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_migration_config_creation() {
         let config = MigrationConfig {
             source_workspace_id: "source-123".to_string(),
@@ -153,7 +153,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_migration_config_strategies() {
         let strategies = vec!["full", "incremental", "differential"];
         
@@ -171,7 +171,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_migration_config_serialization() {
         let config = MigrationConfig {
             source_workspace_id: "src-001".to_string(),
@@ -189,7 +189,7 @@ mod workspace_lifecycle_tests {
     // ==================== LIFECYCLE POLICY TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_lifecycle_policy_creation() {
         let policy = LifecyclePolicy {
             policy_name: "retention-30-days".to_string(),
@@ -208,7 +208,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_lifecycle_policy_retention_periods() {
         let periods = vec![7, 30, 60, 90, 365];
         
@@ -227,7 +227,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_lifecycle_policy_serialization() {
         let policy = LifecyclePolicy {
             policy_name: "test-policy".to_string(),
@@ -359,7 +359,7 @@ mod workspace_lifecycle_tests {
     // ==================== INTEGRATION TESTS ====================
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_full_backup_workflow() {
         let config = BackupConfig {
             backup_name: "full-workflow-backup".to_string(),
@@ -375,7 +375,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_full_restore_workflow() {
         let config = RestoreConfig {
             backup_name: "test-backup".to_string(),
@@ -389,7 +389,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_full_migration_workflow() {
         let config = MigrationConfig {
             source_workspace_id: "src-ws".to_string(),
@@ -407,7 +407,7 @@ mod workspace_lifecycle_tests {
     // ==================== EDGE CASE TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_backup_config_max_compression() {
         let config = BackupConfig {
             backup_name: "max-compression".to_string(),
@@ -421,7 +421,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_backup_config_no_compression() {
         let config = BackupConfig {
             backup_name: "no-compression".to_string(),
@@ -435,7 +435,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_lifecycle_policy_no_minimum_backups() {
         let policy = LifecyclePolicy {
             policy_name: "no-minimum".to_string(),
@@ -450,7 +450,7 @@ mod workspace_lifecycle_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_lifecycle_policy_long_retention() {
         let policy = LifecyclePolicy {
             policy_name: "long-term".to_string(),
@@ -468,7 +468,7 @@ mod workspace_lifecycle_tests {
     // ==================== PERFORMANCE TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_config_creation_performance() {
         let start = std::time::Instant::now();
         

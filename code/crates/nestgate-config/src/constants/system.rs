@@ -14,6 +14,17 @@ pub const DEFAULT_INSTANCE_NAME: &str = "nestgate-default";
 /// Default service name
 pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
 
+/// Default ecosystem directory segment (`BiomeOS`) under runtime paths (for example under `XDG_RUNTIME_DIR`).
+///
+/// Override with `BIOMEOS_SERVICE_NAME` via [`ecosystem_path_segment`].
+pub const ECOSYSTEM_NAME: &str = "biomeos";
+
+/// Directory name for ecosystem-scoped runtime paths (e.g. `$XDG_RUNTIME_DIR/<segment>/...`).
+#[must_use]
+pub fn ecosystem_path_segment() -> String {
+    std::env::var("BIOMEOS_SERVICE_NAME").unwrap_or_else(|_| ECOSYSTEM_NAME.to_string())
+}
+
 /// Get timeout in milliseconds from environment or default
 #[must_use]
 pub fn timeout_ms() -> u64 {
@@ -88,41 +99,9 @@ pub const DEFAULT_BIND_HOST: &str = "127.0.0.1";
 
 #[cfg(test)]
 mod tests {
+    use super::super::system_config::SystemConfig;
     use super::*;
-    use std::env;
-    use std::sync::Mutex;
-
-    // Global mutex to serialize environment variable tests
-    static ENV_TEST_LOCK: Mutex<()> = Mutex::new(());
-
-    /// Helper to set and restore environment variables for testing
-    struct EnvGuard {
-        key: String,
-        original: Option<String>,
-    }
-
-    impl EnvGuard {
-        /// Creates a new instance
-        fn new(key: &str, value: &str) -> Self {
-            let original = env::var(key).ok();
-            // SAFETY: single-threaded test context.
-            crate::env_process::set_var(key, value);
-            Self {
-                key: key.to_string(),
-                original,
-            }
-        }
-    }
-
-    impl Drop for EnvGuard {
-        /// Drop
-        fn drop(&mut self) {
-            match &self.original {
-                Some(value) => crate::env_process::set_var(&self.key, value),
-                None => crate::env_process::remove_var(&self.key),
-            }
-        }
-    }
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_default_constants() {
@@ -136,181 +115,129 @@ mod tests {
     }
 
     #[test]
-    fn test_timeout_ms_default() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        // Save original value, remove var, test default, then restore
-        let original = env::var("NESTGATE_TIMEOUT_MS").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_TIMEOUT_MS");
-        assert_eq!(timeout_ms(), 5000);
-        // Restore original value if it existed
-        if let Some(value) = original {
-            // SAFETY: single-threaded test context.
-            crate::env_process::set_var("NESTGATE_TIMEOUT_MS", value);
-        }
+    fn timeout_ms_default() {
+        let cfg = SystemConfig::from_env_source(&MapEnv::new());
+        assert_eq!(cfg.timeout_ms(), 5000);
     }
 
     #[test]
-    fn test_timeout_ms_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_TIMEOUT_MS", "10000");
-        assert_eq!(timeout_ms(), 10000);
+    fn timeout_ms_from_env() {
+        let env = MapEnv::from([("NESTGATE_TIMEOUT_MS", "10000")]);
+        assert_eq!(SystemConfig::from_env_source(&env).timeout_ms(), 10000);
     }
 
     #[test]
-    fn test_timeout_ms_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_TIMEOUT_MS", "invalid");
-        assert_eq!(timeout_ms(), 5000);
+    fn timeout_ms_invalid_env() {
+        let env = MapEnv::from([("NESTGATE_TIMEOUT_MS", "invalid")]);
+        assert_eq!(SystemConfig::from_env_source(&env).timeout_ms(), 5000);
     }
 
     #[test]
-    fn test_max_connections_default() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        // Save original value, remove var, test default, then restore
-        let original = env::var("NESTGATE_MAX_CONNECTIONS").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_MAX_CONNECTIONS");
-        assert_eq!(max_connections(), 1000);
-        // Restore original value if it existed
-        if let Some(value) = original {
-            // SAFETY: single-threaded test context.
-            crate::env_process::set_var("NESTGATE_MAX_CONNECTIONS", value);
-        }
+    fn max_connections_default() {
+        let cfg = SystemConfig::from_env_source(&MapEnv::new());
+        assert_eq!(cfg.max_connections(), 1000);
     }
 
     #[test]
-    fn test_max_connections_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_MAX_CONNECTIONS", "2000");
-        assert_eq!(max_connections(), 2000);
+    fn max_connections_from_env() {
+        let env = MapEnv::from([("NESTGATE_MAX_CONNECTIONS", "2000")]);
+        assert_eq!(SystemConfig::from_env_source(&env).max_connections(), 2000);
     }
 
     #[test]
-    fn test_max_connections_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_MAX_CONNECTIONS", "not_a_number");
-        assert_eq!(max_connections(), 1000);
+    fn max_connections_invalid_env() {
+        let env = MapEnv::from([("NESTGATE_MAX_CONNECTIONS", "not_a_number")]);
+        assert_eq!(SystemConfig::from_env_source(&env).max_connections(), 1000);
     }
 
     #[test]
-    fn test_buffer_size_default() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        // Save original value, remove var, test default, then restore
-        let original = env::var("NESTGATE_BUFFER_SIZE").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_BUFFER_SIZE");
-        assert_eq!(buffer_size(), 8192);
-        // Restore original value if it existed
-        if let Some(value) = original {
-            // SAFETY: single-threaded test context.
-            crate::env_process::set_var("NESTGATE_BUFFER_SIZE", value);
-        }
+    fn buffer_size_default() {
+        let cfg = SystemConfig::from_env_source(&MapEnv::new());
+        assert_eq!(cfg.buffer_size(), 8192);
     }
 
     #[test]
-    fn test_buffer_size_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        // This test reads from the environment variable set by the guard
-        let _guard = EnvGuard::new("NESTGATE_BUFFER_SIZE", "16384");
-        assert_eq!(buffer_size(), 16384);
+    fn buffer_size_from_env() {
+        let env = MapEnv::from([("NESTGATE_BUFFER_SIZE", "16384")]);
+        assert_eq!(SystemConfig::from_env_source(&env).buffer_size(), 16384);
     }
 
     #[test]
-    fn test_buffer_size_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_BUFFER_SIZE", "invalid");
-        assert_eq!(buffer_size(), 8192);
+    fn buffer_size_invalid_env() {
+        let env = MapEnv::from([("NESTGATE_BUFFER_SIZE", "invalid")]);
+        assert_eq!(SystemConfig::from_env_source(&env).buffer_size(), 8192);
     }
 
     #[test]
-    fn test_default_retry_attempts_default() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        // Save original value, remove var, test default, then restore
-        let original = env::var("NESTGATE_RETRY_ATTEMPTS").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_RETRY_ATTEMPTS");
-        assert_eq!(default_retry_attempts(), 3);
-        // Restore original value if it existed
-        if let Some(value) = original {
-            // SAFETY: single-threaded test context.
-            crate::env_process::set_var("NESTGATE_RETRY_ATTEMPTS", value);
-        }
+    fn retry_attempts_default() {
+        let cfg = SystemConfig::from_env_source(&MapEnv::new());
+        assert_eq!(cfg.retry_attempts(), 3);
     }
 
     #[test]
-    fn test_default_retry_attempts_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_RETRY_ATTEMPTS", "5");
-        assert_eq!(default_retry_attempts(), 5);
+    fn retry_attempts_from_env() {
+        let env = MapEnv::from([("NESTGATE_RETRY_ATTEMPTS", "5")]);
+        assert_eq!(SystemConfig::from_env_source(&env).retry_attempts(), 5);
     }
 
     #[test]
-    fn test_default_retry_attempts_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_RETRY_ATTEMPTS", "not_a_number");
-        assert_eq!(default_retry_attempts(), 3);
+    fn retry_attempts_invalid_env() {
+        let env = MapEnv::from([("NESTGATE_RETRY_ATTEMPTS", "not_a_number")]);
+        assert_eq!(SystemConfig::from_env_source(&env).retry_attempts(), 3);
     }
 
     #[test]
-    fn test_health_check_interval_default() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_HEALTH_CHECK_INTERVAL", "");
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_HEALTH_CHECK_INTERVAL");
-        assert_eq!(health_check_interval(), 30);
+    fn health_check_interval_default() {
+        let cfg = SystemConfig::from_env_source(&MapEnv::new());
+        assert_eq!(cfg.health_check_interval(), 30);
     }
 
     #[test]
-    fn test_health_check_interval_from_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        // Set the test value directly
-        let _test_guard = EnvGuard::new("NESTGATE_HEALTH_CHECK_INTERVAL", "60");
-
-        // Verify the environment variable is actually set
+    fn health_check_interval_from_env() {
+        let env = MapEnv::from([("NESTGATE_HEALTH_CHECK_INTERVAL", "60")]);
         assert_eq!(
-            env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
-                .expect("Failed to read environment variable"),
-            "60"
+            SystemConfig::from_env_source(&env).health_check_interval(),
+            60
+        );
+    }
+
+    #[test]
+    fn health_check_interval_invalid_env() {
+        let env = MapEnv::from([("NESTGATE_HEALTH_CHECK_INTERVAL", "invalid")]);
+        assert_eq!(
+            SystemConfig::from_env_source(&env).health_check_interval(),
+            30
+        );
+    }
+
+    #[test]
+    fn edge_cases() {
+        let zero = MapEnv::from([("NESTGATE_TIMEOUT_MS", "0")]);
+        assert_eq!(SystemConfig::from_env_source(&zero).timeout_ms(), 0);
+
+        let negative = MapEnv::from([("NESTGATE_MAX_CONNECTIONS", "-1")]);
+        assert_eq!(
+            SystemConfig::from_env_source(&negative).max_connections(),
+            1000
         );
 
-        // Test the function
-        let result = health_check_interval();
-        assert_eq!(result, 60, "Expected 60, got {result}");
+        let large = MapEnv::from([("NESTGATE_BUFFER_SIZE", "1048576")]);
+        assert_eq!(
+            SystemConfig::from_env_source(&large).buffer_size(),
+            1_048_576
+        );
     }
 
     #[test]
-    fn test_health_check_interval_invalid_env() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard = EnvGuard::new("NESTGATE_HEALTH_CHECK_INTERVAL", "invalid");
-        assert_eq!(health_check_interval(), 30);
-    }
-
-    #[test]
-    fn test_edge_cases() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        // Test zero values
-        let _guard1 = EnvGuard::new("NESTGATE_TIMEOUT_MS", "0");
-        assert_eq!(timeout_ms(), 0);
-
-        // Test negative values (should parse as default due to type constraints)
-        let _guard2 = EnvGuard::new("NESTGATE_MAX_CONNECTIONS", "-1");
-        assert_eq!(max_connections(), 1000);
-
-        // Test very large values
-        let _guard3 = EnvGuard::new("NESTGATE_BUFFER_SIZE", "1048576");
-        assert_eq!(buffer_size(), 1_048_576);
-    }
-
-    #[test]
-    fn test_multiple_env_vars_simultaneously() {
-        let _lock = ENV_TEST_LOCK.lock().expect("Failed to acquire lock");
-        let _guard1 = EnvGuard::new("NESTGATE_TIMEOUT_MS", "2000");
-        let _guard2 = EnvGuard::new("NESTGATE_MAX_CONNECTIONS", "500");
-        let _guard3 = EnvGuard::new("NESTGATE_BUFFER_SIZE", "4096");
-
-        assert_eq!(timeout_ms(), 2000);
-        assert_eq!(max_connections(), 500);
-        assert_eq!(buffer_size(), 4096);
+    fn multiple_env_vars_simultaneously() {
+        let env = MapEnv::from([
+            ("NESTGATE_TIMEOUT_MS", "2000"),
+            ("NESTGATE_MAX_CONNECTIONS", "500"),
+            ("NESTGATE_BUFFER_SIZE", "4096"),
+        ]);
+        let cfg = SystemConfig::from_env_source(&env);
+        assert_eq!(cfg.timeout_ms(), 2000);
+        assert_eq!(cfg.max_connections(), 500);
+        assert_eq!(cfg.buffer_size(), 4096);
     }
 }
