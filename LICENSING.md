@@ -12,7 +12,7 @@ scyBorg is the triple-copyleft stack for ecoPrimals:
 
 | Layer | License | Typical coverage |
 |-------|---------|------------------|
-| **Software** | AGPL-3.0 | Code, shaders, build config, infrastructure |
+| **Software** | AGPL-3.0-or-later | Code, shaders, build config, infrastructure |
 | **Game mechanics** | [ORC](https://azoralaw.com/orclicense/) Licensed Material | Rules, stats, progression, encounter math |
 | **Creative** | [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | Art, narrative, documentation, specs, diagrams |
 

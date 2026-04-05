@@ -26,6 +26,8 @@ This document describes:
 - [PROJECT_STATUS_MASTER.md](./PROJECT_STATUS_MASTER.md) - Current metrics
 - [COMPREHENSIVE_UNIFICATION_ASSESSMENT_NOV_8_2025.md](./COMPREHENSIVE_UNIFICATION_ASSESSMENT_NOV_8_2025.md) - Complete analysis
 
+**Historical note (April 2026)**: The standalone crates **nestgate-network** and **nestgate-automation** were **archived** (removed from the workspace in **v4.7.0**). Rust examples in this file that `use nestgate_network::...` are **legacy illustrations** only; prefer consolidated networking and workflow types in **nestgate-core** / other active crates. The former top-level **`benchmarks/`** directory was also **removed**; use per-crate **`benches/`** targets or workspace tooling where configured.
+
 ---
 
 ## 🎯 **Architectural Philosophy**
@@ -449,10 +451,10 @@ pub mod constants {
 │   ├── nestgate-core ✅        # Unified error/config/constants frameworks
 │   ├── nestgate-api ✅         # REST/RPC with consolidated patterns
 │   ├── nestgate-zfs ✅         # ZFS with unified error handling
-│   └── nestgate-network ✅     # Network with consolidated config
+│   └── nestgate-network ⚠️     # (archived — shed in v4.7.0)
 │
 ├── 🔧 Specialized Services
-│   ├── nestgate-automation ✅  # Workflow with unified patterns
+│   ├── nestgate-automation ⚠️  # (archived — shed in v4.7.0)
 │   ├── (nestgate-mcp removed)   # MCP delegated to biomeOS capability.call
 │   ├── nestgate-performance ✅ # Metrics with domain constants
 │   ├── nestgate-installer ✅   # Deployment with unified config
@@ -467,7 +469,7 @@ pub mod constants {
 └── 🧪 Quality & Validation
     ├── fuzz/ ✅                # Security testing
     ├── tools/ ✅               # Development utilities
-    └── benchmarks/ ✅          # Performance validation
+    └── (benchmarks/ removed — use per-crate `benches/` where present)
 ```
 
 ---

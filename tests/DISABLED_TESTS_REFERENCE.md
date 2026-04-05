@@ -49,7 +49,7 @@ See [README.md](README.md) for the full category list and `cargo test --workspac
 
 | Metric | Value |
 |--------|--------|
-| Passing (total) | ~11,821 |
+| Passing (total) | ~11,812 |
 | Failed | 0 |
 | Ignored | ~463 |
 | Workspace coverage (line) | ~80% |

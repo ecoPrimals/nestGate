@@ -74,7 +74,7 @@ impl ZfsService {
 **Files to Optimize**:
 - `code/crates/nestgate-zfs/src/orchestrator_integration.rs` (3 instances)
 - `code/crates/nestgate-zfs/tests/orchestrator_integration_edge_cases.rs` (4 instances)
-- `code/crates/nestgate-network/src/network_coverage_expansion.rs` (1 instance)
+- *(Historical)* `nestgate-network/src/network_coverage_expansion.rs` — **archived** with **nestgate-network** (shed in v4.7.0); no longer in the tree
 
 ---
 
@@ -201,7 +201,7 @@ process(Arc::clone(&data)); // Cheap ref count increment!
 - [ ] **Network Config** (HIGH PRIORITY)
   - [ ] Convert network configs to `Arc<NetworkConfig>`
   - [ ] Update service initialization
-  - Files: `network_coverage_expansion.rs`, `network/` modules
+  - Files: network-related modules under active crates *(paths like `network_coverage_expansion.rs` referred to the archived **nestgate-network** crate, removed in v4.7.0)*
 
 - [ ] **Discovery Config** (MEDIUM PRIORITY)
   - [ ] Convert discovery configs to `Arc<DiscoveryConfig>`

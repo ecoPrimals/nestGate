@@ -13,9 +13,9 @@ if ! cargo fmt --all -- --check; then
     exit 1
 fi
 
-# Run clippy
+# Run clippy (check exit code; do not rely on grepping output)
 echo "Running clippy..."
-if ! cargo clippy --workspace --all-targets --all-features --quiet -- -D warnings 2>&1 | grep -q "^$"; then
+if ! cargo clippy --workspace --all-targets --all-features --quiet -- -D warnings; then
     echo "WARN: Clippy found issues (see above)"
     echo "Run 'cargo clippy --workspace --all-targets --all-features' to see details"
 fi

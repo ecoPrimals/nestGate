@@ -12,7 +12,7 @@
 
 **Optional**: ZFS (for tiered storage features)
 
-**Current build status** (April 5, 2026): 23 workspace members; ~11,821 tests passing, 463 ignored, 0 failures; ~80% line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
+**Current build status** (April 5, 2026): 23 workspace members; ~11,812 tests passing, 463 ignored, 0 failures; ~80% line coverage; clippy clean with `-D warnings` — details in [STATUS.md](./STATUS.md).
 
 ---
 

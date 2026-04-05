@@ -296,8 +296,7 @@ cargo test --package nestgate-api rest::
 ### Other Packages
 
 ```bash
-# nestgate-network (51 tests)
-cargo test --package nestgate-network --lib
+# nestgate-network — archived (removed from workspace in v4.7.0); do not use --package nestgate-network
 
 # nestgate-canonical (105 tests)
 cargo test --package nestgate-canonical --lib
@@ -628,8 +627,7 @@ cargo test --package nestgate-api --lib
 # ZFS tests
 cargo test --package nestgate-zfs --lib
 
-# Network tests
-cargo test --package nestgate-network --lib
+# Network: nestgate-network crate was archived (v4.7.0); run network-related tests via nestgate-core / nestgate-api as applicable
 ```
 
 ---

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 31: Deep debt: EnvSource evolution, error typing, hardcode elimination (April 5, 2026)
+
+- Migrated 24 remaining `#[allow(` to `#[expect(` or removed
+- Removed stale feature flags from nestgate-performance, nestgate-canonical, root
+- Gated `ZfsManager::mock()` behind `cfg(any(test, dev-stubs))`
+- Replaced scattered `"biomeos"` literals with `ECOSYSTEM_NAME` constant
+- Evolved `Box<dyn Error>` to `NestGateError` in jsonrpc_server + performance analyzer
+- Replaced hardcoded localhost/127.0.0.1 with shared constants
+- Added `from_env_source` to SystemConfig, EnvironmentConfig, SocketConfig, ProductionReadinessValidator
+- Evolved 39 `temp_env` uses to MapEnv (71 remaining from 110)
+- Rewrote `integration_comprehensive_tests` to MapEnv (un-ignored concurrent test)
+- Current: 11,812 tests passing, 463 ignored, 0 failures, 0 clippy warnings
+
 ### Session 30: Documentation hygiene & debris cleanup (April 5, 2026)
 
 **Docs**: 11,685 passing, 463 ignored, 0 failures — all docs aligned
