@@ -1,13 +1,13 @@
 # 🏠 **LOCAL NESTGATE INSTANCE SETUP**
 
-**Run NestGate locally on Eastgate and connect to Songbird service mesh**
+**Run NestGate locally and connect to Songbird service mesh**
 
 ---
 
 ## 🎯 **OVERVIEW**
 
 This guide sets up:
-1. Local NestGate service on Eastgate (development instance)
+1. Local NestGate service (development instance)
 2. Connection to Songbird (service mesh)
 3. Working CLI with full implementations
 4. Ecosystem integration testing
@@ -26,7 +26,7 @@ This guide sets up:
 ### **Step 1: Start Local NestGate Service**
 
 ```bash
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Create local data directory
 mkdir -p ~/.nestgate/data
@@ -75,7 +75,7 @@ export NESTGATE_API_URL="http://127.0.0.1:8080"
 
 ```bash
 # Check if Songbird is running on any tower
-for node in westgate strandgate northgate eastgate; do
+for node in node-a node-b node-c node-d; do
     echo "Checking $node..."
     ssh $node "pgrep songbird && echo '✓ Songbird running on $node'" || true
 done
@@ -85,7 +85,7 @@ done
 
 ```bash
 # If Songbird isn't running, start it locally
-cd /home/eastgate/Development/ecoPrimals/songbird
+cd /path/to/songbird
 
 # Start Songbird service mesh
 ./target/release/songbird service start \
@@ -140,18 +140,18 @@ Create a config file for easier management:
 ```bash
 cat > ~/.nestgate/config.toml << 'EOF'
 [service]
-name = "nestgate-eastgate-dev"
+name = "nestgate-node-d-dev"
 bind_address = "127.0.0.1"
 port = 8080
 
 [storage]
-data_dir = "/home/eastgate/.nestgate/data"
-cache_dir = "/home/eastgate/.nestgate/cache"
+data_dir = "$HOME/.nestgate/data"
+cache_dir = "$HOME/.nestgate/cache"
 temp_dir = "/tmp/nestgate"
 
 [logging]
 level = "info"
-dir = "/home/eastgate/.nestgate/logs"
+dir = "$HOME/.nestgate/logs"
 format = "json"
 
 [discovery]
@@ -221,8 +221,8 @@ echo "Hello NestGate!" | ./target/release/nestgate storage write testdata/hello.
 ./target/release/nestgate discover capabilities storage
 
 # Connect to remote towers
-./target/release/nestgate connect westgate
-./target/release/nestgate remote list --node westgate
+./target/release/nestgate connect node-a
+./target/release/nestgate remote list --node node-a
 ```
 
 ---
@@ -237,15 +237,15 @@ echo "Hello NestGate!" | ./target/release/nestgate storage write testdata/hello.
 
 # Output:
 # Found 3 storage services:
-#   - nestgate-eastgate-dev (local, 127.0.0.1:8080)
-#   - nestgate-westgate (remote, westgate:8080)
-#   - nestgate-strandgate (remote, strandgate:8080)
+#   - nestgate-node-d-dev (local, 127.0.0.1:8080)
+#   - nestgate-node-a (remote, node-a:8080)
+#   - nestgate-node-c (remote, node-c:8080)
 
 # Connect to remote service via Songbird
-./target/release/nestgate connect westgate --via-songbird
+./target/release/nestgate connect node-a --via-songbird
 
 # Now CLI commands route through Songbird mesh!
-./target/release/nestgate storage list --node westgate
+./target/release/nestgate storage list --node node-a
 ```
 
 ### **Scenario: Multi-Node Storage Query**
@@ -269,7 +269,7 @@ echo "Hello NestGate!" | ./target/release/nestgate storage write testdata/hello.
 
 ```bash
 # 1. Start local services
-cd ~/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 ./scripts/start_local_dev.sh
 
 # 2. Make code changes
@@ -295,7 +295,7 @@ Create convenience scripts:
 # ~/.nestgate/scripts/start.sh
 cat > ~/.nestgate/scripts/start.sh << 'EOF'
 #!/bin/bash
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 if [ -f ~/.nestgate/service.pid ]; then
     echo "NestGate already running (PID: $(cat ~/.nestgate/service.pid))"
@@ -432,16 +432,16 @@ mkdir -p ~/.nestgate/{data,logs,config,cache,scripts}
 # 2. Create config
 cat > ~/.nestgate/config.toml << 'EOF'
 [service]
-name = "nestgate-eastgate-dev"
+name = "nestgate-node-d-dev"
 bind_address = "127.0.0.1"
 port = 8080
 
 [storage]
-data_dir = "/home/eastgate/.nestgate/data"
+data_dir = "$HOME/.nestgate/data"
 
 [logging]
 level = "info"
-dir = "/home/eastgate/.nestgate/logs"
+dir = "$HOME/.nestgate/logs"
 
 [discovery]
 enabled = true
@@ -449,7 +449,7 @@ discovery_url = "http://localhost:9090"
 EOF
 
 # 3. Start service
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 ./target/release/nestgate service start \
     --config ~/.nestgate/config.toml &
 

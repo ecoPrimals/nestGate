@@ -46,7 +46,7 @@ Westgate Tower (NAS)
 **OLD Priority**:
 1. ENV variable
 2. Config file
-3. **LAN first** (192.168.1.144) ❌
+3. **LAN first** (192.0.2.10) ❌
 4. localhost second ❌
 
 **NEW Priority**:
@@ -131,7 +131,7 @@ Westgate Tower (NAS)
 let discovery_order = [
     "http://localhost:8080",       // Local Songbird (PRIORITY)
     "http://127.0.0.1:8080",       // Local Songbird (alternate)
-    "http://192.168.1.144:8080",   // LAN Federation (fallback)
+    "http://192.0.2.10:8080",   // LAN Federation (fallback)
 ];
 ```
 
@@ -144,7 +144,7 @@ let discovery_order = [
 vs
 
 ```
-🔍 Discovered Songbird at http://192.168.1.144:8080 (federation)
+🔍 Discovered Songbird at http://192.0.2.10:8080 (federation)
 ```
 
 ---

@@ -70,7 +70,7 @@ fi
 ### **Step 1.1: Clean Build**
 
 ```bash
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Clean any old artifacts
 cargo clean
@@ -219,7 +219,7 @@ echo "Total test data: $TOTAL_SIZE"
 
 ```bash
 # Use filesystem backend for safe testing
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Test basic storage operations
 cat > /tmp/test_storage.py << 'EOF'
@@ -290,7 +290,7 @@ python3 /tmp/test_storage.py
 # Start NestGate API server (background)
 echo "🌐 Starting NestGate API server..."
 
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Start in background
 ./target/release/nestgate \
@@ -331,7 +331,7 @@ echo "✓ API tests complete"
 ### **Step 2.4: Test Performance** (Benchmark)
 
 ```bash
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Run performance benchmarks
 echo "⚡ Running performance benchmarks..."
@@ -447,7 +447,7 @@ sudo zfs get used,referenced nestgate_test/data
 ### **Step 3.3: Test NestGate with ZFS**
 
 ```bash
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Test NestGate ZFS integration
 cat > /tmp/test_nestgate_zfs.sh << 'EOF'
@@ -514,7 +514,7 @@ echo "======================================"
 echo "  NESTGATE VALIDATION REPORT"
 echo "======================================"
 
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Build status
 echo -e "\n📦 BUILD STATUS"
@@ -623,26 +623,26 @@ If validation passes, you're ready to deploy to your towers!
 
 ### **Next Steps**:
 
-1. **✅ Westgate** (NAS/Archive)
+1. **✅ Node-A** (NAS/Archive)
    ```bash
    # Copy binary
-   scp target/release/nestgate westgate:/tmp/
+   scp target/release/nestgate node-a:/tmp/
    
    # SSH and test
-   ssh westgate
+   ssh node-a
    /tmp/nestgate --version
    ```
 
-2. **✅ Strandgate** (Parallel Compute)
+2. **✅ Node-C** (Parallel Compute)
    ```bash
-   scp target/release/nestgate strandgate:/tmp/
-   ssh strandgate "/tmp/nestgate --version"
+   scp target/release/nestgate node-c:/tmp/
+   ssh node-c "/tmp/nestgate --version"
    ```
 
-3. **✅ Northgate** (AI Flagship)
+3. **✅ Node-B** (AI Flagship)
    ```bash
-   scp target/release/nestgate northgate:/tmp/
-   ssh northgate "/tmp/nestgate --version"
+   scp target/release/nestgate node-b:/tmp/
+   ssh node-b "/tmp/nestgate --version"
    ```
 
 **See**: `TOWER_DEPLOYMENT_GUIDE.md` (next step)

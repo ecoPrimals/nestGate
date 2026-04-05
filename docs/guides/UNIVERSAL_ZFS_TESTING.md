@@ -416,12 +416,12 @@ nestgate verify dataset1/important.dat
 
 ```bash
 # Test on your ext4 system
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 
 # Configure filesystem backend
 ./target/release/nestgate storage configure \
   --backend filesystem \
-  --path /home/eastgate/.nestgate/data
+  --path $HOME/.nestgate/data
 
 # Test basic operations
 ./target/release/nestgate storage list
@@ -450,7 +450,7 @@ curl http://localhost:9001/api/v1/health
 ./target/release/nestgate storage configure \
   --backend hybrid \
   --hot memory:1GB \
-  --warm filesystem:/home/eastgate/.nestgate \
+  --warm filesystem:$HOME/.nestgate \
   --cold s3:backup-bucket  # If you have S3
 ```
 

@@ -218,7 +218,7 @@ broadcaster.announce_capabilities(vec![
 
 // Other primals discover via scanning
 let scanner = NetworkCapabilityScanner::new();
-let discovered = scanner.scan_network("192.168.1.0/24").await?;
+let discovered = scanner.scan_network("192.0.2.0/24").await?;
 ```
 
 ---

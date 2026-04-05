@@ -108,9 +108,9 @@ pub enum PortPattern {
 /// A known relay node's endpoints (relay + STUN).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RelayEndpoint {
-    /// UDP address for relay data forwarding (e.g., "192.168.1.144:3479")
+    /// UDP address for relay data forwarding (e.g., "192.0.2.10:3479")
     pub relay_addr: String,
-    /// STUN server address on the same host (e.g., "192.168.1.144:3478")
+    /// STUN server address on the same host (e.g., "192.0.2.10:3478")
     pub stun_addr: String,
 }
 
@@ -288,8 +288,8 @@ mod tests {
         relays.insert(
             "tower".to_string(),
             RelayEndpoint {
-                relay_addr: "192.168.1.144:3479".to_string(),
-                stun_addr: "192.168.1.144:3478".to_string(),
+                relay_addr: "192.0.2.10:3479".to_string(),
+                stun_addr: "192.0.2.10:3478".to_string(),
             },
         );
 
@@ -326,8 +326,8 @@ mod tests {
             }),
             relay_preference: Some(RelayPreference {
                 preferred_relay: "tower".to_string(),
-                relay_addr: "192.168.1.144:3479".to_string(),
-                stun_addr: "192.168.1.144:3478".to_string(),
+                relay_addr: "192.0.2.10:3479".to_string(),
+                stun_addr: "192.0.2.10:3478".to_string(),
             }),
             connection_history: vec![ConnectionRecord {
                 timestamp: "2026-02-11T20:30:00Z".to_string(),

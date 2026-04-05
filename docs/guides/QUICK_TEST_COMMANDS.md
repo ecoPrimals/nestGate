@@ -21,7 +21,7 @@ curl -s http://localhost:8080/api/federation/services | \
 ```bash
 # Configure filesystem backend (correct syntax!)
 ./target/release/nestgate storage configure filesystem \
-  --set path=/home/eastgate/.nestgate/data
+  --set path=$HOME/.nestgate/data
 
 # Show current config
 ./target/release/nestgate config show

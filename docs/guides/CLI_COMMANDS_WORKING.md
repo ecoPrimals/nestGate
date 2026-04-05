@@ -223,16 +223,16 @@ Create `~/.nestgate/config.toml`:
 
 ```toml
 [service]
-name = "nestgate-eastgate-dev"
+name = "nestgate-node-d-dev"
 bind_address = "127.0.0.1"
 port = 8080
 
 [storage]
-data_dir = "/home/eastgate/.nestgate/data"
+data_dir = "$HOME/.nestgate/data"
 
 [logging]
 level = "info"
-dir = "/home/eastgate/.nestgate/logs"
+dir = "$HOME/.nestgate/logs"
 
 [discovery]
 enabled = true

@@ -432,7 +432,7 @@ AGPL-3.0-only
 ## Support
 
 For issues, questions, or contributions:
-- GitHub: https://github.com/eastgate/nestgate
+- GitHub: https://github.com/ecoPrimals/nestGate
 - Docs: See `/docs/UNWRAP_MIGRATION_PLAN_STRATEGIC.md`
 
 ---

@@ -15,11 +15,11 @@
 
 ```bash
 # Terminal 1: Start BearDog
-cd /home/eastgate/Development/ecoPrimals/beardog
+cd /path/to/beardog
 ./target/release/examples/btsp_server
 
 # Terminal 2: Run tests
-cd /home/eastgate/Development/ecoPrimals/nestgate
+cd /path/to/nestgate
 ./scripts/test-live-integration.sh
 ```
 
