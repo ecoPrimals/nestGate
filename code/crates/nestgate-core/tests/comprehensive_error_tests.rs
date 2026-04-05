@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive error handling tests for improved coverage
@@ -8,8 +8,8 @@
 //! NOTE: These tests are disabled pending implementation of TestError type
 
 #![cfg(test)]
-#![allow(dead_code)]
-#![allow(
+#![expect(dead_code)]
+#![expect(
     dead_code,
     missing_docs,
     unused_imports,

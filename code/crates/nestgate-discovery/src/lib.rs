@@ -1,10 +1,9 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
 // Transitional: this crate still references deprecated `service_discovery` and related modules
 // internally; `#[deprecated]` on those modules warns downstream consumers, not this crate.
-#![allow(deprecated)]
 
 //! Capability and peer discovery helpers for the `NestGate` storage primal.
 //!
@@ -73,7 +72,7 @@
 )]
 // Many discovery surfaces return `Result` for forward-compatible evolution; `# Errors` is added
 // incrementally on hot paths; pedantic `missing_errors_doc` is relaxed at crate level.
-#![allow(clippy::missing_errors_doc)]
+#![expect(clippy::missing_errors_doc)]
 #![warn(missing_docs)]
 
 pub mod capabilities;

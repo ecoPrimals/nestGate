@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(async_fn_in_trait)] // Intentional ergonomic async trait for adapter implementations
+#![expect(async_fn_in_trait)] // Intentional ergonomic async trait for adapter implementations
 
 //! Async ZFS service trait for the `dev-stubs` native async adapter.
 

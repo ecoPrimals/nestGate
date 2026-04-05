@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -22,14 +22,7 @@
         clippy::items_after_statements,
     )
 )]
-#![allow(
-    deprecated,
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::doc_markdown,
-    clippy::module_name_repetitions,
-    clippy::struct_excessive_bools
-)]
+#![expect(clippy::missing_errors_doc)]
 
 // Re-export from canonical configuration system
 pub use nestgate_core::config::canonical_primary::{FsMonitorConfig, NestGateCanonicalConfig};

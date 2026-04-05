@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Storage and persistence configuration - extracted from monolithic config
@@ -191,7 +191,7 @@ impl Default for BackupSettings {
 /// 
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub type StorageBackendConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using StorageBackendConfig (the deprecated struct) for now.

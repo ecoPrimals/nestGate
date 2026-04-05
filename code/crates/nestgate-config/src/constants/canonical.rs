@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **CANONICAL CONSTANTS SYSTEM**
@@ -8,7 +8,7 @@
 //
 // Note: Many constants in this module are self-documenting by name.
 // Comprehensive rustdoc will be added incrementally.
-#![allow(missing_docs)]
+#![expect(missing_docs)]
 
 // Removed unused Duration import
 

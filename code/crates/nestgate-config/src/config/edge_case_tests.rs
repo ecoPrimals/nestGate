@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **CONFIGURATION EDGE CASE TESTS** - Nov 23, 2025
@@ -6,7 +6,7 @@
 //! Comprehensive edge case tests for configuration system including
 //! boundary conditions, invalid inputs, and corner cases.
 
-#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+#![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
 
 #[cfg(test)]
 mod config_boundary_tests {

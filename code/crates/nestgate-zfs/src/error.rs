@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
@@ -16,7 +16,7 @@ use nestgate_core::error::{InternalErrorDetails, NestGateError};
 pub struct ZfsErrorBuilder;
 impl ZfsErrorBuilder {
     /// Create a generic ZFS error (for backward compatibility)
-    #[allow(clippy::new_ret_no_self)]
+    #[expect(clippy::new_ret_no_self)]
     #[must_use]
     pub fn new(message: &str) -> NestGateError {
         NestGateError::internal_error(message.to_string(), "zfs-generic")

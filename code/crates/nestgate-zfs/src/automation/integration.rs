@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! ZFS automation integration shims.
@@ -28,7 +28,7 @@ pub struct AutomationConfig;
 ///
 /// Returns a no-op [`IntelligentDatasetManager`] shim.
 #[deprecated(since = "4.7.0", note = "Use DatasetAutomation::new() instead")]
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub fn initialize_automation(
     _config: NestGateCanonicalConfig,
 ) -> Result<IntelligentDatasetManager> {
@@ -39,7 +39,7 @@ pub fn initialize_automation(
 ///
 /// Returns a no-op [`IntelligentDatasetManager`] shim.
 #[deprecated(since = "4.7.0", note = "Use DatasetAutomation::new() instead")]
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub fn initialize_automation_with_config(
     _config: NestGateCanonicalConfig,
     _automation_config: AutomationConfig,
@@ -58,11 +58,11 @@ pub const fn check_zfs_ecosystem_availability() -> bool {
 
 #[cfg(test)]
 mod tests {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_initialize_automation() {
         let config = NestGateCanonicalConfig::default();
         let result = initialize_automation(config);

@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Error Handling Integration Tests
 //!
 //! Tests for error creation, propagation, and handling
 
-#![allow(clippy::unnecessary_literal_unwrap)]
+#![expect(clippy::unnecessary_literal_unwrap)]
 
 use nestgate_core::{NestGateError, Result};
 

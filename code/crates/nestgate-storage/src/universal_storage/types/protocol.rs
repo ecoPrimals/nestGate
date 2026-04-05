@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Storage protocol request and response types
@@ -6,10 +6,8 @@
 //! Defines the protocol for communicating with storage backends,
 //! including all request and response types.
 
-#[allow(
-    deprecated,
-    reason = "StorageResourceConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-)]
+#![expect(deprecated)]
+
 use super::config::StorageResourceConfig;
 use super::{
     events::StorageEventType,
@@ -47,10 +45,6 @@ pub enum UniversalStorageRequest {
         filter: Option<String>,
     },
     /// Create a new storage resource
-    #[allow(
-        deprecated,
-        reason = "Variant carries StorageResourceConfig (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-    )]
     CreateResource {
         /// Resource configuration
         config: Box<StorageResourceConfig>,

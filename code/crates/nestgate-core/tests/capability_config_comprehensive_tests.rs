@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
-#![allow(
+#![expect(
     dead_code,
     missing_docs,
     unused_imports,
@@ -15,11 +15,15 @@
 //! Comprehensive test suite for capability-based configuration
 //!
 //! Tests runtime discovery, error handling, fallback modes, and sovereignty compliance.
+//!
+//! All tests that mutate process-global environment variables are marked `#[serial]`
+//! to prevent races under parallel `cargo test`.
 
 #[cfg(test)]
 mod capability_config_tests {
     use nestgate_core::config::capability_based::PrimalCapability;
     use nestgate_core::config::capability_based::{CapabilityConfigBuilder, FallbackMode};
+    use serial_test::serial;
     use std::time::Duration;
 
     #[test]
@@ -78,6 +82,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_discovery_from_env_var() {
         let orig = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
         nestgate_core::env_process::set_var(
@@ -101,6 +106,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_discovery_missing_env_var_fail_fast() {
         let orig = std::env::var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT").ok();
         nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT");
@@ -118,6 +124,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_discovery_invalid_endpoint_format() {
         let orig = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
         nestgate_core::env_process::set_var(
@@ -138,6 +145,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_discovery_caching() {
         let orig = std::env::var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT").ok();
         nestgate_core::env_process::set_var(
@@ -166,6 +174,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_multiple_capabilities_discovery() {
         let orig_s = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
         let orig_sec = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
@@ -218,6 +227,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_local_fallback_mode() {
         let orig = std::env::var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT").ok();
         nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");
@@ -279,6 +289,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_ipv6_endpoint() {
         let orig = std::env::var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT").ok();
         nestgate_core::env_process::set_var(
@@ -318,6 +329,7 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
+    #[serial]
     #[ignore] // Requires network/socket for capability discovery
     async fn test_discovery_sovereignty_compliance() {
         let orig = std::env::var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT").ok();

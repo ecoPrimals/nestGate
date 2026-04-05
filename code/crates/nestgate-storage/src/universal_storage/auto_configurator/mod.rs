@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Auto Configurator module
@@ -27,7 +27,7 @@ pub use enums::{
     CrossTierRedundancyStrategy, PerformanceTier, RedundancyLevel, RedundancyStrategy,
     StorageUseCase, ZfsFeature,
 };
-#[allow(
+#[expect(
     deprecated,
     reason = "OptimalStorageConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
 )]
@@ -102,7 +102,7 @@ impl AutoConfigurator {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[allow(
+    #[expect(
         deprecated,
         reason = "Returns OptimalStorageConfig (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
     )]

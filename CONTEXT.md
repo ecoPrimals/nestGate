@@ -21,15 +21,15 @@ than by importing this crate graph.
 |-------|--------|
 | **Version** | 4.7.0-dev |
 | **Language** | Rust 2024 edition; 100% Rust application code |
-| **License** | AGPL-3.0-only (code); CC-BY-SA 4.0 (documentation) |
-| **Architecture** | 24 workspace members: 22 `code/crates/*` + `tools/unwrap-migrator` + fuzz targets |
+| **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
+| **Architecture** | 23 workspace members: 20 `code/crates/*` + `tools/unwrap-migrator` + fuzz + root |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
 | **TLS/crypto** | Delegated to security capability provider via IPC; installer uses system `curl` (ring/rustls/reqwest eliminated) |
-| **Unsafe** | None in normal crates; **env-process-shim** bridge is the documented exception |
+| **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | **Lint / format** | Workspace `cargo clippy --workspace --all-features -- -D warnings` (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean in routine runs |
-| **Tests** | `cargo test --all` — ~12,236 passing, 0 failures (see STATUS.md) |
+| **Tests** | `cargo test --workspace --all-features` — ~11,821 passing, 463 ignored, 0 failures (see STATUS.md) |
 | **Coverage** | ~80% line (llvm-cov) — wateringHole 80% minimum met |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
 | **Specs** | 16 specification documents under `specs/` |
@@ -37,11 +37,13 @@ than by importing this crate graph.
 ### Workspace crates (authoritative list)
 
 `nestgate-types`, `nestgate-config`, `nestgate-core`, `nestgate-api`, `nestgate-rpc`,
-`nestgate-zfs`, `nestgate-network`, `nestgate-discovery`, `nestgate-security`,
+`nestgate-zfs`, `nestgate-discovery`, `nestgate-security`,
 `nestgate-cache`, `nestgate-observe`, `nestgate-storage`, `nestgate-performance`,
-`nestgate-automation`, `nestgate-canonical`, `nestgate-fsmonitor`,
+`nestgate-canonical`, `nestgate-fsmonitor`,
 `nestgate-installer`, `nestgate-middleware`, `nestgate-nas`,
 `nestgate-platform`, `nestgate-bin`, `nestgate-env-process-shim`.
+
+Deprecated/shed (fossil on disk): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
 
 ### Canonical trait surface (high level)
 

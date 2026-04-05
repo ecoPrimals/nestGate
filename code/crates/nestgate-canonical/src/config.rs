@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Canonical Configuration System for `NestGate`,
@@ -53,7 +53,7 @@ impl NestGateConfig {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[allow(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
+    #[expect(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
     pub fn validate(&self) -> Result<()> {
         if self.service_name.is_empty() {
             return Err(NestGateError::validation("Service name cannot be empty"));
@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_nestgate_config_validate_zero_port() {
         let mut config = NestGateConfig::default();
         config.network.port = 0;
@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)] // Testing deprecated SecurityConfig fields
+    #[expect(deprecated)] // Testing deprecated SecurityConfig fields
     fn test_nestgate_config_default_values() {
         let config = NestGateConfig::default();
         assert_eq!(config.service_name, "nestgate");
@@ -142,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_nestgate_config_default_network() {
         let config = NestGateConfig::default();
         assert_eq!(config.network.timeout_seconds, 30);
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)] // Testing deprecated SecurityConfig fields
+    #[expect(deprecated)] // Testing deprecated SecurityConfig fields
     fn test_nestgate_config_default_security() {
         let config = NestGateConfig::default();
         assert!(config.security.authentication_enabled);

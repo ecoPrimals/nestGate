@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 ///
@@ -68,7 +68,7 @@ impl Default for ZeroCostSecurityMetadata {
 /// **Security capabilities**
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Securitycapabilities
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct SecurityCapabilities {
     /// Supports hardware security modules
     pub hardware_security_module: bool,

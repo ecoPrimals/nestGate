@@ -1,4 +1,5 @@
-#![allow(
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -19,7 +20,7 @@ use std::sync::Arc;
 
 // Mock config structure similar to ZfsServiceConfig
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(dead_code)]
 struct MockConfig {
     service_name: String,
     bind_address: String,
@@ -59,7 +60,7 @@ impl Default for MockConfig {
 
 // Service using direct clone (old way)
 #[derive(Clone)]
-#[allow(dead_code)]
+#[expect(dead_code)]
 struct ServiceWithClone {
     config: MockConfig,
     id: String,
@@ -76,7 +77,7 @@ impl ServiceWithClone {
 
 // Service using Arc (optimized way)
 #[derive(Clone)]
-#[allow(dead_code)]
+#[expect(dead_code)]
 struct ServiceWithArc {
     config: Arc<MockConfig>,
     id: String,

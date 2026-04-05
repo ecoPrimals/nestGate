@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Email, Slack, and webhook notification channels for alerting.
 
-#![allow(clippy::wildcard_imports)]
+#![expect(clippy::wildcard_imports)]
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

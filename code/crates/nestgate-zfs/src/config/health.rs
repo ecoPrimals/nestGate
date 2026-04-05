@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
@@ -113,7 +113,6 @@ impl HealthMonitoringConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Healthmonitoringconfigcanonical
 pub type HealthMonitoringConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -126,7 +125,7 @@ pub type HealthMonitoringConfigCanonical =
 mod tests {
     use super::*;
 
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     #[test]
     fn health_monitoring_config_default_roundtrip_json() {
         let c = HealthMonitoringConfig::default();
@@ -137,7 +136,7 @@ mod tests {
         assert_eq!(back.alert_endpoints, c.alert_endpoints);
     }
 
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     #[test]
     fn health_monitoring_config_production_sets_alerting() {
         let p = HealthMonitoringConfig::production();

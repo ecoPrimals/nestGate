@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Service Registry Module
@@ -105,7 +105,6 @@ impl ServiceRegistryClient {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    #[allow(deprecated)]
     pub fn query_service_mesh(&self, service_name: &str) -> Result<String> {
         // Check for service mesh configuration (from injected config)
         if let Some(mesh_endpoint) = self.config.get_service_mesh_endpoint() {

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive tests for pool setup configuration types
@@ -270,7 +270,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_default() {
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         let config = PoolPropertyConfig::default();
 
         assert_eq!(config.ashift, 12);
@@ -282,7 +282,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_clone() {
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         let config1 = PoolPropertyConfig::default();
         let config2 = config1.clone();
 
@@ -292,7 +292,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_serialization() {
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         let config = PoolPropertyConfig::default();
         let json = serde_json::to_string(&config).expect("Failed to serialize");
 
@@ -414,7 +414,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_custom_values() {
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         let config = PoolPropertyConfig {
             ashift: 13,
             autoexpand: false,

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
@@ -263,7 +263,7 @@ pub const fn requires_security_capabilities_in_production(
 /// **PURE FUNCTION**: Conditional validation based on enabled state
 /// **TESTABLE**: Can verify enabled implies valid configuration
 #[must_use]
-#[allow(clippy::fn_params_excessive_bools)] // Predicate mirrors external config flags 1:1
+#[expect(clippy::fn_params_excessive_bools)] // Predicate mirrors external config flags 1:1
 pub const fn is_monitoring_config_complete(
     alerts_enabled: bool,
     has_notifications: bool,

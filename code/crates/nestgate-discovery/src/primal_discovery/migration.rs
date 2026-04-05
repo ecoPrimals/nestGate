@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Discovery Migration Helper
@@ -31,7 +31,7 @@ use tracing::{debug, info, warn};
 /// let auth_endpoint = helper.endpoint_for("security", "AUTH_SERVICE_PORT", 5000).await?;
 /// ```
 pub struct DiscoveryOrEnv {
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Reserved for capability-based resolution; endpoint helpers use cache/env only for now"
     )]
@@ -74,7 +74,7 @@ struct CachedEndpoint {
 
 #[derive(Debug, Clone, PartialEq)]
 enum EndpointSource {
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Forward-compatible source tag; not yet written to cache"
     )]

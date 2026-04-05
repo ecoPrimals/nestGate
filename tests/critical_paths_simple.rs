@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -65,7 +65,7 @@ async fn test_empty_string_handling() {
 
     // Empty strings should be handled gracefully
     // Intentionally testing is_empty() method behavior
-    #[allow(clippy::const_is_empty)]
+    #[expect(clippy::const_is_empty)]
     let _ = empty_str.is_empty(); // Test coverage for is_empty()
     assert_eq!(empty_str.len(), 0);
 

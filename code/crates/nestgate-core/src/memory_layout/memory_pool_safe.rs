@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **100% SAFE** High-performance memory pool
@@ -120,7 +120,7 @@ impl<T, const POOL_SIZE: usize> SafeMemoryPool<T, POOL_SIZE> {
     }
 
     /// Get pool statistics
-    #[allow(clippy::missing_const_for_fn)] // `Cell::get` is not const
+    #[expect(clippy::missing_const_for_fn)] // `Cell::get` is not const
     pub fn stats(&self) -> &PoolStats {
         self.stats.get()
     }

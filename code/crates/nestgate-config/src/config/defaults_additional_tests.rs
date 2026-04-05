@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Additional comprehensive tests for default configurations
@@ -7,12 +7,12 @@
 //! Focus: Configuration defaults, serialization, environment overrides
 //! Goal: Expand coverage from 48.28% toward 90%
 
-#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+#![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
 
 #[cfg(test)]
 mod infant_discovery_comprehensive_tests {
     // Backward-compat tests for deprecated `InfantDiscoveryConfig` (see `defaults_tests`).
-    #![allow(deprecated)]
+    #![expect(deprecated)]
 
     use crate::config::InfantDiscoveryConfig;
 
@@ -249,7 +249,7 @@ mod constants_validation_tests {
         // Network buffer size check (8KB)
         use crate::constants::network::NETWORK_BUFFER_SIZE;
         // Compile-time validation of buffer size constants
-        #[allow(clippy::assertions_on_constants)]
+        #[expect(clippy::assertions_on_constants)]
         {
             assert!(NETWORK_BUFFER_SIZE >= 1024, "Network buffer too small");
             assert!(
@@ -262,7 +262,7 @@ mod constants_validation_tests {
     #[test]
     fn test_max_connections_is_positive() {
         // Compile-time validation of connection limits
-        #[allow(clippy::assertions_on_constants)]
+        #[expect(clippy::assertions_on_constants)]
         {
             assert!(shared::DEFAULT_MAX_CONNECTIONS > 0);
             assert!(
@@ -277,7 +277,7 @@ mod constants_validation_tests {
         // Timeout migrated to canonical.rs
         use crate::constants::canonical::timeouts::DEFAULT_TIMEOUT_MS;
         // Compile-time validation of timeout constants
-        #[allow(clippy::assertions_on_constants)]
+        #[expect(clippy::assertions_on_constants)]
         {
             assert!(DEFAULT_TIMEOUT_MS > 0);
             assert!(
@@ -290,7 +290,7 @@ mod constants_validation_tests {
 
 #[cfg(test)]
 mod default_trait_tests {
-    #![allow(deprecated)]
+    #![expect(deprecated)]
 
     use crate::config::InfantDiscoveryConfig;
 

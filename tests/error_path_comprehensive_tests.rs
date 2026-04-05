@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -176,7 +176,7 @@ async fn test_resource_exhaustion_handling() {
 #[test]
 fn test_invalid_state_transition_errors() {
     #[derive(Debug, PartialEq)]
-    #[allow(dead_code)] // Test demonstrates state machine concept
+    #[expect(dead_code)] // Test demonstrates state machine concept
     enum State {
         Init,
         Running,

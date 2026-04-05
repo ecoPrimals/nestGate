@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -74,7 +74,7 @@ mod universal_adapter_validation {
     #[tokio::test]
     async fn test_multi_protocol_support() {
         #[derive(Debug)]
-        #[allow(dead_code)] // Used for demonstration of protocol enumeration
+        #[expect(dead_code)] // Used for demonstration of protocol enumeration
         enum Protocol {
             Http,
             Grpc,

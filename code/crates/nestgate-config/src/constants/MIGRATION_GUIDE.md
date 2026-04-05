@@ -1,8 +1,8 @@
 # Hardcoding to Environment-Driven Configuration - Migration Guide
 
-**Date**: January 19, 2026  
-**Status**: Active Migration  
-**Progress**: 10 of 92 critical values (11%)
+**Date**: January 19, 2026 (originated); updated April 5, 2026  
+**Status**: Substantially complete  
+**Progress**: All critical values migrated to `EnvironmentConfig`; 23 dead deprecated helpers removed; 188 `#[deprecated]` markers remain as migration guideposts for downstream callers
 
 ---
 

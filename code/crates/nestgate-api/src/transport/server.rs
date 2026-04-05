@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **TRANSPORT SERVER**
@@ -245,7 +245,7 @@ impl<H> Clone for JsonRpcHandler<H> {
 }
 
 #[cfg(test)]
-#[allow(deprecated)]
+#[expect(deprecated)]
 mod tests {
     use super::*;
     use serde_json::Value;

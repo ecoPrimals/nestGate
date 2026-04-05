@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     missing_docs,
     clippy::unnecessary_wraps,
     clippy::no_effect_underscore_binding

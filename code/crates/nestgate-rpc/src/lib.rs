@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -9,7 +9,7 @@
 
 #![warn(missing_docs)]
 // Many `Result` helpers differ only by error path; per-function `# Errors` would duplicate noise.
-#![allow(clippy::missing_errors_doc)]
+#![expect(clippy::missing_errors_doc)]
 // Unit tests use unwrap/expect/panic and exercise large API surfaces; keep lib code strict elsewhere.
 #![cfg_attr(
     test,

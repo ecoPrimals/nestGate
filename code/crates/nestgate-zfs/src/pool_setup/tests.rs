@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive tests for ZFS Pool Setup module
@@ -9,7 +9,7 @@
 //! - Configuration validation
 //! - Error handling
 
-#[allow(unused_imports)]
+#[expect(unused_imports)]
 use super::*;
 
 #[cfg(test)]

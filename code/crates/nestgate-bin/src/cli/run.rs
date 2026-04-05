@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! `Cli::run` dispatch implementation.
@@ -9,7 +9,7 @@ use crate::error::BinErrorHelper;
 
 impl Cli {
     /// Run the CLI application
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     pub async fn run(self) -> crate::error::BinResult<()> {
         // Setup logging
         setup_logging(self.verbose);
@@ -32,6 +32,7 @@ impl Cli {
                 enable_http,
                 family_id,
                 socket_only: _,
+                r#abstract,
             } => {
                 // Multi-family support: CLI flag > env var > default
                 let resolved_family_id =
@@ -39,6 +40,11 @@ impl Cli {
 
                 if let Some(ref fid) = resolved_family_id {
                     tracing::info!("👪 Family ID: {} (creates nestgate-{}.sock)", fid, fid);
+                }
+
+                if r#abstract {
+                    nestgate_core::env_process::set_var("NESTGATE_ABSTRACT_SOCKET", "1");
+                    tracing::info!("📱 Abstract socket mode enabled (Android/SELinux substrate)");
                 }
 
                 if enable_http {

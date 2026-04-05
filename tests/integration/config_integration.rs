@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Configuration Integration Tests
 //!
 //! Tests for configuration loading and environment handling
 
-#![allow(clippy::const_is_empty)]
+#![expect(clippy::const_is_empty)]
 
 use nestgate_core::config::canonical_primary::Environment;
 use nestgate_core::Result;

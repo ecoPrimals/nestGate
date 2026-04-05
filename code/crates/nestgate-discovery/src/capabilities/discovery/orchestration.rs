@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(clippy::unused_async)] // Stub async surface; production orchestration discovery lives with the ecosystem orchestration layer
+#![expect(clippy::unused_async)] // Stub async surface; production orchestration discovery lives with the ecosystem orchestration layer
 
 // Removed unused import for pedantic perfection
 // Commented out until available: CapabilityCategory, CapabilityRequest
@@ -175,12 +175,9 @@ impl Default for OrchestrationCapabilityDiscovery {
 }
 
 /// Get orchestration endpoint for routing compatibility (replaces hardcoded orchestration)
-pub async fn get_orchestration_endpoint(
-    #[allow(unused_variables)] _adapter: &(),
-) -> Result<String> {
+pub async fn get_orchestration_endpoint(_adapter: &()) -> Result<String> {
     let discovery = OrchestrationCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;
-    // Find service mesh capability (primary orchestration endpoint)
     for capability in capabilities {
         if matches!(
             capability.capability_type,
@@ -190,6 +187,5 @@ pub async fn get_orchestration_endpoint(
         }
     }
 
-    // Default orchestration endpoint if discovery fails
     Ok("orchestration://service-mesh".to_string())
 }

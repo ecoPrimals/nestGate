@@ -2,7 +2,7 @@
 name = "nestgate-cache"
 version = "0.1.0"
 edition = "2024"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 description = "Caching subsystem for NestGate: multi-tier, UUID cache, and cache math"
 repository = "https://github.com/ecoprimals/nestgate"
 

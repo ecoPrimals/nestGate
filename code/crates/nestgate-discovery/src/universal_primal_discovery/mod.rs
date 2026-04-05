@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Universal Primal Discovery module
@@ -95,11 +95,11 @@ pub use cache::{CacheEntry, DiscoveryCache};
 pub use fallbacks::get_fallback_port;
 pub use introspection::{HardwareProfile, SystemCapabilities};
 pub use introspection_config::{IntrospectionConfig, SharedIntrospectionConfig};
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub use network::{InterfaceInfo, NetworkDiscoveryConfig};
 pub use network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntimeConfig};
 pub use performance::{OptimalTimeout, PerformanceTestConfig};
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub use production_discovery::{ProductionServiceDiscovery, ServiceDiscoveryConfig};
 pub use production_discovery_config::{ProductionDiscoveryConfig, SharedProductionDiscoveryConfig};
 pub use registry::{DiscoveryQuery, ServiceRegistryClient};

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Tests for the consolidated canonical adapter
@@ -8,7 +8,7 @@ use crate::universal_adapter::consolidated_canonical::enums::ResponseStatus;
 
 #[test]
 fn test_adapter_config_defaults() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = CanonicalAdapterConfig::default();
     assert_eq!(config.service_name, "nestgate");
     assert!(config.discovery.auto_discovery);
@@ -60,7 +60,7 @@ fn test_adapter_stats_defaults() {
 async fn adapter_initialize_and_request_capability_updates_stats() {
     use std::collections::HashMap;
 
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = CanonicalAdapterConfig::default();
     let adapter = ConsolidatedCanonicalAdapter::new(config).expect("adapter new");
     adapter.initialize().await.expect("initialize");

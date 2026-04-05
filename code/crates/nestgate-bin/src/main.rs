@@ -1,13 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
-#![allow(
-    deprecated,
-    missing_docs,
-    clippy::missing_errors_doc,
-    clippy::module_name_repetitions
-)]
 
 //! `NestGate` binary main entry point
 //!

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **NETWORK PERFORMANCE CONFIGURATION**
@@ -64,7 +64,7 @@ impl NetworkPerformanceConfig {
     ///
     /// All fields from `other` will replace the current values.
     #[must_use]
-    #[allow(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value)]
     pub const fn merge(mut self, other: Self) -> Self {
         self.buffer_size = other.buffer_size;
         self.tcp_nodelay = other.tcp_nodelay;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Network Discovery Module
@@ -48,7 +48,7 @@ pub struct NetworkDiscoveryConfig {
     /// Interface Priority
     pub interface_priority: Vec<String>,
 }
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl Default for NetworkDiscoveryConfig {
     /// Returns the default instance
     ///
@@ -95,12 +95,12 @@ pub struct InterfaceInfo {
 #[derive(Debug)]
 /// Networkdiscovery
 pub struct NetworkDiscovery {
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Held for canonical migration; discovery uses runtime config paths"
     )]
     canonical_primary: NestGateCanonicalConfig,
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     legacy_discovery: NetworkDiscoveryConfig,
     /// Runtime configuration (immutable, thread-safe)
     network_runtime: SharedNetworkRuntimeConfig,
@@ -112,7 +112,7 @@ impl Default for NetworkDiscovery {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl NetworkDiscovery {
     /// Create new network discovery subsystem
     ///
@@ -398,8 +398,8 @@ impl NetworkDiscovery {
 
 // ==================== CANONICAL TYPE ALIAS ====================
 // Backward-compatible alias to `CanonicalNetworkConfig` while migrating from deprecated structs.
-#[allow(deprecated, missing_docs)]
 mod deprecated_canonical_aliases {
+    /// Backward-compatible alias for `CanonicalNetworkConfig`.
     pub type NetworkDiscoveryConfigCanonical =
         nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 }
@@ -407,7 +407,7 @@ pub use deprecated_canonical_aliases::NetworkDiscoveryConfigCanonical;
 
 #[cfg(test)]
 mod tests {
-    #![allow(deprecated)] // Tests construct deprecated `NetworkDiscoveryConfig` until migration completes
+    #![expect(deprecated)] // Tests construct deprecated `NetworkDiscoveryConfig` until migration completes
 
     use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};

@@ -2,25 +2,25 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-03)**  
+**Verification (as of 2026-04-05)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors)  
 - **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
 - **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~12,236 total passing, 0 failures — run `cargo test --workspace` to refresh counts  
+- **Tests (last recorded)**: ~11,821 passing, 463 ignored, 0 failures — run `cargo test --workspace` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
 - **Open debt markers**: none in production `.rs` (wateringHole; re-verify after large edits)  
-- **Deprecated APIs**: Some call sites still use deprecated types while migrating to canonical APIs  
-**Unsafe**: None in application crates; `#![forbid(unsafe_code)]` on all crate roots except `nestgate-env-process-shim`  
+- **Deprecated APIs**: 188 `#[deprecated]` markers for canonical-config migration; zero dead callers (all deprecated helper functions with 0 callers removed)  
+**Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)  
 **TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack in-tree)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 **File size**: All production `.rs` files under 1,000 lines (max ~500 after smart refactoring)  
-**`#[serial]`**: Some tests in `nestgate-config` and `nestgate-discovery` still use `serial_test::serial` for env isolation (alongside `temp_env` where applicable); not limited to chaos tests  
-**Last Updated**: April 3, 2026
+**`#[serial]`**: 5 total — 4 in env-process-shim (legitimate process-env mutation), 1 in CLI (global tracing subscriber); config/discovery use EnvSource injection  
+**Last Updated**: April 5, 2026
 
 ---
 
@@ -60,7 +60,7 @@ export NESTGATE_JWT_SECRET=$(openssl rand -base64 48)
 ## Architecture
 
 ```
-nestgate/ (24 workspace members: 22 code/crates + tools/unwrap-migrator + fuzz)
+nestgate/ (23 workspace members: 20 code/crates + tools/unwrap-migrator + fuzz + root)
 │
 │  Foundation Layer (zero internal deps, compiles first)
 ├── nestgate-types       Error types, result aliases, unified enums
@@ -84,14 +84,13 @@ nestgate/ (24 workspace members: 22 code/crates + tools/unwrap-migrator + fuzz)
 ├── nestgate-api         REST + JSON-RPC API server
 ├── nestgate-bin         CLI binary (UniBin)
 ├── nestgate-zfs         ZFS integration (adaptive)
-├── nestgate-network     Network storage (admin router)
-├── nestgate-automation  Storage-specific automation (tiering, lifecycle)
 ├── nestgate-installer   Platform installer (system curl, ecoBin compliant)
 ├── nestgate-middleware  Middleware stack
 ├── nestgate-nas         NAS integration
 ├── nestgate-fsmonitor   Filesystem monitoring
 └── nestgate-performance Performance monitoring
 ```
+Deprecated/shed (fossil on disk): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
 
 The core was decomposed across two phases from a 295K-line monolith (488s check)
 into 13 focused crates that compile in parallel. `nestgate-core` re-exports all
@@ -116,7 +115,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-03).
+See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-05).
 
 | Area | Status |
 |------|--------|
@@ -126,9 +125,9 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Tests | `cargo test --workspace` — PASS (0 failures) |
 | Coverage | ~80% line (llvm-cov) — wateringHole 80% minimum met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — builds without rustdoc warnings in normal runs |
-| Migration / deprecation notes | Some deprecated APIs; migration in progress — not blocking |
+| Migration / deprecation notes | 188 `#[deprecated]` markers for canonical migration; 0 dead deprecated callers; `#[allow(` 0 (all migrated to `#[expect(`) |
 | Production unwrap/expect | Zero in library `src/` per project rules; tests/integration may use unwrap; clippy `unwrap_used` warns workspace-wide |
-| Unsafe | Only `nestgate-env-process-shim` (env bridge); `#![forbid(unsafe_code)]` elsewhere |
+| Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
 | File size (production < 1000) | All compliant (max ~500 lines last measured after smart refactoring) |
@@ -261,7 +260,7 @@ For details: See [STATUS.md](./STATUS.md).
 
 ## License
 
-AGPL-3.0-only — see [LICENSE](LICENSE) for the full text.
+AGPL-3.0-or-later — see [LICENSE](LICENSE) for the full text.
 
 All ecoPrimals software is licensed under the strictest copyleft.
 Humans accessing this software through the ecosystem's security and entropy
@@ -271,4 +270,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 3, 2026
+**Latest**: April 5, 2026

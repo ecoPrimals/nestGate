@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unwrap/expect pattern scanner
@@ -6,7 +6,7 @@
 //! This module provides comprehensive scanning and analysis of unwrap/expect
 //! patterns in Rust code, with detailed categorization and risk assessment.
 
-#![allow(clippy::enum_variant_names)] // Descriptive variant names are intentional
+#![expect(clippy::enum_variant_names)] // Descriptive variant names are intentional
 
 use regex::Regex;
 use std::path::{Path, PathBuf};

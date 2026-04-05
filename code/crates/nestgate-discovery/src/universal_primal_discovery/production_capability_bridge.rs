@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **PRODUCTION CAPABILITY BRIDGE**
@@ -43,7 +43,7 @@ pub struct CapabilityAwareDiscovery {
     /// New capability-based discovery
     capability_discovery: Arc<CapabilityDiscoveryManager>,
     /// Configuration for backward compatibility and future extension
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Carried for migration parity; hot paths use capability_discovery only"
     )]

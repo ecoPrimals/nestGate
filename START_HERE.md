@@ -3,15 +3,15 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-03)
-Tests:       PASS — cargo test --all, 0 failures (~12,236 total last recorded — STATUS.md)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-05)
+Tests:       PASS — cargo test --workspace --all-features, 0 failures (~11,821 passing, 463 ignored — STATUS.md)
 Coverage:    ~80% line (llvm-cov) — wateringHole 80% min met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-03)
+Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-05)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
-Unsafe:      #![forbid(unsafe_code)] on all 22 crate roots except env-process-shim
+Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
 sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
-Serial:      Some #[serial] in config/discovery tests (env isolation); see README
+Serial:      5 total — 4 env-process-shim (legitimate), 1 CLI tracing; config/discovery use EnvSource injection
 Debt markers: none in production library sources (wateringHole; see STATUS.md)
 Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -27,6 +27,14 @@ See [STATUS.md](./STATUS.md) for full measured metrics.
 
 ```bash
 cargo build --release --workspace
+```
+
+#### Cross-compile for aarch64 (static musl)
+
+```bash
+rustup target add aarch64-unknown-linux-musl
+sudo apt install gcc-aarch64-linux-gnu   # Debian/Ubuntu
+cargo build-arm64                         # alias from .cargo/config.toml
 ```
 
 ### 2. Configure
@@ -80,15 +88,13 @@ NEST Atomic = TOWER + nestgate + squirrel
 ## Architecture
 
 ```
-nestgate/ (24 workspace members — see README Architecture)
+nestgate/ (23 workspace members — see README Architecture)
 ├── nestgate-types … nestgate-platform … (foundation)
 ├── nestgate-config, nestgate-storage, nestgate-rpc, nestgate-discovery, …
 ├── nestgate-core       Traits, network, services, adapters
 ├── nestgate-api        REST + JSON-RPC API server
 ├── nestgate-bin        CLI binary (UniBin)
 ├── nestgate-zfs        ZFS integration (adaptive)
-├── nestgate-network    Network storage
-├── nestgate-automation Automation engine
 ├── nestgate-installer  Platform installer (system curl, ecoBin compliant)
 ├── nestgate-canonical  Canonical types
 ├── nestgate-middleware Middleware stack
@@ -96,6 +102,7 @@ nestgate/ (24 workspace members — see README Architecture)
 ├── nestgate-fsmonitor  Filesystem monitoring
 ├── nestgate-performance Performance monitoring
 └── tools/unwrap-migrator, fuzz (workspace)
+Note: nestgate-network, nestgate-automation, nestgate-mcp are deprecated/shed (fossil on disk).
 ```
 
 ### Key Patterns
@@ -168,4 +175,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: April 3, 2026
+**Last Updated**: April 5, 2026

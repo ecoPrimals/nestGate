@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Integration tests: real `notify` watcher behavior (dependency of this crate).
 
-#![allow(clippy::expect_used)]
-#![allow(clippy::panic)]
+#![expect(clippy::expect_used)]
+#![expect(clippy::panic)]
 
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::{RecvTimeoutError, channel};

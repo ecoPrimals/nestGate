@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! ⚠️ **DEPRECATED**: This module is being phased out in favor of capability-based configuration
@@ -30,9 +30,8 @@
 //! # }
 //! ```
 //!
-//! See `PHASE2_HARDCODING_ELIMINATION_PLAN.md` for full migration guide.
-//!
-//! This module will be removed in v0.3.0.
+//! The legacy deprecated `ports` submodule has been superseded by `runtime_defaults`
+//! and `runtime_fallback_ports`.
 //!
 //! ## Environment variables (central audit)
 //!
@@ -89,5 +88,5 @@ pub use runtime_defaults::{
 };
 
 #[cfg(test)]
-#[allow(deprecated)]
+#[expect(deprecated)]
 mod tests;

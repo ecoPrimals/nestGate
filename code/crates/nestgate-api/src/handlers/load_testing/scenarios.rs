@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Test scenario implementations.
@@ -65,7 +65,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_scenario_runner_new() {
         use super::super::config::LoadTestConfig;
         let config = LoadTestConfig::default();
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_scenario_runner_run() {
         use super::super::config::LoadTestConfig;
         let config = LoadTestConfig::default();

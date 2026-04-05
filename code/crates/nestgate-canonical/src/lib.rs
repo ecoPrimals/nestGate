@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -23,15 +23,7 @@
         clippy::items_after_statements,
     )
 )]
-#![allow(
-    deprecated,
-    missing_docs,
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::doc_markdown,
-    clippy::module_name_repetitions,
-    clippy::struct_excessive_bools
-)]
+#![expect(deprecated, missing_docs, clippy::module_name_repetitions)]
 
 // ==================== SECTION: CANONICAL EXPORTS ====================
 

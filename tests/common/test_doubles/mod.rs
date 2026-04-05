@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **CANONICAL TEST DOUBLES MODULE**
@@ -13,13 +13,13 @@ use nestgate_core::config::canonical_primary::domains::test_canonical::Canonical
 
 // Re-export all test double implementations.
 // These are test utility libraries — many building blocks defined for future test scenarios.
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub mod hardware_test_doubles;
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub mod network_test_doubles;
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub mod service_test_doubles;
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub mod storage_test_doubles;
 
 // Re-export mock types for ergonomic access

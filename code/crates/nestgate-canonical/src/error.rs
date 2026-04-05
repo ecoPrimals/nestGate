@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Canonical Error Types for `NestGate`,
@@ -287,7 +287,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unnecessary_literal_unwrap)]
+    #[expect(clippy::unnecessary_literal_unwrap)]
     fn test_result_ok() {
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
@@ -586,7 +586,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unnecessary_literal_unwrap)]
+    #[expect(clippy::unnecessary_literal_unwrap)]
     fn test_nestgate_result_with_ok() {
         let result: NestGateResult<String> = Ok("data".to_string());
         assert!(result.is_ok());

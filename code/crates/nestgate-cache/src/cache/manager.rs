@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
@@ -47,7 +47,7 @@ pub struct UnifiedCacheConfig {
     /// Eviction Policy
     pub eviction_policy: String,
 }
-#[allow(
+#[expect(
     deprecated,
     reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
 )]
@@ -136,7 +136,7 @@ pub struct CacheManager {
     hot_tier: HashMap<String, CacheEntry>,
     warm_tier: HashMap<String, CacheEntry>,
     cold_tier: HashMap<String, CacheEntry>,
-    #[allow(
+    #[expect(
         deprecated,
         reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
     )]
@@ -144,7 +144,7 @@ pub struct CacheManager {
     stats: CacheStats,
 }
 
-#[allow(
+#[expect(
     deprecated,
     reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
 )]
@@ -434,7 +434,7 @@ impl CacheManager {
     }
 }
 
-#[allow(
+#[expect(
     deprecated,
     reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
 )]
@@ -460,10 +460,6 @@ impl Default for CacheManager {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(
-    deprecated,
-    reason = "Alias bridges deprecated UnifiedCacheConfig to canonical_primary network config for gradual migration"
-)]
 /// Type alias for Unifiedcacheconfigcanonical
 pub type UnifiedCacheConfigCanonical =
     nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -474,7 +470,7 @@ pub type UnifiedCacheConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![allow(
+    #![expect(
         deprecated,
         clippy::unwrap_used,
         clippy::expect_used,

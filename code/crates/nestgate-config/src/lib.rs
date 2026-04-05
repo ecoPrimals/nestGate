@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -38,13 +38,13 @@
     )
 )]
 // Pedantic `missing_errors_doc` across nested config helpers: errors are always [`nestgate_types::error::NestGateError`].
-#![allow(clippy::missing_errors_doc)]
+#![expect(clippy::missing_errors_doc)]
 // Legacy and generated config DTOs intentionally group many feature toggles in one struct.
-#![allow(clippy::struct_excessive_bools)]
+#![expect(clippy::struct_excessive_bools)]
 // Port and path structs use explicit `*_port` / `*_dir` suffixes for serde and builder clarity.
-#![allow(clippy::struct_field_names)]
+#![expect(clippy::struct_field_names)]
 // Prefer explicit `match`/`if let` for env parsing in several modules; `map_or_else` is not always clearer.
-#![allow(clippy::option_if_let_else)]
+#![expect(clippy::option_if_let_else)]
 #[cfg(test)]
 pub use nestgate_platform::env_process;
 

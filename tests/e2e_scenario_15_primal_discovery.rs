@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -80,7 +80,7 @@ enum ServiceState {
 }
 
 /// Primal service information
-#[allow(dead_code)] // Test infrastructure
+#[expect(dead_code)] // Test infrastructure
 struct PrimalService {
     primal_type: PrimalType,
     state: Arc<AtomicU8>,
@@ -130,7 +130,7 @@ impl PrimalService {
         self.health_score.load(Ordering::SeqCst)
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     fn set_health(&self, score: u8) {
         self.health_score.store(score, Ordering::SeqCst);
     }

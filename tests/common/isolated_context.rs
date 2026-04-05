@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Isolated Test Context - True Concurrent Testing
@@ -277,14 +277,14 @@ impl Default for ConcurrentCoordinator {
 /// Boxed cleanup function for LIFO execution
 type CleanupFn = Box<dyn FnOnce() + Send + 'static>;
 
-#[allow(clippy::arc_with_non_send_sync)]
+#[expect(clippy::arc_with_non_send_sync)]
 pub struct CleanupGuard {
     cleanups: Arc<RwLock<Vec<CleanupFn>>>,
 }
 
 impl CleanupGuard {
     /// Create new cleanup guard
-    #[allow(clippy::arc_with_non_send_sync)]
+    #[expect(clippy::arc_with_non_send_sync)]
     pub fn new() -> Self {
         Self {
             cleanups: Arc::new(RwLock::new(Vec::new())),

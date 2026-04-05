@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **HARDWARE TUNING — PRODUCTION (no `dev-stubs`)**
@@ -77,9 +77,8 @@ fn proc_snapshot_score(resources: &ComputeResources) -> f64 {
     f64::from(resources.available_cpu).mul_add(10.0, f64::from(resources.available_memory_gb) * 0.5)
 }
 
-/// Placeholder hardware tuning handler for production builds
+/// Hardware tuning handler for production builds (reads from `/proc` and live metrics).
 #[derive(Debug, Clone)]
-/// Handler for `RealHardwareTuning` requests
 pub struct RealHardwareTuningHandler {
     _config: HardwareTuningConfig,
     _metrics_collector: SystemMetricsCollector,
@@ -94,7 +93,7 @@ impl Default for RealHardwareTuningHandler {
 }
 
 impl RealHardwareTuningHandler {
-    /// Create a new placeholder handler
+    /// Create a new hardware tuning handler
     #[must_use]
     pub fn new() -> Self {
         Self {

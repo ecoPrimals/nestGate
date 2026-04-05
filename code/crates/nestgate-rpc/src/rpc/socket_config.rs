@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # 🔌 Socket Configuration - Production-Grade
@@ -216,7 +216,7 @@ impl SocketConfig {
     ///
     /// This resolver currently always returns [`Ok`]; the [`Result`] is reserved for future
     /// validation of socket paths and environment-derived identifiers.
-    #[allow(clippy::needless_pass_by_value)] // Stable public signature; callers pass owned env strings.
+    #[expect(clippy::needless_pass_by_value)] // Stable public signature; callers pass owned env strings.
     pub fn resolve(
         family_id: String,
         node_id: String,
@@ -327,13 +327,21 @@ impl SocketConfig {
         let biomeos_socket_dir = std::env::var("BIOMEOS_SOCKET_DIR").ok();
         let xdg_runtime_dir = std::env::var("XDG_RUNTIME_DIR").ok();
 
-        Self::resolve(
+        let mut config = Self::resolve(
             family_id,
             node_id,
             socket_override,
             biomeos_socket_dir,
             xdg_runtime_dir,
-        )
+        )?;
+
+        if std::env::var("NESTGATE_ABSTRACT_SOCKET").is_ok() {
+            info!("📱 Abstract socket mode: using @nestgate as abstract namespace address");
+            config.socket_path = PathBuf::from(format!("@nestgate-{}", config.family_id));
+            config.source = SocketConfigSource::Environment;
+        }
+
+        Ok(config)
     }
 
     /// Prepare socket path for binding

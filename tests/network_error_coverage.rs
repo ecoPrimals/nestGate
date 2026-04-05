@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -54,7 +54,7 @@ fn test_method_equality() {
 }
 
 #[test]
-#[allow(clippy::clone_on_copy)]
+#[expect(clippy::clone_on_copy)]
 fn test_method_clone() {
     let method1 = Method::Post;
     let method2 = method1.clone();
@@ -86,7 +86,7 @@ fn test_status_code_equality() {
 }
 
 #[test]
-#[allow(clippy::clone_on_copy)]
+#[expect(clippy::clone_on_copy)]
 fn test_status_code_clone() {
     let status1 = StatusCode::OK;
     let status2 = status1.clone();
@@ -135,7 +135,7 @@ fn test_timeout_inequality() {
 }
 
 #[test]
-#[allow(clippy::clone_on_copy)]
+#[expect(clippy::clone_on_copy)]
 fn test_timeout_clone() {
     let timeout1 = TimeoutMs::new(5000);
     let timeout2 = timeout1.clone();

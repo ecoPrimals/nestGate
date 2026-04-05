@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unit tests for workspace lifecycle handlers and config types.
@@ -84,7 +84,7 @@ async fn list_workspace_backups_returns_success_json() {
 }
 
 #[test]
-#[allow(deprecated)]
+#[expect(deprecated)]
 fn migration_strategy_roundtrip_serde() {
     for s in [
         MigrationStrategy::Copy,
@@ -98,7 +98,7 @@ fn migration_strategy_roundtrip_serde() {
 }
 
 #[test]
-#[allow(deprecated)]
+#[expect(deprecated)]
 fn backup_restore_migration_config_serde() {
     let b = BackupConfig {
         backup_name: "n".into(),

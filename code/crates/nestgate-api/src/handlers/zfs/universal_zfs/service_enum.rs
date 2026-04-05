@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Concrete enum dispatch for `UniversalZfsService` implementations.
@@ -460,7 +460,7 @@ mod tests {
 
     #[tokio::test]
     async fn universal_zfs_service_enum_native_trait_covers_remaining_methods() {
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         use crate::handlers::zfs::universal_zfs_types::{DatasetConfig, SnapshotConfig};
 
         let svc = UniversalZfsServiceEnum::new_native();

@@ -1,14 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Systematic migration framework
 //!
 //! This module provides a systematic approach to migrating unwrap/expect
 //! patterns across large codebases with comprehensive error handling.
-
-#![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
-#![allow(clippy::excessive_nesting)] // Complex migration logic requires nesting
-#![allow(clippy::upper_case_acronyms)] // IO and AI are standard acronyms
 
 use regex::Regex;
 use std::collections::HashMap;

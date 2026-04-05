@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(clippy::unwrap_used)]
+#![expect(clippy::unwrap_used)]
 
 //! With a registered resolver, [`discover_*_port`] uses resolved ports before env/defaults.
 

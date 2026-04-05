@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
@@ -342,7 +342,6 @@ impl PolicyScheduler {
     }
 
     /// Apply custom retention policy
-    #[allow(clippy::too_many_arguments)] // Retention policy requires multiple time periods
     fn apply_custom_retention(
         &self,
         snapshots: Vec<SnapshotInfo>,

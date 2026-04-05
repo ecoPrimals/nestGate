@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# cargo-tarpaulin configuration
+# Per wateringHole ECOSYSTEM_COMPLIANCE_MATRIX.md Tier 8
+
+[report]
+fail-under = 60.0
+
+[default]
+all-features = true
+workspace = true
+exclude-files = [
+    "target/*",
+    "archive/*",
+    "fuzz/*",
+    "benches/*",
+    "tools/*",
+]

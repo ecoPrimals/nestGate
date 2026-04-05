@@ -2,7 +2,7 @@
 name = "nestgate-rpc"
 version = "0.1.0"
 edition = "2024"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 description = "JSON-RPC + tarpc IPC layer for primal-to-primal communication"
 repository = "https://github.com/ecoprimals/nestgate"
 

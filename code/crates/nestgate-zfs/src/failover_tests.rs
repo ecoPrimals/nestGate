@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::*;
@@ -283,7 +283,7 @@ fn canonical_failover_config_serde_with_notification() {
 }
 
 #[test]
-#[allow(deprecated)]
+#[expect(deprecated)]
 fn deprecated_failover_notification_config_roundtrip() {
     let n = FailoverNotificationConfig {
         email_enabled: false,

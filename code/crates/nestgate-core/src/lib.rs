@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -16,14 +16,14 @@
 //! - `nestgate-discovery`: discovery, capabilities, service_discovery
 
 #![warn(rustdoc::broken_intra_doc_links)]
-#![allow(
+#![expect(
     deprecated,
     reason = "Crate re-exports and legacy modules still surface deprecated aliases; migrate call sites to canonical_primary (e.g. CanonicalNetworkConfig) per type #[deprecated] notes."
 )]
 // Workspace enables pedantic/nursery clippy; child modules in separate files do not inherit a parent
 // module's `#!allow`, so these stay crate-level until fixed or replaced with per-file allows.
 // Lint hygiene (nestgate-core#lints): shrink this allow list as modules gain targeted attributes.
-#![allow(
+#![expect(
     clippy::module_name_repetitions,
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
@@ -32,22 +32,17 @@
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::return_self_not_must_use,
     clippy::must_use_candidate,
     clippy::option_if_let_else,
     clippy::needless_pass_by_value,
-    clippy::unnecessary_wraps,
     clippy::unused_self,
-    clippy::unused_async,
     clippy::implicit_hasher,
-    clippy::doc_overindented_list_items,
     clippy::doc_markdown,
     clippy::float_cmp,
     clippy::suboptimal_flops,
     clippy::manual_midpoint,
     clippy::inline_always,
     clippy::collapsible_if,
-    clippy::redundant_closure,
     clippy::redundant_closure_for_method_calls,
     clippy::single_char_pattern,
     clippy::cast_possible_wrap

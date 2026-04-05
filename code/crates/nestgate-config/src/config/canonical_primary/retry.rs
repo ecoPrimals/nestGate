@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **CANONICAL RETRY CONFIGURATION**
@@ -49,7 +49,7 @@ impl Default for RetryConfig {
 impl RetryConfig {
     /// Get retry delay for a specific attempt number
     #[must_use]
-    #[allow(
+    #[expect(
         clippy::cast_precision_loss,
         clippy::cast_possible_truncation,
         clippy::cast_sign_loss,

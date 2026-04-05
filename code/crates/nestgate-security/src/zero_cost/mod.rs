@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Zero-cost architecture modules
@@ -34,7 +34,7 @@ pub mod types;
 pub use providers::{ZeroCostFileStorage, ZeroCostJwtProvider, ZeroCostMemoryCache};
 pub use system::{ZeroCostSystem, ZeroCostSystemBuilder};
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub use traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
 pub use types::{
     RequestPriority, ZeroCostBenchmarkResults, ZeroCostError, ZeroCostMetadata, ZeroCostMetrics,
@@ -77,7 +77,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_zero_cost_provider_composition() {
         // Test that providers can be composed at compile-time
         let cache = ZeroCostMemoryCache::<128>::new();

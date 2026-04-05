@@ -1,4 +1,5 @@
-#![allow(
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -36,7 +37,7 @@ fn benchmark_error_context(c: &mut Criterion) {
 
 /// Benchmark configuration unification patterns
 fn benchmark_config_patterns(c: &mut Criterion) {
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct UnifiedConfig {
         system: SystemConfig,
@@ -45,28 +46,28 @@ fn benchmark_config_patterns(c: &mut Criterion) {
         security: SecurityConfig,
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct SystemConfig {
         service_name: String,
         environment: String,
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct NetworkConfig {
         host: String,
         port: u16,
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct StorageConfig {
         base_path: String,
         cache_size_mb: u64,
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct SecurityConfig {
         enabled: bool,

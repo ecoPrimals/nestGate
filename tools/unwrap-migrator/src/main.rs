@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -14,8 +14,7 @@
 //! - Integration with `NestGate` error patterns
 //! - Team workflow support
 
-#![allow(dead_code)] // Utility tool with many optional features
-#![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
+#![expect(dead_code)] // Utility tool with many optional features
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::fmt::Write as _;

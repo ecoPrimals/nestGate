@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(deprecated)]
+#![expect(deprecated)]
 
 //! Zero-cost system implementation
 //!
@@ -9,7 +9,7 @@
 //! with compile-time dependency injection, eliminating runtime overhead.
 //!
 //! Note: Uses deprecated traits for backward compatibility.
-//! Deprecation warnings are suppressed via `#![allow(deprecated)]` at module level.
+//! Deprecation warnings are suppressed via `#![expect(deprecated)]` at module level.
 //! Migration to canonical traits is tracked but not yet scheduled.
 
 use super::traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};

@@ -1,12 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Migration reporting functionality
 //!
 //! This module provides comprehensive reporting for migration operations,
 //! including statistics, progress tracking, and detailed analysis.
-
-#![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
 
 use crate::scanner::{PatternType, RiskLevel};
 use std::collections::HashMap;

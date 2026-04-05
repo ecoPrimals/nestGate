@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unit tests for `ApiConfig` and related network API types.
 
-#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+#![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
 
 use super::api::{
     ApiAlertConfig, ApiConfig, ApiMonitoringConfig, ApiPerformanceConfig, ApiSecurityConfig,

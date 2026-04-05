@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Removed unused import for pedantic perfection
@@ -174,7 +174,7 @@ impl Default for SecurityCapabilityDiscovery {
 
 /// Get authentication endpoint for routing compatibility (replaces hardcoded security)
 pub async fn get_auth_endpoint(
-    #[allow(unused_variables)] _adapter: &(),
+    #[expect(unused_variables)] _adapter: &(),
 ) -> Result<String> {
     let discovery = SecurityCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;

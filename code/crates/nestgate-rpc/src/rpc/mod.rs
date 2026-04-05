@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # 🚀 RPC Module for `NestGate`
@@ -108,7 +108,7 @@ pub use storage_backend::{InMemoryStorageBackend, StorageBackend};
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
-#[allow(deprecated)]
+#[expect(deprecated)]
 // Re-export legacy Unix JSON-RPC surface until callers use orchestration IPC.
 pub use unix_socket_server::{
     JsonRpcUnixServer, LegacyUnixJsonRpcHandler, legacy_ecosystem_rpc_handler,

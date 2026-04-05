@@ -1,14 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Enhanced Unwrap Migrator with Batch Processing and Smart Categorization
 //!
 //! This enhanced version can handle the migration of 2,398 unwrap/expect calls
 //! using the existing unified error system with zero-copy performance.
-
-#![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
-#![allow(clippy::excessive_nesting)] // Complex migration logic requires nesting
-#![allow(clippy::if_same_then_else)] // Intentional pattern matching
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -28,7 +24,6 @@ pub struct EnhancedUnwrapMigrator {
     /// Error category mappings based on context
     category_mappings: HashMap<String, String>,
     /// Progress callback for large batch operations
-    #[allow(clippy::type_complexity)]
     progress_callback: Option<Arc<dyn Fn(usize, usize) + Send + Sync>>,
 }
 

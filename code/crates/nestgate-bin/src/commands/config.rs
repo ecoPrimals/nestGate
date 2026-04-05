@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Configuration management commands
@@ -157,7 +157,7 @@ async fn get_config(key: &str) -> Result<()> {
     let value = match key {
         "api_port" | "port" => {
             let cfg = nestgate_core::config::runtime::get_config();
-            format!("{}", cfg.network.api_port)
+            cfg.network.api_port.to_string()
         }
         "bind" | "api_host" => {
             let cfg = nestgate_core::config::runtime::get_config();

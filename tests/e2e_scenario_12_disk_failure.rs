@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -122,7 +122,7 @@ impl VirtualDisk {
 
 /// Pool redundancy type
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[allow(dead_code)] // Test scenarios may not use all pool type variants
+#[expect(dead_code)] // Test scenarios may not use all pool type variants
 enum PoolType {
     Mirror,
     RaidZ1,
@@ -131,7 +131,7 @@ enum PoolType {
 
 /// Simulated ZFS pool with redundancy
 struct ResilientPool {
-    #[allow(dead_code)] // May be used for logging/debugging
+    #[expect(dead_code)] // May be used for logging/debugging
     name: String,
     pool_type: PoolType,
     disks: Vec<Arc<VirtualDisk>>,

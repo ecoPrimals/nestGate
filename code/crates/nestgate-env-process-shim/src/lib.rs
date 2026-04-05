@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![warn(missing_docs)]
@@ -24,7 +24,7 @@ pub fn remove_var<K: AsRef<OsStr>>(key: K) {
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)] // Tests assert env invariants; project prefers `expect` over `unwrap`.
+#[expect(clippy::expect_used)] // Tests assert env invariants; project prefers `expect` over `unwrap`.
 mod tests {
     use super::{remove_var, set_var};
     use serial_test::serial;

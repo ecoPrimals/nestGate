@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -64,7 +64,7 @@ mod infant_discovery_validation {
     #[tokio::test]
     async fn test_service_health_propagation() {
         #[derive(Debug, Clone)]
-        #[allow(dead_code)]
+        #[expect(dead_code)]
         struct ServiceHealth {
             name: String,
             healthy: bool,

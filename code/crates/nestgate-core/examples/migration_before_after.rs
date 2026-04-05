@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
-#![allow(
+#![expect(
     dead_code,
     missing_docs,
     unused_imports,
@@ -18,8 +18,8 @@
 //!
 //! **Run**: `cargo run --example migration_before_after`
 
-#![allow(dead_code)]
-#![allow(unused_imports)]
+#![expect(dead_code)]
+#![expect(unused_imports)]
 
 // ============================================================================
 // ❌ BEFORE: Hardcoded Pattern

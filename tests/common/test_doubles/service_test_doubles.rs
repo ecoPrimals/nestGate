@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Service Test Doubles
@@ -13,14 +13,14 @@ use super::TestDoubleConfig;
 
 /// Service test double for testing service operations
 pub struct ServiceTestDouble {
-    #[allow(dead_code)] // Test fixture field
+    #[expect(dead_code)] // Test fixture field
     config: TestDoubleConfig,
     registered_services: Arc<Mutex<HashMap<String, TestService>>>,
     operations: Arc<Mutex<Vec<String>>>,
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Test fixture
+#[expect(dead_code)] // Test fixture
 struct TestService {
     name: String,
     status: ServiceStatus,
@@ -28,7 +28,7 @@ struct TestService {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Test fixture
+#[expect(dead_code)] // Test fixture
 enum ServiceStatus {
     Running,
     Stopped,

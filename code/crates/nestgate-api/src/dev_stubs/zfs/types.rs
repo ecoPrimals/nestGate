@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **ZFS Mock Data Types (Development Stubs)**
@@ -268,7 +268,6 @@ impl ZeroCostZfsOperations {
 ///
 /// ⚠️ **DEV STUB**: This is mock code, but types are used in production.
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct PerformanceOptimizer;
 
 impl Default for PerformanceOptimizer {
@@ -278,7 +277,7 @@ impl Default for PerformanceOptimizer {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 impl PerformanceOptimizer {
     /// Create a new performance optimizer instance
     #[must_use]
@@ -441,7 +440,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_production_zfs_manager_new() {
         let config = ZfsConfig::default();
         let pool_count = config.pools.len();
@@ -450,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_list_pools() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -464,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_create_dataset() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -473,7 +472,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_get_pool_status() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -484,7 +483,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_create_pool() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -690,7 +689,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_list_datasets() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -702,7 +701,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_create_dataset_with_tier() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -714,7 +713,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_list_snapshots() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);
@@ -725,7 +724,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_create_snapshot() {
         let config = ZfsConfig::default();
         let manager = ProductionZfsManager::new(config);

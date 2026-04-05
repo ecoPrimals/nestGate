@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Integration tests for the middleware crate’s public configuration surface.
 
-#![allow(clippy::expect_used)]
+#![expect(clippy::expect_used)]
 
 use nestgate_middleware::{MiddlewareConfig, create_default_config};
 use serde::{Deserialize, Serialize};

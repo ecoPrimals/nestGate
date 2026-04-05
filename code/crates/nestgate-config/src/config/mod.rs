@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use serde::{Deserialize, Serialize};
@@ -230,7 +230,6 @@ pub fn create_testing_config() -> canonical_primary::NestGateCanonicalConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Infantdiscoveryconfigcanonical
 pub type InfantDiscoveryConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -323,7 +322,7 @@ pub struct InfantDiscoveryConfig {
     pub fallback_to_environment: bool,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl Default for InfantDiscoveryConfig {
     /// Returns the default instance
     fn default() -> Self {

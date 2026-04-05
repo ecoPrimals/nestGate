@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -112,7 +112,7 @@ async fn stability_test_connection_pool_stability() {
     println!("⏱️  STABILITY: Connection Pool Stability (Modernized)");
 
     #[derive(Clone)]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     struct Connection {
         id: u32,
         active: bool,

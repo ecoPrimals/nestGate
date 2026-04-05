@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Discovery configuration and result types for the universal adapter.
@@ -41,7 +41,6 @@ pub struct DiscoveryConfig {
     /// Enabled discovery methods
     pub methods: Vec<DiscoveryMethod>,
 }
-#[expect(deprecated, reason = "migration in progress")]
 impl Default for DiscoveryConfig {
     /// Returns the default instance
     fn default() -> Self {

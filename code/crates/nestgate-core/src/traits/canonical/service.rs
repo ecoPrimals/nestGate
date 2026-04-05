@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **Canonical Service Trait**
@@ -61,7 +61,7 @@ pub trait CanonicalService: Send + Sync + 'static {
     // ==================== ADDITIONAL SERVICE METHODS ====================
 
     /// Get service identifier - PEDANTIC ADDITION
-    #[allow(clippy::unnecessary_literal_bound)] // Default is static; impls may return `&self`-backed ids
+    #[expect(clippy::unnecessary_literal_bound)] // Default is static; impls may return `&self`-backed ids
     fn service_id(&self) -> &str {
         "unknown"
     }

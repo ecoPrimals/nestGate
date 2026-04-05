@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive tests for configuration defaults
@@ -10,8 +10,8 @@
 mod config_defaults_tests {
     // Tests exercise deprecated `InfantDiscoveryConfig` for backward-compat coverage until
     // callers migrate to `CanonicalNetworkConfig`.
-    #![allow(deprecated)]
-    #![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+    #![expect(deprecated)]
+    #![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
 
     use crate::config::*;
 

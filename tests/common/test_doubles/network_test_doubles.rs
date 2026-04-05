@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Network Test Doubles
@@ -14,14 +14,14 @@ use super::TestDoubleConfig;
 
 /// Network test double for testing network operations
 pub struct NetworkTestDouble {
-    #[allow(dead_code)] // Test fixture field
+    #[expect(dead_code)] // Test fixture field
     config: TestDoubleConfig,
     connections: Arc<Mutex<HashMap<String, ConnectionStatus>>>,
     operations: Arc<Mutex<Vec<String>>>,
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Test fixture
+#[expect(dead_code)] // Test fixture
 enum ConnectionStatus {
     Connected,
     Disconnected,

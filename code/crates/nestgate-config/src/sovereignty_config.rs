@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Sovereignty Configuration Helpers
@@ -51,7 +51,6 @@ impl SovereigntyConfig {
     )]
     #[must_use]
     pub fn api_endpoint_with_fallback() -> String {
-        #[allow(deprecated)]
         let default_url = crate::constants::canonical_defaults::network::build_api_url();
         safe_env_var_or_default("NESTGATE_API_ENDPOINT", &default_url)
     }
@@ -96,7 +95,6 @@ impl SovereigntyConfig {
     )]
     #[must_use]
     pub fn websocket_endpoint_with_fallback() -> String {
-        #[allow(deprecated)]
         let default_url = crate::constants::canonical_defaults::network::build_websocket_url();
         safe_env_var_or_default("NESTGATE_WS_ENDPOINT", &default_url)
     }

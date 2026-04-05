@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -21,7 +21,7 @@
 //! Those operations route through the ecosystem's security capability provider.
 
 #![warn(missing_docs)]
-#![allow(deprecated, clippy::missing_errors_doc)]
+#![expect(deprecated, clippy::missing_errors_doc)]
 #![cfg_attr(
     test,
     allow(

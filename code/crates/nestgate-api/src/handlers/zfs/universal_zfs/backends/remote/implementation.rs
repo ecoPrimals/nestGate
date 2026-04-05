@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Implementation module
@@ -719,7 +719,7 @@ mod implementation_tests {
     use std::time::Duration;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn remote_zfs_service_exposes_metadata() {
         let cfg = RemoteConfig {
             endpoint: "http://127.0.0.1:65530".to_string(),

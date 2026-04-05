@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
@@ -97,7 +97,6 @@ impl ZfsHandler {
     }
 
     /// Execute ZFS command
-    #[allow(clippy::too_many_lines)]
     pub async fn execute(&mut self, command: ZfsCommands) -> Result<()> {
         println!("🚀 NestGate ZFS Management (API-based)");
         println!("📡 API Endpoint: {}", self.api_endpoint);

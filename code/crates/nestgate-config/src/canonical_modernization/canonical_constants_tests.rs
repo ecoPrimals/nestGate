@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unit tests for canonical constant modules (values, relationships, `Duration` helpers).
 
 // These tests intentionally assert relationships between `const` values (compile-time invariants).
-#![allow(clippy::assertions_on_constants)]
+#![expect(clippy::assertions_on_constants)]
 
 use std::time::Duration;
 

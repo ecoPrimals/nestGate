@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **CANONICAL DEFAULTS**
@@ -88,6 +88,7 @@ pub mod network {
     /// Default web UI URL constant (for backwards compatibility)
     ///
     /// **Development default** for legacy call sites; prefer [`default_web_ui_url`].
+    #[deprecated(since = "0.9.0", note = "Use default_web_ui_url() function instead")]
     pub const DEFAULT_WEB_UI_URL: &str = "http://localhost:3000";
 
     /// Localhost constant
@@ -102,59 +103,27 @@ pub mod network {
         DEFAULT_ADMIN_PORT as DEFAULT_INTERNAL_PORT, DEFAULT_API_PORT, DEFAULT_METRICS_PORT,
     };
 
-    /// Build API URL from environment or default
-    ///
-    /// **DEPRECATED**: This function uses hardcoded localhost fallback which violates
-    /// the principle of capability-based discovery.
-    ///
-    /// # Migration
-    ///
-    /// Use `ServiceRegistry` for dynamic service discovery:
-    /// ```rust,ignore
-    /// let registry = ServiceRegistry::new(capabilities).await?;
-    /// let service = registry.find_by_capability(&capability).await?;
-    /// let url = service.url();
-    /// ```
-    ///
-    /// Or use environment variable directly without hardcoded fallback:
-    /// ```rust,ignore
-    /// let url = std::env::var("NESTGATE_API_URL")
-    ///     .map_err(|_| Error::configuration("NESTGATE_API_URL must be set"))?;
-    /// ```
-    #[deprecated(
-        since = "0.10.0",
-        note = "Use ServiceRegistry for capability-based discovery or require explicit environment configuration. Hardcoded localhost fallback will be removed."
-    )]
+    /// Build API URL from environment or runtime discovery.
     #[must_use]
-    #[allow(deprecated)]
     pub fn build_api_url() -> String {
-        safe_env_var_or_default("NESTGATE_API_URL", DEFAULT_API_BASE_URL)
+        std::env::var("NESTGATE_API_URL").unwrap_or_else(|_| default_api_base_url())
     }
 
-    /// Build WebSocket URL from environment or default
+    /// Build WebSocket URL from environment or runtime discovery.
     #[must_use]
-    #[allow(deprecated)]
     pub fn build_websocket_url() -> String {
-        safe_env_var_or_default("NESTGATE_WS_URL", DEFAULT_WEBSOCKET_URL)
+        std::env::var("NESTGATE_WS_URL").unwrap_or_else(|_| default_websocket_url())
     }
 
-    /// Build metrics URL from environment or default
+    /// Build metrics URL from environment or runtime discovery.
     #[must_use]
-    #[allow(deprecated)]
     pub fn build_metrics_url() -> String {
-        safe_env_var_or_default("NESTGATE_METRICS_URL", DEFAULT_METRICS_URL)
+        std::env::var("NESTGATE_METRICS_URL").unwrap_or_else(|_| default_metrics_url())
     }
 
-    /// Build generic endpoint from environment
-    ///
-    /// **DEPRECATED**: See `build_api_url()` deprecation notice.
-    #[deprecated(
-        since = "0.10.0",
-        note = "Use ServiceRegistry for capability-based discovery. See build_api_url() for migration guide."
-    )]
+    /// Build generic endpoint from environment or runtime discovery.
     #[must_use]
     pub fn build_endpoint() -> String {
-        #[allow(deprecated)]
         build_api_url()
     }
 

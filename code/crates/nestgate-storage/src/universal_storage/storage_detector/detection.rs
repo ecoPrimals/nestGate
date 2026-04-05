@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Core detection logic for different storage types.
@@ -298,7 +298,7 @@ impl<'a> DetectionEngine<'a> {
 
 #[cfg(test)]
 mod detection_placeholder_tests {
-    #![allow(clippy::field_reassign_with_default)]
+    #![expect(clippy::field_reassign_with_default)]
     use super::{DetectionConfig, DetectionEngine};
 
     #[test]

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # cargo-deny configuration for NestGate supply chain auditing
 
 [advisories]
@@ -15,7 +15,7 @@ ignore = [
 [licenses]
 version = 2
 allow = [
-    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
     "AGPL-3.0-or-later",
     "MIT",
     "Apache-2.0",

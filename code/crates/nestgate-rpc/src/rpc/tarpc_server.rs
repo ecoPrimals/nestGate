@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # tarpc Server for `NestGate`
@@ -124,7 +124,7 @@ impl NestGateRpcService {
         let object_count: u64 = datasets.iter().map(|d| d.object_count).sum();
         let compression_sum: f64 = datasets.iter().map(|d| d.compression_ratio).sum();
         let avg_compression_ratio = if dataset_count > 0 {
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss)]
             {
                 compression_sum / dataset_count as f64
             }

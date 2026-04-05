@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use serde::{Deserialize, Serialize};
@@ -100,7 +100,6 @@ impl AiAutomationSettings {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Datasetautomationconfigcanonical
 pub type DatasetAutomationConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -111,7 +110,7 @@ pub type DatasetAutomationConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![allow(deprecated)]
+    #![expect(deprecated)]
 
     use super::*;
 

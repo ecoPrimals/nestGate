@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Cert module
@@ -63,7 +63,6 @@ pub mod validator;
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Certificateconfigcanonical
 pub type CertificateConfigCanonical =
     nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -78,7 +77,7 @@ mod certificate_config_tests {
     use serde_json::json;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn certificate_config_default_and_serde_roundtrip() {
         let c = CertificateConfig::default();
         assert_eq!(c.validity_days, 365);

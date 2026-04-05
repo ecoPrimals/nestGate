@@ -2,7 +2,7 @@
 name = "nestgate"
 version = "0.1.0"
 edition = "2024"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 authors = ["ecoPrimals Collective"]
 repository = "https://github.com/ecoprimals/nestgate"
 homepage = "https://ecoprimals.org"
@@ -88,10 +88,10 @@ members = [
     "fuzz"
 ]
 
-# All ecoPrimals are AGPL-3.0-only (strictest copyleft)
+# All ecoPrimals are AGPL-3.0-or-later (strictest copyleft)
 # Humans get free use through beardog entropy systems
 [workspace.package]
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 authors = ["ecoPrimals Collective"]
 repository = "https://github.com/ecoprimals/nestgate"
 homepage = "https://ecoprimals.org"
@@ -226,11 +226,11 @@ pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 significant_drop_tightening = "allow"
 unused_self = "allow"
-unwrap_used = "warn"
+unwrap_used = "deny"
 expect_used = "warn"
 panic = "warn"
-todo = "warn"
-unimplemented = "warn"
+todo = "deny"
+unimplemented = "deny"
 cast_possible_truncation = "warn"
 cast_sign_loss = "warn"
 cast_precision_loss = "warn"

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! CRUD and ranking operations on in-memory template storage.
@@ -279,7 +279,7 @@ impl TemplateStorage {
                 .max()
                 .unwrap_or(1);
             // Template ranking denominator: usage counts normalized to float.
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(clippy::cast_precision_loss)]
             {
                 m as f64
             }

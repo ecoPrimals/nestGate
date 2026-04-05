@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Clap subcommand and nested action definitions.
@@ -42,6 +42,10 @@ pub enum Commands {
         /// Reads from: `NESTGATE_FAMILY_ID` environment variable if not specified
         #[arg(long)]
         family_id: Option<String>,
+        /// Use Linux abstract namespace socket (`\0` prefix) instead of filesystem socket.
+        /// Required for Android/SELinux substrates (`UniBin` v1.2).
+        #[arg(long)]
+        r#abstract: bool,
     },
 
     /// Show daemon status (`UniBin`)

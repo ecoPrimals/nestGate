@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
-#![allow(deprecated)] // `JsonRpcUnixServer` retained for legacy re-exports until orchestration IPC migration completes.
+#![expect(deprecated)] // `JsonRpcUnixServer` retained for legacy re-exports until orchestration IPC migration completes.
 
 //! # 🔌 JSON-RPC Unix Socket Server
 //!
@@ -387,7 +387,7 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
 }
 
 /// Handle JSON-RPC request
-#[allow(clippy::too_many_lines)] // Large method dispatch table mirrors supported JSON-RPC surface.
+#[expect(clippy::too_many_lines)] // Large method dispatch table mirrors supported JSON-RPC surface.
 async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRpcResponse {
     if request.jsonrpc.as_ref() != "2.0" {
         return JsonRpcResponse {
@@ -424,10 +424,16 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "health" | "health.check" => Ok(
             json!({"status": "healthy", "version": env!("CARGO_PKG_VERSION"), "primal": DEFAULT_SERVICE_NAME}),
         ),
-        "capabilities.list" => model_cache_handlers::capabilities_list(),
+        "identity.get" => Ok(json!({
+            "primal": DEFAULT_SERVICE_NAME,
+            "version": env!("CARGO_PKG_VERSION"),
+            "family_id": std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".into()),
+        })),
+        "capabilities.list" | "capability.list" => model_cache_handlers::capabilities_list(),
         "discover_capabilities" | "discover.capabilities" => {
             model_cache_handlers::discover_capabilities()
         }
+        "discovery.capability.register" => discovery_capability_register(request.params.as_ref()),
         // Storage operations (filesystem-backed, durable)
         "storage.store" | "storage.put" => {
             storage_handlers::storage_store(request.params.as_ref(), state).await
@@ -520,6 +526,39 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
             id: request.id,
         },
     }
+}
+
+/// Handle `discovery.capability.register` on the legacy Unix/TCP dispatch path.
+fn discovery_capability_register(
+    params: Option<&serde_json::Value>,
+) -> std::result::Result<serde_json::Value, NestGateError> {
+    let params = params.ok_or_else(|| {
+        NestGateError::configuration_error(
+            "params",
+            "discovery.capability.register requires params",
+        )
+    })?;
+    let capability = params
+        .get("capability")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| {
+            NestGateError::configuration_error("capability", "missing 'capability' param")
+        })?;
+    let endpoint = params
+        .get("endpoint")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| {
+            NestGateError::configuration_error("endpoint", "missing 'endpoint' param")
+        })?;
+    nestgate_config::config::capability_discovery::announce_capability(
+        capability,
+        endpoint,
+        std::time::Duration::from_secs(60),
+    )?;
+    Ok(json!({
+        "success": true,
+        "message": format!("Capability {capability} registered and announced"),
+    }))
 }
 
 /// Bridges the full ecosystem JSON-RPC dispatch table to [`crate::rpc::isomorphic_ipc::RpcHandler`]

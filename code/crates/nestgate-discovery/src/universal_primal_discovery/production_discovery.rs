@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(deprecated)]
+#![expect(deprecated)]
 #![expect(
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
@@ -350,7 +350,7 @@ impl ServiceDiscoveryConfig {
 /// Production service discovery implementation
 pub struct ProductionServiceDiscovery {
     config: ServiceDiscoveryConfig,
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Structural placeholder until capability registry replaces unit type"
     )]
@@ -577,7 +577,6 @@ pub fn discover_timeout_standalone(
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Servicediscoveryconfigcanonical
 pub type ServiceDiscoveryConfigCanonical =
     nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;

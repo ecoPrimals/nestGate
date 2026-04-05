@@ -1,12 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! NestGate-specific migration patterns
 //!
 //! This module contains migration patterns specifically designed for
 //! the `NestGate` codebase structure and error handling patterns.
-
-#![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
 
 use crate::systematic_migrator::{ErrorCategory, MigrationPattern};
 use std::collections::HashMap;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Removed unused error imports
@@ -282,7 +282,7 @@ impl Default for UuidManager {
 
 #[cfg(test)]
 mod tests {
-    #![allow(
+    #![expect(
         clippy::unwrap_used,
         clippy::expect_used,
         clippy::panic,

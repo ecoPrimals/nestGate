@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **INTEGRATION CONFIGURATIONS**
@@ -73,7 +73,7 @@ pub struct ExternalHealthCheckConfig {}
 
 /// Container for all protocol-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[allow(clippy::zero_sized_map_values)]
+#[expect(clippy::zero_sized_map_values)]
 pub struct ProtocolConfigs {
     /// HTTP/HTTPS configuration
     pub http: HttpProtocolConfig,

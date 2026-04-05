@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! API and Handler Pattern Integration Tests
 //!
 //! Tests common API patterns, request handling, and response patterns
 
-#![allow(dead_code)]
+#![expect(dead_code)]
 
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;

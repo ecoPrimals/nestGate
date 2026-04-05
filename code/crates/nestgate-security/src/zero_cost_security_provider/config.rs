@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 ///
@@ -167,7 +167,7 @@ impl ZeroCostSecurityConfig {
 
 /// **Authentication configuration**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 /// Configuration for Authentication
 pub struct AuthenticationConfig {
     /// Enable password authentication

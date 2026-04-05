@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
-#![allow(
+#![expect(
     dead_code,
     missing_docs,
     unused_imports,
@@ -169,20 +169,17 @@ mod port_defaults_tests {
     use nestgate_core::constants::ports::*;
 
     #[test]
-    #[allow(deprecated)] // Testing legacy database port functions for backward compatibility
-    fn test_database_ports_standard() {
-        assert_eq!(postgres_port(), 5432, "PostgreSQL standard port");
-        assert_eq!(redis_port(), 6379, "Redis standard port");
-        assert_eq!(mongodb_port(), 27017, "MongoDB standard port");
+    fn test_port_constants_standard() {
+        assert_eq!(POSTGRES_DEFAULT, 5432, "PostgreSQL standard port");
+        assert_eq!(REDIS_DEFAULT, 6379, "Redis standard port");
+        assert_eq!(MONGODB_DEFAULT, 27017, "MongoDB standard port");
     }
 
     #[test]
-    #[allow(deprecated)] // Testing legacy port function determinism
-    fn test_port_consistency() {
-        // Calling same function twice should return same value
-        assert_eq!(postgres_port(), postgres_port());
-        assert_eq!(redis_port(), redis_port());
-        assert_eq!(mongodb_port(), mongodb_port());
+    fn test_api_server_addr_deterministic() {
+        let addr1 = get_api_server_addr();
+        let addr2 = get_api_server_addr();
+        assert_eq!(addr1, addr2);
     }
 }
 

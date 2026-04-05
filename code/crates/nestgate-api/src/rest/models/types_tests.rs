@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive tests for REST API types module
@@ -6,7 +6,7 @@
 //! This module provides thorough testing coverage for all types defined in
 //! the REST API, including enums, structs, serialization, and validation.
 
-#![allow(clippy::unwrap_used, clippy::float_cmp)] // Test code - these patterns are acceptable
+#![expect(clippy::unwrap_used, clippy::float_cmp)] // Test code - these patterns are acceptable
 
 #[cfg(test)]
 mod tests {

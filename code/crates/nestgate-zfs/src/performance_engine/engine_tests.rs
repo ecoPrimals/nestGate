@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive tests for PerformanceOptimizationEngine
@@ -8,7 +8,7 @@ use super::types::{AlertSeverity, AlertType, PerformanceAlert};
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use std::sync::Arc;
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 use super::types::PerformanceEngineConfig;
 
 // ==================== HELPER FUNCTIONS ====================

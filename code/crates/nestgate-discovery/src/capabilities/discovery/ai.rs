@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// **AI CAPABILITY DISCOVERY**
@@ -171,7 +171,7 @@ impl Default for AiCapabilityDiscovery {
 
 /// Get AI endpoint for routing compatibility (replaces hardcoded AI constants)
 pub async fn get_ai_endpoint(
-    #[allow(unused_variables)] _adapter: &(),
+    #[expect(unused_variables)] _adapter: &(),
 ) -> Result<String> {
     let discovery = AiCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Tests for orchestrator integration
@@ -351,7 +351,7 @@ mod config_tests {
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_zfs_service_config_default() {
         let config = ZfsServiceConfig::default();
 
@@ -363,7 +363,7 @@ mod config_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_zfs_service_config_custom() {
         let mut config = ZfsServiceConfig::default();
         config.service_name = "custom-zfs".to_string();
@@ -378,7 +378,7 @@ mod config_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_zfs_service_config_capabilities() {
         let config = ZfsServiceConfig::default();
 
@@ -401,7 +401,7 @@ mod config_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_zfs_service_config_add_orchestrator_endpoint() {
         let mut config = ZfsServiceConfig::default();
         config
@@ -416,7 +416,7 @@ mod config_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_zfs_service_config_add_metadata() {
         let mut config = ZfsServiceConfig::default();
         config

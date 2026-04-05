@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
@@ -136,7 +136,7 @@ pub fn get_snapshot_count_from_engine_impl() -> u64 {
 
 /// Convert real ZFS stats to API format, with sensible defaults if unavailable
 #[cfg(feature = "dev-stubs")]
-#[allow(
+#[expect(
     dead_code,
     reason = "Used when dev-stubs dataset handlers are wired to the REST layer"
 )]
@@ -187,7 +187,7 @@ pub fn convert_zfs_stats_to_api(
 }
 
 /// Convert engine JSON statistics to API format (unknown structure → zeros, not fabricated values).
-#[allow(
+#[expect(
     dead_code,
     reason = "Reserved for engine JSON bridge once storage handlers deserialize live stats"
 )]
@@ -219,7 +219,7 @@ pub fn convert_engine_stats_to_api(stats: &serde_json::Value) -> DatasetStats {
 }
 
 /// Calculate file operations from ZFS _engine statistics
-#[allow(
+#[expect(
     dead_code,
     reason = "Placeholder until engine exposes file op counters in JSON stats"
 )]

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! JSON-RPC 2.0 Server for `NestGate` Storage
@@ -179,7 +179,7 @@ impl JsonRpcServer {
     }
 
     /// Register storage-related JSON-RPC methods
-    #[allow(clippy::too_many_lines)] // Method table mirrors JSON-RPC surface; split would obscure routing.
+    #[expect(clippy::too_many_lines)] // Method table mirrors JSON-RPC surface; split would obscure routing.
     fn register_storage_methods(
         module: &mut RpcModule<JsonRpcState>,
     ) -> Result<(), Box<dyn std::error::Error>> {

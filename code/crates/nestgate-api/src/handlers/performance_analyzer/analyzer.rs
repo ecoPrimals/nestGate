@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **PERFORMANCE ANALYSIS ENGINE**
@@ -245,7 +245,7 @@ pub type AnalyzerConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![allow(deprecated)] // Tests exercise deprecated `AnalyzerConfig` until canonical migration completes
+    #![expect(deprecated)] // Tests exercise deprecated `AnalyzerConfig` until canonical migration completes
 
     use super::super::metrics::{DiskIOMetrics, NetworkMetrics};
     use super::*;

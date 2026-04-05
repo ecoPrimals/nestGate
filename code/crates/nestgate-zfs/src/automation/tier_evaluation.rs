@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
@@ -117,8 +117,14 @@ pub fn evaluate_tier_by_intelligent_rules(
         _ => tier_score.add_cold_weight(0.4, "Rarely accessed"),
     }
 
-    // 3. Access frequency scoring
-    match metadata.access_frequency as u32 {
+    // 3. Access frequency scoring (f64 → u32 with saturation for negative/NaN)
+    #[expect(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    let freq_u32 = if metadata.access_frequency.is_finite() && metadata.access_frequency >= 0.0 {
+        metadata.access_frequency as u32
+    } else {
+        0
+    };
+    match freq_u32 {
         freq if freq > 100 => tier_score.add_hot_weight(0.6, "Very high access frequency"),
         freq if freq > 20 => tier_score.add_hot_weight(0.3, "High access frequency"),
         freq if freq > 5 => tier_score.add_warm_weight(0.3, "Moderate access frequency"),

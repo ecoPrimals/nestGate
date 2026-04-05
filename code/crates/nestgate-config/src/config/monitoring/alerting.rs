@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Alert thresholds and top-level alert configuration validation.
 
-#![allow(clippy::wildcard_imports)]
+#![expect(clippy::wildcard_imports)]
 
 use serde::{Deserialize, Serialize};
 

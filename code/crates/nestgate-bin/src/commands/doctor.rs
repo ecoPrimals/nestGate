@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Doctor command - System diagnostics and health checks
@@ -11,7 +11,7 @@ use crate::error::BinResult;
 use nestgate_core::services::storage::capabilities;
 
 /// Execute doctor diagnostics
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 pub async fn execute(comprehensive: bool, _fix: bool) -> BinResult<()> {
     println!("NestGate System Diagnostics");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");

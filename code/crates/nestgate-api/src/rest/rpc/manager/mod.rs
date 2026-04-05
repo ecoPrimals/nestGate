@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unified RPC Manager
@@ -189,7 +189,6 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns `RpcError` if stream creation fails.
-    #[allow(clippy::unnecessary_wraps)]
     pub fn start_bidirectional_stream(
         &self,
         _request: UnifiedRpcRequest,
@@ -203,7 +202,6 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns `RpcError` if health check fails.
-    #[allow(clippy::unnecessary_wraps)]
     pub fn get_health_status(&self) -> Result<serde_json::Value, RpcError> {
         Ok(serde_json::json!({
             "status": "healthy",
@@ -255,12 +253,12 @@ impl UnifiedRpcManager {
         Ok(())
     }
 
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(clippy::unnecessary_wraps)]
     const fn start_health_monitoring(&self) -> Result<(), RpcError> {
         Ok(())
     }
 
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(clippy::unnecessary_wraps)]
     const fn start_metrics_collection(&self) -> Result<(), RpcError> {
         Ok(())
     }

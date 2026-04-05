@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -148,7 +148,7 @@ async fn byzantine_test_sybil_attack() {
     println!("🛡️  BYZANTINE: Sybil Attack Detection");
 
     #[derive(Clone)]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     struct Node {
         id: u32,
         ip_address: String,
@@ -260,7 +260,7 @@ async fn byzantine_test_double_spend() {
     use std::collections::HashSet;
 
     #[derive(Clone)]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     struct Utxo {
         id: u64,
         amount: u64,

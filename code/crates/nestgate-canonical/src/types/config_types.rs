@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Configuration Type Definitions
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 /// Canonical Configuration - Top-level configuration container
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(deprecated)] // MIGRATION: Using deprecated types until v0.12.0 - will migrate to CanonicalNetworkConfig
+#[expect(deprecated)] // MIGRATION: Using deprecated types until v0.12.0 - will migrate to CanonicalNetworkConfig
 /// Configuration for Canonical
 pub struct CanonicalConfig {
     /// Service name
@@ -122,7 +122,7 @@ pub struct SecurityConfig {
 
 /// Canonical Password Policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)] // Policy flags are semantically correct here
+#[expect(clippy::struct_excessive_bools)] // Policy flags are semantically correct here
 /// Passwordpolicy
 pub struct PasswordPolicy {
     /// Min Length
@@ -171,7 +171,7 @@ pub struct AuthConfig {
 
 // ==================== Default Implementations ====================
 
-#[allow(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
+#[expect(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
 impl Default for CanonicalConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -189,7 +189,7 @@ impl Default for CanonicalConfig {
     }
 }
 
-#[allow(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
+#[expect(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
 impl Default for NetworkConfig {
     /// Returns the default instance.
     ///
@@ -227,7 +227,7 @@ impl Default for StorageConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl Default for SecurityConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -307,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_network_config_default() {
         let config = NetworkConfig::default();
         assert_eq!(config.timeout_seconds, 30);
@@ -327,7 +327,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_security_config_default() {
         let config = SecurityConfig::default();
         assert!(config.authentication_enabled);

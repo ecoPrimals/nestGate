@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
-#![allow(
+#![expect(
     dead_code,
     missing_docs,
     unused_imports,
@@ -26,7 +26,7 @@ use nestgate_core::error::NestGateError;
 // ==================== REQUEST VALIDATION ====================
 
 #[test]
-#[allow(clippy::const_is_empty)]
+#[expect(clippy::const_is_empty)]
 fn test_empty_request_body() {
     let body = "";
     assert!(body.is_empty(), "Empty body should be detected");

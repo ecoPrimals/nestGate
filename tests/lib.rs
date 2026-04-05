@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -14,7 +14,7 @@
 )]
 // Test library — exposes common test infrastructure.
 // Test utility modules contain building blocks that are selectively used.
-#![allow(dead_code)]
+#![expect(dead_code)]
 
 pub mod common;
 

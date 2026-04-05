@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Capability-Based Configuration Discovery
@@ -186,31 +186,99 @@ pub fn discover_with_fallback(
 /// Returns [`NestGateError`] when the capability cannot be announced to the discovery system
 /// (currently always returns [`Ok`] while integration is stubbed).
 pub fn announce_capability(capability: &str, endpoint: &str, ttl: Duration) -> Result<()> {
-    // Integration: `DiscoveryBuilder` / `SelfKnowledge` from nestgate-core apply when those APIs are
-    // exposed without pulling the full core graph into nestgate-config.
-    tracing::debug!(
-        "feature pending: DiscoveryBuilder/SelfKnowledge announcement (using local log only)"
-    );
+    let manifest = serde_json::json!({
+        "capability": capability,
+        "endpoint": endpoint,
+        "ttl_secs": ttl.as_secs(),
+        "announced_at": chrono::Utc::now().to_rfc3339(),
+        "pid": std::process::id(),
+    });
 
-    tracing::info!(
-        "Announcing capability '{}' at '{}' (TTL: {:?}) (local log only; discovery TBD)",
-        capability,
-        endpoint,
-        ttl
-    );
+    let manifest_dir = capability_manifest_dir();
+    if let Err(e) = std::fs::create_dir_all(&manifest_dir) {
+        tracing::warn!(
+            "Could not create capability manifest directory {}: {e}",
+            manifest_dir.display()
+        );
+        tracing::info!(
+            "Announcing capability '{}' at '{}' (TTL: {:?}) (log only; manifest write failed)",
+            capability,
+            endpoint,
+            ttl
+        );
+        return Ok(());
+    }
+
+    let manifest_path = manifest_dir.join(format!("{capability}.json"));
+    match std::fs::write(
+        &manifest_path,
+        serde_json::to_vec_pretty(&manifest).unwrap_or_default(),
+    ) {
+        Ok(()) => {
+            tracing::info!(
+                "Announced capability '{}' at '{}' -> {}",
+                capability,
+                endpoint,
+                manifest_path.display()
+            );
+        }
+        Err(e) => {
+            tracing::warn!(
+                "Could not write capability manifest {}: {e}",
+                manifest_path.display()
+            );
+        }
+    }
 
     Ok(())
 }
 
+/// Directory where capability manifests are written for peer discovery.
+///
+/// Resolution: `$XDG_RUNTIME_DIR/biomeos/nestgate/capabilities/` or
+/// `/tmp/nestgate-capabilities/` as fallback.
+fn capability_manifest_dir() -> std::path::PathBuf {
+    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+        let p = std::path::Path::new(&xdg);
+        if p.exists() {
+            return p.join("biomeos").join("nestgate").join("capabilities");
+        }
+    }
+    std::path::PathBuf::from("/tmp/nestgate-capabilities")
+}
+
 // ==================== INTERNAL DISCOVERY METHODS ====================
 
-/// Discover from capability registry (primary method)
+/// Discover from capability manifest files written by [`announce_capability`].
 fn discover_from_capability_registry(capability: &str) -> Result<ServiceEndpoint> {
-    tracing::debug!("feature pending: capability registry via nestgate-core DiscoveryBuilder");
-    let _ = capability;
-    Err(NestGateError::network_error(
-        "Capability registry discovery unavailable (nestgate-core decoupled)",
-    ))
+    let manifest_path = capability_manifest_dir().join(format!("{capability}.json"));
+    let bytes = std::fs::read(&manifest_path).map_err(|_| {
+        NestGateError::network_error(format!(
+            "No capability manifest for '{capability}' at {}",
+            manifest_path.display()
+        ))
+    })?;
+    let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| {
+        NestGateError::network_error(format!(
+            "Invalid capability manifest for '{capability}': {e}"
+        ))
+    })?;
+    let endpoint = value["endpoint"]
+        .as_str()
+        .ok_or_else(|| {
+            NestGateError::network_error(format!(
+                "Capability manifest for '{capability}' missing 'endpoint' field"
+            ))
+        })?
+        .to_string();
+    let ttl_secs = value["ttl_secs"].as_u64().unwrap_or(60);
+
+    Ok(ServiceEndpoint {
+        capability: capability.to_string(),
+        endpoint,
+        ttl: Duration::from_secs(ttl_secs),
+        source: DiscoverySource::CapabilityRegistry,
+    })
 }
 
 /// Discover from environment variables

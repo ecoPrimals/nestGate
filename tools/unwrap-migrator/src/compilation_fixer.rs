@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Compilation Fixer for `NestGate`
@@ -6,8 +6,8 @@
 //! This module provides automated fixes for common compilation errors
 //! that occur during the modernization process.
 
-#![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
-#![allow(clippy::excessive_nesting)] // Complex migration logic requires nesting
+#![expect(clippy::disallowed_types)] // Allow HashMap in utility crate
+#![expect(clippy::excessive_nesting)] // Complex migration logic requires nesting
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

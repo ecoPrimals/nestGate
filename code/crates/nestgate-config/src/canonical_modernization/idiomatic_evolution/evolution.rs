@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **EVOLUTION TRACKING AND MANAGEMENT**
@@ -72,7 +72,7 @@ impl EvolutionTracker {
 
 /// Migration manager for handling evolution migrations
 #[derive(Debug, Clone, Default)]
-#[allow(clippy::struct_field_names)]
+#[expect(clippy::struct_field_names)]
 /// Manager for Migration operations
 pub struct MigrationManager {
     completed_migrations: HashMap<String, String>,

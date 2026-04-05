@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// **STORAGE CAPABILITY DISCOVERY**
@@ -150,7 +150,7 @@ impl Default for StorageCapabilityDiscovery {
 
 /// Get ZFS endpoint for routing compatibility (replaces hardcoded ZFS constants)
 pub async fn get_zfs_endpoint(
-    #[allow(unused_variables)] _adapter: &(),
+    #[expect(unused_variables)] _adapter: &(),
 ) -> Result<String> {
     let discovery = StorageCapabilityDiscovery::new();
     let capabilities = discovery.discover_capabilities().await?;

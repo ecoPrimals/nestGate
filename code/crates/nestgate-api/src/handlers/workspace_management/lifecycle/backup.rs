@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
@@ -11,7 +11,7 @@ use nestgate_core::error::utilities::safe_env_var_or_default;
 use super::types::BackupConfig;
 
 /// Backup workspace with ZFS snapshots
-#[allow(clippy::too_many_lines)]
+#[expect(clippy::too_many_lines)]
 pub async fn backup_workspace(
     Path(workspace_id): Path<String>,
     Json(config): Json<BackupConfig>,
@@ -156,7 +156,7 @@ pub async fn backup_workspace(
 
 #[cfg(test)]
 mod tests {
-    #![allow(deprecated)]
+    #![expect(deprecated)]
 
     use super::*;
     use axum::extract::{Json, Path};

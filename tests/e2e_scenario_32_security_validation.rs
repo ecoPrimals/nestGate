@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -24,7 +24,7 @@ mod security_validation {
 
     #[tokio::test]
     async fn test_permission_validation() {
-        #[allow(dead_code)]
+        #[expect(dead_code)]
         struct User {
             id: String,
             permissions: HashSet<String>,

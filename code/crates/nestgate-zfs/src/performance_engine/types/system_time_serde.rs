@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Custom serialization for `SystemTime`
@@ -7,7 +7,6 @@ use serde::de;
 use serde::{Deserialize, Deserializer, Serializer};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-#[allow(clippy::type_complexity)]
 /// Function description
 ///
 /// # Errors

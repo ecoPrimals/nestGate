@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **CONFIG VALIDATION TESTS** - Nov 23, 2025
 //!
 //! Comprehensive tests for configuration validation, edge cases, and error handling
 
-#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+#![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
 
 #[cfg(test)]
 mod config_creation_tests {
@@ -397,7 +397,7 @@ mod config_performance_tests {
         // Config creation should be reasonable relative to baseline
         // Allow up to 100x slower than baseline (accounts for actual work)
         // This is machine-independent and robust
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(clippy::cast_precision_loss)]
         let ratio = actual.as_micros() as f64 / baseline.as_micros().max(1) as f64;
         assert!(
             actual <= baseline.saturating_mul(100) || actual.as_millis() < 100,

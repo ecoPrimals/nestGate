@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! **Data Types & Descriptions**
@@ -211,7 +211,7 @@ impl DataDescriptor {
     ///
     /// Formatted size string (e.g., "1.5 GB")
     #[must_use]
-    #[allow(clippy::cast_precision_loss)] // Approximate human-readable units only
+    #[expect(clippy::cast_precision_loss)] // Approximate human-readable units only
     pub fn size_human_readable(&self) -> String {
         const KB: u64 = 1024;
         const MB: u64 = KB * 1024;

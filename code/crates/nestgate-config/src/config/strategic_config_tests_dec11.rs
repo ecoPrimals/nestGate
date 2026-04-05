@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Strategic Configuration Tests - December 11, 2025
@@ -7,7 +7,7 @@
 
 #[cfg(test)]
 mod config_strategic_tests {
-    #![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+    #![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
 
     use crate::config::environment::{EnvironmentConfig, NetworkConfig, Port};
     use std::str::FromStr;

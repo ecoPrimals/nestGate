@@ -2,7 +2,7 @@
 name = "nestgate-types"
 version = "0.1.0"
 edition = "2024"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 description = "Foundational error, result, and unified enum types for NestGate"
 repository = "https://github.com/ecoprimals/nestgate"
 

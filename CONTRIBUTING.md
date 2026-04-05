@@ -4,11 +4,11 @@
 
 NestGate is in active development. Current metrics:
 
-- **Build**: 24/24 workspace members, 0 errors (`cargo check --workspace --all-features --all-targets`)
-- **Tests**: `cargo test --all` — ~12,236 passing, 0 failures (see STATUS.md)
+- **Build**: 23/23 workspace members, 0 errors (`cargo check --workspace --all-features --all-targets`)
+- **Tests**: `cargo test --workspace --all-features` — ~11,821 passing, 463 ignored, 0 failures (see STATUS.md)
 - **Coverage**: ~80% line (llvm-cov); 90% org target not yet
 - **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — must pass before merge (verify dated status in README/STATUS)
-- **Safety**: `#![forbid(unsafe_code)]` on all 22 crate roots except `nestgate-env-process-shim`
+- **Safety**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)
 - **Serial tests**: Some `#[serial]` remain for env-mutation tests; prefer `temp_env` where possible
 
 See [STATUS.md](./STATUS.md) for full metrics.
@@ -118,18 +118,20 @@ mod tests {
 
 ### Environment Variable Isolation
 
-Tests that mutate environment variables MUST use `temp_env` + `serial_test`:
+Prefer `EnvSource` injection (`MapEnv` in tests, `ProcessEnv` in production) — no process-env mutation, fully concurrent:
 
 ```rust
+use nestgate_types::{EnvSource, MapEnv};
+
 #[test]
-#[serial_test::serial]
-fn test_with_env_vars() {
-    temp_env::with_var("NESTGATE_API_PORT", Some("9999"), || {
-        // ... test logic ...
-        // Environment is automatically restored when the closure returns
-    });
+fn config_reads_from_environment() {
+    let env = MapEnv::from([("NESTGATE_API_PORT", "9999")]);
+    let config = Config::from_env_source(&env);
+    assert_eq!(config.port, 9999);
 }
 ```
+
+Only use `temp_env` + `#[serial]` when you must test code that reads `std::env::var` directly (e.g. the env-process-shim crate).
 
 ### Coverage
 
@@ -179,4 +181,4 @@ The `tools/` directory is excluded from coverage — it contains development too
 
 ---
 
-**Last Updated**: April 3, 2026
+**Last Updated**: April 5, 2026

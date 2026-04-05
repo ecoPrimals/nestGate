@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Tests for performance analyzer reports
@@ -40,7 +40,7 @@ fn create_test_analysis() -> AnalysisResult {
 
 #[test]
 fn test_report_config_default() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     assert!(config.include_detailed_analysis);
     assert!(!config.include_trends);
@@ -48,7 +48,7 @@ fn test_report_config_default() {
 
 #[test]
 fn test_report_generator_new() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     assert!(generator.config.include_detailed_analysis);
@@ -56,7 +56,7 @@ fn test_report_generator_new() {
 
 #[test]
 fn test_generate_report_basic() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -70,7 +70,7 @@ fn test_generate_report_basic() {
 
 #[test]
 fn test_generate_report_includes_all_components() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -86,7 +86,7 @@ fn test_generate_report_includes_all_components() {
 
 #[test]
 fn test_generate_report_component_scores() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -155,7 +155,7 @@ fn test_overall_status_determination_healthy() {
         timestamp: std::time::SystemTime::now(),
     };
 
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let report = generator.generate_report(&analysis);
@@ -167,7 +167,7 @@ fn test_overall_status_determination_healthy() {
 fn test_overall_status_determination_warning() {
     let analysis = create_test_analysis();
 
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let report = generator.generate_report(&analysis);
@@ -203,7 +203,7 @@ fn test_overall_status_determination_critical() {
         timestamp: std::time::SystemTime::now(),
     };
 
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let report = generator.generate_report(&analysis);
@@ -213,7 +213,7 @@ fn test_overall_status_determination_critical() {
 
 #[test]
 fn test_report_summary_generation() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -227,7 +227,7 @@ fn test_report_summary_generation() {
 
 #[test]
 fn test_report_has_unique_id() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -240,7 +240,7 @@ fn test_report_has_unique_id() {
 
 #[test]
 fn test_generate_multi_format_report() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -255,7 +255,7 @@ fn test_generate_multi_format_report() {
 
 #[test]
 fn test_markdown_report_format() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -270,7 +270,7 @@ fn test_markdown_report_format() {
 
 #[test]
 fn test_html_report_format() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -289,7 +289,7 @@ fn test_html_report_format() {
 
 #[test]
 fn test_csv_report_format() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -305,7 +305,7 @@ fn test_csv_report_format() {
 
 #[test]
 fn test_json_report_format() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig::default();
     let generator = ReportGenerator::new(config);
     let analysis = create_test_analysis();
@@ -332,7 +332,7 @@ fn test_component_report_structure() {
 
 #[test]
 fn test_report_config_with_custom_settings() {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     let config = ReportConfig {
         include_detailed_analysis: false,
         include_trends: true,

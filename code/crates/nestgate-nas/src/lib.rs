@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -18,22 +18,7 @@
         clippy::cognitive_complexity,
     )
 )]
-#![allow(
-    deprecated,
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::doc_markdown,
-    clippy::module_name_repetitions,
-    clippy::struct_excessive_bools,
-    clippy::struct_field_names,
-    clippy::must_use_candidate,
-    clippy::return_self_not_must_use,
-    clippy::unnecessary_wraps,
-    clippy::unused_self,
-    clippy::unused_async,
-    clippy::option_if_let_else,
-    missing_docs
-)]
+#![expect(missing_docs)]
 
 //! **MIGRATED NAS MODULE**
 //!

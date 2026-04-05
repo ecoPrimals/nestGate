@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(clippy::missing_errors_doc)]
+#![expect(clippy::missing_errors_doc)]
 // Result returns delegate to `CacheManager` / `MultiTierCache`; see those types.
 
 // Cache management module
@@ -58,7 +58,7 @@ pub mod multi_tier;
 /// - `StorageTier`: Multi-tier cache tier definitions
 pub mod types;
 pub use manager::CacheManager;
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub use multi_tier::{MultiTierCache, MultiTierCacheConfig, MultiTierCacheStats};
 pub use types::{
     CacheEntry, CachePolicy, CacheStats, CacheStorageTierExt, EfficiencyMetrics, StorageTier,
@@ -68,7 +68,6 @@ pub use types::{
 pub use nestgate_types::Result as CacheResult;
 
 // The cache system providing both single-tier and multi-tier caching
-#[allow(clippy::large_enum_variant)]
 /// Cachesystem
 pub enum CacheSystem {
     /// Single-tier cache
@@ -88,7 +87,7 @@ impl CacheSystem {
                 "cache hot_tier_size exceeds usize::MAX on this platform",
             )
         })?;
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         let unified_config = crate::cache::manager::UnifiedCacheConfig {
             max_size,
             ttl_seconds: cache_config.ttl_seconds,
@@ -101,7 +100,7 @@ impl CacheSystem {
     }
 
     /// Create a multi-tier cache system
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     pub fn multi_tier(cache_config: MultiTierCacheConfig) -> nestgate_types::Result<Self> {
         let cache = MultiTierCache::new(cache_config)?;
         Ok(Self::MultiTier(cache))
@@ -185,7 +184,6 @@ impl CacheSystem {
 
 // Cache system statistics
 #[derive(Debug, Clone)]
-#[allow(clippy::large_enum_variant)]
 /// Cachesystemstats
 pub enum CacheSystemStats {
     /// Single-tier cache statistics
@@ -260,7 +258,7 @@ impl CacheSystemStats {
 pub struct CacheBuilder {
     config: nestgate_config::config::canonical_primary::CacheConfig,
     multi_tier: bool,
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     multi_tier_config: Option<MultiTierCacheConfig>,
 }
 impl CacheBuilder {
@@ -305,7 +303,7 @@ impl CacheBuilder {
     /// Enable multi-tier caching
     // LINTING FIX: Add underscore prefix for unused parameter
     #[must_use]
-    #[allow(
+    #[expect(
         deprecated,
         reason = "Constructs MultiTierCacheConfig (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
     )]
@@ -338,7 +336,7 @@ impl CacheBuilder {
 
     /// Enable multi-tier caching with default configuration
     #[must_use]
-    #[allow(
+    #[expect(
         deprecated,
         reason = "Uses MultiTierCacheConfig::default() (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
     )]
@@ -370,7 +368,7 @@ impl Default for CacheBuilder {
 
 #[cfg(test)]
 mod cache_mod_coverage_tests {
-    #![allow(clippy::expect_used, clippy::float_cmp, clippy::panic)]
+    #![expect(clippy::expect_used, clippy::float_cmp, clippy::panic)]
 
     use super::*;
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Helper functions for ZFS pool operations
@@ -99,12 +99,12 @@ pub async fn get_pool_properties(pool_name: &str) -> Result<HashMap<String, Stri
     Ok(properties)
 }
 
-/// Ensure default pool exists for testing/development
+/// Ensure default pool exists for testing/development.
 ///
-/// This is a development helper that ensures at least one pool exists.
-/// Not intended for production use.
+/// This is a development helper; in production, pools are managed externally.
+/// Only available with the `dev-stubs` feature.
+#[cfg(feature = "dev-stubs")]
 pub fn ensure_default_pool() -> Result<()> {
     info!("Checking for default pool (development mode)");
-    // This is a stub for development - in production, pools are managed externally
     Ok(())
 }

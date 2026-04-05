@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # Comprehensive Chaos Testing - FULLY MODERNIZED
@@ -397,7 +397,7 @@ mod chaos_helpers {
     use super::*;
 
     /// Helper to verify resilience metrics
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     pub fn assert_resilience(recovery_time_ms: u64) {
         assert!(
             recovery_time_ms < 5000,
@@ -406,14 +406,14 @@ mod chaos_helpers {
     }
 
     /// Helper to simulate service degradation with realistic async delay
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     pub async fn simulate_degradation(percentage: u32) {
         let delay = Duration::from_micros((percentage * 100) as u64);
         tokio::time::sleep(delay).await;
     }
 
     /// Helper to verify system health after chaos
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     pub fn verify_system_healthy(error_rate: f64) {
         assert!(error_rate < 0.01, "Error rate should be under 1%");
     }

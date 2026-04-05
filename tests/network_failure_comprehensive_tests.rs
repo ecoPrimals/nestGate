@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -33,7 +33,7 @@ async fn test_connection_timeout() {
         loop {
             tokio::task::yield_now().await;
         }
-        #[allow(unreachable_code)]
+        #[expect(unreachable_code)]
         Ok::<_, std::io::Error>(())
     })
     .await;

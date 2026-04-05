@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Pure arithmetic for cache sizing, eviction, and hit ratios.
@@ -132,7 +132,7 @@ pub fn calculate_optimal_eviction_count(total_items: usize, target_free_percent:
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::float_cmp)]
+    #![expect(clippy::float_cmp)]
 
     use super::*;
 

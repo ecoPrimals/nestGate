@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::*;
@@ -71,7 +71,7 @@ fn connection_pool_new_reads_config() {
 }
 
 #[test]
-#[allow(deprecated)]
+#[expect(deprecated)]
 fn metrics_config_default() {
     let m = MetricsConfig::default();
     assert!(m.enabled);

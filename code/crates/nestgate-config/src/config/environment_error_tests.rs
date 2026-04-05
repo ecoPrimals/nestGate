@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive Error Path Tests for Environment Configuration
 //!
 //! Tests error handling, edge cases, and failure scenarios in environment-driven config
 
-#![allow(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
+#![expect(clippy::panic)] // test assertions via `let ... else { panic!(...) }`
 
 use crate::config::environment::{EnvironmentConfig, Port};
 use std::str::FromStr;

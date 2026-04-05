@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # Refined `NestGate` Panic Migrator
@@ -330,7 +330,6 @@ impl RefinedNestGateMigrator {
         Ok(migrator)
     }
 
-    #[allow(clippy::vec_init_then_push)]
     fn create_nestgate_patterns() -> RefinedResult<Vec<NestGateMigrationPattern>> {
         let mut patterns = Vec::new();
 
@@ -382,7 +381,7 @@ impl RefinedNestGateMigrator {
             name: "generic_unwrap".to_string(),
             // Literal `.unwrap()` match; clippy wants `contains` but we need capture positions for fixes.
             pattern: {
-                #[allow(clippy::trivial_regex)]
+                #[expect(clippy::trivial_regex)]
                 Regex::new(r"\.unwrap\(\)")?
             },
             replacement: "?".to_string(),

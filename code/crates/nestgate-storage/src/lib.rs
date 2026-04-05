@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -8,10 +8,10 @@
 //! Extracted from nestgate-core to enable parallel compilation.
 
 #![warn(missing_docs)]
-#![allow(clippy::struct_excessive_bools)]
+#![expect(clippy::struct_excessive_bools)]
 // Config/detection structs intentionally use many feature flags
 // Stub pipelines and `Option`/`Result` carriers for `?` trigger pedantic style lints; kept for API stability.
-#![allow(
+#![expect(
     clippy::missing_const_for_fn,
     clippy::needless_pass_by_value,
     clippy::unnecessary_wraps,

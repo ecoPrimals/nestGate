@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Service Pattern Integration Tests
@@ -7,7 +7,7 @@
 //!
 //! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-#![allow(unused_assignments, dead_code)]
+#![expect(unused_assignments, dead_code)]
 
 use nestgate_core::Result;
 

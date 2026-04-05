@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Removed unused import: NestGateError
@@ -8,7 +8,6 @@
 //! Profiling module
 
 // Simulated benchmark outputs use `f64` for throughput and latency aggregates.
-#![allow(clippy::cast_precision_loss, clippy::cast_sign_loss)]
 
 use super::types::{DetectedStorage, PerformanceProfile};
 use nestgate_types::error::Result;

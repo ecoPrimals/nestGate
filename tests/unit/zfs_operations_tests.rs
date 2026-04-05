@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! ZFS Operations Edge Case Tests
@@ -98,7 +98,7 @@ mod zfs_pool_tests {
     #[test]
     fn test_pool_vdev_configuration() {
         // Test vdev (virtual device) configuration validation
-        #[allow(dead_code)]
+        #[expect(dead_code)]
         struct VdevConfig {
             device_type: String,
             device_count: usize,
@@ -279,7 +279,7 @@ mod zfs_scrub_tests {
     fn test_scrub_status() {
         // Test scrub status states
         #[derive(Debug, PartialEq)]
-        #[allow(dead_code)]
+        #[expect(dead_code)]
         enum ScrubStatus {
             None,
             InProgress,

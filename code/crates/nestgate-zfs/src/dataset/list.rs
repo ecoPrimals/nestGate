@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Dataset listing, snapshot listing, and info resolution.
@@ -89,8 +89,15 @@ impl ZfsDatasetManager {
             })?;
 
         if !output.status.success() {
-            // Return empty list if no datasets found
-            return Ok(vec![]);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(create_zfs_error(
+                format!(
+                    "zfs list failed (exit {}): {}",
+                    output.status,
+                    stderr.trim()
+                ),
+                ZfsOperation::Command,
+            ));
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);

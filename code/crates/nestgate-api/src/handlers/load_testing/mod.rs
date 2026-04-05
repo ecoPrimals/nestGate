@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Load Testing Framework
@@ -181,7 +181,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_start_load_test() {
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         let config = LoadTestConfig::default();
         let result = start_load_test(Json(config)).await;
         assert!(result.is_ok());

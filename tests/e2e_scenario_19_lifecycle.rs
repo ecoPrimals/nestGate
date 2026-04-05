@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -49,7 +49,7 @@ enum StorageTier {
 }
 
 impl StorageTier {
-    #[allow(dead_code)] // Used for tier-based lifecycle management
+    #[expect(dead_code)] // Used for tier-based lifecycle management
     fn name(&self) -> &str {
         match self {
             StorageTier::Hot => "Hot",
@@ -158,7 +158,7 @@ struct LifecycleManager {
     datasets: Arc<RwLock<Vec<Arc<LifecycleDataset>>>>,
     hot_to_warm_days: u64,
     warm_to_cold_days: u64,
-    #[allow(dead_code)] // Used in lifecycle policy configuration
+    #[expect(dead_code)] // Used in lifecycle policy configuration
     access_threshold: u64,
 }
 

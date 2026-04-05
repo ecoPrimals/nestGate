@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Multi-tier cache implementation with hot, warm, and cold storage tiers
@@ -90,7 +90,7 @@ pub struct MultiTierCache {
     /// Cold tier for infrequently accessed data (HDD-based, slow but large)
     cold_tier: InMemoryCache,
     /// Tier byte limits and thresholds from construction-time config
-    #[allow(
+    #[expect(
         deprecated,
         reason = "MultiTierCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
     )]
@@ -103,7 +103,7 @@ pub struct MultiTierCache {
     demotion_events: AtomicU64,
 }
 
-#[allow(
+#[expect(
     deprecated,
     reason = "MultiTierCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
 )]
@@ -492,7 +492,7 @@ pub fn resolve_cache_base() -> String {
         .unwrap_or_else(|_| "/tmp/nestgate".to_string())
 }
 
-#[allow(
+#[expect(
     deprecated,
     reason = "MultiTierCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
 )]
@@ -529,10 +529,6 @@ impl Default for MultiTierCacheConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(
-    deprecated,
-    reason = "Alias bridges deprecated MultiTierCacheConfig to canonical_primary network config for gradual migration"
-)]
 /// Type alias for Multitiercacheconfigcanonical
 pub type MultiTierCacheConfigCanonical =
     nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig;

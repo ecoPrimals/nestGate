@@ -1,4 +1,5 @@
-#![allow(
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -21,7 +22,7 @@ use std::sync::Arc;
 /// Tests: Memory layout, cache locality, allocation efficiency
 fn benchmark_configuration_patterns(c: &mut Criterion) {
     // Unified configuration pattern (NestGate modern approach)
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct UnifiedConfig {
         system_service_name: String,
@@ -58,7 +59,7 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
     }
 
     // Fragmented configuration pattern (legacy approach)
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct FragmentedConfigs {
         system: Arc<HashMap<String, String>>,
@@ -139,7 +140,7 @@ fn benchmark_configuration_patterns(c: &mut Criterion) {
 /// Tests: Context addition, error creation, memory efficiency
 fn benchmark_error_patterns(c: &mut Criterion) {
     // Modern unified error pattern
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     struct UnifiedError {
         message: String,
@@ -167,7 +168,7 @@ fn benchmark_error_patterns(c: &mut Criterion) {
     }
 
     // Legacy fragmented error pattern
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug, Clone)]
     enum FragmentedError {
         Validation {
@@ -321,7 +322,7 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
     }
 
     // Fragmented data structure with poor cache locality
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     #[derive(Debug)]
     struct FragmentedDataStore {
         // Data scattered across multiple allocations

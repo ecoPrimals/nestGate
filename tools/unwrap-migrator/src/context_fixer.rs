@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Context-Aware Error Handling Fixer
@@ -6,8 +6,8 @@
 //! This module provides intelligent context analysis for unwrap/expect
 //! patterns and generates appropriate error handling code.
 
-#![allow(clippy::disallowed_types)] // Allow HashMap in utility crate
-#![allow(clippy::too_many_arguments)] // Complex analysis requires many parameters
+#![expect(clippy::disallowed_types)] // Allow HashMap in utility crate
+#![expect(clippy::too_many_arguments)] // Complex analysis requires many parameters
 
 use regex::Regex;
 /// Context-aware fixer for unwrap migration issues

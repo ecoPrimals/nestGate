@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 4, 2026  
+**Last Updated**: April 5, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,16 +8,16 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-03
-Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-03
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-05
+Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-05
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
-Tests:              ~12,236 passing, 0 failures (cargo test --all)
+Tests:              ~11,821 passing, 0 failures, 463 ignored (cargo test --workspace --all-features)
 Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
 Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — re-verify after large edits)
-Unsafe code:        #![forbid(unsafe_code)] on ALL 22 crate roots (except env_process_shim bridge)
+Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
 println! in lib:    ZERO (migrated to tracing)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
 TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
@@ -31,8 +31,8 @@ Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core d
 Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery (single import path)
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
-Workspace members:  24 (22 code/crates + tools/unwrap-migrator + fuzz)
-Serial tests:       #[serial] only on env-var-dependent tests in nestgate-config / nestgate-discovery (temp_env closures for isolation elsewhere)
+Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
+Serial tests:       5 total — 4 in env-process-shim (legitimate process-env mutation), 1 in CLI (global tracing subscriber); all config/discovery tests use EnvSource injection
 Numeric casts:      ZERO raw `as` casts in production — all use try_from with saturating fallbacks
 Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
@@ -42,14 +42,14 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ---
 
-## Ground truth refresh (Apr 3, 2026)
+## Ground truth refresh (Apr 5, 2026)
 
-Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --all`.
+Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
 
-- **Production file size**: All production `.rs` files under **1,000** lines (max ~500 after smart refactoring).
-- **Workspace**: **24** members; clippy with `-D warnings` passes as of 2026-04-03. MCP, ring, rustls, reqwest eliminated from typical app paths.
+- **Production file size**: All production `.rs` files under **1,000** lines (max ~750 pre-refactored; `tarpc_types.rs` split to ~130-line modules).
+- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy with `-D warnings` passes as of 2026-04-05. MCP, ring, rustls, reqwest eliminated from typical app paths.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
-- **Testing**: Zero `thread::sleep` or `tokio::time::sleep` in tests (except chaos). All `#[serial]` markers removed from non-chaos tests. `temp_env` closures provide isolation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
+- **Testing**: Zero `thread::sleep` or `tokio::time::sleep` stabilization waits in tests (except chaos/timeout). `#[serial]` reduced from ~36 to **5** (env-process-shim + CLI tracing). Config/discovery/port-discovery tests use `EnvSource` trait injection (`MapEnv` in tests, `ProcessEnv` in production) — no process-env mutation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
 - **Stubs**: Production mock builders gated behind `#[cfg(any(test, feature = "dev-stubs"))]`. Crypto/data stubs return structured delegation guidance. `orchestrator_integration` feature-gated.
 - **Numeric safety**: All `as` casts replaced with `try_from().unwrap_or(MAX)` or `saturating_*` operations. Custom `unix_secs()` helper for timestamp conversions.
@@ -147,7 +147,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D war
 - Fixed real issues: unused async (40+ functions de-asynced), numeric cast precision, format strings, redundant clones
 
 ### Safety evolution
-- **`#![forbid(unsafe_code)]`** added to ALL 22+ crate roots (except `nestgate-env-process-shim`)
+- **`#![forbid(unsafe_code)]`** on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
 - **println!/eprintln!** eliminated from library code — migrated to `tracing::info!/debug!/warn!/error!`
 - **Production stubs** feature-gated behind `dev-stubs` cargo feature (opt-in only)
 - **serde_yaml_ng** (unsafe-libyaml) removed from core/config — dead dependency eliminated
@@ -406,7 +406,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D war
 **Standards compliance:**
 - tarpc version skew resolved (nestgate-api aligned to workspace 0.34)
 - nestgate-api metadata aligned with workspace (ecoPrimals Collective)
-- README license placeholder replaced with AGPL-3.0-only reference
+- README license placeholder replaced with AGPL-3.0-or-later reference
 - `rust-toolchain.toml` added (pinned to 1.94.1, clippy + rustfmt + llvm-tools)
 - `LICENSING.md` added documenting scyBorg provenance trio alignment
 
@@ -478,7 +478,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D war
 |------|--------|
 | Production unwrap/expect | CLEAN (library `src/`; tests may use unwrap/expect) |
 | Production inline markers (wateringHole §13) | CLEAN |
-| unsafe blocks | EVOLVED (safe alternatives everywhere except env-process-shim) |
+| unsafe blocks | ZERO — `#![forbid(unsafe_code)]` on all crate roots (including env-process-shim) |
 | Hardcoded primal names | CLEAN (DEFAULT_SERVICE_NAME + env config) |
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
@@ -519,20 +519,18 @@ sysinfo:       Optional, non-Linux only
 
 ## Architecture
 
-High-level layout; full member list is `[workspace].members` in root `Cargo.toml` (**24** packages). MCP is not a workspace member (delegated to biomeOS `capability.call`).
+High-level layout; full member list is `[workspace].members` in root `Cargo.toml` (**23** packages). MCP is not a workspace member (delegated to biomeOS `capability.call`).
 
 ```
-nestGate/ (24 workspace members)
+nestGate/ (23 workspace members: 20 code/crates + tools + fuzz + root)
 ├── nestgate-types / nestgate-platform / nestgate-env-process-shim  Foundation
 ├── nestgate-config / nestgate-storage / nestgate-rpc / nestgate-discovery
 ├── nestgate-security / nestgate-observe / nestgate-cache
 ├── nestgate-core       Traits, network, services, adapters (re-exports; primal_self_knowledge from nestgate-discovery)
 ├── nestgate-canonical  Canonical modernization
 ├── nestgate-api        REST + JSON-RPC API server
-├── nestgate-bin        CLI binary (unibin)
+├── nestgate-bin        CLI binary (UniBin)
 ├── nestgate-zfs        ZFS integration (adaptive)
-├── nestgate-network    Network storage
-├── nestgate-automation DEPRECATED — automation/orchestration delegated to biomeOS (zero consumers)
 ├── nestgate-installer  Platform installer (real GitHub releases download)
 ├── nestgate-middleware Middleware stack
 ├── nestgate-nas        NAS integration
@@ -540,6 +538,7 @@ nestGate/ (24 workspace members)
 ├── nestgate-performance Performance monitoring
 ├── tools/unwrap-migrator  Helper CLI
 └── fuzz/               Fuzz targets
+Deprecated/shed (fossil on disk): nestgate-network, nestgate-automation, nestgate-mcp
 ```
 
 ---
@@ -597,4 +596,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 4, 2026
+**Latest**: April 5, 2026

@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -29,7 +29,7 @@ use tracing::{info, warn};
 use uuid::Uuid;
 
 /// Live testing environment manager
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug)]
 pub struct LiveTestingEnvironment {
     /// Test environment configuration
@@ -429,7 +429,7 @@ impl LiveTestingEnvironment {
 
 // === SUPPORTING MANAGERS ===
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug)]
 pub struct TestResourceManager {
     config: LiveTestConfig,

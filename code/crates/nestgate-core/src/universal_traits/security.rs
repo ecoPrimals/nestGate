@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **SECURITY TRAITS - CANONICAL MODERNIZED**
@@ -179,7 +179,7 @@ mod tests {
         }
     }
 
-    #[allow(deprecated)] // Test mock using deprecated trait
+    #[expect(deprecated)] // Test mock using deprecated trait
     impl SecurityPrimalProvider for MockSecurityProvider {
         /// Authenticate
         async fn authenticate(&self, credentials: &Credentials) -> Result<AuthToken> {
@@ -312,7 +312,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_authentication_success() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let credentials = Credentials {
@@ -332,7 +332,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_authentication_failure() {
         let provider = MockSecurityProvider::new();
         let credentials = Credentials {
@@ -349,7 +349,7 @@ mod tests {
     // Note: These tests use deprecated SecurityPrimalProvider API
     // Use CanonicalSecurity trait for new code
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_encryption_decryption() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let data = b"Hello, World!";
@@ -366,7 +366,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_signing_and_verification() -> std::result::Result<(), Box<dyn std::error::Error>>
     {
         let provider = MockSecurityProvider::new();
@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_key_id() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let key_id = provider.get_key_id().await?;
@@ -397,7 +397,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     async fn test_hash_data() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let data = b"test data";
@@ -412,7 +412,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
+    #[expect(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_generate_random() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
 
@@ -426,7 +426,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
+    #[expect(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_derive_key() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let password = "test_password";
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
+    #[expect(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_session_management() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let provider = MockSecurityProvider::new();
         let user_id = "user123";
@@ -536,7 +536,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[allow(deprecated)] // Testing deprecated API for backwards compatibility
+    #[expect(deprecated)] // Testing deprecated API for backwards compatibility
     async fn test_boundary_access_evaluation() -> Result<()> {
         let provider = MockSecurityProvider::new();
 

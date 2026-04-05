@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -13,7 +13,7 @@
     clippy::cargo
 )]
 // E2E test framework — many building blocks defined ahead of use
-#![allow(dead_code, unused_imports)]
+#![expect(dead_code, unused_imports)]
 
 // E2E Test Scenarios: Final Batch - Advanced Integration
 //

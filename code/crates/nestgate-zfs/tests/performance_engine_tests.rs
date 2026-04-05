@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     dead_code,
     unused_doc_comments,
     unused_imports,
@@ -88,7 +88,7 @@
 //! This test module provides comprehensive coverage for the performance_engine module
 //! including types, monitoring, and engine functionality.
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 use nestgate_zfs::performance_engine::{
     AccessPattern, AiOptimizationRecommendation, AlertResponse, AlertSeverity, AlertType,
     AppliedOptimization, ArcStatistics, BottleneckSeverity, EcosystemOptimizationStrategy,
@@ -101,7 +101,7 @@ use std::collections::HashMap;
 use std::time::SystemTime;
 
 #[cfg(test)]
-#[allow(deprecated)] // Testing deprecated PerformanceEngineConfig for backward compatibility
+#[expect(deprecated)] // Testing deprecated PerformanceEngineConfig for backward compatibility
 mod performance_engine_config_tests {
     use super::*;
 

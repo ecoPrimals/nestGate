@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Comprehensive tests for Performance Analytics
@@ -187,7 +187,7 @@ mod performance_analytics_tests {
     // ==================== ANALYSIS CONFIG TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_analysis_config_creation() {
         let config = AnalysisConfig {
             interval_seconds: 60,
@@ -199,7 +199,7 @@ mod performance_analytics_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_analysis_config_default() {
         let config = AnalysisConfig::default();
         assert!(!std::ptr::addr_of!(config).is_null());
@@ -208,7 +208,7 @@ mod performance_analytics_tests {
     // ==================== ANALYZER STATE TESTS ====================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_performance_analyzer_state_creation() {
         let state = PerformanceAnalyzerState {
             config: AnalysisConfig::default(),
@@ -225,7 +225,7 @@ mod performance_analytics_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     fn test_performance_analyzer_state_clone() {
         let state1 = PerformanceAnalyzerState {
             config: AnalysisConfig::default(),

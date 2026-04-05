@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
@@ -78,7 +78,6 @@ impl PoolDiscoveryConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Pooldiscoveryconfigcanonical
 pub type PoolDiscoveryConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -91,7 +90,7 @@ pub type PoolDiscoveryConfigCanonical =
 mod tests {
     use super::*;
 
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     #[test]
     fn pool_discovery_config_default_and_production() {
         let d = PoolDiscoveryConfig::default();

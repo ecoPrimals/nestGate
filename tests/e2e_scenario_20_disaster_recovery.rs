@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -81,7 +81,7 @@ impl Backup {
         self.data_snapshot.values().map(|v| v.len()).sum()
     }
 
-    #[allow(dead_code)] // Test utility method for backup metadata
+    #[expect(dead_code)] // Test utility method for backup metadata
     fn age(&self) -> Duration {
         self._created_at.elapsed().unwrap_or(Duration::from_secs(0))
     }

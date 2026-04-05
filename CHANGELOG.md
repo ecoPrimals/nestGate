@@ -9,6 +9,236 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 30: Documentation hygiene & debris cleanup (April 5, 2026)
+
+**Docs**: 11,685 passing, 463 ignored, 0 failures — all docs aligned
+
+#### Root doc alignment (11 files)
+- Test counts: `~12,088` → `~11,685 passing, 463 ignored` across START_HERE, STATUS, README, QUICK_REFERENCE, QUICK_START, CONTEXT, CONTRIBUTING, tests/README, tests/DISABLED_TESTS_REFERENCE
+- Crate count: `21 code/crates` → `20` (nestgate-network shed); total stays 23 members
+- Unsafe: corrected "except env-process-shim" → "ALL crate roots, zero exceptions" (env-process-shim has `#![forbid(unsafe_code)]` via edition 2021 safe wrappers)
+- Serial tests: updated to reflect current state (5 total, EnvSource injection for config/discovery)
+- Architecture trees: nestgate-network removed from active listings, noted as deprecated/shed fossil
+- CONTRIBUTING: env isolation example updated from `temp_env`+`#[serial]` to `EnvSource`/`MapEnv` pattern
+- STATUS.md: fixed `24 packages` → `23`; aligned ground truth section
+
+#### Debris cleanup (4 files)
+- `docs/guides/LOCAL_INSTANCE_SETUP.md`: replaced non-existent `scripts/start_local_dev.sh` / `restart_local_dev.sh` with manual commands
+- `docs/guides/ECOSYSTEM_INTEGRATION_GUIDE.md`: replaced non-existent `scripts/test-live-integration.sh` with `cargo test`
+- `docs/UNIVERSAL_ADAPTER_ARCHITECTURE.md`: replaced non-existent `scripts/primal_hardcoding_elimination.sh` with completion note
+- `docs/INFANT_DISCOVERY_ARCHITECTURE.md`: replaced non-existent `scripts/eliminate_all_hardcoding.sh` with completion note
+
+#### Debris audit (confirmed clean)
+- Zero empty `.rs` files in crate sources
+- Zero orphaned JSON fixtures
+- Zero TODO/FIXME/HACK markers in crate sources
+- `nestgate-automation`, `nestgate-network`, `nestgate-mcp` — confirmed fossil on disk, not workspace members
+- 79 `#[deprecated]` markers — legitimate API deprecation surface, not debris
+- `scripts/setup-test-substrate.sh`, `.pre-commit-config.sh` — legitimate, no stale refs
+
+### Session 29: Deep debt — shed network, evolve silent failures, smart refactor (April 4, 2026)
+
+**Tests**: 11,685 total passing, 0 failures, 463 ignored
+
+#### Overstep shedding
+- Removed `nestgate-network` from workspace (deprecated since 4.7.0, zero dependents; code retained on disk as fossil record)
+
+#### Silent failure evolution (production safety)
+- `nestgate-zfs` `list_datasets`: returns `Err` with stderr on `zfs list` failure instead of `Ok(vec![])`
+- `nestgate-zfs` `get_dataset_properties`: returns `Err` with details instead of `Ok(HashMap::new())`
+- `nestgate-zfs` `get_pool_properties`: returns `Err` with stderr instead of `Ok(HashMap::new())`
+- `nestgate-zfs` `get_pool_properties` / `get_dataset_properties`: error messages now include actual error instead of placeholder string
+- `nestgate-api` remote ZFS implementation: 10 `Ok(empty)` on JSON parse errors → proper `Err` with serde context
+- `nestgate-api` `collect_zfs_pool_metrics`: differentiates "zpool not found" (debug) from "zpool failed" (warn)
+
+#### Smart refactoring
+- Extracted `compliance/manager.rs` tests to `manager_tests.rs` (741 → 240 lines; 30 tests preserved)
+
+#### Audit findings
+- Dev stubs: already properly gated behind `cfg(test)` + `dev-stubs` feature; no production leakage
+- Unsafe code: ZERO actual `unsafe` blocks in workspace; all crate roots have `#![forbid(unsafe_code)]`
+- External C/C++ deps: zero in normal dependency tree (only `cc` via fuzz target)
+- TODO/FIXME/HACK markers: zero in crate sources
+
+### Session 28: primalSpring T1–T9 audit resolution (April 4, 2026)
+
+**Tests**: 12,095 total passing, 0 failures, 468 ignored
+
+#### T1 Build
+- Fixed `migration.rs` fmt deviation (long line from `discovery_default_host()` call)
+- Fixed `nestgate-api/README.md` license (`AGPL-3.0-or-later` → `AGPL-3.0-or-later` to match `LICENSING.md`)
+
+#### T2 UniBin / T3 IPC — TCP JSON-RPC wiring
+- Wired env-based port resolution into socket-only daemon mode: `NESTGATE_API_PORT` / `NESTGATE_HTTP_PORT` / `NESTGATE_PORT` now activate TCP alongside Unix socket
+- Added `env_port_if_set` / `env_port_if_set_source` — returns `None` when no env var is set (prevents default-port TCP activation)
+- Updated `Daemon` `--port` doc to reflect actual behavior
+- `server` alias for `daemon` subcommand already existed
+
+#### T3 IPC — broadened capability symlink
+- Replaced `socket_parent_is_biomeos_standard_dir` with `socket_parent_eligible_for_capability_symlink`
+- `storage.sock` symlink now created for any dedicated runtime directory (not just `biomeos/`)
+- Still excluded from `/tmp` and `/var/tmp` (global namespace)
+- Deprecated old function name for backward compatibility
+
+#### T4 Discovery — primal-name ref sprint
+- Removed 12 primal-name references from documentation and comments across 8 files
+- Remaining 48 refs: 47 in deprecated `services_config.rs` compatibility surface + 1 test denylist guard
+- All `biomeos` refs are ecosystem protocol names, not primal coupling
+
+#### T9 Deploy
+- aarch64-unknown-linux-musl target added to rustup
+- Cross-compilation instructions added to `START_HERE.md`
+- `.cargo/config.toml` already had correct linker/rustflags configuration
+
+### Session 27: Deep debt — dependency rationalization, host discovery, dead code removal (April 4, 2026)
+
+**Tests**: 12,088 total passing, 0 failures, ~468 ignored
+
+#### Dependency rationalization
+- Removed unused `log` from nestgate-core (workspace is tracing-only)
+- Removed unused `getrandom` from nestgate-core, unused `rand` from nestgate-zfs `[dependencies]`
+- Removed unused `fastrand` from nestgate-rpc `[dev-dependencies]`
+- Migrated `RandomLoadBalancer` and `WeightedRandomLoadBalancer` from `rand::StdRng`+Mutex to `fastrand`
+- Migrated nestgate-network random load balancer from `rand` to `fastrand`
+- Production crates are now `rand`-free (only test/dev-deps remain)
+
+#### Host discovery evolution
+- Made `canonical_defaults::network::discovery_default_host()` public
+- `capability_port_discovery` `try_discover_*` now use configurable host (`NESTGATE_DEV_HOST` → `NESTGATE_DISCOVERY_FALLBACK_HOST` → localhost with warning)
+- `primal_discovery/migration.rs` `try_environment`/`try_default` use same host resolution
+
+#### Dead code removal
+- `optimization.rs`: removed dead `if false {}` block and unused JSON construction, replaced with honest delegation debug log
+
+#### Doc cleanup
+- Fixed START_HERE.md verification dates to 2026-04-04
+- Stale script references in `docs/guides/` documented as fossil record (scripts removed in prior sessions)
+
+---
+
+### Session 26: primalSpring audit resolution — NG-01, security delegation, discovery compliance (April 4, 2026)
+
+**Tests**: 12,088 total passing, 0 failures, ~468 ignored
+**Clippy**: PASS
+**Format**: Clean
+
+#### Resolved (NG-01 — metadata backend production wiring)
+- Created `metadata_handlers.rs` in Unix socket server with `metadata.store`, `metadata.retrieve`, `metadata.search`
+- Added `Arc<dyn MetadataBackend>` to `StorageState` — `FileMetadataBackend` in production, `InMemoryMetadataBackend` fallback
+- `metadata.*` now wired in both `SemanticRouter` and legacy Unix IPC handler
+
+#### Evolved (nestgate-security crypto delegation)
+- Added `CertUtils::calculate_fingerprint_delegated()` — routes SHA-256 through `CryptoDelegate::hash()` via `crypto.hash` IPC
+- Local `calculate_fingerprint()` retained for backward compat with docs pointing to delegated version
+- `CryptoDelegate` now covers: encrypt, decrypt, sign, verify, hash, JWT, HMAC, password, and cert fingerprint
+
+#### Evolved (discovery compliance — deprecated primal-named APIs)
+- All primal-named getters/builders in `ServicesConfig` now carry `#[deprecated(since = "0.12.0")]`
+- Consistent deprecation notes point to `get_capability_url()` / `with_capability()` alternatives
+- `with_biomeos_url` was missing `#[deprecated]` — fixed
+
+#### Confirmed (already resolved from prior sessions)
+- **NG-03** (data.* stubs): Honest delegation stubs with discovery guidance — no action needed
+- **nestgate-mcp**: Already shed (no directory, no member, no imports)
+
+---
+
+### Session 25: Concurrent test evolution — EnvSource injection (April 4, 2026)
+
+**Tests**: 12,088 total passing, 0 failures, ~468 ignored  
+**Clippy**: PASS  
+**Format**: Clean  
+**Serial tests**: 5 remaining (was ~36) — all legitimate
+
+#### Evolved (EnvSource trait — eliminate process-env mutation in tests)
+- Introduced `nestgate_types::EnvSource` trait with `ProcessEnv` (production) and `MapEnv` (test isolation) impls
+- `ConfigBuilder`, `ExternalServicesConfig`, `DatabaseConfig`, `NestGateCanonicalConfig` — all evolved to accept `Arc<dyn EnvSource>`
+- `capability_port_discovery` — all `discover_*_port` functions gained `_with_env` variants
+- `capability_discovery` — `discover_service_with_env`, `discover_with_fallback_env`, `discover_from_environment_with_env`
+- `nestgate-bin` CLI — `port_from_env_source`, `bind_from_env_source`
+- `ServiceDetector::new_with_env` in nestgate-discovery
+- 31 `#[serial]` tests converted to concurrent `MapEnv`-based tests across 8 modules
+- `env_parsed<T>()` free function for dyn-compatible parsed env lookups
+
+#### Evolved (sleep rationalization)
+- `transport_integration_test.rs` — blind 100ms sleep → active `socket_path.exists()` polling with 5ms micro-delays
+- `metrics_tests.rs` — 50ms sleep → `tokio::task::yield_now().await`
+
+#### Fixed (pre-existing clippy)
+- `nestgate-observe/metrics.rs` — redundant `assert!(x <= u64::MAX)` → `let _ = x`
+- `nestgate-zfs/orchestrator_integration_edge_cases.rs` — missing crate-level doc comment
+
+#### Docs
+- Updated all root docs to April 4, 2026; test counts to 12,088; ignored to ~468
+- STATUS.md architecture: 24 → 23 members; removed nestgate-automation from diagram
+- STATUS.md serial tests: updated to reflect EnvSource injection (5 remaining)
+
+---
+
+### Session 24: Copy-paste artifacts, automation removal, fail-safe honesty, tarpc refactor (April 4, 2026)
+
+**Tests**: 12,088 total passing, 0 failures  
+**Clippy**: PASS  
+**Format**: Clean  
+
+#### Fixed (copy-paste artifacts — `"self.base_url"` string literals)
+- Eliminated 83 occurrences of `"self.base_url"` copy-paste artifacts across 22 `.rs` files
+- Error messages, URL paths, and status strings now use actual variables (pool name, error details, etc.)
+- Affected modules: pools, universal_pools, workspace_management, remote/implementation, parsing, bidirectional_streams, websocket, error handling
+
+#### Removed (overstep — nestgate-automation)
+- Removed `nestgate-automation` from workspace members and dev-dependencies (zero consumers)
+- Crate directory retained for fossil record; workspace now has 23 members (was 24)
+
+#### Fixed (production safety)
+- `fail_safe/core.rs` `execute_fallback_operation()` — returned `Ok(())` without executing anything → now returns `Err(ServiceUnavailable)` with clear message
+- `fail_safe/core.rs` `update_metrics()` — double-incremented `requests_total` → fixed to single increment
+- Two flaky tests fixed with `#[serial]` (env-var race conditions in `agnostic_config` and `critical_path_coverage_dec16`)
+
+#### Evolved (cast safety — `as u64` → `try_from`)
+- `native_real/core.rs`, `pool_handler.rs`, `adapter_routing.rs`, `production_placeholders.rs`, `handlers_production.rs`, `remote/connection.rs`, `consolidated_canonical/mod.rs`, `native_async/production.rs` — all `as_millis() as u64` casts replaced with `u64::try_from().unwrap_or(u64::MAX)`
+- RPC manager `mod.rs` — three `as_millis() as u64` casts replaced
+
+#### Evolved (dead_code allows → expect with reasons)
+- `auth_manager.rs` — three `#[allow(dead_code)]` replaced with `#[expect(dead_code, reason = "...")]`
+- `rest/rpc/manager/{mod.rs,types.rs}` — blanket `#![allow(dead_code)]` replaced with `#![expect(dead_code, reason = "...")]`
+
+#### Refactored (smart decomposition)
+- `tarpc_types.rs` (735 lines) split into `tarpc_types/{mod.rs,storage.rs,discovery.rs,monitoring.rs,error.rs}` — largest module is now ~130 lines; trait stays whole (required by `#[tarpc::service]`)
+
+---
+
+### Session 23: Production safety, orphan cleanup, cast evolution (April 4, 2026)
+
+**Tests**: 12,236 total passing, 0 failures  
+**Clippy**: PASS  
+**Format**: Clean  
+
+#### Fixed (production safety — silent success → honest errors)
+- `ProductionZfsService::create_snapshot()` — returned fake `Ok(SnapshotInfo{...})` without creating any snapshot → now returns `Err(InvalidInput)` directing to ZFS CLI/REST
+- `ProductionZfsService::clone_dataset()` — returned fake `Ok(DatasetInfo{...})` → same
+- `ProductionZfsService::bulk_create_snapshots()` — same pattern → same fix
+
+#### Removed (orphan files — never compiled, not in module tree)
+- 26 orphan files (10,208 lines) deleted across `nestgate-api` and `nestgate-zfs`
+- Includes test files, stub helpers, and circuit breaker tests that were never `mod`'d
+
+#### Evolved (cast safety — `as u32` → `try_from`)
+- `linux_proc.rs` non-Linux CPU detection
+- `crud.rs` snapshot line count
+- `websocket.rs`, `system.rs`, `metrics.rs`, `helpers.rs` — engine/snapshot counts
+- `health.rs` — snapshot list length
+- `tier_evaluation.rs` — f64 access_frequency with NaN/negative guard
+- `event_processing.rs` — CPU count
+- `production.rs` — connection count
+- `response_builder.rs` — pagination total_pages via `div_ceil`
+
+#### Evolved (mock isolation)
+- `DevelopmentZfsService` gated behind `#[cfg(any(test, feature = "dev-stubs"))]`
+- `collect_real_storage_datasets()` — fixed `"localself.base_url"` naming bug → derives name from path
+
+---
+
 ### Session 22: Dead code deletion, production mock evolution, `as` cast cleanup (April 4, 2026)
 
 **Tests**: 12,236 total passing, 0 failures  
@@ -1072,5 +1302,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: April 3, 2026  
+**Last Updated**: April 5, 2026  
 **Current Version**: 4.7.0-dev

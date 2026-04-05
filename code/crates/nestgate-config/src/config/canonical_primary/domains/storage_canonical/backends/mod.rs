@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Storage backend configuration — multi-backend routing, failover, and load balancing.
@@ -399,7 +399,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn full_serde_roundtrip() {
         let distributed_node = DistributedStorageNode {
             id: "n1".to_string(),

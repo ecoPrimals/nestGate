@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Coarse float/integer conversions are intentional for heuristic capacity scoring.
@@ -15,7 +15,7 @@
     clippy::cast_precision_loss,
     reason = "Scores are approximate; full precision is not required"
 )]
-#![allow(
+#![expect(
     clippy::unnecessary_wraps,
     reason = "Introspection helpers use Result for uniform error propagation at call sites"
 )]
@@ -72,7 +72,7 @@ pub struct HardwareProfile {
 /// Systemintrospection
 pub struct SystemIntrospection {
     capabilities: Option<SystemCapabilities>,
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Populated when heuristic scoring is wired into tuning recommendations"
     )]

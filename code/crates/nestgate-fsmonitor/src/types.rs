@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Core types and data structures for the file system monitor.
@@ -247,7 +247,7 @@ impl Default for WatchConfig {
 /// 
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub type WatchConfigCanonical = nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
 // Note: Keep using WatchConfig (the deprecated struct) for now.

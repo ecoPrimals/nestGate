@@ -28,27 +28,27 @@ For NestGate, the scyBorg materialization **simplifies** to:
 
 | Effective layer | License | Legal text in repo |
 |-----------------|---------|---------------------|
-| **Software** | AGPL-3.0-only | [`LICENSE`](LICENSE) |
+| **Software** | AGPL-3.0-or-later | [`LICENSE`](LICENSE) |
 | **Documentation and creative content** | CC-BY-SA 4.0 | [`LICENSE-CC-BY-SA-4.0`](LICENSE-CC-BY-SA-4.0) |
 
-SPDX for the Rust crates remains **AGPL-3.0-only** (see `Cargo.toml`); that identifier applies to **code**, not to non-code docs.
+SPDX for the Rust crates is **AGPL-3.0-or-later** (see `Cargo.toml`), aligned with the wateringHole scyBorg standard.
 
 ## Which files use which license
 
 Use these patterns unless a file explicitly states otherwise:
 
-### AGPL-3.0-only (see [`LICENSE`](LICENSE))
+### AGPL-3.0-or-later (see [`LICENSE`](LICENSE))
 
 - Rust and other **program source** under `code/`, `src/`, `tests/**/*.rs`, `benches/`, and `tools/**` (source and build scripts)
 - **Build and package metadata**: `Cargo.toml`, `Cargo.lock`, workspace manifests, typical CI/build configs that are code-like (e.g. `.github` workflows as source)
-- **Generated or binary artifacts** are governed by the license of the sources that produce them; the published **software** remains AGPL-3.0-only as stated in `LICENSE`
+- **Generated or binary artifacts** are governed by the license of the sources that produce them; the published **software** remains AGPL-3.0-or-later as stated in `LICENSE`
 
 ### CC-BY-SA 4.0 (see [`LICENSE-CC-BY-SA-4.0`](LICENSE-CC-BY-SA-4.0))
 
 - **Markdown and prose documentation** outside of executable source: e.g. root `*.md` (including this file), `docs/**`, `specs/**`, `examples/**/*.md`, `tests/**/*.md`, `benches/README.md`, and `README.md` / guide files under `code/crates/**` and `tools/**` when they are documentation, not code
 - **Specifications and integration notes** expressed as prose or diagrams in those trees
 
-If a path is ambiguous (e.g. a `.md` file that is mostly embedded license text or a tiny pointer), prefer the intent: **prose/spec/docs → CC-BY-SA 4.0; executable source and build config → AGPL-3.0-only**.
+If a path is ambiguous (e.g. a `.md` file that is mostly embedded license text or a tiny pointer), prefer the intent: **prose/spec/docs → CC-BY-SA 4.0; executable source and build config → AGPL-3.0-or-later**.
 
 ### ORC
 
@@ -56,16 +56,16 @@ If a path is ambiguous (e.g. a `.md` file that is mostly embedded license text o
 
 ## Beardog entropy provision
 
-The [`LICENSE`](LICENSE) file includes a **beardog entropy** special provision: humans accessing this software through beardog entropy systems receive free use for personal, educational, and non-commercial purposes, alongside the stated AGPL-3.0-only and network-use obligations. That provision applies to the **software** layer, not to a separate re-licensing of CC-BY-SA documentation.
+The [`LICENSE`](LICENSE) file includes a **beardog entropy** special provision: humans accessing this software through beardog entropy systems receive free use for personal, educational, and non-commercial purposes, alongside the stated AGPL-3.0-or-later and network-use obligations. That provision applies to the **software** layer, not to a separate re-licensing of CC-BY-SA documentation.
 
 ## SPDX and alignment note
 
-NestGate uses **AGPL-3.0-only** (not AGPL-3.0-or-later) for its crates, consistent with this repository’s `LICENSE` and `Cargo.toml`. Broader ecosystem docs may still mention **AGPL-3.0-or-later** in places; this repo’s SPDX line is **AGPL-3.0-only** for **code**.
+NestGate uses **AGPL-3.0-or-later** for its crates, consistent with the wateringHole scyBorg standard, this repository's `LICENSE`, and all `Cargo.toml` manifests. The `-or-later` suffix trusts the nonprofit stewards who defend copyleft.
 
 ## Where to read the full rules
 
 | Topic | Location |
 |-------|----------|
-| Software (AGPL-3.0-only) | [`LICENSE`](LICENSE) |
+| Software (AGPL-3.0-or-later) | [`LICENSE`](LICENSE) |
 | Documentation / creative (CC-BY-SA 4.0) | [`LICENSE-CC-BY-SA-4.0`](LICENSE-CC-BY-SA-4.0) |
 | Ecosystem scyBorg standard | `infra/wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md` |

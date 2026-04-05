@@ -1,55 +1,38 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # Services Configuration
+//! # Services Configuration — Capability-Based Discovery
 //!
-//! ## ⚠️ MIGRATION TO CAPABILITY-BASED DISCOVERY
+//! All peer services are addressed by **capability** (e.g. `"orchestration"`,
+//! `"security"`, `"ai"`, `"compute"`, `"ecosystem"`), never by primal product name.
 //!
-//! This module is in transition from primal-name-based to capability-based service discovery.
+//! ## Environment Variables
 //!
-//! ### Deprecated Pattern (Primal Names):
+//! - `NESTGATE_CAPABILITY_<NAME>` — capability URL (lowercased for lookup).
+//!   Examples: `NESTGATE_CAPABILITY_ORCHESTRATION`, `NESTGATE_CAPABILITY_SECURITY`.
+//! - `NESTGATE_EXTERNAL_<NAME>` — external (non-primal) service URL.
+//! - Core URLs: `NESTGATE_DISCOVERY_URL`, `NESTGATE_ADAPTER_URL`, `NESTGATE_HEALTH_URL`,
+//!   `NESTGATE_METRICS_URL`, `NESTGATE_CONFIG_URL`.
+//!
+//! ## Usage
+//!
 //! ```rust,ignore
-//! // ❌ DEPRECATED: Hardcoded primal names
-//! let songbird_url = config.get_songbird_url();
-//! let beardog_url = config.get_beardog_url();
+//! let config = ServicesConfig::from_env();
+//! let security = config.get_capability_url("security");
+//! let orchestration = config.get_capability_url("orchestration");
 //! ```
-//!
-//! ### New Pattern (Capability-Based):
-//! ```rust,ignore
-//! // ✅ CORRECT: Capability-based discovery
-//! let orchestration_url = config.get_capability_url("orchestration");
-//! let security_url = config.get_capability_url("security");
-//! ```
-//!
-//! ### Environment Variables:
-//! - **Supported**: `NESTGATE_CAPABILITY_ORCHESTRATION`, `NESTGATE_CAPABILITY_SECURITY`, etc.
-//! - Primal-name URL variables (`NESTGATE_*_URL` keyed to a specific product name) are **not** read;
-//!   configure peers only via `NESTGATE_CAPABILITY_*` or programmatic `with_capability`.
-//!
-//! ### Deprecated accessors:
-//! - Primal-named getters (`get_songbird_url`, etc.) remain for compatibility but mirror capability
-//!   data when populated from `NESTGATE_CAPABILITY_*` or builders; prefer `get_capability_url()`.
-//!
-//! Use `get_capability_url()` for new code.
-//!
-//! ## primalSpring Audit Compliance Note
-//!
-//! Primal names in this module are **intentional config-layer service descriptors**
-//! for backward compatibility during the capability migration. They appear in
-//! deprecated struct fields, getters, and builders — never in routing logic.
-//! The capability-based API (`get_capability_url`, `with_capability`) is the
-//! replacement. These deprecated surfaces will be removed once all consumers
-//! have migrated.
 
+use nestgate_types::EnvSource;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Thread-safe configuration for service endpoints
-/// Captures environment variables at initialization to prevent race conditions
+/// Thread-safe configuration for service endpoints.
+///
+/// Captures environment variables at initialization to prevent race conditions.
+/// All peer services are addressed by **capability** (e.g. `"orchestration"`, `"security"`),
+/// never by primal product name.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-/// Configuration for Services
 pub struct ServicesConfig {
-    // Core service URLs
     #[serde(skip_serializing_if = "Option::is_none")]
     discovery_url: Option<String>,
     adapter_url: Option<String>,
@@ -57,22 +40,12 @@ pub struct ServicesConfig {
     metrics_url: Option<String>,
     config_url: Option<String>,
 
-    // ⚠️ DEPRECATED: Primal-specific URL mirrors — prefer `capabilities` / `get_capability_url`.
-    /// Deprecated mirror of orchestration URL; use `NESTGATE_CAPABILITY_ORCHESTRATION` / `get_capability_url("orchestration")`.
-    songbird_url: Option<String>,
-    /// Deprecated mirror of compute URL; use `NESTGATE_CAPABILITY_COMPUTE` / `get_capability_url("compute")`.
-    toadstool_url: Option<String>,
-    /// Deprecated mirror of security URL; use `NESTGATE_CAPABILITY_SECURITY` / `get_capability_url("security")`.
-    beardog_url: Option<String>,
-    /// Deprecated mirror of AI URL; use `NESTGATE_CAPABILITY_AI` / `get_capability_url("ai")`.
-    squirrel_url: Option<String>,
-    /// Deprecated mirror of ecosystem URL; use `NESTGATE_CAPABILITY_ECOSYSTEM` / `get_capability_url("ecosystem")`.
-    biomeos_url: Option<String>,
-
-    // Capability-based service URLs (NESTGATE_CAPABILITY_*)
+    /// Capability-based service URLs (`NESTGATE_CAPABILITY_*`).
+    ///
+    /// Serde aliases allow deserializing configs written before the capability migration:
+    /// a serialized `songbird_url` value is folded into `capabilities["orchestration"]`, etc.
     capabilities: HashMap<String, String>,
 
-    // External service URLs (dynamic NESTGATE_EXTERNAL_*)
     external_services: HashMap<String, String>,
 }
 
@@ -80,7 +53,7 @@ pub struct ServicesConfig {
 pub type SharedServicesConfig = Arc<ServicesConfig>;
 
 impl ServicesConfig {
-    /// Create a new empty configuration (all values None)
+    /// Create a new empty configuration (all values `None`).
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -89,61 +62,50 @@ impl ServicesConfig {
             health_url: None,
             metrics_url: None,
             config_url: None,
-            songbird_url: None,
-            toadstool_url: None,
-            beardog_url: None,
-            squirrel_url: None,
-            biomeos_url: None,
             capabilities: HashMap::new(),
             external_services: HashMap::new(),
         }
     }
 
-    /// Create configuration from current environment variables
-    /// This captures env vars at initialization time, making it thread-safe
+    /// Create configuration from a custom [`EnvSource`].
+    ///
+    /// This is the primary constructor — [`from_env`](Self::from_env) delegates
+    /// to this with [`ProcessEnv`](nestgate_types::ProcessEnv).
     #[must_use]
-    pub fn from_env() -> Self {
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         let mut config = Self::new();
 
         // Core services
-        config.discovery_url = std::env::var("NESTGATE_DISCOVERY_URL").ok();
-        config.adapter_url = std::env::var("NESTGATE_ADAPTER_URL").ok();
-        config.health_url = std::env::var("NESTGATE_HEALTH_URL").ok();
-        config.metrics_url = std::env::var("NESTGATE_METRICS_URL").ok();
-        config.config_url = std::env::var("NESTGATE_CONFIG_URL").ok();
+        config.discovery_url = env.get("NESTGATE_DISCOVERY_URL");
+        config.adapter_url = env.get("NESTGATE_ADAPTER_URL");
+        config.health_url = env.get("NESTGATE_HEALTH_URL");
+        config.metrics_url = env.get("NESTGATE_METRICS_URL");
+        config.config_url = env.get("NESTGATE_CONFIG_URL");
 
         // Capability URLs: NESTGATE_CAPABILITY_<NAME> (name is lowercased for lookup)
-        for (key, value) in std::env::vars() {
+        for (key, value) in env.vars() {
             if let Some(name) = key.strip_prefix("NESTGATE_CAPABILITY_") {
                 config.capabilities.insert(name.to_lowercase(), value);
             }
         }
 
-        // Mirror resolved capability URLs into deprecated fields when set via capability env only
-        if config.songbird_url.is_none() {
-            config.songbird_url = config.capabilities.get("orchestration").cloned();
-        }
-        if config.beardog_url.is_none() {
-            config.beardog_url = config.capabilities.get("security").cloned();
-        }
-        if config.squirrel_url.is_none() {
-            config.squirrel_url = config.capabilities.get("ai").cloned();
-        }
-        if config.toadstool_url.is_none() {
-            config.toadstool_url = config.capabilities.get("compute").cloned();
-        }
-        if config.biomeos_url.is_none() {
-            config.biomeos_url = config.capabilities.get("ecosystem").cloned();
-        }
-
         // Scan for dynamic NESTGATE_EXTERNAL_* entries
-        for (key, value) in std::env::vars() {
+        for (key, value) in env.vars() {
             if let Some(name) = key.strip_prefix("NESTGATE_EXTERNAL_") {
                 config.external_services.insert(name.to_lowercase(), value);
             }
         }
 
         config
+    }
+
+    /// Create configuration from current process environment variables.
+    ///
+    /// Delegates to [`from_env_source`](Self::from_env_source) with
+    /// [`ProcessEnv`](nestgate_types::ProcessEnv).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::from_env_source(&nestgate_types::ProcessEnv)
     }
 
     /// Same as [`Self::from_env`] — captures environment at initialization time.
@@ -268,58 +230,6 @@ impl ServicesConfig {
         &self.capabilities
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // DEPRECATED: Primal-specific service accessors (Use get_capability_url instead!)
-    // ═══════════════════════════════════════════════════════════════════
-
-    /// Gets Songbird Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `get_capability_url("orchestration")` instead
-    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
-    #[must_use]
-    pub fn get_songbird_url(&self) -> Option<&str> {
-        self.songbird_url.as_deref()
-    }
-
-    /// Gets Toadstool Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `get_capability_url("compute")` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use get_capability_url(\"compute\") for capability-based discovery"
-    )]
-    #[must_use]
-    pub fn get_toadstool_url(&self) -> Option<&str> {
-        self.toadstool_url.as_deref()
-    }
-
-    /// Gets Beardog Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `get_capability_url("security")` instead
-    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
-    #[must_use]
-    pub fn get_beardog_url(&self) -> Option<&str> {
-        self.beardog_url.as_deref()
-    }
-
-    /// Gets Squirrel Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `get_capability_url("ai")` instead
-    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
-    #[must_use]
-    pub fn get_squirrel_url(&self) -> Option<&str> {
-        self.squirrel_url.as_deref()
-    }
-
-    /// Gets Biomeos Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `get_capability_url("ecosystem")` instead
-    #[deprecated(note = "use NESTGATE_CAPABILITY_* instead")]
-    #[must_use]
-    pub fn get_biomeos_url(&self) -> Option<&str> {
-        self.biomeos_url.as_deref()
-    }
-
     // External services
 
     /// Gets External Service
@@ -391,69 +301,6 @@ impl ServicesConfig {
         self
     }
 
-    /// Builder method to set Songbird Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `with_capability("orchestration", url)` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use with_capability(\"orchestration\", url) for capability-based discovery"
-    )]
-    #[must_use]
-    pub fn with_songbird_url(mut self, url: String) -> Self {
-        self.songbird_url = Some(url.clone());
-        self.capabilities.insert("orchestration".to_string(), url);
-        self
-    }
-
-    /// Builder method to set Toadstool Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `with_capability("compute", url)` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use with_capability(\"compute\", url) for capability-based discovery"
-    )]
-    #[must_use]
-    pub fn with_toadstool_url(mut self, url: String) -> Self {
-        self.toadstool_url = Some(url.clone());
-        self.capabilities.insert("compute".to_string(), url);
-        self
-    }
-
-    /// Builder method to set Beardog Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `with_capability("security", url)` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use with_capability(\"security\", url) for capability-based discovery"
-    )]
-    #[must_use]
-    pub fn with_beardog_url(mut self, url: String) -> Self {
-        self.beardog_url = Some(url.clone());
-        self.capabilities.insert("security".to_string(), url);
-        self
-    }
-
-    /// Builder method to set Squirrel Url
-    ///
-    /// **⚠️ DEPRECATED**: Use `with_capability("ai", url)` instead
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use with_capability(\"ai\", url) for capability-based discovery"
-    )]
-    #[must_use]
-    pub fn with_squirrel_url(mut self, url: String) -> Self {
-        self.squirrel_url = Some(url.clone());
-        self.capabilities.insert("ai".to_string(), url);
-        self
-    }
-
-    /// Builder method to set Biomeos Url
-    #[must_use]
-    pub fn with_biomeos_url(mut self, url: String) -> Self {
-        self.biomeos_url = Some(url);
-        self
-    }
-
     /// Builder method to set External Service
     #[must_use]
     pub fn with_external_service(mut self, name: String, url: String) -> Self {
@@ -472,32 +319,28 @@ impl Default for ServicesConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_services_config_new() {
         let config = ServicesConfig::new();
 
-        // Should use default URLs (ServiceDiscoveryConfig defaults to 127.0.0.1)
         assert_eq!(
             config.get_discovery_url(),
             "http://127.0.0.1:8080/discovery"
         );
         assert_eq!(config.get_adapter_url(), "http://127.0.0.1:8080/adapter");
-        // ✅ MODERNIZED: Use capability-based access
         assert!(config.get_capability_url("orchestration").is_none());
     }
 
     #[test]
     fn test_services_config_builder() {
-        // ✅ MODERNIZED: Use capability-based builder pattern
         let config = ServicesConfig::new()
             .with_discovery_url("http://discovery:8080".to_string())
             .with_capability("orchestration", "http://test-orchestration:9000")
             .with_external_service("custom".to_string(), "http://custom:8000".to_string());
 
         assert_eq!(config.get_discovery_url(), "http://discovery:8080");
-        // ✅ MODERNIZED: Check capability instead of primal name
         assert_eq!(
             config.get_capability_url("orchestration"),
             Some("http://test-orchestration:9000".to_string())
@@ -522,7 +365,6 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
     async fn test_concurrent_services_config_access() {
-        // Create two different configurations
         let config1 = Arc::new(
             ServicesConfig::new().with_discovery_url("http://discovery1:8080".to_string()),
         );
@@ -530,7 +372,6 @@ mod tests {
             ServicesConfig::new().with_discovery_url("http://discovery2:8080".to_string()),
         );
 
-        // Spawn concurrent tasks accessing different configs
         let handle1 = {
             let config = Arc::clone(&config1);
             tokio::spawn(async move {
@@ -580,7 +421,6 @@ mod tests {
     fn test_services_config_defaults() {
         let config = ServicesConfig::new();
 
-        // All core services should have 127.0.0.1 defaults (from ServiceDiscoveryConfig)
         assert!(config.get_discovery_url().contains("127.0.0.1"));
         assert!(config.get_adapter_url().contains("127.0.0.1"));
         assert!(config.get_health_url().contains("127.0.0.1"));
@@ -589,126 +429,100 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn from_env_capability_vars_lowercased_and_resolve_get_capability_url() {
-        temp_env::with_vars(
-            vec![
-                (
-                    "NESTGATE_CAPABILITY_ORCHESTRATION",
-                    Some("http://orch-cap:9000"),
-                ),
-                ("NESTGATE_CAPABILITY_SECURITY", Some("https://sec-cap:8443")),
-                ("NESTGATE_CAPABILITY_AI", Some("http://ai-cap:7000")),
-            ],
-            || {
-                let config = ServicesConfig::from_env();
-                assert_eq!(
-                    config.get_capability_url("orchestration"),
-                    Some("http://orch-cap:9000".to_string())
-                );
-                assert_eq!(
-                    config.get_capability_url("security"),
-                    Some("https://sec-cap:8443".to_string())
-                );
-                assert_eq!(
-                    config.get_capability_url("ai"),
-                    Some("http://ai-cap:7000".to_string())
-                );
-                assert!(config.get_capability_url("unknown").is_none());
-            },
+        let env = MapEnv::from([
+            ("NESTGATE_CAPABILITY_ORCHESTRATION", "http://orch-cap:9000"),
+            ("NESTGATE_CAPABILITY_SECURITY", "https://sec-cap:8443"),
+            ("NESTGATE_CAPABILITY_AI", "http://ai-cap:7000"),
+        ]);
+        let config = ServicesConfig::from_env_source(&env);
+        assert_eq!(
+            config.get_capability_url("orchestration"),
+            Some("http://orch-cap:9000".to_string())
+        );
+        assert_eq!(
+            config.get_capability_url("security"),
+            Some("https://sec-cap:8443".to_string())
+        );
+        assert_eq!(
+            config.get_capability_url("ai"),
+            Some("http://ai-cap:7000".to_string())
+        );
+        assert!(config.get_capability_url("unknown").is_none());
+    }
+
+    #[test]
+    fn from_env_capability_resolves_to_capability_url() {
+        let env = MapEnv::from([
+            ("NESTGATE_CAPABILITY_ORCHESTRATION", "http://mirror-orch:1"),
+            ("NESTGATE_CAPABILITY_SECURITY", "http://mirror-sec:2"),
+            ("NESTGATE_CAPABILITY_COMPUTE", "http://mirror-comp:3"),
+            ("NESTGATE_CAPABILITY_ECOSYSTEM", "http://mirror-eco:4"),
+        ]);
+        let config = ServicesConfig::from_env_source(&env);
+        assert_eq!(
+            config.get_capability_url("orchestration"),
+            Some("http://mirror-orch:1".to_string())
+        );
+        assert_eq!(
+            config.get_capability_url("security"),
+            Some("http://mirror-sec:2".to_string())
+        );
+        assert_eq!(
+            config.get_capability_url("compute"),
+            Some("http://mirror-comp:3".to_string())
+        );
+        assert_eq!(
+            config.get_capability_url("ecosystem"),
+            Some("http://mirror-eco:4".to_string())
         );
     }
 
     #[test]
-    #[serial]
-    fn from_env_capability_mirrors_into_deprecated_fields_when_primal_urls_unset() {
-        temp_env::with_vars(
-            vec![
-                (
-                    "NESTGATE_CAPABILITY_ORCHESTRATION",
-                    Some("http://mirror-orch:1"),
-                ),
-                ("NESTGATE_CAPABILITY_SECURITY", Some("http://mirror-sec:2")),
-                ("NESTGATE_CAPABILITY_COMPUTE", Some("http://mirror-comp:3")),
-                ("NESTGATE_CAPABILITY_ECOSYSTEM", Some("http://mirror-eco:4")),
-            ],
-            || {
-                let config = ServicesConfig::from_env();
-                assert_eq!(config.get_songbird_url(), Some("http://mirror-orch:1"));
-                assert_eq!(config.get_beardog_url(), Some("http://mirror-sec:2"));
-                assert_eq!(config.get_toadstool_url(), Some("http://mirror-comp:3"));
-                assert_eq!(config.get_biomeos_url(), Some("http://mirror-eco:4"));
-            },
-        );
-    }
-
-    #[test]
-    #[serial]
     fn from_env_capability_mixed_case_prefix_still_maps_to_lowercase_key() {
-        temp_env::with_var(
-            "NESTGATE_CAPABILITY_STORAGE",
-            Some("http://store:5000"),
-            || {
-                let config = ServicesConfig::from_env();
-                assert_eq!(
-                    config.get_capability_url("storage"),
-                    Some("http://store:5000".to_string())
-                );
-            },
+        let env = MapEnv::from([("NESTGATE_CAPABILITY_STORAGE", "http://store:5000")]);
+        let config = ServicesConfig::from_env_source(&env);
+        assert_eq!(
+            config.get_capability_url("storage"),
+            Some("http://store:5000".to_string())
         );
     }
 
     #[test]
-    #[serial]
     fn from_env_external_services_lowercased() {
-        temp_env::with_var(
+        let env = MapEnv::from([(
             "NESTGATE_EXTERNAL_MY_SERVICE",
-            Some("https://external.example/api"),
-            || {
-                let config = ServicesConfig::from_env();
-                assert_eq!(
-                    config.get_external_service("my_service"),
-                    Some("https://external.example/api")
-                );
-                assert!(config.get_external_service("MY_SERVICE").is_none());
-            },
+            "https://external.example/api",
+        )]);
+        let config = ServicesConfig::from_env_source(&env);
+        assert_eq!(
+            config.get_external_service("my_service"),
+            Some("https://external.example/api")
         );
+        assert!(config.get_external_service("MY_SERVICE").is_none());
     }
 
     #[test]
-    #[serial]
     fn from_env_capability_does_not_override_explicit_core_url_when_set() {
-        temp_env::with_vars(
-            vec![
-                (
-                    "NESTGATE_DISCOVERY_URL",
-                    Some("http://explicit-discovery:1111"),
-                ),
-                (
-                    "NESTGATE_CAPABILITY_ORCHESTRATION",
-                    Some("http://cap-only:2222"),
-                ),
-            ],
-            || {
-                let config = ServicesConfig::from_env();
-                assert_eq!(config.get_discovery_url(), "http://explicit-discovery:1111");
-                assert_eq!(
-                    config.get_capability_url("orchestration"),
-                    Some("http://cap-only:2222".to_string())
-                );
-            },
+        let env = MapEnv::from([
+            ("NESTGATE_DISCOVERY_URL", "http://explicit-discovery:1111"),
+            ("NESTGATE_CAPABILITY_ORCHESTRATION", "http://cap-only:2222"),
+        ]);
+        let config = ServicesConfig::from_env_source(&env);
+        assert_eq!(config.get_discovery_url(), "http://explicit-discovery:1111");
+        assert_eq!(
+            config.get_capability_url("orchestration"),
+            Some("http://cap-only:2222".to_string())
         );
     }
 
     #[test]
-    #[serial]
     fn get_all_capabilities_returns_configured_map() {
-        temp_env::with_var("NESTGATE_CAPABILITY_FOO", Some("http://foo:1"), || {
-            let config = ServicesConfig::from_env();
-            assert_eq!(
-                config.get_all_capabilities().get("foo"),
-                Some(&"http://foo:1".to_string())
-            );
-        });
+        let env = MapEnv::from([("NESTGATE_CAPABILITY_FOO", "http://foo:1")]);
+        let config = ServicesConfig::from_env_source(&env);
+        assert_eq!(
+            config.get_all_capabilities().get("foo"),
+            Some(&"http://foo:1".to_string())
+        );
     }
 }

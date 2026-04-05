@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(clippy::wildcard_imports)]
+#![expect(clippy::wildcard_imports)]
 
 //! Monitoring configuration — alerting, logging, metrics, tracing.
 // Removed unused error imports

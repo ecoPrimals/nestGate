@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //
@@ -178,7 +178,6 @@ impl SecurityConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Accesscontrolconfigcanonical
 pub type AccessControlConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -195,7 +194,6 @@ pub type AccessControlConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Keymanagementconfigcanonical
 pub type KeyManagementConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -206,7 +204,7 @@ pub type KeyManagementConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![allow(deprecated)]
+    #![expect(deprecated)]
     use super::*;
     use std::path::PathBuf;
 

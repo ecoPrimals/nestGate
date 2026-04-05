@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![no_main]
@@ -47,9 +47,9 @@ enum FuzzRequestBody {
 #[derive(Arbitrary, Debug)]
 struct MultipartField {
     name: String,
-    #[allow(dead_code)] // Reserved for future multipart handling
+    #[expect(dead_code)] // Reserved for future multipart handling
     filename: Option<String>,
-    #[allow(dead_code)] // Reserved for future content type validation
+    #[expect(dead_code)] // Reserved for future content type validation
     content_type: String,
     data: Vec<u8>,
 }
@@ -597,13 +597,13 @@ fn validate_template_input(input: &str) -> Result<(), String> {
 // Mock request handling
 #[derive(Debug)]
 struct MockRequest {
-    #[allow(dead_code)] // Reserved for comprehensive request mocking
+    #[expect(dead_code)] // Reserved for comprehensive request mocking
     method: String,
-    #[allow(dead_code)] // Reserved for path-based attack testing
+    #[expect(dead_code)] // Reserved for path-based attack testing
     path: String,
-    #[allow(dead_code)] // Reserved for header injection testing
+    #[expect(dead_code)] // Reserved for header injection testing
     headers: HashMap<String, String>,
-    #[allow(dead_code)] // Reserved for body payload testing
+    #[expect(dead_code)] // Reserved for body payload testing
     body: Vec<u8>,
 }
 

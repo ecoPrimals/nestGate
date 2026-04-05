@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(deprecated)]
+#![expect(deprecated)]
 // This module defines deprecated compatibility types; implementations must reference them.
 
 // Removed unused error imports
@@ -116,7 +116,7 @@ pub struct FederationConfig {
     pub heartbeat_interval: u64,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl Default for McpConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -141,7 +141,7 @@ impl Default for McpConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl Default for McpCapabilitiesConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -154,7 +154,7 @@ impl Default for McpCapabilitiesConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl Default for FederationConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -168,7 +168,7 @@ impl Default for FederationConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl McpConfig {
     /// Check if MCP is enabled
     #[must_use]
@@ -217,7 +217,7 @@ impl McpConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl McpCapabilitiesConfig {
     /// Check if a storage protocol is supported
     #[must_use]
@@ -283,7 +283,7 @@ impl McpCapabilitiesConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 impl FederationConfig {
     /// Check if federation is enabled
     #[must_use]
@@ -379,7 +379,6 @@ impl FederationConfig {
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Mcpconfigcanonical
 pub type McpConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -396,7 +395,6 @@ pub type McpConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Federationconfigcanonical
 pub type FederationConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
@@ -413,7 +411,6 @@ pub type FederationConfigCanonical =
 ///
 /// This provides backward compatibility while migrating to unified configuration.
 /// The original struct is marked as deprecated but still functional.
-#[allow(deprecated)]
 /// Type alias for Mcpcapabilitiesconfigcanonical
 pub type McpCapabilitiesConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;

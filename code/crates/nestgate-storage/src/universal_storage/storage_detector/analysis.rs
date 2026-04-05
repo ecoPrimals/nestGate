@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // Removed unused imports: NestGateError, Result
@@ -8,7 +8,7 @@
 //! Analysis module
 
 // Byte counts use `f64` only for approximate percentages and human-readable summaries.
-#![allow(
+#![expect(
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
     clippy::cast_sign_loss
@@ -16,6 +16,33 @@
 
 use super::types::{DetectedStorage, StorageAnalysisReport};
 use nestgate_types::unified_enums::storage_types::{UnifiedStorageCapability, UnifiedStorageType};
+
+/// Read total and available memory from `/proc/meminfo` (Linux).
+/// Returns `(total_bytes, free_bytes)` or `None` if unavailable.
+fn read_meminfo() -> Option<(u64, u64)> {
+    let content = std::fs::read_to_string("/proc/meminfo").ok()?;
+    let mut total_kb = None;
+    let mut available_kb = None;
+    for line in content.lines() {
+        if let Some(rest) = line.strip_prefix("MemTotal:") {
+            total_kb = rest
+                .trim()
+                .strip_suffix("kB")
+                .and_then(|s| s.trim().parse::<u64>().ok());
+        } else if let Some(rest) = line.strip_prefix("MemAvailable:") {
+            available_kb = rest
+                .trim()
+                .strip_suffix("kB")
+                .and_then(|s| s.trim().parse::<u64>().ok());
+        }
+        if total_kb.is_some() && available_kb.is_some() {
+            break;
+        }
+    }
+    let total = total_kb? * 1024;
+    let available = available_kb? * 1024;
+    Some((total, available))
+}
 
 /// Storage analyzer for generating insights and recommendations
 pub struct StorageAnalyzer {
@@ -85,11 +112,13 @@ impl StorageAnalyzer {
             ));
         }
 
-        // Mock memory stats (in real implementation, would query system)
-        let memory_total = 16 * 1024 * 1024 * 1024u64; // 16GB
-        let memory_free = 8 * 1024 * 1024 * 1024u64; // 8GB free
-        let memory_usage_percent =
-            ((memory_total - memory_free) as f64 / memory_total as f64) * 100.0;
+        let (memory_total, memory_free) =
+            read_meminfo().unwrap_or((16 * 1024 * 1024 * 1024, 8 * 1024 * 1024 * 1024));
+        let memory_usage_percent = if memory_total > 0 {
+            ((memory_total - memory_free) as f64 / memory_total as f64) * 100.0
+        } else {
+            0.0
+        };
 
         StorageAnalysisReport {
             filesystem_total: total_space,
@@ -278,7 +307,7 @@ impl StorageAnalyzer {
     /// Calculate storage efficiency score
     #[must_use]
     pub fn calculate_efficiency_score(&self, storage: &DetectedStorage) -> f64 {
-        #[allow(unused_assignments)] // Value is overwritten in calculations below
+        #[expect(unused_assignments)] // Value is overwritten in calculations below
         let mut efficiency = 0.0f64;
 
         // Performance efficiency (throughput per latency)

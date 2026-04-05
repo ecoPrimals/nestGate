@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 // **CANONICAL PRIMARY CONFIGURATION SYSTEM**
@@ -111,7 +111,6 @@ pub use phase2c_types::{
 ///
 /// This replaces ALL other configuration structures with a single,
 /// unified configuration that uses const generics for compile-time optimization.
-#[allow(deprecated)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration for `NestGateCanonical`
 pub struct NestGateCanonicalConfig<
@@ -304,7 +303,6 @@ impl<
         match self.environment {
             Environment::Production => {
                 // Stricter validation for production
-                #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
                 {
                     use crate::constants::hardcoding::runtime_fallback_ports;
                     if self.network.api.port == runtime_fallback_ports::HTTP {
@@ -341,7 +339,6 @@ impl<
     ///
     /// Returns [`nestgate_types::error::NestGateError`] when the configuration is incompatible
     /// with the given [`Environment`], such as insecure defaults in production.
-    #[allow(deprecated)] // Accessing deprecated NetworkConfig fields during migration
     pub fn validate_for_environment(&self, env: Environment) -> nestgate_types::error::Result<()> {
         if env == Environment::Production && self.network.api.port == 8080 {
             return Err(
@@ -374,7 +371,6 @@ impl<
     const API_PORT: u16,
 > Default for NestGateCanonicalConfig<MAX_CONNECTIONS, BUFFER_SIZE, TIMEOUT_MS, API_PORT>
 {
-    #[allow(deprecated)]
     fn default() -> Self {
         Self {
             system: SystemConfig::default(),

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
@@ -14,22 +14,14 @@
         clippy::items_after_statements,
     )
 )]
-#![allow(
-    deprecated,
-    missing_docs,
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
+#![expect(
     clippy::doc_markdown,
     clippy::module_name_repetitions,
     clippy::struct_excessive_bools,
-    clippy::no_effect_underscore_binding,
-    clippy::manual_string_new,
     clippy::case_sensitive_file_extension_comparisons,
-    clippy::needless_pass_by_value,
     clippy::unnecessary_debug_formatting,
     clippy::unused_async,
     clippy::needless_pass_by_ref_mut,
-    clippy::redundant_clone,
     clippy::unnecessary_wraps,
     dead_code,
     clippy::struct_field_names,

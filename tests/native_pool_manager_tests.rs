@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(
+#![expect(
     unused,
     dead_code,
     deprecated,
@@ -315,7 +315,7 @@ fn test_health_check_frequency() {
 fn test_health_degradation_detection() {
     // Test detecting health degradation
     #[derive(Debug, PartialEq, PartialOrd)]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     enum HealthLevel {
         Online = 4,
         Degraded = 3,
@@ -343,7 +343,7 @@ fn test_health_degradation_detection() {
 fn test_pool_scrub_status() {
     // Test pool scrub status tracking
     #[derive(Debug, PartialEq)]
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     enum ScrubStatus {
         NotRunning,
         InProgress,
