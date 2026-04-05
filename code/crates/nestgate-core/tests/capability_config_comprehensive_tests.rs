@@ -15,15 +15,16 @@
 //! Comprehensive test suite for capability-based configuration
 //!
 //! Tests runtime discovery, error handling, fallback modes, and sovereignty compliance.
-//!
-//! All tests that mutate process-global environment variables are marked `#[serial]`
-//! to prevent races under parallel `cargo test`.
+//! Capability endpoints are supplied via [`nestgate_types::MapEnv`] and
+//! [`CapabilityConfigBuilder::build_with_env`](nestgate_config::config::capability_based::CapabilityConfigBuilder::build_with_env)
+//! so tests run concurrently without mutating the process environment.
 
 #[cfg(test)]
 mod capability_config_tests {
     use nestgate_core::config::capability_based::PrimalCapability;
     use nestgate_core::config::capability_based::{CapabilityConfigBuilder, FallbackMode};
-    use serial_test::serial;
+    use nestgate_types::MapEnv;
+    use std::sync::Arc;
     use std::time::Duration;
 
     #[test]
@@ -82,23 +83,14 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_discovery_from_env_var() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
+        let env = Arc::new(MapEnv::from([(
             "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
             "127.0.0.1:9000",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
         let result = config.discover(PrimalCapability::Storage).await;
 
-        match orig {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
-        }
         assert!(result.is_ok());
         let service = result.unwrap();
         assert_eq!(service.capability, PrimalCapability::Storage);
@@ -106,66 +98,40 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_discovery_missing_env_var_fail_fast() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT").ok();
-        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT");
-
+        let env = Arc::new(MapEnv::new());
         let config = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::FailFast)
-            .build()
+            .build_with_env(env)
             .unwrap();
 
         let result = config.discover(PrimalCapability::Compute).await;
-        if let Some(v) = orig {
-            nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v);
-        }
         assert!(result.is_err());
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_discovery_invalid_endpoint_format() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
+        let env = Arc::new(MapEnv::from([(
             "NESTGATE_CAPABILITY_SECURITY_ENDPOINT",
             "invalid_format",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
         let result = config.discover(PrimalCapability::Security).await;
 
-        match orig {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT"),
-        }
         assert!(result.is_err());
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_discovery_caching() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
+        let env = Arc::new(MapEnv::from([(
             "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
             "192.168.1.1:8080",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
 
         let result1 = config.discover(PrimalCapability::Orchestration).await;
         let result2 = config.discover(PrimalCapability::Orchestration).await;
 
-        match orig {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT", v)
-            }
-            None => {
-                nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT")
-            }
-        }
         assert!(result1.is_ok());
         assert!(result2.is_ok());
         let service1 = result1.unwrap();
@@ -174,50 +140,18 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_multiple_capabilities_discovery() {
-        let orig_s = std::env::var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT").ok();
-        let orig_sec = std::env::var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT").ok();
-        let orig_m = std::env::var("NESTGATE_CAPABILITY_MONITORING_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
-            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
-            "10.0.0.1:9000",
-        );
-        nestgate_core::env_process::set_var(
-            "NESTGATE_CAPABILITY_SECURITY_ENDPOINT",
-            "10.0.0.2:3000",
-        );
-        nestgate_core::env_process::set_var(
-            "NESTGATE_CAPABILITY_MONITORING_ENDPOINT",
-            "10.0.0.3:9090",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        let env = Arc::new(MapEnv::from([
+            ("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", "10.0.0.1:9000"),
+            ("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", "10.0.0.2:3000"),
+            ("NESTGATE_CAPABILITY_MONITORING_ENDPOINT", "10.0.0.3:9090"),
+        ]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
 
         let storage = config.discover(PrimalCapability::Storage).await;
         let security = config.discover(PrimalCapability::Security).await;
         let monitoring = config.discover(PrimalCapability::Monitoring).await;
 
-        match orig_s {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_STORAGE_ENDPOINT"),
-        }
-        match orig_sec {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_SECURITY_ENDPOINT"),
-        }
-        match orig_m {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_MONITORING_ENDPOINT", v)
-            }
-            None => {
-                nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_MONITORING_ENDPOINT")
-            }
-        }
         assert!(storage.is_ok());
         assert!(security.is_ok());
         assert!(monitoring.is_ok());
@@ -227,20 +161,14 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_local_fallback_mode() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT").ok();
-        nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT");
-
+        let env = Arc::new(MapEnv::new());
         let config = CapabilityConfigBuilder::new()
             .with_fallback_mode(FallbackMode::LocalFallback)
-            .build()
+            .build_with_env(env)
             .unwrap();
 
         let result = config.discover(PrimalCapability::Analytics).await;
-        if let Some(v) = orig {
-            nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", v);
-        }
         assert!(result.is_ok());
         let service = result.unwrap();
         assert!(service.metadata.get("mode") == Some(&"local_fallback".to_string()));
@@ -289,26 +217,14 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_ipv6_endpoint() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
+        let env = Arc::new(MapEnv::from([(
             "NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT",
             "[::1]:8080",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
         let result = config.discover(PrimalCapability::DataProcessing).await;
 
-        match orig {
-            Some(v) => nestgate_core::env_process::set_var(
-                "NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT",
-                v,
-            ),
-            None => nestgate_core::env_process::remove_var(
-                "NESTGATE_CAPABILITY_DATAPROCESSING_ENDPOINT",
-            ),
-        }
         assert!(result.is_ok());
         let service = result.unwrap();
         assert_eq!(service.endpoint.port(), 8080);
@@ -329,24 +245,15 @@ mod capability_config_tests {
     }
 
     #[tokio::test]
-    #[serial]
     #[ignore] // Requires network/socket for capability discovery
     async fn test_discovery_sovereignty_compliance() {
-        let orig = std::env::var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT").ok();
-        nestgate_core::env_process::set_var(
+        let env = Arc::new(MapEnv::from([(
             "NESTGATE_CAPABILITY_COMPUTE_ENDPOINT",
             "discovered.service:7000",
-        );
-
-        let config = CapabilityConfigBuilder::new().build().unwrap();
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
         let result = config.discover(PrimalCapability::Compute).await;
 
-        match orig {
-            Some(v) => {
-                nestgate_core::env_process::set_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT", v)
-            }
-            None => nestgate_core::env_process::remove_var("NESTGATE_CAPABILITY_COMPUTE_ENDPOINT"),
-        }
         assert!(result.is_ok());
         let service = result.unwrap();
         assert_eq!(service.capability, PrimalCapability::Compute);

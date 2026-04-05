@@ -17,10 +17,12 @@
     )
 )]
 
+pub mod env_source;
 pub mod error;
 pub mod result_types;
 pub mod unified_enums;
 
+pub use env_source::{EnvSource, MapEnv, ProcessEnv, env_parsed};
 pub use error::{
     CanonicalResult, ErrorContext, NestGateError, NestGateUnifiedError, Result, ResultExt,
     RetryInfo, TestResult,

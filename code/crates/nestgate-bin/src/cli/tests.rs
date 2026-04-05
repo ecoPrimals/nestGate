@@ -314,185 +314,99 @@ mod cli_parse_tests {
 
 mod port_env_tests {
     use crate::cli::{Cli, Commands};
-    use crate::commands::env::{bind_from_env_or_default, port_from_env_or_default};
+    use crate::commands::env::{bind_from_env_source, port_from_env_source};
     use clap::Parser;
     use nestgate_core::constants::{DEFAULT_API_PORT, DEFAULT_BIND_ADDRESS};
-    use serial_test::serial;
+    use nestgate_types::MapEnv;
     use std::net::SocketAddr;
 
     #[test]
-    #[serial]
     fn port_from_env_prefers_api_over_http_and_port() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_API_PORT", Some("7101")),
-                ("NESTGATE_HTTP_PORT", Some("7102")),
-                ("NESTGATE_PORT", Some("7103")),
-            ],
-            || {
-                assert_eq!(port_from_env_or_default(), 7101);
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "7101"),
+            ("NESTGATE_HTTP_PORT", "7102"),
+            ("NESTGATE_PORT", "7103"),
+        ]);
+        assert_eq!(port_from_env_source(&env), 7101);
     }
 
     #[test]
-    #[serial]
     fn port_from_env_http_when_api_missing() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_API_PORT", None::<&str>),
-                ("NESTGATE_HTTP_PORT", Some("7202")),
-                ("NESTGATE_PORT", Some("7203")),
-            ],
-            || {
-                assert_eq!(port_from_env_or_default(), 7202);
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_HTTP_PORT", "7202"), ("NESTGATE_PORT", "7203")]);
+        assert_eq!(port_from_env_source(&env), 7202);
     }
 
     #[test]
-    #[serial]
     fn port_from_env_nestgate_port_when_api_and_http_missing() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_API_PORT", None::<&str>),
-                ("NESTGATE_HTTP_PORT", None::<&str>),
-                ("NESTGATE_PORT", Some("7303")),
-            ],
-            || {
-                assert_eq!(port_from_env_or_default(), 7303);
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_PORT", "7303")]);
+        assert_eq!(port_from_env_source(&env), 7303);
     }
 
     #[test]
-    #[serial]
     fn port_from_env_defaults_when_all_missing() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_API_PORT", None::<&str>),
-                ("NESTGATE_HTTP_PORT", None::<&str>),
-                ("NESTGATE_PORT", None::<&str>),
-            ],
-            || {
-                assert_eq!(port_from_env_or_default(), DEFAULT_API_PORT);
-            },
-        );
+        let env = MapEnv::new();
+        assert_eq!(port_from_env_source(&env), DEFAULT_API_PORT);
     }
 
     #[test]
-    #[serial]
     fn port_from_env_invalid_api_string_uses_default_not_http() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_API_PORT", Some("not-a-port")),
-                ("NESTGATE_HTTP_PORT", Some("7402")),
-                ("NESTGATE_PORT", None::<&str>),
-            ],
-            || {
-                assert_eq!(port_from_env_or_default(), DEFAULT_API_PORT);
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "not-a-port"),
+            ("NESTGATE_HTTP_PORT", "7402"),
+        ]);
+        assert_eq!(port_from_env_source(&env), DEFAULT_API_PORT);
     }
 
     #[test]
-    #[serial]
     fn port_from_env_out_of_range_uses_default() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_API_PORT", Some("65536")),
-                ("NESTGATE_HTTP_PORT", None::<&str>),
-                ("NESTGATE_PORT", None::<&str>),
-            ],
-            || {
-                assert_eq!(port_from_env_or_default(), DEFAULT_API_PORT);
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_API_PORT", "65536")]);
+        assert_eq!(port_from_env_source(&env), DEFAULT_API_PORT);
     }
 
     #[test]
-    #[serial]
     fn bind_from_env_prefers_nestgate_bind() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_BIND", Some("192.0.2.10")),
-                ("NESTGATE_BIND_ADDRESS", Some("192.0.2.11")),
-                ("NESTGATE_HOST", Some("192.0.2.12")),
-            ],
-            || {
-                assert_eq!(bind_from_env_or_default(), "192.0.2.10");
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_BIND", "192.0.2.10"),
+            ("NESTGATE_BIND_ADDRESS", "192.0.2.11"),
+            ("NESTGATE_HOST", "192.0.2.12"),
+        ]);
+        assert_eq!(bind_from_env_source(&env), "192.0.2.10");
     }
 
     #[test]
-    #[serial]
     fn bind_from_env_falls_back_to_bind_address() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_BIND", None::<&str>),
-                ("NESTGATE_BIND_ADDRESS", Some("192.0.2.20")),
-                ("NESTGATE_HOST", Some("192.0.2.21")),
-            ],
-            || {
-                assert_eq!(bind_from_env_or_default(), "192.0.2.20");
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_BIND_ADDRESS", "192.0.2.20"),
+            ("NESTGATE_HOST", "192.0.2.21"),
+        ]);
+        assert_eq!(bind_from_env_source(&env), "192.0.2.20");
     }
 
     #[test]
-    #[serial]
     fn bind_from_env_falls_back_to_host() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_BIND", None::<&str>),
-                ("NESTGATE_BIND_ADDRESS", None::<&str>),
-                ("NESTGATE_HOST", Some("192.0.2.30")),
-            ],
-            || {
-                assert_eq!(bind_from_env_or_default(), "192.0.2.30");
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_HOST", "192.0.2.30")]);
+        assert_eq!(bind_from_env_source(&env), "192.0.2.30");
     }
 
     #[test]
-    #[serial]
     fn bind_from_env_defaults_when_all_missing() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_BIND", None::<&str>),
-                ("NESTGATE_BIND_ADDRESS", None::<&str>),
-                ("NESTGATE_HOST", None::<&str>),
-            ],
-            || {
-                assert_eq!(bind_from_env_or_default(), DEFAULT_BIND_ADDRESS);
-            },
-        );
+        let env = MapEnv::new();
+        assert_eq!(bind_from_env_source(&env), DEFAULT_BIND_ADDRESS);
     }
 
     #[test]
-    #[serial]
     fn daemon_resolves_listen_socket_addr() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_API_PORT", None::<&str>),
-                ("NESTGATE_HTTP_PORT", None::<&str>),
-                ("NESTGATE_PORT", None::<&str>),
-            ],
-            || {
-                let cli = Cli::try_parse_from(["nestgate", "daemon", "--listen", "[::1]:8443"])
-                    .expect("parse daemon with listen");
-                match cli.command {
-                    Commands::Daemon { listen, .. } => {
-                        assert_eq!(
-                            listen,
-                            Some("[::1]:8443".parse::<SocketAddr>().expect("listen addr"))
-                        );
-                    }
-                    _ => panic!("expected daemon"),
-                }
-            },
-        );
+        let cli = Cli::try_parse_from(["nestgate", "daemon", "--listen", "[::1]:8443"])
+            .expect("parse daemon with listen");
+        match cli.command {
+            Commands::Daemon { listen, .. } => {
+                assert_eq!(
+                    listen,
+                    Some("[::1]:8443".parse::<SocketAddr>().expect("listen addr"))
+                );
+            }
+            _ => panic!("expected daemon"),
+        }
     }
 }
 

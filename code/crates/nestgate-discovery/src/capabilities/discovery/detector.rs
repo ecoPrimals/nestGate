@@ -15,6 +15,8 @@ use super::service_descriptor::{
     Endpoint, Protocol, ServiceDescriptor, ServiceHealth, ServiceMetadata,
 };
 use super::{CapabilityError, CapabilityResult};
+use nestgate_types::EnvSource;
+use nestgate_types::ProcessEnv;
 
 /// Service detection engine
 ///
@@ -41,21 +43,25 @@ impl ServiceDetector {
     /// be overridden with `NESTGATE_DISCOVERY_SCAN_PORTS` (comma-separated).
     #[must_use]
     pub fn new(registry: Arc<CapabilityRegistry>) -> Self {
+        Self::new_with_env(registry, &ProcessEnv)
+    }
+
+    /// Like [`Self::new`], but reads `NESTGATE_DISCOVERY_SCAN_PORTS` from `env`.
+    #[must_use]
+    pub fn new_with_env(registry: Arc<CapabilityRegistry>, env: &dyn EnvSource) -> Self {
         use nestgate_config::constants::hardcoding::runtime_fallback_ports as fp;
 
-        let scan_ports = std::env::var("NESTGATE_DISCOVERY_SCAN_PORTS")
-            .ok()
-            .map_or_else(
-                || {
-                    vec![
-                        fp::API,
-                        fp::API_ALT,
-                        fp::EXTENDED_SERVICES,
-                        fp::DISCOVERY_SERVICE,
-                    ]
-                },
-                |s| s.split(',').filter_map(|p| p.trim().parse().ok()).collect(),
-            );
+        let scan_ports = env.get("NESTGATE_DISCOVERY_SCAN_PORTS").map_or_else(
+            || {
+                vec![
+                    fp::API,
+                    fp::API_ALT,
+                    fp::EXTENDED_SERVICES,
+                    fp::DISCOVERY_SERVICE,
+                ]
+            },
+            |s| s.split(',').filter_map(|p| p.trim().parse().ok()).collect(),
+        );
 
         Self {
             registry,
@@ -161,18 +167,15 @@ impl Drop for ServiceDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+    use nestgate_types::MapEnv;
 
     #[tokio::test]
     async fn test_detector_creation() {
-        temp_env::async_with_vars([("NESTGATE_DISCOVERY_SCAN_PORTS", None::<&str>)], async {
-            let registry = Arc::new(CapabilityRegistry::new());
-            let detector = ServiceDetector::new(registry);
+        let registry = Arc::new(CapabilityRegistry::new());
+        let detector = ServiceDetector::new_with_env(registry, &MapEnv::new());
 
-            assert_eq!(detector.interval, Duration::from_secs(30));
-            assert_eq!(detector.scan_ports, vec![3000, 3001, 3002, 3010]);
-        })
-        .await;
+        assert_eq!(detector.interval, Duration::from_secs(30));
+        assert_eq!(detector.scan_ports, vec![3000, 3001, 3002, 3010]);
     }
 
     #[tokio::test]
@@ -290,17 +293,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_detector_default_ports() {
-        temp_env::async_with_vars([("NESTGATE_DISCOVERY_SCAN_PORTS", None::<&str>)], async {
-            let registry = Arc::new(CapabilityRegistry::new());
-            let detector = ServiceDetector::new(registry);
+        let registry = Arc::new(CapabilityRegistry::new());
+        let detector = ServiceDetector::new_with_env(registry, &MapEnv::new());
 
-            assert!(!detector.scan_ports.is_empty());
-            assert!(detector.scan_ports.contains(&3000));
-            assert!(detector.scan_ports.contains(&3001));
-            assert!(detector.scan_ports.contains(&3002));
-            assert!(detector.scan_ports.contains(&3010));
-        })
-        .await;
+        assert!(!detector.scan_ports.is_empty());
+        assert!(detector.scan_ports.contains(&3000));
+        assert!(detector.scan_ports.contains(&3001));
+        assert!(detector.scan_ports.contains(&3002));
+        assert!(detector.scan_ports.contains(&3010));
     }
 
     #[tokio::test]
@@ -352,27 +352,22 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn detector_scan_ports_from_env_parses_csv_skips_invalid() {
-        temp_env::with_var(
+        let env = MapEnv::from([(
             "NESTGATE_DISCOVERY_SCAN_PORTS",
-            Some("4000, 4001 , invalid-token, 5000"),
-            || {
-                let registry = Arc::new(CapabilityRegistry::new());
-                let detector = ServiceDetector::new(registry);
-                assert_eq!(detector.scan_ports, vec![4000, 4001, 5000]);
-            },
-        );
+            "4000, 4001 , invalid-token, 5000",
+        )]);
+        let registry = Arc::new(CapabilityRegistry::new());
+        let detector = ServiceDetector::new_with_env(registry, &env);
+        assert_eq!(detector.scan_ports, vec![4000, 4001, 5000]);
     }
 
     #[test]
-    #[serial]
     fn detector_scan_ports_env_only_invalid_tokens_yields_empty() {
-        temp_env::with_var("NESTGATE_DISCOVERY_SCAN_PORTS", Some("bad, , x"), || {
-            let registry = Arc::new(CapabilityRegistry::new());
-            let detector = ServiceDetector::new(registry);
-            assert!(detector.scan_ports.is_empty());
-        });
+        let env = MapEnv::from([("NESTGATE_DISCOVERY_SCAN_PORTS", "bad, , x")]);
+        let registry = Arc::new(CapabilityRegistry::new());
+        let detector = ServiceDetector::new_with_env(registry, &env);
+        assert!(detector.scan_ports.is_empty());
     }
 
     #[tokio::test]

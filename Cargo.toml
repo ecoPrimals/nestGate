@@ -39,7 +39,6 @@ serial_test = { workspace = true }
 # once_cell removed: evolved to std::sync::LazyLock
 # Add workspace crates for integration tests
 nestgate-zfs = { path = "code/crates/nestgate-zfs" }
-nestgate-automation = { path = "code/crates/nestgate-automation" }
 nestgate-nas = { path = "code/crates/nestgate-nas" }
 nestgate-performance = { path = "code/crates/nestgate-performance" }
 fastrand.workspace = true
@@ -64,7 +63,6 @@ members = [
     "code/crates/nestgate-types",
     "code/crates/nestgate-api",
     "code/crates/nestgate-zfs",
-    "code/crates/nestgate-automation", 
     "code/crates/nestgate-bin",
     "code/crates/nestgate-canonical",
     "code/crates/nestgate-cache",
@@ -77,7 +75,6 @@ members = [
 
     "code/crates/nestgate-middleware",
     "code/crates/nestgate-nas",
-    "code/crates/nestgate-network",
     "code/crates/nestgate-observe",
     "code/crates/nestgate-performance",
     "code/crates/nestgate-platform",

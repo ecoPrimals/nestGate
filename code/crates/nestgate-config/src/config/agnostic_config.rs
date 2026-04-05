@@ -39,10 +39,11 @@
 use crate::config::capability_discovery;
 use crate::constants::hardcoding::runtime_fallback_ports;
 use crate::constants::{DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT};
+use nestgate_types::EnvSource;
+use nestgate_types::ProcessEnv;
 use nestgate_types::error::NestGateError;
 use nestgate_types::error::Result;
 use std::collections::HashMap;
-use std::env;
 
 /// Maps logical service names to `NESTGATE_CAPABILITY_*_ENDPOINT` keys used in port migration.
 fn capability_endpoint_env_key(service: &str) -> Option<&'static str> {
@@ -117,6 +118,16 @@ impl ConfigBuilder {
     /// Returns [`NestGateError`] when capability discovery, environment resolution, or port
     /// discovery fails.
     pub fn build(self) -> Result<AgnosticConfig> {
+        self.build_from_env_source(&ProcessEnv)
+    }
+
+    /// Build using an injectable environment source (see [`MapEnv`](nestgate_types::MapEnv) for tests).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] when capability discovery, environment resolution, or port
+    /// discovery fails.
+    pub fn build_from_env_source(self, env: &dyn EnvSource) -> Result<AgnosticConfig> {
         let mut config = AgnosticConfig {
             endpoints: HashMap::new(),
             ports: HashMap::new(),
@@ -124,35 +135,35 @@ impl ConfigBuilder {
         };
 
         // Discover API endpoint
-        if let Ok(endpoint) = self.discover_endpoint("api") {
+        if let Ok(endpoint) = self.discover_endpoint("api", env) {
             config.endpoints.insert("api".to_string(), endpoint);
         }
 
         // Discover storage endpoint
-        if let Ok(endpoint) = self.discover_endpoint("storage") {
+        if let Ok(endpoint) = self.discover_endpoint("storage", env) {
             config.endpoints.insert("storage".to_string(), endpoint);
         }
 
         // Load ports
         config
             .ports
-            .insert("api".to_string(), self.discover_port("api")?);
+            .insert("api".to_string(), self.discover_port("api", env)?);
         config
             .ports
-            .insert("metrics".to_string(), self.discover_port("metrics")?);
+            .insert("metrics".to_string(), self.discover_port("metrics", env)?);
         config
             .ports
-            .insert("health".to_string(), self.discover_port("health")?);
+            .insert("health".to_string(), self.discover_port("health", env)?);
 
         Ok(config)
     }
 
     // Internal discovery methods
 
-    fn discover_endpoint(&self, service: &str) -> Result<String> {
+    fn discover_endpoint(&self, service: &str, env: &dyn EnvSource) -> Result<String> {
         // Try capability discovery
         if self.enable_capability_discovery
-            && let Ok(endpoint) = capability_discovery::discover_service(service)
+            && let Ok(endpoint) = capability_discovery::discover_service_with_env(service, env)
         {
             return Ok(endpoint.endpoint);
         }
@@ -160,7 +171,7 @@ impl ConfigBuilder {
         // Try environment
         if self.enable_environment {
             let env_var = format!("NESTGATE_{}_ENDPOINT", service.to_uppercase());
-            if let Ok(value) = env::var(&env_var) {
+            if let Some(value) = env.get(&env_var) {
                 return Ok(value);
             }
         }
@@ -173,17 +184,18 @@ impl ConfigBuilder {
 
         // Capability env (NESTGATE_CAPABILITY_*_ENDPOINT) before generic dev defaults
         if let Some(cap_env) = capability_endpoint_env_key(service)
-            && let Ok(value) = env::var(cap_env)
+            && let Some(value) = env.get(cap_env)
         {
             return Ok(value);
         }
 
         // Use safe defaults (host from env — never assume a fixed peer address)
         if self.enable_defaults {
-            let host = env::var("NESTGATE_DEV_HOST")
-                .or_else(|_| env::var("NESTGATE_DISCOVERY_DEV_HOST"))
-                .or_else(|_| env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
-                .unwrap_or_else(|_| {
+            let host = env
+                .get("NESTGATE_DEV_HOST")
+                .or_else(|| env.get("NESTGATE_DISCOVERY_DEV_HOST"))
+                .or_else(|| env.get("NESTGATE_DISCOVERY_FALLBACK_HOST"))
+                .unwrap_or_else(|| {
                     tracing::warn!(
                         "Agnostic safe defaults: no NESTGATE_DEV_HOST, NESTGATE_DISCOVERY_DEV_HOST, \
                          or NESTGATE_DISCOVERY_FALLBACK_HOST; using 127.0.0.1 for service '{}'.",
@@ -199,10 +211,10 @@ impl ConfigBuilder {
         )))
     }
 
-    fn discover_port(&self, service: &str) -> Result<u16> {
+    fn discover_port(&self, service: &str, env: &dyn EnvSource) -> Result<u16> {
         // Try capability discovery
         if self.enable_capability_discovery
-            && let Ok(endpoint) = capability_discovery::discover_service(service)
+            && let Ok(endpoint) = capability_discovery::discover_service_with_env(service, env)
             && let Ok((_, port)) = capability_discovery::parse_endpoint(&endpoint.endpoint)
         {
             return Ok(port);
@@ -211,7 +223,7 @@ impl ConfigBuilder {
         // Try environment
         if self.enable_environment {
             let env_var = format!("NESTGATE_{}_PORT", service.to_uppercase());
-            if let Ok(value) = env::var(&env_var)
+            if let Some(value) = env.get(&env_var)
                 && let Ok(port) = value.parse::<u16>()
             {
                 return Ok(port);
@@ -276,10 +288,14 @@ impl AgnosticConfig {
     /// we don't silently use localhost.
     #[must_use]
     pub fn api_endpoint(&self) -> Option<String> {
+        self.api_endpoint_for_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::api_endpoint`], but reads `NESTGATE_API_HOST` from `env` (for tests with [`MapEnv`](nestgate_types::MapEnv)).
+    #[must_use]
+    pub fn api_endpoint_for_env_source(&self, env: &dyn EnvSource) -> Option<String> {
         self.endpoints.get("api").cloned().or_else(|| {
-            // Try to construct from environment
-            std::env::var("NESTGATE_API_HOST")
-                .ok()
+            env.get("NESTGATE_API_HOST")
                 .map(|host| format!("http://{}:{}", host, self.api_port()))
         })
     }
@@ -375,11 +391,20 @@ impl AgnosticConfig {
 /// Returns [`NestGateError`] when [`ConfigBuilder::build`] fails or the service port is missing
 /// after migration.
 pub fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16> {
+    migrate_port_from_env_source(service, hardcoded_fallback, &ProcessEnv)
+}
+
+/// Like [`migrate_port`], but uses `env` for variable resolution.
+pub fn migrate_port_from_env_source(
+    service: &str,
+    hardcoded_fallback: u16,
+    env: &dyn EnvSource,
+) -> Result<u16> {
     ConfigBuilder::new()
         .with_capability_discovery()
         .with_environment_fallback()
         .with_default(format!("{service}_port"), hardcoded_fallback.to_string())
-        .build()?
+        .build_from_env_source(env)?
         .ports
         .get(service)
         .copied()
@@ -395,6 +420,15 @@ pub fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16> {
 /// Returns [`NestGateError`] when [`ConfigBuilder::build`] fails or the service endpoint is missing
 /// after migration.
 pub fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<String> {
+    migrate_endpoint_from_env_source(service, hardcoded_fallback, &ProcessEnv)
+}
+
+/// Like [`migrate_endpoint`], but uses `env` for variable resolution.
+pub fn migrate_endpoint_from_env_source(
+    service: &str,
+    hardcoded_fallback: &str,
+    env: &dyn EnvSource,
+) -> Result<String> {
     let config = ConfigBuilder::new()
         .with_capability_discovery()
         .with_environment_fallback()
@@ -402,7 +436,7 @@ pub fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<Strin
             format!("{service}_endpoint"),
             hardcoded_fallback.to_string(),
         )
-        .build()?;
+        .build_from_env_source(env)?;
 
     config.endpoints.get(service).cloned().ok_or_else(|| {
         NestGateError::network_error(format!(
@@ -416,7 +450,7 @@ pub fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_config_builder_with_defaults() {
@@ -443,15 +477,14 @@ mod tests {
 
     #[test]
     fn test_config_builder_with_environment() {
-        temp_env::with_var("NESTGATE_API_PORT", Some("9999"), || {
-            let config = ConfigBuilder::new()
-                .with_environment_fallback()
-                .with_safe_defaults()
-                .build()
-                .expect("Should build config");
+        let env = MapEnv::from([("NESTGATE_API_PORT", "9999")]);
+        let config = ConfigBuilder::new()
+            .with_environment_fallback()
+            .with_safe_defaults()
+            .build_from_env_source(&env)
+            .expect("Should build config");
 
-            assert_eq!(config.api_port(), 9999);
-        });
+        assert_eq!(config.api_port(), 9999);
     }
 
     #[test]
@@ -518,109 +551,83 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn invalid_api_port_env_falls_through_to_safe_defaults() {
-        temp_env::with_vars(
-            vec![
-                ("NESTGATE_API_PORT", Some("not-a-u16")),
-                ("NESTGATE_METRICS_PORT", Some("also-bad")),
-                ("NESTGATE_HEALTH_PORT", Some("xyz")),
-            ],
-            || {
-                let config = ConfigBuilder::new()
-                    .with_environment_fallback()
-                    .with_safe_defaults()
-                    .build()
-                    .expect("ports should fall back to safe defaults when env parse fails");
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "not-a-u16"),
+            ("NESTGATE_METRICS_PORT", "also-bad"),
+            ("NESTGATE_HEALTH_PORT", "xyz"),
+        ]);
+        let config = ConfigBuilder::new()
+            .with_environment_fallback()
+            .with_safe_defaults()
+            .build_from_env_source(&env)
+            .expect("ports should fall back to safe defaults when env parse fails");
 
-                assert_eq!(config.api_port(), DEFAULT_API_PORT);
-                assert_eq!(config.metrics_port(), DEFAULT_METRICS_PORT);
-                assert_eq!(config.health_port(), DEFAULT_HEALTH_PORT);
-            },
-        );
+        assert_eq!(config.api_port(), DEFAULT_API_PORT);
+        assert_eq!(config.metrics_port(), DEFAULT_METRICS_PORT);
+        assert_eq!(config.health_port(), DEFAULT_HEALTH_PORT);
     }
 
     #[test]
-    #[serial]
     fn capability_endpoint_env_resolves_without_other_flags() {
-        temp_env::with_var(
+        let env = MapEnv::from([(
             "NESTGATE_CAPABILITY_HTTP_API_ENDPOINT",
-            Some("http://cap.example:9999"),
-            || {
-                let config = ConfigBuilder::new()
-                    .with_default("api_port", "9999")
-                    .with_default("metrics_port", "9090")
-                    .with_default("health_port", "8082")
-                    .build()
-                    .expect("capability endpoint env should supply api endpoint");
+            "http://cap.example:9999",
+        )]);
+        let config = ConfigBuilder::new()
+            .with_default("api_port", "9999")
+            .with_default("metrics_port", "9090")
+            .with_default("health_port", "8082")
+            .build_from_env_source(&env)
+            .expect("capability endpoint env should supply api endpoint");
 
-                assert_eq!(
-                    config.api_endpoint().as_deref(),
-                    Some("http://cap.example:9999")
-                );
-            },
+        assert_eq!(
+            config.api_endpoint_for_env_source(&env).as_deref(),
+            Some("http://cap.example:9999")
         );
     }
 
     #[test]
-    #[serial]
     fn api_endpoint_built_from_nestgate_api_host_when_endpoint_missing() {
-        temp_env::with_vars(
-            vec![
-                ("NESTGATE_API_PORT", Some("8080")),
-                ("NESTGATE_API_HOST", Some("10.0.0.42")),
-            ],
-            || {
-                let config = ConfigBuilder::new()
-                    .with_environment_fallback()
-                    .with_default("api_port", "8080")
-                    .with_default("metrics_port", "9090")
-                    .with_default("health_port", "8082")
-                    .build()
-                    .expect("custom ports should allow build when endpoint omitted");
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "8080"),
+            ("NESTGATE_API_HOST", "10.0.0.42"),
+        ]);
+        let config = ConfigBuilder::new()
+            .with_environment_fallback()
+            .with_default("api_port", "8080")
+            .with_default("metrics_port", "9090")
+            .with_default("health_port", "8082")
+            .build_from_env_source(&env)
+            .expect("custom ports should allow build when endpoint omitted");
 
-                assert_eq!(
-                    config.api_endpoint().as_deref(),
-                    Some("http://10.0.0.42:8080")
-                );
-            },
+        assert_eq!(
+            config.api_endpoint_for_env_source(&env).as_deref(),
+            Some("http://10.0.0.42:8080")
         );
     }
 
     #[test]
-    #[serial]
     fn migrate_port_returns_hardcoded_fallback_when_isolated() {
         // `migrate_port` only sets `{service}_port`; `build` still resolves metrics/health ports.
-        temp_env::with_vars(
-            vec![
-                ("NESTGATE_API_ENDPOINT", None::<&str>),
-                ("NESTGATE_API_PORT", None::<&str>),
-                ("NESTGATE_METRICS_PORT", Some("9090")),
-                ("NESTGATE_HEALTH_PORT", Some("8082")),
-            ],
-            || {
-                let port = migrate_port("api", 4242).expect("migrate_port");
-                assert_eq!(port, 4242);
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_METRICS_PORT", "9090"),
+            ("NESTGATE_HEALTH_PORT", "8082"),
+        ]);
+        let port = migrate_port_from_env_source("api", 4242, &env).expect("migrate_port");
+        assert_eq!(port, 4242);
     }
 
     #[test]
-    #[serial]
     fn migrate_endpoint_returns_hardcoded_fallback_when_isolated() {
-        temp_env::with_vars(
-            vec![
-                ("NESTGATE_API_ENDPOINT", None::<&str>),
-                ("NESTGATE_API_PORT", Some("8080")),
-                ("NESTGATE_METRICS_PORT", Some("9090")),
-                ("NESTGATE_HEALTH_PORT", Some("8082")),
-            ],
-            || {
-                let ep = migrate_endpoint("api", "http://migrate.example:7777")
-                    .expect("migrate_endpoint");
-                assert_eq!(ep, "http://migrate.example:7777");
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "8080"),
+            ("NESTGATE_METRICS_PORT", "9090"),
+            ("NESTGATE_HEALTH_PORT", "8082"),
+        ]);
+        let ep = migrate_endpoint_from_env_source("api", "http://migrate.example:7777", &env)
+            .expect("migrate_endpoint");
+        assert_eq!(ep, "http://migrate.example:7777");
     }
 
     #[test]

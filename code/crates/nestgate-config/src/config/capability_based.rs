@@ -59,14 +59,18 @@ pub enum PrimalCapability {
     Custom(String),
 }
 use dashmap::DashMap;
+use nestgate_types::EnvSource;
+use nestgate_types::ProcessEnv;
+use nestgate_types::env_parsed;
 use nestgate_types::error::{NestGateError, Result};
 use std::collections::HashMap;
+use std::fmt;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
 /// Configuration for capability-based service discovery
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CapabilityConfig {
     /// How long to wait for service discovery
     /// Used by runtime discovery system for dynamic capability location
@@ -80,6 +84,19 @@ pub struct CapabilityConfig {
 
     /// Cache of discovered services (lock-free for 5-10x better discovery performance)
     discovered_services: Arc<DashMap<PrimalCapability, DiscoveredService>>,
+
+    /// Environment source for capability and fallback variables
+    env: Arc<dyn EnvSource>,
+}
+
+impl fmt::Debug for CapabilityConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("CapabilityConfig")
+            .field("discovery_timeout", &self.discovery_timeout)
+            .field("retry_attempts", &self.retry_attempts)
+            .field("fallback_mode", &self.fallback_mode)
+            .finish_non_exhaustive()
+    }
 }
 
 /// Fallback behavior when a capability is not available
@@ -183,7 +200,7 @@ impl CapabilityConfig {
             .to_uppercase()
             .replace('-', "_");
 
-        let endpoint_str = std::env::var(&env_key).map_err(|_| {
+        let endpoint_str = self.env.get(&env_key).ok_or_else(|| {
             let msg = format!(
                 "Capability {} not configured. Set {} environment variable",
                 capability_name(&capability),
@@ -251,12 +268,11 @@ impl CapabilityConfig {
                 );
                 // ✅ SOVEREIGNTY COMPLIANT: Use environment-driven fallback, not hardcoded
                 // Get fallback host and port from environment or config
-                let fallback_host = std::env::var("NESTGATE_FALLBACK_HOST")
-                    .unwrap_or_else(|_| "127.0.0.1".to_string());
-                let fallback_port: u16 = std::env::var("NESTGATE_FALLBACK_PORT")
-                    .ok()
-                    .and_then(|p| p.parse().ok())
-                    .unwrap_or(8080);
+                let fallback_host = self
+                    .env
+                    .get("NESTGATE_FALLBACK_HOST")
+                    .unwrap_or_else(|| "127.0.0.1".to_string());
+                let fallback_port: u16 = env_parsed(&*self.env, "NESTGATE_FALLBACK_PORT", 8080u16);
 
                 let endpoint_str = format!("{fallback_host}:{fallback_port}");
                 let endpoint = endpoint_str.parse().map_err(|e| {
@@ -330,6 +346,11 @@ impl CapabilityConfigBuilder {
 
     /// Build the configuration
     pub fn build(self) -> Result<CapabilityConfig> {
+        self.build_with_env(Arc::new(ProcessEnv))
+    }
+
+    /// Build using an injectable environment source (e.g. [`MapEnv`](nestgate_types::MapEnv) in tests).
+    pub fn build_with_env(self, env: Arc<dyn EnvSource>) -> Result<CapabilityConfig> {
         if self.retry_attempts == 0 {
             return Err(NestGateError::validation_error(
                 "retry_attempts must be at least 1",
@@ -341,6 +362,7 @@ impl CapabilityConfigBuilder {
             retry_attempts: self.retry_attempts,
             fallback_mode: self.fallback_mode,
             discovered_services: Arc::new(DashMap::new()),
+            env,
         })
     }
 }
@@ -364,7 +386,8 @@ const fn capability_name(capability: &PrimalCapability) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use temp_env::async_with_vars;
+    use nestgate_types::MapEnv;
+    use std::sync::Arc;
 
     #[test]
     fn test_builder_defaults() {
@@ -399,21 +422,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_from_env() {
-        async_with_vars(
-            vec![(
-                "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
-                Some("127.0.0.1:9000"),
-            )],
-            async {
-                let config = CapabilityConfigBuilder::new().build().unwrap();
-                let result = config.discover(PrimalCapability::Storage).await;
-                assert!(result.is_ok());
-                let service = result.unwrap();
-                assert_eq!(service.capability, PrimalCapability::Storage);
-                assert_eq!(service.endpoint.port(), 9000);
-            },
-        )
-        .await;
+        let env = Arc::new(MapEnv::from([(
+            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
+            "127.0.0.1:9000",
+        )]));
+        let config = CapabilityConfigBuilder::new().build_with_env(env).unwrap();
+        let result = config.discover(PrimalCapability::Storage).await;
+        assert!(result.is_ok());
+        let service = result.unwrap();
+        assert_eq!(service.capability, PrimalCapability::Storage);
+        assert_eq!(service.endpoint.port(), 9000);
     }
 
     #[test]
@@ -428,132 +446,100 @@ mod tests {
 
     #[tokio::test]
     async fn discover_rejects_invalid_endpoint_env() {
-        async_with_vars(
-            vec![(
-                "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
-                Some("not-a-socket-address"),
-            )],
-            async {
-                let config = CapabilityConfigBuilder::new()
-                    .with_retry_attempts(1)
-                    .build()
-                    .unwrap();
-                let result = config.discover(PrimalCapability::Storage).await;
-                assert!(result.is_err());
-            },
-        )
-        .await;
+        let env = Arc::new(MapEnv::from([(
+            "NESTGATE_CAPABILITY_STORAGE_ENDPOINT",
+            "not-a-socket-address",
+        )]));
+        let config = CapabilityConfigBuilder::new()
+            .with_retry_attempts(1)
+            .build_with_env(env)
+            .unwrap();
+        let result = config.discover(PrimalCapability::Storage).await;
+        assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn discover_local_fallback_succeeds_without_capability_env() {
-        async_with_vars(
-            vec![
-                ("NESTGATE_CAPABILITY_STORAGE_ENDPOINT", None::<&str>),
-                ("NESTGATE_FALLBACK_HOST", Some("127.0.0.1")),
-                ("NESTGATE_FALLBACK_PORT", Some("9753")),
-            ],
-            async {
-                let config = CapabilityConfigBuilder::new()
-                    .with_retry_attempts(1)
-                    .with_fallback_mode(FallbackMode::LocalFallback)
-                    .build()
-                    .unwrap();
-                let result = config.discover(PrimalCapability::Storage).await;
-                assert!(result.is_ok());
-                assert_eq!(result.unwrap().endpoint.port(), 9753);
-            },
-        )
-        .await;
+        let env = Arc::new(MapEnv::from([
+            ("NESTGATE_FALLBACK_HOST", "127.0.0.1"),
+            ("NESTGATE_FALLBACK_PORT", "9753"),
+        ]));
+        let config = CapabilityConfigBuilder::new()
+            .with_retry_attempts(1)
+            .with_fallback_mode(FallbackMode::LocalFallback)
+            .build_with_env(env)
+            .unwrap();
+        let result = config.discover(PrimalCapability::Storage).await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().endpoint.port(), 9753);
     }
 
     #[tokio::test]
     async fn discover_fail_fast_without_env() {
-        async_with_vars(
-            vec![("NESTGATE_CAPABILITY_SECURITY_ENDPOINT", None::<&str>)],
-            async {
-                let config = CapabilityConfigBuilder::new()
-                    .with_retry_attempts(1)
-                    .with_fallback_mode(FallbackMode::FailFast)
-                    .build()
-                    .unwrap();
-                let result = config.discover(PrimalCapability::Security).await;
-                assert!(result.is_err());
-            },
-        )
-        .await;
+        let env = Arc::new(MapEnv::new());
+        let config = CapabilityConfigBuilder::new()
+            .with_retry_attempts(1)
+            .with_fallback_mode(FallbackMode::FailFast)
+            .build_with_env(env)
+            .unwrap();
+        let result = config.discover(PrimalCapability::Security).await;
+        assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn discover_graceful_degradation_still_errors_without_env() {
-        async_with_vars(
-            vec![("NESTGATE_CAPABILITY_ANALYTICS_ENDPOINT", None::<&str>)],
-            async {
-                let config = CapabilityConfigBuilder::new()
-                    .with_retry_attempts(1)
-                    .with_fallback_mode(FallbackMode::GracefulDegradation)
-                    .build()
-                    .unwrap();
-                let result = config.discover(PrimalCapability::Analytics).await;
-                assert!(result.is_err());
-            },
-        )
-        .await;
+        let env = Arc::new(MapEnv::new());
+        let config = CapabilityConfigBuilder::new()
+            .with_retry_attempts(1)
+            .with_fallback_mode(FallbackMode::GracefulDegradation)
+            .build_with_env(env)
+            .unwrap();
+        let result = config.discover(PrimalCapability::Analytics).await;
+        assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn discover_second_call_uses_cache_without_rediscovering_env() {
-        async_with_vars(
-            vec![(
-                "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
-                Some("127.0.0.1:18080"),
-            )],
-            async {
-                let config = CapabilityConfigBuilder::new()
-                    .with_retry_attempts(1)
-                    .build()
-                    .unwrap();
-                let a = config
-                    .discover(PrimalCapability::Orchestration)
-                    .await
-                    .expect("first discover");
-                let b = config
-                    .discover(PrimalCapability::Orchestration)
-                    .await
-                    .expect("cached discover");
-                assert_eq!(a.endpoint, b.endpoint);
-                assert_eq!(a.endpoint.port(), 18080);
-            },
-        )
-        .await;
+        let env = Arc::new(MapEnv::from([(
+            "NESTGATE_CAPABILITY_ORCHESTRATION_ENDPOINT",
+            "127.0.0.1:18080",
+        )]));
+        let config = CapabilityConfigBuilder::new()
+            .with_retry_attempts(1)
+            .build_with_env(env)
+            .unwrap();
+        let a = config
+            .discover(PrimalCapability::Orchestration)
+            .await
+            .expect("first discover");
+        let b = config
+            .discover(PrimalCapability::Orchestration)
+            .await
+            .expect("cached discover");
+        assert_eq!(a.endpoint, b.endpoint);
+        assert_eq!(a.endpoint.port(), 18080);
     }
 
     #[tokio::test]
     async fn local_fallback_ignores_invalid_fallback_port_env() {
-        async_with_vars(
-            vec![
-                ("NESTGATE_CAPABILITY_MONITORING_ENDPOINT", None::<&str>),
-                ("NESTGATE_FALLBACK_HOST", Some("127.0.0.1")),
-                ("NESTGATE_FALLBACK_PORT", Some("not-a-number")),
-            ],
-            async {
-                let config = CapabilityConfigBuilder::new()
-                    .with_retry_attempts(1)
-                    .with_fallback_mode(FallbackMode::LocalFallback)
-                    .build()
-                    .unwrap();
-                let svc = config
-                    .discover(PrimalCapability::Monitoring)
-                    .await
-                    .expect("local fallback with default port");
-                assert_eq!(svc.endpoint.port(), 8080);
-                assert_eq!(
-                    svc.metadata.get("mode"),
-                    Some(&"local_fallback".to_string())
-                );
-            },
-        )
-        .await;
+        let env = Arc::new(MapEnv::from([
+            ("NESTGATE_FALLBACK_HOST", "127.0.0.1"),
+            ("NESTGATE_FALLBACK_PORT", "not-a-number"),
+        ]));
+        let config = CapabilityConfigBuilder::new()
+            .with_retry_attempts(1)
+            .with_fallback_mode(FallbackMode::LocalFallback)
+            .build_with_env(env)
+            .unwrap();
+        let svc = config
+            .discover(PrimalCapability::Monitoring)
+            .await
+            .expect("local fallback with default port");
+        assert_eq!(svc.endpoint.port(), 8080);
+        assert_eq!(
+            svc.metadata.get("mode"),
+            Some(&"local_fallback".to_string())
+        );
     }
 
     #[tokio::test]

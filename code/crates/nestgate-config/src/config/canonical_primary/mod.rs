@@ -18,6 +18,8 @@
 //! - `test_config`: Test and validation configurations (NEW)
 //! - `supporting_types`: Common types and enums
 //! - `builders`: Configuration builders and factories
+use nestgate_types::EnvSource;
+use nestgate_types::ProcessEnv;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 use std::time::Duration;
@@ -194,10 +196,15 @@ impl<
 {
     /// **PHASE 2C**: Create configuration from environment variables
     pub fn from_environment() -> nestgate_types::error::Result<Self> {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// **PHASE 2C**: Create configuration using an injectable env source.
+    pub fn from_env_source(env: &dyn EnvSource) -> nestgate_types::error::Result<Self> {
         let mut config = Self::default();
 
         // Load environment-specific overrides
-        if let Ok(env_str) = std::env::var("NESTGATE_ENVIRONMENT") {
+        if let Some(env_str) = env.get("NESTGATE_ENVIRONMENT") {
             config.environment = match env_str.as_str() {
                 "production" => Environment::Production,
                 "staging" => Environment::Staging,
@@ -205,7 +212,7 @@ impl<
             };
         }
 
-        if let Ok(port_str) = std::env::var("NESTGATE_API_PORT")
+        if let Some(port_str) = env.get("NESTGATE_API_PORT")
             && let Ok(port) = port_str.parse::<u16>()
         {
             config.network.api.port = port;
@@ -415,8 +422,7 @@ pub type ProductionConfig = NestGateCanonicalConfig<5000, 262_144, 10000, 443>;
 mod tests {
     use super::*;
     use crate::constants::hardcoding::runtime_fallback_ports;
-    use serial_test::serial;
-    use temp_env::with_vars;
+    use nestgate_types::MapEnv;
 
     type StdCanonical = NestGateCanonicalConfig<1000, 65536, 30000, 8080>;
 
@@ -564,30 +570,21 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn from_environment_sets_production_and_port() {
-        let c = with_vars(
-            vec![
-                ("NESTGATE_ENVIRONMENT", Some("production")),
-                ("NESTGATE_API_PORT", Some("9090")),
-            ],
-            || StdCanonical::from_environment().expect("from_environment"),
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_ENVIRONMENT", "production"),
+            ("NESTGATE_API_PORT", "9090"),
+        ]);
+        let c = StdCanonical::from_env_source(&env).expect("from_env_source");
         assert_eq!(c.environment, Environment::Production);
         assert_eq!(c.network.api.port, 9090);
         assert_eq!(c.api.port, 9090);
     }
 
     #[test]
-    #[serial]
     fn from_environment_unknown_env_string_defaults_to_development() {
-        let c = with_vars(
-            vec![
-                ("NESTGATE_ENVIRONMENT", Some("custom-lab")),
-                ("NESTGATE_API_PORT", None::<&str>),
-            ],
-            || StdCanonical::from_environment().expect("from_environment"),
-        );
+        let env = MapEnv::from([("NESTGATE_ENVIRONMENT", "custom-lab")]);
+        let c = StdCanonical::from_env_source(&env).expect("from_env_source");
         assert_eq!(c.environment, Environment::Development);
     }
 }

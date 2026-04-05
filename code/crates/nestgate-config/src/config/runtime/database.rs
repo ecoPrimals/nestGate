@@ -5,9 +5,9 @@
 //!
 //! Provides configuration for database connection pooling and credentials.
 
+use nestgate_types::EnvSource;
 use nestgate_types::error::Result;
 use serde::{Deserialize, Serialize};
-use std::env;
 
 /// Database configuration for connection management.
 ///
@@ -79,31 +79,33 @@ impl DatabaseConfig {
     /// export NESTGATE_DB_USER="app_user"
     /// export NESTGATE_DB_PASSWORD="secure_password"
     /// ```
-    pub fn from_environment() -> Result<Self> {
-        let host = env::var("NESTGATE_DB_HOST")
-            .map_err(|_| nestgate_types::error::NestGateError::configuration_error(
+    /// Load database configuration from an injectable [`EnvSource`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `NESTGATE_DB_HOST` is not present in `env`.
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let host = env.get("NESTGATE_DB_HOST").ok_or_else(|| {
+            nestgate_types::error::NestGateError::configuration_error(
                 "database_host",
-                "NESTGATE_DB_HOST must be set explicitly. No hardcoded localhost for external services."
-            ))?;
+                "NESTGATE_DB_HOST must be set explicitly. No hardcoded localhost for external services.",
+            )
+        })?;
 
         Ok(Self {
             host,
-            port: env::var("NESTGATE_DB_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(5432), // Port 5432 is PostgreSQL default (industry standard)
-            name: env::var("NESTGATE_DB_NAME").unwrap_or_else(|_| "nestgate".to_string()),
-            user: env::var("NESTGATE_DB_USER").unwrap_or_else(|_| "nestgate".to_string()),
-            password: env::var("NESTGATE_DB_PASSWORD").unwrap_or_default(),
-            pool_size: env::var("NESTGATE_DB_POOL_SIZE")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(10),
-            max_connections: env::var("NESTGATE_DB_MAX_CONNECTIONS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(100),
+            port: nestgate_types::env_parsed(env, "NESTGATE_DB_PORT", 5432),
+            name: env.get_or("NESTGATE_DB_NAME", "nestgate"),
+            user: env.get_or("NESTGATE_DB_USER", "nestgate"),
+            password: env.get_or("NESTGATE_DB_PASSWORD", ""),
+            pool_size: nestgate_types::env_parsed(env, "NESTGATE_DB_POOL_SIZE", 10),
+            max_connections: nestgate_types::env_parsed(env, "NESTGATE_DB_MAX_CONNECTIONS", 100),
         })
+    }
+
+    /// Load from the real process environment. Delegates to [`Self::from_env_source`].
+    pub fn from_environment() -> Result<Self> {
+        Self::from_env_source(&nestgate_types::ProcessEnv)
     }
 
     /// Get database connection URL.
@@ -133,8 +135,7 @@ impl Default for DatabaseConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
-    use temp_env::with_vars;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn database_config_default() {
@@ -157,29 +158,23 @@ mod tests {
     }
 
     #[test]
-    #[serial]
-    fn database_config_from_environment_requires_host() {
-        let res = with_vars(vec![("NESTGATE_DB_HOST", None::<&str>)], || {
-            DatabaseConfig::from_environment()
-        });
-        assert!(res.is_err());
+    fn database_config_from_env_requires_host() {
+        let env = MapEnv::new();
+        assert!(DatabaseConfig::from_env_source(&env).is_err());
     }
 
     #[test]
-    #[serial]
-    fn database_config_from_environment_success() {
-        let c = with_vars(
-            vec![
-                ("NESTGATE_DB_HOST", Some("db.example.com")),
-                ("NESTGATE_DB_PORT", Some("5433")),
-                ("NESTGATE_DB_NAME", Some("app")),
-                ("NESTGATE_DB_USER", Some("user")),
-                ("NESTGATE_DB_PASSWORD", Some("secret")),
-                ("NESTGATE_DB_POOL_SIZE", Some("5")),
-                ("NESTGATE_DB_MAX_CONNECTIONS", Some("50")),
-            ],
-            || DatabaseConfig::from_environment().expect("from_environment"),
-        );
+    fn database_config_from_env_success() {
+        let env = MapEnv::from([
+            ("NESTGATE_DB_HOST", "db.example.com"),
+            ("NESTGATE_DB_PORT", "5433"),
+            ("NESTGATE_DB_NAME", "app"),
+            ("NESTGATE_DB_USER", "user"),
+            ("NESTGATE_DB_PASSWORD", "secret"),
+            ("NESTGATE_DB_POOL_SIZE", "5"),
+            ("NESTGATE_DB_MAX_CONNECTIONS", "50"),
+        ]);
+        let c = DatabaseConfig::from_env_source(&env).expect("from_env_source");
         assert_eq!(c.host, "db.example.com");
         assert_eq!(c.port, 5433);
         assert_eq!(c.name, "app");
@@ -204,20 +199,9 @@ mod tests {
     }
 
     #[test]
-    #[serial]
-    fn database_config_from_environment_only_host_uses_defaults_for_optional_fields() {
-        let c = with_vars(
-            vec![
-                ("NESTGATE_DB_HOST", Some("pg.internal")),
-                ("NESTGATE_DB_PORT", None::<&str>),
-                ("NESTGATE_DB_NAME", None::<&str>),
-                ("NESTGATE_DB_USER", None::<&str>),
-                ("NESTGATE_DB_PASSWORD", None::<&str>),
-                ("NESTGATE_DB_POOL_SIZE", None::<&str>),
-                ("NESTGATE_DB_MAX_CONNECTIONS", None::<&str>),
-            ],
-            || DatabaseConfig::from_environment().expect("from_environment"),
-        );
+    fn database_config_from_env_only_host_uses_defaults() {
+        let env = MapEnv::from([("NESTGATE_DB_HOST", "pg.internal")]);
+        let c = DatabaseConfig::from_env_source(&env).expect("from_env_source");
         assert_eq!(c.host, "pg.internal");
         assert_eq!(c.port, 5432);
         assert_eq!(c.name, "nestgate");

@@ -47,6 +47,8 @@
 //! ✅ **Agnostic**: Works across any deployment environment
 //! ✅ **Fallback Safe**: Graceful degradation to defaults
 
+use nestgate_types::EnvSource;
+use nestgate_types::ProcessEnv;
 use nestgate_types::error::NestGateError;
 use nestgate_types::error::Result;
 use std::env;
@@ -82,25 +84,34 @@ pub enum DiscoverySource {
 
 // ==================== DISCOVERY FUNCTIONS ====================
 
-/// Discover service endpoint through capability system
+/// Discover service endpoint through capability system using an injectable env source.
 ///
 /// This is the primary discovery mechanism that respects primal sovereignty:
 /// - No hardcoded endpoints
 /// - Runtime discovery only
 /// - Self-knowledge pattern
 ///
+/// Production callers typically use [`discover_service`], which reads the real process environment.
+/// Tests should pass [`MapEnv`](nestgate_types::MapEnv) here.
+///
 /// # Errors
 ///
 /// Returns error if service cannot be discovered through any method
-pub fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
+pub fn discover_service_with_env(capability: &str, env: &dyn EnvSource) -> Result<ServiceEndpoint> {
     // Try capability registry first (preferred)
     if let Ok(endpoint) = discover_from_capability_registry(capability) {
         return Ok(endpoint);
     }
 
     // Try environment variable
-    if let Ok(endpoint) = discover_from_environment(capability) {
-        return Ok(endpoint);
+    let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
+    if let Some(endpoint) = env.get(&env_var) {
+        return Ok(ServiceEndpoint {
+            capability: capability.to_string(),
+            endpoint,
+            ttl: Duration::from_secs(300),
+            source: DiscoverySource::Environment,
+        });
     }
 
     // Try local discovery (mDNS, etc.)
@@ -112,6 +123,13 @@ pub fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
     Err(NestGateError::network_error(format!(
         "Service '{capability}' not found (tried: capability, environment, local discovery)"
     )))
+}
+
+/// Discover service endpoint through capability system using the real process environment.
+///
+/// For tests, use [`discover_service_with_env`] with [`MapEnv`](nestgate_types::MapEnv).
+pub fn discover_service(capability: &str) -> Result<ServiceEndpoint> {
+    discover_service_with_env(capability, &ProcessEnv)
 }
 
 /// Discover service with fallback to default
@@ -279,25 +297,6 @@ fn discover_from_capability_registry(capability: &str) -> Result<ServiceEndpoint
         ttl: Duration::from_secs(ttl_secs),
         source: DiscoverySource::CapabilityRegistry,
     })
-}
-
-/// Discover from environment variables
-fn discover_from_environment(capability: &str) -> Result<ServiceEndpoint> {
-    // Build env var name: NESTGATE_<CAPABILITY>_ENDPOINT
-    let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
-
-    if let Ok(endpoint) = env::var(&env_var) {
-        return Ok(ServiceEndpoint {
-            capability: capability.to_string(),
-            endpoint,
-            ttl: Duration::from_secs(300),
-            source: DiscoverySource::Environment,
-        });
-    }
-
-    Err(NestGateError::network_error(format!(
-        "Environment variable '{env_var}' not set"
-    )))
 }
 
 /// Discover from local network (mDNS, etc.)

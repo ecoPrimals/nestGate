@@ -101,7 +101,10 @@ mod tests {
 
         let result = authenticate(State(handler), Json(credentials)).await;
         let response = result.expect("handler returns Ok with failure payload");
-        assert!(!response.success, "no IdP wired — authentication must not succeed");
+        assert!(
+            !response.success,
+            "no IdP wired — authentication must not succeed"
+        );
         assert!(response.token.is_none());
     }
 

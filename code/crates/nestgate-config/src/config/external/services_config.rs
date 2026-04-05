@@ -75,23 +75,16 @@ impl ServicesConfig {
     pub fn from_env_source(env: &dyn EnvSource) -> Self {
         let mut config = Self::new();
 
-        // Core services
         config.discovery_url = env.get("NESTGATE_DISCOVERY_URL");
         config.adapter_url = env.get("NESTGATE_ADAPTER_URL");
         config.health_url = env.get("NESTGATE_HEALTH_URL");
         config.metrics_url = env.get("NESTGATE_METRICS_URL");
         config.config_url = env.get("NESTGATE_CONFIG_URL");
 
-        // Capability URLs: NESTGATE_CAPABILITY_<NAME> (name is lowercased for lookup)
         for (key, value) in env.vars() {
             if let Some(name) = key.strip_prefix("NESTGATE_CAPABILITY_") {
                 config.capabilities.insert(name.to_lowercase(), value);
-            }
-        }
-
-        // Scan for dynamic NESTGATE_EXTERNAL_* entries
-        for (key, value) in env.vars() {
-            if let Some(name) = key.strip_prefix("NESTGATE_EXTERNAL_") {
+            } else if let Some(name) = key.strip_prefix("NESTGATE_EXTERNAL_") {
                 config.external_services.insert(name.to_lowercase(), value);
             }
         }
@@ -100,9 +93,6 @@ impl ServicesConfig {
     }
 
     /// Create configuration from current process environment variables.
-    ///
-    /// Delegates to [`from_env_source`](Self::from_env_source) with
-    /// [`ProcessEnv`](nestgate_types::ProcessEnv).
     #[must_use]
     pub fn from_env() -> Self {
         Self::from_env_source(&nestgate_types::ProcessEnv)
