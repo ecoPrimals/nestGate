@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 33: Comprehensive EnvSource migration, mock evolution, hardcoding elimination (April 6, 2026)
+
+- Migrated 25+ production files from direct `std::env::var` to EnvSource DI (210→79 remaining, 18 are infrastructure)
+- Evolved `ECOSYSTEM_NAME` from hardcoded "biomeos" to env-configurable `ecosystem_name(&dyn EnvSource)` with backward-compatible `BIOMEOS_SERVICE_NAME` fallback
+- socket_config: uses `ecosystem_path_segment()` instead of literal "biomeos"
+- Evolved snapshot `storage_usage` to read real ZFS sizes via `zfs list`, falling back to estimate
+- Evolved compression analysis to read real ZFS `compressratio`/`algorithm` via `zfs get`, falling back to estimation
+- Accurate documentation for `production_placeholders.rs` and `mock_analysis.rs`
+- Fixed `Handle::current().block_on` deadlock risk in `e2e_scenario_28` Drop impl
+- Documented `isolated_test_runner` `block_on` as correct sync-entry pattern
+- Gated ZFS ARC stats tests for non-ZFS environments
+- Current: 11,826 tests passing, 461 ignored, 0 failures, 0 clippy warnings
+
 ### Session 32: Blocking pattern elimination & test harness modernization (April 6, 2026)
 
 - Migrated 8 production modules to EnvSource dependency injection
