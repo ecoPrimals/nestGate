@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
+//
+// Disabled in fuzz/Cargo.toml: real ZFS command-shape fuzzing, but the harness needs type fixes
+// (e.g. `UnifiedZfsConfig` import) before it builds with current `nestgate_zfs::config`.
 
 #![no_main]
 

@@ -2,6 +2,10 @@
 
 **Purpose**: Track performance improvements during DashMap migration and technical debt remediation.
 
+## Status: root-level `benches/` (this directory)
+
+The workspace root `Cargo.toml` does not define any `[[bench]]` entries for these `.rs` files, so they are not built when you run `cargo bench` from the repository root. Treat them as legacy or reference sources unless you wire them into a crate. Active Criterion benchmarks live under crate packages—for example `code/crates/nestgate-core/Cargo.toml` registers `performance_validation`, `comprehensive_reality_check`, and `working_performance_benchmark`.
+
 ---
 
 ## 📊 **Available Benchmarks**

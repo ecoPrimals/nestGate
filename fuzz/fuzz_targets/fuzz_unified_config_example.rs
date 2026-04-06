@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
+//
+// Kept for unified-config fuzz patterns; left out of fuzz/Cargo.toml bins until re-enabled with
+// the rest of the config fuzz suite.
 
 #![no_main]
 

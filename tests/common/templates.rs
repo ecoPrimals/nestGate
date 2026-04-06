@@ -114,26 +114,6 @@ macro_rules! e2e_test {
     };
 }
 
-/// Property-based test helper
-///
-/// # Example
-/// ```ignore
-/// property_test!(test_config_roundtrip, |port: u16| {
-///     port > 1024 && port < 65535
-/// });
-/// ```
-#[cfg(feature = "proptest")]
-#[macro_export]
-macro_rules! property_test {
-    ($name:ident, $prop:expr) => {
-        #[test]
-        fn $name() {
-            use proptest::prelude::*;
-            proptest!($prop);
-        }
-    };
-}
-
 /// Parameterized test helper
 ///
 /// # Example

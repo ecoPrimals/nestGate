@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Debris audit (confirmed clean)
 - Zero empty `.rs` files in crate sources
 - Zero orphaned JSON fixtures
-- Zero TODO/FIXME/HACK markers in crate sources
+- Zero `todo!()` / `FIXME` / `HACK` markers in crate sources (11 tracking `TODO:` comments in `production_placeholders.rs` for future HTTP wiring)
 - `nestgate-automation`, `nestgate-network`, `nestgate-mcp` — confirmed fossil on disk, not workspace members
 - 79 `#[deprecated]` markers — legitimate API deprecation surface, not debris
 - `scripts/setup-test-substrate.sh`, `.pre-commit-config.sh` — legitimate, no stale refs
@@ -96,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dev stubs: already properly gated behind `cfg(test)` + `dev-stubs` feature; no production leakage
 - Unsafe code: ZERO actual `unsafe` blocks in workspace; all crate roots have `#![forbid(unsafe_code)]`
 - External C/C++ deps: zero in normal dependency tree (only `cc` via fuzz target)
-- TODO/FIXME/HACK markers: zero in crate sources
+- `todo!()` / `FIXME` / `HACK` markers: zero in crate sources (11 `TODO:` tracking comments in `production_placeholders.rs` for future HTTP wiring)
 
 ### Session 28: primalSpring T1–T9 audit resolution (April 4, 2026)
 

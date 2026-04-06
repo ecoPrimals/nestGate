@@ -8,8 +8,8 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-05
-Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-05
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-06
+Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-06
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
 Tests:              ~11,826 passing, 0 failures, 461 ignored (cargo test --workspace --all-features)
@@ -42,12 +42,12 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ---
 
-## Ground truth refresh (Apr 5, 2026)
+## Ground truth refresh (Apr 6, 2026)
 
 Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
 
 - **Production file size**: All production `.rs` files under **1,000** lines (max ~750 pre-refactored; `tarpc_types.rs` split to ~130-line modules).
-- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy with `-D warnings` passes as of 2026-04-05. MCP, ring, rustls, reqwest eliminated from typical app paths.
+- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy with `-D warnings` passes as of 2026-04-06. MCP, ring, rustls, reqwest eliminated from typical app paths.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
 - **Testing**: Zero `thread::sleep` or `tokio::time::sleep` stabilization waits in tests (except chaos/timeout). `#[serial]` reduced from ~36 to **5** (env-process-shim + CLI tracing). Config/discovery/port-discovery tests use `EnvSource` trait injection (`MapEnv` in tests, `ProcessEnv` in production) — no process-env mutation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
@@ -538,7 +538,7 @@ nestGate/ (23 workspace members: 20 code/crates + tools + fuzz + root)
 ├── nestgate-performance Performance monitoring
 ├── tools/unwrap-migrator  Helper CLI
 └── fuzz/               Fuzz targets
-Deprecated/shed (fossil on disk): nestgate-network, nestgate-automation, nestgate-mcp
+Deprecated/shed (removed from workspace): nestgate-network, nestgate-automation, nestgate-mcp
 ```
 
 ---

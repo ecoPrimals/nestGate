@@ -3,10 +3,10 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-05)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-06)
 Tests:       PASS — cargo test --workspace --all-features, 0 failures (~11,826 passing, 461 ignored — STATUS.md)
 Coverage:    ~80% line (llvm-cov) — wateringHole 80% min met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-05)
+Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-06)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
@@ -102,7 +102,7 @@ nestgate/ (23 workspace members — see README Architecture)
 ├── nestgate-fsmonitor  Filesystem monitoring
 ├── nestgate-performance Performance monitoring
 └── tools/unwrap-migrator, fuzz (workspace)
-Note: nestgate-network, nestgate-automation, nestgate-mcp are deprecated/shed (fossil on disk).
+Note: nestgate-network, nestgate-automation, nestgate-mcp are deprecated/shed (removed from workspace).
 ```
 
 ### Key Patterns

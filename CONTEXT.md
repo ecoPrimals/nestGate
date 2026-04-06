@@ -43,7 +43,7 @@ than by importing this crate graph.
 `nestgate-installer`, `nestgate-middleware`, `nestgate-nas`,
 `nestgate-platform`, `nestgate-bin`, `nestgate-env-process-shim`.
 
-Deprecated/shed (fossil on disk): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
+Deprecated/shed (removed from workspace): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
 
 ### Canonical trait surface (high level)
 

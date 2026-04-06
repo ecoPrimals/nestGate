@@ -1,5 +1,5 @@
 > **ARCHIVED**: Written November 2025 (~1,319 tests, 41% coverage). As of April 2026 the
-> suite has **~12,240 tests at ~80% coverage**. For current testing guidance see
+> suite has **~11,826 tests at ~80% coverage**. For current testing guidance see
 > [`tests/README.md`](../../tests/README.md) and [`STATUS.md`](../../STATUS.md).
 
 # 🧪 NestGate Testing Guide

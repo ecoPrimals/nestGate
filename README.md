@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-05)**  
+**Verification (as of 2026-04-06)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors)  
 - **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
@@ -90,7 +90,7 @@ nestgate/ (23 workspace members: 20 code/crates + tools/unwrap-migrator + fuzz +
 ├── nestgate-fsmonitor   Filesystem monitoring
 └── nestgate-performance Performance monitoring
 ```
-Deprecated/shed (fossil on disk): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
+Deprecated/shed (removed from workspace): `nestgate-network`, `nestgate-automation`, `nestgate-mcp`.
 
 The core was decomposed across two phases from a 295K-line monolith (488s check)
 into 13 focused crates that compile in parallel. `nestgate-core` re-exports all
@@ -115,7 +115,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-05).
+See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-06).
 
 | Area | Status |
 |------|--------|
@@ -132,7 +132,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
 | File size (production < 1000) | All compliant (max ~500 lines last measured after smart refactoring) |
 | http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
-| Env-var isolation | `temp_env` + targeted `#[serial]` where env mutation still requires serialization |
+| Env-var isolation | `EnvSource` / `MapEnv` primary; `temp_env` + `#[serial]` only where code still reads process env directly |
 
 ### Compliance (wateringHole)
 

@@ -12,7 +12,7 @@
 ```
 Tests passing:          ~11,826
 Failures:               0
-Ignored:                ~463 (mostly e2e/chaos; see tests/DISABLED_TESTS_REFERENCE.md)
+Ignored:                ~461 (mostly e2e/chaos; see tests/DISABLED_TESTS_REFERENCE.md)
 Crates with tests:      Workspace-wide (23 members)
 Clippy:                 cargo clippy --workspace --all-targets --all-features -- -D warnings PASS
 ```

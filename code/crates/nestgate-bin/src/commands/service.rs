@@ -266,7 +266,12 @@ impl ServiceManager {
         info!("\nRPC Protocols:");
         info!("  HTTP/REST  - Port {http_port} (~5ms latency) ✅");
         info!("  JSON-RPC   - Port {http_port} (~2ms latency) ✅");
-        info!("  tarpc      - Port {tarpc_port} (~50μs latency) 🚧 Coming soon");
+        #[cfg(feature = "tarpc-server")]
+        info!("  tarpc      - Port {tarpc_port} (~50μs latency) ✅ tarpc service active");
+        #[cfg(not(feature = "tarpc-server"))]
+        info!(
+            "  tarpc      - Port {tarpc_port} (~50μs latency) — build with `tarpc-server` to run"
+        );
         info!("🔐 Security: JWT authentication");
         info!("🎯 Mode: Standalone (development/testing)");
         info!("\nPress Ctrl+C to stop\n");
