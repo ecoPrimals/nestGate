@@ -14,6 +14,7 @@
 use async_trait::async_trait;
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestgate_types::error::Result;
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -46,18 +47,22 @@ pub const METADATA_SERVICES_NAMESPACE: &str = "services";
 /// 4. `/var/lib/nestgate/metadata`
 #[must_use]
 pub fn default_metadata_base_dir() -> PathBuf {
+    default_metadata_base_dir_from_env_source(&ProcessEnv)
+}
+
+/// Like [`default_metadata_base_dir`], but reads `XDG_DATA_HOME` / `HOME` from an injectable [`EnvSource`].
+#[must_use]
+pub fn default_metadata_base_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
     use etcetera::BaseStrategy;
 
     if let Ok(strategy) = etcetera::base_strategy::choose_base_strategy() {
         return strategy.data_dir().join("nestgate").join("metadata");
     }
 
-    std::env::var("XDG_DATA_HOME")
-        .ok()
+    env.get("XDG_DATA_HOME")
         .map(|p| PathBuf::from(p).join("nestgate").join("metadata"))
         .or_else(|| {
-            std::env::var("HOME")
-                .ok()
+            env.get("HOME")
                 .map(|h| PathBuf::from(h).join(".local/share/nestgate/metadata"))
         })
         .unwrap_or_else(|| PathBuf::from("/var/lib/nestgate/metadata"))

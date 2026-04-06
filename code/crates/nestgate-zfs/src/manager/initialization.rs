@@ -8,6 +8,7 @@
 //! Initialization module
 
 use crate::error::{ZfsOperation, create_zfs_error};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::debug;
@@ -27,6 +28,25 @@ use crate::{
 };
 
 use super::ZfsManager;
+
+#[cfg(feature = "orchestrator")]
+fn zfs_self_endpoint_from_env_source(env: &dyn EnvSource) -> String {
+    if let Some(ep) = env.get("NESTGATE_ZFS_ENDPOINT") {
+        return ep;
+    }
+    let bind_addr = if let Some(addr) = env.get("NESTGATE_ZFS_BIND_ADDRESS") {
+        addr
+    } else {
+        tracing::warn!(
+            "NESTGATE_ZFS_BIND_ADDRESS unset; using {} as development default. \
+             Set NESTGATE_ZFS_ENDPOINT for production.",
+            nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4
+        );
+        nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()
+    };
+    let bind_port = nestgate_core::constants::hardcoding::get_zfs_bind_port();
+    format!("{bind_addr}:{bind_port}")
+}
 
 impl ZfsManager {
     /// Create mock instance for testing
@@ -233,23 +253,22 @@ impl ZfsManager {
     ///
     /// This function will return an error if the operation fails.
     pub fn register_with_orchestrator(&mut self, orchestrator_endpoint: String) -> Result<()> {
+        self.register_with_orchestrator_from_env_source(orchestrator_endpoint, &ProcessEnv)
+    }
+
+    /// Like [`Self::register_with_orchestrator`], but reads ZFS bind env vars from an injectable [`EnvSource`].
+    #[cfg(feature = "orchestrator")]
+    pub fn register_with_orchestrator_from_env_source(
+        &mut self,
+        orchestrator_endpoint: String,
+        env: &dyn EnvSource,
+    ) -> Result<()> {
         info!(
             "Registering Enhanced ZFS service with orchestrator at: {}",
             orchestrator_endpoint
         );
 
-        let endpoint = std::env::var("NESTGATE_ZFS_ENDPOINT").unwrap_or_else(|_| {
-            let bind_addr = std::env::var("NESTGATE_ZFS_BIND_ADDRESS").unwrap_or_else(|_| {
-                tracing::warn!(
-                    "NESTGATE_ZFS_BIND_ADDRESS unset; using {} as development default. \
-                     Set NESTGATE_ZFS_ENDPOINT for production.",
-                    nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4
-                );
-                nestgate_core::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()
-            });
-            let bind_port = nestgate_core::constants::hardcoding::get_zfs_bind_port();
-            format!("{bind_addr}:{bind_port}")
-        });
+        let endpoint = zfs_self_endpoint_from_env_source(env);
 
         let health_payload = serde_json::json!({
             "is_healthy": true,

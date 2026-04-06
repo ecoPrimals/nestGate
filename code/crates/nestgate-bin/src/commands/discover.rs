@@ -10,11 +10,12 @@
 use crate::cli::DiscoverTarget;
 use crate::error::BinResult;
 use nestgate_core::services::storage::capabilities;
+use nestgate_types::{EnvSource, ProcessEnv};
 
 /// Execute discovery commands
 pub async fn execute(target: DiscoverTarget) -> BinResult<()> {
     match target {
-        DiscoverTarget::Primals => discover_primals().await,
+        DiscoverTarget::Primals => discover_primals_from_env_source(&ProcessEnv).await,
         DiscoverTarget::Services => discover_services().await,
         DiscoverTarget::Capabilities => discover_capabilities().await,
     }
@@ -23,7 +24,7 @@ pub async fn execute(target: DiscoverTarget) -> BinResult<()> {
 /// Discover primals in the local ecosystem
 ///
 /// ✅ PRIMAL SELF-KNOWLEDGE: `NestGate` knows itself, discovers others at runtime
-async fn discover_primals() -> BinResult<()> {
+async fn discover_primals_from_env_source(env: &dyn EnvSource) -> BinResult<()> {
     println!("Primal Discovery");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
@@ -36,7 +37,7 @@ async fn discover_primals() -> BinResult<()> {
     );
 
     // Discover via socket directory
-    let socket_dir = discover_socket_dir();
+    let socket_dir = discover_socket_dir_from_env_source(env);
     println!();
     if let Some(dir) = &socket_dir {
         println!("Socket Directory: {}", dir.display());
@@ -173,21 +174,22 @@ async fn discover_capabilities() -> BinResult<()> {
     Ok(())
 }
 
-/// Discover the socket directory from environment
-fn discover_socket_dir() -> Option<std::path::PathBuf> {
+/// Discover the socket directory from an injectable [`EnvSource`].
+/// Production entry points pass [`ProcessEnv`].
+fn discover_socket_dir_from_env_source(env: &dyn EnvSource) -> Option<std::path::PathBuf> {
     // Check explicit socket path
-    if let Ok(socket) = std::env::var("NESTGATE_SOCKET") {
+    if let Some(socket) = env.get("NESTGATE_SOCKET") {
         let path = std::path::PathBuf::from(&socket);
         return path.parent().map(std::path::Path::to_path_buf);
     }
 
     // Ecosystem shared socket directory (`BIOMEOS_SOCKET_DIR`; standard wateringHole path name)
-    if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+    if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
         return Some(std::path::PathBuf::from(dir));
     }
 
     // Check XDG runtime directory
-    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
         let biomeos_dir = std::path::PathBuf::from(xdg)
             .join(nestgate_core::constants::system::ecosystem_path_segment());
         if biomeos_dir.exists() {
@@ -207,7 +209,7 @@ mod tests {
     #[test]
     fn test_discover_socket_dir_returns_some() {
         // Should always return Some (at minimum /tmp fallback)
-        let result = discover_socket_dir();
+        let result = discover_socket_dir_from_env_source(&ProcessEnv);
         assert!(result.is_some());
     }
 
@@ -216,7 +218,7 @@ mod tests {
         // Temporarily set BIOMEOS_SOCKET_DIR
         let original = std::env::var("BIOMEOS_SOCKET_DIR").ok();
         nestgate_core::env_process::set_var("BIOMEOS_SOCKET_DIR", "/tmp/test-biomeos-sockets");
-        let result = discover_socket_dir();
+        let result = discover_socket_dir_from_env_source(&ProcessEnv);
         assert_eq!(
             result,
             Some(std::path::PathBuf::from("/tmp/test-biomeos-sockets"))

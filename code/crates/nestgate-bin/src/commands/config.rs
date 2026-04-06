@@ -8,6 +8,7 @@
 
 use crate::cli::ConfigAction;
 use anyhow::Result;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 
 /// Execute configuration management commands
 pub async fn execute(action: ConfigAction) -> Result<()> {
@@ -24,6 +25,10 @@ pub async fn execute(action: ConfigAction) -> Result<()> {
 
 /// Show current configuration
 async fn show_config() -> Result<()> {
+    show_config_from_env_source(&ProcessEnv).await
+}
+
+async fn show_config_from_env_source(env: &dyn EnvSource) -> Result<()> {
     println!("NestGate Configuration");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -38,7 +43,7 @@ async fn show_config() -> Result<()> {
         Ok(socket_config) => {
             println!("\nSocket:");
             println!("  Path:         {}", socket_config.socket_path.display());
-            if let Ok(fid) = std::env::var("NESTGATE_FAMILY_ID") {
+            if let Some(fid) = env.get("NESTGATE_FAMILY_ID") {
                 println!("  Family ID:    {fid}");
             }
         }
@@ -75,8 +80,8 @@ async fn show_config() -> Result<()> {
             features.join(", ")
         }
     );
-    let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
-        .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
+    let storage_path =
+        env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
     println!("  Path:         {storage_path}");
 
     // Environment
@@ -92,8 +97,8 @@ async fn show_config() -> Result<()> {
         "XDG_RUNTIME_DIR",
     ];
     for var in &env_vars {
-        match std::env::var(var) {
-            Ok(val) => {
+        match env.get(var) {
+            Some(val) => {
                 // Mask sensitive values
                 if var.contains("SECRET") || var.contains("JWT") {
                     println!("  {var}: [set, masked]");
@@ -101,7 +106,7 @@ async fn show_config() -> Result<()> {
                     println!("  {var}: {val}");
                 }
             }
-            Err(_) => println!("  {var}: (not set)"),
+            None => println!("  {var}: (not set)"),
         }
     }
 
@@ -154,6 +159,10 @@ async fn set_config(key: &str, value: &str) -> Result<()> {
 
 /// Get a configuration value
 async fn get_config(key: &str) -> Result<()> {
+    get_config_from_env_source(&ProcessEnv, key).await
+}
+
+async fn get_config_from_env_source(env: &dyn EnvSource, key: &str) -> Result<()> {
     let value = match key {
         "api_port" | "port" => {
             let cfg = nestgate_core::config::runtime::get_config();
@@ -163,11 +172,12 @@ async fn get_config(key: &str) -> Result<()> {
             let cfg = nestgate_core::config::runtime::get_config();
             cfg.network.api_host.to_string()
         }
-        "storage_path" => std::env::var("NESTGATE_STORAGE_PATH")
-            .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string()),
-        "family_id" => {
-            std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "(not set)".to_string())
+        "storage_path" => {
+            env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage")
         }
+        "family_id" => env
+            .get("NESTGATE_FAMILY_ID")
+            .unwrap_or_else(|| "(not set)".to_string()),
         "socket_path" | "socket" => match nestgate_core::rpc::SocketConfig::from_environment() {
             Ok(cfg) => cfg.socket_path.display().to_string(),
             Err(_) => "(default)".to_string(),
@@ -220,11 +230,15 @@ async fn reset_config(confirm: bool) -> Result<()> {
 
 /// Validate the current configuration
 async fn validate_config() -> Result<()> {
+    validate_config_from_env_source(&ProcessEnv).await
+}
+
+async fn validate_config_from_env_source(env: &dyn EnvSource) -> Result<()> {
     println!("Validating NestGate configuration...");
     let mut issues = 0;
 
     // Check JWT secret
-    let jwt_secret = std::env::var("NESTGATE_JWT_SECRET").unwrap_or_default();
+    let jwt_secret = env.get("NESTGATE_JWT_SECRET").unwrap_or_default();
     if jwt_secret.is_empty() || jwt_secret == "development-secret-change-me" {
         println!("  JWT secret not set or using default (set NESTGATE_JWT_SECRET)");
         issues += 1;
@@ -233,8 +247,8 @@ async fn validate_config() -> Result<()> {
     }
 
     // Check storage path
-    let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
-        .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
+    let storage_path =
+        env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
     if std::path::Path::new(&storage_path).exists() {
         println!("  Storage path exists: {storage_path}");
     } else {
@@ -266,6 +280,14 @@ async fn validate_config() -> Result<()> {
 
 /// Export configuration to file or stdout
 async fn export_config(output: Option<std::path::PathBuf>, format: &str) -> Result<()> {
+    export_config_from_env_source(&ProcessEnv, output, format).await
+}
+
+async fn export_config_from_env_source(
+    env_src: &dyn EnvSource,
+    output: Option<std::path::PathBuf>,
+    format: &str,
+) -> Result<()> {
     let runtime_config = nestgate_core::config::runtime::get_config();
     let socket_config = nestgate_core::rpc::SocketConfig::from_environment().ok();
     let caps = nestgate_core::services::storage::capabilities::detect_backend();
@@ -280,9 +302,9 @@ async fn export_config(output: Option<std::path::PathBuf>, format: &str) -> Resu
         "socket": socket_config.map(|c| c.socket_path.display().to_string()),
         "storage": {
             "backend": format!("{:?}", caps.backend_type),
-            "path": std::env::var("NESTGATE_STORAGE_PATH").unwrap_or_default(),
+            "path": env_src.get("NESTGATE_STORAGE_PATH").unwrap_or_default(),
         },
-        "family_id": std::env::var("NESTGATE_FAMILY_ID").ok(),
+        "family_id": env_src.get("NESTGATE_FAMILY_ID"),
     });
 
     // JSON export (primary format for NestGate config interop)

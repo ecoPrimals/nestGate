@@ -5,6 +5,7 @@
 
 use crate::unified_capabilities::{CapabilityMapper, UnifiedCapability};
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 
 use super::types::{CapabilityResolver, ResolvedService};
 use std::future::{Future, ready};
@@ -34,8 +35,15 @@ impl Default for EnvironmentResolver {
 /// Shared env parsing for [`EnvironmentResolver`] — avoids nested `resolve_capability().await`
 /// inside `resolve_capability_all` (one fewer `dyn Future` layer on that path).
 fn resolve_capability_from_env(capability: UnifiedCapability) -> Result<ResolvedService> {
+    resolve_capability_from_env_source(&ProcessEnv, capability)
+}
+
+fn resolve_capability_from_env_source(
+    env: &dyn EnvSource,
+    capability: UnifiedCapability,
+) -> Result<ResolvedService> {
     let env_var = CapabilityMapper::env_var_name(&capability);
-    let value = std::env::var(&env_var).map_err(|_| {
+    let value = env.get(&env_var).ok_or_else(|| {
         NestGateError::internal_error(
             format!(
                 "Capability '{capability}' not configured. Set {env_var} environment variable."
@@ -124,7 +132,7 @@ impl CapabilityResolver for EnvironmentResolver {
         let capability = capability.clone();
         Box::pin(async move {
             let env_var = CapabilityMapper::env_var_name(&capability);
-            std::env::var(&env_var).is_ok()
+            ProcessEnv.get(&env_var).is_some()
         })
     }
 }

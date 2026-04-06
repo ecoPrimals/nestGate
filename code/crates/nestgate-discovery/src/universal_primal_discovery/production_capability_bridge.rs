@@ -31,6 +31,7 @@ use crate::universal_primal_discovery::capability_based_discovery::{
 };
 use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
 use std::time::Duration;
@@ -95,8 +96,16 @@ impl CapabilityAwareDiscovery {
     /// # }
     /// ```
     pub async fn initialize(config: &NestGateCanonicalConfig) -> Result<Self> {
+        Self::initialize_from_env_source(config, &ProcessEnv).await
+    }
+
+    /// Like [`Self::initialize`], but reads capability-related flags from an injectable [`EnvSource`].
+    pub async fn initialize_from_env_source(
+        config: &NestGateCanonicalConfig,
+        env: &dyn EnvSource,
+    ) -> Result<Self> {
         // Detect capabilities this primal provides
-        let capabilities = Self::detect_own_capabilities(config);
+        let capabilities = Self::detect_own_capabilities(config, env);
 
         info!(
             "Initializing capability-aware discovery with {:?}",
@@ -121,11 +130,14 @@ impl CapabilityAwareDiscovery {
     /// Detect what capabilities this primal provides
     ///
     /// Inspects configuration and environment to determine capabilities.
-    fn detect_own_capabilities(config: &NestGateCanonicalConfig) -> Vec<PrimalCapability> {
+    fn detect_own_capabilities(
+        config: &NestGateCanonicalConfig,
+        env: &dyn EnvSource,
+    ) -> Vec<PrimalCapability> {
         let mut capabilities = Vec::new();
 
         // Check for API capability
-        if Self::has_api_capability(config) {
+        if Self::has_api_capability(env, config) {
             capabilities.push(PrimalCapability::ApiGateway);
             info!("Detected API Gateway capability");
         }
@@ -137,13 +149,13 @@ impl CapabilityAwareDiscovery {
         }
 
         // Check for observability capability
-        if Self::has_observability_capability(config) {
+        if Self::has_observability_capability(env, config) {
             capabilities.push(PrimalCapability::Observability);
             info!("Detected Observability capability");
         }
 
         // Check for NFS capability
-        if Self::has_nfs_capability() {
+        if Self::has_nfs_capability(env) {
             capabilities.push(PrimalCapability::NetworkFileSystem(
                 crate::universal_primal_discovery::capability_based_discovery::NfsVersion::V4,
             ));
@@ -161,11 +173,10 @@ impl CapabilityAwareDiscovery {
     }
 
     /// Check if API capability is available
-    fn has_api_capability(_config: &NestGateCanonicalConfig) -> bool {
+    fn has_api_capability(env: &dyn EnvSource, _config: &NestGateCanonicalConfig) -> bool {
         // Check if API server is configured
-        std::env::var("NESTGATE_API_ENABLED")
-            .map(|v| v == "true" || v == "1")
-            .unwrap_or(true) // Default to true
+        env.get("NESTGATE_API_ENABLED")
+            .is_none_or(|v| v == "true" || v == "1") // Default to true when unset
     }
 
     /// Check if ZFS capability is available
@@ -179,19 +190,20 @@ impl CapabilityAwareDiscovery {
     }
 
     /// Check if observability capability is available
-    fn has_observability_capability(_config: &NestGateCanonicalConfig) -> bool {
+    fn has_observability_capability(
+        env: &dyn EnvSource,
+        _config: &NestGateCanonicalConfig,
+    ) -> bool {
         // Check if metrics/tracing is enabled
-        std::env::var("NESTGATE_OBSERVABILITY_ENABLED")
-            .map(|v| v == "true" || v == "1")
-            .unwrap_or(false)
+        env.get("NESTGATE_OBSERVABILITY_ENABLED")
+            .is_some_and(|v| v == "true" || v == "1")
     }
 
     /// Check if NFS capability is available
-    fn has_nfs_capability() -> bool {
+    fn has_nfs_capability(env: &dyn EnvSource) -> bool {
         // Check if NFS is configured
-        std::env::var("NESTGATE_NFS_ENABLED")
-            .map(|v| v == "true" || v == "1")
-            .unwrap_or(false)
+        env.get("NESTGATE_NFS_ENABLED")
+            .is_some_and(|v| v == "true" || v == "1")
     }
 
     /// Setup discovery backends based on environment
@@ -416,7 +428,7 @@ mod tests {
     #[tokio::test]
     async fn test_capability_detection() {
         let config = test_config();
-        let capabilities = CapabilityAwareDiscovery::detect_own_capabilities(&config);
+        let capabilities = CapabilityAwareDiscovery::detect_own_capabilities(&config, &ProcessEnv);
 
         // Should at least have ServiceDiscovery
         assert!(!capabilities.is_empty());

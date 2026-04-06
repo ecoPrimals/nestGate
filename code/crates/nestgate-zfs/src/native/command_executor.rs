@@ -37,6 +37,7 @@
 //! ```
 
 use nestgate_core::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Stdio;
@@ -129,18 +130,30 @@ impl NativeZfsCommandExecutor {
     /// Create a new command executor
     #[must_use]
     pub fn new() -> Self {
+        Self::new_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::new`], but reads `ZFS_VERBOSE_LOGGING` from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn new_from_env_source(env: &dyn EnvSource) -> Self {
         Self {
             timeout_seconds: DEFAULT_ZFS_COMMAND_TIMEOUT_SECS,
-            verbose_logging: std::env::var("ZFS_VERBOSE_LOGGING").is_ok(),
+            verbose_logging: env.get("ZFS_VERBOSE_LOGGING").is_some(),
         }
     }
 
     /// Create with custom timeout
     #[must_use]
     pub fn with_timeout(timeout_seconds: u64) -> Self {
+        Self::with_timeout_from_env_source(timeout_seconds, &ProcessEnv)
+    }
+
+    /// Like [`Self::with_timeout`], but reads `ZFS_VERBOSE_LOGGING` from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn with_timeout_from_env_source(timeout_seconds: u64, env: &dyn EnvSource) -> Self {
         Self {
             timeout_seconds,
-            verbose_logging: std::env::var("ZFS_VERBOSE_LOGGING").is_ok(),
+            verbose_logging: env.get("ZFS_VERBOSE_LOGGING").is_some(),
         }
     }
 

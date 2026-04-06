@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Platform-specific installation settings, component selection, and system integration
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -220,18 +221,28 @@ pub struct ResourceConstraints {
 impl Default for InstallationSettings {
     /// Returns the default instance
     fn default() -> Self {
+        Self::default_from_env_source(&ProcessEnv)
+    }
+}
+
+impl InstallationSettings {
+    /// Like [`Default::default`], but reads install paths from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
         Self {
             mode: InstallMode::Standalone,
-            install_dir: PathBuf::from(
-                std::env::var("NESTGATE_INSTALL_DIR")
-                    .unwrap_or_else(|_| "/opt/nestgate".to_string()),
-            ),
+            install_dir: PathBuf::from(env_var_or_default(
+                env,
+                "NESTGATE_INSTALL_DIR",
+                "/opt/nestgate",
+            )),
             config_dir: PathBuf::from("/etc/nestgate"),
             data_dir: PathBuf::from("/var/lib/nestgate"),
-            log_dir: PathBuf::from(
-                std::env::var("NESTGATE_LOG_DIR")
-                    .unwrap_or_else(|_| "/var/log/nestgate".to_string()),
-            ),
+            log_dir: PathBuf::from(env_var_or_default(
+                env,
+                "NESTGATE_LOG_DIR",
+                "/var/log/nestgate",
+            )),
             temp_dir: std::env::temp_dir().join("nestgate-install"),
             force_install: false,
             interactive: true,

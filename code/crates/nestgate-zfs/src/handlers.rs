@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use nestgate_core::error::Result;
-use nestgate_core::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed, env_var_or_default};
 
 use crate::config::ZfsConfig;
 use tracing::warn;
@@ -239,26 +239,38 @@ impl ZfsRequestHandler {
     /// Get the configured default pool name
     #[must_use]
     pub fn get_default_pool_name(&self) -> String {
-        // Use environment variable or fallback to default
-        safe_env_var_or_default("NESTGATE_DEFAULT_POOL", "tank")
+        self.get_default_pool_name_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::get_default_pool_name`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn get_default_pool_name_from_env_source(&self, env: &dyn EnvSource) -> String {
+        env_var_or_default(env, "NESTGATE_DEFAULT_POOL", "tank")
     }
 
     /// Check if performance monitoring is enabled
     #[must_use]
     pub fn is_performance_monitoring_enabled(&self) -> bool {
-        // Use environment variable or default to enabled
-        std::env::var("NESTGATE_PERFORMANCE_MONITORING")
-            .map(|v| v.parse().unwrap_or(true))
-            .unwrap_or(true)
+        self.is_performance_monitoring_enabled_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::is_performance_monitoring_enabled`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn is_performance_monitoring_enabled_from_env_source(&self, env: &dyn EnvSource) -> bool {
+        env.get("NESTGATE_PERFORMANCE_MONITORING")
+            .is_none_or(|v| v.parse().unwrap_or(true))
     }
 
     /// Get the configured health check interval
     #[must_use]
     pub fn get_health_check_interval(&self) -> Duration {
-        // Use environment variable or default to 5 minutes
-        let seconds = std::env::var("NESTGATE_HEALTH_CHECK_INTERVAL")
-            .map(|v| v.parse().unwrap_or(300))
-            .unwrap_or(300);
+        self.get_health_check_interval_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::get_health_check_interval`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn get_health_check_interval_from_env_source(&self, env: &dyn EnvSource) -> Duration {
+        let seconds = env_parsed(env, "NESTGATE_HEALTH_CHECK_INTERVAL", 300_u64);
         Duration::from_secs(seconds)
     }
 

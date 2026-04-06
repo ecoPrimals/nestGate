@@ -14,6 +14,7 @@
 //! 4. **Capability-Based**: Services discovered by capability, not location
 
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::collections::HashMap;
 use std::future::Future;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -95,9 +96,15 @@ impl PrimalId {
     ///
     /// This ensures unique IDs for each primal instance.
     pub fn from_environment() -> Result<Self> {
-        let hostname = std::env::var("HOSTNAME")
-            .or_else(|_| std::env::var("HOST"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_environment`], but reads hostname from an injectable [`EnvSource`].
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let hostname = env
+            .get("HOSTNAME")
+            .or_else(|| env.get("HOST"))
+            .unwrap_or_else(|| "unknown".to_string());
 
         let pid = std::process::id();
 
@@ -334,16 +341,24 @@ impl Default for DiscoveryConfig {
 impl CapabilityDiscoveryManager {
     /// Initialize discovery with self-knowledge
     pub async fn initialize(capabilities: Vec<PrimalCapability>) -> Result<Self> {
+        Self::initialize_from_env_source(capabilities, &ProcessEnv).await
+    }
+
+    /// Like [`Self::initialize`], but reads metadata env vars from an injectable [`EnvSource`].
+    pub async fn initialize_from_env_source(
+        capabilities: Vec<PrimalCapability>,
+        env: &dyn EnvSource,
+    ) -> Result<Self> {
         // Discover own binding
         let binding = Self::discover_own_binding().await?;
 
         // Create self-knowledge
         let self_knowledge = PrimalSelfKnowledge {
-            id: PrimalId::from_environment()?,
+            id: PrimalId::from_env_source(env)?,
             capabilities,
             binding,
             health: HealthStatus::Healthy,
-            metadata: Self::collect_metadata(),
+            metadata: Self::collect_metadata_from_env_source(env),
         };
 
         info!("Primal self-knowledge established: {:?}", self_knowledge.id);
@@ -377,18 +392,18 @@ impl CapabilityDiscoveryManager {
     }
 
     /// Collect metadata about this environment
-    fn collect_metadata() -> HashMap<String, String> {
+    fn collect_metadata_from_env_source(env: &dyn EnvSource) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
 
         // Runtime information
-        if let Ok(hostname) = std::env::var("HOSTNAME").or_else(|_| std::env::var("HOST")) {
+        if let Some(hostname) = env.get("HOSTNAME").or_else(|| env.get("HOST")) {
             metadata.insert("hostname".to_string(), hostname);
         }
 
         metadata.insert("pid".to_string(), std::process::id().to_string());
 
         // Environment indicators (not hardcoded values!)
-        if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
+        if env.get("KUBERNETES_SERVICE_HOST").is_some() {
             metadata.insert("platform".to_string(), "kubernetes".to_string());
         } else if std::path::Path::new("/.dockerenv").exists() {
             metadata.insert("platform".to_string(), "docker".to_string());

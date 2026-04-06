@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use crate::config::discovery_config::ServiceDiscoveryConfig;
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::Arc;
 
 /// Thread-safe configuration for capability discovery
@@ -44,13 +45,19 @@ impl DiscoveryRuntimeConfig {
     /// This captures env vars at initialization time, making it thread-safe
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self {
             service_discovery: ServiceDiscoveryConfig::default(),
-            security_endpoint: std::env::var("NESTGATE_SECURITY_ENDPOINT").ok(),
-            ai_endpoint: std::env::var("NESTGATE_AI_ENDPOINT").ok(),
-            orchestration_endpoint: std::env::var("NESTGATE_ORCHESTRATION_ENDPOINT").ok(),
-            storage_endpoint: std::env::var("NESTGATE_STORAGE_ENDPOINT").ok(),
-            compute_endpoint: std::env::var("NESTGATE_COMPUTE_ENDPOINT").ok(),
+            security_endpoint: env.get("NESTGATE_SECURITY_ENDPOINT"),
+            ai_endpoint: env.get("NESTGATE_AI_ENDPOINT"),
+            orchestration_endpoint: env.get("NESTGATE_ORCHESTRATION_ENDPOINT"),
+            storage_endpoint: env.get("NESTGATE_STORAGE_ENDPOINT"),
+            compute_endpoint: env.get("NESTGATE_COMPUTE_ENDPOINT"),
         }
     }
 

@@ -4,6 +4,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use nestgate_types::{EnvSource, ProcessEnv};
+
 /// Thread-safe configuration for service registry
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
@@ -55,33 +57,39 @@ impl RegistryConfig {
     /// This captures env vars at initialization time, making it thread-safe
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         let mut config = Self::new();
 
         // Core registry URL
-        config.registry_url = std::env::var("NESTGATE_REGISTRY_URL").ok();
+        config.registry_url = env.get("NESTGATE_REGISTRY_URL");
 
         // Service mesh configuration
-        config.service_mesh_endpoint = std::env::var("NESTGATE_SERVICE_MESH_ENDPOINT").ok();
+        config.service_mesh_endpoint = env.get("NESTGATE_SERVICE_MESH_ENDPOINT");
 
         // Orchestration settings (deprecated)
-        config.kubernetes_namespace = std::env::var("KUBERNETES_NAMESPACE").ok();
-        config.docker_compose_project = std::env::var("DOCKER_COMPOSE_PROJECT").ok();
+        config.kubernetes_namespace = env.get("KUBERNETES_NAMESPACE");
+        config.docker_compose_project = env.get("DOCKER_COMPOSE_PROJECT");
 
         // Modern capability-based discovery
-        config.capability_discovery_endpoint = std::env::var("CAPABILITY_DISCOVERY_ENDPOINT").ok();
+        config.capability_discovery_endpoint = env.get("CAPABILITY_DISCOVERY_ENDPOINT");
 
         // API endpoint fallback
-        config.api_endpoint = std::env::var("NESTGATE_API_ENDPOINT").ok();
+        config.api_endpoint = env.get("NESTGATE_API_ENDPOINT");
 
         // Scan for dynamic NESTGATE_REGISTRY_* entries
-        for (key, value) in std::env::vars() {
+        for (key, value) in env.vars() {
             if key.starts_with("NESTGATE_REGISTRY_") && key != "NESTGATE_REGISTRY_URL" {
                 config.registry_entries.insert(key, value);
             }
         }
 
         // Scan for adapter port entries (NESTGATE_ADAPTER_*_PORT)
-        for (key, value) in std::env::vars() {
+        for (key, value) in env.vars() {
             if key.starts_with("NESTGATE_ADAPTER_")
                 && key.ends_with("_PORT")
                 && let Ok(port) = value.parse::<u16>()

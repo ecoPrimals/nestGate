@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::Arc;
 
 /// Thread-safe configuration for system introspection
@@ -36,12 +37,18 @@ impl IntrospectionConfig {
     /// This captures env vars at initialization time, making it thread-safe
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self {
-            kubernetes_namespace: std::env::var("KUBERNETES_NAMESPACE").ok(),
-            docker_compose_project: std::env::var("DOCKER_COMPOSE_PROJECT").ok(),
-            compute_capability_type: std::env::var("COMPUTE_CAPABILITY_TYPE").ok(),
-            max_file_handles: std::env::var("NESTGATE_MAX_FILE_HANDLES")
-                .ok()
+            kubernetes_namespace: env.get("KUBERNETES_NAMESPACE"),
+            docker_compose_project: env.get("DOCKER_COMPOSE_PROJECT"),
+            compute_capability_type: env.get("COMPUTE_CAPABILITY_TYPE"),
+            max_file_handles: env
+                .get("NESTGATE_MAX_FILE_HANDLES")
                 .and_then(|s| s.parse().ok()),
         }
     }

@@ -6,6 +6,8 @@
 //! For runtime configuration, prefer `EnvironmentConfig::from_env()` or capability discovery.
 //! Constants serve as compile-time fallbacks; the `get_*` functions resolve from env vars at runtime.
 
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed, env_var_or_default};
+
 /// Default port for the main `NestGate` API server
 ///
 /// **Environment Variable**: `NESTGATE_API_PORT`\
@@ -106,11 +108,14 @@ pub const SECURITY_SERVICE_DEFAULT: u16 = 9092;
 /// ```
 #[must_use]
 pub fn get_api_server_addr() -> String {
-    let host = std::env::var("NESTGATE_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
-    let port = std::env::var("NESTGATE_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(API_SERVER_DEFAULT);
+    get_api_server_addr_from_env_source(&ProcessEnv)
+}
+
+/// [`get_api_server_addr`] reading from an injectable [`EnvSource`].
+#[must_use]
+pub fn get_api_server_addr_from_env_source(env: &dyn EnvSource) -> String {
+    let host = env_var_or_default(env, "NESTGATE_HOST", "0.0.0.0");
+    let port = env_parsed(env, "NESTGATE_PORT", API_SERVER_DEFAULT);
     format!("{host}:{port}")
 }
 
@@ -133,11 +138,14 @@ pub fn get_api_server_addr() -> String {
 /// ```
 #[must_use]
 pub fn get_rpc_server_addr() -> String {
-    let host = std::env::var("NESTGATE_RPC_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
-    let port = std::env::var("NESTGATE_RPC_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(8091);
+    get_rpc_server_addr_from_env_source(&ProcessEnv)
+}
+
+/// [`get_rpc_server_addr`] reading from an injectable [`EnvSource`].
+#[must_use]
+pub fn get_rpc_server_addr_from_env_source(env: &dyn EnvSource) -> String {
+    let host = env_var_or_default(env, "NESTGATE_RPC_HOST", "0.0.0.0");
+    let port = env_parsed(env, "NESTGATE_RPC_PORT", 8091u16);
     format!("{host}:{port}")
 }
 
@@ -151,7 +159,13 @@ pub fn get_rpc_server_addr() -> String {
 /// 2. `NESTGATE_RPC_CONNECT_HOST` (default `127.0.0.1`) and `NESTGATE_RPC_PORT` (default `8091`)
 #[must_use]
 pub fn default_tarpc_client_endpoint() -> String {
-    if let Ok(raw) = std::env::var("NESTGATE_RPC_ENDPOINT") {
+    default_tarpc_client_endpoint_from_env_source(&ProcessEnv)
+}
+
+/// [`default_tarpc_client_endpoint`] reading from an injectable [`EnvSource`].
+#[must_use]
+pub fn default_tarpc_client_endpoint_from_env_source(env: &dyn EnvSource) -> String {
+    if let Some(raw) = env.get("NESTGATE_RPC_ENDPOINT") {
         let s = raw.trim();
         if !s.is_empty() {
             if s.starts_with("tarpc://") {
@@ -166,12 +180,8 @@ pub fn default_tarpc_client_endpoint() -> String {
             return format!("tarpc://{s}");
         }
     }
-    let host =
-        std::env::var("NESTGATE_RPC_CONNECT_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-    let port = std::env::var("NESTGATE_RPC_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(8091);
+    let host = env_var_or_default(env, "NESTGATE_RPC_CONNECT_HOST", "127.0.0.1");
+    let port = env_parsed(env, "NESTGATE_RPC_PORT", 8091u16);
     format!("tarpc://{host}:{port}")
 }
 

@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use nestgate_types::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed, env_var_or_default};
 
 /// Configuration for environment detection
 ///
@@ -81,38 +81,49 @@ impl EnvironmentConfig {
     /// Create configuration from environment variables
     #[must_use]
     pub fn from_env() -> Self {
-        let orchestration_url = std::env::var("ORCHESTRATION_URL").ok();
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+        let orchestration_url = env.get("ORCHESTRATION_URL");
         let orchestration_url_present = orchestration_url.is_some();
 
-        let environment = safe_env_var_or_default("ENVIRONMENT", Self::DEFAULT_ENVIRONMENT);
+        let environment = env_var_or_default(env, "ENVIRONMENT", Self::DEFAULT_ENVIRONMENT);
 
-        let service_name = safe_env_var_or_default("SERVICE_NAME", Self::DEFAULT_SERVICE_NAME);
+        let service_name = env_var_or_default(env, "SERVICE_NAME", Self::DEFAULT_SERVICE_NAME);
 
-        let bind_interface_standalone =
-            safe_env_var_or_default("NESTGATE_BIND_INTERFACE", Self::DEFAULT_BIND_STANDALONE);
+        let bind_interface_standalone = env_var_or_default(
+            env,
+            "NESTGATE_BIND_INTERFACE",
+            Self::DEFAULT_BIND_STANDALONE,
+        );
 
-        let bind_interface_orchestration =
-            safe_env_var_or_default("NESTGATE_BIND_INTERFACE", Self::DEFAULT_BIND_ORCHESTRATION);
+        let bind_interface_orchestration = env_var_or_default(
+            env,
+            "NESTGATE_BIND_INTERFACE",
+            Self::DEFAULT_BIND_ORCHESTRATION,
+        );
 
-        let port_str = safe_env_var_or_default("NESTGATE_PORT", &Self::DEFAULT_PORT.to_string());
-        let port = port_str.parse().unwrap_or(Self::DEFAULT_PORT);
+        let port = env_parsed(env, "NESTGATE_PORT", Self::DEFAULT_PORT);
 
         let nestgate_service_name =
-            safe_env_var_or_default("NESTGATE_SERVICE_NAME", Self::DEFAULT_SERVICE_NAME);
+            env_var_or_default(env, "NESTGATE_SERVICE_NAME", Self::DEFAULT_SERVICE_NAME);
 
-        let discovery_enabled_standalone = std::env::var("NESTGATE_DISCOVERY_ENABLED")
-            .ok()
+        let discovery_enabled_standalone = env
+            .get("NESTGATE_DISCOVERY_ENABLED")
             .and_then(|v| v.parse().ok())
             .unwrap_or(false);
 
-        let discovery_enabled_orchestration = std::env::var("NESTGATE_DISCOVERY_ENABLED")
-            .ok()
+        let discovery_enabled_orchestration = env
+            .get("NESTGATE_DISCOVERY_ENABLED")
             .and_then(|v| v.parse().ok())
             .unwrap_or(true);
 
-        let security_url = std::env::var("SECURITY_URL").ok();
-        let ai_url = std::env::var("AI_URL").ok();
-        let compute_url = std::env::var("COMPUTE_URL").ok();
+        let security_url = env.get("SECURITY_URL");
+        let ai_url = env.get("AI_URL");
+        let compute_url = env.get("COMPUTE_URL");
 
         Self {
             orchestration_url_present,

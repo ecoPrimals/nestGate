@@ -13,6 +13,7 @@ use super::operations::{ObjectAddressing, ObjectOrganization, StorageOperationPa
 use super::protocol::{ApiInfo, DiscoveredProtocol};
 use super::transport::{HttpVersion, TlsConfig, TransportProtocol};
 use nestgate_types::error::Result;
+use nestgate_types::{EnvSource, ProcessEnv};
 
 /// Universal storage discovery
 pub struct UniversalStorageDiscovery;
@@ -24,10 +25,19 @@ impl UniversalStorageDiscovery {
     ///
     /// Returns an error if a discovery step fails (e.g. once environment or local probing becomes fallible).
     pub fn discover_all() -> Result<Vec<DiscoveredStorage>> {
+        Self::discover_all_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::discover_all`], but reads storage env vars from an injectable [`EnvSource`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a discovery step fails in a future implementation; currently infallible.
+    pub fn discover_all_from_env_source(env: &dyn EnvSource) -> Result<Vec<DiscoveredStorage>> {
         let mut discovered = Vec::new();
 
         // 1. Environment variables (primary method)
-        discovered.extend(Self::discover_from_env()?);
+        discovered.extend(Self::discover_from_env_source(env)?);
 
         // 2. Configuration files (future)
         // discovered.extend(Self::discover_from_config()?);
@@ -53,12 +63,21 @@ impl UniversalStorageDiscovery {
     ///
     /// Returns an error if environment inspection fails in a future implementation; currently infallible.
     pub fn discover_from_env() -> Result<Vec<DiscoveredStorage>> {
+        Self::discover_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::discover_from_env`], but reads from an injectable [`EnvSource`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if environment inspection fails in a future implementation; currently infallible.
+    pub fn discover_from_env_source(env: &dyn EnvSource) -> Result<Vec<DiscoveredStorage>> {
         let mut storage = Vec::new();
 
-        for (key, value) in std::env::vars() {
+        for (key, value) in env.vars() {
             if key.starts_with("STORAGE_") && key.ends_with("_ENDPOINT") {
                 let name = Self::extract_storage_name(&key);
-                if let Some(discovered) = Self::probe_endpoint(&name, &value) {
+                if let Some(discovered) = Self::probe_endpoint_from_env_source(&name, &value, env) {
                     storage.push(discovered);
                 }
             }
@@ -94,6 +113,16 @@ impl UniversalStorageDiscovery {
     /// Probe an endpoint to discover its protocol
     #[must_use]
     pub fn probe_endpoint(name: &str, endpoint: &str) -> Option<DiscoveredStorage> {
+        Self::probe_endpoint_from_env_source(name, endpoint, &ProcessEnv)
+    }
+
+    /// Like [`Self::probe_endpoint`], but reads auth-related variables from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn probe_endpoint_from_env_source(
+        name: &str,
+        endpoint: &str,
+        env: &dyn EnvSource,
+    ) -> Option<DiscoveredStorage> {
         // 1. Detect transport
         let transport = Self::detect_transport(endpoint)?;
 
@@ -101,7 +130,7 @@ impl UniversalStorageDiscovery {
         let operation_pattern = Self::discover_operations(endpoint, &transport)?;
 
         // 3. Detect authentication
-        let authentication = Self::detect_auth_pattern(name, endpoint)?;
+        let authentication = Self::detect_auth_pattern_from_env_source(name, endpoint, env)?;
 
         // 4. Probe features (basic implementation)
         let mut protocol = DiscoveredProtocol::new(transport, operation_pattern, authentication);
@@ -180,20 +209,26 @@ impl UniversalStorageDiscovery {
     }
 
     /// Detect authentication pattern
-    fn detect_auth_pattern(name: &str, _endpoint: &str) -> Option<AuthenticationPattern> {
+    fn detect_auth_pattern(name: &str, endpoint: &str) -> Option<AuthenticationPattern> {
+        Self::detect_auth_pattern_from_env_source(name, endpoint, &ProcessEnv)
+    }
+
+    fn detect_auth_pattern_from_env_source(
+        name: &str,
+        _endpoint: &str,
+        env: &dyn EnvSource,
+    ) -> Option<AuthenticationPattern> {
         let prefix = format!("STORAGE_{}", name.to_uppercase());
 
         // Check for access key + secret key (signed headers pattern)
         let access_key_var = format!("{prefix}_ACCESS_KEY");
         let secret_key_var = format!("{prefix}_SECRET_KEY");
 
-        if let (Ok(access_key), Ok(secret_key)) = (
-            std::env::var(&access_key_var),
-            std::env::var(&secret_key_var),
-        ) {
-            let session_token = std::env::var(format!("{prefix}_SESSION_TOKEN"))
-                .ok()
-                .map(SecretString::new);
+        if let (Some(access_key), Some(secret_key)) =
+            (env.get(&access_key_var), env.get(&secret_key_var))
+        {
+            let session_key = format!("{prefix}_SESSION_TOKEN");
+            let session_token = env.get(&session_key).map(SecretString::new);
 
             return Some(AuthenticationPattern::SignedHeaders {
                 signing_algorithm: SigningAlgorithm::HmacSha256,
@@ -210,7 +245,7 @@ impl UniversalStorageDiscovery {
 
         // Check for bearer token
         let token_var = format!("{prefix}_TOKEN");
-        if let Ok(token) = std::env::var(&token_var) {
+        if let Some(token) = env.get(&token_var) {
             return Some(AuthenticationPattern::BearerToken {
                 token: SecretString::new(token),
                 token_type: "Bearer".to_string(),
@@ -219,7 +254,7 @@ impl UniversalStorageDiscovery {
 
         // Check for API key
         let api_key_var = format!("{prefix}_API_KEY");
-        if let Ok(api_key) = std::env::var(&api_key_var) {
+        if let Some(api_key) = env.get(&api_key_var) {
             return Some(AuthenticationPattern::ApiKey {
                 key: SecretString::new(api_key),
                 location: ApiKeyLocation::Header {

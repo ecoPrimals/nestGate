@@ -7,6 +7,7 @@
 
 // Import the configuration module for concurrent-safe access
 use super::system_config::SystemConfig;
+use nestgate_types::{EnvSource, ProcessEnv};
 
 /// Default instance name for `NestGate` services
 pub const DEFAULT_INSTANCE_NAME: &str = "nestgate-default";
@@ -14,15 +15,26 @@ pub const DEFAULT_INSTANCE_NAME: &str = "nestgate-default";
 /// Default service name
 pub const DEFAULT_SERVICE_NAME: &str = "nestgate";
 
-/// Default ecosystem directory segment (`BiomeOS`) under runtime paths (for example under `XDG_RUNTIME_DIR`).
+/// Default ecosystem directory segment under runtime paths (for example under `XDG_RUNTIME_DIR`).
 ///
-/// Override with `BIOMEOS_SERVICE_NAME` via [`ecosystem_path_segment`].
+/// Override with `ECOSYSTEM_NAME` (preferred) or legacy `BIOMEOS_SERVICE_NAME` via
+/// [`ecosystem_name`] / [`ecosystem_path_segment`].
 pub const ECOSYSTEM_NAME: &str = "biomeos";
+
+/// Ecosystem directory name for paths and discovery, from `env` or [`ECOSYSTEM_NAME`].
+///
+/// Reads `ECOSYSTEM_NAME` first, then `BIOMEOS_SERVICE_NAME` for backward compatibility.
+#[must_use]
+pub fn ecosystem_name(env: &dyn EnvSource) -> String {
+    env.get("ECOSYSTEM_NAME")
+        .or_else(|| env.get("BIOMEOS_SERVICE_NAME"))
+        .unwrap_or_else(|| ECOSYSTEM_NAME.to_owned())
+}
 
 /// Directory name for ecosystem-scoped runtime paths (e.g. `$XDG_RUNTIME_DIR/<segment>/...`).
 #[must_use]
 pub fn ecosystem_path_segment() -> String {
-    std::env::var("BIOMEOS_SERVICE_NAME").unwrap_or_else(|_| ECOSYSTEM_NAME.to_string())
+    ecosystem_name(&ProcessEnv)
 }
 
 /// Get timeout in milliseconds from environment or default
@@ -102,6 +114,33 @@ mod tests {
     use super::super::system_config::SystemConfig;
     use super::*;
     use nestgate_types::MapEnv;
+
+    #[test]
+    fn ecosystem_name_defaults() {
+        let env = MapEnv::new();
+        assert_eq!(ecosystem_name(&env), ECOSYSTEM_NAME);
+    }
+
+    #[test]
+    fn ecosystem_name_from_ecosystem_name_env() {
+        let env = MapEnv::from([("ECOSYSTEM_NAME", "myeco")]);
+        assert_eq!(ecosystem_name(&env), "myeco");
+    }
+
+    #[test]
+    fn ecosystem_name_prefers_ecosystem_name_over_legacy() {
+        let env = MapEnv::from([
+            ("ECOSYSTEM_NAME", "primary"),
+            ("BIOMEOS_SERVICE_NAME", "legacy"),
+        ]);
+        assert_eq!(ecosystem_name(&env), "primary");
+    }
+
+    #[test]
+    fn ecosystem_name_legacy_biomeos_service_name() {
+        let env = MapEnv::from([("BIOMEOS_SERVICE_NAME", "legacy_only")]);
+        assert_eq!(ecosystem_name(&env), "legacy_only");
+    }
 
     #[test]
     fn test_default_constants() {

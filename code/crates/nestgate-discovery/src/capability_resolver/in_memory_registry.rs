@@ -7,11 +7,18 @@ use crate::service_discovery::registry::UniversalServiceRegistry;
 use crate::unified_capabilities::UnifiedCapability;
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 
 use super::types::{CapabilityResolver, ResolvedService};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
+
+fn primal_namespace_from_env_source(env: &dyn EnvSource) -> String {
+    env.get("NESTGATE_PRIMAL_NAMESPACE")
+        .or_else(|| env.get("NESTGATE_SERVICE_NAME"))
+        .unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string())
+}
 
 /// Adapter for `service_discovery::InMemoryServiceRegistry`
 ///
@@ -181,6 +188,14 @@ impl InMemoryRegistryAdapter<'_> {
         &self,
         capability: &UnifiedCapability,
     ) -> crate::service_discovery::types::ServiceCapability {
+        self.unified_to_service_capability_from_env_source(capability, &ProcessEnv)
+    }
+
+    fn unified_to_service_capability_from_env_source(
+        &self,
+        capability: &UnifiedCapability,
+        env: &dyn EnvSource,
+    ) -> crate::service_discovery::types::ServiceCapability {
         use crate::service_discovery::types::{
             AIModality, CommunicationProtocol, OrchestrationScope, SecurityFunction,
             ServiceCapability, StorageType,
@@ -225,9 +240,7 @@ impl InMemoryRegistryAdapter<'_> {
             | UnifiedCapability::Training
             | UnifiedCapability::Inference => ServiceCapability::AI(AIModality::MachineLearning),
             _ => ServiceCapability::Custom {
-                namespace: std::env::var("NESTGATE_PRIMAL_NAMESPACE")
-                    .or_else(|_| std::env::var("NESTGATE_SERVICE_NAME"))
-                    .unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_string()),
+                namespace: primal_namespace_from_env_source(env),
                 capability: capability.to_string(),
                 version: String::from("1.0"),
             },

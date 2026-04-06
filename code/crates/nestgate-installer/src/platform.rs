@@ -19,6 +19,7 @@
 //! Uses universal service detection instead of compile-time OS checks
 
 use anyhow::Result;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use std::path::{Path, PathBuf};
 
 // Platform submodule
@@ -106,11 +107,16 @@ pub fn add_to_path(install_path: &Path) -> Result<()> {
 
 #[cfg(unix)]
 fn add_to_path_unix(install_path: &Path) -> Result<()> {
+    add_to_path_unix_from_env_source(install_path, &ProcessEnv)
+}
+
+#[cfg(unix)]
+fn add_to_path_unix_from_env_source(install_path: &Path, env: &dyn EnvSource) -> Result<()> {
     use etcetera::BaseStrategy;
     use std::fs::OpenOptions;
     use std::io::Write;
 
-    let shell_rc = if std::env::var("SHELL").unwrap_or_default().contains("zsh") {
+    let shell_rc = if env_var_or_default(env, "SHELL", "").contains("zsh") {
         etcetera::base_strategy::choose_base_strategy()
             .ok()
             .map(|strategy| strategy.home_dir().join(".zshrc"))
@@ -182,14 +188,21 @@ pub fn create_desktop_shortcut(install_path: &Path, name: &str) -> Result<()> {
 
 #[cfg(unix)]
 fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
+    create_desktop_shortcut_unix_from_env_source(install_path, name, &ProcessEnv)
+}
+
+#[cfg(unix)]
+fn create_desktop_shortcut_unix_from_env_source(
+    install_path: &Path,
+    name: &str,
+    env: &dyn EnvSource,
+) -> Result<()> {
     use std::fs;
 
     // Note: etcetera doesn't have desktop_dir, use XDG standard
     use etcetera::BaseStrategy;
-    let desktop_dir: Option<PathBuf> = std::env::var("XDG_DESKTOP_DIR")
-        .ok()
-        .map(PathBuf::from)
-        .or_else(|| {
+    let desktop_dir: Option<PathBuf> =
+        env.get("XDG_DESKTOP_DIR").map(PathBuf::from).or_else(|| {
             etcetera::base_strategy::choose_base_strategy()
                 .ok()
                 .map(|strategy| strategy.home_dir().join("Desktop"))

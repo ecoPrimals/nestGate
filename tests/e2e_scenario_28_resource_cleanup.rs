@@ -21,7 +21,7 @@
 #[cfg(test)]
 mod resource_cleanup {
     use std::sync::Arc;
-    use tokio::sync::Mutex;
+    use std::sync::Mutex;
 
     struct ResourceGuard {
         _name: String,
@@ -39,28 +39,24 @@ mod resource_cleanup {
 
     impl Drop for ResourceGuard {
         fn drop(&mut self) {
-            // Simulate cleanup
-            let cleanup_tracker = Arc::clone(&self.cleanup_called);
-            tokio::runtime::Handle::current().block_on(async move {
-                let mut cleaned = cleanup_tracker.lock().await;
+            if let Ok(mut cleaned) = self.cleanup_called.lock() {
                 *cleaned = true;
-            });
+            }
         }
     }
 
     #[tokio::test]
-    #[ignore = "block_on in Drop can deadlock in async runtime"]
     async fn test_raii_cleanup() {
         let cleanup_tracker = Arc::new(Mutex::new(false));
 
         {
             let _guard = ResourceGuard::new("test".to_string(), Arc::clone(&cleanup_tracker));
             // Guard is in scope
-            assert!(!*cleanup_tracker.lock().await);
+            assert!(!*cleanup_tracker.lock().unwrap());
         }
 
         // Guard dropped, cleanup should have run
-        assert!(*cleanup_tracker.lock().await);
+        assert!(*cleanup_tracker.lock().unwrap());
     }
 
     #[tokio::test]
@@ -79,7 +75,6 @@ mod resource_cleanup {
     }
 
     #[tokio::test]
-    #[ignore = "block_on in Drop can deadlock in multi-threaded tokio runtime"]
     async fn test_multiple_guards() {
         struct Counter {
             count: Arc<Mutex<i32>>,
@@ -87,11 +82,9 @@ mod resource_cleanup {
 
         impl Drop for Counter {
             fn drop(&mut self) {
-                let count = Arc::clone(&self.count);
-                tokio::runtime::Handle::current().block_on(async move {
-                    let mut c = count.lock().await;
+                if let Ok(mut c) = self.count.lock() {
                     *c += 1;
-                });
+                }
             }
         }
 
@@ -109,7 +102,7 @@ mod resource_cleanup {
             };
         }
 
-        assert_eq!(*drop_count.lock().await, 3);
+        assert_eq!(*drop_count.lock().unwrap(), 3);
     }
 
     #[tokio::test]

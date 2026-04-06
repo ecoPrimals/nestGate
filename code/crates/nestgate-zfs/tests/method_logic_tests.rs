@@ -168,7 +168,7 @@ fn test_cache_analytics_analyze_cache_performance() {
 #[test]
 fn test_compression_analyze_with_small_sample() {
     let data = vec![1u8; 100]; // 100 bytes
-    let result = CompressionAnalytics::analyze_compression("tank/small", &data);
+    let result = CompressionAnalytics::analyze_compression("zzz_nestgate_method_test_small", &data);
 
     assert!(result.is_ok());
     let analytics = result.unwrap();
@@ -182,7 +182,7 @@ fn test_compression_analyze_with_small_sample() {
 #[test]
 fn test_compression_analyze_with_large_sample() {
     let data = vec![2u8; 10_000]; // 10KB
-    let result = CompressionAnalytics::analyze_compression("tank/large", &data);
+    let result = CompressionAnalytics::analyze_compression("zzz_nestgate_method_test_large", &data);
 
     assert!(result.is_ok());
     let analytics = result.unwrap();
@@ -194,7 +194,7 @@ fn test_compression_analyze_with_large_sample() {
 #[test]
 fn test_compression_analyze_with_empty_data() {
     let data = vec![]; // Empty
-    let result = CompressionAnalytics::analyze_compression("tank/empty", &data);
+    let result = CompressionAnalytics::analyze_compression("zzz_nestgate_method_test_empty", &data);
 
     // Should handle empty data gracefully
     assert!(result.is_ok());

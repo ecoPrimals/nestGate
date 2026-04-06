@@ -16,6 +16,7 @@ use tokio::time::interval;
 
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, types::StorageTier};
 use nestgate_core::Result as CoreResult;
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 
 use super::operations::SnapshotOperationType;
 use super::policy::{RetentionPolicy, ScheduleFrequency, SnapshotPolicy};
@@ -109,6 +110,11 @@ impl ZfsSnapshotManager {
 
     /// Start the snapshot manager
     pub async fn start(&mut self) -> CoreResult<()> {
+        self.start_from_env_source(&ProcessEnv).await
+    }
+
+    /// Like [`Self::start`], but reads interval env vars from an injectable [`EnvSource`].
+    pub async fn start_from_env_source(&mut self, env: &dyn EnvSource) -> CoreResult<()> {
         info!("Starting ZFS snapshot manager");
 
         let (shutdown_tx, mut shutdown_rx) = mpsc::channel(1);
@@ -124,13 +130,11 @@ impl ZfsSnapshotManager {
             Arc::clone(&self.operation_queue),
         );
 
+        let policy_interval_secs =
+            env_parsed(env, "NESTGATE_ZFS_SNAPSHOT_CHECK_INTERVAL_SECS", 60_u64);
+
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_SNAPSHOT_CHECK_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(60), // 60 seconds default
-            ));
+            let mut interval = interval(Duration::from_secs(policy_interval_secs));
 
             loop {
                 tokio::select! {
@@ -148,7 +152,7 @@ impl ZfsSnapshotManager {
         });
 
         // Start cache updater
-        self.start_cache_updater()?;
+        self.start_cache_updater_from_env_source(env)?;
 
         info!("ZFS snapshot manager started successfully");
         Ok(())
@@ -353,17 +357,22 @@ impl ZfsSnapshotManager {
 
     /// Start cache updater
     pub fn start_cache_updater(&self) -> CoreResult<()> {
+        self.start_cache_updater_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::start_cache_updater`], but reads the interval from an injectable [`EnvSource`].
+    pub fn start_cache_updater_from_env_source(&self, env: &dyn EnvSource) -> CoreResult<()> {
         let snapshot_cache = Arc::clone(&self.snapshot_cache);
         let statistics = Arc::clone(&self.statistics);
         let dataset_manager = Arc::clone(&self.dataset_manager);
+        let cache_interval_secs = env_parsed(
+            env,
+            "NESTGATE_ZFS_SNAPSHOT_CACHE_UPDATE_INTERVAL_SECS",
+            300_u64,
+        );
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_SNAPSHOT_CACHE_UPDATE_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(300), // 5 minutes default
-            ));
+            let mut interval = interval(Duration::from_secs(cache_interval_secs));
 
             loop {
                 interval.tick().await;

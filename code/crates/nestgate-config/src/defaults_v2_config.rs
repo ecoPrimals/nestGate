@@ -8,7 +8,7 @@
 
 use std::sync::Arc;
 
-use nestgate_types::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed, env_var_or_default};
 
 /// Configuration for defaults
 ///
@@ -72,35 +72,26 @@ impl DefaultsV2Config {
     /// Create configuration from environment variables
     #[must_use]
     pub fn from_env() -> Self {
-        let api_port = std::env::var("NESTGATE_API_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_API_PORT);
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+        let api_port = env_parsed(env, "NESTGATE_API_PORT", Self::DEFAULT_API_PORT);
 
         let bind_address =
-            safe_env_var_or_default("NESTGATE_BIND_ADDRESS", Self::DEFAULT_BIND_ADDRESS);
+            env_var_or_default(env, "NESTGATE_BIND_ADDRESS", Self::DEFAULT_BIND_ADDRESS);
 
-        let hostname = safe_env_var_or_default("NESTGATE_HOSTNAME", Self::DEFAULT_HOSTNAME);
+        let hostname = env_var_or_default(env, "NESTGATE_HOSTNAME", Self::DEFAULT_HOSTNAME);
 
-        let ws_port = std::env::var("NESTGATE_WS_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_WS_PORT);
+        let ws_port = env_parsed(env, "NESTGATE_WS_PORT", Self::DEFAULT_WS_PORT);
 
-        let health_port = std::env::var("NESTGATE_HEALTH_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_HEALTH_PORT);
+        let health_port = env_parsed(env, "NESTGATE_HEALTH_PORT", Self::DEFAULT_HEALTH_PORT);
 
-        let db_port = std::env::var("NESTGATE_DB_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_DB_PORT);
+        let db_port = env_parsed(env, "NESTGATE_DB_PORT", Self::DEFAULT_DB_PORT);
 
-        let metrics_port = std::env::var("NESTGATE_METRICS_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_METRICS_PORT);
+        let metrics_port = env_parsed(env, "NESTGATE_METRICS_PORT", Self::DEFAULT_METRICS_PORT);
 
         Self {
             api_port,

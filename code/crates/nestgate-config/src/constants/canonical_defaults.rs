@@ -5,30 +5,37 @@
 //!
 //! Default values for canonical configuration and network settings.
 
-use nestgate_types::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 
 pub mod network {
     //! Network-related canonical defaults
 
-    use super::safe_env_var_or_default;
+    use super::{EnvSource, ProcessEnv, env_var_or_default};
 
     /// Hostname used when building default URLs when `NESTGATE_DEV_HOST` and
     /// `NESTGATE_DISCOVERY_FALLBACK_HOST` are unset (last resort: `localhost` with a warning).
+    ///
+    /// Like [`discovery_default_host_from_env_source`], but resolves once per process and reads
+    /// from [`ProcessEnv`].
     fn discovery_default_host() -> String {
         use std::sync::OnceLock;
         static HOST: OnceLock<String> = OnceLock::new();
-        HOST.get_or_init(|| {
-            std::env::var("NESTGATE_DEV_HOST")
-                .or_else(|_| std::env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
-                .unwrap_or_else(|_| {
-                    tracing::warn!(
-                        "Canonical default URL: NESTGATE_DEV_HOST and NESTGATE_DISCOVERY_FALLBACK_HOST unset; \
-                         using host `localhost`. Set explicit capability endpoints or discovery env vars for production."
-                    );
-                    "localhost".to_string()
-                })
-        })
-        .clone()
+        HOST.get_or_init(|| discovery_default_host_from_env_source(&ProcessEnv))
+            .clone()
+    }
+
+    /// Hostname for default URLs from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn discovery_default_host_from_env_source(env: &dyn EnvSource) -> String {
+        env.get("NESTGATE_DEV_HOST")
+            .or_else(|| env.get("NESTGATE_DISCOVERY_FALLBACK_HOST"))
+            .unwrap_or_else(|| {
+                tracing::warn!(
+                    "Canonical default URL: NESTGATE_DEV_HOST and NESTGATE_DISCOVERY_FALLBACK_HOST unset; \
+                     using host `localhost`. Set explicit capability endpoints or discovery env vars for production."
+                );
+                "localhost".to_string()
+            })
     }
 
     /// Default API base URL (environment-driven)
@@ -38,8 +45,19 @@ pub mod network {
     /// falling back to `localhost` (with warning).
     #[must_use]
     pub fn default_api_base_url() -> String {
-        let port = safe_env_var_or_default("NESTGATE_API_PORT", "8080");
+        let port = env_var_or_default(&ProcessEnv, "NESTGATE_API_PORT", "8080");
         format!("http://{}:{}", discovery_default_host(), port)
+    }
+
+    /// Like [`default_api_base_url`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_api_base_url_from_env_source(env: &dyn EnvSource) -> String {
+        let port = env_var_or_default(env, "NESTGATE_API_PORT", "8080");
+        format!(
+            "http://{}:{}",
+            discovery_default_host_from_env_source(env),
+            port
+        )
     }
 
     /// Default API base URL constant (for backwards compatibility)
@@ -53,8 +71,19 @@ pub mod network {
     /// Uses `NESTGATE_WEBSOCKET_PORT` when set. Hostname follows [`default_api_base_url`].
     #[must_use]
     pub fn default_websocket_url() -> String {
-        let port = safe_env_var_or_default("NESTGATE_WEBSOCKET_PORT", "8080");
+        let port = env_var_or_default(&ProcessEnv, "NESTGATE_WEBSOCKET_PORT", "8080");
         format!("ws://{}:{}/ws", discovery_default_host(), port)
+    }
+
+    /// Like [`default_websocket_url`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_websocket_url_from_env_source(env: &dyn EnvSource) -> String {
+        let port = env_var_or_default(env, "NESTGATE_WEBSOCKET_PORT", "8080");
+        format!(
+            "ws://{}:{}/ws",
+            discovery_default_host_from_env_source(env),
+            port
+        )
     }
 
     /// Default WebSocket URL constant (for backwards compatibility)
@@ -68,8 +97,19 @@ pub mod network {
     /// Uses `NESTGATE_METRICS_PORT` when set. Hostname follows [`default_api_base_url`].
     #[must_use]
     pub fn default_metrics_url() -> String {
-        let port = safe_env_var_or_default("NESTGATE_METRICS_PORT", "9090");
+        let port = env_var_or_default(&ProcessEnv, "NESTGATE_METRICS_PORT", "9090");
         format!("http://{}:{}", discovery_default_host(), port)
+    }
+
+    /// Like [`default_metrics_url`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_metrics_url_from_env_source(env: &dyn EnvSource) -> String {
+        let port = env_var_or_default(env, "NESTGATE_METRICS_PORT", "9090");
+        format!(
+            "http://{}:{}",
+            discovery_default_host_from_env_source(env),
+            port
+        )
     }
 
     /// Default metrics URL constant (for backwards compatibility)
@@ -81,8 +121,19 @@ pub mod network {
     /// Default web UI URL (environment-driven)
     #[must_use]
     pub fn default_web_ui_url() -> String {
-        let port = safe_env_var_or_default("NESTGATE_WEB_UI_PORT", "3000");
+        let port = env_var_or_default(&ProcessEnv, "NESTGATE_WEB_UI_PORT", "3000");
         format!("http://{}:{}", discovery_default_host(), port)
+    }
+
+    /// Like [`default_web_ui_url`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_web_ui_url_from_env_source(env: &dyn EnvSource) -> String {
+        let port = env_var_or_default(env, "NESTGATE_WEB_UI_PORT", "3000");
+        format!(
+            "http://{}:{}",
+            discovery_default_host_from_env_source(env),
+            port
+        )
     }
 
     /// Default web UI URL constant (for backwards compatibility)
@@ -106,19 +157,46 @@ pub mod network {
     /// Build API URL from environment or runtime discovery.
     #[must_use]
     pub fn build_api_url() -> String {
-        std::env::var("NESTGATE_API_URL").unwrap_or_else(|_| default_api_base_url())
+        ProcessEnv
+            .get("NESTGATE_API_URL")
+            .unwrap_or_else(default_api_base_url)
+    }
+
+    /// Like [`build_api_url`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn build_api_url_from_env_source(env: &dyn EnvSource) -> String {
+        env.get("NESTGATE_API_URL")
+            .unwrap_or_else(|| default_api_base_url_from_env_source(env))
     }
 
     /// Build WebSocket URL from environment or runtime discovery.
     #[must_use]
     pub fn build_websocket_url() -> String {
-        std::env::var("NESTGATE_WS_URL").unwrap_or_else(|_| default_websocket_url())
+        ProcessEnv
+            .get("NESTGATE_WS_URL")
+            .unwrap_or_else(default_websocket_url)
+    }
+
+    /// Like [`build_websocket_url`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn build_websocket_url_from_env_source(env: &dyn EnvSource) -> String {
+        env.get("NESTGATE_WS_URL")
+            .unwrap_or_else(|| default_websocket_url_from_env_source(env))
     }
 
     /// Build metrics URL from environment or runtime discovery.
     #[must_use]
     pub fn build_metrics_url() -> String {
-        std::env::var("NESTGATE_METRICS_URL").unwrap_or_else(|_| default_metrics_url())
+        ProcessEnv
+            .get("NESTGATE_METRICS_URL")
+            .unwrap_or_else(default_metrics_url)
+    }
+
+    /// Like [`build_metrics_url`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn build_metrics_url_from_env_source(env: &dyn EnvSource) -> String {
+        env.get("NESTGATE_METRICS_URL")
+            .unwrap_or_else(|| default_metrics_url_from_env_source(env))
     }
 
     /// Build generic endpoint from environment or runtime discovery.

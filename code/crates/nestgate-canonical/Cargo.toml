@@ -15,6 +15,7 @@ workspace = true
 
 [dependencies]
 nestgate-core = { path = "../nestgate-core", default-features = false }
+nestgate-types = { path = "../nestgate-types" }
 
 serde = { workspace = true }
 thiserror = { workspace = true }

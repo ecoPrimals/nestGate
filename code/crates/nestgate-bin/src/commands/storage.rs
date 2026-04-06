@@ -8,6 +8,7 @@
 
 use crate::cli::StorageAction;
 use anyhow::Result;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 
 /// Execute storage management commands
 pub async fn execute(action: StorageAction) -> Result<()> {
@@ -29,6 +30,10 @@ pub async fn execute(action: StorageAction) -> Result<()> {
 
 /// List all available and detected storage backends
 async fn list_backends() -> Result<()> {
+    list_backends_from_env_source(&ProcessEnv).await
+}
+
+async fn list_backends_from_env_source(env: &dyn EnvSource) -> Result<()> {
     println!("NestGate Storage Backends");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -57,8 +62,8 @@ async fn list_backends() -> Result<()> {
     }
 
     // Storage path
-    let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
-        .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
+    let storage_path =
+        env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
     println!("\nStorage Path: {storage_path}");
 
     if std::path::Path::new(&storage_path).exists() {
@@ -86,6 +91,15 @@ async fn list_backends() -> Result<()> {
 
 /// Scan for available storage at a path
 async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> Result<()> {
+    scan_storage_from_env_source(&ProcessEnv, path, cloud, network).await
+}
+
+async fn scan_storage_from_env_source(
+    env: &dyn EnvSource,
+    path: std::path::PathBuf,
+    cloud: bool,
+    network: bool,
+) -> Result<()> {
     println!("Scanning for storage at: {}", path.display());
 
     if !path.exists() {
@@ -133,13 +147,13 @@ async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> R
 
     if cloud {
         println!("\n  Cloud scanning: Environment-based detection");
-        if std::env::var("AWS_ACCESS_KEY_ID").is_ok() {
+        if env.get("AWS_ACCESS_KEY_ID").is_some() {
             println!("    AWS credentials detected");
         }
-        if std::env::var("AZURE_STORAGE_ACCOUNT").is_ok() {
+        if env.get("AZURE_STORAGE_ACCOUNT").is_some() {
             println!("    Azure credentials detected");
         }
-        if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok() {
+        if env.get("GOOGLE_APPLICATION_CREDENTIALS").is_some() {
             println!("    GCP credentials detected");
         }
     }
@@ -163,6 +177,15 @@ async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> R
 
 /// Run storage performance benchmark
 async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result<()> {
+    benchmark_storage_from_env_source(&ProcessEnv, backend, duration, size_mb).await
+}
+
+async fn benchmark_storage_from_env_source(
+    env: &dyn EnvSource,
+    backend: &str,
+    duration: u64,
+    size_mb: u64,
+) -> Result<()> {
     println!("NestGate Storage Benchmark");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("  Backend:    {backend}");
@@ -170,8 +193,7 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
     println!("  Test Size:  {size_mb} MB");
     println!();
 
-    let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
-        .unwrap_or_else(|_| "/tmp/nestgate-benchmark".to_string());
+    let storage_path = env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/tmp/nestgate-benchmark");
     let bench_dir = std::path::PathBuf::from(&storage_path).join("benchmark");
     tokio::fs::create_dir_all(&bench_dir).await?;
 
@@ -217,6 +239,14 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
 
 /// Configure a storage backend
 async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
+    configure_storage_from_env_source(&ProcessEnv, backend, settings).await
+}
+
+async fn configure_storage_from_env_source(
+    env: &dyn EnvSource,
+    backend: &str,
+    settings: &[String],
+) -> Result<()> {
     println!("Configuring storage backend: {backend}");
 
     if settings.is_empty() {
@@ -229,8 +259,8 @@ async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
             nestgate_core::services::storage::capabilities::detect_backend().backend_type
         );
 
-        let storage_path = std::env::var("NESTGATE_STORAGE_PATH")
-            .unwrap_or_else(|_| "/var/lib/nestgate/storage".to_string());
+        let storage_path =
+            env_var_or_default(env, "NESTGATE_STORAGE_PATH", "/var/lib/nestgate/storage");
         println!("  Storage:     {storage_path}");
 
         println!("\nUse --set key=value to modify settings:");

@@ -224,7 +224,8 @@ fn test_compression_analytics_construction() {
 #[test]
 fn test_compression_analyze() {
     let data = vec![1u8; 1024]; // 1KB of data
-    let result = CompressionAnalytics::analyze_compression("tank/data", &data);
+    let result =
+        CompressionAnalytics::analyze_compression("zzz_nestgate_simple_compression_ds", &data);
 
     assert!(result.is_ok());
 

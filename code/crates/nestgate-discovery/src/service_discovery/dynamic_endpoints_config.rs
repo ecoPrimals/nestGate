@@ -12,6 +12,7 @@
 //! creating race conditions. This config module loads configuration once at startup
 //! and provides immutable, thread-safe access.
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -66,10 +67,16 @@ impl DynamicEndpointsConfig {
     /// - `NESTGATE_HOSTNAME` - Default hostname
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         let mut config = Self::new();
 
         // Load hostname
-        if let Ok(hostname) = std::env::var("NESTGATE_HOSTNAME") {
+        if let Some(hostname) = env.get("NESTGATE_HOSTNAME") {
             config.hostname = hostname;
         }
 
@@ -93,7 +100,7 @@ impl DynamicEndpointsConfig {
 
         for service_type in &service_types {
             let env_key = format!("{service_type}_ENDPOINT");
-            if let Ok(endpoint) = std::env::var(&env_key) {
+            if let Some(endpoint) = env.get(&env_key) {
                 config.set_endpoint(&service_type.to_lowercase(), &endpoint);
             }
         }

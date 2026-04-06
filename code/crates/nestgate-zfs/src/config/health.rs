@@ -5,6 +5,7 @@
 // Configuration for ZFS health monitoring, alerting, and failure thresholds.
 
 use nestgate_core::constants::LOCALHOST_NAME;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use serde::{Deserialize, Serialize};
 
 /// Health monitoring configuration
@@ -60,6 +61,12 @@ impl HealthMonitoringConfig {
     /// Create production-optimized health monitoring configuration
     #[must_use]
     pub fn production() -> Self {
+        Self::production_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::production`], but reads alert-related env vars from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn production_from_env_source(env: &dyn EnvSource) -> Self {
         Self {
             enabled: true,
             check_interval_seconds: 60,
@@ -71,7 +78,7 @@ impl HealthMonitoringConfig {
                 // Alert endpoints should be explicitly configured in production
                 // For development, this can be optional
 
-                std::env::var("NESTGATE_ALERT_ENDPOINTS").ok().map_or_else(
+                env.get("NESTGATE_ALERT_ENDPOINTS").map_or_else(
                     || {
                         // Development-only fallback - logs warning
                         tracing::warn!(
@@ -81,16 +88,15 @@ impl HealthMonitoringConfig {
 
                         // Development convenience: local endpoints
                         // In production, this code path should never execute
-                        let dev_host = std::env::var("NESTGATE_DEV_HOST")
-                            .unwrap_or_else(|_| LOCALHOST_NAME.to_string());
-                        let dev_port = std::env::var("NESTGATE_DEV_PORT")
-                            .ok()
+                        let dev_host = env_var_or_default(env, "NESTGATE_DEV_HOST", LOCALHOST_NAME);
+                        let dev_port = env
+                            .get("NESTGATE_DEV_PORT")
                             .and_then(|s| s.parse().ok())
                             .unwrap_or(8080);
 
                         vec![
-                            format!("email:dev@{}", dev_host),
-                            format!("webhook:http://{}:{}/alerts", dev_host, dev_port),
+                            format!("email:dev@{dev_host}"),
+                            format!("webhook:http://{dev_host}:{dev_port}/alerts"),
                         ]
                     },
                     |endpoints_str| {

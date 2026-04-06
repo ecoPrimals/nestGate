@@ -12,7 +12,7 @@
 //!
 //! 1. **`NESTGATE_SOCKET`** env var (explicit override, highest priority)
 //! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate.sock` (ecosystem standard layout)
-//! 3. **`$XDG_RUNTIME_DIR/biomeos/nestgate.sock`** (preferred; reads the actual `XDG_RUNTIME_DIR` env var)
+//! 3. **`$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock`** (preferred; `<ecosystem>` from [`nestgate_config::constants::system::ecosystem_path_segment`], reads the actual `XDG_RUNTIME_DIR` env var)
 //! 4. **Temp Directory**: `/tmp/nestgate-{family}-{node}.sock` (fallback, least secure)
 //!
 //! ## Environment Variables
@@ -34,7 +34,7 @@
 //! ## Capability-domain symlink (`storage.sock`)
 //!
 //! Per `CAPABILITY_BASED_DISCOVERY_STANDARD`, after the primary socket (e.g. `nestgate.sock`) is
-//! bound under `.../biomeos/`, a `storage.sock` symlink is created in the same directory so peers
+//! bound under `.../<ecosystem>/`, a `storage.sock` symlink is created in the same directory so peers
 //! can discover the storage endpoint by capability. See [`install_storage_capability_symlink`] and
 //! [`StorageCapabilitySymlinkGuard`] (Unix only).
 
@@ -46,22 +46,20 @@ use tracing::{debug, info, warn};
 /// Capability-domain socket name for storage discovery (symlink beside the bound socket).
 pub const STORAGE_CAPABILITY_SOCK_NAME: &str = "storage.sock";
 
-/// `true` when `socket_path` is `.../biomeos/<file>` (`CAPABILITY_BASED_DISCOVERY` domain layout).
+/// `true` when `socket_path` is `.../<ecosystem>/<file>` (`CAPABILITY_BASED_DISCOVERY` domain layout).
 #[cfg(unix)]
 #[must_use]
 pub fn socket_parent_is_biomeos_standard_dir(socket_path: &Path) -> bool {
-    socket_path.parent().is_some_and(|p| {
-        p.file_name()
-            == Some(std::ffi::OsStr::new(
-                nestgate_config::constants::system::ECOSYSTEM_NAME,
-            ))
-    })
+    let segment = nestgate_config::constants::system::ecosystem_path_segment();
+    socket_path
+        .parent()
+        .is_some_and(|p| p.file_name() == Some(std::ffi::OsStr::new(segment.as_str())))
 }
 
 /// Create `storage.sock` → `<primary-socket-file>` in the same directory (Unix only).
 ///
-/// Only runs when the socket lives under a directory named `biomeos/` (e.g.
-/// `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`). Otherwise returns `false` (no log noise).
+/// Only runs when the socket lives under the ecosystem runtime directory (e.g.
+/// `$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock`). Otherwise returns `false` (no log noise).
 ///
 /// Returns `true` if the symlink was created; pass that to [`remove_storage_capability_symlink`]
 /// on shutdown. Failure to create the symlink is logged as a warning and returns `false`.
@@ -71,7 +69,8 @@ pub fn install_storage_capability_symlink(socket_path: &Path) -> bool {
 
     if !socket_parent_is_biomeos_standard_dir(socket_path) {
         debug!(
-            "storage capability symlink: skipped (socket not under ecosystem standard biomeos/ parent): {}",
+            "storage capability symlink: skipped (socket not under ecosystem standard {}/ parent): {}",
+            nestgate_config::constants::system::ecosystem_path_segment(),
             socket_path.display()
         );
         return false;
@@ -197,7 +196,7 @@ pub enum SocketConfigSource {
     Environment,
     /// Ecosystem shared socket directory via `BIOMEOS_SOCKET_DIR` (standard wateringHole path)
     BiomeOSDirectory,
-    /// `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`
+    /// `$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock` (see [`nestgate_config::constants::system::ecosystem_path_segment`])
     XdgRuntime,
     /// Temporary directory fallback (/tmp)
     TempDirectory,
@@ -213,7 +212,7 @@ impl SocketConfig {
     ///
     /// 1. `socket_override` (if `Some`, use as-is)
     /// 2. `biomeos_socket_dir` (if `Some`, use `{dir}/nestgate.sock`)
-    /// 3. XDG runtime: `{xdg_runtime_dir}/biomeos/nestgate.sock` when `xdg_runtime_dir` is set and exists
+    /// 3. XDG runtime: `{xdg_runtime_dir}/<ecosystem>/nestgate.sock` when `xdg_runtime_dir` is set and exists
     /// 4. Temp fallback: `/tmp/nestgate-{family}-{node}.sock`
     ///
     /// # Errors
@@ -258,7 +257,7 @@ impl SocketConfig {
             });
         }
 
-        // Tier 3: `$XDG_RUNTIME_DIR/biomeos/nestgate.sock` (preferred)
+        // Tier 3: `$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock` (preferred)
         if let Some(ref dir) = xdg_runtime_dir
             && !dir.is_empty()
             && Path::new(dir).exists()
@@ -289,7 +288,10 @@ impl SocketConfig {
             "⚠️  XDG runtime directory unavailable or not set, falling back to /tmp: {}",
             socket_path.display()
         );
-        warn!("Note: /tmp is less secure than $XDG_RUNTIME_DIR/biomeos/nestgate.sock");
+        warn!(
+            "Note: /tmp is less secure than $XDG_RUNTIME_DIR/{}/nestgate.sock",
+            nestgate_config::constants::system::ecosystem_path_segment()
+        );
 
         Ok(Self {
             socket_path,
@@ -427,6 +429,10 @@ impl SocketConfig {
 
     /// Log configuration summary
     pub fn log_summary(&self) {
+        let xdg_layout = format!(
+            "$XDG_RUNTIME_DIR/{}/nestgate.sock",
+            nestgate_config::constants::system::ecosystem_path_segment()
+        );
         info!("═══════════════════════════════════════════════════════════");
         info!("🔌 Socket Configuration:");
         info!("  Path:      {}", self.socket_path.display());
@@ -438,7 +444,7 @@ impl SocketConfig {
                 SocketConfigSource::Environment => "NESTGATE_SOCKET env var (explicit)",
                 SocketConfigSource::BiomeOSDirectory =>
                     "BIOMEOS_SOCKET_DIR (ecosystem standard layout)",
-                SocketConfigSource::XdgRuntime => "$XDG_RUNTIME_DIR/biomeos/nestgate.sock",
+                SocketConfigSource::XdgRuntime => xdg_layout.as_str(),
                 SocketConfigSource::TempDirectory => "/tmp fallback (insecure)",
             }
         );

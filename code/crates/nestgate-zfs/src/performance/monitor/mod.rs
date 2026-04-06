@@ -31,6 +31,7 @@
 use crate::types::StorageTier;
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::Result as CoreResult;
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::Duration;
@@ -108,10 +109,15 @@ impl ZfsPerformanceMonitor {
 
     /// Start performance monitoring
     pub async fn start(&mut self) -> CoreResult<()> {
+        self.start_from_env_source(&ProcessEnv).await
+    }
+
+    /// Like [`Self::start`], but reads alert-duration env vars from an injectable [`EnvSource`].
+    pub async fn start_from_env_source(&mut self, env: &dyn EnvSource) -> CoreResult<()> {
         info!("Starting ZFS performance monitoring");
 
         // Load default alert conditions
-        self.load_default_alert_conditions().await?;
+        self.load_default_alert_conditions(env).await?;
 
         // Initialize tier targets
         self.initialize_tier_targets().await?;
@@ -143,7 +149,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Load default alert conditions
-    async fn load_default_alert_conditions(&self) -> CoreResult<()> {
+    async fn load_default_alert_conditions(&self, env: &dyn EnvSource) -> CoreResult<()> {
         let mut conditions = self.alert_conditions.write().await;
 
         // High latency alert
@@ -154,12 +160,11 @@ impl ZfsPerformanceMonitor {
             metric: AlertMetric::Latency,
             operator: AlertOperator::GreaterThan,
             threshold: 100.0, // 100ms
-            duration: Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_LATENCY_ALERT_DURATION_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(300), // 5 minutes default
-            ),
+            duration: Duration::from_secs(env_parsed(
+                env,
+                "NESTGATE_ZFS_LATENCY_ALERT_DURATION_SECS",
+                300_u64,
+            )),
             severity: AlertSeverity::Warning,
             enabled: true,
         });
@@ -172,12 +177,11 @@ impl ZfsPerformanceMonitor {
             metric: AlertMetric::Iops,
             operator: AlertOperator::GreaterThan,
             threshold: 10_000.0, // 10K IOPS
-            duration: Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_IOPS_ALERT_DURATION_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(180), // 3 minutes default
-            ),
+            duration: Duration::from_secs(env_parsed(
+                env,
+                "NESTGATE_ZFS_IOPS_ALERT_DURATION_SECS",
+                180_u64,
+            )),
             severity: AlertSeverity::Critical,
             enabled: true,
         });
@@ -190,12 +194,11 @@ impl ZfsPerformanceMonitor {
             metric: AlertMetric::Utilization,
             operator: AlertOperator::GreaterThan,
             threshold: 85.0, // 85% utilization
-            duration: Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_UTILIZATION_ALERT_DURATION_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(600), // 10 minutes default
-            ),
+            duration: Duration::from_secs(env_parsed(
+                env,
+                "NESTGATE_ZFS_UTILIZATION_ALERT_DURATION_SECS",
+                600_u64,
+            )),
             severity: AlertSeverity::Warning,
             enabled: true,
         });
@@ -208,12 +211,11 @@ impl ZfsPerformanceMonitor {
             metric: AlertMetric::CacheHitRatio,
             operator: AlertOperator::LessThan,
             threshold: 80.0, // 80% cache hit ratio
-            duration: Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_CACHE_ALERT_DURATION_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(900), // 15 minutes default
-            ),
+            duration: Duration::from_secs(env_parsed(
+                env,
+                "NESTGATE_ZFS_CACHE_ALERT_DURATION_SECS",
+                900_u64,
+            )),
             severity: AlertSeverity::Info,
             enabled: true,
         });

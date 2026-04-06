@@ -7,7 +7,51 @@
 use crate::types::RetentionPolicy;
 use nestgate_core::error::CanonicalResult as Result;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::process::Command;
 use tracing::debug;
+
+/// Fallback when `zfs list` cannot be used (no binary, dataset missing, or parse failure).
+const FALLBACK_BYTES_PER_SNAPSHOT_ESTIMATE: u64 = 1024 * 1024 * 100;
+
+/// Sums `used` from `zfs list -r -t snapshot` for snapshots whose names match `snapshot_labels`.
+///
+/// Returns [`None`] if the `zfs` command fails or output cannot be parsed. Matching uses the
+/// snapshot tag after `@` or the full `pool/dataset@snap` name.
+fn try_sum_snapshot_used_from_zfs(dataset: &str, snapshot_labels: &[String]) -> Option<u64> {
+    let output = Command::new("zfs")
+        .args([
+            "list",
+            "-r",
+            "-t",
+            "snapshot",
+            "-H",
+            "-p",
+            "-o",
+            "name,used",
+            dataset,
+        ])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let label_set: HashSet<&str> = snapshot_labels.iter().map(String::as_str).collect();
+    let mut sum: u64 = 0;
+    for line in stdout.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        let (full_name, used_str) = line.split_once('\t')?;
+        let used: u64 = used_str.trim().parse().ok()?;
+        let snap_short = full_name.split_once('@').map_or(full_name, |(_, s)| s);
+        if label_set.contains(snap_short) || label_set.contains(full_name) {
+            sum = sum.saturating_add(used);
+        }
+    }
+    Some(sum)
+}
 
 /// Snapshot analytics without AI recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,7 +65,12 @@ pub struct SnapshotAnalytics {
     pub recommendations: Vec<String>,
 }
 impl SnapshotAnalytics {
-    /// Analyze snapshot usage
+    /// Analyze snapshot usage.
+    ///
+    /// `storage_usage` prefers the sum of snapshot `used` bytes from
+    /// `zfs list -r -t snapshot -H -p -o name,used <dataset>` for snapshots whose names match
+    /// `snapshots`. If that sum is zero or `zfs` is unavailable, falls back to
+    /// `snapshot_count × 100 MiB` as a planning estimate.
     ///
     /// # Errors
     ///
@@ -37,7 +86,14 @@ impl SnapshotAnalytics {
         debug!("Analyzing snapshots for dataset: {}", dataset);
 
         let snapshot_count = snapshots.len() as u64;
-        let storage_usage = snapshot_count * 1024 * 1024 * 100; // Mock 100MB per snapshot
+        let storage_usage = if snapshot_count == 0 {
+            0
+        } else {
+            match try_sum_snapshot_used_from_zfs(dataset, snapshots) {
+                Some(zfs_sum) if zfs_sum > 0 => zfs_sum,
+                _ => snapshot_count.saturating_mul(FALLBACK_BYTES_PER_SNAPSHOT_ESTIMATE),
+            }
+        };
         let mut recommendations = Vec::new();
 
         // Basic snapshot analysis
@@ -157,8 +213,12 @@ mod tests {
     fn test_storage_calculation() {
         let snapshots = vec!["snap1".to_string()];
         let policy = create_test_retention_policy(7);
-        let analytics =
-            SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy).unwrap();
+        let analytics = SnapshotAnalytics::analyze_snapshots(
+            "zzz_nestgate_snapshot_storage_fallback_ds",
+            &snapshots,
+            &policy,
+        )
+        .unwrap();
 
         assert_eq!(analytics.storage_usage, 1024 * 1024 * 100); // 100MB per snapshot
     }

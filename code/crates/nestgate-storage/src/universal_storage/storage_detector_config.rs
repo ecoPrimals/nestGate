@@ -6,6 +6,7 @@
 //! Provides immutable configuration for storage detection, eliminating
 //! runtime environment variable access for credential checking.
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::Arc;
 
 /// Immutable configuration for storage detector AWS credentials
@@ -37,9 +38,15 @@ impl StorageDetectorConfig {
     /// Reads `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` once at startup.
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self {
-            aws_access_key: std::env::var("AWS_ACCESS_KEY_ID").ok(),
-            aws_secret_key: std::env::var("AWS_SECRET_ACCESS_KEY").ok(),
+            aws_access_key: env.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_key: env.get("AWS_SECRET_ACCESS_KEY"),
         }
     }
 

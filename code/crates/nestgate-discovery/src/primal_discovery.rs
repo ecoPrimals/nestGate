@@ -57,6 +57,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 
 // ==================== SELF-KNOWLEDGE ====================
 
@@ -227,10 +228,19 @@ impl PrimalInfo {
     /// variable as a fallback. Still no hardcoded values.
     #[must_use]
     pub fn primary_endpoint_or_env_default(&self) -> Option<String> {
+        self.primary_endpoint_or_env_default_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::primary_endpoint_or_env_default`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn primary_endpoint_or_env_default_from_env_source(
+        &self,
+        env: &dyn EnvSource,
+    ) -> Option<String> {
         self.endpoints
             .first()
             .map(Endpoint::url)
-            .or_else(|| std::env::var("NESTGATE_DEFAULT_ENDPOINT").ok())
+            .or_else(|| env.get("NESTGATE_DEFAULT_ENDPOINT"))
     }
 
     /// Check if primal is stale (not seen recently)
@@ -354,7 +364,7 @@ impl DiscoveryBackend for EnvironmentBackend {
         let capability = capability.to_string();
         Box::pin(async move {
             let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
-            if let Ok(endpoint) = std::env::var(&env_var) {
+            if let Some(endpoint) = ProcessEnv.get(&env_var) {
                 tracing::info!(
                     "Discovered '{}' capability from environment: {}",
                     capability,

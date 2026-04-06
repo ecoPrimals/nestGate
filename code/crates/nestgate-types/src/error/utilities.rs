@@ -11,6 +11,7 @@
 //! - `error/modernized_error_helpers.rs` (error constructors) ✅
 
 use super::{NestGateError, NestGateUnifiedError};
+use crate::{EnvSource, ProcessEnv, env_var_or_default};
 
 // ==================== SAFE OPERATION WRAPPERS ====================
 
@@ -43,10 +44,22 @@ pub fn safe_to_string<T: std::fmt::Display>(value: T) -> String {
 /// let home = safe_env_var("HOME")?;
 /// ```
 pub fn safe_env_var(key: &str) -> Result<String, NestGateError> {
-    std::env::var(key).map_err(|e| {
+    safe_env_var_from_env_source(key, &ProcessEnv)
+}
+
+/// Like [`safe_env_var`], but reads from an injectable [`EnvSource`].
+///
+/// # Errors
+///
+/// Returns [`NestGateError::Configuration`] when `key` is not present in `env`.
+pub fn safe_env_var_from_env_source(
+    key: &str,
+    env: &dyn EnvSource,
+) -> Result<String, NestGateError> {
+    env.get(key).ok_or_else(|| {
         NestGateError::configuration_error(
             key.to_string(),
-            format!("Environment variable not found: {e}"),
+            "Environment variable not found".to_string(),
         )
     })
 }
@@ -63,7 +76,17 @@ pub fn safe_env_var(key: &str) -> Result<String, NestGateError> {
 /// ```
 #[must_use]
 pub fn safe_env_var_or_default(key: &str, default: &str) -> String {
-    std::env::var(key).unwrap_or_else(|_| default.to_string())
+    safe_env_var_or_default_from_env_source(key, default, &ProcessEnv)
+}
+
+/// Like [`safe_env_var_or_default`], but reads from an injectable [`EnvSource`].
+#[must_use]
+pub fn safe_env_var_or_default_from_env_source(
+    key: &str,
+    default: &str,
+    env: &dyn EnvSource,
+) -> String {
+    env_var_or_default(env, key, default)
 }
 
 /// Safe file read operation
@@ -288,7 +311,7 @@ mod tests {
 
     #[test]
     fn safe_env_var_reads_home_when_set() {
-        if let Ok(home) = std::env::var("HOME") {
+        if let Some(home) = crate::ProcessEnv.get("HOME") {
             assert_eq!(safe_env_var("HOME").unwrap(), home);
         }
     }

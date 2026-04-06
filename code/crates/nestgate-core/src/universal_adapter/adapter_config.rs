@@ -34,6 +34,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use nestgate_types::{EnvSource, ProcessEnv};
+
 /// Immutable configuration for UniversalAdapter capability discovery
 ///
 /// This struct holds all configuration needed for the UniversalAdapter to
@@ -100,36 +102,42 @@ impl AdapterDiscoveryConfig {
     /// - `NESTGATE_PORT`: Port for fallback endpoints (default: "8080")
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads discovery overrides from `env`.
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         use crate::config::runtime::get_config;
 
         let mut config = Self::new();
 
         // Load discovery endpoints
-        if let Ok(endpoint) = std::env::var("ORCHESTRATION_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = env.get("ORCHESTRATION_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
                 .insert("orchestration".to_string(), endpoint);
         }
 
-        if let Ok(endpoint) = std::env::var("COMPUTE_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = env.get("COMPUTE_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
                 .insert("compute".to_string(), endpoint);
         }
 
-        if let Ok(endpoint) = std::env::var("SECURITY_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = env.get("SECURITY_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
                 .insert("security".to_string(), endpoint);
         }
 
-        if let Ok(endpoint) = std::env::var("AI_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = env.get("AI_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
                 .insert("artificial_intelligence".to_string(), endpoint);
         }
 
-        if let Ok(endpoint) = std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT") {
+        if let Some(endpoint) = env.get("ECOSYSTEM_DISCOVERY_ENDPOINT") {
             config
                 .discovery_endpoints
                 .insert("ecosystem".to_string(), endpoint);
@@ -139,7 +147,7 @@ impl AdapterDiscoveryConfig {
         let runtime_config = get_config();
 
         // Load adapter endpoint override
-        config.adapter_endpoint = std::env::var("UNIVERSAL_ADAPTER_ENDPOINT").ok();
+        config.adapter_endpoint = env.get("UNIVERSAL_ADAPTER_ENDPOINT");
 
         // Load host/port from centralized config
         config.host = runtime_config.network.api_host.to_string();

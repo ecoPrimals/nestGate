@@ -51,6 +51,7 @@
 use crate::zero_cost_zfs_operations::ZeroCostZfsOperations;
 use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::{NestGateError, Result, config_error};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -213,7 +214,7 @@ impl AzureBackend {
 
         // Fallback to environment configuration
         info!("ℹ️ Capability discovery unavailable, using environment config");
-        Self::from_environment()
+        Self::from_env_source(&ProcessEnv)
     }
 
     /// Discover Azure capability via `NestGate` capability system
@@ -253,22 +254,29 @@ impl AzureBackend {
         })
     }
 
-    /// Create backend from environment variables (fallback mode)
+    /// Create backend from the process environment (fallback mode).
     ///
     /// **FALLBACK ONLY**: Used when capability discovery is unavailable.
     /// Validates configuration to fail fast on misconfiguration.
     fn from_environment() -> Result<Self> {
-        let account = std::env::var("AZURE_STORAGE_ACCOUNT").map_err(|_| {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Create backend from an injectable environment source (fallback mode).
+    ///
+    /// **FALLBACK ONLY**: Used when capability discovery is unavailable.
+    /// Validates configuration to fail fast on misconfiguration.
+    fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let account = env.get("AZURE_STORAGE_ACCOUNT").ok_or_else(|| {
             config_error!(
                 "AZURE_STORAGE_ACCOUNT required when using environment config",
                 "AZURE_STORAGE_ACCOUNT"
             )
         })?;
 
-        let connection_string = std::env::var("AZURE_STORAGE_CONNECTION_STRING").ok();
+        let connection_string = env.get("AZURE_STORAGE_CONNECTION_STRING");
 
-        let container_prefix =
-            std::env::var("AZURE_CONTAINER_PREFIX").unwrap_or_else(|_| "nestgate".to_string());
+        let container_prefix = env.get_or("AZURE_CONTAINER_PREFIX", "nestgate");
 
         info!(
             "☁️  Initializing Azure backend from environment: account={}, prefix={}",
@@ -569,19 +577,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_dataset() {
-        let orig = std::env::var("AZURE_STORAGE_ACCOUNT").ok();
-        nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", "teststorage");
-
-        let backend = AzureBackend::new().unwrap();
+        let backend = AzureBackend {
+            client: Arc::new(AzureClientWrapper {
+                account: "teststorage".to_string(),
+                connection_string: None,
+                config_source: ConfigSource::Environment,
+            }),
+            container_prefix: "nestgate".to_string(),
+            pools: Arc::new(RwLock::new(HashMap::new())),
+        };
         let pool = backend.create_pool("test-pool", &[]).await.unwrap();
         let dataset = backend
             .create_dataset(&pool, "data", StorageTier::Warm)
             .await;
 
-        match orig {
-            Some(v) => nestgate_core::env_process::set_var("AZURE_STORAGE_ACCOUNT", v),
-            None => nestgate_core::env_process::remove_var("AZURE_STORAGE_ACCOUNT"),
-        }
         assert!(dataset.is_ok(), "Dataset creation should succeed");
         let dataset = dataset.unwrap();
         assert_eq!(dataset.name, "data");

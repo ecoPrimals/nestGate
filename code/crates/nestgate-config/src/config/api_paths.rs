@@ -9,6 +9,7 @@
 // Centralized management of API endpoints and paths to eliminate hardcoded strings
 //! throughout the codebase. This enables easy customization and versioning of APIs.
 
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -383,10 +384,16 @@ impl ApiPathsConfig {
     /// Get environment-specific configuration
     #[must_use]
     pub fn from_environment() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_environment`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         let mut config = Self::default();
 
         // Override API version from environment
-        if let Ok(version) = std::env::var("NESTGATE_API_VERSION") {
+        if let Some(version) = env.get("NESTGATE_API_VERSION") {
             config.api_version = version;
             // Recreate paths with new version
             config.zfs = ZfsApiPaths::default_with_version(&config.api_version);
@@ -395,13 +402,12 @@ impl ApiPathsConfig {
         }
 
         // Override specific endpoints from environment
-        if let Ok(health_path) = std::env::var("NESTGATE_HEALTH_PATH") {
+        if let Some(health_path) = env.get("NESTGATE_HEALTH_PATH") {
             config.health.health = health_path;
         }
 
-        if let Ok(metrics_path) = std::env::var("NESTGATE_METRICS_PATH") {
-            config.health.metrics = metrics_path;
-        }
+        config.health.metrics =
+            env_var_or_default(env, "NESTGATE_METRICS_PATH", &config.health.metrics);
 
         config
     }

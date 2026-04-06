@@ -6,7 +6,7 @@
 //! Canonical configuration types for services, networks, storage, security, and performance.
 
 use nestgate_core::constants::get_api_port;
-use nestgate_core::constants::network_defaults::LOCALHOST_IPV4;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use serde::{Deserialize, Serialize};
 
 /// Canonical Configuration - Top-level configuration container
@@ -194,14 +194,21 @@ impl Default for NetworkConfig {
     /// Returns the default instance.
     ///
     /// **Development default**: when `NESTGATE_BIND_ADDRESS` is unset, bind endpoint defaults
-    /// to loopback ([`LOCALHOST_IPV4`]). Production and non-local deployments must set
+    /// to loopback (`127.0.0.1`). Production and non-local deployments must set
     /// `NESTGATE_BIND_ADDRESS` (or equivalent) explicitly.
     fn default() -> Self {
+        Self::default_from_env_source(&ProcessEnv)
+    }
+}
+
+impl NetworkConfig {
+    /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
         Self {
-            bind_endpoint: std::env::var("NESTGATE_BIND_ADDRESS")
-                .unwrap_or_else(|_| LOCALHOST_IPV4.to_string()),
-            port: std::env::var("NESTGATE_PORT")
-                .ok()
+            bind_endpoint: env_var_or_default(env, "NESTGATE_BIND_ADDRESS", "127.0.0.1"),
+            port: env
+                .get("NESTGATE_PORT")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or_else(get_api_port),
             timeout_seconds: 30,
@@ -215,10 +222,17 @@ impl Default for NetworkConfig {
 impl Default for StorageConfig {
     /// Returns the default instance
     fn default() -> Self {
+        Self::default_from_env_source(&ProcessEnv)
+    }
+}
+
+impl StorageConfig {
+    /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
         Self {
             backend_type: "local".to_string(),
-            data_directory: std::env::var("NESTGATE_DATA_DIR")
-                .unwrap_or_else(|_| "./data".to_string()),
+            data_directory: env_var_or_default(env, "NESTGATE_DATA_DIR", "./data"),
             cache_size_mb: 512,
             compression_enabled: true,
             encryption_enabled: false,
@@ -271,9 +285,16 @@ impl Default for PasswordPolicy {
 impl Default for AuthConfig {
     /// Returns the default instance
     fn default() -> Self {
+        Self::default_from_env_source(&ProcessEnv)
+    }
+}
+
+impl AuthConfig {
+    /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
         Self {
-            jwt_secret: std::env::var("JWT_SECRET")
-                .unwrap_or_else(|_| "change-me-in-production".to_string()),
+            jwt_secret: env_var_or_default(env, "JWT_SECRET", "change-me-in-production"),
             token_expiry_minutes: 60,
             refresh_token_expiry_days: 30,
             require_email_verification: true,

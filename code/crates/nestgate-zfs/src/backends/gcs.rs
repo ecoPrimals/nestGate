@@ -48,6 +48,7 @@
 use crate::zero_cost_zfs_operations::ZeroCostZfsOperations;
 use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::{NestGateError, Result, config_error};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -222,7 +223,7 @@ impl GcsBackend {
 
         // Fallback to environment configuration
         info!("ℹ️ Capability discovery unavailable, using environment config");
-        Self::from_environment().await
+        Self::from_env_source(&ProcessEnv)
     }
 
     /// Discover GCS capability via `NestGate` capability system
@@ -263,28 +264,36 @@ impl GcsBackend {
         })
     }
 
-    /// Create backend from environment variables (fallback mode)
+    /// Create backend from the process environment (fallback mode).
     ///
     /// **FALLBACK ONLY**: Used when capability discovery is unavailable.
     /// Validates configuration to fail fast on misconfiguration.
-    async fn from_environment() -> Result<Self> {
-        let project_id = std::env::var("GCS_PROJECT_ID")
-            .or_else(|_| std::env::var("GOOGLE_CLOUD_PROJECT"))
-            .map_err(|_| {
+    fn from_environment() -> Result<Self> {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Create backend from an injectable environment source (fallback mode).
+    ///
+    /// **FALLBACK ONLY**: Used when capability discovery is unavailable.
+    /// Validates configuration to fail fast on misconfiguration.
+    fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let project_id = env
+            .get("GCS_PROJECT_ID")
+            .or_else(|| env.get("GOOGLE_CLOUD_PROJECT"))
+            .ok_or_else(|| {
                 config_error!(
                     "GCS_PROJECT_ID or GOOGLE_CLOUD_PROJECT required when using environment config",
                     "GCS_PROJECT_ID"
                 )
             })?;
 
-        let credentials_path = std::env::var("GOOGLE_APPLICATION_CREDENTIALS")
-            .or_else(|_| std::env::var("GCS_CREDENTIALS_PATH"))
-            .ok();
+        let credentials_path = env
+            .get("GOOGLE_APPLICATION_CREDENTIALS")
+            .or_else(|| env.get("GCS_CREDENTIALS_PATH"));
 
-        let bucket_prefix =
-            std::env::var("GCS_BUCKET_PREFIX").unwrap_or_else(|_| "nestgate".to_string());
+        let bucket_prefix = env.get_or("GCS_BUCKET_PREFIX", "nestgate");
 
-        let location = std::env::var("GCS_LOCATION").unwrap_or_else(|_| "US".to_string());
+        let location = env.get_or("GCS_LOCATION", "US");
 
         info!(
             "☁️  Initializing GCS backend from environment: project={}, location={}, prefix={}",
@@ -666,7 +675,7 @@ mod tests {
             props
                 .custom
                 .get("config_source")
-                .is_some_and(|s| s.contains("capability"))
+                .map_or(false, |s| s.contains("capability"))
         );
     }
 

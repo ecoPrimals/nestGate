@@ -22,6 +22,7 @@
 //!     .with_environment("production".to_string());
 //! ```
 use super::network_defaults::{DEFAULT_BIND_ADDRESS, LOCALHOST_NAME};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::Arc;
 
 /// Thread-safe configuration for network defaults
@@ -57,12 +58,18 @@ impl NetworkDefaultsConfig {
     /// This captures env vars at initialization time, making it thread-safe
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self {
-            bind_address: std::env::var("NESTGATE_BIND_ADDRESS").ok(),
-            api_host: std::env::var("NESTGATE_API_HOST").ok(),
-            db_host: std::env::var("NESTGATE_DB_HOST").ok(),
-            redis_host: std::env::var("NESTGATE_REDIS_HOST").ok(),
-            environment: std::env::var("NESTGATE_ENVIRONMENT").ok(),
+            bind_address: env.get("NESTGATE_BIND_ADDRESS"),
+            api_host: env.get("NESTGATE_API_HOST"),
+            db_host: env.get("NESTGATE_DB_HOST"),
+            redis_host: env.get("NESTGATE_REDIS_HOST"),
+            environment: env.get("NESTGATE_ENVIRONMENT"),
         }
     }
 

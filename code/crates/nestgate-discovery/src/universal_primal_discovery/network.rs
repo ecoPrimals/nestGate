@@ -8,6 +8,7 @@
 /// - Network interface introspection
 /// - Service endpoint resolution
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 // **MIGRATED**: Using canonical config system instead of deprecated unified_types
 use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 use std::collections::HashMap;
@@ -56,16 +57,25 @@ impl Default for NetworkDiscoveryConfig {
     /// - `NESTGATE_API_PORT`: Start of port scan range (default: 8080)
     /// - Admin port defaults to 9090 for end of range
     fn default() -> Self {
+        Self::default_from_env_source(&ProcessEnv)
+    }
+}
+
+impl NetworkDiscoveryConfig {
+    /// Like [`Default::default`], but reads `NESTGATE_DISCOVERY_PORT_END` from an injectable [`EnvSource`].
+    #[must_use]
+    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
         use nestgate_config::config::environment::EnvironmentConfig;
 
         let env_config =
             EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 
         let start_port = env_config.network.port.get();
-        let end_port = std::env::var("NESTGATE_DISCOVERY_PORT_END")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS);
+        let end_port = env_parsed(
+            env,
+            "NESTGATE_DISCOVERY_PORT_END",
+            nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS,
+        );
 
         Self {
             scan_timeout: Duration::from_secs(5),
@@ -351,6 +361,15 @@ impl NetworkDiscovery {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn discover_capability_endpoint(&self, capability: &str) -> Result<String> {
+        self.discover_capability_endpoint_from_env_source(capability, &ProcessEnv)
+    }
+
+    /// Like [`Self::discover_capability_endpoint`], but reads `NESTGATE_CAPABILITY_BASE_PORT` from an injectable [`EnvSource`].
+    pub fn discover_capability_endpoint_from_env_source(
+        &self,
+        capability: &str,
+        env: &dyn EnvSource,
+    ) -> Result<String> {
         // Runtime config-based discovery (immutable, thread-safe)
         if let Some(endpoint) = self.network_runtime.get_capability_endpoint(capability) {
             return Ok(endpoint.to_string());
@@ -358,10 +377,11 @@ impl NetworkDiscovery {
 
         // Default capability endpoint generation
         let bind_address = self.detect_optimal_bind_interface()?;
-        let base_port: u16 = std::env::var("NESTGATE_CAPABILITY_BASE_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS);
+        let base_port: u16 = env_parsed(
+            env,
+            "NESTGATE_CAPABILITY_BASE_PORT",
+            nestgate_config::constants::hardcoding::runtime_fallback_ports::METRICS,
+        );
         let offset = u16::try_from(capability.len().rem_euclid(100)).unwrap_or(0);
         let capability_port = base_port.saturating_add(offset);
 

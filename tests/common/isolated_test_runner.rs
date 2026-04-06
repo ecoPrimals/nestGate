@@ -242,12 +242,12 @@ impl IsolatedTestRunner {
         T: Send + 'static,
         E: Into<Box<dyn std::error::Error + Send + Sync>> + Send + 'static,
     {
-        // Execute in the isolated runtime
-        let result = self
-            .runtime
-            .block_on(async { test_fn.await.map_err(|e| e.into()) });
-
-        result
+        // This `Runtime::block_on` runs on the **caller's** thread and drives the future on this
+        // runner's dedicated runtime. It is not `Handle::current().block_on` nested inside an
+        // async test worker, so it does not deadlock the Tokio executor. The public API stays
+        // synchronous so callers can invoke isolated tests from plain `#[test]` functions.
+        self.runtime
+            .block_on(async { test_fn.await.map_err(|e| e.into()) })
     }
 
     /// Run a synchronous test in the isolated runtime's context
@@ -277,15 +277,14 @@ impl IsolatedTestRunner {
         T: Send + 'static,
         E: Into<Box<dyn std::error::Error + Send + Sync>> + Send + 'static,
     {
-        // Spawn blocking task in the isolated runtime
-        let result = self.runtime.block_on(async {
+        // Same rationale as [`Self::run_async`]: `block_on` here is the entry point into this
+        // runner's runtime, not a nested block on the global async test runtime.
+        self.runtime.block_on(async {
             tokio::task::spawn_blocking(test_fn)
                 .await
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?
                 .map_err(|e| e.into())
-        });
-
-        result
+        })
     }
 
     /// Run a test with panic catching

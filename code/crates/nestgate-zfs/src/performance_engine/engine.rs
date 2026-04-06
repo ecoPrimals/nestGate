@@ -19,6 +19,7 @@ use tokio::time::interval;
 // Removed unused tracing import
 
 use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, error::Result, pool::ZfsPoolManager};
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use tracing::debug;
 use tracing::error;
 use tracing::info;
@@ -97,16 +98,21 @@ impl PerformanceOptimizationEngine {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn start(&mut self) -> Result<()> {
+        self.start_from_env_source(&ProcessEnv).await
+    }
+
+    /// Like [`Self::start`], but reads interval env vars from an injectable [`EnvSource`].
+    pub async fn start_from_env_source(&mut self, env: &dyn EnvSource) -> Result<()> {
         info!("🚀 Starting Real-time Performance Optimization Engine");
 
         // Start performance monitoring
-        self.start_performance_monitoring()?;
+        self.start_performance_monitoring(env)?;
 
         // Start optimization loop
-        self.start_optimization_loop()?;
+        self.start_optimization_loop(env)?;
 
         // Start bottleneck detection
-        self.start_bottleneck_detection()?;
+        self.start_bottleneck_detection(env)?;
 
         info!("✅ Performance optimization engine started successfully");
         Ok(())
@@ -242,18 +248,18 @@ impl PerformanceOptimizationEngine {
     // Performance Monitoring Infrastructure
 
     /// Start Performance Monitoring
-    fn start_performance_monitoring(&self) -> Result<()> {
+    fn start_performance_monitoring(&self, env: &dyn EnvSource) -> Result<()> {
         let monitor = self.performance_monitor.clone();
         let pool_manager = self.pool_manager.clone();
         let dataset_manager = self.dataset_manager.clone();
+        let secs = env_parsed(
+            env,
+            "NESTGATE_ZFS_PERFORMANCE_MONITORING_INTERVAL_SECS",
+            10_u64,
+        );
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_PERFORMANCE_MONITORING_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(10), // 10 seconds default
-            ));
+            let mut interval = interval(Duration::from_secs(secs));
 
             loop {
                 interval.tick().await;
@@ -270,16 +276,12 @@ impl PerformanceOptimizationEngine {
     }
 
     /// Start Optimization Loop
-    fn start_optimization_loop(&self) -> Result<()> {
+    fn start_optimization_loop(&self, env: &dyn EnvSource) -> Result<()> {
         let engine = Arc::new(self.clone());
+        let secs = env_parsed(env, "NESTGATE_ZFS_OPTIMIZATION_INTERVAL_SECS", 60_u64);
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_OPTIMIZATION_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(60), // 60 seconds default
-            ));
+            let mut interval = interval(Duration::from_secs(secs));
 
             loop {
                 interval.tick().await;
@@ -293,18 +295,18 @@ impl PerformanceOptimizationEngine {
     }
 
     /// Start Bottleneck Detection
-    fn start_bottleneck_detection(&self) -> Result<()> {
+    fn start_bottleneck_detection(&self, env: &dyn EnvSource) -> Result<()> {
         let performance_monitor = self.performance_monitor.clone();
         let pool_manager = self.pool_manager.clone();
         let dataset_manager = self.dataset_manager.clone();
+        let secs = env_parsed(
+            env,
+            "NESTGATE_ZFS_BOTTLENECK_DETECTION_INTERVAL_SECS",
+            30_u64,
+        );
 
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(
-                std::env::var("NESTGATE_ZFS_BOTTLENECK_DETECTION_INTERVAL_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(30), // 30 seconds default
-            ));
+            let mut interval = interval(Duration::from_secs(secs));
 
             loop {
                 interval.tick().await;
