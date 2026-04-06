@@ -202,6 +202,7 @@ pub struct PoolStats {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod round5_pool_impl_tests {
     use super::*;
 

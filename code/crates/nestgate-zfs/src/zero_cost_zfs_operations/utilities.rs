@@ -77,6 +77,7 @@ impl ZfsBenchmark {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
     use crate::zero_cost_zfs_operations::{
@@ -220,7 +221,7 @@ mod tests {
 
         for (tier, name) in tiers {
             let dataset = ZeroCostDatasetInfo {
-                name: format!("dataset_{}", name),
+                name: format!("dataset_{name}"),
                 pool: "test_pool".to_string(),
                 tier: tier.clone(),
                 size: 100000,

@@ -6,6 +6,7 @@
 //! Tests for pool information, state, health, and capacity types
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use crate::pool::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
     use std::collections::HashMap;
@@ -265,7 +266,7 @@ mod tests {
     #[test]
     fn test_pool_state_debug() {
         let state = PoolState::Degraded;
-        let debug_str = format!("{:?}", state);
+        let debug_str = format!("{state:?}");
         assert!(debug_str.contains("Degraded"));
     }
 
@@ -273,7 +274,7 @@ mod tests {
     #[test]
     fn test_pool_health_debug() {
         let health = PoolHealth::Warning;
-        let debug_str = format!("{:?}", health);
+        let debug_str = format!("{health:?}");
         assert!(debug_str.contains("Warning"));
     }
 
@@ -299,8 +300,8 @@ mod tests {
             properties: HashMap::new(),
         };
 
-        assert!(pool.name.contains("-"));
-        assert!(pool.name.contains("_"));
+        assert!(pool.name.contains('-'));
+        assert!(pool.name.contains('_'));
         assert!(pool.name.contains("2025"));
     }
 
@@ -309,7 +310,7 @@ mod tests {
     fn test_pool_info_many_properties() {
         let mut properties = HashMap::new();
         for i in 0..50 {
-            properties.insert(format!("prop{}", i), format!("value{}", i));
+            properties.insert(format!("prop{i}"), format!("value{i}"));
         }
 
         let pool = PoolInfo {

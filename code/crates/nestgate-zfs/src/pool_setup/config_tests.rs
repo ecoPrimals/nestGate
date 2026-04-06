@@ -31,7 +31,7 @@ mod config_tests {
     #[test]
     fn test_pool_setup_config_debug() {
         let config = PoolSetupConfig::default();
-        let debug = format!("{:?}", config);
+        let debug = format!("{config:?}");
 
         assert!(debug.contains("PoolSetupConfig"));
     }
@@ -452,7 +452,7 @@ mod config_tests {
         let mut config = PoolSetupConfig::default();
 
         for i in 0..1000 {
-            config.devices.push(format!("/dev/sd{}", i));
+            config.devices.push(format!("/dev/sd{i}"));
         }
 
         assert_eq!(config.devices.len(), 1000);
@@ -465,7 +465,7 @@ mod config_tests {
         for i in 0..100 {
             config
                 .properties
-                .insert(format!("prop{}", i), format!("value{}", i));
+                .insert(format!("prop{i}"), format!("value{i}"));
         }
 
         assert_eq!(config.properties.len(), 100);

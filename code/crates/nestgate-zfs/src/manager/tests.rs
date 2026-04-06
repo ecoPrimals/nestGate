@@ -8,6 +8,7 @@
 #[cfg(test)]
 /// Tests module
 mod manager_tests {
+    #![allow(clippy::float_cmp)]
     use super::super::*;
     use std::collections::HashMap;
 
@@ -17,7 +18,7 @@ mod manager_tests {
     /// Uses NESTGATE_TEST_PORT environment variable, defaults to 18080
     fn test_endpoint() -> String {
         let port = std::env::var("NESTGATE_TEST_PORT").unwrap_or_else(|_| "18080".to_string());
-        format!("http://localhost:{}", port)
+        format!("http://localhost:{port}")
     }
 
     /// Helper function to get test health endpoint
@@ -396,10 +397,10 @@ mod manager_tests {
         let unknown = HealthState::Unknown;
 
         // Test Debug formatting
-        assert_eq!(format!("{:?}", healthy), "Healthy");
-        assert_eq!(format!("{:?}", warning), "Warning");
-        assert_eq!(format!("{:?}", critical), "Critical");
-        assert_eq!(format!("{:?}", unknown), "Unknown");
+        assert_eq!(format!("{healthy:?}"), "Healthy");
+        assert_eq!(format!("{warning:?}"), "Warning");
+        assert_eq!(format!("{critical:?}"), "Critical");
+        assert_eq!(format!("{unknown:?}"), "Unknown");
     }
 
     // ==================== SERVICE INFO SERIALIZATION TESTS ====================

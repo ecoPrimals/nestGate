@@ -3,8 +3,6 @@
 
 //! Alert thresholds and top-level alert configuration validation.
 
-#![expect(clippy::wildcard_imports)]
-
 use serde::{Deserialize, Serialize};
 
 use super::constants::*;

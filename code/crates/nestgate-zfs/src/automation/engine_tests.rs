@@ -29,7 +29,7 @@ async fn create_test_engine() -> DatasetAutomation {
 fn create_test_policy(policy_id: &str) -> AutomationPolicy {
     AutomationPolicy {
         policy_id: policy_id.to_string(),
-        name: format!("Test Policy {}", policy_id),
+        name: format!("Test Policy {policy_id}"),
         description: "Test automation policy".to_string(),
         priority: PolicyPriority::Normal,
         enabled: true,
@@ -140,7 +140,7 @@ async fn test_validate_multiple_policies() {
     let engine = create_test_engine().await;
 
     for i in 0..10 {
-        let policy = create_test_policy(&format!("policy{}", i));
+        let policy = create_test_policy(&format!("policy{i}"));
         let result = engine.validate_policy(&policy);
         assert!(result.is_ok());
     }
@@ -181,7 +181,7 @@ async fn test_evaluate_tier_multiple_datasets() {
     let engine = create_test_engine().await;
 
     for i in 0..5 {
-        let dataset_name = format!("tank/dataset{}", i);
+        let dataset_name = format!("tank/dataset{i}");
         let metadata = create_test_metadata();
         let result = engine
             .evaluate_tier_for_dataset(&dataset_name, &metadata)
@@ -246,7 +246,7 @@ async fn test_validate_many_policies() {
     let engine = create_test_engine().await;
 
     for i in 0..50 {
-        let policy = create_test_policy(&format!("stress_policy_{}", i));
+        let policy = create_test_policy(&format!("stress_policy_{i}"));
         let result = engine.validate_policy(&policy);
         assert!(result.is_ok());
     }
@@ -258,7 +258,7 @@ async fn test_evaluate_tier_many_datasets() {
     let metadata = create_test_metadata();
 
     for i in 0..20 {
-        let dataset = format!("tank/stress_test_{}", i);
+        let dataset = format!("tank/stress_test_{i}");
         let result = engine.evaluate_tier_for_dataset(&dataset, &metadata).await;
         assert!(result.is_ok());
     }
@@ -347,7 +347,7 @@ async fn test_concurrent_policy_validation() {
     let mut handles = vec![];
     for i in 0..5 {
         let engine_clone = Arc::clone(&engine);
-        let policy = create_test_policy(&format!("concurrent_{}", i));
+        let policy = create_test_policy(&format!("concurrent_{i}"));
         handles.push(tokio::spawn(async move {
             engine_clone.validate_policy(&policy)
         }));

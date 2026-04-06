@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![expect(
-    unused,
-    dead_code,
-    deprecated,
     missing_docs,
     clippy::all,
     clippy::pedantic,
-    clippy::nursery,
     clippy::restriction,
     clippy::cargo
 )]

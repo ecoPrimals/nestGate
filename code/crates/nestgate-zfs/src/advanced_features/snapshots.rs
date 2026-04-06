@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn test_many_snapshots_recommendation() {
-        let snapshots: Vec<String> = (0..60).map(|i| format!("snap{}", i)).collect();
+        let snapshots: Vec<String> = (0..60).map(|i| format!("snap{i}")).collect();
         let policy = create_test_retention_policy(7);
         let analytics = SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy)
             .expect("Test: analyze_snapshots should succeed");
@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_high_storage_usage_recommendation() {
-        let snapshots: Vec<String> = (0..150).map(|i| format!("snap{}", i)).collect();
+        let snapshots: Vec<String> = (0..150).map(|i| format!("snap{i}")).collect();
         let policy = create_test_retention_policy(7);
         let analytics =
             SnapshotAnalytics::analyze_snapshots("tank/data", &snapshots, &policy).unwrap();

@@ -47,7 +47,7 @@ async fn test_zero_copy_interface() -> std::result::Result<(), Box<dyn std::erro
     let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT").unwrap_or(default_endpoint);
     let socket_addr: SocketAddr = test_endpoint
         .parse()
-        .map_err(|e| format!("Invalid test endpoint '{}': {}", test_endpoint, e))?;
+        .map_err(|e| format!("Invalid test endpoint '{test_endpoint}': {e}"))?;
     let connection_id = interface.connect(socket_addr)?;
 
     let test_data = b"Test zero-copy send";
@@ -76,7 +76,7 @@ async fn test_zero_copy_send_bytes_refcount_path()
     let test_endpoint = std::env::var("NESTGATE_TEST_ENDPOINT").unwrap_or(default_endpoint);
     let socket_addr: SocketAddr = test_endpoint
         .parse()
-        .map_err(|e| format!("Invalid test endpoint '{}': {}", test_endpoint, e))?;
+        .map_err(|e| format!("Invalid test endpoint '{test_endpoint}': {e}"))?;
     let connection_id = interface.connect(socket_addr)?;
 
     let payload = Bytes::from_static(b"refcounted-no-memcpy");

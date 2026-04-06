@@ -9,7 +9,6 @@
 
 #![warn(missing_docs)]
 // Many `Result` helpers differ only by error path; per-function `# Errors` would duplicate noise.
-#![expect(clippy::missing_errors_doc)]
 // Unit tests use unwrap/expect/panic and exercise large API surfaces; keep lib code strict elsewhere.
 #![cfg_attr(
     test,

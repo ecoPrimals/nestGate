@@ -240,6 +240,7 @@ impl RealTimePerformanceMonitor {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod regression_tests {
     use super::super::types::{
         AccessPattern, ArcStatistics, SystemMemoryUsage, ZfsDatasetMetrics, ZfsPerformanceMetrics,
@@ -387,7 +388,7 @@ mod regression_tests {
             for i in 0..3 {
                 w.insert(
                     format!("m{i}"),
-                    sample_metrics_snapshot("p0", 0.9 - (i as f64) * 0.01, 0.5),
+                    sample_metrics_snapshot("p0", f64::from(i).mul_add(-0.01, 0.9), 0.5),
                 );
             }
         }
@@ -406,8 +407,8 @@ mod regression_tests {
                     format!("m{i}"),
                     sample_metrics_snapshot(
                         "heavy",
-                        0.5 - (i as f64) * 0.02,
-                        0.92 + (i as f64) * 0.001,
+                        f64::from(i).mul_add(-0.02, 0.5),
+                        f64::from(i).mul_add(0.001, 0.92),
                     ),
                 );
             }

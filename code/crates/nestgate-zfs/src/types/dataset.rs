@@ -123,6 +123,7 @@ pub struct SnapshotSchedule {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
 
@@ -275,7 +276,7 @@ mod tests {
 
         assert_eq!(props.compression, Some("lz4".to_string()));
         assert_eq!(props.quota, Some(1024 * 1024 * 1024));
-        assert_eq!(props.readonly, false);
+        assert!(!props.readonly);
     }
 
     #[test]

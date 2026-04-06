@@ -292,6 +292,7 @@ impl RealMetricsCollector {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
 
@@ -375,8 +376,7 @@ mod tests {
             let value = result.unwrap();
             assert!(
                 (value - expected).abs() < 1.0,
-                "Failed for input: {}",
-                input
+                "Failed for input: {input}"
             );
         }
     }
@@ -474,14 +474,11 @@ mod tests {
 
         for (input, expected) in test_cases {
             let result = RealMetricsCollector::parse_bandwidth(input);
-            assert!(result.is_ok(), "Failed to parse: {}", input);
+            assert!(result.is_ok(), "Failed to parse: {input}");
             let value = result.unwrap();
             assert!(
                 (value - expected).abs() < 1.0,
-                "Input: {}, Expected: {}, Got: {}",
-                input,
-                expected,
-                value
+                "Input: {input}, Expected: {expected}, Got: {value}"
             );
         }
     }
@@ -493,14 +490,11 @@ mod tests {
 
         for (input, expected_approx) in valid_inputs {
             let result = RealMetricsCollector::parse_bandwidth(input);
-            assert!(result.is_ok(), "Failed to parse: {}", input);
+            assert!(result.is_ok(), "Failed to parse: {input}");
             let value = result.unwrap();
             assert!(
                 (value - expected_approx).abs() / expected_approx < 0.1,
-                "Input {} expected ~{} but got {}",
-                input,
-                expected_approx,
-                value
+                "Input {input} expected ~{expected_approx} but got {value}"
             );
         }
     }

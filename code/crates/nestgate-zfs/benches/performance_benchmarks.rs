@@ -1,27 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    dead_code,
-    missing_docs,
-    unused_imports,
-    clippy::unwrap_used,
-    clippy::expect_used,
-    clippy::panic,
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::cast_precision_loss,
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::float_cmp,
-    clippy::uninlined_format_args,
-    clippy::redundant_clone,
-    clippy::needless_collect,
-    clippy::unnecessary_wraps,
-    clippy::doc_markdown,
-    clippy::semicolon_if_nothing_returned
-)]
-
 //! Performance benchmarks for `nestgate-zfs`.
 //!
 //! ```bash

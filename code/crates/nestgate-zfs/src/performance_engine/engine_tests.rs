@@ -141,7 +141,7 @@ async fn test_tune_long_dataset_name() {
 async fn test_multiple_tuning_operations() {
     let engine = create_test_engine().await;
     for i in 0..20 {
-        let dataset = format!("tank/dataset{}", i);
+        let dataset = format!("tank/dataset{i}");
         let result = engine.tune_zfs_parameters(&dataset);
         assert!(result.is_ok());
     }
@@ -154,9 +154,9 @@ async fn test_multiple_alert_handling() {
         let alert = PerformanceAlert {
             alert_type: AlertType::ThresholdExceeded,
             severity: AlertSeverity::Warning,
-            pool_name: format!("pool{}", i),
+            pool_name: format!("pool{i}"),
             dataset_name: None,
-            description: format!("Alert {}", i),
+            description: format!("Alert {i}"),
             timestamp: std::time::SystemTime::now(),
         };
         let response = engine.handle_performance_alert(alert);

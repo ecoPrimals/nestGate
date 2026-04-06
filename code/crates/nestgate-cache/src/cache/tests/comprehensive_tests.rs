@@ -3,15 +3,10 @@
 
 #![expect(
     deprecated,
-    clippy::unwrap_used,
     clippy::expect_used,
     clippy::panic,
     clippy::float_cmp,
-    clippy::uninlined_format_args,
-    clippy::cast_precision_loss,
-    clippy::cast_possible_truncation,
     clippy::default_trait_access,
-    clippy::unused_async
 )]
 
 //! Comprehensive cache tests
@@ -101,8 +96,8 @@ mod cache_functional_tests {
         let write_through = CachePolicy::WriteThrough;
 
         // They should be different
-        assert_ne!(format!("{:?}", none), format!("{:?}", read_only));
-        assert_ne!(format!("{:?}", read_only), format!("{:?}", write_through));
+        assert_ne!(format!("{none:?}"), format!("{:?}", read_only));
+        assert_ne!(format!("{read_only:?}"), format!("{:?}", write_through));
     }
 
     #[tokio::test]
@@ -113,8 +108,8 @@ mod cache_functional_tests {
         let cold = StorageTier::Cold;
 
         // They should be different
-        assert_ne!(format!("{:?}", hot), format!("{:?}", warm));
-        assert_ne!(format!("{:?}", warm), format!("{:?}", cold));
+        assert_ne!(format!("{hot:?}"), format!("{:?}", warm));
+        assert_ne!(format!("{warm:?}"), format!("{:?}", cold));
     }
 
     #[tokio::test]
@@ -231,8 +226,8 @@ mod cache_functional_tests {
 
         // Full lifecycle test
         for i in 0..10 {
-            let key = format!("key_{}", i);
-            let value = format!("value_{}", i).into_bytes();
+            let key = format!("key_{i}");
+            let value = format!("value_{i}").into_bytes();
 
             cache
                 .put(&key, value.clone())
@@ -417,7 +412,7 @@ mod storage_tier_tests {
     fn test_storage_tier_clone() {
         let tier1 = StorageTier::Hot;
         let tier2 = tier1.clone();
-        assert_eq!(format!("{:?}", tier1), format!("{:?}", tier2));
+        assert_eq!(format!("{tier1:?}"), format!("{:?}", tier2));
     }
 }
 
@@ -576,14 +571,14 @@ mod cache_integration_tests {
 
         // Add many entries
         for i in 0..100 {
-            let key = format!("key_{}", i);
-            let value = format!("value_{}", i).into_bytes();
+            let key = format!("key_{i}");
+            let value = format!("value_{i}").into_bytes();
             cache.put(&key, value).expect("Put failed");
         }
 
         // Verify some entries are accessible
         for i in 0..50 {
-            let key = format!("key_{}", i);
+            let key = format!("key_{i}");
             let result = cache.get(&key);
             assert!(result.is_some());
         }
@@ -615,8 +610,8 @@ mod cache_integration_tests {
 
         // Stress test with many operations
         for i in 0..50 {
-            let key = format!("stress_key_{}", i);
-            let value = format!("stress_value_{}", i).into_bytes();
+            let key = format!("stress_key_{i}");
+            let value = format!("stress_value_{i}").into_bytes();
 
             cache.put(&key, value.clone()).await.expect("Put failed");
             let result = cache.get(&key).await.expect("Get failed");

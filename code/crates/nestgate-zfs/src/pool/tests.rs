@@ -4,6 +4,7 @@
 //! Tests for ZFS pool management
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod pool_manager_tests {
     // Import types ONLY from pool module to avoid conflicts with root types
     use crate::config::ZfsConfig;
@@ -94,7 +95,7 @@ mod pool_manager_tests {
     fn test_pool_manager_creation_for_testing() {
         let manager = ZfsPoolManager::new_for_testing();
         // Verify manager is created successfully
-        assert!(format!("{:?}", manager).contains("ZfsPoolManager"));
+        assert!(format!("{manager:?}").contains("ZfsPoolManager"));
     }
 
     #[test]
@@ -102,7 +103,7 @@ mod pool_manager_tests {
         let config = ZfsConfig::default();
         let manager = ZfsPoolManager::new_production(config);
         // Verify manager is created successfully
-        assert!(format!("{:?}", manager).contains("ZfsPoolManager"));
+        assert!(format!("{manager:?}").contains("ZfsPoolManager"));
     }
 
     #[tokio::test]
@@ -402,7 +403,7 @@ mod pool_manager_tests {
 
         let pool: std::result::Result<PoolInfo, _> = serde_json::from_str(json);
         if let Err(e) = &pool {
-            eprintln!("Deserialization error: {}", e);
+            eprintln!("Deserialization error: {e}");
         }
         assert!(pool.is_ok(), "Failed to deserialize: {:?}", pool.err());
         let pool = pool.expect("ZFS operation failed");
@@ -429,7 +430,7 @@ mod pool_manager_tests {
 
     #[test]
     fn test_pool_info_with_many_devices() {
-        let devices: Vec<String> = (0..100).map(|i| format!("/dev/sd{}", i)).collect();
+        let devices: Vec<String> = (0..100).map(|i| format!("/dev/sd{i}")).collect();
 
         let pool = PoolInfo {
             name: "many_devices".to_string(),

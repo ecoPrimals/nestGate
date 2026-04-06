@@ -6,6 +6,7 @@
 //! Tests all performance structures, defaults, serialization, and edge cases.
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod performance_types_tests {
     use super::super::types::*;
     use std::collections::HashMap;

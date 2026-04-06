@@ -666,7 +666,7 @@ mod tests {
             props
                 .custom
                 .get("config_source")
-                .map_or(false, |s| s.contains("capability"))
+                .is_some_and(|s| s.contains("capability"))
         );
     }
 

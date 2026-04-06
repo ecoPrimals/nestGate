@@ -7,6 +7,7 @@
 //! evaluation functionality.
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod analysis_tests {
     use super::super::analysis::*;
     use super::super::*;
@@ -40,7 +41,7 @@ mod analysis_tests {
         let mut hist = history.write().await;
         for i in 0..count {
             hist.push_back(create_test_snapshot(
-                50.0 + (i as f64 * 2.0),
+                (i as f64).mul_add(2.0, 50.0),
                 (count - i) as u64 * 60,
             ));
         }
@@ -87,7 +88,7 @@ mod analysis_tests {
         assert!(result.is_ok());
         let report = result.unwrap();
         // Verify report structure
-        assert!(std::ptr::addr_of!(report) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(report).is_null());
     }
 
     #[tokio::test]
@@ -180,7 +181,7 @@ mod analysis_tests {
         let report = AnalysisReport::default();
 
         // Verify default construction
-        assert!(std::ptr::addr_of!(report) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(report).is_null());
     }
 
     // ==================== ZFS PERFORMANCE MONITOR ANALYSIS TESTS ====================
@@ -264,7 +265,7 @@ mod analysis_tests {
             // Modify metrics to track order
             {
                 let mut metrics = current_metrics.write().await;
-                metrics.pool_metrics.total_iops = i as f64;
+                metrics.pool_metrics.total_iops = f64::from(i);
             }
             ZfsPerformanceMonitor::analyze_trends(&current_metrics, &history)
                 .await
@@ -331,7 +332,7 @@ mod analysis_tests {
             // Modify metrics slightly to track order
             {
                 let mut metrics = current_metrics.write().await;
-                metrics.pool_metrics.total_iops = i as f64 * 10.0;
+                metrics.pool_metrics.total_iops = f64::from(i) * 10.0;
             }
             ZfsPerformanceMonitor::analyze_trends(&current_metrics, &history)
                 .await

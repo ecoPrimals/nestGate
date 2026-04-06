@@ -48,6 +48,7 @@ pub const fn u64_to_f64_approximate(x: u64) -> f64 {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
 

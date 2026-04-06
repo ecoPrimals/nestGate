@@ -53,7 +53,7 @@ fn create_test_dataset_info(name: &str, pool: &str, tier: StorageTier) -> ZeroCo
         size: 500_000,
         used: 100_000,
         properties: HashMap::new(),
-        mount_point: Some(PathBuf::from(format!("/mnt/{}", name))),
+        mount_point: Some(PathBuf::from(format!("/mnt/{name}"))),
         created_at: SystemTime::now(),
     }
 }
@@ -330,7 +330,7 @@ fn test_snapshot_properties_empty() {
 #[test]
 fn test_pool_info_debug() {
     let pool = create_test_pool_info("debug_pool");
-    let debug_str = format!("{:?}", pool);
+    let debug_str = format!("{pool:?}");
     assert!(debug_str.contains("debug_pool"));
     assert!(debug_str.contains("ONLINE"));
 }
@@ -338,7 +338,7 @@ fn test_pool_info_debug() {
 #[test]
 fn test_dataset_info_debug() {
     let dataset = create_test_dataset_info("debug_ds", "pool1", StorageTier::Hot);
-    let debug_str = format!("{:?}", dataset);
+    let debug_str = format!("{dataset:?}");
     assert!(debug_str.contains("debug_ds"));
     assert!(debug_str.contains("pool1"));
 }
@@ -346,7 +346,7 @@ fn test_dataset_info_debug() {
 #[test]
 fn test_snapshot_info_debug() {
     let snapshot = create_test_snapshot_info("debug_snap", "pool1/ds1");
-    let debug_str = format!("{:?}", snapshot);
+    let debug_str = format!("{snapshot:?}");
     assert!(debug_str.contains("debug_snap"));
     assert!(debug_str.contains("pool1/ds1"));
 }
@@ -506,7 +506,7 @@ fn test_large_property_map() {
 
     for i in 0..1000 {
         pool.properties
-            .insert(format!("prop_{}", i), format!("value_{}", i));
+            .insert(format!("prop_{i}"), format!("value_{i}"));
     }
 
     assert_eq!(pool.properties.len(), 1002); // 1000 + 2 from create_test_pool_info

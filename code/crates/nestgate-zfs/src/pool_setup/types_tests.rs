@@ -7,6 +7,7 @@
 //! for pool setup operations.
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod types_tests {
     use super::super::*;
 
@@ -15,7 +16,7 @@ mod types_tests {
     #[test]
     fn test_pool_setup_error_device_validation() {
         let error = PoolSetupError::DeviceValidation("invalid device".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
 
         assert!(display.contains("Device validation failed"));
         assert!(display.contains("invalid device"));
@@ -24,7 +25,7 @@ mod types_tests {
     #[test]
     fn test_pool_setup_error_pool_creation() {
         let error = PoolSetupError::PoolCreation("creation failed".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
 
         assert!(display.contains("Pool creation failed"));
         assert!(display.contains("creation failed"));
@@ -33,7 +34,7 @@ mod types_tests {
     #[test]
     fn test_pool_setup_error_configuration() {
         let error = PoolSetupError::Configuration("bad config".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
 
         assert!(display.contains("Configuration error"));
         assert!(display.contains("bad config"));
@@ -42,7 +43,7 @@ mod types_tests {
     #[test]
     fn test_pool_setup_error_device_scanning() {
         let error = PoolSetupError::DeviceScanning("scan failed".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
 
         assert!(display.contains("Device scanning failed"));
         assert!(display.contains("scan failed"));
@@ -51,7 +52,7 @@ mod types_tests {
     #[test]
     fn test_pool_setup_error_insufficient_devices() {
         let error = PoolSetupError::InsufficientDevices("need 3, got 2".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
 
         assert!(display.contains("Insufficient devices"));
         assert!(display.contains("need 3, got 2"));
@@ -60,7 +61,7 @@ mod types_tests {
     #[test]
     fn test_pool_setup_error_zfs_command() {
         let error = PoolSetupError::ZfsCommand("zpool create failed".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
 
         assert!(display.contains("ZFS command failed"));
         assert!(display.contains("zpool create failed"));
@@ -69,7 +70,7 @@ mod types_tests {
     #[test]
     fn test_pool_setup_error_debug() {
         let error = PoolSetupError::DeviceValidation("test".to_string());
-        let debug = format!("{:?}", error);
+        let debug = format!("{error:?}");
 
         assert!(debug.contains("DeviceValidation"));
     }
@@ -79,7 +80,7 @@ mod types_tests {
         let core_error = nestgate_core::NestGateError::storage_error("test");
         let pool_error: PoolSetupError = core_error.into();
 
-        let display = format!("{}", pool_error);
+        let display = format!("{pool_error}");
         assert!(display.contains("Core error"));
     }
 
@@ -175,7 +176,7 @@ mod types_tests {
             topology: PoolTopology::Single,
         };
 
-        let debug = format!("{:?}", result);
+        let debug = format!("{result:?}");
         assert!(debug.contains("PoolSetupResult"));
         assert!(debug.contains("testpool"));
     }
@@ -208,7 +209,7 @@ mod types_tests {
     fn test_pool_setup_result_with_many_devices() {
         let mut devices = Vec::new();
         for i in 0..20 {
-            devices.push(format!("/dev/sd{}", ('a' as u8 + i) as char));
+            devices.push(format!("/dev/sd{}", (b'a' + i) as char));
         }
 
         let result = PoolSetupResult {
@@ -295,7 +296,7 @@ mod types_tests {
     #[test]
     fn test_pool_topology_debug() {
         let topology = PoolTopology::Mirror;
-        let debug = format!("{:?}", topology);
+        let debug = format!("{topology:?}");
 
         assert!(debug.contains("Mirror"));
     }
@@ -319,8 +320,8 @@ mod types_tests {
             let config = convert_device_type(&detection);
 
             // Compare using debug representation since we can't directly compare
-            let config_debug = format!("{:?}", config);
-            let expected_debug = format!("{:?}", expected_config);
+            let config_debug = format!("{config:?}");
+            let expected_debug = format!("{expected_config:?}");
             assert_eq!(config_debug, expected_debug);
         }
     }
@@ -357,7 +358,7 @@ mod types_tests {
         let pool_error: PoolSetupError = core_error.into();
 
         // Should be able to display the error chain
-        let display = format!("{}", pool_error);
+        let display = format!("{pool_error}");
         assert!(!display.is_empty());
     }
 }

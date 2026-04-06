@@ -73,7 +73,7 @@ mod device_detection_tests {
     #[test]
     fn test_device_type_debug() {
         let dtype = DetectionDeviceType::NvmeSsd;
-        let debug = format!("{:?}", dtype);
+        let debug = format!("{dtype:?}");
 
         assert!(debug.contains("NvmeSsd"));
     }
@@ -170,7 +170,7 @@ mod device_detection_tests {
     #[test]
     fn test_speed_class_debug() {
         let speed = SpeedClass::Medium;
-        let debug = format!("{:?}", speed);
+        let debug = format!("{speed:?}");
 
         assert!(debug.contains("Medium"));
     }
@@ -191,12 +191,10 @@ mod device_detection_tests {
 
     #[test]
     fn test_speed_class_sorting() {
-        let mut speeds = vec![
-            SpeedClass::Fast,
+        let mut speeds = [SpeedClass::Fast,
             SpeedClass::Slow,
             SpeedClass::UltraFast,
-            SpeedClass::Medium,
-        ];
+            SpeedClass::Medium];
 
         speeds.sort();
 
@@ -243,7 +241,7 @@ mod device_detection_tests {
     #[test]
     fn test_storage_device_debug() {
         let device = create_test_storage_device();
-        let debug = format!("{:?}", device);
+        let debug = format!("{device:?}");
 
         assert!(debug.contains("StorageDevice"));
         assert!(debug.contains("/dev/nvme0n1"));

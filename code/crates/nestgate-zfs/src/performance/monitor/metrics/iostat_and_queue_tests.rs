@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unit tests for iostat parsing and tier queue depth helpers.
+#![allow(clippy::float_cmp)]
 
 use crate::performance::types::ZfsPerformanceMonitor;
 use crate::types::StorageTier;

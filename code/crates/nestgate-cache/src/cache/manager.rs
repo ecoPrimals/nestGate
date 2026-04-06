@@ -472,9 +472,7 @@ pub type UnifiedCacheConfigCanonical =
 mod tests {
     #![expect(
         deprecated,
-        clippy::unwrap_used,
         clippy::expect_used,
-        clippy::panic,
         clippy::float_cmp
     )]
 

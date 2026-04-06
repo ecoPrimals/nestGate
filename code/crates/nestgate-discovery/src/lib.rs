@@ -2,8 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
-// Transitional: this crate still references deprecated `service_discovery` and related modules
-// internally; `#[deprecated]` on those modules warns downstream consumers, not this crate.
+#![allow(deprecated)]
 
 //! Capability and peer discovery helpers for the `NestGate` storage primal.
 //!
@@ -37,6 +36,7 @@
 #![cfg_attr(
     test,
     allow(
+        deprecated,
         clippy::borrow_as_ptr,
         clippy::cast_lossless,
         clippy::cast_possible_truncation,

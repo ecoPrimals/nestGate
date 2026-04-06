@@ -274,6 +274,7 @@ pub(super) fn sample_pool_info(
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use crate::pool::types::{PoolHealth, PoolState};
 

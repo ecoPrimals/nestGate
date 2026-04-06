@@ -65,11 +65,11 @@ mod tests {
 
     #[test]
     fn test_parse_zpool_iostat_header_only() {
-        let output = r#"
+        let output = r"
               capacity     operations    bandwidth
 pool        alloc   free   read  write   read  write
 ----------  -----  -----  -----  -----  -----  -----
-"#;
+";
 
         let result = ZfsPerformanceMonitor::parse_zpool_iostat(output);
         assert!(result.is_ok());
@@ -97,9 +97,9 @@ pool        alloc   free   read  write   read  write
 
     #[test]
     fn test_parse_zpool_iostat_malformed_line() {
-        let output = r#"
+        let output = r"
 pool1  invalid  data  here
-"#;
+";
 
         let result = ZfsPerformanceMonitor::parse_zpool_iostat(output);
         assert!(result.is_ok());
@@ -108,9 +108,9 @@ pool1  invalid  data  here
 
     #[test]
     fn test_parse_zpool_iostat_with_dashes() {
-        let output = r#"
+        let output = r"
 -----------  -----  -----  -----  -----  -----  -----
-"#;
+";
 
         let result = ZfsPerformanceMonitor::parse_zpool_iostat(output);
         assert!(result.is_ok());
@@ -119,9 +119,9 @@ pool1  invalid  data  here
 
     #[test]
     fn test_parse_zpool_iostat_with_pool_keyword() {
-        let output = r#"
+        let output = r"
 pool        alloc   free   read  write   read  write
-"#;
+";
 
         let result = ZfsPerformanceMonitor::parse_zpool_iostat(output);
         assert!(result.is_ok());
@@ -615,9 +615,9 @@ pool        alloc   free   read  write   read  write
 
     #[tokio::test]
     async fn test_parse_zpool_iostat_invalid_numbers() {
-        let output = r#"
+        let output = r"
 testpool     bad    data    notnum    notnum     notnum    notnum
-"#;
+";
 
         let result = ZfsPerformanceMonitor::parse_zpool_iostat(output);
 
@@ -654,12 +654,12 @@ testpool     bad    data    notnum    notnum     notnum    notnum
 
     #[test]
     fn test_parse_zpool_iostat_performance() {
-        let output = r#"
+        let output = r"
               capacity     operations    bandwidth
 pool        alloc   free   read  write   read  write
 ----------  -----  -----  -----  -----  -----  -----
 testpool     10G    90G    100    50     5M    10M
-"#;
+";
 
         let start = std::time::Instant::now();
 

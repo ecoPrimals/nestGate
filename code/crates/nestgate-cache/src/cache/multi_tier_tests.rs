@@ -3,10 +3,8 @@
 
 #![expect(
     deprecated,
-    clippy::unwrap_used,
     clippy::expect_used,
-    clippy::panic,
-    clippy::uninlined_format_args
+    clippy::panic
 )]
 
 use super::*;

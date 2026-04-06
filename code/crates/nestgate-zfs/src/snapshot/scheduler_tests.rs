@@ -14,7 +14,7 @@ use std::collections::HashMap;
 fn create_test_policy(name: &str, enabled: bool, frequency: ScheduleFrequency) -> SnapshotPolicy {
     let mut policy = SnapshotPolicy::default();
     policy.name = name.to_string();
-    policy.description = format!("Test policy: {}", name);
+    policy.description = format!("Test policy: {name}");
     policy.enabled = enabled;
     policy.frequency = frequency;
     policy.retention = RetentionPolicy::Custom {
@@ -36,13 +36,13 @@ fn create_test_policy(name: &str, enabled: bool, frequency: ScheduleFrequency) -
 #[tokio::test]
 async fn test_retention_policy_duration() {
     let retention = RetentionPolicy::Duration(std::time::Duration::from_secs(3600));
-    assert!(format!("{:?}", retention).contains("Duration"));
+    assert!(format!("{retention:?}").contains("Duration"));
 }
 
 #[tokio::test]
 async fn test_retention_policy_count() {
     let retention = RetentionPolicy::Count(10);
-    assert!(format!("{:?}", retention).contains("Count"));
+    assert!(format!("{retention:?}").contains("Count"));
 }
 
 #[tokio::test]
@@ -132,12 +132,12 @@ async fn test_schedule_frequency_variants() {
     let custom = ScheduleFrequency::Custom("*/5 * * * *".to_string());
 
     // All variants should be constructible
-    assert!(format!("{:?}", minutes).contains("Minutes"));
-    assert!(format!("{:?}", hours).contains("Hours"));
-    assert!(format!("{:?}", daily).contains("Daily"));
-    assert!(format!("{:?}", weekly).contains("Weekly"));
-    assert!(format!("{:?}", monthly).contains("Monthly"));
-    assert!(format!("{:?}", custom).contains("Custom"));
+    assert!(format!("{minutes:?}").contains("Minutes"));
+    assert!(format!("{hours:?}").contains("Hours"));
+    assert!(format!("{daily:?}").contains("Daily"));
+    assert!(format!("{weekly:?}").contains("Weekly"));
+    assert!(format!("{monthly:?}").contains("Monthly"));
+    assert!(format!("{custom:?}").contains("Custom"));
 }
 
 #[tokio::test]

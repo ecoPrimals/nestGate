@@ -236,7 +236,7 @@ mod device_detection_tests {
         let unknown = DetectionDeviceType::Unknown;
 
         // Verify they're all different
-        let types = vec![nvme, sata, hdd, optane, unknown];
+        let types = [nvme, sata, hdd, optane, unknown];
         for (i, type1) in types.iter().enumerate() {
             for (j, type2) in types.iter().enumerate() {
                 if i != j {
@@ -420,7 +420,7 @@ mod pool_creation_tests {
                 );
             }
             Err(e) => {
-                println!("Dry run error (acceptable): {}", e);
+                println!("Dry run error (acceptable): {e}");
             }
         }
     }
@@ -428,7 +428,7 @@ mod pool_creation_tests {
     #[test]
     fn test_pool_creation_command_generation() {
         // Test that we can generate pool creation commands
-        let devices = vec!["/dev/sda".to_string(), "/dev/sdb".to_string()];
+        let devices = ["/dev/sda".to_string(), "/dev/sdb".to_string()];
         let pool_name = "test_pool";
 
         // Verify device paths are valid
@@ -439,13 +439,11 @@ mod pool_creation_tests {
 
     #[test]
     fn test_topology_variants() {
-        let topologies = vec![
-            PoolTopology::Single,
+        let topologies = [PoolTopology::Single,
             PoolTopology::Mirror,
             PoolTopology::RaidZ1,
             PoolTopology::RaidZ2,
-            PoolTopology::RaidZ3,
-        ];
+            PoolTopology::RaidZ3];
 
         // Verify all are different
         for (i, top1) in topologies.iter().enumerate() {
@@ -526,7 +524,7 @@ mod integration_tests {
         let sata = ConfigDeviceType::SataSsd;
         let hdd = ConfigDeviceType::SpinningDisk;
 
-        let types = vec![optane, nvme, sata, hdd];
+        let types = [optane, nvme, sata, hdd];
         for (i, type1) in types.iter().enumerate() {
             for (j, type2) in types.iter().enumerate() {
                 if i != j {

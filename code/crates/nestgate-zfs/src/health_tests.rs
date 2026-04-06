@@ -214,7 +214,7 @@ mod tests {
 
         for (i, level) in levels.into_iter().enumerate() {
             let alert = Alert {
-                id: format!("alert-{}", i),
+                id: format!("alert-{i}"),
                 /// Level
                 level,
                 message: "Test message".to_string(),
@@ -222,7 +222,7 @@ mod tests {
                 component: "test".to_string(),
             };
 
-            assert_eq!(alert.id, format!("alert-{}", i));
+            assert_eq!(alert.id, format!("alert-{i}"));
         }
     }
 

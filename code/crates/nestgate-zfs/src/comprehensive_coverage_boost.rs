@@ -7,6 +7,7 @@
 //! Focuses on error handling, edge cases, boundary conditions, and configuration.
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod zfs_comprehensive_coverage {
     use crate::error::ZfsResult;
     use crate::pool_setup::PoolTopology;
@@ -150,7 +151,7 @@ mod zfs_comprehensive_coverage {
     #[test]
     fn test_pool_name_alphanumeric() {
         let name = "pool123";
-        assert!(name.chars().all(|c| c.is_alphanumeric()));
+        assert!(name.chars().all(char::is_alphanumeric));
     }
 
     // ==================== DATASET NAME VALIDATION TESTS ====================

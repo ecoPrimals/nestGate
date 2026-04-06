@@ -148,6 +148,9 @@ nestgate-port-manager-*.tar.gz
 /fuzz/corpus/ 
 # Audit and analysis artifacts
 .audit-artifacts/
+.audit-*.out
+/target-*/
+rust_out
 
 # Showcase output/generated files
 showcase/**/output/

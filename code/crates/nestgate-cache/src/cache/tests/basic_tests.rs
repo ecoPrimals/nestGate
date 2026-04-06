@@ -3,15 +3,8 @@
 
 #![expect(
     deprecated,
-    clippy::unwrap_used,
     clippy::expect_used,
     clippy::panic,
-    clippy::float_cmp,
-    clippy::uninlined_format_args,
-    clippy::cast_precision_loss,
-    clippy::cast_possible_truncation,
-    clippy::default_trait_access,
-    clippy::unused_async
 )]
 
 //! Basic cache tests
@@ -360,15 +353,15 @@ mod cache_comprehensive_tests {
         let mut cache = CacheManager::new(config);
 
         for i in 0..10 {
-            let key = format!("key_{}", i);
-            let value = format!("value_{}", i).into_bytes();
+            let key = format!("key_{i}");
+            let value = format!("value_{i}").into_bytes();
             cache.put(&key, value).expect("Cache operation failed");
         }
 
         // Verify all entries
         for i in 0..10 {
-            let key = format!("key_{}", i);
-            let expected_value = format!("value_{}", i).into_bytes();
+            let key = format!("key_{i}");
+            let expected_value = format!("value_{i}").into_bytes();
             let result = cache.get(&key);
             assert!(result.is_some());
             assert_eq!(result.expect("Cache operation failed"), expected_value);
@@ -481,8 +474,8 @@ mod cache_comprehensive_tests {
 
         // Add multiple entries
         for i in 0..20 {
-            let key = format!("key_{}", i);
-            let value = format!("value_{}", i).into_bytes();
+            let key = format!("key_{i}");
+            let value = format!("value_{i}").into_bytes();
             cache
                 .put(&key, value)
                 .await
@@ -491,8 +484,8 @@ mod cache_comprehensive_tests {
 
         // Verify all entries are accessible
         for i in 0..20 {
-            let key = format!("key_{}", i);
-            let expected_value = format!("value_{}", i).into_bytes();
+            let key = format!("key_{i}");
+            let expected_value = format!("value_{i}").into_bytes();
             let result = cache.get(&key).await.expect("Cache operation failed");
             assert!(result.is_some());
             assert_eq!(result.expect("Cache operation failed"), expected_value);

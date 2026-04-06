@@ -39,7 +39,6 @@
     clippy::default_trait_access,
     clippy::wildcard_in_or_patterns,
     clippy::or_fun_call,
-    clippy::unnecessary_debug_formatting,
     clippy::assigning_clones,
     clippy::similar_names,
     clippy::needless_continue,

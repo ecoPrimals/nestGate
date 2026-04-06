@@ -277,14 +277,12 @@ impl Default for ConcurrentCoordinator {
 /// Boxed cleanup function for LIFO execution
 type CleanupFn = Box<dyn FnOnce() + Send + 'static>;
 
-#[expect(clippy::arc_with_non_send_sync)]
 pub struct CleanupGuard {
     cleanups: Arc<RwLock<Vec<CleanupFn>>>,
 }
 
 impl CleanupGuard {
     /// Create new cleanup guard
-    #[expect(clippy::arc_with_non_send_sync)]
     pub fn new() -> Self {
         Self {
             cleanups: Arc::new(RwLock::new(Vec::new())),

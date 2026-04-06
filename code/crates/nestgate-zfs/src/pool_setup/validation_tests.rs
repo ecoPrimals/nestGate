@@ -511,7 +511,7 @@ mod validation_tests {
         let mut result = ValidationResult::new();
         result.add_error("Error".to_string());
 
-        let debug_str = format!("{:?}", result);
+        let debug_str = format!("{result:?}");
         assert!(debug_str.contains("ValidationResult"));
     }
 
@@ -558,7 +558,7 @@ mod validation_tests {
     #[test]
     fn test_pool_setup_error_display() {
         let error = PoolSetupError::DeviceValidation("test error".to_string());
-        let error_str = format!("{}", error);
+        let error_str = format!("{error}");
 
         assert!(error_str.contains("Device validation failed"));
         assert!(error_str.contains("test error"));
@@ -567,7 +567,7 @@ mod validation_tests {
     #[test]
     fn test_pool_setup_error_debug() {
         let error = PoolSetupError::PoolCreation("test".to_string());
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
 
         assert!(debug_str.contains("PoolCreation"));
     }

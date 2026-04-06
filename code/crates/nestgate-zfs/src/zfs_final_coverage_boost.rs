@@ -92,21 +92,21 @@ mod zfs_final_coverage_tests {
     #[test]
     fn test_pool_state_online() {
         let state = PoolState::Online;
-        let debug = format!("{:?}", state);
+        let debug = format!("{state:?}");
         assert!(debug.contains("Online"));
     }
 
     #[test]
     fn test_pool_state_offline() {
         let state = PoolState::Offline;
-        let debug = format!("{:?}", state);
+        let debug = format!("{state:?}");
         assert!(debug.contains("Offline"));
     }
 
     #[test]
     fn test_pool_state_degraded() {
         let state = PoolState::Degraded;
-        let debug = format!("{:?}", state);
+        let debug = format!("{state:?}");
         assert!(debug.contains("Degraded"));
     }
 
@@ -182,7 +182,7 @@ mod zfs_final_coverage_tests {
         let result: ZfsResult<i32> = Err(ZfsError::CommandError {
             message: "failed".to_string(),
         });
-        let recovered: ZfsResult<i32> = result.or_else(|_| Ok(100));
+        let recovered: ZfsResult<i32> = result.or(Ok(100));
         assert_eq!(recovered.unwrap(), 100);
     }
 
@@ -210,7 +210,7 @@ mod zfs_final_coverage_tests {
         ];
 
         for error in errors {
-            let debug = format!("{:?}", error);
+            let debug = format!("{error:?}");
             assert!(!debug.is_empty());
         }
     }
@@ -230,7 +230,7 @@ mod zfs_final_coverage_tests {
         ];
 
         for error in errors {
-            let display = format!("{}", error);
+            let display = format!("{error}");
             assert!(!display.is_empty());
         }
     }
@@ -297,7 +297,7 @@ mod zfs_final_coverage_tests {
         ];
 
         for health in healths {
-            let debug = format!("{:?}", health);
+            let debug = format!("{health:?}");
             assert!(!debug.is_empty());
         }
     }
@@ -354,7 +354,7 @@ mod zfs_final_coverage_tests {
         assert_eq!(states.len(), 4);
 
         for state in states {
-            let _ = format!("{:?}", state);
+            let _ = format!("{state:?}");
         }
     }
 
@@ -373,7 +373,7 @@ mod zfs_final_coverage_tests {
         ];
 
         for error in errors {
-            let _ = format!("{}", error);
+            let _ = format!("{error}");
         }
     }
 

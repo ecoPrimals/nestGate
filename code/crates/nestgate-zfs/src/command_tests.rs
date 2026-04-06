@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn test_zfs_command_debug() {
         let cmd = ZfsCommand::new().with_dry_run(true);
-        let debug_str = format!("{:?}", cmd);
+        let debug_str = format!("{cmd:?}");
 
         assert!(debug_str.contains("ZfsCommand"));
         assert!(debug_str.contains("dry_run"));

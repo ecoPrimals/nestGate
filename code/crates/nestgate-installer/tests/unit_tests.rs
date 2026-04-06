@@ -3,8 +3,7 @@
 
 #![expect(
     missing_docs,
-    clippy::unnecessary_wraps,
-    clippy::no_effect_underscore_binding
+    clippy::unnecessary_wraps
 )]
 
 //

@@ -7,6 +7,7 @@
 //! including metrics collection, alert thresholds, and caching.
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod performance_monitoring_tests {
     use super::super::monitoring::*;
     use super::super::types::*;
@@ -18,19 +19,19 @@ mod performance_monitoring_tests {
     #[test]
     fn test_monitor_creation() {
         let monitor = RealTimePerformanceMonitor::new();
-        assert!(std::ptr::addr_of!(monitor) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(monitor).is_null());
     }
 
     #[test]
     fn test_monitor_default() {
         let monitor = RealTimePerformanceMonitor::default();
-        assert!(std::ptr::addr_of!(monitor) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(monitor).is_null());
     }
 
     #[test]
     fn test_monitor_debug_implementation() {
         let monitor = RealTimePerformanceMonitor::new();
-        let debug_str = format!("{:?}", monitor);
+        let debug_str = format!("{monitor:?}");
         assert!(debug_str.contains("RealTimePerformanceMonitor"));
     }
 
@@ -88,7 +89,7 @@ mod performance_monitoring_tests {
             disk_threshold: 85.0,
         };
 
-        let debug_str = format!("{:?}", thresholds);
+        let debug_str = format!("{thresholds:?}");
         assert!(debug_str.contains("AlertThresholds"));
     }
 
@@ -100,8 +101,8 @@ mod performance_monitoring_tests {
         let monitor2 = RealTimePerformanceMonitor::new();
 
         // Both should be valid independent instances
-        assert!(std::ptr::addr_of!(monitor1) != std::ptr::null());
-        assert!(std::ptr::addr_of!(monitor2) != std::ptr::null());
+        assert!(!std::ptr::addr_of!(monitor1).is_null());
+        assert!(!std::ptr::addr_of!(monitor2).is_null());
     }
 
     #[tokio::test]
@@ -188,11 +189,11 @@ mod performance_monitoring_tests {
                     arc_stats: ArcStatistics {
                         size: 4_000_000_000,
                         target_size: 4_000_000_000,
-                        hit_ratio: 0.85 - (i as f64 * 0.01),
-                        miss_ratio: 0.15 + (i as f64 * 0.01),
+                        hit_ratio: (i as f64).mul_add(-0.01, 0.85),
+                        miss_ratio: (i as f64).mul_add(0.01, 0.15),
                     },
                 };
-                cache_guard.insert(format!("metric_{}", i), metrics);
+                cache_guard.insert(format!("metric_{i}"), metrics);
             }
         }
 
@@ -202,7 +203,7 @@ mod performance_monitoring_tests {
             assert_eq!(cache_guard.len(), 5);
 
             for i in 0..5 {
-                assert!(cache_guard.contains_key(&format!("metric_{}", i)));
+                assert!(cache_guard.contains_key(&format!("metric_{i}")));
             }
         }
     }

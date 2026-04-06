@@ -284,13 +284,12 @@ mod tests {
             StorageTier::Archive,
         ] {
             let dataset = backend
-                .create_dataset(&pool, &format!("data-{:?}", tier), tier.clone())
+                .create_dataset(&pool, &format!("data-{tier:?}"), tier.clone())
                 .await;
 
             assert!(
                 dataset.is_ok(),
-                "Should create dataset with tier: {:?}",
-                tier
+                "Should create dataset with tier: {tier:?}"
             );
         }
     }

@@ -8,6 +8,7 @@
 //! - Tier statistics tracking
 //! - Tier status reporting
 //! - Storage tier operations
+#![allow(clippy::float_cmp)]
 
 use super::tier::*;
 use crate::types::StorageTier;
@@ -152,13 +153,13 @@ fn test_tier_manager_creation_for_testing() {
     let manager = TierManager::new_for_testing();
 
     // Manager should initialize successfully
-    assert!(format!("{:?}", manager).contains("TierManager"));
+    assert!(format!("{manager:?}").contains("TierManager"));
 }
 
 #[test]
 fn test_tier_manager_debug() {
     let manager = TierManager::new_for_testing();
-    let debug_str = format!("{:?}", manager);
+    let debug_str = format!("{manager:?}");
 
     // Debug output should contain key information
     assert!(debug_str.contains("TierManager"));

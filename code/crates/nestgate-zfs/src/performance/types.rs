@@ -516,6 +516,7 @@ impl LocalMemoryInfo {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod local_pool_stats_tests {
     use super::{DatasetPerformanceStats, LocalMemoryInfo, PoolIoStats, PoolProperties};
 

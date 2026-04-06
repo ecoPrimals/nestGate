@@ -2,9 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![expect(
-    clippy::unwrap_used,
     clippy::expect_used,
-    clippy::panic,
     clippy::float_cmp
 )]
 

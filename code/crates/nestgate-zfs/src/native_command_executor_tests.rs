@@ -92,7 +92,7 @@ mod tests {
             exit_code: 0,
         };
 
-        let debug_str = format!("{:?}", result);
+        let debug_str = format!("{result:?}");
         assert!(debug_str.contains("success"));
         assert!(debug_str.contains("output"));
     }

@@ -90,6 +90,7 @@ impl ZfsPerformanceMonitor {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use crate::performance::ZfsPerformanceMonitor;
     use crate::types::StorageTier;

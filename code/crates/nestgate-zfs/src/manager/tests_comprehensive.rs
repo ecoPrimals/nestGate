@@ -23,9 +23,9 @@ mod zfs_manager_comprehensive_tests {
         assert!(manager.is_ok(), "Manager should initialize successfully");
 
         let manager = manager.unwrap();
-        assert!(manager.pool_manager.as_ref() as *const _ != std::ptr::null());
-        assert!(manager.dataset_manager.as_ref() as *const _ != std::ptr::null());
-        assert!(manager.snapshot_manager.as_ref() as *const _ != std::ptr::null());
+        assert!(!std::ptr::from_ref(manager.pool_manager.as_ref()).is_null());
+        assert!(!std::ptr::from_ref(manager.dataset_manager.as_ref()).is_null());
+        assert!(!std::ptr::from_ref(manager.snapshot_manager.as_ref()).is_null());
     }
 
     #[tokio::test]
@@ -85,7 +85,7 @@ mod zfs_manager_comprehensive_tests {
             .expect("Failed to create manager");
 
         // Verify pool manager is properly integrated
-        assert!(manager.pool_manager.as_ref() as *const _ != std::ptr::null());
+        assert!(!std::ptr::from_ref(manager.pool_manager.as_ref()).is_null());
     }
 
     // ==================== DATASET OPERATIONS TESTS ====================
@@ -99,7 +99,7 @@ mod zfs_manager_comprehensive_tests {
             .expect("Failed to create manager");
 
         // Verify dataset manager is accessible
-        assert!(manager.dataset_manager.as_ref() as *const _ != std::ptr::null());
+        assert!(!std::ptr::from_ref(manager.dataset_manager.as_ref()).is_null());
     }
 
     #[tokio::test]
@@ -415,7 +415,7 @@ mod zfs_manager_comprehensive_tests {
             .expect("Failed to create manager");
 
         // Test Debug implementation
-        let debug_output = format!("{:?}", manager);
+        let debug_output = format!("{manager:?}");
         assert!(debug_output.contains("ZfsManager"));
     }
 
@@ -428,7 +428,7 @@ mod zfs_manager_comprehensive_tests {
             .expect("Failed to create manager");
 
         // Debug output should contain key component names
-        let debug_output = format!("{:?}", manager);
+        let debug_output = format!("{manager:?}");
         assert!(debug_output.contains("pool_manager"));
         assert!(debug_output.contains("dataset_manager"));
         assert!(debug_output.contains("snapshot_manager"));

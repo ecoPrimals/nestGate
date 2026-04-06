@@ -282,14 +282,6 @@ impl Default for UuidManager {
 
 #[cfg(test)]
 mod tests {
-    #![expect(
-        clippy::unwrap_used,
-        clippy::expect_used,
-        clippy::panic,
-        clippy::float_cmp,
-        clippy::uninlined_format_args
-    )]
-
     use super::*;
     use std::thread;
 

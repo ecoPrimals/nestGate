@@ -192,8 +192,8 @@ async fn test_list_policies_with_data() {
     // Add multiple policies
     for i in 0..3 {
         let policy = SnapshotPolicy {
-            name: format!("policy-{}", i),
-            description: format!("Policy {}", i),
+            name: format!("policy-{i}"),
+            description: format!("Policy {i}"),
             enabled: true,
             frequency: ScheduleFrequency::Hours(i as u32 + 1),
             retention: RetentionPolicy::default(),
@@ -359,8 +359,8 @@ async fn test_concurrent_policy_operations() {
         let manager_clone = Arc::clone(&manager);
         let handle = tokio::spawn(async move {
             let policy = SnapshotPolicy {
-                name: format!("concurrent-{}", i),
-                description: format!("Concurrent policy {}", i),
+                name: format!("concurrent-{i}"),
+                description: format!("Concurrent policy {i}"),
                 enabled: true,
                 frequency: ScheduleFrequency::Daily(12),
                 retention: RetentionPolicy::default(),
@@ -399,7 +399,7 @@ async fn test_concurrent_snapshot_operations() {
         let manager_clone = Arc::clone(&manager);
         let handle = tokio::spawn(async move {
             manager_clone
-                .create_snapshot(&format!("pool/dataset{}", i), &format!("snap{}", i), false)
+                .create_snapshot(&format!("pool/dataset{i}"), &format!("snap{i}"), false)
                 .await
         });
         handles.push(handle);
@@ -668,15 +668,15 @@ async fn test_schedule_frequency_variations() {
 
     for (i, frequency) in frequencies.into_iter().enumerate() {
         let policy = SnapshotPolicy {
-            name: format!("freq-test-{}", i),
-            description: format!("Frequency test {}", i),
+            name: format!("freq-test-{i}"),
+            description: format!("Frequency test {i}"),
             enabled: true,
             /// Frequency
             frequency,
             retention: RetentionPolicy::default(),
             dataset_patterns: vec!["pool/dataset".to_string()],
             tiers: vec![StorageTier::Hot],
-            name_prefix: format!("freq{}", i),
+            name_prefix: format!("freq{i}"),
             include_properties: true,
             recursive: false,
             priority: 50,
@@ -685,8 +685,7 @@ async fn test_schedule_frequency_variations() {
 
         assert!(
             manager.add_policy(policy).await.is_ok(),
-            "Should accept frequency type {}",
-            i
+            "Should accept frequency type {i}"
         );
     }
 }

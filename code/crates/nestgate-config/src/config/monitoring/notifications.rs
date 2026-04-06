@@ -3,8 +3,6 @@
 
 //! Email, Slack, and webhook notification channels for alerting.
 
-#![expect(clippy::wildcard_imports)]
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

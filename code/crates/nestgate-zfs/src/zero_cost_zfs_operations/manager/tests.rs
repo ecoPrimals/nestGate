@@ -3,6 +3,8 @@
 
 //! Unit tests for the zero-cost ZFS manager.
 
+#![allow(clippy::float_cmp)]
+
 use super::super::traits::ZeroCostZfsOperations;
 use super::super::types::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo};
 use super::{
@@ -118,7 +120,7 @@ async fn dataset_capacity_still_available_when_under_limit() {
     let m = TestingZfsManager::new();
     assert!(m.test_can_create_more_datasets().await);
     m.test_insert_dataset_entry("ds0".into(), "p0".into()).await;
-    assert_eq!(m.test_can_create_more_datasets().await, true);
+    assert!(m.test_can_create_more_datasets().await);
 }
 
 #[tokio::test]

@@ -367,8 +367,9 @@ impl Default for CacheBuilder {
 // Convenience functions for common use cases - moved to test helpers
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod cache_mod_coverage_tests {
-    #![expect(clippy::expect_used, clippy::float_cmp, clippy::panic)]
+    #![expect(clippy::float_cmp, clippy::panic)]
 
     use super::*;
 
