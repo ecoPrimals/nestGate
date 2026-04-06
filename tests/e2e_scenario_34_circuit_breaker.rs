@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -20,12 +20,8 @@
 
 #[cfg(test)]
 mod circuit_breaker_pattern {
-    use std::time::{Duration, Instant};
-
-    // Helper to wait for circuit breaker timeout (uses blocking sleep since CircuitBreaker uses Instant)
-    fn wait_for_timeout(d: Duration) {
-        std::thread::sleep(d);
-    }
+    use std::time::Duration;
+    use tokio::time::Instant;
 
     #[derive(Debug, Clone, Copy, PartialEq)]
     enum CircuitState {
@@ -124,8 +120,7 @@ mod circuit_breaker_pattern {
         cb.record_failure();
         assert_eq!(cb.state, CircuitState::Open);
 
-        // Wait for timeout
-        wait_for_timeout(Duration::from_millis(150));
+        tokio::time::sleep(Duration::from_millis(150)).await;
 
         // Should transition to half-open
         assert!(cb.can_attempt());
@@ -141,8 +136,7 @@ mod circuit_breaker_pattern {
         cb.record_failure();
         assert_eq!(cb.state, CircuitState::Open);
 
-        // Wait for timeout and transition to half-open
-        wait_for_timeout(Duration::from_millis(75));
+        tokio::time::sleep(Duration::from_millis(75)).await;
         assert!(cb.can_attempt());
 
         // Successful request should close circuit

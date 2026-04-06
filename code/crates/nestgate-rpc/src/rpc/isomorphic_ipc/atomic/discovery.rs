@@ -8,25 +8,33 @@
 //! discovery principles from wateringHole.
 
 use nestgate_config::constants::system::{DEFAULT_SERVICE_NAME, ecosystem_path_segment};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::path::PathBuf;
 use tracing::debug;
 
+pub(super) fn local_primal_id_from_env(env: &dyn EnvSource) -> String {
+    env.get("NESTGATE_SERVICE_NAME")
+        .or_else(|| env.get("NESTGATE_PRIMAL_ID"))
+        .unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string())
+}
+
 pub(super) fn local_primal_id() -> String {
-    std::env::var("NESTGATE_SERVICE_NAME")
-        .or_else(|_| std::env::var("NESTGATE_PRIMAL_ID"))
-        .unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_string())
+    local_primal_id_from_env(&ProcessEnv)
 }
 
 /// Discover a primal's Unix socket path via standard locations.
-pub(super) fn discover_primal_socket(primal_name: &str) -> Option<PathBuf> {
-    if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+pub(super) fn discover_primal_socket_from_env(
+    env: &dyn EnvSource,
+    primal_name: &str,
+) -> Option<PathBuf> {
+    if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
         let path = PathBuf::from(dir).join(format!("{primal_name}.sock"));
         if path.exists() {
             return Some(path);
         }
     }
 
-    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
         let path = PathBuf::from(xdg)
             .join(ecosystem_path_segment())
             .join(format!("{primal_name}.sock"));
@@ -40,10 +48,9 @@ pub(super) fn discover_primal_socket(primal_name: &str) -> Option<PathBuf> {
         return Some(tmp_path);
     }
 
-    if let (Ok(family_id), Ok(xdg)) = (
-        std::env::var("NESTGATE_FAMILY_ID"),
-        std::env::var("XDG_RUNTIME_DIR"),
-    ) {
+    if let (Some(family_id), Some(xdg)) =
+        (env.get("NESTGATE_FAMILY_ID"), env.get("XDG_RUNTIME_DIR"))
+    {
         let path = PathBuf::from(xdg)
             .join(ecosystem_path_segment())
             .join(format!("{primal_name}-{family_id}.sock"));
@@ -55,10 +62,14 @@ pub(super) fn discover_primal_socket(primal_name: &str) -> Option<PathBuf> {
     None
 }
 
+pub(super) fn discover_primal_socket(primal_name: &str) -> Option<PathBuf> {
+    discover_primal_socket_from_env(&ProcessEnv, primal_name)
+}
+
 /// Discover available primals by scanning standard socket locations.
-pub(super) fn discover_available_primals() -> Vec<String> {
+pub(super) fn discover_available_primals_from_env(env: &dyn EnvSource) -> Vec<String> {
     let mut primals = Vec::new();
-    let socket_dirs = gather_socket_search_dirs();
+    let socket_dirs = gather_socket_search_dirs_from_env(env);
 
     for dir in &socket_dirs {
         let dir_path = std::path::Path::new(dir);
@@ -91,15 +102,19 @@ pub(super) fn discover_available_primals() -> Vec<String> {
     primals
 }
 
+pub(super) fn discover_available_primals() -> Vec<String> {
+    discover_available_primals_from_env(&ProcessEnv)
+}
+
 /// Gather standard directories to search for primal sockets.
-pub(super) fn gather_socket_search_dirs() -> Vec<String> {
+pub(super) fn gather_socket_search_dirs_from_env(env: &dyn EnvSource) -> Vec<String> {
     let mut dirs = Vec::new();
 
-    if let Ok(dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
+    if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
         dirs.push(dir);
     }
 
-    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
         dirs.push(format!("{xdg}/{}", ecosystem_path_segment()));
     }
 
@@ -111,4 +126,9 @@ pub(super) fn gather_socket_search_dirs() -> Vec<String> {
 
     dirs.push("/tmp".to_string());
     dirs
+}
+
+#[allow(dead_code)] // Wrapper for `ProcessEnv`; callers typically use `gather_socket_search_dirs_from_env`.
+pub(super) fn gather_socket_search_dirs() -> Vec<String> {
+    gather_socket_search_dirs_from_env(&ProcessEnv)
 }

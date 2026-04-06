@@ -412,23 +412,16 @@ mod universal_zfs_error_tests {
         assert!(rl_only_msg.to_error_data().rate_limit_info.is_none());
     }
 
-    #[test]
-    fn from_io_and_tokio_elapsed() {
+    #[tokio::test]
+    async fn from_io_and_tokio_elapsed() {
         let io_err = std::io::Error::other("disk");
         let u1: UniversalZfsError = io_err.into();
         assert!(matches!(u1, UniversalZfsError::Backend { .. }));
 
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_time()
-            .build()
-            .expect("runtime");
-        rt.block_on(async {
-            let res =
-                tokio::time::timeout(Duration::from_nanos(1), std::future::pending::<()>()).await;
-            let elapsed = res.expect_err("timeout");
-            let u2: UniversalZfsError = elapsed.into();
-            assert!(matches!(u2, UniversalZfsError::Timeout { .. }));
-        });
+        let res = tokio::time::timeout(Duration::from_nanos(1), std::future::pending::<()>()).await;
+        let elapsed = res.expect_err("timeout");
+        let u2: UniversalZfsError = elapsed.into();
+        assert!(matches!(u2, UniversalZfsError::Timeout { .. }));
     }
 
     #[test]

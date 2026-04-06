@@ -124,18 +124,12 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn new_production_uses_config_and_starts_empty() {
+    #[tokio::test]
+    async fn new_production_uses_config_and_starts_empty() {
         let cfg = ZfsConfig::default();
         let m = ZfsPoolManager::new_production(cfg);
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .expect("test runtime");
-        rt.block_on(async {
-            let pools = m.list_pools().await.expect("test: list_pools");
-            assert!(pools.is_empty());
-        });
+        let pools = m.list_pools().await.expect("test: list_pools");
+        assert!(pools.is_empty());
     }
 
     #[tokio::test]

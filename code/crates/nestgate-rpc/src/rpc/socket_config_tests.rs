@@ -2,50 +2,10 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::*;
-use nestgate_platform::env_process;
+use nestgate_types::{EnvSource, MapEnv, ProcessEnv};
 use std::fs;
 use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-
-/// Keys read by [`SocketConfig::from_environment`]. Serialized to avoid parallel test races.
-const FROM_ENV_KEYS: &[&str] = &[
-    "NESTGATE_SOCKET",
-    "NESTGATE_FAMILY_ID",
-    "NESTGATE_NODE_ID",
-    "BIOMEOS_SOCKET_DIR",
-    "XDG_RUNTIME_DIR",
-];
-
-static FROM_ENV_MUTEX: Mutex<()> = Mutex::new(());
-
-fn snapshot_from_env() -> Vec<(String, Option<String>)> {
-    FROM_ENV_KEYS
-        .iter()
-        .map(|&k| (k.to_string(), std::env::var(k).ok()))
-        .collect()
-}
-
-fn restore_from_env(snapshot: &[(String, Option<String>)]) {
-    for (key, val) in snapshot {
-        match val {
-            Some(v) => env_process::set_var(key, v),
-            None => env_process::remove_var(key),
-        }
-    }
-}
-
-/// Clears socket-related env vars, runs `f`, then restores previous values via `env_process`.
-fn with_isolated_from_env<R>(f: impl FnOnce() -> R) -> R {
-    let _guard = FROM_ENV_MUTEX.lock().expect("from_environment test mutex");
-    let snap = snapshot_from_env();
-    for &k in FROM_ENV_KEYS {
-        env_process::remove_var(k);
-    }
-    let out = f();
-    restore_from_env(&snap);
-    out
-}
 
 // ========================================================================
 // UNIT TESTS - Pure Logic via resolve() (no env var races)
@@ -488,79 +448,82 @@ fn log_summary_covers_all_sources() {
 }
 
 // ========================================================================
-// from_environment + env_process (serialized; restores prior env)
+// from_env_source(MapEnv) — no process env mutation (parallel-safe)
 // ========================================================================
 
 #[test]
-fn from_environment_respects_nestgate_socket() {
+fn from_env_source_respects_nestgate_socket() {
     let root = tempfile::tempdir().expect("tempdir");
     let sock = root.path().join("from-env-explicit.sock");
-    with_isolated_from_env(|| {
-        env_process::set_var("NESTGATE_SOCKET", sock.to_string_lossy().as_ref());
-        env_process::set_var("NESTGATE_FAMILY_ID", "fam-env");
-        env_process::set_var("NESTGATE_NODE_ID", "node-env");
-
-        let cfg = SocketConfig::from_environment().expect("from_environment");
-        assert_eq!(cfg.socket_path, sock);
-        assert_eq!(cfg.family_id, "fam-env");
-        assert_eq!(cfg.node_id, "node-env");
-        assert_eq!(cfg.source, SocketConfigSource::Environment);
-    });
+    let sock_s = sock.to_string_lossy().into_owned();
+    let env = MapEnv::from([
+        ("NESTGATE_SOCKET", sock_s.as_str()),
+        ("NESTGATE_FAMILY_ID", "fam-env"),
+        ("NESTGATE_NODE_ID", "node-env"),
+    ]);
+    let cfg = SocketConfig::from_env_source(&env).expect("from_env_source");
+    assert_eq!(cfg.socket_path, sock);
+    assert_eq!(cfg.family_id, "fam-env");
+    assert_eq!(cfg.node_id, "node-env");
+    assert_eq!(cfg.source, SocketConfigSource::Environment);
 }
 
 #[test]
-fn from_environment_default_family_standalone_when_unset() {
-    with_isolated_from_env(|| {
-        let cfg = SocketConfig::from_environment().expect("from_environment");
-        assert_eq!(cfg.family_id, "standalone");
-        assert!(!cfg.node_id.is_empty());
-    });
+fn from_env_source_default_family_standalone_when_unset() {
+    let env = MapEnv::new();
+    let cfg = SocketConfig::from_env_source(&env).expect("from_env_source");
+    assert_eq!(cfg.family_id, "standalone");
+    assert!(!cfg.node_id.is_empty());
 }
 
 #[test]
-fn from_environment_biomeos_dir_when_no_socket_override() {
+fn from_env_source_biomeos_dir_when_no_socket_override() {
     let root = tempfile::tempdir().expect("tempdir");
     let expected_sock = root.path().join("nestgate.sock");
-    with_isolated_from_env(|| {
-        env_process::set_var("BIOMEOS_SOCKET_DIR", root.path().to_string_lossy().as_ref());
-        env_process::set_var("NESTGATE_FAMILY_ID", "bf");
-
-        let cfg = SocketConfig::from_environment().expect("from_environment");
-        assert_eq!(cfg.socket_path, expected_sock);
-        assert_eq!(cfg.source, SocketConfigSource::BiomeOSDirectory);
-    });
+    let dir = root.path().to_string_lossy().into_owned();
+    let env = MapEnv::from([
+        ("BIOMEOS_SOCKET_DIR", dir.as_str()),
+        ("NESTGATE_FAMILY_ID", "bf"),
+    ]);
+    let cfg = SocketConfig::from_env_source(&env).expect("from_env_source");
+    assert_eq!(cfg.socket_path, expected_sock);
+    assert_eq!(cfg.source, SocketConfigSource::BiomeOSDirectory);
 }
 
 #[test]
-fn from_environment_xdg_runtime_when_dir_exists() {
+fn from_env_source_xdg_runtime_when_dir_exists() {
     let dir = tempfile::tempdir().expect("tempdir");
-    with_isolated_from_env(|| {
-        env_process::set_var("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref());
-
-        let cfg = SocketConfig::from_environment().expect("from_environment");
-        assert_eq!(cfg.source, SocketConfigSource::XdgRuntime);
-        assert!(cfg.socket_path.ends_with("biomeos/nestgate.sock"));
-    });
+    let rt = dir.path().to_string_lossy().into_owned();
+    let env = MapEnv::from([("XDG_RUNTIME_DIR", rt.as_str())]);
+    let cfg = SocketConfig::from_env_source(&env).expect("from_env_source");
+    assert_eq!(cfg.source, SocketConfigSource::XdgRuntime);
+    assert!(cfg.socket_path.ends_with("biomeos/nestgate.sock"));
 }
 
 #[test]
-fn from_environment_socket_beats_biomeos_and_xdg() {
+fn from_env_source_socket_beats_biomeos_and_xdg() {
     let xdg = tempfile::tempdir().expect("tempdir");
     let only = tempfile::tempdir().expect("tempdir");
     let only_sock = only.path().join("only-this.sock");
     let ignored = tempfile::tempdir().expect("tempdir");
-    with_isolated_from_env(|| {
-        env_process::set_var("NESTGATE_SOCKET", only_sock.to_string_lossy().as_ref());
-        env_process::set_var(
-            "BIOMEOS_SOCKET_DIR",
-            ignored.path().to_string_lossy().as_ref(),
-        );
-        env_process::set_var("XDG_RUNTIME_DIR", xdg.path().to_string_lossy().as_ref());
+    let only_s = only_sock.to_string_lossy().into_owned();
+    let biome_s = ignored.path().to_string_lossy().into_owned();
+    let xdg_s = xdg.path().to_string_lossy().into_owned();
+    let env = MapEnv::from([
+        ("NESTGATE_SOCKET", only_s.as_str()),
+        ("BIOMEOS_SOCKET_DIR", biome_s.as_str()),
+        ("XDG_RUNTIME_DIR", xdg_s.as_str()),
+    ]);
+    let cfg = SocketConfig::from_env_source(&env).expect("from_env_source");
+    assert_eq!(cfg.socket_path, only_sock);
+    assert_eq!(cfg.source, SocketConfigSource::Environment);
+}
 
-        let cfg = SocketConfig::from_environment().expect("from_environment");
-        assert_eq!(cfg.socket_path, only_sock);
-        assert_eq!(cfg.source, SocketConfigSource::Environment);
-    });
+/// Smoke: [`ProcessEnv`] implements [`EnvSource`] the same way production `from_environment()` does.
+#[test]
+fn from_env_source_accepts_process_env() {
+    let env: &dyn EnvSource = &ProcessEnv;
+    let _ = SocketConfig::from_env_source(env);
 }
 
 // ========================================================================

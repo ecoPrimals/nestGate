@@ -15,8 +15,8 @@
 //! - `NESTGATE_AUTO_DISCOVERY`: Enable automatic discovery (default: true)
 //! - `NESTGATE_DISCOVERY_TIMEOUT`: Discovery timeout in seconds (default: 30)
 
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use serde::{Deserialize, Serialize};
-use std::env;
 
 /// Central configuration for service discovery
 ///
@@ -46,40 +46,29 @@ pub struct ServiceDiscoveryConfig {
 impl Default for ServiceDiscoveryConfig {
     /// Returns the default instance
     fn default() -> Self {
-        Self {
-            endpoints: Self::load_endpoints_from_env(),
-            // ✅ SOVEREIGNTY: Environment-driven discovery configuration
-            // Using compile-time constant for zero runtime overhead
-            discovery_host: env::var("NESTGATE_DISCOVERY_HOST")
-                .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string()),
-            discovery_base_port: env::var("NESTGATE_DISCOVERY_BASE_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(8080), // Safe default
-            discovery_port_range: env::var("NESTGATE_DISCOVERY_PORT_RANGE")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(10),
-            auto_discovery: env::var("NESTGATE_AUTO_DISCOVERY")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(true),
-            discovery_timeout_secs: env::var("NESTGATE_DISCOVERY_TIMEOUT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(30),
-        }
+        Self::from_env_source(&ProcessEnv)
     }
 }
 
 impl ServiceDiscoveryConfig {
-    /// Load discovery endpoints from environment
-    ///
-    /// Tries `NESTGATE_DISCOVERY_ENDPOINTS` first (comma-separated list),
-    /// then falls back to generating endpoints from host + port range.
-    fn load_endpoints_from_env() -> Vec<String> {
+    /// Build from an injectable environment source (use [`MapEnv`](nestgate_types::MapEnv) in tests).
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+        Self {
+            endpoints: Self::load_endpoints_from_env_source(env),
+            discovery_host: env
+                .get("NESTGATE_DISCOVERY_HOST")
+                .unwrap_or_else(|| std::net::Ipv4Addr::LOCALHOST.to_string()),
+            discovery_base_port: env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", 8080),
+            discovery_port_range: env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 10),
+            auto_discovery: env_parsed(env, "NESTGATE_AUTO_DISCOVERY", true),
+            discovery_timeout_secs: env_parsed(env, "NESTGATE_DISCOVERY_TIMEOUT", 30),
+        }
+    }
+
+    fn load_endpoints_from_env_source(env: &dyn EnvSource) -> Vec<String> {
         // Try NESTGATE_DISCOVERY_ENDPOINTS (comma-separated list)
-        if let Ok(endpoints_str) = env::var("NESTGATE_DISCOVERY_ENDPOINTS") {
+        if let Some(endpoints_str) = env.get("NESTGATE_DISCOVERY_ENDPOINTS") {
             return endpoints_str
                 .split(',')
                 .map(|s| s.trim().to_string())
@@ -88,17 +77,11 @@ impl ServiceDiscoveryConfig {
         }
 
         // Fallback: Generate from host + port range
-        // ✅ Using compile-time constant (zero runtime overhead)
-        let host = env::var("NESTGATE_DISCOVERY_HOST")
-            .unwrap_or_else(|_| std::net::Ipv4Addr::LOCALHOST.to_string());
-        let base_port: u16 = env::var("NESTGATE_DISCOVERY_BASE_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(8080);
-        let port_range: u16 = env::var("NESTGATE_DISCOVERY_PORT_RANGE")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(3);
+        let host = env
+            .get("NESTGATE_DISCOVERY_HOST")
+            .unwrap_or_else(|| std::net::Ipv4Addr::LOCALHOST.to_string());
+        let base_port: u16 = env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", 8080);
+        let port_range: u16 = env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 3);
 
         (0..port_range)
             .map(|offset| format!("http://{}:{}", host, base_port + offset))
@@ -148,7 +131,7 @@ impl ServiceDiscoveryConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use temp_env::with_vars;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_default_discovery_config_values() {
@@ -175,18 +158,13 @@ mod tests {
 
     #[test]
     fn test_discovery_config_from_env_host_and_port() {
-        with_vars(
-            vec![
-                ("NESTGATE_DISCOVERY_HOST", Some("192.168.1.100")),
-                ("NESTGATE_DISCOVERY_BASE_PORT", Some("9000")),
-                ("NESTGATE_DISCOVERY_ENDPOINTS", None),
-            ],
-            || {
-                let config = ServiceDiscoveryConfig::default();
-                assert_eq!(config.discovery_host, "192.168.1.100");
-                assert_eq!(config.discovery_base_port, 9000);
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_DISCOVERY_HOST", "192.168.1.100"),
+            ("NESTGATE_DISCOVERY_BASE_PORT", "9000"),
+        ]);
+        let config = ServiceDiscoveryConfig::from_env_source(&env);
+        assert_eq!(config.discovery_host, "192.168.1.100");
+        assert_eq!(config.discovery_base_port, 9000);
     }
 
     #[test]
@@ -223,30 +201,26 @@ mod tests {
 
     #[test]
     fn test_endpoints_from_env() {
-        with_vars(
-            vec![(
-                "NESTGATE_DISCOVERY_ENDPOINTS",
-                Some("http://server1:8080,http://server2:8081,http://server3:8082"),
-            )],
-            || {
-                let config = ServiceDiscoveryConfig::default();
-                assert_eq!(config.endpoints.len(), 3);
-                assert!(
-                    config
-                        .endpoints
-                        .contains(&"http://server1:8080".to_string())
-                );
-                assert!(
-                    config
-                        .endpoints
-                        .contains(&"http://server2:8081".to_string())
-                );
-                assert!(
-                    config
-                        .endpoints
-                        .contains(&"http://server3:8082".to_string())
-                );
-            },
+        let env = MapEnv::from([(
+            "NESTGATE_DISCOVERY_ENDPOINTS",
+            "http://server1:8080,http://server2:8081,http://server3:8082",
+        )]);
+        let config = ServiceDiscoveryConfig::from_env_source(&env);
+        assert_eq!(config.endpoints.len(), 3);
+        assert!(
+            config
+                .endpoints
+                .contains(&"http://server1:8080".to_string())
+        );
+        assert!(
+            config
+                .endpoints
+                .contains(&"http://server2:8081".to_string())
+        );
+        assert!(
+            config
+                .endpoints
+                .contains(&"http://server3:8082".to_string())
         );
     }
 
@@ -284,33 +258,15 @@ mod tests {
 
     #[test]
     fn test_auto_discovery_env_var() {
-        // ✅ EVOLUTION: No longer needs #[ignore] - concurrent-safe!
-        temp_env::with_vars(
-            vec![
-                ("NESTGATE_AUTO_DISCOVERY", Some("false")),
-                ("NESTGATE_DISCOVERY_ENDPOINTS", None),
-            ],
-            || {
-                let config = ServiceDiscoveryConfig::default();
-                assert!(!config.auto_discovery);
-            },
-        );
-        // Environment automatically restored!
+        let env = MapEnv::from([("NESTGATE_AUTO_DISCOVERY", "false")]);
+        let config = ServiceDiscoveryConfig::from_env_source(&env);
+        assert!(!config.auto_discovery);
     }
 
     #[test]
     fn test_discovery_timeout_env_var() {
-        // ✅ EVOLUTION: No longer needs #[ignore] - concurrent-safe!
-        temp_env::with_vars(
-            vec![
-                ("NESTGATE_DISCOVERY_TIMEOUT", Some("60")),
-                ("NESTGATE_DISCOVERY_ENDPOINTS", None),
-            ],
-            || {
-                let config = ServiceDiscoveryConfig::default();
-                assert_eq!(config.discovery_timeout_secs, 60);
-            },
-        );
-        // Environment automatically restored!
+        let env = MapEnv::from([("NESTGATE_DISCOVERY_TIMEOUT", "60")]);
+        let config = ServiceDiscoveryConfig::from_env_source(&env);
+        assert_eq!(config.discovery_timeout_secs, 60);
     }
 }

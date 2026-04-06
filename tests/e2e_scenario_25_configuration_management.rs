@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -25,30 +25,16 @@ mod configuration_management {
 
     #[tokio::test]
     async fn test_config_from_environment() {
-        let orig_timeout = std::env::var("NESTGATE_TIMEOUT").ok();
-        let orig_connections = std::env::var("NESTGATE_MAX_CONNECTIONS").ok();
-        nestgate_core::env_process::set_var("NESTGATE_TIMEOUT", "5000");
-        nestgate_core::env_process::set_var("NESTGATE_MAX_CONNECTIONS", "100");
+        use nestgate_types::{MapEnv, env_parsed};
 
-        let timeout = std::env::var("NESTGATE_TIMEOUT")
-            .ok()
-            .and_then(|s| s.parse::<u64>().ok())
-            .map(Duration::from_millis);
-
-        let max_connections = std::env::var("NESTGATE_MAX_CONNECTIONS")
-            .ok()
-            .and_then(|s| s.parse::<usize>().ok());
-
-        match orig_timeout {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_TIMEOUT", v),
-            None => nestgate_core::env_process::remove_var("NESTGATE_TIMEOUT"),
-        }
-        match orig_connections {
-            Some(v) => nestgate_core::env_process::set_var("NESTGATE_MAX_CONNECTIONS", v),
-            None => nestgate_core::env_process::remove_var("NESTGATE_MAX_CONNECTIONS"),
-        }
-        assert_eq!(timeout, Some(Duration::from_millis(5000)));
-        assert_eq!(max_connections, Some(100));
+        let env = MapEnv::from([
+            ("NESTGATE_TIMEOUT", "5000"),
+            ("NESTGATE_MAX_CONNECTIONS", "100"),
+        ]);
+        let timeout_ms: u64 = env_parsed(&env, "NESTGATE_TIMEOUT", 0);
+        let max_connections: usize = env_parsed(&env, "NESTGATE_MAX_CONNECTIONS", 0);
+        assert_eq!(timeout_ms, 5000);
+        assert_eq!(max_connections, 100);
     }
 
     #[tokio::test]
@@ -104,14 +90,14 @@ mod configuration_management {
         // File override
         config_map.insert("timeout", "60000");
 
-        temp_env::with_var("CONFIG_TIMEOUT", Some("90000"), || {
-            let env_timeout = std::env::var("CONFIG_TIMEOUT").ok();
+        use nestgate_types::{EnvSource, MapEnv};
+        let env = MapEnv::from([("CONFIG_TIMEOUT", "90000")]);
+        let env_timeout = env.get("CONFIG_TIMEOUT");
 
-            let final_timeout = env_timeout
-                .or_else(|| config_map.get("timeout").map(|s| s.to_string()))
-                .unwrap();
+        let final_timeout = env_timeout
+            .or_else(|| config_map.get("timeout").map(|s| s.to_string()))
+            .unwrap();
 
-            assert_eq!(final_timeout, "90000");
-        });
+        assert_eq!(final_timeout, "90000");
     }
 }

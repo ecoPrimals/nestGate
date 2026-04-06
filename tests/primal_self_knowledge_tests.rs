@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -16,6 +16,8 @@
 //! Comprehensive tests for primal self-knowledge and discovery
 
 use anyhow::Result;
+use nestgate_types::MapEnv;
+use std::sync::Arc;
 
 #[tokio::test]
 async fn test_primal_initialization() -> Result<()> {
@@ -117,22 +119,13 @@ async fn test_primal_announce_self() -> Result<()> {
 async fn test_primal_discover_from_environment() -> Result<()> {
     use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 
-    let orig_host = std::env::var("SECURITY_PROVIDER_HOST").ok();
-    let orig_port = std::env::var("SECURITY_PROVIDER_PORT").ok();
-    nestgate_core::env_process::set_var("SECURITY_PROVIDER_HOST", "security.local");
-    nestgate_core::env_process::set_var("SECURITY_PROVIDER_PORT", "4000");
-
-    let mut primal = PrimalSelfKnowledge::initialize().await?;
+    let env = Arc::new(MapEnv::from([
+        ("SECURITY_PROVIDER_HOST", "security.local"),
+        ("SECURITY_PROVIDER_PORT", "4000"),
+    ]));
+    let mut primal = PrimalSelfKnowledge::initialize_with_env(env).await?;
     let discovered = primal.discover_primal("security_provider").await?;
 
-    match orig_host {
-        Some(v) => nestgate_core::env_process::set_var("SECURITY_PROVIDER_HOST", v),
-        None => nestgate_core::env_process::remove_var("SECURITY_PROVIDER_HOST"),
-    }
-    match orig_port {
-        Some(v) => nestgate_core::env_process::set_var("SECURITY_PROVIDER_PORT", v),
-        None => nestgate_core::env_process::remove_var("SECURITY_PROVIDER_PORT"),
-    }
     assert_eq!(discovered.identity.primal_type, "security_provider");
     assert_eq!(discovered.primary_endpoint.address, "security.local");
     assert_eq!(discovered.primary_endpoint.port, 4000);
@@ -144,23 +137,14 @@ async fn test_primal_discover_from_environment() -> Result<()> {
 async fn test_primal_discovery_caching() -> Result<()> {
     use nestgate_core::primal_self_knowledge::PrimalSelfKnowledge;
 
-    let orig_host = std::env::var("ORCHESTRATION_PROVIDER_HOST").ok();
-    let orig_port = std::env::var("ORCHESTRATION_PROVIDER_PORT").ok();
-    nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_HOST", "orchestration.local");
-    nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_PORT", "5000");
-
-    let mut primal = PrimalSelfKnowledge::initialize().await?;
+    let env = Arc::new(MapEnv::from([
+        ("ORCHESTRATION_PROVIDER_HOST", "orchestration.local"),
+        ("ORCHESTRATION_PROVIDER_PORT", "5000"),
+    ]));
+    let mut primal = PrimalSelfKnowledge::initialize_with_env(env).await?;
 
     let _ = primal.discover_primal("orchestration_provider").await?;
 
-    match orig_host {
-        Some(v) => nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_HOST", v),
-        None => nestgate_core::env_process::remove_var("ORCHESTRATION_PROVIDER_HOST"),
-    }
-    match orig_port {
-        Some(v) => nestgate_core::env_process::set_var("ORCHESTRATION_PROVIDER_PORT", v),
-        None => nestgate_core::env_process::remove_var("ORCHESTRATION_PROVIDER_PORT"),
-    }
     let discovered = primal.discovered_primals();
     assert!(discovered.contains_key("orchestration_provider"));
     Ok(())

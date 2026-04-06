@@ -14,7 +14,11 @@ use super::client::ObjectStorageClient;
 use super::config::{ConfigSource, DiscoveredStorageConfig, StorageCapability};
 use super::provider::StorageProvider;
 use super::types::ObjectPool;
-use nestgate_core::{NestGateError, Result, config_error};
+use nestgate_core::{
+    NestGateError, Result, config_error,
+    constants::hardcoding::addresses::{LOCALHOST_IPV4, LOCALHOST_NAME},
+};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -48,8 +52,13 @@ impl ObjectStorageBackend {
     /// 1. Capability discovery (preferred) - zero hardcoding
     /// 2. Environment variables (fallback) - for testing/standalone
     pub fn new() -> Result<Self> {
+        Self::new_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::new`], but reads configuration from `env` instead of the process environment.
+    pub fn new_from_env_source(env: &dyn EnvSource) -> Result<Self> {
         // Try capability discovery first
-        if let Ok(config) = Self::discover_object_storage_capability() {
+        if let Ok(config) = Self::discover_object_storage_capability_from_env_source(env) {
             info!(
                 "✅ Object storage initialized via capability discovery: service={}",
                 config.service_id
@@ -59,7 +68,7 @@ impl ObjectStorageBackend {
 
         // Fallback to environment configuration
         info!("ℹ️  Capability discovery unavailable, using environment configuration");
-        Self::from_environment()
+        Self::from_environment_from_env_source(env)
     }
 
     /// Discover object storage via capability system
@@ -80,16 +89,24 @@ impl ObjectStorageBackend {
     ///
     /// **No Hardcoding** - discovers endpoints, credentials, regions dynamically.
     fn discover_object_storage_capability() -> Result<DiscoveredStorageConfig> {
+        Self::discover_object_storage_capability_from_env_source(&ProcessEnv)
+    }
+
+    fn discover_object_storage_capability_from_env_source(
+        env: &dyn EnvSource,
+    ) -> Result<DiscoveredStorageConfig> {
         debug!("🔍 Discovering object storage capabilities...");
 
         // Step 1: Try environment-based discovery (most explicit)
-        if let Ok(endpoint) = std::env::var("OBJECT_STORAGE_ENDPOINT") {
+        if let Some(endpoint) = env.get("OBJECT_STORAGE_ENDPOINT") {
             info!("📍 Discovered object storage via environment: {}", endpoint);
 
-            let region = std::env::var("OBJECT_STORAGE_REGION")
-                .unwrap_or_else(|_| String::from("us-east-1"));
-            let bucket_prefix = std::env::var("OBJECT_STORAGE_BUCKET_PREFIX")
-                .unwrap_or_else(|_| String::from("nestgate"));
+            let region = env
+                .get("OBJECT_STORAGE_REGION")
+                .unwrap_or_else(|| "us-east-1".to_string());
+            let bucket_prefix = env
+                .get("OBJECT_STORAGE_BUCKET_PREFIX")
+                .unwrap_or_else(|| "nestgate".to_string());
 
             return Ok(DiscoveredStorageConfig {
                 service_id: "env-configured".to_string(),
@@ -147,28 +164,35 @@ impl ObjectStorageBackend {
     /// **FALLBACK MODE**: Used when capability discovery unavailable.
     /// Still maintains sovereignty by accepting ANY S3-compatible endpoint.
     pub fn from_environment() -> Result<Self> {
-        let endpoint = std::env::var("OBJECT_STORAGE_ENDPOINT").map_err(|_| {
+        Self::from_environment_from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_environment`], but reads object-storage variables from `env`.
+    pub fn from_environment_from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let endpoint = env.get("OBJECT_STORAGE_ENDPOINT").ok_or_else(|| {
             config_error!(
                 "OBJECT_STORAGE_ENDPOINT required (e.g., https://s3.amazonaws.com or https://play.min.io)",
                 "OBJECT_STORAGE_ENDPOINT"
             )
         })?;
 
-        let region =
-            std::env::var("OBJECT_STORAGE_REGION").unwrap_or_else(|_| "us-east-1".to_string());
+        let region = env
+            .get("OBJECT_STORAGE_REGION")
+            .unwrap_or_else(|| "us-east-1".to_string());
 
-        let bucket_prefix = std::env::var("OBJECT_STORAGE_BUCKET_PREFIX")
-            .unwrap_or_else(|_| "nestgate".to_string());
+        let bucket_prefix = env
+            .get("OBJECT_STORAGE_BUCKET_PREFIX")
+            .unwrap_or_else(|| "nestgate".to_string());
 
         // Validate credentials present
-        let _access_key = std::env::var("OBJECT_STORAGE_ACCESS_KEY").map_err(|_| {
+        let _access_key = env.get("OBJECT_STORAGE_ACCESS_KEY").ok_or_else(|| {
             config_error!(
                 "OBJECT_STORAGE_ACCESS_KEY required",
                 "OBJECT_STORAGE_ACCESS_KEY"
             )
         })?;
 
-        let _secret_key = std::env::var("OBJECT_STORAGE_SECRET_KEY").map_err(|_| {
+        let _secret_key = env.get("OBJECT_STORAGE_SECRET_KEY").ok_or_else(|| {
             config_error!(
                 "OBJECT_STORAGE_SECRET_KEY required",
                 "OBJECT_STORAGE_SECRET_KEY"
@@ -219,8 +243,8 @@ impl ObjectStorageBackend {
         // the well-known MinIO default API port / local dev convention (not universal for all S3 providers).
         endpoint_lower.contains("min.io")
             || endpoint_lower.contains("minio")
-            || endpoint_lower.contains("localhost")
-            || endpoint_lower.contains("127.0.0.1")
+            || endpoint_lower.contains(LOCALHOST_NAME)
+            || endpoint_lower.contains(LOCALHOST_IPV4)
             || endpoint_lower.contains(":9000")
     }
 
@@ -262,6 +286,7 @@ impl ObjectStorageBackend {
 #[cfg(test)]
 mod tests {
     use super::ObjectStorageBackend;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn from_config_creates_backend_without_env() {
@@ -271,49 +296,30 @@ mod tests {
     }
 
     #[test]
-    fn new_fails_when_no_object_storage_configured() {
-        temp_env::with_vars(
-            [
-                ("OBJECT_STORAGE_ENDPOINT", None::<&str>),
-                ("OBJECT_STORAGE_ACCESS_KEY", None::<&str>),
-                ("OBJECT_STORAGE_SECRET_KEY", None::<&str>),
-            ],
-            || assert!(ObjectStorageBackend::new().is_err()),
-        );
+    fn new_from_env_source_fails_when_unconfigured() {
+        let env = MapEnv::new();
+        assert!(ObjectStorageBackend::new_from_env_source(&env).is_err());
     }
 
     #[test]
-    fn new_succeeds_with_endpoint_discovery_env() {
-        temp_env::with_var(
-            "OBJECT_STORAGE_ENDPOINT",
-            Some("https://s3.example.com"),
-            || {
-                assert!(ObjectStorageBackend::new().is_ok());
-            },
-        );
+    fn new_from_env_source_succeeds_with_endpoint_discovery_env() {
+        let env = MapEnv::from([("OBJECT_STORAGE_ENDPOINT", "https://s3.example.com")]);
+        assert!(ObjectStorageBackend::new_from_env_source(&env).is_ok());
     }
 
     #[test]
     fn from_environment_requires_credentials() {
-        temp_env::with_vars(
-            [
-                ("OBJECT_STORAGE_ENDPOINT", Some("https://s3.example.com")),
-                ("OBJECT_STORAGE_ACCESS_KEY", None::<&str>),
-                ("OBJECT_STORAGE_SECRET_KEY", None::<&str>),
-            ],
-            || assert!(ObjectStorageBackend::from_environment().is_err()),
-        );
+        let env = MapEnv::from([("OBJECT_STORAGE_ENDPOINT", "https://s3.example.com")]);
+        assert!(ObjectStorageBackend::from_environment_from_env_source(&env).is_err());
     }
 
     #[test]
     fn from_environment_succeeds_with_full_env() {
-        temp_env::with_vars(
-            [
-                ("OBJECT_STORAGE_ENDPOINT", Some("https://s3.example.com")),
-                ("OBJECT_STORAGE_ACCESS_KEY", Some("ak")),
-                ("OBJECT_STORAGE_SECRET_KEY", Some("sk")),
-            ],
-            || assert!(ObjectStorageBackend::from_environment().is_ok()),
-        );
+        let env = MapEnv::from([
+            ("OBJECT_STORAGE_ENDPOINT", "https://s3.example.com"),
+            ("OBJECT_STORAGE_ACCESS_KEY", "ak"),
+            ("OBJECT_STORAGE_SECRET_KEY", "sk"),
+        ]);
+        assert!(ObjectStorageBackend::from_environment_from_env_source(&env).is_ok());
     }
 }

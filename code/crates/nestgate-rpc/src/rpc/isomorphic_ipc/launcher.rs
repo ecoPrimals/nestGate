@@ -38,6 +38,7 @@
 //! - ✅ **Capability-Based**: Adapts to platform capabilities (Unix vs TCP)
 
 use anyhow::{Context, Result, anyhow};
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::path::PathBuf;
 use tokio::time::{Duration, sleep};
 use tracing::{debug, info};
@@ -261,14 +262,19 @@ pub async fn is_nestgate_running() -> bool {
 /// }
 /// ```
 pub fn get_nestgate_socket_path() -> Result<PathBuf> {
+    get_nestgate_socket_path_from_env_source(&ProcessEnv)
+}
+
+/// Like [`get_nestgate_socket_path`], but reads `XDG_RUNTIME_DIR` / `HOME` from `env`.
+pub fn get_nestgate_socket_path_from_env_source(env: &dyn EnvSource) -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR (session-specific, auto-cleaned)
-    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
         let path = PathBuf::from(runtime_dir).join(format!("{NESTGATE_SERVICE_NAME}.sock"));
         return Ok(path);
     }
 
     // Priority 2: HOME/.local/share (user-specific, persistent)
-    if let Ok(home) = std::env::var("HOME") {
+    if let Some(home) = env.get("HOME") {
         let path = PathBuf::from(home)
             .join(".local")
             .join("share")
@@ -293,7 +299,7 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
         // Non-Unix platforms (Windows) - use temp directory
         let temp_dir = std::env::temp_dir();
         let path = temp_dir.join(format!("{}.sock", NESTGATE_SERVICE_NAME));
-        return Ok(path);
+        Ok(path)
     }
 }
 
@@ -313,14 +319,19 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
 /// }
 /// ```
 pub fn get_nestgate_tcp_discovery_path() -> Result<PathBuf> {
+    get_nestgate_tcp_discovery_path_from_env_source(&ProcessEnv)
+}
+
+/// Like [`get_nestgate_tcp_discovery_path`], but reads `XDG_RUNTIME_DIR` / `HOME` from `env`.
+pub fn get_nestgate_tcp_discovery_path_from_env_source(env: &dyn EnvSource) -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR
-    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
         let path = PathBuf::from(runtime_dir).join(format!("{NESTGATE_SERVICE_NAME}-ipc-port"));
         return Ok(path);
     }
 
     // Priority 2: HOME/.local/share
-    if let Ok(home) = std::env::var("HOME") {
+    if let Some(home) = env.get("HOME") {
         let path = PathBuf::from(home)
             .join(".local")
             .join("share")
@@ -342,29 +353,21 @@ pub fn get_nestgate_tcp_discovery_path() -> Result<PathBuf> {
 mod tests {
 
     use super::*;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn get_tcp_discovery_path_uses_tmp_when_xdg_and_home_missing() {
-        temp_env::with_vars(
-            vec![("XDG_RUNTIME_DIR", None::<&str>), ("HOME", None::<&str>)],
-            || {
-                let p = get_nestgate_tcp_discovery_path().expect("path");
-                assert!(p.starts_with("/tmp/nestgate-ipc-port"));
-            },
-        );
+        let env = MapEnv::new();
+        let p = get_nestgate_tcp_discovery_path_from_env_source(&env).expect("path");
+        assert!(p.starts_with("/tmp/nestgate-ipc-port"));
     }
 
     #[test]
     fn get_socket_path_prefers_xdg_runtime_when_set() {
         let dir = tempfile::tempdir().expect("tempdir");
-        temp_env::with_var(
-            "XDG_RUNTIME_DIR",
-            Some(dir.path().to_string_lossy().as_ref()),
-            || {
-                let p = get_nestgate_socket_path().expect("path");
-                assert_eq!(p, dir.path().join("nestgate.sock"));
-            },
-        );
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref())]);
+        let p = get_nestgate_socket_path_from_env_source(&env).expect("path");
+        assert_eq!(p, dir.path().join("nestgate.sock"));
     }
 
     #[test]

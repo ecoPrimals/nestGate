@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -16,6 +16,8 @@
 //! Comprehensive tests for the new capability-based discovery system
 
 use anyhow::Result;
+use nestgate_types::MapEnv;
+use std::sync::Arc;
 
 #[tokio::test]
 async fn test_capability_config_initialization_success() -> Result<()> {
@@ -75,23 +77,14 @@ async fn test_capability_config_has_capabilities() -> Result<()> {
 async fn test_discovery_from_environment_variables() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
-    let orig_host = std::env::var("NESTGATE_TESTSERVICE_HOST").ok();
-    let orig_port = std::env::var("NESTGATE_TESTSERVICE_PORT").ok();
-    nestgate_core::env_process::set_var("NESTGATE_TESTSERVICE_HOST", "localhost");
-    nestgate_core::env_process::set_var("NESTGATE_TESTSERVICE_PORT", "9999");
-
-    let config = CapabilityConfig::initialize().await?;
+    let env = Arc::new(MapEnv::from([
+        ("NESTGATE_TESTSERVICE_HOST", "localhost"),
+        ("NESTGATE_TESTSERVICE_PORT", "9999"),
+    ]));
+    let config = CapabilityConfig::initialize_with_env(env).await?;
 
     let result = config.discover_capability("testservice").await;
 
-    match orig_host {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_TESTSERVICE_HOST", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_TESTSERVICE_HOST"),
-    }
-    match orig_port {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_TESTSERVICE_PORT", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_TESTSERVICE_PORT"),
-    }
     assert!(result.is_ok(), "Should discover service from environment");
     let endpoint = result?;
     assert_eq!(endpoint.address, "localhost");
@@ -104,24 +97,15 @@ async fn test_discovery_from_environment_variables() -> Result<()> {
 async fn test_discovery_caching() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
-    let orig_host = std::env::var("NESTGATE_CACHE_TEST_HOST").ok();
-    let orig_port = std::env::var("NESTGATE_CACHE_TEST_PORT").ok();
-    nestgate_core::env_process::set_var("NESTGATE_CACHE_TEST_HOST", "cachehost");
-    nestgate_core::env_process::set_var("NESTGATE_CACHE_TEST_PORT", "8888");
-
-    let config = CapabilityConfig::initialize().await?;
+    let env = Arc::new(MapEnv::from([
+        ("NESTGATE_CACHE_TEST_HOST", "cachehost"),
+        ("NESTGATE_CACHE_TEST_PORT", "8888"),
+    ]));
+    let config = CapabilityConfig::initialize_with_env(env).await?;
 
     let endpoint1 = config.discover_capability("cache_test").await?;
     let endpoint2 = config.discover_capability("cache_test").await?;
 
-    match orig_host {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_CACHE_TEST_HOST", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_CACHE_TEST_HOST"),
-    }
-    match orig_port {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_CACHE_TEST_PORT", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_CACHE_TEST_PORT"),
-    }
     assert_eq!(endpoint1.address, endpoint2.address);
     assert_eq!(endpoint1.port, endpoint2.port);
 
@@ -190,16 +174,10 @@ async fn test_announce_capabilities() -> Result<()> {
 async fn test_get_port_from_environment() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
-    let orig = std::env::var("NESTGATE_CUSTOM_PORT").ok();
-    nestgate_core::env_process::set_var("NESTGATE_CUSTOM_PORT", "7777");
-
-    let config = CapabilityConfig::initialize().await?;
+    let env = Arc::new(MapEnv::from([("NESTGATE_CUSTOM_PORT", "7777")]));
+    let config = CapabilityConfig::initialize_with_env(env).await?;
     let port = config.get_port("NESTGATE_CUSTOM_PORT").await?;
 
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_CUSTOM_PORT", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_CUSTOM_PORT"),
-    }
     assert_eq!(port, 7777);
 
     Ok(())
@@ -209,16 +187,10 @@ async fn test_get_port_from_environment() -> Result<()> {
 async fn test_get_port_invalid_value() -> Result<()> {
     use nestgate_core::capability_based_config::CapabilityConfig;
 
-    let orig = std::env::var("NESTGATE_INVALID_PORT").ok();
-    nestgate_core::env_process::set_var("NESTGATE_INVALID_PORT", "not_a_number");
-
-    let config = CapabilityConfig::initialize().await?;
+    let env = Arc::new(MapEnv::from([("NESTGATE_INVALID_PORT", "not_a_number")]));
+    let config = CapabilityConfig::initialize_with_env(env).await?;
     let result = config.get_port("NESTGATE_INVALID_PORT").await;
 
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_INVALID_PORT", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_INVALID_PORT"),
-    }
     assert!(result.is_err(), "Should fail with invalid port");
 
     Ok(())

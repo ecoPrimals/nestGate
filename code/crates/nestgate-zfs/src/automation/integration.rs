@@ -58,11 +58,11 @@ pub const fn check_zfs_ecosystem_availability() -> bool {
 
 #[cfg(test)]
 mod tests {
-    #[expect(deprecated)]
+    #[allow(deprecated)]
     use super::*;
 
     #[test]
-    #[expect(deprecated)]
+    #[allow(deprecated)]
     fn test_initialize_automation() {
         let config = NestGateCanonicalConfig::default();
         let result = initialize_automation(config);

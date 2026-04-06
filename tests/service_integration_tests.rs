@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -115,29 +115,15 @@ async fn test_e2e_http_mode_configuration() {
 }
 
 #[tokio::test]
-#[ignore] // Requires isolated env; env var pollution when run in parallel
 async fn test_e2e_mode_switching() {
-    let orig_sock = std::env::var("NESTGATE_SOCKET").ok();
-    let orig_fid = std::env::var("NESTGATE_FAMILY_ID").ok();
-    nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
-    nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
-
+    let http = MapEnv::new();
     let http_mode =
-        std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+        http.get("NESTGATE_SOCKET").is_some() || http.get("NESTGATE_FAMILY_ID").is_some();
     assert!(!http_mode, "Should be HTTP mode");
 
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "switch-test");
-
+    let socket = MapEnv::from([("NESTGATE_FAMILY_ID", "switch-test")]);
     let socket_mode =
-        std::env::var("NESTGATE_SOCKET").is_ok() || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-
-    match orig_fid {
-        Some(v) => nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", v),
-        None => nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID"),
-    }
-    if let Some(v) = orig_sock {
-        nestgate_core::env_process::set_var("NESTGATE_SOCKET", v);
-    }
+        socket.get("NESTGATE_SOCKET").is_some() || socket.get("NESTGATE_FAMILY_ID").is_some();
     assert!(socket_mode, "Should be socket mode");
 }
 
@@ -146,7 +132,6 @@ async fn test_e2e_mode_switching() {
 // ============================================================================
 
 #[tokio::test]
-#[ignore] // Env var pollution between parallel tasks; NESTGATE_FAMILY_ID shared
 async fn test_chaos_concurrent_mode_detection() {
     use tokio::task;
 
@@ -154,12 +139,9 @@ async fn test_chaos_concurrent_mode_detection() {
         .map(|i| {
             task::spawn(async move {
                 let family_id = format!("chaos-{}", i);
-                nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", &family_id);
-
-                let socket_requested = std::env::var("NESTGATE_SOCKET").is_ok()
-                    || std::env::var("NESTGATE_FAMILY_ID").is_ok();
-
-                nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
+                let env = MapEnv::from([("NESTGATE_FAMILY_ID", family_id.as_str())]);
+                let socket_requested =
+                    env.get("NESTGATE_SOCKET").is_some() || env.get("NESTGATE_FAMILY_ID").is_some();
 
                 assert!(socket_requested, "Should detect socket mode");
                 socket_requested
@@ -178,22 +160,17 @@ async fn test_chaos_concurrent_mode_detection() {
 }
 
 #[tokio::test]
-#[ignore] // Env var pollution when run in parallel with other tests
 async fn test_chaos_rapid_mode_switches() {
     for i in 0..100 {
         if i % 2 == 0 {
-            // Socket mode
-            nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", "rapid");
-            let mode = std::env::var("NESTGATE_SOCKET").is_ok()
-                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+            let env = MapEnv::from([("NESTGATE_FAMILY_ID", "rapid")]);
+            let mode =
+                env.get("NESTGATE_SOCKET").is_some() || env.get("NESTGATE_FAMILY_ID").is_some();
             assert!(mode);
-            nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
         } else {
-            // HTTP mode
-            nestgate_core::env_process::remove_var("NESTGATE_SOCKET");
-            nestgate_core::env_process::remove_var("NESTGATE_FAMILY_ID");
-            let mode = std::env::var("NESTGATE_SOCKET").is_ok()
-                || std::env::var("NESTGATE_FAMILY_ID").is_ok();
+            let env = MapEnv::new();
+            let mode =
+                env.get("NESTGATE_SOCKET").is_some() || env.get("NESTGATE_FAMILY_ID").is_some();
             assert!(!mode);
         }
     }

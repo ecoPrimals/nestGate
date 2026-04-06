@@ -14,14 +14,14 @@ use super::TestDoubleConfig;
 
 /// Network test double for testing network operations
 pub struct NetworkTestDouble {
-    #[expect(dead_code)] // Test fixture field
+    #[allow(dead_code)] // Test fixture field
     config: TestDoubleConfig,
     connections: Arc<Mutex<HashMap<String, ConnectionStatus>>>,
     operations: Arc<Mutex<Vec<String>>>,
 }
 
 #[derive(Debug, Clone)]
-#[expect(dead_code)] // Test fixture
+#[allow(dead_code)] // Test fixture
 enum ConnectionStatus {
     Connected,
     Disconnected,

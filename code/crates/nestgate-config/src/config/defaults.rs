@@ -249,7 +249,8 @@ impl TimeoutDefaults {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use temp_env::with_var_unset;
+    use crate::config::defaults_config::NetworkDefaultsConfig;
+    use nestgate_types::MapEnv;
 
     // NetworkPortDefaults tests - verify non-zero defaults (actual values are env-driven)
     #[test]
@@ -324,42 +325,37 @@ mod tests {
 
     #[test]
     fn test_network_port_defaults_get_api_port_default() {
-        with_var_unset("NESTGATE_API_PORT", || {
-            let port = NetworkPortDefaults::get_api_port();
-            assert_eq!(port, 3000);
-        });
+        let env = MapEnv::new();
+        let port = NetworkDefaultsConfig::from_env_source(&env).get_api_port();
+        assert_eq!(port, 3000);
     }
 
     #[test]
     fn test_network_port_defaults_get_http_port_default() {
-        with_var_unset("NESTGATE_HTTP_PORT", || {
-            let port = NetworkPortDefaults::get_http_port();
-            assert_eq!(port, 8080);
-        });
+        let env = MapEnv::new();
+        let port = NetworkDefaultsConfig::from_env_source(&env).get_http_port();
+        assert_eq!(port, 8080);
     }
 
     #[test]
     fn test_network_port_defaults_get_metrics_port_default() {
-        with_var_unset("NESTGATE_METRICS_PORT", || {
-            let port = NetworkPortDefaults::get_metrics_port();
-            assert_eq!(port, 9090);
-        });
+        let env = MapEnv::new();
+        let port = NetworkDefaultsConfig::from_env_source(&env).get_metrics_port();
+        assert_eq!(port, 9090);
     }
 
     #[test]
     fn test_network_port_defaults_get_health_port_default() {
-        with_var_unset("NESTGATE_HEALTH_PORT", || {
-            let port = NetworkPortDefaults::get_health_port();
-            assert_eq!(port, 8081);
-        });
+        let env = MapEnv::new();
+        let port = NetworkDefaultsConfig::from_env_source(&env).get_health_port();
+        assert_eq!(port, 8081);
     }
 
     #[test]
     fn test_network_port_defaults_get_orchestrator_port_default() {
-        with_var_unset("NESTGATE_ORCHESTRATOR_PORT", || {
-            let port = NetworkPortDefaults::get_orchestrator_port();
-            assert_eq!(port, 8090);
-        });
+        let env = MapEnv::new();
+        let port = NetworkDefaultsConfig::from_env_source(&env).get_orchestrator_port();
+        assert_eq!(port, 8090);
     }
 
     #[test]
@@ -402,33 +398,38 @@ mod tests {
 
     #[test]
     fn test_network_address_defaults_get_bind_address_default() {
-        with_var_unset("NESTGATE_BIND_ADDRESS", || {
-            assert_eq!(NetworkAddressDefaults::get_bind_address(), "127.0.0.1");
-        });
+        let env = MapEnv::new();
+        assert_eq!(
+            NetworkDefaultsConfig::from_env_source(&env).get_bind_address(),
+            "127.0.0.1"
+        );
     }
 
     #[test]
     fn test_network_address_defaults_get_development_bind_address_default() {
-        with_var_unset("NESTGATE_DEV_BIND_ADDRESS", || {
-            assert_eq!(
-                NetworkAddressDefaults::get_development_bind_address(),
-                "0.0.0.0"
-            );
-        });
+        let env = MapEnv::new();
+        assert_eq!(
+            NetworkDefaultsConfig::from_env_source(&env).get_development_bind_address(),
+            "0.0.0.0"
+        );
     }
 
     #[test]
     fn test_network_address_defaults_get_hostname_default() {
-        with_var_unset("NESTGATE_HOSTNAME", || {
-            assert_eq!(NetworkAddressDefaults::get_hostname(), "localhost");
-        });
+        let env = MapEnv::new();
+        assert_eq!(
+            NetworkDefaultsConfig::from_env_source(&env).get_hostname(),
+            "localhost"
+        );
     }
 
     #[test]
     fn test_network_address_defaults_get_external_hostname_default() {
-        with_var_unset("NESTGATE_EXTERNAL_HOSTNAME", || {
-            assert_eq!(NetworkAddressDefaults::get_external_hostname(), "localhost");
-        });
+        let env = MapEnv::new();
+        assert_eq!(
+            NetworkDefaultsConfig::from_env_source(&env).get_external_hostname(),
+            "localhost"
+        );
     }
 
     #[test]
@@ -462,9 +463,11 @@ mod tests {
 
     #[test]
     fn test_timeout_defaults_get_connection_timeout_ms_default() {
-        with_var_unset("NESTGATE_CONNECTION_TIMEOUT_MS", || {
-            assert_eq!(TimeoutDefaults::get_connection_timeout_ms(), 3000);
-        });
+        let env = MapEnv::new();
+        assert_eq!(
+            NetworkDefaultsConfig::from_env_source(&env).get_connection_timeout_ms(),
+            3000
+        );
     }
 
     #[test]

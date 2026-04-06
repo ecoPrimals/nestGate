@@ -117,7 +117,7 @@ mod tests {
     use super::*;
     use crate::config::environment::EnvironmentConfig;
     use crate::constants::hardcoding::runtime_fallback_ports;
-    use temp_env::{with_var, with_var_unset};
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_default_constants() {
@@ -128,18 +128,13 @@ mod tests {
 
     #[test]
     fn test_environment_override() {
-        with_var_unset("NESTGATE_API_PORT", || {
-            with_var_unset("NESTGATE_HTTP_PORT", || {
-                with_var_unset("NESTGATE_PORT", || {
-                    with_var("NESTGATE_API_PORT", Some("9999"), || {
-                        let cfg = EnvironmentConfig::from_env().expect("config");
-                        assert_eq!(cfg.network.port.get(), 9999);
-                    });
-                    let cfg = EnvironmentConfig::from_env().expect("config");
-                    assert_eq!(cfg.network.port.get(), runtime_fallback_ports::HTTP);
-                });
-            });
-        });
+        let env = MapEnv::from([("NESTGATE_API_PORT", "9999")]);
+        let cfg = EnvironmentConfig::from_env_source(&env).expect("config");
+        assert_eq!(cfg.network.port.get(), 9999);
+
+        let env_default = MapEnv::new();
+        let cfg = EnvironmentConfig::from_env_source(&env_default).expect("config");
+        assert_eq!(cfg.network.port.get(), runtime_fallback_ports::HTTP);
     }
 
     #[test]
@@ -191,36 +186,29 @@ mod tests {
 
     #[test]
     fn test_env_config_api_port() {
-        with_var_unset("NESTGATE_API_PORT", || {
-            with_var_unset("NESTGATE_HTTP_PORT", || {
-                with_var_unset("NESTGATE_PORT", || {
-                    assert_eq!(
-                        EnvironmentConfig::from_env()
-                            .expect("config")
-                            .network
-                            .port
-                            .get(),
-                        8080
-                    );
-                    with_var("NESTGATE_API_PORT", Some("3000"), || {
-                        assert_eq!(
-                            EnvironmentConfig::from_env()
-                                .expect("config")
-                                .network
-                                .port
-                                .get(),
-                            3000
-                        );
-                    });
-                    with_var("NESTGATE_API_PORT", Some("invalid"), || {
-                        assert!(
-                            EnvironmentConfig::from_env().is_err(),
-                            "invalid NESTGATE_API_PORT should fail to parse"
-                        );
-                    });
-                });
-            });
-        });
+        let env = MapEnv::new();
+        assert_eq!(
+            EnvironmentConfig::from_env_source(&env)
+                .expect("config")
+                .network
+                .port
+                .get(),
+            8080
+        );
+        let env = MapEnv::from([("NESTGATE_API_PORT", "3000")]);
+        assert_eq!(
+            EnvironmentConfig::from_env_source(&env)
+                .expect("config")
+                .network
+                .port
+                .get(),
+            3000
+        );
+        let env = MapEnv::from([("NESTGATE_API_PORT", "invalid")]);
+        assert!(
+            EnvironmentConfig::from_env_source(&env).is_err(),
+            "invalid NESTGATE_API_PORT should fail to parse"
+        );
     }
 
     #[test]

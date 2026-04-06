@@ -36,7 +36,7 @@
 use crate::crypto::{EncryptedData, EncryptionAlgorithm, EncryptionParams};
 use nestgate_discovery::capability_discovery::{CapabilityDiscovery, ServiceEndpoint};
 use nestgate_rpc::rpc::JsonRpcClient;
-use nestgate_types::{NestGateError, Result};
+use nestgate_types::{EnvSource, NestGateError, ProcessEnv, Result};
 use serde_json::{Value, json};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
@@ -92,9 +92,14 @@ impl CryptoDelegate {
     /// 2. Query for services providing "crypto" capability
     /// 3. Connect to the first available crypto provider
     pub async fn new() -> Result<Self> {
+        Self::new_from_env_source(&ProcessEnv).await
+    }
+
+    /// Like [`Self::new`], but reads orchestration/bootstrap paths from an injectable [`EnvSource`].
+    pub async fn new_from_env_source(env: &dyn EnvSource) -> Result<Self> {
         info!("Discovering crypto provider via capability-based discovery");
 
-        let ipc_gateway = CapabilityDiscovery::discover_orchestration_ipc()
+        let ipc_gateway = CapabilityDiscovery::discover_orchestration_ipc_from_env(env)
             .await
             .map_err(|e| {
                 NestGateError::internal_error(

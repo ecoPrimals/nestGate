@@ -6,22 +6,15 @@
 //! When no [`CapabilityPortResolver`] is registered, discovery falls through to env/defaults.
 
 use nestgate_config::constants::capability_port_discovery::{
-    discover_api_port, discover_metrics_port, discover_storage_port,
+    discover_api_port_from_env_source, discover_metrics_port_from_env_source,
+    discover_storage_port_from_env_source,
 };
-use temp_env::with_vars;
+use nestgate_types::MapEnv;
 
 #[test]
 fn capability_port_discovery_no_resolver_uses_env_or_defaults() {
-    with_vars(
-        vec![
-            ("NESTGATE_API_PORT", None::<&str>),
-            ("NESTGATE_METRICS_PORT", None::<&str>),
-            ("NESTGATE_STORAGE_PORT", None::<&str>),
-        ],
-        || {
-            assert_eq!(discover_api_port().unwrap(), 8080);
-            assert_eq!(discover_metrics_port().unwrap(), 9090);
-            assert_eq!(discover_storage_port().unwrap(), 8083);
-        },
-    );
+    let env = MapEnv::new();
+    assert_eq!(discover_api_port_from_env_source(&env).unwrap(), 8080);
+    assert_eq!(discover_metrics_port_from_env_source(&env).unwrap(), 9090);
+    assert_eq!(discover_storage_port_from_env_source(&env).unwrap(), 8083);
 }

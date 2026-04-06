@@ -48,6 +48,7 @@
 
 use anyhow::{Context, Result};
 use nestgate_config::constants::hardcoding::addresses::LOCALHOST_IPV4;
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde_json::Value;
 use std::fs::File;
 use std::future::Future;
@@ -259,12 +260,19 @@ impl TcpFallbackServer {
     ///
     /// **Clients** read this file to discover TCP endpoint automatically.
     fn write_tcp_discovery_file(&self, addr: &SocketAddr) -> Result<()> {
+        self.write_tcp_discovery_file_from_env_source(&ProcessEnv, addr)
+    }
+
+    /// Like [`Self::write_tcp_discovery_file`], but reads `XDG_RUNTIME_DIR` / `HOME` from `env`.
+    pub(crate) fn write_tcp_discovery_file_from_env_source(
+        &self,
+        env: &dyn EnvSource,
+        addr: &SocketAddr,
+    ) -> Result<()> {
         // XDG-compliant discovery file paths (try in order)
         let discovery_dirs: [Option<String>; 3] = [
-            std::env::var("XDG_RUNTIME_DIR").ok(),
-            std::env::var("HOME")
-                .ok()
-                .map(|h| format!("{h}/.local/share")),
+            env.get("XDG_RUNTIME_DIR"),
+            env.get("HOME").map(|h| format!("{h}/.local/share")),
             Some("/tmp".to_string()),
         ];
 
@@ -302,6 +310,7 @@ impl TcpFallbackServer {
 mod tests {
 
     use super::*;
+    use nestgate_types::MapEnv;
 
     /// Mock RPC handler for testing
     struct MockHandler;
@@ -353,11 +362,10 @@ mod tests {
         assert!(bind_addr.contains('.') || bind_addr == "localhost" || bind_addr == "::1");
     }
 
-    #[test]
-    fn test_mock_handler_response_structure() {
+    #[tokio::test]
+    async fn test_mock_handler_response_structure() {
         let handler = MockHandler;
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let response = rt.block_on(handler.handle_request(serde_json::json!({"id": 1})));
+        let response = handler.handle_request(serde_json::json!({"id": 1})).await;
         assert_eq!(response["jsonrpc"], "2.0");
         assert!(response.get("result").is_some());
     }
@@ -365,19 +373,16 @@ mod tests {
     #[test]
     fn write_tcp_discovery_file_writes_tcp_prefix_line() {
         let dir = tempfile::tempdir().expect("tempdir");
-        temp_env::with_var(
-            "XDG_RUNTIME_DIR",
-            Some(dir.path().to_string_lossy().as_ref()),
-            || {
-                let handler = Arc::new(MockHandler);
-                let server = TcpFallbackServer::new("ng_tcp_cov".to_string(), handler);
-                let addr: SocketAddr = "127.0.0.1:55055".parse().unwrap();
-                server.write_tcp_discovery_file(&addr).expect("write");
-                let path = dir.path().join("ng_tcp_cov-ipc-port");
-                let contents = std::fs::read_to_string(&path).expect("read discovery");
-                assert!(contents.trim().starts_with("tcp:"));
-            },
-        );
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", dir.path().to_string_lossy().as_ref())]);
+        let handler = Arc::new(MockHandler);
+        let server = TcpFallbackServer::new("ng_tcp_cov".to_string(), handler);
+        let addr: SocketAddr = "127.0.0.1:55055".parse().unwrap();
+        server
+            .write_tcp_discovery_file_from_env_source(&env, &addr)
+            .expect("write");
+        let path = dir.path().join("ng_tcp_cov-ipc-port");
+        let contents = std::fs::read_to_string(&path).expect("read discovery");
+        assert!(contents.trim().starts_with("tcp:"));
     }
 
     #[test]
@@ -388,21 +393,16 @@ mod tests {
         let share = dir.path().join(".local/share");
         std::fs::create_dir_all(&share).expect("mkdir");
         let svc = "ng_tcp_home_fb_scoped";
-        temp_env::with_vars(
-            vec![
-                (
-                    "XDG_RUNTIME_DIR",
-                    Some(bad_xdg.to_string_lossy().into_owned()),
-                ),
-                ("HOME", Some(dir.path().to_string_lossy().into_owned())),
-            ],
-            || {
-                let handler = Arc::new(MockHandler);
-                let server = TcpFallbackServer::new(svc.to_string(), handler);
-                let addr: SocketAddr = "127.0.0.1:44044".parse().unwrap();
-                server.write_tcp_discovery_file(&addr).expect("write");
-            },
-        );
+        let env = MapEnv::from([
+            ("XDG_RUNTIME_DIR", bad_xdg.to_string_lossy().as_ref()),
+            ("HOME", dir.path().to_string_lossy().as_ref()),
+        ]);
+        let handler = Arc::new(MockHandler);
+        let server = TcpFallbackServer::new(svc.to_string(), handler);
+        let addr: SocketAddr = "127.0.0.1:44044".parse().unwrap();
+        server
+            .write_tcp_discovery_file_from_env_source(&env, &addr)
+            .expect("write");
         let path = share.join(format!("{svc}-ipc-port"));
         let contents = std::fs::read_to_string(&path).expect("read discovery");
         assert!(contents.trim().starts_with("tcp:"));

@@ -5,7 +5,7 @@
 //!
 //! Tests for configuration loading and environment handling
 
-#![expect(clippy::const_is_empty)]
+#![allow(clippy::const_is_empty)]
 
 use nestgate_core::config::canonical_primary::Environment;
 use nestgate_core::Result;

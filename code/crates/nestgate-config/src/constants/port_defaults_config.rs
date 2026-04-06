@@ -29,6 +29,8 @@ use super::port_defaults::{
 };
 use std::sync::Arc;
 
+use nestgate_types::{EnvSource, ProcessEnv};
+
 /// Thread-safe configuration for port defaults
 ///
 /// Captures environment variables at initialization to prevent race conditions.
@@ -73,39 +75,35 @@ impl PortConfig {
         }
     }
 
+    /// Create configuration from an injectable environment source
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+        Self {
+            api_port: env.get("NESTGATE_API_PORT").and_then(|s| s.parse().ok()),
+            admin_port: env.get("NESTGATE_ADMIN_PORT").and_then(|s| s.parse().ok()),
+            metrics_port: env
+                .get("NESTGATE_METRICS_PORT")
+                .and_then(|s| s.parse().ok()),
+            health_port: env.get("NESTGATE_HEALTH_PORT").and_then(|s| s.parse().ok()),
+            dev_port: env.get("NESTGATE_DEV_PORT").and_then(|s| s.parse().ok()),
+            postgres_port: env
+                .get("NESTGATE_POSTGRES_PORT")
+                .and_then(|s| s.parse().ok()),
+            redis_port: env.get("NESTGATE_REDIS_PORT").and_then(|s| s.parse().ok()),
+            prometheus_port: env
+                .get("NESTGATE_PROMETHEUS_PORT")
+                .and_then(|s| s.parse().ok()),
+            grafana_port: env
+                .get("NESTGATE_GRAFANA_PORT")
+                .and_then(|s| s.parse().ok()),
+        }
+    }
+
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
     #[must_use]
     pub fn from_env() -> Self {
-        Self {
-            api_port: std::env::var("NESTGATE_API_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            admin_port: std::env::var("NESTGATE_ADMIN_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            metrics_port: std::env::var("NESTGATE_METRICS_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            health_port: std::env::var("NESTGATE_HEALTH_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            dev_port: std::env::var("NESTGATE_DEV_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            postgres_port: std::env::var("NESTGATE_POSTGRES_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            redis_port: std::env::var("NESTGATE_REDIS_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            prometheus_port: std::env::var("NESTGATE_PROMETHEUS_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            grafana_port: std::env::var("NESTGATE_GRAFANA_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-        }
+        Self::from_env_source(&ProcessEnv)
     }
 
     // Port getters with fallback to hardcoded defaults
@@ -240,6 +238,18 @@ impl Default for PortConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
+
+    #[test]
+    fn test_from_env_source_map_env() {
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "7777"),
+            ("NESTGATE_REDIS_PORT", "6380"),
+        ]);
+        let config = PortConfig::from_env_source(&env);
+        assert_eq!(config.get_api_port(), 7777);
+        assert_eq!(config.get_redis_port(), 6380);
+    }
 
     #[test]
     fn test_port_config_new() {

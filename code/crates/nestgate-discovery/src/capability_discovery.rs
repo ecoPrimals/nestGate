@@ -63,9 +63,9 @@
 
 use dashmap::DashMap;
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::env;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -271,12 +271,17 @@ impl CapabilityDiscovery {
     /// let discovery = CapabilityDiscovery::new(ipc);
     /// ```
     pub async fn discover_orchestration_ipc() -> Result<JsonRpcClient> {
+        Self::discover_orchestration_ipc_from_env(&ProcessEnv).await
+    }
+
+    /// Like [`Self::discover_orchestration_ipc`], but reads from an injectable [`EnvSource`].
+    pub async fn discover_orchestration_ipc_from_env(env: &dyn EnvSource) -> Result<JsonRpcClient> {
         tracing::info!("Discovering orchestration IPC gateway (bootstrap)");
 
         // Unix socket path candidates (env-driven)
         let path_candidates = [
-            env::var("NESTGATE_ORCHESTRATION_IPC_PATH").ok(),
-            env::var("ORCHESTRATION_IPC_PATH").ok(),
+            env.get("NESTGATE_ORCHESTRATION_IPC_PATH"),
+            env.get("ORCHESTRATION_IPC_PATH"),
         ];
         for path in path_candidates.into_iter().flatten() {
             tracing::debug!(
@@ -303,8 +308,9 @@ impl CapabilityDiscovery {
             }
         }
 
-        let standard_path = env::var("ORCHESTRATION_IPC_STANDARD_PATH")
-            .unwrap_or_else(|_| "/primal/orchestration".to_string());
+        let standard_path = env
+            .get("ORCHESTRATION_IPC_STANDARD_PATH")
+            .unwrap_or_else(|| "/primal/orchestration".to_string());
         tracing::debug!(path = %standard_path, "Trying standard IPC path");
         if Path::new(&standard_path).exists() {
             match JsonRpcClient::connect_unix(&standard_path).await {
@@ -325,24 +331,26 @@ impl CapabilityDiscovery {
             }
         }
 
-        let host = env::var("ORCHESTRATION_HOST")
-            .or_else(|_| env::var("NESTGATE_DEV_HOST"))
-            .or_else(|_| env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
-            .unwrap_or_else(|_| {
+        let host = env
+            .get("ORCHESTRATION_HOST")
+            .or_else(|| env.get("NESTGATE_DEV_HOST"))
+            .or_else(|| env.get("NESTGATE_DISCOVERY_FALLBACK_HOST"))
+            .unwrap_or_else(|| {
                 tracing::warn!(
                     "Orchestration TCP bootstrap: ORCHESTRATION_HOST, NESTGATE_DEV_HOST, \
                      and NESTGATE_DISCOVERY_FALLBACK_HOST unset; using `localhost`."
                 );
                 "localhost".to_string()
             });
-        let port = env::var("ORCHESTRATION_PORT")
-            .ok()
+        let port = env
+            .get("ORCHESTRATION_PORT")
             .and_then(|s| s.parse().ok())
             .unwrap_or_else(|| {
-                env::var("NESTGATE_API_PORT")
-                    .ok()
+                env.get("NESTGATE_API_PORT")
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or_else(nestgate_config::constants::get_api_port)
+                    .unwrap_or_else(|| {
+                        nestgate_config::constants::PortConfig::from_env_source(env).get_api_port()
+                    })
             });
 
         tracing::debug!(host = host, port = port, "Trying orchestration IPC via TCP");

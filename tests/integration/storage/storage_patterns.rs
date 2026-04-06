@@ -5,7 +5,7 @@
 //!
 //! Tests common storage operations, data persistence patterns, and CRUD operations
 
-#![expect(dead_code)]
+#![allow(dead_code)]
 
 use nestgate_core::Result;
 use std::collections::HashMap;

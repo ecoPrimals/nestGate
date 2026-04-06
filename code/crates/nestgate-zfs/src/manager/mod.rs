@@ -53,9 +53,9 @@ pub struct ZfsManager {
     pub dataset_manager: Arc<ZfsDatasetManager>,
     /// Snapshot management operations
     pub snapshot_manager: Arc<ZfsSnapshotManager>,
-    /// Migration engine for tier optimization (placeholder - not yet implemented)
+    /// Reserved for future tier-migration engine (`MigrationEngine` — module not wired in yet).
     // pub migration_engine: Arc<RwLock<MigrationEngine>>,
-    /// Dataset analysis and automation (placeholder - migration module not yet implemented)
+    /// Reserved for dataset migration analysis (`DatasetAnalyzer` — same as migration engine).
     // pub dataset_analyzer: Arc<crate::migration::discovery::DatasetAnalyzer>,
     /// Performance monitoring
     pub performance_monitor: Arc<RwLock<ZfsPerformanceMonitor>>,
@@ -69,7 +69,7 @@ pub struct ZfsManager {
     pub automation: Option<Arc<DatasetAutomation>>,
     /// Configuration management
     pub config: ZfsConfig,
-    /// Optional orchestrator client (placeholder for future implementation)
+    /// Whether orchestrator integration features are enabled at build/runtime (`orchestrator` feature).
     #[cfg(feature = "orchestrator")]
     orchestrator_enabled: bool,
 }

@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! **ENVIRONMENT VARIABLE ISOLATION FOR TESTS**
+//! **Legacy: process-environment isolation for tests**
 //!
-//! Provides thread-safe environment variable access for concurrent testing.
-//! Prevents race conditions when tests read or modify environment variables.
+//! This module serializes access with a global mutex and snapshots/restores a fixed list of
+//! variables via [`nestgate_core::env_process`]. Prefer injecting [`nestgate_types::MapEnv`] and
+//! calling APIs that take [`nestgate_types::EnvSource`] (`*_from_env_source`, `initialize_with_env`,
+//! etc.) so tests do not mutate the real process environment.
 //!
-//! **Pattern**: Use `IsolatedEnvironment` for any test that accesses env vars.
-//! **Benefit**: Tests can run in parallel without interfering with each other.
+//! `IsolatedEnvironment` / `EnvGuard` remain for older integration helpers (for example
+//! `tests/common/test_environment.rs`, `tests/common/isolated_test_runner.rs`) until those are
+//! migrated off global env mutation.
 
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard};

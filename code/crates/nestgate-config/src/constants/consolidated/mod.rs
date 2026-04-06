@@ -62,9 +62,9 @@ pub fn all_constants() -> (
 
 #[cfg(test)]
 mod tests {
-    use super::defaults::{env_or, env_or_parse};
+    use super::defaults::{env_or_from_source, env_or_parse_from_source};
     use super::*;
-    use temp_env::with_vars;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_network_constants_default() {
@@ -89,21 +89,17 @@ mod tests {
 
     #[test]
     fn test_network_constants_urls() {
-        with_vars(
-            vec![
-                ("NESTGATE_API_HOST", Some("127.0.0.1")),
-                ("NESTGATE_HEALTH_HOST", Some("127.0.0.1")),
-                ("NESTGATE_API_PORT", Some("8080")),
-                ("NESTGATE_HEALTH_PORT", Some("8081")),
-                ("NESTGATE_WS_PORT", Some("8082")),
-            ],
-            || {
-                let nc = NetworkConstants::default();
-                assert_eq!(nc.api_url(), "http://127.0.0.1:8080");
-                assert_eq!(nc.health_url(), "http://127.0.0.1:8081");
-                assert_eq!(nc.websocket_url(), "ws://127.0.0.1:8082/ws");
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_API_HOST", "127.0.0.1"),
+            ("NESTGATE_HEALTH_HOST", "127.0.0.1"),
+            ("NESTGATE_API_PORT", "8080"),
+            ("NESTGATE_HEALTH_PORT", "8081"),
+            ("NESTGATE_WS_PORT", "8082"),
+        ]);
+        let nc = NetworkConstants::from_env_source(&env);
+        assert_eq!(nc.api_url(), "http://127.0.0.1:8080");
+        assert_eq!(nc.health_url(), "http://127.0.0.1:8081");
+        assert_eq!(nc.websocket_url(), "ws://127.0.0.1:8082/ws");
     }
 
     #[test]
@@ -149,13 +145,18 @@ mod tests {
 
     #[test]
     fn test_env_or_helper() {
-        assert_eq!(env_or("NONEXISTENT_VAR", "default"), "default");
+        let empty = MapEnv::new();
+        assert_eq!(
+            env_or_from_source(&empty, "NONEXISTENT_VAR", "default"),
+            "default"
+        );
     }
 
     #[test]
     fn test_env_or_parse_helper() {
-        assert_eq!(env_or_parse("NONEXISTENT_VAR", 42), 42);
-        assert!(env_or_parse("NONEXISTENT_VAR", true));
+        let empty = MapEnv::new();
+        assert_eq!(env_or_parse_from_source(&empty, "NONEXISTENT_VAR", 42), 42);
+        assert!(env_or_parse_from_source(&empty, "NONEXISTENT_VAR", true));
     }
 
     #[test]
@@ -236,29 +237,19 @@ mod tests {
 
     #[test]
     fn test_env_or_parse_invalid_uses_default() {
-        temp_env::with_var(
-            "NESTGATE_CONSOLIDATED_TEST_PARSE_U16",
-            Some("not-a-number"),
-            || {
-                assert_eq!(
-                    env_or_parse("NESTGATE_CONSOLIDATED_TEST_PARSE_U16", 4242u16),
-                    4242
-                );
-            },
+        let env = MapEnv::from([("NESTGATE_CONSOLIDATED_TEST_PARSE_U16", "not-a-number")]);
+        assert_eq!(
+            env_or_parse_from_source(&env, "NESTGATE_CONSOLIDATED_TEST_PARSE_U16", 4242u16),
+            4242
         );
     }
 
     #[test]
     fn test_env_or_set_overrides_default() {
-        temp_env::with_var(
-            "NESTGATE_CONSOLIDATED_TEST_STR",
-            Some("override-value"),
-            || {
-                assert_eq!(
-                    env_or("NESTGATE_CONSOLIDATED_TEST_STR", "default"),
-                    "override-value"
-                );
-            },
+        let env = MapEnv::from([("NESTGATE_CONSOLIDATED_TEST_STR", "override-value")]);
+        assert_eq!(
+            env_or_from_source(&env, "NESTGATE_CONSOLIDATED_TEST_STR", "default"),
+            "override-value"
         );
     }
 

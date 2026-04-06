@@ -43,6 +43,7 @@
 //! ```
 
 use super::NestGateRuntimeConfig;
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::cell::RefCell;
 use std::sync::Arc;
 
@@ -117,14 +118,18 @@ impl TestConfigGuard {
 
     /// Create a test config from environment variables (for this test only).
     pub fn from_test_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_test_env`], but reads host/port from an injectable [`EnvSource`].
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self::new(|config| {
-            // Load from current environment (test-isolated)
-            if let Ok(port) = std::env::var("NESTGATE_API_PORT") {
+            if let Some(port) = env.get("NESTGATE_API_PORT") {
                 if let Ok(p) = port.parse() {
                     config.network.api_port = p;
                 }
             }
-            if let Ok(host) = std::env::var("NESTGATE_API_HOST") {
+            if let Some(host) = env.get("NESTGATE_API_HOST") {
                 if let Ok(h) = host.parse() {
                     config.network.api_host = h;
                 }
@@ -160,13 +165,9 @@ mod tests {
 
     #[test]
     fn test_config_guard_isolation() {
-        temp_env::with_var_unset("NESTGATE_API_PORT", || {
-            temp_env::with_var("NESTGATE_API_PORT", Some("7777"), || {
-                let _guard = TestConfigGuard::with_port(7777);
-                let config = get_test_config();
-                assert_eq!(config.network.api_port, 7777);
-            });
-        });
+        let _guard = TestConfigGuard::with_port(7777);
+        let config = get_test_config();
+        assert_eq!(config.network.api_port, 7777);
     }
 
     #[test]
@@ -184,14 +185,15 @@ mod tests {
 
     #[test]
     fn test_config_from_env() {
-        temp_env::with_var("NESTGATE_API_PORT", Some("6666"), || {
-            let _guard = TestConfigGuard::from_test_env();
-            let config = get_test_config();
-            assert_eq!(
-                config.network.api_port, 6666,
-                "Expected port 6666 from NESTGATE_API_PORT env var, got {}",
-                config.network.api_port
-            );
-        });
+        use nestgate_types::MapEnv;
+
+        let env = MapEnv::from([("NESTGATE_API_PORT", "6666")]);
+        let _guard = TestConfigGuard::from_env_source(&env);
+        let config = get_test_config();
+        assert_eq!(
+            config.network.api_port, 6666,
+            "Expected port 6666 from NESTGATE_API_PORT env var, got {}",
+            config.network.api_port
+        );
     }
 }

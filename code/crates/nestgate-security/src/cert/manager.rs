@@ -9,7 +9,7 @@ use std::collections::HashMap;
 // Removed unused import for pedantic perfection
 use crate::universal_adapter::PrimalAgnosticAdapter;
 use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
-use nestgate_types::{NestGateError, Result};
+use nestgate_types::{EnvSource, NestGateError, ProcessEnv, Result};
 
 /// Certificate manager that uses the universal adapter for ecosystem integration
 pub struct CertificateManager {
@@ -45,18 +45,25 @@ impl CertificateManager {
     /// export NESTGATE_API_URL="http://your-server:8080"
     /// ```
     pub fn new(config: NestGateCanonicalConfig) -> Result<Self> {
-        // Try explicit adapter endpoint first
-        let adapter_url = std::env::var("NESTGATE_ADAPTER_ENDPOINT")
-            .or_else(|_| {
-                // Fall back to API URL + /adapter suffix
-                std::env::var("NESTGATE_API_URL")
+        Self::new_from_env_source(&ProcessEnv, config)
+    }
+
+    /// Like [`Self::new`], but reads adapter URL from an injectable [`EnvSource`].
+    pub fn new_from_env_source(
+        env: &dyn EnvSource,
+        config: NestGateCanonicalConfig,
+    ) -> Result<Self> {
+        let adapter_url = env
+            .get("NESTGATE_ADAPTER_ENDPOINT")
+            .or_else(|| {
+                env.get("NESTGATE_API_URL")
                     .map(|base| format!("{}/adapter", base.trim_end_matches('/')))
             })
-            .map_err(|_| {
+            .ok_or_else(|| {
                 NestGateError::configuration_error(
                     "adapter_endpoint",
                     "Certificate manager requires NESTGATE_ADAPTER_ENDPOINT or NESTGATE_API_URL to be set. \
-                     No hardcoded defaults for sovereignty compliance."
+                     No hardcoded defaults for sovereignty compliance.",
                 )
             })?;
 
@@ -90,76 +97,62 @@ impl CertificateManager {
 ///
 /// Returns an error if the manager cannot be created (e.g. no adapter endpoint configured)
 pub fn create_default_certificate_manager() -> Result<CertificateManager> {
-    CertificateManager::new(NestGateCanonicalConfig::default())
+    create_default_certificate_manager_from_env_source(&ProcessEnv)
+}
+
+/// Like [`create_default_certificate_manager`], but uses an injectable [`EnvSource`].
+pub fn create_default_certificate_manager_from_env_source(
+    env: &dyn EnvSource,
+) -> Result<CertificateManager> {
+    CertificateManager::new_from_env_source(env, NestGateCanonicalConfig::default())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_types::NestGateError;
+    use nestgate_types::{MapEnv, NestGateError};
 
     #[test]
     fn new_errors_when_no_adapter_env() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
-                ("NESTGATE_API_URL", None::<&str>),
-            ],
-            || {
-                let err = CertificateManager::new(NestGateCanonicalConfig::default())
-                    .err()
-                    .expect("expected configuration error");
-                match err {
-                    NestGateError::Configuration(d) => {
-                        assert_eq!(d.field, "adapter_endpoint");
-                    }
-                    ref other => panic!("unexpected {other:?}"),
-                }
-            },
-        );
+        let env = MapEnv::new();
+        let err = CertificateManager::new_from_env_source(&env, NestGateCanonicalConfig::default())
+            .err()
+            .expect("expected configuration error");
+        match err {
+            NestGateError::Configuration(d) => {
+                assert_eq!(d.field, "adapter_endpoint");
+            }
+            ref other => panic!("unexpected {other:?}"),
+        }
     }
 
     #[test]
     fn get_certificate_info_with_explicit_adapter_endpoint() {
-        temp_env::with_var(
+        let env = MapEnv::from([(
             "NESTGATE_ADAPTER_ENDPOINT",
-            Some("unix:///tmp/nestgate-adapter.sock"),
-            || {
-                let m = CertificateManager::new(NestGateCanonicalConfig::default()).unwrap();
-                let info = m.get_certificate_info("cert-1").unwrap();
-                assert_eq!(info.get("id"), Some(&"cert-1".to_string()));
-                assert_eq!(info.get("status"), Some(&"valid".to_string()));
-            },
-        );
+            "unix:///tmp/nestgate-adapter.sock",
+        )]);
+        let m = CertificateManager::new_from_env_source(&env, NestGateCanonicalConfig::default())
+            .unwrap();
+        let info = m.get_certificate_info("cert-1").unwrap();
+        assert_eq!(info.get("id"), Some(&"cert-1".to_string()));
+        assert_eq!(info.get("status"), Some(&"valid".to_string()));
     }
 
     #[test]
     fn create_default_certificate_manager_uses_api_url_fallback() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
-                ("NESTGATE_API_URL", Some("http://127.0.0.1:8080")),
-            ],
-            || {
-                let m = create_default_certificate_manager().unwrap();
-                let info = m.get_certificate_info("x").unwrap();
-                assert_eq!(info.get("status"), Some(&"valid".to_string()));
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_API_URL", "http://127.0.0.1:8080")]);
+        let m = create_default_certificate_manager_from_env_source(&env).unwrap();
+        let info = m.get_certificate_info("x").unwrap();
+        assert_eq!(info.get("status"), Some(&"valid".to_string()));
     }
 
     #[test]
     fn new_trims_trailing_slash_on_api_url_for_adapter_path() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
-                ("NESTGATE_API_URL", Some("https://api.example.com/v1///")),
-            ],
-            || {
-                let m = CertificateManager::new(NestGateCanonicalConfig::default()).unwrap();
-                let info = m.get_certificate_info("id").unwrap();
-                assert_eq!(info.get("id"), Some(&"id".to_string()));
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_API_URL", "https://api.example.com/v1///")]);
+        let m = CertificateManager::new_from_env_source(&env, NestGateCanonicalConfig::default())
+            .unwrap();
+        let info = m.get_certificate_info("id").unwrap();
+        assert_eq!(info.get("id"), Some(&"id".to_string()));
     }
 }

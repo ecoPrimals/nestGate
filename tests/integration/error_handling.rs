@@ -5,7 +5,7 @@
 //!
 //! Tests for error creation, propagation, and handling
 
-#![expect(clippy::unnecessary_literal_unwrap)]
+#![allow(clippy::unnecessary_literal_unwrap)]
 
 use nestgate_core::{NestGateError, Result};
 

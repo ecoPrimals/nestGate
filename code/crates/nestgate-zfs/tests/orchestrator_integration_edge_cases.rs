@@ -2,7 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![cfg(feature = "orchestrator")]
-#![expect(
+#![allow(
     dead_code,
     unused_doc_comments,
     unused_imports,

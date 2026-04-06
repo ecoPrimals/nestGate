@@ -6,8 +6,8 @@
 //! Provides configuration for Redis and in-memory caching.
 
 use nestgate_types::error::Result;
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
-use std::env;
 
 /// Cache configuration for Redis and in-memory caching.
 ///
@@ -59,24 +59,30 @@ impl CacheConfig {
     /// export NESTGATE_REDIS_PORT="6379"
     /// ```
     pub fn from_environment() -> Result<Self> {
-        let redis_host = env::var("NESTGATE_REDIS_HOST")
-            .map_err(|_| nestgate_types::error::NestGateError::configuration_error(
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_environment`], but reads Redis/cache variables from `env`.
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let redis_host = env.get("NESTGATE_REDIS_HOST").ok_or_else(|| {
+            nestgate_types::error::NestGateError::configuration_error(
                 "redis_host",
-                "NESTGATE_REDIS_HOST must be set explicitly. No hardcoded localhost for external services."
-            ))?;
+                "NESTGATE_REDIS_HOST must be set explicitly. No hardcoded localhost for external services.",
+            )
+        })?;
 
         Ok(Self {
             redis_host,
-            redis_port: env::var("NESTGATE_REDIS_PORT")
-                .ok()
+            redis_port: env
+                .get("NESTGATE_REDIS_PORT")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(6379), // Port 6379 is Redis default (industry standard)
-            ttl_seconds: env::var("NESTGATE_CACHE_TTL_SECONDS")
-                .ok()
+            ttl_seconds: env
+                .get("NESTGATE_CACHE_TTL_SECONDS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3600),
-            max_size_mb: env::var("NESTGATE_CACHE_MAX_SIZE_MB")
-                .ok()
+            max_size_mb: env
+                .get("NESTGATE_CACHE_MAX_SIZE_MB")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
         })
@@ -103,6 +109,7 @@ impl Default for CacheConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_cache_config_default() {
@@ -126,36 +133,30 @@ mod tests {
 
     #[test]
     fn test_cache_config_from_environment_requires_redis_host() {
-        // Without NESTGATE_REDIS_HOST, from_environment returns error
-        temp_env::with_vars([("NESTGATE_REDIS_HOST", None::<&str>)], || {
-            let result = CacheConfig::from_environment();
-            assert!(result.is_err());
-            assert!(
-                result
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NESTGATE_REDIS_HOST")
-            );
-        });
+        let env = MapEnv::new();
+        let result = CacheConfig::from_env_source(&env);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("NESTGATE_REDIS_HOST")
+        );
     }
 
     #[test]
     fn test_cache_config_from_environment_success() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_REDIS_HOST", Some("redis.internal")),
-                ("NESTGATE_REDIS_PORT", Some("6380")),
-                ("NESTGATE_CACHE_TTL_SECONDS", Some("7200")),
-                ("NESTGATE_CACHE_MAX_SIZE_MB", Some("256")),
-            ],
-            || {
-                let config = CacheConfig::from_environment().unwrap();
-                assert_eq!(config.redis_host, "redis.internal");
-                assert_eq!(config.redis_port, 6380);
-                assert_eq!(config.ttl_seconds, 7200);
-                assert_eq!(config.max_size_mb, 256);
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_REDIS_HOST", "redis.internal"),
+            ("NESTGATE_REDIS_PORT", "6380"),
+            ("NESTGATE_CACHE_TTL_SECONDS", "7200"),
+            ("NESTGATE_CACHE_MAX_SIZE_MB", "256"),
+        ]);
+        let config = CacheConfig::from_env_source(&env).unwrap();
+        assert_eq!(config.redis_host, "redis.internal");
+        assert_eq!(config.redis_port, 6380);
+        assert_eq!(config.ttl_seconds, 7200);
+        assert_eq!(config.max_size_mb, 256);
     }
 
     #[test]

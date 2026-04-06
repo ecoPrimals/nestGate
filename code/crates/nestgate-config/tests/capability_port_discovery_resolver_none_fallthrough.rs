@@ -6,10 +6,11 @@
 //! When the resolver returns [`None`] for a capability, discovery falls through to env/defaults.
 
 use nestgate_config::constants::capability_port_discovery::{
-    CapabilityPortResolver, capability_ids, discover_api_port, discover_metrics_port,
-    discover_storage_port, register_capability_resolver,
+    CapabilityPortResolver, capability_ids, discover_api_port_from_env_source,
+    discover_metrics_port_from_env_source, discover_storage_port_from_env_source,
+    register_capability_resolver,
 };
-use temp_env::with_vars;
+use nestgate_types::MapEnv;
 
 struct PartialResolver;
 
@@ -28,16 +29,8 @@ impl CapabilityPortResolver for PartialResolver {
 fn capability_port_discovery_resolver_none_falls_through_to_env() {
     register_capability_resolver(Box::new(PartialResolver));
 
-    with_vars(
-        vec![
-            ("NESTGATE_API_PORT", None::<&str>),
-            ("NESTGATE_METRICS_PORT", Some("7777")),
-            ("NESTGATE_STORAGE_PORT", None::<&str>),
-        ],
-        || {
-            assert_eq!(discover_api_port().unwrap(), 7100);
-            assert_eq!(discover_metrics_port().unwrap(), 7777);
-            assert_eq!(discover_storage_port().unwrap(), 7300);
-        },
-    );
+    let env = MapEnv::from([("NESTGATE_METRICS_PORT", "7777")]);
+    assert_eq!(discover_api_port_from_env_source(&env).unwrap(), 7100);
+    assert_eq!(discover_metrics_port_from_env_source(&env).unwrap(), 7777);
+    assert_eq!(discover_storage_port_from_env_source(&env).unwrap(), 7300);
 }

@@ -72,4 +72,3 @@ assert_matches = "1.5"
 approx = "0.5"
 fake = { version = "2.9", features = ["derive", "chrono"] }
 test-log = { version = "0.2", features = ["trace"] }
-temp-env = { workspace = true }

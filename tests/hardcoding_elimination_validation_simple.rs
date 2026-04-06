@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -17,6 +17,7 @@
 //! Tests that dynamic endpoint resolution works without hardcoded values
 
 use nestgate_core::service_discovery::DynamicEndpointResolver;
+use nestgate_types::{EnvSource, MapEnv};
 
 #[tokio::test]
 async fn test_dynamic_endpoint_resolution_basic() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,14 +39,11 @@ async fn test_dynamic_endpoint_resolution_basic() -> Result<(), Box<dyn std::err
 async fn test_environment_overrides() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Testing environment variable overrides...");
 
-    let orig = std::env::var("TEST_API_ENDPOINT").ok();
-    nestgate_core::env_process::set_var("TEST_API_ENDPOINT", "http://custom-test-api:9090");
-    let test_endpoint = std::env::var("TEST_API_ENDPOINT")?;
-    match orig {
-        Some(v) => nestgate_core::env_process::set_var("TEST_API_ENDPOINT", v),
-        None => nestgate_core::env_process::remove_var("TEST_API_ENDPOINT"),
-    }
-    assert_eq!(test_endpoint, "http://custom-test-api:9090");
+    let env = MapEnv::from([("TEST_API_ENDPOINT", "http://custom-test-api:9090")]);
+    assert_eq!(
+        env.get("TEST_API_ENDPOINT").as_deref(),
+        Some("http://custom-test-api:9090")
+    );
 
     println!("✅ Environment variable overrides working");
     Ok(())

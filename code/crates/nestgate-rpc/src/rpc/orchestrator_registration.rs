@@ -6,6 +6,7 @@
 //! Orchestrator auto-registration — stub until nestgate-discovery + nestgate-core wiring.
 
 use nestgate_types::error::Result;
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -152,9 +153,14 @@ impl OrchestratorRegistration {
     /// Returns `NestGateError` if the registration context cannot be constructed (currently always
     /// returns `Ok`).
     pub fn new(self_knowledge: SelfKnowledge) -> Result<Self> {
-        let enabled = std::env::var("NESTGATE_DISABLE_ORCHESTRATOR")
-            .map(|v| v != "1" && v.to_lowercase() != "true")
-            .unwrap_or(true);
+        Self::new_from_env_source(self_knowledge, &ProcessEnv)
+    }
+
+    /// Like [`Self::new`], but reads `NESTGATE_DISABLE_ORCHESTRATOR` from an injectable [`EnvSource`].
+    pub fn new_from_env_source(self_knowledge: SelfKnowledge, env: &dyn EnvSource) -> Result<Self> {
+        let enabled = env
+            .get("NESTGATE_DISABLE_ORCHESTRATOR")
+            .is_none_or(|v| v != "1" && v.to_lowercase() != "true");
 
         if !enabled {
             info!("🎵 Orchestrator auto-registration disabled by environment");
@@ -207,21 +213,21 @@ impl OrchestratorRegistration {
 mod tests {
 
     use super::*;
+    use nestgate_types::MapEnv;
 
     #[tokio::test]
     async fn test_registration_disabled() {
-        temp_env::async_with_vars([("NESTGATE_DISABLE_ORCHESTRATOR", Some("true"))], async {
-            let self_knowledge = SelfKnowledge::builder()
-                .with_id("test")
-                .with_name("nestgate")
-                .with_capability("storage")
-                .build()
-                .unwrap();
+        let self_knowledge = SelfKnowledge::builder()
+            .with_id("test")
+            .with_name("nestgate")
+            .with_capability("storage")
+            .build()
+            .unwrap();
 
-            let registration = OrchestratorRegistration::new(self_knowledge).unwrap();
-            assert!(!registration.enabled);
-        })
-        .await;
+        let env = MapEnv::from([("NESTGATE_DISABLE_ORCHESTRATOR", "true")]);
+        let registration =
+            OrchestratorRegistration::new_from_env_source(self_knowledge, &env).unwrap();
+        assert!(!registration.enabled);
     }
 
     #[tokio::test]
@@ -242,18 +248,17 @@ mod tests {
 
     #[test]
     fn orchestrator_enabled_register_and_discovery_stub() {
-        temp_env::with_var("NESTGATE_DISABLE_ORCHESTRATOR", None::<&str>, || {
-            let sk = SelfKnowledge::builder()
-                .with_name("nestgate")
-                .build()
-                .expect("knowledge");
-            let reg = OrchestratorRegistration::new(sk).expect("reg");
-            assert!(reg.enabled);
-            reg.register();
-            reg.start_health_reporting();
-            assert_eq!(reg.discovery().mechanism_name(), "stub");
-            assert!(reg.orchestrator().is_none());
-        });
+        let sk = SelfKnowledge::builder()
+            .with_name("nestgate")
+            .build()
+            .expect("knowledge");
+        let env = MapEnv::new();
+        let reg = OrchestratorRegistration::new_from_env_source(sk, &env).expect("reg");
+        assert!(reg.enabled);
+        reg.register();
+        reg.start_health_reporting();
+        assert_eq!(reg.discovery().mechanism_name(), "stub");
+        assert!(reg.orchestrator().is_none());
     }
 
     #[test]
@@ -280,11 +285,10 @@ mod tests {
     #[test]
     fn orchestrator_disabled_accepts_true_and_1() {
         for val in ["1", "true", "TRUE"] {
-            temp_env::with_var("NESTGATE_DISABLE_ORCHESTRATOR", Some(val), || {
-                let sk = SelfKnowledge::builder().build().expect("knowledge");
-                let reg = OrchestratorRegistration::new(sk).expect("reg");
-                assert!(!reg.enabled, "{val}");
-            });
+            let sk = SelfKnowledge::builder().build().expect("knowledge");
+            let env = MapEnv::from([("NESTGATE_DISABLE_ORCHESTRATOR", val)]);
+            let reg = OrchestratorRegistration::new_from_env_source(sk, &env).expect("reg");
+            assert!(!reg.enabled, "{val}");
         }
     }
 

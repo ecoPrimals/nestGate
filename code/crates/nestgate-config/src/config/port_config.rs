@@ -6,6 +6,7 @@
 //! Dynamic port configuration system supporting environment variables and config files.
 //! Eliminates hardcoded ports throughout the codebase.
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
@@ -42,6 +43,12 @@ impl PortConfiguration {
     /// All ports configurable via environment variables. No hardcoded assumptions.
     #[must_use]
     pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads `NESTGATE_*` port variables from `env`.
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         use crate::constants::hardcoding::{
             get_grpc_port, get_message_queue_port, get_orchestration_service_port,
             get_websocket_port,
@@ -52,16 +59,45 @@ impl PortConfiguration {
         };
 
         Self {
-            api_port: env_var_or_default("NESTGATE_API_PORT", get_api_port()),
-            health_port: env_var_or_default("NESTGATE_HEALTH_PORT", get_health_port()),
-            metrics_port: env_var_or_default("NESTGATE_METRICS_PORT", get_metrics_port()),
-            admin_port: env_var_or_default("NESTGATE_ADMIN_PORT", get_admin_port()),
-            websocket_port: env_var_or_default("NESTGATE_WEBSOCKET_PORT", get_websocket_port()),
-            rpc_port: env_var_or_default("NESTGATE_RPC_PORT", get_grpc_port()),
-            database_port: env_var_or_default("NESTGATE_DATABASE_PORT", get_postgres_port()),
-            redis_port: env_var_or_default("NESTGATE_REDIS_PORT", get_redis_port()),
-            message_queue_port: env_var_or_default("NESTGATE_MQ_PORT", get_message_queue_port()),
-            orchestration_port: env_var_or_default(
+            api_port: env_var_or_default_from_env_source(env, "NESTGATE_API_PORT", get_api_port()),
+            health_port: env_var_or_default_from_env_source(
+                env,
+                "NESTGATE_HEALTH_PORT",
+                get_health_port(),
+            ),
+            metrics_port: env_var_or_default_from_env_source(
+                env,
+                "NESTGATE_METRICS_PORT",
+                get_metrics_port(),
+            ),
+            admin_port: env_var_or_default_from_env_source(
+                env,
+                "NESTGATE_ADMIN_PORT",
+                get_admin_port(),
+            ),
+            websocket_port: env_var_or_default_from_env_source(
+                env,
+                "NESTGATE_WEBSOCKET_PORT",
+                get_websocket_port(),
+            ),
+            rpc_port: env_var_or_default_from_env_source(env, "NESTGATE_RPC_PORT", get_grpc_port()),
+            database_port: env_var_or_default_from_env_source(
+                env,
+                "NESTGATE_DATABASE_PORT",
+                get_postgres_port(),
+            ),
+            redis_port: env_var_or_default_from_env_source(
+                env,
+                "NESTGATE_REDIS_PORT",
+                get_redis_port(),
+            ),
+            message_queue_port: env_var_or_default_from_env_source(
+                env,
+                "NESTGATE_MQ_PORT",
+                get_message_queue_port(),
+            ),
+            orchestration_port: env_var_or_default_from_env_source(
+                env,
                 "NESTGATE_ORCHESTRATION_PORT",
                 get_orchestration_service_port(),
             ),
@@ -157,10 +193,8 @@ pub fn grafana_port() -> u16 {
     crate::constants::get_grafana_port()
 }
 
-/// Helper function to parse environment variable or use default
-fn env_var_or_default(var_name: &str, default: u16) -> u16 {
-    std::env::var(var_name)
-        .ok()
+fn env_var_or_default_from_env_source(env: &dyn EnvSource, var_name: &str, default: u16) -> u16 {
+    env.get(var_name)
         .and_then(|v| v.parse().ok())
         .unwrap_or(default)
 }
@@ -168,6 +202,7 @@ fn env_var_or_default(var_name: &str, default: u16) -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_default_ports() {
@@ -196,17 +231,14 @@ mod tests {
 
     #[test]
     fn test_env_var_parsing() {
-        // ✅ EVOLUTION: Isolated environment
-        temp_env::with_var("TEST_PORT", Some("1234"), || {
-            let port = env_var_or_default("TEST_PORT", 9999);
-            assert_eq!(port, 1234);
-        });
-        // Environment automatically restored!
+        let env = MapEnv::from([("TEST_PORT", "1234")]);
+        let port = env_var_or_default_from_env_source(&env, "TEST_PORT", 9999);
+        assert_eq!(port, 1234);
     }
 
     #[test]
     fn test_env_var_default_fallback() {
-        let port = env_var_or_default("NONEXISTENT_VAR", 7777);
+        let port = env_var_or_default_from_env_source(&ProcessEnv, "NONEXISTENT_VAR", 7777);
         assert_eq!(port, 7777);
     }
 
@@ -261,15 +293,25 @@ mod tests {
     #[test]
     fn test_env_fallback_nonexistent() {
         // Non-existent env var should use default
-        let port = env_var_or_default("NONEXISTENT_VAR_RANDOM_123", 7777);
+        let port =
+            env_var_or_default_from_env_source(&ProcessEnv, "NONEXISTENT_VAR_RANDOM_123", 7777);
         assert_eq!(port, 7777);
     }
 
     #[test]
     fn test_env_fallback_various_defaults() {
-        assert_eq!(env_var_or_default("NONEX_1", 1000), 1000);
-        assert_eq!(env_var_or_default("NONEX_2", 2000), 2000);
-        assert_eq!(env_var_or_default("NONEX_3", 65535), 65535);
+        assert_eq!(
+            env_var_or_default_from_env_source(&ProcessEnv, "NONEX_1", 1000),
+            1000
+        );
+        assert_eq!(
+            env_var_or_default_from_env_source(&ProcessEnv, "NONEX_2", 2000),
+            2000
+        );
+        assert_eq!(
+            env_var_or_default_from_env_source(&ProcessEnv, "NONEX_3", 65535),
+            65535
+        );
     }
 
     #[test]

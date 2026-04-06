@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -489,17 +489,14 @@ async fn test_timeout_race_condition() {
 }
 
 /// **Concurrent Test 18: Blocking Task in Async**
-/// NO CHANGE: Testing blocking operation handling, sleep is intentional
+/// Uses CPU work inside `spawn_blocking` (no `std::thread::sleep`).
 #[tokio::test]
 async fn test_spawn_blocking() {
-    let result = tokio::task::spawn_blocking(|| {
-        // Simulate blocking operation
-        42
-    })
-    .await
-    .unwrap();
+    let result = tokio::task::spawn_blocking(|| (0..10000).sum::<i64>())
+        .await
+        .unwrap();
 
-    assert_eq!(result, 42);
+    assert_eq!(result, 49_995_000);
 }
 
 /// **Concurrent Test 19: HashMap Concurrent Updates**

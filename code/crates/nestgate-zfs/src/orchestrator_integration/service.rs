@@ -143,8 +143,8 @@ impl ZfsService {
     pub fn register_with_orchestrator(&mut self, _orchestrator_url: &str) -> Result<()> {
         info!("Registering service {} with orchestrator", self.node_id);
 
-        // NOTE: Full implementation requires reqwest or similar HTTP client
-        // For now, this is a stub that demonstrates the interface
+        // Outbound registration RPC/HTTP to the orchestrator is not implemented yet; this path
+        // still validates configuration and records local registration state for the process.
 
         if self.config.orchestrator_endpoints.is_empty() {
             bail!("No orchestrator endpoints configured");
@@ -175,7 +175,8 @@ impl ZfsService {
 
         self.last_health_check = Some(SystemTime::now());
 
-        // Stub implementation - would check actual pool/dataset health
+        // Returns a service-level heartbeat with real timestamps and node id; capacity fields are
+        // not populated here until wired to live ZFS pool/dataset metrics.
         Ok(ZfsHealthStatus {
             node_id: self.node_id.clone(),
             status: "healthy".to_string(),
@@ -377,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
+    #[allow(deprecated)]
     fn default_service_builds() {
         let s = ZfsService::default();
         assert!(!s.node_id().is_empty());

@@ -6,6 +6,7 @@
 //! Environment-driven configuration for TRUE PRIMAL transport.
 
 use nestgate_core::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -56,24 +57,31 @@ impl TransportConfig {
     ///
     /// Returns error if environment is misconfigured
     pub fn from_env() -> Result<Self> {
-        let family_id =
-            std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+        Self::from_env_source(&ProcessEnv)
+    }
 
-        let socket_path = std::env::var("NESTGATE_SOCKET_PATH")
-            .unwrap_or_else(|_| format!("/tmp/nestgate-{family_id}.sock"));
+    /// Like [`Self::from_env`], but reads transport variables from `env`.
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+        let family_id = env
+            .get("NESTGATE_FAMILY_ID")
+            .unwrap_or_else(|| "default".to_string());
 
-        let security_slug =
-            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "security".to_string());
-        let security_provider = std::env::var("NESTGATE_SECURITY_PROVIDER")
-            .unwrap_or_else(|_| format!("/tmp/{security_slug}-{family_id}-default.sock"));
+        let socket_path = env
+            .get("NESTGATE_SOCKET_PATH")
+            .unwrap_or_else(|| format!("/tmp/nestgate-{family_id}.sock"));
 
-        let http_port = std::env::var("NESTGATE_HTTP_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok());
+        let security_slug = env
+            .get("NESTGATE_SECURITY_SLUG")
+            .unwrap_or_else(|| "security".to_string());
+        let security_provider = env
+            .get("NESTGATE_SECURITY_PROVIDER")
+            .unwrap_or_else(|| format!("/tmp/{security_slug}-{family_id}-default.sock"));
 
-        let verbose = std::env::var("NESTGATE_VERBOSE")
-            .map(|v| v == "1" || v.to_lowercase() == "true")
-            .unwrap_or(false);
+        let http_port = env.get("NESTGATE_HTTP_PORT").and_then(|s| s.parse().ok());
+
+        let verbose = env
+            .get("NESTGATE_VERBOSE")
+            .is_some_and(|v| v == "1" || v.to_lowercase() == "true");
 
         Ok(Self {
             family_id,

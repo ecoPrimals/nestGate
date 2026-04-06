@@ -5,6 +5,7 @@
 //!
 //! Provider enum and endpoint-based detection.
 
+use nestgate_core::constants::hardcoding::addresses::LOCALHOST_NAME;
 use serde::{Deserialize, Serialize};
 
 /// Detected storage provider
@@ -29,15 +30,15 @@ pub enum StorageProvider {
 impl StorageProvider {
     /// Detect provider from endpoint.
     ///
-    /// Treats `localhost:9000` as a MinIO-oriented hint: that host/port matches the well-known
-    /// default MinIO API port in local development (not a universal S3 rule).
+    /// Treats the local MinIO dev endpoint pattern (canonical localhost hostname + port 9000) as
+    /// a MinIO-oriented hint (not a universal S3 rule).
     #[must_use]
     pub fn detect_from_endpoint(endpoint: &str) -> Self {
         if endpoint.contains("amazonaws.com") || endpoint.contains("s3.") {
             Self::AwsS3
         } else if endpoint.contains("minio")
             || endpoint.contains("min.io")
-            || endpoint.contains("localhost:9000")
+            || endpoint.contains(&format!("{LOCALHOST_NAME}:9000"))
         {
             Self::MinIO
         } else if endpoint.contains("wasabi") {

@@ -55,9 +55,9 @@
 //! ```
 
 use nestgate_types::error::Result;
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::env;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -201,10 +201,15 @@ impl CapabilityConfig {
     /// Returns `NestGateError` when environment-derived configuration cannot be parsed or
     /// normalized (currently always returns [`Ok`]).
     pub fn from_env() -> Result<Self> {
+        Self::from_env_source(&ProcessEnv)
+    }
+
+    /// Like [`Self::from_env`], but reads capability configuration from `env`.
+    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
         let mut capabilities = HashMap::new();
 
         // Read capabilities from environment
-        if let Ok(caps) = env::var("NESTGATE_CAPABILITIES") {
+        if let Some(caps) = env.get("NESTGATE_CAPABILITIES") {
             for cap in caps.split(',') {
                 let cap = cap.trim();
                 if cap.is_empty() {
@@ -214,8 +219,8 @@ impl CapabilityConfig {
                 // Try to read endpoint for this capability
                 let endpoint_var =
                     format!("NESTGATE_{}_ENDPOINT", cap.to_uppercase().replace('-', "_"));
-                let endpoint = env::var(&endpoint_var)
-                    .ok()
+                let endpoint = env
+                    .get(&endpoint_var)
                     .and_then(|s| s.parse::<SocketAddr>().ok());
 
                 capabilities.insert(
@@ -232,26 +237,29 @@ impl CapabilityConfig {
         }
 
         // Read discovery backends
-        let discovery_backends = env::var("NESTGATE_DISCOVERY_BACKENDS")
-            .unwrap_or_else(|_| "environment".to_string())
+        let discovery_backends = env
+            .get("NESTGATE_DISCOVERY_BACKENDS")
+            .unwrap_or_else(|| "environment".to_string())
             .split(',')
             .filter_map(|backend| match backend.trim() {
                 "dns-srv" => {
-                    let domain = env::var("NESTGATE_DNS_DOMAIN").ok()?;
+                    let domain = env.get("NESTGATE_DNS_DOMAIN")?;
                     Some(DiscoveryBackend::DnsSrv { domain })
                 }
                 "mdns" => {
-                    let service_type = env::var("NESTGATE_MDNS_SERVICE")
-                        .unwrap_or_else(|_| "_nestgate._tcp".to_string());
+                    let service_type = env
+                        .get("NESTGATE_MDNS_SERVICE")
+                        .unwrap_or_else(|| "_nestgate._tcp".to_string());
                     Some(DiscoveryBackend::MDns { service_type })
                 }
                 "consul" => {
-                    let address = env::var("NESTGATE_CONSUL_ADDRESS").ok()?;
+                    let address = env.get("NESTGATE_CONSUL_ADDRESS")?;
                     Some(DiscoveryBackend::Consul { address })
                 }
                 "kubernetes" | "k8s" => {
-                    let namespace = env::var("NESTGATE_K8S_NAMESPACE")
-                        .unwrap_or_else(|_| "default".to_string());
+                    let namespace = env
+                        .get("NESTGATE_K8S_NAMESPACE")
+                        .unwrap_or_else(|| "default".to_string());
                     Some(DiscoveryBackend::Kubernetes { namespace })
                 }
                 "environment" | "env" => Some(DiscoveryBackend::Environment),
@@ -535,17 +543,14 @@ mod tests {
 
     #[test]
     fn from_env_reads_capabilities() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_CAPABILITIES", Some("api")),
-                ("NESTGATE_API_ENDPOINT", Some("127.0.0.1:18080")),
-                ("NESTGATE_DISCOVERY_BACKENDS", Some("environment")),
-            ],
-            || {
-                let c = CapabilityConfig::from_env().expect("from_env");
-                assert!(c.has_capability("api"));
-            },
-        );
+        use nestgate_types::MapEnv;
+        let env = MapEnv::from([
+            ("NESTGATE_CAPABILITIES", "api"),
+            ("NESTGATE_API_ENDPOINT", "127.0.0.1:18080"),
+            ("NESTGATE_DISCOVERY_BACKENDS", "environment"),
+        ]);
+        let c = CapabilityConfig::from_env_source(&env).expect("from_env_source");
+        assert!(c.has_capability("api"));
     }
 
     #[test]

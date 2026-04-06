@@ -8,8 +8,8 @@
 //! NOTE: These tests are disabled pending implementation of TestError type
 
 #![cfg(test)]
-#![expect(dead_code)]
-#![expect(
+#![allow(dead_code)]
+#![allow(
     dead_code,
     missing_docs,
     unused_imports,

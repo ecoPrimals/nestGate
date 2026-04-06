@@ -7,7 +7,7 @@
 //!
 //! **MODERN CONCURRENCY**: Uses yield_now() for async coordination instead of sleep().
 
-#![expect(unused_assignments, dead_code)]
+#![allow(unused_assignments, dead_code)]
 
 use nestgate_core::Result;
 

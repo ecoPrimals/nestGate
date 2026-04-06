@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(
+    clippy::unused_async,
+    reason = "Async discovery API preserved for forward-compatible awaits; implementations are sync today"
+)]
+
 //! Capability-Based Discovery Helpers
 //!
 //! High-level helpers for discovering and connecting to primals by capability.
@@ -45,39 +50,31 @@
 //! # }
 //! ```
 
+use nestgate_config::constants::PortConfig;
 use nestgate_config::constants::hardcoding::runtime_fallback_ports as fallback_ports;
-use nestgate_config::constants::{get_api_port, get_dev_port};
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 
 /// Last-resort host for capability bootstrap when discovery and env URLs are unset.
 /// Prefer `NESTGATE_<CAPABILITY>_HOST` (e.g. `NESTGATE_ORCHESTRATION_HOST`), then
 /// `NESTGATE_DISCOVERY_FALLBACK_HOST`, then loopback.
-fn fallback_host_for_capability(capability: &str) -> String {
+fn fallback_host_for_capability_from_env(env: &dyn EnvSource, capability: &str) -> String {
     let specific = format!("NESTGATE_{}_HOST", capability.to_uppercase());
-    std::env::var(&specific)
-        .or_else(|_| std::env::var("NESTGATE_DISCOVERY_FALLBACK_HOST"))
-        .unwrap_or_else(|_| "127.0.0.1".to_string())
+    env.get(&specific)
+        .or_else(|| env.get("NESTGATE_DISCOVERY_FALLBACK_HOST"))
+        .unwrap_or_else(|| "127.0.0.1".to_string())
 }
 
-fn default_port_compute() -> u16 {
-    std::env::var("NESTGATE_COMPUTE_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(fallback_ports::COMPUTE)
+fn default_port_compute_from_env(env: &dyn EnvSource) -> u16 {
+    env_parsed(env, "NESTGATE_COMPUTE_PORT", fallback_ports::COMPUTE)
 }
 
-fn default_port_ai() -> u16 {
-    std::env::var("NESTGATE_AI_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(fallback_ports::ADMIN)
+fn default_port_ai_from_env(env: &dyn EnvSource) -> u16 {
+    env_parsed(env, "NESTGATE_AI_PORT", fallback_ports::ADMIN)
 }
 
-fn default_port_ecosystem() -> u16 {
-    std::env::var("NESTGATE_ECOSYSTEM_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(fallback_ports::ECOSYSTEM)
+fn default_port_ecosystem_from_env(env: &dyn EnvSource) -> u16 {
+    env_parsed(env, "NESTGATE_ECOSYSTEM_PORT", fallback_ports::ECOSYSTEM)
 }
 
 /// Discovered service information
@@ -138,9 +135,15 @@ impl DiscoveredService {
 ///
 /// Infallible — always falls back to a development default.
 pub async fn discover_orchestration() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_default(
+    discover_orchestration_from_env(&ProcessEnv).await
+}
+
+/// Like [`discover_orchestration`], but reads capability and port env vars from an injectable source.
+pub async fn discover_orchestration_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+    Ok(discover_capability_with_default_from_env(
+        env,
         "orchestration",
-        get_api_port,
+        |e| PortConfig::from_env_source(e).get_api_port(),
     ))
 }
 
@@ -150,7 +153,16 @@ pub async fn discover_orchestration() -> Result<DiscoveredService> {
 /// 1. `NESTGATE_CAPABILITY_SECURITY`
 /// 2. Development default fallback
 pub async fn discover_security() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_default("security", get_dev_port))
+    discover_security_from_env(&ProcessEnv).await
+}
+
+/// Like [`discover_security`], but reads capability and port env vars from an injectable source.
+pub async fn discover_security_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+    Ok(discover_capability_with_default_from_env(
+        env,
+        "security",
+        |e| PortConfig::from_env_source(e).get_dev_port(),
+    ))
 }
 
 /// Discover compute capability provider.
@@ -159,9 +171,15 @@ pub async fn discover_security() -> Result<DiscoveredService> {
 /// 1. `NESTGATE_CAPABILITY_COMPUTE`
 /// 2. Development default fallback
 pub async fn discover_compute() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_default(
+    discover_compute_from_env(&ProcessEnv).await
+}
+
+/// Like [`discover_compute`], but reads capability and port env vars from an injectable source.
+pub async fn discover_compute_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+    Ok(discover_capability_with_default_from_env(
+        env,
         "compute",
-        default_port_compute,
+        default_port_compute_from_env,
     ))
 }
 
@@ -171,7 +189,16 @@ pub async fn discover_compute() -> Result<DiscoveredService> {
 /// 1. `NESTGATE_CAPABILITY_AI`
 /// 2. Development default fallback
 pub async fn discover_ai() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_default("ai", default_port_ai))
+    discover_ai_from_env(&ProcessEnv).await
+}
+
+/// Like [`discover_ai`], but reads capability and port env vars from an injectable source.
+pub async fn discover_ai_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+    Ok(discover_capability_with_default_from_env(
+        env,
+        "ai",
+        default_port_ai_from_env,
+    ))
 }
 
 /// Discover ecosystem capability provider.
@@ -180,9 +207,15 @@ pub async fn discover_ai() -> Result<DiscoveredService> {
 /// 1. `NESTGATE_CAPABILITY_ECOSYSTEM`
 /// 2. Development default fallback
 pub async fn discover_ecosystem() -> Result<DiscoveredService> {
-    Ok(discover_capability_with_default(
+    discover_ecosystem_from_env(&ProcessEnv).await
+}
+
+/// Like [`discover_ecosystem`], but reads capability and port env vars from an injectable source.
+pub async fn discover_ecosystem_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+    Ok(discover_capability_with_default_from_env(
+        env,
         "ecosystem",
-        default_port_ecosystem,
+        default_port_ecosystem_from_env,
     ))
 }
 
@@ -198,8 +231,16 @@ pub async fn discover_ecosystem() -> Result<DiscoveredService> {
 ///
 /// Returns error if capability not found via environment.
 pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> {
+    discover_capability_from_env(&ProcessEnv, capability).await
+}
+
+/// Like [`discover_capability`], but reads from an injectable [`EnvSource`].
+pub async fn discover_capability_from_env(
+    env: &dyn EnvSource,
+    capability: &str,
+) -> Result<DiscoveredService> {
     let env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
-    if let Ok(endpoint) = std::env::var(&env_var) {
+    if let Some(endpoint) = env.get(&env_var) {
         tracing::info!(
             "Discovered '{}' capability from environment: {}",
             capability,
@@ -214,12 +255,13 @@ pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> 
 }
 
 /// Resolve a known capability: `NESTGATE_CAPABILITY_{CAPABILITY}` or development default.
-fn discover_capability_with_default(
+fn discover_capability_with_default_from_env(
+    env: &dyn EnvSource,
     capability: &str,
-    default_port: impl FnOnce() -> u16,
+    default_port: impl FnOnce(&dyn EnvSource) -> u16,
 ) -> DiscoveredService {
     let capability_env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
-    if let Ok(endpoint) = std::env::var(&capability_env_var) {
+    if let Some(endpoint) = env.get(&capability_env_var) {
         tracing::info!(
             "Discovered '{}' capability from environment: {}",
             capability,
@@ -228,8 +270,8 @@ fn discover_capability_with_default(
         return DiscoveredService::from_env(capability, endpoint);
     }
 
-    let host = fallback_host_for_capability(capability);
-    let default_endpoint = format!("http://{}:{}", host, default_port());
+    let host = fallback_host_for_capability_from_env(env, capability);
+    let default_endpoint = format!("http://{}:{}", host, default_port(env));
     tracing::warn!(
         "No environment configuration for '{}'. Using development default: {}. \
          Set {} for production.",
@@ -265,34 +307,36 @@ fn discover_capability_with_default(
 /// ```
 #[must_use]
 pub fn is_capability_available(capability: &str) -> bool {
+    is_capability_available_from_env(&ProcessEnv, capability)
+}
+
+/// Like [`is_capability_available`], but reads from an injectable [`EnvSource`].
+pub fn is_capability_available_from_env(env: &dyn EnvSource, capability: &str) -> bool {
     let env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
-    std::env::var(&env_var).is_ok()
+    env.get(&env_var).is_some()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
 
     #[tokio::test]
     async fn test_discover_with_env_var() {
-        temp_env::async_with_vars(
-            [("NESTGATE_CAPABILITY_TEST", Some("http://test:1234"))],
-            async {
-                let result = discover_capability("test").await;
-                assert!(result.is_ok());
+        let env = MapEnv::from([("NESTGATE_CAPABILITY_TEST", "http://test:1234")]);
+        let result = discover_capability_from_env(&env, "test").await;
+        assert!(result.is_ok());
 
-                let service = result.unwrap();
-                assert_eq!(service.endpoint, "http://test:1234");
-                assert_eq!(service.source, DiscoverySource::Environment);
-            },
-        )
-        .await;
+        let service = result.unwrap();
+        assert_eq!(service.endpoint, "http://test:1234");
+        assert_eq!(service.source, DiscoverySource::Environment);
     }
 
     #[tokio::test]
     async fn test_discover_without_config_falls_back() {
         // Orchestration should fall back to default
-        let result = discover_orchestration().await;
+        let env = MapEnv::new();
+        let result = discover_orchestration_from_env(&env).await;
         assert!(result.is_ok());
 
         let service = result.unwrap();
@@ -302,43 +346,28 @@ mod tests {
 
     #[tokio::test]
     async fn test_primal_name_url_env_vars_are_not_used() {
-        temp_env::async_with_vars(
-            [("NESTGATE_LEGACY_PRIMAL_URL", Some("http://legacy:9999"))],
-            async {
-                let result = discover_security().await;
-                assert!(result.is_ok());
-                let service = result.unwrap();
-                assert_eq!(service.source, DiscoverySource::Default);
-                assert!(service.endpoint.contains("127.0.0.1"));
-            },
-        )
-        .await;
+        let env = MapEnv::from([("NESTGATE_LEGACY_PRIMAL_URL", "http://legacy:9999")]);
+        let result = discover_security_from_env(&env).await;
+        assert!(result.is_ok());
+        let service = result.unwrap();
+        assert_eq!(service.source, DiscoverySource::Default);
+        assert!(service.endpoint.contains("127.0.0.1"));
     }
 
     #[tokio::test]
     async fn test_discover_security_from_capability_env() {
-        temp_env::async_with_vars(
-            [("NESTGATE_CAPABILITY_SECURITY", Some("http://sec:7777"))],
-            async {
-                let result = discover_security().await;
-                assert!(result.is_ok());
-                let service = result.unwrap();
-                assert_eq!(service.endpoint, "http://sec:7777");
-                assert_eq!(service.source, DiscoverySource::Environment);
-            },
-        )
-        .await;
+        let env = MapEnv::from([("NESTGATE_CAPABILITY_SECURITY", "http://sec:7777")]);
+        let result = discover_security_from_env(&env).await;
+        assert!(result.is_ok());
+        let service = result.unwrap();
+        assert_eq!(service.endpoint, "http://sec:7777");
+        assert_eq!(service.source, DiscoverySource::Environment);
     }
 
     #[tokio::test]
     async fn test_is_capability_available() {
-        temp_env::async_with_vars(
-            [("NESTGATE_CAPABILITY_CUSTOM", Some("http://custom:5555"))],
-            async {
-                assert!(is_capability_available("custom"));
-                assert!(!is_capability_available("nonexistent"));
-            },
-        )
-        .await;
+        let env = MapEnv::from([("NESTGATE_CAPABILITY_CUSTOM", "http://custom:5555")]);
+        assert!(is_capability_available_from_env(&env, "custom"));
+        assert!(!is_capability_available_from_env(&env, "nonexistent"));
     }
 }

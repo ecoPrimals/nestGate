@@ -8,7 +8,7 @@
 
 use std::sync::Arc;
 
-use nestgate_types::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed, env_var_or_default};
 
 /// Configuration for network defaults
 ///
@@ -92,66 +92,77 @@ impl NetworkDefaultsV2Config {
         }
     }
 
-    /// Create configuration from environment variables
+    /// Create configuration from an injectable environment source
     #[must_use]
-    pub fn from_env() -> Self {
-        let api_host_env = safe_env_var_or_default("NESTGATE_API_HOST", "");
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+        let api_host_env = env_var_or_default(env, "NESTGATE_API_HOST", "");
         let api_host = if api_host_env.is_empty() {
             crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()
         } else {
             api_host_env
         };
 
-        let api_port = std::env::var("NESTGATE_API_PORT")
-            .ok()
+        let api_port = env
+            .get("NESTGATE_API_PORT")
             .and_then(|s| s.parse().ok())
             .unwrap_or_else(crate::constants::get_api_port);
 
         Self {
             api_host,
             api_port,
-            api_bind: std::env::var("NESTGATE_API_BIND").ok(),
-            api_url: std::env::var("NESTGATE_API_URL").ok(),
+            api_bind: env.get("NESTGATE_API_BIND"),
+            api_url: env.get("NESTGATE_API_URL"),
 
-            metrics_port: std::env::var("NESTGATE_METRICS_PORT")
-                .ok()
+            metrics_port: env
+                .get("NESTGATE_METRICS_PORT")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or_else(crate::constants::get_metrics_port),
-            metrics_bind: std::env::var("NESTGATE_METRICS_BIND").ok(),
+            metrics_bind: env.get("NESTGATE_METRICS_BIND"),
 
-            ws_port: std::env::var("NESTGATE_WS_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::WEBSOCKET),
-            ws_bind: std::env::var("NESTGATE_WS_BIND").ok(),
-            ws_url: std::env::var("NESTGATE_WS_URL").ok(),
+            ws_port: env_parsed(
+                env,
+                "NESTGATE_WS_PORT",
+                crate::constants::hardcoding::runtime_fallback_ports::WEBSOCKET,
+            ),
+            ws_bind: env.get("NESTGATE_WS_BIND"),
+            ws_url: env.get("NESTGATE_WS_URL"),
 
-            health_port: std::env::var("NESTGATE_HEALTH_PORT")
-                .ok()
+            health_port: env
+                .get("NESTGATE_HEALTH_PORT")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or_else(crate::constants::get_health_port),
-            health_bind: std::env::var("NESTGATE_HEALTH_BIND").ok(),
-            health_url: std::env::var("NESTGATE_HEALTH_URL").ok(),
+            health_bind: env.get("NESTGATE_HEALTH_BIND"),
+            health_url: env.get("NESTGATE_HEALTH_URL"),
 
-            storage_port: std::env::var("NESTGATE_STORAGE_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::runtime_fallback_ports::STORAGE),
-            storage_bind: std::env::var("NESTGATE_STORAGE_BIND").ok(),
+            storage_port: env_parsed(
+                env,
+                "NESTGATE_STORAGE_PORT",
+                crate::constants::hardcoding::runtime_fallback_ports::STORAGE,
+            ),
+            storage_bind: env.get("NESTGATE_STORAGE_BIND"),
 
-            connect_timeout_ms: std::env::var("NESTGATE_CONNECT_TIMEOUT_MS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::timeouts::CONNECT_MS),
-            request_timeout_ms: std::env::var("NESTGATE_REQUEST_TIMEOUT_MS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::timeouts::REQUEST_MS),
-            long_op_timeout_ms: std::env::var("NESTGATE_LONG_OP_TIMEOUT_MS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(crate::constants::hardcoding::timeouts::LONG_OPERATION_MS),
+            connect_timeout_ms: env_parsed(
+                env,
+                "NESTGATE_CONNECT_TIMEOUT_MS",
+                crate::constants::hardcoding::timeouts::CONNECT_MS,
+            ),
+            request_timeout_ms: env_parsed(
+                env,
+                "NESTGATE_REQUEST_TIMEOUT_MS",
+                crate::constants::hardcoding::timeouts::REQUEST_MS,
+            ),
+            long_op_timeout_ms: env_parsed(
+                env,
+                "NESTGATE_LONG_OP_TIMEOUT_MS",
+                crate::constants::hardcoding::timeouts::LONG_OPERATION_MS,
+            ),
         }
+    }
+
+    /// Create configuration from environment variables
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::from_env_source(&ProcessEnv)
     }
 
     // ==================== GETTERS ====================
@@ -350,6 +361,20 @@ impl Default for NetworkDefaultsV2Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
+
+    #[test]
+    fn test_from_env_source_map_env() {
+        let env = MapEnv::from([
+            ("NESTGATE_API_HOST", "10.0.0.1"),
+            ("NESTGATE_API_PORT", "9000"),
+            ("NESTGATE_METRICS_PORT", "9100"),
+        ]);
+        let config = NetworkDefaultsV2Config::from_env_source(&env);
+        assert_eq!(config.api_host(), "10.0.0.1");
+        assert_eq!(config.api_port(), 9000);
+        assert_eq!(config.metrics_port(), 9100);
+    }
 
     #[test]
     fn test_config_defaults() {

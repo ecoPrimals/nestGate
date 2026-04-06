@@ -40,6 +40,7 @@
 
 use anyhow::{Context, Result};
 use dashmap::DashMap;
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{debug, info, warn};
@@ -66,6 +67,9 @@ pub struct PrimalSelfKnowledge {
 
     /// Discovery mechanisms we support
     discovery_mechanisms: Vec<DiscoveryMechanism>,
+
+    /// Environment source (production: process env; tests: [`MapEnv`](nestgate_types::MapEnv))
+    env: Arc<dyn EnvSource>,
 }
 
 /// Our identity as a primal
@@ -205,6 +209,11 @@ impl PrimalSelfKnowledge {
     ///
     /// Returns an error if self-introspection fails.
     pub async fn initialize() -> Result<Self> {
+        Self::initialize_with_env(Arc::new(ProcessEnv)).await
+    }
+
+    /// Initialize with an injectable environment source (use [`MapEnv`](nestgate_types::MapEnv) in tests)
+    pub async fn initialize_with_env(env: Arc<dyn EnvSource>) -> Result<Self> {
         info!("Initializing primal self-knowledge");
 
         // Generate our identity
@@ -219,10 +228,10 @@ impl PrimalSelfKnowledge {
         let capabilities = Arc::new(Self::introspect_capabilities().await?);
 
         // Build our endpoints from environment (no hardcoding)
-        let endpoints = Arc::new(Self::build_endpoints_from_env()?);
+        let endpoints = Arc::new(Self::build_endpoints_from_env_source(env.as_ref())?);
 
         // Determine discovery mechanisms
-        let discovery_mechanisms = Self::determine_discovery_mechanisms();
+        let discovery_mechanisms = Self::determine_discovery_mechanisms_from_env(env.as_ref());
 
         Ok(Self {
             identity,
@@ -230,6 +239,7 @@ impl PrimalSelfKnowledge {
             endpoints,
             discovered_primals: Arc::new(DashMap::new()), // ✅ Lock-free
             discovery_mechanisms,
+            env,
         })
     }
 
@@ -290,13 +300,15 @@ impl PrimalSelfKnowledge {
     }
 
     /// Build endpoints from environment (no hardcoded values)
-    fn build_endpoints_from_env() -> Result<Vec<Endpoint>> {
+    fn build_endpoints_from_env_source(env: &dyn EnvSource) -> Result<Vec<Endpoint>> {
         let mut endpoints = Vec::new();
 
         // Get API endpoint from environment
-        let api_host = std::env::var("NESTGATE_API_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+        let api_host = env
+            .get("NESTGATE_API_HOST")
+            .unwrap_or_else(|| "0.0.0.0".to_string());
 
-        let api_port_str = std::env::var("NESTGATE_API_PORT").unwrap_or_else(|_| {
+        let api_port_str = env.get("NESTGATE_API_PORT").unwrap_or_else(|| {
             nestgate_config::constants::hardcoding::runtime_fallback_ports::API.to_string()
         });
 
@@ -316,20 +328,16 @@ impl PrimalSelfKnowledge {
     }
 
     /// Determine which discovery mechanisms to use
-    fn determine_discovery_mechanisms() -> Vec<DiscoveryMechanism> {
+    fn determine_discovery_mechanisms_from_env(env: &dyn EnvSource) -> Vec<DiscoveryMechanism> {
         let mut mechanisms = vec![DiscoveryMechanism::Environment];
 
         // Check if mDNS should be enabled
-        if std::env::var("NESTGATE_MDNS_ENABLED")
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(false)
-        {
+        if env_parsed::<bool>(env, "NESTGATE_MDNS_ENABLED", false) {
             mechanisms.push(DiscoveryMechanism::MDns);
         }
 
         // Check for Kubernetes
-        if std::env::var("KUBERNETES_SERVICE_HOST").is_ok() {
+        if env.get("KUBERNETES_SERVICE_HOST").is_some() {
             mechanisms.push(DiscoveryMechanism::Kubernetes);
         }
 
@@ -467,7 +475,7 @@ impl PrimalSelfKnowledge {
         let prefix = format!("{}_{}", primal_type.to_uppercase(), "HOST");
         let port_var = format!("{}_{}", primal_type.to_uppercase(), "PORT");
 
-        if let (Ok(host), Ok(port_str)) = (std::env::var(&prefix), std::env::var(&port_var)) {
+        if let (Some(host), Some(port_str)) = (self.env.get(&prefix), self.env.get(&port_var)) {
             let port = port_str
                 .parse()
                 .with_context(|| format!("Invalid port in {port_var}"))?;
@@ -505,14 +513,16 @@ impl PrimalSelfKnowledge {
         primal_type: &str,
     ) -> Result<Option<DiscoveredPrimal>> {
         // Check if we're in Kubernetes
-        if std::env::var("KUBERNETES_SERVICE_HOST").is_err() {
+        if self.env.get("KUBERNETES_SERVICE_HOST").is_none() {
             return Ok(None);
         }
 
         // Construct expected service name
         let service_name = format!("{primal_type}-service");
-        let namespace =
-            std::env::var("KUBERNETES_NAMESPACE").unwrap_or_else(|_| "default".to_string());
+        let namespace = self
+            .env
+            .get("KUBERNETES_NAMESPACE")
+            .unwrap_or_else(|| "default".to_string());
 
         // K8s service DNS: <service>.<namespace>.svc.cluster.local
         let dns_name = format!("{service_name}.{namespace}.svc.cluster.local");
@@ -584,6 +594,8 @@ impl PrimalSelfKnowledge {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
+    use std::sync::Arc;
 
     #[test]
     fn endpoint_url_without_path_suffix() {
@@ -600,25 +612,17 @@ mod tests {
 
     #[tokio::test]
     async fn discover_primal_errors_when_not_configured() {
-        temp_env::async_with_vars(
-            [
-                ("KUBERNETES_SERVICE_HOST", None::<&str>),
-                ("ORCHESTRATION_PROVIDER_HOST", None::<&str>),
-                ("ORCHESTRATION_PROVIDER_PORT", None::<&str>),
-            ],
-            async {
-                let mut primal = PrimalSelfKnowledge::initialize().await.expect("initialize");
-                let err = primal
-                    .discover_primal("orchestration_provider")
-                    .await
-                    .expect_err("no discovery source");
-                assert!(
-                    err.to_string().contains("not discovered"),
-                    "unexpected: {err}"
-                );
-            },
-        )
-        .await;
+        let mut primal = PrimalSelfKnowledge::initialize_with_env(Arc::new(MapEnv::new()))
+            .await
+            .expect("initialize");
+        let err = primal
+            .discover_primal("orchestration_provider")
+            .await
+            .expect_err("no discovery source");
+        assert!(
+            err.to_string().contains("not discovered"),
+            "unexpected: {err}"
+        );
     }
 
     #[tokio::test]

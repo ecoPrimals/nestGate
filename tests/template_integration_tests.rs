@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -21,6 +21,7 @@
 //! Uses [`nestgate_core::rpc::IsomorphicIpcServer`] with the ecosystem JSON-RPC handler.
 
 use nestgate_core::rpc::{IsomorphicIpcServer, SocketConfig, legacy_ecosystem_rpc_handler};
+use nestgate_types::MapEnv;
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -28,8 +29,8 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 fn prepare_ecosystem_ipc(family_id: &str) -> (Arc<IsomorphicIpcServer>, PathBuf) {
-    nestgate_core::env_process::set_var("NESTGATE_FAMILY_ID", family_id);
-    let socket_path = SocketConfig::from_environment()
+    let env = MapEnv::from([("NESTGATE_FAMILY_ID", family_id)]);
+    let socket_path = SocketConfig::from_env_source(&env)
         .expect("socket config")
         .socket_path
         .clone();

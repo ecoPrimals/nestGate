@@ -10,7 +10,6 @@ description = "Rust 2021 std::env set_var/remove_var for use from Rust 2024 with
 repository = "https://github.com/ecoprimals/nestgate"
 
 [dev-dependencies]
-serial_test = { workspace = true }
 temp-env = { workspace = true }
 
 [lints]

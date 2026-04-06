@@ -36,8 +36,12 @@
 
 // Consolidation: `ServiceRegistry` / `PrimalCapability` may be shared from `nestgate-types`.
 use nestgate_types::error::{NestGateError, Result};
-use std::env;
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::OnceLock;
+
+fn parse_positive_port(env: &dyn EnvSource, key: &str) -> Option<u16> {
+    env.get(key).and_then(|s| s.parse().ok()).filter(|&p| p > 0)
+}
 
 /// Capability identifiers passed to [`CapabilityPortResolver::resolve_service_port`].
 ///
@@ -92,6 +96,11 @@ pub fn register_capability_resolver(resolver: Box<dyn CapabilityPortResolver>) {
 /// # }
 /// ```
 pub fn discover_api_port() -> Result<u16> {
+    discover_api_port_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_api_port`], but reads `NESTGATE_API_PORT` from `env`.
+pub fn discover_api_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
     // 1. Try capability discovery
     if let Ok(service_url) = try_discover_api_service()
         && let Some(port) = extract_port_from_url(&service_url)
@@ -100,10 +109,7 @@ pub fn discover_api_port() -> Result<u16> {
     }
 
     // 2. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_API_PORT")
-        && let Ok(port) = port_str.parse::<u16>()
-        && port > 0
-    {
+    if let Some(port) = parse_positive_port(env, "NESTGATE_API_PORT") {
         return Ok(port);
     }
 
@@ -118,6 +124,11 @@ pub fn discover_api_port() -> Result<u16> {
 /// 2. Environment variable (`NESTGATE_METRICS_PORT`)
 /// 3. Safe default (9090)
 pub fn discover_metrics_port() -> Result<u16> {
+    discover_metrics_port_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_metrics_port`], but reads `NESTGATE_METRICS_PORT` from `env`.
+pub fn discover_metrics_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
     // 1. Try capability discovery
     if let Ok(service_url) = try_discover_metrics_service()
         && let Some(port) = extract_port_from_url(&service_url)
@@ -126,10 +137,7 @@ pub fn discover_metrics_port() -> Result<u16> {
     }
 
     // 2. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_METRICS_PORT")
-        && let Ok(port) = port_str.parse::<u16>()
-        && port > 0
-    {
+    if let Some(port) = parse_positive_port(env, "NESTGATE_METRICS_PORT") {
         return Ok(port);
     }
 
@@ -144,11 +152,13 @@ pub fn discover_metrics_port() -> Result<u16> {
 /// 2. Environment variable (`NESTGATE_HEALTH_PORT`)
 /// 3. Safe default (8082)
 pub fn discover_health_port() -> Result<u16> {
+    discover_health_port_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_health_port`], but reads `NESTGATE_HEALTH_PORT` from `env`.
+pub fn discover_health_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
     // 1. Environment variable (health checks are often load-balancer specific)
-    if let Ok(port_str) = env::var("NESTGATE_HEALTH_PORT")
-        && let Ok(port) = port_str.parse::<u16>()
-        && port > 0
-    {
+    if let Some(port) = parse_positive_port(env, "NESTGATE_HEALTH_PORT") {
         return Ok(port);
     }
 
@@ -162,11 +172,13 @@ pub fn discover_health_port() -> Result<u16> {
 /// 1. Environment variable (`NESTGATE_ADMIN_PORT`)
 /// 2. Safe default (8081)
 pub fn discover_admin_port() -> Result<u16> {
+    discover_admin_port_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_admin_port`], but reads `NESTGATE_ADMIN_PORT` from `env`.
+pub fn discover_admin_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
     // 1. Environment variable (admin interfaces are sensitive, explicit config preferred)
-    if let Ok(port_str) = env::var("NESTGATE_ADMIN_PORT")
-        && let Ok(port) = port_str.parse::<u16>()
-        && port > 0
-    {
+    if let Some(port) = parse_positive_port(env, "NESTGATE_ADMIN_PORT") {
         return Ok(port);
     }
 
@@ -181,6 +193,11 @@ pub fn discover_admin_port() -> Result<u16> {
 /// 2. Environment variable (`NESTGATE_STORAGE_PORT`)
 /// 3. Safe default (8083)
 pub fn discover_storage_port() -> Result<u16> {
+    discover_storage_port_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_storage_port`], but reads `NESTGATE_STORAGE_PORT` from `env`.
+pub fn discover_storage_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
     // 1. Try capability discovery
     if let Ok(service_url) = try_discover_storage_service()
         && let Some(port) = extract_port_from_url(&service_url)
@@ -189,10 +206,7 @@ pub fn discover_storage_port() -> Result<u16> {
     }
 
     // 2. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_STORAGE_PORT")
-        && let Ok(port) = port_str.parse::<u16>()
-        && port > 0
-    {
+    if let Some(port) = parse_positive_port(env, "NESTGATE_STORAGE_PORT") {
         return Ok(port);
     }
 
@@ -209,11 +223,13 @@ pub fn discover_storage_port() -> Result<u16> {
 /// # Primal Sovereignty
 /// tarpc is Rust-native high-performance RPC - discovered at runtime for flexibility
 pub fn discover_tarpc_port() -> Result<u16> {
+    discover_tarpc_port_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_tarpc_port`], but reads `NESTGATE_TARPC_PORT` from `env`.
+pub fn discover_tarpc_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
     // 1. Try environment variable
-    if let Ok(port_str) = env::var("NESTGATE_TARPC_PORT")
-        && let Ok(port) = port_str.parse::<u16>()
-        && port > 0
-    {
+    if let Some(port) = parse_positive_port(env, "NESTGATE_TARPC_PORT") {
         return Ok(port);
     }
 
@@ -290,51 +306,61 @@ fn extract_port_from_url(url: &str) -> Option<u16> {
 /// Prefer [`discover_api_port`] when the full discovery chain is needed.
 #[must_use]
 pub fn discover_api_port_sync() -> u16 {
-    env::var("NESTGATE_API_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .filter(|&p| p > 0)
-        .unwrap_or(8080)
+    discover_api_port_sync_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_api_port_sync`], but reads from `env`.
+#[must_use]
+pub fn discover_api_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+    parse_positive_port(env, "NESTGATE_API_PORT").unwrap_or(8080)
 }
 
 /// Synchronous metrics port discovery
 #[must_use]
 pub fn discover_metrics_port_sync() -> u16 {
-    env::var("NESTGATE_METRICS_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .filter(|&p| p > 0)
-        .unwrap_or(9090)
+    discover_metrics_port_sync_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_metrics_port_sync`], but reads from `env`.
+#[must_use]
+pub fn discover_metrics_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+    parse_positive_port(env, "NESTGATE_METRICS_PORT").unwrap_or(9090)
 }
 
 /// Synchronous health port discovery
 #[must_use]
 pub fn discover_health_port_sync() -> u16 {
-    env::var("NESTGATE_HEALTH_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .filter(|&p| p > 0)
-        .unwrap_or(8082)
+    discover_health_port_sync_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_health_port_sync`], but reads from `env`.
+#[must_use]
+pub fn discover_health_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+    parse_positive_port(env, "NESTGATE_HEALTH_PORT").unwrap_or(8082)
 }
 
 /// Synchronous admin port discovery
 #[must_use]
 pub fn discover_admin_port_sync() -> u16 {
-    env::var("NESTGATE_ADMIN_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .filter(|&p| p > 0)
-        .unwrap_or(8081)
+    discover_admin_port_sync_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_admin_port_sync`], but reads from `env`.
+#[must_use]
+pub fn discover_admin_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+    parse_positive_port(env, "NESTGATE_ADMIN_PORT").unwrap_or(8081)
 }
 
 /// Synchronous tarpc port discovery
 #[must_use]
 pub fn discover_tarpc_port_sync() -> u16 {
-    env::var("NESTGATE_TARPC_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .filter(|&p| p > 0)
-        .unwrap_or(8091)
+    discover_tarpc_port_sync_from_env_source(&ProcessEnv)
+}
+
+/// Like [`discover_tarpc_port_sync`], but reads from `env`.
+#[must_use]
+pub fn discover_tarpc_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+    parse_positive_port(env, "NESTGATE_TARPC_PORT").unwrap_or(8091)
 }
 
 // ==================== TESTS ====================
@@ -345,7 +371,7 @@ pub fn discover_tarpc_port_sync() -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use temp_env::{with_var, with_var_unset, with_vars};
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_extract_port_from_url() {
@@ -363,57 +389,41 @@ mod tests {
 
     #[test]
     fn test_sync_discovery_defaults() {
-        with_vars(
-            vec![
-                ("NESTGATE_API_PORT", None::<&str>),
-                ("NESTGATE_METRICS_PORT", None::<&str>),
-                ("NESTGATE_HEALTH_PORT", None::<&str>),
-                ("NESTGATE_ADMIN_PORT", None::<&str>),
-            ],
-            || {
-                assert_eq!(discover_api_port_sync(), 8080);
-                assert_eq!(discover_metrics_port_sync(), 9090);
-                assert_eq!(discover_health_port_sync(), 8082);
-                assert_eq!(discover_admin_port_sync(), 8081);
-            },
-        );
+        let env = MapEnv::new();
+        assert_eq!(discover_api_port_sync_from_env_source(&env), 8080);
+        assert_eq!(discover_metrics_port_sync_from_env_source(&env), 9090);
+        assert_eq!(discover_health_port_sync_from_env_source(&env), 8082);
+        assert_eq!(discover_admin_port_sync_from_env_source(&env), 8081);
     }
 
     #[test]
     fn test_sync_discovery_from_env() {
-        with_vars(
-            vec![
-                ("NESTGATE_API_PORT", Some("9000")),
-                ("NESTGATE_METRICS_PORT", Some("9999")),
-            ],
-            || {
-                assert_eq!(discover_api_port_sync(), 9000);
-                assert_eq!(discover_metrics_port_sync(), 9999);
-            },
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "9000"),
+            ("NESTGATE_METRICS_PORT", "9999"),
+        ]);
+        assert_eq!(discover_api_port_sync_from_env_source(&env), 9000);
+        assert_eq!(discover_metrics_port_sync_from_env_source(&env), 9999);
     }
 
     #[test]
     fn test_sync_discovery_invalid_env() {
-        with_var("NESTGATE_API_PORT", Some("invalid"), || {
-            assert_eq!(discover_api_port_sync(), 8080);
-        });
+        let env = MapEnv::from([("NESTGATE_API_PORT", "invalid")]);
+        assert_eq!(discover_api_port_sync_from_env_source(&env), 8080);
     }
 
     #[test]
     fn test_async_discovery_fallback() {
-        with_var_unset("NESTGATE_API_PORT", || {
-            let port = discover_api_port().unwrap();
-            assert_eq!(port, 8080);
-        });
+        let env = MapEnv::new();
+        let port = discover_api_port_from_env_source(&env).unwrap();
+        assert_eq!(port, 8080);
     }
 
     #[test]
     fn test_async_discovery_from_env() {
-        with_vars(vec![("NESTGATE_API_PORT", Some("9000"))], || {
-            let port = discover_api_port().unwrap();
-            assert_eq!(port, 9000);
-        });
+        let env = MapEnv::from([("NESTGATE_API_PORT", "9000")]);
+        let port = discover_api_port_from_env_source(&env).unwrap();
+        assert_eq!(port, 9000);
     }
 
     #[test]
@@ -425,48 +435,42 @@ mod tests {
 
     #[test]
     fn test_discover_metrics_port_default() {
-        with_var_unset("NESTGATE_METRICS_PORT", || {
-            let port = discover_metrics_port().unwrap();
-            assert_eq!(port, 9090);
-        });
+        let env = MapEnv::new();
+        let port = discover_metrics_port_from_env_source(&env).unwrap();
+        assert_eq!(port, 9090);
     }
 
     #[test]
     fn test_discover_health_port_default() {
-        with_var_unset("NESTGATE_HEALTH_PORT", || {
-            let port = discover_health_port().unwrap();
-            assert_eq!(port, 8082);
-        });
+        let env = MapEnv::new();
+        let port = discover_health_port_from_env_source(&env).unwrap();
+        assert_eq!(port, 8082);
     }
 
     #[test]
     fn test_discover_admin_port_default() {
-        with_var_unset("NESTGATE_ADMIN_PORT", || {
-            let port = discover_admin_port().unwrap();
-            assert_eq!(port, 8081);
-        });
+        let env = MapEnv::new();
+        let port = discover_admin_port_from_env_source(&env).unwrap();
+        assert_eq!(port, 8081);
     }
 
     #[test]
     fn test_discover_storage_port_default() {
-        with_var_unset("NESTGATE_STORAGE_PORT", || {
-            let port = discover_storage_port().unwrap();
-            assert_eq!(port, 8083);
-        });
+        let env = MapEnv::new();
+        let port = discover_storage_port_from_env_source(&env).unwrap();
+        assert_eq!(port, 8083);
     }
 
     #[test]
     fn test_discover_tarpc_port_default() {
-        with_var_unset("NESTGATE_TARPC_PORT", || {
-            let port = discover_tarpc_port().unwrap();
-            assert_eq!(port, 8091);
-        });
+        let env = MapEnv::new();
+        let port = discover_tarpc_port_from_env_source(&env).unwrap();
+        assert_eq!(port, 8091);
     }
 
     #[test]
     fn test_tarpc_port_sync_default() {
-        with_var_unset("NESTGATE_TARPC_PORT", || {
-            assert_eq!(discover_tarpc_port_sync(), 8091);
-        });
+        let env = MapEnv::new();
+        assert_eq!(discover_tarpc_port_sync_from_env_source(&env), 8091);
     }
 }

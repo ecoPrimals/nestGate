@@ -11,7 +11,7 @@
         clippy::cognitive_complexity,
     )
 )]
-#![expect(
+#![allow(
     deprecated,
     missing_docs,
     dead_code,

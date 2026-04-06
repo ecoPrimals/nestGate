@@ -42,6 +42,7 @@
 //! Pattern validated in orchestration provider v3.33.0
 
 use anyhow::Result;
+use nestgate_types::{EnvSource, ProcessEnv};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use tracing::{debug, info};
@@ -110,11 +111,19 @@ impl IpcEndpoint {
 /// # }
 /// ```
 pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
+    discover_ipc_endpoint_from_env(&ProcessEnv, service_name)
+}
+
+/// Like [`discover_ipc_endpoint`], but reads `XDG_RUNTIME_DIR` / `HOME` from an injectable [`EnvSource`].
+pub fn discover_ipc_endpoint_from_env(
+    env: &dyn EnvSource,
+    service_name: &str,
+) -> Result<IpcEndpoint> {
     info!("🔍 Discovering IPC endpoint for: {}", service_name);
 
     // 1. Try Unix socket first (optimal)
     debug!("   Trying Unix socket discovery...");
-    if let Ok(socket_path) = discover_unix_socket(service_name) {
+    if let Ok(socket_path) = discover_unix_socket_from_env(env, service_name) {
         if socket_path.exists() {
             info!("✅ Discovered Unix socket: {}", socket_path.display());
             return Ok(IpcEndpoint::UnixSocket(socket_path));
@@ -127,7 +136,7 @@ pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
 
     // 2. Try TCP discovery file (fallback)
     debug!("   Trying TCP discovery file...");
-    if let Ok(endpoint) = discover_tcp_endpoint(service_name) {
+    if let Ok(endpoint) = discover_tcp_endpoint_from_env(env, service_name) {
         info!("✅ Discovered TCP endpoint: {}", endpoint.description());
         return Ok(endpoint);
     }
@@ -151,9 +160,9 @@ pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
 ///
 /// * `Ok(PathBuf)` - Expected socket path (may not exist yet)
 /// * `Err(_)` - Could not determine path
-fn discover_unix_socket(service_name: &str) -> Result<PathBuf> {
+fn discover_unix_socket_from_env(env: &dyn EnvSource, service_name: &str) -> Result<PathBuf> {
     // Try XDG_RUNTIME_DIR first (preferred)
-    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
         let socket_path = PathBuf::from(format!("{runtime_dir}/{service_name}.sock"));
         debug!("   Unix socket candidate: {}", socket_path.display());
         return Ok(socket_path);
@@ -185,8 +194,8 @@ fn discover_unix_socket(service_name: &str) -> Result<PathBuf> {
 ///
 /// * `Ok(IpcEndpoint::TcpLocal)` - Discovered TCP endpoint
 /// * `Err(_)` - No discovery file found
-fn discover_tcp_endpoint(service_name: &str) -> Result<IpcEndpoint> {
-    let discovery_files = get_tcp_discovery_file_candidates(service_name);
+fn discover_tcp_endpoint_from_env(env: &dyn EnvSource, service_name: &str) -> Result<IpcEndpoint> {
+    let discovery_files = get_tcp_discovery_file_candidates_from_env(env, service_name);
 
     for file in discovery_files {
         debug!("   Checking discovery file: {}", file.display());
@@ -214,18 +223,21 @@ fn discover_tcp_endpoint(service_name: &str) -> Result<IpcEndpoint> {
 /// 1. `$XDG_RUNTIME_DIR/{service}-ipc-port`
 /// 2. `$HOME/.local/share/{service}-ipc-port`
 /// 3. `/tmp/{service}-ipc-port`
-fn get_tcp_discovery_file_candidates(service_name: &str) -> Vec<PathBuf> {
+fn get_tcp_discovery_file_candidates_from_env(
+    env: &dyn EnvSource,
+    service_name: &str,
+) -> Vec<PathBuf> {
     let mut candidates = Vec::new();
 
     // XDG_RUNTIME_DIR (preferred)
-    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
         candidates.push(PathBuf::from(format!(
             "{runtime_dir}/{service_name}-ipc-port"
         )));
     }
 
     // HOME/.local/share (fallback)
-    if let Ok(home) = std::env::var("HOME") {
+    if let Some(home) = env.get("HOME") {
         candidates.push(PathBuf::from(format!(
             "{home}/.local/share/{service_name}-ipc-port"
         )));
@@ -241,10 +253,11 @@ fn get_tcp_discovery_file_candidates(service_name: &str) -> Vec<PathBuf> {
 mod tests {
 
     use super::*;
+    use nestgate_types::{MapEnv, ProcessEnv};
 
     #[test]
     fn test_discover_unix_socket() {
-        let path = discover_unix_socket("nestgate").unwrap();
+        let path = discover_unix_socket_from_env(&ProcessEnv, "nestgate").unwrap();
         let path_str = path.to_string_lossy();
 
         // Should contain service name
@@ -256,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_discovery_file_candidates() {
-        let candidates = get_tcp_discovery_file_candidates("nestgate");
+        let candidates = get_tcp_discovery_file_candidates_from_env(&ProcessEnv, "nestgate");
 
         // Should have at least /tmp fallback
         assert!(!candidates.is_empty());
@@ -296,14 +309,10 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let sock = dir.path().join("disc_mysvc.sock");
         std::fs::write(&sock, b"x").unwrap();
-        temp_env::with_var(
-            "XDG_RUNTIME_DIR",
-            Some(dir.path().to_string_lossy().as_ref()),
-            || {
-                let ep = discover_ipc_endpoint("disc_mysvc").expect("discover");
-                assert!(matches!(ep, IpcEndpoint::UnixSocket(ref p) if p == &sock));
-            },
-        );
+        let rt = dir.path().to_string_lossy();
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", rt.as_ref())]);
+        let ep = discover_ipc_endpoint_from_env(&env, "disc_mysvc").expect("discover");
+        assert!(matches!(ep, IpcEndpoint::UnixSocket(ref p) if p == &sock));
     }
 
     #[test]
@@ -311,17 +320,13 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let disc = dir.path().join("disc_tcp_svc-ipc-port");
         std::fs::write(&disc, "tcp:127.0.0.1:54321\n").unwrap();
-        temp_env::with_var(
-            "XDG_RUNTIME_DIR",
-            Some(dir.path().to_string_lossy().as_ref()),
-            || {
-                let ep = discover_ipc_endpoint("disc_tcp_svc").expect("discover");
-                match ep {
-                    IpcEndpoint::TcpLocal(a) => assert_eq!(a.port(), 54321),
-                    _ => panic!("expected TCP"),
-                }
-            },
-        );
+        let rt = dir.path().to_string_lossy();
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", rt.as_ref())]);
+        let ep = discover_ipc_endpoint_from_env(&env, "disc_tcp_svc").expect("discover");
+        match ep {
+            IpcEndpoint::TcpLocal(a) => assert_eq!(a.port(), 54321),
+            _ => panic!("expected TCP"),
+        }
     }
 
     #[test]
@@ -329,14 +334,10 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let disc = dir.path().join("bad_tcp-ipc-port");
         std::fs::write(&disc, "not-tcp-prefix\n").unwrap();
-        temp_env::with_var(
-            "XDG_RUNTIME_DIR",
-            Some(dir.path().to_string_lossy().as_ref()),
-            || {
-                let r = discover_tcp_endpoint("bad_tcp");
-                assert!(r.is_err());
-            },
-        );
+        let rt = dir.path().to_string_lossy();
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", rt.as_ref())]);
+        let r = discover_tcp_endpoint_from_env(&env, "bad_tcp");
+        assert!(r.is_err());
     }
 
     #[test]
@@ -344,13 +345,9 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let disc = dir.path().join("bad_addr-ipc-port");
         std::fs::write(&disc, "tcp:not_a_socket_addr\n").unwrap();
-        temp_env::with_var(
-            "XDG_RUNTIME_DIR",
-            Some(dir.path().to_string_lossy().as_ref()),
-            || {
-                let r = discover_tcp_endpoint("bad_addr");
-                assert!(r.is_err());
-            },
-        );
+        let rt = dir.path().to_string_lossy();
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", rt.as_ref())]);
+        let r = discover_tcp_endpoint_from_env(&env, "bad_addr");
+        assert!(r.is_err());
     }
 }

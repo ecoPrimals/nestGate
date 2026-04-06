@@ -3,6 +3,7 @@
 
 use super::discovery;
 use super::*;
+use nestgate_types::MapEnv;
 
 #[test]
 fn test_atomic_type_required_capabilities() {
@@ -85,7 +86,7 @@ async fn test_verify_nest_health() {
 
 #[tokio::test]
 async fn test_discover_available_primals_does_not_panic() {
-    let primals = discovery::discover_available_primals();
+    let primals = discovery::discover_available_primals_from_env(&MapEnv::new());
     let _ = primals;
 }
 
@@ -112,7 +113,7 @@ fn atomic_status_components_needing_attention_filters() {
 
 #[test]
 fn gather_socket_search_dirs_includes_uid_run_path() {
-    let dirs = discovery::gather_socket_search_dirs();
+    let dirs = discovery::gather_socket_search_dirs_from_env(&MapEnv::new());
     let uid = uzers::get_current_uid();
     assert!(
         dirs.iter().any(|d| d.contains(&format!("/run/user/{uid}"))),
@@ -126,12 +127,9 @@ fn discover_primal_socket_biomeos_dir() {
     let dir = tempfile::tempdir().expect("tempdir");
     let sock = dir.path().join("tower.sock");
     std::fs::write(&sock, b"x").unwrap();
-    nestgate_platform::env_process::set_var(
-        "BIOMEOS_SOCKET_DIR",
-        dir.path().to_string_lossy().as_ref(),
-    );
-    let p = discovery::discover_primal_socket("tower");
-    nestgate_platform::env_process::remove_var("BIOMEOS_SOCKET_DIR");
+    let biome = dir.path().to_string_lossy().to_string();
+    let env = MapEnv::from([("BIOMEOS_SOCKET_DIR", biome.as_str())]);
+    let p = discovery::discover_primal_socket_from_env(&env, "tower");
     assert_eq!(p, Some(sock));
 }
 
@@ -142,14 +140,12 @@ fn discover_primal_socket_family_scoped_under_xdg() {
     std::fs::create_dir_all(&bio).unwrap();
     let sock = bio.join("beacon-fam9.sock");
     std::fs::write(&sock, b"x").unwrap();
-    nestgate_platform::env_process::set_var(
-        "XDG_RUNTIME_DIR",
-        dir.path().to_string_lossy().as_ref(),
-    );
-    nestgate_platform::env_process::set_var("NESTGATE_FAMILY_ID", "fam9");
-    let p = discovery::discover_primal_socket("beacon");
-    nestgate_platform::env_process::remove_var("XDG_RUNTIME_DIR");
-    nestgate_platform::env_process::remove_var("NESTGATE_FAMILY_ID");
+    let xdg = dir.path().to_string_lossy().to_string();
+    let env = MapEnv::from([
+        ("XDG_RUNTIME_DIR", xdg.as_str()),
+        ("NESTGATE_FAMILY_ID", "fam9"),
+    ]);
+    let p = discovery::discover_primal_socket_from_env(&env, "beacon");
     assert_eq!(p, Some(sock));
 }
 
@@ -158,7 +154,7 @@ fn discover_primal_socket_tmp_fallback() {
     let tmp_sock = std::path::PathBuf::from("/tmp").join("ng_atomic_cov_primal.sock");
     let _ = std::fs::remove_file(&tmp_sock);
     std::fs::write(&tmp_sock, b"x").unwrap();
-    let p = discovery::discover_primal_socket("ng_atomic_cov_primal");
+    let p = discovery::discover_primal_socket_from_env(&MapEnv::new(), "ng_atomic_cov_primal");
     let _ = std::fs::remove_file(&tmp_sock);
     assert_eq!(p, Some(tmp_sock));
 }

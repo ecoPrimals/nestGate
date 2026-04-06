@@ -15,7 +15,8 @@
 
 use std::sync::{Arc, OnceLock};
 
-use super::defaults::{env_or, env_or_parse};
+use super::defaults::{env_or_from_source, env_or_parse_from_source};
+use nestgate_types::{EnvSource, ProcessEnv};
 
 /// Network configuration constants with environment override support
 #[derive(Debug, Clone)]
@@ -51,35 +52,41 @@ impl Default for NetworkConstants {
     ///
     /// See the module-level documentation for the env → capability → default hierarchy.
     fn default() -> Self {
+        Self::from_env_source(&ProcessEnv)
+    }
+}
+
+impl NetworkConstants {
+    /// Build network constants from an injectable environment source (use [`MapEnv`](nestgate_types::MapEnv) in tests).
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self {
             // Hosts (default to localhost for security)
-            api_host: env_or("NESTGATE_API_HOST", "127.0.0.1"),
-            metrics_host: env_or("NESTGATE_METRICS_HOST", "127.0.0.1"),
-            health_host: env_or("NESTGATE_HEALTH_HOST", "127.0.0.1"),
-            admin_host: env_or("NESTGATE_ADMIN_HOST", "127.0.0.1"),
+            api_host: env_or_from_source(env, "NESTGATE_API_HOST", "127.0.0.1"),
+            metrics_host: env_or_from_source(env, "NESTGATE_METRICS_HOST", "127.0.0.1"),
+            health_host: env_or_from_source(env, "NESTGATE_HEALTH_HOST", "127.0.0.1"),
+            admin_host: env_or_from_source(env, "NESTGATE_ADMIN_HOST", "127.0.0.1"),
 
             // Ports (defaults: development last resort; see module docs)
-            api_port: env_or_parse("NESTGATE_API_PORT", 8080),
-            http_port: env_or_parse("NESTGATE_HTTP_PORT", 8080),
-            https_port: env_or_parse("NESTGATE_HTTPS_PORT", 8443),
-            websocket_port: env_or_parse("NESTGATE_WS_PORT", 8082),
-            grpc_port: env_or_parse("NESTGATE_GRPC_PORT", 50051),
-            metrics_port: env_or_parse("NESTGATE_METRICS_PORT", 9090),
-            prometheus_port: env_or_parse("NESTGATE_PROMETHEUS_PORT", 9090),
-            health_port: env_or_parse("NESTGATE_HEALTH_PORT", 8081),
-            admin_port: env_or_parse("NESTGATE_ADMIN_PORT", 9000),
+            api_port: env_or_parse_from_source(env, "NESTGATE_API_PORT", 8080),
+            http_port: env_or_parse_from_source(env, "NESTGATE_HTTP_PORT", 8080),
+            https_port: env_or_parse_from_source(env, "NESTGATE_HTTPS_PORT", 8443),
+            websocket_port: env_or_parse_from_source(env, "NESTGATE_WS_PORT", 8082),
+            grpc_port: env_or_parse_from_source(env, "NESTGATE_GRPC_PORT", 50051),
+            metrics_port: env_or_parse_from_source(env, "NESTGATE_METRICS_PORT", 9090),
+            prometheus_port: env_or_parse_from_source(env, "NESTGATE_PROMETHEUS_PORT", 9090),
+            health_port: env_or_parse_from_source(env, "NESTGATE_HEALTH_PORT", 8081),
+            admin_port: env_or_parse_from_source(env, "NESTGATE_ADMIN_PORT", 9000),
 
             // Addresses (bind to loopback by default; expose publicly via env/config)
-            bind_address: env_or("NESTGATE_BIND_ADDRESS", "127.0.0.1"),
+            bind_address: env_or_from_source(env, "NESTGATE_BIND_ADDRESS", "127.0.0.1"),
             localhost_ipv4: "127.0.0.1".to_string(),
             localhost_ipv6: "::1".to_string(),
             bind_all_ipv4: "0.0.0.0".to_string(),
             bind_all_ipv6: "::".to_string(),
         }
     }
-}
 
-impl NetworkConstants {
     /// Get or initialize the global network constants
     pub fn get() -> Arc<Self> {
         static INSTANCE: OnceLock<Arc<NetworkConstants>> = OnceLock::new();

@@ -65,8 +65,8 @@ mod round6_zfs_tests {
         );
     }
 
-    #[test]
-    fn r6_pool_creator_dry_run_triple_raidz_devices() {
+    #[tokio::test]
+    async fn r6_pool_creator_dry_run_triple_raidz_devices() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
             pool_name: "r6rz3".into(),
@@ -83,13 +83,12 @@ mod round6_zfs_tests {
             device_detection: DeviceDetectionConfig::default(),
             create_tiers: false,
         };
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let r = rt.block_on(creator.create_pool_safe(&config));
+        let r = creator.create_pool_safe(&config).await;
         assert!(r.is_ok());
     }
 
-    #[test]
-    fn r6_pool_creator_dry_run_mirror_two_devices() {
+    #[tokio::test]
+    async fn r6_pool_creator_dry_run_mirror_two_devices() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
             pool_name: "r6mir".into(),
@@ -101,8 +100,7 @@ mod round6_zfs_tests {
             device_detection: DeviceDetectionConfig::default(),
             create_tiers: false,
         };
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        assert!(rt.block_on(creator.create_pool_safe(&config)).is_ok());
+        assert!(creator.create_pool_safe(&config).await.is_ok());
     }
 
     #[test]

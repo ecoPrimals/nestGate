@@ -96,26 +96,20 @@ mod round6 {
         }
     }
 
-    #[test]
-    fn r6_composite_resolve_all_empty_errors() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let c = CompositeResolver::new();
-            assert!(
-                c.resolve_capability_all(&UnifiedCapability::Storage)
-                    .await
-                    .is_err()
-            );
-        });
+    #[tokio::test]
+    async fn r6_composite_resolve_all_empty_errors() {
+        let c = CompositeResolver::new();
+        assert!(
+            c.resolve_capability_all(&UnifiedCapability::Storage)
+                .await
+                .is_err()
+        );
     }
 
-    #[test]
-    fn r6_composite_has_capability_false_when_empty() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let c = CompositeResolver::new();
-            assert!(!c.has_capability(&UnifiedCapability::Storage).await);
-        });
+    #[tokio::test]
+    async fn r6_composite_has_capability_false_when_empty() {
+        let c = CompositeResolver::new();
+        assert!(!c.has_capability(&UnifiedCapability::Storage).await);
     }
 
     #[test]

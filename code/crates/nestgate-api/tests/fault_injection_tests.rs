@@ -11,7 +11,7 @@
         clippy::cognitive_complexity,
     )
 )]
-#![expect(
+#![allow(
     deprecated,
     missing_docs,
     dead_code,
@@ -168,17 +168,13 @@ async fn test_fault_invalid_socket_path() {
 
 #[tokio::test]
 async fn test_fault_conflicting_config() {
-    temp_env::async_with_vars(
-        [
-            ("NESTGATE_FAMILY_ID", Some("env_family")),
-            ("NESTGATE_HTTP_PORT", Some("not_a_number")),
-        ],
-        async {
-            let result = TransportConfig::from_env();
-            assert!(result.is_ok() || result.is_err());
-        },
-    )
-    .await;
+    use nestgate_types::MapEnv;
+    let env = MapEnv::from([
+        ("NESTGATE_FAMILY_ID", "env_family"),
+        ("NESTGATE_HTTP_PORT", "not_a_number"),
+    ]);
+    let result = TransportConfig::from_env_source(&env);
+    assert!(result.is_ok() || result.is_err());
 }
 
 // ============================================================================

@@ -368,12 +368,11 @@ mod tests {
         // Server constructed successfully - handler is stored
     }
 
-    #[test]
-    fn test_mock_handler_returns_valid_json_rpc() {
+    #[tokio::test]
+    async fn test_mock_handler_returns_valid_json_rpc() {
         let handler = MockHandler;
         let request = serde_json::json!({"jsonrpc": "2.0", "method": "test", "id": 1});
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let response = rt.block_on(handler.handle_request(request));
+        let response = handler.handle_request(request).await;
         assert_eq!(response["jsonrpc"], "2.0");
         assert_eq!(response["result"], "ok");
         assert_eq!(response["id"], 1);
@@ -386,12 +385,11 @@ mod tests {
         let _server2 = IsomorphicIpcServer::new("test-svc-123".to_string(), handler);
     }
 
-    #[test]
-    fn test_mock_handler_handles_empty_request() {
+    #[tokio::test]
+    async fn test_mock_handler_handles_empty_request() {
         let handler = MockHandler;
         let request = serde_json::json!({});
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let response = rt.block_on(handler.handle_request(request));
+        let response = handler.handle_request(request).await;
         assert!(response.get("jsonrpc").is_some());
     }
 

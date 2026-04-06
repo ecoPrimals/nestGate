@@ -6,9 +6,20 @@
 
 //! Default values and environment override helpers (`NESTGATE_*`).
 
+use nestgate_types::{EnvSource, ProcessEnv};
+
 /// Get environment variable or return default value
 pub(in crate::constants::consolidated) fn env_or(key: &str, default: &str) -> String {
-    std::env::var(key).unwrap_or_else(|_| default.to_string())
+    env_or_from_source(&ProcessEnv, key, default)
+}
+
+/// Like [`env_or`], but reads from an injectable [`EnvSource`].
+pub(in crate::constants::consolidated) fn env_or_from_source(
+    env: &dyn EnvSource,
+    key: &str,
+    default: &str,
+) -> String {
+    env.get(key).unwrap_or_else(|| default.to_string())
 }
 
 /// Get environment variable and parse, or return default value
@@ -16,10 +27,16 @@ pub(in crate::constants::consolidated) fn env_or_parse<T: std::str::FromStr>(
     key: &str,
     default: T,
 ) -> T {
-    std::env::var(key)
-        .ok()
-        .and_then(|v| v.parse::<T>().ok())
-        .unwrap_or(default)
+    env_or_parse_from_source(&ProcessEnv, key, default)
+}
+
+/// Like [`env_or_parse`], but reads from an injectable [`EnvSource`].
+pub(in crate::constants::consolidated) fn env_or_parse_from_source<T: std::str::FromStr>(
+    env: &dyn EnvSource,
+    key: &str,
+    default: T,
+) -> T {
+    env.get(key).and_then(|v| v.parse().ok()).unwrap_or(default)
 }
 
 #[cfg(test)]

@@ -6,11 +6,13 @@
 
 use super::templates::*;
 use axum::{Json, extract::Path, http::StatusCode};
+use nestgate_types::MapEnv;
 
-fn with_temp_template_dir<F: FnOnce()>(f: F) {
+fn with_temp_template_dir<F: FnOnce(&MapEnv)>(f: F) {
     let dir = tempfile::tempdir().expect("tempdir");
     let p = dir.path().to_str().expect("utf8 path");
-    temp_env::with_var("NESTGATE_WORKSPACE_TEMPLATES_DIR", Some(p), f);
+    let env = MapEnv::from([("NESTGATE_WORKSPACE_TEMPLATES_DIR", p)]);
+    f(&env);
 }
 
 #[cfg(test)]
@@ -19,9 +21,9 @@ mod create_tests {
 
     #[test]
     fn test_create_workspace_template_writes_json() {
-        with_temp_template_dir(|| {
+        with_temp_template_dir(|env| {
             let (status, Json(body)) =
-                create_workspace_template(Path("test-workspace".to_string()));
+                create_workspace_template_from_env_source(env, Path("test-workspace".to_string()));
             assert_eq!(status, StatusCode::OK);
             assert_eq!(body["status"].as_str(), Some("created"));
         });
@@ -29,25 +31,26 @@ mod create_tests {
 
     #[test]
     fn test_create_rejects_invalid_id() {
-        with_temp_template_dir(|| {
-            let (status, _) = create_workspace_template(Path("../bad".to_string()));
+        with_temp_template_dir(|env| {
+            let (status, _) =
+                create_workspace_template_from_env_source(env, Path("../bad".to_string()));
             assert_eq!(status, StatusCode::BAD_REQUEST);
         });
     }
 
     #[test]
     fn test_create_rejects_empty_id() {
-        with_temp_template_dir(|| {
-            let (status, _) = create_workspace_template(Path(String::new()));
+        with_temp_template_dir(|env| {
+            let (status, _) = create_workspace_template_from_env_source(env, Path(String::new()));
             assert_eq!(status, StatusCode::BAD_REQUEST);
         });
     }
 
     #[test]
     fn test_create_rejects_too_long_id() {
-        with_temp_template_dir(|| {
+        with_temp_template_dir(|env| {
             let long_id = "a".repeat(300);
-            let (status, _) = create_workspace_template(Path(long_id));
+            let (status, _) = create_workspace_template_from_env_source(env, Path(long_id));
             assert_eq!(status, StatusCode::BAD_REQUEST);
         });
     }
@@ -74,9 +77,10 @@ mod consistency_tests {
 
     #[test]
     fn test_create_ok_and_apply_still_501() {
-        with_temp_template_dir(|| {
+        with_temp_template_dir(|env| {
             let workspace_id = "test-ws-123".to_string();
-            let (c_status, _) = create_workspace_template(Path(workspace_id.clone()));
+            let (c_status, _) =
+                create_workspace_template_from_env_source(env, Path(workspace_id.clone()));
             assert_eq!(c_status, StatusCode::OK);
             let (a_status, Json(ab)) = apply_workspace_template(Path(workspace_id));
             assert_eq!(a_status, StatusCode::NOT_IMPLEMENTED);
@@ -94,8 +98,9 @@ mod error_handling_tests {
 
     #[test]
     fn test_create_rejects_special_chars() {
-        with_temp_template_dir(|| {
-            let (status, _) = create_workspace_template(Path("ws@123".to_string()));
+        with_temp_template_dir(|env| {
+            let (status, _) =
+                create_workspace_template_from_env_source(env, Path("ws@123".to_string()));
             assert_eq!(status, StatusCode::BAD_REQUEST);
         });
     }

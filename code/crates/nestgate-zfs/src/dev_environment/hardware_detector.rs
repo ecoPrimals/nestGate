@@ -5,6 +5,7 @@
 // Determines what storage capabilities are available in the current environment
 // and selects the appropriate backend (native ZFS, remote ZFS, or development abstraction).
 
+use nestgate_types::{EnvSource, ProcessEnv};
 use tokio::process::Command;
 use tracing::{debug, info, warn};
 
@@ -25,19 +26,31 @@ impl HardwareEnvironmentDetector {
     /// Detect the current hardware capabilities (cached)
     pub async fn detect_capabilities() -> HardwareCapabilities {
         // For now, just perform detection directly without caching in async context
-        Self::perform_detection().await
+        Self::detect_capabilities_from_env(&ProcessEnv).await
+    }
+
+    /// Detect capabilities using an injectable environment source
+    pub async fn detect_capabilities_from_env(env: &dyn EnvSource) -> HardwareCapabilities {
+        Self::perform_detection_from_env(env).await
     }
 
     /// Check if we're in a development environment
+    #[must_use]
     pub fn is_development_environment() -> bool {
+        Self::is_development_environment_from_env(&ProcessEnv)
+    }
+
+    /// Check development mode using an injectable environment source
+    pub fn is_development_environment_from_env(env: &dyn EnvSource) -> bool {
         // Check explicit environment variable first
-        if std::env::var("NESTGATE_DEV_ENVIRONMENT").unwrap_or_default() == "true" {
+        if env.get_or("NESTGATE_DEV_ENVIRONMENT", "") == "true" {
             debug!("Development environment explicitly enabled via NESTGATE_DEV_ENVIRONMENT");
             return true;
         }
 
         // Check for common development indicators
-        if Self::is_likely_dev_machine() || Self::is_container_environment() {
+        if Self::is_likely_dev_machine_from_env(env) || Self::is_container_environment_from_env(env)
+        {
             return true;
         }
 
@@ -51,17 +64,17 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Perform comprehensive hardware detection
-    async fn perform_detection() -> HardwareCapabilities {
+    async fn perform_detection_from_env(env: &dyn EnvSource) -> HardwareCapabilities {
         info!("🔍 Detecting hardware environment capabilities...");
 
         // Check explicit development mode
-        if std::env::var("NESTGATE_DEV_ENVIRONMENT").unwrap_or_default() == "true" {
+        if env.get_or("NESTGATE_DEV_ENVIRONMENT", "") == "true" {
             info!("💻 Development environment (explicit via NESTGATE_DEV_ENVIRONMENT)");
             return HardwareCapabilities::DevelopmentEnvironment;
         }
 
         // Check for container environment
-        if Self::is_container_environment() {
+        if Self::is_container_environment_from_env(env) {
             info!("🐳 Container environment detected");
             return HardwareCapabilities::ContainerEnvironment;
         }
@@ -73,7 +86,7 @@ impl HardwareEnvironmentDetector {
         }
 
         // Check development machine indicators
-        if Self::is_likely_dev_machine() {
+        if Self::is_likely_dev_machine_from_env(env) {
             info!("💻 Development machine detected (no ZFS hardware)");
             return HardwareCapabilities::DevelopmentEnvironment;
         }
@@ -112,11 +125,11 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Detect if we're running in a container
-    fn is_container_environment() -> bool {
+    fn is_container_environment_from_env(env: &dyn EnvSource) -> bool {
         // Check for container indicators
         std::path::Path::exists(std::path::Path::new("/.dockerenv"))
-            || std::env::var("container").is_ok()
-            || std::env::var("KUBERNETES_SERVICE_HOST").is_ok()
+            || env.get("container").is_some()
+            || env.get("KUBERNETES_SERVICE_HOST").is_some()
             || std::fs::read_to_string("/proc/1/cgroup")
                 .map(|contents| {
                     contents.contains("container_runtime") || contents.contains("kubepods")
@@ -125,28 +138,33 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Detect if we're likely on a development machine
-    fn is_likely_dev_machine() -> bool {
+    fn is_likely_dev_machine_from_env(env: &dyn EnvSource) -> bool {
         // Check for common development indicators
-        std::env::var("HOME").is_ok()
+        env.get("HOME").is_some()
             && (
-                std::env::var("SSH_CLIENT").is_err() && // Not SSH session
-            std::env::var("DISPLAY").is_ok()
+                env.get("SSH_CLIENT").is_none() && // Not SSH session
+            env.get("DISPLAY").is_some()
                 // Has display (desktop)
             )
-            || std::env::var("USER")
-                .map(|u| u == "developer" || u.contains("dev"))
-                .unwrap_or(false)
-            || std::env::var("HOSTNAME")
-                .map(|h| h.contains("dev") || h.contains("laptop"))
-                .unwrap_or(false)
+            || env
+                .get("USER")
+                .is_some_and(|u| u == "developer" || u.contains("dev"))
+            || env
+                .get("HOSTNAME")
+                .is_some_and(|h| h.contains("dev") || h.contains("laptop"))
     }
 
     /// Get a detailed environment report for debugging
     pub async fn get_environment_report() -> String {
-        let capabilities = Self::detect_capabilities().await;
+        Self::get_environment_report_from_env(&ProcessEnv).await
+    }
+
+    /// Environment report using an injectable environment source
+    pub async fn get_environment_report_from_env(env: &dyn EnvSource) -> String {
+        let capabilities = Self::detect_capabilities_from_env(env).await;
         let zfs_available = Self::is_zfs_available().await;
-        let is_container = Self::is_container_environment();
-        let is_dev_machine = Self::is_likely_dev_machine();
+        let is_container = Self::is_container_environment_from_env(env);
+        let is_dev_machine = Self::is_likely_dev_machine_from_env(env);
 
         format!(
             "Hardware Environment Report:\n\
@@ -159,7 +177,7 @@ impl HardwareEnvironmentDetector {
             zfs_available,
             is_container,
             is_dev_machine,
-            std::env::var("NESTGATE_DEV_ENVIRONMENT").unwrap_or_default()
+            env.get_or("NESTGATE_DEV_ENVIRONMENT", "")
         )
     }
 }
@@ -167,6 +185,7 @@ impl HardwareEnvironmentDetector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
 
     #[tokio::test]
     async fn test_hardware_detection() {
@@ -179,7 +198,14 @@ mod tests {
 
     #[test]
     fn test_container_detection() {
-        let is_container = HardwareEnvironmentDetector::is_container_environment();
+        let is_container =
+            HardwareEnvironmentDetector::is_container_environment_from_env(&MapEnv::new());
         println!("Container environment: {is_container}");
+    }
+
+    #[test]
+    fn test_explicit_dev_mode_from_map_env() {
+        let env = MapEnv::from([("NESTGATE_DEV_ENVIRONMENT", "true")]);
+        assert!(HardwareEnvironmentDetector::is_development_environment_from_env(&env));
     }
 }

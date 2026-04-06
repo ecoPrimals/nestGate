@@ -39,9 +39,6 @@ default = []
 dev-stubs = []
 
 [dev-dependencies]
-nestgate-platform = { path = "../nestgate-platform" }
-temp-env = { workspace = true }
-
 fastrand = { workspace = true }
 tokio-test = { workspace = true }
 tempfile = { workspace = true }

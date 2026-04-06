@@ -8,6 +8,12 @@
 //! This crate is **edition 2021**. In that edition those functions are still safe; in Rust 2024
 //! they are `unsafe`, so higher edition crates can depend on this crate to perform the same
 //! operations without an `unsafe` block (see Rust edition guide: newly unsafe functions).
+//!
+//! ## Test infrastructure
+//!
+//! Unit tests in this crate intentionally use [`temp_env`] to scope **process** environment
+//! mutations while verifying the shim. Call-site tests that only need isolated reads should use the
+//! `MapEnv` / `EnvSource` pattern from `nestgate-types` instead of mutating the global environment.
 
 #![forbid(unsafe_code)]
 
@@ -27,14 +33,12 @@ pub fn remove_var<K: AsRef<OsStr>>(key: K) {
 #[expect(clippy::expect_used)] // Tests assert env invariants; project prefers `expect` over `unwrap`.
 mod tests {
     use super::{remove_var, set_var};
-    use serial_test::serial;
     use std::ffi::OsString;
 
     /// Unique key so parallel test suites in the same process do not collide.
     const KEY: &str = "NESTGATE_ENV_PROCESS_SHIM_UNIT_TEST_KEY";
 
     #[test]
-    #[serial]
     fn set_var_exposes_value_to_process_environment() {
         temp_env::with_var_unset(KEY, || {
             set_var(KEY, "alpha");
@@ -44,7 +48,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn remove_var_clears_variable() {
         temp_env::with_var(KEY, Some("seed"), || {
             set_var(KEY, "during");
@@ -61,7 +64,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn set_then_remove_restores_absent_state() {
         temp_env::with_var_unset(KEY, || {
             assert!(std::env::var_os(KEY).is_none());
@@ -76,7 +78,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn temp_env_restores_prior_value_after_shim_mutation() {
         temp_env::with_var(KEY, Some("original"), || {
             assert_eq!(std::env::var(KEY).expect("fixture value"), "original");

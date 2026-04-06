@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
+#![allow(
     unused,
     dead_code,
     deprecated,
@@ -492,12 +492,11 @@ async fn test_timeout_race_condition() {
 #[tokio::test]
 async fn test_spawn_blocking() {
     let result = tokio::task::spawn_blocking(|| {
-        // Simulate blocking operation
-        std::thread::sleep(Duration::from_millis(10));
-        42
+        // Pure computation instead of blocking sleep
+        (0..10000).sum::<i64>()
     })
     .await
     .unwrap();
 
-    assert_eq!(result, 42);
+    assert_eq!(result, 49_995_000);
 }

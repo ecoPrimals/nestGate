@@ -2,17 +2,23 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use axum::{extract::Json, extract::Path, http::StatusCode};
-use nestgate_core::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use serde_json::{Value, json};
 use tracing::{info, warn};
 
 /// List available backups for a workspace
-pub async fn list_workspace_backups(
+pub async fn list_workspace_backups(path: Path<String>) -> Result<Json<Value>, StatusCode> {
+    list_workspace_backups_from_env_source(&ProcessEnv, path).await
+}
+
+/// Like [`list_workspace_backups`], but resolves `NESTGATE_BACKUP_DIR` from `env`.
+pub async fn list_workspace_backups_from_env_source(
+    env: &dyn EnvSource,
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("📋 Listing backups for workspace: {}", workspace_id);
 
-    let backup_dir = safe_env_var_or_default("NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
+    let backup_dir = env_var_or_default(env, "NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
 
     let backup_pattern = format!("workspace_{workspace_id}_");
     let mut backups = Vec::new();
@@ -67,21 +73,20 @@ pub async fn list_workspace_backups(
 mod tests {
     use super::*;
     use axum::extract::Path;
+    use nestgate_types::MapEnv;
 
     #[tokio::test]
     async fn list_workspace_backups_empty_when_backup_dir_exists_but_has_no_matches() {
         let dir = tempfile::tempdir().expect("temp backup dir");
         let path = dir.path().to_str().expect("utf8 temp path");
-        temp_env::async_with_vars([("NESTGATE_BACKUP_DIR", Some(path))], async {
-            let Json(v) = list_workspace_backups(Path("ws1".to_string()))
-                .await
-                .expect("list_workspace_backups");
-            assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));
-            assert_eq!(v.get("workspace_id").and_then(|s| s.as_str()), Some("ws1"));
-            let backups = v.get("backups").and_then(|b| b.as_array());
-            assert!(backups.is_some_and(Vec::is_empty));
-        })
-        .await;
+        let env = MapEnv::from([("NESTGATE_BACKUP_DIR", path)]);
+        let Json(v) = list_workspace_backups_from_env_source(&env, Path("ws1".to_string()))
+            .await
+            .expect("list_workspace_backups");
+        assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));
+        assert_eq!(v.get("workspace_id").and_then(|s| s.as_str()), Some("ws1"));
+        let backups = v.get("backups").and_then(|b| b.as_array());
+        assert!(backups.is_some_and(Vec::is_empty));
     }
 
     #[tokio::test]
@@ -92,27 +97,25 @@ mod tests {
         tokio::fs::write(&file_path, b"snapshot-data")
             .await
             .expect("write fake backup");
-        temp_env::async_with_vars([("NESTGATE_BACKUP_DIR", Some(path))], async {
-            let Json(v) = list_workspace_backups(Path("acme".to_string()))
-                .await
-                .expect("list_workspace_backups");
-            assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));
-            let backups = v
-                .get("backups")
-                .and_then(|b| b.as_array())
-                .expect("backups array");
-            assert_eq!(backups.len(), 1);
-            let first = backups.first().expect("one backup");
-            assert_eq!(
-                first.get("backup_name").and_then(|s| s.as_str()),
-                Some("mybackup")
-            );
-            assert_eq!(
-                first.get("file_name").and_then(|s| s.as_str()),
-                Some("workspace_acme_mybackup.zfs")
-            );
-        })
-        .await;
+        let env = MapEnv::from([("NESTGATE_BACKUP_DIR", path)]);
+        let Json(v) = list_workspace_backups_from_env_source(&env, Path("acme".to_string()))
+            .await
+            .expect("list_workspace_backups");
+        assert_eq!(v.get("status").and_then(|s| s.as_str()), Some("success"));
+        let backups = v
+            .get("backups")
+            .and_then(|b| b.as_array())
+            .expect("backups array");
+        assert_eq!(backups.len(), 1);
+        let first = backups.first().expect("one backup");
+        assert_eq!(
+            first.get("backup_name").and_then(|s| s.as_str()),
+            Some("mybackup")
+        );
+        assert_eq!(
+            first.get("file_name").and_then(|s| s.as_str()),
+            Some("workspace_acme_mybackup.zfs")
+        );
     }
 
     #[tokio::test]

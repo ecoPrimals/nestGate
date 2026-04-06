@@ -7,17 +7,25 @@
 //! files under `{storage_base}/datasets/_models/{model_id}.json` with optional
 //! model-level metadata at `{storage_base}/datasets/_model_meta/{model_id}.json`.
 
-use nestgate_config::config::storage_paths::get_storage_base_path;
+use nestgate_config::config::storage_paths::StoragePaths;
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use tracing::{debug, info};
 
 const MODELS_DATASET: &str = "_models";
 
-fn model_path(model_id: &str) -> PathBuf {
-    get_storage_base_path()
+fn storage_base_path_for_models(env: &dyn EnvSource) -> PathBuf {
+    if let Some(p) = env.get("NESTGATE_STORAGE_BASE_PATH") {
+        return PathBuf::from(p);
+    }
+    StoragePaths::from_env_source(env).storage_base_path()
+}
+
+fn model_path_from_env(env: &dyn EnvSource, model_id: &str) -> PathBuf {
+    storage_base_path_for_models(env)
         .join("datasets")
         .join(MODELS_DATASET)
         .join(format!("{model_id}.json"))
@@ -43,13 +51,21 @@ async fn ensure_dir(path: &std::path::Path) -> Result<()> {
 
 /// `model.register` — persist model registration metadata to disk.
 pub async fn model_register(params: Option<&Value>) -> Result<Value> {
+    model_register_from_env_source(&ProcessEnv, params).await
+}
+
+/// Like [`model_register`], but resolves storage paths from an injectable [`EnvSource`].
+pub async fn model_register_from_env_source(
+    env: &dyn EnvSource,
+    params: Option<&Value>,
+) -> Result<Value> {
     let params = params
         .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
     let model_id = params["model_id"].as_str().ok_or_else(|| {
         NestGateError::invalid_input_with_field("model_id", "model_id (string) required")
     })?;
 
-    let path = model_path(model_id);
+    let path = model_path_from_env(env, model_id);
     ensure_dir(&path).await?;
 
     let name_default = json!(model_id);
@@ -80,16 +96,26 @@ pub async fn model_register(params: Option<&Value>) -> Result<Value> {
 
 /// `model.exists` — check if a model registration exists on disk.
 pub fn model_exists(params: Option<&Value>) -> Result<Value> {
+    model_exists_from_env_source(&ProcessEnv, params)
+}
+
+/// Like [`model_exists`], but resolves storage paths from an injectable [`EnvSource`].
+pub fn model_exists_from_env_source(env: &dyn EnvSource, params: Option<&Value>) -> Result<Value> {
     let model_id = require_model_id(params)?;
-    let exists = model_path(model_id).exists();
+    let exists = model_path_from_env(env, model_id).exists();
     debug!(model_id, exists, "model.exists");
     Ok(json!({ "model_id": model_id, "exists": exists }))
 }
 
 /// `model.locate` — return the filesystem path of a registered model.
 pub fn model_locate(params: Option<&Value>) -> Result<Value> {
+    model_locate_from_env_source(&ProcessEnv, params)
+}
+
+/// Like [`model_locate`], but resolves storage paths from an injectable [`EnvSource`].
+pub fn model_locate_from_env_source(env: &dyn EnvSource, params: Option<&Value>) -> Result<Value> {
     let model_id = require_model_id(params)?;
-    let path = model_path(model_id);
+    let path = model_path_from_env(env, model_id);
 
     if !path.exists() {
         return Err(NestGateError::not_found(format!(
@@ -106,8 +132,16 @@ pub fn model_locate(params: Option<&Value>) -> Result<Value> {
 
 /// `model.metadata` — retrieve model registration metadata from disk.
 pub async fn model_metadata(params: Option<&Value>) -> Result<Value> {
+    model_metadata_from_env_source(&ProcessEnv, params).await
+}
+
+/// Like [`model_metadata`], but resolves storage paths from an injectable [`EnvSource`].
+pub async fn model_metadata_from_env_source(
+    env: &dyn EnvSource,
+    params: Option<&Value>,
+) -> Result<Value> {
     let model_id = require_model_id(params)?;
-    let path = model_path(model_id);
+    let path = model_path_from_env(env, model_id);
 
     let data = tokio::fs::read(&path).await.map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
@@ -262,62 +296,51 @@ mod tests {
 
     #[tokio::test]
     async fn test_model_register_and_exists_roundtrip() {
+        use nestgate_types::MapEnv;
+
         let tmp = tempfile::tempdir().unwrap();
-        temp_env::async_with_vars(
-            [(
-                "NESTGATE_STORAGE_BASE_PATH",
-                Some(tmp.path().to_str().unwrap()),
-            )],
-            async {
-                let params = json!({"model_id": "test-model", "name": "Test Model"});
-                let reg = model_register(Some(&params)).await.unwrap();
-                assert!(reg["registered"].as_bool().unwrap());
+        let base = tmp.path().to_str().unwrap();
+        let env = MapEnv::from([("NESTGATE_STORAGE_BASE_PATH", base)]);
+        let params = json!({"model_id": "test-model", "name": "Test Model"});
+        let reg = model_register_from_env_source(&env, Some(&params))
+            .await
+            .unwrap();
+        assert!(reg["registered"].as_bool().unwrap());
 
-                let exists = model_exists(Some(&params)).unwrap();
-                assert!(exists["exists"].as_bool().unwrap());
+        let exists = model_exists_from_env_source(&env, Some(&params)).unwrap();
+        assert!(exists["exists"].as_bool().unwrap());
 
-                let meta = model_metadata(Some(&params)).await.unwrap();
-                assert_eq!(meta["model_id"], "test-model");
-                assert_eq!(meta["name"], "Test Model");
+        let meta = model_metadata_from_env_source(&env, Some(&params))
+            .await
+            .unwrap();
+        assert_eq!(meta["model_id"], "test-model");
+        assert_eq!(meta["name"], "Test Model");
 
-                let loc = model_locate(Some(&params)).unwrap();
-                assert!(loc["path"].as_str().unwrap().contains("test-model"));
-            },
-        )
-        .await;
+        let loc = model_locate_from_env_source(&env, Some(&params)).unwrap();
+        assert!(loc["path"].as_str().unwrap().contains("test-model"));
     }
 
     #[tokio::test]
     async fn test_model_exists_returns_false_for_missing() {
+        use nestgate_types::MapEnv;
+
         let tmp = tempfile::tempdir().unwrap();
-        temp_env::async_with_vars(
-            [(
-                "NESTGATE_STORAGE_BASE_PATH",
-                Some(tmp.path().to_str().unwrap()),
-            )],
-            async {
-                let params = json!({"model_id": "nonexistent"});
-                let result: Result<Value> = model_exists(Some(&params));
-                assert!(!result.unwrap()["exists"].as_bool().unwrap());
-            },
-        )
-        .await;
+        let base = tmp.path().to_str().unwrap();
+        let env = MapEnv::from([("NESTGATE_STORAGE_BASE_PATH", base)]);
+        let params = json!({"model_id": "nonexistent"});
+        let result: Result<Value> = model_exists_from_env_source(&env, Some(&params));
+        assert!(!result.unwrap()["exists"].as_bool().unwrap());
     }
 
     #[tokio::test]
     async fn test_model_locate_missing_returns_not_found() {
+        use nestgate_types::MapEnv;
+
         let tmp = tempfile::tempdir().unwrap();
-        temp_env::async_with_vars(
-            [(
-                "NESTGATE_STORAGE_BASE_PATH",
-                Some(tmp.path().to_str().unwrap()),
-            )],
-            async {
-                let params = json!({"model_id": "missing"});
-                let result: Result<Value> = model_locate(Some(&params));
-                assert!(result.is_err());
-            },
-        )
-        .await;
+        let base = tmp.path().to_str().unwrap();
+        let env = MapEnv::from([("NESTGATE_STORAGE_BASE_PATH", base)]);
+        let params = json!({"model_id": "missing"});
+        let result: Result<Value> = model_locate_from_env_source(&env, Some(&params));
+        assert!(result.is_err());
     }
 }

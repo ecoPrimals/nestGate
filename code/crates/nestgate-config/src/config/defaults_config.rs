@@ -3,6 +3,8 @@
 
 use std::sync::Arc;
 
+use nestgate_types::{EnvSource, ProcessEnv};
+
 /// Thread-safe configuration for network port defaults
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
@@ -60,48 +62,48 @@ impl NetworkDefaultsConfig {
         }
     }
 
+    /// Create configuration from an injectable environment source
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+        Self {
+            api_port: env.get("NESTGATE_API_PORT").and_then(|s| s.parse().ok()),
+            websocket_port: env
+                .get("NESTGATE_WEBSOCKET_PORT")
+                .and_then(|s| s.parse().ok()),
+            http_port: env.get("NESTGATE_HTTP_PORT").and_then(|s| s.parse().ok()),
+            nas_http_port: env
+                .get("NESTGATE_NAS_HTTP_PORT")
+                .and_then(|s| s.parse().ok()),
+            dev_server_port: env
+                .get("NESTGATE_DEV_SERVER_PORT")
+                .and_then(|s| s.parse().ok()),
+            metrics_port: env
+                .get("NESTGATE_METRICS_PORT")
+                .and_then(|s| s.parse().ok()),
+            health_port: env.get("NESTGATE_HEALTH_PORT").and_then(|s| s.parse().ok()),
+            orchestrator_port: env
+                .get("NESTGATE_ORCHESTRATOR_PORT")
+                .and_then(|s| s.parse().ok()),
+            bind_address: env.get("NESTGATE_BIND_ADDRESS"),
+            dev_bind_address: env.get("NESTGATE_DEV_BIND_ADDRESS"),
+            hostname: env.get("NESTGATE_HOSTNAME"),
+            external_hostname: env.get("NESTGATE_EXTERNAL_HOSTNAME"),
+            websocket_base_url: env.get("NESTGATE_WS_BASE_URL"),
+            api_base_url: env.get("NESTGATE_API_BASE_URL"),
+            connection_timeout_ms: env
+                .get("NESTGATE_CONNECTION_TIMEOUT_MS")
+                .and_then(|s| s.parse().ok()),
+            request_timeout_ms: env
+                .get("NESTGATE_REQUEST_TIMEOUT_MS")
+                .and_then(|s| s.parse().ok()),
+        }
+    }
+
     /// Create configuration from current environment variables
     /// This captures env vars at initialization time, making it thread-safe
     #[must_use]
     pub fn from_env() -> Self {
-        Self {
-            api_port: std::env::var("NESTGATE_API_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            websocket_port: std::env::var("NESTGATE_WEBSOCKET_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            http_port: std::env::var("NESTGATE_HTTP_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            nas_http_port: std::env::var("NESTGATE_NAS_HTTP_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            dev_server_port: std::env::var("NESTGATE_DEV_SERVER_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            metrics_port: std::env::var("NESTGATE_METRICS_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            health_port: std::env::var("NESTGATE_HEALTH_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            orchestrator_port: std::env::var("NESTGATE_ORCHESTRATOR_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            bind_address: std::env::var("NESTGATE_BIND_ADDRESS").ok(),
-            dev_bind_address: std::env::var("NESTGATE_DEV_BIND_ADDRESS").ok(),
-            hostname: std::env::var("NESTGATE_HOSTNAME").ok(),
-            external_hostname: std::env::var("NESTGATE_EXTERNAL_HOSTNAME").ok(),
-            websocket_base_url: std::env::var("NESTGATE_WS_BASE_URL").ok(),
-            api_base_url: std::env::var("NESTGATE_API_BASE_URL").ok(),
-            connection_timeout_ms: std::env::var("NESTGATE_CONNECTION_TIMEOUT_MS")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-            request_timeout_ms: std::env::var("NESTGATE_REQUEST_TIMEOUT_MS")
-                .ok()
-                .and_then(|s| s.parse().ok()),
-        }
+        Self::from_env_source(&ProcessEnv)
     }
 
     // Port getters with fallback to established defaults
@@ -283,6 +285,18 @@ impl Default for NetworkDefaultsConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
+
+    #[test]
+    fn test_from_env_source_map_env() {
+        let env = MapEnv::from([
+            ("NESTGATE_API_PORT", "4000"),
+            ("NESTGATE_HOSTNAME", "test-host"),
+        ]);
+        let config = NetworkDefaultsConfig::from_env_source(&env);
+        assert_eq!(config.get_api_port(), 4000);
+        assert_eq!(config.get_hostname(), "test-host");
+    }
 
     #[test]
     fn test_defaults_config_new() {

@@ -71,7 +71,8 @@ pub struct ProductionReadinessValidator {
     /// Injectable environment (use [`ProcessEnv`] in production).
     env: Arc<dyn EnvSource>,
 }
-/// Real ZFS operations (placeholder for actual implementation)
+/// Real ZFS operations dispatcher: runs `zfs` / `zpool` (and related) commands and maps output
+/// into [`crate::handlers::ZfsResponse`].
 #[derive(Debug, Default)]
 /// Realzfsoperations
 pub struct RealZfsOperations {}

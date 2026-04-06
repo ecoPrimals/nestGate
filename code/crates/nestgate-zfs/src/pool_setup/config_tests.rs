@@ -270,7 +270,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_default() {
-        #[expect(deprecated)]
+        #[allow(deprecated)]
         let config = PoolPropertyConfig::default();
 
         assert_eq!(config.ashift, 12);
@@ -282,7 +282,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_clone() {
-        #[expect(deprecated)]
+        #[allow(deprecated)]
         let config1 = PoolPropertyConfig::default();
         let config2 = config1.clone();
 
@@ -292,7 +292,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_serialization() {
-        #[expect(deprecated)]
+        #[allow(deprecated)]
         let config = PoolPropertyConfig::default();
         let json = serde_json::to_string(&config).expect("Failed to serialize");
 
@@ -414,7 +414,7 @@ mod config_tests {
 
     #[test]
     fn test_pool_property_config_custom_values() {
-        #[expect(deprecated)]
+        #[allow(deprecated)]
         let config = PoolPropertyConfig {
             ashift: 13,
             autoexpand: false,

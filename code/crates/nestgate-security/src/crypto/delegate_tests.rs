@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::*;
+use nestgate_types::MapEnv;
 use serde_json::json;
 
 #[cfg(unix)]
@@ -300,29 +301,18 @@ async fn crypto_delegate_new_errors_when_ipc_gateway_unreachable() {
     let absent = dir.path().join("definitely_no_orchestration.sock");
     let _ = std::fs::remove_file(&absent);
 
-    temp_env::async_with_vars(
-        [
-            ("NESTGATE_ORCHESTRATION_IPC_PATH", None::<&str>),
-            ("ORCHESTRATION_IPC_PATH", None::<&str>),
-            (
-                "ORCHESTRATION_IPC_STANDARD_PATH",
-                Some(absent.to_string_lossy().as_ref()),
-            ),
-        ],
-        async {
-            let Err(err) = CryptoDelegate::new().await else {
-                panic!("expected discovery to fail");
-            };
-            let s = err.to_string();
-            assert!(
-                s.contains("Failed to discover IPC gateway")
-                    || s.contains("IPC gateway not found")
-                    || s.contains("orchestration"),
-                "unexpected error: {s}"
-            );
-        },
-    )
-    .await;
+    let absent_str = absent.to_string_lossy();
+    let env = MapEnv::from([("ORCHESTRATION_IPC_STANDARD_PATH", absent_str.as_ref())]);
+    let Err(err) = CryptoDelegate::new_from_env_source(&env).await else {
+        panic!("expected discovery to fail");
+    };
+    let s = err.to_string();
+    assert!(
+        s.contains("Failed to discover IPC gateway")
+            || s.contains("IPC gateway not found")
+            || s.contains("orchestration"),
+        "unexpected error: {s}"
+    );
 }
 
 #[tokio::test]
@@ -353,20 +343,15 @@ async fn crypto_delegate_new_errors_when_capability_discovery_returns_empty() {
             .expect("write");
     });
 
-    temp_env::async_with_vars(
-        [("NESTGATE_ORCHESTRATION_IPC_PATH", Some(orch_str.as_str()))],
-        async {
-            let Err(err) = CryptoDelegate::new().await else {
-                panic!("expected empty capability list to fail");
-            };
-            let s = err.to_string();
-            assert!(
-                s.contains("No crypto provider") || s.contains("crypto"),
-                "unexpected error: {s}"
-            );
-        },
-    )
-    .await;
+    let env = MapEnv::from([("NESTGATE_ORCHESTRATION_IPC_PATH", orch_str.as_str())]);
+    let Err(err) = CryptoDelegate::new_from_env_source(&env).await else {
+        panic!("expected empty capability list to fail");
+    };
+    let s = err.to_string();
+    assert!(
+        s.contains("No crypto provider") || s.contains("crypto"),
+        "unexpected error: {s}"
+    );
 
     server.abort();
 }

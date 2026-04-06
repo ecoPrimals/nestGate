@@ -4,7 +4,7 @@
 // Removed unused import for pedantic perfection
 use crate::universal_adapter::PrimalAgnosticAdapter;
 use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
-use nestgate_types::{NestGateError, Result};
+use nestgate_types::{EnvSource, NestGateError, ProcessEnv, Result};
 use x509_parser::pem::parse_x509_pem;
 use x509_parser::prelude::*;
 use x509_parser::time::ASN1Time;
@@ -45,14 +45,21 @@ impl CertificateValidator {
     /// export NESTGATE_API_URL="http://your-server:8080"
     /// ```
     pub fn new(config: NestGateCanonicalConfig) -> Result<Self> {
-        // Try explicit adapter endpoint first
-        let adapter_url = std::env::var("NESTGATE_ADAPTER_ENDPOINT")
-            .or_else(|_| {
-                // Fall back to API URL + /adapter suffix
-                std::env::var("NESTGATE_API_URL")
+        Self::new_from_env_source(&ProcessEnv, config)
+    }
+
+    /// Like [`Self::new`], but reads adapter URL from an injectable [`EnvSource`].
+    pub fn new_from_env_source(
+        env: &dyn EnvSource,
+        config: NestGateCanonicalConfig,
+    ) -> Result<Self> {
+        let adapter_url = env
+            .get("NESTGATE_ADAPTER_ENDPOINT")
+            .or_else(|| {
+                env.get("NESTGATE_API_URL")
                     .map(|base| format!("{}/adapter", base.trim_end_matches('/')))
             })
-            .map_err(|_| {
+            .ok_or_else(|| {
                 NestGateError::configuration_error(
                     "adapter_endpoint",
                     "Certificate validator requires NESTGATE_ADAPTER_ENDPOINT or NESTGATE_API_URL to be set. \
@@ -149,76 +156,61 @@ fn x509_expired(cert_data: &[u8]) -> Option<bool> {
 ///
 /// Returns an error if the validator cannot be created (e.g. no adapter endpoint configured)
 pub fn create_default_certificate_validator() -> Result<CertificateValidator> {
-    CertificateValidator::new(NestGateCanonicalConfig::default())
+    create_default_certificate_validator_from_env_source(&ProcessEnv)
+}
+
+/// Like [`create_default_certificate_validator`], but uses an injectable [`EnvSource`].
+pub fn create_default_certificate_validator_from_env_source(
+    env: &dyn EnvSource,
+) -> Result<CertificateValidator> {
+    CertificateValidator::new_from_env_source(env, NestGateCanonicalConfig::default())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_types::NestGateError;
+    use nestgate_types::{MapEnv, NestGateError};
 
     #[test]
     fn new_errors_when_no_adapter_env() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
-                ("NESTGATE_API_URL", None::<&str>),
-            ],
-            || {
-                let err = CertificateValidator::new(NestGateCanonicalConfig::default())
-                    .err()
-                    .expect("expected configuration error");
-                match err {
-                    NestGateError::Configuration(d) => {
-                        assert_eq!(d.field, "adapter_endpoint");
-                    }
-                    ref other => panic!("unexpected {other:?}"),
-                }
-            },
-        );
+        let env = MapEnv::new();
+        let err =
+            CertificateValidator::new_from_env_source(&env, NestGateCanonicalConfig::default())
+                .err()
+                .expect("expected configuration error");
+        match err {
+            NestGateError::Configuration(d) => {
+                assert_eq!(d.field, "adapter_endpoint");
+            }
+            ref other => panic!("unexpected {other:?}"),
+        }
     }
 
     #[test]
     fn validate_certificate_rejects_garbage() {
-        temp_env::with_var(
-            "NESTGATE_ADAPTER_ENDPOINT",
-            Some("http://localhost/adapter"),
-            || {
-                let v = CertificateValidator::new(NestGateCanonicalConfig::default())
-                    .expect("validator new");
-                assert!(!v.validate_certificate(&[]).expect("structural result"));
-                assert!(!v.validate_certificate(b"x").expect("structural result"));
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_ADAPTER_ENDPOINT", "http://localhost/adapter")]);
+        let v = CertificateValidator::new_from_env_source(&env, NestGateCanonicalConfig::default())
+            .expect("validator new");
+        assert!(!v.validate_certificate(&[]).expect("structural result"));
+        assert!(!v.validate_certificate(b"x").expect("structural result"));
     }
 
     #[test]
     fn is_certificate_expired_errors_on_garbage() {
-        temp_env::with_var(
-            "NESTGATE_ADAPTER_ENDPOINT",
-            Some("http://localhost/adapter"),
-            || {
-                let v = CertificateValidator::new(NestGateCanonicalConfig::default())
-                    .expect("validator new");
-                let e = v
-                    .is_certificate_expired(b"not-a-cert")
-                    .expect_err("parse should fail");
-                assert!(matches!(e, NestGateError::Validation(_)));
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_ADAPTER_ENDPOINT", "http://localhost/adapter")]);
+        let v = CertificateValidator::new_from_env_source(&env, NestGateCanonicalConfig::default())
+            .expect("validator new");
+        let e = v
+            .is_certificate_expired(b"not-a-cert")
+            .expect_err("parse should fail");
+        assert!(matches!(e, NestGateError::Validation(_)));
     }
 
     #[test]
     fn create_default_certificate_validator_uses_api_url_fallback() {
-        temp_env::with_vars(
-            [
-                ("NESTGATE_ADAPTER_ENDPOINT", None::<&str>),
-                ("NESTGATE_API_URL", Some("https://example.com/")),
-            ],
-            || {
-                let v = create_default_certificate_validator().expect("default validator");
-                assert!(!v.validate_certificate(b"x").expect("structural"));
-            },
-        );
+        let env = MapEnv::from([("NESTGATE_API_URL", "https://example.com/")]);
+        let v =
+            create_default_certificate_validator_from_env_source(&env).expect("default validator");
+        assert!(!v.validate_certificate(b"x").expect("structural"));
     }
 }

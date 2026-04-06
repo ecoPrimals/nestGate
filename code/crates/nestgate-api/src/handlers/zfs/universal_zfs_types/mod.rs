@@ -201,18 +201,14 @@ mod tests {
         assert!(matches!(zfs_error, UniversalZfsError::Backend { .. }));
     }
 
-    #[test]
-    fn test_timeout_elapsed_conversion() {
+    #[tokio::test]
+    async fn test_timeout_elapsed_conversion() {
         use tokio::time::{Duration as TokioDuration, timeout};
 
-        // Create a timeout error by running an async block
-        let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime for test");
-        let result = rt.block_on(async {
-            timeout(TokioDuration::from_millis(1), async {
-                tokio::time::sleep(TokioDuration::from_secs(10)).await;
-            })
-            .await
-        });
+        let result = timeout(TokioDuration::from_millis(1), async {
+            tokio::time::sleep(TokioDuration::from_secs(10)).await;
+        })
+        .await;
 
         if let Err(elapsed) = result {
             let zfs_error: UniversalZfsError = elapsed.into();

@@ -13,13 +13,13 @@ use nestgate_core::config::canonical_primary::domains::test_canonical::Canonical
 
 // Re-export all test double implementations.
 // These are test utility libraries — many building blocks defined for future test scenarios.
-#[expect(dead_code)]
+#[allow(dead_code)]
 pub mod hardware_test_doubles;
-#[expect(dead_code)]
+#[allow(dead_code)]
 pub mod network_test_doubles;
-#[expect(dead_code)]
+#[allow(dead_code)]
 pub mod service_test_doubles;
-#[expect(dead_code)]
+#[allow(dead_code)]
 pub mod storage_test_doubles;
 
 // Re-export mock types for ergonomic access

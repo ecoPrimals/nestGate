@@ -47,6 +47,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, warn};
 
+use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
+
 /// Capability-based configuration system
 ///
 /// Implements the evolution from hardcoded values to runtime discovery:
@@ -63,6 +65,9 @@ pub struct CapabilityConfig {
 
     /// Discovery configuration
     discovery_config: DiscoveryConfig,
+
+    /// Environment source (production: process env; tests: [`MapEnv`](nestgate_types::MapEnv))
+    env: Arc<dyn EnvSource>,
 }
 
 /// Self-knowledge: What this primal can do
@@ -129,16 +134,21 @@ pub struct DiscoveryConfig {
     pub timeout_ms: u64,
 }
 
-impl Default for DiscoveryConfig {
-    fn default() -> Self {
+impl DiscoveryConfig {
+    /// Load discovery flags from an injectable environment source
+    #[must_use]
+    pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self {
-            enabled: std::env::var("NESTGATE_DISCOVERY_ENABLED")
-                .ok()
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(true), // Default: discovery enabled
+            enabled: env_parsed(env, "NESTGATE_DISCOVERY_ENABLED", true),
             methods: vec![DiscoveryMethod::Environment], // Start with env only
             timeout_ms: 5000,
         }
+    }
+}
+
+impl Default for DiscoveryConfig {
+    fn default() -> Self {
+        Self::from_env_source(&ProcessEnv)
     }
 }
 
@@ -184,18 +194,28 @@ impl CapabilityConfig {
     ///
     /// Returns an error if self-knowledge cannot be determined.
     pub async fn initialize() -> Result<Self> {
-        let self_knowledge = Self::build_self_knowledge().await?;
-        let discovery_config = DiscoveryConfig::default();
+        Self::initialize_with_env(Arc::new(ProcessEnv)).await
+    }
+
+    /// Initialize with an injectable environment source (use [`MapEnv`](nestgate_types::MapEnv) in tests)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if self-knowledge cannot be determined.
+    pub async fn initialize_with_env(env: Arc<dyn EnvSource>) -> Result<Self> {
+        let discovery_config = DiscoveryConfig::from_env_source(env.as_ref());
+        let self_knowledge = Self::build_self_knowledge(env.clone()).await?;
 
         Ok(Self {
             self_knowledge: Arc::new(self_knowledge),
             discovered: Arc::new(RwLock::new(HashMap::new())),
             discovery_config,
+            env,
         })
     }
 
     /// Build our self-knowledge
-    async fn build_self_knowledge() -> Result<SelfKnowledge> {
+    async fn build_self_knowledge(env: Arc<dyn EnvSource>) -> Result<SelfKnowledge> {
         // Generate unique identity (not hardcoded)
         let identity = PrimalIdentity {
             id: uuid::Uuid::new_v4().to_string(),
@@ -204,10 +224,10 @@ impl CapabilityConfig {
         };
 
         // Determine our capabilities from environment or defaults
-        let capabilities = Self::determine_capabilities().await?;
+        let capabilities = Self::determine_capabilities(env.clone()).await?;
 
         // Build our endpoints from configuration (not hardcoded)
-        let endpoints = Self::build_endpoints()?;
+        let endpoints = Self::build_endpoints(env.as_ref())?;
 
         Ok(SelfKnowledge {
             capabilities,
@@ -217,9 +237,9 @@ impl CapabilityConfig {
     }
 
     /// Determine what capabilities we provide
-    async fn determine_capabilities() -> Result<Vec<String>> {
+    async fn determine_capabilities(env: Arc<dyn EnvSource>) -> Result<Vec<String>> {
         // Check environment for explicit capability list
-        if let Ok(caps) = std::env::var("NESTGATE_CAPABILITIES") {
+        if let Some(caps) = env.get("NESTGATE_CAPABILITIES") {
             return Ok(caps.split(',').map(|s| s.trim().to_string()).collect());
         }
 
@@ -242,12 +262,12 @@ impl CapabilityConfig {
     }
 
     /// Build our endpoints from configuration
-    fn build_endpoints() -> Result<Vec<ServiceEndpoint>> {
+    fn build_endpoints(env: &dyn EnvSource) -> Result<Vec<ServiceEndpoint>> {
         let mut endpoints = Vec::new();
 
         // Primary API endpoint
-        let api_port = Self::resolve_port_from_env("NESTGATE_API_PORT", 0)?;
-        let api_addr = Self::resolve_address_from_env("NESTGATE_API_HOST", "0.0.0.0")?;
+        let api_port = Self::resolve_port_from_env_source(env, "NESTGATE_API_PORT", 0)?;
+        let api_addr = Self::resolve_address_from_env_source(env, "NESTGATE_API_HOST", "0.0.0.0")?;
 
         endpoints.push(ServiceEndpoint {
             protocol: "http".to_string(),
@@ -260,9 +280,13 @@ impl CapabilityConfig {
     }
 
     /// Resolve port from environment with fallback
-    fn resolve_port_from_env(env_var: &str, fallback: u16) -> Result<u16> {
-        std::env::var(env_var).map_or_else(
-            |_| {
+    fn resolve_port_from_env_source(
+        env: &dyn EnvSource,
+        env_var: &str,
+        fallback: u16,
+    ) -> Result<u16> {
+        env.get(env_var).map_or_else(
+            || {
                 debug!("Port {} not set, using fallback: {}", env_var, fallback);
                 Ok(fallback)
             },
@@ -274,8 +298,12 @@ impl CapabilityConfig {
     }
 
     /// Resolve address from environment with fallback
-    fn resolve_address_from_env(env_var: &str, fallback: &str) -> Result<String> {
-        if let Ok(val) = std::env::var(env_var) {
+    fn resolve_address_from_env_source(
+        env: &dyn EnvSource,
+        env_var: &str,
+        fallback: &str,
+    ) -> Result<String> {
+        if let Some(val) = env.get(env_var) {
             // Validate it's a valid address format
             if val.is_empty() {
                 anyhow::bail!("{env_var} cannot be empty");
@@ -348,7 +376,7 @@ impl CapabilityConfig {
         let host_var = format!("{env_prefix}HOST");
         let port_var = format!("{env_prefix}PORT");
 
-        if let (Ok(host), Ok(port_str)) = (std::env::var(&host_var), std::env::var(&port_var)) {
+        if let (Some(host), Some(port_str)) = (self.env.get(&host_var), self.env.get(&port_var)) {
             let port = port_str
                 .parse()
                 .with_context(|| format!("Invalid port in {port_var}"))?;
@@ -432,7 +460,7 @@ impl CapabilityConfig {
     /// Returns an error if the port cannot be determined.
     pub async fn get_port(&self, env_var: &str) -> Result<u16> {
         // 1. Check environment
-        if let Ok(val) = std::env::var(env_var) {
+        if let Some(val) = self.env.get(env_var) {
             return val
                 .parse()
                 .with_context(|| format!("Invalid port in {env_var}: {val}"));
@@ -461,7 +489,7 @@ impl CapabilityConfig {
     ///
     /// Returns an error if the address cannot be parsed.
     pub fn get_bind_address(&self, env_var: &str, default: &str) -> Result<SocketAddr> {
-        let addr_str = std::env::var(env_var).unwrap_or_else(|_| default.to_string());
+        let addr_str = self.env.get(env_var).unwrap_or_else(|| default.to_string());
 
         addr_str
             .parse()
@@ -536,6 +564,15 @@ impl CapabilityConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn test_initialize_with_map_env() {
+        let env = Arc::new(MapEnv::from([("NESTGATE_DISCOVERY_ENABLED", "false")]));
+        let config = CapabilityConfig::initialize_with_env(env).await.unwrap();
+        assert!(!config.discovery_config.enabled);
+    }
 
     #[tokio::test]
     async fn test_capability_config_initialization() {

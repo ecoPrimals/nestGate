@@ -279,5 +279,8 @@ async fn delete_workspace_fake_zfs_dataset_missing_is_not_found() {
     let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
     let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
     let r = delete_workspace_from_env_source(&env, Path("missing-ws".to_string())).await;
-    assert!(matches!(r, Err(StatusCode::NOT_FOUND)));
+    assert!(
+        matches!(r, Err(StatusCode::NOT_FOUND)),
+        "expected NOT_FOUND for missing dataset, got {r:?}"
+    );
 }

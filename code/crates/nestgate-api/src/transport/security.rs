@@ -10,6 +10,7 @@
 
 use nestgate_core::capability_discovery::CapabilityDiscovery;
 use nestgate_core::error::{NestGateError, Result};
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -69,7 +70,12 @@ impl SecurityProviderClient {
     ///
     /// Returns error if no security provider can be discovered.
     pub async fn discover(family_id: &str) -> Result<Self> {
-        if let Ok(socket_path) = std::env::var("NESTGATE_SECURITY_PROVIDER") {
+        Self::discover_from_env_source(&ProcessEnv, family_id).await
+    }
+
+    /// Like [`Self::discover`], but reads `NESTGATE_SECURITY_*` / `XDG_RUNTIME_DIR` from `env`.
+    pub async fn discover_from_env_source(env: &dyn EnvSource, family_id: &str) -> Result<Self> {
+        if let Some(socket_path) = env.get("NESTGATE_SECURITY_PROVIDER") {
             info!(
                 "Found security provider via NESTGATE_SECURITY_PROVIDER: {}",
                 socket_path
@@ -88,10 +94,11 @@ impl SecurityProviderClient {
             }
         }
 
-        let security_slug =
-            std::env::var("NESTGATE_SECURITY_SLUG").unwrap_or_else(|_| "security".to_string());
+        let security_slug = env
+            .get("NESTGATE_SECURITY_SLUG")
+            .unwrap_or_else(|| "security".to_string());
 
-        let socket_dirs = Self::candidate_socket_dirs();
+        let socket_dirs = Self::candidate_socket_dirs_from_env(env);
         for dir in &socket_dirs {
             let patterns = vec![
                 format!("{dir}/{security_slug}-{family_id}-*.sock"),
@@ -114,12 +121,12 @@ impl SecurityProviderClient {
     /// 1. `XDG_RUNTIME_DIR` (recommended, per-user, tmpfs)
     /// 2. /run/user/{uid} (standard XDG fallback)
     /// 3. /tmp (least secure, universal fallback)
-    fn candidate_socket_dirs() -> Vec<String> {
+    fn candidate_socket_dirs_from_env(env: &dyn EnvSource) -> Vec<String> {
         let mut dirs = Vec::with_capacity(3);
-        if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
+        if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
             dirs.push(xdg);
             // XDG_RUNTIME_DIR is typically /run/user/{uid} — no need to duplicate
-        } else if let Ok(uid) = std::env::var("UID").or_else(|_| std::env::var("EUID")) {
+        } else if let Some(uid) = env.get("UID").or_else(|| env.get("EUID")) {
             dirs.push(format!("/run/user/{uid}"));
         }
         dirs.push("/tmp".to_string());
@@ -363,6 +370,7 @@ struct SecurityProviderResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::MapEnv;
     use serde_json::json;
     use std::sync::Arc;
     use std::time::Duration;
@@ -415,22 +423,17 @@ mod tests {
 
     #[tokio::test]
     async fn discover_via_env_returns_client_without_socket_file() {
-        temp_env::async_with_vars(
-            [(
-                "NESTGATE_SECURITY_PROVIDER",
-                Some("/tmp/nestgate-test-security-not-created.sock"),
-            )],
-            async {
-                let c = SecurityProviderClient::discover("fam")
-                    .await
-                    .expect("env path");
-                assert_eq!(
-                    c.socket_path(),
-                    std::path::Path::new("/tmp/nestgate-test-security-not-created.sock")
-                );
-            },
-        )
-        .await;
+        let env = MapEnv::from([(
+            "NESTGATE_SECURITY_PROVIDER",
+            "/tmp/nestgate-test-security-not-created.sock",
+        )]);
+        let c = SecurityProviderClient::discover_from_env_source(&env, "fam")
+            .await
+            .expect("env path");
+        assert_eq!(
+            c.socket_path(),
+            std::path::Path::new("/tmp/nestgate-test-security-not-created.sock")
+        );
     }
 
     #[tokio::test]
@@ -604,19 +607,13 @@ mod tests {
         let _listener = UnixListener::bind(&path).expect("bind for discover");
         let path_clone = path.clone();
 
-        temp_env::async_with_vars(
-            vec![
-                ("NESTGATE_SECURITY_PROVIDER", None::<&str>),
-                ("XDG_RUNTIME_DIR", Some(dir.path().to_str().unwrap())),
-                ("NESTGATE_SECURITY_SLUG", Some("security")),
-            ],
-            async move {
-                let c = SecurityProviderClient::discover("globfam")
-                    .await
-                    .expect("glob discover");
-                assert_eq!(c.socket_path(), path_clone);
-            },
-        )
-        .await;
+        let env = MapEnv::from([
+            ("XDG_RUNTIME_DIR", dir.path().to_str().expect("utf8 path")),
+            ("NESTGATE_SECURITY_SLUG", "security"),
+        ]);
+        let c = SecurityProviderClient::discover_from_env_source(&env, "globfam")
+            .await
+            .expect("glob discover");
+        assert_eq!(c.socket_path(), path_clone);
     }
 }

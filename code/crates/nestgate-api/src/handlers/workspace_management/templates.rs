@@ -6,7 +6,7 @@
 // `NESTGATE_WORKSPACE_TEMPLATES_DIR`. Applying to live ZFS datasets remains orchestration.
 
 use axum::{Json, extract::Path, http::StatusCode};
-use nestgate_core::error::utilities::safe_env_var_or_default;
+use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 use tracing::info;
@@ -33,7 +33,15 @@ fn sanitize_workspace_template_id(id: &str) -> Option<&str> {
 }
 
 /// Create workspace template (JSON on disk)
-pub fn create_workspace_template(Path(workspace_id): Path<String>) -> (StatusCode, Json<Value>) {
+pub fn create_workspace_template(path: Path<String>) -> (StatusCode, Json<Value>) {
+    create_workspace_template_from_env_source(&ProcessEnv, path)
+}
+
+/// Like [`create_workspace_template`], but resolves `NESTGATE_WORKSPACE_TEMPLATES_DIR` from `env`.
+pub fn create_workspace_template_from_env_source(
+    env: &dyn EnvSource,
+    Path(workspace_id): Path<String>,
+) -> (StatusCode, Json<Value>) {
     info!(
         "Template creation requested for workspace: {}",
         workspace_id
@@ -49,7 +57,8 @@ pub fn create_workspace_template(Path(workspace_id): Path<String>) -> (StatusCod
         );
     };
 
-    let base = safe_env_var_or_default(
+    let base = env_var_or_default(
+        env,
         "NESTGATE_WORKSPACE_TEMPLATES_DIR",
         "/var/lib/nestgate/workspace_templates",
     );
@@ -132,6 +141,7 @@ pub fn apply_workspace_template(Path(workspace_id): Path<String>) -> (StatusCode
 mod tests {
     use super::*;
     use axum::Json;
+    use nestgate_types::MapEnv;
     use std::fs;
     use std::path::PathBuf;
 
@@ -145,15 +155,15 @@ mod tests {
     fn test_create_workspace_template_writes_file() {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().to_str().expect("utf8 path");
-        temp_env::with_var("NESTGATE_WORKSPACE_TEMPLATES_DIR", Some(path), || {
-            let (status, Json(body)) = create_workspace_template(Path("my-ws-01".to_string()));
-            assert_eq!(status, StatusCode::OK);
-            assert_eq!(body["status"].as_str(), Some("created"));
-            let p = PathBuf::from(path).join("my-ws-01.json");
-            assert!(p.exists());
-            let raw = fs::read_to_string(p).expect("read template");
-            assert!(raw.contains("schema_version"));
-        });
+        let env = MapEnv::from([("NESTGATE_WORKSPACE_TEMPLATES_DIR", path)]);
+        let (status, Json(body)) =
+            create_workspace_template_from_env_source(&env, Path("my-ws-01".to_string()));
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body["status"].as_str(), Some("created"));
+        let p = PathBuf::from(path).join("my-ws-01.json");
+        assert!(p.exists());
+        let raw = fs::read_to_string(p).expect("read template");
+        assert!(raw.contains("schema_version"));
     }
 
     #[test]

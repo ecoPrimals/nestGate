@@ -8,8 +8,10 @@
 //! the codebase keeps a single audited surface while the workspace lint `unsafe_code` remains
 //! denied at call sites.
 //!
-//! **Tests:** For unit tests, prefer `test_support` helpers built on `temp_env` so changes are
-//! scoped and less likely to race with parallel tests.
+//! **Tests:** For code that only reads configuration, prefer injectable env maps (`MapEnv` in the
+//! `nestgate-types` crate) and APIs that accept `EnvSource`. The [`test_support`] module remains for
+//! tests that must mutate the real process environment (for example alongside [`set_var`]) with
+//! scoped restoration via `temp_env`.
 
 use std::ffi::OsStr;
 

@@ -60,9 +60,8 @@ pub fn get_storage_base_path() -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestgate_types::ProcessEnv;
+    use nestgate_types::MapEnv;
     use std::path::{Path, PathBuf};
-    use temp_env::with_vars;
 
     use super::super::resolve::{
         resolve_cache_dir_from_env_source, resolve_config_dir_from_env_source,
@@ -88,86 +87,50 @@ mod tests {
     #[test]
     fn resolve_data_dir_prefers_nestgate_env() {
         let want = "/tmp/nestgate-resolve-test-data";
-        let got = with_vars(vec![("NESTGATE_DATA_DIR", Some(want))], || {
-            resolve_data_dir_from_env_source(&ProcessEnv)
-        });
+        let env = MapEnv::from([("NESTGATE_DATA_DIR", want)]);
+        let got = resolve_data_dir_from_env_source(&env);
         assert_eq!(got, PathBuf::from(want));
     }
 
     #[test]
     fn resolve_config_dir_uses_xdg_config_home() {
-        let got = with_vars(
-            vec![
-                ("NESTGATE_CONFIG_DIR", None::<&str>),
-                ("XDG_CONFIG_HOME", Some("/tmp/xdg-config")),
-                ("HOME", None::<&str>),
-            ],
-            || resolve_config_dir_from_env_source(&ProcessEnv),
-        );
+        let env = MapEnv::from([("XDG_CONFIG_HOME", "/tmp/xdg-config")]);
+        let got = resolve_config_dir_from_env_source(&env);
         assert_eq!(got, PathBuf::from("/tmp/xdg-config/nestgate"));
     }
 
     #[test]
     fn resolve_cache_dir_from_home_dot_cache() {
-        let got = with_vars(
-            vec![
-                ("NESTGATE_CACHE_DIR", None::<&str>),
-                ("XDG_CACHE_HOME", None::<&str>),
-                ("HOME", Some("/home/testuser")),
-            ],
-            || resolve_cache_dir_from_env_source(&ProcessEnv),
-        );
+        let env = MapEnv::from([("HOME", "/home/testuser")]);
+        let got = resolve_cache_dir_from_env_source(&env);
         assert_eq!(got, PathBuf::from("/home/testuser/.cache/nestgate"));
     }
 
     #[test]
     fn resolve_state_dir_from_xdg_state_home() {
-        let got = with_vars(
-            vec![
-                ("NESTGATE_STATE_DIR", None::<&str>),
-                ("XDG_STATE_HOME", Some("/run/user/1000/state")),
-                ("HOME", None::<&str>),
-            ],
-            || resolve_state_dir_from_env_source(&ProcessEnv),
-        );
+        let env = MapEnv::from([("XDG_STATE_HOME", "/run/user/1000/state")]);
+        let got = resolve_state_dir_from_env_source(&env);
         assert_eq!(got, PathBuf::from("/run/user/1000/state/nestgate"));
     }
 
     #[test]
     fn resolve_log_dir_under_xdg_state() {
-        let got = with_vars(
-            vec![
-                ("NESTGATE_LOG_DIR", None::<&str>),
-                ("XDG_STATE_HOME", Some("/tmp/xdg-state")),
-                ("HOME", None::<&str>),
-            ],
-            || resolve_log_dir_from_env_source(&ProcessEnv),
-        );
+        let env = MapEnv::from([("XDG_STATE_HOME", "/tmp/xdg-state")]);
+        let got = resolve_log_dir_from_env_source(&env);
         assert_eq!(got, PathBuf::from("/tmp/xdg-state/nestgate/logs"));
     }
 
     #[test]
     fn resolve_temp_dir_from_tmpdir() {
-        let got = with_vars(
-            vec![
-                ("NESTGATE_TEMP_DIR", None::<&str>),
-                ("TMPDIR", Some("/var/tmp")),
-            ],
-            || resolve_temp_dir_from_env_source(&ProcessEnv),
-        );
+        let env = MapEnv::from([("TMPDIR", "/var/tmp")]);
+        let got = resolve_temp_dir_from_env_source(&env);
         assert_eq!(got, PathBuf::from("/var/tmp/nestgate"));
     }
 
     #[test]
     fn resolve_runtime_dir_from_xdg_runtime() {
-        let got = with_vars(
-            vec![
-                ("NESTGATE_RUNTIME_DIR", None::<&str>),
-                ("XDG_RUNTIME_DIR", Some("/run/user/1000")),
-                ("HOME", None::<&str>),
-            ],
-            || resolve_runtime_dir_from_env_source(&ProcessEnv),
-        );
+        let env = MapEnv::from([("XDG_RUNTIME_DIR", "/run/user/1000")]);
+        let got = resolve_runtime_dir_from_env_source(&env);
         assert_eq!(got, PathBuf::from("/run/user/1000/nestgate"));
     }
 
@@ -175,18 +138,16 @@ mod tests {
     fn storage_paths_from_environment_matches_resolve_helpers() {
         let data = "/tmp/nestgate-sp-data";
         let cfg = "/tmp/nestgate-sp-config";
-        let paths = with_vars(
-            vec![
-                ("NESTGATE_DATA_DIR", Some(data)),
-                ("NESTGATE_CONFIG_DIR", Some(cfg)),
-                ("NESTGATE_CACHE_DIR", Some("/tmp/nestgate-sp-cache")),
-                ("NESTGATE_STATE_DIR", Some("/tmp/nestgate-sp-state")),
-                ("NESTGATE_LOG_DIR", Some("/tmp/nestgate-sp-logs")),
-                ("NESTGATE_TEMP_DIR", Some("/tmp/nestgate-sp-temp")),
-                ("NESTGATE_RUNTIME_DIR", Some("/tmp/nestgate-sp-run")),
-            ],
-            || super::super::paths::StoragePaths::from_env_source(&ProcessEnv),
-        );
+        let env = MapEnv::from([
+            ("NESTGATE_DATA_DIR", data),
+            ("NESTGATE_CONFIG_DIR", cfg),
+            ("NESTGATE_CACHE_DIR", "/tmp/nestgate-sp-cache"),
+            ("NESTGATE_STATE_DIR", "/tmp/nestgate-sp-state"),
+            ("NESTGATE_LOG_DIR", "/tmp/nestgate-sp-logs"),
+            ("NESTGATE_TEMP_DIR", "/tmp/nestgate-sp-temp"),
+            ("NESTGATE_RUNTIME_DIR", "/tmp/nestgate-sp-run"),
+        ]);
+        let paths = super::super::paths::StoragePaths::from_env_source(&env);
         assert_eq!(paths.data_dir(), Path::new(data));
         assert_eq!(paths.config_dir(), Path::new(cfg));
         assert_eq!(

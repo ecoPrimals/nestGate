@@ -5,7 +5,7 @@
 //!
 //! Tests common API patterns, request handling, and response patterns
 
-#![expect(dead_code)]
+#![allow(dead_code)]
 
 use nestgate_core::{NestGateError, Result};
 use std::collections::HashMap;
