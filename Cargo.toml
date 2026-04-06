@@ -138,7 +138,7 @@ regex = "1.10"
 # Concurrency and performance
 dashmap = "6.1"
 parking_lot = "0.12"
-lru = "0.12"
+lru = "0.16"
 
 # Zero-copy and performance optimizations
 bytes = "1.7"

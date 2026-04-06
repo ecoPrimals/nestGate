@@ -9,7 +9,6 @@
 //! - Configuration validation
 //! - Error handling
 
-#[expect(unused_imports)]
 use super::*;
 
 #[cfg(test)]

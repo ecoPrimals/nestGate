@@ -358,6 +358,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "requires ZFS kernel module — calls `zfs list` via dataset_manager"]
     async fn refresh_tier_stats_updates_internal_map() {
         let m = TierManager::new_for_testing();
         m.refresh_tier_stats().await.expect("refresh");
