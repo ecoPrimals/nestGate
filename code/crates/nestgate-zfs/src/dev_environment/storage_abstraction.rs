@@ -313,7 +313,7 @@ impl DevEnvironmentStorageService {
 
         format!(
             "Development Storage Environment Report:\n\
-             - Base Directory: {:?}\n\
+             - Base Directory: {}\n\
              - Total Pools: {}\n\
              - Total Datasets: {}\n\
              - Total Size: {}GB\n\
@@ -321,7 +321,7 @@ impl DevEnvironmentStorageService {
              - Available: {}GB\n\
              - ZFS Features Simulated: {}\n\
              - Pool Names: {:?}",
-            self.base_path,
+            self.base_path.display(),
             stats.total_pools,
             stats.total_datasets,
             stats.total_size_bytes / (1024 * 1024 * 1024),

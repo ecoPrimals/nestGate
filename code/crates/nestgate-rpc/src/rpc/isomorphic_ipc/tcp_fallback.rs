@@ -102,6 +102,11 @@ impl TcpFallbackServer {
     /// # Returns
     ///
     /// Never returns (runs until process termination)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`anyhow::Error`] if binding the TCP listener or reading its local address fails
+    /// before the accept loop starts.
     pub async fn start(self: Arc<Self>) -> Result<()> {
         info!("🌐 Starting TCP IPC fallback (isomorphic mode)");
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
@@ -138,6 +143,11 @@ impl TcpFallbackServer {
     ///
     /// Same newline-delimited JSON-RPC 2.0 protocol as [`Self::start`]. Use alongside Unix
     /// socket IPC when both transports are desired.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`anyhow::Error`] if binding `addr` or reading the listener's local address fails
+    /// before the accept loop starts.
     pub async fn start_bound(self: Arc<Self>, addr: SocketAddr) -> Result<()> {
         info!("🌐 Starting TCP JSON-RPC listener (isomorphic IPC, fixed address)");
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");

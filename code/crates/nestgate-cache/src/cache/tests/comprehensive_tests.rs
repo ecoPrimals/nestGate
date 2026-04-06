@@ -6,7 +6,7 @@
     clippy::expect_used,
     clippy::panic,
     clippy::float_cmp,
-    clippy::default_trait_access,
+    clippy::default_trait_access
 )]
 
 //! Comprehensive cache tests

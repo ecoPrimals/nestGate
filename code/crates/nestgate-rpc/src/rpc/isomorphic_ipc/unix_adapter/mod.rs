@@ -125,6 +125,12 @@ pub struct UnixSocketRpcHandler {
 
 impl UnixSocketRpcHandler {
     /// Builds a handler with empty in-memory datasets and stub template/audit backends.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`anyhow::Error`] if the default dataset directory under the configured storage base
+    /// cannot be created (for example missing permissions or I/O failure from
+    /// [`std::fs::create_dir_all`]).
     pub fn new() -> Result<Self> {
         let state = Arc::new(StorageState::new()?);
         Ok(Self { state })

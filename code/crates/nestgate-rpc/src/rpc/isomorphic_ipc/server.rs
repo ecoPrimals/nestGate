@@ -153,6 +153,12 @@ impl IsomorphicIpcServer {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`anyhow::Error`] if the Unix socket server fails to start with a non-platform
+    /// error (for example bind or socket preparation), or if TCP fallback fails after a platform
+    /// constraint is detected.
     pub async fn start(self: Arc<Self>) -> Result<()> {
         info!("🔌 Starting IPC server (isomorphic mode)...");
         info!("   Service: {}", self.service_name);

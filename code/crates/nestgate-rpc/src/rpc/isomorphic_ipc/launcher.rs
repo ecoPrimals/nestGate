@@ -88,6 +88,11 @@ const RETRY_DELAY: Duration = Duration::from_millis(500);
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] when [`super::discovery::discover_ipc_endpoint`] fails to find a Unix
+/// socket or TCP discovery file for `NestGate`.
 pub async fn discover_nestgate_endpoint() -> Result<IpcEndpoint> {
     discover_ipc_endpoint(NESTGATE_SERVICE_NAME).context("Failed to discover NestGate IPC endpoint")
 }
@@ -110,6 +115,11 @@ pub async fn discover_nestgate_endpoint() -> Result<IpcEndpoint> {
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] after the maximum number of discovery retries is exhausted (same
+/// underlying causes as [`discover_nestgate_endpoint`]).
 pub async fn discover_nestgate_with_retry() -> Result<IpcEndpoint> {
     let mut attempts = 0;
 
@@ -175,6 +185,10 @@ pub async fn discover_nestgate_with_retry() -> Result<IpcEndpoint> {
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] if discovery or [`super::streams::connect_endpoint`] fails.
 pub async fn connect_to_nestgate() -> Result<IpcStream> {
     let endpoint = discover_nestgate_endpoint().await?;
 
@@ -202,6 +216,11 @@ pub async fn connect_to_nestgate() -> Result<IpcStream> {
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] if [`discover_nestgate_with_retry`] or [`super::streams::connect_endpoint`]
+/// fails.
 pub async fn connect_to_nestgate_with_retry() -> Result<IpcStream> {
     let endpoint = discover_nestgate_with_retry().await?;
 
@@ -261,11 +280,20 @@ pub async fn is_nestgate_running() -> bool {
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// The current implementation always returns [`Ok`]; the [`Result`] is reserved for future path
+/// validation.
 pub fn get_nestgate_socket_path() -> Result<PathBuf> {
     get_nestgate_socket_path_from_env_source(&ProcessEnv)
 }
 
 /// Like [`get_nestgate_socket_path`], but reads `XDG_RUNTIME_DIR` / `HOME` from `env`.
+///
+/// # Errors
+///
+/// Same as [`get_nestgate_socket_path`]: currently always [`Ok`].
 pub fn get_nestgate_socket_path_from_env_source(env: &dyn EnvSource) -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR (session-specific, auto-cleaned)
     if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
@@ -318,11 +346,20 @@ pub fn get_nestgate_socket_path_from_env_source(env: &dyn EnvSource) -> Result<P
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// The current implementation always returns [`Ok`]; the [`Result`] is reserved for future path
+/// validation.
 pub fn get_nestgate_tcp_discovery_path() -> Result<PathBuf> {
     get_nestgate_tcp_discovery_path_from_env_source(&ProcessEnv)
 }
 
 /// Like [`get_nestgate_tcp_discovery_path`], but reads `XDG_RUNTIME_DIR` / `HOME` from `env`.
+///
+/// # Errors
+///
+/// Same as [`get_nestgate_tcp_discovery_path`]: currently always [`Ok`].
 pub fn get_nestgate_tcp_discovery_path_from_env_source(env: &dyn EnvSource) -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR
     if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {

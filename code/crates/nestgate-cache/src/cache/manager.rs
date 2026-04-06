@@ -470,11 +470,7 @@ pub type UnifiedCacheConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![expect(
-        deprecated,
-        clippy::expect_used,
-        clippy::float_cmp
-    )]
+    #![expect(deprecated, clippy::expect_used, clippy::float_cmp)]
 
     use super::*;
 

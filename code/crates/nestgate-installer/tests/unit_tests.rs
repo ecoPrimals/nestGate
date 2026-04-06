@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    missing_docs,
-    clippy::unnecessary_wraps
-)]
+#![expect(missing_docs, clippy::unnecessary_wraps)]
 
 //
 // **Comprehensive unit tests for the NestGate installation system**

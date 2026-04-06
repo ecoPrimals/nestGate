@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(
-    clippy::expect_used,
-    clippy::float_cmp
-)]
+#![expect(clippy::expect_used, clippy::float_cmp)]
 
 use super::*;
 use std::collections::HashMap;

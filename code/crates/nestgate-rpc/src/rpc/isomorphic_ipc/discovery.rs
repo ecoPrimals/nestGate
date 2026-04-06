@@ -110,11 +110,21 @@ impl IpcEndpoint {
 /// # Ok(())
 /// # }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] when neither a discoverable Unix socket (existing path) nor a TCP
+/// discovery file yields an endpoint for `service_name`.
 pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
     discover_ipc_endpoint_from_env(&ProcessEnv, service_name)
 }
 
 /// Like [`discover_ipc_endpoint`], but reads `XDG_RUNTIME_DIR` / `HOME` from an injectable [`EnvSource`].
+///
+/// # Errors
+///
+/// Same as [`discover_ipc_endpoint`]: returns [`anyhow::Error`] when both Unix and TCP discovery
+/// fail for `service_name`.
 pub fn discover_ipc_endpoint_from_env(
     env: &dyn EnvSource,
     service_name: &str,

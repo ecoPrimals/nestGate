@@ -23,12 +23,14 @@ mod performance_types_tests {
 
     #[test]
     fn test_optimization_state_transitions() {
-        let states = [OptimizationState::Idle,
+        let states = [
+            OptimizationState::Idle,
             OptimizationState::Collecting,
             OptimizationState::Analyzing,
             OptimizationState::Optimizing,
             OptimizationState::Validating,
-            OptimizationState::Applied];
+            OptimizationState::Applied,
+        ];
         assert_eq!(states.len(), 6);
     }
 
@@ -193,9 +195,11 @@ mod performance_types_tests {
 
     #[test]
     fn test_access_pattern_variants() {
-        let patterns = [AccessPattern::Sequential,
+        let patterns = [
+            AccessPattern::Sequential,
             AccessPattern::Random,
-            AccessPattern::Mixed];
+            AccessPattern::Mixed,
+        ];
         assert_eq!(patterns.len(), 3);
     }
 
@@ -320,14 +324,16 @@ mod performance_types_tests {
 
     #[test]
     fn test_bottleneck_type_variants() {
-        let types = [ZfsBottleneckType::HighLatency,
+        let types = [
+            ZfsBottleneckType::HighLatency,
             ZfsBottleneckType::LowThroughput,
             ZfsBottleneckType::CacheMiss,
             ZfsBottleneckType::Fragmentation,
             ZfsBottleneckType::MemoryPressure,
             ZfsBottleneckType::CpuUtilization,
             ZfsBottleneckType::NetworkBandwidth,
-            ZfsBottleneckType::DiskIo];
+            ZfsBottleneckType::DiskIo,
+        ];
         assert_eq!(types.len(), 8);
     }
 
@@ -335,10 +341,12 @@ mod performance_types_tests {
 
     #[test]
     fn test_bottleneck_severity_variants() {
-        let severities = [BottleneckSeverity::Low,
+        let severities = [
+            BottleneckSeverity::Low,
             BottleneckSeverity::Medium,
             BottleneckSeverity::High,
-            BottleneckSeverity::Critical];
+            BottleneckSeverity::Critical,
+        ];
         assert_eq!(severities.len(), 4);
     }
 
@@ -442,13 +450,15 @@ mod performance_types_tests {
 
     #[test]
     fn test_optimization_type_variants() {
-        let types = [OptimizationType::CacheOptimization,
+        let types = [
+            OptimizationType::CacheOptimization,
             OptimizationType::LatencyOptimization,
             OptimizationType::ThroughputOptimization,
             OptimizationType::FragmentationDefrag,
             OptimizationType::ArcTuning,
             OptimizationType::RecordSizeOptimization,
-            OptimizationType::CompressionOptimization];
+            OptimizationType::CompressionOptimization,
+        ];
         assert_eq!(types.len(), 7);
     }
 
@@ -456,10 +466,12 @@ mod performance_types_tests {
 
     #[test]
     fn test_alert_type_variants() {
-        let types = [AlertType::PerformanceDegradation,
+        let types = [
+            AlertType::PerformanceDegradation,
             AlertType::BottleneckDetected,
             AlertType::ThresholdExceeded,
-            AlertType::OptimizationFailed];
+            AlertType::OptimizationFailed,
+        ];
         assert_eq!(types.len(), 4);
     }
 
@@ -467,10 +479,12 @@ mod performance_types_tests {
 
     #[test]
     fn test_alert_severity_variants() {
-        let severities = [AlertSeverity::Info,
+        let severities = [
+            AlertSeverity::Info,
             AlertSeverity::Warning,
             AlertSeverity::Error,
-            AlertSeverity::Critical];
+            AlertSeverity::Critical,
+        ];
         assert_eq!(severities.len(), 4);
     }
 

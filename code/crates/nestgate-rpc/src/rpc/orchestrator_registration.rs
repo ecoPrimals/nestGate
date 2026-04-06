@@ -157,6 +157,11 @@ impl OrchestratorRegistration {
     }
 
     /// Like [`Self::new`], but reads `NESTGATE_DISABLE_ORCHESTRATOR` from an injectable [`EnvSource`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`](nestgate_types::error::NestGateError) only if construction fails;
+    /// the current implementation always returns [`Ok`] (same behavior as [`Self::new`]).
     pub fn new_from_env_source(self_knowledge: SelfKnowledge, env: &dyn EnvSource) -> Result<Self> {
         let enabled = env
             .get("NESTGATE_DISABLE_ORCHESTRATOR")

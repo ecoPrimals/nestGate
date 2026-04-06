@@ -97,6 +97,10 @@ use nestgate_zfs::types::RetentionPolicy;
 
 #[test]
 fn test_arc_stats_collect_returns_valid_data() {
+    if !std::path::Path::new("/proc/spl/kstat/zfs/arcstats").exists() {
+        eprintln!("Skipping: ZFS ARC stats not available on this machine");
+        return;
+    }
     let result = ArcStats::collect();
 
     assert!(result.is_ok(), "collect() should succeed");

@@ -6,7 +6,12 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::constants::*;
+use super::constants::{
+    EMPTY_STRING, ERROR_EMAIL_FROM_EMPTY, ERROR_HTTP_METHOD_EMPTY, ERROR_RECIPIENT_REQUIRED,
+    ERROR_SLACK_CHANNEL_EMPTY, ERROR_SLACK_USERNAME_EMPTY, ERROR_SLACK_WEBHOOK_EMPTY,
+    ERROR_SMTP_PORT_ZERO, ERROR_SMTP_SERVER_EMPTY, ERROR_TIMEOUT_ZERO, ERROR_WEBHOOK_URL_EMPTY,
+    HTTP_METHOD_POST, SLACK_CHANNEL_DEFAULT, SLACK_EMOJI_ROBOT, SLACK_USERNAME_DEFAULT,
+};
 
 /// Notification configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

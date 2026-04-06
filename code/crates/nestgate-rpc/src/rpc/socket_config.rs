@@ -321,6 +321,12 @@ impl SocketConfig {
 
     /// Like [`Self::from_environment`], but reads variables from an injectable [`EnvSource`]
     /// (e.g. [`nestgate_types::MapEnv`] in tests).
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::from_environment`]: delegates to [`Self::resolve`]. The resolver currently
+    /// always returns [`Ok`]; the [`Result`] is reserved for future validation of paths and
+    /// identifiers.
     pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
         let family_id = env.get("NESTGATE_FAMILY_ID").unwrap_or_else(|| {
             warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");

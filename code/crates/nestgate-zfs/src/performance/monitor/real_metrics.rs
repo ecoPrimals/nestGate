@@ -374,10 +374,7 @@ mod tests {
             let result = RealMetricsCollector::parse_bandwidth(input);
             assert!(result.is_ok());
             let value = result.unwrap();
-            assert!(
-                (value - expected).abs() < 1.0,
-                "Failed for input: {input}"
-            );
+            assert!((value - expected).abs() < 1.0, "Failed for input: {input}");
         }
     }
 

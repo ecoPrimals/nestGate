@@ -165,12 +165,12 @@ impl DevEnvironmentZfsService {
 
         format!(
             "Development Environment ZFS Report:\n\
-             - Base Directory: {:?}\n\
+             - Base Directory: {}\n\
              - Simulated Pools: {}\n\
              - Simulated Datasets: {}\n\
              - Verbose Logging: {}\n\
              - Pool Names: {:?}",
-            self.config.base_directory,
+            self.config.base_directory.display(),
             pools.len(),
             datasets.len(),
             self.config.verbose_logging,

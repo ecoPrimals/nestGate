@@ -172,6 +172,11 @@ fn parse_health_check_rpc_response(response: &Value) -> Result<HealthCheckRespon
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Does not return [`Err`]; failures from the detailed check are mapped to
+/// [`HealthStatus::Unreachable`].
 pub async fn check_nestgate_health() -> Result<HealthStatus> {
     match check_nestgate_health_detailed().await {
         Ok(response) => Ok(response.status),
@@ -201,6 +206,11 @@ pub async fn check_nestgate_health() -> Result<HealthStatus> {
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] if connecting to `NestGate`, sending the request, reading the
+/// response line, or parsing JSON-RPC / health fields fails.
 pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
     // Connect to NestGate using isomorphic discovery
     let mut stream = connect_to_nestgate()
@@ -271,6 +281,11 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
 ///     ).await
 /// }
 /// ```
+///
+/// # Errors
+///
+/// This function runs until the process stops; it does not return [`Ok`] or [`Err`] in normal
+/// operation. The [`Result`] is reserved for future shutdown or timer failures.
 pub async fn monitor_nestgate_health<F>(check_interval: Duration, mut callback: F) -> Result<()>
 where
     F: FnMut(&HealthStatus),
@@ -319,6 +334,11 @@ where
 ///     Ok(())
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] if `timeout` elapses before a health check returns
+/// [`HealthStatus::Healthy`].
 pub async fn wait_for_healthy(timeout: Duration) -> Result<()> {
     let start = std::time::Instant::now();
     let check_interval = Duration::from_millis(500);

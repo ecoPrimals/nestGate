@@ -191,10 +191,12 @@ mod device_detection_tests {
 
     #[test]
     fn test_speed_class_sorting() {
-        let mut speeds = [SpeedClass::Fast,
+        let mut speeds = [
+            SpeedClass::Fast,
             SpeedClass::Slow,
             SpeedClass::UltraFast,
-            SpeedClass::Medium];
+            SpeedClass::Medium,
+        ];
 
         speeds.sort();
 

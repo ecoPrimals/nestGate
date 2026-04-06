@@ -439,11 +439,13 @@ mod pool_creation_tests {
 
     #[test]
     fn test_topology_variants() {
-        let topologies = [PoolTopology::Single,
+        let topologies = [
+            PoolTopology::Single,
             PoolTopology::Mirror,
             PoolTopology::RaidZ1,
             PoolTopology::RaidZ2,
-            PoolTopology::RaidZ3];
+            PoolTopology::RaidZ3,
+        ];
 
         // Verify all are different
         for (i, top1) in topologies.iter().enumerate() {

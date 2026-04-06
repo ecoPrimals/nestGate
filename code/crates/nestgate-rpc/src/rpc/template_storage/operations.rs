@@ -45,6 +45,11 @@ impl TemplateStorage {
     ///
     /// # Returns
     /// - Template ID and version on success
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`](nestgate_types::error::NestGateError) with invalid input when
+    /// `name`, `family_id`, or `user_id` is empty.
     pub async fn store_template(
         &self,
         name: String,
@@ -123,6 +128,11 @@ impl TemplateStorage {
     /// # Returns
     /// - Template on success
     /// - Error if not found or access denied
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`](nestgate_types::error::NestGateError) as not found when there is
+    /// no template bucket for `family_id`, or when `template_id` is not present under that family.
     pub async fn retrieve_template(
         &self,
         template_id: &str,
@@ -162,6 +172,11 @@ impl TemplateStorage {
     ///
     /// # Returns
     /// - Vector of matching templates
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`](nestgate_types::error::NestGateError) as not found when
+    /// `family_id` has no stored templates.
     pub async fn list_templates(
         &self,
         family_id: &str,
@@ -236,6 +251,11 @@ impl TemplateStorage {
     ///
     /// # Returns
     /// - Vector of top-ranked templates with scores
+    ///
+    /// # Errors
+    ///
+    /// The current implementation always returns [`Ok`]; the [`Result`] is reserved for future
+    /// validation or storage failures.
     pub async fn get_community_top(
         &self,
         niche_type: Option<&str>,
@@ -329,6 +349,11 @@ impl TemplateStorage {
     }
 
     /// Increment usage count for a template (called when template is used)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`](nestgate_types::error::NestGateError) as not found when
+    /// `template_id` is missing under `family_id`.
     pub async fn increment_usage(&self, template_id: &str, family_id: &str) -> Result<()> {
         let mut storage = self.templates.write().await;
 
@@ -345,6 +370,12 @@ impl TemplateStorage {
     }
 
     /// Update success rate for a template
+    ///
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`](nestgate_types::error::NestGateError) as invalid input when
+    /// `success_rate` is outside `0.0..=1.0`, or as not found when the template does not exist
+    /// under `family_id`.
     pub async fn update_success_rate(
         &self,
         template_id: &str,

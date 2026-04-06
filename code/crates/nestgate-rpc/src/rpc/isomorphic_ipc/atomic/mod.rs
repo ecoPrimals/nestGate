@@ -257,6 +257,11 @@ async fn check_primal_health(primal_name: &str) -> Result<HealthStatus> {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// Verify `NestGate` is healthy and operational.
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] if `NestGate` is not running (discovery fails) or the reported
+/// health status is not operational.
 pub async fn verify_nestgate_health() -> Result<()> {
     info!("Verifying NestGate health...");
 
@@ -277,6 +282,10 @@ pub async fn verify_nestgate_health() -> Result<()> {
 }
 
 /// Wait for `NestGate` to start and become healthy.
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] when [`wait_for_healthy`] times out before `NestGate` reports healthy.
 pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
     info!("Waiting for NestGate to start (timeout: {:?})...", timeout);
     wait_for_healthy(timeout)
@@ -285,6 +294,11 @@ pub async fn wait_for_nestgate(timeout: Duration) -> Result<()> {
 }
 
 /// Verify an atomic composition's health by discovering primals at runtime.
+///
+/// # Errors
+///
+/// The current implementation always returns [`Ok`]; the [`Result`] is reserved for future
+/// discovery or health-check failures.
 pub async fn verify_composition_health(composition: &AtomicType) -> Result<AtomicStatus> {
     info!(
         "Verifying {} atomic composition health...",
@@ -346,11 +360,20 @@ pub async fn verify_composition_health(composition: &AtomicType) -> Result<Atomi
 }
 
 /// Backward-compatible wrapper for NEST composition health check.
+///
+/// # Errors
+///
+/// Same as [`verify_composition_health`]: currently always [`Ok`].
 pub async fn verify_nest_health() -> Result<AtomicStatus> {
     verify_composition_health(&AtomicType::Nest).await
 }
 
 /// Get `NestGate`'s endpoint for atomic composition coordination.
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] if [`super::launcher::discover_nestgate_endpoint`] fails (endpoint
+/// not found).
 pub async fn get_nestgate_endpoint_for_atomic() -> Result<String> {
     let endpoint = discover_nestgate_endpoint().await?;
     Ok(format!("{endpoint:?}"))

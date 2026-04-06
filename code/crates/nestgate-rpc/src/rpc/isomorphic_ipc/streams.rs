@@ -162,6 +162,11 @@ impl AsyncWrite for IpcStream {
 /// # Ok(())
 /// # }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`anyhow::Error`] when connecting to the Unix socket path or TCP address fails (for
+/// example connection refused, missing socket file, or I/O errors).
 pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
     debug!("🔌 Connecting to: {}", endpoint.description());
 

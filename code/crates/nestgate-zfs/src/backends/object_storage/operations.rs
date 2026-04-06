@@ -287,10 +287,7 @@ mod tests {
                 .create_dataset(&pool, &format!("data-{tier:?}"), tier.clone())
                 .await;
 
-            assert!(
-                dataset.is_ok(),
-                "Should create dataset with tier: {tier:?}"
-            );
+            assert!(dataset.is_ok(), "Should create dataset with tier: {tier:?}");
         }
     }
 }
