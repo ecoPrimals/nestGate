@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 32: Blocking pattern elimination & test harness modernization (April 6, 2026)
+
+- Migrated 8 production modules to EnvSource dependency injection
+- Converted all test `block_on` patterns to `#[tokio::test]` async
+- Eliminated `std::thread::sleep` from async tests
+- Removed `FROM_ENV_MUTEX` and process env mutation from `socket_config_tests`
+- Migrated 6 integration test files from `env_process` to `MapEnv`
+- Fixed ~839 unfulfilled `#[expect()]` lint warnings
+- Eliminated `temp_env` from all test code (6 legitimate uses remain in `env_process_shim`)
+- Evolved hardcoded localhost literals to constants
+- Updated production placeholder docs
+- Current: 11,820 tests passing, 463 ignored, 0 failures, 0 clippy warnings
+
 ### Session 31: Deep debt: EnvSource evolution, error typing, hardcode elimination (April 5, 2026)
 
 - Migrated 24 remaining `#[allow(` to `#[expect(` or removed
@@ -20,7 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `from_env_source` to SystemConfig, EnvironmentConfig, SocketConfig, ProductionReadinessValidator
 - Evolved 39 `temp_env` uses to MapEnv (71 remaining from 110)
 - Rewrote `integration_comprehensive_tests` to MapEnv (un-ignored concurrent test)
-- Current: 11,812 tests passing, 463 ignored, 0 failures, 0 clippy warnings
 
 ### Session 30: Documentation hygiene & debris cleanup (April 5, 2026)
 
@@ -1315,5 +1327,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: April 5, 2026  
+**Last Updated**: April 6, 2026  
 **Current Version**: 4.7.0-dev

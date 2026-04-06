@@ -9,7 +9,7 @@
 - **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~11,812 passing, 463 ignored, 0 failures — run `cargo test --workspace` to refresh counts  
+- **Tests (last recorded)**: ~11,820 passing, 463 ignored, 0 failures — run `cargo test --workspace` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
@@ -20,7 +20,7 @@
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 **File size**: All production `.rs` files under 1,000 lines (max ~500 after smart refactoring)  
 **`#[serial]`**: 5 total — 4 in env-process-shim (legitimate process-env mutation), 1 in CLI (global tracing subscriber); config/discovery use EnvSource injection  
-**Last Updated**: April 5, 2026
+**Last Updated**: April 6, 2026
 
 ---
 
@@ -270,4 +270,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 5, 2026
+**Latest**: April 6, 2026

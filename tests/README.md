@@ -1,7 +1,7 @@
 # NestGate Testing Guide
 
-**Last Updated**: April 5, 2026
-**Tests**: ~11,812 passing, 0 failures, ~463 ignored
+**Last Updated**: April 6, 2026
+**Tests**: ~11,820 passing, 0 failures, ~463 ignored
 **Coverage**: ~80% line (workspace, all features)
 **Goal**: Maintain high coverage with clean, maintainable tests
 
@@ -10,7 +10,7 @@
 ## Quick Stats
 
 ```
-Tests passing:          ~11,812
+Tests passing:          ~11,820
 Failures:               0
 Ignored:                ~463 (mostly e2e/chaos; see tests/DISABLED_TESTS_REFERENCE.md)
 Crates with tests:      Workspace-wide (23 members)

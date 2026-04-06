@@ -644,7 +644,7 @@ cargo test --package nestgate-zfs --lib
 
 - [Rust Testing Book](https://doc.rust-lang.org/book/ch11-00-testing.html)
 - [cargo-llvm-cov Documentation](https://github.com/taiki-e/cargo-llvm-cov)
-- [NestGate Test Reports](./TEST_SYSTEM_ACTIVATION_REPORT_NOV_3_2025.md)
+- *TEST_SYSTEM_ACTIVATION_REPORT_NOV_3_2025.md* (archived) — historical NestGate test activation report
 
 ---
 

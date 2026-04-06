@@ -21,10 +21,10 @@ This document describes:
 - ✅ **Best Practices**: Standards in use throughout codebase
 - ✅ **Naming Conventions**: Module and type naming patterns
 
-**For detailed status**, refer to:
-- [UNIFICATION_PATH_TO_100_PERCENT_NOV_8_2025.md](./UNIFICATION_PATH_TO_100_PERCENT_NOV_8_2025.md) - Roadmap to 100%
-- [PROJECT_STATUS_MASTER.md](./PROJECT_STATUS_MASTER.md) - Current metrics
-- [COMPREHENSIVE_UNIFICATION_ASSESSMENT_NOV_8_2025.md](./COMPREHENSIVE_UNIFICATION_ASSESSMENT_NOV_8_2025.md) - Complete analysis
+**For detailed status** (standalone companion docs; archived — files no longer in repo):
+- *UNIFICATION_PATH_TO_100_PERCENT_NOV_8_2025.md* (archived) — roadmap to 100%
+- *PROJECT_STATUS_MASTER.md* (archived) — historical metrics
+- *COMPREHENSIVE_UNIFICATION_ASSESSMENT_NOV_8_2025.md* (archived) — complete analysis
 
 **Historical note (April 2026)**: The standalone crates **nestgate-network** and **nestgate-automation** were **archived** (removed from the workspace in **v4.7.0**). Rust examples in this file that `use nestgate_network::...` are **legacy illustrations** only; prefer consolidated networking and workflow types in **nestgate-core** / other active crates. The former top-level **`benchmarks/`** directory was also **removed**; use per-crate **`benches/`** targets or workspace tooling where configured.
 
@@ -127,7 +127,7 @@ use nestgate_network::unified_network_extensions::{
 - `unified_network_config/` = Core networking essentials
 - `unified_network_extensions/` = Advanced orchestration features
 
-See: [UNIFIED_NETWORK_STRUCTURE_EVALUATION_NOV_8_2025.md](./UNIFIED_NETWORK_STRUCTURE_EVALUATION_NOV_8_2025.md)
+See: *UNIFIED_NETWORK_STRUCTURE_EVALUATION_NOV_8_2025.md* (archived)
 
 ---
 
@@ -174,7 +174,7 @@ pub type StorageResult<T> = Result<T>;     // Same NestGateError
 
 **Rule**: All domain Result types MUST wrap `NestGateError`
 
-**Verification**: See [RESULT_TYPE_AUDIT_COMPLETE_NOV_8_2025.md](./RESULT_TYPE_AUDIT_COMPLETE_NOV_8_2025.md)
+**Verification**: See *RESULT_TYPE_AUDIT_COMPLETE_NOV_8_2025.md* (archived)
 
 ---
 
@@ -294,10 +294,10 @@ use nestgate_core::config::canonical_primary::domains::ConsolidatedDomainConfigs
 ### **Documentation References**
 
 - **Naming Patterns**: This document (you are here)
-- **Network Structure**: [UNIFIED_NETWORK_STRUCTURE_EVALUATION_NOV_8_2025.md](./UNIFIED_NETWORK_STRUCTURE_EVALUATION_NOV_8_2025.md)
-- **Result Types**: [RESULT_TYPE_AUDIT_COMPLETE_NOV_8_2025.md](./RESULT_TYPE_AUDIT_COMPLETE_NOV_8_2025.md)
-- **Unification Status**: [UNIFICATION_PATH_TO_100_PERCENT_NOV_8_2025.md](./UNIFICATION_PATH_TO_100_PERCENT_NOV_8_2025.md)
-- **Deprecation Plan**: [V0.12.0_CLEANUP_CHECKLIST.md](./V0.12.0_CLEANUP_CHECKLIST.md)
+- **Network Structure**: *UNIFIED_NETWORK_STRUCTURE_EVALUATION_NOV_8_2025.md* (archived)
+- **Result Types**: *RESULT_TYPE_AUDIT_COMPLETE_NOV_8_2025.md* (archived)
+- **Unification Status**: *UNIFICATION_PATH_TO_100_PERCENT_NOV_8_2025.md* (archived)
+- **Deprecation Plan**: *V0.12.0_CLEANUP_CHECKLIST.md* (archived)
 
 ---
 
