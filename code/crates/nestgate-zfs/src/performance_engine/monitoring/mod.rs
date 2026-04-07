@@ -240,7 +240,10 @@ impl RealTimePerformanceMonitor {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "trend regression tests compare exact empty/constant outputs and linear slope endpoints"
+)]
 mod regression_tests {
     use super::super::types::{
         AccessPattern, ArcStatistics, SystemMemoryUsage, ZfsDatasetMetrics, ZfsPerformanceMetrics,

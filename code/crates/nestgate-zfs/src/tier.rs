@@ -284,7 +284,10 @@ impl TierManager {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "tier status tests compare sentinel 0.0 utilization (zero-capacity branch) and epsilon elsewhere"
+)]
 mod tests {
     use super::*;
     use crate::types::StorageTier;

@@ -259,7 +259,10 @@ impl CurrentPerformanceMetrics {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "alert and tier metric tests assert exact field literals and Default ordering checks"
+)]
 mod tests {
     use super::*;
     use crate::performance::{AlertCondition, AlertMetric, AlertOperator, AlertSeverity};

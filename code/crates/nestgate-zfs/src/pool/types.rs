@@ -102,7 +102,10 @@ impl Default for PoolCapacity {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "serde tests compare PoolCapacity default ratios (0.0, 1.0) exactly"
+)]
 mod tests {
     use super::*;
     use std::collections::HashMap;

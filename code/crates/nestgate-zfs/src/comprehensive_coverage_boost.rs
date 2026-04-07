@@ -7,7 +7,10 @@
 //! Focuses on error handling, edge cases, boundary conditions, and configuration.
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "coverage tests assert exact constructed values and enum/discriminant checks"
+)]
 mod zfs_comprehensive_coverage {
     use crate::error::ZfsResult;
     use crate::pool_setup::PoolTopology;

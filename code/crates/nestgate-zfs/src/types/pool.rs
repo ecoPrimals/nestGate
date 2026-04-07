@@ -202,7 +202,10 @@ pub struct PoolStats {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "Default() tests compare exact sentinel ratios (1.0 dedup) and 0.0 utilization"
+)]
 mod round5_pool_impl_tests {
     use super::*;
 

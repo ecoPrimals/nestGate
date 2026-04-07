@@ -8,7 +8,10 @@
 //! - Tier statistics tracking
 //! - Tier status reporting
 //! - Storage tier operations
-#![allow(clippy::float_cmp)]
+#![expect(
+    clippy::float_cmp,
+    reason = "tier module tests assert exact TierStats literals and utilization fixtures"
+)]
 
 use super::tier::*;
 use crate::types::StorageTier;

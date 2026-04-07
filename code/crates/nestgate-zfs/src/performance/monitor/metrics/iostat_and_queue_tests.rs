@@ -2,7 +2,10 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Unit tests for iostat parsing and tier queue depth helpers.
-#![allow(clippy::float_cmp)]
+#![expect(
+    clippy::float_cmp,
+    reason = "iostat parse tests compare integer casts and exact unit-scaled expectations"
+)]
 
 use crate::performance::types::ZfsPerformanceMonitor;
 use crate::types::StorageTier;

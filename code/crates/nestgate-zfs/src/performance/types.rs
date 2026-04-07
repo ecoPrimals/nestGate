@@ -516,7 +516,10 @@ impl LocalMemoryInfo {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "stats tests compare exact 0.0 defaults and integer-derived percentages as literals"
+)]
 mod local_pool_stats_tests {
     use super::{DatasetPerformanceStats, LocalMemoryInfo, PoolIoStats, PoolProperties};
 

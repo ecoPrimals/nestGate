@@ -292,7 +292,6 @@ impl RealMetricsCollector {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
 
@@ -344,7 +343,7 @@ mod tests {
         let result = RealMetricsCollector::parse_bandwidth("0M");
         assert!(result.is_ok());
         let value = result.unwrap();
-        assert_eq!(value, 0.0);
+        assert!(value.abs() < f64::EPSILON);
     }
 
     #[test]

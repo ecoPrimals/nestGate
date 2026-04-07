@@ -274,7 +274,10 @@ pub(super) fn sample_pool_info(
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "parse tests compare sentinel 0.0 from invalid percent fallback and epsilon for parsed values"
+)]
 mod tests {
     use crate::pool::types::{PoolHealth, PoolState};
 

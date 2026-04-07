@@ -77,7 +77,10 @@ impl ZfsBenchmark {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "expected_improvements() returns const literals; tests assert exact tuple values"
+)]
 mod tests {
     use super::*;
     use crate::zero_cost_zfs_operations::{

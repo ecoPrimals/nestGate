@@ -4,7 +4,10 @@
 //! Tests for ZFS pool management
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "pool fixture tests compare utilization_percent from integer-derived parse expectations"
+)]
 mod pool_manager_tests {
     // Import types ONLY from pool module to avoid conflicts with root types
     use crate::config::ZfsConfig;

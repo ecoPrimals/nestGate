@@ -308,7 +308,10 @@ pub type AiOptimizationConfigCanonical =
 // This alias is here for reference and future migration.
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "AI optimization tests compare fixed threshold literals and helper-constructed metrics"
+)]
 mod tests {
     use super::*;
 

@@ -6,7 +6,10 @@
 //! Tests all performance structures, defaults, serialization, and edge cases.
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "performance metric tests assert exact Default() zeros and fixed thresholds"
+)]
 mod performance_types_tests {
     use super::super::types::*;
     use std::collections::HashMap;

@@ -224,7 +224,10 @@ pub struct DatasetMetadata {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "tests compare exact literals and Default-derived values, not approximate float math"
+)]
 mod tests {
     use super::*;
 

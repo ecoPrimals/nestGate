@@ -48,7 +48,10 @@ pub const fn u64_to_f64_approximate(x: u64) -> f64 {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "conversion tests assert exact representable results (0.0, 1.0, truncation cases)"
+)]
 mod tests {
     use super::*;
 

@@ -128,7 +128,10 @@ impl CompressionAnalytics {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "compression analytics tests compare literals and threshold boundaries from fixtures"
+)]
 mod tests {
     use super::*;
 

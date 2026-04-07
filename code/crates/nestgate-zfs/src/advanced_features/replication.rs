@@ -59,7 +59,10 @@ impl ReplicationAnalytics {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "replication perf tests compare helper literals to fixed construct values"
+)]
 mod tests {
     use super::*;
 

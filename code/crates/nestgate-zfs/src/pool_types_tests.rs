@@ -6,7 +6,10 @@
 //! Tests for pool information, state, health, and capacity types
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "pool type tests compare exact Default floats and literal capacity fixtures"
+)]
 mod tests {
     use crate::pool::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
     use std::collections::HashMap;

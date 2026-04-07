@@ -8,7 +8,10 @@
 #[cfg(test)]
 /// Tests module
 mod manager_tests {
-    #![allow(clippy::float_cmp)]
+    #![expect(
+        clippy::float_cmp,
+        reason = "manager integration tests compare service metrics to fixed literal fixtures"
+    )]
     use super::super::*;
     use std::collections::HashMap;
 

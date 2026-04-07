@@ -199,7 +199,10 @@ impl ZfsManager {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "empty mock utilization is exactly 0.0; capacity tests use literal expectations"
+)]
 mod tests {
     use crate::manager::ZfsManager;
 

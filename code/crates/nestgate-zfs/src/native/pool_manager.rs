@@ -335,7 +335,10 @@ impl NativeZfsPoolManager {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "PoolStats tests assign literal f64 fields and assert round-trip equality to the same literals"
+)]
 mod tests {
     use super::*;
     use crate::types::PoolStatus;

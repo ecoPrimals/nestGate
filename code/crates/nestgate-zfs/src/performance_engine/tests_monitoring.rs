@@ -7,7 +7,10 @@
 //! including metrics collection, alert thresholds, and caching.
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "monitoring tests assert exact metric literals and fixed fixture values"
+)]
 mod performance_monitoring_tests {
     use super::super::monitoring::*;
     use super::super::types::*;

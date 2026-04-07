@@ -90,7 +90,10 @@ impl ZfsPerformanceMonitor {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "test monitor exposes fixed prediction_confidence default (0.5) from new_for_testing()"
+)]
 mod tests {
     use crate::performance::ZfsPerformanceMonitor;
     use crate::types::StorageTier;

@@ -7,7 +7,10 @@
 //! for the performance optimization engine.
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "performance engine type tests compare exact literals and Default-derived metrics"
+)]
 mod performance_types_tests {
     use super::super::types::*;
     use std::collections::HashMap;

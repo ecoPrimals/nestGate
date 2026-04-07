@@ -123,7 +123,10 @@ pub struct SnapshotSchedule {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "DatasetInfo Default tests compare exact literal defaults (e.g. compression_ratio 1.0)"
+)]
 mod tests {
     use super::*;
 

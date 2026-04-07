@@ -231,7 +231,10 @@ impl CacheEfficiency {
 }
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "cache efficiency tests compare Default() fields and identity (arc vs l2 hit_ratio)"
+)]
 mod tests {
     use super::*;
 

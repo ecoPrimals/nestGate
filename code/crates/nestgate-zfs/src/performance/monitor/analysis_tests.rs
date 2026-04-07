@@ -7,7 +7,10 @@
 //! evaluation functionality.
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
+#[expect(
+    clippy::float_cmp,
+    reason = "analysis tests compare trend outputs to exact fixture literals and boundaries"
+)]
 mod analysis_tests {
     use super::super::analysis::*;
     use super::super::*;

@@ -367,9 +367,15 @@ impl Default for CacheBuilder {
 // Convenience functions for common use cases - moved to test helpers
 
 #[cfg(test)]
-#[allow(clippy::float_cmp)]
 mod cache_mod_coverage_tests {
-    #![expect(clippy::float_cmp, clippy::panic)]
+    #![expect(
+        clippy::float_cmp,
+        reason = "exact-by-construction: hit_ratio() is 0.0 on default empty CacheStats"
+    )]
+    #![expect(
+        clippy::panic,
+        reason = "negative tests panic on unexpected CacheSystem variant to fail fast"
+    )]
 
     use super::*;
 

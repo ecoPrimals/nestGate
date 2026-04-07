@@ -92,6 +92,7 @@
 
 mod audit_handlers;
 mod data_handlers;
+mod fetch_external;
 mod nat_handlers;
 mod session_handlers;
 mod storage_handlers;
@@ -452,7 +453,7 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
             storage_handlers::storage_retrieve_blob(request.params.as_ref(), state).await
         }
         "storage.fetch_external" => {
-            storage_handlers::storage_fetch_external(request.params.as_ref(), state).await
+            fetch_external::storage_fetch_external(request.params.as_ref(), state).await
         }
         // Game session persistence (convenience over storage.*)
         "session.save" => session_handlers::session_save(request.params.as_ref(), state).await,
