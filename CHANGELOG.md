@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 34: fetch_external capability, smart refactoring, float_cmp evolution (April 7, 2026)
+
+- Implemented `storage.fetch_external` — NestGate owns the TLS boundary for ecosystem
+- Added `reqwest` (rustls-tls) and `blake3` for HTTPS fetch with content-addressing
+- Smart refactored `storage_handlers.rs` (838→551 lines) by extracting `fetch_external.rs` (319 lines)
+- Evolved all 21+ `#[allow(clippy::float_cmp)]` to `#[expect]` with reasons or epsilon comparisons
+- Zero `#[allow(clippy::*)]` remaining in production code
+- Current: 11,834 tests passing, 461 ignored, 0 failures, 0 clippy warnings
+
 ### Session 33: Comprehensive EnvSource migration, mock evolution, hardcoding elimination (April 6, 2026)
 
 - Migrated 25+ production files from direct `std::env::var` to EnvSource DI (210→79 remaining, 18 are infrastructure)

@@ -9,7 +9,7 @@
 - **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~11,826 passing, 461 ignored, 0 failures — run `cargo test --workspace` to refresh counts  
+- **Tests (last recorded)**: ~11,834 passing, 461 ignored, 0 failures — run `cargo test --workspace` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
