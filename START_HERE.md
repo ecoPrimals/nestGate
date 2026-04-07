@@ -3,15 +3,15 @@
 ## Current Status
 
 ```
-Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-06)
+Build:       PASS — cargo check --workspace --all-features --all-targets (as of 2026-04-07)
 Tests:       PASS — cargo test --workspace --all-features, 0 failures (~11,834 passing, 461 ignored — STATUS.md)
 Coverage:    ~80% line (llvm-cov) — wateringHole 80% min met; 90% target pending
-Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-06)
+Clippy:      PASS — cargo clippy --workspace --all-features -- -D warnings (as of 2026-04-07)
 Docs:        cargo doc --workspace --no-deps — clean in routine runs
 Unsafe:      #![forbid(unsafe_code)] on ALL crate roots (zero exceptions)
 Crypto:      Delegated to security capability provider via IPC; installer uses system curl (no in-tree TLS stack for downloads)
 sysinfo:     Optional — Linux uses pure-Rust /proc; sysinfo on non-Linux only
-Serial:      5 total — 4 env-process-shim (legitimate), 1 CLI tracing; config/discovery use EnvSource injection
+Serial:      #[serial]: 1 — CLI argument tests in nestgate-bin/src/cli/tests.rs
 Debt markers: none in production library sources (wateringHole; see STATUS.md)
 Binary:      ~4.7MB musl static
 Platforms:   6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -175,4 +175,4 @@ RUST_LOG=info                       # Logging level
 ---
 
 **Created**: January 31, 2026  
-**Last Updated**: April 6, 2026
+**Last Updated**: April 7, 2026

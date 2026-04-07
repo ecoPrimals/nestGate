@@ -499,7 +499,7 @@ mod cross_crate_integration_tests {
         );
         
         let network_service = create_test_service_registration(
-            "nestgate-network",
+            "nestgate-rpc",
             vec![ServiceCapability::Networking, ServiceCapability::LoadBalancing],
             ServiceRole::Network,
         );
@@ -529,7 +529,7 @@ mod cross_crate_integration_tests {
         
         // Verify complete workflow coordination
         assert_eq!(auth_services[0].name, "nestgate-security");
-        assert_eq!(network_services[0].name, "nestgate-network");
+        assert_eq!(network_services[0].name, "nestgate-rpc");
         assert_eq!(storage_services[0].name, "nestgate-storage");
         
         println!("✅ Cross-crate integration workflow tested");

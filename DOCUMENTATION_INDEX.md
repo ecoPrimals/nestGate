@@ -1,9 +1,9 @@
 # NestGate Documentation Index
 
-**Last Updated**: April 5, 2026  
+**Last Updated**: April 7, 2026  
 **Version**: 4.7.0-dev
 
-Paths linked below exist in this repository as of April 5, 2026.
+Paths linked below exist in this repository as of April 7, 2026.
 
 ---
 
@@ -78,6 +78,6 @@ nestgate/
 
 ---
 
-**Status**: Documentation cleaned and updated April 5, 2026.  
+**Status**: Documentation cleaned and updated April 7, 2026.  
 **Ground Truth**: See [STATUS.md](./STATUS.md) for current measured metrics.  
-**Last Updated**: April 5, 2026
+**Last Updated**: April 7, 2026

@@ -522,7 +522,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Removed
 - **~17,400 lines of dead test code**: 9 orphan `tests/unit/` files, 9 orphan `tests/` subdirectories (`comprehensive_integration/`, `comprehensive_suite/`, `dashmap/`, `e2e/`, `ecosystem/`, `fault/`, `penetration_testing/`, `test_utils/`, `unibin/`, `fixtures/`), duplicate `tests/mod.rs` (49 tests already run via `tests/lib.rs`)
-- `tests/unit/todo_implementation_tests.rs` (dead code — not referenced by any runner)
+- Historical: `tests/unit/todo_implementation_tests.rs` was removed as dead code (not referenced by any runner); that path no longer exists in the repository
 - `code/crates/nestgate-api/src/routes/storage/` (empty placeholder module, unreferenced)
 - `async-recursion` dependency (iterative `collect_objects` rewrite)
 

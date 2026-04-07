@@ -56,7 +56,6 @@ fn scan_specific_files_for_hardcoded_values() -> Vec<Violation> {
     // Target specific key files instead of scanning everything to avoid hanging
     let key_files = vec![
         "code/crates/nestgate-api/src/lib.rs",
-        "code/crates/nestgate-network/src/lib.rs",
         "code/crates/nestgate-core/src/config.rs",
         "code/crates/nestgate-nas/src/lib.rs",
         "code/crates/nestgate-core/src/security_config.rs",

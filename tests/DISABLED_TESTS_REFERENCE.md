@@ -1,6 +1,6 @@
 # 🚫 Disabled Tests Reference
 
-**Last Updated**: April 6, 2026  
+**Last Updated**: April 7, 2026  
 **Status**: Active
 
 ---
@@ -49,7 +49,7 @@ See [README.md](README.md) for the full category list and `cargo test --workspac
 
 | Metric | Value |
 |--------|--------|
-| Passing (total) | ~11,826 |
+| Passing (total) | ~11,834 |
 | Failed | 0 |
 | Ignored | ~461 |
 | Workspace coverage (line) | ~80% |

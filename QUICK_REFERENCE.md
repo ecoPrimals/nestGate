@@ -3,10 +3,10 @@
 **Version**: 4.7.0-dev  
 **Tests**: `cargo test --workspace --all-features` — PASS, 0 failures (~11,834 passing, 461 ignored — see STATUS.md)  
 **Coverage**: ~80% line (llvm-cov); target 90%  
-**Clippy**: PASS — `cargo clippy --workspace --all-features -- -D warnings` (as of 2026-04-06)  
+**Clippy**: PASS — `cargo clippy --workspace --all-features -- -D warnings` (as of 2026-04-07)  
 **Crates**: 23 workspace members (20 under `code/crates/` + `tools/unwrap-migrator` + `fuzz` + root)  
 **Binary (musl)**: ~4.7MB static  
-**Last Updated**: April 6, 2026
+**Last Updated**: April 7, 2026
 
 ---
 
@@ -222,4 +222,4 @@ ls -la $XDG_RUNTIME_DIR/nestgate.*   # Should show .sock or .tcp
 
 ---
 
-**Last Updated**: April 6, 2026
+**Last Updated**: April 7, 2026

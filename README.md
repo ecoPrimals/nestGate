@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-06)**  
+**Verification (as of 2026-04-07)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors)  
 - **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
@@ -19,8 +19,8 @@
 **TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack in-tree)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 **File size**: All production `.rs` files under 1,000 lines (max ~500 after smart refactoring)  
-**`#[serial]`**: 5 total — 4 in env-process-shim (legitimate process-env mutation), 1 in CLI (global tracing subscriber); config/discovery use EnvSource injection  
-**Last Updated**: April 6, 2026
+**`#[serial]`**: 1 — CLI argument tests in `nestgate-bin/src/cli/tests.rs`  
+**Last Updated**: April 7, 2026
 
 ---
 
@@ -115,7 +115,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-06).
+See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-07).
 
 | Area | Status |
 |------|--------|
@@ -125,7 +125,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Tests | `cargo test --workspace` — PASS (0 failures) |
 | Coverage | ~80% line (llvm-cov) — wateringHole 80% minimum met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — builds without rustdoc warnings in normal runs |
-| Migration / deprecation notes | 188 `#[deprecated]` markers for canonical migration; 0 dead deprecated callers; `#[allow(` 0 (all migrated to `#[expect(`) |
+| Migration / deprecation notes | 188 `#[deprecated]` markers for canonical migration; 0 dead deprecated callers; 0 `#[allow(clippy::…)]` in production code (all migrated to `#[expect(` with documented reasons) |
 | Production unwrap/expect | Zero in library `src/` per project rules; tests/integration may use unwrap; clippy `unwrap_used` warns workspace-wide |
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
@@ -270,4 +270,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 6, 2026
+**Latest**: April 7, 2026

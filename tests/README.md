@@ -1,6 +1,6 @@
 # NestGate Testing Guide
 
-**Last Updated**: April 6, 2026
+**Last Updated**: April 7, 2026
 **Tests**: ~11,834 passing, 0 failures, ~461 ignored
 **Coverage**: ~80% line (workspace, all features)
 **Goal**: Maintain high coverage with clean, maintainable tests
@@ -116,22 +116,20 @@ async fn service_responds_to_health_check() {
 
 ### Environment Isolation
 
+Prefer `EnvSource` / `MapEnv` for env isolation in tests — no process-wide mutation, tests can run concurrently:
+
 ```rust
-use serial_test::serial;
-use temp_env::with_vars;
+use nestgate_types::{EnvSource, MapEnv};
 
 #[test]
-#[serial]
 fn config_reads_from_environment() {
-    with_vars(
-        vec![("NESTGATE_API_PORT", Some("9999"))],
-        || {
-            let config = Config::from_env();
-            assert_eq!(config.port, 9999);
-        },
-    );
+    let env = MapEnv::from([("NESTGATE_API_PORT", "9999")]);
+    let config = Config::from_env_source(&env);
+    assert_eq!(config.port, 9999);
 }
 ```
+
+Use `temp_env` + `#[serial]` only for legacy infrastructure that still reads `std::env::var` directly and genuinely mutates process environment.
 
 ---
 
@@ -143,7 +141,7 @@ fn config_reads_from_environment() {
 - Use descriptive names: `test_config_builder_creates_valid_config`
 - Keep tests focused (one concept per test)
 - Use common helpers from `tests/common/`
-- Use `temp_env` closures for environment isolation
+- Prefer `EnvSource` / `MapEnv` for environment isolation; use `temp_env` + `#[serial]` only for legacy infrastructure that genuinely mutates process env
 - Test behavior, not implementation
 
 **Don't:**

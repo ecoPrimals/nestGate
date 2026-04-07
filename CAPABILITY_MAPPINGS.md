@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: April 3, 2026
+**Last Updated**: April 7, 2026
 
 ---
 
@@ -35,7 +35,8 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
   "storage.metadata": "Get object metadata",
   "storage.copy": "Copy object",
   "storage.move": "Move object",
-  "storage.quota": "Get/set storage quotas"
+  "storage.quota": "Get/set storage quotas",
+  "storage.fetch_external": "Fetch content from external HTTPS URLs (TLS terminated in NestGate)"
 }
 ```
 
@@ -47,6 +48,7 @@ pub async fn store_object(...)  // → storage.put
 pub async fn retrieve_object(...)  // → storage.get
 pub async fn delete_object(...)  // → storage.delete
 pub async fn list_objects(...)  // → storage.list
+// fetch_external handler  // → storage.fetch_external (HTTPS/TLS in NestGate)
 ```
 
 **Evolution Plan**: Rename internal methods to match semantic format (8-12 hours)
@@ -201,31 +203,32 @@ let response = crypto.call_rpc("crypto.encrypt", params).await?;
 
 ---
 
-### **3. TLS/Networking (from Songbird)**
+### **3. External HTTPS fetch (NestGate-owned TLS boundary)**
 
-**Capability**: `tls` or `networking`  
-**Provider**: Songbird primal  
-**Usage**: For external HTTP/HTTPS (concentrated gap)
+**Capability**: `storage.fetch_external` (storage domain)  
+**Provider**: NestGate (TLS and HTTP client for ecosystem external fetch)  
+**Usage**: Fetching remote content over HTTPS for storage workflows — NestGate owns the TLS boundary; this is **not** delegated to Songbird.
 
 #### **Methods Used**:
 
 ```json
 {
-  "tls.derive_secrets": "TLS key derivation",
-  "http.get": "HTTP GET request",
-  "http.post": "HTTP POST request"
+  "storage.fetch_external": "HTTPS GET to external URLs with content-addressed result"
 }
 ```
 
 #### **Current Usage**:
 
 ```rust
-// All external HTTP goes through Songbird:
-let songbird = discovery.find("networking").await?;
-let response = songbird.call_rpc("http.get", params).await?;
+// External HTTPS fetch is implemented in NestGate (e.g. storage handler → fetch_external):
+// reqwest + rustls; content addressing via blake3; no Songbird http.get hop for this path.
 ```
 
-**Status**: ✅ Architecture established, not yet implemented
+**Status**: ✅ Implemented — NestGate terminates TLS for this fetch path
+
+#### **Optional / future (Songbird or other primals)**
+
+Legacy documentation referred to Songbird for generic `http.get` / `http.post` and `tls.derive_secrets`. Those remain **optional** for orchestration or other capabilities; they are **not** the path for `storage.fetch_external`.
 
 ---
 
@@ -366,7 +369,7 @@ optional = ["crypto", "compute"]
 
 | Domain | Methods | Status | Priority |
 |--------|---------|--------|----------|
-| **storage** | 9 methods | ✅ Implemented | P0 (core) |
+| **storage** | 10 methods | ✅ Implemented | P0 (core) |
 | **discovery** | 5 methods | ✅ Implemented | P0 (core) |
 | **metadata** | 4 methods | ✅ Implemented | P1 (important) |
 | **health** | 4 methods | ✅ Implemented | P1 (important) |
@@ -377,7 +380,7 @@ optional = ["crypto", "compute"]
 |------------|----------|--------------|--------|
 | **ipc** | Songbird | 5 methods | ✅ Integrated |
 | **crypto** | BearDog | 6 methods | Evolved (delegation) |
-| **networking** | Songbird | 3 methods | 📋 Planned |
+| **networking** | Songbird (optional) | 3 methods | 📋 Planned (not used for `storage.fetch_external`) |
 | **compute** | ToadStool | 3 methods | 📋 Future |
 
 ---
@@ -442,4 +445,4 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Last Updated**: April 3, 2026
+**Last Updated**: April 7, 2026
