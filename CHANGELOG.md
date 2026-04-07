@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 35: GAP-MATRIX-04 — ZFS JSON-RPC/UDS bridge (April 8, 2026)
+
+- Resolved GAP-MATRIX-04: ZFS operations now accessible via JSON-RPC over UDS
+- Added 7 `zfs.*` methods to ecosystem UDS dispatch: `zfs.pool.list`, `zfs.pool.get`,
+  `zfs.pool.health`, `zfs.dataset.list`, `zfs.dataset.get`, `zfs.snapshot.list`, `zfs.health`
+- Created `zfs_handlers.rs` in `nestgate-rpc` with subprocess-backed handlers
+  (avoids cyclic `nestgate-rpc` -> `nestgate-zfs` -> `nestgate-core` dependency)
+- Added matching `zfs.*` methods to HTTP `/jsonrpc` handler in `nestgate-api`
+  (uses `ZfsOperations` directly since `nestgate-api` can depend on `nestgate-zfs`)
+- Updated `UNIX_SOCKET_SUPPORTED_METHODS`, `discover_capabilities`, and
+  `capabilities_response` to advertise `zfs` domain
+- Method naming follows `SEMANTIC_METHOD_NAMING_STANDARD.md`: `{domain}.{operation}`
+- Graceful degradation: structured errors when ZFS userland is unavailable
+
 ### Session 34: fetch_external capability, smart refactoring, float_cmp evolution (April 7, 2026)
 
 - Implemented `storage.fetch_external` — NestGate owns the TLS boundary for ecosystem

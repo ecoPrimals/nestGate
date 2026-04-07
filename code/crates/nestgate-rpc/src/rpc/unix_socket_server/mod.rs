@@ -97,6 +97,7 @@ mod nat_handlers;
 mod session_handlers;
 mod storage_handlers;
 mod template_handlers;
+mod zfs_handlers;
 
 use crate::rpc::model_cache_handlers;
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
@@ -498,6 +499,14 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
             nat_handlers::beacon_list(request.params.as_ref(), state).await
         }
         "beacon.delete" => nat_handlers::beacon_delete(request.params.as_ref(), state).await,
+        // ZFS operations (subprocess-backed, resolves GAP-MATRIX-04)
+        "zfs.pool.list" => zfs_handlers::zfs_pool_list(request.params.as_ref()).await,
+        "zfs.pool.get" => zfs_handlers::zfs_pool_get(request.params.as_ref()).await,
+        "zfs.pool.health" => zfs_handlers::zfs_pool_health(request.params.as_ref()).await,
+        "zfs.dataset.list" => zfs_handlers::zfs_dataset_list(request.params.as_ref()).await,
+        "zfs.dataset.get" => zfs_handlers::zfs_dataset_get(request.params.as_ref()).await,
+        "zfs.snapshot.list" => zfs_handlers::zfs_snapshot_list(request.params.as_ref()).await,
+        "zfs.health" => zfs_handlers::zfs_health(request.params.as_ref()).await,
         _ => {
             return JsonRpcResponse {
                 jsonrpc: Arc::from("2.0"),

@@ -191,6 +191,13 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "beacon.retrieve",
     "beacon.list",
     "beacon.delete",
+    "zfs.pool.list",
+    "zfs.pool.get",
+    "zfs.pool.health",
+    "zfs.dataset.list",
+    "zfs.dataset.get",
+    "zfs.snapshot.list",
+    "zfs.health",
 ];
 
 /// capabilities.list — wateringHole semantic naming; lists all supported method names.
@@ -223,7 +230,8 @@ pub fn discover_capabilities() -> Result<Value> {
                 "templates": true,
                 "audit": true,
                 "nat_traversal": true,
-                "beacon_persistence": true
+                "beacon_persistence": true,
+                "zfs": true
             }
         }
     }))

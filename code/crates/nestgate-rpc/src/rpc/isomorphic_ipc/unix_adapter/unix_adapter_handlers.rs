@@ -435,6 +435,9 @@ pub(super) fn capabilities_response() -> Value {
             "session.save", "session.load",
             "nat.store_traversal_info", "nat.retrieve_traversal_info",
             "beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete",
+            "zfs.pool.list", "zfs.pool.get", "zfs.pool.health",
+            "zfs.dataset.list", "zfs.dataset.get",
+            "zfs.snapshot.list", "zfs.health",
             "health", "health.check", "health.liveness", "health.readiness",
             "capabilities.list", "version"
         ]

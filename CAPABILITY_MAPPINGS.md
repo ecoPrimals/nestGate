@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: April 7, 2026
+**Last Updated**: April 8, 2026
 
 ---
 
@@ -52,6 +52,36 @@ pub async fn list_objects(...)  // → storage.list
 ```
 
 **Evolution Plan**: Rename internal methods to match semantic format (8-12 hours)
+
+---
+
+### **1b. ZFS Capability (GAP-MATRIX-04 Resolution)**
+
+**Domain**: `zfs.*`
+
+ZFS pool, dataset, and snapshot management exposed over JSON-RPC/UDS. Resolves
+GAP-MATRIX-04 by making the ZFS surface reachable through the same
+`socat`/`PrimalClient` tooling every other primal uses.
+
+#### **Methods Provided**:
+
+```json
+{
+  "zfs.pool.list": "List all ZFS pools with size/allocation/health",
+  "zfs.pool.get": "Get status for a single pool (params: {pool})",
+  "zfs.pool.health": "Health summary across all pools, flags unhealthy",
+  "zfs.dataset.list": "List ZFS datasets, optionally scoped to a pool",
+  "zfs.dataset.get": "Get a single dataset by name (params: {dataset})",
+  "zfs.snapshot.list": "List snapshots, optionally scoped to a dataset",
+  "zfs.health": "ZFS/zpool userland availability and version"
+}
+```
+
+**Transport**: JSON-RPC over UDS (ecosystem standard) **and** HTTP `/jsonrpc`
+
+**Status**: Implemented — subprocess-backed handlers in `nestgate-rpc` (UDS)
+and `nestgate-api` (HTTP JSON-RPC). Gracefully returns structured errors when
+ZFS userland is unavailable.
 
 ---
 
@@ -370,6 +400,7 @@ optional = ["crypto", "compute"]
 | Domain | Methods | Status | Priority |
 |--------|---------|--------|----------|
 | **storage** | 10 methods | ✅ Implemented | P0 (core) |
+| **zfs** | 7 methods | ✅ Implemented (GAP-MATRIX-04) | P0 (core) |
 | **discovery** | 5 methods | ✅ Implemented | P0 (core) |
 | **metadata** | 4 methods | ✅ Implemented | P1 (important) |
 | **health** | 4 methods | ✅ Implemented | P1 (important) |
