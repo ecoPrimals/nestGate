@@ -16,6 +16,8 @@ nestgate-config = { path = "../nestgate-config" }
 async-trait = { workspace = true }
 anyhow = { workspace = true }
 base64 = { workspace = true }
+blake3 = { workspace = true }
+reqwest = { workspace = true }
 bytes = { workspace = true }
 chrono = { workspace = true }
 bincode = { workspace = true }
@@ -30,6 +32,7 @@ tokio = { workspace = true }
 tokio-serde = { workspace = true, features = ["bincode"] }
 tokio-util = { workspace = true }
 tracing = { workspace = true }
+url = { workspace = true }
 uuid = { workspace = true }
 uzers = { workspace = true }
 

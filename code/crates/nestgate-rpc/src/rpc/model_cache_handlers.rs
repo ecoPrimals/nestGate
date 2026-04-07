@@ -175,6 +175,7 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "storage.stats",
     "storage.store_blob",
     "storage.retrieve_blob",
+    "storage.fetch_external",
     "model.register",
     "model.exists",
     "model.locate",
@@ -217,6 +218,7 @@ pub fn discover_capabilities() -> Result<Value> {
             "features": {
                 "persistent": true,
                 "blob_storage": true,
+                "fetch_external": true,
                 "model_cache": true,
                 "templates": true,
                 "audit": true,

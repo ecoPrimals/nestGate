@@ -120,6 +120,7 @@ serde_json = "1.0"
 
 # HTTP and networking
 axum = { version = "0.7", features = ["json", "tokio", "ws"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "brotli"] }
 
 # Time and UUID
 chrono = { version = "0.4", features = ["serde"] }
@@ -149,6 +150,9 @@ uzers = "0.11"
 sysinfo = "0.30"
 rustix = { version = "0.38", default-features = false, features = ["std", "fs", "system"] }
 etcetera = "0.8"
+
+# Content-addressing (BLAKE3 for fetch_external provenance)
+blake3 = "1.5"
 
 # Encoding utilities (crypto ops delegated to bearDog via IPC)
 base64 = "0.22"

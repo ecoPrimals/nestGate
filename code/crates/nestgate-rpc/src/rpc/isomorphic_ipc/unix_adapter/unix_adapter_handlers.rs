@@ -431,7 +431,7 @@ pub(super) fn capabilities_response() -> Value {
         "domain": "storage",
         "capabilities": [
             "storage.store", "storage.retrieve", "storage.list",
-            "storage.delete", "storage.exists",
+            "storage.delete", "storage.exists", "storage.fetch_external",
             "session.save", "session.load",
             "nat.store_traversal_info", "nat.retrieve_traversal_info",
             "beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete",
