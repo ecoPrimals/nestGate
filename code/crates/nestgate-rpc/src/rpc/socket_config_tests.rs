@@ -41,7 +41,7 @@ fn test_biomeos_dir_second_priority() {
 
     assert_eq!(
         config.socket_path,
-        PathBuf::from("/tmp/biomeos-test-dir/nestgate.sock")
+        PathBuf::from("/tmp/biomeos-test-dir/nestgate-biotest.sock")
     );
     assert_eq!(config.source, SocketConfigSource::BiomeOSDirectory);
 }
@@ -395,7 +395,11 @@ fn test_resolve_xdg_runtime_uses_biomeos_sock_when_dir_exists() {
     .expect("resolve");
 
     assert_eq!(config.source, SocketConfigSource::XdgRuntime);
-    assert!(config.socket_path.ends_with("biomeos/nestgate.sock"));
+    assert!(
+        config.socket_path.ends_with("biomeos/nestgate-fam.sock"),
+        "family-scoped naming: got {:?}",
+        config.socket_path
+    );
 }
 
 #[test]
@@ -479,7 +483,7 @@ fn from_env_source_default_family_standalone_when_unset() {
 #[test]
 fn from_env_source_biomeos_dir_when_no_socket_override() {
     let root = tempfile::tempdir().expect("tempdir");
-    let expected_sock = root.path().join("nestgate.sock");
+    let expected_sock = root.path().join("nestgate-bf.sock");
     let dir = root.path().to_string_lossy().into_owned();
     let env = MapEnv::from([
         ("BIOMEOS_SOCKET_DIR", dir.as_str()),
@@ -579,6 +583,142 @@ fn socket_path_str_empty_when_non_utf8() {
 }
 
 // ========================================================================
+// BTSP Phase 1 — INSECURE guard + family-scoped socket naming
+// ========================================================================
+
+#[test]
+fn btsp_guard_rejects_family_id_plus_insecure() {
+    let env = MapEnv::from([
+        ("NESTGATE_FAMILY_ID", "my-family"),
+        ("BIOMEOS_INSECURE", "1"),
+    ]);
+    let result = SocketConfig::from_env_source(&env);
+    assert!(result.is_err(), "FAMILY_ID + BIOMEOS_INSECURE=1 must fail");
+    let msg = format!("{}", result.unwrap_err());
+    assert!(
+        msg.contains("BTSP guard"),
+        "error should mention BTSP guard: {msg}"
+    );
+}
+
+#[test]
+fn btsp_guard_allows_insecure_without_family_id() {
+    let env = MapEnv::from([("BIOMEOS_INSECURE", "1")]);
+    let result = SocketConfig::from_env_source(&env);
+    assert!(
+        result.is_ok(),
+        "INSECURE without FAMILY_ID should be fine (dev mode)"
+    );
+}
+
+#[test]
+fn btsp_guard_allows_insecure_with_standalone_family() {
+    let env = MapEnv::from([
+        ("NESTGATE_FAMILY_ID", "standalone"),
+        ("BIOMEOS_INSECURE", "1"),
+    ]);
+    let result = SocketConfig::from_env_source(&env);
+    assert!(
+        result.is_ok(),
+        "INSECURE with 'standalone' family should be fine (dev mode)"
+    );
+}
+
+#[test]
+fn btsp_guard_allows_insecure_with_default_family() {
+    let env = MapEnv::from([("NESTGATE_FAMILY_ID", "default"), ("BIOMEOS_INSECURE", "1")]);
+    let result = SocketConfig::from_env_source(&env);
+    assert!(
+        result.is_ok(),
+        "INSECURE with 'default' family should be fine (dev mode)"
+    );
+}
+
+#[test]
+fn btsp_guard_allows_family_id_without_insecure() {
+    let env = MapEnv::from([("NESTGATE_FAMILY_ID", "production-fam")]);
+    let result = SocketConfig::from_env_source(&env);
+    assert!(result.is_ok(), "FAMILY_ID alone (no INSECURE) should work");
+}
+
+#[test]
+fn family_scoped_socket_name_in_biomeos_dir() {
+    let root = tempfile::tempdir().expect("tempdir");
+    let biomeos_dir = root.path().to_str().expect("utf8");
+    let config = SocketConfig::resolve(
+        "production-fam".to_string(),
+        "node1".to_string(),
+        None,
+        Some(biomeos_dir.to_string()),
+        None,
+    )
+    .expect("resolve");
+    assert_eq!(
+        config.socket_path.file_name().unwrap().to_str().unwrap(),
+        "nestgate-production-fam.sock",
+        "family-scoped naming per BTSP §Socket Naming"
+    );
+}
+
+#[test]
+fn standalone_uses_simple_socket_name_in_biomeos_dir() {
+    let root = tempfile::tempdir().expect("tempdir");
+    let biomeos_dir = root.path().to_str().expect("utf8");
+    let config = SocketConfig::resolve(
+        "standalone".to_string(),
+        "node1".to_string(),
+        None,
+        Some(biomeos_dir.to_string()),
+        None,
+    )
+    .expect("resolve");
+    assert_eq!(
+        config.socket_path.file_name().unwrap().to_str().unwrap(),
+        "nestgate.sock",
+        "dev default keeps simple name"
+    );
+}
+
+#[test]
+fn family_scoped_socket_name_in_xdg_tier() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let xdg_path = dir.path().to_str().expect("utf8");
+    let config = SocketConfig::resolve(
+        "my-family".to_string(),
+        "node1".to_string(),
+        None,
+        None,
+        Some(xdg_path.to_string()),
+    )
+    .expect("resolve");
+    assert_eq!(
+        config.socket_path.file_name().unwrap().to_str().unwrap(),
+        "nestgate-my-family.sock",
+        "XDG tier also uses family-scoped name"
+    );
+}
+
+#[test]
+fn generic_family_id_also_accepted() {
+    let env = MapEnv::from([("FAMILY_ID", "eco-family"), ("BIOMEOS_INSECURE", "1")]);
+    let result = SocketConfig::from_env_source(&env);
+    assert!(
+        result.is_err(),
+        "generic FAMILY_ID + BIOMEOS_INSECURE must also be caught"
+    );
+}
+
+#[test]
+fn nestgate_family_id_takes_precedence_over_generic() {
+    let env = MapEnv::from([
+        ("NESTGATE_FAMILY_ID", "nestgate-specific"),
+        ("FAMILY_ID", "generic-family"),
+    ]);
+    let config = SocketConfig::from_env_source(&env).expect("resolve");
+    assert_eq!(config.family_id, "nestgate-specific");
+}
+
+// ========================================================================
 // Capability symlink (CAPABILITY_BASED_DISCOVERY_STANDARD) — Unix only
 // ========================================================================
 
@@ -606,10 +746,9 @@ mod storage_capability_symlink_tests {
         let biomeos = root.path().join("biomeos");
         fs::create_dir_all(&biomeos).expect("mkdir");
         let sock = biomeos.join("nestgate.sock");
-        // Placeholder so `storage.sock` → `nestgate.sock` is a resolvable link (`Path::exists` follows).
         fs::write(&sock, b"").expect("touch");
 
-        assert!(install_storage_capability_symlink(&sock));
+        assert!(install_storage_capability_symlink(&sock, "standalone"));
         let link = biomeos.join(STORAGE_CAPABILITY_SOCK_NAME);
         assert!(link.exists());
         assert!(
@@ -619,7 +758,29 @@ mod storage_capability_symlink_tests {
                 .is_symlink()
         );
 
-        remove_storage_capability_symlink(&sock, true);
+        remove_storage_capability_symlink(&sock, "standalone", true);
+        assert!(!link.exists());
+    }
+
+    #[test]
+    fn install_creates_family_scoped_symlink() {
+        let root = tempdir().expect("tempdir");
+        let biomeos = root.path().join("biomeos");
+        fs::create_dir_all(&biomeos).expect("mkdir");
+        let sock = biomeos.join("nestgate-myfamily.sock");
+        fs::write(&sock, b"").expect("touch");
+
+        assert!(install_storage_capability_symlink(&sock, "myfamily"));
+        let link = biomeos.join("storage-myfamily.sock");
+        assert!(link.exists());
+        assert!(
+            fs::symlink_metadata(&link)
+                .expect("meta")
+                .file_type()
+                .is_symlink()
+        );
+
+        remove_storage_capability_symlink(&sock, "myfamily", true);
         assert!(!link.exists());
     }
 
@@ -630,7 +791,7 @@ mod storage_capability_symlink_tests {
         fs::create_dir_all(&other).expect("mkdir");
         let sock = other.join("nestgate.sock");
 
-        assert!(!install_storage_capability_symlink(&sock));
+        assert!(!install_storage_capability_symlink(&sock, "standalone"));
         assert!(!other.join(STORAGE_CAPABILITY_SOCK_NAME).exists());
     }
 
@@ -644,7 +805,7 @@ mod storage_capability_symlink_tests {
         fs::write(&sock, b"").expect("touch");
 
         assert!(!socket_parent_is_biomeos_standard_dir(&sock));
-        assert!(!install_storage_capability_symlink(&sock));
+        assert!(!install_storage_capability_symlink(&sock, "standalone"));
         assert!(!not_biomeos.join(STORAGE_CAPABILITY_SOCK_NAME).exists());
     }
 
@@ -657,7 +818,7 @@ mod storage_capability_symlink_tests {
         fs::write(&sock, b"").expect("touch");
 
         {
-            let _guard = StorageCapabilitySymlinkGuard::new(&sock);
+            let _guard = StorageCapabilitySymlinkGuard::new(&sock, "standalone");
             let link = biomeos.join(STORAGE_CAPABILITY_SOCK_NAME);
             assert!(link.exists());
         }
@@ -671,11 +832,11 @@ mod storage_capability_symlink_tests {
         fs::create_dir_all(&biomeos).expect("mkdir");
         let sock = biomeos.join("nestgate.sock");
         fs::write(&sock, b"").expect("touch");
-        assert!(install_storage_capability_symlink(&sock));
+        assert!(install_storage_capability_symlink(&sock, "standalone"));
         let link = biomeos.join(STORAGE_CAPABILITY_SOCK_NAME);
-        remove_storage_capability_symlink(&sock, false);
+        remove_storage_capability_symlink(&sock, "standalone", false);
         assert!(link.exists(), "symlink preserved when installed=false");
-        remove_storage_capability_symlink(&sock, true);
+        remove_storage_capability_symlink(&sock, "standalone", true);
         assert!(!link.exists());
     }
 
@@ -690,13 +851,13 @@ mod storage_capability_symlink_tests {
         let link = biomeos.join(STORAGE_CAPABILITY_SOCK_NAME);
         std::os::unix::fs::symlink("nestgate.sock", &link).expect("manual symlink");
 
-        remove_storage_capability_symlink(&sock, false);
+        remove_storage_capability_symlink(&sock, "standalone", false);
         assert!(
             link.exists(),
             "with installed=false, remove must not unlink (even if link exists)"
         );
 
-        remove_storage_capability_symlink(&sock, true);
+        remove_storage_capability_symlink(&sock, "standalone", true);
         assert!(!link.exists());
     }
 }

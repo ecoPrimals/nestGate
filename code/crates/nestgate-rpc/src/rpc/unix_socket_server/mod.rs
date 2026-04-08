@@ -264,8 +264,10 @@ impl JsonRpcUnixServer {
 
         #[cfg(unix)]
         {
-            let installed =
-                crate::rpc::socket_config::install_storage_capability_symlink(&self.socket_path);
+            let installed = crate::rpc::socket_config::install_storage_capability_symlink(
+                &self.socket_path,
+                &self.family_id,
+            );
             self.storage_capability_symlink_installed
                 .store(installed, Ordering::SeqCst);
         }
@@ -314,6 +316,7 @@ impl Drop for JsonRpcUnixServer {
         #[cfg(unix)]
         crate::rpc::socket_config::remove_storage_capability_symlink(
             &self.socket_path,
+            &self.family_id,
             self.storage_capability_symlink_installed
                 .load(Ordering::SeqCst),
         );

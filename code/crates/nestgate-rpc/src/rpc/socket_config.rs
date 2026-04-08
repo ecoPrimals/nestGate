@@ -8,20 +8,28 @@
 //! Implements the ecosystem Unix socket layout with robust fallback logic and comprehensive error handling.
 //! `BIOMEOS_SOCKET_DIR` is the **standard shared-socket directory name** in the wateringHole ecosystem (protocol-level; not a coupling to a specific primal).
 //!
+//! ## BTSP Phase 1 — Socket Naming + INSECURE Guard
+//!
+//! Per `BTSP_PROTOCOL_STANDARD.md`:
+//! - When `FAMILY_ID` is set (not `"standalone"` or `"default"`), sockets use `nestgate-{fid}.sock`.
+//! - When `BIOMEOS_INSECURE=1` and `FAMILY_ID` are both set, startup is **refused**.
+//! - Dev defaults (`standalone`, `default`, unset) keep the simple `nestgate.sock` name.
+//!
 //! ## Configuration Priority (4-tier)
 //!
 //! 1. **`NESTGATE_SOCKET`** env var (explicit override, highest priority)
-//! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate.sock` (ecosystem standard layout)
-//! 3. **`$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock`** (preferred; `<ecosystem>` from [`nestgate_config::constants::system::ecosystem_path_segment`], reads the actual `XDG_RUNTIME_DIR` env var)
+//! 2. **`BIOMEOS_SOCKET_DIR`** + `nestgate[-{fid}].sock` (ecosystem standard layout)
+//! 3. **`$XDG_RUNTIME_DIR/<ecosystem>/nestgate[-{fid}].sock`** (preferred; `<ecosystem>` from [`nestgate_config::constants::system::ecosystem_path_segment`], reads the actual `XDG_RUNTIME_DIR` env var)
 //! 4. **Temp Directory**: `/tmp/nestgate-{family}-{node}.sock` (fallback, least secure)
 //!
 //! ## Environment Variables
 //!
 //! - `NESTGATE_SOCKET`: Absolute path to socket (optional, highest priority)
 //! - `BIOMEOS_SOCKET_DIR`: ecosystem shared socket directory (optional, e.g., `$XDG_RUNTIME_DIR/biomeos`)
-//! - `XDG_RUNTIME_DIR`: Base runtime path (optional; tier 3 uses `$XDG_RUNTIME_DIR/biomeos/nestgate.sock`)
-//! - `NESTGATE_FAMILY_ID`: Family identifier (optional; default: `standalone` per wateringHole)
+//! - `XDG_RUNTIME_DIR`: Base runtime path (optional; tier 3 uses `$XDG_RUNTIME_DIR/biomeos/nestgate[-{fid}].sock`)
+//! - `NESTGATE_FAMILY_ID` or `FAMILY_ID`: Family identifier (optional; default: `standalone` per wateringHole)
 //! - `NESTGATE_NODE_ID`: Node identifier for multi-instance (optional; default: system hostname)
+//! - `BIOMEOS_INSECURE`: Set to `"1"` for development mode (no BTSP handshake). MUST NOT be set alongside `FAMILY_ID`.
 //!
 //! ## Philosophy
 //!
@@ -46,6 +54,16 @@ use tracing::{debug, info, warn};
 /// Capability-domain socket name for storage discovery (symlink beside the bound socket).
 pub const STORAGE_CAPABILITY_SOCK_NAME: &str = "storage.sock";
 
+/// Family-scoped capability socket name per BTSP §Socket Naming.
+#[must_use]
+pub fn storage_capability_sock_name(family_id: &str) -> String {
+    if is_family_scoped(family_id) {
+        format!("storage-{family_id}.sock")
+    } else {
+        STORAGE_CAPABILITY_SOCK_NAME.to_string()
+    }
+}
+
 /// `true` when `socket_path` is `.../<ecosystem>/<file>` (`CAPABILITY_BASED_DISCOVERY` domain layout).
 #[cfg(unix)]
 #[must_use]
@@ -64,7 +82,7 @@ pub fn socket_parent_is_biomeos_standard_dir(socket_path: &Path) -> bool {
 /// Returns `true` if the symlink was created; pass that to [`remove_storage_capability_symlink`]
 /// on shutdown. Failure to create the symlink is logged as a warning and returns `false`.
 #[cfg(unix)]
-pub fn install_storage_capability_symlink(socket_path: &Path) -> bool {
+pub fn install_storage_capability_symlink(socket_path: &Path, family_id: &str) -> bool {
     use std::os::unix::fs::symlink;
 
     if !socket_parent_is_biomeos_standard_dir(socket_path) {
@@ -91,7 +109,8 @@ pub fn install_storage_capability_symlink(socket_path: &Path) -> bool {
         return false;
     };
 
-    let link_path = parent.join(STORAGE_CAPABILITY_SOCK_NAME);
+    let link_name = storage_capability_sock_name(family_id);
+    let link_path = parent.join(&link_name);
     if link_path.exists()
         && let Err(e) = std::fs::remove_file(&link_path)
     {
@@ -127,14 +146,15 @@ pub fn install_storage_capability_symlink(socket_path: &Path) -> bool {
 /// When `installed` is `false`, does nothing. Otherwise removes the symlink if it exists and is a
 /// symlink.
 #[cfg(unix)]
-pub fn remove_storage_capability_symlink(socket_path: &Path, installed: bool) {
+pub fn remove_storage_capability_symlink(socket_path: &Path, family_id: &str, installed: bool) {
     if !installed {
         return;
     }
     let Some(parent) = socket_path.parent() else {
         return;
     };
-    let link_path = parent.join(STORAGE_CAPABILITY_SOCK_NAME);
+    let link_name = storage_capability_sock_name(family_id);
+    let link_path = parent.join(&link_name);
     if !link_path.exists() {
         return;
     }
@@ -153,6 +173,7 @@ pub fn remove_storage_capability_symlink(socket_path: &Path, installed: bool) {
 #[cfg(unix)]
 pub struct StorageCapabilitySymlinkGuard {
     socket_path: PathBuf,
+    family_id: String,
     installed: bool,
 }
 
@@ -160,10 +181,11 @@ pub struct StorageCapabilitySymlinkGuard {
 impl StorageCapabilitySymlinkGuard {
     /// Install [`install_storage_capability_symlink`] for `socket_path`.
     #[must_use]
-    pub fn new(socket_path: &Path) -> Self {
-        let installed = install_storage_capability_symlink(socket_path);
+    pub fn new(socket_path: &Path, family_id: &str) -> Self {
+        let installed = install_storage_capability_symlink(socket_path, family_id);
         Self {
             socket_path: socket_path.to_path_buf(),
+            family_id: family_id.to_string(),
             installed,
         }
     }
@@ -172,7 +194,24 @@ impl StorageCapabilitySymlinkGuard {
 #[cfg(unix)]
 impl Drop for StorageCapabilitySymlinkGuard {
     fn drop(&mut self) {
-        remove_storage_capability_symlink(&self.socket_path, self.installed);
+        remove_storage_capability_symlink(&self.socket_path, &self.family_id, self.installed);
+    }
+}
+
+/// Returns `true` when `family_id` represents a real deployed family (not a dev default).
+///
+/// BTSP Phase 1: family-scoped socket naming (`nestgate-{fid}.sock`) is only
+/// activated for production families. Dev defaults keep the simple `nestgate.sock`.
+fn is_family_scoped(family_id: &str) -> bool {
+    !matches!(family_id, "standalone" | "default" | "")
+}
+
+/// Socket file name, family-scoped when appropriate per BTSP §Socket Naming.
+fn socket_file_name(family_id: &str) -> String {
+    if is_family_scoped(family_id) {
+        format!("nestgate-{family_id}.sock")
+    } else {
+        "nestgate.sock".to_string()
     }
 }
 
@@ -196,7 +235,7 @@ pub enum SocketConfigSource {
     Environment,
     /// Ecosystem shared socket directory via `BIOMEOS_SOCKET_DIR` (standard wateringHole path)
     BiomeOSDirectory,
-    /// `$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock` (see [`nestgate_config::constants::system::ecosystem_path_segment`])
+    /// `$XDG_RUNTIME_DIR/<ecosystem>/nestgate[-{fid}].sock` (see [`nestgate_config::constants::system::ecosystem_path_segment`])
     XdgRuntime,
     /// Temporary directory fallback (/tmp)
     TempDirectory,
@@ -211,8 +250,8 @@ impl SocketConfig {
     /// # Priority Order
     ///
     /// 1. `socket_override` (if `Some`, use as-is)
-    /// 2. `biomeos_socket_dir` (if `Some`, use `{dir}/nestgate.sock`)
-    /// 3. XDG runtime: `{xdg_runtime_dir}/<ecosystem>/nestgate.sock` when `xdg_runtime_dir` is set and exists
+    /// 2. `biomeos_socket_dir` (if `Some`, use `{dir}/nestgate[-{fid}].sock`)
+    /// 3. XDG runtime: `{xdg_runtime_dir}/<ecosystem>/nestgate[-{fid}].sock` when `xdg_runtime_dir` is set and exists
     /// 4. Temp fallback: `/tmp/nestgate-{family}-{node}.sock`
     ///
     /// # Errors
@@ -240,7 +279,7 @@ impl SocketConfig {
 
         // Tier 2: `BIOMEOS_SOCKET_DIR` (ecosystem standard shared-socket directory)
         if let Some(biomeos_dir) = biomeos_socket_dir {
-            let socket_path = PathBuf::from(biomeos_dir).join("nestgate.sock");
+            let socket_path = PathBuf::from(biomeos_dir).join(socket_file_name(&family_id));
 
             info!(
                 "🔌 Using ecosystem socket directory (BIOMEOS_SOCKET_DIR): {} (family: {}, node: {})",
@@ -257,14 +296,14 @@ impl SocketConfig {
             });
         }
 
-        // Tier 3: `$XDG_RUNTIME_DIR/<ecosystem>/nestgate.sock` (preferred)
+        // Tier 3: `$XDG_RUNTIME_DIR/<ecosystem>/nestgate[-{fid}].sock`
         if let Some(ref dir) = xdg_runtime_dir
             && !dir.is_empty()
             && Path::new(dir).exists()
         {
             let socket_path = PathBuf::from(dir)
                 .join(nestgate_config::constants::system::ecosystem_path_segment())
-                .join("nestgate.sock");
+                .join(socket_file_name(&family_id));
 
             info!(
                 "🔌 Using XDG runtime directory with ecosystem socket layout: {} (family: {}, node: {})",
@@ -330,10 +369,24 @@ impl SocketConfig {
     /// always returns [`Ok`]; the [`Result`] is reserved for future validation of paths and
     /// identifiers.
     pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
-        let family_id = env.get("NESTGATE_FAMILY_ID").unwrap_or_else(|| {
-            warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");
-            "standalone".to_string()
-        });
+        let family_id = env
+            .get("NESTGATE_FAMILY_ID")
+            .or_else(|| env.get("FAMILY_ID"))
+            .unwrap_or_else(|| {
+                warn!("NESTGATE_FAMILY_ID not set, using 'standalone' (wateringHole default)");
+                "standalone".to_string()
+            });
+
+        // BTSP guard: FAMILY_ID + BIOMEOS_INSECURE is a conflicting configuration.
+        let insecure = env.get("BIOMEOS_INSECURE").is_some_and(|v| v == "1");
+        if is_family_scoped(&family_id) && insecure {
+            return Err(anyhow::anyhow!(
+                "BTSP guard: FAMILY_ID is set ({family_id}) but BIOMEOS_INSECURE=1. \
+                 This is a conflicting configuration — insecure mode is only valid \
+                 in development (no FAMILY_ID). Remove BIOMEOS_INSECURE or unset FAMILY_ID."
+            )
+            .into());
+        }
 
         let node_id = env.get("NESTGATE_NODE_ID").unwrap_or_else(|| {
             rustix::system::uname()
@@ -343,7 +396,6 @@ impl SocketConfig {
         });
 
         let socket_override = env.get("NESTGATE_SOCKET");
-        // Standard ecosystem shared-socket directory (protocol name retained for compatibility).
         let biomeos_socket_dir = env.get("BIOMEOS_SOCKET_DIR");
         let xdg_runtime_dir = env.get("XDG_RUNTIME_DIR");
 

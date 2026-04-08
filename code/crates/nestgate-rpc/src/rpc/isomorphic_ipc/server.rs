@@ -200,22 +200,24 @@ impl IsomorphicIpcServer {
 
         // Prefer production [`SocketConfig`] (NESTGATE_SOCKET / BIOMEOS_SOCKET_DIR / XDG / tmp) so behavior
         // matches [`crate::rpc::unix_socket_server::JsonRpcUnixServer`] and ecosystem clients.
-        let socket_path = match crate::rpc::socket_config::SocketConfig::from_environment() {
-            Ok(cfg) => {
-                cfg.prepare_socket_path()
-                    .map_err(|e| anyhow::anyhow!("Failed to prepare socket path: {e}"))?;
-                cfg.socket_path
-            }
-            Err(e) => {
-                warn!(
-                    "SocketConfig unavailable ({}), using legacy service-name path layout",
-                    e
-                );
-                let socket_path = self.get_socket_path()?;
-                self.prepare_socket_path(&socket_path)?;
-                socket_path
-            }
-        };
+        let (socket_path, family_id) =
+            match crate::rpc::socket_config::SocketConfig::from_environment() {
+                Ok(cfg) => {
+                    cfg.prepare_socket_path()
+                        .map_err(|e| anyhow::anyhow!("Failed to prepare socket path: {e}"))?;
+                    let fid = cfg.family_id.clone();
+                    (cfg.socket_path, fid)
+                }
+                Err(e) => {
+                    warn!(
+                        "SocketConfig unavailable ({}), using legacy service-name path layout",
+                        e
+                    );
+                    let socket_path = self.get_socket_path()?;
+                    self.prepare_socket_path(&socket_path)?;
+                    (socket_path, "standalone".to_string())
+                }
+            };
 
         // Bind to Unix socket
         let listener = UnixListener::bind(&socket_path)
@@ -225,7 +227,7 @@ impl IsomorphicIpcServer {
 
         #[cfg(unix)]
         let _storage_capability_symlink_guard =
-            crate::rpc::socket_config::StorageCapabilitySymlinkGuard::new(&socket_path);
+            crate::rpc::socket_config::StorageCapabilitySymlinkGuard::new(&socket_path, &family_id);
 
         // Accept connections
         loop {
