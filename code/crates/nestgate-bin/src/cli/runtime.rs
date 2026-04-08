@@ -6,13 +6,13 @@
 /// Setup logging based on CLI arguments
 pub fn setup_logging(verbose: bool) {
     let level = if verbose { "debug" } else { "info" };
-    tracing_subscriber::fmt()
+    let _ = tracing_subscriber::fmt()
         .with_env_filter(format!("nestgate={level}"))
         .with_target(false)
         .with_thread_ids(false)
         .with_file(false)
         .with_line_number(false)
-        .init();
+        .try_init();
 }
 
 /// Print welcome banner

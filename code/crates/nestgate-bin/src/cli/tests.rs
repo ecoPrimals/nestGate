@@ -412,10 +412,8 @@ mod port_env_tests {
 
 mod setup_and_banner_tests {
     use crate::cli::{print_banner, setup_logging};
-    use serial_test::serial;
 
     #[test]
-    #[serial]
     fn setup_logging_initializes_subscriber_once() {
         setup_logging(false);
     }

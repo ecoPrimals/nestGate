@@ -127,8 +127,3 @@ pub(super) fn gather_socket_search_dirs_from_env(env: &dyn EnvSource) -> Vec<Str
     dirs.push("/tmp".to_string());
     dirs
 }
-
-#[allow(dead_code)] // Wrapper for `ProcessEnv`; callers typically use `gather_socket_search_dirs_from_env`.
-pub(super) fn gather_socket_search_dirs() -> Vec<String> {
-    gather_socket_search_dirs_from_env(&ProcessEnv)
-}

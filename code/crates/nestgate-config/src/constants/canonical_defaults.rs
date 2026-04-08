@@ -60,12 +60,6 @@ pub mod network {
         )
     }
 
-    /// Default API base URL constant (for backwards compatibility)
-    ///
-    /// **Development default** for legacy call sites; prefer [`default_api_base_url`].
-    #[deprecated(since = "0.9.0", note = "Use default_api_base_url() function instead")]
-    pub const DEFAULT_API_BASE_URL: &str = "http://localhost:8080";
-
     /// Default WebSocket URL (environment-driven)
     ///
     /// Uses `NESTGATE_WEBSOCKET_PORT` when set. Hostname follows [`default_api_base_url`].
@@ -85,12 +79,6 @@ pub mod network {
             port
         )
     }
-
-    /// Default WebSocket URL constant (for backwards compatibility)
-    ///
-    /// **Development default** for legacy call sites; prefer [`default_websocket_url`].
-    #[deprecated(since = "0.9.0", note = "Use default_websocket_url() function instead")]
-    pub const DEFAULT_WEBSOCKET_URL: &str = "ws://localhost:8080/ws";
 
     /// Default metrics URL (environment-driven)
     ///
@@ -112,12 +100,6 @@ pub mod network {
         )
     }
 
-    /// Default metrics URL constant (for backwards compatibility)
-    ///
-    /// **Development default** for legacy call sites; prefer [`default_metrics_url`].
-    #[deprecated(since = "0.9.0", note = "Use default_metrics_url() function instead")]
-    pub const DEFAULT_METRICS_URL: &str = "http://localhost:9090";
-
     /// Default web UI URL (environment-driven)
     #[must_use]
     pub fn default_web_ui_url() -> String {
@@ -135,12 +117,6 @@ pub mod network {
             port
         )
     }
-
-    /// Default web UI URL constant (for backwards compatibility)
-    ///
-    /// **Development default** for legacy call sites; prefer [`default_web_ui_url`].
-    #[deprecated(since = "0.9.0", note = "Use default_web_ui_url() function instead")]
-    pub const DEFAULT_WEB_UI_URL: &str = "http://localhost:3000";
 
     /// Localhost constant
     pub const LOCALHOST: &str = "127.0.0.1";
