@@ -159,9 +159,10 @@ cargo nextest run
 # Watch mode (auto-run tests)
 cargo watch -x 'nextest run'
 
-# Coverage report
-cargo tarpaulin --out Html
-# Open tarpaulin-report.html
+# Coverage report (primary — llvm-cov)
+cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'tools/'
+# HTML report:
+cargo llvm-cov --workspace --html --ignore-filename-regex 'tools/'
 ```
 
 ### **Debugging Workflow**:

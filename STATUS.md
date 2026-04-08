@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 7, 2026  
+**Last Updated**: April 8, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,11 +8,11 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-07
-Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-07
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-08
+Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-08
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
-Tests:              ~11,834 passing, 0 failures, 461 ignored (cargo test --workspace --all-features)
+Tests:              ~11,842 passing, 0 failures, 461 ignored (cargo test --workspace --all-features)
 Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
 Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code
@@ -23,7 +23,7 @@ Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
 TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes:         storage.*, data.* (delegation; not capability-advertised), session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.* wired
+IPC routes:         storage.*, data.* (delegation; not capability-advertised), session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.*, zfs.* wired
 Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -32,7 +32,7 @@ Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
-Serial tests:       #[serial]: 1 — CLI argument tests in nestgate-bin/src/cli/tests.rs
+Serial tests:       #[serial]: 0 — last #[serial] eliminated via try_init() evolution
 Numeric casts:      ZERO raw `as` casts in production — all use try_from with saturating fallbacks
 Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
@@ -42,14 +42,14 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ---
 
-## Ground truth refresh (Apr 7, 2026)
+## Ground truth refresh (Apr 8, 2026)
 
 Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
 
-- **Production file size**: All production `.rs` files under **1,000** lines (max ~750 pre-refactored; `tarpc_types.rs` split to ~130-line modules).
-- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy with `-D warnings` passes as of 2026-04-07. MCP, ring, rustls, reqwest eliminated from typical app paths.
+- **Production file size**: All production `.rs` files under **800** lines (max ~758; no production file exceeds 800 lines).
+- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy with `-D warnings` passes as of 2026-04-08. MCP, ring, rustls, reqwest eliminated from typical app paths.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
-- **Testing**: Zero `thread::sleep` or `tokio::time::sleep` stabilization waits in tests (except chaos/timeout). `#[serial]`: **1** — CLI argument tests in `nestgate-bin/src/cli/tests.rs`. Config/discovery/port-discovery tests use `EnvSource` trait injection (`MapEnv` in tests, `ProcessEnv` in production) — no process-env mutation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
+- **Testing**: Zero `thread::sleep` or `tokio::time::sleep` stabilization waits in tests (except chaos/timeout). `#[serial]`: **0** — last `#[serial]` eliminated via `setup_logging` `try_init()` evolution. Config/discovery/port-discovery tests use `EnvSource` trait injection (`MapEnv` in tests, `ProcessEnv` in production) — no process-env mutation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
 - **Stubs**: Production mock builders gated behind `#[cfg(any(test, feature = "dev-stubs"))]`. Crypto/data stubs return structured delegation guidance. `orchestrator_integration` feature-gated.
 - **Numeric safety**: All `as` casts replaced with `try_from().unwrap_or(MAX)` or `saturating_*` operations. Custom `unix_secs()` helper for timestamp conversions.
@@ -485,7 +485,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D war
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
 | Coverage gap to 90% | ~10 pp remaining (~80% current; last measured 80.95% line) |
 | Semantic router | COMPILED & WIRED — `data.*` delegates; `nat.*`, `beacon.*` routes active; `discovery` overstep modules deprecated |
-| `#[allow(dead_code)]` | 1 production module-level (RPC manager, documented rationale); item-level with reasons |
+| `#[allow(dead_code)]` | 0 production `#[allow(dead_code)]` — dead code removed rather than suppressed |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
 | Automation in-tree | DEPRECATED — zero production consumers; all deps removed from nestgate-zfs/api/fuzz |
 | mDNS in-tree | Feature-gated behind `mdns` — biomeOS for production discovery |
@@ -596,4 +596,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 7, 2026
+**Latest**: April 8, 2026

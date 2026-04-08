@@ -2,25 +2,25 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-07)**  
+**Verification (as of 2026-04-08)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors)  
 - **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
 - **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~11,834 passing, 461 ignored, 0 failures — run `cargo test --workspace` to refresh counts  
+- **Tests (last recorded)**: ~11,842 passing, 461 ignored, 0 failures — run `cargo test --workspace` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
 - **Open debt markers**: none in production `.rs` (wateringHole; re-verify after large edits)  
-- **Deprecated APIs**: 188 `#[deprecated]` markers for canonical-config migration; zero dead callers (all deprecated helper functions with 0 callers removed)  
+- **Deprecated APIs**: 181 `#[deprecated]` markers for canonical-config migration; zero dead callers (all deprecated helper functions with 0 callers removed)  
 **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)  
 **TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack in-tree)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 **File size**: All production `.rs` files under 1,000 lines (max ~500 after smart refactoring)  
-**`#[serial]`**: 1 — CLI argument tests in `nestgate-bin/src/cli/tests.rs`  
-**Last Updated**: April 7, 2026
+**`#[serial]`**: 0 — last `#[serial]` eliminated via `try_init()` evolution  
+**Last Updated**: April 8, 2026
 
 ---
 
@@ -115,7 +115,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-07).
+See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-08).
 
 | Area | Status |
 |------|--------|
@@ -125,14 +125,14 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Tests | `cargo test --workspace` — PASS (0 failures) |
 | Coverage | ~80% line (llvm-cov) — wateringHole 80% minimum met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — builds without rustdoc warnings in normal runs |
-| Migration / deprecation notes | 188 `#[deprecated]` markers for canonical migration; 0 dead deprecated callers; 0 `#[allow(clippy::…)]` in production code (all migrated to `#[expect(` with documented reasons) |
+| Migration / deprecation notes | 181 `#[deprecated]` markers for canonical migration; 0 dead deprecated callers; 0 `#[allow(clippy::…)]` in production code (all migrated to `#[expect(` with documented reasons) |
 | Production unwrap/expect | Zero in library `src/` per project rules; tests/integration may use unwrap; clippy `unwrap_used` warns workspace-wide |
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
 | File size (production < 1000) | All compliant (max ~500 lines last measured after smart refactoring) |
 | http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
-| Env-var isolation | `EnvSource` / `MapEnv` primary; `temp_env` + `#[serial]` only where code still reads process env directly |
+| Env-var isolation | `EnvSource` / `MapEnv` primary; zero `#[serial]` tests remaining |
 
 ### Compliance (wateringHole)
 
@@ -142,7 +142,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | ecoBin | Pass — pure Rust application code, socket-only default, zero C crypto deps (ring/rustls/reqwest eliminated) |
 | JSON-RPC 2.0 | Pass |
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
-| Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*` |
+| Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — ~80% line last measured (wateringHole 80% minimum met; 90% target not yet) |
 | File size (<1000 production) | Pass (max ~500 lines after smart refactoring) |
@@ -270,4 +270,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 7, 2026
+**Latest**: April 8, 2026

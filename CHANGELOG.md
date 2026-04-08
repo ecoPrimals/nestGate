@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 36: Deep debt audit — serial elimination, dead code removal, doc alignment (April 8, 2026)
+
+- Eliminated last `#[serial]` test: `setup_logging` evolved from `.init()` to `.try_init()`,
+  making it safe for concurrent test execution; removed `serial_test` dev-dep from nestgate-bin
+- Removed dead `gather_socket_search_dirs()` function (was `#[allow(dead_code)]` in nestgate-rpc)
+- Removed 4 deprecated zero-caller URL constants (`DEFAULT_API_BASE_URL`, `DEFAULT_WEBSOCKET_URL`,
+  `DEFAULT_METRICS_URL`, `DEFAULT_WEB_UI_URL`) — env-driven functions are the canonical replacements
+- Full codebase audit confirmed: zero unsafe code, zero production `.unwrap()`, zero
+  `#[allow(clippy::*)]`, zero `thread::sleep`/`block_on`, zero `todo!()`/`FIXME`/`HACK`,
+  no production files over 800 lines, all `.clone()` on hot paths verified necessary
+- Deprecated markers: 188 → 181 (7 removed; zero dead callers remain)
+- Updated root docs (README, STATUS, CHANGELOG) to April 8, 2026 metrics
+- Current: 11,842 tests passing, 461 ignored, 0 failures, 0 clippy warnings
+
 ### Session 35: GAP-MATRIX-04 — ZFS JSON-RPC/UDS bridge (April 8, 2026)
 
 - Resolved GAP-MATRIX-04: ZFS operations now accessible via JSON-RPC over UDS
@@ -1363,5 +1377,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: April 6, 2026  
+**Last Updated**: April 8, 2026  
 **Current Version**: 4.7.0-dev
