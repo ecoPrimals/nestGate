@@ -161,12 +161,17 @@ pub async fn model_metadata_from_env_source(
 /// All JSON-RPC method names supported by the Unix socket server (`unix_socket_server`).
 /// Keep in sync with `handle_request` in `unix_socket_server/mod.rs`.
 pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
+    // Health triad (Wire Standard L1)
     "health.liveness",
     "health.readiness",
     "health.check",
     "health",
+    // Meta / self-advertisement (Wire Standard L2)
+    "identity.get",
     "capabilities.list",
     "discover_capabilities",
+    "discovery.capability.register",
+    // Storage operations (primary domain)
     "storage.store",
     "storage.retrieve",
     "storage.exists",
@@ -176,21 +181,36 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "storage.store_blob",
     "storage.retrieve_blob",
     "storage.fetch_external",
+    // Model cache
     "model.register",
     "model.exists",
     "model.locate",
     "model.metadata",
+    // Template persistence
     "templates.store",
     "templates.retrieve",
     "templates.list",
     "templates.community_top",
+    // Session persistence
+    "session.save",
+    "session.load",
+    // Audit persistence
     "audit.store_execution",
+    // NAT traversal persistence
     "nat.store_traversal_info",
     "nat.retrieve_traversal_info",
+    // Beacon persistence
     "beacon.store",
     "beacon.retrieve",
     "beacon.list",
     "beacon.delete",
+    // External data feeds
+    "data.ncbi_search",
+    "data.ncbi_fetch",
+    "data.noaa_ghcnd",
+    "data.iris_stations",
+    "data.iris_events",
+    // ZFS storage management
     "zfs.pool.list",
     "zfs.pool.get",
     "zfs.pool.health",
@@ -200,14 +220,80 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "zfs.health",
 ];
 
-/// capabilities.list — wateringHole semantic naming; lists all supported method names.
+/// capabilities.list — Wire Standard L3 compliant response.
+///
+/// Returns the required `{primal, version, methods}` envelope (L2) plus
+/// structured `provided_capabilities` grouping and `consumed_capabilities`
+/// declaration for composition completeness validation (L3).
 #[expect(clippy::unnecessary_wraps, reason = "Handler dispatch requires Result")]
 pub fn capabilities_list() -> Result<Value> {
     info!("🔍 capabilities.list called");
     Ok(json!({
-        "methods": UNIX_SOCKET_SUPPORTED_METHODS,
         "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
+        "methods": UNIX_SOCKET_SUPPORTED_METHODS,
+        "provided_capabilities": [
+            {
+                "type": "storage",
+                "methods": [
+                    "store", "retrieve", "exists", "delete", "list",
+                    "stats", "store_blob", "retrieve_blob", "fetch_external"
+                ],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Filesystem-backed durable key-value and blob storage"
+            },
+            {
+                "type": "model",
+                "methods": ["register", "exists", "locate", "metadata"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "AI model cache — registration, lookup, metadata"
+            },
+            {
+                "type": "templates",
+                "methods": ["store", "retrieve", "list", "community_top"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Template persistence and community ranking"
+            },
+            {
+                "type": "session",
+                "methods": ["save", "load"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Game session persistence (convenience over storage.*)"
+            },
+            {
+                "type": "audit",
+                "methods": ["store_execution"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Execution audit trail persistence"
+            },
+            {
+                "type": "nat",
+                "methods": ["store_traversal_info", "retrieve_traversal_info"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "NAT traversal endpoint persistence"
+            },
+            {
+                "type": "beacon",
+                "methods": ["store", "retrieve", "list", "delete"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "Known beacon persistence for mesh discovery"
+            },
+            {
+                "type": "data",
+                "methods": ["ncbi_search", "ncbi_fetch", "noaa_ghcnd", "iris_stations", "iris_events"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "External data feed proxying (NCBI, NOAA, IRIS)"
+            },
+            {
+                "type": "zfs",
+                "methods": ["pool.list", "pool.get", "pool.health", "dataset.list", "dataset.get", "snapshot.list", "health"],
+                "version": env!("CARGO_PKG_VERSION"),
+                "description": "ZFS storage management — pools, datasets, snapshots"
+            }
+        ],
+        "consumed_capabilities": [],
+        "protocol": "jsonrpc-2.0",
+        "transport": ["uds", "http"]
     }))
 }
 
@@ -250,6 +336,41 @@ mod tests {
         let methods = value["methods"].as_array().unwrap();
         let names: Vec<&str> = methods.iter().filter_map(|v| v.as_str()).collect();
         assert_eq!(names, UNIX_SOCKET_SUPPORTED_METHODS);
+    }
+
+    #[test]
+    fn test_capabilities_list_wire_standard_l2_envelope() {
+        let value = capabilities_list().unwrap();
+        assert!(value["primal"].is_string(), "L2: primal field required");
+        assert!(value["version"].is_string(), "L2: version field required");
+        assert!(
+            value["methods"].is_array(),
+            "L2: methods flat array required"
+        );
+    }
+
+    #[test]
+    fn test_capabilities_list_wire_standard_l3_composable() {
+        let value = capabilities_list().unwrap();
+        let provided = value["provided_capabilities"].as_array().unwrap();
+        assert!(!provided.is_empty(), "L3: provided_capabilities required");
+        for group in provided {
+            assert!(group["type"].is_string(), "L3: group type required");
+            assert!(group["methods"].is_array(), "L3: group methods required");
+        }
+        assert!(
+            value["consumed_capabilities"].is_array(),
+            "L3: consumed_capabilities required"
+        );
+    }
+
+    #[test]
+    fn test_capabilities_list_protocol_and_transport() {
+        let value = capabilities_list().unwrap();
+        assert_eq!(value["protocol"], "jsonrpc-2.0");
+        let transports = value["transport"].as_array().unwrap();
+        let ts: Vec<&str> = transports.iter().filter_map(|v| v.as_str()).collect();
+        assert!(ts.contains(&"uds"));
     }
 
     #[tokio::test]

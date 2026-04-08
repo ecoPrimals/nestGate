@@ -477,7 +477,7 @@ mod tests {
         assert!(m.cpu_usage.is_finite());
         assert!(m.disk_iops.is_finite());
         assert!(m.network_bytes_per_sec.is_finite());
-        assert!(m.memory_usage <= u64::MAX);
+        assert!(m.memory_usage > 0, "memory usage should be non-zero");
         Ok(())
     }
 }

@@ -429,6 +429,8 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "identity.get" => Ok(json!({
             "primal": DEFAULT_SERVICE_NAME,
             "version": env!("CARGO_PKG_VERSION"),
+            "domain": "storage",
+            "license": "AGPL-3.0-or-later",
             "family_id": std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".into()),
         })),
         "capabilities.list" | "capability.list" => model_cache_handlers::capabilities_list(),

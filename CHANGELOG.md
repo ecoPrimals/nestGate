@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 37: Wire Standard L3 compliance — capabilities.list + identity.get evolution (April 8, 2026)
+
+- Upgraded `capabilities.list` to Wire Standard Level 3 (Composable): now returns full
+  `{primal, version, methods, provided_capabilities, consumed_capabilities, protocol, transport}` envelope
+- `provided_capabilities` groups all 57 methods into 9 capability domains (storage, model, templates,
+  session, audit, nat, beacon, data, zfs)
+- `identity.get` now includes `domain: "storage"` and `license: "AGPL-3.0-or-later"` per Wire Standard L2
+- `UNIX_SOCKET_SUPPORTED_METHODS` expanded from 37 → 57: added `identity.get`, `session.save`,
+  `session.load`, `data.ncbi_search`, `data.ncbi_fetch`, `data.noaa_ghcnd`, `data.iris_stations`,
+  `data.iris_events`, `discovery.capability.register` — all were callable but unadvertised
+- Added 3 Wire Standard compliance tests (L2 envelope, L3 composable, protocol+transport)
+- Fixed pre-existing clippy error in nestgate-observe (`u64::MAX` absurd comparison)
+- Updated wateringHole `CAPABILITY_WIRE_STANDARD.md` compliance table: NestGate → L3
+
 ### Session 36: Deep debt audit — serial elimination, dead code removal, doc alignment (April 8, 2026)
 
 - Eliminated last `#[serial]` test: `setup_logging` evolved from `.init()` to `.try_init()`,

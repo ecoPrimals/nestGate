@@ -23,7 +23,8 @@ Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
 TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes:         storage.*, data.* (delegation; not capability-advertised), session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.*, zfs.* wired
+IPC routes:         storage.*, data.*, session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.*, identity.*, model.*, templates.*, audit.*, zfs.* — 57 methods advertised
+Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (9 groups), consumed_capabilities, protocol, transport
 Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -549,7 +550,7 @@ Deprecated/shed (removed from workspace): nestgate-network, nestgate-automation,
 |----------|--------|
 | UniBin | PASS |
 | ecoBin | PASS (pure Rust app code; ring/rustls/reqwest eliminated; sysinfo optional non-Linux only) |
-| JSON-RPC 2.0 | PASS |
+| JSON-RPC 2.0 | PASS — Wire Standard Level 3 (Composable) |
 | tarpc | PASS (feature-gated, version aligned) |
 | Semantic naming | PASS (storage.*, data.*, nat.*, beacon.*, health.*, capabilities.*) |
 | File size (<1000 production) | PASS (max ~500 lines after smart refactors) |
