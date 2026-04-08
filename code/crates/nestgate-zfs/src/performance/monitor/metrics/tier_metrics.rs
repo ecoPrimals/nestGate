@@ -107,9 +107,6 @@ impl ZfsPerformanceMonitor {
             dataset_name
         );
 
-        // Mock mode: return default performance stats for development
-        debug!("Mock mode: returning default performance stats");
-
         let mut stats = DatasetPerformanceStats::default();
 
         // Get dataset properties

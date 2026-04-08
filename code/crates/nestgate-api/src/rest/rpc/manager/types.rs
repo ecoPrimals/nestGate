@@ -3,9 +3,9 @@
 
 //! Connection pool, health monitoring, and infrastructure types for the unified
 //! RPC stack. These types preserve the public API shape while transport, real
-//! pooling, and background tasks remain placeholders.
+//! pooling, and background tasks are wired incrementally.
 
-#![allow(dead_code)]
+#![expect(dead_code, reason = "Scaffold fields reserved for upcoming RPC wiring")]
 
 use super::super::config::{
     ConnectionPoolConfig, HealthMonitoringConfig, LoadBalancingConfig, RpcSecurityConfig,

@@ -123,7 +123,7 @@ impl ServicesConfig {
     /// ```ignore
     /// // ✅ CORRECT: Capability-based
     /// let security_url = services.get_capability_url("security");
-    /// // Discovers ANY primal offering security (BearDog, custom, etc.)
+    /// // Discovers ANY primal offering the security capability
     /// ```
     /// Resolve a service URL by capability — **primary API** for capability-first access.
     ///

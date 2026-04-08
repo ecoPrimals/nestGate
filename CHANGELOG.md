@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 38: Deep debt audit — silent-success catch-all, dead deps, self-knowledge cleanup (April 8, 2026)
+
+- **ZFS catch-all safety**: Replaced silent-success wildcard in `ZfsRequestHandler::handle_zfs_request`
+  with explicit `Err` for unimplemented mutations (PoolCreate/Destroy, DatasetCreate/Destroy,
+  SnapshotCreate/Destroy) — prevents callers from believing no-op succeeded
+- **`#[allow(dead_code)]` → `#[expect(dead_code)]`**: RPC manager `mod.rs` and `types.rs` evolved
+  to modern `#[expect]` with reason strings; will auto-warn when scaffold fields are wired
+- **Removed unused deps**: `memmap2` (workspace, zero consumers), `log` (workspace + nestgate-core,
+  zero imports — `tracing` is sole logging framework)
+- **Fixed duplicate dep**: `temp-env` root package now uses `workspace = true` instead of inline version
+- **Misleading log removed**: `tier_metrics.rs` "Mock mode: returning default performance stats" log
+  preceded real ZFS CLI calls — stale from dev iteration, removed
+- **Self-knowledge cleanup**: Removed primal name "bearDog" from `nestgate-security` crate docs,
+  "songBird" from `infant_discovery_demo.rs`, "BearDog" from `services.rs` doc example — replaced
+  with capability-domain language per `PRIMAL_SELF_KNOWLEDGE_STANDARD.md`
+- **Stale "placeholder" labels**: Updated `discovery.rs` doc comments from "placeholder" to accurate
+  descriptions of baseline feature detection behavior
+
 ### Session 37: Wire Standard L3 compliance — capabilities.list + identity.get evolution (April 8, 2026)
 
 - Upgraded `capabilities.list` to Wire Standard Level 3 (Composable): now returns full

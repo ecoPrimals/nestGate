@@ -3,14 +3,12 @@
 
 //! Unified RPC Manager
 //!
-//! **Stub RPC stack:** `UnifiedRpcManager` holds connection pool, security, load
-//! balancer, health monitor, stream registry, metrics, and service map types so
-//! the public API and tests can compile while transport, real pooling, and
-//! background tasks are still placeholders. Fields exist to preserve shape for
-//! upcoming wiring; remove `dead_code` allows once the stack is exercised
-//! end-to-end.
+//! Connection pool, security, load balancer, health monitor, stream registry,
+//! metrics, and service map types for the RPC stack. Fields exist to preserve
+//! shape for upcoming wiring; the `dead_code` expect will auto-warn when the
+//! stack is exercised end-to-end.
 
-#![allow(dead_code)]
+#![expect(dead_code, reason = "Scaffold fields reserved for upcoming RPC wiring")]
 
 #[cfg(test)]
 mod tests;

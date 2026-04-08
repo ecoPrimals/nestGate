@@ -288,14 +288,30 @@ impl ZfsRequestHandler {
             ZfsRequest::DatasetList { pool } => self.handle_dataset_list(pool).await,
             ZfsRequest::SnapshotList { dataset } => self.handle_snapshot_list(dataset).await,
             ZfsRequest::HealthCheck => self.handle_health_check(),
-            _ => {
-                // For now, return success for other operations
-                // Additional operations can be implemented here as needed
-                // Current implementation covers the core ZFS operations
-                Ok(ZfsResponse::Success {
-                    message: "Operation completed successfully".to_string(),
-                })
-            }
+            ZfsRequest::PoolCreate { name, .. } => Err(anyhow::anyhow!(
+                "zfs pool create ({name}) not yet implemented — use `zpool create` directly"
+            )
+            .into()),
+            ZfsRequest::PoolDestroy { name } => Err(anyhow::anyhow!(
+                "zfs pool destroy ({name}) not yet implemented — use `zpool destroy` directly"
+            )
+            .into()),
+            ZfsRequest::DatasetCreate { name, .. } => Err(anyhow::anyhow!(
+                "zfs dataset create ({name}) not yet implemented — use `zfs create` directly"
+            )
+            .into()),
+            ZfsRequest::DatasetDestroy { name } => Err(anyhow::anyhow!(
+                "zfs dataset destroy ({name}) not yet implemented — use `zfs destroy` directly"
+            )
+            .into()),
+            ZfsRequest::SnapshotCreate { dataset, name } => Err(anyhow::anyhow!(
+                "zfs snapshot create ({dataset}@{name}) not yet implemented — use `zfs snapshot` directly"
+            )
+            .into()),
+            ZfsRequest::SnapshotDestroy { name } => Err(anyhow::anyhow!(
+                "zfs snapshot destroy ({name}) not yet implemented — use `zfs destroy` directly"
+            )
+            .into()),
         }
     }
 
@@ -435,20 +451,19 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn handler_stub_operations_return_success() {
+    async fn handler_unimplemented_mutations_return_error() {
         let handler = ZfsRequestHandler::new(ZfsConfig::default());
-        let out = handler
+        let result = handler
             .handle_zfs_request(ZfsRequest::PoolDestroy {
                 name: "gone".to_string(),
             })
-            .await
-            .expect("stub success");
-        match out {
-            ZfsResponse::Success { message } => {
-                assert!(message.contains("successfully"));
-            }
-            other => panic!("unexpected response: {other:?}"),
-        }
+            .await;
+        assert!(result.is_err(), "unimplemented mutations must return Err");
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("not yet implemented"),
+            "error should explain: {msg}"
+        );
     }
 
     #[test]

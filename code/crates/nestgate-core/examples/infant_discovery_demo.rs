@@ -5,8 +5,8 @@
 //!
 //! This example referenced the pre-overstep `discovery_mechanism` and `self_knowledge`
 //! modules that were shed to `nestgate-discovery` and capability-based IPC. It is
-//! preserved for the fossil record; the discovery pattern now uses env-var + songBird
-//! IPC per the primal responsibility matrix.
+//! preserved for the fossil record; the discovery pattern now uses env-var + network
+//! capability IPC per the primal responsibility matrix.
 //!
 //! See `nestgate-discovery` crate and `specs/INFANT_DISCOVERY_ARCHITECTURE_SPEC.md`.
 

@@ -8,7 +8,7 @@
 //! # Delegation Model
 //!
 //! Core cryptographic operations (encrypt, decrypt, sign, verify, hash) are **delegated**
-//! to the security capability provider (bearDog) via `crypto.*` JSON-RPC IPC. This crate
+//! to the security capability provider via `crypto.*` JSON-RPC IPC. This crate
 //! provides:
 //!
 //! - **`CryptoDelegate`** — IPC client that forwards crypto requests to the security provider

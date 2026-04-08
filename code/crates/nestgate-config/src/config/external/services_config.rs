@@ -43,7 +43,7 @@ pub struct ServicesConfig {
     /// Capability-based service URLs (`NESTGATE_CAPABILITY_*`).
     ///
     /// Serde aliases allow deserializing configs written before the capability migration:
-    /// a serialized `songbird_url` value is folded into `capabilities["orchestration"]`, etc.
+    /// legacy primal-named URL values are folded into capability-keyed entries.
     capabilities: HashMap<String, String>,
 
     external_services: HashMap<String, String>,

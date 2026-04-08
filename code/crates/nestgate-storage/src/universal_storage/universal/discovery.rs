@@ -267,7 +267,7 @@ impl UniversalStorageDiscovery {
         Some(AuthenticationPattern::None)
     }
 
-    /// Probe basic features (placeholder for now)
+    /// Baseline feature set for local filesystem storage.
     fn probe_basic_features() -> FeatureSet {
         let mut features = FeatureSet::new();
 
@@ -280,7 +280,7 @@ impl UniversalStorageDiscovery {
         features
     }
 
-    /// Detect API info (placeholder)
+    /// API info for a discovered storage endpoint (defaults for local FS).
     fn detect_api_info(_endpoint: &str) -> ApiInfo {
         ApiInfo::default()
     }

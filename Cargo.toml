@@ -46,7 +46,7 @@ fastrand.workspace = true
 criterion.workspace = true
 rstest.workspace = true
 test-log = "0.2.18"
-temp-env = { version = "0.3.6", features = ["async_closure"] }
+temp-env = { workspace = true }
 portpicker = "0.1.1"
 base64.workspace = true
 bytes = { workspace = true }
@@ -129,7 +129,7 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 # Logging and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
-log = "0.4"
+
 
 # Configuration and parsing
 toml = "0.8"
@@ -143,7 +143,7 @@ lru = "0.16"
 
 # Zero-copy and performance optimizations
 bytes = "1.7"
-memmap2 = "0.9"
+
 
 # System utilities (100% Pure Rust!)
 uzers = "0.11"
