@@ -17,6 +17,40 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 
 ---
 
+## Wire Standard Compliance
+
+**Level**: 3 (Composable) — full compliance as of April 8, 2026
+
+`capabilities.list` returns the standard envelope:
+
+```json
+{
+  "primal": "nestgate",
+  "version": "<semver>",
+  "methods": ["<57 methods>"],
+  "provided_capabilities": [
+    {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "fetch_external"]},
+    {"type": "model", "methods": ["register", "exists", "locate", "metadata"]},
+    {"type": "templates", "methods": ["store", "retrieve", "list", "community_top"]},
+    {"type": "session", "methods": ["save", "load"]},
+    {"type": "audit", "methods": ["store_execution"]},
+    {"type": "nat", "methods": ["store_traversal_info", "retrieve_traversal_info"]},
+    {"type": "beacon", "methods": ["store", "retrieve", "list", "delete"]},
+    {"type": "data", "methods": ["ncbi_search", "ncbi_fetch", "noaa_ghcnd", "iris_stations", "iris_events"]},
+    {"type": "zfs", "methods": ["pool.list", "pool.get", "pool.health", "dataset.list", "dataset.get", "snapshot.list", "health"]}
+  ],
+  "consumed_capabilities": [],
+  "protocol": "jsonrpc-2.0",
+  "transport": ["uds", "http"]
+}
+```
+
+`identity.get` returns `{primal, version, domain: "storage", license: "AGPL-3.0-or-later", family_id}`.
+
+See `wateringHole/CAPABILITY_WIRE_STANDARD.md` for the ecosystem-wide standard.
+
+---
+
 ## 🎁 CAPABILITIES PROVIDED BY NESTGATE
 
 ### **1. Storage Capability**

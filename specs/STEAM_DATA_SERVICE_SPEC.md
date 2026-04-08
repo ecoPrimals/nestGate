@@ -331,5 +331,5 @@ impl SteamAccessControl {
 ---
 
 *Specification created: September 16, 2025*  
-*Implementation target: Phase 1 completion by October 2025*  
+*Implementation target: Phase 1 — session persistence shipped (April 2026); federation expansion ongoing*  
 *Focus: Data storage and federation excellence for gaming biomes* 
