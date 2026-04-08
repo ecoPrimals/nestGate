@@ -56,7 +56,7 @@ pub(in crate::rpc::unix_socket_server) async fn ensure_parent_dirs(path: &Path) 
 ///
 /// When callers connect via a family-scoped socket (`nestgate-{family}.sock`),
 /// the server already knows the family context. This eliminates the #1 friction
-/// point identified in primalSpring composition experiments (exp066/068).
+/// point identified in downstream composition experiments.
 pub(in crate::rpc::unix_socket_server) fn resolve_family_id<'a>(
     params: &'a Value,
     state: &'a StorageState,
@@ -302,8 +302,8 @@ pub(super) async fn storage_retrieve_blob(
 
 /// Recursively list all file keys under a dataset directory.
 ///
-/// Keys are returned as relative paths from `root` (e.g. `test/primalspring/hello`
-/// for a file at `{root}/test/primalspring/hello`). Directories are traversed but
+/// Keys are returned as relative paths from `root` (e.g. `test/myapp/hello`
+/// for a file at `{root}/test/myapp/hello`). Directories are traversed but
 /// not returned as keys themselves — only files are keys.
 fn list_keys_recursive<'a>(
     dir: &'a Path,

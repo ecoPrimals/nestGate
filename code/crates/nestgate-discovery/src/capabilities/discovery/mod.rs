@@ -55,7 +55,7 @@
 //!
 //! ```rust,ignore
 //! // ❌ VIOLATES SPEC - hardcoded name
-//! if service_name == "beardog" {
+//! if service_name == "<specific-primal>" {
 //!     // security operations
 //! }
 //! ```

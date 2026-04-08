@@ -202,7 +202,7 @@ impl ServicesConfig {
     /// let orchestration_url = config.get_capability_url("orchestration");
     ///
     /// // ❌ DEPRECATED: Don't use primal-specific methods
-    /// // let beardog_url = config.get_beardog_url();
+    /// // let specific_url = config.get_primal_url("name");
     /// ```
     ///
     /// # Returns

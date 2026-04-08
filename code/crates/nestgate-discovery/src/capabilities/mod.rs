@@ -22,7 +22,7 @@
 //! `PRIMAL_ECOSYSTEM_INTEGRATION_SPEC.md`. Services are discovered by
 //! **capability**, not by name. This ensures:
 //!
-//! - ✅ Vendor independence (no hardcoded "beardog", "songbird", etc.)
+//! - ✅ Vendor independence (no hardcoded primal names)
 //! - ✅ Dynamic service substitution
 //! - ✅ Load balancing across providers
 //! - ✅ Sovereignty compliance
@@ -40,8 +40,8 @@
 //!
 //! ```rust,ignore
 //! // ❌ HARDCODED primal name - violates spec
-//! if service_name == "beardog" {
-//!     connect_to_security_service("beardog:8443").await?;
+//! if service_name == "<specific-primal>" {
+//!     connect_to_security_service("<specific-primal>:8443").await?;
 //! }
 //! ```
 //!

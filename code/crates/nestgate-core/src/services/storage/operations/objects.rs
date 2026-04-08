@@ -44,7 +44,7 @@ pub async fn store_object(
     let object_path = dataset_path.join(key);
 
     // Ensure all parent directories exist. Keys may contain `/` separators
-    // (e.g. "test/primalspring/hello") which create nested subdirectories.
+    // (e.g. "test/myapp/hello") which create nested subdirectories.
     if let Some(parent) = object_path.parent() {
         tokio::fs::create_dir_all(parent).await.map_err(|e| {
             NestGateError::io_error(format!("Failed to create key path directories: {e}"))

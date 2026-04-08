@@ -9,7 +9,7 @@
 //!
 //! ## Problem
 //!
-//! Previously, `NestGate` hardcoded primal names like "beardog", "songbird", etc. This violates:
+//! Previously, `NestGate` hardcoded specific primal names. This violates:
 //! - Primal autonomy (primals shouldn't know each other's names)
 //! - Self-knowledge principle (only know capabilities, discover at runtime)
 //! - Inter-primal interaction standards

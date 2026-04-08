@@ -95,7 +95,7 @@ impl RuntimeDiscovery {
     /// Find a security primal capable of authentication
     ///
     /// This discovers any primal that provides security/authentication capability.
-    /// It does NOT hardcode "beardog" or any specific primal name.
+    /// It does NOT hardcode any specific primal name.
     ///
     /// # Errors
     ///

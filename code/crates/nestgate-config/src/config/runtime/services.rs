@@ -12,7 +12,7 @@
 //! # Philosophy
 //!
 //! - ✅ **Capability-based**: "I need security" → discovers ANY security provider
-//! - ❌ **NOT identity-based**: "I need `BearDog`" → vendor lock-in
+//! - ❌ **NOT identity-based**: "I need `<specific-primal>`" → vendor lock-in
 //!
 //! # Example
 //!

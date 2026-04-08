@@ -84,10 +84,6 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
     /// # Panics
     ///
     /// Panics if CAPACITY > 64 (bitmap limitation for this implementation)
-    #[expect(
-        clippy::panic,
-        reason = "constructor validates const-generic invariant"
-    )]
     pub fn new() -> Self {
         assert!(
             CAPACITY > 0 && CAPACITY < 64,
@@ -99,9 +95,10 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
             for _ in 0..CAPACITY {
                 vec.push(MutexOption::new(None));
             }
-            vec.into_boxed_slice().try_into().unwrap_or_else(|_| {
-                panic!("Vec capacity equals CAPACITY ({CAPACITY}); conversion is infallible")
-            })
+            match vec.into_boxed_slice().try_into() {
+                Ok(arr) => arr,
+                Err(_) => unreachable!("Vec has exactly CAPACITY elements"),
+            }
         };
 
         // All bits set = all slots free

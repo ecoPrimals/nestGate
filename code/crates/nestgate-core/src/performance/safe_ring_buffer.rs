@@ -66,10 +66,6 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
     /// # Panics
     ///
     /// Panics if CAPACITY is not a power of 2
-    #[expect(
-        clippy::panic,
-        reason = "constructor validates const-generic invariant"
-    )]
     pub fn new() -> Self {
         assert!(
             CAPACITY.is_power_of_two(),
@@ -82,9 +78,10 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
             for _ in 0..CAPACITY {
                 vec.push(Mutex::new(None));
             }
-            vec.into_boxed_slice().try_into().unwrap_or_else(|_| {
-                panic!("Vec capacity equals CAPACITY ({CAPACITY}); conversion is infallible")
-            })
+            match vec.into_boxed_slice().try_into() {
+                Ok(arr) => arr,
+                Err(_) => unreachable!("Vec has exactly CAPACITY elements"),
+            }
         };
 
         Self {
