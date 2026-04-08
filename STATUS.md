@@ -12,9 +12,9 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-08
 Format:             CLEAN (cargo fmt --check passes)
 Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
-Tests:              ~11,845 passing, 0 failures, 461 ignored (cargo test --workspace --all-features)
+Tests:              ~11,856 passing, 0 failures, 461 ignored (cargo test --workspace --all-features)
 Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
-Files > 1000 lines: 0 (production; max ~500 lines — smart-refactored)
+Files > 800 lines:  0 (production; max ~759 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — re-verify after large edits)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
@@ -25,7 +25,8 @@ Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s disc
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes:         storage.*, data.*, session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.*, identity.*, model.*, templates.*, audit.*, zfs.* — 57 methods advertised
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (9 groups), consumed_capabilities, protocol, transport
-Capability symlink: storage.sock → nestgate.sock (auto-managed lifecycle)
+Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
+BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)

@@ -9,7 +9,7 @@
 - **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~11,845 passing, 461 ignored, 0 failures — run `cargo test --workspace --all-features` to refresh counts  
+- **Tests (last recorded)**: ~11,856 passing, 461 ignored, 0 failures — run `cargo test --workspace --all-features` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
@@ -18,7 +18,7 @@
 **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)  
 **TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack in-tree)  
 **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-**File size**: All production `.rs` files under 1,000 lines (max ~500 after smart refactoring)  
+**File size**: All production `.rs` files under 800 lines (max ~759 after smart refactoring)  
 **`#[serial]`**: 0 — last `#[serial]` eliminated via `try_init()` evolution  
 **Last Updated**: April 8, 2026
 
@@ -145,8 +145,9 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
 | Coverage (80%+) | Pass — ~80% line last measured (wateringHole 80% minimum met; 90% target not yet) |
-| File size (<1000 production) | Pass (max ~500 lines after smart refactoring) |
-| Sovereignty | Pass — capability-based discovery, zero hardcoded primals, storage.sock symlink |
+| File size (<800 production) | Pass (max ~759 lines after smart refactoring) |
+| BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
+| Sovereignty | Pass — capability-based discovery, zero hardcoded primals, family-scoped capability symlinks |
 | Discovery | Env vars + capability IPC (mDNS behind `mdns` feature gate — delegated to biomeOS) |
 | Crypto delegation | Pass — capability-based `SecurityProviderClient` |
 

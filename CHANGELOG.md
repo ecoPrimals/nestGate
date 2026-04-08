@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 40: BTSP Phase 1 + deep debt audit — INSECURE guard, family-scoped naming, self-knowledge cleanup (April 8, 2026)
+
+- **BTSP Phase 1 compliance** (corrected 2 false positives from primalSpring audit):
+  - `BIOMEOS_INSECURE` guard: startup refuses when both `FAMILY_ID` and `BIOMEOS_INSECURE=1` are set
+  - Family-scoped socket naming: `nestgate-{fid}.sock` + `storage-{fid}.sock` symlinks when
+    `FAMILY_ID` is set (not "standalone"/"default"); tiers 2/3/4 all updated
+  - Generic `FAMILY_ID` env now accepted (in addition to `NESTGATE_FAMILY_ID`); primal-prefixed wins
+  - 13 new tests for BTSP guard + naming across all socket tiers
+- **Self-knowledge Standard**: removed remaining hardcoded primal names (beardog, songbird,
+  primalSpring) from doc comments across 8 files in nestgate-discovery, nestgate-config,
+  nestgate-rpc, nestgate-core; anti-pattern examples use generic `<specific-primal>` placeholder
+- **Dead dependency cleanup**: removed unused `tokio`/`anyhow`/`thiserror` from nestgate-middleware;
+  removed unused workspace entries `ahash`/`arrayvec`/`indexmap`/`smallvec`
+- **Panic elimination**: `unwrap_or_else(|_| panic!)` in safe_ring_buffer + safe_memory_pool evolved
+  to `match` + `unreachable!()` with removed `#[expect(clippy::panic)]` attributes
+- **Audit confirmed clean**: zero production `.unwrap()` in high-traffic crates, zero unsafe,
+  zero files >800L, zero production `todo!()`/`unimplemented!()`
+- Tests: 11,856 passed, 461 ignored; deprecated: 181
+
 ### Session 38: Deep debt audit — silent-success catch-all, dead deps, self-knowledge cleanup (April 8, 2026)
 
 - **ZFS catch-all safety**: Replaced silent-success wildcard in `ZfsRequestHandler::handle_zfs_request`
