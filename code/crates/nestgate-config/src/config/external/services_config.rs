@@ -147,7 +147,8 @@ impl ServicesConfig {
     pub fn get_metrics_url(&self) -> String {
         self.metrics_url.clone().unwrap_or_else(|| {
             let config = crate::config::discovery_config::ServiceDiscoveryConfig::default();
-            format!("{}/metrics", config.build_endpoint(9090))
+            let metrics_port = crate::constants::get_metrics_port();
+            format!("{}/metrics", config.build_endpoint(metrics_port))
         })
     }
 

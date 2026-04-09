@@ -59,7 +59,7 @@ rand = { workspace = true }
 chrono = { workspace = true }
 tracing-subscriber = { workspace = true }
 criterion = { workspace = true, features = ["html_reports", "async_tokio"] }
-mockall = { workspace = true }
+# mockall removed — zero usage; hand-written test doubles used instead
 axum-test = { workspace = true }
 rstest = { workspace = true }
 serial_test = { workspace = true }

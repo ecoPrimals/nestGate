@@ -369,11 +369,11 @@ pub async fn execute_storage_operation(
             ai_response_with_actions(message, suggestions)
         }
         "snapshot" => {
-            let message = "Snapshot created for pool: self.base_url".to_string();
+            let message = format!("Snapshot created for pool: {}", request.pool_name);
             ai_success_with_confidence(message, 0.95)
         }
         "export" => {
-            let message = "Export initiated for pool: self.base_url".to_string();
+            let message = format!("Export initiated for pool: {}", request.pool_name);
 
             let suggestions = vec![SuggestedAction {
                 action_id: "verify_export".to_string(),
@@ -391,7 +391,7 @@ pub async fn execute_storage_operation(
         _ => {
             // Unsupported operation - this would normally return an error
             // but for demo purposes, we'll return a low-confidence response
-            let message = "Operation 'self.base_url' not supported".to_string();
+            let message = format!("Operation '{}' not supported", request.b_operation);
             ai_success_with_confidence(message, 0.1)
         }
     };

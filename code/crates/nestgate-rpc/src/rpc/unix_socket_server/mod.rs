@@ -66,7 +66,7 @@
 //! - **Self-Knowledge**: Socket path from own environment ($`NESTGATE_FAMILY_ID`)
 //! - **Runtime Discovery**: Discover the orchestration provider via the capability system
 //! - **Zero Hardcoding**: All configuration from environment
-//! - **Memory Safe**: Zero unsafe blocks
+//! - **Memory safety**: implemented with safe Rust throughout this path
 //! - **Modern Async**: Native async/await with tokio
 //!
 //! ## Socket Path Pattern
@@ -100,6 +100,7 @@ mod template_handlers;
 mod zfs_handlers;
 
 use crate::rpc::model_cache_handlers;
+use bytes::Bytes;
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
@@ -111,7 +112,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 #[cfg(unix)]
 use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::BufReader;
 use tokio::net::{UnixListener, UnixStream};
 use tracing::{debug, error, info, warn};
 
@@ -329,10 +330,40 @@ impl Drop for JsonRpcUnixServer {
     }
 }
 
-/// Handle a single Unix socket connection
+/// Handle a single Unix socket connection.
+///
+/// When BTSP is required (production), runs the 4-step handshake before
+/// entering the JSON-RPC dispatch loop. Development connections proceed
+/// directly.
 async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Result<()> {
     let (reader, mut writer) = stream.into_split();
+
+    if crate::rpc::btsp_server_handshake::is_btsp_required() {
+        let family_id = state.family_id.as_deref().unwrap_or("default").to_string();
+
+        let mut raw_reader = BufReader::new(reader);
+        let _session = crate::rpc::btsp_server_handshake::perform_handshake(
+            &mut raw_reader,
+            &mut writer,
+            &family_id,
+        )
+        .await?;
+
+        return json_rpc_loop(&mut raw_reader, &mut writer, &state).await;
+    }
+
     let mut reader = BufReader::new(reader);
+    json_rpc_loop(&mut reader, &mut writer, &state).await
+}
+
+/// Newline-delimited JSON-RPC read/dispatch/write loop.
+///
+/// Shared between the BTSP-authenticated and development (plaintext) code paths.
+async fn json_rpc_loop<R, W>(reader: &mut R, writer: &mut W, state: &StorageState) -> Result<()>
+where
+    R: tokio::io::AsyncBufReadExt + Unpin,
+    W: tokio::io::AsyncWriteExt + Unpin,
+{
     let mut line = Vec::new();
 
     loop {
@@ -343,7 +374,6 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
             .map_err(|e| NestGateError::io_error(format!("Failed to read request: {e}")))?;
 
         if n == 0 && line.is_empty() {
-            // Connection closed
             break;
         }
 
@@ -354,9 +384,8 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
 
         debug!("Received request: {}", String::from_utf8_lossy(trimmed));
 
-        // Parse and handle request (from bytes: no UTF-8 `String` buffer for the line)
         let response = match serde_json::from_slice::<JsonRpcRequest>(trimmed) {
-            Ok(request) => handle_request(request, &state).await,
+            Ok(request) => handle_request(request, state).await,
             Err(e) => {
                 error!("Failed to parse JSON-RPC request: {}", e);
                 JsonRpcResponse {
@@ -372,12 +401,12 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
             }
         };
 
-        // Send response
-        let response_json = serde_json::to_string(&response)
+        let response_bytes: Bytes = serde_json::to_vec(&response)
+            .map(Bytes::from)
             .map_err(|e| NestGateError::api(format!("Failed to serialize response: {e}")))?;
 
         writer
-            .write_all(response_json.as_bytes())
+            .write_all(&response_bytes)
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to write response: {e}")))?;
         writer
@@ -385,7 +414,7 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to write newline: {e}")))?;
 
-        debug!("Sent response: {}", response_json);
+        debug!("Sent response ({} bytes)", response_bytes.len());
     }
 
     Ok(())
@@ -464,12 +493,8 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         // Game session persistence (convenience over storage.*)
         "session.save" => session_handlers::session_save(request.params.as_ref(), state).await,
         "session.load" => session_handlers::session_load(request.params.as_ref(), state).await,
-        // Data domain (live feeds, not storage — delegated to data capability provider)
-        "data.ncbi_search" => data_handlers::data_ncbi_search(request.params.as_ref()),
-        "data.ncbi_fetch" => data_handlers::data_ncbi_fetch(request.params.as_ref()),
-        "data.noaa_ghcnd" => data_handlers::data_noaa_ghcnd(request.params.as_ref()),
-        "data.iris_stations" => data_handlers::data_iris_stations(request.params.as_ref()),
-        "data.iris_events" => data_handlers::data_iris_events(request.params.as_ref()),
+        // Data domain (live feeds, not storage — wildcard delegation to data capability provider)
+        m if m.starts_with("data.") => data_handlers::data_delegation(m, request.params.as_ref()),
         // Model cache operations (filesystem-backed via model_cache_handlers.rs)
         "model.register" => model_cache_handlers::model_register(request.params.as_ref()).await,
         "model.exists" => model_cache_handlers::model_exists(request.params.as_ref()),

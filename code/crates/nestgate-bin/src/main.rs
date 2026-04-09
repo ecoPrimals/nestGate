@@ -10,7 +10,7 @@
 //! - Legacy: Detects `nestgate-server` and `nestgate-client` symlinks for backward compatibility
 //!
 //! ## Modes
-//! - `nestgate daemon` - Run as background service
+//! - `nestgate server` - Run as server (primary mode)
 //! - `nestgate status` - Check service status
 //! - `nestgate health` - Health check
 //! - `nestgate discover` - Discover primals
@@ -41,7 +41,7 @@ async fn main() -> BinResult<()> {
     // Backward compatibility: Auto-daemon mode for 'nestgate-server' symlink
     if bin_name == "nestgate-server" {
         info!("🏰 NestGate invoked as 'nestgate-server' (legacy symlink detected)");
-        info!("💡 RECOMMENDED: Use 'nestgate daemon' for the modern UniBin interface");
+        info!("💡 RECOMMENDED: Use 'nestgate server' for the modern UniBin interface");
 
         // Setup basic logging for daemon mode
         tracing_subscriber::fmt()

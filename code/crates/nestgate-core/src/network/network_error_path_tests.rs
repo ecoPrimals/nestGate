@@ -226,11 +226,11 @@ mod network_error_recovery_tests {
         }
 
         /// Fallback Service
-        fn fallback_service() -> Result<String> {
-            Ok("fallback success".to_string())
+        fn fallback_service() -> String {
+            "fallback success".to_string()
         }
 
-        let result = primary_service().or_else(|_| fallback_service());
+        let result: Result<String> = primary_service().or_else(|_| Ok(fallback_service()));
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "fallback success");
     }
@@ -243,11 +243,11 @@ mod network_error_recovery_tests {
         }
 
         /// Fetch From Cache
-        fn fetch_from_cache() -> Result<String> {
-            Ok("cached data".to_string())
+        fn fetch_from_cache() -> String {
+            "cached data".to_string()
         }
 
-        let result = fetch_from_network(false).or_else(|_| fetch_from_cache());
+        let result: Result<String> = fetch_from_network(false).or_else(|_| Ok(fetch_from_cache()));
         assert_eq!(result.unwrap(), "cached data");
     }
 
@@ -259,11 +259,11 @@ mod network_error_recovery_tests {
         }
 
         /// Degraded Mode
-        fn degraded_mode() -> Result<Vec<String>> {
-            Ok(vec!["basic".to_string(), "features".to_string()])
+        fn degraded_mode() -> Vec<String> {
+            vec!["basic".to_string(), "features".to_string()]
         }
 
-        let result = full_feature_mode().or_else(|_| degraded_mode());
+        let result: Result<Vec<String>> = full_feature_mode().or_else(|_| Ok(degraded_mode()));
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 2);
     }

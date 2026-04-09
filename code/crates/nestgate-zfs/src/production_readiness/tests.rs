@@ -213,6 +213,8 @@ fn assess_production_readiness_with_mock_mode_records_mock_dependency_finding() 
 
 #[tokio::test]
 async fn real_zfs_operations_is_available_is_stable_across_calls() {
+    // Serialize with mock-`PATH` CLI tests: they swap `zfs`/`zpool` on `PATH` concurrently otherwise.
+    let _lock = crate::path_cli_test_lock::acquire().await;
     let a = RealZfsOperations::is_available().await;
     let b = RealZfsOperations::is_available().await;
     assert_eq!(a, b);

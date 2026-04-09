@@ -8,7 +8,7 @@ mod return_builder_tests {
     use serde_json::Value as JsonValue;
 
     #[test]
-    fn test_success_response_builder() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_success_response_builder() {
         // ✅ CATCHES STATUS FIELD MUTATIONS
         let response = crate::return_builders::build_success_response(
             "test_request_123".to_string(),
@@ -20,11 +20,10 @@ mod return_builder_tests {
         // assert!(matches!(response.status, ResponseStatus::Success));
         assert!(response.data.is_some());
         assert!(response.error.is_none());
-        Ok(())
     }
 
     #[test]
-    fn test_error_response_builder() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_error_response_builder() {
         // ✅ CATCHES ERROR FIELD MUTATIONS
         let response = crate::return_builders::build_error_response(
             "test_request_456".to_string(),
@@ -43,11 +42,10 @@ mod return_builder_tests {
             }),
             "Internal server error"
         );
-        Ok(())
     }
 
     #[test]
-    fn test_json_response_builder() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_json_response_builder() {
         // ✅ CATCHES JSON FIELD MUTATIONS (success structure)
         let success_response = crate::return_builders::build_json_response(
             true,
@@ -62,11 +60,10 @@ mod return_builder_tests {
         );
         assert!(success_response.get("error").is_none());
         assert!(success_response.get("timestamp").is_some());
-        Ok(())
     }
 
     #[test]
-    fn test_build_mock_resource_allocation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_build_mock_resource_allocation() {
         let allocation =
             crate::return_builders::build_mock_resource_allocation(4, 16384, 1000, 1000);
 
@@ -76,11 +73,10 @@ mod return_builder_tests {
         assert_eq!(allocation.status, "active");
         assert!(!allocation.allocated_at.is_empty());
         assert!(!allocation.expires_at.is_empty());
-        Ok(())
     }
 
     #[test]
-    fn test_access_grant_builder() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_access_grant_builder() {
         // ✅ CATCHES ACCESS GRANT FIELD MUTATIONS
         let permissions = vec!["read".to_string(), "write".to_string()];
         let consensus_nodes = vec!["node1".to_string(), "node2".to_string()];
@@ -98,6 +94,5 @@ mod return_builder_tests {
         // Use the actual fields that exist in AccessGrant
         assert_eq!(grant.confidence_score, 0.85);
         assert!(!grant.proof_data.is_empty());
-        Ok(())
     }
 }

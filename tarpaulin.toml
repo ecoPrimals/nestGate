@@ -3,7 +3,7 @@
 # Per wateringHole ECOSYSTEM_COMPLIANCE_MATRIX.md Tier 8
 
 [report]
-fail-under = 60.0
+fail-under = 80.0
 
 [default]
 all-features = true

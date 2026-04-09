@@ -446,7 +446,7 @@ async fn generate_sample_system_event(state: &ApiState) -> SystemEvent {
     };
 
     SystemEvent {
-        id: "event_self.base_url".to_string(),
+        id: format!("event_{seed}"),
         timestamp: chrono::Utc::now(),
         event_type: (*event_type).to_string(),
         description,

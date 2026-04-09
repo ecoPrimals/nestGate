@@ -5,13 +5,13 @@
 //!
 //! Zero-allocation memory pool using 100% safe Rust with RAII patterns.
 //! This module provides the same performance intent as raw-pointer slabs while
-//! using a `Mutex` wrapping `Option` with type parameter `T` per slot (no `UnsafeCell`, no manual `Send`/`Sync`).
+//! using a `Mutex` wrapping `Option` with type parameter `T` per slot (no lock-free shared buffers, no manual `Send`/`Sync` impl tricks).
 //!
 //! ## Key Innovations
 //!
 //! - **RAII Handles**: Automatic deallocation through Drop
 //! - **Type Safety**: Compile-time guarantees prevent double-free
-//! - **Zero Unsafe**: Uses safe abstractions exclusively
+//! - **Memory safety**: uses mutex-backed slots and RAII handles exclusively
 //! - **Concurrency**: Bitmap + atomics for allocation; per-slot mutex for storage
 //!
 //! ## Example
@@ -36,7 +36,7 @@ use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 
 /// Safe memory pool with automatic deallocation via RAII
 ///
-/// This pool provides O(1) allocation and deallocation with zero unsafe code.
+/// This pool provides O(1) allocation and deallocation using only memory-safe Rust.
 /// Uses a bitmap allocator with atomic operations for thread-safety.
 pub struct SafeMemoryPool<T, const CAPACITY: usize = 1024> {
     /// Shared pool state
@@ -45,7 +45,7 @@ pub struct SafeMemoryPool<T, const CAPACITY: usize = 1024> {
 
 /// Inner pool state (shared between pool and handles)
 struct PoolInner<T, const CAPACITY: usize> {
-    /// Storage slots — mutex per slot (no `UnsafeCell`)
+    /// Storage slots — mutex per slot (no hand-rolled interior mutability)
     slots: Box<[Mutex<Option<T>>; CAPACITY]>,
 
     /// Allocation bitmap (1 = free, 0 = allocated)

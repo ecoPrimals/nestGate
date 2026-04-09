@@ -144,7 +144,7 @@ mod zfs_final_coverage_tests {
     fn test_zfs_result_ok() {
         let result: ZfsResult<String> = Ok("success".to_string());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert_eq!(result.ok().as_deref(), Some("success"));
     }
 
     #[test]

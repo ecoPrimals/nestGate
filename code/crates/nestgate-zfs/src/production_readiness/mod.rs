@@ -3,10 +3,10 @@
 
 #![expect(
     clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
+    reason = "Readiness APIs use Result for forward-compatible error propagation"
 )]
 
-mod mock_analysis;
+mod readiness_env;
 mod reporting;
 
 use nestgate_core::Result;
@@ -25,7 +25,7 @@ pub struct ProductionReadinessReport {
     pub zfs_available: bool,
     /// Real hardware detection status
     pub real_hardware_detected: bool,
-    /// List of active mock dependencies
+    /// Mock-mode notices (environment flags and missing Linux procfs signals)
     pub mock_dependencies: Vec<String>,
     /// Performance validation status
     pub performance_validated: bool,
@@ -344,16 +344,22 @@ impl ProductionReadinessValidator {
 
     /// Validates  Performance
     pub(crate) fn validate_performance(&self) -> Result<bool> {
-        // Validate performance characteristics
-        // Check system resources and ZFS performance metrics
-        let available_memory = self
+        let min_mb = self
             .env
             .get("NESTGATE_MIN_MEMORY_MB")
             .and_then(|s| s.parse::<u64>().ok())
-            .unwrap_or(1024); // Minimum 1GB RAM
+            .unwrap_or(1024);
 
-        // Basic performance validation
-        Ok(available_memory >= 512) // Require at least 512MB for ZFS operations
+        if min_mb < 512 {
+            return Ok(false);
+        }
+
+        #[cfg(target_os = "linux")]
+        if let Some(total_mb) = mem_total_mb_from_proc() {
+            return Ok(total_mb >= min_mb);
+        }
+
+        Ok(true)
     }
 
     /// Validates  Security
@@ -401,6 +407,14 @@ impl ProductionReadinessValidator {
     }
 }
 
+#[cfg(target_os = "linux")]
+fn mem_total_mb_from_proc() -> Option<u64> {
+    let content = std::fs::read_to_string("/proc/meminfo").ok()?;
+    let line = content.lines().find(|l| l.starts_with("MemTotal:"))?;
+    let kb = line.split_whitespace().nth(1)?.parse::<u64>().ok()?;
+    Some(kb / 1024)
+}
+
 impl Default for ProductionReadinessValidator {
     /// Returns the default instance
     fn default() -> Self {
@@ -414,5 +428,7 @@ pub fn check_production_readiness() -> Result<ProductionReadinessReport> {
     validator.assess_production_readiness()
 }
 
+#[cfg(test)]
+mod real_zfs_operations_tests;
 #[cfg(test)]
 mod tests;

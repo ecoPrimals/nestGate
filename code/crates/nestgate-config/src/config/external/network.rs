@@ -28,6 +28,10 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 // Import config for environment variable lookups
 use super::network_env_config::NetworkEnvConfig;
+use crate::constants::hardcoding::addresses;
+use crate::constants::port_defaults::{
+    DEFAULT_METRICS_PORT, DEFAULT_POSTGRES_PORT, DEFAULT_REDIS_PORT,
+};
 
 /// Network configuration for all services
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,23 +70,23 @@ impl NetworkConfig {
         Ok(Self {
             api: EndpointConfig::from_env(
                 "NESTGATE_API",
-                "0.0.0.0",
+                addresses::BIND_ALL_IPV4,
                 discovery_config.discovery_base_port,
             )?,
             database: EndpointConfig::from_env(
                 "NESTGATE_DB",
-                "localhost", // Safe default: localhost-only access
-                5432,        // PostgreSQL standard port
+                addresses::LOCALHOST_NAME, // Safe default: localhost-only access
+                DEFAULT_POSTGRES_PORT, // Override via `NESTGATE_POSTGRES_PORT` / `NESTGATE_DB_PORT`
             )?,
             redis: EndpointConfig::from_env(
                 "NESTGATE_REDIS",
-                "localhost", // Safe default: localhost-only access
-                6379,        // Redis standard port
+                addresses::LOCALHOST_NAME, // Safe default: localhost-only access
+                DEFAULT_REDIS_PORT,        // Override via `NESTGATE_REDIS_PORT`
             )?,
             metrics: EndpointConfig::from_env(
                 "NESTGATE_METRICS",
-                "0.0.0.0", // Safe default: bind all interfaces for monitoring
-                9090,      // Prometheus standard port
+                addresses::BIND_ALL_IPV4, // Safe default: bind all interfaces for monitoring
+                DEFAULT_METRICS_PORT,     // Override via `NESTGATE_METRICS_PORT`
             )?,
             discovery: EndpointConfig::from_env(
                 "NESTGATE_DISCOVERY",

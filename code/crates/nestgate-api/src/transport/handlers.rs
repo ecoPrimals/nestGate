@@ -3,7 +3,7 @@
 
 #![expect(
     clippy::unnecessary_wraps,
-    reason = "Stub APIs use Result for forward-compatible error propagation"
+    reason = "RPC handlers use Result for consistent error propagation to JSON-RPC clients"
 )]
 
 //! **RPC METHOD HANDLERS**
@@ -15,8 +15,6 @@ use nestgate_core::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Instant;
 use tracing::debug;
@@ -165,17 +163,19 @@ impl NestGateRpcHandler {
         }))
     }
 
-    /// Handle identity.get request
+    /// Handle `identity.get` request per `CAPABILITY_WIRE_STANDARD` L2.
     fn handle_identity(&self, _params: Value) -> Result<Value> {
-        let family_id =
-            std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+        let family_id = std::env::var("BIOMEOS_FAMILY_ID")
+            .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+            .unwrap_or_else(|_| "default".to_string());
         let primal = self_primal_name();
 
         Ok(serde_json::json!({
             "primal": primal,
-            "family": family_id,
-            "role": "storage",
-            "version": env!("CARGO_PKG_VERSION")
+            "version": env!("CARGO_PKG_VERSION"),
+            "domain": "storage",
+            "license": "AGPL-3.0-or-later",
+            "family_id": family_id
         }))
     }
 
@@ -244,25 +244,19 @@ struct ListRequest {
 /// **STORAGE BACKEND TRAIT**
 ///
 /// Trait for storage implementations to be used by RPC handlers.
+#[async_trait::async_trait]
 pub trait StorageBackend: Send + Sync {
     /// Store a key-value pair
-    fn store(
-        &self,
-        key: &str,
-        value: &[u8],
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
+    async fn store(&self, key: &str, value: &[u8]) -> Result<()>;
 
     /// Retrieve a value by key
-    fn retrieve(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>>;
+    async fn retrieve(&self, key: &str) -> Result<Vec<u8>>;
 
     /// Delete a key
-    fn delete(&self, key: &str) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
+    async fn delete(&self, key: &str) -> Result<()>;
 
     /// List keys with optional prefix
-    fn list(
-        &self,
-        prefix: &Option<String>,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<String>>> + Send + '_>>;
+    async fn list(&self, prefix: &Option<String>) -> Result<Vec<String>>;
 }
 
 #[cfg(test)]
@@ -271,32 +265,22 @@ mod tests {
 
     struct MockStorage;
 
+    #[async_trait::async_trait]
     impl StorageBackend for MockStorage {
-        fn store(
-            &self,
-            _key: &str,
-            _value: &[u8],
-        ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-            Box::pin(async { Ok(()) })
+        async fn store(&self, _key: &str, _value: &[u8]) -> Result<()> {
+            Ok(())
         }
 
-        fn retrieve(
-            &self,
-            key: &str,
-        ) -> Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + '_>> {
-            let key = key.to_string();
-            Box::pin(async move { Ok(format!("mock_value_{key}").into_bytes()) })
+        async fn retrieve(&self, key: &str) -> Result<Vec<u8>> {
+            Ok(format!("mock_value_{key}").into_bytes())
         }
 
-        fn delete(&self, _key: &str) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-            Box::pin(async { Ok(()) })
+        async fn delete(&self, _key: &str) -> Result<()> {
+            Ok(())
         }
 
-        fn list(
-            &self,
-            _prefix: &Option<String>,
-        ) -> Pin<Box<dyn Future<Output = Result<Vec<String>>> + Send + '_>> {
-            Box::pin(async { Ok(vec!["key1".to_string(), "key2".to_string()]) })
+        async fn list(&self, _prefix: &Option<String>) -> Result<Vec<String>> {
+            Ok(vec!["key1".to_string(), "key2".to_string()])
         }
     }
 
@@ -314,6 +298,10 @@ mod tests {
         assert!(result.is_ok());
         let identity = result.unwrap();
         assert_eq!(identity["primal"], "nestgate");
+        assert_eq!(identity["domain"], "storage");
+        assert_eq!(identity["license"], "AGPL-3.0-or-later");
+        assert!(identity.get("version").is_some());
+        assert!(identity.get("family_id").is_some());
     }
 
     #[test]

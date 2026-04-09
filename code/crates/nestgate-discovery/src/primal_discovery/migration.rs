@@ -8,6 +8,7 @@
 
 // HTTP removed — use orchestration / network capability discovery for external HTTP
 use crate::primal_discovery::PrimalDiscovery;
+use nestgate_config::constants::hardcoding::addresses;
 use nestgate_types::error::{NestGateError, Result};
 use nestgate_types::{EnvSource, ProcessEnv};
 use std::collections::HashMap;
@@ -74,7 +75,7 @@ struct CachedEndpoint {
     cached_at: Instant,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum EndpointSource {
     #[expect(
         dead_code,
@@ -137,12 +138,12 @@ impl DiscoveryOrEnv {
         default_port: u16,
     ) -> Result<String> {
         // Check cache first
-        if let Some(cached) = self.check_cache(capability).await {
+        if let Some((url, source)) = self.check_cache(capability).await {
             debug!(
                 "Using cached endpoint for {}: {} (source: {:?})",
-                capability, cached.url, cached.source
+                capability, url, source
             );
-            return Ok(cached.url);
+            return Ok(url);
         }
 
         // Determine search order based on config
@@ -159,7 +160,7 @@ impl DiscoveryOrEnv {
         match endpoint {
             Some((url, source)) => {
                 info!("Resolved {} to {} via {:?}", capability, url, source);
-                self.update_cache(capability, url.clone(), source).await;
+                self.update_cache(capability, &url, source).await;
                 Ok(url)
             }
             None => Err(NestGateError::configuration_error(
@@ -190,7 +191,7 @@ impl DiscoveryOrEnv {
                     }
                 },
                 |port| {
-                    let url = format!("http://localhost:{port}");
+                    let url = format!("http://{}:{port}", addresses::LOCALHOST_NAME);
                     debug!("Found {} in environment: {}", env_var, url);
                     Some((url, EndpointSource::Environment))
                 },
@@ -201,7 +202,7 @@ impl DiscoveryOrEnv {
     /// Try default (development fallback)
     fn try_default(&self, port: u16) -> Option<(String, EndpointSource)> {
         if self.config.allow_defaults {
-            let url = format!("http://localhost:{port}");
+            let url = format!("http://{}:{port}", addresses::LOCALHOST_NAME);
             warn!("Using default endpoint: {}", url);
             Some((url, EndpointSource::Default))
         } else {
@@ -211,15 +212,11 @@ impl DiscoveryOrEnv {
     }
 
     /// Check cache for endpoint
-    async fn check_cache(&self, capability: &str) -> Option<CachedEndpoint> {
+    async fn check_cache(&self, capability: &str) -> Option<(String, EndpointSource)> {
         let cache = self.cache.read().await;
         cache.entries.get(capability).and_then(|entry| {
             if entry.cached_at.elapsed() < self.config.cache_ttl {
-                Some(CachedEndpoint {
-                    url: entry.url.clone(),
-                    source: entry.source.clone(),
-                    cached_at: entry.cached_at,
-                })
+                Some((entry.url.clone(), entry.source))
             } else {
                 debug!("Cache entry for {} is stale", capability);
                 None
@@ -228,12 +225,12 @@ impl DiscoveryOrEnv {
     }
 
     /// Update cache with new endpoint
-    async fn update_cache(&self, capability: &str, url: String, source: EndpointSource) {
+    async fn update_cache(&self, capability: &str, url: &str, source: EndpointSource) {
         let mut cache = self.cache.write().await;
         cache.entries.insert(
             capability.to_string(),
             CachedEndpoint {
-                url,
+                url: url.to_string(),
                 source,
                 cached_at: Instant::now(),
             },
@@ -492,11 +489,12 @@ mod tests {
 
         helper.clear_cache().await;
 
-        let mut g = map.lock().expect("lock");
-        g.insert("SERVICE1_PORT".to_string(), "6001".to_string());
-        g.insert("SERVICE2_PORT".to_string(), "6002".to_string());
-        g.insert("SERVICE3_PORT".to_string(), "6003".to_string());
-        drop(g);
+        {
+            let mut g = map.lock().expect("lock");
+            g.insert("SERVICE1_PORT".to_string(), "6001".to_string());
+            g.insert("SERVICE2_PORT".to_string(), "6002".to_string());
+            g.insert("SERVICE3_PORT".to_string(), "6003".to_string());
+        }
 
         let e1 = helper
             .endpoint_for("service1", "SERVICE1_PORT", 9000)

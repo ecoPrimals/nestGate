@@ -505,5 +505,13 @@ impl SocketConfig {
 }
 
 #[cfg(test)]
-#[path = "socket_config_tests.rs"]
-mod tests;
+#[path = "socket_config_resolve_prepare_tests.rs"]
+mod socket_config_resolve_prepare_tests;
+
+#[cfg(test)]
+#[path = "socket_config_from_env_and_btsp_tests.rs"]
+mod socket_config_from_env_and_btsp_tests;
+
+#[cfg(all(test, unix))]
+#[path = "socket_config_capability_symlink_tests.rs"]
+mod socket_config_capability_symlink_tests;

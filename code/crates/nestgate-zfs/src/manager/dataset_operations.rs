@@ -39,49 +39,6 @@ impl Default for DatasetAnalyzer {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_dataset_analyzer_new() {
-        let analyzer = DatasetAnalyzer::new();
-        assert!(analyzer.config.is_empty());
-    }
-
-    #[test]
-    fn test_dataset_analyzer_default() {
-        let analyzer = DatasetAnalyzer::default();
-        assert!(analyzer.config.is_empty());
-    }
-
-    #[test]
-    fn test_dataset_analyzer_with_config() {
-        let mut analyzer = DatasetAnalyzer::new();
-        analyzer
-            .config
-            .insert("key1".to_string(), "value1".to_string());
-        analyzer
-            .config
-            .insert("key2".to_string(), "value2".to_string());
-
-        assert_eq!(analyzer.config.len(), 2);
-        assert_eq!(analyzer.config.get("key1"), Some(&"value1".to_string()));
-        assert_eq!(analyzer.config.get("key2"), Some(&"value2".to_string()));
-    }
-
-    #[test]
-    fn test_dataset_analyzer_clone() {
-        let mut analyzer = DatasetAnalyzer::new();
-        analyzer
-            .config
-            .insert("test".to_string(), "value".to_string());
-
-        let cloned = analyzer.clone();
-        assert_eq!(analyzer.config, cloned.config);
-    }
-}
-
 impl ZfsManager {
     /// Create a new dataset
     ///
@@ -161,5 +118,48 @@ impl ZfsManager {
                     ZfsOperation::DatasetCreate,
                 )
             })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dataset_analyzer_new() {
+        let analyzer = DatasetAnalyzer::new();
+        assert!(analyzer.config.is_empty());
+    }
+
+    #[test]
+    fn test_dataset_analyzer_default() {
+        let analyzer = DatasetAnalyzer::default();
+        assert!(analyzer.config.is_empty());
+    }
+
+    #[test]
+    fn test_dataset_analyzer_with_config() {
+        let mut analyzer = DatasetAnalyzer::new();
+        analyzer
+            .config
+            .insert("key1".to_string(), "value1".to_string());
+        analyzer
+            .config
+            .insert("key2".to_string(), "value2".to_string());
+
+        assert_eq!(analyzer.config.len(), 2);
+        assert_eq!(analyzer.config.get("key1"), Some(&"value1".to_string()));
+        assert_eq!(analyzer.config.get("key2"), Some(&"value2".to_string()));
+    }
+
+    #[test]
+    fn test_dataset_analyzer_clone() {
+        let mut analyzer = DatasetAnalyzer::new();
+        analyzer
+            .config
+            .insert("test".to_string(), "value".to_string());
+
+        let cloned = analyzer.clone();
+        assert_eq!(analyzer.config, cloned.config);
     }
 }

@@ -176,6 +176,13 @@ pub use metrics::{LoadTestMetrics, PerformanceStats, ResponseTimeStats};
 pub use scenarios::TestResult;
 
 #[cfg(test)]
+mod load_testing_handler_edge_tests;
+#[cfg(test)]
+mod load_testing_handler_read_tests;
+#[cfg(test)]
+mod load_testing_handler_start_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

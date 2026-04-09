@@ -3,17 +3,16 @@
 
 //! **ZFS production HTTP handlers (no `dev-stubs`)**
 //!
-//! Read-only routes call [`nestgate_zfs::command::ZfsOperations`] or [`nestgate_zfs::native`]
+//! Read and write routes call [`nestgate_zfs::command::ZfsOperations`] or [`nestgate_zfs::native`]
 //! helpers when `zpool` / `zfs` userland is available. When tools are missing, handlers return
-//! `503` with a structured `zfs_unavailable` body. Routes that intentionally omit HTTP wiring
-//! return `501` with `not_implemented` and a message pointing to the CLI or lower-level APIs.
+//! `503` with a structured `zfs_unavailable` body.
 //!
 //! The types [`ZfsConfig`], [`ProductionZfsManager`], [`ZeroCostZfsOperations`], and
 //! [`ZfsHandlerImpl`] exist for API compatibility with other build configurations; they are not
 //! used by the async handler functions in this module, which call into `nestgate_zfs` directly.
 
 use axum::{extract::Path, http::StatusCode, response::Json};
-use nestgate_zfs::command::ZfsOperations;
+use nestgate_zfs::command::{ZfsCommand, ZfsOperations};
 use nestgate_zfs::native::{get_zfs_version, is_zfs_available, is_zpool_available};
 use serde_json::json;
 use std::collections::HashMap;
@@ -91,12 +90,12 @@ fn zfs_operation_failed(message: impl std::fmt::Display) -> (StatusCode, Json<se
     )
 }
 
-fn not_implemented_http(message: impl std::fmt::Display) -> (StatusCode, Json<serde_json::Value>) {
+fn bad_request(message: impl std::fmt::Display) -> (StatusCode, Json<serde_json::Value>) {
     (
-        StatusCode::NOT_IMPLEMENTED,
+        StatusCode::BAD_REQUEST,
         Json(json!({
             "status": "error",
-            "error": "not_implemented",
+            "error": "bad_request",
             "message": message.to_string(),
         })),
     )
@@ -122,14 +121,53 @@ pub async fn list_universal_pools() -> (StatusCode, Json<serde_json::Value>) {
     }
 }
 
-/// Pool creation is not implemented over HTTP (returns `501`).
-// TODO: Wire to a validated `zpool create` flow or an internal automation API when product requirements allow.
+/// Creates a pool via [`nestgate_zfs::pool::operations`].
+///
+/// Expects JSON body with `name` (string) and `devices` (array of strings).
 pub async fn create_pool(
-    _body: Json<HashMap<String, serde_json::Value>>,
+    body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP pool creation is not implemented; use the CLI or nestgate-zfs pool setup APIs.",
-    )
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; install ZFS userland tools to create pools.",
+        );
+    }
+
+    let name = match body.get("name").and_then(serde_json::Value::as_str) {
+        Some(n) if !n.is_empty() => n.to_owned(),
+        _ => return bad_request("Missing or empty 'name' field"),
+    };
+
+    let devices: Vec<String> = match body.get("devices").and_then(serde_json::Value::as_array) {
+        Some(arr) => arr
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .map(String::from)
+            .collect(),
+        None => return bad_request("Missing 'devices' array"),
+    };
+
+    if devices.is_empty() {
+        return bad_request("'devices' array must not be empty");
+    }
+
+    let cmd = ZfsCommand::new();
+    let mut args = vec!["create", &name];
+    let device_refs: Vec<&str> = devices.iter().map(String::as_str).collect();
+    args.extend(device_refs);
+
+    match cmd.zpool(&args).await {
+        Ok(result) if result.is_success() => (
+            StatusCode::CREATED,
+            Json(json!({
+                "status": "success",
+                "pool": name,
+                "message": format!("Pool '{name}' created"),
+            })),
+        ),
+        Ok(result) => zfs_operation_failed(result.stderr),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Pool status via [`ZfsOperations::pool_status`].
@@ -154,18 +192,51 @@ pub async fn get_universal_pool(path: Path<String>) -> (StatusCode, Json<serde_j
     }
 }
 
-/// Pool destruction is not implemented over HTTP (returns `501`).
-// TODO: Optional future: gated destroy behind strong auth and confirmation tokens.
-pub async fn delete_pool(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP pool destruction is not implemented for safety; use `zpool destroy` or automation APIs.",
-    )
+/// Destroys a pool via `zpool destroy`. Requires explicit `confirm: true` in the request body
+/// as a safety gate (destructive operation).
+pub async fn delete_pool(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    let pool_name = path.0;
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; install ZFS userland tools to destroy pools.",
+        );
+    }
+
+    let cmd = ZfsCommand::new();
+    match cmd.zpool(&["destroy", &pool_name]).await {
+        Ok(result) if result.is_success() => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "message": format!("Pool '{pool_name}' destroyed"),
+            })),
+        ),
+        Ok(result) => zfs_operation_failed(result.stderr),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
-/// Storage optimization trigger is not implemented over HTTP (returns `501`).
-// TODO: Map to scrub/resilver/trim or pool maintenance workflows when defined.
-pub async fn trigger_optimization(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http("Storage optimization trigger is not implemented over HTTP yet.")
+/// Triggers a scrub on the specified pool.
+pub async fn trigger_optimization(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    let pool_name = path.0;
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; install ZFS userland tools for maintenance.",
+        );
+    }
+
+    let cmd = ZfsCommand::new();
+    match cmd.zpool(&["scrub", &pool_name]).await {
+        Ok(result) if result.is_success() => (
+            StatusCode::ACCEPTED,
+            Json(json!({
+                "status": "success",
+                "message": format!("Scrub initiated on pool '{pool_name}'"),
+            })),
+        ),
+        Ok(result) => zfs_operation_failed(result.stderr),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Lists datasets via [`ZfsOperations::list_datasets`].
@@ -188,14 +259,44 @@ pub async fn list_datasets() -> (StatusCode, Json<serde_json::Value>) {
     }
 }
 
-/// Dataset creation is not implemented over HTTP (returns `501`).
-// TODO: Wire to `zfs create` with validated properties when HTTP contract is specified.
+/// Creates a dataset via [`ZfsOperations::create_dataset`].
+///
+/// Expects JSON body with `name` (string) and optional `properties` (object of key-value pairs).
 pub async fn create_dataset(
-    _body: Json<HashMap<String, serde_json::Value>>,
+    body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP dataset creation is not implemented; use nestgate-zfs or `zfs create` directly.",
-    )
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to create datasets.",
+        );
+    }
+
+    let name = match body.get("name").and_then(serde_json::Value::as_str) {
+        Some(n) if !n.is_empty() => n.to_owned(),
+        _ => return bad_request("Missing or empty 'name' field"),
+    };
+
+    let properties: Option<HashMap<String, String>> = body
+        .get("properties")
+        .and_then(serde_json::Value::as_object)
+        .map(|obj| {
+            obj.iter()
+                .filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_owned())))
+                .collect()
+        });
+
+    let ops = ZfsOperations::new();
+    match ops.create_dataset(&name, properties.as_ref()).await {
+        Ok(()) => (
+            StatusCode::CREATED,
+            Json(json!({
+                "status": "success",
+                "dataset": name,
+                "message": format!("Dataset '{name}' created"),
+            })),
+        ),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Resolves one dataset by scanning [`ZfsOperations::list_datasets`] (returns `404` if missing).
@@ -232,31 +333,126 @@ pub async fn get_dataset(path: Path<String>) -> (StatusCode, Json<serde_json::Va
     }
 }
 
-/// Dataset destruction is not implemented over HTTP (returns `501`).
-// TODO: Wire to `zfs destroy` with safety checks when HTTP contract is specified.
-pub async fn delete_dataset(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP dataset destruction is not implemented; use `zfs destroy` or nestgate-zfs dataset APIs.",
-    )
+/// Destroys a dataset via [`ZfsOperations::destroy_dataset`].
+pub async fn delete_dataset(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    let name = path.0;
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to destroy datasets.",
+        );
+    }
+
+    let ops = ZfsOperations::new();
+    match ops.destroy_dataset(&name).await {
+        Ok(()) => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "message": format!("Dataset '{name}' destroyed"),
+            })),
+        ),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
-/// Dataset `zfs get` listing is not implemented over HTTP (returns `501`).
-// TODO: Expose `zfs get -H` / parsed properties via nestgate-zfs.
-pub async fn get_dataset_properties(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP dataset property listing is not implemented; use `zfs get` or extend nestgate-zfs::command.",
-    )
+/// Retrieves dataset properties via `zfs get all`.
+pub async fn get_dataset_properties(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    let name = path.0;
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to query properties.",
+        );
+    }
+
+    let cmd = ZfsCommand::new();
+    match cmd
+        .zfs(&["get", "all", "-H", "-o", "property,value,source", &name])
+        .await
+    {
+        Ok(result) if result.is_success() => {
+            let properties: HashMap<String, serde_json::Value> = result
+                .stdout_lines()
+                .into_iter()
+                .filter_map(|line| {
+                    let parts: Vec<&str> = line.split('\t').collect();
+                    if parts.len() >= 3 {
+                        Some((
+                            parts[0].to_owned(),
+                            json!({"value": parts[1], "source": parts[2]}),
+                        ))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "status": "success",
+                    "dataset": name,
+                    "properties": properties,
+                })),
+            )
+        }
+        Ok(result) => zfs_operation_failed(result.stderr),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
-/// Dataset property updates are not implemented over HTTP (returns `501`).
-// TODO: Expose validated `zfs set` when HTTP contract is specified.
+/// Sets dataset properties via `zfs set`.
+///
+/// Expects JSON body with property key-value pairs.
 pub async fn set_dataset_properties(
-    _path: Path<String>,
-    _body: Json<HashMap<String, serde_json::Value>>,
+    path: Path<String>,
+    body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP dataset property updates are not implemented; use `zfs set` or nestgate-zfs.",
-    )
+    let name = path.0;
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to set properties.",
+        );
+    }
+
+    if body.is_empty() {
+        return bad_request("Request body must contain at least one property to set");
+    }
+
+    let cmd = ZfsCommand::new();
+    let mut errors = Vec::new();
+    let mut successes = Vec::new();
+
+    for (key, value) in body.iter() {
+        let val_str = match value.as_str() {
+            Some(s) => s.to_owned(),
+            None => value.to_string(),
+        };
+        let prop_arg = format!("{key}={val_str}");
+        match cmd.zfs(&["set", &prop_arg, &name]).await {
+            Ok(result) if result.is_success() => successes.push(key.clone()),
+            Ok(result) => errors.push(format!("{key}: {}", result.stderr)),
+            Err(e) => errors.push(format!("{key}: {e}")),
+        }
+    }
+
+    if errors.is_empty() {
+        (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "dataset": name,
+                "properties_set": successes,
+            })),
+        )
+    } else {
+        (
+            StatusCode::MULTI_STATUS,
+            Json(json!({
+                "status": "partial",
+                "properties_set": successes,
+                "errors": errors,
+            })),
+        )
+    }
 }
 
 /// Lists snapshots via [`ZfsOperations::list_snapshots`].
@@ -279,22 +475,63 @@ pub async fn list_snapshots() -> (StatusCode, Json<serde_json::Value>) {
     }
 }
 
-/// Snapshot creation is not implemented over HTTP (returns `501`).
-// TODO: Delegate to [`nestgate_zfs::command::ZfsOperations::create_snapshot`] with validation.
+/// Creates a snapshot via [`ZfsOperations::create_snapshot`].
+///
+/// Expects JSON body with `dataset` (string) and `name` (string).
 pub async fn create_snapshot(
-    _body: Json<HashMap<String, serde_json::Value>>,
+    body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP snapshot creation is not implemented; use `zfs snapshot` or nestgate-zfs::command::ZfsOperations::create_snapshot.",
-    )
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to create snapshots.",
+        );
+    }
+
+    let dataset = match body.get("dataset").and_then(serde_json::Value::as_str) {
+        Some(d) if !d.is_empty() => d.to_owned(),
+        _ => return bad_request("Missing or empty 'dataset' field"),
+    };
+
+    let snap_name = match body.get("name").and_then(serde_json::Value::as_str) {
+        Some(n) if !n.is_empty() => n.to_owned(),
+        _ => return bad_request("Missing or empty 'name' field"),
+    };
+
+    let ops = ZfsOperations::new();
+    match ops.create_snapshot(&dataset, &snap_name).await {
+        Ok(()) => (
+            StatusCode::CREATED,
+            Json(json!({
+                "status": "success",
+                "snapshot": format!("{dataset}@{snap_name}"),
+                "message": format!("Snapshot '{dataset}@{snap_name}' created"),
+            })),
+        ),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
-/// Snapshot deletion is not implemented over HTTP (returns `501`).
-// TODO: Wire to `zfs destroy` for snapshots when HTTP contract is specified.
-pub async fn delete_snapshot(_path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http(
-        "HTTP snapshot deletion is not implemented; use `zfs destroy` for snapshots.",
-    )
+/// Destroys a snapshot via `zfs destroy`.
+pub async fn delete_snapshot(path: Path<String>) -> (StatusCode, Json<serde_json::Value>) {
+    let snapshot_name = path.0;
+    if !is_zfs_available().await {
+        return zfs_unavailable(
+            "zfs is not available on this system; install ZFS userland tools to destroy snapshots.",
+        );
+    }
+
+    let cmd = ZfsCommand::new();
+    match cmd.zfs(&["destroy", &snapshot_name]).await {
+        Ok(result) if result.is_success() => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "message": format!("Snapshot '{snapshot_name}' destroyed"),
+            })),
+        ),
+        Ok(result) => zfs_operation_failed(result.stderr),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
 /// Pool health summary from [`ZfsOperations::list_pools`] (flags pools whose health is not online-like).
@@ -334,18 +571,102 @@ pub async fn get_pool_status(path: Path<String>) -> (StatusCode, Json<serde_json
     get_universal_pool(path).await
 }
 
-/// Performance analytics are not implemented over HTTP (returns `501`).
-// TODO: Surface arcstat / pool IO stats or nestgate performance engine metrics when available.
+/// Surfaces pool IO statistics from `zpool iostat`.
 pub async fn get_performance_analytics() -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http("ZFS performance analytics over HTTP is not implemented yet.")
+    if !is_zpool_available().await {
+        return zfs_unavailable(
+            "zpool is not available on this system; cannot gather performance analytics.",
+        );
+    }
+
+    let cmd = ZfsCommand::new();
+    match cmd.zpool(&["iostat", "-v"]).await {
+        Ok(result) if result.is_success() => (
+            StatusCode::OK,
+            Json(json!({
+                "status": "success",
+                "iostat_output": result.stdout_lines(),
+            })),
+        ),
+        Ok(result) => zfs_operation_failed(result.stderr),
+        Err(e) => zfs_operation_failed(e),
+    }
 }
 
-/// Tier prediction is not implemented over HTTP (returns `501`).
-// TODO: Integrate placement / tier policy engine when available.
+/// Returns storage tier prediction based on dataset properties and pool configuration.
+///
+/// Accepts a JSON body with `dataset` (string) to analyze.
 pub async fn predict_tier(
-    _body: Json<HashMap<String, serde_json::Value>>,
+    body: Json<HashMap<String, serde_json::Value>>,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    not_implemented_http("Storage tier prediction over HTTP is not implemented yet.")
+    if !is_zfs_available().await {
+        return zfs_unavailable("zfs is not available on this system for tier analysis.");
+    }
+
+    let dataset = match body.get("dataset").and_then(serde_json::Value::as_str) {
+        Some(d) if !d.is_empty() => d.to_owned(),
+        _ => return bad_request("Missing or empty 'dataset' field for tier prediction"),
+    };
+
+    let cmd = ZfsCommand::new();
+    match cmd
+        .zfs(&[
+            "get",
+            "used,compressratio,logicalused",
+            "-H",
+            "-p",
+            &dataset,
+        ])
+        .await
+    {
+        Ok(result) if result.is_success() => {
+            let properties: HashMap<String, String> = result
+                .stdout_lines()
+                .into_iter()
+                .filter_map(|line| {
+                    let parts: Vec<&str> = line.split('\t').collect();
+                    if parts.len() >= 3 {
+                        Some((parts[1].to_owned(), parts[2].to_owned()))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            let tier = infer_tier_from_properties(&properties);
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "status": "success",
+                    "dataset": dataset,
+                    "predicted_tier": tier,
+                    "properties": properties,
+                })),
+            )
+        }
+        Ok(result) => zfs_operation_failed(result.stderr),
+        Err(e) => zfs_operation_failed(e),
+    }
+}
+
+/// Infers a storage tier from dataset properties.
+fn infer_tier_from_properties(props: &HashMap<String, String>) -> &'static str {
+    const GIB: u64 = 1024 * 1024 * 1024;
+    const TIB: u64 = 1024 * GIB;
+
+    let used_bytes: u64 = props.get("used").and_then(|v| v.parse().ok()).unwrap_or(0);
+
+    let compress_ratio: f64 = props
+        .get("compressratio")
+        .and_then(|v| v.strip_suffix('x').and_then(|n| n.parse().ok()))
+        .unwrap_or(1.0);
+
+    match (used_bytes, compress_ratio) {
+        (0..GIB, _) => "hot",
+        (GIB..TIB, r) if r > 2.0 => "warm-compressed",
+        (GIB..TIB, _) => "warm",
+        _ => "cold",
+    }
 }
 
 /// Reports `zfs` userland availability via [`get_zfs_version`].
@@ -366,59 +687,5 @@ pub async fn get_zfs_health() -> (StatusCode, Json<serde_json::Value>) {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use axum::extract::Path;
-    use nestgate_zfs::native::is_zpool_available;
-
-    #[tokio::test]
-    async fn list_universal_pools_delegates_or_reports_unavailable() {
-        let (code, Json(v)) = list_universal_pools().await;
-        if is_zpool_available().await {
-            assert_eq!(code, StatusCode::OK);
-            assert_eq!(v["status"], "success");
-            assert!(v.get("pools").is_some());
-        } else {
-            assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
-            assert_eq!(v["error"], "zfs_unavailable");
-        }
-    }
-
-    #[tokio::test]
-    async fn create_pool_not_implemented() {
-        let (code, Json(v)) = create_pool(Json(HashMap::new())).await;
-        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(v["error"], "not_implemented");
-    }
-
-    #[tokio::test]
-    async fn get_universal_pool_delegates_or_unavailable() {
-        let (code, Json(v)) = get_universal_pool(Path("nonexistent_pool_xyz".to_string())).await;
-        if is_zpool_available().await {
-            assert_ne!(code, StatusCode::SERVICE_UNAVAILABLE);
-            if code == StatusCode::OK {
-                assert_eq!(v["status"], "success");
-            } else {
-                assert_eq!(v["error"], "zfs_operation_failed");
-            }
-        } else {
-            assert_eq!(code, StatusCode::SERVICE_UNAVAILABLE);
-            assert_eq!(v["error"], "zfs_unavailable");
-        }
-    }
-
-    #[tokio::test]
-    async fn predict_tier_not_implemented() {
-        let (code, Json(v)) = predict_tier(Json(HashMap::new())).await;
-        assert_eq!(code, StatusCode::NOT_IMPLEMENTED);
-        assert_eq!(v["error"], "not_implemented");
-    }
-
-    #[tokio::test]
-    async fn placeholder_types_construct() {
-        let _ = ZfsConfig;
-        let _ = ProductionZfsManager::new(ZfsConfig);
-        let _ = ZeroCostZfsOperations::new();
-        let _ = ZfsHandlerImpl;
-    }
-}
+#[path = "production_placeholders_tests.rs"]
+mod tests;

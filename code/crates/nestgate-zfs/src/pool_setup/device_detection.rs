@@ -505,8 +505,10 @@ mod device_detection_unit_tests {
 
     #[test]
     fn should_include_device_respects_loop_flag() {
-        let mut cfg = DeviceDetectionConfig::default();
-        cfg.include_loop_devices = false;
+        let cfg = DeviceDetectionConfig {
+            include_loop_devices: false,
+            ..Default::default()
+        };
         let s = DeviceScanner::new(cfg);
         let loop_dev = StorageDevice {
             device_path: "/dev/loop0".into(),
@@ -518,8 +520,10 @@ mod device_detection_unit_tests {
             current_use: None,
         };
         assert!(!s.should_include_device(&loop_dev));
-        let mut cfg2 = DeviceDetectionConfig::default();
-        cfg2.include_loop_devices = true;
+        let cfg2 = DeviceDetectionConfig {
+            include_loop_devices: true,
+            ..Default::default()
+        };
         let s2 = DeviceScanner::new(cfg2);
         assert!(s2.should_include_device(&loop_dev));
     }

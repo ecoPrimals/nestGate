@@ -146,9 +146,9 @@ bytes = "1.7"
 
 
 # System utilities (100% Pure Rust!)
-uzers = "0.11"
+# uzers removed — uid/gid now via rustix::process (already in dep tree, fewer total deps)
 sysinfo = "0.30"
-rustix = { version = "0.38", default-features = false, features = ["std", "fs", "system"] }
+rustix = { version = "0.38", default-features = false, features = ["std", "fs", "process", "system"] }
 etcetera = "0.8"
 
 # Content-addressing (BLAKE3 for fetch_external provenance)
@@ -201,7 +201,7 @@ bincode = "1.3"
 jsonrpsee = { version = "0.26.0", features = ["server"] }
 # Testing utilities
 axum-test = "15.0"
-mockall = "0.13"
+# mockall removed — zero usage in .rs files; hand-written test doubles used instead
 rstest = "0.18"
 
 

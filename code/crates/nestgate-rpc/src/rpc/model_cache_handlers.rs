@@ -204,12 +204,6 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "beacon.retrieve",
     "beacon.list",
     "beacon.delete",
-    // External data feeds
-    "data.ncbi_search",
-    "data.ncbi_fetch",
-    "data.noaa_ghcnd",
-    "data.iris_stations",
-    "data.iris_events",
     // ZFS storage management
     "zfs.pool.list",
     "zfs.pool.get",

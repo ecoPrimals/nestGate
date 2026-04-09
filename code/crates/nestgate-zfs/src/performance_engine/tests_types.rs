@@ -372,12 +372,14 @@ mod performance_types_tests {
 
     #[test]
     fn test_performance_optimization_result_with_data() {
-        let mut result = PerformanceOptimizationResult::default();
-        result.performance_improvement = 15.5;
-        result.recommendations.push("Increase ARC size".to_string());
-        result
-            .recommendations
-            .push("Enable compression".to_string());
+        let result = PerformanceOptimizationResult {
+            performance_improvement: 15.5,
+            recommendations: vec![
+                "Increase ARC size".to_string(),
+                "Enable compression".to_string(),
+            ],
+            ..Default::default()
+        };
 
         assert_eq!(result.performance_improvement, 15.5);
         assert_eq!(result.recommendations.len(), 2);
@@ -385,17 +387,17 @@ mod performance_types_tests {
 
     #[test]
     fn test_performance_optimization_result_merge() {
-        let mut result1 = PerformanceOptimizationResult::default();
-        result1.performance_improvement = 10.0;
-        result1
-            .recommendations
-            .push("First recommendation".to_string());
+        let mut result1 = PerformanceOptimizationResult {
+            performance_improvement: 10.0,
+            recommendations: vec!["First recommendation".to_string()],
+            ..Default::default()
+        };
 
-        let mut result2 = PerformanceOptimizationResult::default();
-        result2.performance_improvement = 5.0;
-        result2
-            .recommendations
-            .push("Second recommendation".to_string());
+        let result2 = PerformanceOptimizationResult {
+            performance_improvement: 5.0,
+            recommendations: vec!["Second recommendation".to_string()],
+            ..Default::default()
+        };
 
         result1.merge_with(result2);
 

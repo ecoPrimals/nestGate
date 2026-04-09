@@ -167,22 +167,20 @@ mod tests {
     type TestResult = anyhow::Result<()>;
 
     #[test]
-    fn test_safe_pool_creation() -> TestResult {
+    fn test_safe_pool_creation() {
         let pool: SafeMemoryPool<u64, 16> = SafeMemoryPool::new();
         assert_eq!(pool.utilization(), 0.0);
         assert_eq!(pool.active_count(), 0);
-        Ok(())
     }
 
     #[test]
-    fn test_safe_pool_allocation() -> TestResult {
+    fn test_safe_pool_allocation() {
         let pool: SafeMemoryPool<u64, 16> = SafeMemoryPool::new();
 
         let handle = pool.allocate(42u64);
         assert!(handle.is_some());
         assert!(pool.utilization() > 0.0);
         assert_eq!(pool.active_count(), 1);
-        Ok(())
     }
 
     #[test]
@@ -200,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn test_safe_pool_exhaustion() -> TestResult {
+    fn test_safe_pool_exhaustion() {
         let pool: SafeMemoryPool<u64, 2> = SafeMemoryPool::new();
 
         let handle1 = pool.allocate(1u64);
@@ -210,7 +208,6 @@ mod tests {
         assert!(handle1.is_some());
         assert!(handle2.is_some());
         assert!(handle3.is_none()); // Pool exhausted
-        Ok(())
     }
 
     #[test]
@@ -229,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn test_safe_pool_invalid_handle() -> TestResult {
+    fn test_safe_pool_invalid_handle() {
         let pool: SafeMemoryPool<u64, 16> = SafeMemoryPool::new();
 
         // Create an invalid handle
@@ -241,7 +238,6 @@ mod tests {
         // ✅ SAFE! This doesn't crash or cause UB - it just returns None
         let result = pool.deallocate(invalid_handle);
         assert_eq!(result, None);
-        Ok(())
     }
 
     #[test]
@@ -440,7 +436,7 @@ mod tests {
     }
 
     #[test]
-    fn test_safe_pool_default_implementation() -> TestResult {
+    fn test_safe_pool_default_implementation() {
         let pool: SafeMemoryPool<i32, 10> = SafeMemoryPool::default();
 
         assert_eq!(pool.utilization(), 0.0);
@@ -449,7 +445,6 @@ mod tests {
         let handle = pool.allocate(42i32);
         assert!(handle.is_some());
         assert_eq!(pool.active_count(), 1);
-        Ok(())
     }
 
     #[test]

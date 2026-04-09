@@ -23,9 +23,9 @@ mod zfs_manager_comprehensive_tests {
         assert!(manager.is_ok(), "Manager should initialize successfully");
 
         let manager = manager.unwrap();
-        assert!(!std::ptr::from_ref(manager.pool_manager.as_ref()).is_null());
-        assert!(!std::ptr::from_ref(manager.dataset_manager.as_ref()).is_null());
-        assert!(!std::ptr::from_ref(manager.snapshot_manager.as_ref()).is_null());
+        assert!(Arc::strong_count(&manager.pool_manager) >= 1);
+        assert!(Arc::strong_count(&manager.dataset_manager) >= 1);
+        assert!(Arc::strong_count(&manager.snapshot_manager) >= 1);
     }
 
     #[tokio::test]
@@ -85,7 +85,7 @@ mod zfs_manager_comprehensive_tests {
             .expect("Failed to create manager");
 
         // Verify pool manager is properly integrated
-        assert!(!std::ptr::from_ref(manager.pool_manager.as_ref()).is_null());
+        assert!(Arc::strong_count(&manager.pool_manager) >= 1);
     }
 
     // ==================== DATASET OPERATIONS TESTS ====================
@@ -99,7 +99,7 @@ mod zfs_manager_comprehensive_tests {
             .expect("Failed to create manager");
 
         // Verify dataset manager is accessible
-        assert!(!std::ptr::from_ref(manager.dataset_manager.as_ref()).is_null());
+        assert!(Arc::strong_count(&manager.dataset_manager) >= 1);
     }
 
     #[tokio::test]

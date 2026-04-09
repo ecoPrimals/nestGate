@@ -20,7 +20,7 @@ use std::mem;
 const SIMD_BATCH_MULTIPLIER: usize = 4;
 
 // Re-export SIMD modules
-// ✅ **SAFE SIMD** - Zero unsafe code, portable across all platforms
+// ✅ **SAFE SIMD** — portable patterns (`safe_simd`), no vendor intrinsics in-tree
 pub mod safe_simd;
 
 /// SIMD capability detection and feature flags

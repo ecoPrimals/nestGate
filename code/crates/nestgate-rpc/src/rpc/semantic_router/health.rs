@@ -84,7 +84,7 @@ mod tests {
 
     fn router() -> SemanticRouter {
         let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
-        SemanticRouter::new(Arc::new(client))
+        SemanticRouter::new(Arc::new(client)).expect("router")
     }
 
     #[tokio::test]
@@ -104,7 +104,7 @@ mod tests {
 
         let (addr, server_handle) = spawn_local_tarpc_server().await;
         let client = Arc::new(NestGateRpcClient::new(&format!("tarpc://{addr}")).expect("client"));
-        let r = SemanticRouter::new(client);
+        let r = SemanticRouter::new(client).expect("router");
 
         let check = health_check(&r, json!({})).await.expect("health_check");
         assert_eq!(check["status"], "healthy");

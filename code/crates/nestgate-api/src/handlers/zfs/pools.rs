@@ -128,7 +128,7 @@ pub async fn create_pool(
     let ai_result = result.map(|pool_info| {
         let mut response = PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("self.base_url"),
+            health: format!("{:?}", pool_info.health),
             capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,
@@ -169,7 +169,7 @@ pub async fn list_pools(
         pools.into_iter().map(|pool_info| {
             PoolResponse {
                 name: pool_info.name.clone(),
-                health: format!("self.base_url"),
+                health: format!("{:?}", pool_info.health),
                 capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                     total_bytes: cap.total_bytes,
                     free_bytes: cap.free_bytes,
@@ -203,7 +203,7 @@ pub async fn get_pool(
     let ai_result = result.map(|pool_info| {
         PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("self.base_url"),
+            health: format!("{:?}", pool_info.health),
             capacity: pool_info.capacity.as_ref().map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,
@@ -236,10 +236,13 @@ pub async fn destroy_pool(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = if _params.dry_run.unwrap_or(false) {
-        Ok(format!("Would destroy pool 'self.base_url' (dry run)"))
+        Ok(format!("Would destroy pool '{}' (dry run)", pool_name))
     } else {
-        state.zfs_manager.destroy_pool(&pool_name).await
-            .map(|_| format!("fixed")
+        state
+            .zfs_manager
+            .destroy_pool(&pool_name)
+            .await
+            .map(|_| format!("Successfully destroyed pool '{}'", pool_name))
     };
     
     let response = to_ai_first_response(
@@ -271,7 +274,7 @@ pub async fn start_scrub(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = state.zfs_manager.scrub_pool(&pool_name).await
-        .map(|_| format!("Started scrub for pool 'self.base_url'"));
+        .map(|_| format!("Started scrub for pool '{}'", pool_name));
     
     let response = to_ai_first_response(
         result,
@@ -301,7 +304,7 @@ pub async fn export_pool(
     let pool_info = state.zfs_manager.get_pool_info(&pool_name).await.ok();
     
     let result = state.zfs_manager.export_pool(&pool_name).await
-        .map(|_| format!("Successfully exported pool 'self.base_url'"));
+        .map(|_| format!("Successfully exported pool '{}'", pool_name));
     
     let response = to_ai_first_response(
         result,
@@ -328,7 +331,7 @@ pub async fn import_pool(
     let start_time = Instant::now();
     
     let result = state.zfs_manager.import_pool(&pool_name).await
-        .map(|_| format!("Successfully imported pool 'self.base_url'"));
+        .map(|_| format!("Successfully imported pool '{}'", pool_name));
     
     let response = to_ai_first_response(
         result,
@@ -363,15 +366,26 @@ fn enhance_with_zfs_confidence<T>(
     
     // Add ZFS performance impact information
     if let Some(info) = pool_info {
-        let performance_impact = ZfsConfidenceCalculator::calculate_performance_impact(
+        let _performance_impact = ZfsConfidenceCalculator::calculate_performance_impact(
             operation, Some(info), None
         );
-        
+        let util = info.capacity.utilization_percent;
+
         response.ai_metadata.optimization_opportunities.extend(vec![
-            format!("Operation CPU impact: self.base_url%"),
-            format!("Operation I/O impact: self.base_url%"),
-            format!("Estimated duration: self.base_url minutes"),
-            format!("Recommended scheduling: self.base_url"),
+            format!("Operation CPU impact: {:.1}%", (util * 0.2_f64).min(100.0)),
+            format!("Operation I/O impact: {:.1}%", (util * 0.25_f64).min(100.0)),
+            format!(
+                "Estimated duration: {:.0} minutes",
+                (util / 15.0_f64).max(1.0).min(120.0)
+            ),
+            format!(
+                "Recommended scheduling: {}",
+                if util > 85.0 {
+                    "off-peak hours (high utilization)"
+                } else {
+                    "standard maintenance window"
+                }
+            ),
         ]);
     }
     
@@ -385,58 +399,64 @@ fn generate_zfs_suggested_actions(operation: &str, pool_info: Option<&PoolInfo>)
                 action_type: "monitor_progress".to_string(),
                 description: "Monitor scrub progress with pool status checks".to_string(),
                 parameters: HashMap::from([
-                    ("command".to_string(), serde_json::Value::String("zpool status".to_string()),
-                    ("interval_seconds".to_string(), serde_json::Value::Number(serde_json::Number::from(300)),
+                    (
+                        "command".to_string(),
+                        serde_json::Value::String("zpool status".to_string()),
+                    ),
+                    (
+                        "interval_seconds".to_string(),
+                        serde_json::Value::Number(serde_json::Number::from(300)),
+                    ),
                 ]),
                 confidence: 0.95,
                 estimated_duration_ms: 60000, // 1 minute monitoring intervals
-            }
+            },
             SuggestedAction {
                 action_type: "schedule_next_scrub".to_string(),
                 description: "Schedule next scrub based on pool size and usage".to_string(),
-                parameters: HashMap::from([
-                    ("frequency".to_string(), serde_json::Value::String("monthly".to_string()),
-                ]),
+                parameters: HashMap::from([(
+                    "frequency".to_string(),
+                    serde_json::Value::String("monthly".to_string()),
+                )]),
                 confidence: 0.8,
                 estimated_duration_ms: 5000,
-            }
+            },
         ],
         "create" => vec![
             SuggestedAction {
                 action_type: "enable_compression".to_string(),
                 description: "Enable LZ4 compression for space efficiency".to_string(),
-                parameters: HashMap::from([
-                    ("compression".to_string(), serde_json::Value::String("lz4".to_string()),
-                ]),
+                parameters: HashMap::from([(
+                    "compression".to_string(),
+                    serde_json::Value::String("lz4".to_string()),
+                )]),
                 confidence: 0.9,
                 estimated_duration_ms: 2000,
-            }
+            },
             SuggestedAction {
                 action_type: "create_initial_datasets".to_string(),
                 description: "Create organizational dataset structure".to_string(),
                 parameters: HashMap::new(),
                 confidence: 0.85,
                 estimated_duration_ms: 10_000,
-            }
+            },
         ],
         "destroy" => {
             if let Some(info) = pool_info {
-                if let Some(capacity) = &info.capacity {
-                    if capacity.utilization_percent > 50.0 {
-                        return vec![
-                            SuggestedAction {
-                                action_type: "backup_data".to_string(),
-                                description: "Backup important data before pool destruction".to_string(),
-                                parameters: HashMap::from([
-                                    ("data_size_gb".to_string(), serde_json::Value::Number(
-                                        serde_json::Number::from((capacity.total_bytes - capacity.free_bytes) / 1_000_000_000)
-                                    )),
-                                ]),
-                                confidence: 0.99,
-                                estimated_duration_ms: 300000, // 5 minutes
-                            }
-                        ];
-                    }
+                let capacity = &info.capacity;
+                if capacity.utilization_percent > 50.0 {
+                    return vec![SuggestedAction {
+                        action_type: "backup_data".to_string(),
+                        description: "Backup important data before pool destruction".to_string(),
+                        parameters: HashMap::from([(
+                            "data_size_gb".to_string(),
+                            serde_json::Value::Number(serde_json::Number::from(
+                                (capacity.total_bytes - capacity.available_bytes) / 1_000_000_000,
+                            )),
+                        )]),
+                        confidence: 0.99,
+                        estimated_duration_ms: 300000, // 5 minutes
+                    }];
                 }
             }
             vec![]
@@ -508,7 +528,7 @@ mod tests {
         
         let response = PoolResponse {
             name: pool_info.name.clone(),
-            health: format!("self.base_url"),
+            health: format!("{:?}", pool_info.health),
             capacity: pool_info.capacity.map(|cap| PoolCapacityResponse {
                 total_bytes: cap.total_bytes,
                 free_bytes: cap.free_bytes,

@@ -232,8 +232,7 @@ fn test_complete_request_handling(request: &FuzzHttpRequest) {
     let mock_request = create_mock_request(request);
 
     // Should handle any request without panicking
-    let handling_result = process_mock_request(&mock_request);
-    assert!(handling_result.is_ok() || handling_result.is_err());
+    process_mock_request(&mock_request);
 }
 
 fn test_rate_limiting_bypass(request: &FuzzHttpRequest) {
@@ -241,9 +240,7 @@ fn test_rate_limiting_bypass(request: &FuzzHttpRequest) {
     let bypass_attempts = generate_rate_limit_bypass_attempts(request);
 
     for attempt in bypass_attempts {
-        let result = simulate_rate_limit_check(&attempt);
-        // Rate limiting should not be bypassable
-        assert!(result.is_ok() || result.is_err());
+        simulate_rate_limit_check(&attempt);
     }
 }
 
@@ -252,9 +249,7 @@ fn test_auth_bypass_attempts(request: &FuzzHttpRequest) {
     let auth_bypass_attempts = generate_auth_bypass_attempts(request);
 
     for attempt in auth_bypass_attempts {
-        let result = simulate_auth_check(&attempt);
-        // Authentication should not be bypassable
-        assert!(result.is_ok() || result.is_err());
+        simulate_auth_check(&attempt);
     }
 }
 
@@ -344,8 +339,20 @@ fn validate_query_parameter(name: &str, value: &str) -> Result<(), String> {
     }
 
     // Check for XSS
-    if value.contains("<script") || value.contains("javascript:") || value.contains("onload=") {
+    if value.contains("<script")
+        || value.contains("javascript:")
+        || value.contains("onload=")
+        || value.contains("onerror=")
+    {
         return Err("Potential XSS detected".to_string());
+    }
+
+    // Check for command injection shell metacharacters
+    let shell_metacharacters = ["; ", "| ", "&& ", "|| ", "$(", "`", "$(("];
+    for meta in &shell_metacharacters {
+        if value.contains(meta) {
+            return Err("Potential command injection detected".to_string());
+        }
     }
 
     Ok(())
@@ -624,7 +631,6 @@ fn create_mock_request(fuzz_request: &FuzzHttpRequest) -> MockRequest {
     let body = match &fuzz_request.body {
         FuzzRequestBody::Json(json) => json.as_bytes().to_vec(),
         FuzzRequestBody::Raw(bytes) => bytes.clone(),
-        FuzzRequestBody::Empty => Vec::new(),
         _ => Vec::new(),
     };
 
@@ -636,9 +642,8 @@ fn create_mock_request(fuzz_request: &FuzzHttpRequest) -> MockRequest {
     }
 }
 
-const fn process_mock_request(_request: &MockRequest) -> Result<(), String> {
+const fn process_mock_request(_request: &MockRequest) {
     // Mock request processing - should never panic
-    Ok(())
 }
 
 const fn generate_rate_limit_bypass_attempts(_request: &FuzzHttpRequest) -> Vec<MockRequest> {
@@ -651,12 +656,10 @@ const fn generate_auth_bypass_attempts(_request: &FuzzHttpRequest) -> Vec<MockRe
     vec![]
 }
 
-const fn simulate_rate_limit_check(_request: &MockRequest) -> Result<(), String> {
+const fn simulate_rate_limit_check(_request: &MockRequest) {
     // Mock rate limit checking
-    Ok(())
 }
 
-const fn simulate_auth_check(_request: &MockRequest) -> Result<(), String> {
+const fn simulate_auth_check(_request: &MockRequest) {
     // Mock authentication checking
-    Ok(())
 }

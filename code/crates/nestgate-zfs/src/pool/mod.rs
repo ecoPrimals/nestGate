@@ -35,6 +35,8 @@ mod status;
 pub mod types;
 
 #[cfg(test)]
+mod operations_tests;
+#[cfg(test)]
 mod tests;
 
 // Re-export commonly used types

@@ -14,6 +14,8 @@ use serde_json::{Value, json};
 )]
 pub(super) fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
     Ok(json!({
+        "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+        "version": env!("CARGO_PKG_VERSION"),
         "methods": [
             "storage.put",
             "storage.get",
@@ -47,7 +49,8 @@ pub(super) fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Res
             "session.load",
             "session.list",
             "session.delete",
-            "capabilities.list"
+            "capabilities.list",
+            "identity.get"
         ]
     }))
 }

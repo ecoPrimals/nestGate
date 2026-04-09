@@ -334,8 +334,10 @@ mod validation_tests {
 
     #[test]
     fn test_validate_pool_config_empty_name() {
-        let mut config = PoolSetupConfig::default();
-        config.pool_name = String::new();
+        let config = PoolSetupConfig {
+            pool_name: String::new(),
+            ..Default::default()
+        };
 
         let validator = PoolSetupValidator::new(config.clone());
         let result = validator.validate_pool_config(&config);
@@ -346,8 +348,10 @@ mod validation_tests {
 
     #[test]
     fn test_validate_pool_config_no_devices() {
-        let mut config = PoolSetupConfig::default();
-        config.devices.clear();
+        let config = PoolSetupConfig {
+            devices: vec![],
+            ..Default::default()
+        };
 
         let validator = PoolSetupValidator::new(config.clone());
         let result = validator.validate_pool_config(&config);
@@ -363,9 +367,11 @@ mod validation_tests {
 
     #[test]
     fn test_validate_pool_config_insufficient_devices_for_mirror() {
-        let mut config = PoolSetupConfig::default();
-        config.topology = PoolTopology::Mirror;
-        config.devices = vec!["/dev/sda".to_string()]; // Only 1 device, need 2
+        let config = PoolSetupConfig {
+            topology: PoolTopology::Mirror,
+            devices: vec!["/dev/sda".to_string()], // Only 1 device, need 2
+            ..Default::default()
+        };
 
         let validator = PoolSetupValidator::new(config.clone());
         let result = validator.validate_pool_config(&config);
@@ -375,9 +381,11 @@ mod validation_tests {
 
     #[test]
     fn test_validate_pool_config_sufficient_devices() {
-        let mut config = PoolSetupConfig::default();
-        config.topology = PoolTopology::Mirror;
-        config.devices = vec!["/dev/sda".to_string(), "/dev/sdb".to_string()];
+        let config = PoolSetupConfig {
+            topology: PoolTopology::Mirror,
+            devices: vec!["/dev/sda".to_string(), "/dev/sdb".to_string()],
+            ..Default::default()
+        };
 
         let validator = PoolSetupValidator::new(config.clone());
         let result = validator.validate_pool_config(&config);

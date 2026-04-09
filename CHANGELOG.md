@@ -9,7 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
-### Session 40: BTSP Phase 1 + deep debt audit — INSECURE guard, family-scoped naming, self-knowledge cleanup (April 8, 2026)
+### Session 41: Deep debt cleanup + dependency evolution + wateringHole handoff (April 9, 2026)
+
+- **Dependency evolution**: `uzers` crate removed entirely — replaced by `rustix::process::getuid()`/`getgid()`
+  (4 call sites, 3 files; `rustix` already in dep tree; added `process` feature). One fewer external crate.
+- **Hardcoding elimination**: 81 `self.base_url` string literals across 21 files replaced with proper
+  `format!()` interpolation using actual variables (`{e}`, `{pool_name}`, `{workspace_id}`, etc.)
+- **Smart refactoring**: `tarpc_server.rs` (635L) → directory module `tarpc_server/mod.rs` (497L) +
+  `tarpc_server/tests.rs` (138L). `jsonrpc_server/mod.rs` (777L) retained — size justified by JSON-RPC
+  method registration surface (18 methods, annotated `#[expect(clippy::too_many_lines)]`).
+- **Production stubs audit**: clean — all `dev_stubs/` properly gated, zero production leakage,
+  not enabled by default in any crate
+- **Debt marker sweep**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` files (confirmed `rg` sweep)
+- **Dependency analysis**: `async-trait` retained (all traits need `dyn` dispatch); `async-recursion`
+  retained (bounded 1-2 level recursion, equivalent to manual `Box::pin`)
+- **Root docs updated**: README.md refreshed with BTSP Phase 2, uzers removal, debt marker status,
+  file size metrics, stubs audit status
+- **wateringHole handoffs**: Session 40 handoff created; compliance matrix v2.6.0 with all NestGate
+  gap resolutions documented
+- Validation: `cargo check --workspace` PASS, `cargo fmt --all --check` PASS, 435 nestgate-rpc tests PASS
+
+### Session 40: primalSpring gap resolution + BTSP Phase 2 (April 9, 2026)
+
+- **NG-01 RESOLVED**: `SemanticRouter::new()` returns `Result`; production (`FAMILY_ID` set) errors on
+  `FileMetadataBackend` init failure instead of silent in-memory fallback
+- **NG-03 RESOLVED**: `data.*` handler stubs (NCBI/NOAA/IRIS) replaced with single wildcard
+  `data_delegation()` — returns `NotImplemented` directing callers to discover data capability provider
+  at runtime. Removed from `UNIX_SOCKET_SUPPORTED_METHODS` and `capabilities.list`.
+- **BTSP Phase 2 RESOLVED**: Server-side handshake (`btsp_server_handshake.rs`) wired into both
+  `IsomorphicIpcServer` and `JsonRpcUnixServer` UDS listeners, gated by `is_btsp_required()`.
+  4-step handshake (ClientHello → ServerChallenge → ClientResponse → ServerAccept) with crypto
+  delegated to BearDog via `JsonRpcClient::connect_unix`. Feature gate removed from `btsp_client`.
+- **JSON-RPC loop extraction**: `handle_connection` in `unix_socket_server` refactored — core
+  JSON-RPC processing loop extracted to reusable generic `json_rpc_loop<R, W>()` function
+- Tests: `handshake_fails_when_beardog_unavailable` (safe, no `unsafe` blocks, `temp_env` isolation)
+- Validation: 435 passed, 0 failed; `cargo fmt --all --check` PASS; zero warnings
+
+### Session 39: BTSP Phase 1 + deep debt audit — INSECURE guard, family-scoped naming, self-knowledge cleanup (April 8, 2026)
 
 - **BTSP Phase 1 compliance** (corrected 2 false positives from primalSpring audit):
   - `BIOMEOS_INSECURE` guard: startup refuses when both `FAMILY_ID` and `BIOMEOS_INSECURE=1` are set

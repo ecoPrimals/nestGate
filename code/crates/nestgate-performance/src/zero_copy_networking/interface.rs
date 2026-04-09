@@ -16,7 +16,7 @@ use super::buffer_pool::{BufferPoolStats, ZeroCopyBuffer, ZeroCopyBufferPool, Ze
 /// High-performance networking interface with zero-copy I/O
 /// Integrates with kernel bypass and hardware acceleration
 ///
-/// **✅ 100% SAFE** - Uses safe concurrent structures (zero unsafe code)
+/// **✅ 100% SAFE** — uses safe concurrent structures for shared state
 pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
     buffer_pool: Arc<ZeroCopyBufferPool<BUFFER_SIZE, 1024>>,
     connection_registry: SafeConcurrentHashMap<u64, Arc<ZeroCopyConnection<BUFFER_SIZE>>>,
@@ -26,7 +26,7 @@ pub struct ZeroCopyNetworkInterface<const BUFFER_SIZE: usize = 65_536> {
 ///
 /// Individual network connection with zero-copy capabilities
 ///
-/// **✅ 100% SAFE** - Uses safe concurrent queues (zero unsafe code)
+/// **✅ 100% SAFE** — per-connection work is queued with safe concurrent queues
 /// Zerocopyconnection
 pub struct ZeroCopyConnection<const BUFFER_SIZE: usize = 65_536> {
     connection_id: u64,

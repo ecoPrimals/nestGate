@@ -44,6 +44,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use bytes::Bytes;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
@@ -228,7 +229,7 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .create_dataset(ctx, name.to_string(), params)
+            .create_dataset(ctx, Arc::from(name), params)
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -263,7 +264,7 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .get_dataset(ctx, name.to_string())
+            .get_dataset(ctx, Arc::from(name))
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -282,7 +283,7 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .delete_dataset(ctx, name.to_string())
+            .delete_dataset(ctx, Arc::from(name))
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -302,7 +303,7 @@ impl NestGateRpcClient {
         &self,
         dataset: &str,
         key: &str,
-        data: Vec<u8>,
+        data: impl Into<Bytes>,
         metadata: Option<std::collections::HashMap<String, String>>,
     ) -> Result<ObjectInfo> {
         debug!("Storing object: {}/{}", dataset, key);
@@ -310,7 +311,13 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .store_object(ctx, dataset.to_string(), key.to_string(), data, metadata)
+            .store_object(
+                ctx,
+                Arc::from(dataset),
+                Arc::from(key),
+                data.into(),
+                metadata,
+            )
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -324,13 +331,13 @@ impl NestGateRpcClient {
     ///
     /// # Errors
     /// Returns error if object doesn't exist
-    pub async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Vec<u8>> {
+    pub async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Bytes> {
         debug!("Retrieving object: {}/{}", dataset, key);
         let client = self.get_connection().await?;
         let ctx = tarpc::context::current();
 
         client
-            .retrieve_object(ctx, dataset.to_string(), key.to_string())
+            .retrieve_object(ctx, Arc::from(dataset), Arc::from(key))
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -350,7 +357,7 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .get_object_metadata(ctx, dataset.to_string(), key.to_string())
+            .get_object_metadata(ctx, Arc::from(dataset), Arc::from(key))
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -376,7 +383,7 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .list_objects(ctx, dataset.to_string(), prefix, limit)
+            .list_objects(ctx, Arc::from(dataset), prefix.map(Arc::<str>::from), limit)
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -396,7 +403,7 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .delete_object(ctx, dataset.to_string(), key.to_string())
+            .delete_object(ctx, Arc::from(dataset), Arc::from(key))
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -439,7 +446,7 @@ impl NestGateRpcClient {
         let ctx = tarpc::context::current();
 
         client
-            .discover_capability(ctx, capability.to_string())
+            .discover_capability(ctx, Arc::from(capability))
             .await
             .map_err(|e| NestGateError::api_internal_error(format!("RPC call failed: {e}")))?
             .map_err(Self::convert_rpc_error)
@@ -614,9 +621,10 @@ impl NestGateRpcClient {
                 NestGateError::service_unavailable(message)
             }
             NestGateRpcError::ConnectionError { message } => NestGateError::network_error(message),
-            NestGateRpcError::Timeout { operation } => {
-                NestGateError::timeout_error(operation, std::time::Duration::from_secs(5))
-            }
+            NestGateRpcError::Timeout { operation } => NestGateError::timeout_error(
+                operation.to_string(),
+                std::time::Duration::from_secs(5),
+            ),
         }
     }
 }

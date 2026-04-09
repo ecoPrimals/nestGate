@@ -2,7 +2,7 @@
                        Version 3, 19 November 2007
 
  Copyright (c) 2025-2026 ecoPrimals Collective
- All ecoPrimals software is licensed under AGPL-3.0-only (strictest copyleft)
+ All ecoPrimals software is licensed under AGPL-3.0-or-later
 
  SPECIAL PROVISION - BEARDOG ENTROPY HUMAN FREE USE:
  Humans accessing this software through beardog entropy systems are granted
@@ -11,7 +11,8 @@
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Affero General Public License as published by
- the Free Software Foundation, version 3 of the License.
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,7 +24,7 @@
 
  Additional Terms under AGPL-3.0 Section 7:
  - Network use constitutes distribution (AGPL copyleft requirement)
- - All derivative works must be licensed under AGPL-3.0-only
+ - All derivative works must be licensed under AGPL-3.0-or-later
  - Commercial use requires compliance with full AGPL-3.0 terms
  - Beardog entropy systems provide human access exemption as described above
 

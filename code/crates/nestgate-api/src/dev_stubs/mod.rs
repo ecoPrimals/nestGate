@@ -33,9 +33,9 @@
 //!
 //! # Organization
 //!
-//! - [`zfs`] - ZFS operation stubs (development pools, datasets, etc.)
-//! - [`hardware`] - Hardware tuning stubs (CPU, GPU, memory metrics)
-//! - [`testing`] - Test utilities (mock builders, test doubles)
+//! - [`zfs`](crate::dev_stubs::zfs) - ZFS operation stubs (development pools, datasets, etc.)
+//! - [`hardware`](crate::dev_stubs::hardware) - Hardware tuning stubs (CPU, GPU, memory metrics)
+//! - [`testing`](crate::dev_stubs::testing) - Test utilities (mock builders, test doubles)
 //!
 //! # Production Alternatives
 //!

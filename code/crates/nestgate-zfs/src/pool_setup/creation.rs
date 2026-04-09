@@ -344,7 +344,7 @@ mod tests {
     async fn test_invalid_pool_name() {
         let creator = PoolCreator::new_dry_run();
         let config = PoolSetupConfig {
-            pool_name: "".to_string(),
+            pool_name: String::new(),
             devices: vec!["/dev/sdb".to_string()],
             topology: PoolTopology::Single,
             properties: HashMap::new(),
@@ -558,14 +558,14 @@ mod round3_validation_tests {
             pool_name: "p".into(),
             devices: vec!["/dev/a".into()],
             topology: PoolTopology::Single,
-            properties: HashMap::from([("".into(), "v".into())]),
+            properties: HashMap::from([(String::new(), "v".into())]),
             tier_mappings: HashMap::new(),
             redundancy: RedundancyLevel::None,
             device_detection: crate::pool_setup::config::DeviceDetectionConfig::default(),
             create_tiers: false,
         };
         assert!(!validate_zfs_create_args(&c));
-        c.properties = HashMap::from([("k".into(), "".into())]);
+        c.properties = HashMap::from([("k".into(), String::new())]);
         assert!(!validate_zfs_create_args(&c));
     }
 

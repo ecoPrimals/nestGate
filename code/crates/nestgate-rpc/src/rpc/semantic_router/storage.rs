@@ -8,6 +8,7 @@
 use super::SemanticRouter;
 use crate::rpc::tarpc_types::DatasetParams;
 use base64::{Engine as _, engine::general_purpose::STANDARD};
+use bytes::Bytes;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
@@ -29,7 +30,10 @@ pub(super) async fn storage_put(router: &SemanticRouter, params: Value) -> Resul
     })?;
 
     // Call internal implementation
-    let result = router.client.store_object(dataset, key, data, None).await?;
+    let result = router
+        .client
+        .store_object(dataset, key, Bytes::from(data), None)
+        .await?;
 
     serde_json::to_value(&result).map_err(|e| {
         NestGateError::internal_error(
@@ -51,7 +55,7 @@ pub(super) async fn storage_get(router: &SemanticRouter, params: Value) -> Resul
     let data = router.client.retrieve_object(dataset, key).await?;
 
     // Encode to base64 for transport
-    let data_b64 = STANDARD.encode(&data);
+    let data_b64 = STANDARD.encode(data.as_ref());
 
     Ok(json!({
         "data": data_b64,
@@ -202,7 +206,7 @@ mod tests {
 
     fn router() -> SemanticRouter {
         let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
-        SemanticRouter::new(Arc::new(client))
+        SemanticRouter::new(Arc::new(client)).expect("router")
     }
 
     #[tokio::test]

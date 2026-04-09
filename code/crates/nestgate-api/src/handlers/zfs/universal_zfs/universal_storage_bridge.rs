@@ -319,8 +319,8 @@ impl UniversalStorageBridge {
             used: 0,
             available: 0,
             referenced: 0,
-            mountpoint: Some("/self.base_url".to_string()), // Add missing field
-            properties: HashMap::new(),                     // Add missing field
+            mountpoint: Some(format!("/{}", config.name)), // Default ZFS mount path pattern
+            properties: HashMap::new(),                    // Add missing field
         })
     }
 

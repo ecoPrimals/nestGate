@@ -10,10 +10,10 @@ use std::path::PathBuf;
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Run `NestGate` as a daemon (server mode) - `UniBin` pattern
-    #[command(name = "daemon", alias = "server")]
-    #[command(about = "Run NestGate daemon (server mode)")]
-    Daemon {
+    /// Run `NestGate` as a server (primary mode) - `UniBin` pattern
+    #[command(name = "server", alias = "daemon")]
+    #[command(about = "Run NestGate server")]
+    Server {
         /// Port for TCP JSON-RPC listener (alongside Unix socket). When omitted, reads from
         /// `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT`, then default.
         #[arg(short, long)]

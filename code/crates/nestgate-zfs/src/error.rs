@@ -5,6 +5,8 @@
 // This module provides canonical error handling for ZFS operations, integrating
 // with the unified NestGateError system for consistent error reporting.
 
+use std::borrow::Cow;
+
 use nestgate_core::error::{InternalErrorDetails, NestGateError};
 
 // ==================== SECTION ====================
@@ -89,11 +91,15 @@ impl ZfsErrorBuilder {
 
     /// Create a generic internal error with component and location (migration helper)
     #[must_use]
-    pub fn internal(message: String, component: String, location: Option<String>) -> NestGateError {
+    pub fn internal(
+        message: impl Into<String>,
+        component: impl Into<String>,
+        location: Option<String>,
+    ) -> NestGateError {
         NestGateError::Internal(Box::new(InternalErrorDetails {
-            message: message.into(),
-            component: component.into(),
-            location: location.map(Into::into),
+            message: Cow::Owned(message.into()),
+            component: Cow::Owned(component.into()),
+            location: location.map(Cow::Owned),
             context: None,
             is_bug: false,
         }))
@@ -106,8 +112,8 @@ impl ZfsErrorBuilder {
 /// Create ZFS internal error from old struct pattern (migration helper)
 #[must_use]
 pub fn zfs_internal(
-    message: String,
-    component: String,
+    message: impl Into<String>,
+    component: impl Into<String>,
     location: Option<String>,
     _is_bug: bool,
     _context: Option<()>,
@@ -183,6 +189,13 @@ pub enum ZfsOperation {
 
 // CANONICAL MODERNIZATION: Remove duplicate type aliases
 // All ZFS errors now use the unified nestgate_core error system
+
+// USE CANONICAL TYPES:
+pub use nestgate_core::error::Result;
+// Re-export ZfsError from types module for backward compatibility
+pub use crate::types::ZfsError;
+/// Type alias for ZFS operation results using the canonical error system.
+pub type ZfsResult<T> = Result<T>;
 
 // ==================== TESTS ====================
 
@@ -526,12 +539,5 @@ mod tests {
         }
     }
 }
-
-// USE CANONICAL TYPES:
-pub use nestgate_core::error::Result;
-// Re-export ZfsError from types module for backward compatibility
-pub use crate::types::ZfsError;
-/// Type alias for ZFS operation results using the canonical error system.
-pub type ZfsResult<T> = Result<T>;
 
 // ==================== SECTION ====================

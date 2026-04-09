@@ -37,7 +37,7 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     // Check if dataset exists first
     let check_output = Command::new("zfs")
@@ -107,7 +107,7 @@ pub async fn get_workspace_status(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     // Get ZFS dataset properties
     let status_output = Command::new("zfs")
@@ -200,7 +200,7 @@ pub async fn cleanup_workspace(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
     let mut cleanup_actions = Vec::new();
     let mut space_freed = 0u64;
 
@@ -294,7 +294,7 @@ pub async fn cleanup_workspace(
 pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
     info!("📈 Scaling workspace storage: {}", workspace_id);
     // Basic workspace scaling implementation
-    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     // Get current usage
     let usage_output = Command::new("zfs")

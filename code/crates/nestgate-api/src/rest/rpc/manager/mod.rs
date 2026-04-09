@@ -20,6 +20,7 @@ use super::config::NestGateRpcConfig;
 use super::types::{
     DynRpcService, ResponseMetrics, RpcError, RpcStreamEvent, UnifiedRpcRequest, UnifiedRpcResponse,
 };
+use nestgate_core::error::NestGateError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -82,10 +83,7 @@ impl UnifiedRpcManager {
     /// # Errors
     ///
     /// Returns error if the operation fails (currently always succeeds).
-    pub fn init_security_capability(
-        &self,
-        _endpoint: &str,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub fn init_security_capability(&self, _endpoint: &str) -> Result<(), NestGateError> {
         tracing::info!(
             "Security capability initialization deferred \
              — delegated to crypto capability provider via crypto.* IPC"
@@ -100,11 +98,11 @@ impl UnifiedRpcManager {
     /// Returns `RpcError` if registration fails.
     pub async fn register_service(
         &self,
-        name: String,
+        name: impl Into<String>,
         service: DynRpcService,
     ) -> Result<(), RpcError> {
         let mut services = self.services.write().await;
-        services.insert(name, service);
+        services.insert(name.into(), service);
         Ok(())
     }
 

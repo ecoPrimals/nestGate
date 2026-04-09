@@ -63,10 +63,10 @@ impl NativeZfsService {
             })?;
 
         if !output.status.success() {
-            let _stderr = String::from_utf8_lossy(&output.stderr);
+            let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                "ZFS command failed: self.base_url".to_string(),
+                format!("ZFS command failed: {stderr}"),
             ));
         }
 
@@ -86,10 +86,10 @@ impl NativeZfsService {
             })?;
 
         if !output.status.success() {
-            let _stderr = String::from_utf8_lossy(&output.stderr);
+            let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(UniversalZfsError::backend(
                 "native-zfs",
-                "zpool command failed: self.base_url".to_string(),
+                format!("zpool command failed: {stderr}"),
             ));
         }
 

@@ -18,7 +18,7 @@ anyhow = { workspace = true }
 base64 = { workspace = true }
 blake3 = { workspace = true }
 reqwest = { workspace = true }
-bytes = { workspace = true }
+bytes = { workspace = true, features = ["serde"] }
 chrono = { workspace = true }
 bincode = { workspace = true }
 etcetera = { workspace = true }
@@ -34,14 +34,17 @@ tokio-util = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
-uzers = { workspace = true }
+# uzers removed — replaced by rustix::process::getuid (already in dep tree)
 
 [features]
 default = []
+# BTSP handshake client (JSON-RPC to BearDog security capability; no crypto in NestGate).
+btsp = []
 # Orchestrator registration stub and related dev-only RPC helpers (opt-in).
 dev-stubs = []
 
 [dev-dependencies]
 fastrand = { workspace = true }
+temp-env = { workspace = true }
 tokio-test = { workspace = true }
 tempfile = { workspace = true }

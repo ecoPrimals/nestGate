@@ -79,6 +79,7 @@
 //! Pattern validated in orchestration provider v3.33.0
 
 use anyhow::Result;
+use bytes::Bytes;
 use serde_json::Value;
 use std::sync::Arc;
 use tracing::{error, info, warn};
@@ -248,7 +249,11 @@ impl IsomorphicIpcServer {
         }
     }
 
-    /// Handle Unix socket connection
+    /// Handle Unix socket connection.
+    ///
+    /// When BTSP is required (production: `FAMILY_ID` set, not `BIOMEOS_INSECURE`),
+    /// the 4-step BTSP handshake runs first, delegating crypto to BearDog.
+    /// Development connections proceed directly to JSON-RPC.
     async fn handle_unix_connection(
         stream: tokio::net::UnixStream,
         handler: Arc<dyn RpcHandler>,
@@ -256,6 +261,55 @@ impl IsomorphicIpcServer {
         use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
         let (reader, mut writer) = stream.into_split();
+
+        if crate::rpc::btsp_server_handshake::is_btsp_required() {
+            let family_id = std::env::var("FAMILY_ID")
+                .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
+                .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+                .unwrap_or_default();
+
+            let mut raw_reader = tokio::io::BufReader::new(reader);
+            let _session = crate::rpc::btsp_server_handshake::perform_handshake(
+                &mut raw_reader,
+                &mut writer,
+                &family_id,
+            )
+            .await?;
+
+            let mut reader = raw_reader;
+            let mut line = Vec::new();
+            loop {
+                line.clear();
+                let n = match reader.read_until(b'\n', &mut line).await {
+                    Ok(n) => n,
+                    Err(e) => {
+                        error!("Unix socket read error: {}", e);
+                        break;
+                    }
+                };
+                if n == 0 && line.is_empty() {
+                    break;
+                }
+                let trimmed = line.as_slice().trim_ascii();
+                if trimmed.is_empty() {
+                    continue;
+                }
+                match serde_json::from_slice::<Value>(trimmed) {
+                    Ok(request) => {
+                        let response = handler.handle_request(request).await;
+                        let response_bytes: Bytes =
+                            serde_json::to_vec(&response).map(Bytes::from)?;
+                        writer.write_all(&response_bytes).await?;
+                        writer.write_all(b"\n").await?;
+                    }
+                    Err(e) => {
+                        warn!("Invalid JSON-RPC request: {}", e);
+                    }
+                }
+            }
+            return Ok(());
+        }
+
         let mut reader = BufReader::new(reader);
         let mut line = Vec::new();
 
@@ -280,9 +334,9 @@ impl IsomorphicIpcServer {
             match serde_json::from_slice::<Value>(trimmed) {
                 Ok(request) => {
                     let response = handler.handle_request(request).await;
-                    let response_str = serde_json::to_string(&response)?;
+                    let response_bytes: Bytes = serde_json::to_vec(&response).map(Bytes::from)?;
 
-                    writer.write_all(response_str.as_bytes()).await?;
+                    writer.write_all(&response_bytes).await?;
                     writer.write_all(b"\n").await?;
                 }
                 Err(e) => {

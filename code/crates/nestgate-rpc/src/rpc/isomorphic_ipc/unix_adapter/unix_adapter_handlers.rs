@@ -423,13 +423,12 @@ pub(super) async fn handle_beacon_list(
     Ok(json!({ "peer_ids": peer_ids, "count": count }))
 }
 
-/// Static JSON for `capabilities.list` / `discover_capabilities`.
+/// Wire Standard L2 envelope for `capabilities.list` / `discover_capabilities`.
 pub(super) fn capabilities_response() -> Value {
     json!({
         "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
-        "domain": "storage",
-        "capabilities": [
+        "methods": [
             "storage.store", "storage.retrieve", "storage.list",
             "storage.delete", "storage.exists", "storage.fetch_external",
             "session.save", "session.load",
@@ -438,8 +437,8 @@ pub(super) fn capabilities_response() -> Value {
             "zfs.pool.list", "zfs.pool.get", "zfs.pool.health",
             "zfs.dataset.list", "zfs.dataset.get",
             "zfs.snapshot.list", "zfs.health",
-            "health", "health.check", "health.liveness", "health.readiness",
-            "capabilities.list", "version"
+            "health.check", "health.liveness", "health.readiness",
+            "capabilities.list", "identity.get"
         ]
     })
 }

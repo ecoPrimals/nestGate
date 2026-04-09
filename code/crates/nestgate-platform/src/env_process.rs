@@ -5,11 +5,10 @@
 //!
 //! Mutating the process environment is not synchronized with other threads on all platforms.
 //! This module centralizes environment updates via [`nestgate_env_process_shim`] so the rest of
-//! the codebase keeps a single audited surface while the workspace lint `unsafe_code` remains
-//! denied at call sites.
+//! the codebase keeps a single audited surface for process-wide environment updates.
 //!
 //! **Tests:** For code that only reads configuration, prefer injectable env maps (`MapEnv` in the
-//! `nestgate-types` crate) and APIs that accept `EnvSource`. The [`test_support`] module remains for
+//! `nestgate-types` crate) and APIs that accept `EnvSource`. The `test_support` module remains for
 //! tests that must mutate the real process environment (for example alongside [`set_var`]) with
 //! scoped restoration via `temp_env`.
 
@@ -30,7 +29,7 @@ pub fn set_var<K: AsRef<OsStr>, V: AsRef<OsStr>>(key: K, value: V) {
     tracing::warn!(
         target: "nestgate_platform::env_process",
         key = ?key_ref,
-        "mutating process environment (set_var); unsafe on concurrent access — see env_process docs"
+        "mutating process environment (set_var); concurrent readers may observe torn values — see env_process docs"
     );
     nestgate_env_process_shim::set_var(key_ref, value);
 }
@@ -45,14 +44,14 @@ pub fn remove_var<K: AsRef<OsStr>>(key: K) {
     tracing::warn!(
         target: "nestgate_platform::env_process",
         key = ?key_ref,
-        "mutating process environment (remove_var); unsafe on concurrent access — see env_process docs"
+        "mutating process environment (remove_var); concurrent readers may observe torn values — see env_process docs"
     );
     nestgate_env_process_shim::remove_var(key_ref);
 }
 
-/// Scoped environment helpers for unit tests (backed by [`temp_env`]).
+/// Scoped environment helpers for unit tests (backed by `temp_env`).
 ///
-/// Prefer [`with_var`](temp_env::with_var), [`with_vars`](temp_env::with_vars), and related
+/// Prefer `temp_env::with_var`, `temp_env::with_vars`, and related
 /// `temp_env` APIs over [`set_var`] / [`remove_var`] in tests so each test restores the previous
 /// environment and parallel test runs are less likely to observe races.
 #[cfg(test)]

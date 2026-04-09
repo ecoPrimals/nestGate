@@ -23,8 +23,8 @@ impl Cli {
 
         // Handle commands
         match self.command {
-            // UniBin: Daemon mode command
-            Commands::Daemon {
+            // UniBin: Server mode command (primary)
+            Commands::Server {
                 port,
                 bind,
                 listen,
@@ -64,7 +64,7 @@ impl Cli {
                 )
                 .await
                 .map_err(|e| {
-                    BinErrorHelper::runtime_error(e.to_string(), Some("daemon".to_string()))
+                    BinErrorHelper::runtime_error(e.to_string(), Some("server".to_string()))
                 })?;
             }
 

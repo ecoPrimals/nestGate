@@ -267,7 +267,7 @@ impl UniversalZfsService for NativeZfsService {
             && output
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
-                    std::io::Error::other("Operation failed: self.base_url".to_string())
+                    std::io::Error::other(format!("Operation failed: {e}"))
                 })?
                 .status
                 .success();

@@ -157,7 +157,7 @@ async fn handle_websocket_connection(
                         info!("Received WebSocket message: {}", text);
                         // Echo back for now - in production this would handle commands
                         let response = WebSocketEvent::Message {
-                            content: "Echo: self.base_url".to_string(),
+                            content: format!("Echo: {text}"),
                             timestamp: chrono::Utc::now().to_rfc3339(),
                         };
 

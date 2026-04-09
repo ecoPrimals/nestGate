@@ -56,7 +56,7 @@ pub async fn list_universal_pools(State(state): State<AppState>) -> impl IntoRes
             warn!("❌ Failed to list pools: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to list pools: self.base_url"),
+                "message": format!("Failed to list pools: {e}"),
                 "pools": []
             }))
         }
@@ -82,7 +82,7 @@ pub async fn get_universal_pool(
             } else {
                 Json(json!({
                     "status": "error",
-                    "message": format!("Pool 'self.base_url' not found"),
+                    "message": format!("Pool '{pool_name}' not found"),
                     "available_pools": pools.iter().map(|p| &p.name).collect::<Vec<_>>()
                 }))
             }
@@ -91,7 +91,7 @@ pub async fn get_universal_pool(
             warn!("❌ Failed to get pool details: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to get pool details: self.base_url")
+                "message": format!("Failed to get pool details: {e}")
             }))
         }
     }
@@ -161,7 +161,7 @@ pub fn create_universal_pool(
             warn!("❌ Failed to create pool: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to create pool: self.base_url")
+                "message": format!("Failed to create pool: {e}")
             }))
         }
     }
@@ -183,13 +183,13 @@ pub fn destroy_universal_pool(
             if pools.iter().any(|p| p.name == pool_name) {
                 Json(json!({
                     "status": "success",
-                    "message": format!("Pool 'self.base_url' destruction initiated"),
+                    "message": format!("Pool '{pool_name}' destruction initiated"),
                     "pool_name": pool_name
                 }))
             } else {
                 Json(json!({
                     "status": "error",
-                    "message": format!("Pool 'self.base_url' not found"),
+                    "message": format!("Pool '{pool_name}' not found"),
                     "pool_name": pool_name
                 }))
             }
@@ -198,7 +198,7 @@ pub fn destroy_universal_pool(
             warn!("❌ Failed to list pools for destruction: {}", e);
             Json(json!({
                 "status": "error",
-                "message": format!("Failed to destroy pool: self.base_url")
+                "message": format!("Failed to destroy pool: {e}")
             }))
         }
     }

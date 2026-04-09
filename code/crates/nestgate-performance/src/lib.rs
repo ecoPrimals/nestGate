@@ -41,17 +41,17 @@
 //!
 //! ## 🚀 Safe Concurrent Structures
 //!
-//! This crate provides **100% safe** concurrent data structures with zero unsafe code:
+//! This crate provides **100% safe** concurrent data structures:
 //! - `SafeConcurrentQueue<T>`: Lock-free multi-producer multi-consumer queue
 //! - `SafeConcurrentHashMap<K, V>`: High-performance concurrent hash map
 //!
-//! These safe abstractions **replace** the old unsafe lock-free implementations,
+//! These safe abstractions **replace** prior custom lock-free experiments,
 //! providing **equal or better performance** with **complete memory safety**.
 
 pub mod adaptive_optimization;
-// ✅ ELIMINATED: custom_allocators (14 unsafe blocks) - Use nestgate_core::memory_pool instead
-// ✅ ELIMINATED: lock_free_structures (20 unsafe blocks) - Use safe_concurrent instead
-pub mod safe_concurrent; // ✅ 100% SAFE - Zero unsafe code
+// ✅ ELIMINATED: custom_allocators — use `nestgate_core::memory_pool` instead
+// ✅ ELIMINATED: lock_free_structures — use `safe_concurrent` instead
+pub mod safe_concurrent;
 pub mod simd;
 pub mod zero_copy_networking;
 

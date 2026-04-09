@@ -12,7 +12,7 @@ workspace = true
 [dependencies]
 nestgate-env-process-shim = { path = "../nestgate-env-process-shim" }
 rustix = { workspace = true }
-uzers = { workspace = true }
+# uzers removed — replaced by rustix::process::getuid/getgid (already in dep tree)
 etcetera = { workspace = true }
 tracing = { workspace = true }
 

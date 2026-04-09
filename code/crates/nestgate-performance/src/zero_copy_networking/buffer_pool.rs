@@ -11,7 +11,7 @@ use crate::safe_concurrent::SafeConcurrentQueue;
 /// Memory pool for zero-copy networking operations
 /// Pre-allocated buffers eliminate allocation overhead during I/O
 ///
-/// **✅ 100% SAFE** - Uses safe concurrent queue (zero unsafe code)
+/// **✅ 100% SAFE** — built on a safe concurrent queue (see [`crate::safe_concurrent::SafeConcurrentQueue`])
 pub struct ZeroCopyBufferPool<const BUFFER_SIZE: usize = 65_536, const POOL_SIZE: usize = 1024> {
     available_buffers: SafeConcurrentQueue<ZeroCopyBuffer<BUFFER_SIZE>>,
     total_buffers: std::sync::atomic::AtomicUsize,

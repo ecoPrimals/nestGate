@@ -30,11 +30,11 @@ mod cli_parse_tests {
     }
 
     #[test]
-    fn daemon_accepts_server_alias() {
-        let cli = Cli::try_parse_from(["nestgate", "server", "--dev"]).expect("parse server alias");
+    fn server_accepts_daemon_alias() {
+        let cli = Cli::try_parse_from(["nestgate", "daemon", "--dev"]).expect("parse daemon alias");
         match cli.command {
-            Commands::Daemon { dev, .. } => assert!(dev),
-            _ => panic!("expected daemon via server alias"),
+            Commands::Server { dev, .. } => assert!(dev),
+            _ => panic!("expected server via daemon alias"),
         }
     }
 
@@ -98,17 +98,17 @@ mod cli_parse_tests {
     }
 
     #[test]
-    fn daemon_parses_socket_only_and_family() {
+    fn server_parses_socket_only_and_family() {
         let cli = Cli::try_parse_from([
             "nestgate",
-            "daemon",
+            "server",
             "--family-id",
             "fam-a",
             "--enable-http",
         ])
         .expect("parse");
         match cli.command {
-            Commands::Daemon {
+            Commands::Server {
                 family_id,
                 enable_http,
                 port,
@@ -118,16 +118,16 @@ mod cli_parse_tests {
                 assert!(enable_http);
                 assert!(port.is_none());
             }
-            _ => panic!("daemon"),
+            _ => panic!("server"),
         }
     }
 
     #[test]
-    fn daemon_parses_explicit_port_for_tcp_jsonrpc() {
-        let cli = Cli::try_parse_from(["nestgate", "daemon", "--port", "9443"]).expect("parse");
+    fn server_parses_explicit_port_for_tcp_jsonrpc() {
+        let cli = Cli::try_parse_from(["nestgate", "server", "--port", "9443"]).expect("parse");
         match cli.command {
-            Commands::Daemon { port, .. } => assert_eq!(port, Some(9443)),
-            _ => panic!("daemon"),
+            Commands::Server { port, .. } => assert_eq!(port, Some(9443)),
+            _ => panic!("server"),
         }
     }
 
@@ -306,8 +306,8 @@ mod cli_parse_tests {
     }
 
     #[test]
-    fn parse_fails_on_daemon_conflicting_flags() {
-        let err = Cli::try_parse_from(["nestgate", "daemon", "--socket-only", "--enable-http"]);
+    fn parse_fails_on_server_conflicting_flags() {
+        let err = Cli::try_parse_from(["nestgate", "server", "--socket-only", "--enable-http"]);
         assert!(err.is_err(), "socket_only conflicts with enable_http");
     }
 }
@@ -395,17 +395,17 @@ mod port_env_tests {
     }
 
     #[test]
-    fn daemon_resolves_listen_socket_addr() {
-        let cli = Cli::try_parse_from(["nestgate", "daemon", "--listen", "[::1]:8443"])
-            .expect("parse daemon with listen");
+    fn server_resolves_listen_socket_addr() {
+        let cli = Cli::try_parse_from(["nestgate", "server", "--listen", "[::1]:8443"])
+            .expect("parse server with listen");
         match cli.command {
-            Commands::Daemon { listen, .. } => {
+            Commands::Server { listen, .. } => {
                 assert_eq!(
                     listen,
                     Some("[::1]:8443".parse::<SocketAddr>().expect("listen addr"))
                 );
             }
-            _ => panic!("expected daemon"),
+            _ => panic!("expected server"),
         }
     }
 }

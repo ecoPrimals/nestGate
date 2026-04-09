@@ -118,13 +118,13 @@ impl StorageState {
     }
 }
 
-/// JSON-RPC handler that serves the isomorphic IPC Unix path with in-memory stub storage.
+/// JSON-RPC handler that serves the isomorphic IPC Unix path with filesystem-backed storage.
 pub struct UnixSocketRpcHandler {
     state: Arc<StorageState>,
 }
 
 impl UnixSocketRpcHandler {
-    /// Builds a handler with empty in-memory datasets and stub template/audit backends.
+    /// Builds a handler with an on-disk default dataset and production template/audit storage handles.
     ///
     /// # Errors
     ///
@@ -169,6 +169,17 @@ impl UnixSocketRpcHandler {
             })),
             "capabilities.list" | "discover_capabilities" => {
                 Ok(unix_adapter_handlers::capabilities_response())
+            }
+            "identity.get" => {
+                let family_id =
+                    std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+                Ok(json!({
+                    "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+                    "version": env!("CARGO_PKG_VERSION"),
+                    "domain": "storage",
+                    "license": "AGPL-3.0-or-later",
+                    "family_id": family_id
+                }))
             }
 
             // nat.* — NAT traversal info uses its own sub-directory

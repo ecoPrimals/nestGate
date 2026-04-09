@@ -36,7 +36,6 @@
 #![cfg_attr(
     test,
     allow(
-        deprecated,
         clippy::borrow_as_ptr,
         clippy::cast_lossless,
         clippy::cast_possible_truncation,

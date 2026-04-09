@@ -28,7 +28,9 @@ pub mod types;
 pub mod operations;
 
 #[cfg(test)]
-mod mock_tests;
+mod mock_pool_quota_tests;
+#[cfg(test)]
+mod mock_stats_operations_extended_tests;
 #[cfg(test)]
 mod service_tests;
 

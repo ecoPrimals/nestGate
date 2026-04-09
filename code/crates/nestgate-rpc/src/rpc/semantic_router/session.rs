@@ -9,6 +9,7 @@
 use super::SemanticRouter;
 use crate::rpc::metadata_backend::ServiceRecord;
 use crate::rpc::tarpc_types::OperationResult;
+use bytes::Bytes;
 use chrono::Utc;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
@@ -105,7 +106,7 @@ pub(super) async fn session_save(router: &SemanticRouter, params: Value) -> Resu
 
     router
         .client
-        .store_object(SESSION_DATASET, &key, payload, None)
+        .store_object(SESSION_DATASET, &key, Bytes::from(payload), None)
         .await?;
 
     let record = ServiceRecord {

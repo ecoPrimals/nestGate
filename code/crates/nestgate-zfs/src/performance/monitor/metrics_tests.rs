@@ -333,8 +333,7 @@ pool        alloc   free   read  write   read  write
     async fn test_get_pool_properties_structure() {
         let result = ZfsPerformanceMonitor::get_pool_properties("testpool").await;
 
-        if result.is_ok() {
-            let props = result.unwrap();
+        if let Ok(props) = result {
             // Properties should have valid values
             assert!(props.fragmentation >= 0.0);
             assert!(props.fragmentation <= 100.0);

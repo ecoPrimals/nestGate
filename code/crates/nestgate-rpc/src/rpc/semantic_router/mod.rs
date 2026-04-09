@@ -30,7 +30,7 @@
 //! use nestgate_core::rpc::SemanticRouter;
 //! use serde_json::json;
 //!
-//! let router = SemanticRouter::new(service);
+//! let router = SemanticRouter::new(service)?;
 //!
 //! // External primal calls with semantic name
 //! let result = router.call_method("storage.put", json!({
@@ -130,24 +130,44 @@ pub struct SemanticRouter {
 
 impl SemanticRouter {
     /// Create new semantic router with the default file-backed metadata backend
-    /// ([`FileMetadataBackend`] under [`default_metadata_base_dir`]), falling back to
-    /// in-memory storage only if the on-disk path cannot be created.
+    /// ([`FileMetadataBackend`] under [`default_metadata_base_dir`]).
     ///
     /// **NG-01 compliance**: `FileMetadataBackend` is the production default.
-    /// `InMemoryMetadataBackend` is only used as an error fallback and in tests.
-    /// The daemon currently uses `legacy_ecosystem_rpc_handler` (which routes
-    /// `storage.*` via `StorageState`); when the daemon migrates to
-    /// `SemanticRouter`, this constructor ensures file-backed metadata persistence.
+    /// When `FAMILY_ID` is set (production mode), the file backend is mandatory
+    /// and this constructor returns an error if the directory cannot be created.
+    /// In development mode (no `FAMILY_ID` / `BIOMEOS_INSECURE=1`), an in-memory
+    /// fallback is used with a warning.
     ///
-    /// # Arguments
-    /// * `client` - Internal RPC client for method delegation
-    pub fn new(client: Arc<NestGateRpcClient>) -> Self {
+    /// # Errors
+    ///
+    /// Returns [`NestGateError`] in production mode when `FileMetadataBackend`
+    /// cannot be initialized (e.g. permissions, disk full).
+    pub fn new(
+        client: Arc<NestGateRpcClient>,
+    ) -> std::result::Result<Self, nestgate_types::error::NestGateError> {
         debug!("Creating semantic method router");
         let metadata: Arc<dyn MetadataBackend> = match FileMetadataBackend::new(
             default_metadata_base_dir(),
         ) {
             Ok(b) => Arc::new(b),
             Err(e) => {
+                let is_production = std::env::var("FAMILY_ID")
+                    .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
+                    .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
+                    .map_or(false, |fid| {
+                        !matches!(fid.as_str(), "" | "default" | "standalone")
+                    });
+
+                if is_production {
+                    return Err(nestgate_types::error::NestGateError::storage_error(
+                        format!(
+                            "NG-01: file metadata backend required in production (FAMILY_ID set) \
+                             but initialization failed at {}: {e}",
+                            default_metadata_base_dir().display()
+                        ),
+                    ));
+                }
+
                 warn!(
                     error = %e,
                     "file metadata backend unavailable; using in-memory metadata (lost on restart)"
@@ -155,7 +175,7 @@ impl SemanticRouter {
                 Arc::new(InMemoryMetadataBackend::new())
             }
         };
-        Self { client, metadata }
+        Ok(Self { client, metadata })
     }
 
     /// Create a semantic router with a custom metadata backend.
@@ -217,12 +237,8 @@ impl SemanticRouter {
             "storage.dataset.list" => storage::dataset_list(self, params).await,
             "storage.dataset.delete" => storage::dataset_delete(self, params).await,
 
-            // ==================== DATA DOMAIN (live feeds, not storage) ====================
-            "data.ncbi_search" => data::data_ncbi_search(self, params),
-            "data.ncbi_fetch" => data::data_ncbi_fetch(self, params),
-            "data.noaa_ghcnd" => data::data_noaa_ghcnd(self, params),
-            "data.iris_stations" => data::data_iris_stations(self, params),
-            "data.iris_events" => data::data_iris_events(self, params),
+            // ==================== DATA DOMAIN (live feeds, not storage — wildcard delegation) ====================
+            m if m.starts_with("data.") => data::data_delegation(self, m, params),
 
             // ==================== DISCOVERY DOMAIN ====================
             "discovery.announce" => discovery::discovery_announce(self, &params),

@@ -301,8 +301,8 @@ async fn handle_rpc_call(
     let target = request.target.clone();
     match rpc_manager.call(&target, request).await {
         Ok(response) => Ok(axum::Json(DataResponse::new(response))),
-        Err(_e) => Err(axum::Json(DataError::new(
-            "RPC call failed: self.base_url".to_string(),
+        Err(e) => Err(axum::Json(DataError::new(
+            format!("RPC call failed: {e}"),
             "RPC_CALL_FAILED".to_string(),
         ))),
     }
@@ -337,8 +337,8 @@ async fn handle_rpc_stream(
                 "message": "Bidirectional RPC stream initiated"
             }))))
         }
-        Err(_e) => Err(axum::Json(DataError::new(
-            "Failed to start RPC stream: self.base_url".to_string(),
+        Err(e) => Err(axum::Json(DataError::new(
+            format!("Failed to start RPC stream: {e}"),
             "RPC_STREAM_FAILED".to_string(),
         ))),
     }

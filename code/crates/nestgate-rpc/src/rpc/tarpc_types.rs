@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! # 🚀 tarpc Types and Traits for `NestGate`
@@ -24,6 +24,7 @@
 //! - Zero unsafe blocks
 //! - Modern async/await patterns
 
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -55,7 +56,7 @@ pub trait NestGateRpc {
     /// # Returns
     /// Dataset information if successful
     async fn create_dataset(
-        name: String,
+        name: Arc<str>,
         params: DatasetParams,
     ) -> Result<DatasetInfo, NestGateRpcError>;
 
@@ -72,7 +73,7 @@ pub trait NestGateRpc {
     ///
     /// # Returns
     /// Dataset information if exists
-    async fn get_dataset(name: String) -> Result<DatasetInfo, NestGateRpcError>;
+    async fn get_dataset(name: Arc<str>) -> Result<DatasetInfo, NestGateRpcError>;
 
     /// Delete a dataset
     ///
@@ -81,7 +82,7 @@ pub trait NestGateRpc {
     ///
     /// # Returns
     /// Success result
-    async fn delete_dataset(name: String) -> Result<OperationResult, NestGateRpcError>;
+    async fn delete_dataset(name: Arc<str>) -> Result<OperationResult, NestGateRpcError>;
 
     /// Store an object
     ///
@@ -94,9 +95,9 @@ pub trait NestGateRpc {
     /// # Returns
     /// Object information after storage
     async fn store_object(
-        dataset: String,
-        key: String,
-        data: Vec<u8>,
+        dataset: Arc<str>,
+        key: Arc<str>,
+        data: Bytes,
         metadata: Option<HashMap<String, String>>,
     ) -> Result<ObjectInfo, NestGateRpcError>;
 
@@ -108,7 +109,7 @@ pub trait NestGateRpc {
     ///
     /// # Returns
     /// Object data if exists
-    async fn retrieve_object(dataset: String, key: String) -> Result<Vec<u8>, NestGateRpcError>;
+    async fn retrieve_object(dataset: Arc<str>, key: Arc<str>) -> Result<Bytes, NestGateRpcError>;
 
     /// Get object metadata
     ///
@@ -119,8 +120,8 @@ pub trait NestGateRpc {
     /// # Returns
     /// Object information without data
     async fn get_object_metadata(
-        dataset: String,
-        key: String,
+        dataset: Arc<str>,
+        key: Arc<str>,
     ) -> Result<ObjectInfo, NestGateRpcError>;
 
     /// List objects in dataset
@@ -133,8 +134,8 @@ pub trait NestGateRpc {
     /// # Returns
     /// List of object information
     async fn list_objects(
-        dataset: String,
-        prefix: Option<String>,
+        dataset: Arc<str>,
+        prefix: Option<Arc<str>>,
         limit: Option<usize>,
     ) -> Result<Vec<ObjectInfo>, NestGateRpcError>;
 
@@ -147,8 +148,8 @@ pub trait NestGateRpc {
     /// # Returns
     /// Success result
     async fn delete_object(
-        dataset: String,
-        key: String,
+        dataset: Arc<str>,
+        key: Arc<str>,
     ) -> Result<OperationResult, NestGateRpcError>;
 
     // ==================== CAPABILITY OPERATIONS ====================
@@ -171,7 +172,9 @@ pub trait NestGateRpc {
     ///
     /// # Returns
     /// List of services matching the capability
-    async fn discover_capability(capability: String) -> Result<Vec<ServiceInfo>, NestGateRpcError>;
+    async fn discover_capability(
+        capability: Arc<str>,
+    ) -> Result<Vec<ServiceInfo>, NestGateRpcError>;
 
     // ==================== HEALTH & MONITORING ====================
 
@@ -484,29 +487,29 @@ pub enum NestGateRpcError {
     /// Dataset not found
     DatasetNotFound {
         /// Name of the dataset that was not found
-        dataset: String,
+        dataset: Arc<str>,
     },
 
     /// Dataset already exists
     DatasetAlreadyExists {
         /// Name of the dataset that already exists
-        dataset: String,
+        dataset: Arc<str>,
     },
 
     /// Object not found
     ObjectNotFound {
         /// Dataset name
-        dataset: String,
+        dataset: Arc<str>,
         /// Object key
-        key: String,
+        key: Arc<str>,
     },
 
     /// Object already exists
     ObjectAlreadyExists {
         /// Dataset name
-        dataset: String,
+        dataset: Arc<str>,
         /// Object key
-        key: String,
+        key: Arc<str>,
     },
 
     /// Invalid parameters
@@ -526,7 +529,7 @@ pub enum NestGateRpcError {
     /// Quota exceeded
     QuotaExceeded {
         /// Dataset name
-        dataset: String,
+        dataset: Arc<str>,
         /// Quota limit in bytes
         quota: u64,
         /// Requested storage in bytes
@@ -560,7 +563,7 @@ pub enum NestGateRpcError {
     /// Timeout
     Timeout {
         /// Operation that timed out
-        operation: String,
+        operation: Arc<str>,
     },
 }
 
@@ -632,7 +635,7 @@ mod tests {
     #[test]
     fn test_error_display() {
         let error = NestGateRpcError::DatasetNotFound {
-            dataset: "test".to_string(),
+            dataset: Arc::from("test"),
         };
         assert_eq!(error.to_string(), "Dataset not found: test");
     }
@@ -640,7 +643,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_dataset_already_exists() {
         let e = NestGateRpcError::DatasetAlreadyExists {
-            dataset: "tank/data".to_string(),
+            dataset: Arc::from("tank/data"),
         };
         assert!(e.to_string().contains("already exists"));
         assert!(e.to_string().contains("tank/data"));
@@ -649,8 +652,8 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_object_not_found() {
         let e = NestGateRpcError::ObjectNotFound {
-            dataset: "d".to_string(),
-            key: "k".to_string(),
+            dataset: Arc::from("d"),
+            key: Arc::from("k"),
         };
         assert_eq!(e.to_string(), "Object not found: d/k");
     }
@@ -658,8 +661,8 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_object_already_exists() {
         let e = NestGateRpcError::ObjectAlreadyExists {
-            dataset: "d".to_string(),
-            key: "k".to_string(),
+            dataset: Arc::from("d"),
+            key: Arc::from("k"),
         };
         assert_eq!(e.to_string(), "Object already exists: d/k");
     }
@@ -685,7 +688,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_quota_exceeded() {
         let e = NestGateRpcError::QuotaExceeded {
-            dataset: "z".to_string(),
+            dataset: Arc::from("z"),
             quota: 50,
             requested: 60,
         };
@@ -728,7 +731,7 @@ mod tests {
     #[test]
     fn round5_rpc_error_display_timeout() {
         let e = NestGateRpcError::Timeout {
-            operation: "read".to_string(),
+            operation: Arc::from("read"),
         };
         assert_eq!(e.to_string(), "Timeout: read");
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![forbid(unsafe_code)]
+#![cfg_attr(not(test), forbid(unsafe_code))]
 
 //! **NESTGATE ZFS CRATE**
 //!
@@ -78,6 +78,8 @@ pub mod zero_cost_zfs_operations;
 pub mod health;
 #[cfg(test)]
 mod health_tests;
+#[cfg(test)]
+mod path_cli_test_lock;
 
 /// Metrics collection and reporting for ZFS operations
 pub mod metrics;

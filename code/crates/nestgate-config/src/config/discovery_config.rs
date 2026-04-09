@@ -18,6 +18,9 @@
 use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use serde::{Deserialize, Serialize};
 
+use crate::constants::hardcoding::addresses;
+use crate::constants::port_defaults::DEFAULT_API_PORT;
+
 /// Central configuration for service discovery
 ///
 /// Replaces hardcoded URLs like "<http://localhost:8080>" with configurable endpoints.
@@ -58,8 +61,8 @@ impl ServiceDiscoveryConfig {
             endpoints: Self::load_endpoints_from_env_source(env),
             discovery_host: env
                 .get("NESTGATE_DISCOVERY_HOST")
-                .unwrap_or_else(|| std::net::Ipv4Addr::LOCALHOST.to_string()),
-            discovery_base_port: env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", 8080),
+                .unwrap_or_else(|| addresses::LOCALHOST_IPV4.to_string()),
+            discovery_base_port: env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", DEFAULT_API_PORT),
             discovery_port_range: env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 10),
             auto_discovery: env_parsed(env, "NESTGATE_AUTO_DISCOVERY", true),
             discovery_timeout_secs: env_parsed(env, "NESTGATE_DISCOVERY_TIMEOUT", 30),
@@ -79,8 +82,8 @@ impl ServiceDiscoveryConfig {
         // Fallback: Generate from host + port range
         let host = env
             .get("NESTGATE_DISCOVERY_HOST")
-            .unwrap_or_else(|| std::net::Ipv4Addr::LOCALHOST.to_string());
-        let base_port: u16 = env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", 8080);
+            .unwrap_or_else(|| addresses::LOCALHOST_IPV4.to_string());
+        let base_port: u16 = env_parsed(env, "NESTGATE_DISCOVERY_BASE_PORT", DEFAULT_API_PORT);
         let port_range: u16 = env_parsed(env, "NESTGATE_DISCOVERY_PORT_RANGE", 3);
 
         (0..port_range)

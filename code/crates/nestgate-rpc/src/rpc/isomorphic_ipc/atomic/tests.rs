@@ -114,7 +114,7 @@ fn atomic_status_components_needing_attention_filters() {
 #[test]
 fn gather_socket_search_dirs_includes_uid_run_path() {
     let dirs = discovery::gather_socket_search_dirs_from_env(&MapEnv::new());
-    let uid = uzers::get_current_uid();
+    let uid = rustix::process::getuid().as_raw();
     assert!(
         dirs.iter().any(|d| d.contains(&format!("/run/user/{uid}"))),
         "{dirs:?}"

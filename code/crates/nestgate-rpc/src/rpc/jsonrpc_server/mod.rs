@@ -46,6 +46,9 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::sync::Arc;
+
+use bytes::Bytes;
 
 use base64::Engine;
 use jsonrpsee::{
@@ -92,6 +95,7 @@ const JSON_RPC_CAPABILITIES_METHODS: &[&str] = &[
     "health.info",
     "health.protocols",
     "capabilities.list",
+    "identity.get",
 ];
 
 /// JSON-RPC server configuration
@@ -221,7 +225,7 @@ impl JsonRpcServer {
                 // Clone service to satisfy tarpc trait's self-consuming methods
                 let service_clone = state.service.clone();
                 let result = service_clone
-                    .create_dataset(tarpc::context::current(), p.name, dataset_params)
+                    .create_dataset(tarpc::context::current(), Arc::from(p.name), dataset_params)
                     .await
                     .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
@@ -279,7 +283,7 @@ impl JsonRpcServer {
                 let state = ctx.as_ref();
                 let service_clone = state.service.clone();
                 let dataset = service_clone
-                    .get_dataset(tarpc::context::current(), name)
+                    .get_dataset(tarpc::context::current(), Arc::from(name))
                     .await
                     .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
@@ -305,7 +309,7 @@ impl JsonRpcServer {
                 let state = ctx.as_ref();
                 let service_clone = state.service.clone();
                 let result = service_clone
-                    .delete_dataset(tarpc::context::current(), name)
+                    .delete_dataset(tarpc::context::current(), Arc::from(name))
                     .await
                     .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
@@ -348,9 +352,9 @@ impl JsonRpcServer {
                 let result = service_clone
                     .store_object(
                         tarpc::context::current(),
-                        p.dataset,
-                        p.key,
-                        data,
+                        Arc::from(p.dataset),
+                        Arc::from(p.key),
+                        Bytes::from(data),
                         p.metadata,
                     )
                     .await
@@ -382,12 +386,16 @@ impl JsonRpcServer {
                 let state = ctx.as_ref();
                 let service_clone = state.service.clone();
                 let data = service_clone
-                    .retrieve_object(tarpc::context::current(), p.dataset, p.key)
+                    .retrieve_object(
+                        tarpc::context::current(),
+                        Arc::from(p.dataset),
+                        Arc::from(p.key),
+                    )
                     .await
                     .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
                 // Encode to base64
-                let encoded = base64::engine::general_purpose::STANDARD.encode(&data);
+                let encoded = base64::engine::general_purpose::STANDARD.encode(data.as_ref());
 
                 Ok::<_, ErrorObjectOwned>(serde_json::json!({
                     "data": encoded,
@@ -412,7 +420,11 @@ impl JsonRpcServer {
                 let state = ctx.as_ref();
                 let service_clone = state.service.clone();
                 let info = service_clone
-                    .get_object_metadata(tarpc::context::current(), p.dataset, p.key)
+                    .get_object_metadata(
+                        tarpc::context::current(),
+                        Arc::from(p.dataset),
+                        Arc::from(p.key),
+                    )
                     .await
                     .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
@@ -449,7 +461,12 @@ impl JsonRpcServer {
                 let state = ctx.as_ref();
                 let service_clone = state.service.clone();
                 let objects = service_clone
-                    .list_objects(tarpc::context::current(), p.dataset, p.prefix, p.limit)
+                    .list_objects(
+                        tarpc::context::current(),
+                        Arc::from(p.dataset),
+                        p.prefix.map(Arc::<str>::from),
+                        p.limit,
+                    )
                     .await
                     .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
@@ -486,7 +503,7 @@ impl JsonRpcServer {
                 let state = ctx.as_ref();
                 let service_clone = state.service.clone();
                 let result = service_clone
-                    .delete_object(tarpc::context::current(), p.dataset, p.key)
+                    .delete_object(tarpc::context::current(), p.dataset.into(), p.key.into())
                     .await
                     .map_err(|e| ErrorObjectOwned::owned(-32603, e.to_string(), None::<()>))?;
 
@@ -501,6 +518,10 @@ impl JsonRpcServer {
     }
 
     /// Register capability-related JSON-RPC methods
+    #[expect(
+        clippy::too_many_lines,
+        reason = "single cohesive registration block for all capability methods"
+    )]
     fn register_capability_methods(
         module: &mut RpcModule<JsonRpcState>,
     ) -> Result<(), NestGateError> {
@@ -597,13 +618,32 @@ impl JsonRpcServer {
             ),
         )?;
 
-        // capabilities.list — semantic surface discovery
+        // capabilities.list — Wire Standard L2 envelope
         map_jsonrpc_registration(module.register_async_method(
             "capabilities.list",
             |_params, _ctx, _ext| async move {
                 debug!("JSON-RPC: capabilities.list()");
                 Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+                    "version": env!("CARGO_PKG_VERSION"),
                     "methods": JSON_RPC_CAPABILITIES_METHODS
+                }))
+            },
+        ))?;
+
+        // identity.get — Wire Standard L2 identity endpoint
+        map_jsonrpc_registration(module.register_async_method(
+            "identity.get",
+            |_params, _ctx, _ext| async move {
+                debug!("JSON-RPC: identity.get()");
+                let family_id =
+                    std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
+                Ok::<_, ErrorObjectOwned>(serde_json::json!({
+                    "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+                    "version": env!("CARGO_PKG_VERSION"),
+                    "domain": "storage",
+                    "license": "AGPL-3.0-or-later",
+                    "family_id": family_id
                 }))
             },
         ))?;

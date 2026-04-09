@@ -94,7 +94,7 @@ tempfile = { workspace = true }
 criterion = { workspace = true }
 serial_test = { workspace = true }
 temp-env = { workspace = true }
-mockall = { workspace = true }
+# mockall removed — zero usage; hand-written test doubles used instead
 
 [[bench]]
 name = "performance_validation"

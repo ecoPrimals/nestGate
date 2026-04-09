@@ -185,8 +185,8 @@ pub async fn create_pool(
     cmd.arg("create");
 
     // Add pool-specific options
-    for key in config.properties.keys() {
-        cmd.arg("-o").arg(format!("{key}=self.base_url"));
+    for (key, value) in &config.properties {
+        cmd.arg("-o").arg(format!("{key}={value}"));
     }
 
     cmd.arg(pool_name);

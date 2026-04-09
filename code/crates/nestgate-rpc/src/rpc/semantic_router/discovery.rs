@@ -15,6 +15,7 @@
 //! capability provider (discovered at runtime, not by name).
 
 use super::SemanticRouter;
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
@@ -77,7 +78,7 @@ pub(super) fn discovery_query(_router: &SemanticRouter, params: &Value) -> Resul
         "capability": capability,
         "providers": if self_provides {
             json!([{
-                "name": "nestgate",
+                "name": DEFAULT_SERVICE_NAME,
                 "capabilities": SELF_CAPABILITIES,
                 "source": "self_knowledge"
             }])
@@ -101,7 +102,7 @@ pub(super) fn discovery_query(_router: &SemanticRouter, params: &Value) -> Resul
 pub(super) fn discovery_list(_router: &SemanticRouter, _params: &Value) -> Result<Value> {
     Ok(json!({
         "services": [{
-            "name": "nestgate",
+            "name": DEFAULT_SERVICE_NAME,
             "capabilities": SELF_CAPABILITIES,
             "source": "self_knowledge",
             "status": "active"
@@ -119,7 +120,7 @@ pub(super) fn discovery_list(_router: &SemanticRouter, _params: &Value) -> Resul
 )]
 pub(super) fn discovery_capabilities(_router: &SemanticRouter, _params: &Value) -> Result<Value> {
     Ok(json!({
-        "primal": "nestgate",
+        "primal": DEFAULT_SERVICE_NAME,
         "capabilities": SELF_CAPABILITIES,
         "version": env!("CARGO_PKG_VERSION"),
     }))
@@ -135,7 +136,7 @@ mod tests {
 
     fn router() -> SemanticRouter {
         let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
-        SemanticRouter::new(Arc::new(client))
+        SemanticRouter::new(Arc::new(client)).expect("router")
     }
 
     #[test]
@@ -154,7 +155,7 @@ mod tests {
         let v = discovery_query(&r, &json!({"capability": "storage"})).expect("ok");
         let providers = v["providers"].as_array().expect("providers");
         assert_eq!(providers.len(), 1);
-        assert_eq!(providers[0]["name"], "nestgate");
+        assert_eq!(providers[0]["name"], DEFAULT_SERVICE_NAME);
     }
 
     #[test]
@@ -171,7 +172,7 @@ mod tests {
         let v = discovery_list(&r, &json!({})).expect("ok");
         let services = v["services"].as_array().expect("services");
         assert_eq!(services.len(), 1);
-        assert_eq!(services[0]["name"], "nestgate");
+        assert_eq!(services[0]["name"], DEFAULT_SERVICE_NAME);
     }
 
     #[test]

@@ -2,25 +2,30 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-08)**  
-- **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors)  
+**Verification (as of 2026-04-09)**  
+- **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors, 0 warnings)  
 - **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
-- **Docs**: `cargo doc --workspace --no-deps` — builds clean (no rustdoc warnings in routine CI-style runs; re-check after large doc edits)  
+- **Format**: `cargo fmt --all --check` — PASS  
+- **Docs**: `cargo doc --workspace --no-deps` — builds clean  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
 - **Tests (last recorded)**: ~11,856 passing, 461 ignored, 0 failures — run `cargo test --workspace --all-features` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
-- **Open debt markers**: none in production `.rs` (wateringHole; re-verify after large edits)  
-- **Deprecated APIs**: 181 `#[deprecated]` markers for canonical-config migration; zero dead callers (all deprecated helper functions with 0 callers removed)  
-**Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)  
-**TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack in-tree)  
-**sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-**File size**: All production `.rs` files under 800 lines (max ~759 after smart refactoring)  
-**`#[serial]`**: 0 — last `#[serial]` eliminated via `try_init()` evolution  
-**Last Updated**: April 8, 2026
+- **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-09)  
+- **Hardcoding**: zero `self.base_url` string literals (81 fixed → proper interpolation)  
+- **Deprecated APIs**: 181 `#[deprecated]` markers for canonical-config migration; zero dead callers  
+- **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
+- **TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack)  
+- **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
+- **External deps evolved**: `uzers` removed (replaced by `rustix::process`); 54 workspace deps, all pure Rust  
+- **File size**: All production `.rs` files under 800 lines (max ~777 `jsonrpc_server` method table)  
+- **`#[serial]`**: 0 — last `#[serial]` eliminated via `try_init()` evolution  
+- **dev_stubs**: properly feature-gated (`#[cfg(feature = "dev-stubs")]`), zero production leakage, not enabled by default  
+- **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate)  
+**Last Updated**: April 9, 2026
 
 ---
 
@@ -64,7 +69,7 @@ nestgate/ (23 workspace members: 20 code/crates + tools/unwrap-migrator + fuzz +
 │
 │  Foundation Layer (zero internal deps, compiles first)
 ├── nestgate-types       Error types, result aliases, unified enums
-├── nestgate-platform    env_process, linux_proc, OS abstractions (rustix/uzers)
+├── nestgate-platform    env_process, linux_proc, OS abstractions (rustix)
 ├── nestgate-env-process-shim  Safe env mutation (tests; isolates set_var / remove_var)
 │
 │  Domain Layer (depends on types/platform)
@@ -115,7 +120,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-08).
+See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-09).
 
 | Area | Status |
 |------|--------|
@@ -130,7 +135,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
 | sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
-| File size (production < 1000) | All compliant (max ~500 lines last measured after smart refactoring) |
+| File size (production < 1000) | All compliant (max ~777 lines; `jsonrpc_server` method table) |
 | http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
 | Env-var isolation | `EnvSource` / `MapEnv` primary; zero `#[serial]` tests remaining |
 
@@ -147,6 +152,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | Coverage (80%+) | Pass — ~80% line last measured (wateringHole 80% minimum met; 90% target not yet) |
 | File size (<800 production) | Pass (max ~759 lines after smart refactoring) |
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
+| BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to BearDog |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, family-scoped capability symlinks |
 | Discovery | Env vars + capability IPC (mDNS behind `mdns` feature gate — delegated to biomeOS) |
 | Crypto delegation | Pass — capability-based `SecurityProviderClient` |
@@ -271,4 +277,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 8, 2026
+**Latest**: April 9, 2026

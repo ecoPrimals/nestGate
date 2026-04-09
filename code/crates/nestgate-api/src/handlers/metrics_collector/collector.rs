@@ -211,7 +211,7 @@ impl RealTimeMetricsCollector {
 
     /// ZFS ARC / L2ARC cache performance over time.
     ///
-    /// Point-in-time snapshots are available via [`get_current_metrics`]; historical
+    /// Point-in-time snapshots are available via [`Self::get_current_metrics`]; historical
     /// trends require a time-series backend.
     ///
     /// # Errors

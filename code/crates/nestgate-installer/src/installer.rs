@@ -571,7 +571,7 @@ mod tests {
             config_path: PathBuf::from("/etc/nestgate"),
             data_path: PathBuf::from("/var/lib/nestgate"),
             service_installed: true,
-            features: features.clone(),
+            features,
         };
         assert_eq!(info.features.len(), 5);
         assert!(info.features.contains(&"monitoring".to_string()));

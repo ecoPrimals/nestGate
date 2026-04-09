@@ -6,6 +6,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use bytes::Bytes;
+
 use super::NestGateRpcClient;
 use crate::rpc::tarpc_types::NestGateRpcError;
 
@@ -95,7 +97,7 @@ async fn test_list_datasets_connection_fails() {
 #[test]
 fn test_convert_rpc_error_dataset_not_found() {
     let err = NestGateRpcError::DatasetNotFound {
-        dataset: "missing".to_string(),
+        dataset: Arc::from("missing"),
     };
     let nest_err = NestGateRpcClient::convert_rpc_error(err);
     assert!(nest_err.to_string().to_lowercase().contains("not found"));
@@ -123,7 +125,7 @@ fn test_convert_rpc_error_storage_full() {
 #[test]
 fn test_convert_rpc_error_timeout() {
     let err = NestGateRpcError::Timeout {
-        operation: "create_dataset".to_string(),
+        operation: Arc::from("create_dataset"),
     };
     let nest_err = NestGateRpcClient::convert_rpc_error(err);
     assert!(!nest_err.to_string().is_empty());
@@ -141,7 +143,7 @@ fn test_convert_rpc_error_connection_error() {
 #[test]
 fn test_convert_rpc_error_dataset_already_exists() {
     let err = NestGateRpcError::DatasetAlreadyExists {
-        dataset: "exists".to_string(),
+        dataset: Arc::from("exists"),
     };
     let nest_err = NestGateRpcClient::convert_rpc_error(err);
     assert!(nest_err.to_string().to_lowercase().contains("exists"));
@@ -150,8 +152,8 @@ fn test_convert_rpc_error_dataset_already_exists() {
 #[test]
 fn test_convert_rpc_error_object_not_found() {
     let err = NestGateRpcError::ObjectNotFound {
-        dataset: "ds".to_string(),
-        key: "key".to_string(),
+        dataset: Arc::from("ds"),
+        key: Arc::from("key"),
     };
     let nest_err = NestGateRpcClient::convert_rpc_error(err);
     assert!(nest_err.to_string().to_lowercase().contains("not found"));
@@ -160,8 +162,8 @@ fn test_convert_rpc_error_object_not_found() {
 #[test]
 fn test_convert_rpc_error_object_already_exists() {
     let err = NestGateRpcError::ObjectAlreadyExists {
-        dataset: "ds".to_string(),
-        key: "key".to_string(),
+        dataset: Arc::from("ds"),
+        key: Arc::from("key"),
     };
     let nest_err = NestGateRpcClient::convert_rpc_error(err);
     assert!(!nest_err.to_string().is_empty());
@@ -170,7 +172,7 @@ fn test_convert_rpc_error_object_already_exists() {
 #[test]
 fn test_convert_rpc_error_quota_exceeded() {
     let err = NestGateRpcError::QuotaExceeded {
-        dataset: "ds".to_string(),
+        dataset: Arc::from("ds"),
         quota: 100,
         requested: 200,
     };
@@ -393,7 +395,11 @@ async fn delete_dataset_connection_fails() {
 #[tokio::test]
 async fn store_object_connection_fails() {
     let c = NestGateRpcClient::new("tarpc://127.0.0.1:9").unwrap();
-    assert!(c.store_object("ds", "k", vec![1], None).await.is_err());
+    assert!(
+        c.store_object("ds", "k", Bytes::from(vec![1u8]), None)
+            .await
+            .is_err()
+    );
 }
 
 #[tokio::test]

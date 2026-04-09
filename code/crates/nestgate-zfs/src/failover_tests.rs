@@ -201,8 +201,10 @@ async fn detect_failed_nodes_skips_future_heartbeat() {
 
 #[tokio::test]
 async fn detect_failed_nodes_skips_when_marked_not_alive() {
-    let mut config = CanonicalFailoverConfig::default();
-    config.node_failure_timeout_secs = 10;
+    let config = CanonicalFailoverConfig {
+        node_failure_timeout_secs: 10,
+        ..Default::default()
+    };
     let monitor = NodeHealthMonitor::new(config);
     monitor.update_node_heartbeat("n1").await;
     monitor.test_set_node_alive("n1", false).await;

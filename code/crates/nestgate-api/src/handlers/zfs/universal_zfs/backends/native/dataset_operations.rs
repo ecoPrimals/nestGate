@@ -162,8 +162,8 @@ pub async fn set_dataset_properties(
 ) -> UniversalZfsResult<()> {
     info!("Setting properties for dataset: {}", name);
     // Set each property individually
-    for key in properties.keys() {
-        let property_arg = format!("{key}=self.base_url");
+    for (key, value) in properties {
+        let property_arg = format!("{key}={value}");
         service
             .execute_zfs_command(&["set", &property_arg, name])
             .await?;

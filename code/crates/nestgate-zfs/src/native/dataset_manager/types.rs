@@ -83,11 +83,10 @@ mod tests {
             "lz4"
         );
         assert!(options.deduplication.is_some());
-        assert_eq!(
-            options
+        assert!(
+            !options
                 .deduplication
-                .expect("Test: deduplication should be Some"),
-            false
+                .expect("Test: deduplication should be Some")
         );
         assert!(options.record_size.is_some());
         assert!(options.storage_tier.is_some());
@@ -113,11 +112,10 @@ mod tests {
                 .expect("Test: compression should be Some"),
             "zstd"
         );
-        assert_eq!(
+        assert!(
             options
                 .deduplication
-                .expect("Test: deduplication should be Some"),
-            true
+                .expect("Test: deduplication should be Some")
         );
         assert_eq!(
             options
@@ -359,11 +357,10 @@ mod tests {
                 .expect("Test: compression should be Some"),
             "zstd"
         );
-        assert_eq!(
+        assert!(
             options
                 .deduplication
-                .expect("Test: deduplication should be Some"),
-            true
+                .expect("Test: deduplication should be Some")
         );
     }
 
@@ -396,11 +393,10 @@ mod tests {
         );
 
         // Default fields
-        assert_eq!(
-            options
+        assert!(
+            !options
                 .deduplication
-                .expect("Test: deduplication should be Some"),
-            false
+                .expect("Test: deduplication should be Some")
         );
         assert!(options.record_size.is_some());
     }
@@ -417,17 +413,15 @@ mod tests {
             ..Default::default()
         };
 
-        assert_eq!(
+        assert!(
             with_dedup
                 .deduplication
-                .expect("Test: deduplication should be Some"),
-            true
+                .expect("Test: deduplication should be Some")
         );
-        assert_eq!(
-            without_dedup
+        assert!(
+            !without_dedup
                 .deduplication
-                .expect("Test: deduplication should be Some"),
-            false
+                .expect("Test: deduplication should be Some")
         );
     }
 }

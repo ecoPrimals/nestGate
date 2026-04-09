@@ -136,7 +136,7 @@ impl UniversalZfsService for RemoteZfsService {
         Box::pin(async move {
         debug!("Getting pool '{}' via remote service", name);
 
-        let endpoint = "/api/v1/pools/self.base_url".to_string();
+        let endpoint = format!("/api/v1/pools/{name}");
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into PoolInfo
@@ -177,13 +177,13 @@ impl UniversalZfsService for RemoteZfsService {
             Ok(response) => {
                 self.record_success(start_time.elapsed()).await;
                 // Parse response into PoolInfo
-                serde_json::from_value(response).map_err(|_e| UniversalZfsError::Backend {
+                serde_json::from_value(response).map_err(|e| UniversalZfsError::Backend {
                     backend: "remote".to_string(),
-                    message: "Failed to parse pool response: self.base_url".to_string(),
+                    message: format!("Failed to parse pool response: {e}"),
                 })
             }
             Err(e) => {
-                let error = "Failed to create pool: self.base_url".to_string();
+                let error = format!("Failed to create pool: {e}");
                 self.record_failure(error.clone()).await;
                 Err(e)
             }
@@ -196,14 +196,14 @@ impl UniversalZfsService for RemoteZfsService {
         Box::pin(async move {
         debug!("Destroying pool '{}' via remote service", name);
 
-        let endpoint = "/api/v1/pools/self.base_url".to_string();
+        let endpoint = format!("/api/v1/pools/{name}");
         match self.client().delete(&endpoint).await {
             Ok(_) => {
                 debug!("Successfully destroyed pool '{}'", name);
                 Ok(())
             }
             Err(e) => {
-                let _error_msg = "Failed to destroy pool: self.base_url".to_string();
+                let _error_msg = format!("Failed to destroy pool: {e}");
                 debug!("{}", _error_msg);
                 self.record_failure(_error_msg).await;
                 Err(e)
@@ -217,14 +217,14 @@ impl UniversalZfsService for RemoteZfsService {
         Box::pin(async move {
         debug!("Scrubbing pool '{}' via remote service", name);
 
-        let endpoint = "/api/v1/pools/self.base_url/scrub".to_string();
+        let endpoint = format!("/api/v1/pools/{name}/scrub");
         match self.client().post(&endpoint, json!({})).await {
             Ok(_) => {
                 debug!("Successfully started scrub for pool '{}'", name);
                 Ok(())
             }
             Err(e) => {
-                let _error_msg = "Failed to scrub pool: self.base_url".to_string();
+                let _error_msg = format!("Failed to scrub pool: {e}");
                 debug!("{}", _error_msg);
                 self.record_failure(_error_msg).await;
                 Err(e)
@@ -238,7 +238,7 @@ impl UniversalZfsService for RemoteZfsService {
         Box::pin(async move {
         debug!("Getting pool status for '{}' via remote service", name);
 
-        let endpoint = "/api/v1/pools/self.base_url/status".to_string();
+        let endpoint = format!("/api/v1/pools/{name}/status");
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Extract status from response
@@ -291,7 +291,7 @@ impl UniversalZfsService for RemoteZfsService {
         Box::pin(async move {
         debug!("Getting dataset '{}' via remote service", name);
 
-        let endpoint = "/api/v1/datasets/self.base_url".to_string();
+        let endpoint = format!("/api/v1/datasets/{name}");
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into DatasetInfo
@@ -340,7 +340,7 @@ impl UniversalZfsService for RemoteZfsService {
                 })
             }
             Err(e) => {
-                let error = "Failed to create dataset: self.base_url".to_string();
+                let error = format!("Failed to create dataset: {e}");
                 self.record_failure(error.clone()).await;
                 Err(e)
             }
@@ -353,7 +353,7 @@ impl UniversalZfsService for RemoteZfsService {
         Box::pin(async move {
         debug!("Destroying dataset '{}' via remote service", name);
 
-        let endpoint = "/api/v1/datasets/self.base_url".to_string();
+        let endpoint = format!("/api/v1/datasets/{name}");
         match self.client().delete(&endpoint).await {
             Ok(_) => {
                 debug!("Successfully destroyed dataset '{}'", name);
@@ -380,7 +380,7 @@ impl UniversalZfsService for RemoteZfsService {
             name
         );
 
-        let endpoint = "/api/v1/datasets/self.base_url/properties".to_string();
+        let endpoint = format!("/api/v1/datasets/{name}/properties");
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into HashMap<String, String>
@@ -420,7 +420,7 @@ impl UniversalZfsService for RemoteZfsService {
             name
         );
 
-        let endpoint = "/api/v1/datasets/self.base_url/properties".to_string();
+        let endpoint = format!("/api/v1/datasets/{name}/properties");
         let request_body = json!({
             "properties": properties
         });
@@ -474,7 +474,7 @@ impl UniversalZfsService for RemoteZfsService {
             dataset
         );
 
-        let endpoint = "/api/v1/datasets/self.base_url/snapshots".to_string();
+        let endpoint = format!("/api/v1/datasets/{dataset}/snapshots");
         match self.client().get(&endpoint).await {
             Ok(response) => {
                 // Parse response into Vec<SnapshotInfo>
@@ -524,7 +524,7 @@ impl UniversalZfsService for RemoteZfsService {
                 })
             }
             Err(e) => {
-                let error = "Failed to create snapshot: self.base_url".to_string();
+                let error = format!("Failed to create snapshot: {e}");
                 self.record_failure(error.clone()).await;
                 Err(e)
             }
@@ -537,7 +537,7 @@ impl UniversalZfsService for RemoteZfsService {
         Box::pin(async move {
         debug!("Destroying snapshot '{}' via remote service", name);
 
-        let endpoint = "/api/v1/snapshots/self.base_url".to_string();
+        let endpoint = format!("/api/v1/snapshots/{name}");
         match self.client().delete(&endpoint).await {
             Ok(_) => {
                 debug!("Successfully destroyed snapshot '{}'", name);
@@ -679,7 +679,7 @@ impl UniversalZfsService for RemoteZfsService {
                 Ok(())
             }
             Err(e) => {
-                let _error_msg = "Failed to update configuration: self.base_url".to_string();
+                let _error_msg = format!("Failed to update configuration: {e}");
                 debug!("{}", _error_msg);
                 self.record_failure(_error_msg).await;
                 Err(e)

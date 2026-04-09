@@ -20,6 +20,8 @@ pub use pool_ops::{
 pub use snapshot_ops::{build_snapshot_zfs_path, parse_snapshot_list_line};
 
 #[cfg(test)]
+mod snapshot_path_tests;
+#[cfg(test)]
 mod test_helpers;
 #[cfg(test)]
 mod tests;

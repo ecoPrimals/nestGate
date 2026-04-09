@@ -17,7 +17,7 @@ mod test_constants {
     /// Generate test endpoint
     pub fn endpoint() -> String {
         std::env::var("NESTGATE_TEST_ENDPOINT")
-            .unwrap_or_else(|_| format!("http://{}:{}", TEST_HOST, TEST_PORT))
+            .unwrap_or_else(|_| format!("http://{TEST_HOST}:{TEST_PORT}"))
     }
 
     /// Generate test endpoint with path
@@ -365,11 +365,13 @@ mod config_tests {
     #[test]
     #[expect(deprecated)]
     fn test_zfs_service_config_custom() {
-        let mut config = ZfsServiceConfig::default();
-        config.service_name = "custom-zfs".to_string();
-        config.bind_address = "192.168.1.100".to_string();
-        config.port = 9999;
-        config.health_check_interval = 60;
+        let config = ZfsServiceConfig {
+            service_name: "custom-zfs".to_string(),
+            bind_address: "192.168.1.100".to_string(),
+            port: 9999,
+            health_check_interval: 60,
+            ..Default::default()
+        };
 
         assert_eq!(config.service_name, "custom-zfs");
         assert_eq!(config.bind_address, "192.168.1.100");
@@ -490,7 +492,7 @@ mod edge_case_tests {
     fn test_service_info_many_capabilities() {
         let mut info = ServiceInfo::new("svc-many-caps", "zfs-storage");
         for i in 0..100 {
-            info.capabilities.push(format!("capability-{}", i));
+            info.capabilities.push(format!("capability-{i}"));
         }
 
         assert_eq!(info.capabilities.len(), 100);
@@ -500,7 +502,7 @@ mod edge_case_tests {
     fn test_service_info_many_endpoints() {
         let mut info = ServiceInfo::new("svc-many-endpoints", "zfs-storage");
         for i in 8080..8180 {
-            info.endpoints.push(format!("http://localhost:{}", i));
+            info.endpoints.push(format!("http://localhost:{i}"));
         }
 
         assert_eq!(info.endpoints.len(), 100);
@@ -616,7 +618,8 @@ mod capacity_calculation_tests {
         };
 
         assert_eq!(health.used_capacity(), 0);
-        assert_eq!(health.usage_percentage(), 0.0);
+        let pct = health.usage_percentage();
+        assert!(pct.is_finite() && (pct - 0.0).abs() < f64::EPSILON);
     }
 
     #[test]

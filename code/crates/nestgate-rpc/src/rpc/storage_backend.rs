@@ -12,6 +12,7 @@
 //! route through the same storage backend as `nestgate-core`.
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use bytes::Bytes;
 
@@ -70,7 +71,6 @@ pub trait StorageBackend: Send + Sync {
 // In-memory implementation (tests / lightweight standalone)
 // ---------------------------------------------------------------------------
 
-use std::sync::Arc;
 use std::time::SystemTime;
 use tokio::sync::RwLock;
 
@@ -86,12 +86,13 @@ fn byte_len(n: usize) -> u64 {
 }
 
 type StoredPayload = (Bytes, HashMap<String, String>);
+type ObjectMapKey = (Arc<str>, Arc<str>);
 
 /// In-memory storage backend for tests and lightweight standalone mode.
 #[derive(Default)]
 struct InnerStore {
     datasets: HashMap<String, DatasetInfo>,
-    objects: HashMap<(String, String), StoredPayload>,
+    objects: HashMap<ObjectMapKey, StoredPayload>,
 }
 
 /// In-memory [`StorageBackend`] backed by `HashMap`.
@@ -156,8 +157,7 @@ impl StorageBackend for InMemoryStorageBackend {
                 format!("dataset {name}"),
             ));
         }
-        let owned = name.to_string();
-        g.objects.retain(|k, _| k.0 != owned);
+        g.objects.retain(|k, _| k.0.as_ref() != name);
         Ok(OperationResult {
             success: true,
             message: format!("Dataset {name} deleted successfully"),
@@ -193,14 +193,19 @@ impl StorageBackend for InMemoryStorageBackend {
             compressed: false,
             metadata: meta.clone(),
         };
-        g.objects
-            .insert((dataset.to_string(), key.to_string()), (data, meta));
+        let dk: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
+        g.objects.insert(dk, (data, meta));
 
-        let object_count = byte_len(g.objects.keys().filter(|(d, _)| d == dataset).count());
+        let object_count = byte_len(
+            g.objects
+                .keys()
+                .filter(|(d, _)| d.as_ref() == dataset)
+                .count(),
+        );
         let used_bytes: u64 = g
             .objects
             .iter()
-            .filter(|((d, _), _)| d == dataset)
+            .filter(|((d, _), _)| d.as_ref() == dataset)
             .map(|(_, (b, _))| byte_len(b.len()))
             .sum();
         if let Some(ds) = g.datasets.get_mut(dataset) {
@@ -213,8 +218,9 @@ impl StorageBackend for InMemoryStorageBackend {
 
     async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Bytes> {
         let g = self.inner.read().await;
+        let lookup: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
         g.objects
-            .get(&(dataset.to_string(), key.to_string()))
+            .get(&lookup)
             .map(|(b, _)| b.clone())
             .ok_or_else(|| {
                 nestgate_types::error::NestGateError::storage_not_found(format!(
@@ -225,8 +231,9 @@ impl StorageBackend for InMemoryStorageBackend {
 
     async fn get_object_metadata(&self, dataset: &str, key: &str) -> Result<ObjectInfo> {
         let g = self.inner.read().await;
+        let lookup: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
         g.objects
-            .get(&(dataset.to_string(), key.to_string()))
+            .get(&lookup)
             .map(|(data, meta)| ObjectInfo {
                 key: key.to_string(),
                 dataset: dataset.to_string(),
@@ -255,7 +262,7 @@ impl StorageBackend for InMemoryStorageBackend {
         let g = self.inner.read().await;
         let mut results = Vec::new();
         for ((ds, key), (data, meta)) in &g.objects {
-            if ds != dataset {
+            if ds.as_ref() != dataset {
                 continue;
             }
             if let Some(pfx) = prefix
@@ -264,7 +271,7 @@ impl StorageBackend for InMemoryStorageBackend {
                 continue;
             }
             results.push(ObjectInfo {
-                key: key.clone(),
+                key: key.as_ref().to_string(),
                 dataset: dataset.to_string(),
                 size_bytes: byte_len(data.len()),
                 created_at: unix_ts(),
@@ -286,17 +293,22 @@ impl StorageBackend for InMemoryStorageBackend {
 
     async fn delete_object(&self, dataset: &str, key: &str) -> Result<OperationResult> {
         let mut g = self.inner.write().await;
-        let lookup = (dataset.to_string(), key.to_string());
+        let lookup: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
         if g.objects.remove(&lookup).is_none() {
             return Err(nestgate_types::error::NestGateError::storage_not_found(
                 format!("object {dataset}/{key}"),
             ));
         }
-        let object_count = byte_len(g.objects.keys().filter(|(d, _)| d == dataset).count());
+        let object_count = byte_len(
+            g.objects
+                .keys()
+                .filter(|(d, _)| d.as_ref() == dataset)
+                .count(),
+        );
         let used_bytes: u64 = g
             .objects
             .iter()
-            .filter(|((d, _), _)| d == dataset)
+            .filter(|((d, _), _)| d.as_ref() == dataset)
             .map(|(_, (b, _))| byte_len(b.len()))
             .sum();
         if let Some(ds) = g.datasets.get_mut(dataset) {

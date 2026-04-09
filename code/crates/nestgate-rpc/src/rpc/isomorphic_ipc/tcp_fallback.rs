@@ -47,6 +47,7 @@
 //! Pattern validated in orchestration provider v3.33.0
 
 use anyhow::{Context, Result};
+use bytes::Bytes;
 use nestgate_config::constants::hardcoding::addresses::LOCALHOST_IPV4;
 use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
 use serde_json::Value;
@@ -235,11 +236,12 @@ impl TcpFallbackServer {
                     let response = self.handler.handle_request(request).await;
 
                     // Send response (line-delimited JSON)
-                    let response_str = serde_json::to_string(&response)
+                    let response_bytes: Bytes = serde_json::to_vec(&response)
+                        .map(Bytes::from)
                         .context("Failed to serialize JSON-RPC response")?;
 
                     writer
-                        .write_all(response_str.as_bytes())
+                        .write_all(&response_bytes)
                         .await
                         .context("Failed to write response")?;
 
@@ -248,7 +250,7 @@ impl TcpFallbackServer {
                         .await
                         .context("Failed to write newline")?;
 
-                    debug!("📤 Sent response ({} bytes)", response_str.len());
+                    debug!("📤 Sent response ({} bytes)", response_bytes.len());
                 }
                 Err(e) => {
                     warn!("⚠️  Invalid JSON-RPC request: {}", e);

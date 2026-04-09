@@ -305,3 +305,48 @@ impl RealTimePerformanceMonitor {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod collect_metrics_parse_tests {
+    /// Mirrors the pool-name gate in `RealTimePerformanceMonitor::collect_metrics`.
+    /// so branch logic is covered without spawning `zpool`/`zfs`.
+    fn pool_name_is_eligible_for_iostat_row(pool_name: &str) -> bool {
+        pool_name != "pool" && !pool_name.is_empty() && !pool_name.contains('-')
+    }
+
+    #[test]
+    fn eligible_pool_names_exclude_header_and_empty_and_hyphenated() {
+        assert!(!pool_name_is_eligible_for_iostat_row("pool"));
+        assert!(!pool_name_is_eligible_for_iostat_row(""));
+        assert!(!pool_name_is_eligible_for_iostat_row("tank-cache"));
+        assert!(pool_name_is_eligible_for_iostat_row("tank"));
+    }
+
+    #[test]
+    fn iostat_row_fields_parse_bandwidth_and_latency_midpoint() {
+        let line = "tank 10 20 10485760 20971520 0 0 1.25 3.75";
+        let fields: Vec<&str> = line.split_whitespace().collect();
+        assert!(fields.len() >= 9);
+        let pool_name = fields[0];
+        assert!(pool_name_is_eligible_for_iostat_row(pool_name));
+        let read_ops: f64 = fields[1].parse().unwrap_or(0.0);
+        let write_ops: f64 = fields[2].parse().unwrap_or(0.0);
+        let read_bw: f64 = fields[3].parse::<f64>().unwrap_or(0.0) / (1024.0 * 1024.0);
+        let write_bw: f64 = fields[4].parse::<f64>().unwrap_or(0.0) / (1024.0 * 1024.0);
+        let avg_latency = f64::midpoint(
+            fields[7].parse::<f64>().unwrap_or(0.0),
+            fields[8].parse::<f64>().unwrap_or(0.0),
+        );
+        assert!((read_ops - 10.0).abs() < f64::EPSILON);
+        assert!((write_ops - 20.0).abs() < f64::EPSILON);
+        assert!(read_bw > 0.0 && write_bw > 0.0);
+        assert!((avg_latency - 2.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn short_iostat_rows_are_skipped() {
+        let line = "tank 1 2 3";
+        let fields: Vec<&str> = line.split_whitespace().collect();
+        assert!(fields.len() < 7);
+    }
+}

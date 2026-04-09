@@ -15,10 +15,6 @@ mod basic_tests {
 
         // Test that config has sensible defaults
         assert!(!config.base_config.system.instance_name.is_empty());
-        // Test other available fields exist using unified structure
-        let _zfs = &config.base_config.domains.zfs;
-        let _api = &config.base_config.domains.api;
-        let _mcp = &config.base_config.domains.mcp;
     }
 
     #[test]
@@ -59,11 +55,6 @@ mod basic_tests {
 
         // Test basic config validation
         assert!(!config.base_config.system.instance_name.is_empty());
-
-        // Test domain configurations access using unified structure
-        let _zfs = &config.base_config.domains.zfs;
-        let _api = &config.base_config.domains.api;
-        let _mcp = &config.base_config.domains.mcp;
 
         Ok(())
     }
@@ -201,8 +192,8 @@ mod comprehensive_tests {
 
         assert!(!platform.os.is_empty());
         assert!(!platform.arch.is_empty());
-        let _service_manager = &platform.service_manager;
-        let _binary_ext = &platform.binary_extension;
+        assert!(!platform.service_manager.name().is_empty());
+        assert!(platform.binary_extension.is_empty() || platform.binary_extension == ".exe");
     }
 
     // ==================== PATH HANDLING TESTS ====================
@@ -251,7 +242,7 @@ mod comprehensive_tests {
     #[test]
     fn test_config_utils_validation_failure() {
         let mut config = InstallerConfig::default();
-        config.base_config.system.instance_name = "".to_string();
+        config.base_config.system.instance_name = String::new();
         config.base_config.system.debug_mode = true; // Skip directory check
 
         let result = crate::config::InstallerConfigUtils::validate(&config);
@@ -300,9 +291,13 @@ mod comprehensive_tests {
 
     #[test]
     fn test_install_mode_variants() {
-        let _interactive = crate::config::InstallMode::Interactive;
-        let _silent = crate::config::InstallMode::Silent;
-        let _custom = crate::config::InstallMode::Custom;
+        use crate::config::InstallMode;
+        let modes = [
+            InstallMode::Interactive,
+            InstallMode::Silent,
+            InstallMode::Custom,
+        ];
+        assert_eq!(modes.len(), 3);
     }
 
     // ==================== INSTALLER EXTENSIONS TESTS ====================

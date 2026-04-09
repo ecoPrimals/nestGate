@@ -12,22 +12,23 @@ use std::collections::HashMap;
 
 /// Helper to create test policy matching actual struct
 fn create_test_policy(name: &str, enabled: bool, frequency: ScheduleFrequency) -> SnapshotPolicy {
-    let mut policy = SnapshotPolicy::default();
-    policy.name = name.to_string();
-    policy.description = format!("Test policy: {name}");
-    policy.enabled = enabled;
-    policy.frequency = frequency;
-    policy.retention = RetentionPolicy::Custom {
-        hourly_hours: 24,
-        daily_days: 7,
-        weekly_weeks: 4,
-        monthly_months: 12,
-        yearly_years: 5,
-    };
-    policy.dataset_patterns = vec!["tank/*".to_string()];
-    policy.tiers = vec![StorageTier::Hot];
-    policy.name_prefix = "auto".to_string();
-    policy
+    SnapshotPolicy {
+        name: name.to_string(),
+        description: format!("Test policy: {name}"),
+        enabled,
+        frequency,
+        retention: RetentionPolicy::Custom {
+            hourly_hours: 24,
+            daily_days: 7,
+            weekly_weeks: 4,
+            monthly_months: 12,
+            yearly_years: 5,
+        },
+        dataset_patterns: vec!["tank/*".to_string()],
+        tiers: vec![StorageTier::Hot],
+        name_prefix: "auto".to_string(),
+        ..Default::default()
+    }
 }
 
 //Note: PolicyScheduler integration tests would require ZfsDatasetManager with dependencies

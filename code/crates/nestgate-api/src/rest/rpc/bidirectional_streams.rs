@@ -270,9 +270,9 @@ impl BidirectionalStreamManager {
                     stream_id,
                     event_type: "zfs_event".to_string(),
                     data: serde_json::json!({
-                        "event_id": format!("zfs_event_self.base_url"),
+                        "event_id": format!("zfs_event_{counter}"),
                         "event_type": event_type,
-                        "dataset": format!("tank/data_self.base_url"),
+                        "dataset": format!("tank/data_{counter}"),
                         "timestamp": chrono::Utc::now(),
                         "details": {
                             "operation": event_type,
@@ -321,7 +321,7 @@ impl BidirectionalStreamManager {
                     stream_id,
                     event_type: "storage_event".to_string(),
                     data: serde_json::json!({
-                        "event_id": format!("storage_event_self.base_url"),
+                        "event_id": format!("storage_event_{counter}"),
                         "backend_type": backend,
                         "event_type": event_type,
                         "timestamp": chrono::Utc::now(),
@@ -418,7 +418,7 @@ impl BidirectionalStreamManager {
                     stream_id,
                     event_type: "performance_data".to_string(),
                     data: serde_json::json!({
-                        "sample_id": format!("perf_self.base_url"),
+                        "sample_id": format!("perf_{counter}"),
                         "timestamp": chrono::Utc::now(),
                         "response_times": {
                             "api_avg_ms": 5.0 + (f64::from(counter) * 0.1) % 20.0,

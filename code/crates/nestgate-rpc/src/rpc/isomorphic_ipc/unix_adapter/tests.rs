@@ -50,11 +50,11 @@ async fn test_capabilities_list() {
         .handle_request(json!({"jsonrpc":"2.0","method":"capabilities.list","id":1}))
         .await;
     assert_eq!(r["result"]["primal"], "nestgate");
-    assert_eq!(r["result"]["domain"], "storage");
-    let caps = r["result"]["capabilities"].as_array().unwrap();
-    assert!(caps.iter().any(|c| c == "health.liveness"));
-    assert!(caps.iter().any(|c| c == "health.readiness"));
-    assert!(caps.iter().any(|c| c == "session.save"));
+    let methods = r["result"]["methods"].as_array().unwrap();
+    assert!(methods.iter().any(|c| c == "health.liveness"));
+    assert!(methods.iter().any(|c| c == "health.readiness"));
+    assert!(methods.iter().any(|c| c == "session.save"));
+    assert!(methods.iter().any(|c| c == "identity.get"));
 }
 
 #[tokio::test]
@@ -271,5 +271,5 @@ async fn test_discover_capabilities_legacy_method() {
         .handle_request(json!({"jsonrpc":"2.0","method":"discover_capabilities","id":1}))
         .await;
     assert_eq!(r["result"]["primal"], "nestgate");
-    assert!(r["result"]["capabilities"].is_array());
+    assert!(r["result"]["methods"].is_array());
 }

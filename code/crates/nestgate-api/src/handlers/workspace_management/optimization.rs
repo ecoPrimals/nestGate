@@ -23,7 +23,7 @@ pub async fn optimize_workspace(
 ) -> Result<Json<Value>, StatusCode> {
     info!("⚡ Optimizing workspace storage: {}", workspace_id);
     // Real ZFS optimization implementation
-    let dataset_name = "nestpool/workspaces/self.base_url".to_string();
+    let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
     let mut optimizations = Vec::new();
     let warnings: Vec<String> = Vec::new();
@@ -53,7 +53,7 @@ pub async fn optimize_workspace(
     // 5. Delegate AI analysis to any available AI primal provider
     let ai_recommendations = request_ai_optimization(&dataset_name, &pattern_analysis).await;
     if let Some(ai_rec) = ai_recommendations {
-        optimizations.push("AI recommendations: self.base_url".to_string());
+        optimizations.push(format!("AI recommendations: {ai_rec}"));
         info!("🧠 AI optimization recommendations: {}", ai_rec);
     }
 
@@ -136,7 +136,11 @@ fn optimize_compression(dataset_name: &str, pattern: &StoragePattern) -> Option<
 
     // Apply compression setting
     let result = std::process::Command::new("zfs")
-        .args(["set", "compression=self.base_url", dataset_name])
+        .args([
+            "set",
+            &format!("compression={optimal_compression}"),
+            dataset_name,
+        ])
         .output();
 
     match result {
@@ -164,7 +168,11 @@ fn optimize_recordsize(dataset_name: &str, pattern: &StoragePattern) -> Option<S
 
     // Apply recordsize setting
     let result = std::process::Command::new("zfs")
-        .args(["set", "recordsize=self.base_url", dataset_name])
+        .args([
+            "set",
+            &format!("recordsize={optimal_recordsize}"),
+            dataset_name,
+        ])
         .output();
 
     match result {
@@ -192,11 +200,15 @@ fn optimize_cache_settings(dataset_name: &str, pattern: &StoragePattern) -> Opti
 
     // Apply cache settings
     let primary_result = std::process::Command::new("zfs")
-        .args(["set", "primarycache=self.base_url", dataset_name])
+        .args(["set", &format!("primarycache={primarycache}"), dataset_name])
         .output();
 
     let secondary_result = std::process::Command::new("zfs")
-        .args(["set", "secondarycache=self.base_url", dataset_name])
+        .args([
+            "set",
+            &format!("secondarycache={secondarycache}"),
+            dataset_name,
+        ])
         .output();
 
     match (primary_result, secondary_result) {

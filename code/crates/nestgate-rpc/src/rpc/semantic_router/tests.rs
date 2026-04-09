@@ -85,7 +85,7 @@ async fn crypto_methods_return_not_implemented() {
 }
 
 #[tokio::test]
-async fn data_methods_return_delegation_not_implemented() {
+async fn data_wildcard_returns_delegation_not_implemented() {
     let router = test_router();
     for method in [
         "data.ncbi_search",
@@ -93,6 +93,8 @@ async fn data_methods_return_delegation_not_implemented() {
         "data.noaa_ghcnd",
         "data.iris_stations",
         "data.iris_events",
+        "data.anything_future",
+        "data.unknown_provider",
     ] {
         let err = router
             .call_method(method, json!({}))
@@ -280,7 +282,7 @@ async fn health_semantic_methods_with_live_tarpc_server() {
     let (addr, server_handle) = spawn_local_tarpc_server().await;
     let endpoint = format!("tarpc://{}", addr);
     let client = Arc::new(NestGateRpcClient::new(&endpoint).expect("client"));
-    let router = SemanticRouter::new(client);
+    let router = SemanticRouter::new(client).expect("router");
 
     let check = router
         .call_method("health.check", json!({}))
@@ -322,7 +324,7 @@ async fn storage_put_success_through_router_with_server() {
     let (addr, server_handle) = spawn_local_tarpc_server().await;
     let endpoint = format!("tarpc://{}", addr);
     let client = Arc::new(NestGateRpcClient::new(&endpoint).expect("client"));
-    let router = SemanticRouter::new(client);
+    let router = SemanticRouter::new(client).expect("router");
 
     router
         .call_method(

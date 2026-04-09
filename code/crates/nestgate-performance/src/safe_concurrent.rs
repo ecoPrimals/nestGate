@@ -3,14 +3,14 @@
 
 //! # 🚀 **SAFE CONCURRENT DATA STRUCTURES**
 //!
-//! **100% SAFE RUST** - Zero unsafe code, maximum performance
+//! **100% SAFE RUST** — battle-tested crates, maximum performance
 //!
 //! This module provides high-performance concurrent data structures
 //! using battle-tested safe abstractions from the Rust ecosystem.
 //!
 //! ## Why Safe Concurrent Structures?
 //!
-//! - ✅ **ZERO unsafe code** - Memory safety guaranteed by the compiler
+//! - ✅ **Memory safety** — enforced by the compiler and well-tested dependencies
 //! - ✅ **Production proven** - Used by thousands of companies worldwide
 //! - ✅ **Equal or better performance** - Often faster than handwritten lock-free code
 //! - ✅ **Easier to maintain** - No subtle memory ordering bugs
@@ -22,13 +22,13 @@
 //! - **`SafeConcurrentHashMap`**: O(1) average, lock-free reads, minimal contention
 //! - **Zero overhead abstractions**: Compiles to optimal machine code
 //!
-//! ## Replaced Unsafe Patterns
+//! ## Replaced legacy patterns
 //!
 //! This module replaces:
 //! - ❌ `LockFreeMpscQueue<T>` → ✅ `SafeConcurrentQueue<T>`
 //! - ❌ `LockFreeHashMap<K, V>` → ✅ `SafeConcurrentHashMap<K, V>`
 //!
-//! **Result**: **20 unsafe blocks eliminated** ✅
+//! **Result**: custom lock-free code replaced with maintainable, auditable abstractions ✅
 
 use crossbeam::channel::{Receiver, Sender, unbounded};
 use dashmap::DashMap;
@@ -39,7 +39,7 @@ use std::sync::Arc;
 
 /// **100% SAFE CONCURRENT QUEUE**
 ///
-/// Multi-producer, multi-consumer queue with zero unsafe code.
+/// Multi-producer, multi-consumer queue implemented with crossbeam channels.
 /// Replacement for `LockFreeMpscQueue` with equal or better performance.
 ///
 /// ## Performance
@@ -49,7 +49,7 @@ use std::sync::Arc;
 /// - Contention: Excellent scaling on multi-core systems
 ///
 /// ## Safety
-/// - ✅ Zero unsafe code
+/// - ✅ No custom atomics or raw synchronization primitives here
 /// - ✅ Compiler-verified memory safety
 /// - ✅ No data races possible
 /// - ✅ No use-after-free possible
@@ -160,7 +160,7 @@ impl<T> Default for SafeConcurrentQueue<T> {
 
 /// **100% SAFE CONCURRENT HASHMAP**
 ///
-/// High-performance concurrent hash map with zero unsafe code.
+/// High-performance concurrent hash map backed by `DashMap`.
 /// Replacement for `LockFreeHashMap` with superior performance.
 ///
 /// ## Performance
@@ -171,7 +171,7 @@ impl<T> Default for SafeConcurrentQueue<T> {
 /// - Contention: Sharded design, excellent scaling
 ///
 /// ## Safety
-/// - ✅ Zero unsafe code
+/// - ✅ No custom atomics or raw synchronization primitives here
 /// - ✅ Compiler-verified memory safety
 /// - ✅ No data races possible
 /// - ✅ No use-after-free possible

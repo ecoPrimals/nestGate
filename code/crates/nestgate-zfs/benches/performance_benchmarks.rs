@@ -7,6 +7,11 @@
 //! cargo bench -p nestgate-zfs --features benchmark
 //! ```
 
+#![cfg_attr(
+    feature = "benchmark",
+    allow(dead_code, missing_docs, clippy::cast_precision_loss)
+)]
+
 #[cfg(feature = "benchmark")]
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 #[cfg(feature = "benchmark")]
@@ -54,8 +59,8 @@ fn create_test_opportunities(count: usize) -> Vec<OptimizationOpportunity> {
         .map(|i| OptimizationOpportunity {
             optimization_type: OptimizationType::TierMigration,
             description: format!("Optimization {i}"),
-            expected_impact: (f64::from(i as u32) * 3.7) % 100.0,
-            confidence: 0.5 + (f64::from(i as u32) * 0.1) % 0.5,
+            expected_impact: (i as f64 * 3.7) % 100.0,
+            confidence: 0.5 + (i as f64 * 0.1) % 0.5,
             complexity: OptimizationComplexity::Medium,
             implementation_time: Duration::from_secs(60 + (i as u64 * 13) % 300),
         })
@@ -65,7 +70,7 @@ fn create_test_opportunities(count: usize) -> Vec<OptimizationOpportunity> {
 #[cfg(feature = "benchmark")]
 fn bench_config_creation(c: &mut Criterion) {
     c.bench_function("config_creation", |b| {
-        b.iter(|| black_box(ZfsConfig::default()))
+        b.iter(|| black_box(ZfsConfig::default()));
     });
 }
 
@@ -73,7 +78,7 @@ fn bench_config_creation(c: &mut Criterion) {
 fn bench_config_validation(c: &mut Criterion) {
     let config = ZfsConfig::default();
     c.bench_function("config_validation", |b| {
-        b.iter(|| black_box(config.clone()))
+        b.iter(|| black_box(config.clone()));
     });
 }
 
@@ -90,14 +95,14 @@ fn bench_tier_config_access(c: &mut Criterion) {
             for tier in &tiers {
                 black_box(config.tier_properties.get(tier));
             }
-        })
+        });
     });
 }
 
 #[cfg(feature = "benchmark")]
 fn bench_performance_metrics(c: &mut Criterion) {
     c.bench_function("performance_metrics_creation", |b| {
-        b.iter(|| black_box(CurrentPerformanceMetrics::default()))
+        b.iter(|| black_box(CurrentPerformanceMetrics::default()));
     });
 }
 
@@ -135,7 +140,7 @@ fn bench_ai_optimization_sorting(c: &mut Criterion) {
                             .unwrap_or(std::cmp::Ordering::Equal)
                     });
                     black_box(ops)
-                })
+                });
             },
         );
     }

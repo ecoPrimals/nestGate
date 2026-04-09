@@ -3,7 +3,7 @@
 
 //! # 🚀 **SAFE SIMD DATA PROCESSING**
 //!
-//! **100% SAFE RUST** - Zero unsafe code, maximum performance
+//! **100% SAFE RUST** — portable SIMD patterns without hand-written intrinsics
 //!
 //! This module provides SIMD-optimized data processing using Rust's
 //! portable SIMD (`std::simd`) which is **100% safe** and works across
@@ -11,9 +11,9 @@
 //!
 //! ## Why Safe SIMD?
 //!
-//! - ✅ **ZERO unsafe code** - Memory safety guaranteed by the compiler
+//! - ✅ **Memory safety** — guaranteed by the compiler (no hand-written intrinsics)
 //! - ✅ **Portable** - Works on x86, ARM, RISC-V, WebAssembly
-//! - ✅ **Same performance** - Compiles to identical assembly as unsafe intrinsics
+//! - ✅ **Same performance** — LLVM can emit the same SIMD instructions as vendor intrinsics
 //! - ✅ **Future-proof** - Rust's portable SIMD is the future
 //! - ✅ **Easier to maintain** - No platform-specific code
 //!
@@ -24,10 +24,10 @@
 //! - **Integer operations**: 4-8x speedup
 //! - **Auto-fallback**: Graceful degradation to scalar code
 //!
-//! ## Replaced Unsafe Patterns
+//! ## Replaced legacy patterns
 //!
 //! This module replaces:
-//! - ❌ `std::arch::x86_64::*` (unsafe, x86-only)
+//! - ❌ `std::arch::x86_64::*` (vendor intrinsics, x86-only)
 //! - ❌ Manual CPU feature detection
 //! - ❌ Platform-specific intrinsics
 //!
@@ -36,7 +36,7 @@
 //! - ✅ Automatic vectorization
 //! - ✅ Single implementation for all platforms
 //!
-//! **Result**: **32 unsafe blocks eliminated** ✅
+//! **Result**: legacy hand-rolled SIMD replaced with portable, maintainable code ✅
 
 use crate::simd::{Result, SimdEngine, SimdOperation};
 use nestgate_core::error::NestGateError as NestGateUnifiedError;
@@ -51,7 +51,7 @@ use nestgate_core::error::NestGateError as NestGateUnifiedError;
 /// based on the target architecture.
 ///
 /// ## Safety
-/// - ✅ Zero unsafe code
+/// - ✅ Entirely safe, portable Rust
 /// - ✅ Compiler-verified bounds checking
 /// - ✅ Works on all platforms
 ///
@@ -100,7 +100,7 @@ impl SafeSimdArraySum {
     /// ; ... (vectorized loop)
     /// ```
     ///
-    /// **Identical to unsafe intrinsics!**
+    /// **Competitive with tuned intrinsics** on each target (LLVM chooses instructions).
     #[inline]
     fn sum_safe(&self, data: &[f32]) -> f32 {
         // SAFE: Standard iterator operations
@@ -114,7 +114,7 @@ impl SafeSimdArraySum {
 /// Element-wise array multiplication using compiler auto-vectorization.
 ///
 /// ## Safety
-/// - ✅ Zero unsafe code
+/// - ✅ Entirely safe, portable Rust
 /// - ✅ Automatic bounds checking
 /// - ✅ Works on all platforms
 pub struct SafeSimdArrayMultiply;
@@ -172,7 +172,7 @@ impl SafeSimdArrayMultiply {
 /// **100% SAFE BATCH PROCESSOR**
 ///
 /// High-performance batch processing using compiler auto-vectorization.
-/// Replaces unsafe SIMD batch processor with 100% safe code.
+/// Replaces hand-written SIMD batch code with portable, maintainable Rust.
 pub struct SafeSimdBatchProcessor<const BATCH_SIZE: usize = 32> {
     _phantom: std::marker::PhantomData<()>,
 }

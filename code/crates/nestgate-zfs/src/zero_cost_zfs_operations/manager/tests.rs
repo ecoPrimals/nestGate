@@ -3,11 +3,6 @@
 
 //! Unit tests for the zero-cost ZFS manager.
 
-#![expect(
-    clippy::float_cmp,
-    reason = "zero-cost manager tests compare parse outputs to exact literal expectations"
-)]
-
 use super::super::traits::ZeroCostZfsOperations;
 use super::super::types::{ZeroCostDatasetInfo, ZeroCostPoolInfo, ZeroCostSnapshotInfo};
 use super::{

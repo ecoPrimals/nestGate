@@ -118,7 +118,7 @@ pub(super) fn gather_socket_search_dirs_from_env(env: &dyn EnvSource) -> Vec<Str
         dirs.push(format!("{xdg}/{}", ecosystem_path_segment()));
     }
 
-    let uid = uzers::get_current_uid();
+    let uid = rustix::process::getuid().as_raw();
     let xdg_default = format!("/run/user/{uid}/{}", ecosystem_path_segment());
     if !dirs.contains(&xdg_default) {
         dirs.push(xdg_default);

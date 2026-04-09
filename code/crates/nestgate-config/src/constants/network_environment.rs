@@ -52,6 +52,15 @@
 
 use std::env;
 
+use super::hardcoding::addresses;
+use super::hardcoding::runtime_fallback_ports as fallback_ports;
+use super::hardcoding::timeouts as fallback_timeouts;
+use super::port_defaults::{
+    DEFAULT_ADMIN_PORT, DEFAULT_API_PORT, DEFAULT_DEV_ALT_PORT, DEFAULT_DEV_PORT,
+    DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT, DEFAULT_POSTGRES_PORT,
+};
+use super::timeouts::DEFAULT_KEEPALIVE_SECS;
+
 // ==================== PORT CONFIGURATION ====================
 
 /// Get API server port from environment or use default (8080)
@@ -74,7 +83,7 @@ pub fn api_port() -> u16 {
     env::var("NESTGATE_API_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8080)
+        .unwrap_or(DEFAULT_API_PORT)
 }
 
 /// Get admin interface port from environment or use default (8081)
@@ -96,7 +105,7 @@ pub fn admin_port() -> u16 {
     env::var("NESTGATE_ADMIN_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8081)
+        .unwrap_or(DEFAULT_ADMIN_PORT)
 }
 
 /// Get metrics port from environment or use default (9090)
@@ -123,7 +132,7 @@ pub fn metrics_port() -> u16 {
     env::var("NESTGATE_METRICS_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(9090)
+        .unwrap_or(DEFAULT_METRICS_PORT)
 }
 
 /// Get health check port from environment or use default (8082)
@@ -152,7 +161,7 @@ pub fn health_port() -> u16 {
     env::var("NESTGATE_HEALTH_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8082)
+        .unwrap_or(DEFAULT_HEALTH_PORT)
 }
 
 /// Get WebSocket port from environment or use default (8081)
@@ -165,7 +174,7 @@ pub fn websocket_port() -> u16 {
     env::var("NESTGATE_WEBSOCKET_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8081)
+        .unwrap_or(DEFAULT_ADMIN_PORT)
 }
 
 /// Get development server port from environment or use default (3000)
@@ -178,7 +187,7 @@ pub fn dev_port() -> u16 {
     env::var("NESTGATE_DEV_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(3000)
+        .unwrap_or(DEFAULT_DEV_PORT)
 }
 
 /// Get alternative development port from environment or use default (5000)
@@ -191,7 +200,7 @@ pub fn dev_alt_port() -> u16 {
     env::var("NESTGATE_DEV_ALT_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(5000)
+        .unwrap_or(DEFAULT_DEV_ALT_PORT)
 }
 
 /// Get `PostgreSQL` port from environment or use default (5432)
@@ -204,7 +213,7 @@ pub fn postgres_port() -> u16 {
     env::var("NESTGATE_POSTGRES_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(5432)
+        .unwrap_or(DEFAULT_POSTGRES_PORT)
 }
 
 /// Get HTTPS port from environment or use default (8443)
@@ -217,7 +226,7 @@ pub fn https_port() -> u16 {
     env::var("NESTGATE_HTTPS_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8443)
+        .unwrap_or(fallback_ports::HTTPS)
 }
 
 // ==================== ADDRESS CONFIGURATION ====================
@@ -234,7 +243,7 @@ pub fn https_port() -> u16 {
 /// Override with "127.0.0.1" for localhost-only in development.
 #[must_use]
 pub fn bind_address() -> String {
-    env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| "0.0.0.0".to_string())
+    env::var("NESTGATE_BIND_ADDRESS").unwrap_or_else(|_| addresses::BIND_ALL_IPV4.to_string())
 }
 
 /// Get localhost address (always 127.0.0.1 for consistency)
@@ -247,7 +256,7 @@ pub fn bind_address() -> String {
 /// should always resolve to 127.0.0.1 for local connections.
 #[must_use]
 pub const fn localhost_ipv4() -> &'static str {
-    "127.0.0.1"
+    addresses::LOCALHOST_IPV4
 }
 
 /// Get localhost name (always "localhost" for consistency)
@@ -255,7 +264,7 @@ pub const fn localhost_ipv4() -> &'static str {
 /// **Usage**: Hostname for local service connections
 #[must_use]
 pub const fn localhost_name() -> &'static str {
-    "localhost"
+    addresses::LOCALHOST_NAME
 }
 
 // ==================== TIMEOUT CONFIGURATION ====================
@@ -270,7 +279,7 @@ pub fn connect_timeout_ms() -> u64 {
     env::var("NESTGATE_CONNECT_TIMEOUT_MS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(5000)
+        .unwrap_or(fallback_timeouts::CONNECT_MS)
 }
 
 /// Get request timeout from environment or use default (30000ms)
@@ -283,7 +292,7 @@ pub fn request_timeout_ms() -> u64 {
     env::var("NESTGATE_REQUEST_TIMEOUT_MS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(30000)
+        .unwrap_or(fallback_timeouts::REQUEST_MS)
 }
 
 /// Get keep-alive interval from environment or use default (60000ms)
@@ -296,7 +305,7 @@ pub fn keepalive_ms() -> u64 {
     env::var("NESTGATE_KEEPALIVE_MS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(60000)
+        .unwrap_or(DEFAULT_KEEPALIVE_SECS * 1000)
 }
 
 // ==================== TESTS ====================
@@ -304,9 +313,14 @@ pub fn keepalive_ms() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::hardcoding::addresses;
+    use crate::constants::hardcoding::timeouts as fallback_timeouts;
+    use crate::constants::timeouts::DEFAULT_KEEPALIVE_SECS;
+    use serial_test::serial;
     use std::env;
 
     #[test]
+    #[serial]
     fn test_api_port_default() {
         let orig = env::var("NESTGATE_API_PORT").ok();
         // SAFETY: single-threaded test context.
@@ -316,10 +330,11 @@ mod tests {
             Some(v) => crate::env_process::set_var("NESTGATE_API_PORT", v),
             None => {}
         }
-        assert_eq!(port, 8080);
+        assert_eq!(port, DEFAULT_API_PORT);
     }
 
     #[test]
+    #[serial]
     fn test_api_port_environment() {
         let orig = env::var("NESTGATE_API_PORT").ok();
         // SAFETY: single-threaded test context.
@@ -342,7 +357,7 @@ mod tests {
             Some(v) => crate::env_process::set_var("NESTGATE_METRICS_PORT", v),
             None => {}
         }
-        assert_eq!(port, 9090);
+        assert_eq!(port, DEFAULT_METRICS_PORT);
     }
 
     #[test]
@@ -355,7 +370,7 @@ mod tests {
             Some(v) => crate::env_process::set_var("NESTGATE_BIND_ADDRESS", v),
             None => {}
         }
-        assert_eq!(addr, "0.0.0.0");
+        assert_eq!(addr, addresses::BIND_ALL_IPV4);
     }
 
     #[test]
@@ -368,13 +383,13 @@ mod tests {
             Some(v) => crate::env_process::set_var("NESTGATE_BIND_ADDRESS", v),
             None => crate::env_process::remove_var("NESTGATE_BIND_ADDRESS"),
         }
-        assert_eq!(addr, "127.0.0.1");
+        assert_eq!(addr, addresses::LOCALHOST_IPV4);
     }
 
     #[test]
     fn test_localhost_constants() {
-        assert_eq!(localhost_ipv4(), "127.0.0.1");
-        assert_eq!(localhost_name(), "localhost");
+        assert_eq!(localhost_ipv4(), addresses::LOCALHOST_IPV4);
+        assert_eq!(localhost_name(), addresses::LOCALHOST_NAME);
     }
 
     #[test]
@@ -403,8 +418,8 @@ mod tests {
             Some(v) => crate::env_process::set_var("NESTGATE_KEEPALIVE_MS", v),
             None => {}
         }
-        assert_eq!(connect, 5000);
-        assert_eq!(request, 30000);
-        assert_eq!(keepalive, 60000);
+        assert_eq!(connect, fallback_timeouts::CONNECT_MS);
+        assert_eq!(request, fallback_timeouts::REQUEST_MS);
+        assert_eq!(keepalive, DEFAULT_KEEPALIVE_SECS * 1000);
     }
 }

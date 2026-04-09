@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_mount_info_with_different_tiers() {
-        let tiers = vec![
+        let tiers = [
             crate::types::StorageTier::Hot,
             crate::types::StorageTier::Warm,
             crate::types::StorageTier::Cold,

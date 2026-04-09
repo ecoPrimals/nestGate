@@ -42,7 +42,7 @@ pub async fn get_workspaces_from_env_source(
     info!("📁 Getting all workspaces from ZFS datasets");
     let zfs_bin = zfs_executable(env);
     let pool_name = workspace_pool_name(env);
-    let workspaces_path = "self.base_url/workspaces".to_string();
+    let workspaces_path = format!("{pool_name}/workspaces");
 
     // Query ZFS for workspace datasets
     let list_output = Command::new(&zfs_bin)
@@ -661,7 +661,7 @@ async fn get_workspace_properties(zfs_bin: &str, dataset_name: &str) -> (String,
 /// Get workspace details for a specific workspace ID
 async fn get_workspace_details(zfs_bin: &str, env: &dyn EnvSource, _workspace_id: &str) -> Value {
     let pool_name = workspace_pool_name(env);
-    let dataset_name = format!("{pool_name}/workspaces/self.base_url");
+    let dataset_name = format!("{pool_name}/workspaces/{_workspace_id}");
     let props_output = Command::new(zfs_bin)
         .args([
             "get",

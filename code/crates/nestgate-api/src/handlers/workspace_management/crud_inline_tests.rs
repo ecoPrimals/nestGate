@@ -87,11 +87,11 @@ fn fake_zfs_dir_and_path(script: &str) -> (tempfile::TempDir, String) {
 
 /// Covers `get_workspaces` success path, `get_workspace_properties`, and list parsing.
 #[cfg(unix)]
-const FAKE_ZFS_GET_WORKSPACES: &str = r#"#!/bin/bash
+const FAKE_ZFS_GET_WORKSPACES: &str = r#"#!/usr/bin/env bash
 cmd="${1:-}"
 case "$cmd" in
   list)
-if [[ "$*" == *"self.base_url/workspaces"* ]]; then
+if [[ "$*" == *"zfspool/workspaces"* ]]; then
   echo -e "zfspool/workspaces/ws-active\t1048576\t10485760\t1048576\t/mnt\tJan 1 2020"
   echo -e "zfspool/workspaces/ws-inactive\t1048576\t10485760\t1048576\t/mnt\tJan 1 2020"
   exit 0
@@ -130,7 +130,7 @@ if [[ "$*" == *"property,value"* ]]; then
   fi
   exit 0
 fi
-if [[ "$*" == *"used,available,quota,compression"* ]] && [[ "$*" == *"self.base_url"* ]]; then
+if [[ "$*" == *"used,available,quota,compression"* ]] && [[ "$*" == *"workspaces"* ]]; then
   echo "1"; echo "2"; echo "3"; echo "4"
   exit 0
 fi

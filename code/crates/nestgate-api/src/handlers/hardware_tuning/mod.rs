@@ -18,6 +18,8 @@ pub mod handlers;
 pub mod handlers_production;
 /// `/proc`-based resource helpers (production hardware tuning shims and dev-stubs).
 pub mod linux_proc;
+/// Best-effort hardware snapshots from procfs/sysfs (shared by dev stubs and tooling).
+pub mod stub_helpers;
 
 // Production: Placeholder handlers
 #[cfg(not(feature = "dev-stubs"))]

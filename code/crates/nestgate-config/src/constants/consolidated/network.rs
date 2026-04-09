@@ -16,6 +16,8 @@
 use std::sync::{Arc, OnceLock};
 
 use super::defaults::{env_or_from_source, env_or_parse_from_source};
+use crate::constants::hardcoding::addresses;
+use crate::constants::hardcoding::runtime_fallback_ports as fallback_ports;
 use nestgate_types::{EnvSource, ProcessEnv};
 
 /// Network configuration constants with environment override support
@@ -62,28 +64,52 @@ impl NetworkConstants {
     pub fn from_env_source(env: &dyn EnvSource) -> Self {
         Self {
             // Hosts (default to localhost for security)
-            api_host: env_or_from_source(env, "NESTGATE_API_HOST", "127.0.0.1"),
-            metrics_host: env_or_from_source(env, "NESTGATE_METRICS_HOST", "127.0.0.1"),
-            health_host: env_or_from_source(env, "NESTGATE_HEALTH_HOST", "127.0.0.1"),
-            admin_host: env_or_from_source(env, "NESTGATE_ADMIN_HOST", "127.0.0.1"),
+            api_host: env_or_from_source(env, "NESTGATE_API_HOST", addresses::LOCALHOST_IPV4),
+            metrics_host: env_or_from_source(
+                env,
+                "NESTGATE_METRICS_HOST",
+                addresses::LOCALHOST_IPV4,
+            ),
+            health_host: env_or_from_source(env, "NESTGATE_HEALTH_HOST", addresses::LOCALHOST_IPV4),
+            admin_host: env_or_from_source(env, "NESTGATE_ADMIN_HOST", addresses::LOCALHOST_IPV4),
 
-            // Ports (defaults: development last resort; see module docs)
-            api_port: env_or_parse_from_source(env, "NESTGATE_API_PORT", 8080),
-            http_port: env_or_parse_from_source(env, "NESTGATE_HTTP_PORT", 8080),
-            https_port: env_or_parse_from_source(env, "NESTGATE_HTTPS_PORT", 8443),
-            websocket_port: env_or_parse_from_source(env, "NESTGATE_WS_PORT", 8082),
-            grpc_port: env_or_parse_from_source(env, "NESTGATE_GRPC_PORT", 50051),
-            metrics_port: env_or_parse_from_source(env, "NESTGATE_METRICS_PORT", 9090),
-            prometheus_port: env_or_parse_from_source(env, "NESTGATE_PROMETHEUS_PORT", 9090),
-            health_port: env_or_parse_from_source(env, "NESTGATE_HEALTH_PORT", 8081),
-            admin_port: env_or_parse_from_source(env, "NESTGATE_ADMIN_PORT", 9000),
+            // Ports (defaults: development last resort; see module docs; override via `NESTGATE_*_PORT`)
+            api_port: env_or_parse_from_source(env, "NESTGATE_API_PORT", fallback_ports::HTTP),
+            http_port: env_or_parse_from_source(env, "NESTGATE_HTTP_PORT", fallback_ports::HTTP),
+            https_port: env_or_parse_from_source(env, "NESTGATE_HTTPS_PORT", fallback_ports::HTTPS),
+            websocket_port: env_or_parse_from_source(
+                env,
+                "NESTGATE_WS_PORT",
+                fallback_ports::WEBSOCKET,
+            ),
+            grpc_port: env_or_parse_from_source(env, "NESTGATE_GRPC_PORT", fallback_ports::GRPC),
+            metrics_port: env_or_parse_from_source(
+                env,
+                "NESTGATE_METRICS_PORT",
+                fallback_ports::METRICS,
+            ),
+            prometheus_port: env_or_parse_from_source(
+                env,
+                "NESTGATE_PROMETHEUS_PORT",
+                fallback_ports::PROMETHEUS,
+            ),
+            health_port: env_or_parse_from_source(
+                env,
+                "NESTGATE_HEALTH_PORT",
+                fallback_ports::HEALTH,
+            ),
+            admin_port: env_or_parse_from_source(env, "NESTGATE_ADMIN_PORT", fallback_ports::ADMIN),
 
             // Addresses (bind to loopback by default; expose publicly via env/config)
-            bind_address: env_or_from_source(env, "NESTGATE_BIND_ADDRESS", "127.0.0.1"),
-            localhost_ipv4: "127.0.0.1".to_string(),
-            localhost_ipv6: "::1".to_string(),
-            bind_all_ipv4: "0.0.0.0".to_string(),
-            bind_all_ipv6: "::".to_string(),
+            bind_address: env_or_from_source(
+                env,
+                "NESTGATE_BIND_ADDRESS",
+                addresses::LOCALHOST_IPV4,
+            ),
+            localhost_ipv4: addresses::LOCALHOST_IPV4.to_string(),
+            localhost_ipv6: addresses::LOCALHOST_IPV6.to_string(),
+            bind_all_ipv4: addresses::BIND_ALL_IPV4.to_string(),
+            bind_all_ipv6: addresses::BIND_ALL_IPV6.to_string(),
         }
     }
 

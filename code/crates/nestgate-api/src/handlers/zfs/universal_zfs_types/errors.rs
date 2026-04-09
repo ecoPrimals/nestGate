@@ -307,10 +307,10 @@ impl UniversalZfsError {
 
 impl From<std::io::Error> for UniversalZfsError {
     /// From
-    fn from(_error: std::io::Error) -> Self {
+    fn from(error: std::io::Error) -> Self {
         Self::Backend {
             backend: "system".to_string(),
-            message: "IO error: self.base_url".to_string(),
+            message: format!("IO error: {error}"),
         }
     }
 }

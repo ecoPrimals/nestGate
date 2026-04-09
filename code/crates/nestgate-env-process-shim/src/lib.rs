@@ -5,13 +5,14 @@
 
 //! Thin wrappers around [`std::env::set_var`] and [`std::env::remove_var`].
 //!
-//! This crate is **edition 2021**. In that edition those functions are still safe; in Rust 2024
-//! they are `unsafe`, so higher edition crates can depend on this crate to perform the same
-//! operations without an `unsafe` block (see Rust edition guide: newly unsafe functions).
+//! This crate targets **Rust 2021**, where mutating the process environment remains a normal safe
+//! API. The Rust 2024 edition changes how callers opt in to these operations; consumers that
+//! migrate editions can keep a single audited callsite by depending on this crate (see the edition
+//! guide: environment variable APIs).
 //!
 //! ## Test infrastructure
 //!
-//! Unit tests in this crate intentionally use [`temp_env`] to scope **process** environment
+//! Unit tests in this crate intentionally use `temp_env` to scope **process** environment
 //! mutations while verifying the shim. Call-site tests that only need isolated reads should use the
 //! `MapEnv` / `EnvSource` pattern from `nestgate-types` instead of mutating the global environment.
 

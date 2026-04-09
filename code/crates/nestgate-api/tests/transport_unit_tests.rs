@@ -297,7 +297,7 @@ async fn test_handler_identity_get() {
     assert!(response.error.is_none());
     if let Some(result) = response.result {
         assert!(result["primal"].is_string());
-        assert!(result["family"].is_string()); // Handler returns "family", not "family_id"
+        assert!(result["family_id"].is_string());
     }
 }
 

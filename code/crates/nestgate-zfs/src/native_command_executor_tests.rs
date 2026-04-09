@@ -332,7 +332,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn execute_command_rejects_unsafe_subcommand_before_spawn() {
+    async fn execute_command_rejects_disallowed_subcommand_before_spawn() {
         let ex = NativeZfsCommandExecutor::new();
         let r = ex.execute_command(&["rm", "-rf", "/"]).await;
         assert!(r.is_err());

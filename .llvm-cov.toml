@@ -20,8 +20,8 @@ summary-only = false
 # Show percentages with 2 decimal places
 precision = 2
 
-# Fail if coverage is below threshold (disabled for now, enable when ready)
-# fail-under-lines = 90
+# Coverage thresholds (wateringHole target: 90% line)
+fail-under-lines = 80
 # fail-under-functions = 85
 # fail-under-regions = 80
 

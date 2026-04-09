@@ -131,8 +131,10 @@ mod round6_zfs_tests {
 
     #[test]
     fn r6_mcp_config_validate_edges() {
-        let mut c = ZfsMcpConfig::default();
-        c.max_concurrent_operations = 0;
+        let mut c = ZfsMcpConfig {
+            max_concurrent_operations: 0,
+            ..Default::default()
+        };
         assert!(c.validate().is_err());
         c.max_concurrent_operations = 1001;
         assert!(c.validate().is_err());
@@ -220,8 +222,10 @@ mod round6_zfs_tests {
 
     #[test]
     fn r6_should_include_loop_respects_config() {
-        let mut cfg = DeviceDetectionConfig::default();
-        cfg.include_loop_devices = false;
+        let cfg = DeviceDetectionConfig {
+            include_loop_devices: false,
+            ..Default::default()
+        };
         let scan = DeviceScanner::new(cfg);
         let dev = StorageDevice {
             device_path: "/dev/loop0".into(),

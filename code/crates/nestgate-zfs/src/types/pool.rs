@@ -250,8 +250,10 @@ mod round5_pool_impl_tests {
 
     #[test]
     fn round5_pool_info_serde_roundtrip() {
-        let mut p = PoolInfo::default();
-        p.name = "tank".to_string();
+        let p = PoolInfo {
+            name: "tank".to_string(),
+            ..Default::default()
+        };
         let json = serde_json::to_string(&p).unwrap();
         let back: PoolInfo = serde_json::from_str(&json).unwrap();
         assert_eq!(back.name, "tank");

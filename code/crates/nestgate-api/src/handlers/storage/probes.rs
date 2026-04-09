@@ -164,7 +164,7 @@ fn collect_real_storage_datasets() -> Vec<StorageDataset> {
             && let Ok((size, used, available)) = get_directory_usage(dir)
         {
             datasets.push(StorageDataset {
-                name: "localself.base_url".to_string(),
+                name: format!("local_{}", dir.trim_start_matches('/').replace('/', "_")),
                 pool: "root".to_string(),
                 size,
                 used,

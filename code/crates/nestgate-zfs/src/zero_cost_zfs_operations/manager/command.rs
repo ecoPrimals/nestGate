@@ -24,13 +24,16 @@ impl<
             .await
             .map_err(|_| {
                 create_zfs_error(
-                    "ZFS command timed out after self.base_url".to_string(),
+                    format!(
+                        "ZFS command timed out after {}ms",
+                        Self::command_timeout().as_millis()
+                    ),
                     ZfsOperation::Command,
                 )
             })?
-            .map_err(|_e| {
+            .map_err(|e| {
                 create_zfs_error(
-                    "Failed to execute ZFS command: self.base_url".to_string(),
+                    format!("Failed to execute ZFS command: {e}"),
                     ZfsOperation::Command,
                 )
             })?;

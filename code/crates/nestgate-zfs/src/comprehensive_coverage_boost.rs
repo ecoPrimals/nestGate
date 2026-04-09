@@ -73,7 +73,7 @@ mod zfs_comprehensive_coverage {
     fn test_zfs_result_ok() {
         let result: ZfsResult<u32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.ok(), Some(42));
     }
 
     #[test]

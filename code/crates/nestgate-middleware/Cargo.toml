@@ -14,7 +14,7 @@ categories = [ "web-programming", "middleware",]
 workspace = true
 
 [dev-dependencies]
-mockall = { workspace = true }
+# mockall removed — zero usage; hand-written test doubles used instead
 
 [dependencies.nestgate-core]
 path = "../nestgate-core"

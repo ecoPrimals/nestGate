@@ -3,7 +3,7 @@
 
 //! **AUTH HANDLERS - PRODUCTION IMPLEMENTATION**
 //!
-//! Real authentication using the in-crate [`auth_manager::AuthManager`] (aligned with
+//! Real authentication using the in-crate `auth_manager::AuthManager` (aligned with
 //! `nestgate-security` types) until a single capability integration path is wired.
 
 mod auth_manager;

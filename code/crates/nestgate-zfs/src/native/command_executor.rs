@@ -17,7 +17,7 @@
 //!
 //! # Safety
 //!
-//! - ✅ No unsafe code
+//! - ✅ Shell invocation goes through validated argument lists only
 //! - ✅ Timeout enforcement prevents indefinite blocking
 //! - ✅ Proper error propagation
 //! - ✅ Structured logging for audit trails
@@ -362,7 +362,7 @@ impl NativeZfsCommandExecutor {
                 }
                 _ => {
                     return Err(NestGateError::security(format!(
-                        "Unsafe ZFS command: {command}"
+                        "Disallowed ZFS subcommand: {command}"
                     )));
                 }
             }

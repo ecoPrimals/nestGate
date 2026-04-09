@@ -78,7 +78,7 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
     let basevalue = numeric_part
         .parse::<f64>()
         .map_err(|_| UniversalZfsError::InvalidInput {
-            message: "Invalid numeric value: self.base_url".to_string(),
+            message: format!("Invalid numeric value in size string: {size_str}"),
         })?;
 
     // Universal scale multipliers - from quantum to cosmic
@@ -114,7 +114,7 @@ pub fn parse_size_string(size_str: &str) -> UniversalZfsResult<u64> {
 
         _ => {
             return Err(UniversalZfsError::InvalidInput {
-                message: "Unknown size unit: self.base_url".to_string(),
+                message: format!("Unknown size unit: {unit_part}"),
             });
         }
     };
@@ -314,7 +314,7 @@ mod tests {
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::other("Error: self.base_url".to_string())
+                std::io::Error::other(format!("Error: {e}"))
             })?,
             1024
         );
@@ -325,7 +325,7 @@ mod tests {
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::other("Error: self.base_url".to_string())
+                std::io::Error::other(format!("Error: {e}"))
             })?,
             1024
         );
@@ -336,7 +336,7 @@ mod tests {
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::other("Error: self.base_url".to_string())
+                std::io::Error::other(format!("Error: {e}"))
             })?,
             1024 * 1024
         );
@@ -347,7 +347,7 @@ mod tests {
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::other("Error: self.base_url".to_string())
+                std::io::Error::other(format!("Error: {e}"))
             })?,
             1024 * 1024 * 1024
         );
@@ -358,14 +358,14 @@ mod tests {
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::other("Error: self.base_url".to_string())
+                std::io::Error::other(format!("Error: {e}"))
             })?,
             1024_u64.pow(4)
         );
         assert_eq!(
             parse_size_string("1.5G").map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
-                std::io::Error::other("Operation failed: self.base_url".to_string())
+                std::io::Error::other(format!("Operation failed: {e}"))
             })?,
             (1.5 * 1024.0 * 1024.0 * 1024.0) as u64
         );
@@ -376,7 +376,7 @@ mod tests {
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::other("Error: self.base_url".to_string())
+                std::io::Error::other(format!("Error: {e}"))
             })?,
             0
         );
@@ -387,7 +387,7 @@ mod tests {
                     "Test assertion failed",
                     e
                 );
-                std::io::Error::other("Error: self.base_url".to_string())
+                std::io::Error::other(format!("Error: {e}"))
             })?,
             0
         );
@@ -398,14 +398,14 @@ mod tests {
     fn test_split_size_string() -> std::result::Result<(), Box<dyn std::error::Error>> {
         let (num, unit) = split_size_string("1024B").map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
-            std::io::Error::other("Operation failed: self.base_url".to_string())
+            std::io::Error::other(format!("Operation failed: {e}"))
         })?;
         assert_eq!(num, "1024");
         assert_eq!(unit, "B");
 
         let (num, unit) = split_size_string("1.5GB").map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
-            std::io::Error::other("Operation failed: self.base_url".to_string())
+            std::io::Error::other(format!("Operation failed: {e}"))
         })?;
         assert_eq!(num, "1.5");
         assert_eq!(unit, "GB");

@@ -160,12 +160,12 @@ impl NestGateRpc for NestGateRpcService {
     async fn create_dataset(
         self,
         _context: Context,
-        name: String,
+        name: Arc<str>,
         params: DatasetParams,
     ) -> std::result::Result<crate::rpc::tarpc_types::DatasetInfo, NestGateRpcError> {
         debug!("RPC: create_dataset({}) → backend", name);
         self.backend
-            .create_dataset(&name, params)
+            .create_dataset(name.as_ref(), params)
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -181,11 +181,11 @@ impl NestGateRpc for NestGateRpcService {
     async fn get_dataset(
         self,
         _context: Context,
-        name: String,
+        name: Arc<str>,
     ) -> std::result::Result<crate::rpc::tarpc_types::DatasetInfo, NestGateRpcError> {
         debug!("RPC: get_dataset({}) → backend", name);
         self.backend
-            .get_dataset(&name)
+            .get_dataset(name.as_ref())
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -193,11 +193,11 @@ impl NestGateRpc for NestGateRpcService {
     async fn delete_dataset(
         self,
         _context: Context,
-        name: String,
+        name: Arc<str>,
     ) -> std::result::Result<OperationResult, NestGateRpcError> {
         debug!("RPC: delete_dataset({}) → backend", name);
         self.backend
-            .delete_dataset(&name)
+            .delete_dataset(name.as_ref())
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -205,14 +205,14 @@ impl NestGateRpc for NestGateRpcService {
     async fn store_object(
         self,
         _context: Context,
-        dataset: String,
-        key: String,
-        data: Vec<u8>,
+        dataset: Arc<str>,
+        key: Arc<str>,
+        data: Bytes,
         metadata: Option<HashMap<String, String>>,
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
         debug!("RPC: store_object({}/{}) → backend", dataset, key);
         self.backend
-            .store_object(&dataset, &key, Bytes::from(data), metadata)
+            .store_object(dataset.as_ref(), key.as_ref(), data, metadata)
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -220,26 +220,25 @@ impl NestGateRpc for NestGateRpcService {
     async fn retrieve_object(
         self,
         _context: Context,
-        dataset: String,
-        key: String,
-    ) -> std::result::Result<Vec<u8>, NestGateRpcError> {
+        dataset: Arc<str>,
+        key: Arc<str>,
+    ) -> std::result::Result<Bytes, NestGateRpcError> {
         debug!("RPC: retrieve_object({}/{}) → backend", dataset, key);
         self.backend
-            .retrieve_object(&dataset, &key)
+            .retrieve_object(dataset.as_ref(), key.as_ref())
             .await
-            .map(|b| b.to_vec())
             .map_err(|e| rpc_err(&e))
     }
 
     async fn get_object_metadata(
         self,
         _context: Context,
-        dataset: String,
-        key: String,
+        dataset: Arc<str>,
+        key: Arc<str>,
     ) -> std::result::Result<ObjectInfo, NestGateRpcError> {
         debug!("RPC: get_object_metadata({}/{}) → backend", dataset, key);
         self.backend
-            .get_object_metadata(&dataset, &key)
+            .get_object_metadata(dataset.as_ref(), key.as_ref())
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -247,8 +246,8 @@ impl NestGateRpc for NestGateRpcService {
     async fn list_objects(
         self,
         _context: Context,
-        dataset: String,
-        prefix: Option<String>,
+        dataset: Arc<str>,
+        prefix: Option<Arc<str>>,
         limit: Option<usize>,
     ) -> std::result::Result<Vec<ObjectInfo>, NestGateRpcError> {
         debug!(
@@ -256,7 +255,11 @@ impl NestGateRpc for NestGateRpcService {
             dataset, prefix, limit
         );
         self.backend
-            .list_objects(&dataset, prefix.as_deref(), limit)
+            .list_objects(
+                dataset.as_ref(),
+                prefix.as_ref().map(std::convert::AsRef::as_ref),
+                limit,
+            )
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -264,12 +267,12 @@ impl NestGateRpc for NestGateRpcService {
     async fn delete_object(
         self,
         _context: Context,
-        dataset: String,
-        key: String,
+        dataset: Arc<str>,
+        key: Arc<str>,
     ) -> std::result::Result<OperationResult, NestGateRpcError> {
         debug!("RPC: delete_object({}/{}) → backend", dataset, key);
         self.backend
-            .delete_object(&dataset, &key)
+            .delete_object(dataset.as_ref(), key.as_ref())
             .await
             .map_err(|e| rpc_err(&e))
     }
@@ -325,7 +328,7 @@ impl NestGateRpc for NestGateRpcService {
     async fn discover_capability(
         self,
         _context: Context,
-        capability: String,
+        capability: Arc<str>,
     ) -> std::result::Result<Vec<ServiceInfo>, NestGateRpcError> {
         debug!("RPC: discover_capability({})", capability);
         let env_var = format!(
@@ -334,7 +337,7 @@ impl NestGateRpc for NestGateRpcService {
         );
         let discovery_default = default_tarpc_client_endpoint();
         let se = match capability_discovery::discover_with_fallback(
-            &capability,
+            capability.as_ref(),
             &env_var,
             &discovery_default,
         ) {
@@ -364,9 +367,10 @@ impl NestGateRpc for NestGateRpcService {
         };
         let mut endpoints = HashMap::new();
         endpoints.insert(String::from("tarpc"), tarpc_ep);
+        let cap = capability.clone();
         Ok(vec![ServiceInfo {
-            id: Arc::from(format!("discovered-{capability}")),
-            capability: Arc::from(capability),
+            id: Arc::from(format!("discovered-{cap}")),
+            capability,
             endpoints,
             status: Arc::from("discovered"),
             metadata: None,
@@ -491,141 +495,4 @@ pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Resul
 }
 
 #[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    async fn create_test_service() -> Result<NestGateRpcService> {
-        NestGateRpcService::new()
-    }
-
-    #[tokio::test]
-    async fn test_service_creation() {
-        let service = create_test_service()
-            .await
-            .expect("Failed to create service");
-        let datasets = service.backend.list_datasets().await.unwrap();
-        assert!(
-            datasets.is_empty(),
-            "New service should start with empty storage"
-        );
-    }
-
-    #[tokio::test]
-    async fn test_health() {
-        let service = create_test_service()
-            .await
-            .expect("Failed to create service");
-        let health = service.health(Context::current()).await;
-        assert_eq!(health.status, "healthy");
-        assert_eq!(health.version, env!("CARGO_PKG_VERSION"));
-    }
-
-    #[tokio::test]
-    async fn test_version() {
-        let service = create_test_service()
-            .await
-            .expect("Failed to create service");
-        let version = service.version(Context::current()).await;
-        assert_eq!(version.version, env!("CARGO_PKG_VERSION"));
-        assert_eq!(version.api_version, "1.0");
-    }
-
-    #[tokio::test]
-    async fn test_protocols() {
-        let service = create_test_service()
-            .await
-            .expect("Failed to create service");
-        let protocols = service.protocols(Context::current()).await;
-        assert_eq!(protocols.len(), 3);
-        assert_eq!(protocols[0].protocol, "tarpc");
-        assert_eq!(protocols[0].priority, 1);
-        assert!(protocols[0].enabled);
-    }
-
-    #[tokio::test]
-    async fn test_create_dataset() {
-        let service = create_test_service()
-            .await
-            .expect("Failed to create service");
-        let result = service
-            .create_dataset(
-                Context::current(),
-                "test-dataset".to_string(),
-                DatasetParams::default(),
-            )
-            .await;
-
-        assert!(result.is_ok());
-        let dataset = result.unwrap();
-        assert_eq!(dataset.name, "test-dataset");
-        assert_eq!(dataset.object_count, 0);
-    }
-
-    #[tokio::test]
-    async fn test_list_datasets() {
-        let service = create_test_service()
-            .await
-            .expect("Failed to create service");
-
-        service
-            .clone()
-            .create_dataset(
-                Context::current(),
-                "test-dataset".to_string(),
-                DatasetParams::default(),
-            )
-            .await
-            .unwrap();
-
-        let datasets = service
-            .clone()
-            .list_datasets(Context::current())
-            .await
-            .unwrap();
-        assert_eq!(datasets.len(), 1);
-        assert_eq!(datasets[0].name, "test-dataset");
-    }
-
-    #[tokio::test]
-    async fn test_store_retrieve_object() {
-        let service = create_test_service()
-            .await
-            .expect("Failed to create service");
-
-        service
-            .clone()
-            .create_dataset(
-                Context::current(),
-                "test-dataset".to_string(),
-                DatasetParams::default(),
-            )
-            .await
-            .unwrap();
-
-        let data = vec![1, 2, 3, 4, 5];
-        service
-            .clone()
-            .store_object(
-                Context::current(),
-                "test-dataset".to_string(),
-                "test-key".to_string(),
-                data.clone(),
-                None,
-            )
-            .await
-            .unwrap();
-
-        let retrieved = service
-            .clone()
-            .retrieve_object(
-                Context::current(),
-                "test-dataset".to_string(),
-                "test-key".to_string(),
-            )
-            .await
-            .unwrap();
-
-        assert_eq!(retrieved, data);
-    }
-}
+mod tests;

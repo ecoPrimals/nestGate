@@ -62,7 +62,7 @@ impl SystemConfig {
         }
     }
 
-    /// Create configuration from an injectable [`EnvSource`].
+    /// Create configuration from an injectable [`EnvSource`](nestgate_types::EnvSource).
     #[must_use]
     pub fn from_env_source(env: &dyn nestgate_types::EnvSource) -> Self {
         use nestgate_types::env_parsed;

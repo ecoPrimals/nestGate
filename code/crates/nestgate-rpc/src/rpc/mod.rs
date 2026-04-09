@@ -63,6 +63,8 @@
 //! ```
 
 pub mod audit_storage;
+pub mod btsp_client;
+pub mod btsp_server_handshake;
 pub mod jsonrpc_client;
 pub mod jsonrpc_server;
 pub mod metadata_backend;
