@@ -121,7 +121,7 @@ pub async fn list_universal_pools() -> (StatusCode, Json<serde_json::Value>) {
     }
 }
 
-/// Creates a pool via [`nestgate_zfs::pool::operations`].
+/// Creates a pool via the `nestgate_zfs::pool` operations layer.
 ///
 /// Expects JSON body with `name` (string) and `devices` (array of strings).
 pub async fn create_pool(

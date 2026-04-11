@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 42: NG-08 ring elimination + deep debt cleanup + doc refresh (April 11, 2026)
+
+- **NG-08 RESOLVED**: `ring` v0.17.14 eliminated from production binary. `reqwest` replaced with
+  `ureq` 3.3 + `rustls-rustcrypto` 0.0.2-alpha (pure Rust TLS). `fetch_external.rs` refactored
+  to use synchronous `ureq` inside `tokio::task::spawn_blocking`. Verified: `cargo tree -i ring`
+  returns "did not match any packages"; `cargo deny check bans` PASS.
+- **Clippy zero warnings**: Fixed 18 warnings — doc backticks for primal names (`NestGate`,
+  `BearDog`), `_workspace_id` underscore binding, `unwrap_or` → `unwrap_or_else` for lazy
+  evaluation, added `# Errors` doc section and `#[expect(clippy::too_many_lines)]` for BTSP
+  handshake, removed unit let-binding
+- **Dead code removed**: `if false` stub + unused `request_data` in `optimization.rs` (18 lines);
+  deleted unwired `ai_first_example_coverage_boost.rs` (435 lines, no `mod` declaration);
+  evolved `#[allow(dead_code)]` → `#[expect(dead_code)]` in BTSP `ClientHello.version`
+- **Doc link fixed**: `production_placeholders.rs` referenced private module
+  `nestgate_zfs::pool::operations` — changed to plain text (module is `mod`, not `pub mod`)
+- **Root docs refreshed**: README.md, STATUS.md, CONTEXT.md, DOCUMENTATION_INDEX.md updated
+  with NG-08 resolution, ureq migration, zero-warning clippy status, current dates
+- **Audits completed (no changes needed)**: coverage-boost files (all `#[cfg(test)]` gated),
+  ORC license (correctly absent per LICENSING.md), hardcoded network (test-only; production
+  uses `from_env()`), production mocks (all properly gated), zero-copy RPC (serde wire-type
+  constraint), large files (max 777 lines, clean structure)
+- **wateringHole handoffs**: PORTABILITY_DEBT NG-08 marked RESOLVED; PRIMAL_GAPS.md updated
+- Validation: `cargo fmt --check` PASS, `cargo clippy --workspace --lib` zero warnings,
+  `cargo doc -D warnings` PASS, `cargo deny check bans` PASS
+
 ### Session 41: Deep debt cleanup + dependency evolution + wateringHole handoff (April 9, 2026)
 
 - **Dependency evolution**: `uzers` crate removed entirely — replaced by `rustix::process::getuid()`/`getgid()`

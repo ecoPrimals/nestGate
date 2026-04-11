@@ -659,9 +659,9 @@ async fn get_workspace_properties(zfs_bin: &str, dataset_name: &str) -> (String,
 }
 
 /// Get workspace details for a specific workspace ID
-async fn get_workspace_details(zfs_bin: &str, env: &dyn EnvSource, _workspace_id: &str) -> Value {
+async fn get_workspace_details(zfs_bin: &str, env: &dyn EnvSource, workspace_id: &str) -> Value {
     let pool_name = workspace_pool_name(env);
-    let dataset_name = format!("{pool_name}/workspaces/{_workspace_id}");
+    let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
     let props_output = Command::new(zfs_bin)
         .args([
             "get",

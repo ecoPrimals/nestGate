@@ -241,7 +241,7 @@ fn optimize_deduplication(dataset_name: &str) -> Option<String> {
 }
 
 /// Request Ai Optimization
-async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -> Option<String> {
+async fn request_ai_optimization(_dataset_name: &str, _pattern: &StoragePattern) -> Option<String> {
     // ✅ MIGRATED: Now uses capability-based discovery (not primal names!)
     // Try to use any available AI provider via capability discovery
     use nestgate_core::config::runtime::{capability_url, get_config};
@@ -256,29 +256,6 @@ async fn request_ai_optimization(dataset_name: &str, pattern: &StoragePattern) -
 
     // Discover available AI capabilities
     let _ = adapter.discover_capabilities().await;
-
-    // Use universal adapter to request AI optimization
-    if let Ok(_ai_endpoint) = std::env::var("NESTGATE_AI_ENDPOINT") {
-        let request_data = serde_json::json!({
-            "dataset": dataset_name,
-            "pattern_analysis": {
-                "file_size_distribution": pattern.file_size_distribution,
-                "file_type_distribution": pattern.file_type_distribution,
-                "duplicate_ratio": pattern.duplicate_ratio,
-                "sequential_vs_random": pattern.sequential_vs_random,
-                "read_write_ratio": pattern.read_write_ratio
-            },
-            "optimization_context": "zfs_storage_optimization"
-        });
-
-        // HTTP removed per Concentrated Gap Architecture
-        let _ = request_data;
-        tracing::warn!("AI optimization removed - HTTP removed");
-
-        if false { // Dead code stub
-            // AI provider not available, continue without AI recommendations
-        }
-    }
 
     None
 }

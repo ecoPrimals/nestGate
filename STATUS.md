@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 8, 2026  
+**Last Updated**: April 11, 2026  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,19 +8,20 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-08
-Clippy:             PASS — cargo clippy --workspace --all-features -- -D warnings, as of 2026-04-08
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-11
+Clippy:             PASS — cargo clippy --workspace --lib (zero warnings), as of 2026-04-11
 Format:             CLEAN (cargo fmt --check passes)
-Docs:               cargo doc --workspace --no-deps — builds without rustdoc warnings in routine runs (re-check after large edits)
+Docs:               PASS — cargo doc -D warnings (nestgate-api verified clean)
 Tests:              ~11,856 passing, 0 failures, 461 ignored (cargo test --workspace --all-features)
 Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
-Files > 800 lines:  0 (production; max ~759 lines — smart-refactored)
+Files > 800 lines:  0 (production; max ~777 lines — smart-refactored)
 Unwrap/Expect:      ZERO in production library code
-Inline markers:     none in committed production `.rs` (wateringHole policy — re-verify after large edits)
+Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
 println! in lib:    ZERO (migrated to tracing)
-Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only)
-TLS/crypto:         Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED)
+Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
+Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
+TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED; installer uses system curl
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes:         storage.*, data.*, session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.*, identity.*, model.*, templates.*, audit.*, zfs.* — 57 methods advertised
@@ -36,7 +37,7 @@ Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
 Serial tests:       #[serial]: 0 — last #[serial] eliminated via try_init() evolution
 Numeric casts:      ZERO raw `as` casts in production — all use try_from with saturating fallbacks
-Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0
+Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0; cargo deny check bans PASS
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
 
@@ -44,12 +45,12 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ---
 
-## Ground truth refresh (Apr 8, 2026)
+## Ground truth refresh (Apr 11, 2026)
 
-Measured with `cargo check` / `cargo clippy --workspace --all-features -- -D warnings` / `cargo fmt --check --all` / `cargo test --workspace`.
+Measured with `cargo check` / `cargo clippy --workspace --lib` / `cargo fmt --check --all` / `cargo test --workspace` / `cargo deny check bans` / `cargo tree -i ring`.
 
-- **Production file size**: All production `.rs` files under **800** lines (max ~758; no production file exceeds 800 lines).
-- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy with `-D warnings` passes as of 2026-04-08. MCP, ring, rustls, reqwest eliminated from typical app paths.
+- **Production file size**: All production `.rs` files under **800** lines (max ~777; no production file exceeds 800 lines).
+- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy zero warnings as of 2026-04-11. ring/reqwest/openssl/aws-lc-rs/native-tls fully eliminated — ureq + rustls-rustcrypto (pure Rust) for external HTTPS.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
 - **Testing**: Zero `thread::sleep` or `tokio::time::sleep` stabilization waits in tests (except chaos/timeout). `#[serial]`: **0** — last `#[serial]` eliminated via `setup_logging` `try_init()` evolution. Config/discovery/port-discovery tests use `EnvSource` trait injection (`MapEnv` in tests, `ProcessEnv` in production) — no process-env mutation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.

@@ -3,7 +3,7 @@
 
 //! Data domain semantic methods (live feeds, NOT storage)
 //!
-//! NestGate is a **storage** primal and does not implement data fetching.
+//! `NestGate` is a **storage** primal and does not implement data fetching.
 //! Any `data.*` method is delegated to whichever primal advertises the
 //! `"data"` capability at runtime (resolved via `discovery.query`, not by
 //! hardcoding external-domain method names like NCBI or NOAA).
@@ -18,7 +18,7 @@ use serde_json::Value;
 /// Catch-all delegation for any `data.*` method.
 ///
 /// Returns a structured `NotImplemented` error directing callers to discover
-/// the data capability provider at runtime rather than calling NestGate.
+/// the data capability provider at runtime rather than calling `NestGate`.
 pub(super) fn data_delegation(
     _router: &SemanticRouter,
     method: &str,

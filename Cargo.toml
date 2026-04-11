@@ -25,7 +25,6 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 chrono = { workspace = true }
 anyhow = { workspace = true }
-# reqwest removed (BiomeOS Pure Rust Evolution)
 # Additional test dependencies
 tempfile = { workspace = true }
 axum = { workspace = true }
@@ -120,7 +119,8 @@ serde_json = "1.0"
 
 # HTTP and networking
 axum = { version = "0.7", features = ["json", "tokio", "ws"] }
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "brotli"] }
+ureq = { version = "3.3", default-features = false, features = ["rustls-no-provider", "rustls-webpki-roots", "gzip", "brotli"] }
+rustls-rustcrypto = "0.0.2-alpha"
 
 # Time and UUID
 chrono = { version = "0.4", features = ["serde"] }

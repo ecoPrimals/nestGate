@@ -154,9 +154,7 @@ impl SemanticRouter {
                 let is_production = std::env::var("FAMILY_ID")
                     .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
                     .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
-                    .map_or(false, |fid| {
-                        !matches!(fid.as_str(), "" | "default" | "standalone")
-                    });
+                    .is_ok_and(|fid| !matches!(fid.as_str(), "" | "default" | "standalone"));
 
                 if is_production {
                     return Err(nestgate_types::error::NestGateError::storage_error(

@@ -3,12 +3,12 @@
 
 //! Data domain JSON-RPC handlers (live feeds, NOT storage).
 //!
-//! NestGate is a storage primal and does not implement data fetching.
+//! `NestGate` is a storage primal and does not implement data fetching.
 //! Any `data.*` method returns a structured delegation error directing
 //! callers to discover a primal that advertises the `"data"` capability
 //! via `discovery.query` or `NESTGATE_CAPABILITY_DATA`.
 //!
-//! `data.*` is intentionally excluded from `capabilities.list` — NestGate
+//! `data.*` is intentionally excluded from `capabilities.list` — `NestGate`
 //! routes these method names for ecosystem convenience but does not provide
 //! the underlying data service.
 

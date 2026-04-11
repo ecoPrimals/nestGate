@@ -75,6 +75,10 @@ async fn try_cached_external(url: &str, cache_key: &str, family_id: &str) -> Res
 }
 
 /// Fetch a URL, BLAKE3-hash the payload, cache it, and return provenance metadata.
+///
+/// Uses `ureq` (pure-Rust HTTP) with `rustls-rustcrypto` (pure-Rust TLS) —
+/// zero C/ASM dependencies, fully ecoBin-compliant.  The sync HTTP call runs
+/// inside `spawn_blocking` so the tokio runtime stays unblocked.
 async fn do_external_fetch(
     url: &str,
     cache_key: &str,
@@ -82,32 +86,44 @@ async fn do_external_fetch(
     timeout_secs: u64,
 ) -> Result<Value> {
     debug!("storage.fetch_external: fetching '{url}' as '{cache_key}' (family={family_id})");
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(timeout_secs))
-        .user_agent(format!("NestGate/{}", env!("CARGO_PKG_VERSION")))
-        .build()
-        .map_err(|e| NestGateError::io_error(format!("HTTP client error: {e}")))?;
 
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| NestGateError::io_error(format!("Fetch failed for {url}: {e}")))?;
-    let status = response.status();
-    if !status.is_success() {
-        return Err(NestGateError::io_error(format!(
-            "Fetch returned HTTP {status} for {url}"
-        )));
-    }
-    let content_type = response
-        .headers()
-        .get("content-type")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("application/octet-stream")
-        .to_owned();
-    let payload_bytes = response.bytes().await.map_err(|e| {
-        NestGateError::io_error(format!("Failed to read response body from {url}: {e}"))
-    })?;
+    let url_owned = url.to_owned();
+    let timeout = std::time::Duration::from_secs(timeout_secs);
+    let user_agent = format!("NestGate/{}", env!("CARGO_PKG_VERSION"));
+
+    let (content_type, payload_bytes) = tokio::task::spawn_blocking(move || -> Result<_> {
+        let _ = rustls_rustcrypto::provider().install_default();
+
+        let config = ureq::Agent::config_builder()
+            .timeout_global(Some(timeout))
+            .https_only(false)
+            .build();
+        let agent = ureq::Agent::new_with_config(config);
+
+        let mut response = agent
+            .get(&url_owned)
+            .header("User-Agent", &user_agent)
+            .call()
+            .map_err(|e| NestGateError::io_error(format!("Fetch failed for {url_owned}: {e}")))?;
+
+        let ct = response
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("application/octet-stream")
+            .to_owned();
+
+        let body = response
+            .body_mut()
+            .read_to_vec()
+            .map_err(|e| NestGateError::io_error(format!("Failed to read body: {e}")))?;
+
+        Ok::<_, NestGateError>((ct, body))
+    })
+    .await
+    .map_err(|e| NestGateError::io_error(format!("Fetch task failed: {e}")))??;
+
+    let payload_bytes = bytes::Bytes::from(payload_bytes);
 
     let blake3_hex = blake3::hash(&payload_bytes).to_hex().to_string();
     debug!(

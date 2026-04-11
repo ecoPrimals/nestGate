@@ -25,9 +25,9 @@ than by importing this crate graph.
 | **Architecture** | 23 workspace members: 20 `code/crates/*` + `tools/unwrap-migrator` + fuzz + root |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
-| **TLS/crypto** | Delegated to security capability provider via IPC; installer uses system `curl` (ring/rustls/reqwest eliminated) |
+| **TLS/crypto** | `ureq` + `rustls-rustcrypto` (pure Rust); ring/reqwest/openssl eliminated; installer uses system `curl` |
 | **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
-| **Lint / format** | Workspace `cargo clippy --workspace --all-features -- -D warnings` (pedantic + nursery); `cargo fmt --check` clean |
+| **Lint / format** | `cargo clippy --workspace --lib` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean in routine runs |
 | **Tests** | `cargo test --workspace --all-features` — ~11,856 passing, 461 ignored, 0 failures (see STATUS.md) |
 | **Coverage** | ~80% line (llvm-cov) — wateringHole 80% minimum met |

@@ -252,7 +252,7 @@ impl IsomorphicIpcServer {
     /// Handle Unix socket connection.
     ///
     /// When BTSP is required (production: `FAMILY_ID` set, not `BIOMEOS_INSECURE`),
-    /// the 4-step BTSP handshake runs first, delegating crypto to BearDog.
+    /// the 4-step BTSP handshake runs first, delegating crypto to `BearDog`.
     /// Development connections proceed directly to JSON-RPC.
     async fn handle_unix_connection(
         stream: tokio::net::UnixStream,

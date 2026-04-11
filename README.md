@@ -2,30 +2,32 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-09)**  
+**Verification (as of 2026-04-11)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors, 0 warnings)  
-- **Clippy**: `cargo clippy --workspace --all-features -- -D warnings` — PASS  
+- **Clippy**: `cargo clippy --workspace --lib` — PASS (zero warnings)  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
 - **Format**: `cargo fmt --all --check` — PASS  
-- **Docs**: `cargo doc --workspace --no-deps` — builds clean  
+- **Docs**: `cargo doc --workspace --no-deps -D warnings` — PASS (`nestgate-api` verified)  
+- **Supply chain**: `cargo deny check bans` — PASS; `cargo tree -i ring` — no matches  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
 - **Tests (last recorded)**: ~11,856 passing, 461 ignored, 0 failures — run `cargo test --workspace --all-features` to refresh counts  
 - **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
 
 **Technical debt (honest)**  
-- **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-09)  
+- **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-11)  
 - **Hardcoding**: zero `self.base_url` string literals (81 fixed → proper interpolation)  
 - **Deprecated APIs**: 181 `#[deprecated]` markers for canonical-config migration; zero dead callers  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
-- **TLS/crypto**: Delegated to security capability provider via IPC; installer uses system `curl` (no bundled C TLS stack)  
+- **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + `rustls-rustcrypto` (pure Rust); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-- **External deps evolved**: `uzers` removed (replaced by `rustix::process`); 54 workspace deps, all pure Rust  
+- **External deps evolved**: `reqwest`→`ureq` (pure Rust, no C TLS); `uzers`→`rustix::process`; 54 workspace deps, all pure Rust  
 - **File size**: All production `.rs` files under 800 lines (max ~777 `jsonrpc_server` method table)  
 - **`#[serial]`**: 0 — last `#[serial]` eliminated via `try_init()` evolution  
 - **dev_stubs**: properly feature-gated (`#[cfg(feature = "dev-stubs")]`), zero production leakage, not enabled by default  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate)  
-**Last Updated**: April 9, 2026
+- **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
+**Last Updated**: April 11, 2026
 
 ---
 

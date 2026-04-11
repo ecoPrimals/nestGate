@@ -4,8 +4,8 @@
 //! # BTSP Server-Side Handshake
 //!
 //! Implements the listener side of the BTSP handshake protocol per
-//! `BTSP_PROTOCOL_STANDARD.md` §Handshake Protocol. NestGate delegates all
-//! cryptographic operations to BearDog (the security capability provider) via
+//! `BTSP_PROTOCOL_STANDARD.md` §Handshake Protocol. `NestGate` delegates all
+//! cryptographic operations to `BearDog` (the security capability provider) via
 //! JSON-RPC calls to `btsp.session.create`, `btsp.session.verify`, and
 //! `btsp.negotiate`.
 //!
@@ -18,10 +18,10 @@
 //!
 //! 1. Read `ClientHello` frame → extract `client_ephemeral_pub`
 //! 2. Generate 32-byte random challenge
-//! 3. Delegate to BearDog: `btsp.session.create` → get `session_id`, `server_ephemeral_pub`
+//! 3. Delegate to `BearDog`: `btsp.session.create` → get `session_id`, `server_ephemeral_pub`
 //! 4. Write `ServerHello` frame → `{version, server_ephemeral_pub, challenge}`
 //! 5. Read `ChallengeResponse` frame → extract `response`, `preferred_cipher`
-//! 6. Delegate to BearDog: `btsp.session.verify` → get `verified`
+//! 6. Delegate to `BearDog`: `btsp.session.verify` → get `verified`
 //! 7. On success: `btsp.negotiate` → get negotiated `cipher`
 //! 8. Write `HandshakeComplete` frame → `{cipher, session_id}`
 //!
@@ -43,7 +43,7 @@ const BTSP_VERSION: u32 = 1;
 /// Outcome of a successful BTSP handshake on the server side.
 #[derive(Debug, Clone)]
 pub struct BtspSession {
-    /// Session identifier from BearDog.
+    /// Session identifier from `BearDog`.
     pub session_id: String,
     /// Negotiated cipher suite name (e.g. `chacha20_poly1305`, `hmac_plain`, `null`).
     pub cipher: String,
@@ -100,7 +100,10 @@ async fn write_error_frame<W: AsyncWriteExt + Unpin>(writer: &mut W, reason: &st
 
 #[derive(Debug, Deserialize)]
 struct ClientHello {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "deserialized for protocol compat, validated by presence not value"
+    )]
     version: Option<u32>,
     client_ephemeral_pub: String,
 }
@@ -155,7 +158,7 @@ pub fn is_btsp_required() -> bool {
 
 /// Perform the BTSP server-side handshake on an accepted connection.
 ///
-/// Delegates all cryptographic operations to BearDog via JSON-RPC.
+/// Delegates all cryptographic operations to `BearDog` via JSON-RPC.
 /// On success, the stream is ready for (optionally encrypted) JSON-RPC frames.
 /// On failure, an error frame is written and the error is returned (caller
 /// should close the connection).
@@ -164,6 +167,15 @@ pub fn is_btsp_required() -> bool {
 ///
 /// * `reader` / `writer` — split halves of the accepted socket
 /// * `family_id` — the primal's family identifier for bond-type resolution
+///
+/// # Errors
+///
+/// Returns an error if any handshake step fails (frame read/write, JSON
+/// parsing, or `BearDog` IPC delegation for session/verify/negotiate).
+#[expect(
+    clippy::too_many_lines,
+    reason = "BTSP handshake is a single linear protocol sequence"
+)]
 pub async fn perform_handshake<R, W>(
     reader: &mut R,
     writer: &mut W,
@@ -181,7 +193,7 @@ where
         e
     })?;
     let client_hello: ClientHello = serde_json::from_slice(&hello_bytes).map_err(|e| {
-        let _ = tokio::runtime::Handle::current().block_on(async {
+        tokio::runtime::Handle::current().block_on(async {
             write_error_frame(writer, "invalid_client_hello").await;
         });
         NestGateError::validation_error(format!("BTSP: malformed ClientHello: {e}"))
@@ -329,7 +341,7 @@ where
             warn!("BTSP: cipher negotiation failed, defaulting to null: {e}");
             e
         })
-        .unwrap_or(json!({"cipher": "null"}));
+        .unwrap_or_else(|_| json!({"cipher": "null"}));
 
     let cipher = negotiate_result
         .get("cipher")

@@ -1,15 +1,12 @@
-> **Historical**: This document was written in November 8, 2025. Current architecture
-> and patterns may differ. See root-level docs and `specs/` for current specifications.
+> **Fossil Record**: Written November 8, 2025 (v0.11.0). Preserved for historical context.
+> Current architecture: see [CONTEXT.md](../../CONTEXT.md) and [STATUS.md](../../STATUS.md).
+> Current version: 4.7.0-dev (23 workspace crates, pure Rust, ureq + rustls-rustcrypto TLS).
 
-# 🏗️ **NestGate Architecture Overview**
+# NestGate Architecture Overview
 
-> **✅ UPDATED**: This document now reflects **ACTUAL CURRENT STATE** as of November 8, 2025.  
-> **Status**: 97% unification complete - Production ready
-
-**Version**: 0.11.0 - Unification Complete Edition  
-**Status**: ✅ **97% COMPLETE** - Production Ready  
-**Achievement**: Systematic Unification & Zero-Cost Architecture Achieved  
-**Document Type**: **CURRENT ARCHITECTURE** (Updated Nov 8, 2025)
+**Version at time of writing**: 0.11.0  
+**Status at time of writing**: 97% unification complete  
+**Document Type**: **FOSSIL RECORD** (November 8, 2025 — see root docs for current state)
 
 ---
 
