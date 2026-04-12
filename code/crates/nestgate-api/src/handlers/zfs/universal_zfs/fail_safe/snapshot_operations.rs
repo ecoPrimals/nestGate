@@ -13,12 +13,10 @@ use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
-use async_recursion::async_recursion;
 
 use super::core::FailSafeZfsService;
 
 /// List Snapshots
-#[async_recursion]
 pub async fn list_snapshots(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<SnapshotInfo>> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -45,18 +43,21 @@ pub async fn list_snapshots(service: &FailSafeZfsService) -> UniversalZfsResult<
     }
 }
 
-#[async_recursion]
 async fn dispatch_list_snapshots(
     e: &Arc<UniversalZfsServiceEnum>,
 ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.list_snapshots().await,
-        UniversalZfsServiceEnum::FailSafe(f) => list_snapshots(f).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.list_snapshots().await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// List Dataset Snapshots
-#[async_recursion]
 pub async fn list_dataset_snapshots(
     service: &FailSafeZfsService,
     dataset: &str,
@@ -86,19 +87,22 @@ pub async fn list_dataset_snapshots(
     }
 }
 
-#[async_recursion]
 async fn dispatch_list_dataset_snapshots(
     e: &Arc<UniversalZfsServiceEnum>,
     dataset: &str,
 ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.list_dataset_snapshots(dataset).await,
-        UniversalZfsServiceEnum::FailSafe(f) => list_dataset_snapshots(f, dataset).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.list_dataset_snapshots(dataset).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Creates  Snapshot
-#[async_recursion]
 pub async fn create_snapshot(
     service: &FailSafeZfsService,
     config: &SnapshotConfig,
@@ -128,19 +132,22 @@ pub async fn create_snapshot(
     }
 }
 
-#[async_recursion]
 async fn dispatch_create_snapshot(
     e: &Arc<UniversalZfsServiceEnum>,
     config: &SnapshotConfig,
 ) -> UniversalZfsResult<SnapshotInfo> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.create_snapshot(config).await,
-        UniversalZfsServiceEnum::FailSafe(f) => create_snapshot(f, config).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.create_snapshot(config).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Destroy Snapshot
-#[async_recursion]
 pub async fn destroy_snapshot(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -167,14 +174,18 @@ pub async fn destroy_snapshot(service: &FailSafeZfsService, name: &str) -> Unive
     }
 }
 
-#[async_recursion]
 async fn dispatch_destroy_snapshot(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<()> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.destroy_snapshot(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => destroy_snapshot(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.destroy_snapshot(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 

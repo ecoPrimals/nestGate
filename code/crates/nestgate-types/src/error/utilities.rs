@@ -54,7 +54,7 @@ pub fn safe_env_var(key: &str) -> Result<String, NestGateError> {
 /// Returns [`NestGateError::Configuration`] when `key` is not present in `env`.
 pub fn safe_env_var_from_env_source(
     key: &str,
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
 ) -> Result<String, NestGateError> {
     env.get(key).ok_or_else(|| {
         NestGateError::configuration_error(
@@ -84,7 +84,7 @@ pub fn safe_env_var_or_default(key: &str, default: &str) -> String {
 pub fn safe_env_var_or_default_from_env_source(
     key: &str,
     default: &str,
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
 ) -> String {
     env_var_or_default(env, key, default)
 }

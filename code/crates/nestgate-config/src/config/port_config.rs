@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 //! Port Configuration - Environment-Driven
 //!
 //! Dynamic port configuration system supporting environment variables and config files.
@@ -48,7 +50,7 @@ impl PortConfiguration {
 
     /// Like [`Self::from_env`], but reads `NESTGATE_*` port variables from `env`.
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         use crate::constants::hardcoding::{
             get_grpc_port, get_message_queue_port, get_orchestration_service_port,
             get_websocket_port,
@@ -193,7 +195,11 @@ pub fn grafana_port() -> u16 {
     crate::constants::get_grafana_port()
 }
 
-fn env_var_or_default_from_env_source(env: &dyn EnvSource, var_name: &str, default: u16) -> u16 {
+fn env_var_or_default_from_env_source(
+    env: &(impl EnvSource + ?Sized),
+    var_name: &str,
+    default: u16,
+) -> u16 {
     env.get(var_name)
         .and_then(|v| v.parse().ok())
         .unwrap_or(default)

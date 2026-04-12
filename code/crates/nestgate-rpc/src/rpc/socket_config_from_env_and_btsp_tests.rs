@@ -5,7 +5,7 @@
 //! family-scoped socket naming tests.
 
 use super::*;
-use nestgate_types::{EnvSource, MapEnv, ProcessEnv};
+use nestgate_types::{MapEnv, ProcessEnv};
 use std::path::PathBuf;
 
 // ========================================================================
@@ -83,8 +83,7 @@ fn from_env_source_socket_beats_biomeos_and_xdg() {
 /// Smoke: [`ProcessEnv`] implements [`EnvSource`] the same way production `from_environment()` does.
 #[test]
 fn from_env_source_accepts_process_env() {
-    let env: &dyn EnvSource = &ProcessEnv;
-    let _ = SocketConfig::from_env_source(env);
+    let _ = SocketConfig::from_env_source(&ProcessEnv);
 }
 
 // ========================================================================

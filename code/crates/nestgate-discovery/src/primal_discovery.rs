@@ -50,9 +50,7 @@ pub use runtime_discovery::{PrimalConnection, RuntimeDiscovery};
 // HTTP removed — use orchestration / network capability discovery for external HTTP
 use dashmap::DashMap;
 use std::collections::HashMap;
-use std::future::Future;
 use std::net::SocketAddr;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -174,6 +172,7 @@ impl SelfKnowledgeBuilder {
 /// Primal discovery system
 ///
 /// Discovers other primals at runtime based on their capabilities.
+/// Uses environment-based discovery (`NESTGATE_<CAPABILITY>_ENDPOINT` vars).
 pub struct PrimalDiscovery {
     /// Our self-knowledge (what we provide)
     self_knowledge: SelfKnowledge,
@@ -181,9 +180,6 @@ pub struct PrimalDiscovery {
     /// Discovered primals (lock-free for concurrent discovery)
     /// `DashMap` provides 5-10x better performance for discovery operations
     discovered: Arc<DashMap<String, PrimalInfo>>,
-
-    /// Discovery backend (mDNS, DNS-SD, etc.)
-    backend: Arc<dyn DiscoveryBackend + Send + Sync>,
 }
 
 /// Information about a discovered primal
@@ -235,7 +231,7 @@ impl PrimalInfo {
     #[must_use]
     pub fn primary_endpoint_or_env_default_from_env_source(
         &self,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Option<String> {
         self.endpoints
             .first()
@@ -257,16 +253,24 @@ impl PrimalDiscovery {
         Self {
             self_knowledge,
             discovered: Arc::new(DashMap::new()),
-            backend: Arc::new(EnvironmentBackend),
         }
     }
 
     /// Announce our presence (advertise our capabilities)
-    pub async fn announce(&self) -> Result<()> {
-        self.backend.announce(&self.self_knowledge).await
+    pub fn announce(&self) -> Result<()> {
+        tracing::info!(
+            "Announcing {} with capabilities: {:?} (registration delegated to orchestration provider)",
+            self.self_knowledge.name,
+            self.self_knowledge.capabilities,
+        );
+        Ok(())
     }
 
     /// Discover a primal by capability
+    ///
+    /// Looks up `NESTGATE_<CAPABILITY>_ENDPOINT` environment variables.
+    /// In production, the orchestration provider supplies these via its
+    /// discovery registry; in dev, they are set manually.
     ///
     /// # Example
     ///
@@ -274,22 +278,38 @@ impl PrimalDiscovery {
     /// # use nestgate_core::primal_discovery::*;
     /// # async fn example(discovery: &PrimalDiscovery) -> Result<(), Box<dyn std::error::Error>> {
     /// // Discover security capability (any primal advertising it)
-    /// let security = discovery.discover_capability("security").await?;
+    /// let security = discovery.discover_capability("security")?;
     /// println!("Security primal: {}", security.name);
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn discover_capability(&self, capability: &str) -> Result<PrimalInfo> {
-        // Check cache first (lock-free)
-        if let Some(info) = self.discovered.get(capability) {
-            // Verify not stale
-            if !info.is_stale(Duration::from_secs(300)) {
-                return Ok(info.clone());
-            }
+    pub fn discover_capability(&self, capability: &str) -> Result<PrimalInfo> {
+        if let Some(info) = self.discovered.get(capability)
+            && !info.is_stale(Duration::from_secs(300))
+        {
+            return Ok(info.clone());
         }
 
-        // Discover via backend
-        let discovered = self.backend.discover(capability).await?;
+        // Discover via environment variables
+        let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
+        let discovered = if let Some(endpoint) = ProcessEnv.get(&env_var) {
+            tracing::info!(
+                "Discovered '{}' capability from environment: {}",
+                capability,
+                endpoint,
+            );
+            PrimalInfo {
+                name: capability.to_string(),
+                capabilities: vec![capability.to_string()],
+                endpoints: vec![],
+                metadata: HashMap::new(),
+                last_seen: Instant::now(),
+            }
+        } else {
+            return Err(NestGateError::network_error(format!(
+                "No endpoint for capability '{capability}'. Set {env_var} or use capability-based discovery."
+            )));
+        };
 
         // Cache for future use (lock-free)
         self.discovered
@@ -313,78 +333,8 @@ impl PrimalDiscovery {
     }
 }
 
-// ==================== DISCOVERY BACKEND ====================
-
-/// Discovery backend trait
-///
-/// Implement this for different discovery mechanisms (mDNS, DNS-SD, Consul, etc.)
-pub trait DiscoveryBackend: Send + Sync {
-    /// Announce our presence
-    fn announce(
-        &self,
-        knowledge: &SelfKnowledge,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
-
-    /// Discover a primal by capability
-    fn discover(
-        &self,
-        capability: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<PrimalInfo>> + Send + '_>>;
-}
-
-/// Environment + IPC discovery backend.
-///
-/// Discovers peers via `NESTGATE_<CAPABILITY>_ENDPOINT` environment variables.
-/// In production, the orchestration provider supplies these via its discovery registry; in dev,
-/// they are set manually or default to loopback.
-#[derive(Default)]
-struct EnvironmentBackend;
-
-impl DiscoveryBackend for EnvironmentBackend {
-    fn announce(
-        &self,
-        knowledge: &SelfKnowledge,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-        let name = knowledge.name.clone();
-        let caps = knowledge.capabilities.clone();
-        Box::pin(async move {
-            tracing::info!(
-                "Announcing {} with capabilities: {:?} (registration delegated to orchestration provider)",
-                name,
-                caps,
-            );
-            Ok(())
-        })
-    }
-
-    fn discover(
-        &self,
-        capability: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<PrimalInfo>> + Send + '_>> {
-        let capability = capability.to_string();
-        Box::pin(async move {
-            let env_var = format!("NESTGATE_{}_ENDPOINT", capability.to_uppercase());
-            if let Some(endpoint) = ProcessEnv.get(&env_var) {
-                tracing::info!(
-                    "Discovered '{}' capability from environment: {}",
-                    capability,
-                    endpoint,
-                );
-                return Ok(PrimalInfo {
-                    name: capability.clone(),
-                    capabilities: vec![capability],
-                    endpoints: vec![],
-                    metadata: HashMap::new(),
-                    last_seen: Instant::now(),
-                });
-            }
-
-            Err(NestGateError::network_error(format!(
-                "No endpoint for capability '{capability}'. Set {env_var} or use capability-based discovery."
-            )))
-        })
-    }
-}
+// Discovery backend trait consolidated into self_knowledge::DiscoveryBackend.
+// PrimalDiscovery inlines environment-based discovery directly (the only backend used here).
 
 #[cfg(test)]
 mod tests {

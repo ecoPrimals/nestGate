@@ -42,7 +42,7 @@ impl IntrospectionConfig {
 
     /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             kubernetes_namespace: env.get("KUBERNETES_NAMESPACE"),
             docker_compose_project: env.get("DOCKER_COMPOSE_PROJECT"),

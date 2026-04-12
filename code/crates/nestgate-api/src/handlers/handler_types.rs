@@ -31,7 +31,10 @@ impl AIFirstHandler {
     #[must_use]
     pub fn new() -> Self {
         Self {
+            #[cfg(any(test, feature = "dev-stubs"))]
             router: crate::handlers::ai_first_example::create_handler(),
+            #[cfg(not(any(test, feature = "dev-stubs")))]
+            router: Router::new(),
         }
     }
 }

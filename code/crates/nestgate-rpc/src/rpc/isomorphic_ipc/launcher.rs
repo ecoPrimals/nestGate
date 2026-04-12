@@ -294,7 +294,9 @@ pub fn get_nestgate_socket_path() -> Result<PathBuf> {
 /// # Errors
 ///
 /// Same as [`get_nestgate_socket_path`]: currently always [`Ok`].
-pub fn get_nestgate_socket_path_from_env_source(env: &dyn EnvSource) -> Result<PathBuf> {
+pub fn get_nestgate_socket_path_from_env_source(
+    env: &(impl EnvSource + ?Sized),
+) -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR (session-specific, auto-cleaned)
     if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
         let path = PathBuf::from(runtime_dir).join(format!("{NESTGATE_SERVICE_NAME}.sock"));
@@ -360,7 +362,9 @@ pub fn get_nestgate_tcp_discovery_path() -> Result<PathBuf> {
 /// # Errors
 ///
 /// Same as [`get_nestgate_tcp_discovery_path`]: currently always [`Ok`].
-pub fn get_nestgate_tcp_discovery_path_from_env_source(env: &dyn EnvSource) -> Result<PathBuf> {
+pub fn get_nestgate_tcp_discovery_path_from_env_source(
+    env: &(impl EnvSource + ?Sized),
+) -> Result<PathBuf> {
     // Priority 1: XDG_RUNTIME_DIR
     if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
         let path = PathBuf::from(runtime_dir).join(format!("{NESTGATE_SERVICE_NAME}-ipc-port"));

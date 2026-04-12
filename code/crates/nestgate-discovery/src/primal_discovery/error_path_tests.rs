@@ -23,7 +23,7 @@ async fn test_discover_capability_not_found() {
     let discovery = PrimalDiscovery::new(self_knowledge);
     
     // Try to discover a non-existent capability
-    let result = discovery.discover_capability("non-existent-capability").await;
+    let result = discovery.discover_capability("non-existent-capability");
     assert!(result.is_err(), "Should fail for non-existent capability");
 }
 
@@ -39,7 +39,7 @@ async fn test_discover_with_empty_capability_string() {
     let discovery = PrimalDiscovery::new(self_knowledge);
     
     // Try to discover with empty string
-    let result = discovery.discover_capability("").await;
+    let result = discovery.discover_capability("");
     assert!(result.is_err(), "Should fail for empty capability string");
 }
 
@@ -55,7 +55,7 @@ async fn test_discover_with_whitespace_only() {
     let discovery = PrimalDiscovery::new(self_knowledge);
     
     // Try with whitespace
-    let result = discovery.discover_capability("   ").await;
+    let result = discovery.discover_capability("   ");
     assert!(result.is_err(), "Should fail for whitespace-only capability");
 }
 
@@ -206,7 +206,7 @@ async fn test_concurrent_discovery_attempts() {
         let disc = discovery.clone();
         tasks.spawn(async move {
             let capability = format!("test-capability-{}", i);
-            disc.discover_capability(&capability).await
+            disc.discover_capability(&capability)
         });
     }
     

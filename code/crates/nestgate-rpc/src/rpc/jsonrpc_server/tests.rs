@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 use super::*;
+use base64::Engine;
 use jsonrpsee::core::params::{ArrayParams, ObjectParams};
 use nestgate_types::error::Result as NgResult;
 

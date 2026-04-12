@@ -8,6 +8,7 @@
 
 use std::collections::HashMap;
 use tokio::process::Command as TokioCommand;
+#[cfg(feature = "dev-stubs")]
 use tracing::info;
 
 use crate::error::{Result, ZfsOperation, create_zfs_error};

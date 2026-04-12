@@ -9,7 +9,7 @@ use tracing::{debug, warn};
 
 /// Resolve data directory from an injectable [`EnvSource`] (e.g. [`nestgate_types::MapEnv`] in tests).
 #[must_use]
-pub fn resolve_data_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn resolve_data_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_DATA_DIR") {
         debug!("📂 Data dir from NESTGATE_DATA_DIR: {}", path);
         return PathBuf::from(path);
@@ -33,7 +33,7 @@ pub fn resolve_data_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
 
 /// Resolve config directory from an injectable [`EnvSource`].
 #[must_use]
-pub fn resolve_config_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn resolve_config_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_CONFIG_DIR") {
         debug!("📂 Config dir from NESTGATE_CONFIG_DIR: {}", path);
         return PathBuf::from(path);
@@ -57,7 +57,7 @@ pub fn resolve_config_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
 
 /// Resolve cache directory from an injectable [`EnvSource`].
 #[must_use]
-pub fn resolve_cache_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn resolve_cache_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_CACHE_DIR") {
         debug!("📂 Cache dir from NESTGATE_CACHE_DIR: {}", path);
         return PathBuf::from(path);
@@ -81,7 +81,7 @@ pub fn resolve_cache_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
 
 /// Resolve state directory from an injectable [`EnvSource`].
 #[must_use]
-pub fn resolve_state_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn resolve_state_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_STATE_DIR") {
         debug!("📂 State dir from NESTGATE_STATE_DIR: {}", path);
         return PathBuf::from(path);
@@ -105,7 +105,7 @@ pub fn resolve_state_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
 
 /// Resolve log directory from an injectable [`EnvSource`].
 #[must_use]
-pub fn resolve_log_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn resolve_log_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_LOG_DIR") {
         debug!("📂 Log dir from NESTGATE_LOG_DIR: {}", path);
         return PathBuf::from(path);
@@ -129,7 +129,7 @@ pub fn resolve_log_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
 
 /// Resolve temporary directory from an injectable [`EnvSource`].
 #[must_use]
-pub fn resolve_temp_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn resolve_temp_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_TEMP_DIR") {
         debug!("📂 Temp dir from NESTGATE_TEMP_DIR: {}", path);
         return PathBuf::from(path);
@@ -147,7 +147,7 @@ pub fn resolve_temp_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
 
 /// Resolve runtime directory from an injectable [`EnvSource`].
 #[must_use]
-pub fn resolve_runtime_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn resolve_runtime_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(path) = env.get("NESTGATE_RUNTIME_DIR") {
         debug!("📂 Runtime dir from NESTGATE_RUNTIME_DIR: {}", path);
         return PathBuf::from(path);

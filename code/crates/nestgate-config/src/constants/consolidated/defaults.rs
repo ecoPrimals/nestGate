@@ -15,7 +15,7 @@ pub(in crate::constants::consolidated) fn env_or(key: &str, default: &str) -> St
 
 /// Like [`env_or`], but reads from an injectable [`EnvSource`].
 pub(in crate::constants::consolidated) fn env_or_from_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     key: &str,
     default: &str,
 ) -> String {
@@ -32,7 +32,7 @@ pub(in crate::constants::consolidated) fn env_or_parse<T: std::str::FromStr>(
 
 /// Like [`env_or_parse`], but reads from an injectable [`EnvSource`].
 pub(in crate::constants::consolidated) fn env_or_parse_from_source<T: std::str::FromStr>(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     key: &str,
     default: T,
 ) -> T {

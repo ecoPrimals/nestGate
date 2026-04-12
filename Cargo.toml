@@ -152,7 +152,7 @@ rustix = { version = "0.38", default-features = false, features = ["std", "fs", 
 etcetera = "0.8"
 
 # Content-addressing (BLAKE3 for fetch_external provenance)
-blake3 = "1.5"
+blake3 = { version = "1.5", default-features = false, features = ["std", "pure"] }
 
 # Encoding utilities (crypto ops delegated to bearDog via IPC)
 base64 = "0.22"
@@ -169,9 +169,7 @@ fastrand = "2.0"
 url = "2.5"
 
 # Async utilities
-async-trait = "0.1"
 futures-util = "0.3"
-async-recursion = "1.1"
 
 # Testing and development
 tempfile = "3.10"

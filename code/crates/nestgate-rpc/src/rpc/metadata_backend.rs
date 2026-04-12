@@ -11,12 +11,12 @@
 //! Follows the same dependency-injection pattern as
 //! [`StorageBackend`](crate::rpc::storage_backend::StorageBackend).
 
-use async_trait::async_trait;
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestgate_types::error::Result;
 use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
@@ -52,7 +52,7 @@ pub fn default_metadata_base_dir() -> PathBuf {
 
 /// Like [`default_metadata_base_dir`], but reads `XDG_DATA_HOME` / `HOME` from an injectable [`EnvSource`].
 #[must_use]
-pub fn default_metadata_base_dir_from_env_source(env: &dyn EnvSource) -> PathBuf {
+pub fn default_metadata_base_dir_from_env_source(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     use etcetera::BaseStrategy;
 
     if let Ok(strategy) = etcetera::base_strategy::choose_base_strategy() {
@@ -79,22 +79,27 @@ fn service_record_path(base_dir: &Path, name: &str) -> PathBuf {
 /// - **`FileMetadataBackend`** (this crate) — default for `SemanticRouter::new`; JSON on disk
 /// - **`InMemoryMetadataBackend`** (this crate) — tests / ephemeral mode
 /// - **`CoreMetadataBackend`** (`nestgate-core`) — backed by `ServiceMetadataStore`
-#[async_trait]
 pub trait MetadataBackend: Send + Sync {
     /// Store service metadata.
-    async fn store_service(&self, record: ServiceRecord) -> Result<()>;
+    fn store_service(&self, record: ServiceRecord) -> impl Future<Output = Result<()>> + Send + '_;
 
     /// Retrieve service metadata by name.
-    async fn get_service(&self, name: &str) -> Result<ServiceRecord>;
+    fn get_service(&self, name: &str) -> impl Future<Output = Result<ServiceRecord>> + Send + '_;
 
     /// Search services by capability.
-    async fn find_by_capability(&self, capability: &str) -> Result<Vec<ServiceRecord>>;
+    fn find_by_capability(
+        &self,
+        capability: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_;
 
     /// List service records whose name starts with `prefix` (e.g. `session/` for session index).
-    async fn list_services_by_name_prefix(&self, prefix: &str) -> Result<Vec<ServiceRecord>>;
+    fn list_services_by_name_prefix(
+        &self,
+        prefix: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_;
 
     /// Remove a service record by name (session index entry, etc.).
-    async fn delete_service(&self, name: &str) -> Result<()>;
+    fn delete_service(&self, name: &str) -> impl Future<Output = Result<()>> + Send + '_;
 }
 
 /// In-memory metadata backend for tests and standalone mode.
@@ -111,56 +116,79 @@ impl InMemoryMetadataBackend {
     }
 }
 
-#[async_trait]
 impl MetadataBackend for InMemoryMetadataBackend {
-    async fn store_service(&self, record: ServiceRecord) -> Result<()> {
-        self.services
-            .write()
-            .await
-            .insert(record.name.clone(), record);
-        Ok(())
-    }
-
-    async fn get_service(&self, name: &str) -> Result<ServiceRecord> {
-        self.services
-            .read()
-            .await
-            .get(name)
-            .cloned()
-            .ok_or_else(|| {
-                nestgate_types::error::NestGateError::not_found(format!("service `{name}`"))
-            })
-    }
-
-    async fn find_by_capability(&self, capability: &str) -> Result<Vec<ServiceRecord>> {
-        let guard = self.services.read().await;
-        let matches: Vec<ServiceRecord> = guard
-            .values()
-            .filter(|s| s.capabilities.iter().any(|c| c == capability))
-            .cloned()
-            .collect();
-        Ok(matches)
-    }
-
-    async fn list_services_by_name_prefix(&self, prefix: &str) -> Result<Vec<ServiceRecord>> {
-        let guard = self.services.read().await;
-        let mut matches: Vec<ServiceRecord> = guard
-            .values()
-            .filter(|s| s.name.starts_with(prefix))
-            .cloned()
-            .collect();
-        matches.sort_by(|a, b| a.name.cmp(&b.name));
-        Ok(matches)
-    }
-
-    async fn delete_service(&self, name: &str) -> Result<()> {
-        let removed = self.services.write().await.remove(name);
-        if removed.is_some() {
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn store_service(&self, record: ServiceRecord) -> impl Future<Output = Result<()>> + Send + '_ {
+        async move {
+            self.services
+                .write()
+                .await
+                .insert(record.name.clone(), record);
             Ok(())
-        } else {
-            Err(nestgate_types::error::NestGateError::not_found(format!(
-                "service `{name}`"
-            )))
+        }
+    }
+
+    fn get_service(&self, name: &str) -> impl Future<Output = Result<ServiceRecord>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            self.services
+                .read()
+                .await
+                .get(&name)
+                .cloned()
+                .ok_or_else(|| {
+                    nestgate_types::error::NestGateError::not_found(format!("service `{name}`"))
+                })
+        }
+    }
+
+    fn find_by_capability(
+        &self,
+        capability: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
+        let capability = capability.to_owned();
+        async move {
+            let guard = self.services.read().await;
+            let matches: Vec<ServiceRecord> = guard
+                .values()
+                .filter(|s| s.capabilities.iter().any(|c| c == &capability))
+                .cloned()
+                .collect();
+            Ok(matches)
+        }
+    }
+
+    fn list_services_by_name_prefix(
+        &self,
+        prefix: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
+        let prefix = prefix.to_owned();
+        async move {
+            let guard = self.services.read().await;
+            let mut matches: Vec<ServiceRecord> = guard
+                .values()
+                .filter(|s| s.name.starts_with(&*prefix))
+                .cloned()
+                .collect();
+            matches.sort_by(|a, b| a.name.cmp(&b.name));
+            Ok(matches)
+        }
+    }
+
+    fn delete_service(&self, name: &str) -> impl Future<Output = Result<()>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            let removed = self.services.write().await.remove(&name);
+            if removed.is_some() {
+                Ok(())
+            } else {
+                Err(nestgate_types::error::NestGateError::not_found(format!(
+                    "service `{name}`"
+                )))
+            }
         }
     }
 }
@@ -221,59 +249,155 @@ impl FileMetadataBackend {
     }
 }
 
-#[async_trait]
 impl MetadataBackend for FileMetadataBackend {
-    async fn store_service(&self, record: ServiceRecord) -> Result<()> {
-        let path = service_record_path(&self.base_dir, &record.name);
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).await?;
-        }
-        let bytes = serde_json::to_vec_pretty(&record)?;
-        fs::write(&path, bytes).await?;
-        Ok(())
-    }
-
-    async fn get_service(&self, name: &str) -> Result<ServiceRecord> {
-        let path = service_record_path(&self.base_dir, name);
-        let bytes = fs::read(&path).await.map_err(|e| {
-            if e.kind() == std::io::ErrorKind::NotFound {
-                nestgate_types::error::NestGateError::not_found(format!("service `{name}`"))
-            } else {
-                e.into()
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn store_service(&self, record: ServiceRecord) -> impl Future<Output = Result<()>> + Send + '_ {
+        async move {
+            let path = service_record_path(&self.base_dir, &record.name);
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent).await?;
             }
-        })?;
-        let record: ServiceRecord = serde_json::from_slice(&bytes)?;
-        Ok(record)
+            let bytes = serde_json::to_vec_pretty(&record)?;
+            fs::write(&path, bytes).await?;
+            Ok(())
+        }
     }
 
-    async fn find_by_capability(&self, capability: &str) -> Result<Vec<ServiceRecord>> {
-        let all = self.iter_service_records().await?;
-        let mut out: Vec<ServiceRecord> = all
-            .into_iter()
-            .filter(|s| s.capabilities.iter().any(|c| c == capability))
-            .collect();
-        out.sort_by(|a, b| a.name.cmp(&b.name));
-        Ok(out)
+    fn get_service(&self, name: &str) -> impl Future<Output = Result<ServiceRecord>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            let path = service_record_path(&self.base_dir, &name);
+            let bytes = fs::read(&path).await.map_err(|e| {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    nestgate_types::error::NestGateError::not_found(format!("service `{name}`"))
+                } else {
+                    e.into()
+                }
+            })?;
+            let record: ServiceRecord = serde_json::from_slice(&bytes)?;
+            Ok(record)
+        }
     }
 
-    async fn list_services_by_name_prefix(&self, prefix: &str) -> Result<Vec<ServiceRecord>> {
-        let all = self.iter_service_records().await?;
-        let mut matches: Vec<ServiceRecord> = all
-            .into_iter()
-            .filter(|s| s.name.starts_with(prefix))
-            .collect();
-        matches.sort_by(|a, b| a.name.cmp(&b.name));
-        Ok(matches)
+    fn find_by_capability(
+        &self,
+        capability: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
+        let capability = capability.to_owned();
+        async move {
+            let all = self.iter_service_records().await?;
+            let mut out: Vec<ServiceRecord> = all
+                .into_iter()
+                .filter(|s| s.capabilities.iter().any(|c| c == &capability))
+                .collect();
+            out.sort_by(|a, b| a.name.cmp(&b.name));
+            Ok(out)
+        }
     }
 
-    async fn delete_service(&self, name: &str) -> Result<()> {
-        let path = service_record_path(&self.base_dir, name);
-        match fs::remove_file(&path).await {
-            Ok(()) => Ok(()),
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(
-                nestgate_types::error::NestGateError::not_found(format!("service `{name}`")),
-            ),
-            Err(e) => Err(e.into()),
+    fn list_services_by_name_prefix(
+        &self,
+        prefix: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
+        let prefix = prefix.to_owned();
+        async move {
+            let all = self.iter_service_records().await?;
+            let mut matches: Vec<ServiceRecord> = all
+                .into_iter()
+                .filter(|s| s.name.starts_with(&*prefix))
+                .collect();
+            matches.sort_by(|a, b| a.name.cmp(&b.name));
+            Ok(matches)
+        }
+    }
+
+    fn delete_service(&self, name: &str) -> impl Future<Output = Result<()>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            let path = service_record_path(&self.base_dir, &name);
+            match fs::remove_file(&path).await {
+                Ok(()) => Ok(()),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(
+                    nestgate_types::error::NestGateError::not_found(format!("service `{name}`")),
+                ),
+                Err(e) => Err(e.into()),
+            }
+        }
+    }
+}
+
+/// Enum dispatch for runtime metadata backend selection (file vs in-memory).
+///
+/// Used by `SemanticRouter::new()` where the backend is chosen at startup
+/// based on environment. Avoids `dyn` boxing while preserving runtime polymorphism.
+#[derive(Clone)]
+pub enum DefaultMetadataBackend {
+    /// File-backed (production default)
+    File(FileMetadataBackend),
+    /// In-memory (development fallback)
+    InMemory(InMemoryMetadataBackend),
+}
+
+impl MetadataBackend for DefaultMetadataBackend {
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn store_service(&self, record: ServiceRecord) -> impl Future<Output = Result<()>> + Send + '_ {
+        async move {
+            match self {
+                Self::File(f) => f.store_service(record).await,
+                Self::InMemory(m) => m.store_service(record).await,
+            }
+        }
+    }
+
+    fn get_service(&self, name: &str) -> impl Future<Output = Result<ServiceRecord>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            match self {
+                Self::File(f) => f.get_service(&name).await,
+                Self::InMemory(m) => m.get_service(&name).await,
+            }
+        }
+    }
+
+    fn find_by_capability(
+        &self,
+        capability: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
+        let capability = capability.to_owned();
+        async move {
+            match self {
+                Self::File(f) => f.find_by_capability(&capability).await,
+                Self::InMemory(m) => m.find_by_capability(&capability).await,
+            }
+        }
+    }
+
+    fn list_services_by_name_prefix(
+        &self,
+        prefix: &str,
+    ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
+        let prefix = prefix.to_owned();
+        async move {
+            match self {
+                Self::File(f) => f.list_services_by_name_prefix(&prefix).await,
+                Self::InMemory(m) => m.list_services_by_name_prefix(&prefix).await,
+            }
+        }
+    }
+
+    fn delete_service(&self, name: &str) -> impl Future<Output = Result<()>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            match self {
+                Self::File(f) => f.delete_service(&name).await,
+                Self::InMemory(m) => m.delete_service(&name).await,
+            }
         }
     }
 }
@@ -281,8 +405,10 @@ impl MetadataBackend for FileMetadataBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nestgate_types::error::NestGateError;
     use tempfile::tempdir;
     use tokio::fs;
+    use tokio::task::JoinSet;
 
     #[tokio::test]
     async fn in_memory_metadata_roundtrip() {
@@ -481,5 +607,175 @@ mod tests {
         assert_eq!(listed.len(), 16);
         let caps = backend.find_by_capability("cc").await.expect("find");
         assert_eq!(caps.len(), 16);
+    }
+
+    #[tokio::test]
+    async fn in_memory_get_service_not_found() {
+        let backend = InMemoryMetadataBackend::new();
+        let err = backend
+            .get_service("missing")
+            .await
+            .expect_err("missing service");
+        assert!(matches!(err, NestGateError::Api(_)));
+    }
+
+    #[tokio::test]
+    async fn in_memory_delete_service_not_found() {
+        let backend = InMemoryMetadataBackend::new();
+        let err = backend
+            .delete_service("nope")
+            .await
+            .expect_err("delete missing");
+        assert!(matches!(err, NestGateError::Api(_)));
+    }
+
+    #[tokio::test]
+    async fn file_metadata_get_service_not_found() {
+        let dir = tempdir().expect("tempdir");
+        let backend = FileMetadataBackend::new(dir.path().to_path_buf()).expect("new");
+        let err = backend.get_service("absent").await.expect_err("not found");
+        assert!(matches!(err, NestGateError::Api(_)));
+    }
+
+    #[tokio::test]
+    async fn file_metadata_get_service_invalid_json() {
+        let dir = tempdir().expect("tempdir");
+        let backend = FileMetadataBackend::new(dir.path().to_path_buf()).expect("new");
+        let path = service_record_path(backend.base_dir(), "bad-json");
+        fs::write(&path, b"{\"name\":")
+            .await
+            .expect("write truncated json");
+        let err = backend.get_service("bad-json").await.expect_err("serde");
+        assert!(!err.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn file_metadata_delete_service_not_found() {
+        let dir = tempdir().expect("tempdir");
+        let backend = FileMetadataBackend::new(dir.path().to_path_buf()).expect("new");
+        let err = backend
+            .delete_service("never-stored")
+            .await
+            .expect_err("not found");
+        assert!(matches!(err, NestGateError::Api(_)));
+    }
+
+    #[tokio::test]
+    async fn file_metadata_iter_skips_subdirectories_and_non_json_files() {
+        let dir = tempdir().expect("tempdir");
+        let backend = FileMetadataBackend::new(dir.path().to_path_buf()).expect("new");
+        let svc = dir.path().join(METADATA_SERVICES_NAMESPACE);
+        fs::create_dir(svc.join("nested"))
+            .await
+            .expect("mkdir nested");
+        fs::write(svc.join("note.txt"), b"{}").await.expect("txt");
+        backend
+            .store_service(ServiceRecord {
+                name: "only-valid".into(),
+                capabilities: vec!["x".into()],
+                endpoint: None,
+                metadata: HashMap::new(),
+            })
+            .await
+            .expect("store");
+        let listed = backend
+            .list_services_by_name_prefix("")
+            .await
+            .expect("list");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].name, "only-valid");
+    }
+
+    #[tokio::test]
+    async fn file_metadata_read_dir_error_when_services_path_is_file() {
+        let dir = tempdir().expect("tempdir");
+        let backend = FileMetadataBackend::new(dir.path().to_path_buf()).expect("new");
+        let services_path = dir.path().join(METADATA_SERVICES_NAMESPACE);
+        fs::remove_dir_all(&services_path)
+            .await
+            .expect("remove services dir");
+        fs::write(&services_path, b"not-a-dir")
+            .await
+            .expect("replace with file");
+        let err = backend
+            .find_by_capability("any")
+            .await
+            .expect_err("read_dir should fail");
+        assert!(!err.to_string().is_empty());
+    }
+
+    #[tokio::test]
+    async fn default_metadata_backend_enum_dispatches_file_and_memory() {
+        let dir = tempdir().expect("tempdir");
+        let file = DefaultMetadataBackend::File(
+            FileMetadataBackend::new(dir.path().to_path_buf()).expect("new"),
+        );
+        let mem = DefaultMetadataBackend::InMemory(InMemoryMetadataBackend::new());
+
+        for (label, backend) in [("file", file), ("mem", mem)] {
+            let name = format!("svc-{label}");
+            backend
+                .store_service(ServiceRecord {
+                    name: name.clone(),
+                    capabilities: vec!["c".into()],
+                    endpoint: None,
+                    metadata: HashMap::new(),
+                })
+                .await
+                .expect("store");
+            let got = backend.get_service(&name).await.expect("get");
+            assert_eq!(got.name, name);
+            backend.delete_service(&name).await.expect("delete");
+        }
+    }
+
+    #[tokio::test]
+    async fn file_metadata_concurrent_mixed_ops() {
+        let dir = tempdir().expect("tempdir");
+        let backend = FileMetadataBackend::new(dir.path().to_path_buf()).expect("new");
+        let mut set = JoinSet::new();
+        for i in 0u32..32 {
+            let b = backend.clone();
+            set.spawn(async move {
+                let name = format!("mix-{i}");
+                b.store_service(ServiceRecord {
+                    name: name.clone(),
+                    capabilities: vec!["m".into()],
+                    endpoint: None,
+                    metadata: HashMap::new(),
+                })
+                .await?;
+                let _ = b.get_service(&name).await?;
+                if i % 4 == 0 {
+                    b.delete_service(&name).await?;
+                }
+                let _ = b.list_services_by_name_prefix("mix-").await?;
+                let _ = b.find_by_capability("m").await?;
+                Ok::<(), nestgate_types::error::NestGateError>(())
+            });
+        }
+        while let Some(res) = set.join_next().await {
+            res.expect("join").expect("task");
+        }
+        let remaining = backend
+            .list_services_by_name_prefix("mix-")
+            .await
+            .expect("list");
+        assert_eq!(remaining.len(), 24);
+    }
+
+    #[test]
+    fn default_metadata_base_dir_paths_contain_nestgate_metadata() {
+        let p = default_metadata_base_dir();
+        let s = p.to_string_lossy();
+        assert!(s.contains("nestgate"), "{s}");
+        assert!(s.contains("metadata"), "{s}");
+    }
+
+    #[test]
+    fn default_metadata_base_dir_from_env_source_ends_with_nestgate_metadata_segment() {
+        // Resolution may use etcetera or env fallbacks; path always ends with …/nestgate/metadata.
+        let p = default_metadata_base_dir_from_env_source(&nestgate_types::MapEnv::new());
+        assert!(p.ends_with("nestgate/metadata"), "{}", p.display());
     }
 }

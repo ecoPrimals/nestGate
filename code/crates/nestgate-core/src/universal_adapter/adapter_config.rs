@@ -107,7 +107,7 @@ impl AdapterDiscoveryConfig {
 
     /// Like [`Self::from_env`], but reads discovery overrides from `env`.
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         use crate::config::runtime::get_config;
 
         let mut config = Self::new();
@@ -253,7 +253,11 @@ mod tests {
         let config = AdapterDiscoveryConfig::new();
         // Runtime config uses 127.0.0.1 (IpAddr format) instead of "localhost"
         assert_eq!(config.get_host(), "127.0.0.1");
-        assert_eq!(config.get_port(), &runtime_fallback_ports::HTTP.to_string());
+        let expected_port = {
+            #[expect(deprecated)]
+            runtime_fallback_ports::HTTP.to_string()
+        };
+        assert_eq!(config.get_port(), &expected_port);
         assert!(config.get_adapter_endpoint().is_none());
         assert!(config.get_all_discovery_endpoints().is_empty());
     }

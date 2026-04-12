@@ -15,6 +15,7 @@ use nestgate_core::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::future::Future;
 use std::sync::Arc;
 use std::time::Instant;
 use tracing::debug;
@@ -35,25 +36,64 @@ fn self_primal_name() -> String {
 /// - `health.*` - Health and status checks
 /// - `identity.*` - Primal identity and discovery
 /// - `system.*` - System information and capabilities
-#[derive(Clone)]
-pub struct NestGateRpcHandler {
+pub struct NestGateRpcHandler<S: StorageBackend = NoopStorage> {
     /// Optional storage backend
-    storage: Option<Arc<dyn StorageBackend>>,
+    storage: Option<Arc<S>>,
+}
+
+impl<S: StorageBackend> Clone for NestGateRpcHandler<S> {
+    fn clone(&self) -> Self {
+        Self {
+            storage: self.storage.clone(),
+        }
+    }
+}
+
+/// Null-object storage backend for `NestGateRpcHandler` when no real storage is configured.
+///
+/// All operations return errors. This is NOT a mock — it is the production default
+/// that signals "storage not initialized" until a real backend is wired.
+pub struct NoopStorage;
+
+impl StorageBackend for NoopStorage {
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn store(&self, _key: &str, _value: &[u8]) -> impl Future<Output = Result<()>> + Send + '_ {
+        async { Err(NestGateError::api_error("Storage backend not configured")) }
+    }
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn retrieve(&self, _key: &str) -> impl Future<Output = Result<Vec<u8>>> + Send + '_ {
+        async { Err(NestGateError::api_error("Storage backend not configured")) }
+    }
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn delete(&self, _key: &str) -> impl Future<Output = Result<()>> + Send + '_ {
+        async { Err(NestGateError::api_error("Storage backend not configured")) }
+    }
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn list(
+        &self,
+        _prefix: &Option<String>,
+    ) -> impl Future<Output = Result<Vec<String>>> + Send + '_ {
+        async { Err(NestGateError::api_error("Storage backend not configured")) }
+    }
 }
 
 impl NestGateRpcHandler {
-    /// Create new RPC handler
+    /// Create new RPC handler (no storage backend).
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { storage: None }
-    }
-
-    /// Create handler with storage backend
-    #[must_use]
-    pub fn with_storage(storage: Arc<dyn StorageBackend>) -> Self {
-        Self {
-            storage: Some(storage),
-        }
     }
 }
 
@@ -63,7 +103,17 @@ impl Default for NestGateRpcHandler {
     }
 }
 
-impl RpcMethodHandler for NestGateRpcHandler {
+impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
+    /// Create handler with storage backend.
+    #[must_use]
+    pub const fn with_storage(storage: Arc<S>) -> Self {
+        Self {
+            storage: Some(storage),
+        }
+    }
+}
+
+impl<S: StorageBackend + 'static> RpcMethodHandler for NestGateRpcHandler<S> {
     async fn handle_method(&self, method: &str, params: Value) -> Result<Value> {
         debug!("Handling RPC method: {}", method);
 
@@ -93,7 +143,7 @@ impl RpcMethodHandler for NestGateRpcHandler {
     }
 }
 
-impl NestGateRpcHandler {
+impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
     /// Handle storage.store request
     async fn handle_store(&self, params: Value) -> Result<Value> {
         let request: StoreRequest = serde_json::from_value(params)
@@ -244,19 +294,21 @@ struct ListRequest {
 /// **STORAGE BACKEND TRAIT**
 ///
 /// Trait for storage implementations to be used by RPC handlers.
-#[async_trait::async_trait]
 pub trait StorageBackend: Send + Sync {
     /// Store a key-value pair
-    async fn store(&self, key: &str, value: &[u8]) -> Result<()>;
+    fn store(&self, key: &str, value: &[u8]) -> impl Future<Output = Result<()>> + Send + '_;
 
     /// Retrieve a value by key
-    async fn retrieve(&self, key: &str) -> Result<Vec<u8>>;
+    fn retrieve(&self, key: &str) -> impl Future<Output = Result<Vec<u8>>> + Send + '_;
 
     /// Delete a key
-    async fn delete(&self, key: &str) -> Result<()>;
+    fn delete(&self, key: &str) -> impl Future<Output = Result<()>> + Send + '_;
 
     /// List keys with optional prefix
-    async fn list(&self, prefix: &Option<String>) -> Result<Vec<String>>;
+    fn list(
+        &self,
+        prefix: &Option<String>,
+    ) -> impl Future<Output = Result<Vec<String>>> + Send + '_;
 }
 
 #[cfg(test)]
@@ -265,22 +317,41 @@ mod tests {
 
     struct MockStorage;
 
-    #[async_trait::async_trait]
     impl StorageBackend for MockStorage {
-        async fn store(&self, _key: &str, _value: &[u8]) -> Result<()> {
-            Ok(())
+        #[expect(
+            clippy::manual_async_fn,
+            reason = "trait requires impl Future with Send bound"
+        )]
+        fn store(&self, _key: &str, _value: &[u8]) -> impl Future<Output = Result<()>> + Send + '_ {
+            async { Ok(()) }
         }
 
-        async fn retrieve(&self, key: &str) -> Result<Vec<u8>> {
-            Ok(format!("mock_value_{key}").into_bytes())
+        #[expect(
+            clippy::manual_async_fn,
+            reason = "trait requires impl Future with Send bound"
+        )]
+        fn retrieve(&self, key: &str) -> impl Future<Output = Result<Vec<u8>>> + Send + '_ {
+            let key = key.to_owned();
+            async move { Ok(format!("mock_value_{key}").into_bytes()) }
         }
 
-        async fn delete(&self, _key: &str) -> Result<()> {
-            Ok(())
+        #[expect(
+            clippy::manual_async_fn,
+            reason = "trait requires impl Future with Send bound"
+        )]
+        fn delete(&self, _key: &str) -> impl Future<Output = Result<()>> + Send + '_ {
+            async { Ok(()) }
         }
 
-        async fn list(&self, _prefix: &Option<String>) -> Result<Vec<String>> {
-            Ok(vec!["key1".to_string(), "key2".to_string()])
+        #[expect(
+            clippy::manual_async_fn,
+            reason = "trait requires impl Future with Send bound"
+        )]
+        fn list(
+            &self,
+            _prefix: &Option<String>,
+        ) -> impl Future<Output = Result<Vec<String>>> + Send + '_ {
+            async { Ok(vec!["key1".to_string(), "key2".to_string()]) }
         }
     }
 

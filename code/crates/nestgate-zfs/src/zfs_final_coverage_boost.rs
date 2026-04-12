@@ -7,9 +7,8 @@
 
 #[cfg(test)]
 mod zfs_final_coverage_tests {
-    use crate::types::{DatasetInfo, PoolHealth, PoolInfo, PoolState, ZfsError};
+    use crate::types::{PoolHealth, PoolState, ZfsError};
     use std::collections::HashMap;
-    use std::time::SystemTime;
 
     /// Type alias for ZfsResult
     type ZfsResult<T> = Result<T, ZfsError>;

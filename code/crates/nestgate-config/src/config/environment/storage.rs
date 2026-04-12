@@ -39,7 +39,7 @@ impl StorageConfig {
     }
 
     /// Load from an injectable environment source (e.g. [`nestgate_types::MapEnv`] in tests).
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self, ConfigError> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self, ConfigError> {
         Self::from_env_with_prefix_source("NESTGATE", env)
     }
 
@@ -51,7 +51,7 @@ impl StorageConfig {
     /// Load with custom prefix from an injectable [`EnvSource`].
     pub fn from_env_with_prefix_source(
         prefix: &str,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<Self, ConfigError> {
         Ok(Self {
             zfs_pool: Self::env_var_or(prefix, "ZFS_POOL", "tank".to_string(), env)?,
@@ -75,7 +75,7 @@ impl StorageConfig {
         prefix: &str,
         key: &str,
         default: T,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<T, ConfigError>
     where
         T::Err: std::error::Error + Send + Sync + 'static,

@@ -434,7 +434,10 @@ mod result_types_tests {
     }
 
     #[test]
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "test helper returns Result for API consistency"
+    )]
     fn test_void_result_multiple_operations() {
         fn step() -> VoidResult {
             Ok(())

@@ -28,7 +28,7 @@ async fn show_config() -> Result<()> {
     show_config_from_env_source(&ProcessEnv).await
 }
 
-async fn show_config_from_env_source(env: &dyn EnvSource) -> Result<()> {
+async fn show_config_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<()> {
     println!("NestGate Configuration");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -162,7 +162,7 @@ async fn get_config(key: &str) -> Result<()> {
     get_config_from_env_source(&ProcessEnv, key).await
 }
 
-async fn get_config_from_env_source(env: &dyn EnvSource, key: &str) -> Result<()> {
+async fn get_config_from_env_source(env: &(impl EnvSource + ?Sized), key: &str) -> Result<()> {
     let value = match key {
         "api_port" | "port" => {
             let cfg = nestgate_core::config::runtime::get_config();
@@ -233,7 +233,7 @@ async fn validate_config() -> Result<()> {
     validate_config_from_env_source(&ProcessEnv).await
 }
 
-async fn validate_config_from_env_source(env: &dyn EnvSource) -> Result<()> {
+async fn validate_config_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<()> {
     println!("Validating NestGate configuration...");
     let mut issues = 0;
 
@@ -284,7 +284,7 @@ async fn export_config(output: Option<std::path::PathBuf>, format: &str) -> Resu
 }
 
 async fn export_config_from_env_source(
-    env_src: &dyn EnvSource,
+    env_src: &(impl EnvSource + ?Sized),
     output: Option<std::path::PathBuf>,
     format: &str,
 ) -> Result<()> {

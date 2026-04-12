@@ -12,8 +12,8 @@
 //! ## Design
 //! - tarpc primary for primal-to-primal communication
 //! - Zero unsafe blocks, modern async/await
-//! - **NG-01 resolved**: All storage operations delegate to a [`StorageBackend`]
-//!   trait object, which is filesystem-backed via `nestgate-core` in production
+//! - **NG-01 resolved**: All storage operations delegate to a generic [`StorageBackend`]
+//!   implementation, which is filesystem-backed via `nestgate-core` in production
 //!   and in-memory for tests.
 //! - Self-knowledge: exposes only storage capabilities
 //! - Runtime discovery: registers with discovery system
@@ -67,20 +67,29 @@ const HTTP_WIRE_VERSION: &str = "1.1";
 
 /// `NestGate` RPC service implementation.
 ///
-/// Delegates all storage operations to the injected [`StorageBackend`]. In
-/// production this is `CoreStorageBackend` (filesystem-backed via
-/// `StorageManagerService`); in tests it is
-/// [`InMemoryStorageBackend`](crate::rpc::storage_backend::InMemoryStorageBackend).
-#[derive(Clone)]
-pub struct NestGateRpcService {
+/// Generic over the [`StorageBackend`] implementation. In production this is
+/// `StorageManagerService` (filesystem-backed via `nestgate-core`); in tests
+/// it is [`InMemoryStorageBackend`](crate::rpc::storage_backend::InMemoryStorageBackend).
+pub struct NestGateRpcService<
+    S: StorageBackend = crate::rpc::storage_backend::InMemoryStorageBackend,
+> {
     pub(crate) start_time: SystemTime,
-    pub(crate) backend: Arc<dyn StorageBackend>,
+    pub(crate) backend: Arc<S>,
 }
 
-impl NestGateRpcService {
+impl<S: StorageBackend> Clone for NestGateRpcService<S> {
+    fn clone(&self) -> Self {
+        Self {
+            start_time: self.start_time,
+            backend: Arc::clone(&self.backend),
+        }
+    }
+}
+
+impl<S: StorageBackend> NestGateRpcService<S> {
     /// Create an RPC service backed by the given [`StorageBackend`].
     #[must_use]
-    pub fn with_backend(backend: impl StorageBackend + 'static) -> Self {
+    pub fn with_backend(backend: S) -> Self {
         info!("🚀 Creating NestGate RPC service (StorageBackend-backed)");
         Self {
             start_time: SystemTime::now(),
@@ -88,16 +97,18 @@ impl NestGateRpcService {
         }
     }
 
-    /// Create an RPC service from a pre-wrapped `Arc<dyn StorageBackend>`.
+    /// Create an RPC service from a pre-wrapped `Arc<S>`.
     #[must_use]
-    pub fn with_backend_arc(backend: Arc<dyn StorageBackend>) -> Self {
+    pub fn with_backend_arc(backend: Arc<S>) -> Self {
         info!("🚀 Creating NestGate RPC service (StorageBackend-backed, Arc)");
         Self {
             start_time: SystemTime::now(),
             backend,
         }
     }
+}
 
+impl NestGateRpcService {
     /// Create new RPC service with the default in-memory backend (tests / standalone).
     ///
     /// # Errors
@@ -110,7 +121,9 @@ impl NestGateRpcService {
             crate::rpc::storage_backend::InMemoryStorageBackend::new(),
         ))
     }
+}
 
+impl<S: StorageBackend + 'static> NestGateRpcService<S> {
     /// Get uptime in seconds
     fn uptime_seconds(&self) -> u64 {
         self.start_time.elapsed().unwrap_or_default().as_secs()
@@ -154,7 +167,7 @@ fn rpc_err(e: &nestgate_types::error::NestGateError) -> NestGateRpcError {
     }
 }
 
-impl NestGateRpc for NestGateRpcService {
+impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
     // ==================== STORAGE OPERATIONS (delegated to StorageBackend) ====
 
     async fn create_dataset(
@@ -454,7 +467,10 @@ impl NestGateRpc for NestGateRpcService {
 ///
 /// # Errors
 /// Returns error if server fails to start or bind to address
-pub async fn serve_tarpc(addr: SocketAddr, service: NestGateRpcService) -> Result<()> {
+pub async fn serve_tarpc<S: StorageBackend + 'static>(
+    addr: SocketAddr,
+    service: NestGateRpcService<S>,
+) -> Result<()> {
     info!("🚀 Starting NestGate tarpc server on {}", addr);
 
     let listener =

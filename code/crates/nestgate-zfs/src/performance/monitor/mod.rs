@@ -29,7 +29,7 @@
 //! ```
 
 use crate::types::StorageTier;
-use crate::{config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager};
+use crate::{dataset::ZfsDatasetManager, pool::ZfsPoolManager};
 use nestgate_core::Result as CoreResult;
 use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use std::collections::{HashMap, VecDeque};
@@ -70,9 +70,11 @@ impl ZfsPerformanceMonitor {
     #[cfg(any(test, feature = "dev-stubs"))]
     pub fn new_for_testing() -> Self {
         Self {
-            pool_manager: Arc::new(ZfsPoolManager::new_production(ZfsConfig::default())),
+            pool_manager: Arc::new(ZfsPoolManager::new_production(
+                crate::config::ZfsConfig::default(),
+            )),
             dataset_manager: Arc::new({
-                let config = ZfsConfig::default();
+                let config = crate::config::ZfsConfig::default();
                 let pool_manager = Arc::new(ZfsPoolManager::new_production(config.clone()));
                 ZfsDatasetManager::new(config, pool_manager)
             }),
@@ -113,7 +115,10 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Like [`Self::start`], but reads alert-duration env vars from an injectable [`EnvSource`].
-    pub async fn start_from_env_source(&mut self, env: &dyn EnvSource) -> CoreResult<()> {
+    pub async fn start_from_env_source(
+        &mut self,
+        env: &(impl EnvSource + ?Sized),
+    ) -> CoreResult<()> {
         info!("Starting ZFS performance monitoring");
 
         // Load default alert conditions
@@ -149,7 +154,10 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Load default alert conditions
-    async fn load_default_alert_conditions(&self, env: &dyn EnvSource) -> CoreResult<()> {
+    async fn load_default_alert_conditions(
+        &self,
+        env: &(impl EnvSource + ?Sized),
+    ) -> CoreResult<()> {
         let mut conditions = self.alert_conditions.write().await;
 
         // High latency alert

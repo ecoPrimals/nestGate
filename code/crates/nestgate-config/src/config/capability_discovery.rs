@@ -98,7 +98,10 @@ pub enum DiscoverySource {
 /// # Errors
 ///
 /// Returns error if service cannot be discovered through any method
-pub fn discover_service_with_env(capability: &str, env: &dyn EnvSource) -> Result<ServiceEndpoint> {
+pub fn discover_service_with_env(
+    capability: &str,
+    env: &(impl EnvSource + ?Sized),
+) -> Result<ServiceEndpoint> {
     // Try capability registry first (preferred)
     if let Ok(endpoint) = discover_from_capability_registry(capability) {
         return Ok(endpoint);

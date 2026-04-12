@@ -3,14 +3,14 @@
 
 //! Environment-variable fallbacks for bind address and API port (`UniBin` compliance).
 //!
-//! All helpers accept `&dyn EnvSource` for concurrent-safe testing via `MapEnv`.
+//! All helpers accept `&(impl EnvSource + ?Sized)` for concurrent-safe testing via `MapEnv`.
 //! Production callers pass `&ProcessEnv`.
 
 use nestgate_types::EnvSource;
 
 /// Read port from environment with fallback chain (`UniBin` compliance).
 /// Priority: `NESTGATE_API_PORT` → `NESTGATE_HTTP_PORT` → `NESTGATE_PORT` → default
-pub fn port_from_env_source(env: &dyn EnvSource) -> u16 {
+pub fn port_from_env_source(env: &(impl EnvSource + ?Sized)) -> u16 {
     env.get("NESTGATE_API_PORT")
         .or_else(|| env.get("NESTGATE_HTTP_PORT"))
         .or_else(|| env.get("NESTGATE_PORT"))
@@ -20,7 +20,7 @@ pub fn port_from_env_source(env: &dyn EnvSource) -> u16 {
 
 /// Read bind address from environment with fallback (`UniBin` compliance).
 /// Priority: `NESTGATE_BIND` → `NESTGATE_BIND_ADDRESS` → `NESTGATE_HOST` → default
-pub fn bind_from_env_source(env: &dyn EnvSource) -> String {
+pub fn bind_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
     env.get("NESTGATE_BIND")
         .or_else(|| env.get("NESTGATE_BIND_ADDRESS"))
         .or_else(|| env.get("NESTGATE_HOST"))

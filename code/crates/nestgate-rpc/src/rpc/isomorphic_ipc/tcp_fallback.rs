@@ -278,7 +278,7 @@ impl TcpFallbackServer {
     /// Like [`Self::write_tcp_discovery_file`], but reads `XDG_RUNTIME_DIR` / `HOME` from `env`.
     pub(crate) fn write_tcp_discovery_file_from_env_source(
         &self,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
         addr: &SocketAddr,
     ) -> Result<()> {
         // XDG-compliant discovery file paths (try in order)

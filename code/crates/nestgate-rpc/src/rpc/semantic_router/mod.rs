@@ -96,7 +96,8 @@
 
 use crate::rpc::NestGateRpcClient;
 use crate::rpc::metadata_backend::{
-    FileMetadataBackend, InMemoryMetadataBackend, MetadataBackend, default_metadata_base_dir,
+    DefaultMetadataBackend, FileMetadataBackend, InMemoryMetadataBackend, MetadataBackend,
+    default_metadata_base_dir,
 };
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
@@ -120,12 +121,12 @@ mod tests;
 ///
 /// Routes semantic method names (e.g., `storage.put`) to internal
 /// implementations, enabling Neural API integration and capability-based
-/// discovery.
-pub struct SemanticRouter {
+/// discovery. Generic over the [`MetadataBackend`] implementation.
+pub struct SemanticRouter<M: MetadataBackend = DefaultMetadataBackend> {
     /// Internal RPC client for delegation (storage, health, etc.)
     pub(crate) client: Arc<NestGateRpcClient>,
     /// Metadata backend for service registration / lookup
-    pub(crate) metadata: Arc<dyn MetadataBackend>,
+    pub(crate) metadata: Arc<M>,
 }
 
 impl SemanticRouter {
@@ -146,10 +147,10 @@ impl SemanticRouter {
         client: Arc<NestGateRpcClient>,
     ) -> std::result::Result<Self, nestgate_types::error::NestGateError> {
         debug!("Creating semantic method router");
-        let metadata: Arc<dyn MetadataBackend> = match FileMetadataBackend::new(
+        let metadata: DefaultMetadataBackend = match FileMetadataBackend::new(
             default_metadata_base_dir(),
         ) {
-            Ok(b) => Arc::new(b),
+            Ok(b) => DefaultMetadataBackend::File(b),
             Err(e) => {
                 let is_production = std::env::var("FAMILY_ID")
                     .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
@@ -170,20 +171,22 @@ impl SemanticRouter {
                     error = %e,
                     "file metadata backend unavailable; using in-memory metadata (lost on restart)"
                 );
-                Arc::new(InMemoryMetadataBackend::new())
+                DefaultMetadataBackend::InMemory(InMemoryMetadataBackend::new())
             }
         };
-        Ok(Self { client, metadata })
+        Ok(Self {
+            client,
+            metadata: Arc::new(metadata),
+        })
     }
+}
 
+impl<M: MetadataBackend> SemanticRouter<M> {
     /// Create a semantic router with a custom metadata backend.
     ///
     /// Use this at daemon startup to inject `nestgate-core`'s
     /// `ServiceMetadataStore`-backed implementation.
-    pub fn with_metadata_backend(
-        client: Arc<NestGateRpcClient>,
-        metadata: Arc<dyn MetadataBackend>,
-    ) -> Self {
+    pub fn with_metadata_backend(client: Arc<NestGateRpcClient>, metadata: Arc<M>) -> Self {
         debug!("Creating semantic method router (custom metadata backend)");
         Self { client, metadata }
     }

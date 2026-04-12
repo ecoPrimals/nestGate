@@ -6,7 +6,6 @@
 
 //! Pool Operations module
 
-use async_recursion::async_recursion;
 use std::sync::Arc;
 
 use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
@@ -18,7 +17,6 @@ use crate::handlers::zfs::universal_zfs_types::{
 use super::core::FailSafeZfsService;
 
 /// List Pools
-#[async_recursion]
 pub async fn list_pools(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<PoolInfo>> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -45,18 +43,21 @@ pub async fn list_pools(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<
     }
 }
 
-#[async_recursion]
 async fn dispatch_list_pools(
     e: &Arc<UniversalZfsServiceEnum>,
 ) -> UniversalZfsResult<Vec<PoolInfo>> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.list_pools().await,
-        UniversalZfsServiceEnum::FailSafe(f) => list_pools(f).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.list_pools().await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Gets Pool
-#[async_recursion]
 pub async fn get_pool(
     service: &FailSafeZfsService,
     name: &str,
@@ -86,19 +87,22 @@ pub async fn get_pool(
     }
 }
 
-#[async_recursion]
 async fn dispatch_get_pool(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<Option<PoolInfo>> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.get_pool(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => get_pool(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.get_pool(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Creates  Pool
-#[async_recursion]
 pub async fn create_pool(
     service: &FailSafeZfsService,
     config: &PoolConfig,
@@ -128,19 +132,22 @@ pub async fn create_pool(
     }
 }
 
-#[async_recursion]
 async fn dispatch_create_pool(
     e: &Arc<UniversalZfsServiceEnum>,
     config: &PoolConfig,
 ) -> UniversalZfsResult<PoolInfo> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.create_pool(config).await,
-        UniversalZfsServiceEnum::FailSafe(f) => create_pool(f, config).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.create_pool(config).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Destroy Pool
-#[async_recursion]
 pub async fn destroy_pool(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -167,19 +174,22 @@ pub async fn destroy_pool(service: &FailSafeZfsService, name: &str) -> Universal
     }
 }
 
-#[async_recursion]
 async fn dispatch_destroy_pool(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<()> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.destroy_pool(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => destroy_pool(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.destroy_pool(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Scrub Pool
-#[async_recursion]
 pub async fn scrub_pool(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -206,19 +216,22 @@ pub async fn scrub_pool(service: &FailSafeZfsService, name: &str) -> UniversalZf
     }
 }
 
-#[async_recursion]
 async fn dispatch_scrub_pool(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<()> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.scrub_pool(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => scrub_pool(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.scrub_pool(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Gets Pool Status
-#[async_recursion]
 pub async fn get_pool_status(
     service: &FailSafeZfsService,
     name: &str,
@@ -248,14 +261,18 @@ pub async fn get_pool_status(
     }
 }
 
-#[async_recursion]
 async fn dispatch_get_pool_status(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<String> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.get_pool_status(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => get_pool_status(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.get_pool_status(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 

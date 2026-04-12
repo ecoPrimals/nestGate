@@ -50,7 +50,7 @@ impl DiscoveryRuntimeConfig {
 
     /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             service_discovery: ServiceDiscoveryConfig::default(),
             security_endpoint: env.get("NESTGATE_SECURITY_ENDPOINT"),

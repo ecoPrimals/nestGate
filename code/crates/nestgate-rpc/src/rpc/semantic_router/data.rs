@@ -11,7 +11,7 @@
 //! Per wateringHole capability-based discovery, callers must discover a primal
 //! that advertises the `"data"` capability and delegate there via IPC.
 
-use super::SemanticRouter;
+use super::{MetadataBackend, SemanticRouter};
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::Value;
 
@@ -20,7 +20,7 @@ use serde_json::Value;
 /// Returns a structured `NotImplemented` error directing callers to discover
 /// the data capability provider at runtime rather than calling `NestGate`.
 pub(super) fn data_delegation(
-    _router: &SemanticRouter,
+    _router: &SemanticRouter<impl MetadataBackend>,
     method: &str,
     _params: Value,
 ) -> Result<Value> {

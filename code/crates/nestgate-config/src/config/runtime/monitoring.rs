@@ -39,7 +39,7 @@ impl MonitoringConfig {
     }
 
     /// Like [`Self::from_environment`], but reads monitoring variables from `env`.
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         Ok(Self {
             metrics_enabled: env
                 .get("NESTGATE_METRICS_ENABLED")

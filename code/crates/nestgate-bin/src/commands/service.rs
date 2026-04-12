@@ -427,7 +427,12 @@ pub async fn run_daemon(
             .await
     } else {
         info!("Starting NestGate in socket-only mode (TRUE ecoBin - default)");
-        let tcp_addr = tcp_jsonrpc_listen_addr(port, bind, listen)?;
+        let resolved_port = port.or_else(|| {
+            let env_port = port_from_env_or_default();
+            let default_port = nestgate_core::constants::DEFAULT_API_PORT;
+            (env_port != default_port).then_some(env_port)
+        });
+        let tcp_addr = tcp_jsonrpc_listen_addr(resolved_port, bind, listen)?;
         run_socket_only_daemon(tcp_addr).await
     }
 }

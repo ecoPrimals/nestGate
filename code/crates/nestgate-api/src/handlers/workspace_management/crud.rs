@@ -7,134 +7,29 @@
 
 //! Crud module
 
+#[path = "crud_helpers.rs"]
+mod crud_helpers;
+#[path = "crud_list.rs"]
+mod crud_list;
+#[path = "crud_properties.rs"]
+mod crud_properties;
+
+pub(crate) use crud_helpers::parse_size;
+pub use crud_list::{get_workspaces, get_workspaces_from_env_source};
+
 use axum::{
     extract::{Json, Path},
     http::StatusCode,
 };
-use nestgate_types::{EnvSource, ProcessEnv, env_var_or_default};
-use nestgate_zfs::numeric::f64_to_u64_saturating;
+use nestgate_types::{EnvSource, ProcessEnv};
 use serde_json::{Value, json};
 use tokio::process::Command;
 use tracing::{error, info, warn};
-// Removed unused tracing import
 
-fn zfs_executable(env: &dyn EnvSource) -> String {
-    env_var_or_default(env, "NESTGATE_ZFS_BINARY", "zfs")
-}
-
-fn workspace_pool_name(env: &dyn EnvSource) -> String {
-    env_var_or_default(env, "NESTGATE_WORKSPACE_POOL", "zfspool")
-}
-
-/// Get all workspaces with real ZFS integration
-///
-/// # Errors
-///
-/// Returns `StatusCode::INTERNAL_SERVER_ERROR` if ZFS command fails or output cannot be parsed.
-pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
-    get_workspaces_from_env_source(&ProcessEnv).await
-}
-
-/// Like [`get_workspaces`], but uses an injectable [`EnvSource`] (e.g. [`nestgate_types::MapEnv`] in tests).
-pub async fn get_workspaces_from_env_source(
-    env: &dyn EnvSource,
-) -> Result<Json<Value>, StatusCode> {
-    info!("📁 Getting all workspaces from ZFS datasets");
-    let zfs_bin = zfs_executable(env);
-    let pool_name = workspace_pool_name(env);
-    let workspaces_path = format!("{pool_name}/workspaces");
-
-    // Query ZFS for workspace datasets
-    let list_output = Command::new(&zfs_bin)
-        .args([
-            "list",
-            "-H",
-            "-o",
-            "name,used,avail,referenced,mountpoint,creation",
-            "-t",
-            "filesystem",
-            "-d",
-            "1",
-            &workspaces_path,
-        ])
-        .output()
-        .await;
-
-    match list_output {
-        Ok(output) if output.status.success() => {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let mut workspaces = Vec::new();
-
-            for line in stdout.lines() {
-                if line.trim().is_empty() {
-                    continue;
-                }
-
-                let fields: Vec<&str> = line.split('\t').collect();
-                if fields.len() >= 6 {
-                    let full_name = fields[0];
-                    let used = fields[1];
-                    let available = fields[2];
-                    let referenced = fields[3];
-                    let mountpoint = fields[4];
-                    let creation = fields[5];
-
-                    // Extract workspace ID from dataset name (e.g., "zfspool/workspaces/ws-123" -> "ws-123")
-                    if let Some(workspace_id) = full_name.split('/').next_back() {
-                        // Skip the parent dataset itself
-                        if workspace_id == "workspaces" {
-                            continue;
-                        }
-
-                        // Get additional properties
-                        let (compression, quota, status) =
-                            get_workspace_properties(&zfs_bin, full_name).await;
-
-                        workspaces.push(json!({
-                            "id": workspace_id,
-                            "name": workspace_id.replace(['-', '_'], " "),
-                            "dataset_name": full_name,
-                            "status": status,
-                            "used": used,
-                            "available": available,
-                            "referenced": referenced,
-                            "mountpoint": mountpoint,
-                            "compression": compression,
-                            "quota": quota,
-                            "created": creation,
-                            "type": "zfs_dataset"
-                        }));
-                    }
-                }
-            }
-
-            info!("✅ Found {} workspaces", workspaces.len());
-            Ok(Json(json!({
-                "status": "success",
-                "workspaces": workspaces,
-                "count": workspaces.len(),
-                "pool": pool_name
-            })))
-        }
-        Ok(output) => {
-            let error_msg = String::from_utf8_lossy(&output.stderr);
-            warn!("⚠️ ZFS list command failed: {}", error_msg);
-
-            // Return empty list if workspaces dataset doesn't exist yet
-            Ok(Json(json!({
-                "status": "success",
-                "workspaces": [],
-                "count": 0,
-                "message": "No workspaces found - workspace pool may not be initialized",
-                "pool": pool_name
-            })))
-        }
-        Err(e) => {
-            error!("❌ Failed to execute ZFS list command: {}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
-}
+use crud_helpers::{
+    get_snapshot_count, get_workspace_details, workspace_pool_name, zfs_executable,
+};
+use crud_properties::{workspace_apply_compression, workspace_apply_name, workspace_apply_quota};
 
 /// Create a new workspace with real ZFS dataset creation
 ///
@@ -148,7 +43,7 @@ pub async fn create_workspace(Json(request): Json<Value>) -> Result<Json<Value>,
 
 /// Like [`create_workspace`], but uses an injectable [`EnvSource`].
 pub async fn create_workspace_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     Json(request): Json<Value>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("🆕 Creating new workspace: {:?}", request);
@@ -253,7 +148,7 @@ pub async fn get_workspace(Path(workspace_id): Path<String>) -> Result<Json<Valu
 
 /// Like [`get_workspace`], but uses an injectable [`EnvSource`].
 pub async fn get_workspace_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("📋 Getting workspace details: {}", workspace_id);
@@ -365,94 +260,6 @@ pub async fn get_workspace_from_env_source(
     }
 }
 
-async fn workspace_apply_quota(
-    zfs_bin: &str,
-    dataset_name: &str,
-    quota: &str,
-    updated_properties: &mut Vec<String>,
-    errors: &mut Vec<String>,
-) {
-    let quota_result = Command::new(zfs_bin)
-        .args(["set", &format!("quota={quota}"), dataset_name])
-        .output()
-        .await;
-
-    match quota_result {
-        Ok(output) if output.status.success() => {
-            updated_properties.push(format!("quota: {quota}"));
-            info!("✅ Updated quota to: {}", quota);
-        }
-        Ok(output) => {
-            errors.push(format!(
-                "Failed to update quota: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ));
-        }
-        Err(e) => {
-            errors.push(format!("Quota update command failed: {e}"));
-        }
-    }
-}
-
-async fn workspace_apply_compression(
-    zfs_bin: &str,
-    dataset_name: &str,
-    compression: &str,
-    updated_properties: &mut Vec<String>,
-    errors: &mut Vec<String>,
-) {
-    let compression_result = Command::new(zfs_bin)
-        .args(["set", &format!("compression={compression}"), dataset_name])
-        .output()
-        .await;
-
-    match compression_result {
-        Ok(output) if output.status.success() => {
-            updated_properties.push(format!("compression: {compression}"));
-            info!("✅ Updated compression to: {}", compression);
-        }
-        Ok(output) => {
-            errors.push(format!(
-                "Failed to update compression: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ));
-        }
-        Err(_e) => {
-            errors.push("Compression update command failed".to_string());
-        }
-    }
-}
-
-async fn workspace_apply_name(
-    zfs_bin: &str,
-    dataset_name: &str,
-    name: &str,
-    updated_properties: &mut Vec<String>,
-    errors: &mut Vec<String>,
-) {
-    let prop = format!("org.nestgate:workspace_name={name}");
-    let name_result = Command::new(zfs_bin)
-        .args(["set", &prop, dataset_name])
-        .output()
-        .await;
-
-    match name_result {
-        Ok(output) if output.status.success() => {
-            updated_properties.push(format!("name: {name}"));
-            info!("✅ Updated workspace name to: {}", name);
-        }
-        Ok(output) => {
-            errors.push(format!(
-                "Failed to update name: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ));
-        }
-        Err(_e) => {
-            errors.push("Name update command failed".to_string());
-        }
-    }
-}
-
 /// Update workspace configuration with real ZFS properties.
 ///
 /// # Errors
@@ -468,7 +275,7 @@ pub async fn update_workspace_config(
 
 /// Like [`update_workspace_config`], but uses an injectable [`EnvSource`].
 pub async fn update_workspace_config_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     Path(workspace_id): Path<String>,
     Json(config): Json<Value>,
 ) -> Result<Json<Value>, StatusCode> {
@@ -562,7 +369,7 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Status
 
 /// Like [`delete_workspace`], but uses an injectable [`EnvSource`].
 pub async fn delete_workspace_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     Path(workspace_id): Path<String>,
 ) -> Result<StatusCode, StatusCode> {
     tracing::info!("Deleting workspace: {}", workspace_id);
@@ -619,137 +426,6 @@ pub async fn delete_workspace_from_env_source(
             tracing::error!("Failed to execute zfs destroy command: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
-    }
-}
-
-// Helper functions
-
-/// Get additional workspace properties
-async fn get_workspace_properties(zfs_bin: &str, dataset_name: &str) -> (String, String, String) {
-    let props_output = Command::new(zfs_bin)
-        .args([
-            "get",
-            "-H",
-            "-o",
-            "value",
-            "compression,quota,mounted",
-            dataset_name,
-        ])
-        .output()
-        .await;
-    if let Ok(output) = props_output
-        && output.status.success()
-    {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let lines: Vec<&str> = stdout.lines().collect();
-        if lines.len() >= 3 {
-            let compression = lines[0].to_string();
-            let quota = lines[1].to_string();
-            let mounted = lines[2];
-            let status = if mounted == "yes" {
-                "active"
-            } else {
-                "inactive"
-            };
-            return (compression, quota, status.to_string());
-        }
-    }
-
-    ("lz4".to_string(), "none".to_string(), "unknown".to_string())
-}
-
-/// Get workspace details for a specific workspace ID
-async fn get_workspace_details(zfs_bin: &str, env: &dyn EnvSource, workspace_id: &str) -> Value {
-    let pool_name = workspace_pool_name(env);
-    let dataset_name = format!("{pool_name}/workspaces/{workspace_id}");
-    let props_output = Command::new(zfs_bin)
-        .args([
-            "get",
-            "-H",
-            "-o",
-            "value",
-            "used,available,quota,compression",
-            &dataset_name,
-        ])
-        .output()
-        .await;
-
-    if let Ok(output) = props_output
-        && output.status.success()
-    {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let lines: Vec<&str> = stdout.lines().collect();
-        if lines.len() >= 4 {
-            return json!({
-                "used": lines[0],
-                "available": lines[1],
-                "quota": lines[2],
-                "compression": lines[3]
-            });
-        }
-    }
-
-    json!({
-        "used": "unknown",
-        "available": "unknown",
-        "quota": "unknown",
-        "compression": "unknown"
-    })
-}
-
-/// Get snapshot count for a dataset
-async fn get_snapshot_count(zfs_bin: &str, dataset_name: &str) -> u32 {
-    let snapshot_output = Command::new(zfs_bin)
-        .args(["list", "-H", "-t", "snapshot", "-d", "1", dataset_name])
-        .output()
-        .await;
-    if let Ok(output) = snapshot_output
-        && output.status.success()
-    {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        return stdout.lines().count() as u32;
-    }
-
-    0
-}
-
-/// Parse ZFS size strings (e.g., "1.5G", "512M") to bytes
-pub(crate) fn parse_size(size_str: &str) -> u64 {
-    if size_str == "none" || size_str == "-" {
-        return 0;
-    }
-    let size_str = size_str.trim();
-    if size_str.is_empty() {
-        return 0;
-    }
-
-    // Handle numeric-only values (bytes)
-    if let Ok(bytes) = size_str.parse::<u64>() {
-        return bytes;
-    }
-
-    // Handle suffixed values
-    let (number_part, suffix) = if size_str.len() > 1 {
-        let split_pos = size_str.len() - 1;
-        let (num, suf) = size_str.split_at(split_pos);
-        (num, suf)
-    } else {
-        return 0;
-    };
-
-    if let Ok(number) = number_part.parse::<f64>() {
-        let multiplier = match suffix.to_uppercase().as_str() {
-            "K" => 1024,
-            "M" => 1024 * 1024,
-            "G" => 1024 * 1024 * 1024,
-            "T" => 1024_u64 * 1024 * 1024 * 1024,
-            "P" => 1024_u64 * 1024 * 1024 * 1024 * 1024,
-            _ => 1,
-        };
-
-        f64_to_u64_saturating(number * multiplier as f64)
-    } else {
-        0
     }
 }
 

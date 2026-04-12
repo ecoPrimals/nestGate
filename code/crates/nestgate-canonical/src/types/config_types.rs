@@ -204,7 +204,7 @@ impl Default for NetworkConfig {
 impl NetworkConfig {
     /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             bind_endpoint: env_var_or_default(env, "NESTGATE_BIND_ADDRESS", "127.0.0.1"),
             port: env
@@ -229,7 +229,7 @@ impl Default for StorageConfig {
 impl StorageConfig {
     /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             backend_type: "local".to_string(),
             data_directory: env_var_or_default(env, "NESTGATE_DATA_DIR", "./data"),
@@ -292,7 +292,7 @@ impl Default for AuthConfig {
 impl AuthConfig {
     /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             jwt_secret: env_var_or_default(env, "JWT_SECRET", "change-me-in-production"),
             token_expiry_minutes: 60,

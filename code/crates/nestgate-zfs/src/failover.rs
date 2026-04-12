@@ -98,14 +98,14 @@ pub(crate) fn orphaned_pools_from_known_registry(
 ) -> Vec<String> {
     let mut orphaned_pools = Vec::new();
     for pool_name in available_pools {
-        if let Some(metadata) = known_pools.get(pool_name) {
-            if metadata.original_owner == failed_node_id {
-                info!(
-                    "Pool {} was owned by failed node {}",
-                    pool_name, failed_node_id
-                );
-                orphaned_pools.push(pool_name.clone());
-            }
+        if let Some(metadata) = known_pools.get(pool_name)
+            && metadata.original_owner == failed_node_id
+        {
+            info!(
+                "Pool {} was owned by failed node {}",
+                pool_name, failed_node_id
+            );
+            orphaned_pools.push(pool_name.clone());
         }
     }
     orphaned_pools

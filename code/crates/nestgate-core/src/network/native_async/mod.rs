@@ -6,6 +6,7 @@
 /// Configuration types for native async networking
 pub mod config;
 /// Development-mode implementations for testing
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod development;
 /// Production-ready async network implementations
 pub mod production;
@@ -39,6 +40,7 @@ pub use production::{
     ProductionProtocolHandler,
 };
 
+#[cfg(any(test, feature = "dev-stubs"))]
 pub use development::{DevelopmentNetworkServiceDiscovery, DevelopmentServiceDiscovery};
 
 pub use service::NativeAsyncNetworkService;

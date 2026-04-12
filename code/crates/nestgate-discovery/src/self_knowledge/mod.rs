@@ -107,7 +107,7 @@ pub mod discovery;
 // Re-exports for convenience
 pub use announcement::Announcement;
 pub use builder::SelfKnowledgeBuilder;
-pub use discovery::PrimalDiscovery;
+pub use discovery::{DiscoveryBackend, InMemoryBackend, PrimalDiscovery};
 
 /// Unique identifier for a primal in the ecosystem
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

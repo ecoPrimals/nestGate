@@ -135,7 +135,7 @@ impl NativeZfsCommandExecutor {
 
     /// Like [`Self::new`], but reads `ZFS_VERBOSE_LOGGING` from an injectable [`EnvSource`].
     #[must_use]
-    pub fn new_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn new_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             timeout_seconds: DEFAULT_ZFS_COMMAND_TIMEOUT_SECS,
             verbose_logging: env.get("ZFS_VERBOSE_LOGGING").is_some(),
@@ -150,7 +150,10 @@ impl NativeZfsCommandExecutor {
 
     /// Like [`Self::with_timeout`], but reads `ZFS_VERBOSE_LOGGING` from an injectable [`EnvSource`].
     #[must_use]
-    pub fn with_timeout_from_env_source(timeout_seconds: u64, env: &dyn EnvSource) -> Self {
+    pub fn with_timeout_from_env_source(
+        timeout_seconds: u64,
+        env: &(impl EnvSource + ?Sized),
+    ) -> Self {
         Self {
             timeout_seconds,
             verbose_logging: env.get("ZFS_VERBOSE_LOGGING").is_some(),

@@ -114,7 +114,10 @@ impl ZfsSnapshotManager {
     }
 
     /// Like [`Self::start`], but reads interval env vars from an injectable [`EnvSource`].
-    pub async fn start_from_env_source(&mut self, env: &dyn EnvSource) -> CoreResult<()> {
+    pub async fn start_from_env_source(
+        &mut self,
+        env: &(impl EnvSource + ?Sized),
+    ) -> CoreResult<()> {
         info!("Starting ZFS snapshot manager");
 
         let (shutdown_tx, mut shutdown_rx) = mpsc::channel(1);
@@ -361,7 +364,10 @@ impl ZfsSnapshotManager {
     }
 
     /// Like [`Self::start_cache_updater`], but reads the interval from an injectable [`EnvSource`].
-    pub fn start_cache_updater_from_env_source(&self, env: &dyn EnvSource) -> CoreResult<()> {
+    pub fn start_cache_updater_from_env_source(
+        &self,
+        env: &(impl EnvSource + ?Sized),
+    ) -> CoreResult<()> {
         let snapshot_cache = Arc::clone(&self.snapshot_cache);
         let statistics = Arc::clone(&self.statistics);
         let dataset_manager = Arc::clone(&self.dataset_manager);

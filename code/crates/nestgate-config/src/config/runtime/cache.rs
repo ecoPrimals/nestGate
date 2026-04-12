@@ -63,7 +63,7 @@ impl CacheConfig {
     }
 
     /// Like [`Self::from_environment`], but reads Redis/cache variables from `env`.
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let redis_host = env.get("NESTGATE_REDIS_HOST").ok_or_else(|| {
             nestgate_types::error::NestGateError::configuration_error(
                 "redis_host",

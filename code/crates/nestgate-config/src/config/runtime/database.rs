@@ -84,7 +84,7 @@ impl DatabaseConfig {
     /// # Errors
     ///
     /// Returns an error if `NESTGATE_DB_HOST` is not present in `env`.
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let host = env.get("NESTGATE_DB_HOST").ok_or_else(|| {
             nestgate_types::error::NestGateError::configuration_error(
                 "database_host",

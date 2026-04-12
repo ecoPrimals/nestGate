@@ -12,7 +12,7 @@ use nestgate_types::{EnvSource, ProcessEnv};
 use std::path::PathBuf;
 use tracing::debug;
 
-pub(super) fn local_primal_id_from_env(env: &dyn EnvSource) -> String {
+pub(super) fn local_primal_id_from_env(env: &(impl EnvSource + ?Sized)) -> String {
     env.get("NESTGATE_SERVICE_NAME")
         .or_else(|| env.get("NESTGATE_PRIMAL_ID"))
         .unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string())
@@ -24,7 +24,7 @@ pub(super) fn local_primal_id() -> String {
 
 /// Discover a primal's Unix socket path via standard locations.
 pub(super) fn discover_primal_socket_from_env(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     primal_name: &str,
 ) -> Option<PathBuf> {
     if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {
@@ -67,7 +67,7 @@ pub(super) fn discover_primal_socket(primal_name: &str) -> Option<PathBuf> {
 }
 
 /// Discover available primals by scanning standard socket locations.
-pub(super) fn discover_available_primals_from_env(env: &dyn EnvSource) -> Vec<String> {
+pub(super) fn discover_available_primals_from_env(env: &(impl EnvSource + ?Sized)) -> Vec<String> {
     let mut primals = Vec::new();
     let socket_dirs = gather_socket_search_dirs_from_env(env);
 
@@ -107,7 +107,7 @@ pub(super) fn discover_available_primals() -> Vec<String> {
 }
 
 /// Gather standard directories to search for primal sockets.
-pub(super) fn gather_socket_search_dirs_from_env(env: &dyn EnvSource) -> Vec<String> {
+pub(super) fn gather_socket_search_dirs_from_env(env: &(impl EnvSource + ?Sized)) -> Vec<String> {
     let mut dirs = Vec::new();
 
     if let Some(dir) = env.get("BIOMEOS_SOCKET_DIR") {

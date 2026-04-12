@@ -5,7 +5,7 @@
 // Helper functions for ZFS dataset and snapshot operations.
 // Shared utilities used by dataset and snapshot handlers.
 
-//! Public ZFS/engine stat bridges are reserved until full engine integration is wired.
+//! Helpers for ZFS dataset and snapshot REST handlers.
 
 use std::path::Path;
 use std::{fs, sync::Arc};
@@ -131,102 +131,6 @@ pub fn get_snapshot_count_from_engine_impl() -> u64 {
     {
         return entries.count() as u64;
     }
-    0
-}
-
-/// Convert real ZFS stats to API format, with sensible defaults if unavailable
-#[cfg(feature = "dev-stubs")]
-#[expect(
-    dead_code,
-    reason = "Used when dev-stubs dataset handlers are wired to the REST layer"
-)]
-pub fn convert_zfs_stats_to_api(
-    zfs_stats: Option<crate::handlers::zfs_stub::ZeroCostDatasetInfo>,
-    default_name: &str,
-) -> DatasetStats {
-    match zfs_stats {
-        Some(stats) => DatasetStats {
-            name: stats.name.clone(),
-            size_bytes: stats.used + stats.available,
-            used_bytes: stats.used,
-            available_bytes: stats.available,
-            files_written: 0,
-            files_read: 0,
-            cow_operations: 0,
-            blocks_copied: 0,
-            compression_ratio: Some(1.0),
-            compression_space_saved: None,
-            deduplication_ratio: 1.0,
-            checksums_computed: 0,
-            checksums_verified: 0,
-            read_throughput: 0.0,
-            write_throughput: 0.0,
-            avg_latency_ms: 0.0,
-            snapshot_count: 0,
-        },
-        None => DatasetStats {
-            name: default_name.to_string(),
-            size_bytes: 1024 * 1024 * 1024,
-            used_bytes: 0,
-            available_bytes: 1024 * 1024 * 1024,
-            files_written: 0,
-            files_read: 0,
-            cow_operations: 0,
-            blocks_copied: 0,
-            compression_ratio: Some(1.0),
-            compression_space_saved: None,
-            deduplication_ratio: 1.0,
-            checksums_computed: 0,
-            checksums_verified: 0,
-            read_throughput: 0.0,
-            write_throughput: 0.0,
-            avg_latency_ms: 0.0,
-            snapshot_count: 0,
-        },
-    }
-}
-
-/// Convert engine JSON statistics to API format (unknown structure → zeros, not fabricated values).
-#[expect(
-    dead_code,
-    reason = "Reserved for engine JSON bridge once storage handlers deserialize live stats"
-)]
-pub fn convert_engine_stats_to_api(stats: &serde_json::Value) -> DatasetStats {
-    let name = stats
-        .get("name")
-        .and_then(|v| v.as_str())
-        .unwrap_or("unknown")
-        .to_string();
-    DatasetStats {
-        name,
-        size_bytes: 0,
-        used_bytes: 0,
-        available_bytes: 0,
-        snapshot_count: 0,
-        deduplication_ratio: 1.0,
-        files_written: 0,
-        files_read: 0,
-        cow_operations: 0,
-        blocks_copied: 0,
-        compression_ratio: None,
-        compression_space_saved: None,
-        checksums_computed: 0,
-        checksums_verified: 0,
-        read_throughput: 0.0,
-        write_throughput: 0.0,
-        avg_latency_ms: 0.0,
-    }
-}
-
-/// Calculate file operations from ZFS _engine statistics
-#[expect(
-    dead_code,
-    reason = "Placeholder until engine exposes file op counters in JSON stats"
-)]
-pub const fn calculate_file_operations_from_stats(
-    _stats: &serde_json::Value,
-    _operation: &str,
-) -> u64 {
     0
 }
 

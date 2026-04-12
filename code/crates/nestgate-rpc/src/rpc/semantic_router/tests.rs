@@ -4,7 +4,7 @@
 //! Unit tests for semantic router
 
 use super::SemanticRouter;
-use crate::rpc::metadata_backend::InMemoryMetadataBackend;
+use crate::rpc::metadata_backend::{DefaultMetadataBackend, InMemoryMetadataBackend};
 use crate::rpc::{NestGateRpcClient, NestGateRpcService, serve_tarpc};
 use nestgate_types::error::NestGateError;
 use serde_json::json;
@@ -40,7 +40,12 @@ fn test_semantic_method_names() {
 fn test_router() -> SemanticRouter {
     let client =
         Arc::new(NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("valid endpoint"));
-    SemanticRouter::with_metadata_backend(client, Arc::new(InMemoryMetadataBackend::new()))
+    SemanticRouter::with_metadata_backend(
+        client,
+        Arc::new(DefaultMetadataBackend::InMemory(
+            InMemoryMetadataBackend::new(),
+        )),
+    )
 }
 
 #[tokio::test]

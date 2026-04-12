@@ -126,7 +126,7 @@ pub fn discover_ipc_endpoint(service_name: &str) -> Result<IpcEndpoint> {
 /// Same as [`discover_ipc_endpoint`]: returns [`anyhow::Error`] when both Unix and TCP discovery
 /// fail for `service_name`.
 pub fn discover_ipc_endpoint_from_env(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     service_name: &str,
 ) -> Result<IpcEndpoint> {
     info!("🔍 Discovering IPC endpoint for: {}", service_name);
@@ -170,7 +170,10 @@ pub fn discover_ipc_endpoint_from_env(
 ///
 /// * `Ok(PathBuf)` - Expected socket path (may not exist yet)
 /// * `Err(_)` - Could not determine path
-fn discover_unix_socket_from_env(env: &dyn EnvSource, service_name: &str) -> Result<PathBuf> {
+fn discover_unix_socket_from_env(
+    env: &(impl EnvSource + ?Sized),
+    service_name: &str,
+) -> Result<PathBuf> {
     // Try XDG_RUNTIME_DIR first (preferred)
     if let Some(runtime_dir) = env.get("XDG_RUNTIME_DIR") {
         let socket_path = PathBuf::from(format!("{runtime_dir}/{service_name}.sock"));
@@ -204,7 +207,10 @@ fn discover_unix_socket_from_env(env: &dyn EnvSource, service_name: &str) -> Res
 ///
 /// * `Ok(IpcEndpoint::TcpLocal)` - Discovered TCP endpoint
 /// * `Err(_)` - No discovery file found
-fn discover_tcp_endpoint_from_env(env: &dyn EnvSource, service_name: &str) -> Result<IpcEndpoint> {
+fn discover_tcp_endpoint_from_env(
+    env: &(impl EnvSource + ?Sized),
+    service_name: &str,
+) -> Result<IpcEndpoint> {
     let discovery_files = get_tcp_discovery_file_candidates_from_env(env, service_name);
 
     for file in discovery_files {
@@ -234,7 +240,7 @@ fn discover_tcp_endpoint_from_env(env: &dyn EnvSource, service_name: &str) -> Re
 /// 2. `$HOME/.local/share/{service}-ipc-port`
 /// 3. `/tmp/{service}-ipc-port`
 fn get_tcp_discovery_file_candidates_from_env(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     service_name: &str,
 ) -> Vec<PathBuf> {
     let mut candidates = Vec::new();

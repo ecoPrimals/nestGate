@@ -43,7 +43,7 @@ impl StorageDetectorConfig {
 
     /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             aws_access_key: env.get("AWS_ACCESS_KEY_ID"),
             aws_secret_key: env.get("AWS_SECRET_ACCESS_KEY"),

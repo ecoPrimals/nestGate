@@ -300,7 +300,7 @@ impl PrimalSelfKnowledge {
     }
 
     /// Build endpoints from environment (no hardcoded values)
-    fn build_endpoints_from_env_source(env: &dyn EnvSource) -> Result<Vec<Endpoint>> {
+    fn build_endpoints_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Vec<Endpoint>> {
         let mut endpoints = Vec::new();
 
         // Get API endpoint from environment
@@ -309,7 +309,10 @@ impl PrimalSelfKnowledge {
             .unwrap_or_else(|| "0.0.0.0".to_string());
 
         let api_port_str = env.get("NESTGATE_API_PORT").unwrap_or_else(|| {
-            nestgate_config::constants::hardcoding::runtime_fallback_ports::API.to_string()
+            #[expect(deprecated)]
+            {
+                nestgate_config::constants::hardcoding::runtime_fallback_ports::API.to_string()
+            }
         });
 
         let api_port = api_port_str
@@ -328,7 +331,9 @@ impl PrimalSelfKnowledge {
     }
 
     /// Determine which discovery mechanisms to use
-    fn determine_discovery_mechanisms_from_env(env: &dyn EnvSource) -> Vec<DiscoveryMechanism> {
+    fn determine_discovery_mechanisms_from_env(
+        env: &(impl EnvSource + ?Sized),
+    ) -> Vec<DiscoveryMechanism> {
         let mut mechanisms = vec![DiscoveryMechanism::Environment];
 
         // Check if mDNS should be enabled

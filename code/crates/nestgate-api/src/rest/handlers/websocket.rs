@@ -225,8 +225,9 @@ fn zfs_arc_snapshot() -> (f64, u64, u64) {
     reason = "cfg(test) awaits this helper; metrics assembly is synchronous"
 )]
 async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> {
-    let total_datasets = state.zfs_engines.len() as u32;
-    let total_snapshots = super::zfs::helpers::get_snapshot_count_from_engine_impl() as u32;
+    let total_datasets = u32::try_from(state.zfs_engines.len()).unwrap_or(u32::MAX);
+    let total_snapshots = u32::try_from(super::zfs::helpers::get_snapshot_count_from_engine_impl())
+        .unwrap_or(u32::MAX);
     // No aggregated ZFS-used-bytes path on this REST surface; report 0 instead of inventing totals.
     let total_used_bytes = 0_u64;
     let (arc_hit_ratio, arc_size, arc_target) = zfs_arc_snapshot();
@@ -247,7 +248,7 @@ async fn get_current_metrics(state: &ApiState) -> Result<SystemMetrics, String> 
                 .next()
                 .and_then(|s| s.parse::<f64>().ok())
         })
-        .map_or(0, |s| s as u64);
+        .map_or(0, |s| s.clamp(0.0, u64::MAX as f64) as u64);
 
     let cpu_usage_percent =
         nestgate_core::linux_proc::globalcpu_usage_percent_from_stat().unwrap_or(0.0);

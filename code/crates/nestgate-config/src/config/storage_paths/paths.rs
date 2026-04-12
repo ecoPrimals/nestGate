@@ -41,7 +41,7 @@ impl StoragePaths {
 
     /// Like [`Self::from_environment`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         let data_dir = resolve_data_dir_from_env_source(env);
         let config_dir = resolve_config_dir_from_env_source(env);
         let cache_dir = resolve_cache_dir_from_env_source(env);

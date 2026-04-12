@@ -30,7 +30,9 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Detect capabilities using an injectable environment source
-    pub async fn detect_capabilities_from_env(env: &dyn EnvSource) -> HardwareCapabilities {
+    pub async fn detect_capabilities_from_env(
+        env: &(impl EnvSource + ?Sized),
+    ) -> HardwareCapabilities {
         Self::perform_detection_from_env(env).await
     }
 
@@ -41,7 +43,7 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Check development mode using an injectable environment source
-    pub fn is_development_environment_from_env(env: &dyn EnvSource) -> bool {
+    pub fn is_development_environment_from_env(env: &(impl EnvSource + ?Sized)) -> bool {
         // Check explicit environment variable first
         if env.get_or("NESTGATE_DEV_ENVIRONMENT", "") == "true" {
             debug!("Development environment explicitly enabled via NESTGATE_DEV_ENVIRONMENT");
@@ -64,7 +66,7 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Perform comprehensive hardware detection
-    async fn perform_detection_from_env(env: &dyn EnvSource) -> HardwareCapabilities {
+    async fn perform_detection_from_env(env: &(impl EnvSource + ?Sized)) -> HardwareCapabilities {
         info!("🔍 Detecting hardware environment capabilities...");
 
         // Check explicit development mode
@@ -125,7 +127,7 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Detect if we're running in a container
-    fn is_container_environment_from_env(env: &dyn EnvSource) -> bool {
+    fn is_container_environment_from_env(env: &(impl EnvSource + ?Sized)) -> bool {
         // Check for container indicators
         std::path::Path::exists(std::path::Path::new("/.dockerenv"))
             || env.get("container").is_some()
@@ -138,7 +140,7 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Detect if we're likely on a development machine
-    fn is_likely_dev_machine_from_env(env: &dyn EnvSource) -> bool {
+    fn is_likely_dev_machine_from_env(env: &(impl EnvSource + ?Sized)) -> bool {
         // Check for common development indicators
         env.get("HOME").is_some()
             && (
@@ -160,7 +162,7 @@ impl HardwareEnvironmentDetector {
     }
 
     /// Environment report using an injectable environment source
-    pub async fn get_environment_report_from_env(env: &dyn EnvSource) -> String {
+    pub async fn get_environment_report_from_env(env: &(impl EnvSource + ?Sized)) -> String {
         let capabilities = Self::detect_capabilities_from_env(env).await;
         let zfs_available = Self::is_zfs_available().await;
         let is_container = Self::is_container_environment_from_env(env);

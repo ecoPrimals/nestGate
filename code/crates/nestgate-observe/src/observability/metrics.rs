@@ -17,6 +17,16 @@ use tokio::sync::RwLock;
 
 const DEFAULT_METRICS_HISTORY_SIZE: usize = 100;
 
+#[inline]
+fn histogram_mean_for_snapshot(val: &[f64]) -> f64 {
+    let n = val.len();
+    if n == 0 {
+        0.0
+    } else {
+        val.iter().sum::<f64>() / (n as f64)
+    }
+}
+
 /// Metric value types for custom metrics
 #[derive(Debug, Clone)]
 pub enum MetricValue {
@@ -112,7 +122,7 @@ fn gather_performance_metrics_sysinfo(custom: &CustomMetricsMap) -> PerformanceM
                     match v {
                         MetricValue::Gauge(val) => *val,
                         MetricValue::Counter(val) => *val as f64,
-                        MetricValue::Histogram(val) => val.iter().sum::<f64>() / (val.len() as f64),
+                        MetricValue::Histogram(val) => histogram_mean_for_snapshot(val),
                         MetricValue::Summary { sum, count: _ } => *sum,
                         MetricValue::String(_) => 0.0,
                     },
@@ -269,9 +279,7 @@ impl MetricsRegistry {
                                 match v {
                                     MetricValue::Gauge(val) => *val,
                                     MetricValue::Counter(val) => *val as f64,
-                                    MetricValue::Histogram(val) => {
-                                        val.iter().sum::<f64>() / (val.len() as f64)
-                                    }
+                                    MetricValue::Histogram(val) => histogram_mean_for_snapshot(val),
                                     MetricValue::Summary { sum, count: _ } => *sum,
                                     MetricValue::String(_) => 0.0,
                                 },
@@ -311,9 +319,7 @@ impl MetricsRegistry {
                             match v {
                                 MetricValue::Gauge(val) => *val,
                                 MetricValue::Counter(val) => *val as f64,
-                                MetricValue::Histogram(val) => {
-                                    val.iter().sum::<f64>() / (val.len() as f64)
-                                }
+                                MetricValue::Histogram(val) => histogram_mean_for_snapshot(val),
                                 MetricValue::Summary { sum, count: _ } => *sum,
                                 MetricValue::String(_) => 0.0,
                             },

@@ -389,7 +389,7 @@ impl ApiPathsConfig {
 
     /// Like [`Self::from_environment`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         let mut config = Self::default();
 
         // Override API version from environment

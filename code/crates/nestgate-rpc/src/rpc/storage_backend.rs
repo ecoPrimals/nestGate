@@ -12,6 +12,7 @@
 //! route through the same storage backend as `nestgate-core`.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::Arc;
 
 use bytes::Bytes;
@@ -22,49 +23,69 @@ use nestgate_types::error::Result;
 /// Pluggable storage backend for the tarpc/semantic-router RPC layer.
 ///
 /// Implementors must be `Send + Sync` for use behind `Arc` in async contexts.
+/// All async methods return `Send` futures for use with `tokio::spawn`.
+///
 /// Two canonical implementations exist:
 ///
 /// - **`InMemoryStorageBackend`** (this crate) — for tests and lightweight usage
 /// - **`CoreStorageBackend`** (`nestgate-core`) — filesystem-backed via `StorageManagerService`
-#[async_trait::async_trait]
 pub trait StorageBackend: Send + Sync {
     /// Create a new dataset.
-    async fn create_dataset(&self, name: &str, params: DatasetParams) -> Result<DatasetInfo>;
+    fn create_dataset(
+        &self,
+        name: &str,
+        params: DatasetParams,
+    ) -> impl Future<Output = Result<DatasetInfo>> + Send + '_;
 
     /// List all datasets.
-    async fn list_datasets(&self) -> Result<Vec<DatasetInfo>>;
+    fn list_datasets(&self) -> impl Future<Output = Result<Vec<DatasetInfo>>> + Send + '_;
 
     /// Get a single dataset by name.
-    async fn get_dataset(&self, name: &str) -> Result<DatasetInfo>;
+    fn get_dataset(&self, name: &str) -> impl Future<Output = Result<DatasetInfo>> + Send + '_;
 
     /// Delete a dataset and all its objects.
-    async fn delete_dataset(&self, name: &str) -> Result<OperationResult>;
+    fn delete_dataset(
+        &self,
+        name: &str,
+    ) -> impl Future<Output = Result<OperationResult>> + Send + '_;
 
     /// Store an object in a dataset.
-    async fn store_object(
+    fn store_object(
         &self,
         dataset: &str,
         key: &str,
         data: Bytes,
         metadata: Option<HashMap<String, String>>,
-    ) -> Result<ObjectInfo>;
+    ) -> impl Future<Output = Result<ObjectInfo>> + Send + '_;
 
     /// Retrieve an object's raw bytes from a dataset.
-    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Bytes>;
+    fn retrieve_object(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> impl Future<Output = Result<Bytes>> + Send + '_;
 
     /// Get object metadata without the body.
-    async fn get_object_metadata(&self, dataset: &str, key: &str) -> Result<ObjectInfo>;
+    fn get_object_metadata(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> impl Future<Output = Result<ObjectInfo>> + Send + '_;
 
     /// List objects in a dataset with optional prefix filter and limit.
-    async fn list_objects(
+    fn list_objects(
         &self,
         dataset: &str,
         prefix: Option<&str>,
         limit: Option<usize>,
-    ) -> Result<Vec<ObjectInfo>>;
+    ) -> impl Future<Output = Result<Vec<ObjectInfo>>> + Send + '_;
 
     /// Delete a single object.
-    async fn delete_object(&self, dataset: &str, key: &str) -> Result<OperationResult>;
+    fn delete_object(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> impl Future<Output = Result<OperationResult>> + Send + '_;
 }
 
 // ---------------------------------------------------------------------------
@@ -113,214 +134,267 @@ impl InMemoryStorageBackend {
     }
 }
 
-#[async_trait::async_trait]
 impl StorageBackend for InMemoryStorageBackend {
-    async fn create_dataset(&self, name: &str, params: DatasetParams) -> Result<DatasetInfo> {
-        let mut g = self.inner.write().await;
-        if g.datasets.contains_key(name) {
-            return Err(nestgate_types::error::NestGateError::storage_error(
-                format!("Dataset already exists: {name}"),
-            ));
+    fn create_dataset(
+        &self,
+        name: &str,
+        params: DatasetParams,
+    ) -> impl Future<Output = Result<DatasetInfo>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            let mut g = self.inner.write().await;
+            if g.datasets.contains_key(&name) {
+                return Err(nestgate_types::error::NestGateError::storage_error(
+                    format!("Dataset already exists: {name}"),
+                ));
+            }
+            let ts = unix_ts();
+            let info = DatasetInfo {
+                name: name.clone(),
+                description: params.description.clone(),
+                created_at: ts,
+                modified_at: ts,
+                size_bytes: 0,
+                object_count: 0,
+                compression_ratio: 1.0,
+                params: params.clone(),
+                status: String::from("active"),
+            };
+            g.datasets.insert(name, info.clone());
+            Ok(info)
         }
-        let ts = unix_ts();
-        let info = DatasetInfo {
-            name: name.to_string(),
-            description: params.description.clone(),
-            created_at: ts,
-            modified_at: ts,
-            size_bytes: 0,
-            object_count: 0,
-            compression_ratio: 1.0,
-            params: params.clone(),
-            status: String::from("active"),
-        };
-        g.datasets.insert(name.to_string(), info.clone());
-        Ok(info)
     }
 
-    async fn list_datasets(&self) -> Result<Vec<DatasetInfo>> {
-        let g = self.inner.read().await;
-        Ok(g.datasets.values().cloned().collect())
-    }
-
-    async fn get_dataset(&self, name: &str) -> Result<DatasetInfo> {
-        let g = self.inner.read().await;
-        g.datasets.get(name).cloned().ok_or_else(|| {
-            nestgate_types::error::NestGateError::storage_not_found(format!("dataset {name}"))
-        })
-    }
-
-    async fn delete_dataset(&self, name: &str) -> Result<OperationResult> {
-        let mut g = self.inner.write().await;
-        if g.datasets.remove(name).is_none() {
-            return Err(nestgate_types::error::NestGateError::storage_not_found(
-                format!("dataset {name}"),
-            ));
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn list_datasets(&self) -> impl Future<Output = Result<Vec<DatasetInfo>>> + Send + '_ {
+        async move {
+            let g = self.inner.read().await;
+            Ok(g.datasets.values().cloned().collect())
         }
-        g.objects.retain(|k, _| k.0.as_ref() != name);
-        Ok(OperationResult {
-            success: true,
-            message: format!("Dataset {name} deleted successfully"),
-            metadata: HashMap::new(),
-        })
     }
 
-    async fn store_object(
+    fn get_dataset(&self, name: &str) -> impl Future<Output = Result<DatasetInfo>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            let g = self.inner.read().await;
+            g.datasets.get(&name).cloned().ok_or_else(|| {
+                nestgate_types::error::NestGateError::storage_not_found(format!("dataset {name}"))
+            })
+        }
+    }
+
+    fn delete_dataset(
+        &self,
+        name: &str,
+    ) -> impl Future<Output = Result<OperationResult>> + Send + '_ {
+        let name = name.to_owned();
+        async move {
+            let mut g = self.inner.write().await;
+            if g.datasets.remove(&name).is_none() {
+                return Err(nestgate_types::error::NestGateError::storage_not_found(
+                    format!("dataset {name}"),
+                ));
+            }
+            g.objects.retain(|k, _| k.0.as_ref() != &*name);
+            Ok(OperationResult {
+                success: true,
+                message: format!("Dataset {name} deleted successfully"),
+                metadata: HashMap::new(),
+            })
+        }
+    }
+
+    fn store_object(
         &self,
         dataset: &str,
         key: &str,
         data: Bytes,
         metadata: Option<HashMap<String, String>>,
-    ) -> Result<ObjectInfo> {
-        let mut g = self.inner.write().await;
-        if !g.datasets.contains_key(dataset) {
-            return Err(nestgate_types::error::NestGateError::storage_not_found(
-                format!("dataset {dataset}"),
-            ));
-        }
-        let ts = unix_ts();
-        let size = byte_len(data.len());
-        let meta = metadata.unwrap_or_default();
-        let info = ObjectInfo {
-            key: key.to_string(),
-            dataset: dataset.to_string(),
-            size_bytes: size,
-            created_at: ts,
-            modified_at: ts,
-            content_type: None,
-            checksum: None,
-            encrypted: false,
-            compressed: false,
-            metadata: meta.clone(),
-        };
-        let dk: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
-        g.objects.insert(dk, (data, meta));
-
-        let object_count = byte_len(
-            g.objects
-                .keys()
-                .filter(|(d, _)| d.as_ref() == dataset)
-                .count(),
-        );
-        let used_bytes: u64 = g
-            .objects
-            .iter()
-            .filter(|((d, _), _)| d.as_ref() == dataset)
-            .map(|(_, (b, _))| byte_len(b.len()))
-            .sum();
-        if let Some(ds) = g.datasets.get_mut(dataset) {
-            ds.object_count = object_count;
-            ds.size_bytes = used_bytes;
-            ds.modified_at = ts;
-        }
-        Ok(info)
-    }
-
-    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<Bytes> {
-        let g = self.inner.read().await;
-        let lookup: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
-        g.objects
-            .get(&lookup)
-            .map(|(b, _)| b.clone())
-            .ok_or_else(|| {
-                nestgate_types::error::NestGateError::storage_not_found(format!(
-                    "object {dataset}/{key}",
-                ))
-            })
-    }
-
-    async fn get_object_metadata(&self, dataset: &str, key: &str) -> Result<ObjectInfo> {
-        let g = self.inner.read().await;
-        let lookup: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
-        g.objects
-            .get(&lookup)
-            .map(|(data, meta)| ObjectInfo {
-                key: key.to_string(),
-                dataset: dataset.to_string(),
-                size_bytes: byte_len(data.len()),
-                created_at: unix_ts(),
-                modified_at: unix_ts(),
+    ) -> impl Future<Output = Result<ObjectInfo>> + Send + '_ {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move {
+            let mut g = self.inner.write().await;
+            if !g.datasets.contains_key(&dataset) {
+                return Err(nestgate_types::error::NestGateError::storage_not_found(
+                    format!("dataset {dataset}"),
+                ));
+            }
+            let ts = unix_ts();
+            let size = byte_len(data.len());
+            let meta = metadata.unwrap_or_default();
+            let info = ObjectInfo {
+                key: key.clone(),
+                dataset: dataset.clone(),
+                size_bytes: size,
+                created_at: ts,
+                modified_at: ts,
                 content_type: None,
                 checksum: None,
                 encrypted: false,
                 compressed: false,
                 metadata: meta.clone(),
-            })
-            .ok_or_else(|| {
-                nestgate_types::error::NestGateError::storage_not_found(format!(
-                    "object {dataset}/{key}",
-                ))
-            })
+            };
+            let dk: ObjectMapKey = (Arc::from(&*dataset), Arc::from(&*key));
+            g.objects.insert(dk, (data, meta));
+
+            let object_count = byte_len(
+                g.objects
+                    .keys()
+                    .filter(|(d, _)| d.as_ref() == &*dataset)
+                    .count(),
+            );
+            let used_bytes: u64 = g
+                .objects
+                .iter()
+                .filter(|((d, _), _)| d.as_ref() == &*dataset)
+                .map(|(_, (b, _))| byte_len(b.len()))
+                .sum();
+            if let Some(ds) = g.datasets.get_mut(&dataset) {
+                ds.object_count = object_count;
+                ds.size_bytes = used_bytes;
+                ds.modified_at = ts;
+            }
+            Ok(info)
+        }
     }
 
-    async fn list_objects(
+    fn retrieve_object(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> impl Future<Output = Result<Bytes>> + Send + '_ {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move {
+            let g = self.inner.read().await;
+            let lookup: ObjectMapKey = (Arc::from(&*dataset), Arc::from(&*key));
+            g.objects
+                .get(&lookup)
+                .map(|(b, _)| b.clone())
+                .ok_or_else(|| {
+                    nestgate_types::error::NestGateError::storage_not_found(format!(
+                        "object {dataset}/{key}",
+                    ))
+                })
+        }
+    }
+
+    fn get_object_metadata(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> impl Future<Output = Result<ObjectInfo>> + Send + '_ {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move {
+            let g = self.inner.read().await;
+            let lookup: ObjectMapKey = (Arc::from(&*dataset), Arc::from(&*key));
+            g.objects
+                .get(&lookup)
+                .map(|(data, meta)| ObjectInfo {
+                    key: key.clone(),
+                    dataset: dataset.clone(),
+                    size_bytes: byte_len(data.len()),
+                    created_at: unix_ts(),
+                    modified_at: unix_ts(),
+                    content_type: None,
+                    checksum: None,
+                    encrypted: false,
+                    compressed: false,
+                    metadata: meta.clone(),
+                })
+                .ok_or_else(|| {
+                    nestgate_types::error::NestGateError::storage_not_found(format!(
+                        "object {dataset}/{key}",
+                    ))
+                })
+        }
+    }
+
+    fn list_objects(
         &self,
         dataset: &str,
         prefix: Option<&str>,
         limit: Option<usize>,
-    ) -> Result<Vec<ObjectInfo>> {
-        let g = self.inner.read().await;
-        let mut results = Vec::new();
-        for ((ds, key), (data, meta)) in &g.objects {
-            if ds.as_ref() != dataset {
-                continue;
+    ) -> impl Future<Output = Result<Vec<ObjectInfo>>> + Send + '_ {
+        let dataset = dataset.to_owned();
+        let prefix = prefix.map(str::to_owned);
+        async move {
+            let g = self.inner.read().await;
+            let mut results = Vec::new();
+            for ((ds, key), (data, meta)) in &g.objects {
+                if ds.as_ref() != &*dataset {
+                    continue;
+                }
+                if let Some(ref pfx) = prefix
+                    && !key.starts_with(&**pfx)
+                {
+                    continue;
+                }
+                results.push(ObjectInfo {
+                    key: key.as_ref().to_string(),
+                    dataset: dataset.clone(),
+                    size_bytes: byte_len(data.len()),
+                    created_at: unix_ts(),
+                    modified_at: unix_ts(),
+                    content_type: None,
+                    checksum: None,
+                    encrypted: false,
+                    compressed: false,
+                    metadata: meta.clone(),
+                });
+                if let Some(lim) = limit
+                    && results.len() >= lim
+                {
+                    break;
+                }
             }
-            if let Some(pfx) = prefix
-                && !key.starts_with(pfx)
-            {
-                continue;
-            }
-            results.push(ObjectInfo {
-                key: key.as_ref().to_string(),
-                dataset: dataset.to_string(),
-                size_bytes: byte_len(data.len()),
-                created_at: unix_ts(),
-                modified_at: unix_ts(),
-                content_type: None,
-                checksum: None,
-                encrypted: false,
-                compressed: false,
-                metadata: meta.clone(),
-            });
-            if let Some(lim) = limit
-                && results.len() >= lim
-            {
-                break;
-            }
+            Ok(results)
         }
-        Ok(results)
     }
 
-    async fn delete_object(&self, dataset: &str, key: &str) -> Result<OperationResult> {
-        let mut g = self.inner.write().await;
-        let lookup: ObjectMapKey = (Arc::from(dataset), Arc::from(key));
-        if g.objects.remove(&lookup).is_none() {
-            return Err(nestgate_types::error::NestGateError::storage_not_found(
-                format!("object {dataset}/{key}"),
-            ));
+    fn delete_object(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> impl Future<Output = Result<OperationResult>> + Send + '_ {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move {
+            let mut g = self.inner.write().await;
+            let lookup: ObjectMapKey = (Arc::from(&*dataset), Arc::from(&*key));
+            if g.objects.remove(&lookup).is_none() {
+                return Err(nestgate_types::error::NestGateError::storage_not_found(
+                    format!("object {dataset}/{key}"),
+                ));
+            }
+            let object_count = byte_len(
+                g.objects
+                    .keys()
+                    .filter(|(d, _)| d.as_ref() == &*dataset)
+                    .count(),
+            );
+            let used_bytes: u64 = g
+                .objects
+                .iter()
+                .filter(|((d, _), _)| d.as_ref() == &*dataset)
+                .map(|(_, (b, _))| byte_len(b.len()))
+                .sum();
+            if let Some(ds) = g.datasets.get_mut(&dataset) {
+                ds.object_count = object_count;
+                ds.size_bytes = used_bytes;
+                ds.modified_at = unix_ts();
+            }
+            Ok(OperationResult {
+                success: true,
+                message: format!("Object {dataset}/{key} deleted successfully"),
+                metadata: HashMap::new(),
+            })
         }
-        let object_count = byte_len(
-            g.objects
-                .keys()
-                .filter(|(d, _)| d.as_ref() == dataset)
-                .count(),
-        );
-        let used_bytes: u64 = g
-            .objects
-            .iter()
-            .filter(|((d, _), _)| d.as_ref() == dataset)
-            .map(|(_, (b, _))| byte_len(b.len()))
-            .sum();
-        if let Some(ds) = g.datasets.get_mut(dataset) {
-            ds.object_count = object_count;
-            ds.size_bytes = used_bytes;
-            ds.modified_at = unix_ts();
-        }
-        Ok(OperationResult {
-            success: true,
-            message: format!("Object {dataset}/{key} deleted successfully"),
-            metadata: HashMap::new(),
-        })
     }
 }
 

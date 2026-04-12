@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Storage JSON-RPC Handlers
+//! Storage JSON-RPC Handlers — core key/value CRUD on the dataset filesystem layout.
 //!
-//! Extracted from `unix_socket_server` for domain-based refactoring.
-//! Handles: `storage.store`, `storage.retrieve`, `storage.exists`, `storage.delete`,
-//! `storage.list`, `storage.stats`, `storage.store_blob`, `storage.retrieve_blob`.
-//! See [`super::fetch_external`] for `storage.fetch_external`.
+//! Blob helpers live in [`super::blob_handlers`]. External fetch and object metadata in
+//! [`super::external_handlers`]. See [`super::bonding_handlers`] for `bonding.ledger.*`.
 
-use base64::{Engine as _, engine::general_purpose::STANDARD};
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
@@ -20,7 +17,7 @@ use super::StorageState;
 /// Build the filesystem path for a key in a family's dataset.
 ///
 /// Layout matches `nestgate-core` `operations::objects`: `{base}/datasets/{family}/{key}`.
-fn dataset_key_path(family_id: &str, key: &str) -> PathBuf {
+pub(in crate::rpc::unix_socket_server) fn dataset_key_path(family_id: &str, key: &str) -> PathBuf {
     get_storage_base_path()
         .join("datasets")
         .join(family_id)
@@ -31,7 +28,7 @@ fn dataset_key_path(family_id: &str, key: &str) -> PathBuf {
 ///
 /// Blobs are stored separately under `{base}/datasets/{family}/_blobs/{key}` so list
 /// operations can distinguish JSON objects from raw blobs.
-fn blob_key_path(family_id: &str, key: &str) -> PathBuf {
+pub(in crate::rpc::unix_socket_server) fn blob_key_path(family_id: &str, key: &str) -> PathBuf {
     get_storage_base_path()
         .join("datasets")
         .join(family_id)
@@ -224,79 +221,6 @@ pub(super) async fn storage_stats(params: Option<&Value>, state: &StorageState) 
         "key_count": key_count,
         "blob_count": 0,
         "family_id": family_id
-    }))
-}
-
-/// `storage.store_blob` - Store binary blob (base64 encoded, filesystem-backed)
-pub(super) async fn storage_store_blob(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
-    let params = params
-        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
-
-    let key = params["key"]
-        .as_str()
-        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    let blob_base64 = params["blob"].as_str().ok_or_else(|| {
-        NestGateError::invalid_input_with_field("blob", "blob (base64 string) required")
-    })?;
-    let family_id = resolve_family_id(params, state)?;
-
-    let blob_data = STANDARD.decode(blob_base64).map_err(|e| {
-        NestGateError::invalid_input_with_field("blob", format!("Invalid base64: {e}"))
-    })?;
-
-    debug!(
-        "storage.store_blob: family_id='{}', key='{}', blob_size={} bytes",
-        family_id,
-        key,
-        blob_data.len()
-    );
-
-    let blob_path = blob_key_path(family_id, key);
-    ensure_parent_dirs(&blob_path).await?;
-    tokio::fs::write(&blob_path, &blob_data)
-        .await
-        .map_err(|e| {
-            NestGateError::io_error(format!("Failed to write blob {family_id}/{key}: {e}"))
-        })?;
-
-    Ok(json!({
-        "status": "stored",
-        "key": key,
-        "family_id": family_id,
-        "size": blob_data.len()
-    }))
-}
-
-/// `storage.retrieve_blob` - Retrieve binary blob (base64 encoded, filesystem-backed)
-pub(super) async fn storage_retrieve_blob(
-    params: Option<&Value>,
-    state: &StorageState,
-) -> Result<Value> {
-    let params = params
-        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
-
-    let key = params["key"]
-        .as_str()
-        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
-    let family_id = resolve_family_id(params, state)?;
-
-    let blob_path = blob_key_path(family_id, key);
-    if !blob_path.exists() {
-        return Ok(json!({"blob": null, "key": key}));
-    }
-
-    let blob_data = tokio::fs::read(&blob_path).await.map_err(|e| {
-        NestGateError::io_error(format!("Failed to read blob {family_id}/{key}: {e}"))
-    })?;
-
-    Ok(json!({
-        "blob": STANDARD.encode(&blob_data),
-        "key": key,
-        "family_id": family_id,
-        "size": blob_data.len()
     }))
 }
 
@@ -513,35 +437,6 @@ mod tests {
         assert!(list_result.is_ok());
         let keys = list_result.unwrap()["keys"].as_array().unwrap().clone();
         assert!(keys.iter().any(|k| k == "deep/path/key"));
-
-        // Cleanup
-        let _ =
-            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
-                .await;
-    }
-
-    #[tokio::test]
-    async fn storage_blob_round_trip() {
-        let state = mock_state(Some("test-blob")).await;
-        let family_id = format!("test-blob-{}", uuid::Uuid::new_v4());
-        let raw_data = b"binary payload \x00\xff\xfe";
-        let encoded = base64::engine::general_purpose::STANDARD.encode(raw_data);
-
-        let store_p = json!({"family_id": &family_id, "key": "binfile", "blob": encoded});
-        let store_result = storage_store_blob(Some(&store_p), &state).await;
-        assert!(store_result.is_ok(), "blob store: {store_result:?}");
-
-        let retrieve_p = json!({"family_id": &family_id, "key": "binfile"});
-        let retrieve_result = storage_retrieve_blob(Some(&retrieve_p), &state).await;
-        assert!(retrieve_result.is_ok());
-        let blob_b64 = retrieve_result.unwrap()["blob"]
-            .as_str()
-            .unwrap()
-            .to_string();
-        let decoded = base64::engine::general_purpose::STANDARD
-            .decode(&blob_b64)
-            .unwrap();
-        assert_eq!(decoded, raw_data);
 
         // Cleanup
         let _ =

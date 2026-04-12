@@ -39,7 +39,7 @@ pub fn create_workspace_template(path: Path<String>) -> (StatusCode, Json<Value>
 
 /// Like [`create_workspace_template`], but resolves `NESTGATE_WORKSPACE_TEMPLATES_DIR` from `env`.
 pub fn create_workspace_template_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     Path(workspace_id): Path<String>,
 ) -> (StatusCode, Json<Value>) {
     info!(

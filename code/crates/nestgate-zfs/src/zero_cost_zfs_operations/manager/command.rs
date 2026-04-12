@@ -17,6 +17,11 @@ impl<
 {
     /// Execute ZFS command with compile-time timeout
     pub(super) async fn execute_zfs_command(&self, args: &[&str]) -> Result<String> {
+        #[cfg(test)]
+        if let Some(res) = super::test_zfs_stub::try_run_stub(args) {
+            return res;
+        }
+
         let mut cmd = tokio::process::Command::new("zfs");
         cmd.args(args);
 

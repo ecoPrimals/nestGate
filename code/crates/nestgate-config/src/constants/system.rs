@@ -25,7 +25,7 @@ pub const ECOSYSTEM_NAME: &str = "biomeos";
 ///
 /// Reads `ECOSYSTEM_NAME` first, then `BIOMEOS_SERVICE_NAME` for backward compatibility.
 #[must_use]
-pub fn ecosystem_name(env: &dyn EnvSource) -> String {
+pub fn ecosystem_name(env: &(impl EnvSource + ?Sized)) -> String {
     env.get("ECOSYSTEM_NAME")
         .or_else(|| env.get("BIOMEOS_SERVICE_NAME"))
         .unwrap_or_else(|| ECOSYSTEM_NAME.to_owned())

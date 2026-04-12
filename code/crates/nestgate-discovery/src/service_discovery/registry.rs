@@ -287,45 +287,6 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 }
 
 impl InMemoryServiceRegistry {
-    #[expect(
-        dead_code,
-        reason = "Reserved for requirement-aware lookup; registry currently matches by capability only"
-    )]
-    fn service_matches_requirements(
-        &self,
-        registration: &UniversalServiceRegistration,
-        requirements: &ServiceRequirements,
-    ) -> bool {
-        // Check if service has all required capabilities
-        let has_required_capabilities = requirements
-            .capabilities
-            .iter()
-            .all(|req_cap| registration.capabilities.contains(req_cap));
-
-        if !has_required_capabilities {
-            return false;
-        }
-
-        // Check resource constraints if specified
-        if let Some(constraints) = &requirements.resource_constraints {
-            if let Some(max_cpu) = constraints.max_cpu_cores
-                && let Some(service_cpu) = registration.resources.cpu_cores
-                && service_cpu > max_cpu
-            {
-                return false;
-            }
-
-            if let Some(max_memory) = constraints.max_memory_mb
-                && let Some(service_memory) = registration.resources.memory_mb
-                && service_memory > max_memory
-            {
-                return false;
-            }
-        }
-
-        true
-    }
-
     /// Get all registered services (for debugging/monitoring) - lock-free!
     #[must_use]
     pub fn get_all_services(&self) -> Vec<ServiceInfo> {
@@ -387,6 +348,7 @@ mod tests {
         AIModality, CommunicationProtocol, ServiceEndpoint, StorageType,
     };
     use crate::service_discovery::{create_service_registration, create_storage_role};
+    use std::sync::Arc;
 
     fn make_registration(
         name: &str,
@@ -590,5 +552,140 @@ mod tests {
             .get_services_by_category(&ServiceCategory::AI)
             .unwrap();
         assert!(ai_services.is_empty());
+    }
+
+    #[tokio::test]
+    async fn discover_by_capabilities_requires_all_capabilities_no_partial_match() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg = make_registration(
+            "partial",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        registry.register_service(reg).await.unwrap();
+
+        let found = registry
+            .discover_by_capabilities(vec![
+                ServiceCapability::Storage(StorageType::Object),
+                ServiceCapability::Storage(StorageType::Cache),
+            ])
+            .await
+            .unwrap();
+        assert!(
+            found.is_empty(),
+            "service missing one of the required capabilities must not match"
+        );
+    }
+
+    #[tokio::test]
+    async fn discover_by_capabilities_dedupes_when_service_indexed_under_multiple_caps() {
+        let registry = InMemoryServiceRegistry::new();
+        let caps = vec![
+            ServiceCapability::Storage(StorageType::Object),
+            ServiceCapability::Storage(StorageType::Cache),
+        ];
+        let reg = make_registration("dedup", ServiceCategory::Storage, caps.clone());
+        registry.register_service(reg).await.unwrap();
+
+        let found = registry.discover_by_capabilities(caps).await.unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].metadata.name, "dedup");
+    }
+
+    #[tokio::test]
+    async fn register_deregister_register_cycle() {
+        let registry = InMemoryServiceRegistry::new();
+        let id = {
+            let reg = make_registration(
+                "cycle",
+                ServiceCategory::Storage,
+                vec![ServiceCapability::Storage(StorageType::Object)],
+            );
+            let handle = registry.register_service(reg).await.unwrap();
+            handle.service_id
+        };
+        registry.deregister_service(id).await.unwrap();
+        registry.deregister_service(id).await.unwrap();
+
+        let reg2 = make_registration(
+            "cycle",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        registry.register_service(reg2).await.unwrap();
+
+        let found = registry
+            .discover_by_capabilities(vec![ServiceCapability::Storage(StorageType::Object)])
+            .await
+            .unwrap();
+        assert_eq!(found.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn discover_empty_after_deregister_like_logical_expiration() {
+        let registry = InMemoryServiceRegistry::new();
+        let reg = make_registration(
+            "ephemeral",
+            ServiceCategory::Storage,
+            vec![ServiceCapability::Storage(StorageType::Object)],
+        );
+        let id = reg.service_id;
+        registry.register_service(reg).await.unwrap();
+        registry.deregister_service(id).await.unwrap();
+
+        let found = registry
+            .discover_by_capabilities(vec![ServiceCapability::Storage(StorageType::Object)])
+            .await
+            .unwrap();
+        assert!(found.is_empty());
+    }
+
+    #[tokio::test]
+    async fn concurrent_register_and_discover() {
+        let registry = Arc::new(InMemoryServiceRegistry::new());
+        let mut tasks = Vec::new();
+        for i in 0..16 {
+            let r = Arc::clone(&registry);
+            tasks.push(tokio::spawn(async move {
+                let reg = make_registration(
+                    &format!("c-{i}"),
+                    ServiceCategory::Storage,
+                    vec![ServiceCapability::Storage(StorageType::Object)],
+                );
+                r.register_service(reg).await.unwrap();
+                let v = r
+                    .discover_by_capabilities(vec![ServiceCapability::Storage(StorageType::Object)])
+                    .await
+                    .unwrap();
+                assert!(!v.is_empty());
+            }));
+        }
+        for t in tasks {
+            t.await.unwrap();
+        }
+        assert_eq!(registry.service_count(), 16);
+    }
+
+    #[tokio::test]
+    async fn find_optimal_prefers_candidate_when_multiple_registered() {
+        let registry = InMemoryServiceRegistry::new();
+        for name in ["a", "b"] {
+            let reg = make_registration(
+                name,
+                ServiceCategory::Storage,
+                vec![ServiceCapability::Storage(StorageType::Object)],
+            );
+            registry.register_service(reg).await.unwrap();
+        }
+        let requirements = ServiceRequirements {
+            capabilities: vec![ServiceCapability::Storage(StorageType::Object)],
+            resource_constraints: None,
+            performance_requirements: None,
+        };
+        let picked = registry
+            .find_optimal_service(requirements, SelectionPreferences::default())
+            .await
+            .unwrap();
+        assert!(picked.metadata.name == "a" || picked.metadata.name == "b");
     }
 }

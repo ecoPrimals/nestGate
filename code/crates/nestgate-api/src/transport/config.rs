@@ -61,7 +61,7 @@ impl TransportConfig {
     }
 
     /// Like [`Self::from_env`], but reads transport variables from `env`.
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let family_id = env
             .get("NESTGATE_FAMILY_ID")
             .unwrap_or_else(|| "default".to_string());

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
 // **CANONICAL PRIMARY CONFIGURATION SYSTEM**
 //! Module definitions and exports.
 //! This is THE single source of truth for ALL NestGate configuration,
@@ -200,7 +201,7 @@ impl<
     }
 
     /// **PHASE 2C**: Create configuration using an injectable env source.
-    pub fn from_env_source(env: &dyn EnvSource) -> nestgate_types::error::Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> nestgate_types::error::Result<Self> {
         let mut config = Self::default();
 
         // Load environment-specific overrides

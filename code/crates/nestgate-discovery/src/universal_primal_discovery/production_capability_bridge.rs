@@ -102,7 +102,7 @@ impl CapabilityAwareDiscovery {
     /// Like [`Self::initialize`], but reads capability-related flags from an injectable [`EnvSource`].
     pub async fn initialize_from_env_source(
         config: &NestGateCanonicalConfig,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<Self> {
         // Detect capabilities this primal provides
         let capabilities = Self::detect_own_capabilities(config, env);
@@ -132,7 +132,7 @@ impl CapabilityAwareDiscovery {
     /// Inspects configuration and environment to determine capabilities.
     fn detect_own_capabilities(
         config: &NestGateCanonicalConfig,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Vec<PrimalCapability> {
         let mut capabilities = Vec::new();
 
@@ -173,7 +173,10 @@ impl CapabilityAwareDiscovery {
     }
 
     /// Check if API capability is available
-    fn has_api_capability(env: &dyn EnvSource, _config: &NestGateCanonicalConfig) -> bool {
+    fn has_api_capability(
+        env: &(impl EnvSource + ?Sized),
+        _config: &NestGateCanonicalConfig,
+    ) -> bool {
         // Check if API server is configured
         env.get("NESTGATE_API_ENABLED")
             .is_none_or(|v| v == "true" || v == "1") // Default to true when unset
@@ -191,7 +194,7 @@ impl CapabilityAwareDiscovery {
 
     /// Check if observability capability is available
     fn has_observability_capability(
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
         _config: &NestGateCanonicalConfig,
     ) -> bool {
         // Check if metrics/tracing is enabled
@@ -200,7 +203,7 @@ impl CapabilityAwareDiscovery {
     }
 
     /// Check if NFS capability is available
-    fn has_nfs_capability(env: &dyn EnvSource) -> bool {
+    fn has_nfs_capability(env: &(impl EnvSource + ?Sized)) -> bool {
         // Check if NFS is configured
         env.get("NESTGATE_NFS_ENABLED")
             .is_some_and(|v| v == "true" || v == "1")

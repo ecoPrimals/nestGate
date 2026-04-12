@@ -25,9 +25,6 @@ nestgate-platform = { path = "../nestgate-platform" }
 nestgate-observe = { path = "../nestgate-observe", default-features = false }
 nestgate-cache = { path = "../nestgate-cache" }
 
-# Async trait for StorageBackend impl
-async-trait = { workspace = true }
-
 # Error handling
 anyhow = { workspace = true }
 thiserror = { workspace = true }
@@ -69,7 +66,6 @@ url = { workspace = true }
 # Encoding, hashing, and RNG
 base64 = { workspace = true }
 hex = { workspace = true }
-urlencoding = { workspace = true }
 rand = { workspace = true }
 sha2 = { workspace = true }
 getrandom = { workspace = true }
@@ -82,7 +78,6 @@ fastrand = { workspace = true }
 tarpc = { workspace = true, features = ["tokio1", "serde-transport", "serde1", "tcp"] }
 tokio-serde = { workspace = true, features = ["bincode"] }
 bincode = { workspace = true }
-jsonrpsee = { workspace = true }
 
 # Non-Linux: enable sysinfo fallback in nestgate-observe metrics (Linux uses pure-Rust `/proc` only).
 [target.'cfg(not(target_os = "linux"))'.dependencies]
@@ -112,3 +107,5 @@ harness = false
 default = []
 # Development stubs - include mock/stub implementations for testing
 dev-stubs = ["nestgate-config/dev-stubs", "nestgate-rpc/dev-stubs"]
+# Domain-specific Steam gaming data integration (not part of core storage primal)
+steam = []

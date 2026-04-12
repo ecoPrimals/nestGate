@@ -228,7 +228,7 @@ impl Default for InstallationSettings {
 impl InstallationSettings {
     /// Like [`Default::default`], but reads install paths from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             mode: InstallMode::Standalone,
             install_dir: PathBuf::from(env_var_or_default(

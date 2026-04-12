@@ -3,7 +3,7 @@
 
 //! Capabilities domain semantic methods (`capabilities.*`)
 
-use super::SemanticRouter;
+use super::{MetadataBackend, SemanticRouter};
 use nestgate_types::error::Result;
 use serde_json::{Value, json};
 
@@ -12,7 +12,10 @@ use serde_json::{Value, json};
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result for uniform router dispatch"
 )]
-pub(super) fn capabilities_list(_router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) fn capabilities_list(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
     Ok(json!({
         "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),

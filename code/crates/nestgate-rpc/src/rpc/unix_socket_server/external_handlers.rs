@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! `storage.fetch_external` — HTTPS fetch, BLAKE3 addressing, and on-disk cache.
+//! External storage operations: HTTPS `storage.fetch_external` and `storage.object.size`.
 
 use nestgate_config::config::storage_paths::get_storage_base_path;
 use nestgate_types::error::{NestGateError, Result};
@@ -10,7 +10,51 @@ use std::path::PathBuf;
 use tracing::debug;
 
 use super::StorageState;
-use super::storage_handlers::{ensure_parent_dirs, resolve_family_id};
+use super::storage_handlers::{
+    blob_key_path, dataset_key_path, ensure_parent_dirs, resolve_family_id,
+};
+
+/// `storage.object.size` — get size of a stored object without reading its content.
+///
+/// Returns `{size, exists, key, family_id, storage_type}` where `storage_type` is
+/// `"blob"`, `"object"`, or `"none"`.
+pub(super) async fn storage_object_size(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> Result<Value> {
+    let params = params
+        .ok_or_else(|| NestGateError::invalid_input_with_field("params", "params required"))?;
+
+    let key = params["key"]
+        .as_str()
+        .ok_or_else(|| NestGateError::invalid_input_with_field("key", "key (string) required"))?;
+    let family_id = resolve_family_id(params, state)?;
+
+    let blob_path = blob_key_path(family_id, key);
+    let object_path = dataset_key_path(family_id, key);
+
+    let (exists, size, storage_type) = if blob_path.exists() {
+        let meta = tokio::fs::metadata(&blob_path).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to stat blob {family_id}/{key}: {e}"))
+        })?;
+        (true, meta.len(), "blob")
+    } else if object_path.exists() {
+        let meta = tokio::fs::metadata(&object_path).await.map_err(|e| {
+            NestGateError::io_error(format!("Failed to stat object {family_id}/{key}: {e}"))
+        })?;
+        (true, meta.len(), "object")
+    } else {
+        (false, 0, "none")
+    };
+
+    Ok(json!({
+        "exists": exists,
+        "size": size,
+        "key": key,
+        "family_id": family_id,
+        "storage_type": storage_type
+    }))
+}
 
 /// Build the filesystem path for an external-fetch cache entry.
 ///
@@ -204,6 +248,7 @@ pub(super) async fn storage_fetch_external(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64::Engine;
     use nestgate_config::config::storage_paths::get_storage_base_path;
     use serde_json::json;
 
@@ -326,6 +371,48 @@ mod tests {
         assert_eq!(val["cached"], true);
         assert_eq!(val["blake3"], blake3_hex);
         assert_eq!(val["value"]["result"], "cached_data");
+
+        // Cleanup
+        let _ =
+            tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
+                .await;
+    }
+
+    #[tokio::test]
+    async fn object_size_requires_params() {
+        let state = mock_state(Some("test")).await;
+        assert!(storage_object_size(None, &state).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn object_size_returns_none_for_missing() {
+        let state = mock_state(Some("test")).await;
+        let params = Some(json!({"key": "ghost-key-999", "family_id": "test"}));
+        let result = storage_object_size(params.as_ref(), &state).await.unwrap();
+        assert_eq!(result["exists"], false);
+        assert_eq!(result["size"], 0);
+        assert_eq!(result["storage_type"], "none");
+    }
+
+    #[tokio::test]
+    async fn object_size_returns_correct_size_for_blob() {
+        let state = mock_state(Some("test-size")).await;
+        let family_id = format!("test-size-{}", uuid::Uuid::new_v4());
+        let payload = vec![0u8; 2048];
+        let encoded = base64::engine::general_purpose::STANDARD.encode(&payload);
+
+        let store_p = json!({"family_id": &family_id, "key": "sized", "blob": encoded});
+        assert!(
+            super::super::blob_handlers::storage_store_blob(Some(&store_p), &state)
+                .await
+                .is_ok()
+        );
+
+        let size_p = json!({"family_id": &family_id, "key": "sized"});
+        let result = storage_object_size(Some(&size_p), &state).await.unwrap();
+        assert_eq!(result["exists"], true);
+        assert_eq!(result["size"], 2048);
+        assert_eq!(result["storage_type"], "blob");
 
         // Cleanup
         let _ =

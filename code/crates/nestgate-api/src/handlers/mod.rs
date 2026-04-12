@@ -73,7 +73,8 @@ mod auth_production_tests;
 
 /// **AI-FIRST EXAMPLE MODULE**
 ///
-/// AI-powered example handlers and demonstrations.
+/// Demo/example handlers — gated behind `dev-stubs` to keep production binary lean.
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod ai_first_example;
 #[cfg(test)]
 mod ai_first_example_tests;

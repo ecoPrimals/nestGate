@@ -201,8 +201,6 @@ impl DatasetAutomation {
             dataset_name, lifecycle.lifecycle_stage
         );
 
-        let mut actions_taken = Vec::new();
-
         // Process all lifecycle rules for the current stage
         for lifecycle_rule in &policy.conditions.lifecycle_rules {
             if lifecycle_rule.stage == lifecycle.lifecycle_stage {
@@ -218,7 +216,6 @@ impl DatasetAutomation {
                             Ok(action_result) => {
                                 let success = action_result.success;
                                 let msg = action_result.message.clone();
-                                actions_taken.push(action_result);
                                 if success {
                                     info!(
                                         "✅ Applied action '{}' to dataset {}",

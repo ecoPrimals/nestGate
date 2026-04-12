@@ -15,6 +15,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 // Removed unused tracing import
 
+use crate::dataset::DatasetInfo;
 use crate::performance::types::TierStatsMap;
 use crate::{
     config::ZfsConfig, dataset::ZfsDatasetManager, pool::ZfsPoolManager, types::StorageTier,
@@ -22,6 +23,43 @@ use crate::{
 use nestgate_core::Result;
 use tracing::info;
 use tracing::warn;
+
+fn tier_stats_map_from_datasets(datasets: &[DatasetInfo]) -> HashMap<StorageTier, TierStats> {
+    let mut stats = HashMap::new();
+
+    for tier in [
+        StorageTier::Hot,
+        StorageTier::Warm,
+        StorageTier::Cold,
+        StorageTier::Cache,
+    ] {
+        let tier_datasets: Vec<_> = datasets.iter().filter(|d| d.tier == tier).collect();
+
+        let total_capacity = tier_datasets
+            .iter()
+            .map(|d| d.used_space + d.available_space)
+            .sum();
+
+        let used_capacity = tier_datasets.iter().map(|d| d.used_space).sum();
+
+        let file_count = tier_datasets
+            .iter()
+            .map(|d| d.file_count.unwrap_or(0))
+            .sum();
+
+        stats.insert(
+            tier,
+            TierStats {
+                total_capacity,
+                used_capacity,
+                file_count,
+                active_operations: 0,
+            },
+        );
+    }
+
+    stats
+}
 
 /// Manages tiered storage operations
 #[derive(Debug)]
@@ -210,38 +248,7 @@ impl TierManager {
         info!("Refreshing tier statistics");
 
         let datasets = self.dataset_manager.list_datasets().await?;
-        let mut stats = HashMap::new();
-
-        for tier in [
-            StorageTier::Hot,
-            StorageTier::Warm,
-            StorageTier::Cold,
-            StorageTier::Cache,
-        ] {
-            let tier_datasets: Vec<_> = datasets.iter().filter(|d| d.tier == tier).collect();
-
-            let total_capacity = tier_datasets
-                .iter()
-                .map(|d| d.used_space + d.available_space)
-                .sum();
-
-            let used_capacity = tier_datasets.iter().map(|d| d.used_space).sum();
-
-            let file_count = tier_datasets
-                .iter()
-                .map(|d| d.file_count.unwrap_or(0))
-                .sum();
-
-            stats.insert(
-                tier,
-                TierStats {
-                    total_capacity,
-                    used_capacity,
-                    file_count,
-                    active_operations: 0, // Will be updated by migration engine
-                },
-            );
-        }
+        let stats = tier_stats_map_from_datasets(&datasets);
 
         *self.tier_stats.write().await = stats;
         Ok(())
@@ -281,6 +288,14 @@ impl TierManager {
     pub async fn set_tier_stats_for_test(&self, tier: crate::types::StorageTier, stats: TierStats) {
         self.tier_stats.write().await.insert(tier, stats);
     }
+
+    /// Rebuild tier statistics from an in-memory dataset list (unit tests; no `zfs` subprocess).
+    #[cfg(test)]
+    pub async fn refresh_tier_stats_from_datasets(&self, datasets: Vec<DatasetInfo>) -> Result<()> {
+        let stats = tier_stats_map_from_datasets(&datasets);
+        *self.tier_stats.write().await = stats;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -290,7 +305,122 @@ impl TierManager {
 )]
 mod tests {
     use super::*;
+    use crate::dataset::DatasetInfo;
     use crate::types::StorageTier;
+    use std::collections::HashMap;
+
+    fn sample_dataset(
+        name: &str,
+        tier: StorageTier,
+        used: u64,
+        avail: u64,
+        files: Option<u64>,
+    ) -> DatasetInfo {
+        DatasetInfo {
+            name: name.to_string(),
+            used_space: used,
+            available_space: avail,
+            file_count: files,
+            compression_ratio: None,
+            mount_point: "/mnt".into(),
+            tier,
+            properties: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn tier_stats_map_from_datasets_empty() {
+        let m = tier_stats_map_from_datasets(&[]);
+        for t in [
+            StorageTier::Hot,
+            StorageTier::Warm,
+            StorageTier::Cold,
+            StorageTier::Cache,
+        ] {
+            let s = m.get(&t).expect("tier key");
+            assert_eq!(s.total_capacity, 0);
+            assert_eq!(s.used_capacity, 0);
+            assert_eq!(s.file_count, 0);
+        }
+    }
+
+    #[test]
+    fn tier_stats_map_from_datasets_sums_per_tier_and_none_file_count() {
+        let datasets = vec![
+            sample_dataset("t/a", StorageTier::Hot, 10, 90, None),
+            sample_dataset("t/b", StorageTier::Hot, 5, 45, Some(3)),
+            sample_dataset("t/c", StorageTier::Warm, 1, 1, Some(10)),
+        ];
+        let m = tier_stats_map_from_datasets(&datasets);
+        let hot = m.get(&StorageTier::Hot).expect("hot");
+        assert_eq!(hot.total_capacity, 150);
+        assert_eq!(hot.used_capacity, 15);
+        assert_eq!(hot.file_count, 3);
+        let warm = m.get(&StorageTier::Warm).expect("warm");
+        assert_eq!(warm.total_capacity, 2);
+        assert_eq!(warm.used_capacity, 1);
+        assert_eq!(warm.file_count, 10);
+    }
+
+    #[tokio::test]
+    async fn refresh_tier_stats_from_datasets_updates_status_without_zfs() {
+        let m = TierManager::new_for_testing();
+        let datasets = vec![sample_dataset(
+            "pool/ds",
+            StorageTier::Cold,
+            100,
+            900,
+            Some(42),
+        )];
+        m.refresh_tier_stats_from_datasets(datasets)
+            .await
+            .expect("refresh from fixture");
+        let cold = m.get_tier_status(StorageTier::Cold).await.expect("cold");
+        assert_eq!(cold.stats.total_capacity, 1000);
+        assert_eq!(cold.stats.used_capacity, 100);
+        assert_eq!(cold.stats.file_count, 42);
+    }
+
+    #[tokio::test]
+    async fn get_tier_status_uses_default_stats_for_missing_tier_key() {
+        let m = TierManager::new_for_testing();
+        let s = m.get_tier_status(StorageTier::Cache).await.expect("cache");
+        assert_eq!(s.stats.total_capacity, 0);
+        assert_eq!(s.stats.used_capacity, 0);
+        assert_eq!(s.stats.file_count, 0);
+        assert_eq!(s.stats.active_operations, 0);
+        assert_eq!(s.utilization, 0.0);
+        assert_eq!(s.health, "Healthy");
+    }
+
+    #[tokio::test]
+    async fn shutdown_warn_path_resets_active_operations() {
+        let m = TierManager::new_for_testing();
+        m.set_tier_stats_for_test(
+            StorageTier::Hot,
+            TierStats {
+                active_operations: 7,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        m.shutdown().await.expect("shutdown");
+        let s = m.get_tier_status(StorageTier::Hot).await.expect("hot");
+        assert_eq!(s.stats.active_operations, 0);
+    }
+
+    #[test]
+    fn tier_stats_tier_status_debug_format() {
+        let st = format!("{:?}", TierStats::default());
+        assert!(st.contains("TierStats"));
+        let ts = TierStatus {
+            tier: StorageTier::Warm,
+            health: "OK".into(),
+            utilization: 1.0,
+            stats: TierStats::default(),
+        };
+        assert!(format!("{ts:?}").contains("TierStatus"));
+    }
 
     #[tokio::test]
     async fn initialize_tiers_and_shutdown_are_ok() {
@@ -315,6 +445,54 @@ mod tests {
         let s = m.get_tier_status(StorageTier::Hot).await.expect("status");
         assert_eq!(s.health, "Healthy");
         assert!((s.utilization - 50.0).abs() < f64::EPSILON);
+
+        m.set_tier_stats_for_test(
+            StorageTier::Hot,
+            TierStats {
+                total_capacity: 100,
+                used_capacity: 75,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Hot).await.expect("status");
+        assert_eq!(s.health, "Healthy", "exactly 75% is not Warning");
+
+        m.set_tier_stats_for_test(
+            StorageTier::Hot,
+            TierStats {
+                total_capacity: 100,
+                used_capacity: 76,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Hot).await.expect("status");
+        assert_eq!(s.health, "Warning");
+
+        m.set_tier_stats_for_test(
+            StorageTier::Hot,
+            TierStats {
+                total_capacity: 100,
+                used_capacity: 90,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Hot).await.expect("status");
+        assert_eq!(s.health, "Warning", "exactly 90% is not Critical");
+
+        m.set_tier_stats_for_test(
+            StorageTier::Hot,
+            TierStats {
+                total_capacity: 100,
+                used_capacity: 91,
+                ..TierStats::default()
+            },
+        )
+        .await;
+        let s = m.get_tier_status(StorageTier::Hot).await.expect("status");
+        assert_eq!(s.health, "Critical");
 
         m.set_tier_stats_for_test(
             StorageTier::Warm,

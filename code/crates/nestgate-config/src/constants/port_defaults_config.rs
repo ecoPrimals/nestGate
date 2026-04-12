@@ -77,7 +77,7 @@ impl PortConfig {
 
     /// Create configuration from an injectable environment source
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             api_port: env.get("NESTGATE_API_PORT").and_then(|s| s.parse().ok()),
             admin_port: env.get("NESTGATE_ADMIN_PORT").and_then(|s| s.parse().ok()),

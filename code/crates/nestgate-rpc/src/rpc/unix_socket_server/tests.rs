@@ -144,7 +144,7 @@ async fn test_blob_storage() {
         "blob": blob_base64,
         "family_id": &family_id
     });
-    let result = storage_handlers::storage_store_blob(Some(&store_params), &state)
+    let result = blob_handlers::storage_store_blob(Some(&store_params), &state)
         .await
         .unwrap();
     assert_eq!(result["status"], "stored");
@@ -154,7 +154,7 @@ async fn test_blob_storage() {
         "key": "test_blob",
         "family_id": &family_id
     });
-    let result = storage_handlers::storage_retrieve_blob(Some(&retrieve_params), &state)
+    let result = blob_handlers::storage_retrieve_blob(Some(&retrieve_params), &state)
         .await
         .unwrap();
     let retrieved_blob = base64::engine::general_purpose::STANDARD
@@ -670,4 +670,62 @@ async fn legacy_unix_json_rpc_handler_parse_error_returns_jsonrpc_error() {
     let handler = LegacyUnixJsonRpcHandler::new(Arc::new(state));
     let v = handler.handle_request(json!("not an object")).await;
     assert_eq!(v["error"]["code"], -32700);
+}
+
+#[tokio::test]
+async fn legacy_unix_json_rpc_handler_unknown_method() {
+    let mut state = StorageState::new().expect("storage state");
+    state.family_id = Some("fam".to_string());
+    let handler = LegacyUnixJsonRpcHandler::new(Arc::new(state));
+    let v = handler
+        .handle_request(json!({
+            "jsonrpc": "2.0",
+            "method": "totally.unknown.method",
+            "id": 7
+        }))
+        .await;
+    assert_eq!(v["error"]["code"], -32601);
+    assert_eq!(v["error"]["data"]["method"], "totally.unknown.method");
+    assert!(v["result"].is_null());
+}
+
+#[tokio::test]
+async fn legacy_unix_json_rpc_handler_malformed_request_wrong_method_type() {
+    let mut state = StorageState::new().expect("storage state");
+    state.family_id = Some("fam".to_string());
+    let handler = LegacyUnixJsonRpcHandler::new(Arc::new(state));
+    let v = handler
+        .handle_request(json!({
+            "jsonrpc": "2.0",
+            "method": 42,
+            "id": 1
+        }))
+        .await;
+    assert_eq!(v["error"]["code"], -32700);
+}
+
+#[tokio::test]
+#[cfg(unix)]
+async fn handle_connection_malformed_json_returns_parse_error() {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixStream;
+
+    let state = StorageState::new().expect("storage state");
+    let state = Arc::new(state);
+    let (client, server) = UnixStream::pair().expect("unix pair");
+    let h = tokio::spawn(handle_connection(server, Arc::clone(&state)));
+    let (mut c_read, mut c_write) = client.into_split();
+    c_write
+        .write_all(b"{\"jsonrpc\":\"2.0\",\"method\":}\n")
+        .await
+        .expect("write");
+    let mut line = String::new();
+    BufReader::new(&mut c_read)
+        .read_line(&mut line)
+        .await
+        .expect("read");
+    let v: serde_json::Value = serde_json::from_str(line.trim()).expect("resp json");
+    assert_eq!(v["error"]["code"], -32700);
+    drop(c_write);
+    let _ = h.await;
 }

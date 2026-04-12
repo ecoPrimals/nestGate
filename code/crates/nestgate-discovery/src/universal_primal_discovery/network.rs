@@ -64,13 +64,14 @@ impl Default for NetworkDiscoveryConfig {
 impl NetworkDiscoveryConfig {
     /// Like [`Default::default`], but reads `NESTGATE_DISCOVERY_PORT_END` from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         use nestgate_config::config::environment::EnvironmentConfig;
 
         let env_config =
             EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 
         let start_port = env_config.network.port.get();
+        #[expect(deprecated)]
         let end_port = env_parsed(
             env,
             "NESTGATE_DISCOVERY_PORT_END",
@@ -368,7 +369,7 @@ impl NetworkDiscovery {
     pub fn discover_capability_endpoint_from_env_source(
         &self,
         capability: &str,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<String> {
         // Runtime config-based discovery (immutable, thread-safe)
         if let Some(endpoint) = self.network_runtime.get_capability_endpoint(capability) {
@@ -377,6 +378,7 @@ impl NetworkDiscovery {
 
         // Default capability endpoint generation
         let bind_address = self.detect_optimal_bind_interface()?;
+        #[expect(deprecated)]
         let base_port: u16 = env_parsed(
             env,
             "NESTGATE_CAPABILITY_BASE_PORT",

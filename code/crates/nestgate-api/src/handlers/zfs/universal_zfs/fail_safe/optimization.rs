@@ -9,12 +9,10 @@ use std::sync::Arc;
 use crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum;
 use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{UniversalZfsError, UniversalZfsResult};
-use async_recursion::async_recursion;
 
 use super::core::FailSafeZfsService;
 
 /// Optimize
-#[async_recursion]
 pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -41,16 +39,19 @@ pub async fn optimize(service: &FailSafeZfsService) -> UniversalZfsResult<String
     }
 }
 
-#[async_recursion]
 async fn dispatch_optimize(e: &Arc<UniversalZfsServiceEnum>) -> UniversalZfsResult<String> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.optimize().await,
-        UniversalZfsServiceEnum::FailSafe(f) => optimize(f).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.optimize().await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Gets Optimization Analytics
-#[async_recursion]
 pub async fn get_optimization_analytics(
     service: &FailSafeZfsService,
 ) -> UniversalZfsResult<serde_json::Value> {
@@ -79,18 +80,21 @@ pub async fn get_optimization_analytics(
     }
 }
 
-#[async_recursion]
 async fn dispatch_get_optimization_analytics(
     e: &Arc<UniversalZfsServiceEnum>,
 ) -> UniversalZfsResult<serde_json::Value> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.get_optimization_analytics().await,
-        UniversalZfsServiceEnum::FailSafe(f) => get_optimization_analytics(f).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.get_optimization_analytics().await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Predict Tier
-#[async_recursion]
 pub async fn predict_tier(
     service: &FailSafeZfsService,
     file_path: &str,
@@ -120,19 +124,22 @@ pub async fn predict_tier(
     }
 }
 
-#[async_recursion]
 async fn dispatch_predict_tier(
     e: &Arc<UniversalZfsServiceEnum>,
     file_path: &str,
 ) -> UniversalZfsResult<String> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.predict_tier(file_path).await,
-        UniversalZfsServiceEnum::FailSafe(f) => predict_tier(f, file_path).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.predict_tier(file_path).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Gets Configuration
-#[async_recursion]
 pub async fn get_configuration(
     service: &FailSafeZfsService,
 ) -> UniversalZfsResult<serde_json::Value> {
@@ -161,18 +168,21 @@ pub async fn get_configuration(
     }
 }
 
-#[async_recursion]
 async fn dispatch_get_configuration(
     e: &Arc<UniversalZfsServiceEnum>,
 ) -> UniversalZfsResult<serde_json::Value> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.get_configuration().await,
-        UniversalZfsServiceEnum::FailSafe(f) => get_configuration(f).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.get_configuration().await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Updates  Configuration
-#[async_recursion]
 pub async fn update_configuration(
     service: &FailSafeZfsService,
     config: serde_json::Value,
@@ -202,19 +212,24 @@ pub async fn update_configuration(
     }
 }
 
-#[async_recursion]
 async fn dispatch_update_configuration(
     e: &Arc<UniversalZfsServiceEnum>,
     config: serde_json::Value,
 ) -> UniversalZfsResult<()> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.update_configuration(config.clone()).await,
-        UniversalZfsServiceEnum::FailSafe(f) => update_configuration(f, config).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => {
+                return n.update_configuration(config.clone()).await;
+            }
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Shutdown
-#[async_recursion]
 pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -241,11 +256,15 @@ pub async fn shutdown(service: &FailSafeZfsService) -> UniversalZfsResult<()> {
     }
 }
 
-#[async_recursion]
 async fn dispatch_shutdown(e: &Arc<UniversalZfsServiceEnum>) -> UniversalZfsResult<()> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.shutdown().await,
-        UniversalZfsServiceEnum::FailSafe(f) => shutdown(f).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.shutdown().await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 

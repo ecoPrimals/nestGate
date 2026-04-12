@@ -187,21 +187,6 @@ impl ZfsServiceFactory {
         Ok(Arc::new(UniversalZfsServiceEnum::Native(service)))
     }
 
-    /// Create remote ZFS service (HTTP removed)
-    #[expect(
-        dead_code,
-        reason = "Remote backend retained for error path; not called after HTTP removal"
-    )]
-    fn create_remote_service(
-        config: &crate::handlers::zfs::universal_zfs::config::RemoteConfig,
-    ) -> UniversalZfsResult<Arc<UniversalZfsServiceEnum>> {
-        let _ = config;
-        error!("Remote ZFS service removed - HTTP removed per Concentrated Gap Architecture");
-        Err(UniversalZfsError::configuration(
-            "Remote backends removed - use native ZFS".to_string(),
-        ))
-    }
-
     /// Create fallback service
     fn create_fallback_service(
         backend: &ZfsBackend,

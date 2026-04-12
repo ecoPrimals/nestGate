@@ -32,7 +32,7 @@ impl Default for AuthenticationConfig {
 impl AuthenticationConfig {
     /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         // Capability-based auth discovery (no hardcoded provider):
         // 1. AUTH_CAPABILITY_ENDPOINT - capability-based (primary)
         // 2. NESTGATE_SECURITY_AUTH_ENDPOINT - generic security/auth endpoint
@@ -73,7 +73,7 @@ impl Default for LocalTokenConfig {
 impl LocalTokenConfig {
     /// Like [`Default::default`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn default_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             signing_key: env_var_or_default(env, "NESTGATE_TOKEN_KEY", "default-local-key"),
             token_expiry: Duration::from_secs(3600), // 1 hour

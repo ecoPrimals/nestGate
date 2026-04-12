@@ -16,9 +16,7 @@
 use nestgate_types::error::{NestGateError, Result};
 use nestgate_types::{EnvSource, ProcessEnv};
 use std::collections::HashMap;
-use std::future::Future;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -45,6 +43,21 @@ pub enum PrimalCapability {
     Custom(String),
 }
 
+impl std::fmt::Display for PrimalCapability {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ZfsStorage => f.write_str("zfs_storage"),
+            Self::ApiGateway => f.write_str("api_gateway"),
+            Self::ServiceDiscovery => f.write_str("service_discovery"),
+            Self::Observability => f.write_str("observability"),
+            Self::Authentication => f.write_str("authentication"),
+            Self::NetworkFileSystem(v) => write!(f, "nfs_{v}"),
+            Self::DataSync => f.write_str("data_sync"),
+            Self::Custom(s) => f.write_str(s),
+        }
+    }
+}
+
 /// NFS protocol version
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub enum NfsVersion {
@@ -52,6 +65,15 @@ pub enum NfsVersion {
     V3,
     /// `NFSv4`
     V4,
+}
+
+impl std::fmt::Display for NfsVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::V3 => f.write_str("v3"),
+            Self::V4 => f.write_str("v4"),
+        }
+    }
 }
 
 /// Primal's self-knowledge about its capabilities and binding
@@ -100,7 +122,7 @@ impl PrimalId {
     }
 
     /// Like [`Self::from_environment`], but reads hostname from an injectable [`EnvSource`].
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let hostname = env
             .get("HOSTNAME")
             .or_else(|| env.get("HOST"))
@@ -185,29 +207,10 @@ impl HealthStatus {
     }
 }
 
-/// Discovery backend trait for finding other primals
-pub trait DiscoveryBackend: Send + Sync {
-    /// Announce this primal's capabilities
-    fn announce(
-        &self,
-        knowledge: &PrimalSelfKnowledge,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
-
-    /// Find primals with specific capabilities
-    fn find_by_capability(
-        &self,
-        capability: &PrimalCapability,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PeerDescriptor>>> + Send + '_>>;
-
-    /// Query for primals matching criteria
-    fn query(
-        &self,
-        query: &DiscoveryQuery,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PeerDescriptor>>> + Send + '_>>;
-
-    /// Remove announcement (on shutdown)
-    fn unannounce(&self, id: &PrimalId) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
-}
+// DiscoveryBackend trait consolidated into self_knowledge::DiscoveryBackend.
+// InMemoryDiscoveryBackend implements the canonical trait with these associated types:
+//   Knowledge = PrimalSelfKnowledge, PeerInfo = PeerDescriptor, PeerId = PrimalId
+pub use crate::self_knowledge::DiscoveryBackend;
 
 /// Query for discovering peers
 #[derive(Debug, Clone)]
@@ -306,11 +309,14 @@ impl ServiceEndpoint {
 }
 
 /// Capability-based discovery manager
-pub struct CapabilityDiscoveryManager {
+pub struct CapabilityDiscoveryManager<
+    B: DiscoveryBackend<Knowledge = PrimalSelfKnowledge, PeerInfo = PeerDescriptor, PeerId = PrimalId>
+        = crate::universal_primal_discovery::backends::InMemoryDiscoveryBackend,
+> {
     /// My own self-knowledge
     self_knowledge: Arc<RwLock<PrimalSelfKnowledge>>,
-    /// Discovery backends (mDNS, consul, etc.)
-    backends: Vec<Arc<dyn DiscoveryBackend>>,
+    /// Discovery backends
+    backends: Vec<Arc<B>>,
     /// Cache of known peers
     peer_cache: Arc<RwLock<HashMap<PrimalId, PeerDescriptor>>>,
     /// Configuration
@@ -347,10 +353,10 @@ impl CapabilityDiscoveryManager {
     /// Like [`Self::initialize`], but reads metadata env vars from an injectable [`EnvSource`].
     pub async fn initialize_from_env_source(
         capabilities: Vec<PrimalCapability>,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<Self> {
         // Discover own binding
-        let binding = Self::discover_own_binding().await?;
+        let binding = Self::discover_own_binding_inner().await?;
 
         // Create self-knowledge
         let self_knowledge = PrimalSelfKnowledge {
@@ -358,7 +364,7 @@ impl CapabilityDiscoveryManager {
             capabilities,
             binding,
             health: HealthStatus::Healthy,
-            metadata: Self::collect_metadata_from_env_source(env),
+            metadata: Self::collect_metadata_from_env_source_inner(env),
         };
 
         info!("Primal self-knowledge established: {:?}", self_knowledge.id);
@@ -370,9 +376,14 @@ impl CapabilityDiscoveryManager {
             config: DiscoveryConfig::default(),
         })
     }
+}
 
+impl<
+    B: DiscoveryBackend<Knowledge = PrimalSelfKnowledge, PeerInfo = PeerDescriptor, PeerId = PrimalId>,
+> CapabilityDiscoveryManager<B>
+{
     /// Discover own network binding (no hardcoding!)
-    async fn discover_own_binding() -> Result<BindingInfo> {
+    async fn discover_own_binding_inner() -> Result<BindingInfo> {
         // Try to find an available port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
             .await
@@ -392,7 +403,9 @@ impl CapabilityDiscoveryManager {
     }
 
     /// Collect metadata about this environment
-    fn collect_metadata_from_env_source(env: &dyn EnvSource) -> HashMap<String, String> {
+    fn collect_metadata_from_env_source_inner(
+        env: &(impl EnvSource + ?Sized),
+    ) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
 
         // Runtime information
@@ -413,7 +426,7 @@ impl CapabilityDiscoveryManager {
     }
 
     /// Add a discovery backend
-    pub fn add_backend(&mut self, backend: Arc<dyn DiscoveryBackend>) {
+    pub fn add_backend(&mut self, backend: Arc<B>) {
         self.backends.push(backend);
     }
 
@@ -437,11 +450,11 @@ impl CapabilityDiscoveryManager {
         &self,
         capability: PrimalCapability,
     ) -> Result<Vec<PeerDescriptor>> {
+        let cap_str = capability.to_string();
         let mut all_peers = Vec::new();
 
-        // Query all backends
         for backend in &self.backends {
-            match backend.find_by_capability(&capability).await {
+            match backend.query_capability(&cap_str).await {
                 Ok(mut peers) => all_peers.append(&mut peers),
                 Err(e) => warn!("Backend query failed: {}", e),
             }
@@ -453,7 +466,6 @@ impl CapabilityDiscoveryManager {
             cache.insert(peer.id.clone(), peer.clone());
         }
 
-        // Remove stale entries
         self.remove_stale_peers(&mut cache);
 
         Ok(all_peers)
@@ -463,14 +475,16 @@ impl CapabilityDiscoveryManager {
     pub async fn query(&self, query: &DiscoveryQuery) -> Result<Vec<PeerDescriptor>> {
         let mut all_peers = Vec::new();
 
-        for backend in &self.backends {
-            match backend.query(query).await {
-                Ok(mut peers) => all_peers.append(&mut peers),
-                Err(e) => warn!("Backend query failed: {}", e),
+        for cap in &query.required_capabilities {
+            let cap_str = cap.to_string();
+            for backend in &self.backends {
+                match backend.query_capability(&cap_str).await {
+                    Ok(mut peers) => all_peers.append(&mut peers),
+                    Err(e) => warn!("Backend query failed: {}", e),
+                }
             }
         }
 
-        // Filter by query criteria
         let filtered: Vec<_> = all_peers
             .into_iter()
             .filter(|peer| self.matches_query(peer, query))
@@ -549,7 +563,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_binding_discovery() {
-        let binding = CapabilityDiscoveryManager::discover_own_binding().await;
+        use crate::universal_primal_discovery::backends::InMemoryDiscoveryBackend;
+        let binding =
+            CapabilityDiscoveryManager::<InMemoryDiscoveryBackend>::discover_own_binding_inner()
+                .await;
         assert!(binding.is_ok());
 
         let binding = binding.unwrap();

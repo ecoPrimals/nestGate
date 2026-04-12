@@ -17,14 +17,14 @@ use tracing::{debug, info};
 
 const MODELS_DATASET: &str = "_models";
 
-fn storage_base_path_for_models(env: &dyn EnvSource) -> PathBuf {
+fn storage_base_path_for_models(env: &(impl EnvSource + ?Sized)) -> PathBuf {
     if let Some(p) = env.get("NESTGATE_STORAGE_BASE_PATH") {
         return PathBuf::from(p);
     }
     StoragePaths::from_env_source(env).storage_base_path()
 }
 
-fn model_path_from_env(env: &dyn EnvSource, model_id: &str) -> PathBuf {
+fn model_path_from_env(env: &(impl EnvSource + ?Sized), model_id: &str) -> PathBuf {
     storage_base_path_for_models(env)
         .join("datasets")
         .join(MODELS_DATASET)
@@ -56,7 +56,7 @@ pub async fn model_register(params: Option<&Value>) -> Result<Value> {
 
 /// Like [`model_register`], but resolves storage paths from an injectable [`EnvSource`].
 pub async fn model_register_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     params: Option<&Value>,
 ) -> Result<Value> {
     let params = params
@@ -100,7 +100,10 @@ pub fn model_exists(params: Option<&Value>) -> Result<Value> {
 }
 
 /// Like [`model_exists`], but resolves storage paths from an injectable [`EnvSource`].
-pub fn model_exists_from_env_source(env: &dyn EnvSource, params: Option<&Value>) -> Result<Value> {
+pub fn model_exists_from_env_source(
+    env: &(impl EnvSource + ?Sized),
+    params: Option<&Value>,
+) -> Result<Value> {
     let model_id = require_model_id(params)?;
     let exists = model_path_from_env(env, model_id).exists();
     debug!(model_id, exists, "model.exists");
@@ -113,7 +116,10 @@ pub fn model_locate(params: Option<&Value>) -> Result<Value> {
 }
 
 /// Like [`model_locate`], but resolves storage paths from an injectable [`EnvSource`].
-pub fn model_locate_from_env_source(env: &dyn EnvSource, params: Option<&Value>) -> Result<Value> {
+pub fn model_locate_from_env_source(
+    env: &(impl EnvSource + ?Sized),
+    params: Option<&Value>,
+) -> Result<Value> {
     let model_id = require_model_id(params)?;
     let path = model_path_from_env(env, model_id);
 
@@ -137,7 +143,7 @@ pub async fn model_metadata(params: Option<&Value>) -> Result<Value> {
 
 /// Like [`model_metadata`], but resolves storage paths from an injectable [`EnvSource`].
 pub async fn model_metadata_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     params: Option<&Value>,
 ) -> Result<Value> {
     let model_id = require_model_id(params)?;
@@ -180,7 +186,13 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "storage.stats",
     "storage.store_blob",
     "storage.retrieve_blob",
+    "storage.retrieve_range",
+    "storage.object.size",
     "storage.fetch_external",
+    // Ionic bond ledger persistence (security capability provider)
+    "bonding.ledger.store",
+    "bonding.ledger.retrieve",
+    "bonding.ledger.list",
     // Model cache
     "model.register",
     "model.exists",

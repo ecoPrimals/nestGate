@@ -66,7 +66,7 @@ impl HealthMonitoringConfig {
 
     /// Like [`Self::production`], but reads alert-related env vars from an injectable [`EnvSource`].
     #[must_use]
-    pub fn production_from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn production_from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             enabled: true,
             check_interval_seconds: 60,

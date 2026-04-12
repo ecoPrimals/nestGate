@@ -157,7 +157,7 @@ impl ZfsManager {
         // Check if any pools are unhealthy
         for pool in pools {
             match pool.health.as_str() {
-                "ONLINE" | "HEALTHY" => continue,
+                "ONLINE" | "HEALTHY" => {}
                 "DEGRADED" => return Ok(HealthState::Warning),
                 _ => return Ok(HealthState::Critical),
             }
@@ -174,10 +174,7 @@ impl ZfsManager {
             .await
             .map_err(|e| create_zfs_error(e.to_string(), ZfsOperation::Configuration))?;
 
-        // Filter datasets by tier and calculate utilization
-        let tier_datasets: Vec<_> = datasets.iter().filter(|d| d.name.contains(tier)).collect();
-
-        if tier_datasets.is_empty() {
+        if !datasets.iter().any(|d| d.name.contains(tier)) {
             return Ok(0.0);
         }
 
@@ -258,9 +255,13 @@ mod tests {
     #[tokio::test]
     async fn get_zfs_health_matches_service_status() {
         let m = ZfsManager::mock();
-        let a = m.get_zfs_health().await;
-        let b = m.get_service_status().await;
-        assert_eq!(a.is_ok(), b.is_ok());
+        let zfs_present = crate::native::is_zfs_available().await;
+        let health = m.get_zfs_health().await;
+        if zfs_present {
+            assert!(health.is_ok(), "expected Ok when ZFS is available");
+        } else {
+            assert!(health.is_err(), "expected Err when ZFS is unavailable");
+        }
     }
 
     #[tokio::test]

@@ -13,7 +13,7 @@ pub async fn list_workspace_backups(path: Path<String>) -> Result<Json<Value>, S
 
 /// Like [`list_workspace_backups`], but resolves `NESTGATE_BACKUP_DIR` from `env`.
 pub async fn list_workspace_backups_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
     info!("📋 Listing backups for workspace: {}", workspace_id);

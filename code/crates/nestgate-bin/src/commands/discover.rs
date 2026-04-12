@@ -24,7 +24,7 @@ pub async fn execute(target: DiscoverTarget) -> BinResult<()> {
 /// Discover primals in the local ecosystem
 ///
 /// ✅ PRIMAL SELF-KNOWLEDGE: `NestGate` knows itself, discovers others at runtime
-async fn discover_primals_from_env_source(env: &dyn EnvSource) -> BinResult<()> {
+async fn discover_primals_from_env_source(env: &(impl EnvSource + ?Sized)) -> BinResult<()> {
     println!("Primal Discovery");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
@@ -176,7 +176,9 @@ async fn discover_capabilities() -> BinResult<()> {
 
 /// Discover the socket directory from an injectable [`EnvSource`].
 /// Production entry points pass [`ProcessEnv`].
-fn discover_socket_dir_from_env_source(env: &dyn EnvSource) -> Option<std::path::PathBuf> {
+fn discover_socket_dir_from_env_source(
+    env: &(impl EnvSource + ?Sized),
+) -> Option<std::path::PathBuf> {
     // Check explicit socket path
     if let Some(socket) = env.get("NESTGATE_SOCKET") {
         let path = std::path::PathBuf::from(&socket);

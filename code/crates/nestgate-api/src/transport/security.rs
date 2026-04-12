@@ -74,7 +74,10 @@ impl SecurityProviderClient {
     }
 
     /// Like [`Self::discover`], but reads `NESTGATE_SECURITY_*` / `XDG_RUNTIME_DIR` from `env`.
-    pub async fn discover_from_env_source(env: &dyn EnvSource, family_id: &str) -> Result<Self> {
+    pub async fn discover_from_env_source(
+        env: &(impl EnvSource + ?Sized),
+        family_id: &str,
+    ) -> Result<Self> {
         if let Some(socket_path) = env.get("NESTGATE_SECURITY_PROVIDER") {
             info!(
                 "Found security provider via NESTGATE_SECURITY_PROVIDER: {}",
@@ -121,7 +124,7 @@ impl SecurityProviderClient {
     /// 1. `XDG_RUNTIME_DIR` (recommended, per-user, tmpfs)
     /// 2. /run/user/{uid} (standard XDG fallback)
     /// 3. /tmp (least secure, universal fallback)
-    fn candidate_socket_dirs_from_env(env: &dyn EnvSource) -> Vec<String> {
+    fn candidate_socket_dirs_from_env(env: &(impl EnvSource + ?Sized)) -> Vec<String> {
         let mut dirs = Vec::with_capacity(3);
         if let Some(xdg) = env.get("XDG_RUNTIME_DIR") {
             dirs.push(xdg);

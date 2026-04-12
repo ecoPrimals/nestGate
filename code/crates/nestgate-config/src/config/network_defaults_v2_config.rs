@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 //! Configuration for network defaults module
 //!
 //! This module provides immutable configuration for network defaults,
@@ -94,7 +96,7 @@ impl NetworkDefaultsV2Config {
 
     /// Create configuration from an injectable environment source
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         let api_host_env = env_var_or_default(env, "NESTGATE_API_HOST", "");
         let api_host = if api_host_env.is_empty() {
             crate::constants::hardcoding::addresses::LOCALHOST_IPV4.to_string()

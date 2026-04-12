@@ -2,32 +2,32 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-11)**  
+**Verification (as of 2026-04-12)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors, 0 warnings)  
-- **Clippy**: `cargo clippy --workspace --lib` — PASS (zero warnings)  
+- **Clippy**: `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero errors)  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
 - **Format**: `cargo fmt --all --check` — PASS  
-- **Docs**: `cargo doc --workspace --no-deps -D warnings` — PASS (`nestgate-api` verified)  
+- **Docs**: `cargo doc --workspace --no-deps` — PASS (zero warnings)  
 - **Supply chain**: `cargo deny check bans` — PASS; `cargo tree -i ring` — no matches  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: ~11,856 passing, 461 ignored, 0 failures — run `cargo test --workspace --all-features` to refresh counts  
-- **Coverage**: ~80% line (`cargo llvm-cov`; wateringHole minimum 80% met; org target 90% not yet)  
+- **Tests (last recorded)**: 11,792 passing, 451 ignored, 0 failures — run `cargo test --workspace` to refresh counts
+- **Coverage**: ~81.7% line (`cargo llvm-cov --workspace --lib`; wateringHole minimum 80% met; org target 90% pending)
 
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-11)  
 - **Hardcoding**: zero `self.base_url` string literals (81 fixed → proper interpolation)  
-- **Deprecated APIs**: 181 `#[deprecated]` markers for canonical-config migration; zero dead callers  
+- **Deprecated APIs**: 199 `#[deprecated]` markers for canonical-config migration; zero dead callers (11 zero-caller items removed Session 43)  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + `rustls-rustcrypto` (pure Rust); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
-- **External deps evolved**: `reqwest`→`ureq` (pure Rust, no C TLS); `uzers`→`rustix::process`; 54 workspace deps, all pure Rust  
-- **File size**: All production `.rs` files under 800 lines (max ~777 `jsonrpc_server` method table)  
-- **`#[serial]`**: 0 — last `#[serial]` eliminated via `try_init()` evolution  
-- **dev_stubs**: properly feature-gated (`#[cfg(feature = "dev-stubs")]`), zero production leakage, not enabled by default  
+- **External deps**: Zero C-FFI `-sys` crates in production; `reqwest`→`ureq`; `uzers`→`rustix::process`  
+- **File size**: All production `.rs` files under 750 lines (Session 43: 4 largest refactored — jsonrpc_server 794→185, storage_handlers 771→446, crud 762→433, tarpc_types 738→463)  
+- **`as` casts**: Dangerous narrowing casts evolved to `try_from`/saturating; benign widening casts remain  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate)  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
-**Last Updated**: April 11, 2026
+- **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`  
+**Last Updated**: April 12, 2026
 
 ---
 
@@ -122,24 +122,22 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by the commands in the **Verification** block at the top (as of 2026-04-09).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-12 (Session 43).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
-| Clippy | `cargo clippy --workspace --all-features -- -D warnings` — PASS |
-| Format | `cargo fmt --check` — expected clean on main |
-| Tests | `cargo test --workspace` — PASS (0 failures) |
-| Coverage | ~80% line (llvm-cov) — wateringHole 80% minimum met; 90% target pending |
-| Docs | `cargo doc --workspace --no-deps` — builds without rustdoc warnings in normal runs |
-| Migration / deprecation notes | 181 `#[deprecated]` markers for canonical migration; 0 dead deprecated callers; 0 `#[allow(clippy::…)]` in production code (all migrated to `#[expect(` with documented reasons) |
-| Production unwrap/expect | Zero in library `src/` per project rules; tests/integration may use unwrap; clippy `unwrap_used` warns workspace-wide |
-| Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
-| TLS/crypto | Delegated to security capability provider via IPC; installer uses system `curl` (no in-tree ring/rustls/reqwest for app HTTPS) |
-| sysinfo | Optional — Linux uses pure-Rust `/proc`; sysinfo on non-Linux only |
-| File size (production < 1000) | All compliant (max ~777 lines; `jsonrpc_server` method table) |
-| http_client_stub | Self-contained (no removed `discovery_mechanism` dependency) |
-| Env-var isolation | `EnvSource` / `MapEnv` primary; zero `#[serial]` tests remaining |
+| Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
+| Format | `cargo fmt --all --check` — PASS |
+| Tests | `cargo test --workspace` — 11,792 passing, 0 failures, 451 ignored |
+| Coverage | ~81.7% line (llvm-cov) — wateringHole 80% met; 90% target pending |
+| Docs | `cargo doc --workspace --no-deps` — zero warnings |
+| Deprecated | 199 `#[deprecated]` for canonical migration; zero dead callers |
+| unwrap/expect | Zero in production library code; tests may use |
+| Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots |
+| TLS/crypto | `ureq` + `rustls-rustcrypto` (pure Rust); zero C-FFI `-sys` in production |
+| File size | All production under 750 LOC (wateringHole limit 1000) |
+| Env-var isolation | `EnvSource` / `MapEnv` primary; zero `#[serial]` tests |
 
 ### Compliance (wateringHole)
 
@@ -151,8 +149,8 @@ See [STATUS.md](./STATUS.md) for measured metrics. Numbers below are verified by
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
 | Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
-| Coverage (80%+) | Pass — ~80% line last measured (wateringHole 80% minimum met; 90% target not yet) |
-| File size (<800 production) | Pass (max ~759 lines after smart refactoring) |
+| Coverage (80%+) | Pass — 81.7% line (wateringHole 80% met; 90% target pending) |
+| File size (<1000 production) | Pass — all under 750 LOC (4 largest files refactored Session 43) |
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
 | BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to BearDog |
 | Sovereignty | Pass — capability-based discovery, zero hardcoded primals, family-scoped capability symlinks |
@@ -258,10 +256,11 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently ~80% line last measured)
+1. Push test coverage toward 90% target (currently 81.7% — targeted files dramatically improved Session 43)
 2. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 3. Cross-gate replication (multi-node data orchestration)
-4. Profile and optimize `.clone()` hotspots in RPC layer with real benchmark data
+4. Validate `storage.store`/`storage.retrieve` round-trip under NUCLEUS mesh
+5. aarch64 musl cross-compile CI (config exists; pipeline not wired)
 
 For details: See [STATUS.md](./STATUS.md).
 
@@ -279,4 +278,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 9, 2026
+**Latest**: April 12, 2026 (Session 43)

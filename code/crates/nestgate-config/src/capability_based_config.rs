@@ -137,7 +137,7 @@ pub struct DiscoveryConfig {
 impl DiscoveryConfig {
     /// Load discovery flags from an injectable environment source
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             enabled: env_parsed(env, "NESTGATE_DISCOVERY_ENABLED", true),
             methods: vec![DiscoveryMethod::Environment], // Start with env only
@@ -262,7 +262,7 @@ impl CapabilityConfig {
     }
 
     /// Build our endpoints from configuration
-    fn build_endpoints(env: &dyn EnvSource) -> Result<Vec<ServiceEndpoint>> {
+    fn build_endpoints(env: &(impl EnvSource + ?Sized)) -> Result<Vec<ServiceEndpoint>> {
         let mut endpoints = Vec::new();
 
         // Primary API endpoint
@@ -281,7 +281,7 @@ impl CapabilityConfig {
 
     /// Resolve port from environment with fallback
     fn resolve_port_from_env_source(
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
         env_var: &str,
         fallback: u16,
     ) -> Result<u16> {
@@ -299,7 +299,7 @@ impl CapabilityConfig {
 
     /// Resolve address from environment with fallback
     fn resolve_address_from_env_source(
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
         env_var: &str,
         fallback: &str,
     ) -> Result<String> {

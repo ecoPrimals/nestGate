@@ -56,7 +56,7 @@ impl ObjectStorageBackend {
     }
 
     /// Like [`Self::new`], but reads configuration from `env` instead of the process environment.
-    pub fn new_from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn new_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         // Try capability discovery first
         if let Ok(config) = Self::discover_object_storage_capability_from_env_source(env) {
             info!(
@@ -93,7 +93,7 @@ impl ObjectStorageBackend {
     }
 
     fn discover_object_storage_capability_from_env_source(
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<DiscoveredStorageConfig> {
         debug!("🔍 Discovering object storage capabilities...");
 
@@ -168,7 +168,7 @@ impl ObjectStorageBackend {
     }
 
     /// Like [`Self::from_environment`], but reads object-storage variables from `env`.
-    pub fn from_environment_from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_environment_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let endpoint = env.get("OBJECT_STORAGE_ENDPOINT").ok_or_else(|| {
             config_error!(
                 "OBJECT_STORAGE_ENDPOINT required (e.g., https://s3.amazonaws.com or https://play.min.io)",

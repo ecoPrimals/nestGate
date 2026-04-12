@@ -33,7 +33,9 @@ impl UniversalStorageDiscovery {
     /// # Errors
     ///
     /// Returns an error if a discovery step fails in a future implementation; currently infallible.
-    pub fn discover_all_from_env_source(env: &dyn EnvSource) -> Result<Vec<DiscoveredStorage>> {
+    pub fn discover_all_from_env_source(
+        env: &(impl EnvSource + ?Sized),
+    ) -> Result<Vec<DiscoveredStorage>> {
         let mut discovered = Vec::new();
 
         // 1. Environment variables (primary method)
@@ -71,7 +73,9 @@ impl UniversalStorageDiscovery {
     /// # Errors
     ///
     /// Returns an error if environment inspection fails in a future implementation; currently infallible.
-    pub fn discover_from_env_source(env: &dyn EnvSource) -> Result<Vec<DiscoveredStorage>> {
+    pub fn discover_from_env_source(
+        env: &(impl EnvSource + ?Sized),
+    ) -> Result<Vec<DiscoveredStorage>> {
         let mut storage = Vec::new();
 
         for (key, value) in env.vars() {
@@ -121,7 +125,7 @@ impl UniversalStorageDiscovery {
     pub fn probe_endpoint_from_env_source(
         name: &str,
         endpoint: &str,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Option<DiscoveredStorage> {
         // 1. Detect transport
         let transport = Self::detect_transport(endpoint)?;
@@ -216,7 +220,7 @@ impl UniversalStorageDiscovery {
     fn detect_auth_pattern_from_env_source(
         name: &str,
         _endpoint: &str,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Option<AuthenticationPattern> {
         let prefix = format!("STORAGE_{}", name.to_uppercase());
 

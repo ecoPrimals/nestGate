@@ -271,13 +271,14 @@ fn apply_active_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecycle) 
     debug!("Applying rules for active dataset: {}", dataset_name);
 
     // For active datasets, monitor performance and maintain optimal tier
-    if lifecycle.current_tier != StorageTier::Hot && lifecycle.access_count > 100 {
-        if let Err(e) = execute_migration_action(dataset_name, StorageTier::Hot) {
-            warn!(
-                "Skipping tier migration for active dataset {} (not implemented): {}",
-                dataset_name, e
-            );
-        }
+    if lifecycle.current_tier != StorageTier::Hot
+        && lifecycle.access_count > 100
+        && let Err(e) = execute_migration_action(dataset_name, StorageTier::Hot)
+    {
+        warn!(
+            "Skipping tier migration for active dataset {} (not implemented): {}",
+            dataset_name, e
+        );
     }
 
     // Create periodic snapshots for active datasets
@@ -291,13 +292,13 @@ async fn apply_aging_dataset_rules(dataset_name: &str, lifecycle: &DatasetLifecy
     debug!("Applying rules for aging dataset: {}", dataset_name);
 
     // For aging datasets, prepare for migration to cold storage
-    if lifecycle.current_tier == StorageTier::Hot {
-        if let Err(e) = execute_migration_action(dataset_name, StorageTier::Warm) {
-            warn!(
-                "Skipping tier migration for aging dataset {} (not implemented): {}",
-                dataset_name, e
-            );
-        }
+    if lifecycle.current_tier == StorageTier::Hot
+        && let Err(e) = execute_migration_action(dataset_name, StorageTier::Warm)
+    {
+        warn!(
+            "Skipping tier migration for aging dataset {} (not implemented): {}",
+            dataset_name, e
+        );
     }
 
     // Apply compression to save space

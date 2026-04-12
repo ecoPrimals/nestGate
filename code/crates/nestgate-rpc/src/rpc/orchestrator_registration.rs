@@ -162,7 +162,10 @@ impl OrchestratorRegistration {
     ///
     /// Returns [`NestGateError`](nestgate_types::error::NestGateError) only if construction fails;
     /// the current implementation always returns [`Ok`] (same behavior as [`Self::new`]).
-    pub fn new_from_env_source(self_knowledge: SelfKnowledge, env: &dyn EnvSource) -> Result<Self> {
+    pub fn new_from_env_source(
+        self_knowledge: SelfKnowledge,
+        env: &(impl EnvSource + ?Sized),
+    ) -> Result<Self> {
         let enabled = env
             .get("NESTGATE_DISABLE_ORCHESTRATOR")
             .is_none_or(|v| v != "1" && v.to_lowercase() != "true");

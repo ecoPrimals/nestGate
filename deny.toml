@@ -6,7 +6,10 @@ version = 2
 unmaintained = "workspace"
 yanked = "deny"
 ignore = [
-    # bincode: unmaintained — transitive via tarpc (our IPC layer); tarpc requires it
+    # bincode: unmaintained — transitive via tarpc (our IPC layer); tarpc requires it.
+    # TRACKING: Monitor tarpc for migration to postcard or another codec.
+    # When tarpc drops bincode, remove this ignore and the bincode workspace dep.
+    # See: https://github.com/google/tarpc/issues — search "bincode"
     "RUSTSEC-2025-0141",
     # linked-hash-map: unsound IterMut — lockfile residue; source deps removed
     "RUSTSEC-2026-0002",

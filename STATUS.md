@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 11, 2026  
+**Last Updated**: April 12, 2026 (Session 43)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,13 +8,13 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-11
-Clippy:             PASS — cargo clippy --workspace --lib (zero warnings), as of 2026-04-11
-Format:             CLEAN (cargo fmt --check passes)
-Docs:               PASS — cargo doc -D warnings (nestgate-api verified clean)
-Tests:              ~11,856 passing, 0 failures, 461 ignored (cargo test --workspace --all-features)
-Coverage:           ~80% line (cargo llvm-cov) — wateringHole 80% min met; 90% target pending — re-run to refresh
-Files > 800 lines:  0 (production; max ~777 lines — smart-refactored)
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-12
+Clippy:             PASS — cargo clippy --workspace --all-targets --all-features -- -D warnings (zero errors), as of 2026-04-12
+Format:             CLEAN (cargo fmt --check passes), as of 2026-04-12
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-12
+Tests:              11,792 passing, 0 failures, 451 ignored (cargo test --workspace; flaky tests stabilized)
+Coverage:           ~81.7% line (cargo llvm-cov --workspace --lib) — wateringHole 80% min met; 90% target pending
+Files > 750 lines:  0 (production; 4 largest refactored Session 43 — all under 1000 LOC per wateringHole)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
@@ -24,10 +24,14 @@ Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only,
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED; installer uses system curl
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes:         storage.*, data.*, session.*, metadata.*, discovery.*, crypto.*, nat.*, beacon.*, health.* (liveness/readiness/check per wateringHole), capabilities.*, identity.*, model.*, templates.*, audit.*, zfs.* — 57 methods advertised
+IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 46 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
+IPC routes (HTTP):  storage.dataset.*, storage.object.*, discovery.capability.*, health.*, capabilities.*, identity.* — 19 methods (JSON_RPC_CAPABILITIES_METHODS const)
+IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 33 semantic-routed methods
+data.* delegation:  Wildcard catch-all returns NotImplemented directing callers to discover data capability provider (not counted as methods)
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (9 groups), consumed_capabilities, protocol, transport
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
+TCP JSON-RPC:      Functional — `--port`, `--listen`, or NESTGATE_API_PORT env activates TcpFallbackServer alongside UDS
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
@@ -36,7 +40,7 @@ Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-p
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
 Serial tests:       #[serial]: 0 — last #[serial] eliminated via try_init() evolution
-Numeric casts:      ZERO raw `as` casts in production — all use try_from with saturating fallbacks
+Numeric casts:      Dangerous narrowing `as` casts evolved to try_from/saturating; benign widening casts remain
 Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0; cargo deny check bans PASS
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
@@ -45,20 +49,59 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 
 ---
 
-## Ground truth refresh (Apr 11, 2026)
+## Session 43 — Deep Debt Evolution & primalSpring Compliance (Apr 12, 2026)
 
-Measured with `cargo check` / `cargo clippy --workspace --lib` / `cargo fmt --check --all` / `cargo test --workspace` / `cargo deny check bans` / `cargo tree -i ring`.
+### primalSpring Audit Response
+- **Doc drift**: STATUS.md inflated method count corrected — now per-surface: UDS 46, HTTP 19, tarpc 33, `data.*` documented as wildcard delegation
+- **TCP/`--port` wiring**: Socket-only mode now resolves port from `NESTGATE_API_PORT` env; activates TCP alongside UDS when env port differs from default
+- **Domain symlink**: Confirmed already implemented (`storage[-{fid}].sock` → `nestgate[-{fid}].sock`); compliance matrix update proposed
+- **Deprecated APIs**: 210→199 (11 zero-caller items removed: 6 runtime_fallback_ports, 1 ports, 4 automation shims)
 
-- **Production file size**: All production `.rs` files under **800** lines (max ~777; no production file exceeds 800 lines).
-- **Workspace**: **23** members (20 code/crates + tools + fuzz + root; nestgate-network/automation/mcp shed); clippy zero warnings as of 2026-04-11. ring/reqwest/openssl/aws-lc-rs/native-tls fully eliminated — ureq + rustls-rustcrypto (pure Rust) for external HTTPS.
+### Smart file refactoring (4 largest files)
+- `jsonrpc_server/mod.rs` 794→185 lines (extracted `storage_methods.rs`, `capability_methods.rs`, `monitoring_methods.rs`)
+- `storage_handlers.rs` 771→446 lines (extracted `blob_handlers.rs`, `external_handlers.rs`)
+- `crud.rs` 762→433 lines (extracted `crud_properties.rs`, `crud_helpers.rs`, `crud_list.rs`)
+- `tarpc_types/mod.rs` 738→463 lines (extracted `storage.rs`, `metadata.rs` DTOs)
+
+### `as` cast evolution (production)
+- `btsp_server_handshake.rs`: `len as usize` → `usize::try_from(len)` with error mapping
+- `websocket.rs`: `usize`/`u64` → `u32` casts to `u32::try_from(...).unwrap_or(u32::MAX)`
+- `storage/service.rs`: `u64` → `f64` division → `u128` integer math (no precision loss)
+- `observability/metrics.rs`: Added division-by-zero guard for empty histograms
+
+### Clone optimization
+- `JsonRpcServer::start`: Removed unnecessary `state.clone()` (moved into scope)
+- `InMemoryBackend::announce`: Build `PrimalInfo` from `&SelfKnowledge` instead of cloning entire struct
+
+### Test coverage push (+42 tests)
+- `pool_ops.rs` 59→99%, `trait_impl.rs` 62→99%, `tier.rs` 64→86%
+- `metadata_backend.rs`: error paths, edge cases, concurrency
+- `unix_socket_server/mod.rs`: unknown method, malformed request handling
+- `registry.rs`: register/deregister cycles, capability queries, concurrent access
+- Flaky fake-ZFS tests stabilized with `can_spawn_fake_zfs` pre-flight check
+
+### Verification (all PASS)
+- `cargo fmt --all --check` — PASS
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings)
+- `cargo doc --workspace --no-deps` — PASS (zero warnings)
+- `cargo test --workspace` — 11,792 passing, 0 failures, 451 ignored
+
+---
+
+## Ground truth refresh (Apr 12, 2026 — Session 43)
+
+Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-features -- -D warnings` / `cargo fmt --all --check` / `cargo test --workspace` / `cargo deny check bans` / `cargo doc --workspace --no-deps`.
+
+- **Production file size**: All production `.rs` files under **750** lines. Session 43 refactored 4 largest: `jsonrpc_server/mod.rs` 794→185, `storage_handlers.rs` 771→446, `crud.rs` 762→433, `tarpc_types/mod.rs` 738→463.
+- **Workspace**: **23** members (20 code/crates + tools + fuzz + root). Zero clippy warnings. Zero C-FFI `-sys` crates in production.
 - **Concurrency**: Zero lock-across-await. All `Mutex` in async context uses `tokio::sync::Mutex` or `parking_lot::Mutex` (sub-microsecond). Zero `std::sync::Mutex` in async. `DiagnosticsManager` migrated to `tokio::sync::RwLock`.
-- **Testing**: Zero `thread::sleep` or `tokio::time::sleep` stabilization waits in tests (except chaos/timeout). `#[serial]`: **0** — last `#[serial]` eliminated via `setup_logging` `try_init()` evolution. Config/discovery/port-discovery tests use `EnvSource` trait injection (`MapEnv` in tests, `ProcessEnv` in production) — no process-env mutation. Mock servers use `tokio::sync::Notify` for readiness signaling. Socket existence polling replaces fixed-delay waits.
+- **Testing**: Zero `thread::sleep` waits (except chaos/timeout). `#[serial]`: **0**. `EnvSource` trait injection for env isolation. Fake-ZFS tests have `can_spawn_fake_zfs` pre-flight checks for stability under parallel load.
 - **Defaults**: Bind defaults to `127.0.0.1` (secure-by-default). Fallback port is `0` (ephemeral, OS-assigned). Hardcoded ports centralized to `runtime_fallback_ports` constants with env-var overrides.
-- **Stubs**: Production mock builders gated behind `#[cfg(any(test, feature = "dev-stubs"))]`. Crypto/data stubs return structured delegation guidance. `orchestrator_integration` feature-gated.
-- **Numeric safety**: All `as` casts replaced with `try_from().unwrap_or(MAX)` or `saturating_*` operations. Custom `unix_secs()` helper for timestamp conversions.
+- **Stubs**: Production mock builders gated behind `#[cfg(any(test, feature = "dev-stubs"))]`. `NoopStorage` documented as intentional null-object backend. All test doubles behind `#[cfg(test)]`.
+- **Numeric safety**: Dangerous narrowing `as` casts evolved to `try_from`/`saturating`/`u128` integer math. Benign widening casts remain. Custom `unix_secs()` helper for timestamp conversions.
 - **Dependency injection**: `StorageBackend` and `MetadataBackend` traits in RPC layer allow `nestgate-core`'s filesystem-backed storage to back tarpc/semantic router (NG-01 resolved).
 - **Copyright**: 2025-2026 across all source files. SPDX on all .rs files.
-- **Coverage**: ~80% line; not re-measured this session.
+- **Coverage**: ~81.7% line (llvm-cov). 42 new tests added Session 43 targeting low-coverage files.
 
 ---
 
@@ -486,7 +529,7 @@ Measured with `cargo check` / `cargo clippy --workspace --lib` / `cargo fmt --ch
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
-| Coverage gap to 90% | ~10 pp remaining (~80% current; last measured 80.95% line) |
+| Coverage gap to 90% | ~8.3 pp remaining (81.7% current; Session 43 targeted low-coverage files +42 tests) |
 | Semantic router | COMPILED & WIRED — `data.*` delegates; `nat.*`, `beacon.*` routes active; `discovery` overstep modules deprecated |
 | `#[allow(dead_code)]` | 0 production `#[allow(dead_code)]` — dead code removed rather than suppressed |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
@@ -497,11 +540,12 @@ Measured with `cargo check` / `cargo clippy --workspace --lib` / `cargo fmt --ch
 ### Coverage
 
 ```
-Current:  ~80% line coverage (llvm-cov, Mar 30 2026)
-          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → ~80%)
+Current:  ~81.7% line coverage (llvm-cov, Apr 12 2026)
+          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7%)
 Target:   90% line coverage
-Gap:      ~9.75 percentage points
+Gap:      ~8.3 percentage points
 Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary entrypoints
+Session 43: pool_ops 59→99%, trait_impl 62→99%, tier 64→86%, metadata_backend +edge tests, registry +concurrent tests
 ```
 
 ### Dependency Purity
@@ -511,7 +555,7 @@ Production:    Pure Rust; platform via rustix + /proc parsing
 Crypto:        Delegated to security capability provider via IPC; local JWT uses RustCrypto (hmac, sha2)
 TLS:           ELIMINATED from dep tree — installer uses system curl; security capability provider supplies ecosystem TLS
 HTTP client:   Pure Rust (tokio TcpStream bootstrap; reqwest/rustls/ring all removed)
-No direct libc: uzers used instead
+No direct libc: rustix replaces uzers
 Hostname:      rustix::system::uname (gethostname eliminated)
 Tokio:         Minimal features (9 specific, not "full")
 Discovery:     Env vars + capability IPC (mDNS feature-gated, not default)
@@ -555,7 +599,7 @@ Deprecated/shed (removed from workspace): nestgate-network, nestgate-automation,
 | JSON-RPC 2.0 | PASS — Wire Standard Level 3 (Composable) |
 | tarpc | PASS (feature-gated, version aligned) |
 | Semantic naming | PASS (storage.*, data.*, nat.*, beacon.*, health.*, capabilities.*) |
-| File size (<1000 production) | PASS (max ~500 lines after smart refactors) |
+| File size (<1000 production) | PASS (max ~463 lines after Session 43 refactors) |
 | Sovereignty | PASS (capability-based discovery, storage.sock symlink, zero hardcoded primals) |
 | mDNS Discovery | Feature-gated (`mdns`); production via biomeOS |
 | Crypto delegation | PASS — SecurityProviderClient |
@@ -599,4 +643,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 8, 2026
+**Latest**: April 12, 2026 (Session 43)

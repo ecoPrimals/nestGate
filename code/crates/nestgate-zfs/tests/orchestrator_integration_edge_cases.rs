@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+//! Integration edge-case tests for ZFS orchestrator.
+
 #![cfg(feature = "orchestrator")]
 #![allow(
     dead_code,

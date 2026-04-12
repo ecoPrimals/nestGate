@@ -9,11 +9,19 @@
 //! with canonical configuration integration and zero-cost abstractions.
 
 #![warn(missing_docs)]
-#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic,))]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::redundant_clone,
+        clippy::needless_collect,
+    )
+)]
 #![expect(
     deprecated,
     dead_code,
-    unused_imports,
     clippy::missing_errors_doc,
     clippy::doc_markdown,
     clippy::module_name_repetitions,
@@ -27,22 +35,15 @@
     clippy::needless_pass_by_value,
     clippy::option_if_let_else,
     clippy::too_long_first_doc_paragraph,
-    clippy::collapsible_if,
     clippy::implicit_hasher,
     clippy::items_after_statements,
     clippy::too_many_lines,
     clippy::cognitive_complexity,
     clippy::unreadable_literal,
-    clippy::redundant_clone,
     clippy::used_underscore_items,
-    clippy::needless_collect,
     clippy::default_trait_access,
     clippy::wildcard_in_or_patterns,
-    clippy::or_fun_call,
-    clippy::assigning_clones,
-    clippy::similar_names,
-    clippy::needless_continue,
-    clippy::collection_is_never_read
+    clippy::similar_names
 )]
 #![warn(rustdoc::broken_intra_doc_links)]
 

@@ -9,6 +9,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43 (cont.): primalSpring compliance audit + deep debt evolution (April 12, 2026)
+
+- **primalSpring audit response**: Doc drift corrected — STATUS.md now shows per-surface method
+  counts (UDS 46, HTTP 19, tarpc 33) instead of inflated total. `data.*` documented as wildcard
+  delegation, not counted as methods.
+- **TCP/`--port` socket-only wiring**: `run_daemon` now resolves port from `NESTGATE_API_PORT`
+  env in socket-only mode; activates `TcpFallbackServer` alongside UDS when env port differs
+  from compile-time default. Compliance matrix "TCP not wired" resolved.
+- **Domain symlink confirmed**: `storage[-{fid}].sock` → `nestgate[-{fid}].sock` already
+  implemented in `socket_config.rs` with `StorageCapabilitySymlinkGuard` lifecycle. Matrix update
+  proposed to primalSpring.
+- **11 zero-caller deprecated items removed** (210→199): 6 from `runtime_fallback_ports.rs`,
+  1 from `ports.rs`, 4 from `automation/integration.rs`.
+- **4 largest files smart-refactored**: `jsonrpc_server/mod.rs` 794→185 (→ `storage_methods.rs`,
+  `capability_methods.rs`, `monitoring_methods.rs`), `storage_handlers.rs` 771→446
+  (→ `blob_handlers.rs`, `external_handlers.rs`), `crud.rs` 762→433 (→ `crud_properties.rs`,
+  `crud_helpers.rs`, `crud_list.rs`), `tarpc_types/mod.rs` 738→463 (→ `storage.rs`,
+  `metadata.rs`). All production files now under 750 LOC.
+- **Dangerous `as` casts evolved**: `btsp_server_handshake.rs` → `usize::try_from`,
+  `websocket.rs` → `u32::try_from(...).unwrap_or(u32::MAX)`, `storage/service.rs` → `u128`
+  integer math, `observability/metrics.rs` → division-by-zero guard.
+- **Clone hotspots optimized**: `JsonRpcServer::start` unnecessary state clone removed;
+  `InMemoryBackend::announce` builds from `&SelfKnowledge` instead of cloning.
+- **42 new tests**: `pool_ops` 59→99%, `trait_impl` 62→99%, `tier` 64→86%,
+  `metadata_backend` edge/concurrency, `unix_socket_server` unknown method/malformed request,
+  `registry` register/deregister/concurrent access.
+- **Flaky tests stabilized**: 5 fake-ZFS tests with `can_spawn_fake_zfs` pre-flight check;
+  assertion diagnostics improved.
+- **Coverage**: 81.4% → 81.7% line (llvm-cov).
+- **Handoff**: `NESTGATE_V470_SESSION43_COMPLIANCE_AUDIT_HANDOFF_APR12_2026.md` created for
+  primalSpring with proposed compliance matrix updates.
+- Validation: `cargo fmt`, `cargo clippy`, `cargo doc`, `cargo test` — all PASS, zero warnings.
+
+### Session 44: Deep debt cleanup — dead code elimination + dependency evolution (April 11, 2026)
+
+- **21 unwired dead files deleted** (5,755 lines, ~183 KB): Files with no `mod` declaration in
+  any parent module, confirmed never compiled. Across 10 crates: nestgate-api (3 files),
+  nestgate-config (1), nestgate-discovery (3), nestgate-fsmonitor (3), nestgate-middleware (4),
+  nestgate-nas (1), nestgate-performance (1), nestgate-security (1), nestgate-types (4).
+- **`blake3` evolved to pure Rust**: `default-features = false, features = ["std", "pure"]` —
+  eliminates `cc` C compiler dependency and all C/ASM code from the hash function. ecoBin
+  compliance strengthened.
+- **BearDog sovereignty violation fixed**: 13 hardcoded "BearDog" references in
+  `btsp_server_handshake.rs` (runtime errors, doc comments, log messages) replaced with
+  capability-neutral "security provider" wording. Test updated to match.
+- **`bonding_handlers.rs` extracted**: Smart-refactored `storage_handlers.rs` from 1048→772
+  lines by extracting bonding ledger handlers into `bonding_handlers.rs` (distinct domain).
+- **`#[allow(...)]` → `#[expect(...)]`**: `tarpc_client.rs` `dead_code`, `nestgate-discovery`
+  `deprecated` — now with documented `reason` strings per idiomatic Rust.
+- **Dead discovery module deleted**: `performance_benchmarks.rs` (387 lines, 46 `println!`
+  calls, no `mod` declaration) removed from nestgate-discovery.
+- **Audit completed (no changes needed)**: `#[allow(deprecated)]` in ZFS tests (correct for
+  testing deprecated APIs), `println!`/`eprintln!` (all in `#[test]` or doc comments),
+  hardcoded paths (FHS defaults with `NESTGATE_*` env overrides), `BIOMEOS_*` env vars
+  (ecosystem layout convention), production mocks (all properly gated).
+- Validation: `cargo fmt --check` PASS, `cargo clippy --workspace --lib` zero warnings,
+  `cargo doc -D warnings` PASS, `cargo deny check bans` PASS, 448 tests PASS
+
+### Session 43: Cross-spring storage IPC + ionic bond ledger (April 11, 2026)
+
+- **Cross-spring storage IPC RESOLVED**: Added `storage.retrieve_range` — chunked byte-range
+  reads for large tensors/datasets (4 MiB max per chunk, base64 encoded, returns
+  `{data, offset, length, total_size, encoding}`). Added `storage.object.size` — pre-flight
+  object size check without reading content (`{exists, size, storage_type}`). Both search
+  blob and object paths, resolving PG-04 (wetSpring), neuralSpring Gap 5, healthSpring.
+- **Ionic bond ledger storage RESOLVED**: Added `bonding.ledger.store`,
+  `bonding.ledger.retrieve`, `bonding.ledger.list` — durable persistence for ionic bond
+  contract records on behalf of BearDog (security capability provider). Records stored under
+  `__bonding/{contract_id}/{record_type}.json` in family-scoped datasets. Supports full bond
+  lifecycle: proposal → active → seal (provenance). Resolves BD-IONIC coordination item.
+- **New methods wired**: 5 new JSON-RPC methods registered in unix_socket_server dispatcher
+  and advertised in capabilities list. IPC surface now 63 methods.
+- **15 new tests**: `retrieve_range` (params validation, missing key, chunked blob read),
+  `object_size` (params, missing, blob sizing), `bonding_ledger` (validation, round-trip,
+  multi-record-type, empty family list). 448 total nestgate-rpc tests PASS.
+- Validation: `cargo fmt` PASS, `cargo clippy --workspace --lib` zero warnings,
+  `cargo doc -D warnings` PASS
+- wateringHole: PORTABILITY_DEBT timeline updated, PRIMAL_GAPS.md NestGate section fully
+  RESOLVED
+
 ### Session 42: NG-08 ring elimination + deep debt cleanup + doc refresh (April 11, 2026)
 
 - **NG-08 RESOLVED**: `ring` v0.17.14 eliminated from production binary. `reqwest` replaced with

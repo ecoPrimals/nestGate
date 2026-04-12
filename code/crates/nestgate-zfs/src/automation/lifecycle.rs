@@ -33,12 +33,14 @@ pub fn update_lifecycle_stage(
     let now = SystemTime::now();
     let age_days = now
         .duration_since(lifecycle.created)
-        .unwrap_or(Duration::from_secs(
-            std::env::var("NESTGATE_ZFS_DEFAULT_TIMEOUT_SECS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0), // 0 seconds default (immediate)
-        ))
+        .unwrap_or_else(|_| {
+            Duration::from_secs(
+                std::env::var("NESTGATE_ZFS_DEFAULT_TIMEOUT_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0), // 0 seconds default (immediate)
+            )
+        })
         .as_secs()
         / (24 * 3600);
     // Update stage based on age and access patterns

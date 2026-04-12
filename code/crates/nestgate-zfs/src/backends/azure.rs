@@ -266,7 +266,7 @@ impl AzureBackend {
     ///
     /// **FALLBACK ONLY**: Used when capability discovery is unavailable.
     /// Validates configuration to fail fast on misconfiguration.
-    fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let account = env.get("AZURE_STORAGE_ACCOUNT").ok_or_else(|| {
             config_error!(
                 "AZURE_STORAGE_ACCOUNT required when using environment config",

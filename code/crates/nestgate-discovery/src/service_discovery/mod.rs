@@ -31,12 +31,7 @@ pub use types::*; // ✅ NEW: Export dynamic endpoint functionality
 // Convenience re-exports for common usage patterns
 pub use crate::service_discovery::registry::{InMemoryServiceRegistry, UniversalServiceRegistry};
 
-// Backward compatibility aliases for legacy code
-/// Type alias for the universal service registry trait object.
-///
-/// This provides a dynamic interface for service discovery implementations,
-/// allowing runtime polymorphism for different registry backends.
-pub type ServiceDiscovery = dyn UniversalServiceRegistry;
+// Backward compatibility alias for legacy code
 /// Type alias for Serviceregistry
 pub type ServiceRegistry = InMemoryServiceRegistry;
 

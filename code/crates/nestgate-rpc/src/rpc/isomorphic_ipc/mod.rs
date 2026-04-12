@@ -73,11 +73,11 @@
 //! // Implement RPC handler
 //! struct MyHandler;
 //!
-//! #[async_trait::async_trait]
 //! impl RpcHandler for MyHandler {
-//!     async fn handle_request(&self, request: Value) -> Value {
-//!         // Handle JSON-RPC request
-//!         serde_json::json!({"jsonrpc": "2.0", "result": "ok", "id": 1})
+//!     fn handle_request(&self, request: Value) -> Pin<Box<dyn Future<Output = Value> + Send + '_>> {
+//!         Box::pin(async move {
+//!             serde_json::json!({"jsonrpc": "2.0", "result": "ok", "id": 1})
+//!         })
 //!     }
 //! }
 //!

@@ -1,28 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! # 🚀 tarpc Types and Traits for `NestGate`
+//! # tarpc types and traits for `NestGate`
 //!
-//! **HIGH-PERFORMANCE PRIMAL-TO-PRIMAL RPC** (v0.2.0)
+//! Shared types and the [`NestGateRpc`] service trait for tarpc-based communication.
 //!
-//! Provides shared types and service traits for tarpc-based communication.
-//! This module defines the interface used by both clients and servers.
+//! ## Layout
+//! - Storage types — dataset/object request and response structs.
+//! - Metadata types — capability discovery, health, metrics, and protocol metadata.
+//! - This module — the `#[tarpc::service]` trait ([`NestGateRpc`]) and [`NestGateRpcError`].
 //!
-//! ## Performance
-//! - ~10-20 μs latency (vs 50-100 μs for JSON-RPC, 500-1000 μs for HTTP)
-//! - ~100K requests/sec (vs 10K for JSON-RPC, 1K for HTTP)
-//! - Zero-copy binary serialization with bincode
-//! - Type-safe at compile time
-//!
-//! ## Philosophy (Primal Sovereignty)
-//! - **tarpc PRIMARY** for primal-to-primal communication
-//! - **JSON-RPC SECONDARY** for universal access
-//! - **HTTP FALLBACK** for network-only scenarios
-//! - **Self-knowledge**: `NestGate` knows only storage capabilities
-//! - **Runtime discovery**: Other primals discovered via capability
-//! - **Zero hardcoding**: No primal names, ports, or endpoints
-//! - Zero unsafe blocks
-//! - Modern async/await patterns
+//! The trait is intentionally large: it is the full RPC contract in one place. Supporting
+//! types live in submodules to keep navigation simple without hiding the interface behind
+//! excessive file splits.
+
+mod metadata;
+mod storage;
+
+pub use metadata::{
+    CapabilityRegistration, HealthStatus, ProtocolInfo, RegistrationResult, ServiceInfo,
+    StorageMetrics, VersionInfo,
+};
+pub use storage::{DatasetInfo, DatasetParams, ObjectInfo, OperationResult};
 
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
@@ -205,280 +204,6 @@ pub trait NestGateRpc {
     /// # Returns
     /// List of supported protocols (tarpc, JSON-RPC, HTTP)
     async fn protocols() -> Vec<ProtocolInfo>;
-}
-
-// ==================== TYPE DEFINITIONS ====================
-
-/// Dataset creation parameters
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DatasetParams {
-    /// Dataset description
-    pub description: Option<String>,
-
-    /// Compression settings
-    pub compression: Option<String>,
-
-    /// Encryption enabled
-    pub encrypted: bool,
-
-    /// Deduplication enabled
-    pub deduplicated: bool,
-
-    /// Quota in bytes (None = unlimited)
-    pub quota: Option<u64>,
-
-    /// Additional custom properties
-    #[serde(default)]
-    pub properties: HashMap<String, String>,
-}
-
-impl Default for DatasetParams {
-    fn default() -> Self {
-        Self {
-            description: None,
-            compression: Some("lz4".to_string()),
-            encrypted: true,
-            deduplicated: true,
-            quota: None,
-            properties: HashMap::new(),
-        }
-    }
-}
-
-/// Dataset information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DatasetInfo {
-    /// Dataset name
-    pub name: String,
-
-    /// Dataset description
-    pub description: Option<String>,
-
-    /// Creation timestamp
-    pub created_at: i64,
-
-    /// Last modified timestamp
-    pub modified_at: i64,
-
-    /// Total size in bytes
-    pub size_bytes: u64,
-
-    /// Number of objects
-    pub object_count: u64,
-
-    /// Compression ratio (1.0 = no compression)
-    pub compression_ratio: f64,
-
-    /// Configuration parameters
-    pub params: DatasetParams,
-
-    /// Dataset status
-    pub status: String,
-}
-
-/// Object information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ObjectInfo {
-    /// Object key
-    pub key: String,
-
-    /// Dataset name
-    pub dataset: String,
-
-    /// Content size in bytes
-    pub size_bytes: u64,
-
-    /// Creation timestamp
-    pub created_at: i64,
-
-    /// Last modified timestamp
-    pub modified_at: i64,
-
-    /// Content type (MIME)
-    pub content_type: Option<String>,
-
-    /// Checksum (SHA-256)
-    pub checksum: Option<String>,
-
-    /// Encrypted
-    pub encrypted: bool,
-
-    /// Compressed
-    pub compressed: bool,
-
-    /// Custom metadata
-    #[serde(default)]
-    pub metadata: HashMap<String, String>,
-}
-
-/// Operation result
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OperationResult {
-    /// Success flag
-    pub success: bool,
-
-    /// Result message
-    pub message: String,
-
-    /// Operation metadata
-    #[serde(default)]
-    pub metadata: HashMap<String, String>,
-}
-
-/// Capability registration for discovery
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CapabilityRegistration {
-    /// Service ID (UUID)
-    pub service_id: Arc<str>,
-
-    /// Service name (`NestGate` primal identity: `"nestgate"`, not the compiling crate name)
-    pub service_name: Arc<str>,
-
-    /// Primary capability ("storage")
-    pub capability: Arc<str>,
-
-    /// All capabilities provided
-    pub capabilities: Vec<Arc<str>>,
-
-    /// tarpc endpoint
-    pub tarpc_endpoint: Arc<str>,
-
-    /// JSON-RPC endpoint
-    pub jsonrpc_endpoint: Option<Arc<str>>,
-
-    /// HTTP endpoint (if enabled)
-    pub http_endpoint: Option<Arc<str>>,
-
-    /// Service metadata
-    #[serde(default)]
-    pub metadata: HashMap<String, String>,
-}
-
-/// Discovered service information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceInfo {
-    /// Service ID
-    pub id: Arc<str>,
-
-    /// Service capability
-    pub capability: Arc<str>,
-
-    /// Available endpoints by protocol
-    pub endpoints: HashMap<String, String>,
-
-    /// Service status
-    pub status: Arc<str>,
-
-    /// Service metadata
-    pub metadata: Option<serde_json::Value>,
-}
-
-/// Registration result
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RegistrationResult {
-    /// Success flag
-    pub success: bool,
-
-    /// Result message
-    pub message: String,
-}
-
-/// Health status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HealthStatus {
-    /// Status string ("healthy", "degraded", "unhealthy")
-    pub status: String,
-
-    /// Service version
-    pub version: String,
-
-    /// Uptime in seconds
-    pub uptime_seconds: u64,
-
-    /// Total datasets
-    pub total_datasets: usize,
-
-    /// Total objects
-    pub total_objects: u64,
-
-    /// Storage used in bytes
-    pub storage_used_bytes: u64,
-
-    /// Additional health metrics
-    #[serde(default)]
-    pub metrics: HashMap<String, serde_json::Value>,
-}
-
-/// Storage metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StorageMetrics {
-    /// Total capacity in bytes
-    pub total_capacity_bytes: u64,
-
-    /// Used space in bytes
-    pub used_space_bytes: u64,
-
-    /// Available space in bytes
-    pub available_space_bytes: u64,
-
-    /// Number of datasets
-    pub dataset_count: usize,
-
-    /// Total number of objects
-    pub object_count: u64,
-
-    /// Average compression ratio
-    pub avg_compression_ratio: f64,
-
-    /// Deduplication ratio
-    pub dedup_ratio: f64,
-
-    /// Read operations per second
-    pub read_ops_per_sec: f64,
-
-    /// Write operations per second
-    pub write_ops_per_sec: f64,
-
-    /// Average read latency in milliseconds
-    pub avg_read_latency_ms: f64,
-
-    /// Average write latency in milliseconds
-    pub avg_write_latency_ms: f64,
-}
-
-/// Version information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VersionInfo {
-    /// Service version
-    pub version: String,
-
-    /// API version
-    pub api_version: String,
-
-    /// Supported protocol versions
-    pub protocol_versions: Vec<String>,
-
-    /// Build information
-    pub build_info: Option<String>,
-}
-
-/// Protocol information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProtocolInfo {
-    /// Protocol name ("tarpc", "jsonrpc", "http")
-    pub protocol: String,
-
-    /// Protocol version
-    pub version: String,
-
-    /// Connection endpoint
-    pub endpoint: String,
-
-    /// Priority (1 = highest)
-    pub priority: u8,
-
-    /// Enabled flag
-    pub enabled: bool,
 }
 
 /// RPC error types

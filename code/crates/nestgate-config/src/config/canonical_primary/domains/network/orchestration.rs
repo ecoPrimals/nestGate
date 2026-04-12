@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 // **NETWORK ORCHESTRATION CONFIGURATION**
 
 use nestgate_types::error::Result;

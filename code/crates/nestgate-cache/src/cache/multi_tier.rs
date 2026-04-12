@@ -14,9 +14,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 // Type aliases for complex cache types
-/// Type-erased cache provider for dynamic dispatch across multiple cache implementations.
-/// Enables runtime polymorphism for cache backends while maintaining async trait compatibility.
-pub type CacheProviderBox = Box<dyn CacheProvider<String, Vec<u8>>>;
 /// Type alias for lock-free cache data (`DashMap`!)
 pub type CacheDataMap = Arc<DashMap<String, Vec<u8>>>;
 

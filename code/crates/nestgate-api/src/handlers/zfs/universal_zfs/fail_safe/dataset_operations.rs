@@ -14,12 +14,10 @@ use crate::handlers::zfs::universal_zfs::traits::UniversalZfsService;
 use crate::handlers::zfs::universal_zfs_types::{
     DatasetConfig, DatasetInfo, UniversalZfsError, UniversalZfsResult,
 };
-use async_recursion::async_recursion;
 
 use super::core::FailSafeZfsService;
 
 /// List Datasets
-#[async_recursion]
 pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<Vec<DatasetInfo>> {
     if !service.circuit_breaker.can_execute().await {
         return if let Some(fallback) = &service.fallback {
@@ -60,18 +58,21 @@ pub async fn list_datasets(service: &FailSafeZfsService) -> UniversalZfsResult<V
     result
 }
 
-#[async_recursion]
 async fn dispatch_list_datasets(
     e: &Arc<UniversalZfsServiceEnum>,
 ) -> UniversalZfsResult<Vec<DatasetInfo>> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.list_datasets().await,
-        UniversalZfsServiceEnum::FailSafe(f) => list_datasets(f).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.list_datasets().await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Gets Dataset
-#[async_recursion]
 pub async fn get_dataset(
     service: &FailSafeZfsService,
     name: &str,
@@ -101,19 +102,22 @@ pub async fn get_dataset(
     }
 }
 
-#[async_recursion]
 async fn dispatch_get_dataset(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<Option<DatasetInfo>> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.get_dataset(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => get_dataset(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.get_dataset(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Creates  Dataset
-#[async_recursion]
 pub async fn create_dataset(
     service: &FailSafeZfsService,
     config: &DatasetConfig,
@@ -143,19 +147,22 @@ pub async fn create_dataset(
     }
 }
 
-#[async_recursion]
 async fn dispatch_create_dataset(
     e: &Arc<UniversalZfsServiceEnum>,
     config: &DatasetConfig,
 ) -> UniversalZfsResult<DatasetInfo> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.create_dataset(config).await,
-        UniversalZfsServiceEnum::FailSafe(f) => create_dataset(f, config).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.create_dataset(config).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Destroy Dataset
-#[async_recursion]
 pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> UniversalZfsResult<()> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
@@ -182,19 +189,22 @@ pub async fn destroy_dataset(service: &FailSafeZfsService, name: &str) -> Univer
     }
 }
 
-#[async_recursion]
 async fn dispatch_destroy_dataset(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<()> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.destroy_dataset(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => destroy_dataset(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.destroy_dataset(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Gets Dataset Properties
-#[async_recursion]
 pub async fn get_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,
@@ -224,19 +234,22 @@ pub async fn get_dataset_properties(
     }
 }
 
-#[async_recursion]
 async fn dispatch_get_dataset_properties(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
 ) -> UniversalZfsResult<HashMap<String, String>> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.get_dataset_properties(name).await,
-        UniversalZfsServiceEnum::FailSafe(f) => get_dataset_properties(f, name).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => return n.get_dataset_properties(name).await,
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 
 /// Sets Dataset Properties
-#[async_recursion]
 pub async fn set_dataset_properties(
     service: &FailSafeZfsService,
     name: &str,
@@ -267,15 +280,21 @@ pub async fn set_dataset_properties(
     }
 }
 
-#[async_recursion]
 async fn dispatch_set_dataset_properties(
     e: &Arc<UniversalZfsServiceEnum>,
     name: &str,
     properties: &HashMap<String, String>,
 ) -> UniversalZfsResult<()> {
-    match e.as_ref() {
-        UniversalZfsServiceEnum::Native(n) => n.set_dataset_properties(name, properties).await,
-        UniversalZfsServiceEnum::FailSafe(f) => set_dataset_properties(f, name, properties).await,
+    let mut current = e.as_ref();
+    loop {
+        match current {
+            UniversalZfsServiceEnum::Native(n) => {
+                return n.set_dataset_properties(name, properties).await;
+            }
+            UniversalZfsServiceEnum::FailSafe(f) => {
+                current = f.primary.as_ref();
+            }
+        }
     }
 }
 

@@ -14,7 +14,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-fn primal_namespace_from_env_source(env: &dyn EnvSource) -> String {
+fn primal_namespace_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
     env.get("NESTGATE_PRIMAL_NAMESPACE")
         .or_else(|| env.get("NESTGATE_SERVICE_NAME"))
         .unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string())
@@ -194,7 +194,7 @@ impl InMemoryRegistryAdapter<'_> {
     fn unified_to_service_capability_from_env_source(
         &self,
         capability: &UnifiedCapability,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> crate::service_discovery::types::ServiceCapability {
         use crate::service_discovery::types::{
             AIModality, CommunicationProtocol, OrchestrationScope, SecurityFunction,

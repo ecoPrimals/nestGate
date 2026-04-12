@@ -113,7 +113,7 @@ pub fn get_api_server_addr() -> String {
 
 /// [`get_api_server_addr`] reading from an injectable [`EnvSource`].
 #[must_use]
-pub fn get_api_server_addr_from_env_source(env: &dyn EnvSource) -> String {
+pub fn get_api_server_addr_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
     let host = env_var_or_default(env, "NESTGATE_HOST", "0.0.0.0");
     let port = env_parsed(env, "NESTGATE_PORT", API_SERVER_DEFAULT);
     format!("{host}:{port}")
@@ -143,7 +143,7 @@ pub fn get_rpc_server_addr() -> String {
 
 /// [`get_rpc_server_addr`] reading from an injectable [`EnvSource`].
 #[must_use]
-pub fn get_rpc_server_addr_from_env_source(env: &dyn EnvSource) -> String {
+pub fn get_rpc_server_addr_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
     let host = env_var_or_default(env, "NESTGATE_RPC_HOST", "0.0.0.0");
     let port = env_parsed(env, "NESTGATE_RPC_PORT", 8091u16);
     format!("{host}:{port}")
@@ -164,7 +164,7 @@ pub fn default_tarpc_client_endpoint() -> String {
 
 /// [`default_tarpc_client_endpoint`] reading from an injectable [`EnvSource`].
 #[must_use]
-pub fn default_tarpc_client_endpoint_from_env_source(env: &dyn EnvSource) -> String {
+pub fn default_tarpc_client_endpoint_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
     if let Some(raw) = env.get("NESTGATE_RPC_ENDPOINT") {
         let s = raw.trim();
         if !s.is_empty() {

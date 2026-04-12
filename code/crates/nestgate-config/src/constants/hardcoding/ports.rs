@@ -240,12 +240,3 @@ pub const MONGODB_DEFAULT: u16 = 27017;
     note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
 )]
 pub const MYSQL_DEFAULT: u16 = 3306;
-
-/// Streaming RPC default port
-///
-/// Prefer capability discovery at runtime; fallback only.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
-)]
-pub const STREAMING_RPC_DEFAULT: u16 = 8001;

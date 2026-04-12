@@ -39,7 +39,7 @@ fn resolve_capability_from_env(capability: UnifiedCapability) -> Result<Resolved
 }
 
 fn resolve_capability_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     capability: UnifiedCapability,
 ) -> Result<ResolvedService> {
     let env_var = CapabilityMapper::env_var_name(&capability);

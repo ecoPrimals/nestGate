@@ -361,11 +361,9 @@ impl StorageManagerService {
 
                     if hits + misses > 0 {
                         let total = hits + misses;
-                        #[expect(
-                            clippy::cast_precision_loss,
-                            reason = "ARC hit/miss counters; percentage for debug log only"
-                        )]
-                        let hit_rate = hits as f64 / total as f64 * 100.0;
+                        // Integer path avoids u64→f64 ratio casts; `total` > 0.
+                        let hit_rate =
+                            (u128::from(hits) * 10_000 / u128::from(total)) as f64 / 100.0;
                         debug!("ZFS ARC hit rate: {:.2}%", hit_rate);
                     }
                 }
@@ -560,76 +558,118 @@ impl StorageManagerService {
 // StorageBackend implementation — resolves NG-01
 // ---------------------------------------------------------------------------
 
-#[async_trait::async_trait]
 impl nestgate_rpc::rpc::storage_backend::StorageBackend for StorageManagerService {
-    async fn create_dataset(
+    fn create_dataset(
         &self,
         name: &str,
         params: crate::rpc::tarpc_types::DatasetParams,
-    ) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
-        self.create_dataset(name, params).await
+    ) -> impl std::future::Future<Output = Result<crate::rpc::tarpc_types::DatasetInfo>> + Send + '_
+    {
+        let name = name.to_owned();
+        async move { self.create_dataset(&name, params).await }
     }
 
-    async fn list_datasets(&self) -> Result<Vec<crate::rpc::tarpc_types::DatasetInfo>> {
-        self.list_datasets().await
+    #[expect(
+        clippy::manual_async_fn,
+        reason = "trait requires impl Future with Send bound"
+    )]
+    fn list_datasets(
+        &self,
+    ) -> impl std::future::Future<Output = Result<Vec<crate::rpc::tarpc_types::DatasetInfo>>> + Send + '_
+    {
+        async move { self.list_datasets().await }
     }
 
-    async fn get_dataset(&self, name: &str) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
-        Self::get_dataset(self, name).await
+    fn get_dataset(
+        &self,
+        name: &str,
+    ) -> impl std::future::Future<Output = Result<crate::rpc::tarpc_types::DatasetInfo>> + Send + '_
+    {
+        let name = name.to_owned();
+        async move { Self::get_dataset(self, &name).await }
     }
 
-    async fn delete_dataset(&self, name: &str) -> Result<crate::rpc::tarpc_types::OperationResult> {
-        Self::delete_dataset(self, name).await?;
-        Ok(crate::rpc::tarpc_types::OperationResult {
-            success: true,
-            message: format!("Dataset {name} deleted successfully"),
-            metadata: std::collections::HashMap::new(),
-        })
+    fn delete_dataset(
+        &self,
+        name: &str,
+    ) -> impl std::future::Future<Output = Result<crate::rpc::tarpc_types::OperationResult>> + Send + '_
+    {
+        let name = name.to_owned();
+        async move {
+            Self::delete_dataset(self, &name).await?;
+            Ok(crate::rpc::tarpc_types::OperationResult {
+                success: true,
+                message: format!("Dataset {name} deleted successfully"),
+                metadata: std::collections::HashMap::new(),
+            })
+        }
     }
 
-    async fn store_object(
+    fn store_object(
         &self,
         dataset: &str,
         key: &str,
         data: bytes::Bytes,
         _metadata: Option<std::collections::HashMap<String, String>>,
-    ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
-        self.store_object(dataset, key, data).await
+    ) -> impl std::future::Future<Output = Result<crate::rpc::tarpc_types::ObjectInfo>> + Send + '_
+    {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move { self.store_object(&dataset, &key, data).await }
     }
 
-    async fn retrieve_object(&self, dataset: &str, key: &str) -> Result<bytes::Bytes> {
-        let (bytes, _info) = Self::retrieve_object(self, dataset, key).await?;
-        Ok(bytes)
-    }
-
-    async fn get_object_metadata(
+    fn retrieve_object(
         &self,
         dataset: &str,
         key: &str,
-    ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
-        Self::get_object_metadata(self, dataset, key).await
+    ) -> impl std::future::Future<Output = Result<bytes::Bytes>> + Send + '_ {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move {
+            let (bytes, _info) = Self::retrieve_object(self, &dataset, &key).await?;
+            Ok(bytes)
+        }
     }
 
-    async fn list_objects(
+    fn get_object_metadata(
+        &self,
+        dataset: &str,
+        key: &str,
+    ) -> impl std::future::Future<Output = Result<crate::rpc::tarpc_types::ObjectInfo>> + Send + '_
+    {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move { Self::get_object_metadata(self, &dataset, &key).await }
+    }
+
+    fn list_objects(
         &self,
         dataset: &str,
         prefix: Option<&str>,
         limit: Option<usize>,
-    ) -> Result<Vec<crate::rpc::tarpc_types::ObjectInfo>> {
-        Self::list_objects(self, dataset, prefix, limit).await
+    ) -> impl std::future::Future<Output = Result<Vec<crate::rpc::tarpc_types::ObjectInfo>>> + Send + '_
+    {
+        let dataset = dataset.to_owned();
+        let prefix = prefix.map(str::to_owned);
+        async move { Self::list_objects(self, &dataset, prefix.as_deref(), limit).await }
     }
 
-    async fn delete_object(
+    fn delete_object(
         &self,
         dataset: &str,
         key: &str,
-    ) -> Result<crate::rpc::tarpc_types::OperationResult> {
-        Self::delete_object(self, dataset, key).await?;
-        Ok(crate::rpc::tarpc_types::OperationResult {
-            success: true,
-            message: format!("Object {dataset}/{key} deleted successfully"),
-            metadata: std::collections::HashMap::new(),
-        })
+    ) -> impl std::future::Future<Output = Result<crate::rpc::tarpc_types::OperationResult>> + Send + '_
+    {
+        let dataset = dataset.to_owned();
+        let key = key.to_owned();
+        async move {
+            Self::delete_object(self, &dataset, &key).await?;
+            Ok(crate::rpc::tarpc_types::OperationResult {
+                success: true,
+                message: format!("Object {dataset}/{key} deleted successfully"),
+                metadata: std::collections::HashMap::new(),
+            })
+        }
     }
 }
 

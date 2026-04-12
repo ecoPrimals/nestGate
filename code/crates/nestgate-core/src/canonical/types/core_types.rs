@@ -73,10 +73,6 @@ pub type SuppressionRuleMap = Arc<RwLock<HashMap<String, SuppressionRule>>>;
 ///
 /// Map for tracking health check configurations.
 pub type HealthCheckMap = Arc<RwLock<HashMap<String, HealthCheck>>>;
-/// **Canonical Health Check Function**
-///
-/// Type alias for health check functions.
-pub type HealthCheckFunction = Arc<dyn Fn() -> bool + Send + Sync>;
 // ==================== SECTION ====================
 
 /// **Service Information Structure**

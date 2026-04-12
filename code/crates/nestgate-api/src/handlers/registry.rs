@@ -3,10 +3,11 @@
 
 //! Handler collection, registry trait, and discovery helpers.
 
+#[cfg(any(test, feature = "dev-stubs"))]
+use crate::handlers::ai_first_example;
 use crate::handlers::{
     AIFirstHandler, ComplianceHandler, HardwareTuningHandler, HealthHandler, LoadTestHandler,
     MetricsCollector, PerformanceAnalyzer, StorageHandler, WorkspaceManager, ZfsHandler,
-    ai_first_example,
 };
 
 /// Collection of all core handlers for easy registration
@@ -109,6 +110,7 @@ pub fn initialize_handlers() -> HandlerCollection {
 #[must_use]
 pub fn create_handler_by_name(name: &str) -> Option<Box<dyn std::any::Any>> {
     match name {
+        #[cfg(any(test, feature = "dev-stubs"))]
         "ai_first" => Some(Box::new(ai_first_example::create_handler())),
         "compliance" => Some(Box::new(ComplianceHandler::new())),
         "hardware_tuning" => Some(Box::new(HardwareTuningHandler::new())),

@@ -91,8 +91,10 @@
 //! ```
 
 mod audit_handlers;
+mod blob_handlers;
+mod bonding_handlers;
 mod data_handlers;
-mod fetch_external;
+mod external_handlers;
 mod nat_handlers;
 mod session_handlers;
 mod storage_handlers;
@@ -482,13 +484,29 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "storage.list" => storage_handlers::storage_list(request.params.as_ref(), state).await,
         "storage.stats" => storage_handlers::storage_stats(request.params.as_ref(), state).await,
         "storage.store_blob" => {
-            storage_handlers::storage_store_blob(request.params.as_ref(), state).await
+            blob_handlers::storage_store_blob(request.params.as_ref(), state).await
         }
         "storage.retrieve_blob" => {
-            storage_handlers::storage_retrieve_blob(request.params.as_ref(), state).await
+            blob_handlers::storage_retrieve_blob(request.params.as_ref(), state).await
+        }
+        "storage.retrieve_range" => {
+            blob_handlers::storage_retrieve_range(request.params.as_ref(), state).await
+        }
+        "storage.object.size" => {
+            external_handlers::storage_object_size(request.params.as_ref(), state).await
         }
         "storage.fetch_external" => {
-            fetch_external::storage_fetch_external(request.params.as_ref(), state).await
+            external_handlers::storage_fetch_external(request.params.as_ref(), state).await
+        }
+        // Ionic bond ledger persistence (on behalf of security capability provider)
+        "bonding.ledger.store" => {
+            bonding_handlers::bonding_ledger_store(request.params.as_ref(), state).await
+        }
+        "bonding.ledger.retrieve" => {
+            bonding_handlers::bonding_ledger_retrieve(request.params.as_ref(), state).await
+        }
+        "bonding.ledger.list" => {
+            bonding_handlers::bonding_ledger_list(request.params.as_ref(), state).await
         }
         // Game session persistence (convenience over storage.*)
         "session.save" => session_handlers::session_save(request.params.as_ref(), state).await,

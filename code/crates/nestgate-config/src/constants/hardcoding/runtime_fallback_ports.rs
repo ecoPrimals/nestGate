@@ -1,65 +1,105 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! Compile-time port fallbacks when environment variables are unset.
+//! **DEPRECATED**: Compile-time port fallbacks.
 //!
-//! These mirror the numeric defaults used by `RuntimeDefaults` and the deprecated `ports`
-//! module. **Prefer** `RuntimeDefaults`, `get_api_port`, `get_metrics_port`, or capability
-//! discovery at runtime instead of importing this module for new code.
+//! Use [`crate::constants::capability_port_discovery::RuntimePortResolver`] or the
+//! `discover_*_port` family instead. These constants remain only for backward compatibility
+//! during the migration period.
 
-/// Default HTTP service port fallback
+/// Fallback port for plain HTTP API listeners.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver or discover_api_port")]
 pub const HTTP: u16 = 8080;
-/// Default HTTPS service port fallback
+/// Fallback port for TLS-terminated API listeners.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const HTTPS: u16 = 8443;
-/// Default API port fallback
+/// Fallback port for the primary REST/JSON-RPC API.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver or discover_api_port")]
 pub const API: u16 = 3000;
-/// Alternate API port fallback
+/// Fallback alternate API port.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const API_ALT: u16 = 3001;
-/// Metrics / observability port fallback
+/// Fallback port for `Prometheus`-compatible metrics endpoint.
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver or discover_metrics_port"
+)]
 pub const METRICS: u16 = 9090;
-/// Prometheus scrape port fallback
+/// Fallback port for `Prometheus` scrape endpoint (alias of METRICS).
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver or discover_metrics_port"
+)]
 pub const PROMETHEUS: u16 = 9090;
-/// Health check endpoint port fallback
+/// Fallback port for the health/liveness probe endpoint.
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver or discover_health_port"
+)]
 pub const HEALTH: u16 = 8081;
-/// gRPC service port fallback
+/// Fallback port for gRPC listeners.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const GRPC: u16 = 50051;
-/// WebSocket service port fallback
+/// Fallback port for `WebSocket` connections.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const WEBSOCKET: u16 = 8082;
-/// Admin UI or control plane port fallback
+/// Fallback port for the admin/management API.
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver or discover_admin_port"
+)]
 pub const ADMIN: u16 = 9000;
-/// Storage service port fallback
+/// Fallback port for the storage service endpoint.
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver or discover_storage_port"
+)]
 pub const STORAGE: u16 = 5000;
-/// Orchestration service port fallback
+/// Fallback port for the orchestration service.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const ORCHESTRATION: u16 = 8083;
-/// Storage discovery service port fallback
-pub const STORAGE_DISCOVERY: u16 = 8084;
-/// Compute service port fallback
+/// Fallback port for compute service endpoints.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const COMPUTE: u16 = 8085;
-/// Extended services port fallback
+/// Fallback port for extended/auxiliary services.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const EXTENDED_SERVICES: u16 = 3002;
-/// Ecosystem orchestration service port fallback (dev bootstrap; prefer discovery)
+/// Fallback port for the ecosystem coordination endpoint.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const ECOSYSTEM: u16 = 6000;
-/// Service discovery registry port fallback
+/// Fallback port for the discovery service.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const DISCOVERY_SERVICE: u16 = 3010;
-/// Alternate metrics port fallback
+/// Fallback alternate metrics port.
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver or discover_metrics_port"
+)]
 pub const METRICS_ALT: u16 = 9001;
-/// Metrics Prometheus alias port fallback
-pub const METRICS_PROMETHEUS: u16 = 9090;
-/// Default health-related port fallback
-pub const HEALTH_DEFAULT: u16 = 8081;
-/// Orchestrator peer port fallback
+/// Fallback port for the orchestrator control plane.
+#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const ORCHESTRATOR: u16 = 8090;
-/// Security service port fallback
-pub const SECURITY_SERVICE: u16 = 8081;
-/// Networking service port fallback
-pub const NETWORKING_SERVICE: u16 = 8082;
-/// `PostgreSQL` port fallback
+/// Fallback port for `PostgreSQL` (external service, env-resolved).
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver::resolve_env_or_default"
+)]
 pub const POSTGRES: u16 = 5432;
-/// Redis port fallback
+/// Fallback port for `Redis` (external service, env-resolved).
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver::resolve_env_or_default"
+)]
 pub const REDIS: u16 = 6379;
-/// `MongoDB` port fallback
+/// Fallback port for `MongoDB` (external service, env-resolved).
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver::resolve_env_or_default"
+)]
 pub const MONGODB: u16 = 27017;
-/// `MySQL` port fallback
+/// Fallback port for `MySQL` (external service, env-resolved).
+#[deprecated(
+    since = "0.4.0",
+    note = "use RuntimePortResolver::resolve_env_or_default"
+)]
 pub const MYSQL: u16 = 3306;
-/// Streaming RPC port fallback
-pub const STREAMING_RPC: u16 = 8001;

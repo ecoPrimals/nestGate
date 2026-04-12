@@ -63,7 +63,7 @@ impl NetworkDefaultsConfig {
 
     /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             bind_address: env.get("NESTGATE_BIND_ADDRESS"),
             api_host: env.get("NESTGATE_API_HOST"),

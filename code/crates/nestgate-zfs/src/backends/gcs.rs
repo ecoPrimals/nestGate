@@ -276,7 +276,7 @@ impl GcsBackend {
     ///
     /// **FALLBACK ONLY**: Used when capability discovery is unavailable.
     /// Validates configuration to fail fast on misconfiguration.
-    fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let project_id = env
             .get("GCS_PROJECT_ID")
             .or_else(|| env.get("GOOGLE_CLOUD_PROJECT"))

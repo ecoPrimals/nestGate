@@ -275,7 +275,9 @@ impl CapabilityDiscovery {
     }
 
     /// Like [`Self::discover_orchestration_ipc`], but reads from an injectable [`EnvSource`].
-    pub async fn discover_orchestration_ipc_from_env(env: &dyn EnvSource) -> Result<JsonRpcClient> {
+    pub async fn discover_orchestration_ipc_from_env(
+        env: &(impl EnvSource + ?Sized),
+    ) -> Result<JsonRpcClient> {
         tracing::info!("Discovering orchestration IPC gateway (bootstrap)");
 
         // Unix socket path candidates (env-driven)

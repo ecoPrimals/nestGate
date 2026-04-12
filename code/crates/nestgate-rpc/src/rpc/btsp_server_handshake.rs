@@ -5,8 +5,8 @@
 //!
 //! Implements the listener side of the BTSP handshake protocol per
 //! `BTSP_PROTOCOL_STANDARD.md` §Handshake Protocol. `NestGate` delegates all
-//! cryptographic operations to `BearDog` (the security capability provider) via
-//! JSON-RPC calls to `btsp.session.create`, `btsp.session.verify`, and
+//! cryptographic operations to the security capability provider via JSON-RPC
+//! calls to `btsp.session.create`, `btsp.session.verify`, and
 //! `btsp.negotiate`.
 //!
 //! ## Wire Framing
@@ -18,10 +18,10 @@
 //!
 //! 1. Read `ClientHello` frame → extract `client_ephemeral_pub`
 //! 2. Generate 32-byte random challenge
-//! 3. Delegate to `BearDog`: `btsp.session.create` → get `session_id`, `server_ephemeral_pub`
+//! 3. Delegate to security provider: `btsp.session.create` → get `session_id`, `server_ephemeral_pub`
 //! 4. Write `ServerHello` frame → `{version, server_ephemeral_pub, challenge}`
 //! 5. Read `ChallengeResponse` frame → extract `response`, `preferred_cipher`
-//! 6. Delegate to `BearDog`: `btsp.session.verify` → get `verified`
+//! 6. Delegate to security provider: `btsp.session.verify` → get `verified`
 //! 7. On success: `btsp.negotiate` → get negotiated `cipher`
 //! 8. Write `HandshakeComplete` frame → `{cipher, session_id}`
 //!
@@ -43,7 +43,7 @@ const BTSP_VERSION: u32 = 1;
 /// Outcome of a successful BTSP handshake on the server side.
 #[derive(Debug, Clone)]
 pub struct BtspSession {
-    /// Session identifier from `BearDog`.
+    /// Session identifier from the security capability provider.
     pub session_id: String,
     /// Negotiated cipher suite name (e.g. `chacha20_poly1305`, `hmac_plain`, `null`).
     pub cipher: String,
@@ -64,7 +64,10 @@ async fn read_frame<R: AsyncReadExt + Unpin>(reader: &mut R) -> Result<Vec<u8>> 
             "BTSP handshake: frame too large ({len} > {MAX_FRAME_SIZE})"
         )));
     }
-    let mut buf = vec![0u8; len as usize];
+    let buf_len = usize::try_from(len).map_err(|_| {
+        NestGateError::validation_error("BTSP handshake: frame length does not fit usize")
+    })?;
+    let mut buf = vec![0u8; buf_len];
     reader.read_exact(&mut buf).await.map_err(|e| {
         NestGateError::io_error(format!("BTSP handshake: failed to read frame payload: {e}"))
     })?;
@@ -158,7 +161,7 @@ pub fn is_btsp_required() -> bool {
 
 /// Perform the BTSP server-side handshake on an accepted connection.
 ///
-/// Delegates all cryptographic operations to `BearDog` via JSON-RPC.
+/// Delegates all cryptographic operations to the security capability provider via JSON-RPC.
 /// On success, the stream is ready for (optionally encrypted) JSON-RPC frames.
 /// On failure, an error frame is written and the error is returned (caller
 /// should close the connection).
@@ -171,7 +174,7 @@ pub fn is_btsp_required() -> bool {
 /// # Errors
 ///
 /// Returns an error if any handshake step fails (frame read/write, JSON
-/// parsing, or `BearDog` IPC delegation for session/verify/negotiate).
+/// parsing, or security-provider IPC delegation for session/verify/negotiate).
 #[expect(
     clippy::too_many_lines,
     reason = "BTSP handshake is a single linear protocol sequence"
@@ -204,7 +207,7 @@ where
     let challenge_bytes = generate_challenge();
     let challenge_b64 = B64.encode(challenge_bytes);
 
-    // 3. Delegate to BearDog: btsp.session.create
+    // 3. Delegate to security provider: btsp.session.create
     let security_path = resolve_security_socket_path();
     let security_path_str = security_path.to_str().ok_or_else(|| {
         NestGateError::validation_error("BTSP: security socket path is not valid UTF-8")
@@ -214,11 +217,11 @@ where
         .await
         .map_err(|e| {
             error!(
-                "BTSP: cannot connect to BearDog at {}: {e}",
+                "BTSP: cannot connect to security provider at {}: {e}",
                 security_path.display()
             );
             NestGateError::api_internal_error(format!(
-                "BTSP: BearDog security provider unavailable at {}: {e}",
+                "BTSP: security provider unavailable at {}: {e}",
                 security_path.display()
             ))
         })?;
@@ -241,14 +244,18 @@ where
     let session_id = create_result
         .get("session_id")
         .and_then(Value::as_str)
-        .ok_or_else(|| NestGateError::api_internal_error("BTSP: missing session_id from BearDog"))?
+        .ok_or_else(|| {
+            NestGateError::api_internal_error("BTSP: missing session_id from security provider")
+        })?
         .to_string();
 
     let server_ephemeral_pub = create_result
         .get("server_ephemeral_pub")
         .and_then(Value::as_str)
         .ok_or_else(|| {
-            NestGateError::api_internal_error("BTSP: missing server_ephemeral_pub from BearDog")
+            NestGateError::api_internal_error(
+                "BTSP: missing server_ephemeral_pub from security provider",
+            )
         })?
         .to_string();
 
@@ -276,11 +283,13 @@ where
     })?;
     debug!("BTSP: received ChallengeResponse");
 
-    // 6. Delegate to BearDog: btsp.session.verify
+    // 6. Delegate to security provider: btsp.session.verify
     let mut bd_verify = JsonRpcClient::connect_unix(security_path_str)
         .await
         .map_err(|e| {
-            NestGateError::api_internal_error(format!("BTSP: BearDog reconnect failed: {e}"))
+            NestGateError::api_internal_error(format!(
+                "BTSP: security provider reconnect failed: {e}"
+            ))
         })?;
 
     let verify_result = bd_verify
@@ -324,7 +333,9 @@ where
     let mut bd_negotiate = JsonRpcClient::connect_unix(security_path_str)
         .await
         .map_err(|e| {
-            NestGateError::api_internal_error(format!("BTSP: BearDog reconnect failed: {e}"))
+            NestGateError::api_internal_error(format!(
+                "BTSP: security provider reconnect failed: {e}"
+            ))
         })?;
 
     let negotiate_result = bd_negotiate
@@ -460,7 +471,7 @@ mod tests {
     }
 
     #[test]
-    fn handshake_fails_when_beardog_unavailable() {
+    fn handshake_fails_when_security_provider_unavailable() {
         let hello = json!({"version": 1, "client_ephemeral_pub": "AAAA"});
         let hello_bytes = serde_json::to_vec(&hello).unwrap();
         let mut input = Vec::new();
@@ -477,8 +488,8 @@ mod tests {
                 assert!(result.is_err());
                 let msg = result.unwrap_err().to_string();
                 assert!(
-                    msg.contains("BearDog") || msg.contains("security provider"),
-                    "error should mention BearDog: {msg}"
+                    msg.contains("security provider"),
+                    "error should mention security provider: {msg}"
                 );
             },
         );

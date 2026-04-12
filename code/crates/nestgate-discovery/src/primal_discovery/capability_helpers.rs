@@ -58,22 +58,25 @@ use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 /// Last-resort host for capability bootstrap when discovery and env URLs are unset.
 /// Prefer `NESTGATE_<CAPABILITY>_HOST` (e.g. `NESTGATE_ORCHESTRATION_HOST`), then
 /// `NESTGATE_DISCOVERY_FALLBACK_HOST`, then loopback.
-fn fallback_host_for_capability_from_env(env: &dyn EnvSource, capability: &str) -> String {
+fn fallback_host_for_capability_from_env(
+    env: &(impl EnvSource + ?Sized),
+    capability: &str,
+) -> String {
     let specific = format!("NESTGATE_{}_HOST", capability.to_uppercase());
     env.get(&specific)
         .or_else(|| env.get("NESTGATE_DISCOVERY_FALLBACK_HOST"))
         .unwrap_or_else(|| "127.0.0.1".to_string())
 }
 
-fn default_port_compute_from_env(env: &dyn EnvSource) -> u16 {
+fn default_port_compute_from_env(env: &(impl EnvSource + ?Sized)) -> u16 {
     env_parsed(env, "NESTGATE_COMPUTE_PORT", fallback_ports::COMPUTE)
 }
 
-fn default_port_ai_from_env(env: &dyn EnvSource) -> u16 {
+fn default_port_ai_from_env(env: &(impl EnvSource + ?Sized)) -> u16 {
     env_parsed(env, "NESTGATE_AI_PORT", fallback_ports::ADMIN)
 }
 
-fn default_port_ecosystem_from_env(env: &dyn EnvSource) -> u16 {
+fn default_port_ecosystem_from_env(env: &(impl EnvSource + ?Sized)) -> u16 {
     env_parsed(env, "NESTGATE_ECOSYSTEM_PORT", fallback_ports::ECOSYSTEM)
 }
 
@@ -139,7 +142,9 @@ pub async fn discover_orchestration() -> Result<DiscoveredService> {
 }
 
 /// Like [`discover_orchestration`], but reads capability and port env vars from an injectable source.
-pub async fn discover_orchestration_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+pub async fn discover_orchestration_from_env(
+    env: &(impl EnvSource + ?Sized),
+) -> Result<DiscoveredService> {
     Ok(discover_capability_with_default_from_env(
         env,
         "orchestration",
@@ -157,7 +162,9 @@ pub async fn discover_security() -> Result<DiscoveredService> {
 }
 
 /// Like [`discover_security`], but reads capability and port env vars from an injectable source.
-pub async fn discover_security_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+pub async fn discover_security_from_env(
+    env: &(impl EnvSource + ?Sized),
+) -> Result<DiscoveredService> {
     Ok(discover_capability_with_default_from_env(
         env,
         "security",
@@ -175,7 +182,9 @@ pub async fn discover_compute() -> Result<DiscoveredService> {
 }
 
 /// Like [`discover_compute`], but reads capability and port env vars from an injectable source.
-pub async fn discover_compute_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+pub async fn discover_compute_from_env(
+    env: &(impl EnvSource + ?Sized),
+) -> Result<DiscoveredService> {
     Ok(discover_capability_with_default_from_env(
         env,
         "compute",
@@ -193,7 +202,7 @@ pub async fn discover_ai() -> Result<DiscoveredService> {
 }
 
 /// Like [`discover_ai`], but reads capability and port env vars from an injectable source.
-pub async fn discover_ai_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+pub async fn discover_ai_from_env(env: &(impl EnvSource + ?Sized)) -> Result<DiscoveredService> {
     Ok(discover_capability_with_default_from_env(
         env,
         "ai",
@@ -211,7 +220,9 @@ pub async fn discover_ecosystem() -> Result<DiscoveredService> {
 }
 
 /// Like [`discover_ecosystem`], but reads capability and port env vars from an injectable source.
-pub async fn discover_ecosystem_from_env(env: &dyn EnvSource) -> Result<DiscoveredService> {
+pub async fn discover_ecosystem_from_env(
+    env: &(impl EnvSource + ?Sized),
+) -> Result<DiscoveredService> {
     Ok(discover_capability_with_default_from_env(
         env,
         "ecosystem",
@@ -236,7 +247,7 @@ pub async fn discover_capability(capability: &str) -> Result<DiscoveredService> 
 
 /// Like [`discover_capability`], but reads from an injectable [`EnvSource`].
 pub async fn discover_capability_from_env(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     capability: &str,
 ) -> Result<DiscoveredService> {
     let env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
@@ -255,10 +266,10 @@ pub async fn discover_capability_from_env(
 }
 
 /// Resolve a known capability: `NESTGATE_CAPABILITY_{CAPABILITY}` or development default.
-fn discover_capability_with_default_from_env(
-    env: &dyn EnvSource,
+fn discover_capability_with_default_from_env<E: EnvSource + ?Sized>(
+    env: &E,
     capability: &str,
-    default_port: impl FnOnce(&dyn EnvSource) -> u16,
+    default_port: impl FnOnce(&E) -> u16,
 ) -> DiscoveredService {
     let capability_env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
     if let Some(endpoint) = env.get(&capability_env_var) {
@@ -311,7 +322,7 @@ pub fn is_capability_available(capability: &str) -> bool {
 }
 
 /// Like [`is_capability_available`], but reads from an injectable [`EnvSource`].
-pub fn is_capability_available_from_env(env: &dyn EnvSource, capability: &str) -> bool {
+pub fn is_capability_available_from_env(env: &(impl EnvSource + ?Sized), capability: &str) -> bool {
     let env_var = format!("NESTGATE_CAPABILITY_{}", capability.to_uppercase());
     env.get(&env_var).is_some()
 }

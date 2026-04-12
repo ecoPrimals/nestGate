@@ -2,7 +2,10 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
-#![allow(deprecated)]
+#![expect(
+    deprecated,
+    reason = "re-exports legacy modules with documented migration paths"
+)]
 
 //! Capability and peer discovery helpers for the `NestGate` storage primal.
 //!

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 //! Configuration for environment detection module
 //!
 //! This module provides immutable configuration for environment detection,
@@ -86,7 +88,7 @@ impl EnvironmentConfig {
 
     /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         let orchestration_url = env.get("ORCHESTRATION_URL");
         let orchestration_url_present = orchestration_url.is_some();
 

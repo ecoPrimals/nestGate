@@ -244,7 +244,7 @@ impl ZfsRequestHandler {
 
     /// Like [`Self::get_default_pool_name`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn get_default_pool_name_from_env_source(&self, env: &dyn EnvSource) -> String {
+    pub fn get_default_pool_name_from_env_source(&self, env: &(impl EnvSource + ?Sized)) -> String {
         env_var_or_default(env, "NESTGATE_DEFAULT_POOL", "tank")
     }
 
@@ -256,7 +256,10 @@ impl ZfsRequestHandler {
 
     /// Like [`Self::is_performance_monitoring_enabled`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn is_performance_monitoring_enabled_from_env_source(&self, env: &dyn EnvSource) -> bool {
+    pub fn is_performance_monitoring_enabled_from_env_source(
+        &self,
+        env: &(impl EnvSource + ?Sized),
+    ) -> bool {
         env.get("NESTGATE_PERFORMANCE_MONITORING")
             .is_none_or(|v| v.parse().unwrap_or(true))
     }
@@ -269,7 +272,10 @@ impl ZfsRequestHandler {
 
     /// Like [`Self::get_health_check_interval`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn get_health_check_interval_from_env_source(&self, env: &dyn EnvSource) -> Duration {
+    pub fn get_health_check_interval_from_env_source(
+        &self,
+        env: &(impl EnvSource + ?Sized),
+    ) -> Duration {
         let seconds = env_parsed(env, "NESTGATE_HEALTH_CHECK_INTERVAL", 300_u64);
         Duration::from_secs(seconds)
     }

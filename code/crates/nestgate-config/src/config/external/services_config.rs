@@ -72,7 +72,7 @@ impl ServicesConfig {
     /// This is the primary constructor — [`from_env`](Self::from_env) delegates
     /// to this with [`ProcessEnv`](nestgate_types::ProcessEnv).
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         let mut config = Self::new();
 
         config.discovery_url = env.get("NESTGATE_DISCOVERY_URL");

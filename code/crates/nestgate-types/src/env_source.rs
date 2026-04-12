@@ -27,14 +27,18 @@ pub trait EnvSource: Send + Sync {
 
 /// Parses the value of `key` from `env` as `T`, returning `default` on absence
 /// or parse failure. Separated from [`EnvSource`] to keep the trait
-/// dyn-compatible.
-pub fn env_parsed<T: std::str::FromStr>(env: &dyn EnvSource, key: &str, default: T) -> T {
+/// object-safe (generic return types are not dyn-compatible).
+pub fn env_parsed<T: std::str::FromStr>(
+    env: &(impl EnvSource + ?Sized),
+    key: &str,
+    default: T,
+) -> T {
     env.get(key).and_then(|v| v.parse().ok()).unwrap_or(default)
 }
 
 /// Returns `env[key]` or `default` when missing (injectable alternative to reading the process env).
 #[must_use]
-pub fn env_var_or_default(env: &dyn EnvSource, key: &str, default: &str) -> String {
+pub fn env_var_or_default(env: &(impl EnvSource + ?Sized), key: &str, default: &str) -> String {
     env.get(key).unwrap_or_else(|| default.to_string())
 }
 
@@ -105,7 +109,7 @@ impl<T: EnvSource + ?Sized> EnvSource for std::sync::Arc<T> {
     }
 }
 
-/// Blanket impl so `&dyn EnvSource` works ergonomically.
+/// Blanket impl so `&T` (including `&dyn EnvSource`) works ergonomically.
 impl<T: EnvSource + ?Sized> EnvSource for &T {
     fn get(&self, key: &str) -> Option<String> {
         (**self).get(key)

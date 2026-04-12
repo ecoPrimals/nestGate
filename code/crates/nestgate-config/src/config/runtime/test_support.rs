@@ -122,7 +122,7 @@ impl TestConfigGuard {
     }
 
     /// Like [`Self::from_test_env`], but reads host/port from an injectable [`EnvSource`].
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self::new(|config| {
             if let Some(port) = env.get("NESTGATE_API_PORT") {
                 if let Ok(p) = port.parse() {

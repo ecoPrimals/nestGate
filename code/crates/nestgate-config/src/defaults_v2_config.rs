@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 //! Configuration for defaults module
 //!
 //! This module provides immutable configuration for default values,
@@ -77,7 +79,7 @@ impl DefaultsV2Config {
 
     /// Like [`Self::from_env`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         let api_port = env_parsed(env, "NESTGATE_API_PORT", Self::DEFAULT_API_PORT);
 
         let bind_address =

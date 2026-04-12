@@ -332,7 +332,7 @@ impl ZfsPoolSetup {
 
             // Ensure each tier has at least one device type
             if hot_types.is_empty() {
-                hot_types = warm_types.clone();
+                hot_types.clone_from(&warm_types);
             }
             if warm_types.is_empty() {
                 if let Some(device_type) = device_types.iter().next() {
@@ -345,7 +345,7 @@ impl ZfsPoolSetup {
                 }
             }
             if cold_types.is_empty() {
-                cold_types = warm_types.clone();
+                cold_types.clone_from(&warm_types);
             }
 
             tier_mappings.insert(ConfigStorageTier::Hot, hot_types);

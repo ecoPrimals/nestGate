@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-//! **ZFS production HTTP handlers (no `dev-stubs`)**
+//! Production ZFS HTTP handler module for the NestGate API (no `dev-stubs`).
 //!
-//! Read and write routes call [`nestgate_zfs::command::ZfsOperations`] or [`nestgate_zfs::native`]
-//! helpers when `zpool` / `zfs` userland is available. When tools are missing, handlers return
-//! `503` with a structured `zfs_unavailable` body.
+//! Handlers call [`nestgate_zfs::command::ZfsOperations`] or [`nestgate_zfs::native`] when
+//! `zpool` / `zfs` userland is available. When tools are missing, routes return `503` with a
+//! structured `zfs_unavailable` body.
 //!
 //! The types [`ZfsConfig`], [`ProductionZfsManager`], [`ZeroCostZfsOperations`], and
 //! [`ZfsHandlerImpl`] exist for API compatibility with other build configurations; they are not

@@ -99,8 +99,8 @@ pub use audit_storage::{
 };
 pub use jsonrpc_server::{JsonRpcConfig, JsonRpcServer};
 pub use metadata_backend::{
-    FileMetadataBackend, InMemoryMetadataBackend, MetadataBackend, ServiceRecord,
-    default_metadata_base_dir,
+    DefaultMetadataBackend, FileMetadataBackend, InMemoryMetadataBackend, MetadataBackend,
+    ServiceRecord, default_metadata_base_dir,
 };
 #[cfg(any(feature = "dev-stubs", test))]
 pub use orchestrator_registration::OrchestratorRegistration;

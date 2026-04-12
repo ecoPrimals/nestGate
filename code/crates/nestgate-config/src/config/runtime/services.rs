@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 //! Services configuration module  
 //!
 //! **CAPABILITY-BASED DISCOVERY**: Discovers services by WHAT THEY DO, not WHO THEY ARE.
@@ -179,6 +181,10 @@ impl ServicesConfig {
     /// # Primal Sovereignty
     ///
     /// Falls back to environment-configurable localhost endpoints. No hardcoded assumptions.
+    #[deprecated(
+        since = "0.4.0",
+        note = "use resolve_by_capability(); hardcoded port mapping to capabilities violates primal self-knowledge"
+    )]
     #[must_use]
     pub fn capability_url_or_local(&self, capability: &str) -> String {
         use std::env;

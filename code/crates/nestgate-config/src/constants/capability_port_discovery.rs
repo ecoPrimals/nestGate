@@ -39,7 +39,7 @@ use nestgate_types::error::{NestGateError, Result};
 use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::OnceLock;
 
-fn parse_positive_port(env: &dyn EnvSource, key: &str) -> Option<u16> {
+fn parse_positive_port(env: &(impl EnvSource + ?Sized), key: &str) -> Option<u16> {
     env.get(key).and_then(|s| s.parse().ok()).filter(|&p| p > 0)
 }
 
@@ -100,7 +100,7 @@ pub fn discover_api_port() -> Result<u16> {
 }
 
 /// Like [`discover_api_port`], but reads `NESTGATE_API_PORT` from `env`.
-pub fn discover_api_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
+pub fn discover_api_port_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<u16> {
     // 1. Try capability discovery
     if let Ok(service_url) = try_discover_api_service()
         && let Some(port) = extract_port_from_url(&service_url)
@@ -128,7 +128,7 @@ pub fn discover_metrics_port() -> Result<u16> {
 }
 
 /// Like [`discover_metrics_port`], but reads `NESTGATE_METRICS_PORT` from `env`.
-pub fn discover_metrics_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
+pub fn discover_metrics_port_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<u16> {
     // 1. Try capability discovery
     if let Ok(service_url) = try_discover_metrics_service()
         && let Some(port) = extract_port_from_url(&service_url)
@@ -156,7 +156,7 @@ pub fn discover_health_port() -> Result<u16> {
 }
 
 /// Like [`discover_health_port`], but reads `NESTGATE_HEALTH_PORT` from `env`.
-pub fn discover_health_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
+pub fn discover_health_port_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<u16> {
     // 1. Environment variable (health checks are often load-balancer specific)
     if let Some(port) = parse_positive_port(env, "NESTGATE_HEALTH_PORT") {
         return Ok(port);
@@ -176,7 +176,7 @@ pub fn discover_admin_port() -> Result<u16> {
 }
 
 /// Like [`discover_admin_port`], but reads `NESTGATE_ADMIN_PORT` from `env`.
-pub fn discover_admin_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
+pub fn discover_admin_port_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<u16> {
     // 1. Environment variable (admin interfaces are sensitive, explicit config preferred)
     if let Some(port) = parse_positive_port(env, "NESTGATE_ADMIN_PORT") {
         return Ok(port);
@@ -197,7 +197,7 @@ pub fn discover_storage_port() -> Result<u16> {
 }
 
 /// Like [`discover_storage_port`], but reads `NESTGATE_STORAGE_PORT` from `env`.
-pub fn discover_storage_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
+pub fn discover_storage_port_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<u16> {
     // 1. Try capability discovery
     if let Ok(service_url) = try_discover_storage_service()
         && let Some(port) = extract_port_from_url(&service_url)
@@ -227,7 +227,7 @@ pub fn discover_tarpc_port() -> Result<u16> {
 }
 
 /// Like [`discover_tarpc_port`], but reads `NESTGATE_TARPC_PORT` from `env`.
-pub fn discover_tarpc_port_from_env_source(env: &dyn EnvSource) -> Result<u16> {
+pub fn discover_tarpc_port_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<u16> {
     // 1. Try environment variable
     if let Some(port) = parse_positive_port(env, "NESTGATE_TARPC_PORT") {
         return Ok(port);
@@ -311,7 +311,7 @@ pub fn discover_api_port_sync() -> u16 {
 
 /// Like [`discover_api_port_sync`], but reads from `env`.
 #[must_use]
-pub fn discover_api_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+pub fn discover_api_port_sync_from_env_source(env: &(impl EnvSource + ?Sized)) -> u16 {
     parse_positive_port(env, "NESTGATE_API_PORT").unwrap_or(8080)
 }
 
@@ -323,7 +323,7 @@ pub fn discover_metrics_port_sync() -> u16 {
 
 /// Like [`discover_metrics_port_sync`], but reads from `env`.
 #[must_use]
-pub fn discover_metrics_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+pub fn discover_metrics_port_sync_from_env_source(env: &(impl EnvSource + ?Sized)) -> u16 {
     parse_positive_port(env, "NESTGATE_METRICS_PORT").unwrap_or(9090)
 }
 
@@ -335,7 +335,7 @@ pub fn discover_health_port_sync() -> u16 {
 
 /// Like [`discover_health_port_sync`], but reads from `env`.
 #[must_use]
-pub fn discover_health_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+pub fn discover_health_port_sync_from_env_source(env: &(impl EnvSource + ?Sized)) -> u16 {
     parse_positive_port(env, "NESTGATE_HEALTH_PORT").unwrap_or(8082)
 }
 
@@ -347,7 +347,7 @@ pub fn discover_admin_port_sync() -> u16 {
 
 /// Like [`discover_admin_port_sync`], but reads from `env`.
 #[must_use]
-pub fn discover_admin_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+pub fn discover_admin_port_sync_from_env_source(env: &(impl EnvSource + ?Sized)) -> u16 {
     parse_positive_port(env, "NESTGATE_ADMIN_PORT").unwrap_or(8081)
 }
 
@@ -359,8 +359,75 @@ pub fn discover_tarpc_port_sync() -> u16 {
 
 /// Like [`discover_tarpc_port_sync`], but reads from `env`.
 #[must_use]
-pub fn discover_tarpc_port_sync_from_env_source(env: &dyn EnvSource) -> u16 {
+pub fn discover_tarpc_port_sync_from_env_source(env: &(impl EnvSource + ?Sized)) -> u16 {
     parse_positive_port(env, "NESTGATE_TARPC_PORT").unwrap_or(8091)
+}
+
+// ==================== RUNTIME PORT RESOLVER ====================
+
+/// Unified port resolver implementing the three-tier resolution strategy:
+/// 1. Registered `CapabilityPortResolver` (runtime discovery)
+/// 2. `NESTGATE_*` environment variable
+/// 3. Ephemeral port binding (`TcpListener::bind("127.0.0.1:0")`) or safe default
+///
+/// Prefer this over importing raw port constants from `runtime_fallback_ports`.
+pub struct RuntimePortResolver;
+
+impl RuntimePortResolver {
+    /// Resolve a port by capability id and env var name.
+    ///
+    /// Tries: capability resolver → env var → ephemeral bind.
+    #[must_use]
+    pub fn resolve(capability_id: &str, env_var: &str) -> u16 {
+        Self::resolve_from_env_source(&ProcessEnv, capability_id, env_var)
+    }
+
+    /// Same as [`Self::resolve`] with an injectable `EnvSource`.
+    pub fn resolve_from_env_source(
+        env: &(impl EnvSource + ?Sized),
+        capability_id: &str,
+        env_var: &str,
+    ) -> u16 {
+        if let Some(resolver) = CAPABILITY_RESOLVER.get()
+            && let Some(port) = resolver.resolve_service_port(capability_id)
+            && port > 0
+        {
+            return port;
+        }
+
+        if let Some(port) = parse_positive_port(env, env_var) {
+            return port;
+        }
+
+        Self::ephemeral_port()
+    }
+
+    /// Resolve a port using only env var (no capability id), with a static default fallback.
+    ///
+    /// Use this for ports that don't have a capability mapping (e.g. database ports which
+    /// belong to external services, not primal capabilities).
+    #[must_use]
+    pub fn resolve_env_or_default(env_var: &str, default: u16) -> u16 {
+        Self::resolve_env_or_default_from_env_source(&ProcessEnv, env_var, default)
+    }
+
+    /// Same as [`Self::resolve_env_or_default`] with an injectable `EnvSource`.
+    pub fn resolve_env_or_default_from_env_source(
+        env: &(impl EnvSource + ?Sized),
+        env_var: &str,
+        default: u16,
+    ) -> u16 {
+        parse_positive_port(env, env_var).unwrap_or(default)
+    }
+
+    /// Bind to an ephemeral port and return the OS-assigned number.
+    /// Falls back to 0 if binding fails (callers should treat 0 as "unconfigured").
+    fn ephemeral_port() -> u16 {
+        std::net::TcpListener::bind("127.0.0.1:0")
+            .ok()
+            .and_then(|l| l.local_addr().ok())
+            .map_or(0, |a| a.port())
+    }
 }
 
 // ==================== TESTS ====================
@@ -472,5 +539,35 @@ mod tests {
     fn test_tarpc_port_sync_default() {
         let env = MapEnv::new();
         assert_eq!(discover_tarpc_port_sync_from_env_source(&env), 8091);
+    }
+
+    #[test]
+    fn runtime_port_resolver_uses_env_var() {
+        let env = MapEnv::from([("NESTGATE_API_PORT", "4242")]);
+        let port = RuntimePortResolver::resolve_from_env_source(
+            &env,
+            capability_ids::API_GATEWAY,
+            "NESTGATE_API_PORT",
+        );
+        assert_eq!(port, 4242);
+    }
+
+    #[test]
+    fn runtime_port_resolver_ephemeral_when_nothing_set() {
+        let env = MapEnv::new();
+        let port = RuntimePortResolver::resolve_from_env_source(
+            &env,
+            "nonexistent.capability",
+            "NONEXISTENT_ENV_VAR",
+        );
+        assert!(port > 0, "ephemeral port should be > 0");
+    }
+
+    #[test]
+    fn runtime_port_resolver_env_or_default() {
+        let env = MapEnv::new();
+        let port =
+            RuntimePortResolver::resolve_env_or_default_from_env_source(&env, "UNUSED_VAR", 5432);
+        assert_eq!(port, 5432);
     }
 }

@@ -378,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[allow(deprecated, reason = "testing deprecated API backward compatibility")]
     fn default_service_builds() {
         let s = ZfsService::default();
         assert!(!s.node_id().is_empty());

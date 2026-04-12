@@ -46,10 +46,7 @@ pub use nestgate_core::traits::native_async::ServiceHealth;
 pub use engine::DatasetAutomation;
 
 // Re-export integration functions with correct names
-pub use integration::{
-    check_zfs_ecosystem_availability, initialize_automation as initialize_zfs_automation,
-    initialize_automation_with_config as initialize_zfs_automation_with_config,
-};
+pub use integration::check_zfs_ecosystem_availability;
 
 // Re-export policy management
 pub use policies::{

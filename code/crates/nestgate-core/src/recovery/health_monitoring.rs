@@ -103,9 +103,9 @@ pub trait HealthCheckZeroCost: Send + Sync + std::fmt::Debug {
 
 // ==================== DYNAMIC TRAIT OBJECT (EXTENSIBILITY) ====================
 
-/// **DYNAMIC** health check trait using `async_trait` for trait objects
+/// **DYNAMIC** health check trait using explicit future boxing for trait objects.
 ///
-/// This version uses `async_trait` and is required for `Box<dyn HealthCheckDyn>`.
+/// Required for `Box<dyn HealthCheckDyn>` / `Arc<dyn HealthCheckDyn>`.
 /// Use this when you need runtime polymorphism (plugins, extensions, etc.).
 ///
 /// ## When to Use

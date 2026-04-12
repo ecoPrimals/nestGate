@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 //! Network hosts, ports, and bind addresses (environment-driven).
 //!
 //! # Configuration hierarchy
@@ -61,7 +63,7 @@ impl Default for NetworkConstants {
 impl NetworkConstants {
     /// Build network constants from an injectable environment source (use [`MapEnv`](nestgate_types::MapEnv) in tests).
     #[must_use]
-    pub fn from_env_source(env: &dyn EnvSource) -> Self {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             // Hosts (default to localhost for security)
             api_host: env_or_from_source(env, "NESTGATE_API_HOST", addresses::LOCALHOST_IPV4),

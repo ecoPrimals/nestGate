@@ -9,14 +9,13 @@
 //! - Local development
 //! - Fallback when other backends are unavailable
 
+use crate::self_knowledge::DiscoveryBackend;
 use crate::universal_primal_discovery::capability_based_discovery::{
-    DiscoveryBackend, DiscoveryQuery, PeerDescriptor, PrimalCapability, PrimalId,
-    PrimalSelfKnowledge,
+    PeerDescriptor, PrimalId, PrimalSelfKnowledge,
 };
 use nestgate_types::error::{NestGateError, Result};
 use std::collections::HashMap;
 use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
@@ -116,18 +115,24 @@ impl Default for InMemoryDiscoveryBackend {
 }
 
 impl DiscoveryBackend for InMemoryDiscoveryBackend {
+    type Knowledge = PrimalSelfKnowledge;
+    type PeerInfo = PeerDescriptor;
+    type PeerId = PrimalId;
+
+    fn name(&self) -> &'static str {
+        "in-memory-capability"
+    }
+
     fn announce(
         &self,
         knowledge: &PrimalSelfKnowledge,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+    ) -> impl Future<Output = anyhow::Result<()>> + Send + '_ {
         let knowledge = knowledge.clone();
-        Box::pin(async move {
-            // Clean up stale entries first
+        async move {
             self.cleanup_stale().await;
 
             let mut primals = self.primals.write().await;
 
-            // Check capacity before adding
             if !primals.contains_key(&knowledge.id) {
                 self.check_capacity(&primals)?;
             }
@@ -148,35 +153,28 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
             );
 
             Ok(())
-        })
+        }
     }
 
-    fn find_by_capability(
+    fn query_capability(
         &self,
-        capability: &PrimalCapability,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PeerDescriptor>>> + Send + '_>> {
-        let capability = capability.clone();
-        Box::pin(async move {
+        capability: &str,
+    ) -> impl Future<Output = anyhow::Result<Vec<PeerDescriptor>>> + Send + '_ {
+        let capability = capability.to_string();
+        async move {
             self.cleanup_stale().await;
 
             let primals = self.primals.read().await;
 
             let peers: Vec<PeerDescriptor> = primals
                 .values()
-                .filter(|p| p.knowledge.capabilities.contains(&capability))
-                .map(|p| {
-                    let binding = &p.knowledge.binding;
-                    PeerDescriptor {
-                        id: p.knowledge.id.clone(),
-                        capabilities: p.knowledge.capabilities.clone(),
-                        endpoint: crate::universal_primal_discovery::capability_based_discovery::ServiceEndpoint::tcp(
-                            std::net::SocketAddr::new(binding.address, binding.port),
-                        ),
-                        last_seen: p.last_updated,
-                        health: p.knowledge.health.clone(),
-                        latency: Some(Duration::from_millis(1)), // Local, so minimal latency
-                    }
+                .filter(|p| {
+                    p.knowledge
+                        .capabilities
+                        .iter()
+                        .any(|c| c.to_string() == capability)
                 })
+                .map(|p| self.to_peer_descriptor(p))
                 .collect();
 
             debug!(
@@ -186,52 +184,23 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
             );
 
             Ok(peers)
-        })
+        }
     }
 
-    fn query(
+    fn query_by_id(
         &self,
-        query: &DiscoveryQuery,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PeerDescriptor>>> + Send + '_>> {
-        let query = query.clone();
-        Box::pin(async move {
-            self.cleanup_stale().await;
-
+        id: &PrimalId,
+    ) -> impl Future<Output = anyhow::Result<Option<PeerDescriptor>>> + Send + '_ {
+        let id = id.clone();
+        async move {
             let primals = self.primals.read().await;
-
-            let peers: Vec<PeerDescriptor> = primals
-                .values()
-                .filter(|p| {
-                    // Check required capabilities
-                    query
-                        .required_capabilities
-                        .iter()
-                        .all(|cap| p.knowledge.capabilities.contains(cap))
-                })
-                .map(|p| {
-                    let binding = &p.knowledge.binding;
-                    PeerDescriptor {
-                        id: p.knowledge.id.clone(),
-                        capabilities: p.knowledge.capabilities.clone(),
-                        endpoint: crate::universal_primal_discovery::capability_based_discovery::ServiceEndpoint::tcp(
-                            std::net::SocketAddr::new(binding.address, binding.port),
-                        ),
-                        last_seen: p.last_updated,
-                        health: p.knowledge.health.clone(),
-                        latency: Some(Duration::from_millis(1)),
-                    }
-                })
-                .collect();
-
-            debug!("Query returned {} matching primals", peers.len());
-
-            Ok(peers)
-        })
+            Ok(primals.get(&id).map(|p| self.to_peer_descriptor(p)))
+        }
     }
 
-    fn unannounce(&self, id: &PrimalId) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+    fn unannounce(&self, id: &PrimalId) -> impl Future<Output = anyhow::Result<()>> + Send + '_ {
         let id = id.clone();
-        Box::pin(async move {
+        async move {
             let mut primals = self.primals.write().await;
 
             if primals.remove(&id).is_some() {
@@ -241,9 +210,27 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
                 Err(NestGateError::not_found(format!(
                     "Primal '{}' not found in registry",
                     id.as_str()
-                )))
+                ))
+                .into())
             }
-        })
+        }
+    }
+}
+
+impl InMemoryDiscoveryBackend {
+    fn to_peer_descriptor(&self, p: &RegisteredPrimal) -> PeerDescriptor {
+        let binding = &p.knowledge.binding;
+        PeerDescriptor {
+            id: p.knowledge.id.clone(),
+            capabilities: p.knowledge.capabilities.clone(),
+            endpoint:
+                crate::universal_primal_discovery::capability_based_discovery::ServiceEndpoint::tcp(
+                    std::net::SocketAddr::new(binding.address, binding.port),
+                ),
+            last_seen: p.last_updated,
+            health: p.knowledge.health.clone(),
+            latency: Some(Duration::from_millis(1)),
+        }
     }
 }
 
@@ -251,7 +238,7 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
 mod tests {
     use super::*;
     use crate::universal_primal_discovery::capability_based_discovery::{
-        BindingInfo, HealthStatus, Protocol,
+        BindingInfo, HealthStatus, PrimalCapability, Protocol,
     };
     use std::net::{IpAddr, Ipv4Addr};
 
@@ -277,12 +264,10 @@ mod tests {
         let backend = InMemoryDiscoveryBackend::new();
         let knowledge = create_test_knowledge("test1", vec![PrimalCapability::ZfsStorage]);
 
-        // Announce
         backend.announce(&knowledge).await.unwrap();
 
-        // Find by capability
         let peers = backend
-            .find_by_capability(&PrimalCapability::ZfsStorage)
+            .query_capability(&PrimalCapability::ZfsStorage.to_string())
             .await
             .unwrap();
 
@@ -309,42 +294,34 @@ mod tests {
         backend.announce(&k2).await.unwrap();
         backend.announce(&k3).await.unwrap();
 
-        // Find ZFS storage
         let zfs_peers = backend
-            .find_by_capability(&PrimalCapability::ZfsStorage)
+            .query_capability(&PrimalCapability::ZfsStorage.to_string())
             .await
             .unwrap();
         assert_eq!(zfs_peers.len(), 2);
 
-        // Find API gateway
         let api_peers = backend
-            .find_by_capability(&PrimalCapability::ApiGateway)
+            .query_capability(&PrimalCapability::ApiGateway.to_string())
             .await
             .unwrap();
         assert_eq!(api_peers.len(), 2);
     }
 
     #[tokio::test]
-    async fn test_query() {
+    async fn test_query_by_id() {
         let backend = InMemoryDiscoveryBackend::new();
-
-        let knowledge = create_test_knowledge(
-            "test",
-            vec![PrimalCapability::ZfsStorage, PrimalCapability::ApiGateway],
-        );
+        let knowledge = create_test_knowledge("test", vec![PrimalCapability::ZfsStorage]);
 
         backend.announce(&knowledge).await.unwrap();
 
-        // Query for both capabilities
-        let query = DiscoveryQuery {
-            required_capabilities: vec![PrimalCapability::ZfsStorage, PrimalCapability::ApiGateway],
-            optional_capabilities: vec![],
-            max_latency: None,
-            min_health: HealthStatus::Healthy,
-        };
+        let peer = backend.query_by_id(&knowledge.id).await.unwrap();
 
-        let peers = backend.query(&query).await.unwrap();
-        assert_eq!(peers.len(), 1);
+        assert!(peer.is_some());
+        assert!(
+            peer.unwrap()
+                .capabilities
+                .contains(&PrimalCapability::ZfsStorage)
+        );
     }
 
     #[tokio::test]
@@ -354,19 +331,16 @@ mod tests {
 
         backend.announce(&knowledge).await.unwrap();
 
-        // Verify it's there
         let peers = backend
-            .find_by_capability(&PrimalCapability::ZfsStorage)
+            .query_capability(&PrimalCapability::ZfsStorage.to_string())
             .await
             .unwrap();
         assert_eq!(peers.len(), 1);
 
-        // Unannounce
         backend.unannounce(&knowledge.id).await.unwrap();
 
-        // Verify it's gone
         let peers = backend
-            .find_by_capability(&PrimalCapability::ZfsStorage)
+            .query_capability(&PrimalCapability::ZfsStorage.to_string())
             .await
             .unwrap();
         assert_eq!(peers.len(), 0);

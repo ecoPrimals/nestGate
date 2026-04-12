@@ -5,7 +5,7 @@
 //!
 //! Handles storage.* and storage.dataset.* semantic method routing.
 
-use super::SemanticRouter;
+use super::{MetadataBackend, SemanticRouter};
 use crate::rpc::tarpc_types::DatasetParams;
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use bytes::Bytes;
@@ -13,7 +13,10 @@ use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
 /// Route storage.put → `store_object`
-pub(super) async fn storage_put(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn storage_put(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let dataset = params["dataset"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("dataset", "string required"))?;
@@ -44,7 +47,10 @@ pub(super) async fn storage_put(router: &SemanticRouter, params: Value) -> Resul
 }
 
 /// Route storage.get → `retrieve_object`
-pub(super) async fn storage_get(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn storage_get(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let dataset = params["dataset"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("dataset", "string required"))?;
@@ -64,7 +70,10 @@ pub(super) async fn storage_get(router: &SemanticRouter, params: Value) -> Resul
 }
 
 /// Route storage.delete → `delete_object`
-pub(super) async fn storage_delete(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn storage_delete(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let dataset = params["dataset"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("dataset", "string required"))?;
@@ -81,7 +90,10 @@ pub(super) async fn storage_delete(router: &SemanticRouter, params: Value) -> Re
 }
 
 /// Route storage.list → `list_objects`
-pub(super) async fn storage_list(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn storage_list(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let dataset = params["dataset"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("dataset", "string required"))?;
@@ -96,7 +108,10 @@ pub(super) async fn storage_list(router: &SemanticRouter, params: Value) -> Resu
 }
 
 /// Route storage.exists → check if object exists
-pub(super) async fn storage_exists(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn storage_exists(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let dataset = params["dataset"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("dataset", "string required"))?;
@@ -114,7 +129,10 @@ pub(super) async fn storage_exists(router: &SemanticRouter, params: Value) -> Re
 }
 
 /// Route storage.metadata → get object metadata
-pub(super) async fn storage_metadata(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn storage_metadata(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let dataset = params["dataset"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("dataset", "string required"))?;
@@ -135,7 +153,10 @@ pub(super) async fn storage_metadata(router: &SemanticRouter, params: Value) -> 
 // ==================== DATASET OPERATIONS ====================
 
 /// Route storage.dataset.create → `create_dataset`
-pub(super) async fn dataset_create(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn dataset_create(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let name = params["name"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?;
@@ -156,7 +177,10 @@ pub(super) async fn dataset_create(router: &SemanticRouter, params: Value) -> Re
 }
 
 /// Route storage.dataset.get → `get_dataset`
-pub(super) async fn dataset_get(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn dataset_get(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let name = params["name"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?;
@@ -172,7 +196,10 @@ pub(super) async fn dataset_get(router: &SemanticRouter, params: Value) -> Resul
 }
 
 /// Route storage.dataset.list → `list_datasets`
-pub(super) async fn dataset_list(router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) async fn dataset_list(
+    router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
     let datasets = router.client.list_datasets().await?;
 
     Ok(json!({
@@ -182,7 +209,10 @@ pub(super) async fn dataset_list(router: &SemanticRouter, _params: Value) -> Res
 }
 
 /// Route storage.dataset.delete → `delete_dataset`
-pub(super) async fn dataset_delete(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn dataset_delete(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let name = params["name"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?;

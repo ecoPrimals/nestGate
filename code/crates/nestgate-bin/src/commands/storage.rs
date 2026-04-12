@@ -33,7 +33,7 @@ async fn list_backends() -> Result<()> {
     list_backends_from_env_source(&ProcessEnv).await
 }
 
-async fn list_backends_from_env_source(env: &dyn EnvSource) -> Result<()> {
+async fn list_backends_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<()> {
     println!("NestGate Storage Backends");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -95,7 +95,7 @@ async fn scan_storage(path: std::path::PathBuf, cloud: bool, network: bool) -> R
 }
 
 async fn scan_storage_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     path: std::path::PathBuf,
     cloud: bool,
     network: bool,
@@ -181,7 +181,7 @@ async fn benchmark_storage(backend: &str, duration: u64, size_mb: u64) -> Result
 }
 
 async fn benchmark_storage_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     backend: &str,
     duration: u64,
     size_mb: u64,
@@ -243,7 +243,7 @@ async fn configure_storage(backend: &str, settings: &[String]) -> Result<()> {
 }
 
 async fn configure_storage_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
     backend: &str,
     settings: &[String],
 ) -> Result<()> {

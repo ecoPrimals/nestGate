@@ -26,7 +26,7 @@ pub mod network {
 
     /// Hostname for default URLs from an injectable [`EnvSource`].
     #[must_use]
-    pub fn discovery_default_host_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn discovery_default_host_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         env.get("NESTGATE_DEV_HOST")
             .or_else(|| env.get("NESTGATE_DISCOVERY_FALLBACK_HOST"))
             .unwrap_or_else(|| {
@@ -51,7 +51,7 @@ pub mod network {
 
     /// Like [`default_api_base_url`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_api_base_url_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn default_api_base_url_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         let port = env_var_or_default(env, "NESTGATE_API_PORT", "8080");
         format!(
             "http://{}:{}",
@@ -71,7 +71,7 @@ pub mod network {
 
     /// Like [`default_websocket_url`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_websocket_url_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn default_websocket_url_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         let port = env_var_or_default(env, "NESTGATE_WEBSOCKET_PORT", "8080");
         format!(
             "ws://{}:{}/ws",
@@ -91,7 +91,7 @@ pub mod network {
 
     /// Like [`default_metrics_url`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_metrics_url_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn default_metrics_url_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         let port = env_var_or_default(env, "NESTGATE_METRICS_PORT", "9090");
         format!(
             "http://{}:{}",
@@ -109,7 +109,7 @@ pub mod network {
 
     /// Like [`default_web_ui_url`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn default_web_ui_url_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn default_web_ui_url_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         let port = env_var_or_default(env, "NESTGATE_WEB_UI_PORT", "3000");
         format!(
             "http://{}:{}",
@@ -140,7 +140,7 @@ pub mod network {
 
     /// Like [`build_api_url`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn build_api_url_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn build_api_url_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         env.get("NESTGATE_API_URL")
             .unwrap_or_else(|| default_api_base_url_from_env_source(env))
     }
@@ -155,7 +155,7 @@ pub mod network {
 
     /// Like [`build_websocket_url`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn build_websocket_url_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn build_websocket_url_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         env.get("NESTGATE_WS_URL")
             .unwrap_or_else(|| default_websocket_url_from_env_source(env))
     }
@@ -170,7 +170,7 @@ pub mod network {
 
     /// Like [`build_metrics_url`], but reads from an injectable [`EnvSource`].
     #[must_use]
-    pub fn build_metrics_url_from_env_source(env: &dyn EnvSource) -> String {
+    pub fn build_metrics_url_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
         env.get("NESTGATE_METRICS_URL")
             .unwrap_or_else(|| default_metrics_url_from_env_source(env))
     }

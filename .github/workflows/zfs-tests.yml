@@ -85,9 +85,9 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
       
-      - name: Install cargo-tarpaulin
+      - name: Install cargo-llvm-cov
         if: matrix.coverage
-        run: cargo install cargo-tarpaulin
+        uses: taiki-e/install-action@cargo-llvm-cov
       
       # nestgate-zfs Cargo.toml has no `test-utils` feature (was stale); default features match CI.
       - name: Run unit tests
@@ -100,16 +100,16 @@ jobs:
       - name: Generate coverage report
         if: matrix.coverage
         run: |
-          cargo tarpaulin --out Xml --output-dir target/coverage \
+          cargo llvm-cov --lcov --output-path target/coverage/lcov.info \
             --all-features \
-            --exclude-files "benches/*" "tests/*"
+            --ignore-filename-regex "benches/.*|tests/.*"
         working-directory: code/crates/nestgate-zfs
       
       - name: Upload coverage to Codecov
         if: matrix.coverage
         uses: codecov/codecov-action@v3
         with:
-          file: code/crates/nestgate-zfs/target/coverage/cobertura.xml
+          file: code/crates/nestgate-zfs/target/coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
 

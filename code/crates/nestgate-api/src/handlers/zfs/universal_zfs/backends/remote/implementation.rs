@@ -5,8 +5,6 @@
 
 use serde_json::json;
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::time::SystemTime;
 use tracing::debug;
 
@@ -17,7 +15,6 @@ use crate::handlers::zfs::universal_zfs_types::{
     SnapshotConfig, SnapshotInfo, UniversalZfsError, UniversalZfsResult,
 };
 
-// **ASYNC TRAIT IMPLEMENTATION**: Using async_trait for proper lifetime handling
 impl UniversalZfsService for RemoteZfsService {
     /// Service Name
     fn service_name(&self) -> &str {
@@ -30,8 +27,7 @@ impl UniversalZfsService for RemoteZfsService {
     }
 
     /// Health Check
-    fn health_check(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HealthStatus>> + Send + '_>> {
-        Box::pin(async move {
+    async fn health_check(&self) -> UniversalZfsResult<HealthStatus> {
         debug!("Getting health status via remote service");
 
         // Perform actual health check by calling remote endpoint
@@ -60,12 +56,10 @@ impl UniversalZfsService for RemoteZfsService {
             last_check: SystemTime::now(),
             metadata: HashMap::new(),
         })
-    })}
-
+    }
 
     /// Gets Metrics
-    fn get_metrics(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<ServiceMetrics>> + Send + '_>> {
-        Box::pin(async move {
+    async fn get_metrics(&self) -> UniversalZfsResult<ServiceMetrics> {
         debug!("Getting service metrics via remote service");
 
         // Collect actual metrics from remote service
@@ -92,20 +86,16 @@ impl UniversalZfsService for RemoteZfsService {
             latency_p99: 0.0,
             custom_metrics: metrics,
         })
-    })}
-
+    }
 
     /// Checks if Available
-    fn is_available(&self) -> Pin<Box<dyn Future<Output = bool> + Send + '_>> {
-        Box::pin(async move {
+    async fn is_available(&self) -> bool {
         // Check availability by attempting to connect to remote service
         (self.client().get("/health").await).is_ok()
-    })}
-
+    }
 
     /// List Pools
-    fn list_pools(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<PoolInfo>>> + Send + '_>> {
-        Box::pin(async move {
+    async fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
         debug!("Listing pools via remote service");
 
         match self.client().get("/api/v1/pools").await {
@@ -128,12 +118,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e) // Propagate the error
             }
         }
-    })}
-
+    }
 
     /// Gets Pool
-    fn get_pool(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<PoolInfo>>> + Send + '_>> {
-        Box::pin(async move {
+    async fn get_pool(&self, name: &str) -> UniversalZfsResult<Option<PoolInfo>> {
         debug!("Getting pool '{}' via remote service", name);
 
         let endpoint = format!("/api/v1/pools/{name}");
@@ -158,12 +146,10 @@ impl UniversalZfsService for RemoteZfsService {
                 }
             }
         }
-    })}
-
+    }
 
     /// Creates  Pool
-    fn create_pool(&self, config: &PoolConfig) -> Pin<Box<dyn Future<Output = UniversalZfsResult<PoolInfo>> + Send + '_>> {
-        Box::pin(async move {
+    async fn create_pool(&self, config: &PoolConfig) -> UniversalZfsResult<PoolInfo> {
         debug!("Creating pool '{}' via remote service", config.name);
         let start_time = std::time::Instant::now();
 
@@ -188,12 +174,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Destroy Pool
-    fn destroy_pool(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
+    async fn destroy_pool(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Destroying pool '{}' via remote service", name);
 
         let endpoint = format!("/api/v1/pools/{name}");
@@ -209,12 +193,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Scrub Pool
-    fn scrub_pool(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
+    async fn scrub_pool(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Scrubbing pool '{}' via remote service", name);
 
         let endpoint = format!("/api/v1/pools/{name}/scrub");
@@ -230,12 +212,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Gets Pool Status
-    fn get_pool_status(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async move {
+    async fn get_pool_status(&self, name: &str) -> UniversalZfsResult<String> {
         debug!("Getting pool status for '{}' via remote service", name);
 
         let endpoint = format!("/api/v1/pools/{name}/status");
@@ -255,12 +235,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// List Datasets
-    fn list_datasets(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<DatasetInfo>>> + Send + '_>> {
-        Box::pin(async move {
+    async fn list_datasets(&self) -> UniversalZfsResult<Vec<DatasetInfo>> {
         debug!("Listing datasets via remote service");
 
         match self.client().get("/api/v1/datasets").await {
@@ -283,12 +261,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e) // Propagate the error
             }
         }
-    })}
-
+    }
 
     /// Gets Dataset
-    fn get_dataset(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Option<DatasetInfo>>> + Send + '_>> {
-        Box::pin(async move {
+    async fn get_dataset(&self, name: &str) -> UniversalZfsResult<Option<DatasetInfo>> {
         debug!("Getting dataset '{}' via remote service", name);
 
         let endpoint = format!("/api/v1/datasets/{name}");
@@ -316,12 +292,10 @@ impl UniversalZfsService for RemoteZfsService {
                 }
             }
         }
-    })}
-
+    }
 
     /// Creates  Dataset
-    fn create_dataset(&self, config: &DatasetConfig) -> Pin<Box<dyn Future<Output = UniversalZfsResult<DatasetInfo>> + Send + '_>> {
-        Box::pin(async move {
+    async fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
         debug!("Creating dataset '{}' via remote service", config.name);
         let start_time = std::time::Instant::now();
 
@@ -345,12 +319,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Destroy Dataset
-    fn destroy_dataset(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
+    async fn destroy_dataset(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Destroying dataset '{}' via remote service", name);
 
         let endpoint = format!("/api/v1/datasets/{name}");
@@ -366,15 +338,13 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Gets Dataset Properties
-    fn get_dataset_properties(
+    async fn get_dataset_properties(
         &self,
         name: &str,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<HashMap<String, String>>> + Send + '_>> {
-        Box::pin(async move {
+    ) -> UniversalZfsResult<HashMap<String, String>> {
         debug!(
             "Getting properties for dataset '{}' via remote service",
             name
@@ -405,16 +375,14 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e) // Propagate the error
             }
         }
-    })}
-
+    }
 
     /// Sets Dataset Properties
-    fn set_dataset_properties(
+    async fn set_dataset_properties(
         &self,
         name: &str,
         properties: &HashMap<String, String>,
-    ) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
+    ) -> UniversalZfsResult<()> {
         debug!(
             "Setting properties for dataset '{}' via remote service",
             name
@@ -435,12 +403,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e) // Propagate the error
             }
         }
-    })}
-
+    }
 
     /// List Snapshots
-    fn list_snapshots(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send + '_>> {
-        Box::pin(async move {
+    async fn list_snapshots(&self) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         debug!("Listing snapshots via remote service");
 
         match self.client().get("/api/v1/snapshots").await {
@@ -463,12 +429,13 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e) // Propagate the error
             }
         }
-    })}
-
+    }
 
     /// List Dataset Snapshots
-    fn list_dataset_snapshots(&self, dataset: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<Vec<SnapshotInfo>>> + Send + '_>> {
-        Box::pin(async move {
+    async fn list_dataset_snapshots(
+        &self,
+        dataset: &str,
+    ) -> UniversalZfsResult<Vec<SnapshotInfo>> {
         debug!(
             "Listing snapshots for dataset '{}' via remote service",
             dataset
@@ -499,12 +466,13 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e) // Propagate the error
             }
         }
-    })}
-
+    }
 
     /// Creates  Snapshot
-    fn create_snapshot(&self, config: &SnapshotConfig) -> Pin<Box<dyn Future<Output = UniversalZfsResult<SnapshotInfo>> + Send + '_>> {
-        Box::pin(async move {
+    async fn create_snapshot(
+        &self,
+        config: &SnapshotConfig,
+    ) -> UniversalZfsResult<SnapshotInfo> {
         debug!("Creating snapshot '{}' via remote service", config.name);
         let start_time = std::time::Instant::now();
 
@@ -529,12 +497,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Destroy Snapshot
-    fn destroy_snapshot(&self, name: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
+    async fn destroy_snapshot(&self, name: &str) -> UniversalZfsResult<()> {
         debug!("Destroying snapshot '{}' via remote service", name);
 
         let endpoint = format!("/api/v1/snapshots/{name}");
@@ -550,12 +516,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Optimize
-    fn optimize(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async move {
+    async fn optimize(&self) -> UniversalZfsResult<String> {
         debug!("Running optimization via remote service");
 
         match self.client().post("/api/v1/optimize", json!({})).await {
@@ -574,12 +538,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Gets Optimization Analytics
-    fn get_optimization_analytics(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
-        Box::pin(async move {
+    async fn get_optimization_analytics(&self) -> UniversalZfsResult<serde_json::Value> {
         debug!("Getting optimization analytics via remote service");
 
         match self.client().get("/api/v1/optimize/analytics").await {
@@ -599,12 +561,10 @@ impl UniversalZfsService for RemoteZfsService {
                 }))
             }
         }
-    })}
-
+    }
 
     /// Predict Tier
-    fn predict_tier(&self, file_path: &str) -> Pin<Box<dyn Future<Output = UniversalZfsResult<String>> + Send + '_>> {
-        Box::pin(async move {
+    async fn predict_tier(&self, file_path: &str) -> UniversalZfsResult<String> {
         debug!("Predicting tier for '{}' via remote service", file_path);
 
         let request_body = json!({
@@ -635,12 +595,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Ok("warm".to_string())
             }
         }
-    })}
-
+    }
 
     /// Gets Configuration
-    fn get_configuration(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<serde_json::Value>> + Send + '_>> {
-        Box::pin(async move {
+    async fn get_configuration(&self) -> UniversalZfsResult<serde_json::Value> {
         debug!("Getting configuration via remote service");
 
         match self.client().get("/api/v1/configuration").await {
@@ -665,12 +623,10 @@ impl UniversalZfsService for RemoteZfsService {
                 }))
             }
         }
-    })}
-
+    }
 
     /// Updates  Configuration
-    fn update_configuration(&self, config: serde_json::Value) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
+    async fn update_configuration(&self, config: serde_json::Value) -> UniversalZfsResult<()> {
         debug!("Updating configuration via remote service");
 
         match self.client().put("/api/v1/configuration", config).await {
@@ -685,12 +641,10 @@ impl UniversalZfsService for RemoteZfsService {
                 Err(e)
             }
         }
-    })}
-
+    }
 
     /// Shutdown
-    fn shutdown(&self) -> Pin<Box<dyn Future<Output = UniversalZfsResult<()>> + Send + '_>> {
-        Box::pin(async move {
+    async fn shutdown(&self) -> UniversalZfsResult<()> {
         debug!("Shutting down remote service");
 
         match self.client().post("/api/v1/shutdown", json!({})).await {
@@ -708,8 +662,7 @@ impl UniversalZfsService for RemoteZfsService {
                 Ok(())
             }
         }
-    })}
-
+    }
 }
 
 #[cfg(test)]

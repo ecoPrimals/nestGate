@@ -10,7 +10,6 @@
 
 //! Core module
 
-use async_recursion::async_recursion;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -286,36 +285,52 @@ impl UniversalZfsService for FailSafeZfsService {
 /// Checks the circuit breaker state and falls back to the fallback service if available.
 /// Dispatches on `UniversalZfsServiceEnum` without re-entering the trait on `FailSafe` to avoid
 /// recursive `async fn` types (see `UniversalZfsServiceEnum` fail-safe arms).
-#[async_recursion]
 pub async fn health_check(service: &FailSafeZfsService) -> UniversalZfsResult<HealthStatus> {
     if !service.circuit_breaker.can_execute().await {
         if let Some(fallback) = &service.fallback {
-            return fallback.health_check().await;
+            return drill_to_native_health_check(fallback.as_ref()).await;
         }
         return Err(UniversalZfsError::CircuitBreakerOpen {
             backend: service.service_name.clone(),
         });
     }
 
-    match service.primary.as_ref() {
-        crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::Native(n) => {
-            n.health_check().await
-        }
-        crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::FailSafe(f) => {
-            health_check(f).await
+    drill_to_native_health_check(service.primary.as_ref()).await
+}
+
+async fn drill_to_native_health_check(
+    mut current: &crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum,
+) -> UniversalZfsResult<HealthStatus> {
+    loop {
+        match current {
+            crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::Native(
+                n,
+            ) => return n.health_check().await,
+            crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::FailSafe(
+                f,
+            ) => {
+                current = f.primary.as_ref();
+            }
         }
     }
 }
 
 /// Fail-safe availability (dispatched without trait recursion on nested fail-safe primaries).
-#[async_recursion]
 pub async fn is_available_dispatch(service: &FailSafeZfsService) -> bool {
-    !service.circuit_breaker.is_open().await && match service.primary.as_ref() {
-        crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::Native(n) => {
-            n.is_available().await
-        }
-        crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::FailSafe(f) => {
-            is_available_dispatch(f).await
+    if service.circuit_breaker.is_open().await {
+        return false;
+    }
+    let mut current = service.primary.as_ref();
+    loop {
+        match current {
+            crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::Native(
+                n,
+            ) => return n.is_available().await,
+            crate::handlers::zfs::universal_zfs::service_enum::UniversalZfsServiceEnum::FailSafe(
+                f,
+            ) => {
+                current = f.primary.as_ref();
+            }
         }
     }
 }

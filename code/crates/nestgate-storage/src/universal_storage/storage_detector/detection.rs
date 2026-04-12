@@ -239,65 +239,144 @@ impl<'a> DetectionEngine<'a> {
         Ok(memory_storage)
     }
 
-    // Helper methods for specific detection logic
-    // NOTE: Platform-specific methods removed in favor of universal detection
-
-    /// Detect Aws S3
+    /// Cloud storage (S3, Azure, GCS) is not `NestGate`'s responsibility — it is delegated
+    /// to orchestration providers via capability discovery.
     fn detect_aws_s3(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for AWS S3 detection
-        // In a real implementation, this would use AWS SDK
+        tracing::debug!(
+            "Cloud S3 detection delegated to orchestration provider via capability discovery"
+        );
         Ok(Vec::new())
     }
 
-    /// Detect Azure Blob
+    /// Cloud storage detection delegated to orchestration.
     fn detect_azure_blob(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for Azure Blob detection
+        tracing::debug!(
+            "Cloud Azure Blob detection delegated to orchestration provider via capability discovery"
+        );
         Ok(Vec::new())
     }
 
-    /// Detect Gcs
+    /// Cloud storage detection delegated to orchestration.
     fn detect_gcs(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for Google Cloud Storage detection
+        tracing::debug!(
+            "Cloud GCS detection delegated to orchestration provider via capability discovery"
+        );
         Ok(Vec::new())
     }
 
-    /// Detect Smb Shares
+    /// Detect SMB/CIFS shares by parsing `/proc/mounts` for `cifs` filesystem type.
     fn detect_smb_shares(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for SMB share detection
-        Ok(Vec::new())
+        Self::detect_mounts_by_fs_type(&["cifs", "smb", "smb3"], UnifiedStorageType::Network, "smb")
     }
 
-    /// Detect Nfs Mounts
+    /// Detect NFS mounts by parsing `/proc/mounts` for `nfs`/`nfs4` filesystem types.
     fn detect_nfs_mounts(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for NFS mount detection
-        Ok(Vec::new())
+        Self::detect_mounts_by_fs_type(&["nfs", "nfs4"], UnifiedStorageType::Network, "nfs")
     }
 
-    /// Detect Iscsi Targets
+    /// Detect iSCSI targets by checking `/sys/class/iscsi_host/` and cross-referencing
+    /// block devices in `/proc/mounts`.
     fn detect_iscsi_targets(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for iSCSI target detection
-        Ok(Vec::new())
+        let iscsi_host_dir = std::path::Path::new("/sys/class/iscsi_host");
+        if !iscsi_host_dir.exists() {
+            return Ok(Vec::new());
+        }
+
+        let hosts: Vec<_> = std::fs::read_dir(iscsi_host_dir)
+            .map(|rd| rd.filter_map(std::result::Result::ok).collect())
+            .unwrap_or_default();
+
+        if hosts.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut targets = Vec::new();
+        for (i, host) in hosts.iter().enumerate() {
+            let id = format!("iscsi_{}", host.file_name().to_string_lossy());
+            let mut storage =
+                DetectedStorage::new(id, UnifiedStorageType::Network, format!("iSCSI host {i}"));
+            storage.add_metadata(
+                "iscsi_host".to_string(),
+                host.file_name().to_string_lossy().to_string(),
+            );
+            targets.push(storage);
+        }
+
+        tracing::debug!("Detected {} iSCSI host(s)", targets.len());
+        Ok(targets)
     }
 
-    /// Detect Tmpfs
+    /// Detect tmpfs mounts by parsing `/proc/mounts`.
     fn detect_tmpfs(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for tmpfs detection
-        Ok(Vec::new())
+        Self::detect_mounts_by_fs_type(&["tmpfs"], UnifiedStorageType::Memory, "tmpfs")
     }
 
-    /// Detect Ramdisk
+    /// Detect ramdisk (ramfs) mounts by parsing `/proc/mounts`.
     fn detect_ramdisk(&self) -> Result<Vec<DetectedStorage>> {
-        // Placeholder for ramdisk detection
-        Ok(Vec::new())
+        Self::detect_mounts_by_fs_type(&["ramfs"], UnifiedStorageType::Memory, "ramdisk")
     }
 
-    // Dead helper methods removed - superseded by universal filesystem detection (Phase 3.1)
-    // Previously: analyze_block_device(), get_filesystem_stats()
-    // Now handled by: UniversalFilesystemDetector in filesystem_detection.rs
+    /// Shared helper: parse `/proc/mounts` for lines matching any of the given fs types
+    /// and return them as `DetectedStorage`. Falls back to an empty vec on non-Linux.
+    fn detect_mounts_by_fs_type(
+        fs_types: &[&str],
+        storage_type: UnifiedStorageType,
+        label_prefix: &str,
+    ) -> Result<Vec<DetectedStorage>> {
+        let proc_mounts = std::path::Path::new("/proc/mounts");
+        if !proc_mounts.exists() {
+            return Ok(Vec::new());
+        }
+
+        let content = std::fs::read_to_string(proc_mounts).map_err(|e| {
+            nestgate_types::error::NestGateError::io_error(format!(
+                "Failed to read /proc/mounts: {e}"
+            ))
+        })?;
+
+        let mut results = Vec::new();
+        for line in content.lines() {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() < 4 {
+                continue;
+            }
+
+            let device = parts[0];
+            let mount_point = parts[1];
+            let fs_type = parts[2];
+
+            if !fs_types.contains(&fs_type) {
+                continue;
+            }
+
+            let id = format!("{label_prefix}_{}", mount_point.replace('/', "_"));
+            let display = format!("{mount_point} ({fs_type})");
+            let mut storage = DetectedStorage::new(id, storage_type.clone(), display);
+
+            let mount_path = std::path::Path::new(mount_point);
+            if let Ok(stat) = rustix::fs::statvfs(mount_path) {
+                let block_size = stat.f_frsize;
+                let total = stat.f_blocks * block_size;
+                let avail = stat.f_bavail * block_size;
+                storage.available_space = avail;
+                storage.add_metadata("total_bytes".to_string(), total.to_string());
+            }
+
+            storage.add_metadata("device".to_string(), device.to_string());
+            storage.add_metadata("filesystem_type".to_string(), fs_type.to_string());
+            storage.add_metadata("mount_point".to_string(), mount_point.to_string());
+            results.push(storage);
+        }
+
+        if !results.is_empty() {
+            tracing::debug!("Detected {} {label_prefix} mount(s)", results.len());
+        }
+        Ok(results)
+    }
 }
 
 #[cfg(test)]
-mod detection_placeholder_tests {
+mod detection_tests {
     #![expect(clippy::field_reassign_with_default)]
     use super::{DetectionConfig, DetectionEngine};
 
@@ -324,45 +403,64 @@ mod detection_placeholder_tests {
         );
     }
 
-    /// Placeholder cloud detectors (S3, Azure, GCS) return no results until real SDK wiring exists.
+    /// Cloud detection (S3, Azure, GCS) is delegated to orchestration — always returns empty.
     #[test]
-    fn detect_cloud_storage_placeholders_return_empty() {
+    fn cloud_detection_delegated_to_orchestration() {
         let mut config = DetectionConfig::default();
         config.enable_cloud_detection = true;
         let engine = DetectionEngine::new(&config);
         let v = engine.detect_cloud_storage().expect("detect_cloud_storage");
         assert!(
             v.is_empty(),
-            "placeholder cloud detection should return an empty list"
+            "cloud detection is delegated — should always return empty"
         );
     }
 
-    /// Placeholder network detectors (SMB, NFS, iSCSI) return no results until implemented.
+    /// Network share detection reads /proc/mounts when enabled (no panic).
     #[test]
-    fn detect_network_shares_placeholders_return_empty() {
+    fn network_share_detection_does_not_panic() {
         let mut config = DetectionConfig::default();
         config.enable_network_detection = true;
         let engine = DetectionEngine::new(&config);
-        let v = engine
+        let _ = engine
             .detect_network_shares()
-            .expect("detect_network_shares");
-        assert!(
-            v.is_empty(),
-            "placeholder network share detection should return an empty list"
-        );
+            .expect("detect_network_shares should not error");
     }
 
-    /// Placeholder tmpfs and ramdisk paths return no results until implemented.
+    /// Memory storage detection reads /proc/mounts for tmpfs/ramfs (no panic).
     #[test]
-    fn detect_memory_storage_placeholders_return_empty() {
+    fn memory_storage_detection_does_not_panic() {
+        let config = DetectionConfig::default();
+        let engine = DetectionEngine::new(&config);
+        let _ = engine
+            .detect_memory_storage()
+            .expect("detect_memory_storage should not error");
+    }
+
+    /// On Linux, tmpfs mounts are expected (at least /dev/shm, /tmp, or /run).
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn detect_tmpfs_finds_mounts_on_linux() {
         let config = DetectionConfig::default();
         let engine = DetectionEngine::new(&config);
         let v = engine
             .detect_memory_storage()
             .expect("detect_memory_storage");
         assert!(
-            v.is_empty(),
-            "placeholder memory storage detection should return an empty list"
+            !v.is_empty(),
+            "Linux systems should have at least one tmpfs mount"
         );
+    }
+
+    /// `detect_mounts_by_fs_type` returns empty on non-Linux (no /proc/mounts).
+    #[cfg(not(target_os = "linux"))]
+    #[test]
+    fn detect_mounts_returns_empty_on_non_linux() {
+        let config = DetectionConfig::default();
+        let engine = DetectionEngine::new(&config);
+        let v = engine
+            .detect_memory_storage()
+            .expect("detect_memory_storage");
+        assert!(v.is_empty(), "non-Linux has no /proc/mounts");
     }
 }

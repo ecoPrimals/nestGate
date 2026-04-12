@@ -268,7 +268,7 @@ fn test_redundancy_level_all_variants() {
 
 #[test]
 fn test_pool_property_config_default() {
-    #[allow(deprecated)]
+    #[allow(deprecated, reason = "testing deprecated API backward compatibility")]
     let config = PoolPropertyConfig::default();
 
     assert_eq!(config.ashift, 12);
@@ -280,7 +280,7 @@ fn test_pool_property_config_default() {
 
 #[test]
 fn test_pool_property_config_clone() {
-    #[allow(deprecated)]
+    #[allow(deprecated, reason = "testing deprecated API backward compatibility")]
     let config1 = PoolPropertyConfig::default();
     let config2 = config1.clone();
 
@@ -290,7 +290,7 @@ fn test_pool_property_config_clone() {
 
 #[test]
 fn test_pool_property_config_serialization() {
-    #[allow(deprecated)]
+    #[allow(deprecated, reason = "testing deprecated API backward compatibility")]
     let config = PoolPropertyConfig::default();
     let json = serde_json::to_string(&config).expect("Failed to serialize");
 
@@ -411,7 +411,7 @@ fn test_storage_tier_in_hashmap() {
 
 #[test]
 fn test_pool_property_config_custom_values() {
-    #[allow(deprecated)]
+    #[allow(deprecated, reason = "testing deprecated API backward compatibility")]
     let config = PoolPropertyConfig {
         ashift: 13,
         autoexpand: false,

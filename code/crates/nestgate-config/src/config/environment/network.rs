@@ -45,7 +45,7 @@ impl NetworkConfig {
     }
 
     /// Load from an injectable environment source (e.g. [`nestgate_types::MapEnv`] in tests).
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self, ConfigError> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self, ConfigError> {
         Self::from_env_with_prefix_source("NESTGATE", env)
     }
 
@@ -57,7 +57,7 @@ impl NetworkConfig {
     /// Load with custom prefix from an injectable [`EnvSource`].
     pub fn from_env_with_prefix_source(
         prefix: &str,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<Self, ConfigError> {
         Ok(Self {
             port: Self::env_port_with_alternatives(prefix, env)?,
@@ -77,7 +77,7 @@ impl NetworkConfig {
     /// 2. `NESTGATE_BIND_ADDRESS` (alternative)
     /// 3. `NESTGATE_HOST` (original)
     /// 4. Default (127.0.0.1)
-    fn env_host_with_alternatives(prefix: &str, env: &dyn EnvSource) -> String {
+    fn env_host_with_alternatives(prefix: &str, env: &(impl EnvSource + ?Sized)) -> String {
         // Try BIND first (common name)
         let bind_var = format!("{prefix}_BIND");
         if let Some(val) = env.get(&bind_var) {
@@ -106,7 +106,10 @@ impl NetworkConfig {
     /// 2. `NESTGATE_HTTP_PORT` (alternative)
     /// 3. `NESTGATE_PORT` (original)
     /// 4. Default (8080)
-    fn env_port_with_alternatives(prefix: &str, env: &dyn EnvSource) -> Result<Port, ConfigError> {
+    fn env_port_with_alternatives(
+        prefix: &str,
+        env: &(impl EnvSource + ?Sized),
+    ) -> Result<Port, ConfigError> {
         // Try API_PORT first (documented name)
         let api_port_var = format!("{prefix}_API_PORT");
         if let Some(val) = env.get(&api_port_var) {
@@ -151,7 +154,7 @@ impl NetworkConfig {
         prefix: &str,
         key: &str,
         default: T,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<T, ConfigError>
     where
         T::Err: std::error::Error + Send + Sync + 'static,

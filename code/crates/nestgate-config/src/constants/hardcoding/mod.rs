@@ -62,7 +62,6 @@
 //! | `EXTENDED_SERVICES` | `NESTGATE_EXTENDED_SERVICES_PORT` |
 //! | `DISCOVERY_SERVICE` | `NESTGATE_DISCOVERY_SERVICE_PORT` |
 //! | `ORCHESTRATOR_DEFAULT` | `NESTGATE_ORCHESTRATOR_PORT` |
-//! | `STREAMING_RPC_DEFAULT` | `NESTGATE_STREAMING_RPC_PORT` |
 //! | `POSTGRES_DEFAULT` | `NESTGATE_POSTGRES_PORT` |
 //! | `REDIS_DEFAULT` | `NESTGATE_REDIS_PORT` |
 //! | `MONGODB_DEFAULT` | `NESTGATE_MONGODB_PORT` |
@@ -81,6 +80,10 @@ pub mod runtime_defaults;
 pub mod runtime_fallback_ports;
 pub mod timeouts;
 
+#[expect(
+    deprecated,
+    reason = "re-exporting deprecated items for backward compatibility"
+)]
 pub use runtime_defaults::{
     RuntimeDefaults, get_api_port, get_bind_address, get_grpc_port, get_health_port,
     get_message_queue_port, get_metrics_port, get_orchestration_service_port,

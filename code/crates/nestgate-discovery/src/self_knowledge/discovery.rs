@@ -9,7 +9,6 @@ use super::{PrimalId, PrimalInfo, SelfKnowledge};
 use anyhow::{Result, bail};
 use std::collections::HashMap;
 use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
@@ -50,7 +49,10 @@ use tracing::{debug, info, warn};
 /// # Ok(())
 /// # }
 /// ```
-pub struct PrimalDiscovery {
+pub struct PrimalDiscovery<
+    B: DiscoveryBackend<Knowledge = SelfKnowledge, PeerInfo = PrimalInfo, PeerId = PrimalId>
+        = InMemoryBackend,
+> {
     /// Our own self-knowledge
     self_knowledge: Arc<SelfKnowledge>,
 
@@ -58,7 +60,7 @@ pub struct PrimalDiscovery {
     discovered: Arc<RwLock<HashMap<PrimalId, DiscoveredPrimal>>>,
 
     /// Discovery backends to use
-    backends: Vec<Box<dyn DiscoveryBackend>>,
+    backends: Vec<B>,
 
     /// Configuration
     config: DiscoveryConfig,
@@ -94,7 +96,7 @@ impl Default for DiscoveryConfig {
     }
 }
 
-impl PrimalDiscovery {
+impl PrimalDiscovery<InMemoryBackend> {
     /// Create a new discovery service with default configuration
     #[must_use]
     pub fn new(self_knowledge: SelfKnowledge) -> Self {
@@ -111,12 +113,15 @@ impl PrimalDiscovery {
             config,
         }
     }
+}
 
+impl<B: DiscoveryBackend<Knowledge = SelfKnowledge, PeerInfo = PrimalInfo, PeerId = PrimalId>>
+    PrimalDiscovery<B>
+{
     /// Add a discovery backend
     ///
     /// Multiple backends can be added for redundancy and broader reach.
-    /// Examples: mDNS, Consul, Kubernetes service discovery, etc.
-    pub fn add_backend(&mut self, backend: Box<dyn DiscoveryBackend>) {
+    pub fn add_backend(&mut self, backend: B) {
         self.backends.push(backend);
     }
 
@@ -248,7 +253,7 @@ impl PrimalDiscovery {
 
         // Query backends
         for backend in &self.backends {
-            match tokio::time::timeout(self.config.query_timeout, backend.query_primal(id)).await {
+            match tokio::time::timeout(self.config.query_timeout, backend.query_by_id(id)).await {
                 Ok(Ok(Some(info))) => {
                     self.cache_single(&info).await;
                     return Ok(Some(info));
@@ -344,35 +349,46 @@ impl PrimalDiscovery {
     }
 }
 
-/// Backend for discovering primals
+/// Canonical backend for discovering primals
 ///
-/// Implement this trait to add support for different discovery mechanisms:
-/// - mDNS (local network)
-/// - Consul (service mesh)
-/// - Kubernetes (container orchestration)
-/// - Etcd (distributed key-value)
-/// - Custom protocol
+/// All discovery backends in the crate implement this single trait.
+/// Associated types allow each module to use its own type vocabulary
+/// while sharing a common interface for announce / query / unannounce.
+///
+/// Discovery mechanisms (mDNS, Consul, K8s, etc.) belong with the
+/// orchestration provider; `NestGate` retains environment-based and
+/// in-memory backends only.
 pub trait DiscoveryBackend: Send + Sync {
+    /// Self-knowledge type passed to [`announce`](Self::announce).
+    type Knowledge: Send + Sync;
+    /// Peer information returned from queries.
+    type PeerInfo: Send + Sync + Clone;
+    /// Peer identifier used for lookups and unannounce.
+    type PeerId: Send + Sync + Clone;
+
     /// Name of this backend (for logging)
     fn name(&self) -> &str;
 
     /// Announce a primal's presence
-    fn announce(
-        &self,
-        knowledge: &SelfKnowledge,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
+    fn announce(&self, knowledge: &Self::Knowledge)
+    -> impl Future<Output = Result<()>> + Send + '_;
 
-    /// Query for primals with a specific capability
+    /// Query for primals with a specific capability (string-based)
     fn query_capability(
         &self,
         capability: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PrimalInfo>>> + Send + '_>>;
+    ) -> impl Future<Output = Result<Vec<Self::PeerInfo>>> + Send + '_;
 
     /// Query for a specific primal by ID
-    fn query_primal(
+    fn query_by_id(
         &self,
-        id: &PrimalId,
-    ) -> Pin<Box<dyn Future<Output = Result<Option<PrimalInfo>>> + Send + '_>>;
+        id: &Self::PeerId,
+    ) -> impl Future<Output = Result<Option<Self::PeerInfo>>> + Send + '_;
+
+    /// Remove announcement (on shutdown). Default no-op.
+    fn unannounce(&self, _id: &Self::PeerId) -> impl Future<Output = Result<()>> + Send + '_ {
+        async { Ok(()) }
+    }
 }
 
 /// In-memory discovery backend for testing and development
@@ -403,58 +419,57 @@ impl Default for InMemoryBackend {
 }
 
 impl DiscoveryBackend for InMemoryBackend {
+    type Knowledge = SelfKnowledge;
+    type PeerInfo = PrimalInfo;
+    type PeerId = PrimalId;
+
     fn name(&self) -> &'static str {
         "in-memory"
     }
 
-    fn announce(
-        &self,
-        knowledge: &SelfKnowledge,
-    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
-        let knowledge = knowledge.clone();
-        Box::pin(async move {
-            let info = PrimalInfo {
-                id: knowledge.id.clone(),
-                name: knowledge.name.clone(),
-                version: knowledge.version.clone(),
-                capabilities: knowledge.capabilities.clone(),
-                endpoints: knowledge.endpoints.clone(),
-                health: knowledge.health,
-                discovered_at: SystemTime::now(),
-                last_health_check: SystemTime::now(),
-            };
-
+    fn announce(&self, knowledge: &SelfKnowledge) -> impl Future<Output = Result<()>> + Send + '_ {
+        let info = PrimalInfo {
+            id: knowledge.id.clone(),
+            name: knowledge.name.clone(),
+            version: knowledge.version.clone(),
+            capabilities: knowledge.capabilities.clone(),
+            endpoints: knowledge.endpoints.clone(),
+            health: knowledge.health,
+            discovered_at: SystemTime::now(),
+            last_health_check: SystemTime::now(),
+        };
+        async move {
             let mut primals = self.primals.write().await;
-            primals.insert(knowledge.id.clone(), info);
+            primals.insert(info.id.clone(), info);
 
             Ok(())
-        })
+        }
     }
 
     fn query_capability(
         &self,
         capability: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<PrimalInfo>>> + Send + '_>> {
+    ) -> impl Future<Output = Result<Vec<PrimalInfo>>> + Send + '_ {
         let capability = capability.to_string();
-        Box::pin(async move {
+        async move {
             let primals = self.primals.read().await;
             Ok(primals
                 .values()
                 .filter(|p| p.capabilities.iter().any(|c| c == &capability))
                 .cloned()
                 .collect())
-        })
+        }
     }
 
-    fn query_primal(
+    fn query_by_id(
         &self,
         id: &PrimalId,
-    ) -> Pin<Box<dyn Future<Output = Result<Option<PrimalInfo>>> + Send + '_>> {
+    ) -> impl Future<Output = Result<Option<PrimalInfo>>> + Send + '_ {
         let id = id.clone();
-        Box::pin(async move {
+        async move {
             let primals = self.primals.read().await;
             Ok(primals.get(&id).cloned())
-        })
+        }
     }
 }
 
@@ -471,7 +486,7 @@ mod tests {
             .unwrap();
 
         let mut discovery = PrimalDiscovery::new(self_knowledge);
-        discovery.add_backend(Box::new(InMemoryBackend::new()));
+        discovery.add_backend(InMemoryBackend::new());
 
         // Announce ourselves
         discovery.announce().await.unwrap();
@@ -484,23 +499,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_capability_multiple_primals() {
-        let backend = Arc::new(InMemoryBackend::new());
-
-        // Register multiple primals with same capability
-        for i in 1..=3 {
-            let knowledge = SelfKnowledge::builder()
-                .with_id(format!("primal{}", i))
-                .with_capability("storage")
-                .build()
-                .unwrap();
-
-            backend.announce(&knowledge).await.unwrap();
-        }
-
         let self_knowledge = SelfKnowledge::builder().with_id("test").build().unwrap();
 
         let mut discovery = PrimalDiscovery::new(self_knowledge);
-        discovery.add_backend(Box::new(InMemoryBackend::new()));
+        discovery.add_backend(InMemoryBackend::new());
 
         // Manually add the primals from the shared backend
         for i in 1..=3 {
@@ -509,7 +511,6 @@ mod tests {
                 .with_capability("storage")
                 .build()
                 .unwrap();
-            // The backend we just added will store these
             if let Some(backend_ref) = discovery.backends.last() {
                 backend_ref.announce(&knowledge).await.unwrap();
             }
@@ -533,7 +534,7 @@ mod tests {
         };
 
         let mut discovery = PrimalDiscovery::with_config(self_knowledge, config);
-        discovery.add_backend(Box::new(InMemoryBackend::new()));
+        discovery.add_backend(InMemoryBackend::new());
 
         discovery.announce().await.unwrap();
 
@@ -568,7 +569,7 @@ mod tests {
         let self_knowledge = SelfKnowledge::builder().with_id("test").build().unwrap();
 
         let mut discovery = PrimalDiscovery::new(self_knowledge);
-        discovery.add_backend(Box::new(backend));
+        discovery.add_backend(backend);
 
         let result = discovery
             .find_primal(&PrimalId::new("target"))

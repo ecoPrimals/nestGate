@@ -368,7 +368,7 @@ impl SocketConfig {
     /// Same as [`Self::from_environment`]: delegates to [`Self::resolve`]. The resolver currently
     /// always returns [`Ok`]; the [`Result`] is reserved for future validation of paths and
     /// identifiers.
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let family_id = env
             .get("NESTGATE_FAMILY_ID")
             .or_else(|| env.get("FAMILY_ID"))

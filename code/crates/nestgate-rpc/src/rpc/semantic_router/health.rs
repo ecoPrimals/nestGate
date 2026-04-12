@@ -7,12 +7,15 @@
 //! `SEMANTIC_METHOD_NAMING_STANDARD`: triad `health.check` / `health.liveness` /
 //! `health.readiness`, plus optional `health.metrics` and `health.info`.
 
-use super::SemanticRouter;
+use super::{MetadataBackend, SemanticRouter};
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 
 /// Route `health.check` → full `HealthStatus` JSON from tarpc `health()` (all fields).
-pub(super) async fn health_check(router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) async fn health_check(
+    router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
     let health = router.client.health().await?;
 
     serde_json::to_value(&health).map_err(|e| {
@@ -24,7 +27,10 @@ pub(super) async fn health_check(router: &SemanticRouter, _params: Value) -> Res
 }
 
 /// Route `health.liveness` → minimal alive probe (cheap RPC; does **not** call full `health()`).
-pub(super) async fn health_liveness(router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) async fn health_liveness(
+    router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
     // `version()` proves the process responds without `calculate_metrics()` (used by `health()`).
     router.client.version().await?;
 
@@ -35,7 +41,10 @@ pub(super) async fn health_liveness(router: &SemanticRouter, _params: Value) -> 
 }
 
 /// Route health.metrics → `get_metrics`
-pub(super) async fn health_metrics(router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) async fn health_metrics(
+    router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
     let metrics = router.client.metrics().await?;
 
     serde_json::to_value(metrics).map_err(|e| {
@@ -47,7 +56,10 @@ pub(super) async fn health_metrics(router: &SemanticRouter, _params: Value) -> R
 }
 
 /// Route health.info → `get_info`
-pub(super) async fn health_info(router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) async fn health_info(
+    router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
     let info = router.client.version().await?;
 
     serde_json::to_value(info).map_err(|e| {
@@ -60,7 +72,10 @@ pub(super) async fn health_info(router: &SemanticRouter, _params: Value) -> Resu
 
 /// Route `health.readiness` → whether backends are reachable and ready (uses full `health()` so
 /// storage/metrics path is exercised, not just process liveness).
-pub(super) async fn health_readiness(router: &SemanticRouter, _params: Value) -> Result<Value> {
+pub(super) async fn health_readiness(
+    router: &SemanticRouter<impl MetadataBackend>,
+    _params: Value,
+) -> Result<Value> {
     let health = router.client.health().await?;
     let ready = health.status == "healthy";
 

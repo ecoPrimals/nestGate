@@ -44,7 +44,7 @@ impl SecurityConfig {
     }
 
     /// Like [`Self::from_environment`], but reads security variables from `env`.
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         Ok(Self {
             auth_enabled: env
                 .get("NESTGATE_AUTH_ENABLED")

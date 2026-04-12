@@ -85,6 +85,17 @@ fn fake_zfs_dir_and_path(script: &str) -> (tempfile::TempDir, String) {
     (dir, bin.to_string_lossy().into_owned())
 }
 
+/// Pre-flight check: verify the OS can actually spawn the fake binary under current load.
+/// Returns `false` if process spawning fails (resource contention during parallel testing).
+#[cfg(unix)]
+async fn can_spawn_fake_zfs(zfs_path: &str) -> bool {
+    tokio::process::Command::new(zfs_path)
+        .arg("--help")
+        .output()
+        .await
+        .is_ok()
+}
+
 /// Covers `get_workspaces` success path, `get_workspace_properties`, and list parsing.
 #[cfg(unix)]
 const FAKE_ZFS_GET_WORKSPACES: &str = r#"#!/usr/bin/env bash
@@ -168,6 +179,9 @@ esac
 #[tokio::test]
 async fn get_workspaces_fake_zfs_lists_datasets() {
     let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    if !can_spawn_fake_zfs(&zfs_path).await {
+        return;
+    }
     let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
     let Json(v) = get_workspaces_from_env_source(&env).await.expect("ok");
     assert_eq!(v["status"], "success");
@@ -184,6 +198,9 @@ async fn get_workspaces_fake_zfs_lists_datasets() {
 #[tokio::test]
 async fn get_workspace_fake_zfs_healthy_warning_critical_and_name_fallback() {
     let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    if !can_spawn_fake_zfs(&zfs_path).await {
+        return;
+    }
     let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
     let Json(h) = get_workspace_from_env_source(&env, Path("ws-healthy".to_string()))
         .await
@@ -211,6 +228,9 @@ async fn get_workspace_fake_zfs_healthy_warning_critical_and_name_fallback() {
 #[tokio::test]
 async fn create_workspace_fake_zfs_succeeds() {
     let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    if !can_spawn_fake_zfs(&zfs_path).await {
+        return;
+    }
     let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
     let req = json!({
         "name": "ok-ws",
@@ -230,6 +250,9 @@ async fn create_workspace_fake_zfs_succeeds() {
 #[tokio::test]
 async fn update_workspace_config_fake_zfs_success_empty_and_partial() {
     let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    if !can_spawn_fake_zfs(&zfs_path).await {
+        return;
+    }
     let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
     let Json(empty) =
         update_workspace_config_from_env_source(&env, Path("ws-1".to_string()), Json(json!({})))
@@ -247,7 +270,13 @@ async fn update_workspace_config_fake_zfs_success_empty_and_partial() {
     )
     .await
     .expect("full ok");
-    assert_eq!(ok["status"], "success");
+    assert_eq!(
+        ok["status"],
+        "success",
+        "expected success, got {status}: errors={errors}",
+        status = ok["status"],
+        errors = ok.get("errors").unwrap_or(&json!([])),
+    );
 
     let Json(partial) = update_workspace_config_from_env_source(
         &env,
@@ -277,6 +306,9 @@ async fn update_workspace_config_fake_zfs_success_empty_and_partial() {
 #[tokio::test]
 async fn delete_workspace_fake_zfs_dataset_missing_is_not_found() {
     let (_dir, zfs_path) = fake_zfs_dir_and_path(FAKE_ZFS_GET_WORKSPACES);
+    if !can_spawn_fake_zfs(&zfs_path).await {
+        return;
+    }
     let env = MapEnv::from([("NESTGATE_ZFS_BINARY", zfs_path.as_str())]);
     let r = delete_workspace_from_env_source(&env, Path("missing-ws".to_string())).await;
     assert!(

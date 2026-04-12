@@ -102,7 +102,7 @@ impl PerformanceOptimizationEngine {
     }
 
     /// Like [`Self::start`], but reads interval env vars from an injectable [`EnvSource`].
-    pub async fn start_from_env_source(&mut self, env: &dyn EnvSource) -> Result<()> {
+    pub async fn start_from_env_source(&mut self, env: &(impl EnvSource + ?Sized)) -> Result<()> {
         info!("🚀 Starting Real-time Performance Optimization Engine");
 
         // Start performance monitoring
@@ -248,7 +248,7 @@ impl PerformanceOptimizationEngine {
     // Performance Monitoring Infrastructure
 
     /// Start Performance Monitoring
-    fn start_performance_monitoring(&self, env: &dyn EnvSource) -> Result<()> {
+    fn start_performance_monitoring(&self, env: &(impl EnvSource + ?Sized)) -> Result<()> {
         let monitor = self.performance_monitor.clone();
         let pool_manager = self.pool_manager.clone();
         let dataset_manager = self.dataset_manager.clone();
@@ -276,7 +276,7 @@ impl PerformanceOptimizationEngine {
     }
 
     /// Start Optimization Loop
-    fn start_optimization_loop(&self, env: &dyn EnvSource) -> Result<()> {
+    fn start_optimization_loop(&self, env: &(impl EnvSource + ?Sized)) -> Result<()> {
         let engine = Arc::new(self.clone());
         let secs = env_parsed(env, "NESTGATE_ZFS_OPTIMIZATION_INTERVAL_SECS", 60_u64);
 
@@ -295,7 +295,7 @@ impl PerformanceOptimizationEngine {
     }
 
     /// Start Bottleneck Detection
-    fn start_bottleneck_detection(&self, env: &dyn EnvSource) -> Result<()> {
+    fn start_bottleneck_detection(&self, env: &(impl EnvSource + ?Sized)) -> Result<()> {
         let performance_monitor = self.performance_monitor.clone();
         let pool_manager = self.pool_manager.clone();
         let dataset_manager = self.dataset_manager.clone();

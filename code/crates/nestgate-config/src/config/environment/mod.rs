@@ -121,7 +121,7 @@ impl EnvironmentConfig {
     /// # Errors
     ///
     /// Returns error if required environment variables are missing or invalid
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self, ConfigError> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self, ConfigError> {
         Ok(Self {
             network: NetworkConfig::from_env_source(env)?,
             storage: StorageConfig::from_env_source(env)?,
@@ -147,7 +147,7 @@ impl EnvironmentConfig {
     /// Returns error if required environment variables are missing or invalid
     pub fn from_env_with_prefix_source(
         prefix: &str,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<Self, ConfigError> {
         Ok(Self {
             network: NetworkConfig::from_env_with_prefix_source(prefix, env)?,

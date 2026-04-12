@@ -62,6 +62,10 @@ impl RuntimeDefaults {
 
     /// `NESTGATE_ORCHESTRATOR_ADDR`, else `localhost`:[`ports::HTTP_DEFAULT`]. See
     /// [`get_orchestrator_fallback_addr`].
+    #[deprecated(
+        since = "0.4.0",
+        note = "use capability discovery (ServicesConfig::resolve_by_capability) instead of hardcoded orchestrator addresses"
+    )]
     #[must_use]
     pub fn orchestrator_fallback_addr() -> String {
         match env::var("NESTGATE_ORCHESTRATOR_ADDR") {
@@ -73,6 +77,10 @@ impl RuntimeDefaults {
 
     /// `NESTGATE_ORCHESTRATOR_URL` if set; otherwise a URL derived from
     /// [`Self::orchestrator_fallback_addr`].
+    #[deprecated(
+        since = "0.4.0",
+        note = "use capability discovery (ServicesConfig::resolve_by_capability) instead of hardcoded orchestrator URLs"
+    )]
     #[must_use]
     pub fn orchestrator_url() -> String {
         if let Some(url) = env::var("NESTGATE_ORCHESTRATOR_URL")
@@ -192,6 +200,10 @@ pub fn get_health_port() -> u16 {
 /// Defaults to `localhost` and [`ports::HTTP_DEFAULT`] when unset.
 /// If the variable is set to an empty string (after trim), returns empty — callers treat that as
 /// "no configured orchestrator".
+#[deprecated(
+    since = "0.4.0",
+    note = "use capability discovery (ServicesConfig::resolve_by_capability) instead"
+)]
 #[must_use]
 pub fn get_orchestrator_fallback_addr() -> String {
     RuntimeDefaults::orchestrator_fallback_addr()
@@ -199,6 +211,10 @@ pub fn get_orchestrator_fallback_addr() -> String {
 
 /// Orchestrator HTTP(S) base URL: `NESTGATE_ORCHESTRATOR_URL`, else derived from
 /// [`get_orchestrator_fallback_addr`].
+#[deprecated(
+    since = "0.4.0",
+    note = "use capability discovery (ServicesConfig::resolve_by_capability) instead"
+)]
 #[must_use]
 pub fn get_orchestrator_url() -> String {
     RuntimeDefaults::orchestrator_url()

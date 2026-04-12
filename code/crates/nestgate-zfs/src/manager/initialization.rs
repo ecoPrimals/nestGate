@@ -8,6 +8,7 @@
 //! Initialization module
 
 use crate::error::{ZfsOperation, create_zfs_error};
+#[cfg(feature = "orchestrator")]
 use nestgate_types::{EnvSource, ProcessEnv};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -30,7 +31,7 @@ use crate::{
 use super::ZfsManager;
 
 #[cfg(feature = "orchestrator")]
-fn zfs_self_endpoint_from_env_source(env: &dyn EnvSource) -> String {
+fn zfs_self_endpoint_from_env_source(env: &(impl EnvSource + ?Sized)) -> String {
     if let Some(ep) = env.get("NESTGATE_ZFS_ENDPOINT") {
         return ep;
     }
@@ -64,7 +65,7 @@ impl ZfsManager {
         let config = ZfsConfig::default();
 
         Self {
-            config: config.clone(),
+            config,
             pool_manager: Arc::new(ZfsPoolManager::new_for_testing()),
             dataset_manager: Arc::new(ZfsDatasetManager::new_for_testing()),
             snapshot_manager: Arc::new(ZfsSnapshotManager::new_for_testing()),
@@ -261,7 +262,7 @@ impl ZfsManager {
     pub fn register_with_orchestrator_from_env_source(
         &mut self,
         orchestrator_endpoint: String,
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
     ) -> Result<()> {
         info!(
             "Registering Enhanced ZFS service with orchestrator at: {}",

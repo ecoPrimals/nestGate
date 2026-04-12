@@ -4,18 +4,21 @@
 //! Metadata domain semantic methods
 //!
 //! **Integration:** Metadata operations are delegated to the injected
-//! [`MetadataBackend`](crate::rpc::metadata_backend::MetadataBackend) implementation. At daemon startup, `nestgate-core`'s
+//! [`MetadataBackend`] implementation. At daemon startup, `nestgate-core`'s
 //! `ServiceMetadataStore` is wired as the backend; standalone / test mode
 //! uses the in-memory default.
 
-use super::SemanticRouter;
+use super::{MetadataBackend, SemanticRouter};
 use crate::rpc::metadata_backend::ServiceRecord;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
 /// Route `metadata.store` → store service metadata via backend.
-pub(super) async fn metadata_store(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn metadata_store(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let name = params["name"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?;
@@ -57,7 +60,10 @@ pub(super) async fn metadata_store(router: &SemanticRouter, params: Value) -> Re
 }
 
 /// Route `metadata.retrieve` → get service metadata by name via backend.
-pub(super) async fn metadata_retrieve(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn metadata_retrieve(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let name = params["name"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("name", "string required"))?;
@@ -73,7 +79,10 @@ pub(super) async fn metadata_retrieve(router: &SemanticRouter, params: Value) ->
 }
 
 /// Route `metadata.search` → search services by capability via backend.
-pub(super) async fn metadata_search(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn metadata_search(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let capability = params["capability"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("capability", "string required"))?;
@@ -91,7 +100,7 @@ pub(super) async fn metadata_search(router: &SemanticRouter, params: Value) -> R
 mod tests {
     use super::*;
     use crate::rpc::NestGateRpcClient;
-    use crate::rpc::metadata_backend::InMemoryMetadataBackend;
+    use crate::rpc::metadata_backend::{DefaultMetadataBackend, InMemoryMetadataBackend};
     use crate::rpc::semantic_router::SemanticRouter;
     use serde_json::json;
     use std::sync::Arc;
@@ -100,7 +109,9 @@ mod tests {
         let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
         SemanticRouter::with_metadata_backend(
             Arc::new(client),
-            Arc::new(InMemoryMetadataBackend::new()),
+            Arc::new(DefaultMetadataBackend::InMemory(
+                InMemoryMetadataBackend::new(),
+            )),
         )
     }
 

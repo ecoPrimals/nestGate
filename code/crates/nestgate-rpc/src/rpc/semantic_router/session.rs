@@ -6,7 +6,7 @@
 //! Durable session state is stored via [`crate::rpc::NestGateRpcClient`] (storage backend);
 //! session index entries for listing use [`crate::rpc::metadata_backend::MetadataBackend`].
 
-use super::SemanticRouter;
+use super::{MetadataBackend, SemanticRouter};
 use crate::rpc::metadata_backend::ServiceRecord;
 use crate::rpc::tarpc_types::OperationResult;
 use bytes::Bytes;
@@ -38,7 +38,10 @@ fn session_index_name(id: &str) -> String {
 }
 
 /// Route `session.save` — persist session JSON under `session/{id}` and update metadata index.
-pub(super) async fn session_save(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn session_save(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let id = params["id"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("id", "string required"))?;
@@ -139,7 +142,10 @@ pub(super) async fn session_save(router: &SemanticRouter, params: Value) -> Resu
 }
 
 /// Route `session.load` — load session JSON from storage.
-pub(super) async fn session_load(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn session_load(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let id = params["id"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("id", "string required"))?;
@@ -164,7 +170,10 @@ pub(super) async fn session_load(router: &SemanticRouter, params: Value) -> Resu
 }
 
 /// Route `session.list` — list session index entries from metadata (`session/` prefix).
-pub(super) async fn session_list(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn session_list(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let prefix = params["prefix"].as_str().unwrap_or(SESSION_INDEX_PREFIX);
 
     let records = router.metadata.list_services_by_name_prefix(prefix).await?;
@@ -195,7 +204,10 @@ pub(super) async fn session_list(router: &SemanticRouter, params: Value) -> Resu
 }
 
 /// Route `session.delete` — remove session blob and metadata index entry.
-pub(super) async fn session_delete(router: &SemanticRouter, params: Value) -> Result<Value> {
+pub(super) async fn session_delete(
+    router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
     let id = params["id"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("id", "string required"))?;
@@ -233,7 +245,7 @@ mod tests {
     use super::super::tests::spawn_local_tarpc_server;
     use super::*;
     use crate::rpc::NestGateRpcClient;
-    use crate::rpc::metadata_backend::InMemoryMetadataBackend;
+    use crate::rpc::metadata_backend::{DefaultMetadataBackend, InMemoryMetadataBackend};
     use crate::rpc::semantic_router::SemanticRouter;
     use serde_json::json;
     use std::sync::Arc;
@@ -242,7 +254,9 @@ mod tests {
         let client = NestGateRpcClient::new("tarpc://127.0.0.1:65534").expect("client");
         SemanticRouter::with_metadata_backend(
             Arc::new(client),
-            Arc::new(InMemoryMetadataBackend::new()),
+            Arc::new(DefaultMetadataBackend::InMemory(
+                InMemoryMetadataBackend::new(),
+            )),
         )
     }
 

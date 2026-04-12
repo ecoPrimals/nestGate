@@ -48,7 +48,10 @@ impl ServiceDetector {
 
     /// Like [`Self::new`], but reads `NESTGATE_DISCOVERY_SCAN_PORTS` from `env`.
     #[must_use]
-    pub fn new_with_env(registry: Arc<CapabilityRegistry>, env: &dyn EnvSource) -> Self {
+    pub fn new_with_env(
+        registry: Arc<CapabilityRegistry>,
+        env: &(impl EnvSource + ?Sized),
+    ) -> Self {
         use nestgate_config::constants::hardcoding::runtime_fallback_ports as fp;
 
         let scan_ports = env.get("NESTGATE_DISCOVERY_SCAN_PORTS").map_or_else(

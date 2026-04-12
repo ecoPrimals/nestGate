@@ -50,7 +50,7 @@ impl CertificateManager {
 
     /// Like [`Self::new`], but reads adapter URL from an injectable [`EnvSource`].
     pub fn new_from_env_source(
-        env: &dyn EnvSource,
+        env: &(impl EnvSource + ?Sized),
         config: NestGateCanonicalConfig,
     ) -> Result<Self> {
         let adapter_url = env
@@ -102,7 +102,7 @@ pub fn create_default_certificate_manager() -> Result<CertificateManager> {
 
 /// Like [`create_default_certificate_manager`], but uses an injectable [`EnvSource`].
 pub fn create_default_certificate_manager_from_env_source(
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
 ) -> Result<CertificateManager> {
     CertificateManager::new_from_env_source(env, NestGateCanonicalConfig::default())
 }

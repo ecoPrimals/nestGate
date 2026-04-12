@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 /// Development-mode service implementations with mock support
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod development;
 /// Production-ready service implementations
 pub mod production;

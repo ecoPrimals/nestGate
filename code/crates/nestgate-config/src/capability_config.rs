@@ -205,7 +205,7 @@ impl CapabilityConfig {
     }
 
     /// Like [`Self::from_env`], but reads capability configuration from `env`.
-    pub fn from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         let mut capabilities = HashMap::new();
 
         // Read capabilities from environment

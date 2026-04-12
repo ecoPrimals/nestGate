@@ -14,7 +14,7 @@
 //! Production deployments delegate full peer discovery to the orchestration
 //! capability provider (discovered at runtime, not by name).
 
-use super::SemanticRouter;
+use super::{MetadataBackend, SemanticRouter};
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
 use serde_json::{Value, json};
@@ -38,7 +38,10 @@ const SELF_CAPABILITIES: &[&str] = &[
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result<Value> for uniform dispatch"
 )]
-pub(super) fn discovery_announce(_router: &SemanticRouter, params: &Value) -> Result<Value> {
+pub(super) fn discovery_announce(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: &Value,
+) -> Result<Value> {
     let name = params["name"].as_str().unwrap_or("unknown");
     let capabilities = params["capabilities"]
         .as_array()
@@ -67,7 +70,10 @@ pub(super) fn discovery_announce(_router: &SemanticRouter, params: &Value) -> Re
 /// Route `discovery.query` — find services by capability.
 ///
 /// Returns self-knowledge matches when queried for capabilities this primal provides.
-pub(super) fn discovery_query(_router: &SemanticRouter, params: &Value) -> Result<Value> {
+pub(super) fn discovery_query(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: &Value,
+) -> Result<Value> {
     let capability = params["capability"]
         .as_str()
         .ok_or_else(|| NestGateError::invalid_input_with_field("capability", "string required"))?;
@@ -99,7 +105,10 @@ pub(super) fn discovery_query(_router: &SemanticRouter, params: &Value) -> Resul
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result<Value> for uniform dispatch"
 )]
-pub(super) fn discovery_list(_router: &SemanticRouter, _params: &Value) -> Result<Value> {
+pub(super) fn discovery_list(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    _params: &Value,
+) -> Result<Value> {
     Ok(json!({
         "services": [{
             "name": DEFAULT_SERVICE_NAME,
@@ -118,7 +127,10 @@ pub(super) fn discovery_list(_router: &SemanticRouter, _params: &Value) -> Resul
     clippy::unnecessary_wraps,
     reason = "JSON-RPC semantic handlers use Result<Value> for uniform dispatch"
 )]
-pub(super) fn discovery_capabilities(_router: &SemanticRouter, _params: &Value) -> Result<Value> {
+pub(super) fn discovery_capabilities(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    _params: &Value,
+) -> Result<Value> {
     Ok(json!({
         "primal": DEFAULT_SERVICE_NAME,
         "capabilities": SELF_CAPABILITIES,

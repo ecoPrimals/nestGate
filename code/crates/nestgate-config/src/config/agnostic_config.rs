@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
+#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
+
 //! Agnostic Configuration Module
 //!
 //! Replaces hardcoded values with environment-driven, capability-based configuration.
@@ -127,7 +129,7 @@ impl ConfigBuilder {
     ///
     /// Returns [`NestGateError`] when capability discovery, environment resolution, or port
     /// discovery fails.
-    pub fn build_from_env_source(self, env: &dyn EnvSource) -> Result<AgnosticConfig> {
+    pub fn build_from_env_source(self, env: &(impl EnvSource + ?Sized)) -> Result<AgnosticConfig> {
         let mut config = AgnosticConfig {
             endpoints: HashMap::new(),
             ports: HashMap::new(),
@@ -160,7 +162,7 @@ impl ConfigBuilder {
 
     // Internal discovery methods
 
-    fn discover_endpoint(&self, service: &str, env: &dyn EnvSource) -> Result<String> {
+    fn discover_endpoint(&self, service: &str, env: &(impl EnvSource + ?Sized)) -> Result<String> {
         // Try capability discovery
         if self.enable_capability_discovery
             && let Ok(endpoint) = capability_discovery::discover_service_with_env(service, env)
@@ -212,7 +214,7 @@ impl ConfigBuilder {
         )))
     }
 
-    fn discover_port(&self, service: &str, env: &dyn EnvSource) -> Result<u16> {
+    fn discover_port(&self, service: &str, env: &(impl EnvSource + ?Sized)) -> Result<u16> {
         // Try capability discovery
         if self.enable_capability_discovery
             && let Ok(endpoint) = capability_discovery::discover_service_with_env(service, env)
@@ -294,7 +296,7 @@ impl AgnosticConfig {
 
     /// Like [`Self::api_endpoint`], but reads `NESTGATE_API_HOST` from `env` (for tests with [`MapEnv`](nestgate_types::MapEnv)).
     #[must_use]
-    pub fn api_endpoint_for_env_source(&self, env: &dyn EnvSource) -> Option<String> {
+    pub fn api_endpoint_for_env_source(&self, env: &(impl EnvSource + ?Sized)) -> Option<String> {
         self.endpoints.get("api").cloned().or_else(|| {
             env.get("NESTGATE_API_HOST")
                 .map(|host| format!("http://{}:{}", host, self.api_port()))
@@ -399,7 +401,7 @@ pub fn migrate_port(service: &str, hardcoded_fallback: u16) -> Result<u16> {
 pub fn migrate_port_from_env_source(
     service: &str,
     hardcoded_fallback: u16,
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
 ) -> Result<u16> {
     ConfigBuilder::new()
         .with_capability_discovery()
@@ -428,7 +430,7 @@ pub fn migrate_endpoint(service: &str, hardcoded_fallback: &str) -> Result<Strin
 pub fn migrate_endpoint_from_env_source(
     service: &str,
     hardcoded_fallback: &str,
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
 ) -> Result<String> {
     let config = ConfigBuilder::new()
         .with_capability_discovery()

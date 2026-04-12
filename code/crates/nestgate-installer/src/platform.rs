@@ -111,7 +111,10 @@ fn add_to_path_unix(install_path: &Path) -> Result<()> {
 }
 
 #[cfg(unix)]
-fn add_to_path_unix_from_env_source(install_path: &Path, env: &dyn EnvSource) -> Result<()> {
+fn add_to_path_unix_from_env_source(
+    install_path: &Path,
+    env: &(impl EnvSource + ?Sized),
+) -> Result<()> {
     use etcetera::BaseStrategy;
     use std::fs::OpenOptions;
     use std::io::Write;
@@ -195,7 +198,7 @@ fn create_desktop_shortcut_unix(install_path: &Path, name: &str) -> Result<()> {
 fn create_desktop_shortcut_unix_from_env_source(
     install_path: &Path,
     name: &str,
-    env: &dyn EnvSource,
+    env: &(impl EnvSource + ?Sized),
 ) -> Result<()> {
     use std::fs;
 

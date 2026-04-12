@@ -96,7 +96,7 @@ impl CryptoDelegate {
     }
 
     /// Like [`Self::new`], but reads orchestration/bootstrap paths from an injectable [`EnvSource`].
-    pub async fn new_from_env_source(env: &dyn EnvSource) -> Result<Self> {
+    pub async fn new_from_env_source(env: &(impl EnvSource + ?Sized)) -> Result<Self> {
         info!("Discovering crypto provider via capability-based discovery");
 
         let ipc_gateway = CapabilityDiscovery::discover_orchestration_ipc_from_env(env)
