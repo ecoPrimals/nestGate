@@ -249,16 +249,21 @@ impl IsomorphicIpcServer {
         }
     }
 
-    /// Handle Unix socket connection.
+    /// Handle Unix socket connection (persistent keep-alive).
+    ///
+    /// Reads newline-delimited JSON-RPC requests in a loop until the client
+    /// disconnects (EOF). Each response is flushed before reading the next
+    /// request, enabling multi-request sessions on a single connection
+    /// (e.g. `storage.store` then `storage.retrieve`).
     ///
     /// When BTSP is required (production: `FAMILY_ID` set, not `BIOMEOS_INSECURE`),
-    /// the 4-step BTSP handshake runs first, delegating crypto to `BearDog`.
-    /// Development connections proceed directly to JSON-RPC.
-    async fn handle_unix_connection(
+    /// the 4-step BTSP handshake runs first, delegating crypto to the security
+    /// capability provider. Development connections proceed directly.
+    pub(crate) async fn handle_unix_connection(
         stream: tokio::net::UnixStream,
         handler: Arc<dyn RpcHandler>,
     ) -> Result<()> {
-        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        use tokio::io::BufReader;
 
         let (reader, mut writer) = stream.into_split();
 
@@ -276,41 +281,27 @@ impl IsomorphicIpcServer {
             )
             .await?;
 
-            let mut reader = raw_reader;
-            let mut line = Vec::new();
-            loop {
-                line.clear();
-                let n = match reader.read_until(b'\n', &mut line).await {
-                    Ok(n) => n,
-                    Err(e) => {
-                        error!("Unix socket read error: {}", e);
-                        break;
-                    }
-                };
-                if n == 0 && line.is_empty() {
-                    break;
-                }
-                let trimmed = line.as_slice().trim_ascii();
-                if trimmed.is_empty() {
-                    continue;
-                }
-                match serde_json::from_slice::<Value>(trimmed) {
-                    Ok(request) => {
-                        let response = handler.handle_request(request).await;
-                        let response_bytes: Bytes =
-                            serde_json::to_vec(&response).map(Bytes::from)?;
-                        writer.write_all(&response_bytes).await?;
-                        writer.write_all(b"\n").await?;
-                    }
-                    Err(e) => {
-                        warn!("Invalid JSON-RPC request: {}", e);
-                    }
-                }
-            }
+            Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler).await?;
             return Ok(());
         }
 
         let mut reader = BufReader::new(reader);
+        Self::json_rpc_keep_alive_loop(&mut reader, &mut writer, &handler).await
+    }
+
+    /// Persistent newline-delimited JSON-RPC loop shared by BTSP and plain paths.
+    ///
+    /// Reads until client disconnects (EOF). Flushes after every response to
+    /// ensure the client receives data before the server blocks on the next read.
+    async fn json_rpc_keep_alive_loop<R, W>(
+        reader: &mut R,
+        writer: &mut W,
+        handler: &Arc<dyn RpcHandler>,
+    ) -> Result<()>
+    where
+        R: tokio::io::AsyncBufReadExt + Unpin,
+        W: tokio::io::AsyncWriteExt + Unpin,
+    {
         let mut line = Vec::new();
 
         loop {
@@ -323,26 +314,32 @@ impl IsomorphicIpcServer {
                     break;
                 }
             };
-            if n == 0 && line.is_empty() {
-                break; // EOF
+            if n == 0 {
+                break;
             }
             let trimmed = line.as_slice().trim_ascii();
             if trimmed.is_empty() {
                 continue;
             }
-            // Parse from byte slice: avoids allocating a UTF-8 `String` for the line buffer.
-            match serde_json::from_slice::<Value>(trimmed) {
-                Ok(request) => {
-                    let response = handler.handle_request(request).await;
-                    let response_bytes: Bytes = serde_json::to_vec(&response).map(Bytes::from)?;
-
-                    writer.write_all(&response_bytes).await?;
-                    writer.write_all(b"\n").await?;
-                }
+            let response = match serde_json::from_slice::<Value>(trimmed) {
+                Ok(request) => handler.handle_request(request).await,
                 Err(e) => {
                     warn!("Invalid JSON-RPC request: {}", e);
+                    serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": -32700,
+                            "message": "Parse error",
+                            "data": { "error": e.to_string() }
+                        },
+                        "id": null
+                    })
                 }
-            }
+            };
+            let response_bytes: Bytes = serde_json::to_vec(&response).map(Bytes::from)?;
+            writer.write_all(&response_bytes).await?;
+            writer.write_all(b"\n").await?;
+            writer.flush().await?;
         }
 
         Ok(())

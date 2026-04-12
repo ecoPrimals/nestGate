@@ -358,7 +358,13 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
     json_rpc_loop(&mut reader, &mut writer, &state).await
 }
 
-/// Newline-delimited JSON-RPC read/dispatch/write loop.
+/// Persistent newline-delimited JSON-RPC read/dispatch/write loop (keep-alive).
+///
+/// Reads requests until the client disconnects (EOF). Each request is
+/// dispatched, the response written, and the writer flushed before reading
+/// the next request. This allows multiple sequential calls on a single
+/// connection — the pattern required by ecosystem composition parity
+/// (e.g. `storage.store` then `storage.retrieve` on the same socket).
 ///
 /// Shared between the BTSP-authenticated and development (plaintext) code paths.
 async fn json_rpc_loop<R, W>(reader: &mut R, writer: &mut W, state: &StorageState) -> Result<()>
@@ -375,7 +381,7 @@ where
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to read request: {e}")))?;
 
-        if n == 0 && line.is_empty() {
+        if n == 0 {
             break;
         }
 
@@ -415,6 +421,10 @@ where
             .write_all(b"\n")
             .await
             .map_err(|e| NestGateError::io_error(format!("Failed to write newline: {e}")))?;
+        writer
+            .flush()
+            .await
+            .map_err(|e| NestGateError::io_error(format!("Failed to flush response: {e}")))?;
 
         debug!("Sent response ({} bytes)", response_bytes.len());
     }

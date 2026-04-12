@@ -32,6 +32,7 @@ Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
 TCP JSON-RPC:      Functional — `--port`, `--listen`, or NESTGATE_API_PORT env activates TcpFallbackServer alongside UDS
+UDS keep-alive:    PASS — persistent connections (multiple sequential requests per connection); flush after every response (LD-03 resolved)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)

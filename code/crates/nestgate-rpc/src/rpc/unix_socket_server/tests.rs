@@ -729,3 +729,132 @@ async fn handle_connection_malformed_json_returns_parse_error() {
     drop(c_write);
     let _ = h.await;
 }
+
+/// LD-03 composition parity: multiple sequential requests on one connection.
+///
+/// This is the exact pattern primalSpring needs for Nest atomic storage
+/// validation: `storage.store` then `storage.retrieve` on the same socket
+/// without reconnecting.
+#[tokio::test]
+#[cfg(unix)]
+async fn keep_alive_store_then_retrieve_on_same_connection() {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixStream;
+
+    let family_id = format!("test-keepalive-{}", uuid::Uuid::new_v4());
+    let mut state = StorageState::new().expect("storage state");
+    state.family_id = Some(family_id.clone());
+    let state = Arc::new(state);
+
+    let (client, server) = UnixStream::pair().expect("unix pair");
+    let h = tokio::spawn(handle_connection(server, Arc::clone(&state)));
+    let (c_read, mut c_write) = client.into_split();
+    let mut reader = BufReader::new(c_read);
+
+    // Request 1: store
+    let store_req = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "storage.store",
+        "params": { "key": "keepalive_key", "data": {"msg": "hello"}, "family_id": &family_id },
+        "id": 1
+    });
+    c_write
+        .write_all(serde_json::to_string(&store_req).unwrap().as_bytes())
+        .await
+        .unwrap();
+    c_write.write_all(b"\n").await.unwrap();
+    c_write.flush().await.unwrap();
+
+    let mut line = String::new();
+    reader.read_line(&mut line).await.unwrap();
+    let resp1: serde_json::Value = serde_json::from_str(line.trim()).unwrap();
+    assert_eq!(resp1["id"], 1);
+    assert!(resp1["error"].is_null(), "store failed: {resp1}");
+    assert_eq!(resp1["result"]["status"], "stored");
+
+    // Request 2: retrieve (same connection — keep-alive)
+    line.clear();
+    let retrieve_req = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "storage.retrieve",
+        "params": { "key": "keepalive_key", "family_id": &family_id },
+        "id": 2
+    });
+    c_write
+        .write_all(serde_json::to_string(&retrieve_req).unwrap().as_bytes())
+        .await
+        .unwrap();
+    c_write.write_all(b"\n").await.unwrap();
+    c_write.flush().await.unwrap();
+
+    reader.read_line(&mut line).await.unwrap();
+    let resp2: serde_json::Value = serde_json::from_str(line.trim()).unwrap();
+    assert_eq!(resp2["id"], 2);
+    assert!(resp2["error"].is_null(), "retrieve failed: {resp2}");
+    assert_eq!(resp2["result"]["data"]["msg"], "hello");
+
+    // Request 3: health check (proving the loop handles N requests)
+    line.clear();
+    let health_req = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "health.check",
+        "id": 3
+    });
+    c_write
+        .write_all(serde_json::to_string(&health_req).unwrap().as_bytes())
+        .await
+        .unwrap();
+    c_write.write_all(b"\n").await.unwrap();
+    c_write.flush().await.unwrap();
+
+    reader.read_line(&mut line).await.unwrap();
+    let resp3: serde_json::Value = serde_json::from_str(line.trim()).unwrap();
+    assert_eq!(resp3["id"], 3);
+    assert_eq!(resp3["result"]["status"], "healthy");
+
+    // Client closes — server should exit loop cleanly
+    drop(c_write);
+    h.await.unwrap().unwrap();
+
+    cleanup_family(&family_id).await;
+}
+
+/// LD-03: verify IsomorphicIpcServer keep-alive through the LegacyUnixJsonRpcHandler.
+#[tokio::test]
+#[cfg(unix)]
+async fn isomorphic_keep_alive_multiple_requests_one_connection() {
+    use crate::rpc::isomorphic_ipc::server::IsomorphicIpcServer;
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixStream;
+
+    let family_id = format!("test-iso-keepalive-{}", uuid::Uuid::new_v4());
+    let handler = legacy_ecosystem_rpc_handler(&family_id).expect("handler");
+
+    let (client, server) = UnixStream::pair().expect("unix pair");
+    let h = tokio::spawn(IsomorphicIpcServer::handle_unix_connection(server, handler));
+    let (c_read, mut c_write) = client.into_split();
+    let mut reader = BufReader::new(c_read);
+
+    for id in 1..=5 {
+        let req = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "health.check",
+            "id": id
+        });
+        c_write
+            .write_all(serde_json::to_string(&req).unwrap().as_bytes())
+            .await
+            .unwrap();
+        c_write.write_all(b"\n").await.unwrap();
+        c_write.flush().await.unwrap();
+
+        let mut line = String::new();
+        reader.read_line(&mut line).await.unwrap();
+        let resp: serde_json::Value = serde_json::from_str(line.trim()).unwrap();
+        assert_eq!(resp["id"], id, "response {id} id mismatch");
+        assert_eq!(resp["result"]["status"], "healthy");
+    }
+
+    drop(c_write);
+    h.await.unwrap().unwrap();
+}

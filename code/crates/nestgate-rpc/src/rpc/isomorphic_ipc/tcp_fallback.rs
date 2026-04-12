@@ -195,11 +195,11 @@ impl TcpFallbackServer {
         }
     }
 
-    /// Handle TCP connection (JSON-RPC over TCP)
+    /// Handle TCP connection (persistent keep-alive JSON-RPC over TCP).
     ///
-    /// **Protocol**: Line-delimited JSON-RPC 2.0\
-    /// **Format**: Each request/response is a single JSON line\
-    /// **Same as Unix sockets**: Identical protocol for transparency
+    /// Reads newline-delimited JSON-RPC requests in a loop until the client
+    /// disconnects (EOF). Each response is flushed (critical for TCP — Nagle's
+    /// algorithm can delay small writes) before reading the next request.
     async fn handle_tcp_connection(&self, stream: TcpStream) -> Result<()> {
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
@@ -211,52 +211,49 @@ impl TcpFallbackServer {
             let n = match reader.read_until(b'\n', &mut line).await {
                 Ok(n) => n,
                 Err(e) => {
-                    error!("❌ TCP read error: {}", e);
+                    error!("TCP read error: {}", e);
                     break;
                 }
             };
-            if n == 0 && line.is_empty() {
-                debug!("📤 TCP client disconnected (EOF)");
+            if n == 0 {
+                debug!("TCP client disconnected (EOF)");
                 break;
             }
-
-            debug!("📥 Received {} bytes", n);
 
             let trimmed = line.as_slice().trim_ascii();
             if trimmed.is_empty() {
                 continue;
             }
 
-            // Parse JSON from bytes (no intermediate `String` for the line buffer).
-            match serde_json::from_slice::<Value>(trimmed) {
-                Ok(request) => {
-                    debug!("🔍 Parsed JSON-RPC request");
-
-                    // Handle request (same as Unix socket)
-                    let response = self.handler.handle_request(request).await;
-
-                    // Send response (line-delimited JSON)
-                    let response_bytes: Bytes = serde_json::to_vec(&response)
-                        .map(Bytes::from)
-                        .context("Failed to serialize JSON-RPC response")?;
-
-                    writer
-                        .write_all(&response_bytes)
-                        .await
-                        .context("Failed to write response")?;
-
-                    writer
-                        .write_all(b"\n")
-                        .await
-                        .context("Failed to write newline")?;
-
-                    debug!("📤 Sent response ({} bytes)", response_bytes.len());
-                }
+            let response = match serde_json::from_slice::<Value>(trimmed) {
+                Ok(request) => self.handler.handle_request(request).await,
                 Err(e) => {
-                    warn!("⚠️  Invalid JSON-RPC request: {}", e);
-                    // Continue to next request (don't break connection)
+                    warn!("Invalid JSON-RPC request: {}", e);
+                    serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": -32700,
+                            "message": "Parse error",
+                            "data": { "error": e.to_string() }
+                        },
+                        "id": null
+                    })
                 }
-            }
+            };
+
+            let response_bytes: Bytes = serde_json::to_vec(&response)
+                .map(Bytes::from)
+                .context("Failed to serialize JSON-RPC response")?;
+
+            writer
+                .write_all(&response_bytes)
+                .await
+                .context("Failed to write response")?;
+            writer
+                .write_all(b"\n")
+                .await
+                .context("Failed to write newline")?;
+            writer.flush().await.context("Failed to flush response")?;
         }
 
         Ok(())
