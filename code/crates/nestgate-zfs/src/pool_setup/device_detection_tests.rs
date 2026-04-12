@@ -63,7 +63,7 @@ fn test_device_type_equality() {
 #[test]
 fn test_device_type_clone() {
     let dtype1 = DetectionDeviceType::OptaneMemory;
-    let dtype2 = dtype1.clone();
+    let dtype2 = dtype1;
 
     assert_eq!(dtype1, dtype2);
 }
@@ -160,7 +160,7 @@ fn test_speed_class_equality() {
 #[test]
 fn test_speed_class_clone() {
     let speed1 = SpeedClass::UltraFast;
-    let speed2 = speed1.clone();
+    let speed2 = speed1;
 
     assert_eq!(speed1, speed2);
 }
@@ -300,7 +300,7 @@ fn test_storage_device_different_types() {
             device_path: "/dev/sda".to_string(),
             model: "Test".to_string(),
             size_bytes: 1000,
-            device_type: dtype.clone(),
+            device_type: dtype,
             speed_class: SpeedClass::Fast,
             in_use: false,
             current_use: None,
@@ -325,7 +325,7 @@ fn test_storage_device_different_speeds() {
             model: "Test".to_string(),
             size_bytes: 1000,
             device_type: DetectionDeviceType::NvmeSsd,
-            speed_class: speed.clone(),
+            speed_class: speed,
             in_use: false,
             current_use: None,
         };

@@ -49,7 +49,7 @@ use nestgate_core::{NestGateError, Result as CoreResult};
 use serde::{Deserialize, Serialize};
 
 /// Convert detection `DeviceType` to config `DeviceType`
-const fn convert_device_type(detection_type: &DetectionDeviceType) -> ConfigDeviceType {
+const fn convert_device_type(detection_type: DetectionDeviceType) -> ConfigDeviceType {
     match detection_type {
         DetectionDeviceType::NvmeSsd => ConfigDeviceType::NvmeSsd,
         DetectionDeviceType::SataSsd => ConfigDeviceType::SataSsd,
@@ -248,17 +248,22 @@ impl ZfsPoolSetup {
             PoolTopology::RaidZ3 => std::cmp::min(available_devices.len(), 12),
         };
 
-        // Prefer faster devices
-        let mut sorted_devices = available_devices.clone();
-        sorted_devices.sort_by(|a, b| {
+        // Prefer faster devices (index sort avoids cloning the `Vec<&StorageDevice>`).
+        let mut order: Vec<usize> = (0..available_devices.len()).collect();
+        order.sort_by(|&i, &j| {
+            let a = available_devices[i];
+            let b = available_devices[j];
             b.speed_class
                 .cmp(&a.speed_class)
                 .then_with(|| b.size_bytes.cmp(&a.size_bytes))
         });
 
-        for device in sorted_devices.iter().take(device_count) {
-            selected_devices.push(device.device_path.clone());
+        for &idx in order.iter().take(device_count) {
+            selected_devices.push(available_devices[idx].device_path.clone());
         }
+
+        let sorted_devices: Vec<&StorageDevice> =
+            order.iter().map(|&idx| available_devices[idx]).collect();
 
         // Set up default properties
         let mut properties = HashMap::new();
@@ -290,23 +295,19 @@ impl ZfsPoolSetup {
     ) -> CoreResult<()> {
         let device_types: std::collections::HashSet<ConfigDeviceType> = devices
             .iter()
-            .map(|d| convert_device_type(&d.device_type))
+            .map(|d| convert_device_type(d.device_type))
             .collect();
 
         if device_types.len() == 1 {
             // Single device type - use for all tiers
-            let primary_type = device_types
-                .iter()
-                .next()
-                .ok_or_else(|| {
-                    NestGateError::internal_error(
-                        "No device types found for tier mapping",
-                        "configure_tier_mappings",
-                    )
-                })?
-                .clone();
-            tier_mappings.insert(ConfigStorageTier::Hot, vec![primary_type.clone()]);
-            tier_mappings.insert(ConfigStorageTier::Warm, vec![primary_type.clone()]);
+            let primary_type = device_types.iter().copied().next().ok_or_else(|| {
+                NestGateError::internal_error(
+                    "No device types found for tier mapping",
+                    "configure_tier_mappings",
+                )
+            })?;
+            tier_mappings.insert(ConfigStorageTier::Hot, vec![primary_type]);
+            tier_mappings.insert(ConfigStorageTier::Warm, vec![primary_type]);
             tier_mappings.insert(ConfigStorageTier::Cold, vec![primary_type]);
         } else {
             // Multiple device types - optimize assignment
@@ -314,18 +315,18 @@ impl ZfsPoolSetup {
             let mut warm_types = Vec::new();
             let mut cold_types = Vec::new();
 
-            for device_type in &device_types {
+            for device_type in device_types.iter().copied() {
                 match device_type {
                     ConfigDeviceType::OptaneMemory | ConfigDeviceType::NvmeSsd => {
-                        hot_types.push(device_type.clone());
-                        warm_types.push(device_type.clone());
+                        hot_types.push(device_type);
+                        warm_types.push(device_type);
                     }
                     ConfigDeviceType::SataSsd => {
-                        warm_types.push(device_type.clone());
-                        cold_types.push(device_type.clone());
+                        warm_types.push(device_type);
+                        cold_types.push(device_type);
                     }
                     ConfigDeviceType::SpinningDisk => {
-                        cold_types.push(device_type.clone());
+                        cold_types.push(device_type);
                     }
                 }
             }
@@ -335,8 +336,8 @@ impl ZfsPoolSetup {
                 hot_types.clone_from(&warm_types);
             }
             if warm_types.is_empty() {
-                if let Some(device_type) = device_types.iter().next() {
-                    warm_types = vec![device_type.clone()];
+                if let Some(device_type) = device_types.iter().copied().next() {
+                    warm_types = vec![device_type];
                 } else {
                     return Err(NestGateError::internal_error(
                         "Invalid tier configuration detected",
@@ -401,7 +402,7 @@ impl ZfsPoolSetup {
     fn get_device_type_summary(&self) -> HashMap<DetectionDeviceType, usize> {
         let mut summary = HashMap::new();
         for device in &self.devices {
-            *summary.entry(device.device_type.clone()).or_insert(0) += 1;
+            *summary.entry(device.device_type).or_insert(0) += 1;
         }
         summary
     }
@@ -410,7 +411,7 @@ impl ZfsPoolSetup {
     fn get_speed_class_summary(&self) -> HashMap<SpeedClass, usize> {
         let mut summary = HashMap::new();
         for device in &self.devices {
-            *summary.entry(device.speed_class.clone()).or_insert(0) += 1;
+            *summary.entry(device.speed_class).or_insert(0) += 1;
         }
         summary
     }

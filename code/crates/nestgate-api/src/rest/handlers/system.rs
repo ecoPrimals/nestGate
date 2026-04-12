@@ -191,7 +191,7 @@ pub async fn system_status(State(state): State<ApiState>) -> Json<DataResponse<S
     let resources = get_resource_usage();
 
     // Count datasets and snapshots
-    let datasets_count = state.zfs_engines.len() as u32;
+    let datasets_count = u32::try_from(state.zfs_engines.len()).unwrap_or(u32::MAX);
 
     let snapshots_count = super::zfs::helpers::get_snapshot_count_from_engine_impl();
 

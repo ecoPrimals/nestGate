@@ -27,7 +27,7 @@ pub async fn get_metrics(
     State(state): State<ApiState>,
 ) -> Result<Json<DataResponse<SystemMetrics>>, Json<DataError>> {
     debug!("Getting current system metrics");
-    let total_datasets = state.zfs_engines.len() as u32;
+    let total_datasets = u32::try_from(state.zfs_engines.len()).unwrap_or(u32::MAX);
 
     // Real system metrics via linux_proc on Linux, with sensible fallbacks
     #[cfg(target_os = "linux")]

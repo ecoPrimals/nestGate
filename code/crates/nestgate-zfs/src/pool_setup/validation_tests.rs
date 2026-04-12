@@ -438,7 +438,7 @@ fn test_validate_pool_config_raidz1_topology_valid() {
 #[test]
 fn test_convert_device_type_nvme_ssd() {
     let detection_type = DetectionDeviceType::NvmeSsd;
-    let config_type = super::convert_device_type(&detection_type);
+    let config_type = super::convert_device_type(detection_type);
 
     assert!(matches!(config_type, ConfigDeviceType::NvmeSsd));
 }
@@ -446,7 +446,7 @@ fn test_convert_device_type_nvme_ssd() {
 #[test]
 fn test_convert_device_type_sata_ssd() {
     let detection_type = DetectionDeviceType::SataSsd;
-    let config_type = super::convert_device_type(&detection_type);
+    let config_type = super::convert_device_type(detection_type);
 
     assert!(matches!(config_type, ConfigDeviceType::SataSsd));
 }
@@ -454,7 +454,7 @@ fn test_convert_device_type_sata_ssd() {
 #[test]
 fn test_convert_device_type_hdd() {
     let detection_type = DetectionDeviceType::Hdd;
-    let config_type = super::convert_device_type(&detection_type);
+    let config_type = super::convert_device_type(detection_type);
 
     assert!(matches!(config_type, ConfigDeviceType::SpinningDisk));
 }
@@ -462,7 +462,7 @@ fn test_convert_device_type_hdd() {
 #[test]
 fn test_convert_device_type_optane() {
     let detection_type = DetectionDeviceType::OptaneMemory;
-    let config_type = super::convert_device_type(&detection_type);
+    let config_type = super::convert_device_type(detection_type);
 
     assert!(matches!(config_type, ConfigDeviceType::OptaneMemory));
 }
@@ -470,7 +470,7 @@ fn test_convert_device_type_optane() {
 #[test]
 fn test_convert_device_type_unknown() {
     let detection_type = DetectionDeviceType::Unknown;
-    let config_type = super::convert_device_type(&detection_type);
+    let config_type = super::convert_device_type(detection_type);
 
     // Unknown should default to SpinningDisk
     assert!(matches!(config_type, ConfigDeviceType::SpinningDisk));

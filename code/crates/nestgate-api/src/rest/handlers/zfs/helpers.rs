@@ -27,7 +27,7 @@ pub fn dataset_stats_for_name(name: &str) -> DatasetStats {
         size_bytes,
         used_bytes,
         available_bytes,
-        snapshot_count: get_snapshot_count_from_engine_impl() as u32,
+        snapshot_count: u32::try_from(get_snapshot_count_from_engine_impl()).unwrap_or(u32::MAX),
         deduplication_ratio: 1.0,
         files_written: 0,
         files_read: 0,
@@ -93,7 +93,7 @@ pub fn convert_engine_to_placeholder_dataset(name: &str, _engine: &String) -> Da
         created: chrono::Utc::now() - chrono::Duration::hours(1),
         modified: chrono::Utc::now(),
         status: DatasetStatus::Online,
-        snapshot_count: get_snapshot_count_from_engine_impl() as u32,
+        snapshot_count: u32::try_from(get_snapshot_count_from_engine_impl()).unwrap_or(u32::MAX),
     }
 }
 

@@ -135,7 +135,7 @@ impl ResponseBuilder {
                 page,
                 per_page,
                 total,
-                total_pages: (total as f64 / f64::from(per_page)).ceil() as u32,
+                total_pages: u32::try_from(total.div_ceil(u64::from(per_page))).unwrap_or(u32::MAX),
             },
         };
         (StatusCode::OK, Json(response))

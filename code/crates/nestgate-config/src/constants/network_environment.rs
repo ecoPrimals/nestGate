@@ -318,35 +318,20 @@ mod tests {
     use crate::constants::hardcoding::addresses;
     use crate::constants::hardcoding::timeouts as fallback_timeouts;
     use crate::constants::timeouts::DEFAULT_KEEPALIVE_SECS;
-    use serial_test::serial;
     use std::env;
 
     #[test]
-    #[serial]
     fn test_api_port_default() {
-        let orig = env::var("NESTGATE_API_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::remove_var("NESTGATE_API_PORT");
-        let port = api_port();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_API_PORT", v),
-            None => {}
-        }
-        assert_eq!(port, DEFAULT_API_PORT);
+        temp_env::with_vars([("NESTGATE_API_PORT", None::<&str>)], || {
+            assert_eq!(api_port(), DEFAULT_API_PORT);
+        });
     }
 
     #[test]
-    #[serial]
     fn test_api_port_environment() {
-        let orig = env::var("NESTGATE_API_PORT").ok();
-        // SAFETY: single-threaded test context.
-        crate::env_process::set_var("NESTGATE_API_PORT", "9999");
-        let port = api_port();
-        match orig {
-            Some(v) => crate::env_process::set_var("NESTGATE_API_PORT", v),
-            None => crate::env_process::remove_var("NESTGATE_API_PORT"),
-        }
-        assert_eq!(port, 9999);
+        temp_env::with_vars([("NESTGATE_API_PORT", Some("9999"))], || {
+            assert_eq!(api_port(), 9999);
+        });
     }
 
     #[test]

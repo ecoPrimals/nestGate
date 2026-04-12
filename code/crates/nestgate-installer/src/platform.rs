@@ -142,6 +142,7 @@ fn add_to_path_unix_from_env_source(
             install_path.join("bin").display()
         )?;
 
+        // User-facing interactive output — not log
         println!("Added {} to PATH in {:?}", install_path.display(), rc_path);
         println!("Please restart your shell or run: source {rc_path:?}");
     }
@@ -169,6 +170,7 @@ fn add_to_path_windows(install_path: &Path) -> Result<()> {
         };
 
         env.setvalue("PATH", &new_path)?;
+        // User-facing interactive output — not log
         println!("Added {} to PATH", install_bin.display());
         println!("Please restart your command prompt to use the new PATH");
     }
@@ -247,6 +249,7 @@ Categories=System;
             fs::set_permissions(&shortcut_path, perms)?;
         }
 
+        // User-facing interactive output — not log
         println!("Created desktop shortcut: {}", shortcut_path.display());
     }
 
@@ -257,7 +260,7 @@ Categories=System;
 fn create_desktop_shortcut_windows(_install_path: &Path, _name: &str) -> Result<()> {
     // Windows shortcut creation would require additional dependencies
     // For now, we'll skip this and focus on core functionality
-    println!("Desktop shortcut creation not yet implemented on Windows");
+    tracing::warn!("Desktop shortcut creation not yet implemented on Windows");
     Ok(())
 }
 

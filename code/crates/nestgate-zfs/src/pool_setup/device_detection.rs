@@ -39,7 +39,7 @@ pub struct StorageDevice {
     pub current_use: Option<String>,
 }
 /// Types of storage devices
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 /// Types of Device
 pub enum DeviceType {
     /// Nvmessd
@@ -54,7 +54,7 @@ pub enum DeviceType {
     Unknown,
 }
 /// Speed classification for storage devices
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 /// Speedclass
 pub enum SpeedClass {
     /// Ultra-fast devices (`NVMe` Gen4, Optane)
@@ -188,7 +188,7 @@ impl DeviceScanner {
         }
 
         let device_type = self.detect_device_type(&device_path, &model).await?;
-        let speed_class = self.classify_device_speed(&device_type, &model);
+        let speed_class = self.classify_device_speed(device_type, &model);
 
         Ok(Some(StorageDevice {
             device_path,
@@ -294,7 +294,7 @@ impl DeviceScanner {
     }
 
     /// Classify device speed based on type and model
-    fn classify_device_speed(&self, device_type: &DeviceType, model: &str) -> SpeedClass {
+    fn classify_device_speed(&self, device_type: DeviceType, model: &str) -> SpeedClass {
         match device_type {
             DeviceType::OptaneMemory => SpeedClass::UltraFast,
             DeviceType::NvmeSsd => {
@@ -382,7 +382,7 @@ impl DeviceScanner {
 
     pub(crate) fn test_classify_device_speed(
         &self,
-        device_type: &DeviceType,
+        device_type: DeviceType,
         model: &str,
     ) -> SpeedClass {
         self.classify_device_speed(device_type, model)
@@ -408,15 +408,15 @@ mod device_detection_unit_tests {
     fn classify_speed_nvme_gen4_and_hdd() {
         let s = DeviceScanner::new(DeviceDetectionConfig::default());
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::NvmeSsd, "PCIe Gen4 NVMe"),
+            s.test_classify_device_speed(DeviceType::NvmeSsd, "PCIe Gen4 NVMe"),
             SpeedClass::UltraFast
         );
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::Hdd, "any"),
+            s.test_classify_device_speed(DeviceType::Hdd, "any"),
             SpeedClass::Slow
         );
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::Unknown, "x"),
+            s.test_classify_device_speed(DeviceType::Unknown, "x"),
             SpeedClass::Medium
         );
     }
@@ -486,19 +486,19 @@ mod device_detection_unit_tests {
     fn classify_speed_sata_tiers_and_nvme_default() {
         let s = DeviceScanner::new(DeviceDetectionConfig::default());
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::SataSsd, "Samsung Enterprise SSD"),
+            s.test_classify_device_speed(DeviceType::SataSsd, "Samsung Enterprise SSD"),
             SpeedClass::Fast
         );
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::SataSsd, "consumer sata"),
+            s.test_classify_device_speed(DeviceType::SataSsd, "consumer sata"),
             SpeedClass::Medium
         );
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::NvmeSsd, "Generic NVMe"),
+            s.test_classify_device_speed(DeviceType::NvmeSsd, "Generic NVMe"),
             SpeedClass::Fast
         );
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::OptaneMemory, "Intel Optane"),
+            s.test_classify_device_speed(DeviceType::OptaneMemory, "Intel Optane"),
             SpeedClass::UltraFast
         );
     }

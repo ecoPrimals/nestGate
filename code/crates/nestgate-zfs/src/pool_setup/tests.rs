@@ -52,23 +52,23 @@ mod pool_setup_tests {
     #[test]
     fn test_device_type_conversion() {
         let nvme = DetectionDeviceType::NvmeSsd;
-        let converted = convert_device_type(&nvme);
+        let converted = convert_device_type(nvme);
         assert!(matches!(converted, ConfigDeviceType::NvmeSsd));
 
         let sata = DetectionDeviceType::SataSsd;
-        let converted = convert_device_type(&sata);
+        let converted = convert_device_type(sata);
         assert!(matches!(converted, ConfigDeviceType::SataSsd));
 
         let hdd = DetectionDeviceType::Hdd;
-        let converted = convert_device_type(&hdd);
+        let converted = convert_device_type(hdd);
         assert!(matches!(converted, ConfigDeviceType::SpinningDisk));
 
         let optane = DetectionDeviceType::OptaneMemory;
-        let converted = convert_device_type(&optane);
+        let converted = convert_device_type(optane);
         assert!(matches!(converted, ConfigDeviceType::OptaneMemory));
 
         let unknown = DetectionDeviceType::Unknown;
-        let converted = convert_device_type(&unknown);
+        let converted = convert_device_type(unknown);
         assert!(matches!(converted, ConfigDeviceType::SpinningDisk));
     }
 

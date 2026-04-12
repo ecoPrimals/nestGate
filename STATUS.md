@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 12, 2026 (Session 43)  
+**Last Updated**: April 12, 2026 (Session 43d — deep debt evolution)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,13 +12,13 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-targets --all-features -- -D warnings (zero errors), as of 2026-04-12
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-12
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-12
-Tests:              11,792 passing, 0 failures, 451 ignored (cargo test --workspace; flaky tests stabilized)
+Tests:              11,794 passing, 0 failures, 451 ignored (cargo test --workspace; flaky tests stabilized)
 Coverage:           ~81.7% line (cargo llvm-cov --workspace --lib) — wateringHole 80% min met; 90% target pending
-Files > 750 lines:  0 (production; 4 largest refactored Session 43 — all under 1000 LOC per wateringHole)
+Files > 750 lines:  0 (production; 6 largest refactored Sessions 43–43d — all under 500 LOC per module)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
-println! in lib:    ZERO (migrated to tracing)
+println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)
 Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED; installer uses system curl
@@ -40,7 +40,7 @@ Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
-Serial tests:       #[serial]: 0 — last #[serial] eliminated via try_init() evolution
+Serial tests:       #[serial]: 0 — last 2 eliminated via temp_env::with_vars (Session 43d)
 Numeric casts:      Dangerous narrowing `as` casts evolved to try_from/saturating; benign widening casts remain
 Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0; cargo deny check bans PASS
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)

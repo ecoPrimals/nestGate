@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43d: Deep debt evolution — casts, clones, refactors, tracing (April 12, 2026)
+
+- **10 dangerous `as` casts evolved**: `response_builder.rs` pagination → `div_ceil` + `u32::try_from`,
+  `dataset_handlers.rs`/`storage.rs` offset → `saturating_mul` + `usize::try_from`,
+  `crud_helpers.rs`/`health.rs`/`production.rs`/`metrics.rs`/`system.rs`/`helpers.rs` `len() as u32`
+  → `u32::try_from(...).unwrap_or(u32::MAX)`, `tier_evaluation.rs` `f64 → u32` → `clamp`.
+- **2 smart file refactors**: `metadata_backend.rs` 781→264 (→ `file_backend.rs` 154, `tests.rs` 378),
+  `primal_self_knowledge.rs` 728→173 (→ `types.rs` 134, `knowledge.rs` 439). All modules under 500 LOC.
+- **12 clone() hotspots eliminated** in `pool_setup`: `DeviceType`/`SpeedClass`/`ConfigDeviceType`
+  evolved to `Copy`; index-based sort replaces `Vec` clone; tier-mapping uses `copied()`.
+- **Last 2 `#[serial]` tests eliminated**: `network_environment.rs` → `temp_env::with_vars`,
+  `serial_test` dependency removed from `nestgate-config`.
+- **`nestgate-installer` println! evolved**: Uninstall/update/doctor/config-updated → `tracing::info!`/
+  `tracing::warn!`; interactive wizard stdout retained (documented).
+- **`#[allow(deprecated)]` audit**: All `#[allow(deprecated)]` in production confirmed test-only;
+  `orchestrator_integration/service.rs` uses `#[allow(deprecated, reason = "...")]` with migration path.
+- **Production unwrap audit**: Confirmed 0 panicking `unwrap()`/`expect()` in library code; all 2084
+  hits are in test modules.
+- **dev-stubs feature audit**: Verified never in `default` features, properly `#[cfg]`-gated across
+  all 23 workspace members.
+- **36 unwired dead files deleted** (12,971 lines): Test files with no `mod` declaration in any
+  parent module across 8 crates (nestgate-api 22, nestgate-config 4, nestgate-core 1,
+  nestgate-discovery 1, nestgate-observe 2, nestgate-rpc 1, nestgate-storage 1, nestgate-zfs 4).
+  Zero compile-time impact — confirmed never built.
+- **2 empty directories removed**: `nestgate-zfs/data/`, `nestgate-zfs/config/`.
+- Validation: `cargo fmt`, `cargo clippy`, `cargo doc`, `cargo test` — all PASS, zero warnings.
+  Tests: 11,794 passing, 0 failures, 451 ignored.
+
 ### Session 43 (cont.): primalSpring compliance audit + deep debt evolution (April 12, 2026)
 
 - **primalSpring audit response**: Doc drift corrected — STATUS.md now shows per-surface method

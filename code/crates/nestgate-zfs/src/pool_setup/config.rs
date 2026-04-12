@@ -59,7 +59,7 @@ pub enum StorageTier {
 }
 
 /// Device type classifications
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 /// Types of Device
 pub enum DeviceType {
     /// Optanememory

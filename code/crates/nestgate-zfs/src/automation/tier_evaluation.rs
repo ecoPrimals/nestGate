@@ -117,13 +117,8 @@ pub fn evaluate_tier_by_intelligent_rules(
         _ => tier_score.add_cold_weight(0.4, "Rarely accessed"),
     }
 
-    // 3. Access frequency scoring (f64 → u32 with saturation for negative/NaN)
-    #[expect(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
-    let freq_u32 = if metadata.access_frequency.is_finite() && metadata.access_frequency >= 0.0 {
-        metadata.access_frequency as u32
-    } else {
-        0
-    };
+    // 3. Access frequency scoring (f64 → u32 with clamped range)
+    let freq_u32 = metadata.access_frequency.clamp(0.0, f64::from(u32::MAX)) as u32;
     match freq_u32 {
         freq if freq > 100 => tier_score.add_hot_weight(0.6, "Very high access frequency"),
         freq if freq > 20 => tier_score.add_hot_weight(0.3, "High access frequency"),

@@ -5,10 +5,6 @@
 //!
 //! This module provides zero-copy optimized ZFS snapshot operations including
 //! listing, creating, destroying, and rolling back snapshots.
-//!
-//! **Tests**: Located in `snapshot_operations_tests.rs` (sibling file)
-//! Note: Tests are in a separate file for better organization.
-//! Run with: `cargo test snapshot_operations`
 
 use std::collections::HashMap;
 // Removed unused tracing import

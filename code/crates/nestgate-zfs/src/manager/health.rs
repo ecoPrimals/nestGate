@@ -205,7 +205,7 @@ impl ZfsManager {
             .await
             .map_err(|e| create_zfs_error(e.to_string(), ZfsOperation::Configuration))?;
 
-        Ok(snapshots.len() as u32)
+        Ok(u32::try_from(snapshots.len()).unwrap_or(u32::MAX))
     }
 
     /// Initialize ZFS system

@@ -378,7 +378,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated, reason = "testing deprecated API backward compatibility")]
+    #[allow(
+        deprecated,
+        reason = "ZfsService::default() uses deprecated ZfsServiceConfig; orchestrator integration is not yet migrated to nestgate_core::config::canonical_primary (see ZfsServiceConfig deprecation)."
+    )]
     fn default_service_builds() {
         let s = ZfsService::default();
         assert!(!s.node_id().is_empty());

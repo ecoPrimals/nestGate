@@ -368,7 +368,7 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
     async fn broadcast(&self, message: Self::Message) -> Result<u32> {
         // Direct async method for broadcasting
         let connections = self.connections.read().await;
-        let connection_count = connections.len() as u32;
+        let connection_count = u32::try_from(connections.len()).unwrap_or(u32::MAX);
         info!(
             message_id = %message.message_id,
             connection_count,

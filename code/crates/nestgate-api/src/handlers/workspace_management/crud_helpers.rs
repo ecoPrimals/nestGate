@@ -106,7 +106,7 @@ pub(super) async fn get_snapshot_count(zfs_bin: &str, dataset_name: &str) -> u32
         && output.status.success()
     {
         let stdout = String::from_utf8_lossy(&output.stdout);
-        return stdout.lines().count() as u32;
+        return u32::try_from(stdout.lines().count()).unwrap_or(u32::MAX);
     }
 
     0

@@ -31,13 +31,15 @@ use dialoguer::Confirm;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::config::InstallerConfig;
 use crate::download::DownloadManager;
 use crate::platform::PlatformInfo;
 use crate::wizard::InstallationWizard;
 // Migration utilities no longer needed - using canonical configurations
+
+// `configure()` below keeps `println!` for stdout (piping / shell redirection). Other subcommands use `tracing` for user-visible messages.
 
 /// Metadata recorded about a completed or in-progress installation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,8 +115,8 @@ impl NestGateInstaller {
         let red = Style::new().red().bold();
         let yellow = Style::new().yellow().bold();
 
-        println!("{}", red.apply_to("🗑️  NestGate Uninstallation"));
-        println!();
+        info!("{}", red.apply_to("🗑️  NestGate Uninstallation"));
+        info!("");
 
         let installation_info = self
             .get_installation_info()
@@ -143,7 +145,7 @@ impl NestGateInstaller {
                 ))
                 .interact()?
             {
-                println!("Uninstallation cancelled.");
+                info!("Uninstallation cancelled.");
                 return Ok(());
             }
         }
@@ -188,7 +190,7 @@ impl NestGateInstaller {
             fs::remove_file(&info_path)?;
         }
 
-        println!(
+        info!(
             "{}",
             yellow.apply_to("✅ NestGate uninstalled successfully")
         );
@@ -203,8 +205,8 @@ impl NestGateInstaller {
     pub async fn update(&mut self, version: Option<String>, yes: bool) -> Result<()> {
         let blue = Style::new().blue().bold();
 
-        println!("{}", blue.apply_to("🔄 NestGate Update"));
-        println!();
+        info!("{}", blue.apply_to("🔄 NestGate Update"));
+        info!("");
 
         let installation_info = self
             .get_installation_info()
@@ -216,7 +218,7 @@ impl NestGateInstaller {
         };
 
         if target_version == installation_info.version {
-            println!("Already up to date (version {target_version})");
+            info!("Already up to date (version {target_version})");
             return Ok(());
         }
 
@@ -228,7 +230,7 @@ impl NestGateInstaller {
                 ))
                 .interact()?
         {
-            println!("Update cancelled.");
+            info!("Update cancelled.");
             return Ok(());
         }
 
@@ -273,7 +275,7 @@ impl NestGateInstaller {
         fs::remove_dir_all(&backup_path)?;
         fs::remove_dir_all(&temp_dir)?;
 
-        println!(
+        info!(
             "✅ Update completed successfully to version {}",
             updated_info.version
         );
@@ -292,6 +294,7 @@ impl NestGateInstaller {
 
         let config_file = config_path.unwrap_or(installation_info.config_path);
 
+        // User-facing interactive output — not log
         println!("Current configuration: {}", config_file.display());
 
         if config_file.exists() {
@@ -321,7 +324,7 @@ impl NestGateInstaller {
             .map_err(|e| anyhow::anyhow!("Failed to serialize config: {e}"))?;
         fs::write(&installation_info.config_path, config_toml)?;
 
-        println!(
+        info!(
             "✅ Configuration updated: {}",
             installation_info.config_path.display()
         );
@@ -338,36 +341,36 @@ impl NestGateInstaller {
         let red = Style::new().red();
         let yellow = Style::new().yellow();
 
-        println!("🔍 NestGate System Check");
-        println!();
+        info!("🔍 NestGate System Check");
+        info!("");
 
         let mut issues = 0;
 
         // Check if installed
         if let Ok(info) = self.get_installation_info() {
-            println!("{} NestGate is installed", green.apply_to("✓"));
-            println!("   Version: {}", info.version);
-            println!("   Path: {}", info.install_path.display());
-            println!(
+            info!("{} NestGate is installed", green.apply_to("✓"));
+            info!("   Version: {}", info.version);
+            info!("   Path: {}", info.install_path.display());
+            info!(
                 "   Service: {}",
                 if info.service_installed { "Yes" } else { "No" }
             );
         } else {
-            println!("{} NestGate is not installed", red.apply_to("✗"));
+            warn!("{} NestGate is not installed", red.apply_to("✗"));
             issues += 1;
         }
 
         // Check platform support
-        println!(
+        info!(
             "{} Platform: {}-{}",
             green.apply_to("✓"),
             self.platform.os,
             self.platform.arch
         );
         if self.platform.service_install_supported() {
-            println!("{} Service installation supported", green.apply_to("✓"));
+            info!("{} Service installation supported", green.apply_to("✓"));
         } else {
-            println!(
+            warn!(
                 "{} Service installation not supported",
                 yellow.apply_to("⚠")
             );
@@ -376,24 +379,24 @@ impl NestGateInstaller {
         // Check system requirements
         let requirements_ok = self.check_system_requirements_silent();
         if requirements_ok {
-            println!("{} System requirements met", green.apply_to("✓"));
+            info!("{} System requirements met", green.apply_to("✓"));
         } else {
-            println!("{} System requirements not met", red.apply_to("✗"));
+            warn!("{} System requirements not met", red.apply_to("✗"));
             issues += 1;
         }
 
         // Check ZFS availability
         if self.check_zfs_availability() {
-            println!("{} ZFS available", green.apply_to("✓"));
+            info!("{} ZFS available", green.apply_to("✓"));
         } else {
-            println!("{} ZFS not available", yellow.apply_to("⚠"));
+            warn!("{} ZFS not available", yellow.apply_to("⚠"));
         }
 
-        println!();
+        info!("");
         if issues == 0 {
-            println!("{} All checks passed", green.apply_to("✅"));
+            info!("{} All checks passed", green.apply_to("✅"));
         } else {
-            println!("{} {} issues found", red.apply_to("❌"), issues);
+            warn!("{} {} issues found", red.apply_to("❌"), issues);
         }
         Ok(())
     }

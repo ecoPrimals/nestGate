@@ -7,6 +7,9 @@ use dialoguer::{Confirm, Input};
 // Migration utilities no longer needed - using canonical configurations
 use nestgate_core::error::{NestGateError, Result};
 use std::path::PathBuf;
+
+// User-facing interactive output — not log: stdout for the installation wizard alongside `dialoguer` prompts.
+
 /// Installation wizard for canonical configuration
 pub struct InstallationWizard {
     config: InstallerConfig,

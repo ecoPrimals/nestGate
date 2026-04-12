@@ -206,7 +206,7 @@ mod round6_zfs_tests {
     fn r6_classify_sata_enterprise() {
         let s = DeviceScanner::new(DeviceDetectionConfig::default());
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::SataSsd, "enterprise pro"),
+            s.test_classify_device_speed(DeviceType::SataSsd, "enterprise pro"),
             SpeedClass::Fast
         );
     }
@@ -215,7 +215,7 @@ mod round6_zfs_tests {
     fn r6_classify_nvme_non_gen4() {
         let s = DeviceScanner::new(DeviceDetectionConfig::default());
         assert_eq!(
-            s.test_classify_device_speed(&DeviceType::NvmeSsd, "standard"),
+            s.test_classify_device_speed(DeviceType::NvmeSsd, "standard"),
             SpeedClass::Fast
         );
     }

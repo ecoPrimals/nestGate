@@ -68,8 +68,9 @@ pub async fn list_datasets(
     let page = query.page.unwrap_or(1);
     let per_page = query.per_page.unwrap_or(50);
     let total = datasets.len() as u64;
-    let start = ((page - 1) * per_page) as usize;
-    let end = (start + per_page as usize).min(datasets.len());
+    let start = usize::try_from((page.saturating_sub(1)).saturating_mul(per_page)).unwrap_or(0);
+    let per_sz = usize::try_from(per_page).unwrap_or(usize::MAX);
+    let end = start.saturating_add(per_sz).min(datasets.len());
     let page_datasets = datasets[start..end].to_vec();
 
     info!(

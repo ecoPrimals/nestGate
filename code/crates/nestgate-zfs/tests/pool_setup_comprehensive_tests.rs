@@ -244,7 +244,7 @@ fn test_device_type_equality() {
 #[test]
 fn test_device_type_clone() {
     let device1 = ConfigDeviceType::NvmeSsd;
-    let device2 = device1.clone();
+    let device2 = device1;
     assert_eq!(device1, device2);
 }
 

@@ -314,7 +314,7 @@ fn test_convert_all_device_types() {
     ];
 
     for (detection, expected_config) in conversions {
-        let config = convert_device_type(&detection);
+        let config = convert_device_type(detection);
 
         // Compare using debug representation since we can't directly compare
         let config_debug = format!("{config:?}");
