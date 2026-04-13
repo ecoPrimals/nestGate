@@ -11,7 +11,6 @@ use nestgate_core::error::utilities::safe_env_var_or_default;
 use super::types::BackupConfig;
 
 /// Backup workspace with ZFS snapshots
-#[expect(clippy::too_many_lines)]
 pub async fn backup_workspace(
     Path(workspace_id): Path<String>,
     Json(config): Json<BackupConfig>,

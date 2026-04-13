@@ -23,6 +23,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tracing::debug;
 
+use crate::rpc::protocol::normalize_method;
+
 use super::tcp_fallback::RpcHandler;
 
 #[derive(Debug, Deserialize)]
@@ -141,7 +143,8 @@ impl UnixSocketRpcHandler {
 
         let id = request.id.clone();
         let state = self.state.as_ref();
-        let result = match &*request.method {
+        let method = normalize_method(&request.method);
+        let result = match method.as_ref() {
             "storage.store" => unix_adapter_handlers::handle_storage_store(state, &request).await,
             "storage.retrieve" => {
                 unix_adapter_handlers::handle_storage_retrieve(state, &request).await

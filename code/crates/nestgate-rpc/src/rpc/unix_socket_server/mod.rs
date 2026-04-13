@@ -102,6 +102,7 @@ mod template_handlers;
 mod zfs_handlers;
 
 use crate::rpc::model_cache_handlers;
+use crate::rpc::protocol::normalize_method;
 use bytes::Bytes;
 use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::{NestGateError, Result};
@@ -448,7 +449,8 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         };
     }
 
-    let result = match &*request.method {
+    let method = normalize_method(&request.method);
+    let result = match method.as_ref() {
         // Health — wateringHole semantic names + legacy aliases
         "health.liveness" => Ok(json!({
             "status": "alive",

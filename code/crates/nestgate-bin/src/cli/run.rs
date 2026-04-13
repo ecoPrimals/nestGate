@@ -9,7 +9,6 @@ use crate::error::BinErrorHelper;
 
 impl Cli {
     /// Run the CLI application
-    #[expect(clippy::too_many_lines)]
     pub async fn run(self) -> crate::error::BinResult<()> {
         // Setup logging
         setup_logging(self.verbose);

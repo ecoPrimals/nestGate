@@ -11,7 +11,6 @@ use nestgate_core::error::utilities::safe_env_var_or_default;
 use super::types::RestoreConfig;
 
 /// Restore workspace from backup
-#[expect(clippy::too_many_lines)]
 pub async fn restore_workspace(
     Path(workspace_id): Path<String>,
     Json(config): Json<RestoreConfig>,

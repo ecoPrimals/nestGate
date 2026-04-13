@@ -399,7 +399,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(clippy::too_many_lines)]
     fn full_serde_roundtrip() {
         let distributed_node = DistributedStorageNode {
             id: "n1".to_string(),

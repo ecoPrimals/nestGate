@@ -86,6 +86,7 @@ members = [
 # All ecoPrimals are AGPL-3.0-or-later (strictest copyleft)
 # Humans get free use through beardog entropy systems
 [workspace.package]
+rust-version = "1.85"
 license = "AGPL-3.0-or-later"
 authors = ["ecoPrimals Collective"]
 repository = "https://github.com/ecoprimals/nestgate"
@@ -219,7 +220,7 @@ nursery = { level = "warn", priority = -1 }
 significant_drop_tightening = "allow"
 unused_self = "allow"
 unwrap_used = "deny"
-expect_used = "warn"
+expect_used = "deny"
 panic = "warn"
 todo = "deny"
 unimplemented = "deny"

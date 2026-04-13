@@ -42,10 +42,6 @@ const JSON_RPC_CAPABILITIES_METHODS: &[&str] = &[
 ];
 
 /// Register capability-related JSON-RPC methods
-#[expect(
-    clippy::too_many_lines,
-    reason = "Registration block mirrors the JSON-RPC capability surface"
-)]
 pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
     module: &mut RpcModule<JsonRpcState<S>>,
 ) -> Result<(), NestGateError> {

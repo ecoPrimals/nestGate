@@ -297,7 +297,23 @@ pub fn capabilities_list() -> Result<Value> {
                 "description": "ZFS storage management — pools, datasets, snapshots"
             }
         ],
-        "consumed_capabilities": [],
+        "consumed_capabilities": [
+            {
+                "type": "security",
+                "reason": "BTSP handshake crypto delegation (BearDog or any security capability provider)",
+                "required": false
+            },
+            {
+                "type": "discovery",
+                "reason": "Songbird-style service mesh registration and heartbeat",
+                "required": false
+            },
+            {
+                "type": "crypto",
+                "reason": "Content-addressed hashing, signature verification (delegated via IPC)",
+                "required": false
+            }
+        ],
         "protocol": "jsonrpc-2.0",
         "transport": ["uds", "http"]
     }))

@@ -25,8 +25,7 @@
     clippy::unnecessary_wraps,
     dead_code,
     clippy::struct_field_names,
-    clippy::trivially_copy_pass_by_ref,
-    clippy::too_many_lines
+    clippy::trivially_copy_pass_by_ref
 )]
 
 //! Main module

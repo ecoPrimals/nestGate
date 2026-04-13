@@ -1,0 +1,97 @@
+# NestGate Capability Registry — Machine-Readable Self-Knowledge
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (c) 2025-2026 ecoPrimals Collective
+#
+# This file is the single source of truth for NestGate's primal identity
+# and advertised capabilities. Wire Standard L3 responses and cross-check
+# tests derive from these definitions.
+
+[primal]
+name = "nestgate"
+domain = "storage"
+version = "4.7.0-dev"
+license = "AGPL-3.0-or-later"
+description = "Sovereign storage & permanence primal — filesystem-backed durable key-value, blob, and ZFS orchestration"
+transport = ["uds", "http"]
+protocol = "jsonrpc-2.0"
+
+[capabilities.storage]
+domain = "storage"
+description = "Filesystem-backed durable key-value and blob storage"
+methods = [
+    "storage.store", "storage.retrieve", "storage.exists",
+    "storage.delete", "storage.list", "storage.stats",
+    "storage.store_blob", "storage.retrieve_blob", "storage.fetch_external",
+]
+
+[capabilities.model]
+domain = "model"
+description = "AI model cache — registration, lookup, metadata"
+methods = ["model.register", "model.exists", "model.locate", "model.metadata"]
+
+[capabilities.templates]
+domain = "templates"
+description = "Template persistence and community ranking"
+methods = ["templates.store", "templates.retrieve", "templates.list", "templates.community_top"]
+
+[capabilities.session]
+domain = "session"
+description = "Game session persistence (convenience over storage.*)"
+methods = ["session.save", "session.load"]
+
+[capabilities.audit]
+domain = "audit"
+description = "Execution audit trail persistence"
+methods = ["audit.store_execution"]
+
+[capabilities.nat]
+domain = "nat"
+description = "NAT traversal endpoint persistence"
+methods = ["nat.store_traversal_info", "nat.retrieve_traversal_info"]
+
+[capabilities.beacon]
+domain = "beacon"
+description = "Known beacon persistence for mesh discovery"
+methods = ["beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete"]
+
+[capabilities.data]
+domain = "data"
+description = "External data feed proxying (NCBI, NOAA, IRIS)"
+methods = ["data.ncbi_search", "data.ncbi_fetch", "data.noaa_ghcnd", "data.iris_stations", "data.iris_events"]
+
+[capabilities.zfs]
+domain = "zfs"
+description = "ZFS storage management — pools, datasets, snapshots"
+methods = [
+    "zfs.pool.list", "zfs.pool.get", "zfs.pool.health",
+    "zfs.dataset.list", "zfs.dataset.get",
+    "zfs.snapshot.list", "zfs.health",
+]
+
+[capabilities.health]
+domain = "health"
+description = "Liveness, readiness, and health check endpoints"
+methods = ["health.liveness", "health.readiness", "health.check"]
+
+[capabilities.identity]
+domain = "identity"
+description = "Primal identity and self-knowledge"
+methods = ["identity.get"]
+
+[capabilities.discovery]
+domain = "discovery"
+description = "Capability advertisement and listing"
+methods = ["capabilities.list", "discover.capabilities"]
+
+# Consumed capabilities — what NestGate needs from other primals
+[consumed_capabilities.security]
+reason = "BTSP handshake crypto delegation"
+required = false
+
+[consumed_capabilities.discovery_mesh]
+reason = "Songbird-style service mesh registration and heartbeat"
+required = false
+
+[consumed_capabilities.crypto]
+reason = "Content-addressed hashing, signature verification (delegated via IPC)"
+required = false

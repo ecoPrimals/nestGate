@@ -18,10 +18,6 @@ use super::JsonRpcState;
 use super::map_jsonrpc_registration;
 
 /// Register `storage.dataset.*` JSON-RPC methods
-#[expect(
-    clippy::too_many_lines,
-    reason = "method table mirrors JSON-RPC surface; split would obscure routing"
-)]
 pub(super) fn register_dataset_methods<S: StorageBackend + 'static>(
     module: &mut RpcModule<JsonRpcState<S>>,
 ) -> Result<(), NestGateError> {

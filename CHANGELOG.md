@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43e: wetSpring parity — workspace lints, capability registry, method normalization (April 13, 2026)
+
+- **wetSpring pattern validation**: Pulled and analyzed wetSpring V143 systems; identified and resolved
+  6 ecosystem parity gaps.
+- **Workspace lint evolution**: `expect_used` escalated `warn` → `deny`; `clippy.toml` added with
+  `too-many-lines-threshold = 150`; `rust-version = "1.85"` (MSRV) set in `[workspace.package]`.
+- **`consumed_capabilities` manifest**: Wire Standard L3 `capabilities.list` response now declares
+  3 consumed capabilities (security, discovery, crypto) instead of empty array.
+- **`capability_registry.toml` created**: Machine-readable primal self-knowledge — 12 capability
+  groups, 46+ methods, 3 consumed capabilities. Matches wetSpring's registry pattern.
+- **Method normalization**: `normalize_method()` (zero-alloc `Cow`) strips legacy `nestgate.` prefix
+  for backward-compatible clients; wired into UDS + isomorphic IPC dispatch.
+- **`clippy::too_many_lines` cleanup**: 5 unfulfilled `#[expect]` attributes removed after threshold
+  increase; 4 justified suppressions retained (160+ line dispatch tables).
+- Validation: `cargo fmt`, `cargo clippy`, `cargo doc`, `cargo test` — all PASS (11,794 tests, 0 failures).
+
 ### Session 43d: Deep debt evolution — casts, clones, refactors, tracing (April 12, 2026)
 
 - **10 dangerous `as` casts evolved**: `response_builder.rs` pagination → `div_ceil` + `u32::try_from`,

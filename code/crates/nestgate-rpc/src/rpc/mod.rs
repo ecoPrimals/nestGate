@@ -70,6 +70,7 @@ pub mod jsonrpc_server;
 pub mod metadata_backend;
 #[cfg(any(feature = "dev-stubs", test))]
 pub mod orchestrator_registration;
+pub mod protocol;
 pub mod semantic_router;
 pub mod socket_config;
 pub mod storage_backend;
