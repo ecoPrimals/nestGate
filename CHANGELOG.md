@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43k: Deep debt audit — zero production dyn Error, zero async-trait (April 13, 2026)
+
+- **Last `Box<dyn Error>` in production eliminated**: `ConfigError::ParseError` evolved from
+  `Box<dyn std::error::Error + Send + Sync>` to `String` detail. Zero type-erased errors
+  remain in production library code.
+- **Comprehensive deep debt audit**: All dimensions verified clean:
+  - Files >800 LOC: none (max 749)
+  - `#[async_trait]`: zero compiled usages, `async-trait` not in any Cargo.toml
+  - Mocks in production: zero (all `#[cfg(test)]` or `dev-stubs` feature-gated)
+  - `println!` in library code: zero (all in `#[cfg(test)]` blocks)
+  - External deps: `cargo deny check bans` PASS; zero C-FFI in production
+  - Primal name hardcoding: only `biomeos` (ecosystem infra naming, not peer coupling)
+  - TODO/FIXME/HACK in production: zero
+- **Verification**: 11,816 tests passing, 0 failures. Clippy clean. Format clean.
+
 ### Session 43j: Doc drift fix, data.* cleanup, dead deprecated deletion (April 13, 2026)
 
 - **Doc drift resolved**: `UNIX_SOCKET_SUPPORTED_METHODS` synced with Session 43h additions

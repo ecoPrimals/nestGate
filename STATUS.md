@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 13, 2026 (Session 43j — doc drift fix, data.* cleanup, dead deprecated deletion)  
+**Last Updated**: April 13, 2026 (Session 43k — deep debt audit: zero production dyn Error, zero async-trait, zero mocks)  
 **Version**: 4.7.0-dev
 
 ---
@@ -20,6 +20,9 @@ Inline markers:     none in committed production `.rs` (wateringHole policy — 
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
 println! in lib:    ZERO in core libs; installer retains stdout for interactive wizard UX (documented)
 Dead code:          ZERO unwired modules, ZERO `if false` stubs, ZERO #[allow(dead_code)] in production
+Box<dyn Error>:     ZERO in production library code (last one evolved Session 43k — ConfigError::ParseError → String)
+async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
+Mocks in prod:      ZERO — all mocks test-only (#[cfg(test)]) or feature-gated (dev-stubs)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED; installer uses system curl
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)

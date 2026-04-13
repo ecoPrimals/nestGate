@@ -125,7 +125,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43j).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43k).
 
 | Area | Status |
 |------|--------|
@@ -133,7 +133,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Se
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
 | Tests | `cargo test --workspace` — 11,816 passing, 0 failures, 451 ignored |
-| Coverage | ~81.7% line (llvm-cov) — wateringHole 80% met; 90% target pending |
+| Coverage | 80.08% line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 187 `#[deprecated]` for canonical migration; zero dead callers |
 | unwrap/expect | Zero in production library code; tests may use |
@@ -281,4 +281,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 13, 2026 (Session 43j)
+**Latest**: April 13, 2026 (Session 43k)
