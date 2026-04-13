@@ -17,16 +17,15 @@
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-11)  
 - **Hardcoding**: zero `self.base_url` string literals (81 fixed → proper interpolation)  
-- **Deprecated APIs**: 202 `#[deprecated]` markers for canonical-config migration; zero dead callers  
+- **Deprecated APIs**: 193 `#[deprecated]` markers for canonical-config migration; zero dead callers  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + `rustls-rustcrypto` (pure Rust); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 - **External deps**: Zero C-FFI `-sys` crates in production; `reqwest`→`ureq`; `uzers`→`rustix::process`  
 - **File size**: All production `.rs` modules under 750 lines (9 largest refactored Sessions 43–43f; engine/gcs/azure/pool_setup under 500)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
-- **Dead code**: 36 unwired `.rs` files removed (12,971 lines) Session 43d — zero orphan modules  
+- **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production (36 orphan files, 12,971 lines removed Session 43d)  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate)  
-- **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`  
 - **Primal sovereignty**: zero hardcoded other-primal names (BearDog/Songbird/primalSpring) in production code  
 - **Emoji in logs**: zero — professional structured logging only (Session 43f)  
@@ -126,21 +125,21 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-12 (Session 43d).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43g).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace` — 11,794 passing, 0 failures, 451 ignored |
+| Tests | `cargo test --workspace` — 11,805 passing, 0 failures, 451 ignored |
 | Coverage | ~81.7% line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
-| Deprecated | 202 `#[deprecated]` for canonical migration; zero dead callers |
+| Deprecated | 193 `#[deprecated]` for canonical migration; zero dead callers |
 | unwrap/expect | Zero in production library code; tests may use |
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots |
 | TLS/crypto | `ureq` + `rustls-rustcrypto` (pure Rust); zero C-FFI `-sys` in production |
-| File size | All production modules under 500 LOC (wateringHole limit 1000) |
+| File size | All production modules under 750 LOC (wateringHole limit 1000) |
 | Env-var isolation | `EnvSource` / `MapEnv` primary; zero `#[serial]` tests |
 
 ### Compliance (wateringHole)
@@ -189,7 +188,7 @@ cargo build --release
 cargo test --workspace
 
 # Linting (CI-style: deny warnings; matches STATUS.md)
-cargo clippy --workspace --all-features -- -D warnings
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 # Format
 cargo fmt --all
@@ -261,7 +260,7 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 ## What's Active
 
 1. Push test coverage toward 90% target (currently 81.7%)
-2. Migrate remaining 202 deprecated APIs to canonical config
+2. Migrate remaining 193 deprecated APIs to canonical config
 3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 4. Cross-gate replication (multi-node data orchestration)
 5. aarch64 musl cross-compile CI (config exists; pipeline not wired)
@@ -282,4 +281,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 12, 2026 (Session 43d)
+**Latest**: April 13, 2026 (Session 43g)

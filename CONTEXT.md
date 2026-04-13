@@ -20,14 +20,14 @@ than by importing this crate graph.
 | Field | Value |
 |-------|--------|
 | **Version** | 4.7.0-dev |
-| **Language** | Rust 2024 edition; 100% Rust application code |
+| **Language** | Rust 2024 edition (env-process-shim: 2021 for safe env mutation); 100% Rust application code |
 | **License** | AGPL-3.0-or-later (code); CC-BY-SA 4.0 (documentation) |
 | **Architecture** | 23 workspace members: 20 `code/crates/*` + `tools/unwrap-migrator` + fuzz + root |
 | **Binary** | Single self-contained static release binary (~4.7 MB, musl) |
 | **IPC** | JSON-RPC 2.0 (required); tarpc (optional, high-performance path) |
 | **TLS/crypto** | `ureq` + `rustls-rustcrypto` (pure Rust); ring/reqwest/openssl eliminated; installer uses system `curl` |
 | **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
-| **Lint / format** | `cargo clippy --workspace --lib` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
+| **Lint / format** | `cargo clippy --workspace --all-targets --all-features -- -D warnings` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean in routine runs |
 | **Tests** | `cargo test --workspace` — 11,805 passing, 451 ignored, 0 failures (see STATUS.md) |
 | **Coverage** | ~81.7% line (llvm-cov) — wateringHole 80% met; 90% target pending |
