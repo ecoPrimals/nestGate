@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 13, 2026 (Session 43i — final sovereignty cleanup)  
+**Last Updated**: April 13, 2026 (Session 43j — doc drift fix, data.* cleanup, dead deprecated deletion)  
 **Version**: 4.7.0-dev
 
 ---
@@ -13,7 +13,7 @@ Clippy:             PASS — cargo clippy --workspace --all-targets --all-featur
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-13
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-13
 Tests:              11,816 passing, 0 failures, 451 ignored (cargo test --workspace; flaky tests stabilized)
-Coverage:           ~81.7% line (cargo llvm-cov --workspace --lib) — wateringHole 80% min met; 90% target pending
+Coverage:           80.08% line (cargo llvm-cov --workspace, 2026-04-13) — wateringHole 80% min met; 90% target is multi-session effort
 Files > 750 lines:  0 (production; 9 largest refactored Sessions 43–43f — max 749 LOC; engine/gcs/azure/pool_setup all under 500)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
@@ -24,7 +24,7 @@ Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only,
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED; installer uses system curl
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 46 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
+IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 47 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
 IPC routes (HTTP):  storage.dataset.*, storage.object.*, discovery.capability.*, health.*, capabilities.*, identity.* — 19 methods (JSON_RPC_CAPABILITIES_METHODS const)
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 33 semantic-routed methods
 data.* delegation:  Wildcard catch-all returns NotImplemented directing callers to discover data capability provider (not counted as methods)
@@ -58,7 +58,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 - **Doc drift**: STATUS.md inflated method count corrected — now per-surface: UDS 46, HTTP 19, tarpc 33, `data.*` documented as wildcard delegation
 - **TCP/`--port` wiring**: Socket-only mode now resolves port from `NESTGATE_API_PORT` env; activates TCP alongside UDS when env port differs from default
 - **Domain symlink**: Confirmed already implemented (`storage[-{fid}].sock` → `nestgate[-{fid}].sock`); compliance matrix update proposed
-- **Deprecated APIs**: 210→193 (17 zero-caller items removed across Sessions 43–43g; 6 additional dead port constants removed Session 43g)
+- **Deprecated APIs**: 210→187 (17 zero-caller items removed Sessions 43–43g; 6 dead port constants Session 43g; 6 dead functions Session 43j)
 - **Box\<dyn Error\>**: 5 production function signatures evolved to typed `NestGateError` / `Result<T>` (Session 43g)
 
 ### Smart file refactoring (4 largest files)

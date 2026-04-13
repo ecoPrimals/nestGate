@@ -12,16 +12,13 @@ use axum::{
     extract::{Query, State},
     response::Json,
 };
-use std::collections::HashMap;
 use tracing::{debug, info};
 
 use crate::rest::models::{
-    AutoConfigInput, AutoConfigResult, BenchmarkResults, BenchmarkStorageRequest,
-    PerformanceProjection, PerformanceRequirements, ScanStorageRequest, StorageBackend,
-    StorageBackendType, StorageConfiguration, StoragePerformance, StorageTier, costs::CostEstimate,
+    BenchmarkResults, BenchmarkStorageRequest, ScanStorageRequest, StorageBackend,
+    StorageBackendType, StoragePerformance,
 };
 use crate::rest::{ApiState, DataError, DataResponse, ListQuery};
-use nestgate_core::universal_storage::AutoConfigurator;
 
 // ==================== SECTION ====================
 // STORAGE BACKEND DATA HANDLERS
@@ -272,222 +269,185 @@ pub fn benchmark_storage(
     )))
 }
 
-fn development_storage_configuration() -> StorageConfiguration {
-    StorageConfiguration {
-        name: "Development Setup".to_string(),
-        backends: vec![StorageBackend {
-            backend_type: StorageBackendType::Memory,
-            name: "memory-dev".to_string(),
-            config: HashMap::from([("capacity_gb".to_string(), "2".to_string())]),
-            performance: StoragePerformance {
-                read_iops: 100_000,
-                write_iops: 80_000,
-                read_throughput_mbps: 1000.0,
-                write_throughput_mbps: 800.0,
-                avg_latency_ms: 0.1,
-            },
-        }],
-        tier: StorageTier::Hot,
-        performance_requirements: PerformanceRequirements {
-            min_iops: 800_000,
-            min_throughput_mbps: 6000.0,
-            max_latency_ms: 0.001,
-            availability_percent: 99.9,
-        },
-    }
-}
-
-fn home_nas_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
-    StorageConfiguration {
-        name: "Home NAS Setup".to_string(),
-        backends: vec![StorageBackend {
-            backend_type: StorageBackendType::Filesystem,
-            name: "filesystem-nas".to_string(),
-            config: HashMap::from([(
-                "capacity_gb".to_string(),
-                min_capacity_gb.unwrap_or(1000).to_string(),
-            )]),
-            performance: StoragePerformance {
-                read_iops: 5000,
-                write_iops: 3000,
-                read_throughput_mbps: 150.0,
-                write_throughput_mbps: 100.0,
-                avg_latency_ms: 2.0,
-            },
-        }],
-        tier: StorageTier::Warm,
-        performance_requirements: PerformanceRequirements {
-            min_iops: 40000,
-            min_throughput_mbps: 300.0,
-            max_latency_ms: 1.0,
-            availability_percent: 99.5,
-        },
-    }
-}
-
-fn database_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
-    StorageConfiguration {
-        name: "Database Storage Setup".to_string(),
-        backends: vec![StorageBackend {
-            backend_type: StorageBackendType::Filesystem,
-            name: "database-storage".to_string(),
-            config: HashMap::from([(
-                "capacity_gb".to_string(),
-                min_capacity_gb.unwrap_or(500).to_string(),
-            )]),
-            performance: StoragePerformance {
-                read_iops: 8000,
-                write_iops: 6000,
-                read_throughput_mbps: 200.0,
-                write_throughput_mbps: 150.0,
-                avg_latency_ms: 1.0,
-            },
-        }],
-        tier: StorageTier::Hot,
-        performance_requirements: PerformanceRequirements {
-            min_iops: 80000,
-            min_throughput_mbps: 500.0,
-            max_latency_ms: 0.5,
-            availability_percent: 99.99,
-        },
-    }
-}
-
-fn generic_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
-    StorageConfiguration {
-        name: "Generic Setup".to_string(),
-        backends: vec![StorageBackend {
-            backend_type: StorageBackendType::Filesystem,
-            name: "generic-storage".to_string(),
-            config: HashMap::from([(
-                "capacity_gb".to_string(),
-                min_capacity_gb.unwrap_or(100).to_string(),
-            )]),
-            performance: StoragePerformance {
-                read_iops: 4000,
-                write_iops: 2500,
-                read_throughput_mbps: 120.0,
-                write_throughput_mbps: 80.0,
-                avg_latency_ms: 3.0,
-            },
-        }],
-        tier: StorageTier::Warm,
-        performance_requirements: PerformanceRequirements {
-            min_iops: 30000,
-            min_throughput_mbps: 250.0,
-            max_latency_ms: 2.0,
-            availability_percent: 99.0,
-        },
-    }
-}
-
-fn auto_config_storage_for_use_case(
-    use_case: &str,
-    min_capacity_gb: Option<u64>,
-) -> StorageConfiguration {
-    match use_case {
-        "Development" => development_storage_configuration(),
-        "HomeNas" => home_nas_storage_configuration(min_capacity_gb),
-        "Database" => database_storage_configuration(min_capacity_gb),
-        _ => generic_storage_configuration(min_capacity_gb),
-    }
-}
-
-fn default_cost_breakdown() -> HashMap<String, f64> {
-    HashMap::from([
-        ("storage".to_string(), 15.0),
-        ("redundancy".to_string(), 5.0),
-        ("monitoring".to_string(), 2.0),
-    ])
-}
-
-fn cost_estimate_for_use_case(use_case: &str) -> CostEstimate {
-    match use_case {
-        "Development" => CostEstimate {
-            setup_cost: 0.0,
-            monthly_cost: 0.0,
-            cost_per_gb_monthly: 0.0,
-            breakdown: default_cost_breakdown(),
-            total_cost: 0.0,
-        },
-        "HomeNas" => CostEstimate {
-            setup_cost: 50.0,
-            monthly_cost: 5.0,
-            cost_per_gb_monthly: 0.005,
-            breakdown: default_cost_breakdown(),
-            total_cost: 55.0,
-        },
-        "Database" => CostEstimate {
-            setup_cost: 200.0,
-            monthly_cost: 25.0,
-            cost_per_gb_monthly: 0.05,
-            breakdown: default_cost_breakdown(),
-            total_cost: 225.0,
-        },
-        _ => CostEstimate {
-            setup_cost: 25.0,
-            monthly_cost: 10.0,
-            cost_per_gb_monthly: 0.01,
-            breakdown: default_cost_breakdown(),
-            total_cost: 35.0,
-        },
-    }
-}
-
-/// Auto-configure optimal storage setup.
-///
-/// POST `/api/v1/storage/auto-config`
-///
-/// # Errors
-///
-/// Returns [`Json<DataError>`] when the auto-configurator state cannot be initialized or validation fails.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
-pub fn auto_configure(
-    State(state): State<ApiState>,
-    Json(request): Json<AutoConfigInput>,
-) -> Result<Json<DataResponse<AutoConfigResult>>, Json<DataError>> {
-    info!(
-        "Auto-configuring storage for use case: {:?}",
-        request.use_case
-    );
-    let _auto = state
-        .auto_configurator
-        .get_or_init(|| AutoConfigurator::new(vec![]));
-
-    let use_case = request.use_case.as_str();
-    let recommended_config = auto_config_storage_for_use_case(use_case, request.min_capacity_gb);
-    let cost_estimate = cost_estimate_for_use_case(use_case);
-
-    let performance_projection = PerformanceProjection {
-        expected_throughput_mbps: 1000.0,
-        expected_latency_ms: 5.0,
-        expected_iops: 10_000,
-        confidence_percent: 85.0,
-    };
-
-    let result = AutoConfigResult {
-        recommended_config,
-        alternatives: vec![],
-        cost_estimate,
-        performance_projection,
-    };
-
-    info!(
-        "Auto-configuration completed for {:?} use case",
-        request.use_case
-    );
-    Ok(Json(DataResponse::new(result)))
-}
-
 // Helper trait for converting storage backend types to strings
 // Removed duplicate ToString implementation - already exists in zfs.rs
 
 #[cfg(test)]
+mod auto_config_test_support {
+    use std::collections::HashMap;
+
+    use crate::rest::models::{
+        PerformanceRequirements, StorageBackend, StorageBackendType, StorageConfiguration,
+        StoragePerformance, StorageTier, costs::CostEstimate,
+    };
+
+    fn development_storage_configuration() -> StorageConfiguration {
+        StorageConfiguration {
+            name: "Development Setup".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Memory,
+                name: "memory-dev".to_string(),
+                config: HashMap::from([("capacity_gb".to_string(), "2".to_string())]),
+                performance: StoragePerformance {
+                    read_iops: 100_000,
+                    write_iops: 80_000,
+                    read_throughput_mbps: 1000.0,
+                    write_throughput_mbps: 800.0,
+                    avg_latency_ms: 0.1,
+                },
+            }],
+            tier: StorageTier::Hot,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 800_000,
+                min_throughput_mbps: 6000.0,
+                max_latency_ms: 0.001,
+                availability_percent: 99.9,
+            },
+        }
+    }
+
+    fn home_nas_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
+        StorageConfiguration {
+            name: "Home NAS Setup".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Filesystem,
+                name: "filesystem-nas".to_string(),
+                config: HashMap::from([(
+                    "capacity_gb".to_string(),
+                    min_capacity_gb.unwrap_or(1000).to_string(),
+                )]),
+                performance: StoragePerformance {
+                    read_iops: 5000,
+                    write_iops: 3000,
+                    read_throughput_mbps: 150.0,
+                    write_throughput_mbps: 100.0,
+                    avg_latency_ms: 2.0,
+                },
+            }],
+            tier: StorageTier::Warm,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 40000,
+                min_throughput_mbps: 300.0,
+                max_latency_ms: 1.0,
+                availability_percent: 99.5,
+            },
+        }
+    }
+
+    fn database_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
+        StorageConfiguration {
+            name: "Database Storage Setup".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Filesystem,
+                name: "database-storage".to_string(),
+                config: HashMap::from([(
+                    "capacity_gb".to_string(),
+                    min_capacity_gb.unwrap_or(500).to_string(),
+                )]),
+                performance: StoragePerformance {
+                    read_iops: 8000,
+                    write_iops: 6000,
+                    read_throughput_mbps: 200.0,
+                    write_throughput_mbps: 150.0,
+                    avg_latency_ms: 1.0,
+                },
+            }],
+            tier: StorageTier::Hot,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 80000,
+                min_throughput_mbps: 500.0,
+                max_latency_ms: 0.5,
+                availability_percent: 99.99,
+            },
+        }
+    }
+
+    fn generic_storage_configuration(min_capacity_gb: Option<u64>) -> StorageConfiguration {
+        StorageConfiguration {
+            name: "Generic Setup".to_string(),
+            backends: vec![StorageBackend {
+                backend_type: StorageBackendType::Filesystem,
+                name: "generic-storage".to_string(),
+                config: HashMap::from([(
+                    "capacity_gb".to_string(),
+                    min_capacity_gb.unwrap_or(100).to_string(),
+                )]),
+                performance: StoragePerformance {
+                    read_iops: 4000,
+                    write_iops: 2500,
+                    read_throughput_mbps: 120.0,
+                    write_throughput_mbps: 80.0,
+                    avg_latency_ms: 3.0,
+                },
+            }],
+            tier: StorageTier::Warm,
+            performance_requirements: PerformanceRequirements {
+                min_iops: 30000,
+                min_throughput_mbps: 250.0,
+                max_latency_ms: 2.0,
+                availability_percent: 99.0,
+            },
+        }
+    }
+
+    pub(super) fn auto_config_storage_for_use_case(
+        use_case: &str,
+        min_capacity_gb: Option<u64>,
+    ) -> StorageConfiguration {
+        match use_case {
+            "Development" => development_storage_configuration(),
+            "HomeNas" => home_nas_storage_configuration(min_capacity_gb),
+            "Database" => database_storage_configuration(min_capacity_gb),
+            _ => generic_storage_configuration(min_capacity_gb),
+        }
+    }
+
+    fn default_cost_breakdown() -> HashMap<String, f64> {
+        HashMap::from([
+            ("storage".to_string(), 15.0),
+            ("redundancy".to_string(), 5.0),
+            ("monitoring".to_string(), 2.0),
+        ])
+    }
+
+    pub(super) fn cost_estimate_for_use_case(use_case: &str) -> CostEstimate {
+        match use_case {
+            "Development" => CostEstimate {
+                setup_cost: 0.0,
+                monthly_cost: 0.0,
+                cost_per_gb_monthly: 0.0,
+                breakdown: default_cost_breakdown(),
+                total_cost: 0.0,
+            },
+            "HomeNas" => CostEstimate {
+                setup_cost: 50.0,
+                monthly_cost: 5.0,
+                cost_per_gb_monthly: 0.005,
+                breakdown: default_cost_breakdown(),
+                total_cost: 55.0,
+            },
+            "Database" => CostEstimate {
+                setup_cost: 200.0,
+                monthly_cost: 25.0,
+                cost_per_gb_monthly: 0.05,
+                breakdown: default_cost_breakdown(),
+                total_cost: 225.0,
+            },
+            _ => CostEstimate {
+                setup_cost: 25.0,
+                monthly_cost: 10.0,
+                cost_per_gb_monthly: 0.01,
+                breakdown: default_cost_breakdown(),
+                total_cost: 35.0,
+            },
+        }
+    }
+}
+
+#[cfg(test)]
 mod round4_storage_helper_tests {
     use super::*;
+    use crate::rest::models::StorageTier;
 
     fn get_filesystem_space(path: &str) -> Option<u64> {
         use std::fs;
@@ -499,7 +459,7 @@ mod round4_storage_helper_tests {
 
     #[test]
     fn auto_config_storage_development_is_memory_hot_tier() {
-        let c = super::auto_config_storage_for_use_case("Development", None);
+        let c = super::auto_config_test_support::auto_config_storage_for_use_case("Development", None);
         assert_eq!(c.name, "Development Setup");
         assert!(matches!(c.tier, StorageTier::Hot));
         assert_eq!(c.backends.len(), 1);
@@ -507,21 +467,21 @@ mod round4_storage_helper_tests {
 
     #[test]
     fn auto_config_storage_home_nas_and_database_use_expected_names() {
-        let h = super::auto_config_storage_for_use_case("HomeNas", Some(2000));
+        let h = super::auto_config_test_support::auto_config_storage_for_use_case("HomeNas", Some(2000));
         assert!(h.name.contains("NAS"));
-        let d = super::auto_config_storage_for_use_case("Database", None);
+        let d = super::auto_config_test_support::auto_config_storage_for_use_case("Database", None);
         assert!(d.name.contains("Database"));
-        let g = super::auto_config_storage_for_use_case("UnknownProfile", None);
+        let g = super::auto_config_test_support::auto_config_storage_for_use_case("UnknownProfile", None);
         assert_eq!(g.name, "Generic Setup");
     }
 
     #[test]
     fn cost_estimate_for_use_case_matches_tiered_defaults() {
-        let dev = super::cost_estimate_for_use_case("Development");
+        let dev = super::auto_config_test_support::cost_estimate_for_use_case("Development");
         assert_eq!(dev.monthly_cost, 0.0);
-        let home = super::cost_estimate_for_use_case("HomeNas");
+        let home = super::auto_config_test_support::cost_estimate_for_use_case("HomeNas");
         assert!(home.setup_cost > 0.0);
-        let db = super::cost_estimate_for_use_case("Database");
+        let db = super::auto_config_test_support::cost_estimate_for_use_case("Database");
         assert!(db.total_cost > home.total_cost);
     }
 

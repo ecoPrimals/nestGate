@@ -86,7 +86,7 @@ pub mod timeouts;
 pub use runtime_defaults::{
     RuntimeDefaults, get_api_port, get_bind_address, get_grpc_port, get_health_port,
     get_message_queue_port, get_metrics_port, get_orchestration_service_port,
-    get_orchestrator_fallback_addr, get_orchestrator_url, get_websocket_port, get_zfs_bind_port,
+    get_orchestrator_fallback_addr, get_websocket_port, get_zfs_bind_port,
 };
 
 #[cfg(test)]

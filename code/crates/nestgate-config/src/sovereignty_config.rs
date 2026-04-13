@@ -42,19 +42,6 @@ impl SovereigntyConfig {
         })
     }
 
-    /// Get API endpoint with fallback (for backwards compatibility during migration)
-    ///
-    /// **DEPRECATED**: Use `api_endpoint()` which requires explicit configuration.
-    #[deprecated(
-        since = "0.10.0",
-        note = "Use api_endpoint() which enforces explicit configuration"
-    )]
-    #[must_use]
-    pub fn api_endpoint_with_fallback() -> String {
-        let default_url = crate::constants::canonical_defaults::network::build_api_url();
-        safe_env_var_or_default("NESTGATE_API_ENDPOINT", &default_url)
-    }
-
     /// Get bind address respecting user sovereignty
     #[must_use]
     pub fn bind_address() -> String {
@@ -86,17 +73,6 @@ impl SovereigntyConfig {
             "NESTGATE_WS_ENDPOINT must be set explicitly - no hardcoded defaults for sovereignty"
                 .to_string()
         })
-    }
-
-    /// Get WebSocket endpoint with fallback (backwards compatibility)
-    #[deprecated(
-        since = "0.10.0",
-        note = "Use websocket_endpoint() which enforces explicit configuration"
-    )]
-    #[must_use]
-    pub fn websocket_endpoint_with_fallback() -> String {
-        let default_url = crate::constants::canonical_defaults::network::build_websocket_url();
-        safe_env_var_or_default("NESTGATE_WS_ENDPOINT", &default_url)
     }
 
     /// Get database URL respecting user sovereignty

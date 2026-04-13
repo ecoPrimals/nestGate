@@ -32,7 +32,7 @@ use crate::universal_primal_discovery::capability_based_discovery::{
 use nestgate_config::config::canonical_primary::NestGateCanonicalConfig;
 use nestgate_types::error::{NestGateError, Result};
 use nestgate_types::{EnvSource, ProcessEnv};
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{debug, info, warn};
@@ -344,49 +344,6 @@ impl CapabilityAwareDiscovery {
             })?;
 
         Ok(best.endpoint.address)
-    }
-
-    /// Discover port - DEPRECATED (use `find_service` instead)
-    ///
-    /// Maintained for backward compatibility. New code should use `find_service`.
-    ///
-    /// # Errors
-    ///
-    /// Returns error if discovery fails
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use find_service() for capability-based discovery without hardcoded fallbacks"
-    )]
-    pub async fn discover_port_compat(&self, service_name: &str) -> Result<u16> {
-        match self.find_service(service_name).await {
-            Ok(services) if !services.is_empty() => Ok(services[0].endpoint.address.port()),
-            Ok(_) => {
-                // No services found - return error (no hardcoded fallback!)
-                Err(NestGateError::not_found(format!(
-                    "Service '{service_name}' not found in discovery"
-                )))
-            }
-            Err(e) => Err(e),
-        }
-    }
-
-    /// Discover bind address - DEPRECATED
-    ///
-    /// # Errors
-    ///
-    /// Returns error if discovery fails
-    #[deprecated(
-        since = "0.12.0",
-        note = "Use find_service() for capability-based discovery"
-    )]
-    pub async fn discover_bind_address_compat(&self, service_name: &str) -> Result<IpAddr> {
-        match self.find_service(service_name).await {
-            Ok(services) if !services.is_empty() => Ok(services[0].endpoint.address.ip()),
-            Ok(_) => Err(NestGateError::not_found(format!(
-                "Service '{service_name}' not found"
-            ))),
-            Err(e) => Err(e),
-        }
     }
 
     /// Gracefully shutdown discovery and unannounce from network

@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43j: Doc drift fix, data.* cleanup, dead deprecated deletion (April 13, 2026)
+
+- **Doc drift resolved**: `UNIX_SOCKET_SUPPORTED_METHODS` synced with Session 43h additions
+  (`storage.namespaces.list` added — const now 47 methods). `provided_capabilities` storage
+  group updated with `retrieve_range`, `object.size`, `namespaces.list`. `bonding` capability
+  group added to both `provided_capabilities` and `capability_registry.toml` (was missing).
+- **`data.*` capability inconsistency fixed**: Removed fake `data.*` methods from
+  `capability_registry.toml` and `provided_capabilities` — NestGate delegates data operations
+  to data capability providers (wildcard catch-all), not implements them.
+- **Dead deprecated code deleted**: 6 dead functions removed (`api_endpoint_with_fallback`,
+  `websocket_endpoint_with_fallback`, `auto_configure`, `get_orchestrator_url`,
+  `discover_bind_address_compat`, `discover_port_compat`). Deprecated count: 193→187.
+- **Coverage audit**: 80.08% line (measured with `cargo llvm-cov --workspace`). Core crates
+  95%+ individually. 90% target requires targeted test additions (multi-session effort).
+- **Verification**: 11,816 tests passing, 0 failures. Clippy clean. Crosscheck 11/11 PASS.
+
 ### Session 43h: Streaming storage & cross-spring namespace isolation (April 13, 2026)
 
 - **Streaming large-object support on isomorphic IPC**: `storage.store_blob`, `storage.retrieve_blob`,

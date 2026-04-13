@@ -17,7 +17,7 @@
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-11)  
 - **Hardcoding**: zero `self.base_url` string literals (81 fixed → proper interpolation)  
-- **Deprecated APIs**: 193 `#[deprecated]` markers for canonical-config migration; zero dead callers  
+- **Deprecated APIs**: 187 `#[deprecated]` markers for canonical-config migration; zero dead callers  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + `rustls-rustcrypto` (pure Rust); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
@@ -125,7 +125,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43i).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43j).
 
 | Area | Status |
 |------|--------|
@@ -135,7 +135,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Se
 | Tests | `cargo test --workspace` — 11,816 passing, 0 failures, 451 ignored |
 | Coverage | ~81.7% line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
-| Deprecated | 193 `#[deprecated]` for canonical migration; zero dead callers |
+| Deprecated | 187 `#[deprecated]` for canonical migration; zero dead callers |
 | unwrap/expect | Zero in production library code; tests may use |
 | Unsafe | `#![forbid(unsafe_code)]` on ALL crate roots |
 | TLS/crypto | `ureq` + `rustls-rustcrypto` (pure Rust); zero C-FFI `-sys` in production |
@@ -259,8 +259,8 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 81.7%)
-2. Migrate remaining 193 deprecated APIs to canonical config
+1. Push test coverage toward 90% target (currently 80.08%)
+2. Migrate remaining 187 deprecated APIs to canonical config
 3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 4. Cross-gate replication (multi-node data orchestration)
 5. aarch64 musl cross-compile CI (config exists; pipeline not wired)
@@ -281,4 +281,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 13, 2026 (Session 43i)
+**Latest**: April 13, 2026 (Session 43j)

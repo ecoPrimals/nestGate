@@ -209,17 +209,6 @@ pub fn get_orchestrator_fallback_addr() -> String {
     RuntimeDefaults::orchestrator_fallback_addr()
 }
 
-/// Orchestrator HTTP(S) base URL: `NESTGATE_ORCHESTRATOR_URL`, else derived from
-/// [`get_orchestrator_fallback_addr`].
-#[deprecated(
-    since = "0.4.0",
-    note = "use capability discovery (ServicesConfig::resolve_by_capability) instead"
-)]
-#[must_use]
-pub fn get_orchestrator_url() -> String {
-    RuntimeDefaults::orchestrator_url()
-}
-
 /// WebSocket port from environment or [`ports::WEBSOCKET_DEFAULT`].
 #[must_use]
 pub fn get_websocket_port() -> u16 {

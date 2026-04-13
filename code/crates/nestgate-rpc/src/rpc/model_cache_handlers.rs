@@ -188,6 +188,7 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "storage.retrieve_blob",
     "storage.retrieve_range",
     "storage.object.size",
+    "storage.namespaces.list",
     "storage.fetch_external",
     // Ionic bond ledger persistence (security capability provider)
     "bonding.ledger.store",
@@ -243,10 +244,11 @@ pub fn capabilities_list() -> Result<Value> {
                 "type": "storage",
                 "methods": [
                     "store", "retrieve", "exists", "delete", "list",
-                    "stats", "store_blob", "retrieve_blob", "fetch_external"
+                    "stats", "store_blob", "retrieve_blob", "retrieve_range",
+                    "object.size", "namespaces.list", "fetch_external"
                 ],
                 "version": env!("CARGO_PKG_VERSION"),
-                "description": "Filesystem-backed durable key-value and blob storage"
+                "description": "Filesystem-backed durable key-value, blob, and streaming storage with namespace isolation"
             },
             {
                 "type": "model",
@@ -285,10 +287,10 @@ pub fn capabilities_list() -> Result<Value> {
                 "description": "Known beacon persistence for mesh discovery"
             },
             {
-                "type": "data",
-                "methods": ["ncbi_search", "ncbi_fetch", "noaa_ghcnd", "iris_stations", "iris_events"],
+                "type": "bonding",
+                "methods": ["ledger.store", "ledger.retrieve", "ledger.list"],
                 "version": env!("CARGO_PKG_VERSION"),
-                "description": "External data feed proxying (NCBI, NOAA, IRIS)"
+                "description": "Ionic bond ledger persistence for security capability provider"
             },
             {
                 "type": "zfs",

@@ -56,10 +56,13 @@ domain = "beacon"
 description = "Known beacon persistence for mesh discovery"
 methods = ["beacon.store", "beacon.retrieve", "beacon.list", "beacon.delete"]
 
-[capabilities.data]
-domain = "data"
-description = "External data feed proxying (NCBI, NOAA, IRIS)"
-methods = ["data.ncbi_search", "data.ncbi_fetch", "data.noaa_ghcnd", "data.iris_stations", "data.iris_events"]
+# data.* — Wildcard delegation only. NestGate does not implement data operations;
+# it directs callers to discover a data capability provider. Not counted as methods.
+
+[capabilities.bonding]
+domain = "bonding"
+description = "Ionic bond ledger persistence for security capability provider"
+methods = ["bonding.ledger.store", "bonding.ledger.retrieve", "bonding.ledger.list"]
 
 [capabilities.zfs]
 domain = "zfs"
