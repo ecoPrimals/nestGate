@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 13, 2026 (Session 43h — streaming storage & namespace isolation)  
+**Last Updated**: April 13, 2026 (Session 43i — final sovereignty cleanup)  
 **Version**: 4.7.0-dev
 
 ---
