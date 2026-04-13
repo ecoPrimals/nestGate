@@ -43,7 +43,7 @@
 //! - **Sovereignty**: `NestGate` delegates crypto to the security capability
 //!   provider and network to the orchestration capability provider
 //!
-//! ## primalSpring Audit Compliance Note
+//! ## Audit Compliance Note
 //!
 //! Primal product names in this module's documentation describe **ecosystem
 //! topology** — the NEST Atomic composition and TOWER architecture. These are

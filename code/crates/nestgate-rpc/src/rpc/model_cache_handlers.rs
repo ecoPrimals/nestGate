@@ -300,12 +300,12 @@ pub fn capabilities_list() -> Result<Value> {
         "consumed_capabilities": [
             {
                 "type": "security",
-                "reason": "BTSP handshake crypto delegation (BearDog or any security capability provider)",
+                "reason": "BTSP handshake crypto delegation (security capability provider)",
                 "required": false
             },
             {
                 "type": "discovery",
-                "reason": "Songbird-style service mesh registration and heartbeat",
+                "reason": "Service mesh registration and heartbeat (discovery capability provider)",
                 "required": false
             },
             {
