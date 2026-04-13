@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43h: Streaming storage & cross-spring namespace isolation (April 13, 2026)
+
+- **Streaming large-object support on isomorphic IPC**: `storage.store_blob`, `storage.retrieve_blob`,
+  `storage.retrieve_range` (4 MiB chunked base64), and `storage.object.size` wired into the modern
+  isomorphic IPC adapter — resolves primalSpring upstream gap for large tensor retrieval.
+- **Cross-spring namespace isolation**: All `storage.*` methods now accept an optional `namespace`
+  parameter. Default namespace is `"shared"` (cross-spring accessible). Springs can use private
+  namespaces for isolation. Directory layout: `{base}/datasets/{family_id}/{namespace}/{key}.json`.
+- **`storage.namespaces.list`**: New method to enumerate available namespaces within a family.
+- **`StorageState` evolved**: Family-scoped (`NESTGATE_FAMILY_ID` / `FAMILY_ID` / `BIOMEOS_FAMILY_ID`
+  env resolution), namespace directory model, blob subdirectory, segment validation.
+- **11 new tests**: blob store/retrieve roundtrip, chunked range reassembly, object.size,
+  namespace isolation, shared namespace default, namespace listing, path traversal rejection,
+  capabilities listing.
+- Validation: `cargo fmt`, `cargo clippy`, `cargo doc`, `cargo test` — all PASS (11,816 tests, 0 failures).
+
 ### Session 43g: Deep debt evolution — error types & dead code (April 13, 2026)
 
 - **`Box<dyn Error>` evolved**: 5 production function signatures (`websocket.rs`, `probes.rs`×3,

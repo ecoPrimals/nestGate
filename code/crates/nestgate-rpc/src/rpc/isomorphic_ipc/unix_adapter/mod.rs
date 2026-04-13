@@ -60,14 +60,28 @@ struct JsonRpcError {
 /// Match `nestgate_core::nat_traversal::BEACON_DATASET` when core is linked.
 const BEACON_DATASET: &str = "_known_beacons";
 
-/// Filesystem-backed storage state.
+/// Default namespace for cross-spring shared storage.
+const DEFAULT_NAMESPACE: &str = "shared";
+
+/// Filesystem-backed storage state with family-scoped namespace isolation.
 ///
-/// Keys are stored as individual JSON files under `{base}/datasets/default/{key}.json`.
-/// This replaces the former in-memory `HashMap` so IPC storage survives restarts.
+/// Directory layout:
+/// ```text
+/// {base}/datasets/{family_id}/{namespace}/{key}.json   (JSON values)
+/// {base}/datasets/{family_id}/{namespace}/_blobs/{key}  (binary blobs)
+/// ```
+///
+/// - `family_id` is resolved from env (`NESTGATE_FAMILY_ID` / `FAMILY_ID` / `BIOMEOS_FAMILY_ID`),
+///   defaulting to `"default"`.
+/// - `namespace` isolates each caller (spring). The `"shared"` namespace is the cross-spring
+///   meeting point, readable/writable by all springs in the family. Omitting `namespace` from
+///   request params defaults to `"shared"` for backward compatibility.
 #[derive(Clone)]
 pub(super) struct StorageState {
-    /// Root directory for the default dataset.
-    dataset_dir: PathBuf,
+    /// Root directory for this family: `{base}/datasets/{family_id}`.
+    family_dir: PathBuf,
+    /// The resolved family identifier.
+    family_id: String,
     #[expect(
         dead_code,
         reason = "Template storage wired when template RPC handlers are enabled"
@@ -80,43 +94,81 @@ pub(super) struct StorageState {
     audits: crate::rpc::audit_storage::AuditStorage,
 }
 
+/// Resolve the family identifier from environment, with cascading fallback.
+fn resolve_family_id() -> String {
+    std::env::var("NESTGATE_FAMILY_ID")
+        .or_else(|_| std::env::var("FAMILY_ID"))
+        .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
+        .unwrap_or_else(|_| "default".to_string())
+}
+
 impl StorageState {
     fn new() -> Result<Self> {
-        let dataset_dir = get_storage_base_path().join("datasets").join("default");
-        std::fs::create_dir_all(&dataset_dir)?;
+        let family_id = resolve_family_id();
+        let family_dir = get_storage_base_path().join("datasets").join(&family_id);
+        let shared_dir = family_dir.join(DEFAULT_NAMESPACE);
+        std::fs::create_dir_all(&shared_dir)?;
         Ok(Self {
-            dataset_dir,
+            family_dir,
+            family_id,
             templates: crate::rpc::template_storage::TemplateStorage::new(),
             audits: crate::rpc::audit_storage::AuditStorage::new(),
         })
     }
 
-    /// Sanitize a key to a safe filename (reject path traversal).
-    fn key_path(&self, key: &str) -> std::result::Result<PathBuf, (i32, Cow<'static, str>)> {
-        if key.is_empty()
-            || key.contains('/')
-            || key.contains('\\')
-            || key.contains("..")
-            || key.starts_with('.')
+    /// Validate a name segment (key or namespace) — reject path traversal.
+    fn validate_segment(
+        name: &str,
+        field: &'static str,
+    ) -> std::result::Result<(), (i32, Cow<'static, str>)> {
+        if name.is_empty()
+            || name.contains('/')
+            || name.contains('\\')
+            || name.contains("..")
+            || name.starts_with('.')
         {
-            return Err((-32602, Cow::Borrowed("Invalid key: must be a simple name")));
+            return Err((
+                -32602,
+                Cow::Owned(format!("Invalid {field}: must be a simple name")),
+            ));
         }
-        Ok(self.dataset_dir.join(format!("{key}.json")))
+        Ok(())
+    }
+
+    /// Resolve a namespace directory, creating it on first access.
+    fn namespace_dir(&self, namespace: &str) -> PathBuf {
+        self.family_dir.join(namespace)
+    }
+
+    /// Sanitize a key to a safe filename within a namespace.
+    fn key_path(
+        &self,
+        namespace: &str,
+        key: &str,
+    ) -> std::result::Result<PathBuf, (i32, Cow<'static, str>)> {
+        Self::validate_segment(namespace, "namespace")?;
+        Self::validate_segment(key, "key")?;
+        Ok(self.namespace_dir(namespace).join(format!("{key}.json")))
+    }
+
+    /// Blob storage path within a namespace.
+    fn blob_path(
+        &self,
+        namespace: &str,
+        key: &str,
+    ) -> std::result::Result<PathBuf, (i32, Cow<'static, str>)> {
+        Self::validate_segment(namespace, "namespace")?;
+        Self::validate_segment(key, "key")?;
+        Ok(self.namespace_dir(namespace).join("_blobs").join(key))
     }
 
     /// NAT traversal info is stored under the `_nat` sub-directory.
     fn nat_dir(&self) -> PathBuf {
-        self.dataset_dir
-            .parent()
-            .unwrap_or(&self.dataset_dir)
-            .join("_nat")
+        self.family_dir.join("_nat")
     }
 
     fn beacon_dir(&self) -> PathBuf {
-        self.dataset_dir
-            .parent()
-            .unwrap_or(&self.dataset_dir)
-            .join(BEACON_DATASET)
+        self.family_dir.join(BEACON_DATASET)
     }
 }
 
@@ -152,6 +204,21 @@ impl UnixSocketRpcHandler {
             "storage.list" => unix_adapter_handlers::handle_storage_list(state, &request).await,
             "storage.delete" => unix_adapter_handlers::handle_storage_delete(state, &request).await,
             "storage.exists" => unix_adapter_handlers::handle_storage_exists(state, &request),
+            "storage.store_blob" => {
+                unix_adapter_handlers::handle_storage_store_blob(state, &request).await
+            }
+            "storage.retrieve_blob" => {
+                unix_adapter_handlers::handle_storage_retrieve_blob(state, &request).await
+            }
+            "storage.retrieve_range" => {
+                unix_adapter_handlers::handle_storage_retrieve_range(state, &request).await
+            }
+            "storage.object.size" => {
+                unix_adapter_handlers::handle_storage_object_size(state, &request).await
+            }
+            "storage.namespaces.list" => {
+                unix_adapter_handlers::handle_storage_namespaces_list(state).await
+            }
             "session.save" => unix_adapter_handlers::handle_session_save(state, &request).await,
             "session.load" => unix_adapter_handlers::handle_session_load(state, &request).await,
             "session.list" => unix_adapter_handlers::handle_session_list(state, &request).await,
@@ -173,17 +240,13 @@ impl UnixSocketRpcHandler {
             "capabilities.list" | "discover_capabilities" => {
                 Ok(unix_adapter_handlers::capabilities_response())
             }
-            "identity.get" => {
-                let family_id =
-                    std::env::var("NESTGATE_FAMILY_ID").unwrap_or_else(|_| "default".to_string());
-                Ok(json!({
-                    "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
-                    "version": env!("CARGO_PKG_VERSION"),
-                    "domain": "storage",
-                    "license": "AGPL-3.0-or-later",
-                    "family_id": family_id
-                }))
-            }
+            "identity.get" => Ok(json!({
+                "primal": nestgate_config::constants::system::DEFAULT_SERVICE_NAME,
+                "version": env!("CARGO_PKG_VERSION"),
+                "domain": "storage",
+                "license": "AGPL-3.0-or-later",
+                "family_id": state.family_id
+            })),
 
             // nat.* — NAT traversal info uses its own sub-directory
             "nat.store_traversal_info" => {

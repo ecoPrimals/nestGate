@@ -17,11 +17,12 @@ protocol = "jsonrpc-2.0"
 
 [capabilities.storage]
 domain = "storage"
-description = "Filesystem-backed durable key-value and blob storage"
+description = "Filesystem-backed durable key-value and blob storage with namespace isolation"
 methods = [
     "storage.store", "storage.retrieve", "storage.exists",
     "storage.delete", "storage.list", "storage.stats",
     "storage.store_blob", "storage.retrieve_blob", "storage.retrieve_range",
+    "storage.object.size", "storage.namespaces.list",
     "storage.fetch_external",
 ]
 
