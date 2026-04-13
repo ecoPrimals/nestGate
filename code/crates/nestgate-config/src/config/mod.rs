@@ -67,13 +67,13 @@ pub mod validation;
 mod config_validation_tests; // Nov 23, 2025 - P1 test expansion
 
 #[cfg(test)]
-mod comprehensive_error_path_tests_dec20; // Dec 20, 2025 - Error path coverage expansion
+mod comprehensive_error_path_tests; // Dec 20, 2025 - Error path coverage expansion
 #[cfg(test)]
 mod edge_case_tests; // Nov 23, 2025 - P1-5 edge case tests
 #[cfg(test)]
 mod environment_error_tests; // Dec 6, 2025 - P1 comprehensive environment error tests
 #[cfg(test)]
-mod strategic_config_tests_dec11; // Dec 11, 2025 - Strategic configuration tests
+mod strategic_config_tests; // Dec 11, 2025 - Strategic configuration tests
 
 // Week 2 test expansion - REMOVED (outdated API) Nov 30, 2025
 // The error_path_tests_week2 module was deleted as it tested a refactored API

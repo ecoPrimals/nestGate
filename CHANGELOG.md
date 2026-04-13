@@ -522,7 +522,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed (production safety)
 - `fail_safe/core.rs` `execute_fallback_operation()` — returned `Ok(())` without executing anything → now returns `Err(ServiceUnavailable)` with clear message
 - `fail_safe/core.rs` `update_metrics()` — double-incremented `requests_total` → fixed to single increment
-- Two flaky tests fixed with `#[serial]` (env-var race conditions in `agnostic_config` and `critical_path_coverage_dec16`)
+- Two flaky tests fixed with `#[serial]` (env-var race conditions in `agnostic_config` and `critical_path_coverage`)
 
 #### Evolved (cast safety — `as u64` → `try_from`)
 - `native_real/core.rs`, `pool_handler.rs`, `adapter_routing.rs`, `production_placeholders.rs`, `handlers_production.rs`, `remote/connection.rs`, `consolidated_canonical/mod.rs`, `native_async/production.rs` — all `as_millis() as u64` casts replaced with `u64::try_from().unwrap_or(u64::MAX)`
