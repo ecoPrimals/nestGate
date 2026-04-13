@@ -459,7 +459,8 @@ mod round4_storage_helper_tests {
 
     #[test]
     fn auto_config_storage_development_is_memory_hot_tier() {
-        let c = super::auto_config_test_support::auto_config_storage_for_use_case("Development", None);
+        let c =
+            super::auto_config_test_support::auto_config_storage_for_use_case("Development", None);
         assert_eq!(c.name, "Development Setup");
         assert!(matches!(c.tier, StorageTier::Hot));
         assert_eq!(c.backends.len(), 1);
@@ -467,11 +468,17 @@ mod round4_storage_helper_tests {
 
     #[test]
     fn auto_config_storage_home_nas_and_database_use_expected_names() {
-        let h = super::auto_config_test_support::auto_config_storage_for_use_case("HomeNas", Some(2000));
+        let h = super::auto_config_test_support::auto_config_storage_for_use_case(
+            "HomeNas",
+            Some(2000),
+        );
         assert!(h.name.contains("NAS"));
         let d = super::auto_config_test_support::auto_config_storage_for_use_case("Database", None);
         assert!(d.name.contains("Database"));
-        let g = super::auto_config_test_support::auto_config_storage_for_use_case("UnknownProfile", None);
+        let g = super::auto_config_test_support::auto_config_storage_for_use_case(
+            "UnknownProfile",
+            None,
+        );
         assert_eq!(g.name, "Generic Setup");
     }
 

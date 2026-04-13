@@ -113,27 +113,27 @@ impl NetworkConfig {
         // Try API_PORT first (documented name)
         let api_port_var = format!("{prefix}_API_PORT");
         if let Some(val) = env.get(&api_port_var) {
-            return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
+            return Port::new(val.parse::<u16>().map_err(|e| ConfigError::ParseError {
                 key: api_port_var,
-                source: Box::new(e),
+                detail: e.to_string(),
             })?);
         }
 
         // Try HTTP_PORT (alternative)
         let http_port_var = format!("{prefix}_HTTP_PORT");
         if let Some(val) = env.get(&http_port_var) {
-            return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
+            return Port::new(val.parse::<u16>().map_err(|e| ConfigError::ParseError {
                 key: http_port_var,
-                source: Box::new(e),
+                detail: e.to_string(),
             })?);
         }
 
         // Try PORT (original)
         let port_var = format!("{prefix}_PORT");
         if let Some(val) = env.get(&port_var) {
-            return Port::new(val.parse().map_err(|e| ConfigError::ParseError {
+            return Port::new(val.parse::<u16>().map_err(|e| ConfigError::ParseError {
                 key: port_var,
-                source: Box::new(e),
+                detail: e.to_string(),
             })?);
         }
 
@@ -161,9 +161,9 @@ impl NetworkConfig {
     {
         let var_name = format!("{prefix}_{key}");
         match env.get(&var_name) {
-            Some(val) => val.parse().map_err(|e| ConfigError::ParseError {
+            Some(val) => val.parse::<T>().map_err(|e| ConfigError::ParseError {
                 key: var_name,
-                source: Box::new(e),
+                detail: e.to_string(),
             }),
             None => Ok(default),
         }

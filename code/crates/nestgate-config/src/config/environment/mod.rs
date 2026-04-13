@@ -61,12 +61,12 @@ pub enum ConfigError {
     MissingEnvVar(String),
 
     /// Failed to parse environment variable value
-    #[error("Failed to parse environment variable '{key}': {source}")]
+    #[error("Failed to parse environment variable '{key}': {detail}")]
     ParseError {
         /// The environment variable key
         key: String,
-        /// The underlying parse error
-        source: Box<dyn std::error::Error + Send + Sync>,
+        /// The parse error description
+        detail: String,
     },
 
     /// Invalid configuration value
@@ -245,9 +245,9 @@ impl FromStr for Port {
     type Err = ConfigError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let port: u16 = s.parse().map_err(|e| ConfigError::ParseError {
+        let port: u16 = s.parse::<u16>().map_err(|e| ConfigError::ParseError {
             key: "port".to_string(),
-            source: Box::new(e),
+            detail: e.to_string(),
         })?;
         Self::new(port)
     }

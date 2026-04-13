@@ -78,9 +78,9 @@ impl DiscoveryConfig {
     {
         let var_name = format!("{prefix}_{key}");
         match env.get(&var_name) {
-            Some(val) => val.parse().map_err(|e| ConfigError::ParseError {
+            Some(val) => val.parse::<T>().map_err(|e| ConfigError::ParseError {
                 key: var_name,
-                source: Box::new(e),
+                detail: e.to_string(),
             }),
             None => Ok(default),
         }
