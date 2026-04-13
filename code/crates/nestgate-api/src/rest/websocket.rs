@@ -14,6 +14,7 @@ use axum::{
     },
     response::IntoResponse,
 };
+use nestgate_core::error::{NestGateError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -86,15 +87,14 @@ impl WebSocketManager {
     /// - The operation fails due to invalid input
     /// - System resources are unavailable
     /// - Network or I/O errors occur
-    pub fn broadcast_event(
-        &self,
-        event: WebSocketEvent,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub fn broadcast_event(&self, event: WebSocketEvent) -> Result<()> {
         match self.event_sender.send(event) {
             Ok(_) => Ok(()),
             Err(e) => {
                 warn!("Failed to broadcast WebSocket event: {}", e);
-                Err(Box::new(e))
+                Err(NestGateError::internal(format!(
+                    "WebSocket broadcast failed: {e}"
+                )))
             }
         }
     }

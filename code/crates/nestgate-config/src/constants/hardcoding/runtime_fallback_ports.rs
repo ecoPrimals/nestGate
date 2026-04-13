@@ -76,9 +76,6 @@ pub const DISCOVERY_SERVICE: u16 = 3010;
     note = "use RuntimePortResolver or discover_metrics_port"
 )]
 pub const METRICS_ALT: u16 = 9001;
-/// Fallback port for the orchestrator control plane.
-#[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
-pub const ORCHESTRATOR: u16 = 8090;
 /// Fallback port for `PostgreSQL` (external service, env-resolved).
 #[deprecated(
     since = "0.4.0",

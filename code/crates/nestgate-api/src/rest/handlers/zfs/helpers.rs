@@ -14,6 +14,7 @@ use crate::rest::models::{
     ChecksumType, CompressionType, CreateDatasetRequest, Dataset, DatasetProperties, DatasetStats,
     DatasetStatus, DatasetType, StorageBackendType,
 };
+use nestgate_core::error::{NestGateError, Result};
 fn default_mount_path_for_dataset(name: &str) -> std::path::PathBuf {
     std::path::PathBuf::from(format!("/mnt/{name}"))
 }
@@ -98,9 +99,7 @@ pub fn convert_engine_to_placeholder_dataset(name: &str, _engine: &String) -> Da
 }
 
 /// Create storage backend from request
-pub fn create_storage_backend(
-    request: &CreateDatasetRequest,
-) -> std::result::Result<Arc<serde_json::Value>, Box<dyn std::error::Error + Send + Sync>> {
+pub fn create_storage_backend(request: &CreateDatasetRequest) -> Result<Arc<serde_json::Value>> {
     match request.backend {
         StorageBackendType::Filesystem => {
             let default_path = format!("/mnt/{}", request.name);
@@ -109,11 +108,10 @@ pub fn create_storage_backend(
                 serde_json::json!({"backend": "filesystem", "path": path}),
             ))
         }
-        _ => Err(nestgate_core::error::NestGateUnifiedError::api_with_status(
+        _ => Err(NestGateError::api_with_status(
             format!("Storage backend not supported: {:?}", request.backend),
             501,
-        )
-        .into()),
+        )),
     }
 }
 

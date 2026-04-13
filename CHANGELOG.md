@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43g: Deep debt evolution — error types & dead code (April 13, 2026)
+
+- **`Box<dyn Error>` evolved**: 5 production function signatures (`websocket.rs`, `probes.rs`×3,
+  `helpers.rs`, `prometheus.rs`) replaced with typed `NestGateError` / `Result<T>` — eliminates
+  unstructured error boxing at API boundaries.
+- **6 zero-caller deprecated port constants deleted**: `PROMETHEUS`, `METRICS_PROMETHEUS`,
+  `HEALTH_DEFAULT`, `METRICS_ALT`, `STORAGE_DISCOVERY_DEFAULT` from `hardcoding/ports.rs`;
+  `ORCHESTRATOR` from `runtime_fallback_ports.rs` (46 lines removed).
+- **Dependency audit**: `inotify-sys`, `linux-raw-sys` confirmed transitive (via `rustix`/`notify`);
+  `libfuzzer-sys` is fuzz-only direct dep. No C-FFI in production dependency graph.
+- **`#[async_trait]` audit**: Zero live usage confirmed — already fully on native `async fn` in traits.
+- Validation: `cargo fmt`, `cargo clippy`, `cargo doc`, `cargo test` — all PASS (11,805 tests, 0 failures).
+
 ### Session 43f: Deep debt cleanup & professionalization (April 13, 2026)
 
 - **Emoji stripped from production logs**: ~620 emoji occurrences removed from 87 library files across

@@ -3,8 +3,10 @@
 
 //! ZFS ARC / kstat helpers for Prometheus-oriented metrics.
 
+use nestgate_core::error::Result;
+
 /// Calculate real ZFS ARC (Adaptive Replacement Cache) hit ratio
-pub async fn calculate_real_zfs_cache_hit_ratio() -> Result<f64, Box<dyn std::error::Error>> {
+pub async fn calculate_real_zfs_cache_hit_ratio() -> Result<f64> {
     // Try to read ZFS ARC statistics from /proc/spl/kstat/zfs/arcstats
     match tokio::fs::read_to_string("/proc/spl/kstat/zfs/arcstats").await {
         Ok(content) => {

@@ -52,15 +52,6 @@ pub const API_ALT: u16 = 3001;
 )]
 pub const METRICS_DEFAULT: u16 = 9090;
 
-/// Prometheus metrics port
-///
-/// Prefer capability discovery at runtime; fallback only.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
-)]
-pub const PROMETHEUS: u16 = 9090;
-
 /// Default health check port
 ///
 /// Prefer capability discovery at runtime; fallback only.
@@ -115,15 +106,6 @@ pub const STORAGE_DEFAULT: u16 = 5000;
 )]
 pub const ORCHESTRATION_DEFAULT: u16 = 8083;
 
-/// Default storage discovery port
-///
-/// Prefer capability discovery at runtime; fallback only.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
-)]
-pub const STORAGE_DISCOVERY_DEFAULT: u16 = 8084;
-
 /// Default compute service port
 ///
 /// Prefer capability discovery at runtime; fallback only.
@@ -150,33 +132,6 @@ pub const EXTENDED_SERVICES: u16 = 3002;
     note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
 )]
 pub const DISCOVERY_SERVICE: u16 = 3010;
-
-/// Alternative metrics port
-///
-/// Prefer capability discovery at runtime; fallback only.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
-)]
-pub const METRICS_ALT: u16 = 9001;
-
-/// Prometheus metrics port
-///
-/// Prefer capability discovery at runtime; fallback only.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
-)]
-pub const METRICS_PROMETHEUS: u16 = 9090;
-
-/// Default health check port
-///
-/// Prefer capability discovery at runtime; fallback only.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use capability-based discovery. Ports are resolved at runtime via primal discovery."
-)]
-pub const HEALTH_DEFAULT: u16 = 8081;
 
 /// Orchestrator port
 ///

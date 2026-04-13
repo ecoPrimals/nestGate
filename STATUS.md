@@ -58,7 +58,8 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 - **Doc drift**: STATUS.md inflated method count corrected — now per-surface: UDS 46, HTTP 19, tarpc 33, `data.*` documented as wildcard delegation
 - **TCP/`--port` wiring**: Socket-only mode now resolves port from `NESTGATE_API_PORT` env; activates TCP alongside UDS when env port differs from default
 - **Domain symlink**: Confirmed already implemented (`storage[-{fid}].sock` → `nestgate[-{fid}].sock`); compliance matrix update proposed
-- **Deprecated APIs**: 210→199 (11 zero-caller items removed: 6 runtime_fallback_ports, 1 ports, 4 automation shims)
+- **Deprecated APIs**: 210→193 (17 zero-caller items removed across Sessions 43–43g; 6 additional dead port constants removed Session 43g)
+- **Box\<dyn Error\>**: 5 production function signatures evolved to typed `NestGateError` / `Result<T>` (Session 43g)
 
 ### Smart file refactoring (4 largest files)
 - `jsonrpc_server/mod.rs` 794→185 lines (extracted `storage_methods.rs`, `capability_methods.rs`, `monitoring_methods.rs`)

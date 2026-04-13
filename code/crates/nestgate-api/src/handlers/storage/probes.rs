@@ -7,6 +7,7 @@
     reason = "Probe helpers not yet called from production handlers; tests cover them"
 )]
 
+use nestgate_core::error::{NestGateError, Result};
 use nestgate_zfs::numeric::f64_to_u64_saturating;
 use std::process::Command;
 
@@ -17,8 +18,7 @@ use super::types::{StorageDataset, StorageMetrics, StoragePool, StorageSnapshot}
 /// These functions are kept for future storage integration and testing purposes.
 ///
 /// Collect real storage pools from system
-pub(super) fn collect_real_storage_pools()
--> Result<Vec<StoragePool>, Box<dyn std::error::Error + Send + Sync>> {
+pub(super) fn collect_real_storage_pools() -> Result<Vec<StoragePool>> {
     use std::str;
     let mut pools = Vec::new();
 
@@ -27,7 +27,8 @@ pub(super) fn collect_real_storage_pools()
         .args(["-h", "--output=source,fstype,size,used,avail,pcent,target"])
         .output()?;
 
-    let stdout = str::from_utf8(&output.stdout)?;
+    let stdout =
+        str::from_utf8(&output.stdout).map_err(|e| NestGateError::internal(e.to_string()))?;
 
     for line in stdout.lines().skip(1) {
         // Skip header
@@ -198,13 +199,12 @@ fn collect_real_storage_datasets() -> Vec<StorageDataset> {
 }
 
 /// Get directory usage statistics
-fn get_directory_usage(
-    dir: &str,
-) -> Result<(u64, u64, u64), Box<dyn std::error::Error + Send + Sync>> {
+fn get_directory_usage(dir: &str) -> Result<(u64, u64, u64)> {
     // Use df to get filesystem stats for the directory
     let output = Command::new("df").args(["-B1", dir]).output()?;
 
-    let stdout = std::str::from_utf8(&output.stdout)?;
+    let stdout =
+        std::str::from_utf8(&output.stdout).map_err(|e| NestGateError::internal(e.to_string()))?;
     if let Some(line) = stdout.lines().nth(1) {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() >= 4 {
@@ -235,8 +235,7 @@ fn create_fallback_home_dataset() -> StorageDataset {
 }
 
 /// Collect real ZFS snapshots from system
-async fn collect_real_zfs_snapshots()
--> Result<Vec<StorageSnapshot>, Box<dyn std::error::Error + Send + Sync>> {
+async fn collect_real_zfs_snapshots() -> Result<Vec<StorageSnapshot>> {
     let output = tokio::process::Command::new("zfs")
         .args([
             "list",
@@ -250,7 +249,7 @@ async fn collect_real_zfs_snapshots()
         .output()
         .await?;
     if !output.status.success() {
-        return Err("ZFS snapshot command failed".into());
+        return Err(NestGateError::internal("ZFS snapshot command failed"));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
