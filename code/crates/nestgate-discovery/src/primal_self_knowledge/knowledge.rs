@@ -126,14 +126,14 @@ impl PrimalSelfKnowledge {
             Ok(output) => {
                 let available = output.status.success();
                 if available {
-                    debug!("✅ ZFS capability detected (zfs command available)");
+                    debug!("ZFS capability detected (zfs command available)");
                 } else {
-                    debug!("ℹ️  ZFS command found but returned error");
+                    debug!("ZFS command found but returned error");
                 }
                 available
             }
             Err(e) => {
-                debug!("ℹ️  ZFS not available: {}", e);
+                debug!("ZFS not available: {}", e);
                 false
             }
         }

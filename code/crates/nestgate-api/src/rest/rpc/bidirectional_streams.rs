@@ -114,7 +114,7 @@ impl BidirectionalStreamManager {
         }
 
         info!(
-            "🔄 Created bidirectional stream {} for method {}",
+            "Created bidirectional stream {} for method {}",
             stream_id, request.method
         );
         Ok((tx, response_rx))
@@ -132,7 +132,7 @@ impl BidirectionalStreamManager {
         let mut streams = self.active_streams.lock().await;
         if let Some(stream) = streams.remove(&stream_id) {
             info!(
-                "🔌 Closed bidirectional stream {} ({})",
+                "Closed bidirectional stream {} ({})",
                 stream_id, stream.stream_type
             );
             Ok(())

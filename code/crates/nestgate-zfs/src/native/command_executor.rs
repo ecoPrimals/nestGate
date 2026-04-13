@@ -170,7 +170,7 @@ impl NativeZfsCommandExecutor {
     /// - Network or I/O errors occur
     pub async fn execute_command(&self, args: &[&str]) -> Result<ZfsCommandResult> {
         if self.verbose_logging {
-            debug!("🔧 Executing ZFS command: zfs {}", args.join(" "));
+            debug!("Executing ZFS command: zfs {}", args.join(" "));
         }
 
         // Security check: validate command arguments
@@ -210,7 +210,7 @@ impl NativeZfsCommandExecutor {
         };
 
         if self.verbose_logging {
-            debug!("📤 ZFS command result: {:?}", result);
+            debug!("ZFS command result: {:?}", result);
         }
 
         if !result.success {
@@ -322,7 +322,7 @@ impl NativeZfsCommandExecutor {
 
         self.execute_command_expect_success(&args).await?;
 
-        info!("✅ Created ZFS dataset: {}", dataset);
+        info!("Created ZFS dataset: {}", dataset);
         Ok(())
     }
 
@@ -339,7 +339,7 @@ impl NativeZfsCommandExecutor {
         self.execute_command_expect_success(&["snapshot", &snapshot_full])
             .await?;
 
-        info!("✅ Created ZFS snapshot: {}", snapshot_full);
+        info!("Created ZFS snapshot: {}", snapshot_full);
         Ok(())
     }
 

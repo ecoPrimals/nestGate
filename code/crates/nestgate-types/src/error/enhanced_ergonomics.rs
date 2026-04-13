@@ -202,7 +202,7 @@ pub fn format_error_chain(error: &NestGateError) -> String {
 #[must_use]
 pub fn debug_error_report(error: &NestGateError) -> String {
     format!(
-        "🚨 ERROR REPORT 🚨\n\
+        "ERROR REPORT\n\
          Error: {error}\n\
          Type: {}\n\
          Chain: {}\n\

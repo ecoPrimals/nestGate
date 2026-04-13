@@ -14,13 +14,13 @@ pub async fn migrate_workspace(
     Json(config): Json<MigrationConfig>,
 ) -> Result<Json<Value>, StatusCode> {
     info!(
-        "🚀 Migrating workspace: {} with config: {:?}",
+        "Migrating workspace: {} with config: {:?}",
         workspace_id, config
     );
 
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
-        warn!("❌ Invalid workspace ID format: {}", workspace_id);
+        warn!("Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -35,7 +35,7 @@ pub async fn migrate_workspace(
 
     match check_source {
         Ok(output) if !output.status.success() => {
-            error!("❌ Source workspace not found: {}", source_dataset);
+            error!("Source workspace not found: {}", source_dataset);
             return Ok(Json(json!({
                 "status": "error",
                 "message": format!("Source workspace not found: {source_dataset}"),
@@ -43,7 +43,7 @@ pub async fn migrate_workspace(
             })));
         }
         Err(e) => {
-            error!("❌ Failed to check source workspace: {}", e);
+            error!("Failed to check source workspace: {}", e);
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
         _ => {}
@@ -55,7 +55,7 @@ pub async fn migrate_workspace(
         .duration_since(std::time::UNIX_EPOCH)
         .map_or_else(
             |_| {
-                warn!("⚠️ System time before UNIX epoch, using current timestamp");
+                warn!("System time before UNIX epoch, using current timestamp");
                 0
             },
             |d| d.as_secs(),
@@ -71,15 +71,15 @@ pub async fn migrate_workspace(
     match snapshot_result {
         Ok(output) if !output.status.success() => {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to create migration snapshot: {}", stderr);
+            error!("Failed to create migration snapshot: {}", stderr);
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
         Err(e) => {
-            error!("❌ Failed to create migration snapshot: {}", e);
+            error!("Failed to create migration snapshot: {}", e);
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
         _ => {
-            info!("📸 Created migration snapshot: {}", migration_snapshot);
+            info!("Created migration snapshot: {}", migration_snapshot);
         }
     }
 
@@ -121,7 +121,7 @@ async fn perform_copy_migration(
     config: &MigrationConfig,
 ) -> Result<Value, StatusCode> {
     info!(
-        "📋 Performing copy migration from {} to {}",
+        "Performing copy migration from {} to {}",
         snapshot, target_dataset
     );
 
@@ -147,7 +147,7 @@ async fn perform_copy_migration(
 
                 match receive_result {
                     Ok(output) if output.status.success() => {
-                        info!("✅ Remote copy migration completed successfully");
+                        info!("Remote copy migration completed successfully");
                         Ok(json!({
                             "status": "success",
                             "message": "Copy migration completed successfully",
@@ -159,17 +159,17 @@ async fn perform_copy_migration(
                     }
                     Ok(output) => {
                         let stderr = String::from_utf8_lossy(&output.stderr);
-                        error!("❌ Remote copy migration failed: {}", stderr);
+                        error!("Remote copy migration failed: {}", stderr);
                         Err(StatusCode::INTERNAL_SERVER_ERROR)
                     }
                     Err(e) => {
-                        error!("❌ Failed to execute remote copy: {}", e);
+                        error!("Failed to execute remote copy: {}", e);
                         Err(StatusCode::INTERNAL_SERVER_ERROR)
                     }
                 }
             }
             Err(e) => {
-                error!("❌ Failed to start send process: {}", e);
+                error!("Failed to start send process: {}", e);
                 Err(StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
@@ -185,7 +185,7 @@ async fn perform_copy_migration(
 
         match result {
             Ok(output) if output.status.success() => {
-                info!("✅ Local copy migration completed successfully");
+                info!("Local copy migration completed successfully");
                 Ok(json!({
                     "status": "success",
                     "message": "Copy migration completed successfully",
@@ -196,11 +196,11 @@ async fn perform_copy_migration(
             }
             Ok(output) => {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                error!("❌ Local copy migration failed: {}", stderr);
+                error!("Local copy migration failed: {}", stderr);
                 Err(StatusCode::INTERNAL_SERVER_ERROR)
             }
             Err(e) => {
-                error!("❌ Failed to execute local copy: {}", e);
+                error!("Failed to execute local copy: {}", e);
                 Err(StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
@@ -215,7 +215,7 @@ async fn perform_move_migration(
     config: &MigrationConfig,
 ) -> Result<Value, StatusCode> {
     info!(
-        "🚚 Performing move migration from {} to {}",
+        "Performing move migration from {} to {}",
         snapshot, target_dataset
     );
 
@@ -230,7 +230,7 @@ async fn perform_move_migration(
 
     match destroy_result {
         Ok(output) if output.status.success() => {
-            info!("✅ Move migration completed - source destroyed");
+            info!("Move migration completed - source destroyed");
             Ok(json!({
                 "status": "success",
                 "message": "Move migration completed successfully",
@@ -242,10 +242,7 @@ async fn perform_move_migration(
         }
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            warn!(
-                "⚠️ Copy successful but failed to destroy source: {}",
-                stderr
-            );
+            warn!("Copy successful but failed to destroy source: {}", stderr);
             Ok(json!({
                 "status": "partial_success",
                 "message": "Migration copied successfully but source cleanup failed",
@@ -257,7 +254,7 @@ async fn perform_move_migration(
             }))
         }
         Err(e) => {
-            error!("❌ Failed to destroy source after migration: {}", e);
+            error!("Failed to destroy source after migration: {}", e);
             Ok(json!({
                 "status": "partial_success",
                 "message": "Migration copied successfully but source cleanup failed",
@@ -278,7 +275,7 @@ async fn perform_replicate_migration(
     config: &MigrationConfig,
 ) -> Result<Value, StatusCode> {
     info!(
-        "🔄 Performing replicate migration from {} to {}",
+        "Performing replicate migration from {} to {}",
         snapshot, target_dataset
     );
 

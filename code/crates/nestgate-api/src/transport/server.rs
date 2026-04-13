@@ -98,12 +98,12 @@ where
     ///
     /// Returns error if server startup fails
     pub async fn start(&self) -> Result<()> {
-        info!("🚀 Starting NestGate Transport Server");
+        info!("Starting NestGate Transport Server");
         info!("   Family ID: {}", self.config.family_id);
         info!("   Socket: {}", self.config.socket_path.display());
 
         if let Some(port) = self.config.http_port {
-            warn!("⚠️  HTTP fallback enabled on port {}", port);
+            warn!("HTTP fallback enabled on port {}", port);
             warn!("   This is for debugging only - production should use Unix sockets");
         }
 
@@ -120,7 +120,7 @@ where
         // Wait for shutdown signal
         self.shutdown.notified().await;
 
-        info!("📡 Shutting down gracefully...");
+        info!("Shutting down gracefully...");
 
         // Wait for tasks to complete
         let _ = tokio::join!(unix_handle);
@@ -128,7 +128,7 @@ where
             let _ = handle.await;
         }
 
-        info!("✅ NestGate Transport Server stopped");
+        info!("NestGate Transport Server stopped");
         Ok(())
     }
 
@@ -217,7 +217,7 @@ where
             }
         });
 
-        info!("📡 HTTP fallback started on port {}", port);
+        info!("HTTP fallback started on port {}", port);
 
         Ok(handle)
     }

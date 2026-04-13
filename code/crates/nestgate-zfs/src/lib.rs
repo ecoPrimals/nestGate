@@ -145,15 +145,15 @@ pub mod constants;
 
 // Additional test modules
 #[cfg(test)]
+mod additional_coverage_tests;
+#[cfg(test)]
 mod command_tests;
 #[cfg(test)]
-mod comprehensive_coverage_boost;
+mod comprehensive_coverage_tests;
+#[cfg(test)]
+mod extended_coverage_tests;
 #[cfg(test)]
 mod pool_types_tests;
-#[cfg(test)]
-mod round6_zfs_final_coverage;
-#[cfg(test)]
-mod zfs_final_coverage_boost;
 
 // Re-exports for common usage
 pub use command::ZfsCommand;

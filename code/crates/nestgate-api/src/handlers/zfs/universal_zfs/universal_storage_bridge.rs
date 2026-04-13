@@ -36,17 +36,17 @@ impl UniversalStorageBridge {
 
     /// Detect and set the best available storage backend
     pub fn detect_best_backend(&mut self) -> UniversalZfsResult<String> {
-        info!("🔍 Detecting best available storage backend");
+        info!("Detecting best available storage backend");
 
         // Try backends in order of preference: ZFS -> Filesystem -> Others
         if self.is_zfs_available() {
-            info!("✅ Selected storage backend: zfs");
+            info!("Selected storage backend: zfs");
             self.preferred_backend = Some("zfs".to_string());
             return Ok("zfs".to_string());
         }
 
         // Filesystem is always available as fallback
-        info!("✅ Selected storage backend: filesystem");
+        info!("Selected storage backend: filesystem");
         self.preferred_backend = Some("filesystem".to_string());
         Ok("filesystem".to_string())
     }
@@ -62,7 +62,7 @@ impl UniversalStorageBridge {
 
     /// Translate ZFS pool operations to universal storage operations
     pub fn list_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        debug!("🔍 Listing pools via universal storage");
+        debug!("Listing pools via universal storage");
 
         let backend = self.get_active_backend()?;
 
@@ -75,7 +75,7 @@ impl UniversalStorageBridge {
 
     /// List ZFS pools (when ZFS is available)
     fn list_zfs_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        info!("📋 Listing ZFS pools");
+        info!("Listing ZFS pools");
 
         let output = std::process::Command::new("zpool")
             .args(["list", "-H", "-o", "name,size,alloc,free,health"])
@@ -129,7 +129,7 @@ impl UniversalStorageBridge {
         }
 
         info!(
-            "✅ Found {},
+            "Found {},
     ZFS pools",
             pools.len()
         );
@@ -138,7 +138,7 @@ impl UniversalStorageBridge {
 
     /// List filesystem "pools" (mount points as pools)
     fn list_filesystem_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        info!("📋 Listing filesystem pools (mount points)");
+        info!("Listing filesystem pools (mount points)");
 
         let output = std::process::Command::new("df")
             .args(["-h", "--output=source,fstype,size,used,avail,target"])
@@ -190,13 +190,13 @@ impl UniversalStorageBridge {
             }
         }
 
-        info!("✅ Found {} filesystem pools", pools.len());
+        info!("Found {} filesystem pools", pools.len());
         Ok(pools)
     }
 
     /// List fallback pools (when no storage backend is available)
     fn list_fallback_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        warn!("📋 Using fallback pool listing");
+        warn!("Using fallback pool listing");
 
         // Create a minimal pool representing the root filesystem
         let pool = PoolInfo {
@@ -285,7 +285,7 @@ impl UniversalStorageBridge {
 
     /// Create a dataset (directory) via universal storage
     pub fn create_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
-        info!("🏗️ Creating dataset: {}", config.name);
+        info!("Creating dataset: {}", config.name);
 
         let backend = self.get_active_backend()?;
 
@@ -331,7 +331,7 @@ impl UniversalStorageBridge {
         std::fs::create_dir_all(path)
             .map_err(|_e| UniversalZfsError::internal("Failed to create directory".to_string()))?;
 
-        info!("✅ Created filesystem dataset at: {:?}", path);
+        info!("Created filesystem dataset at: {:?}", path);
 
         Ok(DatasetInfo {
             name: config.name.clone(),

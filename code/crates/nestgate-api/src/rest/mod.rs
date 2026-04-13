@@ -110,14 +110,14 @@ impl ApiState {
                 .unwrap_or(true)
             {
                 tracing::info!(
-                    "🔄 Universal adapter enabled - RPC routing will use capability discovery"
+                    "Universal adapter enabled - RPC routing will use capability discovery"
                 );
                 // Future: Initialize universal RPC router here
                 // let universal_router = UniversalRpcRouter::new(universal_adapter).await?;
                 // rpc_manager.set_universal_router(universal_router);
             }
 
-            tracing::info!("🔗 RPC connections initialized");
+            tracing::info!("RPC connections initialized");
             rpc_manager
         });
 

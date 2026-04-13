@@ -44,7 +44,7 @@ pub async fn create_storage_service()
 -> nestgate_core::error::CanonicalResult<std::sync::Arc<DevEnvironmentStorageService>> {
     match HardwareEnvironmentDetector::detect_capabilities().await {
         HardwareCapabilities::NativeZfs => {
-            tracing::info!("🔧 Native ZFS hardware detected");
+            tracing::info!("Native ZFS hardware detected");
             // Native ZFS service would be implemented here when ZFS is available
             // For development, return mock service
             tracing::warn!(
@@ -53,11 +53,11 @@ pub async fn create_storage_service()
             Ok(std::sync::Arc::new(DevEnvironmentStorageService::new()))
         }
         HardwareCapabilities::DevelopmentEnvironment => {
-            tracing::info!("💻 Development environment - using storage abstraction");
+            tracing::info!("Development environment - using storage abstraction");
             Ok(std::sync::Arc::new(DevEnvironmentStorageService::new()))
         }
         HardwareCapabilities::ContainerEnvironment => {
-            tracing::info!("🐳 Container environment - using abstraction layer");
+            tracing::info!("Container environment - using abstraction layer");
             Ok(std::sync::Arc::new(DevEnvironmentStorageService::new()))
         }
     }
@@ -66,7 +66,7 @@ pub async fn create_storage_service()
 #[cfg(not(feature = "dev-environment-fallbacks"))]
 compile_error!(
     "
-❌ Development environment fallbacks are disabled.
+ Development environment fallbacks are disabled.
 To enable development environment support, add to your Cargo.toml:
 [features]
 default = [\"dev-environment-fallbacks\"]

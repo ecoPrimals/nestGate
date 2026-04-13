@@ -10,7 +10,7 @@ use super::types::{DiskIOMetrics, NetworkIOMetrics, PoolMetrics, SystemMetrics};
 
 /// Collect real system metrics from /proc filesystem and system commands
 pub(super) async fn collect_real_system_metrics() -> Result<SystemMetrics> {
-    debug!("💻 Collecting real system metrics from /proc and system interfaces");
+    debug!("Collecting real system metrics from /proc and system interfaces");
 
     // Collect CPU usage from /proc/stat
     let cpu_usage = get_realcpu_usage().await?;
@@ -54,16 +54,16 @@ async fn get_realcpu_usage() -> Result<f64> {
 
                     if total > 0 {
                         let usage = (total_active as f64 / total as f64) * 100.0;
-                        debug!("📈 Real CPU usage: {:.2}%", usage);
+                        debug!("Real CPU usage: {:.2}%", usage);
                         return Ok(usage);
                     }
                 }
             }
-            warn!("⚠️ Could not parse /proc/stat; reporting 0% CPU");
+            warn!("Could not parse /proc/stat; reporting 0% CPU");
             Ok(0.0)
         }
         Err(e) => {
-            warn!("⚠️ Could not read /proc/stat: {}; reporting 0% CPU", e);
+            warn!("Could not read /proc/stat: {}; reporting 0% CPU", e);
             Ok(0.0)
         }
     }
@@ -106,7 +106,7 @@ async fn get_real_memory_info() -> Result<(f64, u64, u64)> {
                 let memory_usage_percent = (memory_used as f64 / mem_total as f64) * 100.0;
 
                 debug!(
-                    "🧠 Real memory usage: {:.2}% ({} GB / {} GB)",
+                    "Real memory usage: {:.2}% ({} GB / {} GB)",
                     memory_usage_percent,
                     memory_used / (1024 * 1024 * 1024),
                     mem_total / (1024 * 1024 * 1024)
@@ -115,11 +115,11 @@ async fn get_real_memory_info() -> Result<(f64, u64, u64)> {
                 return Ok((memory_usage_percent, mem_total, mem_available));
             }
 
-            warn!("⚠️ Could not parse memory info; reporting zeros");
+            warn!("Could not parse memory info; reporting zeros");
             Ok((0.0, 0, 0))
         }
         Err(e) => {
-            warn!("⚠️ Could not read /proc/meminfo: {}; reporting zeros", e);
+            warn!("Could not read /proc/meminfo: {}; reporting zeros", e);
             Ok((0.0, 0, 0))
         }
     }
@@ -154,7 +154,7 @@ async fn get_real_network_io() -> Result<NetworkIOMetrics> {
             }
 
             debug!(
-                "🌐 Real network I/O: RX {},
+                "Real network I/O: RX {},
     MB, TX {},
     MB",
                 total_bytes_received / (1024 * 1024),
@@ -170,7 +170,7 @@ async fn get_real_network_io() -> Result<NetworkIOMetrics> {
         }
         Err(e) => {
             warn!(
-                "⚠️ Could not read /proc/net/dev: {}; reporting zero counters",
+                "Could not read /proc/net/dev: {}; reporting zero counters",
                 e
             );
             Ok(NetworkIOMetrics {
@@ -218,7 +218,7 @@ async fn get_real_disk_io() -> Result<DiskIOMetrics> {
             }
 
             debug!(
-                "💾 Real disk I/O: Read {},
+                "Real disk I/O: Read {},
     MB, Write {},
     MB",
                 total_read_bytes / (1024 * 1024),
@@ -233,7 +233,7 @@ async fn get_real_disk_io() -> Result<DiskIOMetrics> {
             })
         }
         Err(e) => {
-            warn!("⚠️ Could not read /proc/diskstats: {}, using fallback", e);
+            warn!("Could not read /proc/diskstats: {}, using fallback", e);
             Ok(DiskIOMetrics {
                 read_bytes: 1024 * 1024 * 1024, // 1GB fallback
                 write_bytes: 512 * 1024 * 1024, // 512MB fallback
@@ -288,14 +288,14 @@ pub(super) async fn collect_zfs_pool_metrics() -> Result<Vec<PoolMetrics>> {
             }
 
             debug!(
-                "🏊 Collected {},
+                "Collected {},
     ZFS pool metrics",
                 pools.len()
             );
             Ok(pools)
         }
         Ok(_) | Err(_) => {
-            debug!("⚠️ ZFS not available or command failed, using empty pool metrics");
+            debug!("ZFS not available or command failed, using empty pool metrics");
             Ok(vec![])
         }
     }
@@ -338,14 +338,14 @@ pub(super) async fn collect_zfs_cache_stats() -> Result<(f64, f64, f64)> {
         };
 
         debug!(
-            "🎯 Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%",
+            "Real ZFS cache stats: ARC {:.1}%, L2ARC {:.1}%",
             arc_hit_ratio, l2arc_hit_ratio
         );
 
         // Compression ratio would come from pool-specific stats
         Ok((arc_hit_ratio, l2arc_hit_ratio, 1.4)) // Default 1.4x compression
     } else {
-        debug!("⚠️ ZFS ARC stats not available, using defaults");
+        debug!("ZFS ARC stats not available, using defaults");
         Ok((85.0, 65.0, 1.2)) // Reasonable defaults
     }
 }

@@ -67,34 +67,34 @@ impl HardwareEnvironmentDetector {
 
     /// Perform comprehensive hardware detection
     async fn perform_detection_from_env(env: &(impl EnvSource + ?Sized)) -> HardwareCapabilities {
-        info!("🔍 Detecting hardware environment capabilities...");
+        info!("Detecting hardware environment capabilities...");
 
         // Check explicit development mode
         if env.get_or("NESTGATE_DEV_ENVIRONMENT", "") == "true" {
-            info!("💻 Development environment (explicit via NESTGATE_DEV_ENVIRONMENT)");
+            info!("Development environment (explicit via NESTGATE_DEV_ENVIRONMENT)");
             return HardwareCapabilities::DevelopmentEnvironment;
         }
 
         // Check for container environment
         if Self::is_container_environment_from_env(env) {
-            info!("🐳 Container environment detected");
+            info!("Container environment detected");
             return HardwareCapabilities::ContainerEnvironment;
         }
 
         // Check for ZFS availability
         if Self::is_zfs_available().await {
-            info!("🔧 Native ZFS hardware detected");
+            info!("Native ZFS hardware detected");
             return HardwareCapabilities::NativeZfs;
         }
 
         // Check development machine indicators
         if Self::is_likely_dev_machine_from_env(env) {
-            info!("💻 Development machine detected (no ZFS hardware)");
+            info!("Development machine detected (no ZFS hardware)");
             return HardwareCapabilities::DevelopmentEnvironment;
         }
 
         // Default to development environment
-        warn!("⚠️ Unable to detect hardware capabilities, defaulting to development environment");
+        warn!("Unable to detect hardware capabilities, defaulting to development environment");
         HardwareCapabilities::DevelopmentEnvironment
     }
 
@@ -104,14 +104,14 @@ impl HardwareEnvironmentDetector {
             Ok(output) => {
                 let success = output.status.success();
                 if success {
-                    debug!("✅ ZFS command available");
+                    debug!("ZFS command available");
                 } else {
-                    debug!("❌ ZFS command failed");
+                    debug!("ZFS command failed");
                 }
                 success
             }
             Err(e) => {
-                debug!("❌ ZFS command not found: {}", e);
+                debug!("ZFS command not found: {}", e);
                 false
             }
         }

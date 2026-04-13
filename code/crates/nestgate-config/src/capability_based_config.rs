@@ -254,7 +254,7 @@ impl CapabilityConfig {
             .await
             && output.status.success()
         {
-            debug!("✅ ZFS capability detected (universal runtime check)");
+            debug!("ZFS capability detected (universal runtime check)");
             capabilities.push("zfs".to_string());
         }
 

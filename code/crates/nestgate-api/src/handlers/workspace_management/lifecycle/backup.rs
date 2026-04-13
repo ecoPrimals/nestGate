@@ -16,13 +16,13 @@ pub async fn backup_workspace(
     Json(config): Json<BackupConfig>,
 ) -> Result<Json<Value>, StatusCode> {
     info!(
-        "💾 Creating backup for workspace: {} with config: {:?}",
+        "Creating backup for workspace: {} with config: {:?}",
         workspace_id, config
     );
 
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
-        warn!("❌ Invalid workspace ID format: {}", workspace_id);
+        warn!("Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -35,7 +35,7 @@ pub async fn backup_workspace(
     );
 
     // Step 1: Create snapshot
-    info!("📸 Creating snapshot: {}", snapshot_name);
+    info!("Creating snapshot: {}", snapshot_name);
     let snapshot_result = Command::new("zfs")
         .args(["snapshot", &snapshot_name])
         .output()
@@ -43,11 +43,11 @@ pub async fn backup_workspace(
 
     match snapshot_result {
         Ok(output) if output.status.success() => {
-            info!("✅ Snapshot created successfully: {}", snapshot_name);
+            info!("Snapshot created successfully: {}", snapshot_name);
         }
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to create snapshot: {}", stderr);
+            error!("Failed to create snapshot: {}", stderr);
             return Ok(Json(json!({
                 "status": "error",
                 "message": format!("Failed to create snapshot: {stderr}"),
@@ -56,19 +56,19 @@ pub async fn backup_workspace(
             })));
         }
         Err(e) => {
-            error!("❌ Failed to execute snapshot command: {}", e);
+            error!("Failed to execute snapshot command: {}", e);
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
     // Step 2: Create backup directory if it doesn't exist
     if let Err(e) = tokio::fs::create_dir_all(&backup_dir).await {
-        error!("❌ Failed to create backup directory: {}", e);
+        error!("Failed to create backup directory: {}", e);
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     // Step 3: Send snapshot to backup file
-    info!("💾 Sending snapshot to backup file: {}", backup_file);
+    info!("Sending snapshot to backup file: {}", backup_file);
     let mut send_args = vec!["send"];
 
     if config.compression_level > 0 {
@@ -93,7 +93,7 @@ pub async fn backup_workspace(
                         match tokio::io::copy(&mut reader, &mut file).await {
                             Ok(bytes_written) => {
                                 info!(
-                                    "✅ Backup completed: {} bytes written to {}",
+                                    "Backup completed: {} bytes written to {}",
                                     bytes_written, backup_file
                                 );
 
@@ -107,7 +107,7 @@ pub async fn backup_workspace(
                                                 .output()
                                                 .await;
                                             debug!(
-                                                "🧹 Cleaned up temporary snapshot: {}",
+                                                "Cleaned up temporary snapshot: {}",
                                                 snapshot_name
                                             );
                                         }
@@ -124,23 +124,23 @@ pub async fn backup_workspace(
                                         })));
                                     }
                                     Ok(_) | Err(_) => {
-                                        error!("❌ ZFS send process failed");
+                                        error!("ZFS send process failed");
                                     }
                                 }
                             }
                             Err(e) => {
-                                error!("❌ Failed to write backup data: {}", e);
+                                error!("Failed to write backup data: {}", e);
                             }
                         }
                     }
                 }
                 Err(e) => {
-                    error!("❌ Failed to create backup file: {}", e);
+                    error!("Failed to create backup file: {}", e);
                 }
             }
         }
         Err(e) => {
-            error!("❌ Failed to start ZFS send process: {}", e);
+            error!("Failed to start ZFS send process: {}", e);
         }
     }
 

@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 13, 2026 (Session 43e — wetSpring parity)  
+**Last Updated**: April 13, 2026 (Session 43f — deep debt cleanup & professionalization)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,9 +12,9 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-targets --all-features -- -D warnings (zero errors), as of 2026-04-12
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-12
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-12
-Tests:              11,794 passing, 0 failures, 451 ignored (cargo test --workspace; flaky tests stabilized)
+Tests:              11,805 passing, 0 failures, 451 ignored (cargo test --workspace; flaky tests stabilized)
 Coverage:           ~81.7% line (cargo llvm-cov --workspace --lib) — wateringHole 80% min met; 90% target pending
-Files > 750 lines:  0 (production; 6 largest refactored Sessions 43–43d — all under 500 LOC per module)
+Files > 750 lines:  0 (production; 9 largest refactored Sessions 43–43f — max 749 LOC; engine/gcs/azure/pool_setup all under 500)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
@@ -28,7 +28,9 @@ IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, 
 IPC routes (HTTP):  storage.dataset.*, storage.object.*, discovery.capability.*, health.*, capabilities.*, identity.* — 19 methods (JSON_RPC_CAPABILITIES_METHODS const)
 IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 33 semantic-routed methods
 data.* delegation:  Wildcard catch-all returns NotImplemented directing callers to discover data capability provider (not counted as methods)
-Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (9 groups), consumed_capabilities, protocol, transport
+Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 45 methods), consumed_capabilities (3), protocol, transport
+Emoji in logs:      ZERO in library tracing — professional structured logging only (Session 43f)
+Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
 TCP JSON-RPC:      Functional — `--port`, `--listen`, or NESTGATE_API_PORT env activates TcpFallbackServer alongside UDS
@@ -37,7 +39,7 @@ sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on 
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
 Decomposition:      nestgate-core split into 13 crates (295K→52K lines, core deps 51→44)
 Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery (single import path)
-Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs
+Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs in production code
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
 Serial tests:       #[serial]: 0 — last 2 eliminated via temp_env::with_vars (Session 43d)

@@ -25,7 +25,7 @@ pub mod success_response;
 /// Response conversion traits for seamless type transformations.
 pub mod traits;
 #[cfg(test)]
-mod traits_round3_tests;
+mod traits_coverage_tests;
 // Re-export all types for backward compatibility and ease of use
 pub use ai_first_response::{
     AIErrorCategory, AIFirstError, AIFirstResponse, AIResponseMetadata, CacheInfo, DataQuality,

@@ -233,7 +233,7 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
 /// declaration for composition completeness validation (L3).
 #[expect(clippy::unnecessary_wraps, reason = "Handler dispatch requires Result")]
 pub fn capabilities_list() -> Result<Value> {
-    info!("🔍 capabilities.list called");
+    info!("capabilities.list called");
     Ok(json!({
         "primal": DEFAULT_SERVICE_NAME,
         "version": env!("CARGO_PKG_VERSION"),
@@ -322,7 +322,7 @@ pub fn capabilities_list() -> Result<Value> {
 /// `discover_capabilities` - Return all available JSON-RPC methods
 #[expect(clippy::unnecessary_wraps, reason = "Handler dispatch requires Result")]
 pub fn discover_capabilities() -> Result<Value> {
-    info!("🔍 discover_capabilities called");
+    info!("discover_capabilities called");
 
     Ok(json!({
         "primal": DEFAULT_SERVICE_NAME,

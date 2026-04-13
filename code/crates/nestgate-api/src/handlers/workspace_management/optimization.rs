@@ -21,7 +21,7 @@ use tracing::info;
 pub async fn optimize_workspace(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
-    info!("⚡ Optimizing workspace storage: {}", workspace_id);
+    info!("Optimizing workspace storage: {}", workspace_id);
     // Real ZFS optimization implementation
     let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 
@@ -30,23 +30,23 @@ pub async fn optimize_workspace(
 
     // 1. Analyze storage patterns
     let pattern_analysis = analyze_storage_patterns(&dataset_name);
-    info!("📊 Storage pattern analysis: {:?}", pattern_analysis);
+    info!("Storage pattern analysis: {:?}", pattern_analysis);
 
     // 2. Adjust compression settings based on file types
     if let Some(compression_opt) = optimize_compression(&dataset_name, &pattern_analysis) {
-        info!("✅ Compression optimization: {}", compression_opt);
+        info!("Compression optimization: {}", compression_opt);
         optimizations.push(compression_opt);
     }
 
     // 3. Optimize recordsize based on workload
     if let Some(recordsize_opt) = optimize_recordsize(&dataset_name, &pattern_analysis) {
-        info!("✅ Recordsize optimization: {}", recordsize_opt);
+        info!("Recordsize optimization: {}", recordsize_opt);
         optimizations.push(recordsize_opt);
     }
 
     // 4. Optimize cache settings
     if let Some(cache_opt) = optimize_cache_settings(&dataset_name, &pattern_analysis) {
-        info!("✅ Cache optimization: {}", cache_opt);
+        info!("Cache optimization: {}", cache_opt);
         optimizations.push(cache_opt);
     }
 
@@ -54,14 +54,14 @@ pub async fn optimize_workspace(
     let ai_recommendations = request_ai_optimization(&dataset_name, &pattern_analysis).await;
     if let Some(ai_rec) = ai_recommendations {
         optimizations.push(format!("AI recommendations: {ai_rec}"));
-        info!("🧠 AI optimization recommendations: {}", ai_rec);
+        info!("AI optimization recommendations: {}", ai_rec);
     }
 
     // 6. Apply deduplication if beneficial
     if pattern_analysis.duplicate_ratio > 0.1
         && let Some(dedup_opt) = optimize_deduplication(&dataset_name)
     {
-        info!("✅ Deduplication optimization: {}", dedup_opt);
+        info!("Deduplication optimization: {}", dedup_opt);
         optimizations.push(dedup_opt);
     }
 

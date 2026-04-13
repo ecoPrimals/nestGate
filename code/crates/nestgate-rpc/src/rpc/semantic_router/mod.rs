@@ -221,7 +221,7 @@ impl<M: MetadataBackend> SemanticRouter<M> {
     /// # }
     /// ```
     pub async fn call_method(&self, method: &str, params: Value) -> Result<Value> {
-        debug!("🔀 Routing semantic method: {}", method);
+        debug!("Routing semantic method: {}", method);
 
         match method {
             // ==================== STORAGE DOMAIN ====================
@@ -278,7 +278,7 @@ impl<M: MetadataBackend> SemanticRouter<M> {
 
             // Unknown method
             _ => {
-                warn!("❌ Unknown semantic method: {}", method);
+                warn!("Unknown semantic method: {}", method);
                 Err(NestGateError::not_found(format!(
                     "semantic method `{method}`"
                 )))

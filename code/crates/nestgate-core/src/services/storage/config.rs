@@ -219,13 +219,13 @@ impl StorageServiceConfig {
                 // ZFS available - enable optimization features
                 config.auto_discover_pools = true;
                 config.enable_quotas = true;
-                info!("🚀 ZFS optimization enabled (native features available)");
+                info!("ZFS optimization enabled (native features available)");
             }
             capabilities::BackendType::Filesystem => {
                 // No ZFS - use filesystem-only mode
                 config.auto_discover_pools = false;
                 config.enable_quotas = false;
-                info!("🌍 Filesystem mode (universal compatibility)");
+                info!("Filesystem mode (universal compatibility)");
                 info!("   Works on: ext4, NTFS, APFS, btrfs, XFS, etc.");
             }
         }

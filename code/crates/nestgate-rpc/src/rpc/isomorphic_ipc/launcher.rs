@@ -129,14 +129,14 @@ pub async fn discover_nestgate_with_retry() -> Result<IpcEndpoint> {
         match discover_nestgate_endpoint().await {
             Ok(endpoint) => {
                 info!(
-                    "✅ Discovered NestGate endpoint after {} attempt(s): {:?}",
+                    "Discovered NestGate endpoint after {} attempt(s): {:?}",
                     attempts, endpoint
                 );
                 return Ok(endpoint);
             }
             Err(e) if attempts < MAX_DISCOVERY_RETRIES => {
                 debug!(
-                    "🔄 Discovery attempt {}/{} failed: {}. Retrying in {:?}...",
+                    "Discovery attempt {}/{} failed: {}. Retrying in {:?}...",
                     attempts, MAX_DISCOVERY_RETRIES, e, RETRY_DELAY
                 );
                 sleep(RETRY_DELAY).await;
@@ -192,7 +192,7 @@ pub async fn discover_nestgate_with_retry() -> Result<IpcEndpoint> {
 pub async fn connect_to_nestgate() -> Result<IpcStream> {
     let endpoint = discover_nestgate_endpoint().await?;
 
-    info!("🔌 Connecting to NestGate at: {:?}", endpoint);
+    info!("Connecting to NestGate at: {:?}", endpoint);
 
     connect_endpoint(&endpoint)
         .await
@@ -224,7 +224,7 @@ pub async fn connect_to_nestgate() -> Result<IpcStream> {
 pub async fn connect_to_nestgate_with_retry() -> Result<IpcStream> {
     let endpoint = discover_nestgate_with_retry().await?;
 
-    info!("🔌 Connecting to NestGate at: {:?}", endpoint);
+    info!("Connecting to NestGate at: {:?}", endpoint);
 
     connect_endpoint(&endpoint)
         .await

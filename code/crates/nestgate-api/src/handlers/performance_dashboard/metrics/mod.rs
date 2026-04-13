@@ -70,7 +70,7 @@ impl RealTimeMetricsCollector {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics> {
-        debug!("📊 Getting current real-time metrics");
+        debug!("Getting current real-time metrics");
 
         // Try to get cached metrics first
         {
@@ -82,7 +82,7 @@ impl RealTimeMetricsCollector {
 
                 if age < Duration::from_secs(60) {
                     // Use cache if less than 1 minute old
-                    debug!("📈 Using cached metrics (age: {:?})", age);
+                    debug!("Using cached metrics (age: {:?})", age);
                     return Ok(cached_metrics.clone());
                 }
             }
@@ -94,7 +94,7 @@ impl RealTimeMetricsCollector {
 
     /// Collect all real metrics from system and ZFS
     async fn collect_all_metrics() -> Result<RealTimeMetrics> {
-        debug!("🔍 Collecting comprehensive real-time metrics");
+        debug!("Collecting comprehensive real-time metrics");
 
         // Collect system metrics
         let system_metrics = metrics_system::collect_system_metrics().await?;

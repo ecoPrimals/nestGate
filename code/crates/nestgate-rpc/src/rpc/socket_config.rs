@@ -268,7 +268,7 @@ impl SocketConfig {
     ) -> Result<Self> {
         // Tier 1: Explicit socket path override (highest priority)
         if let Some(socket_path) = socket_override {
-            info!("🔌 Using explicit socket path: {}", socket_path);
+            info!("Using explicit socket path: {}", socket_path);
             return Ok(Self {
                 socket_path: PathBuf::from(socket_path),
                 family_id,
@@ -282,7 +282,7 @@ impl SocketConfig {
             let socket_path = PathBuf::from(biomeos_dir).join(socket_file_name(&family_id));
 
             info!(
-                "🔌 Using ecosystem socket directory (BIOMEOS_SOCKET_DIR): {} (family: {}, node: {})",
+                "Using ecosystem socket directory (BIOMEOS_SOCKET_DIR): {} (family: {}, node: {})",
                 socket_path.display(),
                 family_id,
                 node_id
@@ -306,7 +306,7 @@ impl SocketConfig {
                 .join(socket_file_name(&family_id));
 
             info!(
-                "🔌 Using XDG runtime directory with ecosystem socket layout: {} (family: {}, node: {})",
+                "Using XDG runtime directory with ecosystem socket layout: {} (family: {}, node: {})",
                 socket_path.display(),
                 family_id,
                 node_id
@@ -324,7 +324,7 @@ impl SocketConfig {
         let socket_path = PathBuf::from(format!("/tmp/nestgate-{family_id}-{node_id}.sock"));
 
         warn!(
-            "⚠️  XDG runtime directory unavailable or not set, falling back to /tmp: {}",
+            "XDG runtime directory unavailable or not set, falling back to /tmp: {}",
             socket_path.display()
         );
         warn!(
@@ -408,7 +408,7 @@ impl SocketConfig {
         )?;
 
         if env.get("NESTGATE_ABSTRACT_SOCKET").is_some() {
-            info!("📱 Abstract socket mode: using @nestgate as abstract namespace address");
+            info!("Abstract socket mode: using @nestgate as abstract namespace address");
             config.socket_path = PathBuf::from(format!("@nestgate-{}", config.family_id));
             config.source = SocketConfigSource::Environment;
         }
@@ -486,7 +486,7 @@ impl SocketConfig {
             nestgate_config::constants::system::ecosystem_path_segment()
         );
         info!("═══════════════════════════════════════════════════════════");
-        info!("🔌 Socket Configuration:");
+        info!("Socket Configuration:");
         info!("  Path:      {}", self.socket_path.display());
         info!("  Family ID: {}", self.family_id);
         info!("  Node ID:   {}", self.node_id);

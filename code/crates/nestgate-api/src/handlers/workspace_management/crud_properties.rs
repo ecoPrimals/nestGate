@@ -21,7 +21,7 @@ pub(super) async fn workspace_apply_quota(
     match quota_result {
         Ok(output) if output.status.success() => {
             updated_properties.push(format!("quota: {quota}"));
-            info!("✅ Updated quota to: {}", quota);
+            info!("Updated quota to: {}", quota);
         }
         Ok(output) => {
             errors.push(format!(
@@ -50,7 +50,7 @@ pub(super) async fn workspace_apply_compression(
     match compression_result {
         Ok(output) if output.status.success() => {
             updated_properties.push(format!("compression: {compression}"));
-            info!("✅ Updated compression to: {}", compression);
+            info!("Updated compression to: {}", compression);
         }
         Ok(output) => {
             errors.push(format!(
@@ -80,7 +80,7 @@ pub(super) async fn workspace_apply_name(
     match name_result {
         Ok(output) if output.status.success() => {
             updated_properties.push(format!("name: {name}"));
-            info!("✅ Updated workspace name to: {}", name);
+            info!("Updated workspace name to: {}", name);
         }
         Ok(output) => {
             errors.push(format!(

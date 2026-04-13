@@ -226,7 +226,7 @@ impl JsonRpcUnixServer {
 
         // Log configuration before preparing
         info!("═══════════════════════════════════════════════════════════");
-        info!("🏰 NestGate JSON-RPC Unix Socket Server");
+        info!("NestGate JSON-RPC Unix Socket Server");
         info!("═══════════════════════════════════════════════════════════");
         socket_config.log_summary();
 
@@ -236,9 +236,9 @@ impl JsonRpcUnixServer {
         let socket_path = socket_config.socket_path;
 
         // Initialize persistent storage backend
-        info!("📦 Initializing persistent storage backend...");
+        info!("Initializing persistent storage backend...");
         let state = StorageState::new()?;
-        info!("✅ Storage backend initialized");
+        info!("Storage backend initialized");
 
         Ok(Self {
             socket_path,
@@ -277,13 +277,13 @@ impl JsonRpcUnixServer {
         }
 
         info!("═══════════════════════════════════════════════════════════");
-        info!("✅ NestGate ready!");
+        info!("NestGate ready!");
         info!("   Socket: {}", self.socket_path.display());
         info!("   Family: {}", self.family_id);
         info!("   Protocol: JSON-RPC 2.0 over Unix socket");
         info!("═══════════════════════════════════════════════════════════");
         info!(
-            "💡 Test with: echo '{{\"jsonrpc\":\"2.0\",\"method\":\"storage.list\",\"id\":1}}' | nc -U {}",
+            "Test with: echo '{{\"jsonrpc\":\"2.0\",\"method\":\"storage.list\",\"id\":1}}' | nc -U {}",
             self.socket_path.display()
         );
 

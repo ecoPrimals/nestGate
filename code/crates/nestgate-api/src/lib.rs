@@ -127,6 +127,6 @@ pub use routes::{AppState, create_router};
 
 // Test modules
 #[cfg(test)]
-mod api_coverage_boost;
+mod api_coverage_tests;
 #[cfg(all(test, feature = "dev-stubs"))]
-mod round6_final_coverage;
+mod extended_coverage_tests;

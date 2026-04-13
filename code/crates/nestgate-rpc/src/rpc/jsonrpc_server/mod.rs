@@ -157,7 +157,7 @@ impl<S: StorageBackend + 'static> JsonRpcServer<S> {
     /// or JSON-RPC method registration fails.
     pub async fn start(self) -> Result<(ServerHandle, SocketAddr), NestGateError> {
         info!(
-            "🚀 Starting NestGate JSON-RPC 2.0 server on {}",
+            "Starting NestGate JSON-RPC 2.0 server on {}",
             self.config.addr
         );
 
@@ -172,7 +172,7 @@ impl<S: StorageBackend + 'static> JsonRpcServer<S> {
         // Start server
         let handle = server.start(module);
 
-        info!("✅ NestGate JSON-RPC 2.0 server listening on {}", addr);
+        info!("NestGate JSON-RPC 2.0 server listening on {}", addr);
         info!("   Endpoint: http://{}/jsonrpc", addr);
         info!("   Methods: 18 registered");
         info!("   Protocol: Primary=tarpc, Secondary=JSON-RPC");

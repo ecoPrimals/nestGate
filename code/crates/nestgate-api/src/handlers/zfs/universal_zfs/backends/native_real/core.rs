@@ -118,7 +118,7 @@ impl NativeZfsService {
     pub fn new() -> Self {
         let zfs_available = Self::check_zfs_availability();
         info!(
-            "🔧 Native ZFS service initialized (available: {})",
+            "Native ZFS service initialized (available: {})",
             zfs_available
         );
 
@@ -180,10 +180,7 @@ impl NativeZfsService {
             Ok(output) => {
                 self.track_request(duration, false);
                 let error_msg = String::from_utf8_lossy(&output.stderr);
-                warn!(
-                    "⚠️ ZFS command failed: {} {:?} - {}",
-                    command, args, error_msg
-                );
+                warn!("ZFS command failed: {} {:?} - {}", command, args, error_msg);
                 Err(UniversalZfsError::Internal {
                     message: format!("Command failed: zfs {} - {}", args.join(" "), error_msg),
                 })
@@ -191,7 +188,7 @@ impl NativeZfsService {
             Err(e) => {
                 self.track_request(duration, false);
                 warn!(
-                    "⚠️ Failed to execute ZFS command: {} {:?} - {}",
+                    "Failed to execute ZFS command: {} {:?} - {}",
                     command, args, e
                 );
                 Err(UniversalZfsError::Internal {
@@ -300,7 +297,7 @@ impl UniversalZfsService for NativeZfsService {
 
     /// Shutdown
     async fn shutdown(&self) -> UniversalZfsResult<()> {
-        info!("🔄 Shutting down Native ZFS service");
+        info!("Shutting down Native ZFS service");
         Ok(())
     }
 

@@ -67,7 +67,7 @@ pub(super) fn register_capability_methods<S: StorageBackend + 'static>(
                 std::time::Duration::from_secs(60),
             ) {
                 Ok(()) => {
-                    info!("✅ Capability '{}' registered successfully", p.capability);
+                    info!("Capability '{}' registered successfully", p.capability);
                     Ok::<_, ErrorObjectOwned>(serde_json::json!({
                         "success": true,
                         "message": format!("Capability {} registered and announced", p.capability),

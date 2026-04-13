@@ -164,7 +164,7 @@ pub fn transition_lifecycle_stage(
         });
 
         info!(
-            "✅ Transitioned dataset {} from {:?} to {:?}",
+            "Transitioned dataset {} from {:?} to {:?}",
             dataset_name, old_stage, new_stage
         );
     } else {

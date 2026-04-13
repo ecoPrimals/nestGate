@@ -215,4 +215,4 @@ mod edge_case_tests;
 mod result_types_comprehensive_tests;
 
 #[cfg(test)]
-mod core_coverage_boost;
+mod core_coverage_tests;

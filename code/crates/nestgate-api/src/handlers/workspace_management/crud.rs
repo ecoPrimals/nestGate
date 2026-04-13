@@ -63,7 +63,7 @@ pub async fn create_workspace_from_env_source(
 
     // Validate workspace name
     if workspace_name.is_empty() || workspace_name.len() > 100 {
-        warn!("❌ Invalid workspace name: {}", workspace_name);
+        warn!("Invalid workspace name: {}", workspace_name);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -110,7 +110,7 @@ pub async fn create_workspace_from_env_source(
 
     match create_output {
         Ok(output) if output.status.success() => {
-            info!("✅ Created ZFS dataset: {}", dataset_name);
+            info!("Created ZFS dataset: {}", dataset_name);
 
             // Get the created dataset information
             let dataset_info = get_workspace_details(&zfs_bin, env, &workspace_id).await;
@@ -126,11 +126,11 @@ pub async fn create_workspace_from_env_source(
         }
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to create ZFS dataset: {}", error_msg);
+            error!("Failed to create ZFS dataset: {}", error_msg);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
         Err(e) => {
-            error!("❌ Command execution failed: {}", e);
+            error!("Command execution failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -151,10 +151,10 @@ pub async fn get_workspace_from_env_source(
     env: &(impl EnvSource + ?Sized),
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
-    info!("📋 Getting workspace details: {}", workspace_id);
+    info!("Getting workspace details: {}", workspace_id);
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') {
-        warn!("❌ Invalid workspace ID: {}", workspace_id);
+        warn!("Invalid workspace ID: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -248,13 +248,13 @@ pub async fn get_workspace_from_env_source(
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
             warn!(
-                "⚠️ Workspace not found or inaccessible: {} - {}",
+                "Workspace not found or inaccessible: {} - {}",
                 workspace_id, error_msg
             );
             Err(StatusCode::NOT_FOUND)
         }
         Err(e) => {
-            error!("❌ Command execution failed: {}", e);
+            error!("Command execution failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -280,12 +280,12 @@ pub async fn update_workspace_config_from_env_source(
     Json(config): Json<Value>,
 ) -> Result<Json<Value>, StatusCode> {
     info!(
-        "⚙️ Updating workspace config: {} -> {:?}",
+        "Updating workspace config: {} -> {:?}",
         workspace_id, config
     );
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') {
-        warn!("❌ Invalid workspace ID: {}", workspace_id);
+        warn!("Invalid workspace ID: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -331,7 +331,7 @@ pub async fn update_workspace_config_from_env_source(
 
     if errors.is_empty() {
         info!(
-            "✅ Workspace configuration updated successfully: {}",
+            "Workspace configuration updated successfully: {}",
             workspace_id
         );
         Ok(Json(json!({
@@ -341,10 +341,10 @@ pub async fn update_workspace_config_from_env_source(
             "updated_properties": updated_properties
         })))
     } else if updated_properties.is_empty() {
-        warn!("❌ No properties were updated due to errors: {:?}", errors);
+        warn!("No properties were updated due to errors: {:?}", errors);
         Err(StatusCode::BAD_REQUEST)
     } else {
-        warn!("⚠️ Partial update completed with some errors: {:?}", errors);
+        warn!("Partial update completed with some errors: {:?}", errors);
         Ok(Json(json!({
             "status": "partial_success",
             "message": "Some configuration updates succeeded, others failed",

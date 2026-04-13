@@ -26,7 +26,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    info!("🚀 NestGate v2 - ZFS Pool Setup Demo");
+    info!("NestGate v2 - ZFS Pool Setup Demo");
     info!("=====================================");
 
     // Create pool setup manager
@@ -41,21 +41,21 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Get system report
     let report = setup.get_system_report();
 
-    info!("📊 System Analysis Report:");
+    info!("System Analysis Report:");
     info!("  Total devices found: {}", report.total_devices);
     info!("  Available for ZFS: {}", report.available_devices);
 
-    info!("📋 Device breakdown by type:");
+    info!("Device breakdown by type:");
     for (device_type, count) in &report.devices_by_type {
         info!("  {:?}: {} devices", device_type, count);
     }
 
-    info!("⚡ Device breakdown by speed:");
+    info!("Device breakdown by speed:");
     for (speed_class, count) in &report.devices_by_speed {
         info!("  {:?}: {} devices", speed_class, count);
     }
 
-    info!("🏊 Existing ZFS pools:");
+    info!("Existing ZFS pools:");
     if report.existing_pools.is_empty() {
         info!("  No existing pools found");
     } else {
@@ -64,7 +64,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    info!("💡 Recommendations:");
+    info!("Recommendations:");
     for recommendation in &report.recommendations {
         info!("  - {}", recommendation);
     }
@@ -72,10 +72,10 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Show available devices in detail
     let available_devices = setup.get_available_devices();
     if !available_devices.is_empty() {
-        info!("🔍 Available devices for ZFS:");
+        info!("Available devices for ZFS:");
         for device in &available_devices {
             let size_gb = device.size_bytes as f64 / (1024.0_f64.powi(3));
-            info!("  📀 {} ({:.1} GB)", device.device_path, size_gb);
+            info!("   {} ({:.1} GB)", device.device_path, size_gb);
             info!("     Model: {}", device.model);
             info!("     Type: {:?}", device.device_type);
             info!("     Speed: {:?}", device.speed_class);
@@ -87,28 +87,28 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     // Generate recommended configuration
     if report.available_devices > 0 {
-        info!("🎯 Generating optimal pool configuration...");
+        info!("Generating optimal pool configuration...");
 
         match setup.recommend_pool_config("nestpool-demo") {
             Ok(config) => {
-                info!("✅ Recommended configuration:");
+                info!("Recommended configuration:");
                 info!("  Pool name: {}", config.pool_name);
                 info!("  Topology: {:?}", config.topology);
                 info!("  Devices: {:?}", config.devices);
                 info!("  Create tiers: {}", config.create_tiers);
 
-                info!("📋 Pool properties:");
+                info!("Pool properties:");
                 for (key, value) in &config.properties {
                     info!("    {}: {}", key, value);
                 }
 
-                info!("🏗️ Tier mappings:");
+                info!("Tier mappings:");
                 for (tier, device_types) in &config.tier_mappings {
                     info!("    {:?}: {:?}", tier, device_types);
                 }
 
                 // Ask user if they want to create the pool
-                println!("\n⚠️  WARNING: This will create a real ZFS pool!");
+                println!("\nWARNING: This will create a real ZFS pool!");
                 println!("   This is a DEMO - do not run on production systems!");
                 println!("   Press Ctrl+C to abort, or Enter to continue...");
 
@@ -134,7 +134,7 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         info!("  - Insufficient permissions to access device information");
     }
 
-    info!("🎉 Demo completed!");
+    info!("Demo completed!");
     info!("To set up a production ZFS pool with the spare 990 EVO:");
     info!("  1. Ensure the device is not in use");
     info!("  2. Run with sudo privileges");

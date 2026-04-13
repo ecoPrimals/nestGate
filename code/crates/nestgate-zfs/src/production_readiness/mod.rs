@@ -292,7 +292,7 @@ impl ProductionReadinessValidator {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn assess_production_readiness(&self) -> Result<ProductionReadinessReport> {
-        info!("🔍 Starting comprehensive production readiness assessment...");
+        info!("Starting comprehensive production readiness assessment...");
         let mut report = ProductionReadinessReport {
             ready_for_production: false,
             zfs_available: false,

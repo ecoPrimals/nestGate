@@ -42,7 +42,7 @@ impl RealTimeMetricsCollector {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn get_current_metrics(&self) -> Result<RealTimeMetrics> {
-        info!("📊 Collecting real-time system and storage metrics");
+        info!("Collecting real-time system and storage metrics");
 
         // Collect real system metrics
         let system_metrics = linux_proc::collect_real_system_metrics().await?;

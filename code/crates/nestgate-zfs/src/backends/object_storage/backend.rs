@@ -60,14 +60,14 @@ impl ObjectStorageBackend {
         // Try capability discovery first
         if let Ok(config) = Self::discover_object_storage_capability_from_env_source(env) {
             info!(
-                "✅ Object storage initialized via capability discovery: service={}",
+                "Object storage initialized via capability discovery: service={}",
                 config.service_id
             );
             return Self::from_discovered_capability(config);
         }
 
         // Fallback to environment configuration
-        info!("ℹ️  Capability discovery unavailable, using environment configuration");
+        info!("Capability discovery unavailable, using environment configuration");
         Self::from_environment_from_env_source(env)
     }
 
@@ -95,11 +95,11 @@ impl ObjectStorageBackend {
     fn discover_object_storage_capability_from_env_source(
         env: &(impl EnvSource + ?Sized),
     ) -> Result<DiscoveredStorageConfig> {
-        debug!("🔍 Discovering object storage capabilities...");
+        debug!("Discovering object storage capabilities...");
 
         // Step 1: Try environment-based discovery (most explicit)
         if let Some(endpoint) = env.get("OBJECT_STORAGE_ENDPOINT") {
-            info!("📍 Discovered object storage via environment: {}", endpoint);
+            info!("Discovered object storage via environment: {}", endpoint);
 
             let region = env
                 .get("OBJECT_STORAGE_REGION")
@@ -140,7 +140,7 @@ impl ObjectStorageBackend {
     /// Create backend from discovered capability
     fn from_discovered_capability(config: DiscoveredStorageConfig) -> Result<Self> {
         info!(
-            "🪣 Initializing object storage from capability: endpoint={}, region={}",
+            "Initializing object storage from capability: endpoint={}, region={}",
             config.endpoint, config.region
         );
 
@@ -204,12 +204,12 @@ impl ObjectStorageBackend {
         let path_style = Self::should_use_path_style(&endpoint);
 
         info!(
-            "🪣 Initializing object storage from environment: endpoint={}, region={}, provider={:?}",
+            "Initializing object storage from environment: endpoint={}, region={}, provider={:?}",
             endpoint, region, provider
         );
 
         if path_style {
-            info!("🔧 Using path-style requests (MinIO/legacy S3 mode)");
+            info!("Using path-style requests (MinIO/legacy S3 mode)");
         }
 
         Ok(Self {

@@ -76,7 +76,7 @@ impl JsonRpcService {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn disconnect(&mut self) -> Result<(), RpcError> {
-        info!("🔌 Disconnecting from orchestration");
+        info!("Disconnecting from orchestration");
         // Simplified - just log the disconnection
         Ok(())
     }
@@ -133,7 +133,7 @@ impl UnifiedRpcService for JsonRpcService {
         // implementation or the service's own logic.
         // For now, we'll assume the service is always connected for the purpose of this example.
 
-        debug!("📞 JSON RPC call to orchestration: {}", request.method);
+        debug!("JSON RPC call to orchestration: {}", request.method);
 
         // Route to appropriate handler based on method
         if request.method.starts_with("register")
@@ -168,7 +168,7 @@ impl UnifiedRpcService for JsonRpcService {
         // For now, we'll assume the service is always connected for the purpose of this example.
 
         debug!(
-            "🔄 Starting JSON RPC stream to orchestration: {}",
+            "Starting JSON RPC stream to orchestration: {}",
             request.method
         );
 

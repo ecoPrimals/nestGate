@@ -69,7 +69,7 @@ impl ZfsHealthMonitor {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn start(&mut self) -> Result<()> {
-        info!("🏥 Starting ZFS health monitoring...");
+        info!("Starting ZFS health monitoring...");
 
         // Initialize monitoring tasks
         let _config = self.config.clone();
@@ -109,7 +109,7 @@ impl ZfsHealthMonitor {
                     }
                 }
 
-                debug!("🔍 Pool health check cycle completed");
+                debug!("Pool health check cycle completed");
             }
         });
 
@@ -151,7 +151,7 @@ impl ZfsHealthMonitor {
         // Store task handles
         self.monitoring_tasks = Some((pool_monitor_handle, dataset_monitor_handle));
 
-        info!("✅ ZFS health monitoring started successfully");
+        info!("ZFS health monitoring started successfully");
         Ok(())
     }
 
@@ -164,7 +164,7 @@ impl ZfsHealthMonitor {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn stop(&mut self) -> Result<()> {
-        info!("🛑 Stopping ZFS health monitoring...");
+        info!("Stopping ZFS health monitoring...");
 
         // Cancel monitoring tasks
         if let Some((pool_handle, dataset_handle)) = self.monitoring_tasks.take() {
@@ -181,7 +181,7 @@ impl ZfsHealthMonitor {
             health.clear();
         }
 
-        info!("✅ ZFS health monitoring stopped");
+        info!("ZFS health monitoring stopped");
         Ok(())
     }
 

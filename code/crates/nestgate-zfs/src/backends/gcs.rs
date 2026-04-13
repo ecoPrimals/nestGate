@@ -45,11 +45,14 @@
 //! let dataset = backend.create_dataset(&pool, "data", StorageTier::Hot).await?;
 //! ```
 
+use super::cloud_helpers::{
+    self, CloudConfigSource, dataset_path_prefix, prefixed_pool_resource_name,
+};
+pub use super::gcs_types::{GcsDataset, GcsPool, GcsProperties, GcsSnapshot, GcsStorageClass};
 use crate::zero_cost_zfs_operations::ZeroCostZfsOperations;
 use nestgate_core::canonical_types::StorageTier;
 use nestgate_core::{NestGateError, Result, config_error};
 use nestgate_types::{EnvSource, ProcessEnv};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -86,27 +89,7 @@ struct GcsClientWrapper {
     /// **PLANNED**: GCS SDK client initialization (v0.2.0)
     credentials_path: Option<String>,
     /// Configuration source (capability discovery vs environment)
-    config_source: ConfigSource,
-}
-
-/// Configuration source for GCS backend
-///
-/// **EVOLUTION**: Tracks configuration provenance for audit and dynamic reconfiguration
-#[derive(Debug, Clone)]
-enum ConfigSource {
-    /// Discovered via `NestGate` capability system (preferred)
-    CapabilityDiscovered {
-        /// Service descriptor from discovery
-        /// Service descriptor from discovery
-        service_id: String,
-    },
-    /// Fallback to environment variables
-    Environment,
-    /// Explicit configuration (for testing/future use)
-    Explicit {
-        /// Project ID
-        project_id: String,
-    },
+    config_source: CloudConfigSource,
 }
 
 /// Discovered GCS configuration from capability system
@@ -122,81 +105,6 @@ struct DiscoveredGcsConfig {
     bucket_prefix: String,
     /// Default location
     location: String,
-}
-
-/// GCS-backed pool (maps to GCS bucket)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GcsPool {
-    /// Pool name
-    pub name: String,
-    /// GCS bucket name
-    pub bucket: String,
-    /// Bucket location
-    pub location: String,
-    /// Creation time
-    pub created_at: std::time::SystemTime,
-    /// Pool metadata
-    pub metadata: HashMap<String, String>,
-}
-
-/// GCS-backed dataset (maps to object prefix with storage class)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GcsDataset {
-    /// Dataset name
-    pub name: String,
-    /// Pool name
-    pub pool: String,
-    /// Object prefix
-    pub prefix: String,
-    /// Storage tier
-    pub tier: StorageTier,
-    /// GCS storage class
-    pub storage_class: GcsStorageClass,
-    /// Creation time
-    pub created_at: std::time::SystemTime,
-}
-
-/// GCS-backed snapshot (maps to object versioning or generation)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GcsSnapshot {
-    /// Snapshot name
-    pub name: String,
-    /// Dataset name
-    pub dataset: String,
-    /// GCS generation identifier
-    pub generation: String,
-    /// Creation time
-    pub created_at: std::time::SystemTime,
-}
-
-/// GCS pool properties
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GcsProperties {
-    /// GCP project ID
-    pub project_id: String,
-    /// Bucket location
-    pub location: String,
-    /// Versioning enabled
-    pub versioning: bool,
-    /// Uniform bucket-level access
-    pub uniform_access: bool,
-    /// Lifecycle rules active
-    pub lifecycle_enabled: bool,
-    /// Additional properties
-    pub custom: HashMap<String, String>,
-}
-
-/// GCS storage class mapping
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum GcsStorageClass {
-    /// Standard storage (frequent access)
-    Standard,
-    /// Nearline storage (monthly access)
-    Nearline,
-    /// Coldline storage (quarterly access)
-    Coldline,
-    /// Archive storage (yearly access)
-    Archive,
 }
 
 impl GcsBackend {
@@ -215,14 +123,14 @@ impl GcsBackend {
         // Try capability discovery first
         if let Ok(config) = Self::discover_gcs_capability().await {
             info!(
-                "✅ GCS backend initialized via capability discovery: service_id={}",
+                "GCS backend initialized via capability discovery: service_id={}",
                 config.service_id
             );
             return Self::from_discovered_capability(config).await;
         }
 
         // Fallback to environment configuration
-        info!("ℹ️ Capability discovery unavailable, using environment config");
+        info!("Capability discovery unavailable, using environment config");
         Self::from_env_source(&ProcessEnv)
     }
 
@@ -231,30 +139,25 @@ impl GcsBackend {
     /// **RUNTIME DISCOVERY**: No hardcoded service locations.
     /// Backend discovers GCS-compatible storage services at startup.
     async fn discover_gcs_capability() -> Result<DiscoveredGcsConfig> {
-        // Integration point for NestGate capability discovery
-        // When capability system is available, it will return discovered GCS config
-        // For now, return error to trigger environment fallback
-        Err(NestGateError::not_found(
-            "GCS capability discovery integration pending",
-        ))
+        Err(cloud_helpers::pending_capability_discovery("GCS"))
     }
 
     /// Create backend from discovered capability (zero-hardcoding approach)
     async fn from_discovered_capability(config: DiscoveredGcsConfig) -> Result<Self> {
         info!(
-            "☁️  Initializing GCS backend from capability: project={}, location={}, prefix={}",
+            "Initializing GCS backend from capability: project={}, location={}, prefix={}",
             config.project_id, config.location, config.bucket_prefix
         );
 
         if let Some(ref creds) = config.credentials_path {
-            info!("🔑 Using discovered GCS credentials: {}", creds);
+            info!("Using discovered GCS credentials: {}", creds);
         }
 
         Ok(Self {
             client: Arc::new(GcsClientWrapper {
                 project_id: config.project_id,
                 credentials_path: config.credentials_path,
-                config_source: ConfigSource::CapabilityDiscovered {
+                config_source: CloudConfigSource::CapabilityDiscovered {
                     service_id: config.service_id,
                 },
             }),
@@ -296,21 +199,21 @@ impl GcsBackend {
         let location = env.get_or("GCS_LOCATION", "US");
 
         info!(
-            "☁️  Initializing GCS backend from environment: project={}, location={}, prefix={}",
+            "Initializing GCS backend from environment: project={}, location={}, prefix={}",
             project_id, location, bucket_prefix
         );
 
         if let Some(ref creds) = credentials_path {
-            info!("🔑 Using GCS credentials from: {}", creds);
+            info!("Using GCS credentials from: {}", creds);
         } else {
-            warn!("⚠️ No explicit credentials path - using default application credentials");
+            warn!("No explicit credentials path - using default application credentials");
         }
 
         Ok(Self {
             client: Arc::new(GcsClientWrapper {
                 project_id,
                 credentials_path,
-                config_source: ConfigSource::Environment,
+                config_source: CloudConfigSource::Environment,
             }),
             bucket_prefix,
             location,
@@ -320,14 +223,12 @@ impl GcsBackend {
 
     /// Get full bucket name with prefix
     fn bucket_name(&self, pool_name: &str) -> String {
-        format!("{}-{}", self.bucket_prefix, pool_name)
-            .to_lowercase()
-            .replace('_', "-")
+        prefixed_pool_resource_name(&self.bucket_prefix, pool_name)
     }
 
     /// Get dataset prefix
     fn dataset_prefix(pool_name: &str, dataset_name: &str) -> String {
-        format!("{pool_name}/{dataset_name}")
+        dataset_path_prefix(pool_name, dataset_name)
     }
 
     /// Map storage tier to GCS storage class
@@ -383,7 +284,7 @@ impl ZeroCostZfsOperations for GcsBackend {
     async fn create_pool(&self, name: &str, _devices: &[&str]) -> Result<Self::Pool> {
         let bucket_name = self.bucket_name(name);
 
-        info!("☁️  Creating GCS pool (bucket): {}", bucket_name);
+        info!("Creating GCS pool (bucket): {}", bucket_name);
 
         // ✅ PROTOCOL-FIRST: Create GCS bucket via JSON API (no SDK)
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/buckets/insert
@@ -408,7 +309,7 @@ impl ZeroCostZfsOperations for GcsBackend {
             .await
             .insert(name.to_string(), pool.clone());
 
-        info!("✅ GCS pool created: {}", name);
+        info!("GCS pool created: {}", name);
         Ok(pool)
     }
 
@@ -424,7 +325,7 @@ impl ZeroCostZfsOperations for GcsBackend {
         let class_name = Self::storage_class_name(&storage_class);
 
         info!(
-            "📁 Creating GCS dataset: {} (tier: {:?} -> GCS: {})",
+            "Creating GCS dataset: {} (tier: {:?} -> GCS: {})",
             prefix, tier, class_name
         );
 
@@ -450,7 +351,7 @@ impl ZeroCostZfsOperations for GcsBackend {
             created_at: std::time::SystemTime::now(),
         };
 
-        info!("✅ GCS dataset created: {}", name);
+        info!("GCS dataset created: {}", name);
         Ok(dataset)
     }
 
@@ -463,7 +364,7 @@ impl ZeroCostZfsOperations for GcsBackend {
             chrono::Utc::now().timestamp()
         );
 
-        info!("📸 Creating GCS snapshot: {}", generation);
+        info!("Creating GCS snapshot: {}", generation);
 
         // ✅ PROTOCOL-FIRST: Create snapshot using GCS object versioning
         // Spec: https://cloud.google.com/storage/docs/object-versioning
@@ -482,13 +383,13 @@ impl ZeroCostZfsOperations for GcsBackend {
             created_at: std::time::SystemTime::now(),
         };
 
-        info!("✅ GCS snapshot created: {}", name);
+        info!("GCS snapshot created: {}", name);
         Ok(snapshot)
     }
 
     /// Get GCS pool properties
     async fn get_pool_properties(&self, pool: &Self::Pool) -> Result<Self::Properties> {
-        debug!("📊 Getting properties for pool: {}", pool.name);
+        debug!("Getting properties for pool: {}", pool.name);
 
         // ✅ PROTOCOL-FIRST: Query GCS bucket properties via JSON API
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/buckets/get
@@ -504,13 +405,7 @@ impl ZeroCostZfsOperations for GcsBackend {
                 let mut map = HashMap::new();
                 map.insert(
                     "config_source".to_string(),
-                    match &self.client.config_source {
-                        ConfigSource::CapabilityDiscovered { service_id } => {
-                            format!("capability:{service_id}")
-                        }
-                        ConfigSource::Environment => "environment".to_string(),
-                        ConfigSource::Explicit { project_id } => format!("explicit:{project_id}"),
-                    },
+                    cloud_helpers::config_source_custom_value(&self.client.config_source),
                 );
                 map
             },
@@ -521,20 +416,20 @@ impl ZeroCostZfsOperations for GcsBackend {
 
     /// List GCS pools (buckets)
     async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
-        debug!("📋 Listing GCS pools");
+        debug!("Listing GCS pools");
 
         // ✅ PROTOCOL-FIRST: List GCS buckets via JSON API
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/buckets/list
         // Future: GET https://storage.googleapis.com/storage/v1/b?project={project}&prefix={prefix}
         // For now, return in-memory pools (consistent with current architecture)
         let pools = self.pools.read().await;
-        debug!("📋 Found {} GCS pools in memory", pools.len());
+        debug!("Found {} GCS pools in memory", pools.len());
         Ok(pools.values().cloned().collect())
     }
 
     /// List GCS datasets (object prefixes)
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
-        debug!("📋 Listing datasets for pool: {}", pool.name);
+        debug!("Listing datasets for pool: {}", pool.name);
 
         // ✅ PROTOCOL-FIRST: List object prefixes using delimiter
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/objects/list
@@ -547,7 +442,7 @@ impl ZeroCostZfsOperations for GcsBackend {
 
     /// List GCS snapshots (object generations)
     async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
-        debug!("📋 Listing snapshots for dataset: {}", dataset.name);
+        debug!("Listing snapshots for dataset: {}", dataset.name);
 
         // ✅ PROTOCOL-FIRST: List object generations (versions)
         // Spec: https://cloud.google.com/storage/docs/json_api/v1/objects/list
@@ -560,166 +455,5 @@ impl ZeroCostZfsOperations for GcsBackend {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn tier_mapping_and_storage_class_names() {
-        assert_eq!(
-            GcsBackend::map_tier(&StorageTier::Hot),
-            GcsStorageClass::Standard
-        );
-        assert_eq!(
-            GcsBackend::map_tier(&StorageTier::Warm),
-            GcsStorageClass::Nearline
-        );
-        assert_eq!(
-            GcsBackend::map_tier(&StorageTier::Cold),
-            GcsStorageClass::Coldline
-        );
-        assert_eq!(
-            GcsBackend::map_tier(&StorageTier::Cache),
-            GcsStorageClass::Standard
-        );
-        assert_eq!(
-            GcsBackend::map_tier(&StorageTier::Archive),
-            GcsStorageClass::Archive
-        );
-        assert_eq!(
-            GcsBackend::storage_class_name(&GcsStorageClass::Standard),
-            "STANDARD"
-        );
-        assert_eq!(
-            GcsBackend::storage_class_name(&GcsStorageClass::Nearline),
-            "NEARLINE"
-        );
-        assert_eq!(
-            GcsBackend::storage_class_name(&GcsStorageClass::Coldline),
-            "COLDLINE"
-        );
-        assert_eq!(
-            GcsBackend::storage_class_name(&GcsStorageClass::Archive),
-            "ARCHIVE"
-        );
-    }
-
-    #[test]
-    fn dataset_prefix_format() {
-        assert_eq!(GcsBackend::dataset_prefix("tank", "data"), "tank/data");
-    }
-
-    #[tokio::test]
-    async fn gcs_backend_from_config_no_external_apis() {
-        let backend = GcsBackend::from_discovered_config_for_test(
-            "env-test",
-            "nestgate-gcs-test",
-            None,
-            "test-nestgate",
-            "US-WEST1",
-        )
-        .await
-        .expect("config-injected backend");
-        assert_eq!(backend.bucket_prefix, "test-nestgate");
-        assert_eq!(backend.location, "US-WEST1");
-    }
-
-    #[tokio::test]
-    async fn gcs_backend_accepts_project_id_via_config() {
-        let backend = GcsBackend::from_discovered_config_for_test(
-            "alias-test",
-            "alias-proj",
-            None,
-            "nestgate",
-            "US",
-        )
-        .await
-        .expect("project id via config injection");
-        assert_eq!(backend.bucket_prefix, "nestgate");
-    }
-
-    #[tokio::test]
-    async fn gcs_operations_in_memory_round_trip() {
-        let backend = GcsBackend::from_discovered_config_for_test(
-            "inmem-test",
-            "inmem-proj",
-            None,
-            "nestgate",
-            "US",
-        )
-        .await
-        .expect("backend");
-
-        let pool = backend
-            .create_pool("test-pool", &[])
-            .await
-            .expect("create_pool");
-        let bucket = backend.bucket_name("test-pool");
-        assert!(bucket.contains("test-pool"));
-        assert!(!bucket.contains('_'));
-
-        let dataset = backend
-            .create_dataset(&pool, "data", StorageTier::Warm)
-            .await
-            .expect("dataset");
-        assert_eq!(dataset.storage_class, GcsStorageClass::Nearline);
-
-        let snapshot = backend
-            .create_snapshot(&dataset, "snap1")
-            .await
-            .expect("snapshot");
-        assert_eq!(snapshot.dataset, "data");
-
-        let props = backend.get_pool_properties(&pool).await.expect("props");
-        assert_eq!(props.project_id, "inmem-proj");
-        assert!(
-            props
-                .custom
-                .get("config_source")
-                .is_some_and(|s| s.contains("capability"))
-        );
-    }
-
-    #[tokio::test]
-    async fn gcs_backend_from_discovered_capability_path() {
-        let backend = GcsBackend::from_discovered_config_for_test(
-            "svc-1",
-            "discovered-project",
-            Some("/tmp/creds.json".to_string()),
-            "ng-prefix",
-            "EU",
-        )
-        .await
-        .expect("discovered backend");
-
-        let pool = backend.create_pool("p1", &[]).await.expect("pool");
-        let props = backend
-            .get_pool_properties(&pool)
-            .await
-            .expect("properties");
-        assert_eq!(props.project_id, "discovered-project");
-        let src = props.custom.get("config_source").expect("config_source");
-        assert!(src.contains("capability:svc-1"));
-    }
-
-    #[tokio::test]
-    async fn gcs_pools_list_and_empty_datasets() {
-        let backend = GcsBackend::from_discovered_config_for_test(
-            "list-test",
-            "list-proj",
-            None,
-            "nestgate",
-            "US",
-        )
-        .await
-        .expect("backend");
-
-        backend.create_pool("pool1", &[]).await.unwrap();
-        backend.create_pool("pool2", &[]).await.unwrap();
-        let pools = backend.list_pools().await.expect("list pools");
-        assert_eq!(pools.len(), 2);
-
-        let p = &pools[0];
-        let datasets = backend.list_datasets(p).await.expect("list datasets");
-        assert!(datasets.is_empty());
-    }
-}
+#[path = "gcs_tests.rs"]
+mod tests;

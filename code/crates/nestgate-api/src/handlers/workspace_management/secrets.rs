@@ -17,14 +17,14 @@ use tracing::{info, warn};
 pub async fn create_workspace_secret(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
-    info!("🔐 Creating workspace secret: {}", workspace_id);
+    info!("Creating workspace secret: {}", workspace_id);
     // Attempt to delegate to security adapter
     let adapter = AuthTokenManager::new("default-signing-key".to_string());
 
     // Use security adapter for actual secret management
     match adapter.create_workspace_secret(&workspace_id) {
         Ok(secret_id) => {
-            info!("✅ Workspace secret created: {}", secret_id);
+            info!("Workspace secret created: {}", secret_id);
             Ok(Json(json!({
                 "status": "success",
                 "message": "Workspace secret created successfully",
@@ -34,7 +34,7 @@ pub async fn create_workspace_secret(
             })))
         }
         Err(e) => {
-            warn!("❌ Failed to create workspace secret: {}", e);
+            warn!("Failed to create workspace secret: {}", e);
             // Fallback when security operation fails
             Ok(Json(json!({
                 "status": "fallback",

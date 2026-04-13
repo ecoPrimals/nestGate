@@ -31,9 +31,9 @@ fn is_valid_workspace_id(id: &str) -> bool {
 /// Returns `StatusCode::BAD_REQUEST` if workspace ID format is invalid,
 /// or `StatusCode::INTERNAL_SERVER_ERROR` if storage deletion fails.
 pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
-    info!("🗑️ Deleting workspace storage: {}", workspace_id);
+    info!("Deleting workspace storage: {}", workspace_id);
     if !is_valid_workspace_id(&workspace_id) {
-        warn!("❌ Invalid workspace ID format: {}", workspace_id);
+        warn!("Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -47,13 +47,10 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
 
     match check_output {
         Ok(output) if output.status.success() => {
-            info!(
-                "✅ Dataset exists, proceeding with deletion: {}",
-                dataset_name
-            );
+            info!("Dataset exists, proceeding with deletion: {}", dataset_name);
         }
         Ok(_) => {
-            warn!("⚠️ Dataset does not exist: {}", dataset_name);
+            warn!("Dataset does not exist: {}", dataset_name);
             return Ok(Json(json!({
                 "status": "success",
                 "message": "Workspace storage already deleted or never existed",
@@ -61,7 +58,7 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
             })));
         }
         Err(e) => {
-            error!("❌ Failed to check dataset existence: {}", e);
+            error!("Failed to check dataset existence: {}", e);
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
     }
@@ -74,10 +71,7 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
 
     match delete_output {
         Ok(output) if output.status.success() => {
-            info!(
-                "✅ Successfully deleted workspace storage: {}",
-                workspace_id
-            );
+            info!("Successfully deleted workspace storage: {}", workspace_id);
             Ok(Json(json!({
                 "status": "success",
                 "message": "Workspace storage deleted successfully",
@@ -87,11 +81,11 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
         }
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to delete ZFS dataset: {}", error_msg);
+            error!("Failed to delete ZFS dataset: {}", error_msg);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
         Err(e) => {
-            error!("❌ Command execution failed: {}", e);
+            error!("Command execution failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -101,9 +95,9 @@ pub async fn delete_workspace(Path(workspace_id): Path<String>) -> Result<Json<V
 pub async fn get_workspace_status(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
-    info!("📊 Getting workspace storage status: {}", workspace_id);
+    info!("Getting workspace storage status: {}", workspace_id);
     if !is_valid_workspace_id(&workspace_id) {
-        warn!("❌ Invalid workspace ID format: {}", workspace_id);
+        warn!("Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -159,7 +153,7 @@ pub async fn get_workspace_status(
             let mountpoint = properties.get("mountpoint").map_or("-", |v| v);
             let mounted = properties.get("mounted").map_or("no", |v| v);
 
-            info!("✅ Retrieved workspace storage status: {}", workspace_id);
+            info!("Retrieved workspace storage status: {}", workspace_id);
             Ok(Json(json!({
                 "status": "success",
                 "workspace_id": workspace_id,
@@ -180,11 +174,11 @@ pub async fn get_workspace_status(
         }
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            error!("❌ Failed to get ZFS dataset properties: {}", error_msg);
+            error!("Failed to get ZFS dataset properties: {}", error_msg);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
         Err(e) => {
-            error!("❌ Command execution failed: {}", e);
+            error!("Command execution failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -194,9 +188,9 @@ pub async fn get_workspace_status(
 pub async fn cleanup_workspace(
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
-    info!("🧹 Cleaning up workspace storage: {}", workspace_id);
+    info!("Cleaning up workspace storage: {}", workspace_id);
     if !is_valid_workspace_id(&workspace_id) {
-        warn!("❌ Invalid workspace ID format: {}", workspace_id);
+        warn!("Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -276,7 +270,7 @@ pub async fn cleanup_workspace(
         }
     }
 
-    info!("✅ Workspace storage cleanup completed: {}", workspace_id);
+    info!("Workspace storage cleanup completed: {}", workspace_id);
     Ok(Json(json!({
         "status": "success",
         "message": "Workspace storage cleaned up successfully",
@@ -292,7 +286,7 @@ pub async fn cleanup_workspace(
 ///
 /// Returns `StatusCode::INTERNAL_SERVER_ERROR` if storage scaling fails.
 pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Value>, StatusCode> {
-    info!("📈 Scaling workspace storage: {}", workspace_id);
+    info!("Scaling workspace storage: {}", workspace_id);
     // Basic workspace scaling implementation
     let dataset_name = format!("nestpool/workspaces/{workspace_id}");
 

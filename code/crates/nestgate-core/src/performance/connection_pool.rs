@@ -153,7 +153,7 @@ where
         F: Fn() -> Result<T> + Send + Sync + 'static,
     {
         info!(
-            "🏊 Creating universal connection pool with max {} connections",
+            "Creating universal connection pool with max {} connections",
             config.max_connections
         );
 
@@ -192,7 +192,7 @@ where
         for pooled_conn in connections.iter_mut() {
             if !pooled_conn.in_use {
                 pooled_conn.mark_used();
-                debug!("♻️ Reusing existing connection from pool");
+                debug!("Reusing existing connection from pool");
 
                 // For now, we'll create a new connection instead of trying to move/clone
                 // This is a temporary solution until we can redesign the pooling properly
@@ -260,7 +260,7 @@ where
             for &index in connections_to_remove.iter().rev() {
                 if index < connections.len() {
                     connections.remove(index);
-                    debug!("🧹 Removed idle connection from pool");
+                    debug!("Removed idle connection from pool");
                 }
             }
 
@@ -320,7 +320,7 @@ where
                     stats.connections_destroyed += removed_count as u64;
                     stats.total_connections = connections.len();
                     debug!(
-                        "🧹 Background cleanup removed {} idle connections",
+                        "Background cleanup removed {} idle connections",
                         removed_count
                     );
                 }
@@ -363,7 +363,7 @@ impl<T> PooledConnectionGuard<T> {
 impl<T> Drop for PooledConnectionGuard<T> {
     /// Drop
     fn drop(&mut self) {
-        debug!("🔄 Connection returned to pool");
+        debug!("Connection returned to pool");
         // Connection will be returned to pool when this is dropped
         // The pool will handle reusing it for the next request
     }
@@ -406,7 +406,7 @@ impl ConnectionPoolManager {
         T: Send + Sync + 'static,
     {
         info!(
-            "📝 Registering connection pool for provider: {}",
+            "Registering connection pool for provider: {}",
             provider_name
         );
         let mut pools = self.pools.write().await;

@@ -116,7 +116,7 @@ impl UnixSocketListener {
         })?;
 
         info!(
-            "✅ NestGate listening on Unix socket: {}",
+            "NestGate listening on Unix socket: {}",
             self.socket_path.display()
         );
 

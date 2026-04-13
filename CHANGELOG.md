@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43f: Deep debt cleanup & professionalization (April 13, 2026)
+
+- **Emoji stripped from production logs**: ~620 emoji occurrences removed from 87 library files across
+  all crates. Professional structured logging only; CLI (`nestgate-bin`) retains user-facing output.
+- **Primal sovereignty hardened**: BearDog/Songbird/primalSpring references in production code replaced
+  with capability-generic wording (security provider, discovery service, etc.). Test fixtures unchanged.
+- **Module naming debt resolved**: 9 production-wired `*round*`/`*coverage_boost*` modules renamed to
+  neutral descriptive names (`impl_coverage_tests`, `extended_coverage_tests`, etc.) across 6 crates.
+- **3 large files smart-refactored**: `performance_engine/engine.rs` (750→5 files, all <240 LOC),
+  `pool_setup/mod.rs` (707→4 files, all <230 LOC), `backends/gcs.rs` (725→461) + `azure.rs` (692→498)
+  with shared `cloud_helpers.rs`. Max production file: 749 LOC.
+- **Cross-check invariant tests**: 11 new tests validating `capability_registry.toml` ↔ Wire Standard
+  L3 response (semantic naming, health triad, identity.get, no duplicates, transport, consumed caps).
+- **`capability_registry.toml` accuracy**: Added missing `storage.retrieve_range`; removed Songbird
+  reference from consumed capabilities.
+- **Clippy residual fixed**: `if_same_then_else` in `adaptive_backend.rs` after emoji strip.
+- Validation: `cargo fmt`, `cargo clippy`, `cargo test` — all PASS (11,805 tests, 0 failures).
+
 ### Session 43e: wetSpring parity — workspace lints, capability registry, method normalization (April 13, 2026)
 
 - **wetSpring pattern validation**: Pulled and analyzed wetSpring V143 systems; identified and resolved

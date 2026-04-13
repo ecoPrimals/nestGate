@@ -30,10 +30,7 @@ impl TarpcRpcService {
             _endpoint: endpoint.to_string(),
         };
 
-        info!(
-            "🔗 tarpc RPC service initialized for endpoint: {}",
-            endpoint
-        );
+        info!("tarpc RPC service initialized for endpoint: {}", endpoint);
         service
     }
 
@@ -72,7 +69,7 @@ impl TarpcRpcService {
         ),
         super::RpcError,
     > {
-        debug!("🔄 Starting tarpc stream to security: {}", request.method);
+        debug!("Starting tarpc stream to security: {}", request.method);
 
         let stream_id = Uuid::new_v4();
         let (response_tx, response_rx) = mpsc::channel(100);

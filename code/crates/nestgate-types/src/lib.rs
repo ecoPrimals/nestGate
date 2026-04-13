@@ -31,7 +31,7 @@ pub use result_types::{ConnectionFactory, HealthCheckFn, ValidatorFn, VoidResult
 pub use unified_enums::UnifiedEnum;
 
 #[cfg(test)]
-mod round5_impl_coverage;
+mod impl_coverage_tests;
 
 #[cfg(test)]
 mod unified_enums_exhaustive_tests;

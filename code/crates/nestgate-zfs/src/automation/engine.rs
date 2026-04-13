@@ -218,7 +218,7 @@ impl DatasetAutomation {
                                 let msg = action_result.message.clone();
                                 if success {
                                     info!(
-                                        "✅ Applied action '{}' to dataset {}",
+                                        "Applied action '{}' to dataset {}",
                                         action, dataset_name
                                     );
                                 } else {
@@ -230,7 +230,7 @@ impl DatasetAutomation {
                             }
                             Err(e) => {
                                 warn!(
-                                    "❌ Failed to apply action '{}' to dataset {}: {}",
+                                    "Failed to apply action '{}' to dataset {}: {}",
                                     action, dataset_name, e
                                 );
                             }
@@ -242,7 +242,7 @@ impl DatasetAutomation {
                         && lifecycle::should_transition_to_stage(dataset_name, lifecycle)
                     {
                         info!(
-                            "🔄 Transitioning dataset {} from {:?} to {:?}",
+                            "Transitioning dataset {} from {:?} to {:?}",
                             dataset_name, lifecycle.lifecycle_stage, next_stage
                         );
                         let mut lifecycle_tracker = self.lifecycle_tracker.write().await;

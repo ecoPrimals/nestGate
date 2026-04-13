@@ -168,7 +168,7 @@ impl AsyncWrite for IpcStream {
 /// Returns [`anyhow::Error`] when connecting to the Unix socket path or TCP address fails (for
 /// example connection refused, missing socket file, or I/O errors).
 pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
-    debug!("🔌 Connecting to: {}", endpoint.description());
+    debug!("Connecting to: {}", endpoint.description());
 
     match endpoint {
         IpcEndpoint::UnixSocket(path) => {
@@ -177,7 +177,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
                 .await
                 .map_err(|e| anyhow::anyhow!("Failed to connect to Unix socket: {e}"))?;
 
-            debug!("✅ Connected via Unix socket");
+            debug!("Connected via Unix socket");
             Ok(IpcStream::Unix(stream))
         }
         IpcEndpoint::TcpLocal(addr) => {
@@ -186,7 +186,7 @@ pub async fn connect_endpoint(endpoint: &IpcEndpoint) -> Result<IpcStream> {
                 .await
                 .map_err(|e| anyhow::anyhow!("Failed to connect to TCP endpoint: {e}"))?;
 
-            debug!("✅ Connected via TCP (localhost)");
+            debug!("Connected via TCP (localhost)");
             Ok(IpcStream::Tcp(stream))
         }
     }

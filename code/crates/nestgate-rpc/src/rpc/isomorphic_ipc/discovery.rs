@@ -129,13 +129,13 @@ pub fn discover_ipc_endpoint_from_env(
     env: &(impl EnvSource + ?Sized),
     service_name: &str,
 ) -> Result<IpcEndpoint> {
-    info!("🔍 Discovering IPC endpoint for: {}", service_name);
+    info!("Discovering IPC endpoint for: {}", service_name);
 
     // 1. Try Unix socket first (optimal)
     debug!("   Trying Unix socket discovery...");
     if let Ok(socket_path) = discover_unix_socket_from_env(env, service_name) {
         if socket_path.exists() {
-            info!("✅ Discovered Unix socket: {}", socket_path.display());
+            info!("Discovered Unix socket: {}", socket_path.display());
             return Ok(IpcEndpoint::UnixSocket(socket_path));
         }
         debug!(
@@ -147,7 +147,7 @@ pub fn discover_ipc_endpoint_from_env(
     // 2. Try TCP discovery file (fallback)
     debug!("   Trying TCP discovery file...");
     if let Ok(endpoint) = discover_tcp_endpoint_from_env(env, service_name) {
-        info!("✅ Discovered TCP endpoint: {}", endpoint.description());
+        info!("Discovered TCP endpoint: {}", endpoint.description());
         return Ok(endpoint);
     }
 
@@ -220,12 +220,12 @@ fn discover_tcp_endpoint_from_env(
             // Parse format: tcp:127.0.0.1:PORT
             if let Some(addr_str) = contents.trim().strip_prefix("tcp:") {
                 if let Ok(addr) = addr_str.parse::<SocketAddr>() {
-                    debug!("✅ Parsed TCP endpoint from discovery file: {}", addr);
+                    debug!("Parsed TCP endpoint from discovery file: {}", addr);
                     return Ok(IpcEndpoint::TcpLocal(addr));
                 }
-                debug!("⚠️  Invalid address format: {}", addr_str);
+                debug!("Invalid address format: {}", addr_str);
             } else {
-                debug!("⚠️  Invalid discovery file format (expected tcp:127.0.0.1:PORT)");
+                debug!("Invalid discovery file format (expected tcp:127.0.0.1:PORT)");
             }
         }
     }

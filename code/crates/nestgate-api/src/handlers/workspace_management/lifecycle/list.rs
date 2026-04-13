@@ -16,7 +16,7 @@ pub async fn list_workspace_backups_from_env_source(
     env: &(impl EnvSource + ?Sized),
     Path(workspace_id): Path<String>,
 ) -> Result<Json<Value>, StatusCode> {
-    info!("📋 Listing backups for workspace: {}", workspace_id);
+    info!("Listing backups for workspace: {}", workspace_id);
 
     let backup_dir = env_var_or_default(env, "NESTGATE_BACKUP_DIR", "/var/backups/nestgate");
 
@@ -57,7 +57,7 @@ pub async fn list_workspace_backups_from_env_source(
             }
         }
         Err(e) => {
-            warn!("⚠️ Could not read backup directory: {}", e);
+            warn!("Could not read backup directory: {}", e);
         }
     }
 

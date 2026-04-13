@@ -21,7 +21,8 @@ description = "Filesystem-backed durable key-value and blob storage"
 methods = [
     "storage.store", "storage.retrieve", "storage.exists",
     "storage.delete", "storage.list", "storage.stats",
-    "storage.store_blob", "storage.retrieve_blob", "storage.fetch_external",
+    "storage.store_blob", "storage.retrieve_blob", "storage.retrieve_range",
+    "storage.fetch_external",
 ]
 
 [capabilities.model]
@@ -89,7 +90,7 @@ reason = "BTSP handshake crypto delegation"
 required = false
 
 [consumed_capabilities.discovery_mesh]
-reason = "Songbird-style service mesh registration and heartbeat"
+reason = "Service mesh registration and heartbeat"
 required = false
 
 [consumed_capabilities.crypto]

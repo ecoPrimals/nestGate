@@ -193,7 +193,7 @@ impl ServiceMetadataStore {
             capabilities = ?meta.capabilities,
             virtual_endpoint = %meta.virtual_endpoint,
             platform = %meta.platform,
-            "📦 Service metadata stored"
+            "Service metadata stored"
         );
 
         Ok(())
@@ -263,7 +263,7 @@ impl ServiceMetadataStore {
 
         tracing::info!(
             service = %name,
-            "🗑️  Service metadata removed"
+            "Service metadata removed"
         );
 
         Ok(())

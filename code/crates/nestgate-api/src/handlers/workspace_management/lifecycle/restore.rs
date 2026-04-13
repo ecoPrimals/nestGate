@@ -16,13 +16,13 @@ pub async fn restore_workspace(
     Json(config): Json<RestoreConfig>,
 ) -> Result<Json<Value>, StatusCode> {
     info!(
-        "🔄 Restoring workspace: {} from backup: {:?}",
+        "Restoring workspace: {} from backup: {:?}",
         workspace_id, config
     );
 
     // Validate workspace ID
     if workspace_id.is_empty() || workspace_id.contains('/') || workspace_id.contains(' ') {
-        warn!("❌ Invalid workspace ID format: {}", workspace_id);
+        warn!("Invalid workspace ID format: {}", workspace_id);
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -36,7 +36,7 @@ pub async fn restore_workspace(
 
     // Step 1: Check if backup file exists
     if !tokio::fs::try_exists(&backup_file).await.unwrap_or(false) {
-        error!("❌ Backup file not found: {}", backup_file);
+        error!("Backup file not found: {}", backup_file);
         return Ok(Json(json!({
             "status": "error",
             "message": format!("Backup file not found: {backup_file}"),
@@ -55,7 +55,7 @@ pub async fn restore_workspace(
         if let Ok(output) = check_result
             && output.status.success()
         {
-            warn!("⚠️ Target workspace already exists: {}", dataset_name);
+            warn!("Target workspace already exists: {}", dataset_name);
             return Ok(Json(json!({
                 "status": "error",
                 "message": format!("Target workspace already exists. Use force=true to overwrite."),
@@ -74,12 +74,12 @@ pub async fn restore_workspace(
         if let Ok(output) = destroy_result
             && output.status.success()
         {
-            info!("🗑️ Destroyed existing workspace: {}", dataset_name);
+            info!("Destroyed existing workspace: {}", dataset_name);
         }
     }
 
     // Step 4: Restore from backup using ZFS receive
-    info!("📥 Restoring from backup file: {}", backup_file);
+    info!("Restoring from backup file: {}", backup_file);
 
     let backup_file_handle = tokio::fs::File::open(&backup_file).await;
     match backup_file_handle {
@@ -103,7 +103,7 @@ pub async fn restore_workspace(
                                 match receive_process.wait().await {
                                     Ok(status) if status.success() => {
                                         info!(
-                                            "✅ Workspace restored successfully: {} ({} bytes)",
+                                            "Workspace restored successfully: {} ({} bytes)",
                                             dataset_name, bytes_read
                                         );
 
@@ -122,26 +122,26 @@ pub async fn restore_workspace(
                                         })));
                                     }
                                     Ok(status) => {
-                                        error!("❌ ZFS receive failed with status: {}", status);
+                                        error!("ZFS receive failed with status: {}", status);
                                     }
                                     Err(e) => {
-                                        error!("❌ ZFS receive process error: {}", e);
+                                        error!("ZFS receive process error: {}", e);
                                     }
                                 }
                             }
                             Err(e) => {
-                                error!("❌ Failed to pipe backup data: {}", e);
+                                error!("Failed to pipe backup data: {}", e);
                             }
                         }
                     }
                 }
                 Err(e) => {
-                    error!("❌ Failed to start ZFS receive process: {}", e);
+                    error!("Failed to start ZFS receive process: {}", e);
                 }
             }
         }
         Err(e) => {
-            error!("❌ Failed to open backup file: {}", e);
+            error!("Failed to open backup file: {}", e);
         }
     }
 

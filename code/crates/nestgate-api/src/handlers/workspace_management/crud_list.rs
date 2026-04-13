@@ -25,7 +25,7 @@ pub async fn get_workspaces() -> Result<Json<Value>, StatusCode> {
 pub async fn get_workspaces_from_env_source(
     env: &(impl EnvSource + ?Sized),
 ) -> Result<Json<Value>, StatusCode> {
-    info!("📁 Getting all workspaces from ZFS datasets");
+    info!("Getting all workspaces from ZFS datasets");
     let zfs_bin = zfs_executable(env);
     let pool_name = workspace_pool_name(env);
     let workspaces_path = format!("{pool_name}/workspaces");
@@ -94,7 +94,7 @@ pub async fn get_workspaces_from_env_source(
                 }
             }
 
-            info!("✅ Found {} workspaces", workspaces.len());
+            info!("Found {} workspaces", workspaces.len());
             Ok(Json(json!({
                 "status": "success",
                 "workspaces": workspaces,
@@ -104,7 +104,7 @@ pub async fn get_workspaces_from_env_source(
         }
         Ok(output) => {
             let error_msg = String::from_utf8_lossy(&output.stderr);
-            warn!("⚠️ ZFS list command failed: {}", error_msg);
+            warn!("ZFS list command failed: {}", error_msg);
 
             // Return empty list if workspaces dataset doesn't exist yet
             Ok(Json(json!({
@@ -116,7 +116,7 @@ pub async fn get_workspaces_from_env_source(
             })))
         }
         Err(e) => {
-            error!("❌ Failed to execute ZFS list command: {}", e);
+            error!("Failed to execute ZFS list command: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }

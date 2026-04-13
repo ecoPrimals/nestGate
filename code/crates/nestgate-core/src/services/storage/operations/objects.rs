@@ -33,7 +33,7 @@ pub async fn store_object(
 ) -> Result<crate::rpc::tarpc_types::ObjectInfo> {
     let data_ref = data.as_ref();
     info!(
-        "💾 Storing object: {}/{} ({} bytes)",
+        "Storing object: {}/{} ({} bytes)",
         dataset,
         key,
         data_ref.len()
@@ -73,7 +73,7 @@ pub async fn store_object(
         metadata: std::collections::HashMap::new(),
     };
 
-    info!("✅ Object stored: {}/{}", dataset, key);
+    info!("Object stored: {}/{}", dataset, key);
     Ok(object_info)
 }
 
@@ -89,7 +89,7 @@ pub async fn retrieve_object(
     dataset: &str,
     key: &str,
 ) -> Result<(Bytes, crate::rpc::tarpc_types::ObjectInfo)> {
-    info!("📖 Retrieving object: {}/{}", dataset, key);
+    info!("Retrieving object: {}/{}", dataset, key);
 
     let base_path = PathBuf::from(&config.base_path);
     let dataset_path = base_path.join("datasets").join(dataset);
@@ -128,7 +128,7 @@ pub async fn retrieve_object(
     };
 
     info!(
-        "✅ Object retrieved: {}/{} ({} bytes)",
+        "Object retrieved: {}/{} ({} bytes)",
         dataset,
         key,
         data.len()
@@ -287,7 +287,7 @@ pub async fn get_object_metadata(
 ///
 /// Returns error if object not found or deletion fails
 pub async fn delete_object(config: &StorageServiceConfig, dataset: &str, key: &str) -> Result<()> {
-    info!("🗑️  Deleting object: {}/{}", dataset, key);
+    info!("Deleting object: {}/{}", dataset, key);
 
     let base_path = PathBuf::from(&config.base_path);
     let dataset_path = base_path.join("datasets").join(dataset);
@@ -301,7 +301,7 @@ pub async fn delete_object(config: &StorageServiceConfig, dataset: &str, key: &s
         }
     })?;
 
-    info!("✅ Object deleted: {}/{}", dataset, key);
+    info!("Object deleted: {}/{}", dataset, key);
     Ok(())
 }
 

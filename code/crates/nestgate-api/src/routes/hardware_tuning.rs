@@ -32,12 +32,12 @@ pub async fn auto_tune(
     Json(_request): Json<HardwareTuningRequest>,
 ) -> std::result::Result<ResponseJson<HardwareTuningResponse>, StatusCode> {
     let service = &state.hardware_tuning_service;
-    info!("🚀 Auto-tuning hardware with live compute integration");
+    info!("Auto-tuning hardware with live compute integration");
 
     match service.auto_tune().await {
         Ok(result) => {
             info!(
-                "✅ Auto-tuning completed: {} optimizations applied",
+                "Auto-tuning completed: {} optimizations applied",
                 result.applied_settings.len()
             );
 
@@ -70,7 +70,7 @@ pub async fn auto_tune(
             }))
         }
         Err(e) => {
-            error!("❌ Auto-tuning failed: {}", e);
+            error!("Auto-tuning failed: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -81,15 +81,15 @@ pub async fn get_config(
     State(state): State<AppState>,
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
     let service = &state.hardware_tuning_service;
-    info!("📊 Getting hardware configuration with live compute data");
+    info!("Getting hardware configuration with live compute data");
 
     match service.get_config().await {
         Ok(config) => {
-            info!("✅ Hardware configuration retrieved with live metrics");
+            info!("Hardware configuration retrieved with live metrics");
             Ok(ResponseJson(config))
         }
     Err(e) => {
-            error!("❌ Failed to get configuration: {}", e);
+            error!("Failed to get configuration: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -100,12 +100,12 @@ pub async fn get_profiles(
     State(state): State<AppState>,
 ) -> std::result::Result<ResponseJson<serde_json::Value>, StatusCode> {
     let service = &state.hardware_tuning_service;
-    info!("📋 Getting tuning profiles from compute service");
+    info!("Getting tuning profiles from compute service");
 
     match service.get_profiles().await {
         Ok(profiles) => {
             info!(
-                "✅ Retrieved {} tuning profiles from compute service",
+                "Retrieved {} tuning profiles from compute service",
                 profiles.len()
             );
             Ok(ResponseJson(serde_json::json!({
@@ -115,7 +115,7 @@ pub async fn get_profiles(
             })))
         }
         Err(e) => {
-            error!("❌ Failed to get profiles: {}", e);
+            error!("Failed to get profiles: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -132,14 +132,14 @@ pub fn run_benchmark(
         .and_then(|v| v.as_str())
         .unwrap_or("overall");
     info!(
-        "🏁 Running live benchmark '{}' with compute resources",
+        "Running live benchmark '{}' with compute resources",
         benchmark_name
     );
 
     match service.benchmark(benchmark_name).await {
         Ok(result) => {
             info!(
-                "✅ Live benchmark '{}' completed (score: {})",
+                "Live benchmark '{}' completed (score: {})",
                 benchmark_name, result.score
             );
 
@@ -150,7 +150,7 @@ pub fn run_benchmark(
             })))
         }
         Err(e) => {
-            error!("❌ Benchmark '{}' failed: {}", benchmark_name, e);
+            error!("Benchmark '{}' failed: {}", benchmark_name, e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -174,17 +174,17 @@ pub fn generate_extraction_lock(
         .to_string();
 
     info!(
-        "🔐 Generating extraction lock: {} -> {}",
+        "Generating extraction lock: {} -> {}",
         source, destination
     );
 
     match service.generate_extraction_lock(source, destination).await {
         Ok(lock) => {
-            info!("✅ Extraction lock generated with cryptographic proof");
+            info!("Extraction lock generated with cryptographic proof");
             Ok(ResponseJson(lock))
         }
     Err(e) => {
-            error!("❌ Failed to generate extraction lock: {}", e);
+            error!("Failed to generate extraction lock: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -202,12 +202,12 @@ pub fn verify_extraction_lock(
         .and_then(|s| Uuid::parse_str(s).ok())
         .unwrap_or_else(Uuid::new_v4);
 
-    info!("🔓 Verifying extraction lock: {}", lock_id);
+    info!("Verifying extraction lock: {}", lock_id);
 
     match service.verify_extraction_lock(lock_id).await {
         Ok(valid) => {
             info!(
-                "✅ Extraction lock verification: {}",
+                "Extraction lock verification: {}",
                 if valid { "VALID" } else { "INVALID" }
             );
 
@@ -219,7 +219,7 @@ pub fn verify_extraction_lock(
             })))
         }
         Err(e) => {
-            error!("❌ Failed to verify extraction lock: {}", e);
+            error!("Failed to verify extraction lock: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -230,7 +230,7 @@ pub fn get_session_status(
     State(state): State<AppState>,
     Path(session_id): Path<Uuid>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    info!("🔍 Getting session status for: {}", session_id);
+    info!("Getting session status for: {}", session_id);
     // Get session from hardware tuning service
     let session = state
         .hardware_tuning_service

@@ -171,7 +171,7 @@ impl OrchestratorRegistration {
             .is_none_or(|v| v != "1" && v.to_lowercase() != "true");
 
         if !enabled {
-            info!("🎵 Orchestrator auto-registration disabled by environment");
+            info!("Orchestrator auto-registration disabled by environment");
         }
 
         Ok(Self {

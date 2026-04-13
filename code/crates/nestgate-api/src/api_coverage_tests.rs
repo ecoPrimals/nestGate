@@ -7,7 +7,7 @@
 //! and edge cases to boost coverage from 71% → 80%+.
 
 #[cfg(test)]
-mod api_coverage_boost_tests {
+mod tests {
     use crate::error::{ApiError, ErrorResponse};
     use axum::http::StatusCode;
     use axum::response::IntoResponse;

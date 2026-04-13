@@ -79,7 +79,7 @@ impl DeviceScanner {
 
     /// Scan for available storage devices
     pub async fn scan_devices(&self) -> CoreResult<Vec<StorageDevice>> {
-        info!("🔍 Scanning for available storage devices");
+        info!("Scanning for available storage devices");
 
         let mut devices = Vec::new();
 

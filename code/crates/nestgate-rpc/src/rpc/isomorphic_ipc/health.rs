@@ -181,7 +181,7 @@ pub async fn check_nestgate_health() -> Result<HealthStatus> {
     match check_nestgate_health_detailed().await {
         Ok(response) => Ok(response.status),
         Err(e) => {
-            warn!("⚠️  Health check failed: {}", e);
+            warn!("Health check failed: {}", e);
             Ok(HealthStatus::Unreachable)
         }
     }
@@ -233,7 +233,7 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
         .context("Failed to send health check request")?;
     stream.flush().await?;
 
-    debug!("📤 Sent health check request");
+    debug!("Sent health check request");
 
     // Read response
     let mut reader = BufReader::new(stream);
@@ -243,7 +243,7 @@ pub async fn check_nestgate_health_detailed() -> Result<HealthCheckResponse> {
         .await
         .context("Failed to read health check response")?;
 
-    debug!("📥 Received health check response: {}", response_line);
+    debug!("Received health check response: {}", response_line);
 
     // Parse JSON-RPC response
     let response: Value =
@@ -293,7 +293,7 @@ where
     let mut interval_timer = interval(check_interval);
 
     info!(
-        "🔍 Starting NestGate health monitoring (interval: {:?})",
+        "Starting NestGate health monitoring (interval: {:?})",
         check_interval
     );
 
@@ -305,10 +305,10 @@ where
             .unwrap_or(HealthStatus::Unreachable);
 
         match status {
-            HealthStatus::Healthy => debug!("✅ NestGate health check: Healthy"),
-            HealthStatus::Degraded => warn!("⚠️  NestGate health check: Degraded"),
-            HealthStatus::Unhealthy => error!("❌ NestGate health check: Unhealthy"),
-            HealthStatus::Unreachable => error!("💀 NestGate health check: Unreachable"),
+            HealthStatus::Healthy => debug!("NestGate health check: Healthy"),
+            HealthStatus::Degraded => warn!("NestGate health check: Degraded"),
+            HealthStatus::Unhealthy => error!("NestGate health check: Unhealthy"),
+            HealthStatus::Unreachable => error!("NestGate health check: Unreachable"),
         }
 
         callback(&status);
@@ -354,18 +354,18 @@ pub async fn wait_for_healthy(timeout: Duration) -> Result<()> {
 
         match check_nestgate_health().await {
             Ok(HealthStatus::Healthy) => {
-                info!("✅ NestGate is healthy!");
+                info!("NestGate is healthy!");
                 return Ok(());
             }
             Ok(status) => {
                 debug!(
-                    "🔄 NestGate status: {:?}, waiting... ({:?} elapsed)",
+                    "NestGate status: {:?}, waiting... ({:?} elapsed)",
                     status,
                     start.elapsed()
                 );
             }
             Err(e) => {
-                debug!("⚠️  Health check error: {}, retrying...", e);
+                debug!("Health check error: {}, retrying...", e);
             }
         }
 

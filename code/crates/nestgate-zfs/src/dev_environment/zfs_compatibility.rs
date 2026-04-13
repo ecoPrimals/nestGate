@@ -84,8 +84,8 @@ impl DevEnvironmentZfsService {
     pub fn new() -> Self {
         let config = DevEnvironmentConfig::default();
 
-        info!("🔧 Initializing Development Environment ZFS Compatibility Layer");
-        info!("📁 Base directory: {:?}", config.base_directory);
+        info!("Initializing Development Environment ZFS Compatibility Layer");
+        info!("Base directory: {:?}", config.base_directory);
 
         Self {
             pools: Arc::new(tokio::sync::RwLock::new(HashSet::new())),
@@ -96,8 +96,8 @@ impl DevEnvironmentZfsService {
 
     /// Create with custom configuration
     pub fn with_config(config: DevEnvironmentConfig) -> Self {
-        info!("🔧 Initializing Development Environment ZFS with custom config");
-        info!("📁 Base directory: {:?}", config.base_directory);
+        info!("Initializing Development Environment ZFS with custom config");
+        info!("Base directory: {:?}", config.base_directory);
 
         Self {
             pools: Arc::new(tokio::sync::RwLock::new(HashSet::new())),
@@ -126,7 +126,7 @@ impl DevEnvironmentZfsService {
             ));
         }
 
-        info!("✅ Development environment initialized");
+        info!("Development environment initialized");
 
         // Create a default development pool
         self.create_dev_pool("dev-pool", self.config.default_pool_size)
@@ -149,7 +149,7 @@ impl DevEnvironmentZfsService {
 
         if self.config.verbose_logging {
             info!(
-                "🏊 Created development pool: {} ({}GB)",
+                "Created development pool: {} ({}GB)",
                 name,
                 size_bytes / (1024 * 1024 * 1024)
             );

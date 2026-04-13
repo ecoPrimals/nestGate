@@ -301,7 +301,7 @@ impl FilesystemDetector for LinuxProcFilesystemDetector {
                 });
 
                 debug!(
-                    "✅ Discovered filesystem via /proc/mounts: {} at {}",
+                    "Discovered filesystem via /proc/mounts: {} at {}",
                     device, mount_point
                 );
             }
@@ -337,12 +337,12 @@ impl UniversalFilesystemDetector {
     ///
     /// **RUNTIME SELECTION**: Picks best available detector
     pub fn new() -> Self {
-        debug!("🔍 Initializing universal filesystem detector");
+        debug!("Initializing universal filesystem detector");
 
         // Try optimized detectors first (faster, more detailed)
         let linux_detector = LinuxProcFilesystemDetector;
         if linux_detector.is_available() {
-            debug!("✅ Using optimized Linux /proc/mounts detector");
+            debug!("Using optimized Linux /proc/mounts detector");
             return Self {
                 detector: Box::new(linux_detector),
             };
@@ -373,15 +373,15 @@ impl UniversalFilesystemDetector {
     ///
     /// Returns `Ok(Vec::new())` when the underlying detector fails; errors are logged and not propagated.
     pub async fn discover(&self) -> Result<Vec<DiscoveredFilesystem>> {
-        debug!("🔍 Discovering filesystems with {}", self.detector.name());
+        debug!("Discovering filesystems with {}", self.detector.name());
 
         match self.detector.discover().await {
             Ok(filesystems) => {
-                debug!("✅ Discovered {} filesystems", filesystems.len());
+                debug!("Discovered {} filesystems", filesystems.len());
                 Ok(filesystems)
             }
             Err(e) => {
-                warn!("⚠️ Filesystem discovery failed (non-fatal): {}", e);
+                warn!("Filesystem discovery failed (non-fatal): {}", e);
                 Ok(Vec::new()) // Graceful degradation
             }
         }

@@ -109,7 +109,7 @@ impl TcpFallbackServer {
     /// Returns [`anyhow::Error`] if binding the TCP listener or reading its local address fails
     /// before the accept loop starts.
     pub async fn start(self: Arc<Self>) -> Result<()> {
-        info!("🌐 Starting TCP IPC fallback (isomorphic mode)");
+        info!("Starting TCP IPC fallback (isomorphic mode)");
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
         info!("   Security: Localhost only (127.0.0.1)");
 
@@ -128,14 +128,14 @@ impl TcpFallbackServer {
             .context("Failed to get local address")?;
 
         info!(
-            "✅ TCP IPC listening on {} (resolved from bind pattern {} — ephemeral port)",
+            "TCP IPC listening on {} (resolved from bind pattern {} — ephemeral port)",
             local_addr, bind_socket
         );
 
         // Write discovery file for clients
         self.write_tcp_discovery_file(&local_addr)?;
 
-        info!("   Status: READY ✅ (isomorphic TCP fallback active)");
+        info!("   Status: READY  (isomorphic TCP fallback active)");
 
         self.accept_loop(listener).await
     }
@@ -150,7 +150,7 @@ impl TcpFallbackServer {
     /// Returns [`anyhow::Error`] if binding `addr` or reading the listener's local address fails
     /// before the accept loop starts.
     pub async fn start_bound(self: Arc<Self>, addr: SocketAddr) -> Result<()> {
-        info!("🌐 Starting TCP JSON-RPC listener (isomorphic IPC, fixed address)");
+        info!("Starting TCP JSON-RPC listener (isomorphic IPC, fixed address)");
         info!("   Protocol: JSON-RPC 2.0 (same as Unix socket)");
 
         let listener = TcpListener::bind(addr)
@@ -162,13 +162,13 @@ impl TcpFallbackServer {
             .context("Failed to get local address after bind")?;
 
         info!(
-            "✅ TCP JSON-RPC listening on {} (requested {})",
+            "TCP JSON-RPC listening on {} (requested {})",
             local_addr, addr
         );
 
         self.write_tcp_discovery_file(&local_addr)?;
 
-        info!("   Status: READY ✅ (TCP JSON-RPC alongside Unix socket when enabled)");
+        info!("   Status: READY  (TCP JSON-RPC alongside Unix socket when enabled)");
 
         self.accept_loop(listener).await
     }
@@ -178,7 +178,7 @@ impl TcpFallbackServer {
         loop {
             match listener.accept().await {
                 Ok((stream, addr)) => {
-                    debug!("📥 TCP client connected: {}", addr);
+                    debug!("TCP client connected: {}", addr);
                     let handler = self.clone();
 
                     // Spawn task for each connection
@@ -295,21 +295,21 @@ impl TcpFallbackServer {
                 Ok(mut f) => {
                     // Write in format: tcp:127.0.0.1:PORT
                     if let Err(e) = writeln!(f, "tcp:{addr}") {
-                        warn!("⚠️  Failed to write discovery file: {}", e);
+                        warn!("Failed to write discovery file: {}", e);
                         continue;
                     }
 
-                    info!("📁 TCP discovery file: {}", discovery_file);
+                    info!("TCP discovery file: {}", discovery_file);
                     return Ok(());
                 }
                 Err(e) => {
-                    debug!("⚠️  Could not create discovery file in {}: {}", dir, e);
+                    debug!("Could not create discovery file in {}: {}", dir, e);
                     // Try next directory
                 }
             }
         }
 
-        warn!("⚠️  Could not write TCP discovery file (clients may not find endpoint)");
+        warn!("Could not write TCP discovery file (clients may not find endpoint)");
         warn!("   Tried: XDG_RUNTIME_DIR, HOME/.local/share, /tmp");
         Ok(())
     }

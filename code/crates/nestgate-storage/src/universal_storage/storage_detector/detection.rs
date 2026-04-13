@@ -36,7 +36,7 @@ impl<'a> DetectionEngine<'a> {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn detect_local_filesystems(&self) -> Result<Vec<DetectedStorage>> {
-        tracing::info!("🔍 Detecting local filesystems (universal detector)");
+        tracing::info!("Detecting local filesystems (universal detector)");
 
         // Use universal filesystem detector (no platform-specific code!)
         let detector = UniversalFilesystemDetector::new();
@@ -79,7 +79,7 @@ impl<'a> DetectionEngine<'a> {
 
             filesystems.push(storage);
             tracing::debug!(
-                "✅ Local filesystem: {} ({}) - {}GB available",
+                "Local filesystem: {} ({}) - {}GB available",
                 fs.device,
                 fs.fs_type,
                 fs.available_bytes / 1_000_000_000
@@ -87,7 +87,7 @@ impl<'a> DetectionEngine<'a> {
         }
 
         tracing::info!(
-            "✅ Detected {} local filesystems using {}",
+            "Detected {} local filesystems using {}",
             filesystems.len(),
             detector.detector_name()
         );
@@ -171,7 +171,7 @@ impl<'a> DetectionEngine<'a> {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn detect_block_devices(&self) -> Result<Vec<DetectedStorage>> {
-        tracing::info!("🔍 Detecting block devices (universal detector)");
+        tracing::info!("Detecting block devices (universal detector)");
 
         // Use universal filesystem detector to find block-backed filesystems
         let detector = UniversalFilesystemDetector::new();
@@ -202,14 +202,14 @@ impl<'a> DetectionEngine<'a> {
 
                 block_devices.push(storage);
                 tracing::debug!(
-                    "✅ Block device: {} - {}GB available",
+                    "Block device: {} - {}GB available",
                     fs.device,
                     fs.available_bytes / 1_000_000_000
                 );
             }
         }
 
-        tracing::info!("✅ Detected {} block devices", block_devices.len());
+        tracing::info!("Detected {} block devices", block_devices.len());
         Ok(block_devices)
     }
 

@@ -139,7 +139,7 @@ impl UnixSocketRpcHandler {
     }
 
     async fn handle_rpc_request(&self, request: JsonRpcRequest) -> JsonRpcResponse {
-        debug!("📥 Processing JSON-RPC request: method={}", request.method);
+        debug!("Processing JSON-RPC request: method={}", request.method);
 
         let id = request.id.clone();
         let state = self.state.as_ref();

@@ -50,7 +50,7 @@ impl StoragePaths {
         let temp_dir = resolve_temp_dir_from_env_source(env);
         let runtime_dir = resolve_runtime_dir_from_env_source(env);
 
-        info!("📂 Storage paths initialized (XDG-compliant):");
+        info!("Storage paths initialized (XDG-compliant):");
         info!("   Data:    {}", data_dir.display());
         info!("   Config:  {}", config_dir.display());
         info!("   Cache:   {}", cache_dir.display());
@@ -158,7 +158,7 @@ impl StoragePaths {
     /// Log summary of resolved paths
     pub fn log_summary(&self) {
         info!("═══════════════════════════════════════════════════════════");
-        info!("📂 STORAGE PATHS CONFIGURATION (XDG-Compliant)");
+        info!("STORAGE PATHS CONFIGURATION (XDG-Compliant)");
         info!("═══════════════════════════════════════════════════════════");
         info!("Data Dir:     {}", self.data_dir.display());
         info!("Config Dir:   {}", self.config_dir.display());

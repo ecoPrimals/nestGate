@@ -44,7 +44,7 @@ pub mod traits;
 pub mod types;
 
 #[cfg(test)]
-mod types_coverage_boost;
+mod types_coverage_tests;
 // Security operation modules - hybrid capabilities approach
 // External heavy: Route to Security via universal adapter for complex security
 // Local smart: Basic security operations for standalone mode

@@ -12,7 +12,7 @@ use tracing::warn;
 
 /// Collect real ZFS pool metrics
 pub(super) async fn collect_pool_metrics() -> Result<Vec<PoolMetrics>> {
-    debug!("🏊 Collecting real ZFS pool metrics");
+    debug!("Collecting real ZFS pool metrics");
 
     let mut pool_metrics = Vec::new();
 
@@ -40,12 +40,12 @@ pub(super) async fn collect_pool_metrics() -> Result<Vec<PoolMetrics>> {
         }
         Ok(output) => {
             warn!(
-                "⚠️ zpool list failed: {}",
+                "zpool list failed: {}",
                 String::from_utf8_lossy(&output.stderr)
             );
         }
         Err(e) => {
-            warn!("⚠️ Failed to execute zpool list: {e}");
+            warn!("Failed to execute zpool list: {e}");
         }
     }
 
@@ -55,7 +55,7 @@ pub(super) async fn collect_pool_metrics() -> Result<Vec<PoolMetrics>> {
 
 /// Collect metrics for a single pool
 pub(super) async fn collect_single_pool_metrics(pool_name: &str) -> Result<PoolMetrics> {
-    debug!("📊 Collecting metrics for pool: {}", pool_name);
+    debug!("Collecting metrics for pool: {}", pool_name);
 
     // Get pool I/O statistics using zpool iostat
     let iostat_output = Command::new("zpool")

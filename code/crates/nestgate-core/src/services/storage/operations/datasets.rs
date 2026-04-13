@@ -26,7 +26,7 @@ pub async fn create_dataset(
     name: &str,
     params: crate::rpc::tarpc_types::DatasetParams,
 ) -> Result<crate::rpc::tarpc_types::DatasetInfo> {
-    info!("📦 Creating dataset: {}", name);
+    info!("Creating dataset: {}", name);
 
     // Create dataset directory
     let base_path = PathBuf::from(&config.base_path);
@@ -50,7 +50,7 @@ pub async fn create_dataset(
         status: "active".to_string(),
     };
 
-    info!("✅ Dataset created: {}", name);
+    info!("Dataset created: {}", name);
     Ok(dataset)
 }
 
@@ -62,7 +62,7 @@ pub async fn create_dataset(
 pub async fn list_datasets(
     config: &StorageServiceConfig,
 ) -> Result<Vec<crate::rpc::tarpc_types::DatasetInfo>> {
-    debug!("📋 Listing datasets");
+    debug!("Listing datasets");
 
     let base_path = PathBuf::from(&config.base_path);
     let datasets_path = base_path.join("datasets");
@@ -115,7 +115,7 @@ pub async fn list_datasets(
         }
     }
 
-    debug!("✅ Listed {} datasets", datasets.len());
+    debug!("Listed {} datasets", datasets.len());
     Ok(datasets)
 }
 
@@ -166,7 +166,7 @@ pub async fn get_dataset(
 ///
 /// Returns error if dataset not found or deletion fails
 pub async fn delete_dataset(config: &StorageServiceConfig, name: &str) -> Result<()> {
-    info!("🗑️  Deleting dataset: {}", name);
+    info!("Deleting dataset: {}", name);
 
     let base_path = PathBuf::from(&config.base_path);
     let dataset_path = base_path.join("datasets").join(name);
@@ -182,7 +182,7 @@ pub async fn delete_dataset(config: &StorageServiceConfig, name: &str) -> Result
             }
         })?;
 
-    info!("✅ Dataset deleted: {}", name);
+    info!("Dataset deleted: {}", name);
     Ok(())
 }
 

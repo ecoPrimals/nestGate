@@ -18,7 +18,7 @@ use tracing::info;
 /// Returns a vector of `PoolInfo` structures containing details about each pool
 /// including name, size, usage, and health status.
 pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<PoolInfo>> {
-    info!("📊 Listing all ZFS pools");
+    info!("Listing all ZFS pools");
     let output = service
         .execute_zfs_command(
             "zpool",
@@ -28,7 +28,7 @@ pub async fn list_pools(service: &NativeZfsService) -> UniversalZfsResult<Vec<Po
 
     let pools = parsing::parse_zpool_list(&output)?;
     info!(
-        "📊 Found {},
+        "Found {},
     ZFS pools",
         pools.len()
     );
@@ -48,7 +48,7 @@ pub async fn get_pool_info(
     service: &NativeZfsService,
     pool_name: &str,
 ) -> UniversalZfsResult<PoolInfo> {
-    info!("📊 Getting detailed info for pool: {}", pool_name);
+    info!("Getting detailed info for pool: {}", pool_name);
     // Get basic pool information
     let pools = list_pools(service).await?;
     let mut pool_info = pools
@@ -65,13 +65,13 @@ pub async fn get_pool_info(
 
     // Parse device information from zpool status output
     let devices = parsing::parse_zpool_status(&status_output)?;
-    info!("📊 Found {} devices in pool {}", devices.len(), pool_name);
+    info!("Found {} devices in pool {}", devices.len(), pool_name);
 
     // Log device information for monitoring
     for device in &devices {
         if device.read_errors > 0 || device.write_errors > 0 || device.checksum_errors > 0 {
             tracing::warn!(
-                "⚠️ Device {} has errors: read={}, write={}, checksum={}",
+                "Device {} has errors: read={}, write={}, checksum={}",
                 device.name,
                 device.read_errors,
                 device.write_errors,
@@ -115,7 +115,7 @@ pub async fn create_pool(
     service: &NativeZfsService,
     config: &PoolConfig,
 ) -> UniversalZfsResult<PoolInfo> {
-    info!("🔧 Creating ZFS pool: {}", config.name);
+    info!("Creating ZFS pool: {}", config.name);
     if config.devices.is_empty() {
         return Err(UniversalZfsError::InvalidInput {
             message: "Pool creation requires at least one device".to_string(),
@@ -148,7 +148,7 @@ pub async fn destroy_pool(
     pool_name: &str,
     force: bool,
 ) -> UniversalZfsResult<()> {
-    info!("🗑️ Destroying ZFS pool: {} (force: {})", pool_name, force);
+    info!("Destroying ZFS pool: {} (force: {})", pool_name, force);
     let mut args = vec!["destroy"];
     if force {
         args.push("-f");
@@ -192,7 +192,7 @@ pub async fn get_pool(
 /// # Returns
 /// * `UniversalZfsResult<()>` - Success or error result
 pub async fn scrub_pool(service: &NativeZfsService, name: &str) -> UniversalZfsResult<()> {
-    info!("🧹 Starting scrub for pool: {}", name);
+    info!("Starting scrub for pool: {}", name);
     service
         .execute_zfs_command("zpool", &["scrub", name])
         .await?;

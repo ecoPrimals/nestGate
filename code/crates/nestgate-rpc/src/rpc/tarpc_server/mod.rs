@@ -90,7 +90,7 @@ impl<S: StorageBackend> NestGateRpcService<S> {
     /// Create an RPC service backed by the given [`StorageBackend`].
     #[must_use]
     pub fn with_backend(backend: S) -> Self {
-        info!("🚀 Creating NestGate RPC service (StorageBackend-backed)");
+        info!("Creating NestGate RPC service (StorageBackend-backed)");
         Self {
             start_time: SystemTime::now(),
             backend: Arc::new(backend),
@@ -100,7 +100,7 @@ impl<S: StorageBackend> NestGateRpcService<S> {
     /// Create an RPC service from a pre-wrapped `Arc<S>`.
     #[must_use]
     pub fn with_backend_arc(backend: Arc<S>) -> Self {
-        info!("🚀 Creating NestGate RPC service (StorageBackend-backed, Arc)");
+        info!("Creating NestGate RPC service (StorageBackend-backed, Arc)");
         Self {
             start_time: SystemTime::now(),
             backend,
@@ -116,7 +116,7 @@ impl NestGateRpcService {
     /// Returns [`NestGateError`] when the service cannot be constructed; the current
     /// implementation always succeeds and reserves this for future initialization.
     pub fn new() -> Result<Self> {
-        info!("🚀 Creating NestGate RPC service (in-memory backend for standalone/test)");
+        info!("Creating NestGate RPC service (in-memory backend for standalone/test)");
         Ok(Self::with_backend(
             crate::rpc::storage_backend::InMemoryStorageBackend::new(),
         ))
@@ -314,7 +314,7 @@ impl<S: StorageBackend + 'static> NestGateRpc for NestGateRpcService<S> {
         ) {
             Ok(()) => {
                 info!(
-                    "✅ Capability '{}' registered successfully",
+                    "Capability '{}' registered successfully",
                     registration.capability
                 );
                 Ok(RegistrationResult {
@@ -471,14 +471,14 @@ pub async fn serve_tarpc<S: StorageBackend + 'static>(
     addr: SocketAddr,
     service: NestGateRpcService<S>,
 ) -> Result<()> {
-    info!("🚀 Starting NestGate tarpc server on {}", addr);
+    info!("Starting NestGate tarpc server on {}", addr);
 
     let listener =
         tarpc::serde_transport::tcp::listen(addr, tokio_serde::formats::Bincode::default)
             .await
             .map_err(|e| NestGateError::network_error(format!("Failed to bind to {addr}: {e}")))?;
 
-    info!("✅ NestGate tarpc server listening on {}", addr);
+    info!("NestGate tarpc server listening on {}", addr);
 
     let backend = Arc::clone(&service.backend);
     let start_time = service.start_time;

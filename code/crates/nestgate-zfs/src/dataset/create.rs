@@ -107,7 +107,7 @@ impl ZfsDatasetManager {
 
         match output {
             Ok(result) if result.status.success() => {
-                info!("✅ Created ZFS dataset: {}", dataset_path);
+                info!("Created ZFS dataset: {}", dataset_path);
                 self.get_dataset_info_with_fallback(&dataset_path).await
             }
             Ok(result) => {

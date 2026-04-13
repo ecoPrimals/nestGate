@@ -134,7 +134,7 @@ impl UnifiedRpcRouter {
         );
 
         info!(
-            "🔀 RPC router initialized with {} method rules and {} target rules",
+            "RPC router initialized with {} method rules and {} target rules",
             self.method_rules.len(),
             self.target_rules.len()
         );
@@ -153,14 +153,14 @@ impl UnifiedRpcRouter {
         request: &UnifiedRpcRequest,
     ) -> Result<RpcConnectionType, RpcError> {
         debug!(
-            "🔀 Routing RPC request: {} -> {}",
+            "Routing RPC request: {} -> {}",
             request.method, request.target
         );
 
         // 1. Check method-specific rules first (most specific)
         if let Some(&connection_type) = self.method_rules.get(&request.method) {
             debug!(
-                "✅ Routed by method rule: {} -> {:?}",
+                "Routed by method rule: {} -> {:?}",
                 request.method, connection_type
             );
             return Ok(connection_type);
@@ -169,7 +169,7 @@ impl UnifiedRpcRouter {
         // 2. Check target service rules
         if let Some(&connection_type) = self.target_rules.get(&request.target) {
             debug!(
-                "✅ Routed by target rule: {} -> {:?}",
+                "Routed by target rule: {} -> {:?}",
                 request.target, connection_type
             );
             return Ok(connection_type);
@@ -178,7 +178,7 @@ impl UnifiedRpcRouter {
         // 3. Apply heuristic routing based on method patterns
         let connection_type = self.apply_heuristic_routing(request);
         debug!(
-            "✅ Routed by heuristic: {} -> {:?}",
+            "Routed by heuristic: {} -> {:?}",
             request.method, connection_type
         );
 
@@ -239,26 +239,26 @@ impl UnifiedRpcRouter {
     /// Add custom routing rule for a method
     pub fn add_method_rule(&mut self, method: String, connection_type: RpcConnectionType) {
         self.method_rules.insert(method.clone(), connection_type);
-        debug!("➕ Added method rule: {} -> {:?}", method, connection_type);
+        debug!("Added method rule: {} -> {:?}", method, connection_type);
     }
 
     /// Add custom routing rule for a target service
     pub fn add_target_rule(&mut self, target: String, connection_type: RpcConnectionType) {
         self.target_rules.insert(target.clone(), connection_type);
-        debug!("➕ Added target rule: {} -> {:?}", target, connection_type);
+        debug!("Added target rule: {} -> {:?}", target, connection_type);
     }
 
     /// Remove routing rule for a method
     pub fn remove_method_rule(&mut self, method: &str) {
         if self.method_rules.remove(method).is_some() {
-            debug!("➖ Removed method rule: {}", method);
+            debug!("Removed method rule: {}", method);
         }
     }
 
     /// Remove routing rule for a target service
     pub fn remove_target_rule(&mut self, target: &str) {
         if self.target_rules.remove(target).is_some() {
-            debug!("➖ Removed target rule: {}", target);
+            debug!("Removed target rule: {}", target);
         }
     }
 
@@ -277,7 +277,7 @@ impl UnifiedRpcRouter {
     /// Set default connection type
     pub fn set_default_connection(&mut self, connection_type: RpcConnectionType) {
         self.default_connection = connection_type;
-        debug!("🔧 Set default connection type: {:?}", connection_type);
+        debug!("Set default connection type: {:?}", connection_type);
     }
 
     /// Get connection type recommendation for a method pattern

@@ -81,7 +81,7 @@ impl ZfsManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn trigger_optimization(&self) -> Result<OptimizationResult> {
-        info!("🚀 Triggering comprehensive ZFS optimization using heuristic analysis");
+        info!("Triggering comprehensive ZFS optimization using heuristic analysis");
 
         let mut results: Vec<String> = Vec::new();
 

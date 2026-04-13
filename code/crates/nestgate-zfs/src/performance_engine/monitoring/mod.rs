@@ -104,7 +104,7 @@ impl RealTimePerformanceMonitor {
         if arc_trend < -0.05 {
             // 5% degradation trend
             warn!(
-                "📉 ARC hit ratio degrading: {:.2}% trend over last {} minutes",
+                "ARC hit ratio degrading: {:.2}% trend over last {} minutes",
                 arc_trend * 100.0,
                 recent_metrics.len()
             );
@@ -131,7 +131,7 @@ impl RealTimePerformanceMonitor {
                 if iops_trend < -0.15 {
                     // 15% IOPS degradation
                     warn!(
-                        "📉 Pool {},
+                        "Pool {},
     IOPS degrading: {:.2}% trend",
                         pool_name,
                         iops_trend * 100.0
@@ -141,7 +141,7 @@ impl RealTimePerformanceMonitor {
                 if latency_trend > 0.20 {
                     // 20% latency increase
                     warn!(
-                        "📈 Pool {} latency increasing: {:.2}% trend",
+                        "Pool {} latency increasing: {:.2}% trend",
                         pool_name,
                         latency_trend * 100.0
                     );
@@ -160,11 +160,11 @@ impl RealTimePerformanceMonitor {
 
         if *current_memory_usage > 0.90 && memory_trend > 0.05 {
             error!(
-                "🔴 CRITICAL: Memory pressure detected - {}% used with increasing trend",
+                "CRITICAL: Memory pressure detected - {}% used with increasing trend",
                 current_memory_usage * 100.0
             );
         } else if *current_memory_usage > 0.85 {
-            warn!("⚠️ High memory usage: {:.1}%", current_memory_usage * 100.0);
+            warn!("High memory usage: {:.1}%", current_memory_usage * 100.0);
         }
         Ok(())
     }

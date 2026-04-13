@@ -96,25 +96,25 @@ impl ObservabilityManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub fn initialize(&self) -> Result<()> {
-        tracing::info!("🔍 Initializing observability systems");
+        tracing::info!("Initializing observability systems");
 
         if self.config.tracing_enabled {
             let tracing_config = TracingConfig::default();
             init_tracing(&tracing_config)?;
-            tracing::info!("✅ Distributed tracing initialized");
+            tracing::info!("Distributed tracing initialized");
         }
 
         if self.config.metrics_enabled {
             self.start_metrics_collection();
-            tracing::info!("✅ Metrics collection started");
+            tracing::info!("Metrics collection started");
         }
 
         if self.config.health_checks_enabled {
             self.start_health_monitoring();
-            tracing::info!("✅ Health monitoring started");
+            tracing::info!("Health monitoring started");
         }
 
-        tracing::info!("🎯 Observability systems fully initialized");
+        tracing::info!("Observability systems fully initialized");
         Ok(())
     }
 

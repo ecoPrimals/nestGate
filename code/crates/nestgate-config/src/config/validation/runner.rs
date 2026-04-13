@@ -34,17 +34,13 @@ impl ConfigValidator {
         let _ = writeln!(
             report,
             "Status: {}\n",
-            if result.is_valid {
-                "✅ VALID"
-            } else {
-                "❌ INVALID"
-            }
+            if result.is_valid { "VALID" } else { "INVALID" }
         );
 
         if !result.errors.is_empty() {
             report.push_str("Errors:\n");
             for error in &result.errors {
-                let _ = writeln!(report, "  ❌ {}: {}", error.field, error.message);
+                let _ = writeln!(report, "  error {}: {}", error.field, error.message);
                 if let Some(current) = &error.current_value {
                     let _ = writeln!(report, "     Current: {current}");
                 }
@@ -59,9 +55,9 @@ impl ConfigValidator {
             report.push_str("Warnings:\n");
             for warning in &result.warnings {
                 let icon = match warning.severity {
-                    WarningSeverity::High => "🔶",
-                    WarningSeverity::Medium => "🔸",
-                    WarningSeverity::Low => "🔹",
+                    WarningSeverity::High => "[high]",
+                    WarningSeverity::Medium => "[medium]",
+                    WarningSeverity::Low => "[low]",
                 };
                 let _ = writeln!(report, "  {icon} {}: {}", warning.field, warning.message);
             }
@@ -71,7 +67,11 @@ impl ConfigValidator {
         if !result.suggestions.is_empty() {
             report.push_str("Suggestions:\n");
             for suggestion in &result.suggestions {
-                let _ = writeln!(report, "  💡 {}: {}", suggestion.field, suggestion.message);
+                let _ = writeln!(
+                    report,
+                    "  suggestion {}: {}",
+                    suggestion.field, suggestion.message
+                );
                 if let Some(suggested) = &suggestion.suggested_value {
                     let _ = writeln!(report, "     Suggested: {suggested}");
                 }

@@ -28,6 +28,9 @@
 //! let pool = backend.create_pool("tank", &[]).await?;
 //! ```
 
+mod cloud_helpers;
+mod gcs_types;
+
 pub mod azure;
 pub mod gcs;
 

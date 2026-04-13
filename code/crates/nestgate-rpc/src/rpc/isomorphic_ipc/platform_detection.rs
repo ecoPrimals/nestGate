@@ -62,34 +62,31 @@ pub fn is_platform_constraint(error: &anyhow::Error) -> bool {
             // Permission denied - check for SELinux/Android restrictions
             ErrorKind::PermissionDenied => {
                 let is_selinux = is_selinux_enforcing();
-                debug!("🔍 Permission denied - SELinux enforcing: {}", is_selinux);
+                debug!("Permission denied - SELinux enforcing: {}", is_selinux);
                 is_selinux
             }
 
             // Platform doesn't support Unix sockets
             ErrorKind::Unsupported => {
-                debug!("🔍 Platform lacks Unix socket support");
+                debug!("Platform lacks Unix socket support");
                 true
             }
 
             // Address family not supported (common on limited platforms)
             ErrorKind::AddrNotAvailable => {
-                debug!("🔍 Address family not available");
+                debug!("Address family not available");
                 true
             }
 
             // All other errors are real failures
             _ => {
-                debug!(
-                    "🔍 Real error (not platform constraint): {:?}",
-                    io_err.kind()
-                );
+                debug!("Real error (not platform constraint): {:?}", io_err.kind());
                 false
             }
         }
     } else {
         // Non-IO errors are not platform constraints
-        debug!("🔍 Non-IO error (not platform constraint)");
+        debug!("Non-IO error (not platform constraint)");
         false
     }
 }
@@ -114,24 +111,24 @@ fn is_selinux_enforcing() -> bool {
     match std::fs::read_to_string("/sys/fs/selinux/enforce") {
         Ok(contents) => match contents.trim().parse::<u8>() {
             Ok(1) => {
-                debug!("✅ SELinux detected: ENFORCING (likely blocking Unix sockets)");
+                debug!("SELinux detected: ENFORCING (likely blocking Unix sockets)");
                 true
             }
             Ok(0) => {
-                debug!("ℹ️  SELinux detected: PERMISSIVE (not blocking)");
+                debug!("SELinux detected: PERMISSIVE (not blocking)");
                 false
             }
             Ok(v) => {
-                debug!("⚠️  SELinux unknown mode: {}", v);
+                debug!("SELinux unknown mode: {}", v);
                 false
             }
             Err(e) => {
-                debug!("⚠️  SELinux enforce value parse error: {}", e);
+                debug!("SELinux enforce value parse error: {}", e);
                 false
             }
         },
         Err(e) => {
-            debug!("ℹ️  SELinux not detected: {}", e);
+            debug!("SELinux not detected: {}", e);
             false
         }
     }

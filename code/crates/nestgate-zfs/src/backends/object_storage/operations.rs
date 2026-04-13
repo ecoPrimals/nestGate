@@ -41,7 +41,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     async fn create_pool(&self, name: &str, _devices: &[&str]) -> Result<Self::Pool> {
         let bucket_name = self.bucket_name(name);
 
-        info!("🪣 Creating object storage pool (bucket): {}", bucket_name);
+        info!("Creating object storage pool (bucket): {}", bucket_name);
 
         // Create marker object to establish bucket (idempotent)
         // Note: Actual S3 client integration pending
@@ -51,7 +51,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
 
         // In production with S3 SDK:
         // match self.client.put_object(&marker_path, marker_data.as_bytes()).await {
-        //     Ok(()) => debug!("✅ Pool marker created: {}", marker_path),
+        //     Ok(()) => debug!("Pool marker created: {}", marker_path),
         //     Err(e) => warn!("Pool marker creation failed (non-fatal): {}", e),
         // }
 
@@ -68,7 +68,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
             .await
             .insert(name.to_string(), pool.clone());
 
-        info!("✅ Object storage pool created: {}", name);
+        info!("Object storage pool created: {}", name);
         Ok(pool)
     }
 
@@ -87,7 +87,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         let prefix = Self::dataset_prefix(&pool.name, name);
 
         info!(
-            "📁 Creating object storage dataset: {} (tier: {:?})",
+            "Creating object storage dataset: {} (tier: {:?})",
             prefix, tier
         );
 
@@ -116,7 +116,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
         };
 
         info!(
-            "✅ Object storage dataset created: {} (tier: {:?})",
+            "Object storage dataset created: {} (tier: {:?})",
             name, tier
         );
         Ok(dataset)
@@ -131,7 +131,7 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     async fn create_snapshot(&self, dataset: &Self::Dataset, name: &str) -> Result<Self::Snapshot> {
         let snapshot_id = format!("{}-snapshot-{}", dataset.prefix, name);
 
-        info!("📸 Creating object storage snapshot: {}", snapshot_id);
+        info!("Creating object storage snapshot: {}", snapshot_id);
 
         // Create snapshot marker with metadata
         // Note: Actual S3 client integration pending
@@ -146,13 +146,13 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
             created_at: std::time::SystemTime::now(),
         };
 
-        info!("✅ Object storage snapshot created: {}", name);
+        info!("Object storage snapshot created: {}", name);
         Ok(snapshot)
     }
 
     /// Get pool properties
     async fn get_pool_properties(&self, pool: &Self::Pool) -> Result<Self::Properties> {
-        debug!("📊 Getting properties for pool: {}", pool.name);
+        debug!("Getting properties for pool: {}", pool.name);
 
         let provider = Self::detect_provider(self.client.endpoint());
 
@@ -177,12 +177,12 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     ///
     /// **Protocol-First**: Would use GET / (`ListBuckets`) with prefix filter.
     async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
-        debug!("📋 Listing object storage pools");
+        debug!("Listing object storage pools");
 
         let pools = self.pools.read().await;
         let pool_list: Vec<_> = pools.values().cloned().collect();
 
-        info!("✅ Found {} object storage pools", pool_list.len());
+        info!("Found {} object storage pools", pool_list.len());
 
         // Future enhancement: Query S3 API for bucket discovery
         // - GET / (ListBuckets)
@@ -200,12 +200,12 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     /// Uses S3 `ListObjectsV2` with delimiter to discover dataset prefixes.
     /// Works with any S3-compatible provider.
     async fn list_datasets(&self, pool: &Self::Pool) -> Result<Vec<Self::Dataset>> {
-        debug!("📋 Listing datasets for pool: {}", pool.name);
+        debug!("Listing datasets for pool: {}", pool.name);
 
         // Future: List objects in pool with delimiter to find prefixes (datasets)
         // For now, return empty list (graceful degradation)
 
-        info!("✅ Dataset listing (S3 SDK integration pending)");
+        info!("Dataset listing (S3 SDK integration pending)");
         Ok(Vec::new())
     }
 
@@ -216,12 +216,12 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     /// Discovers snapshots by finding marker objects with snapshot prefix.
     /// Future enhancement: Use S3 versioning API for native version support.
     async fn list_snapshots(&self, dataset: &Self::Dataset) -> Result<Vec<Self::Snapshot>> {
-        debug!("📋 Listing snapshots for dataset: {}", dataset.name);
+        debug!("Listing snapshots for dataset: {}", dataset.name);
 
         // Future: Search for snapshot markers in dataset prefix
         // For now, return empty list (graceful degradation)
 
-        info!("✅ Snapshot listing (S3 SDK integration pending)");
+        info!("Snapshot listing (S3 SDK integration pending)");
         Ok(Vec::new())
     }
 }

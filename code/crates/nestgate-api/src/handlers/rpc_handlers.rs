@@ -111,7 +111,7 @@ pub struct ProtocolCapabilities {
 pub async fn handle_jsonrpc(
     Json(request): Json<JsonRpcRequest>,
 ) -> Result<Json<JsonRpcResponse>, (StatusCode, Json<JsonRpcResponse>)> {
-    info!("📞 JSON-RPC request: method={}", request.method);
+    info!("JSON-RPC request: method={}", request.method);
     debug!("Request details: {:?}", request);
 
     // Validate JSON-RPC version
@@ -164,7 +164,7 @@ pub async fn handle_jsonrpc(
 /// This endpoint advertises available protocols for protocol escalation.
 /// Orchestration and integration clients use this to discover the tarpc endpoint for high-performance operations.
 pub async fn get_protocol_capabilities() -> Json<ProtocolCapabilities> {
-    info!("🔍 Protocol capabilities requested");
+    info!("Protocol capabilities requested");
 
     // Discover ports at runtime (no hardcoding!)
     let api_port = discover_api_port_sync();

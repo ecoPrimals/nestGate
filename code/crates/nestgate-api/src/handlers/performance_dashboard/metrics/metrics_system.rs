@@ -10,7 +10,7 @@ use tracing::debug;
 
 /// Collect real system metrics from `/proc` and system commands.
 pub(super) async fn collect_system_metrics() -> Result<SystemMetrics> {
-    debug!("💻 Collecting real system metrics");
+    debug!("Collecting real system metrics");
 
     // Get CPU usage
     let cpu_usage = getcpu_usage().await.unwrap_or(25.0);

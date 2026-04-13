@@ -2,7 +2,7 @@
 
 **Version**: 4.7.0-dev  
 
-**Verification (as of 2026-04-12)**  
+**Verification (as of 2026-04-13)**  
 - **Build**: `cargo check --workspace --all-features --all-targets` — PASS (0 errors, 0 warnings)  
 - **Clippy**: `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero errors)  
 - **Tests**: `cargo test --workspace` — PASS (0 failures)  
@@ -11,7 +11,7 @@
 - **Supply chain**: `cargo deny check bans` — PASS; `cargo tree -i ring` — no matches  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 11,794 passing, 451 ignored, 0 failures — run `cargo test --workspace` to refresh counts
+- **Tests (last recorded)**: 11,805 passing, 451 ignored, 0 failures — run `cargo test --workspace` to refresh counts
 - **Coverage**: ~81.7% line (`cargo llvm-cov --workspace --lib`; wateringHole minimum 80% met; org target 90% pending)
 
 **Technical debt (honest)**  
@@ -22,13 +22,16 @@
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + `rustls-rustcrypto` (pure Rust); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
 - **External deps**: Zero C-FFI `-sys` crates in production; `reqwest`→`ureq`; `uzers`→`rustix::process`  
-- **File size**: All production `.rs` modules under 500 lines (6 largest refactored Sessions 43–43d)  
+- **File size**: All production `.rs` modules under 750 lines (9 largest refactored Sessions 43–43f; engine/gcs/azure/pool_setup under 500)  
 - **`as` casts**: Dangerous narrowing casts evolved to `try_from`/`saturating`/`div_ceil`; benign widening casts remain  
 - **Dead code**: 36 unwired `.rs` files removed (12,971 lines) Session 43d — zero orphan modules  
 - **BTSP Phase 2**: server-side handshake wired into both UDS listeners (`is_btsp_required()` gate)  
 - **Dead code**: zero unwired modules, zero `if false` stubs, zero `#[allow(dead_code)]` in production  
 - **Mocks**: zero in production — `NoopStorage` is intentional null-object backend; all test doubles behind `#[cfg(test)]`  
-**Last Updated**: April 12, 2026
+- **Primal sovereignty**: zero hardcoded other-primal names (BearDog/Songbird/primalSpring) in production code  
+- **Emoji in logs**: zero — professional structured logging only (Session 43f)  
+- **Cross-check tests**: `capability_registry.toml` ↔ dispatch invariant tests (11 tests)  
+**Last Updated**: April 13, 2026
 
 ---
 

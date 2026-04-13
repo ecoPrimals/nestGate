@@ -71,7 +71,7 @@ impl NativeZfsDatasetManager {
             .create_dataset(dataset_name, &properties)
             .await?;
 
-        info!("✅ Created ZFS dataset: {}", dataset_name);
+        info!("Created ZFS dataset: {}", dataset_name);
         Ok(())
     }
 
@@ -94,7 +94,7 @@ impl NativeZfsDatasetManager {
             .execute_command_expect_success(&args)
             .await?;
 
-        info!("✅ Destroyed ZFS dataset: {}", dataset_name);
+        info!("Destroyed ZFS dataset: {}", dataset_name);
         Ok(())
     }
 }

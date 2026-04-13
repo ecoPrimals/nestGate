@@ -250,7 +250,7 @@ impl NativeZfsPoolManager {
             .execute_command_expect_success(&["import", pool_name])
             .await?;
 
-        info!("✅ Imported ZFS pool: {}", pool_name);
+        info!("Imported ZFS pool: {}", pool_name);
         Ok(())
     }
 
@@ -267,7 +267,7 @@ impl NativeZfsPoolManager {
             .execute_command_expect_success(&["export", pool_name])
             .await?;
 
-        info!("✅ Exported ZFS pool: {}", pool_name);
+        info!("Exported ZFS pool: {}", pool_name);
         Ok(())
     }
 
@@ -284,7 +284,7 @@ impl NativeZfsPoolManager {
             .execute_command_expect_success(&["scrub", pool_name])
             .await?;
 
-        info!("✅ Started scrub for ZFS pool: {}", pool_name);
+        info!("Started scrub for ZFS pool: {}", pool_name);
         Ok(())
     }
 

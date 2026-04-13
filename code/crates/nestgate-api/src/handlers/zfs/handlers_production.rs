@@ -34,7 +34,7 @@ impl ProductionZfsHandler {
     /// Create a new production ZFS handler
     #[must_use]
     pub fn new() -> Self {
-        info!("🗄️ Initializing production ZFS handler");
+        info!("Initializing production ZFS handler");
         Self {
             config: nestgate_core::services::storage::config::ZfsConfig::default(),
         }

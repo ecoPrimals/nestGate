@@ -81,11 +81,11 @@ pub use threading::*;
 pub fn safe_adapter_init<T>(init_result: Result<T>, adapter_name: &str) -> Result<Option<T>> {
     match init_result {
         Ok(adapter) => {
-            tracing::info!("✅ {} initialized successfully", adapter_name);
+            tracing::info!("{} initialized successfully", adapter_name);
             Ok(Some(adapter))
         }
         Err(e) => {
-            tracing::warn!("⚠️ {} initialization failed: {}", adapter_name, e);
+            tracing::warn!("{} initialization failed: {}", adapter_name, e);
             // Return None instead of error to allow graceful degradation
             Ok(None)
         }

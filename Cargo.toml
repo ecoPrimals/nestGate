@@ -49,6 +49,7 @@ temp-env = { workspace = true }
 portpicker = "0.1.1"
 base64.workspace = true
 bytes = { workspace = true }
+toml = { workspace = true }
 
 [features]
 default = []

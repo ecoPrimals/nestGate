@@ -96,8 +96,8 @@ impl DevEnvironmentStorageService {
     pub fn new() -> Self {
         let config = StorageAbstractionConfig::default();
 
-        info!("🗄️ Initializing Development Environment Storage Abstraction");
-        info!("📁 Base directory: {:?}", config.base_directory);
+        info!("Initializing Development Environment Storage Abstraction");
+        info!("Base directory: {:?}", config.base_directory);
 
         Self {
             base_path: config.base_directory.clone(),
@@ -108,8 +108,8 @@ impl DevEnvironmentStorageService {
 
     /// Create with custom configuration
     pub fn with_config(config: StorageAbstractionConfig) -> Self {
-        info!("🗄️ Initializing Development Storage with custom config");
-        info!("📁 Base directory: {:?}", config.base_directory);
+        info!("Initializing Development Storage with custom config");
+        info!("Base directory: {:?}", config.base_directory);
 
         Self {
             base_path: config.base_directory.clone(),
@@ -162,7 +162,7 @@ impl DevEnvironmentStorageService {
             ));
         }
 
-        info!("✅ Development storage abstraction initialized");
+        info!("Development storage abstraction initialized");
 
         // Create a default development pool
         self.create_simulated_pool(
@@ -205,7 +205,7 @@ impl DevEnvironmentStorageService {
 
         if self.config.verbose_logging {
             info!(
-                "🏊 Created simulated pool: {} ({}GB)",
+                "Created simulated pool: {} ({}GB)",
                 name,
                 size_bytes / (1024 * 1024 * 1024)
             );
@@ -273,7 +273,7 @@ impl DevEnvironmentStorageService {
 
         if self.config.verbose_logging {
             info!(
-                "📊 Created simulated dataset: {}/{} (tier: {:?})",
+                "Created simulated dataset: {}/{} (tier: {:?})",
                 pool_name, dataset_name, tier
             );
         }

@@ -161,7 +161,7 @@ impl IsomorphicIpcServer {
     /// error (for example bind or socket preparation), or if TCP fallback fails after a platform
     /// constraint is detected.
     pub async fn start(self: Arc<Self>) -> Result<()> {
-        info!("🔌 Starting IPC server (isomorphic mode)...");
+        info!("Starting IPC server (isomorphic mode)...");
         info!("   Service: {}", self.service_name);
         info!("   Pattern: Try→Detect→Adapt→Succeed");
 
@@ -169,23 +169,23 @@ impl IsomorphicIpcServer {
         info!("   Trying Unix socket IPC (optimal)...");
         match self.try_unix_server().await {
             Ok(()) => {
-                info!("✅ Unix socket IPC active (optimal path)");
+                info!("Unix socket IPC active (optimal path)");
                 Ok(())
             }
 
             // 2. DETECT platform constraints
             Err(e) if is_platform_constraint(&e) => {
-                warn!("⚠️  Unix sockets unavailable: {}", e);
+                warn!("Unix sockets unavailable: {}", e);
                 warn!("   Detected platform constraint, adapting...");
 
                 // 3. ADAPT to TCP fallback
-                info!("🌐 Initiating TCP IPC fallback (isomorphic mode)");
+                info!("Initiating TCP IPC fallback (isomorphic mode)");
                 self.start_tcp_fallback().await
             }
 
             // 4. Real error (not platform constraint)
             Err(e) => {
-                error!("❌ Failed to start IPC server: {}", e);
+                error!("Failed to start IPC server: {}", e);
                 error!("   This is a real error, not a platform constraint");
                 Err(e)
             }
@@ -224,7 +224,7 @@ impl IsomorphicIpcServer {
         let listener = UnixListener::bind(&socket_path)
             .map_err(|e| anyhow::anyhow!("Failed to bind Unix socket: {e}"))?;
 
-        info!("✅ Unix socket bound: {}", socket_path.display());
+        info!("Unix socket bound: {}", socket_path.display());
 
         #[cfg(unix)]
         let _storage_capability_symlink_guard =

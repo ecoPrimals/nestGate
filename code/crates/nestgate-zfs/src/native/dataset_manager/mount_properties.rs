@@ -28,7 +28,7 @@ impl NativeZfsDatasetManager {
             .await?;
 
         info!(
-            "✅ Set property {}={} on dataset {}",
+            "Set property {}={} on dataset {}",
             property, value, dataset_name
         );
         Ok(())
@@ -47,7 +47,7 @@ impl NativeZfsDatasetManager {
             .execute_command_expect_success(&["mount", dataset_name])
             .await?;
 
-        info!("✅ Mounted ZFS dataset: {}", dataset_name);
+        info!("Mounted ZFS dataset: {}", dataset_name);
         Ok(())
     }
 
@@ -70,7 +70,7 @@ impl NativeZfsDatasetManager {
             .execute_command_expect_success(&args)
             .await?;
 
-        info!("✅ Unmounted ZFS dataset: {}", dataset_name);
+        info!("Unmounted ZFS dataset: {}", dataset_name);
         Ok(())
     }
 }

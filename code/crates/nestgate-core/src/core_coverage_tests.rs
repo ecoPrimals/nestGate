@@ -7,7 +7,7 @@
 //! to boost nestgate-core coverage.
 
 #[cfg(test)]
-mod core_coverage_boost_tests {
+mod tests {
     use crate::error::{NestGateError, Result};
     use crate::response::ApiResponse;
     use std::collections::HashMap;

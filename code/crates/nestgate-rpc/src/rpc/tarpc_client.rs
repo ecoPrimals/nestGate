@@ -558,7 +558,7 @@ impl NestGateRpcClient {
             *conn = Some(client.clone());
         }
 
-        info!("✅ Connected to NestGate tarpc server at {}", self.addr);
+        info!("Connected to NestGate tarpc server at {}", self.addr);
         Ok(client)
     }
 

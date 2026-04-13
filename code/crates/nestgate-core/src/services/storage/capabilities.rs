@@ -92,15 +92,12 @@ pub fn is_zfs_available() -> bool {
     // This checks if ZFS kernel modules are loaded without requiring pools
     match Command::new("zpool").arg("version").output() {
         Ok(output) if output.status.success() => {
-            debug!("✅ ZFS detected (zpool version succeeded)");
+            debug!("ZFS detected (zpool version succeeded)");
             true
         }
         Ok(output) => {
             let exit_code = output.status.code().unwrap_or(-1);
-            debug!(
-                "❌ ZFS not available (zpool version exit code: {})",
-                exit_code
-            );
+            debug!("ZFS not available (zpool version exit code: {})", exit_code);
 
             // Log stderr for debugging (but don't treat as error)
             if !output.stderr.is_empty() {
@@ -111,7 +108,7 @@ pub fn is_zfs_available() -> bool {
             false
         }
         Err(e) => {
-            debug!("❌ ZFS not available (zpool command not found: {})", e);
+            debug!("ZFS not available (zpool command not found: {})", e);
             false
         }
     }
@@ -126,16 +123,16 @@ pub fn detect_backend() -> BackendCapabilities {
     let zfs_available = is_zfs_available();
 
     if zfs_available {
-        info!("🗄️  Storage backend: ZFS (optimized features available)");
-        info!("   • Native snapshots ✅");
-        info!("   • Native deduplication ✅");
-        info!("   • Native compression ✅");
-        info!("   • Native checksums ✅");
-        info!("   • Native replication ✅");
+        info!("Storage backend: ZFS (optimized features available)");
+        info!("   • Native snapshots ");
+        info!("   • Native deduplication ");
+        info!("   • Native compression ");
+        info!("   • Native checksums ");
+        info!("   • Native replication ");
         BackendCapabilities::zfs()
     } else {
-        info!("🗄️  Storage backend: Filesystem (universal compatibility)");
-        info!("   • Basic operations ✅");
+        info!("Storage backend: Filesystem (universal compatibility)");
+        info!("   • Basic operations ");
         info!("   • Software snapshots available (file copy)");
         info!("   • Software deduplication available (hash-based)");
         BackendCapabilities::filesystem()
@@ -146,15 +143,15 @@ pub fn detect_backend() -> BackendCapabilities {
 ///
 /// ✅ TRANSPARENT: Clear logging of capabilities
 pub fn detect_and_log() -> BackendCapabilities {
-    info!("🔍 Detecting storage backend capabilities...");
+    info!("Detecting storage backend capabilities...");
     let capabilities = detect_backend();
 
     match capabilities.backend_type {
         BackendType::Zfs => {
-            info!("✨ NestGate: Universal Data Orchestrator with ZFS Optimization");
+            info!("NestGate: Universal Data Orchestrator with ZFS Optimization");
         }
         BackendType::Filesystem => {
-            info!("🌍 NestGate: Universal Data Orchestrator (Agnostic Mode)");
+            info!("NestGate: Universal Data Orchestrator (Agnostic Mode)");
             info!("   Works on ANY filesystem: ext4, NTFS, APFS, btrfs, etc.");
         }
     }

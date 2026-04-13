@@ -78,27 +78,27 @@ impl ZfsServiceFactory {
 
         match capabilities.availability {
             nestgate_zfs::adaptive_backend::ZfsAvailability::SystemZfs => {
-                tracing::info!("✅ Using system ZFS (optimal performance)");
+                tracing::info!("Using system ZFS (optimal performance)");
 
                 // Determine if we need sudo
                 let needs_sudo = std::env::var("USER").unwrap_or_default() != "root";
 
                 if needs_sudo {
-                    tracing::info!("🔐 Creating ZFS service with sudo privileges");
+                    tracing::info!("Creating ZFS service with sudo privileges");
                     Self::create_service_with_sudo(config)
                 } else {
-                    tracing::info!("👑 Creating ZFS service with root privileges");
+                    tracing::info!("Creating ZFS service with root privileges");
                     Self::create_service(config)
                 }
             }
             nestgate_zfs::adaptive_backend::ZfsAvailability::InternalZfs => {
-                tracing::info!("🔄 Using NestGate's internal ZFS (fully functional, sovereign)");
+                tracing::info!("Using NestGate's internal ZFS (fully functional, sovereign)");
                 tracing::info!("   Reason: {}", capabilities.status_reason);
                 // Use native service which will use internal implementations
                 Self::create_service(config)
             }
             nestgate_zfs::adaptive_backend::ZfsAvailability::Degraded => {
-                tracing::warn!("⚠️ Limited ZFS functionality available");
+                tracing::warn!("Limited ZFS functionality available");
                 tracing::warn!("   {}", capabilities.status_reason);
                 // Still create service - will work with limitations
                 Self::create_service(config)

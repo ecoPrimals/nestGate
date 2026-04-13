@@ -27,7 +27,7 @@ impl RealTimePerformanceMonitor {
         _pool_manager: &ZfsPoolManager,
         dataset_manager: &ZfsDatasetManager,
     ) -> Result<()> {
-        debug!("📊 Collecting real-time performance metrics");
+        debug!("Collecting real-time performance metrics");
 
         // Collect comprehensive ZFS performance metrics with real system integration
         let mut pool_metrics = HashMap::new();
@@ -298,7 +298,7 @@ impl RealTimePerformanceMonitor {
         self.analyze_performance_trends().await?;
 
         debug!(
-            "✅ Collected and cached performance metrics: {} pools, {} datasets",
+            "Collected and cached performance metrics: {} pools, {} datasets",
             metrics.pool_metrics.len(),
             metrics.dataset_metrics.len()
         );

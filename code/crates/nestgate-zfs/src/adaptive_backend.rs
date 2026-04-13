@@ -70,7 +70,7 @@ impl AdaptiveZfsBackend {
     ///
     /// This function never fails - it always returns a usable configuration.
     pub async fn detect() -> ZfsCapabilities {
-        info!("🔍 Detecting ZFS capabilities for adaptive backend...");
+        info!("Detecting ZFS capabilities for adaptive backend...");
 
         // Check environment variable override
         if let Ok(mode) = std::env::var("NESTGATE_ZFS_MODE") {
@@ -120,15 +120,15 @@ impl AdaptiveZfsBackend {
         // Log the detection result
         match availability {
             ZfsAvailability::SystemZfs => {
-                info!("✅ {}", status_reason);
+                info!("{}", status_reason);
                 info!("   Using system ZFS for optimal performance");
             }
             ZfsAvailability::InternalZfs => {
-                info!("🔄 {}", status_reason);
+                info!("{}", status_reason);
                 info!("   NestGate is fully functional with internal ZFS");
             }
             ZfsAvailability::Degraded => {
-                warn!("⚠️ {}", status_reason);
+                warn!("{}", status_reason);
                 warn!("   Limited ZFS functionality available");
             }
         }
@@ -141,11 +141,7 @@ impl AdaptiveZfsBackend {
         match Command::new(cmd).arg("version").output().await {
             Ok(output) => {
                 let success = output.status.success();
-                debug!(
-                    "Command '{}' check: {}",
-                    cmd,
-                    if success { "✅" } else { "❌" }
-                );
+                debug!("command '{}' check: available={}", cmd, success);
                 success
             }
             Err(e) => {
@@ -168,23 +164,20 @@ impl AdaptiveZfsBackend {
             Ok(modules) => {
                 // We're on Linux and can check /proc/modules
                 let loaded = modules.lines().any(|line| line.starts_with("zfs "));
-                debug!("✅ Linux detected: ZFS kernel module loaded: {}", loaded);
+                debug!("Linux detected: ZFS kernel module loaded: {}", loaded);
                 loaded
             }
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
                 // /proc/modules doesn't exist - we're not on Linux
                 // On FreeBSD, illumos, macOS: ZFS is integrated differently
                 debug!(
-                    "ℹ️  Non-Linux system detected (no /proc/modules) - ZFS may be built-in or use different loading mechanism"
+                    "Non-Linux system detected (no /proc/modules) - ZFS may be built-in or use different loading mechanism"
                 );
                 true // Assume available - will be validated by command checks
             }
             Err(e) => {
                 // Permission denied or other error
-                debug!(
-                    "⚠️  Cannot read /proc/modules: {} - assuming module loaded",
-                    e
-                );
+                debug!("Cannot read /proc/modules: {} - assuming module loaded", e);
                 true // Conservative: assume loaded if we can't check
             }
         }
@@ -194,7 +187,7 @@ impl AdaptiveZfsBackend {
     fn handle_explicit_mode(mode: &str) -> ZfsCapabilities {
         match mode.to_lowercase().as_str() {
             "system" => {
-                info!("🔧 Explicit mode: SYSTEM ZFS (via NESTGATE_ZFS_MODE)");
+                info!("Explicit mode: SYSTEM ZFS (via NESTGATE_ZFS_MODE)");
                 ZfsCapabilities {
                     availability: ZfsAvailability::SystemZfs,
                     has_zfs_command: true, // Assume true in explicit mode
@@ -205,7 +198,7 @@ impl AdaptiveZfsBackend {
                 }
             }
             "internal" => {
-                info!("🔧 Explicit mode: INTERNAL ZFS (via NESTGATE_ZFS_MODE)");
+                info!("Explicit mode: INTERNAL ZFS (via NESTGATE_ZFS_MODE)");
                 ZfsCapabilities {
                     availability: ZfsAvailability::InternalZfs,
                     has_zfs_command: false,
@@ -217,7 +210,7 @@ impl AdaptiveZfsBackend {
             }
             _ => {
                 warn!(
-                    "⚠️ Unknown NESTGATE_ZFS_MODE value: '{}' - auto-detecting",
+                    "Unknown NESTGATE_ZFS_MODE value: '{}' - auto-detecting",
                     mode
                 );
                 // Fall back to auto-detection by returning a signal value
@@ -263,25 +256,25 @@ impl GracefulZfsOperations {
             match Command::new(command).args(args).output().await {
                 Ok(output) if output.status.success() => {
                     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-                    debug!("✅ System ZFS command succeeded: {} {:?}", command, args);
+                    debug!("System ZFS command succeeded: {} {:?}", command, args);
                     return (true, stdout, true);
                 }
                 Ok(output) => {
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     warn!(
-                        "⚠️ System ZFS command failed: {} {:?} - {}",
+                        "System ZFS command failed: {} {:?} - {}",
                         command, args, stderr
                     );
                 }
                 Err(e) => {
-                    warn!("⚠️ Failed to execute system ZFS: {} - {}", command, e);
+                    warn!("Failed to execute system ZFS: {} - {}", command, e);
                 }
             }
         }
 
         // Fall back to internal implementation
         info!(
-            "🔄 Using internal ZFS implementation for: {} {:?}",
+            "Using internal ZFS implementation for: {} {:?}",
             command, args
         );
         let result = Self::execute_internal(command, args);
@@ -292,7 +285,7 @@ impl GracefulZfsOperations {
     fn execute_internal(command: &str, args: &[&str]) -> (bool, String) {
         // This would call into NestGate's internal ZFS implementation
         // For now, return a placeholder that indicates we're using internal impl
-        debug!("📦 Internal ZFS implementation: {} {:?}", command, args);
+        debug!("Internal ZFS implementation: {} {:?}", command, args);
 
         // Return simulated success for basic commands
         match command {
