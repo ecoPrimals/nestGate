@@ -11,7 +11,7 @@
 - **Supply chain**: `cargo deny check bans` — PASS; `cargo tree -i ring` — no matches  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 11,819 passing, 451 ignored, 0 failures — run `cargo test --workspace` to refresh counts
+- **Tests (last recorded)**: 11,994 passing, 460 ignored, 0 failures — run `cargo test --workspace` to refresh counts
 - **Coverage**: 80.08% line (`cargo llvm-cov --workspace`; wateringHole minimum 80% met; org target 90% pending)
 
 **Technical debt (honest)**  

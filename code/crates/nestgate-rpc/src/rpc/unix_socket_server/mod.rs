@@ -368,6 +368,9 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
 /// (e.g. `storage.store` then `storage.retrieve` on the same socket).
 ///
 /// Shared between the BTSP-authenticated and development (plaintext) code paths.
+/// Idle timeout for keep-alive connections: 5 minutes without any request.
+const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(300);
+
 async fn json_rpc_loop<R, W>(reader: &mut R, writer: &mut W, state: &StorageState) -> Result<()>
 where
     R: tokio::io::AsyncBufReadExt + Unpin,
@@ -377,10 +380,19 @@ where
 
     loop {
         line.clear();
-        let n = reader
-            .read_until(b'\n', &mut line)
-            .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to read request: {e}")))?;
+        let n = match tokio::time::timeout(IDLE_TIMEOUT, reader.read_until(b'\n', &mut line)).await
+        {
+            Ok(Ok(n)) => n,
+            Ok(Err(e)) => {
+                return Err(NestGateError::io_error(format!(
+                    "Failed to read request: {e}"
+                )));
+            }
+            Err(_) => {
+                debug!("Connection idle for {IDLE_TIMEOUT:?}, closing");
+                break;
+            }
+        };
 
         if n == 0 {
             break;

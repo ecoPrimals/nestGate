@@ -858,3 +858,55 @@ async fn isomorphic_keep_alive_multiple_requests_one_connection() {
     drop(c_write);
     h.await.unwrap().unwrap();
 }
+
+#[tokio::test]
+async fn idle_timeout_closes_connection() {
+    use std::sync::Arc;
+    use tokio::io::BufReader;
+
+    let state = StorageState::new().expect("storage state");
+    let state = Arc::new(state);
+
+    let (client, server) = tokio::net::UnixStream::pair().unwrap();
+    let (reader, writer) = server.into_split();
+    let mut reader = BufReader::new(reader);
+    let mut writer = writer;
+
+    let idle_override = std::time::Duration::from_millis(100);
+    let state_clone = state.clone();
+
+    let h = tokio::spawn(async move {
+        let mut line = Vec::new();
+        loop {
+            line.clear();
+            let n = match tokio::time::timeout(
+                idle_override,
+                tokio::io::AsyncBufReadExt::read_until(&mut reader, b'\n', &mut line),
+            )
+            .await
+            {
+                Ok(Ok(n)) => n,
+                Ok(Err(_)) => break,
+                Err(_) => break,
+            };
+            if n == 0 {
+                break;
+            }
+            let _ = crate::rpc::unix_socket_server::handle_request(
+                serde_json::from_slice(&line).unwrap(),
+                &state_clone,
+            )
+            .await;
+            tokio::io::AsyncWriteExt::write_all(&mut writer, b"{}\n")
+                .await
+                .unwrap();
+        }
+    });
+
+    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    assert!(
+        h.is_finished(),
+        "loop should have exited after idle timeout"
+    );
+    drop(client);
+}

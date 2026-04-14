@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 14, 2026 (Session 43m — comprehensive deep debt audit: all dimensions verified clean)  
+**Last Updated**: April 14, 2026 (Session 43n — semantic router streaming parity + idle timeout)  
 **Version**: 4.7.0-dev
 
 ---
@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --all-targets --all-features -- -D warnings (zero errors), as of 2026-04-13
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-13
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-13
-Tests:              11,819 passing, 0 failures, 451 ignored (cargo test --workspace; flaky tests stabilized)
+Tests:              11,994 passing, 0 failures, 460 ignored (cargo test --workspace; flaky tests stabilized)
 Coverage:           80.08% line (cargo llvm-cov --workspace, 2026-04-13) — wateringHole 80% min met; 90% target is multi-session effort
 Files > 750 lines:  0 (production; 9 largest refactored Sessions 43–43f — max 749 LOC; engine/gcs/azure/pool_setup all under 500)
 Unwrap/Expect:      ZERO in production library code

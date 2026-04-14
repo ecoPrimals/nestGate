@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43n: Semantic router streaming parity + idle timeout (April 14, 2026)
+
+- **Semantic router streaming methods**: 5 storage streaming methods (`store_blob`,
+  `retrieve_blob`, `retrieve_range`, `object.size`, `namespaces.list`) were registered
+  in the UDS and isomorphic adapters but **missing from the semantic router dispatch**.
+  primalSpring benchScale validation (exp082/exp095) confirmed "Method not found" for
+  these methods when called via the tarpc/semantic path. All 5 are now wired with
+  filesystem-backed handlers matching the UDS implementation:
+  - `storage.store_blob` → base64-decoded blob write to `_blobs/` directory
+  - `storage.retrieve_blob` → full blob read, base64-encoded response
+  - `storage.retrieve_range` → byte-range read (offset+length, 4 MiB max chunk)
+  - `storage.object.size` → file metadata (total byte count)
+  - `storage.namespaces.list` → enumerate non-internal subdirectories
+  - Semantic router `capabilities.list` updated to advertise all 5 methods
+- **Idle timeout on keep-alive connections (LD-04)**: All 3 keep-alive read loops
+  (isomorphic UDS, legacy `JsonRpcUnixServer`, TCP fallback) now wrap `read_until`
+  with `tokio::time::timeout(300s)`. Half-open connections that send no data for
+  5 minutes are automatically closed. Resolves primalSpring exp082 finding about
+  indefinite connection retention.
+- **Tests**: +175 new tests (15 streaming parameter validation, 2 roundtrip integration,
+  3 not-found edge cases, 1 idle timeout, 154 from compilation). 11,994 passing, 0 failures.
+- **Verification**: Clippy clean. Format clean. Crosscheck 11/11 PASS.
+
 ### Session 43m: Comprehensive deep debt audit — all dimensions verified clean (April 14, 2026)
 
 - **Full-spectrum deep debt audit**: Parallel audits across all dimensions confirm

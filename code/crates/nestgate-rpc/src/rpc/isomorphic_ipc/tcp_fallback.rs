@@ -200,6 +200,9 @@ impl TcpFallbackServer {
     /// Reads newline-delimited JSON-RPC requests in a loop until the client
     /// disconnects (EOF). Each response is flushed (critical for TCP — Nagle's
     /// algorithm can delay small writes) before reading the next request.
+    /// Idle timeout for keep-alive TCP connections: 5 minutes.
+    const TCP_IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(300);
+
     async fn handle_tcp_connection(&self, stream: TcpStream) -> Result<()> {
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
@@ -208,10 +211,22 @@ impl TcpFallbackServer {
         loop {
             line.clear();
 
-            let n = match reader.read_until(b'\n', &mut line).await {
-                Ok(n) => n,
-                Err(e) => {
+            let n = match tokio::time::timeout(
+                Self::TCP_IDLE_TIMEOUT,
+                reader.read_until(b'\n', &mut line),
+            )
+            .await
+            {
+                Ok(Ok(n)) => n,
+                Ok(Err(e)) => {
                     error!("TCP read error: {}", e);
+                    break;
+                }
+                Err(_) => {
+                    debug!(
+                        "TCP connection idle for {:?}, closing",
+                        Self::TCP_IDLE_TIMEOUT
+                    );
                     break;
                 }
             };

@@ -238,6 +238,13 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "storage.dataset.list" => storage::dataset_list(self, params).await,
             "storage.dataset.delete" => storage::dataset_delete(self, params).await,
 
+            // Blob / streaming operations (filesystem-backed, not tarpc-delegated)
+            "storage.store_blob" => storage::storage_store_blob(self, params).await,
+            "storage.retrieve_blob" => storage::storage_retrieve_blob(self, params).await,
+            "storage.retrieve_range" => storage::storage_retrieve_range(self, params).await,
+            "storage.object.size" => storage::storage_object_size(self, params).await,
+            "storage.namespaces.list" => storage::storage_namespaces_list(self, params).await,
+
             // ==================== DATA DOMAIN (live feeds, not storage — wildcard delegation) ====================
             m if m.starts_with("data.") => data::data_delegation(self, m, params),
 

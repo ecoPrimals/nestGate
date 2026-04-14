@@ -82,7 +82,7 @@ use anyhow::Result;
 use bytes::Bytes;
 use serde_json::Value;
 use std::sync::Arc;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use super::platform_detection::is_platform_constraint;
 use super::tcp_fallback::{RpcHandler, TcpFallbackServer};
@@ -293,6 +293,9 @@ impl IsomorphicIpcServer {
     ///
     /// Reads until client disconnects (EOF). Flushes after every response to
     /// ensure the client receives data before the server blocks on the next read.
+    /// Idle timeout for keep-alive connections: 5 minutes without any request.
+    const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(300);
+
     async fn json_rpc_keep_alive_loop<R, W>(
         reader: &mut R,
         writer: &mut W,
@@ -307,13 +310,20 @@ impl IsomorphicIpcServer {
         loop {
             line.clear();
 
-            let n = match reader.read_until(b'\n', &mut line).await {
-                Ok(n) => n,
-                Err(e) => {
-                    error!("Unix socket read error: {}", e);
-                    break;
-                }
-            };
+            let n =
+                match tokio::time::timeout(Self::IDLE_TIMEOUT, reader.read_until(b'\n', &mut line))
+                    .await
+                {
+                    Ok(Ok(n)) => n,
+                    Ok(Err(e)) => {
+                        error!("Unix socket read error: {}", e);
+                        break;
+                    }
+                    Err(_) => {
+                        debug!("Connection idle for {:?}, closing", Self::IDLE_TIMEOUT);
+                        break;
+                    }
+                };
             if n == 0 {
                 break;
             }
