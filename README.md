@@ -12,10 +12,10 @@
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
 - **Tests (last recorded)**: 11,819 passing, 451 ignored, 0 failures — run `cargo test --workspace` to refresh counts
-- **Coverage**: ~81.7% line (`cargo llvm-cov --workspace --lib`; wateringHole minimum 80% met; org target 90% pending)
+- **Coverage**: 80.08% line (`cargo llvm-cov --workspace`; wateringHole minimum 80% met; org target 90% pending)
 
 **Technical debt (honest)**  
-- **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-11)  
+- **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs` (verified `rg` sweep 2026-04-14)  
 - **Hardcoding**: zero `self.base_url` string literals (81 fixed → proper interpolation)  
 - **Deprecated APIs**: 187 `#[deprecated]` markers for canonical-config migration; zero dead callers  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
@@ -125,7 +125,7 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43l).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-14 (Session 43m).
 
 | Area | Status |
 |------|--------|
@@ -281,4 +281,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 13, 2026 (Session 43l)
+**Latest**: April 14, 2026 (Session 43m)
