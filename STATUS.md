@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 14, 2026 (Session 43n — semantic router streaming parity + idle timeout)  
+**Last Updated**: April 14, 2026 (Session 43n — semantic router streaming parity + event-driven connection lifecycle)  
 **Version**: 4.7.0-dev
 
 ---

@@ -23,13 +23,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `storage.object.size` → file metadata (total byte count)
   - `storage.namespaces.list` → enumerate non-internal subdirectories
   - Semantic router `capabilities.list` updated to advertise all 5 methods
-- **Idle timeout on keep-alive connections (LD-04)**: All 3 keep-alive read loops
-  (isomorphic UDS, legacy `JsonRpcUnixServer`, TCP fallback) now wrap `read_until`
-  with `tokio::time::timeout(300s)`. Half-open connections that send no data for
-  5 minutes are automatically closed. Resolves primalSpring exp082 finding about
-  indefinite connection retention.
-- **Tests**: +175 new tests (15 streaming parameter validation, 2 roundtrip integration,
-  3 not-found edge cases, 1 idle timeout, 154 from compilation). 11,994 passing, 0 failures.
+- **Event-driven connection lifecycle (LD-04)**: All 3 keep-alive loops (isomorphic
+  UDS, legacy `JsonRpcUnixServer`, TCP fallback) evolved from brute-force
+  `tokio::time::timeout()` wrapping to proper `tokio::select!`-based event loops:
+  - Resettable idle timer via `pin!(sleep)` + `.reset()` — models "time since last
+    activity" as explicit connection state, resets on every request
+  - Graceful close: clients receive a `connection.closing` JSON-RPC notification
+    with `reason`, `idle_timeout_secs`, and `requests_served` before teardown
+  - Extensible: adding shutdown channels or rate-limit events is a single `select!`
+    arm addition
+  - 300s idle limit; half-open connections reaped automatically
+  - Resolves primalSpring exp082 finding (indefinite connection retention)
+- **Tests**: +175 new tests including `idle_event_sends_close_notification` (validates
+  notification delivery) and `activity_resets_idle_timer` (confirms timer reset on
+  request activity). 11,995+ passing, 0 failures.
 - **Verification**: Clippy clean. Format clean. Crosscheck 11/11 PASS.
 
 ### Session 43m: Comprehensive deep debt audit — all dimensions verified clean (April 14, 2026)
