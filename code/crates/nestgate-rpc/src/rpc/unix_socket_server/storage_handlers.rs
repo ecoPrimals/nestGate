@@ -267,21 +267,16 @@ pub(super) async fn storage_namespaces_list(
 ) -> Result<Value> {
     let family_id = match params {
         Some(p) => resolve_family_id(p, state)?,
-        None => state
-            .family_id
-            .as_deref()
-            .ok_or_else(|| {
-                NestGateError::invalid_input_with_field("family_id", "family_id required")
-            })?,
+        None => state.family_id.as_deref().ok_or_else(|| {
+            NestGateError::invalid_input_with_field("family_id", "family_id required")
+        })?,
     };
 
     let family_dir = get_storage_base_path().join("datasets").join(family_id);
     let mut namespaces = Vec::new();
     if family_dir.exists() {
         let mut entries = tokio::fs::read_dir(&family_dir).await.map_err(|e| {
-            NestGateError::io_error(format!(
-                "Failed to list namespaces for {family_id}: {e}"
-            ))
+            NestGateError::io_error(format!("Failed to list namespaces for {family_id}: {e}"))
         })?;
         while let Ok(Some(entry)) = entries.next_entry().await {
             let name = entry.file_name();
@@ -497,9 +492,15 @@ mod tests {
         let family_id = format!("test-ns-{}", uuid::Uuid::new_v4());
         let base = get_storage_base_path().join("datasets").join(&family_id);
 
-        tokio::fs::create_dir_all(base.join("shared")).await.unwrap();
-        tokio::fs::create_dir_all(base.join("private")).await.unwrap();
-        tokio::fs::create_dir_all(base.join("_blobs")).await.unwrap();
+        tokio::fs::create_dir_all(base.join("shared"))
+            .await
+            .unwrap();
+        tokio::fs::create_dir_all(base.join("private"))
+            .await
+            .unwrap();
+        tokio::fs::create_dir_all(base.join("_blobs"))
+            .await
+            .unwrap();
 
         let params = json!({"family_id": &family_id});
         let result = storage_namespaces_list(Some(&params), &state)
@@ -531,7 +532,9 @@ mod tests {
         let state = mock_state(Some(&family_id)).await;
         let base = get_storage_base_path().join("datasets").join(&family_id);
 
-        tokio::fs::create_dir_all(base.join("default")).await.unwrap();
+        tokio::fs::create_dir_all(base.join("default"))
+            .await
+            .unwrap();
 
         let result = storage_namespaces_list(None, &state).await.unwrap();
         assert_eq!(result["count"], 1);
