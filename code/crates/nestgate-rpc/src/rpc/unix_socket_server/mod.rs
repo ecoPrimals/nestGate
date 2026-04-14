@@ -507,6 +507,9 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         "storage.object.size" => {
             external_handlers::storage_object_size(request.params.as_ref(), state).await
         }
+        "storage.namespaces.list" => {
+            storage_handlers::storage_namespaces_list(request.params.as_ref(), state).await
+        }
         "storage.fetch_external" => {
             external_handlers::storage_fetch_external(request.params.as_ref(), state).await
         }

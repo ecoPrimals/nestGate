@@ -258,6 +258,53 @@ fn list_keys_recursive<'a>(
     })
 }
 
+/// `storage.namespaces.list` — enumerate namespaces under a family's dataset directory.
+///
+/// Returns all subdirectories (excluding underscore-prefixed internals like `_blobs`).
+pub(super) async fn storage_namespaces_list(
+    params: Option<&Value>,
+    state: &StorageState,
+) -> Result<Value> {
+    let family_id = match params {
+        Some(p) => resolve_family_id(p, state)?,
+        None => state
+            .family_id
+            .as_deref()
+            .ok_or_else(|| {
+                NestGateError::invalid_input_with_field("family_id", "family_id required")
+            })?,
+    };
+
+    let family_dir = get_storage_base_path().join("datasets").join(family_id);
+    let mut namespaces = Vec::new();
+    if family_dir.exists() {
+        let mut entries = tokio::fs::read_dir(&family_dir).await.map_err(|e| {
+            NestGateError::io_error(format!(
+                "Failed to list namespaces for {family_id}: {e}"
+            ))
+        })?;
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if !name.starts_with('_')
+                && entry
+                    .file_type()
+                    .await
+                    .map(|ft| ft.is_dir())
+                    .unwrap_or(false)
+            {
+                namespaces.push(name.to_string());
+            }
+        }
+    }
+    namespaces.sort();
+    Ok(json!({
+        "namespaces": namespaces,
+        "family_id": family_id,
+        "count": namespaces.len()
+    }))
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -442,5 +489,54 @@ mod tests {
         let _ =
             tokio::fs::remove_dir_all(get_storage_base_path().join("datasets").join(&family_id))
                 .await;
+    }
+
+    #[tokio::test]
+    async fn namespaces_list_returns_dirs_only() {
+        let state = mock_state(Some("test-ns")).await;
+        let family_id = format!("test-ns-{}", uuid::Uuid::new_v4());
+        let base = get_storage_base_path().join("datasets").join(&family_id);
+
+        tokio::fs::create_dir_all(base.join("shared")).await.unwrap();
+        tokio::fs::create_dir_all(base.join("private")).await.unwrap();
+        tokio::fs::create_dir_all(base.join("_blobs")).await.unwrap();
+
+        let params = json!({"family_id": &family_id});
+        let result = storage_namespaces_list(Some(&params), &state)
+            .await
+            .unwrap();
+        let ns = result["namespaces"].as_array().unwrap();
+        assert_eq!(ns.len(), 2, "expected 2 namespaces (not _blobs): {ns:?}");
+        assert_eq!(ns[0], "private");
+        assert_eq!(ns[1], "shared");
+        assert_eq!(result["count"], 2);
+
+        let _ = tokio::fs::remove_dir_all(&base).await;
+    }
+
+    #[tokio::test]
+    async fn namespaces_list_empty_for_missing_family() {
+        let state = mock_state(Some("test-ns-missing")).await;
+        let params = json!({"family_id": "nonexistent-family-12345"});
+        let result = storage_namespaces_list(Some(&params), &state)
+            .await
+            .unwrap();
+        assert_eq!(result["count"], 0);
+        assert!(result["namespaces"].as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn namespaces_list_uses_state_family_id() {
+        let family_id = format!("test-ns-state-{}", uuid::Uuid::new_v4());
+        let state = mock_state(Some(&family_id)).await;
+        let base = get_storage_base_path().join("datasets").join(&family_id);
+
+        tokio::fs::create_dir_all(base.join("default")).await.unwrap();
+
+        let result = storage_namespaces_list(None, &state).await.unwrap();
+        assert_eq!(result["count"], 1);
+        assert_eq!(result["family_id"], family_id);
+
+        let _ = tokio::fs::remove_dir_all(&base).await;
     }
 }

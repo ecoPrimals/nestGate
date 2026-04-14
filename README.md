@@ -11,7 +11,7 @@
 - **Supply chain**: `cargo deny check bans` — PASS; `cargo tree -i ring` — no matches  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 11,816 passing, 451 ignored, 0 failures — run `cargo test --workspace` to refresh counts
+- **Tests (last recorded)**: 11,819 passing, 451 ignored, 0 failures — run `cargo test --workspace` to refresh counts
 - **Coverage**: ~81.7% line (`cargo llvm-cov --workspace --lib`; wateringHole minimum 80% met; org target 90% pending)
 
 **Technical debt (honest)**  
@@ -125,14 +125,14 @@ core-only modules and 44 dependencies (down from 51).
 
 ## Current State
 
-See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43k).
+See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-13 (Session 43l).
 
 | Area | Status |
 |------|--------|
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace` — 11,816 passing, 0 failures, 451 ignored |
+| Tests | `cargo test --workspace` — 11,819 passing, 0 failures, 451 ignored |
 | Coverage | 80.08% line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 187 `#[deprecated]` for canonical migration; zero dead callers |
@@ -281,4 +281,4 @@ non-commercial purposes.
 ---
 
 **Created**: January 31, 2026  
-**Latest**: April 13, 2026 (Session 43k)
+**Latest**: April 13, 2026 (Session 43l)

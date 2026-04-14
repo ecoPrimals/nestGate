@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43l: Streaming storage parity — all 3 methods wired in both server paths (April 13, 2026)
+
+- **`storage.namespaces.list` wired in legacy server**: The only parity gap between the
+  isomorphic IPC adapter (production) and the legacy `JsonRpcUnixServer` was
+  `storage.namespaces.list`. Now wired in both paths with handler + 3 tests.
+- **primalSpring audit triage**: Audit claimed 3 streaming methods "not yet wired" — this is
+  stale. `storage.retrieve_range` and `storage.object.size` were already wired in both servers
+  (Session 43h). `storage.namespaces.list` was wired in isomorphic (production path) but
+  missing from legacy server (parity gap, now closed).
+- **Verification**: 11,819 tests passing (+3), 0 failures. Clippy clean. Crosscheck 11/11.
+
 ### Session 43k: Deep debt audit — zero production dyn Error, zero async-trait (April 13, 2026)
 
 - **Last `Box<dyn Error>` in production eliminated**: `ConfigError::ParseError` evolved from
