@@ -368,80 +368,119 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
 /// (e.g. `storage.store` then `storage.retrieve` on the same socket).
 ///
 /// Shared between the BTSP-authenticated and development (plaintext) code paths.
-/// Idle timeout for keep-alive connections: 5 minutes without any request.
-const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(300);
+///
+/// Maximum idle time before a keep-alive connection is closed. The timer
+/// resets on every successful request so active connections are never reaped.
+const CONNECTION_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
 
+/// Event-driven JSON-RPC keep-alive loop.
+///
+/// Uses `tokio::select!` to multiplex between I/O readiness and a resettable
+/// idle timer. On idle expiry the client receives a `connection.closing`
+/// notification before the socket is torn down.
 async fn json_rpc_loop<R, W>(reader: &mut R, writer: &mut W, state: &StorageState) -> Result<()>
 where
     R: tokio::io::AsyncBufReadExt + Unpin,
     W: tokio::io::AsyncWriteExt + Unpin,
 {
     let mut line = Vec::new();
+    let mut requests_served: u64 = 0;
+
+    let idle_timer = tokio::time::sleep(CONNECTION_IDLE_LIMIT);
+    tokio::pin!(idle_timer);
 
     loop {
         line.clear();
-        let n = match tokio::time::timeout(IDLE_TIMEOUT, reader.read_until(b'\n', &mut line)).await
-        {
-            Ok(Ok(n)) => n,
-            Ok(Err(e)) => {
-                return Err(NestGateError::io_error(format!(
-                    "Failed to read request: {e}"
-                )));
-            }
-            Err(_) => {
-                debug!("Connection idle for {IDLE_TIMEOUT:?}, closing");
-                break;
-            }
-        };
 
-        if n == 0 {
-            break;
-        }
+        tokio::select! {
+            result = reader.read_until(b'\n', &mut line) => {
+                match result {
+                    Ok(0) => break,
+                    Ok(_) => {
+                        idle_timer.as_mut().reset(
+                            tokio::time::Instant::now() + CONNECTION_IDLE_LIMIT,
+                        );
 
-        let trimmed = line.as_slice().trim_ascii();
-        if trimmed.is_empty() {
-            continue;
-        }
+                        let trimmed = line.as_slice().trim_ascii();
+                        if trimmed.is_empty() {
+                            continue;
+                        }
 
-        debug!("Received request: {}", String::from_utf8_lossy(trimmed));
+                        requests_served += 1;
+                        debug!("Received request: {}", String::from_utf8_lossy(trimmed));
 
-        let response = match serde_json::from_slice::<JsonRpcRequest>(trimmed) {
-            Ok(request) => handle_request(request, state).await,
-            Err(e) => {
-                error!("Failed to parse JSON-RPC request: {}", e);
-                JsonRpcResponse {
-                    jsonrpc: Arc::from("2.0"),
-                    result: None,
-                    error: Some(JsonRpcError {
-                        code: -32700,
-                        message: Cow::Borrowed("Parse error"),
-                        data: Some(json!({"error": e.to_string()})),
-                    }),
-                    id: None,
+                        let response = match serde_json::from_slice::<JsonRpcRequest>(trimmed) {
+                            Ok(request) => handle_request(request, state).await,
+                            Err(e) => {
+                                error!("Failed to parse JSON-RPC request: {}", e);
+                                JsonRpcResponse {
+                                    jsonrpc: Arc::from("2.0"),
+                                    result: None,
+                                    error: Some(JsonRpcError {
+                                        code: -32700,
+                                        message: Cow::Borrowed("Parse error"),
+                                        data: Some(json!({"error": e.to_string()})),
+                                    }),
+                                    id: None,
+                                }
+                            }
+                        };
+
+                        let response_bytes: Bytes = serde_json::to_vec(&response)
+                            .map(Bytes::from)
+                            .map_err(|e| {
+                                NestGateError::api(format!("Failed to serialize response: {e}"))
+                            })?;
+
+                        writer
+                            .write_all(&response_bytes)
+                            .await
+                            .map_err(|e| {
+                                NestGateError::io_error(format!("Failed to write response: {e}"))
+                            })?;
+                        writer.write_all(b"\n").await.map_err(|e| {
+                            NestGateError::io_error(format!("Failed to write newline: {e}"))
+                        })?;
+                        writer.flush().await.map_err(|e| {
+                            NestGateError::io_error(format!("Failed to flush response: {e}"))
+                        })?;
+
+                        debug!("Sent response ({} bytes)", response_bytes.len());
+                    }
+                    Err(e) => {
+                        return Err(NestGateError::io_error(format!(
+                            "Failed to read request: {e}"
+                        )));
+                    }
                 }
             }
-        };
-
-        let response_bytes: Bytes = serde_json::to_vec(&response)
-            .map(Bytes::from)
-            .map_err(|e| NestGateError::api(format!("Failed to serialize response: {e}")))?;
-
-        writer
-            .write_all(&response_bytes)
-            .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to write response: {e}")))?;
-        writer
-            .write_all(b"\n")
-            .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to write newline: {e}")))?;
-        writer
-            .flush()
-            .await
-            .map_err(|e| NestGateError::io_error(format!("Failed to flush response: {e}")))?;
-
-        debug!("Sent response ({} bytes)", response_bytes.len());
+            () = &mut idle_timer => {
+                debug!(
+                    requests_served,
+                    idle_secs = CONNECTION_IDLE_LIMIT.as_secs(),
+                    "Connection idle — sending close notification"
+                );
+                let notification = json!({
+                    "jsonrpc": "2.0",
+                    "method": "connection.closing",
+                    "params": {
+                        "reason": "idle",
+                        "idle_timeout_secs": CONNECTION_IDLE_LIMIT.as_secs(),
+                        "requests_served": requests_served
+                    }
+                });
+                let bytes: Bytes = serde_json::to_vec(&notification)
+                    .map(Bytes::from)
+                    .unwrap_or_default();
+                let _ = writer.write_all(&bytes).await;
+                let _ = writer.write_all(b"\n").await;
+                let _ = writer.flush().await;
+                break;
+            }
+        }
     }
 
+    debug!(requests_served, "Connection closed");
     Ok(())
 }
 

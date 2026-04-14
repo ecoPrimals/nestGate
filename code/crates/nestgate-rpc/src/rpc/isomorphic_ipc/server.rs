@@ -289,13 +289,20 @@ impl IsomorphicIpcServer {
         Self::json_rpc_keep_alive_loop(&mut reader, &mut writer, &handler).await
     }
 
-    /// Persistent newline-delimited JSON-RPC loop shared by BTSP and plain paths.
+    /// Maximum idle time before a keep-alive connection is closed.
     ///
-    /// Reads until client disconnects (EOF). Flushes after every response to
-    /// ensure the client receives data before the server blocks on the next read.
-    /// Idle timeout for keep-alive connections: 5 minutes without any request.
-    const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(300);
+    /// The timer resets on every successful request, so active connections
+    /// are never reaped. Only truly idle (half-open, abandoned) connections
+    /// are affected.
+    const CONNECTION_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
 
+    /// Event-driven JSON-RPC keep-alive loop.
+    ///
+    /// Uses `tokio::select!` to multiplex between I/O readiness and a
+    /// resettable idle timer rather than wrapping reads in a brute-force
+    /// timeout. On idle expiry the client receives a `connection.closing`
+    /// JSON-RPC notification before the socket is torn down, giving it the
+    /// opportunity to reconnect or flush pending work.
     async fn json_rpc_keep_alive_loop<R, W>(
         reader: &mut R,
         writer: &mut W,
@@ -306,52 +313,83 @@ impl IsomorphicIpcServer {
         W: tokio::io::AsyncWriteExt + Unpin,
     {
         let mut line = Vec::new();
+        let mut requests_served: u64 = 0;
+
+        let idle_timer = tokio::time::sleep(Self::CONNECTION_IDLE_LIMIT);
+        tokio::pin!(idle_timer);
 
         loop {
             line.clear();
 
-            let n =
-                match tokio::time::timeout(Self::IDLE_TIMEOUT, reader.read_until(b'\n', &mut line))
-                    .await
-                {
-                    Ok(Ok(n)) => n,
-                    Ok(Err(e)) => {
-                        error!("Unix socket read error: {}", e);
-                        break;
+            tokio::select! {
+                result = reader.read_until(b'\n', &mut line) => {
+                    match result {
+                        Ok(0) => break,
+                        Ok(_) => {
+                            idle_timer
+                                .as_mut()
+                                .reset(tokio::time::Instant::now() + Self::CONNECTION_IDLE_LIMIT);
+
+                            let trimmed = line.as_slice().trim_ascii();
+                            if trimmed.is_empty() {
+                                continue;
+                            }
+
+                            requests_served += 1;
+
+                            let response = match serde_json::from_slice::<Value>(trimmed) {
+                                Ok(request) => handler.handle_request(request).await,
+                                Err(e) => {
+                                    warn!("Invalid JSON-RPC request: {}", e);
+                                    serde_json::json!({
+                                        "jsonrpc": "2.0",
+                                        "error": {
+                                            "code": -32700,
+                                            "message": "Parse error",
+                                            "data": { "error": e.to_string() }
+                                        },
+                                        "id": null
+                                    })
+                                }
+                            };
+                            let response_bytes: Bytes =
+                                serde_json::to_vec(&response).map(Bytes::from)?;
+                            writer.write_all(&response_bytes).await?;
+                            writer.write_all(b"\n").await?;
+                            writer.flush().await?;
+                        }
+                        Err(e) => {
+                            error!("Unix socket read error: {}", e);
+                            break;
+                        }
                     }
-                    Err(_) => {
-                        debug!("Connection idle for {:?}, closing", Self::IDLE_TIMEOUT);
-                        break;
-                    }
-                };
-            if n == 0 {
-                break;
-            }
-            let trimmed = line.as_slice().trim_ascii();
-            if trimmed.is_empty() {
-                continue;
-            }
-            let response = match serde_json::from_slice::<Value>(trimmed) {
-                Ok(request) => handler.handle_request(request).await,
-                Err(e) => {
-                    warn!("Invalid JSON-RPC request: {}", e);
-                    serde_json::json!({
-                        "jsonrpc": "2.0",
-                        "error": {
-                            "code": -32700,
-                            "message": "Parse error",
-                            "data": { "error": e.to_string() }
-                        },
-                        "id": null
-                    })
                 }
-            };
-            let response_bytes: Bytes = serde_json::to_vec(&response).map(Bytes::from)?;
-            writer.write_all(&response_bytes).await?;
-            writer.write_all(b"\n").await?;
-            writer.flush().await?;
+                () = &mut idle_timer => {
+                    debug!(
+                        requests_served,
+                        idle_secs = Self::CONNECTION_IDLE_LIMIT.as_secs(),
+                        "Connection idle — sending close notification"
+                    );
+                    let notification = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "method": "connection.closing",
+                        "params": {
+                            "reason": "idle",
+                            "idle_timeout_secs": Self::CONNECTION_IDLE_LIMIT.as_secs(),
+                            "requests_served": requests_served
+                        }
+                    });
+                    if let Ok(bytes) = serde_json::to_vec(&notification) {
+                        let _ = writer.write_all(&bytes).await;
+                        let _ = writer.write_all(b"\n").await;
+                        let _ = writer.flush().await;
+                    }
+                    break;
+                }
+            }
         }
 
+        debug!(requests_served, "Connection closed");
         Ok(())
     }
 

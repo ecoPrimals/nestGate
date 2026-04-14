@@ -859,54 +859,142 @@ async fn isomorphic_keep_alive_multiple_requests_one_connection() {
     h.await.unwrap().unwrap();
 }
 
+/// Verify event-driven idle loop: the server-side select! fires the idle
+/// timer arm and sends a `connection.closing` notification before EOF.
 #[tokio::test]
-async fn idle_timeout_closes_connection() {
-    use std::sync::Arc;
-    use tokio::io::BufReader;
+async fn idle_event_sends_close_notification() {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-    let state = StorageState::new().expect("storage state");
-    let state = Arc::new(state);
+    let idle_limit = std::time::Duration::from_millis(80);
 
     let (client, server) = tokio::net::UnixStream::pair().unwrap();
-    let (reader, writer) = server.into_split();
-    let mut reader = BufReader::new(reader);
-    let mut writer = writer;
+    let (srv_reader, mut srv_writer) = server.into_split();
+    let mut srv_reader = BufReader::new(srv_reader);
 
-    let idle_override = std::time::Duration::from_millis(100);
-    let state_clone = state.clone();
-
-    let h = tokio::spawn(async move {
+    let server_task = tokio::spawn(async move {
         let mut line = Vec::new();
+        let idle_timer = tokio::time::sleep(idle_limit);
+        tokio::pin!(idle_timer);
+
         loop {
             line.clear();
-            let n = match tokio::time::timeout(
-                idle_override,
-                tokio::io::AsyncBufReadExt::read_until(&mut reader, b'\n', &mut line),
-            )
-            .await
-            {
-                Ok(Ok(n)) => n,
-                Ok(Err(_)) => break,
-                Err(_) => break,
-            };
-            if n == 0 {
-                break;
+            tokio::select! {
+                result = srv_reader.read_until(b'\n', &mut line) => {
+                    match result {
+                        Ok(0) | Err(_) => break,
+                        Ok(_) => {
+                            idle_timer.as_mut().reset(
+                                tokio::time::Instant::now() + idle_limit,
+                            );
+                            srv_writer.write_all(b"{\"ok\":true}\n").await.unwrap();
+                            srv_writer.flush().await.unwrap();
+                        }
+                    }
+                }
+                () = &mut idle_timer => {
+                    let notification = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "method": "connection.closing",
+                        "params": { "reason": "idle" }
+                    });
+                    let bytes = serde_json::to_vec(&notification).unwrap();
+                    srv_writer.write_all(&bytes).await.unwrap();
+                    srv_writer.write_all(b"\n").await.unwrap();
+                    srv_writer.flush().await.unwrap();
+                    break;
+                }
             }
-            let _ = crate::rpc::unix_socket_server::handle_request(
-                serde_json::from_slice(&line).unwrap(),
-                &state_clone,
-            )
-            .await;
-            tokio::io::AsyncWriteExt::write_all(&mut writer, b"{}\n")
-                .await
-                .unwrap();
         }
     });
 
-    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-    assert!(
-        h.is_finished(),
-        "loop should have exited after idle timeout"
+    let (c_reader, _c_writer) = client.into_split();
+    let mut c_reader = BufReader::new(c_reader);
+
+    let mut notification_line = String::new();
+    c_reader.read_line(&mut notification_line).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(notification_line.trim()).unwrap();
+    assert_eq!(parsed["method"], "connection.closing");
+    assert_eq!(parsed["params"]["reason"], "idle");
+
+    server_task.await.unwrap();
+}
+
+/// Verify that activity resets the idle timer: send a request right before
+/// the idle limit expires, confirm the timer resets and fires later.
+#[tokio::test]
+async fn activity_resets_idle_timer() {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+    let idle_limit = std::time::Duration::from_millis(120);
+
+    let (client, server) = tokio::net::UnixStream::pair().unwrap();
+    let (srv_reader, mut srv_writer) = server.into_split();
+    let mut srv_reader = BufReader::new(srv_reader);
+
+    let server_task = tokio::spawn(async move {
+        let mut line = Vec::new();
+        let mut requests_served: u64 = 0;
+        let idle_timer = tokio::time::sleep(idle_limit);
+        tokio::pin!(idle_timer);
+
+        loop {
+            line.clear();
+            tokio::select! {
+                result = srv_reader.read_until(b'\n', &mut line) => {
+                    match result {
+                        Ok(0) | Err(_) => break,
+                        Ok(_) => {
+                            requests_served += 1;
+                            idle_timer.as_mut().reset(
+                                tokio::time::Instant::now() + idle_limit,
+                            );
+                            let resp = serde_json::json!({"served": requests_served});
+                            srv_writer
+                                .write_all(serde_json::to_string(&resp).unwrap().as_bytes())
+                                .await
+                                .unwrap();
+                            srv_writer.write_all(b"\n").await.unwrap();
+                            srv_writer.flush().await.unwrap();
+                        }
+                    }
+                }
+                () = &mut idle_timer => {
+                    let n = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "method": "connection.closing",
+                        "params": { "reason": "idle", "requests_served": requests_served }
+                    });
+                    let _ = srv_writer.write_all(serde_json::to_string(&n).unwrap().as_bytes()).await;
+                    let _ = srv_writer.write_all(b"\n").await;
+                    let _ = srv_writer.flush().await;
+                    break;
+                }
+            }
+        }
+    });
+
+    let (c_reader, mut c_writer) = client.into_split();
+    let mut c_reader = BufReader::new(c_reader);
+
+    // Send a request at ~80ms (before the 120ms idle limit)
+    tokio::time::sleep(std::time::Duration::from_millis(80)).await;
+    c_writer.write_all(b"ping\n").await.unwrap();
+    c_writer.flush().await.unwrap();
+
+    let mut resp = String::new();
+    c_reader.read_line(&mut resp).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(resp.trim()).unwrap();
+    assert_eq!(
+        parsed["served"], 1,
+        "server should have processed 1 request"
     );
-    drop(client);
+
+    // Now wait for idle close notification (~120ms after last activity)
+    let mut notification = String::new();
+    c_reader.read_line(&mut notification).await.unwrap();
+    let closing: serde_json::Value = serde_json::from_str(notification.trim()).unwrap();
+    assert_eq!(closing["method"], "connection.closing");
+    assert_eq!(closing["params"]["requests_served"], 1);
+
+    server_task.await.unwrap();
 }

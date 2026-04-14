@@ -197,80 +197,108 @@ impl TcpFallbackServer {
 
     /// Handle TCP connection (persistent keep-alive JSON-RPC over TCP).
     ///
-    /// Reads newline-delimited JSON-RPC requests in a loop until the client
-    /// disconnects (EOF). Each response is flushed (critical for TCP — Nagle's
-    /// algorithm can delay small writes) before reading the next request.
-    /// Idle timeout for keep-alive TCP connections: 5 minutes.
-    const TCP_IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(300);
+    /// Maximum idle time before a keep-alive TCP connection is closed.
+    const CONNECTION_IDLE_LIMIT: std::time::Duration = std::time::Duration::from_secs(300);
 
+    /// Event-driven TCP JSON-RPC keep-alive loop.
+    ///
+    /// Uses `tokio::select!` to multiplex between I/O readiness and a
+    /// resettable idle timer. Each response is flushed (critical for TCP —
+    /// Nagle's algorithm can delay small writes). On idle expiry the client
+    /// receives a `connection.closing` notification before teardown.
     async fn handle_tcp_connection(&self, stream: TcpStream) -> Result<()> {
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
         let mut line = Vec::new();
+        let mut requests_served: u64 = 0;
+
+        let idle_timer = tokio::time::sleep(Self::CONNECTION_IDLE_LIMIT);
+        tokio::pin!(idle_timer);
 
         loop {
             line.clear();
 
-            let n = match tokio::time::timeout(
-                Self::TCP_IDLE_TIMEOUT,
-                reader.read_until(b'\n', &mut line),
-            )
-            .await
-            {
-                Ok(Ok(n)) => n,
-                Ok(Err(e)) => {
-                    error!("TCP read error: {}", e);
-                    break;
+            tokio::select! {
+                result = reader.read_until(b'\n', &mut line) => {
+                    match result {
+                        Ok(0) => {
+                            debug!("TCP client disconnected (EOF)");
+                            break;
+                        }
+                        Ok(_) => {
+                            idle_timer
+                                .as_mut()
+                                .reset(tokio::time::Instant::now() + Self::CONNECTION_IDLE_LIMIT);
+
+                            let trimmed = line.as_slice().trim_ascii();
+                            if trimmed.is_empty() {
+                                continue;
+                            }
+
+                            requests_served += 1;
+
+                            let response = match serde_json::from_slice::<Value>(trimmed) {
+                                Ok(request) => self.handler.handle_request(request).await,
+                                Err(e) => {
+                                    warn!("Invalid JSON-RPC request: {}", e);
+                                    serde_json::json!({
+                                        "jsonrpc": "2.0",
+                                        "error": {
+                                            "code": -32700,
+                                            "message": "Parse error",
+                                            "data": { "error": e.to_string() }
+                                        },
+                                        "id": null
+                                    })
+                                }
+                            };
+
+                            let response_bytes: Bytes = serde_json::to_vec(&response)
+                                .map(Bytes::from)
+                                .context("Failed to serialize JSON-RPC response")?;
+
+                            writer
+                                .write_all(&response_bytes)
+                                .await
+                                .context("Failed to write response")?;
+                            writer
+                                .write_all(b"\n")
+                                .await
+                                .context("Failed to write newline")?;
+                            writer.flush().await.context("Failed to flush response")?;
+                        }
+                        Err(e) => {
+                            error!("TCP read error: {}", e);
+                            break;
+                        }
+                    }
                 }
-                Err(_) => {
+                () = &mut idle_timer => {
                     debug!(
-                        "TCP connection idle for {:?}, closing",
-                        Self::TCP_IDLE_TIMEOUT
+                        requests_served,
+                        idle_secs = Self::CONNECTION_IDLE_LIMIT.as_secs(),
+                        "TCP connection idle — sending close notification"
                     );
+                    let notification = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "method": "connection.closing",
+                        "params": {
+                            "reason": "idle",
+                            "idle_timeout_secs": Self::CONNECTION_IDLE_LIMIT.as_secs(),
+                            "requests_served": requests_served
+                        }
+                    });
+                    if let Ok(bytes) = serde_json::to_vec(&notification) {
+                        let _ = writer.write_all(&bytes).await;
+                        let _ = writer.write_all(b"\n").await;
+                        let _ = writer.flush().await;
+                    }
                     break;
                 }
-            };
-            if n == 0 {
-                debug!("TCP client disconnected (EOF)");
-                break;
             }
-
-            let trimmed = line.as_slice().trim_ascii();
-            if trimmed.is_empty() {
-                continue;
-            }
-
-            let response = match serde_json::from_slice::<Value>(trimmed) {
-                Ok(request) => self.handler.handle_request(request).await,
-                Err(e) => {
-                    warn!("Invalid JSON-RPC request: {}", e);
-                    serde_json::json!({
-                        "jsonrpc": "2.0",
-                        "error": {
-                            "code": -32700,
-                            "message": "Parse error",
-                            "data": { "error": e.to_string() }
-                        },
-                        "id": null
-                    })
-                }
-            };
-
-            let response_bytes: Bytes = serde_json::to_vec(&response)
-                .map(Bytes::from)
-                .context("Failed to serialize JSON-RPC response")?;
-
-            writer
-                .write_all(&response_bytes)
-                .await
-                .context("Failed to write response")?;
-            writer
-                .write_all(b"\n")
-                .await
-                .context("Failed to write newline")?;
-            writer.flush().await.context("Failed to flush response")?;
         }
 
+        debug!(requests_served, "TCP connection closed");
         Ok(())
     }
 
