@@ -219,43 +219,6 @@ pub struct BenchmarkResults {
     pub duration_seconds: u32,
 }
 
-/// Auto-configuration request parameters
-///
-/// Provides all necessary information for automated storage
-/// configuration generation based on requirements and constraints.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::AutoConfigRequest;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::AutoConfigRequest; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Request parameters for `AutoConfig` operation
-pub struct AutoConfigRequest {
-    /// Recommended storage configuration
-    pub storage_config: StorageConfiguration,
-    /// Benchmark configuration for performance validation
-    pub benchmark_config: BenchmarkConfig,
-    /// Preferred storage backend type
-    pub backend: crate::rest::models::types::StorageBackendType,
-    /// Optional test duration override in seconds
-    pub duration_seconds: Option<u32>,
-    /// Optional test data size override in megabytes
-    pub test_size_mb: Option<u32>,
-}
-
 /// Storage benchmark request configuration
 ///
 /// Specifies parameters for executing storage performance
@@ -356,82 +319,6 @@ pub struct LoadTestingParams {
     pub requests_per_second: u32,
     /// Distribution of data sizes for realistic testing
     pub data_size_distribution: HashMap<String, f64>,
-}
-
-/// Comprehensive auto-configuration input parameters
-///
-/// Complete specification for automated storage configuration
-/// including all requirements, constraints, and preferences.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::AutoConfigInput;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::AutoConfigInput; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Autoconfiginput
-pub struct AutoConfigInput {
-    /// Hardware specifications and constraints
-    pub hardware: HardwareSpec,
-    /// Performance requirements to be met
-    pub performance_requirements: PerformanceRequirements,
-    /// Data reliability and protection requirements
-    pub reliability_requirements: ReliabilityRequirements,
-    /// Budget constraints and cost preferences
-    pub budget_constraints: BudgetConstraints,
-    /// Expected workload patterns and characteristics
-    pub workload_pattern: WorkloadPattern,
-    /// Primary use case description
-    pub use_case: String,
-    /// Minimum required capacity in gigabytes
-    pub min_capacity_gb: Option<u64>,
-}
-
-/// Auto-configuration result with recommendations
-///
-/// Complete result of automated configuration analysis including
-/// recommendations, alternatives, projections, and cost estimates.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::AutoConfigResult;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::AutoConfigResult; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Autoconfigresult
-pub struct AutoConfigResult {
-    /// Primary recommended storage configuration
-    pub recommended_config: StorageConfiguration,
-    /// Alternative configuration options
-    pub alternatives: Vec<AlternativeConfiguration>,
-    /// Performance projections for the recommended configuration
-    pub performance_projection: PerformanceProjection,
-    /// Cost estimation for the recommended solution
-    pub cost_estimate: crate::rest::models::costs::CostEstimate,
 }
 
 /// Alternative storage configuration option
@@ -535,9 +422,7 @@ pub type AlternativeConfigurationCanonical =
 pub type AutoConfigInputCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Keep using AutoConfigInput (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+// Note: Prefer CanonicalNetworkConfig directly for new code; this alias remains for compatibility.
 
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
@@ -551,9 +436,7 @@ pub type AutoConfigInputCanonical =
 pub type AutoConfigRequestCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Keep using AutoConfigRequest (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+// Note: Prefer CanonicalNetworkConfig directly for new code; this alias remains for compatibility.
 
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
@@ -567,9 +450,7 @@ pub type AutoConfigRequestCanonical =
 pub type AutoConfigResultCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Keep using AutoConfigResult (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
+// Note: Prefer CanonicalNetworkConfig directly for new code; this alias remains for compatibility.
 
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration

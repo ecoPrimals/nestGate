@@ -29,8 +29,8 @@ than by importing this crate graph.
 | **Unsafe** | `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions) |
 | **Lint / format** | `cargo clippy --workspace --all-targets --all-features -- -D warnings` zero warnings (pedantic + nursery); `cargo fmt --check` clean |
 | **Docs** | `cargo doc --workspace --no-deps` — clean in routine runs |
-| **Tests** | `cargo test --workspace --lib` — 8,472 passing, 60 ignored, 0 failures (see STATUS.md) |
-| **Coverage** | 81.68% line (llvm-cov) — wateringHole 80% met; 90% target pending |
+| **Tests** | `cargo test --workspace --lib` — 8,519 passing, 60 ignored, 0 failures (see STATUS.md) |
+| **Coverage** | 82.06% line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | **Platforms** | Linux, FreeBSD, macOS, WSL2, illumos, Android |
 | **Specs** | 16 specification documents under `specs/` |
 

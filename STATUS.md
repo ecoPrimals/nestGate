@@ -12,8 +12,8 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-15
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-15
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-15
-Tests:              8,472 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-15
-Coverage:           81.68% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-15) — wateringHole 80% met; 90% target pending
+Tests:              8,519 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-15
+Coverage:           82.06% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-15) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
@@ -27,11 +27,11 @@ Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only,
 TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED; installer uses system curl
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
-IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 47 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
-IPC routes (HTTP):  storage.dataset.*, storage.object.*, discovery.capability.*, health.*, capabilities.*, identity.* — 19 methods (JSON_RPC_CAPABILITIES_METHODS const)
-IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 38 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
-data.* delegation:  Wildcard catch-all returns NotImplemented directing callers to discover data capability provider (not counted as methods)
-Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 45 methods), consumed_capabilities (3), protocol, transport
+IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
+IPC routes (HTTP):  storage.dataset.*, storage.object.*, storage.*_stream*, discovery.capability.*, health.*, capabilities.*, identity.* — 23 methods (JSON_RPC_CAPABILITIES_METHODS const)
+IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 42 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
+data.* delegation:  Removed from router — callers should discover data capability provider via `capabilities.list`
+Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 51 methods), consumed_capabilities (3), protocol, transport
 Emoji in logs:      ZERO in library tracing — professional structured logging only (Session 43f)
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
@@ -58,7 +58,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ## Session 43 — Deep Debt Evolution & primalSpring Compliance (Apr 12, 2026)
 
 ### primalSpring Audit Response
-- **Doc drift**: STATUS.md method counts reconciled to code — per-surface: UDS 47 (`UNIX_SOCKET_SUPPORTED_METHODS`), HTTP 19 (`JSON_RPC_CAPABILITIES_METHODS`), tarpc semantic router 38 explicit routes + `data.*` wildcard delegation (`semantic_router/mod.rs`)
+- **Doc drift**: STATUS.md method counts reconciled to code — per-surface: UDS 51 (`UNIX_SOCKET_SUPPORTED_METHODS`), HTTP 23 (`JSON_RPC_CAPABILITIES_METHODS`), tarpc semantic router 42 explicit routes (`semantic_router/mod.rs`)
 - **TCP/`--port` wiring**: Socket-only mode now resolves port from `NESTGATE_API_PORT` env; activates TCP alongside UDS when env port differs from default
 - **Domain symlink**: Confirmed already implemented (`storage[-{fid}].sock` → `nestgate[-{fid}].sock`); compliance matrix update proposed
 - **Deprecated APIs**: 210→187 (17 zero-caller items removed Sessions 43–43g; 6 dead port constants Session 43g; 6 dead functions Session 43j)

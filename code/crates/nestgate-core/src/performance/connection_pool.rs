@@ -445,6 +445,19 @@ impl Default for ConnectionPoolManager {
     }
 }
 
+#[cfg(test)]
+impl<T> UniversalConnectionPool<T>
+where
+    T: Send + Sync + 'static,
+{
+    async fn test_push_idle_connection(&self, connection: T) {
+        self.connections
+            .write()
+            .await
+            .push(PooledConnection::new(connection));
+    }
+}
+
 /// HTTP client connection pool (example usage). Requires `dev-stubs` (uses [`crate::http_client_stub`]).
 #[cfg(feature = "dev-stubs")]
 pub type HttpConnectionPool = UniversalConnectionPool<reqwest::Client>;
@@ -592,5 +605,56 @@ mod tests {
         let g2 = pool.get_connection().await.expect("test: second");
         assert_eq!(*g1.connection(), 0);
         assert_eq!(*g2.connection(), 1);
+    }
+
+    #[tokio::test]
+    async fn idle_connection_path_reuses_slot_before_factory() {
+        let pool = Arc::new(UniversalConnectionPool::new(
+            ConnectionPoolConfig {
+                max_connections: 4,
+                min_connections: 0,
+                ..ConnectionPoolConfig::default()
+            },
+            || Ok::<u8, NestGateError>(7),
+        ));
+        pool.test_push_idle_connection(9).await;
+        let guard = pool.get_connection().await.expect("test: acquire");
+        assert_eq!(*guard.connection(), 7);
+    }
+
+    #[tokio::test]
+    async fn cleanup_idle_connections_removes_stale_entries() {
+        let pool = UniversalConnectionPool::new(
+            ConnectionPoolConfig {
+                max_idle_time: Duration::from_millis(40),
+                min_connections: 0,
+                ..ConnectionPoolConfig::default()
+            },
+            || Ok::<(), NestGateError>(()),
+        );
+        pool.test_push_idle_connection(()).await;
+        tokio::time::sleep(Duration::from_millis(80)).await;
+        pool.cleanup_idle_connections().await;
+        let stats = pool.get_stats().await;
+        assert_eq!(stats.total_connections, 0);
+    }
+
+    #[tokio::test]
+    async fn background_cleanup_task_removes_idle_entries() {
+        let pool = Arc::new(UniversalConnectionPool::new(
+            ConnectionPoolConfig {
+                cleanup_interval: Duration::from_millis(30),
+                max_idle_time: Duration::from_millis(20),
+                min_connections: 0,
+                ..ConnectionPoolConfig::default()
+            },
+            || Ok::<u8, NestGateError>(0),
+        ));
+        pool.test_push_idle_connection(0).await;
+        let handle = pool.start_cleanup_task();
+        tokio::time::sleep(Duration::from_millis(120)).await;
+        handle.abort();
+        let stats = pool.get_stats().await;
+        assert_eq!(stats.total_connections, 0);
     }
 }

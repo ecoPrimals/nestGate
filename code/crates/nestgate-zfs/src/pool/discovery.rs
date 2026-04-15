@@ -459,4 +459,12 @@ mod tests {
         let m = ZfsPoolManager::new_for_testing();
         let _ = m.discover_pools().await;
     }
+
+    #[tokio::test]
+    async fn refresh_pool_info_is_ok_when_pool_not_discoverable() {
+        let m = ZfsPoolManager::new_for_testing();
+        m.refresh_pool_info("nonexistent_pool_for_refresh_test")
+            .await
+            .expect("test: refresh should not error when discovery yields none");
+    }
 }

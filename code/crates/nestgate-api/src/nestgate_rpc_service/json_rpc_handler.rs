@@ -220,3 +220,83 @@ async fn require_zfs() -> Result<(), String> {
         Err("zfs is not available on this system".to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn handle_unknown_method_returns_error_string() {
+        let h = NestGateJsonRpcHandler::new();
+        let err = h
+            .handle("not_a_real_method", serde_json::json!({}))
+            .await
+            .expect_err("test: unknown method");
+        assert!(err.contains("Unknown method"));
+    }
+
+    #[tokio::test]
+    async fn handle_list_datasets_bad_params() {
+        let h = NestGateJsonRpcHandler::new();
+        let err = h
+            .handle("list_datasets", serde_json::json!({"pool": "t"}))
+            .await
+            .expect_err("test: bad params");
+        assert!(!err.is_empty());
+    }
+
+    #[tokio::test]
+    async fn handle_health_readiness_includes_ready_flag() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("health.readiness", serde_json::json!({}))
+            .await
+            .expect("test: readiness");
+        assert!(v.get("ready").is_some());
+        assert!(v.get("status").is_some());
+    }
+
+    #[tokio::test]
+    async fn handle_capabilities_alias() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("capabilities.list", serde_json::json!({}))
+            .await
+            .expect("test: caps");
+        assert!(v.is_array() || v.as_array().is_some());
+    }
+
+    #[tokio::test]
+    async fn handle_zfs_health_always_success_json() {
+        let v = handle_zfs_method("zfs.health", &serde_json::json!({}))
+            .await
+            .expect("test: zfs.health");
+        assert_eq!(v["status"], "success");
+        assert!(v.get("zpool_available").is_some());
+        assert!(v.get("zfs_available").is_some());
+    }
+
+    #[tokio::test]
+    async fn handle_zfs_unknown_semantic_method() {
+        let err = handle_zfs_method("zfs.not_implemented_xyz", &serde_json::json!({}))
+            .await
+            .expect_err("test: unknown zfs");
+        assert!(err.contains("Unknown zfs method"));
+    }
+
+    #[tokio::test]
+    async fn handle_zfs_pool_get_missing_pool_param() {
+        let err = handle_zfs_method("zfs.pool.get", &serde_json::json!({}))
+            .await
+            .expect_err("test: missing pool");
+        assert!(err.contains("missing"));
+    }
+
+    #[tokio::test]
+    async fn handle_zfs_dataset_get_missing_dataset_param() {
+        let err = handle_zfs_method("zfs.dataset.get", &serde_json::json!({}))
+            .await
+            .expect_err("test: missing dataset");
+        assert!(err.contains("missing"));
+    }
+}

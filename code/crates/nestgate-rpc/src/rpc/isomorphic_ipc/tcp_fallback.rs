@@ -506,4 +506,65 @@ mod tests {
         let contents = std::fs::read_to_string(&path).expect("read discovery");
         assert!(contents.trim().starts_with("tcp:"));
     }
+
+    #[tokio::test]
+    async fn handle_tcp_connection_invalid_json_returns_parse_error_rpc() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let probe = std::net::TcpListener::bind("127.0.0.1:0").expect("probe bind");
+        let port = probe.local_addr().expect("probe addr").port();
+        drop(probe);
+
+        let addr = SocketAddr::from(([127, 0, 0, 1], port));
+        let handler = Arc::new(MockHandler);
+        let server = Arc::new(TcpFallbackServer::new(
+            "sg_tcp_parse_cov".to_string(),
+            handler,
+        ));
+        let _bg = tokio::spawn({
+            let s = Arc::clone(&server);
+            async move {
+                let _ = s.start_bound(addr).await;
+            }
+        });
+
+        let mut stream = None;
+        for _ in 0..80 {
+            match TcpStream::connect(addr).await {
+                Ok(s) => {
+                    stream = Some(s);
+                    break;
+                }
+                Err(_) => tokio::time::sleep(std::time::Duration::from_millis(10)).await,
+            }
+        }
+        let mut stream = stream.expect("connect");
+
+        stream
+            .write_all(b"{not valid json\n")
+            .await
+            .expect("write bad json");
+        let mut buf = vec![0u8; 512];
+        let n = stream.read(&mut buf).await.expect("read response");
+        assert!(n > 0);
+        let line = std::str::from_utf8(&buf[..n]).expect("utf8");
+        assert!(line.contains("Parse error"));
+        assert!(line.contains("-32700"));
+    }
+
+    #[test]
+    fn write_tcp_discovery_file_falls_back_to_tmp_without_xdg_or_home() {
+        let env = MapEnv::new();
+        let handler = Arc::new(MockHandler);
+        let server = TcpFallbackServer::new("ng_tcp_tmp_only".to_string(), handler);
+        let addr: SocketAddr = "127.0.0.1:55111".parse().unwrap();
+        server
+            .write_tcp_discovery_file_from_env_source(&env, &addr)
+            .expect("write");
+        let path = std::path::Path::new("/tmp/ng_tcp_tmp_only-ipc-port");
+        assert!(path.is_file(), "expected /tmp fallback discovery file");
+        let contents = std::fs::read_to_string(path).expect("read");
+        assert!(contents.trim().starts_with("tcp:"));
+        let _ = std::fs::remove_file(path);
+    }
 }

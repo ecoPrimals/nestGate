@@ -347,3 +347,33 @@ pub async fn scale_workspace(Path(workspace_id): Path<String>) -> Result<Json<Va
         _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::extract::Path;
+
+    #[tokio::test]
+    async fn delete_workspace_rejects_invalid_id() {
+        let err = delete_workspace(Path("../bad".into()))
+            .await
+            .expect_err("test: invalid id");
+        assert_eq!(err, StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn get_workspace_status_rejects_invalid_id() {
+        let err = get_workspace_status(Path("bad id".into()))
+            .await
+            .expect_err("test: invalid id");
+        assert_eq!(err, StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn cleanup_workspace_rejects_invalid_id() {
+        let err = cleanup_workspace(Path("".into()))
+            .await
+            .expect_err("test: invalid id");
+        assert_eq!(err, StatusCode::BAD_REQUEST);
+    }
+}

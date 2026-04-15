@@ -329,4 +329,97 @@ mod tests {
         let s = svc();
         let _ = get_dataset_properties(&s, "tank/foo").await;
     }
+
+    fn svc_cb(threshold: u32) -> FailSafeZfsService {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = true;
+        c.failure_threshold = threshold;
+        FailSafeZfsService::new(Arc::new(UniversalZfsServiceEnum::new_native()), c)
+    }
+
+    async fn open_circuit(s: &FailSafeZfsService, times: u32) {
+        for _ in 0..times {
+            s.circuit_breaker.record_failure().await;
+        }
+    }
+
+    #[tokio::test]
+    async fn list_datasets_circuit_open_no_fallback_returns_empty() {
+        let s = svc_cb(1);
+        open_circuit(&s, 1).await;
+        let r = list_datasets(&s)
+            .await
+            .expect("test: empty list when breaker open");
+        assert!(r.is_empty());
+    }
+
+    #[tokio::test]
+    async fn get_dataset_circuit_open_no_fallback_errors() {
+        let s = svc_cb(1);
+        open_circuit(&s, 1).await;
+        let e = get_dataset(&s, "any")
+            .await
+            .expect_err("test: breaker blocks get");
+        assert!(
+            format!("{e:?}").contains("Circuit") || format!("{e:?}").contains("fallback"),
+            "{e:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn destroy_dataset_circuit_open_no_fallback_errors() {
+        let s = svc_cb(1);
+        open_circuit(&s, 1).await;
+        assert!(destroy_dataset(&s, "tank/x").await.is_err());
+    }
+
+    #[tokio::test]
+    async fn create_dataset_circuit_open_no_fallback_errors() {
+        let s = svc_cb(1);
+        open_circuit(&s, 1).await;
+        let cfg = DatasetConfig {
+            name: "tank/new_ds_cov".into(),
+            mountpoint: None,
+            compression: false,
+            quota: None,
+            reservation: None,
+            properties: std::collections::HashMap::new(),
+        };
+        assert!(create_dataset(&s, &cfg).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn set_dataset_properties_circuit_open_no_fallback_errors() {
+        let s = svc_cb(1);
+        open_circuit(&s, 1).await;
+        let mut m = std::collections::HashMap::new();
+        m.insert("atime".into(), "off".into());
+        assert!(set_dataset_properties(&s, "tank/x", &m).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_dataset_circuit_open_with_fallback_dispatches_fallback() {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = true;
+        c.failure_threshold = 1;
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let fallback = Arc::new(UniversalZfsServiceEnum::new_native());
+        let s = FailSafeZfsService::new(primary, c).with_fallback(fallback);
+        open_circuit(&s, 1).await;
+        let _ = get_dataset(&s, "nonexistent-dataset-fallback-cov").await;
+    }
+
+    #[tokio::test]
+    async fn dispatch_unwraps_nested_fail_safe_to_native() {
+        let native = Arc::new(UniversalZfsServiceEnum::new_native());
+        let mut inner_cfg = ZfsFailSafeConfig::default();
+        inner_cfg.circuit_breaker.enabled = false;
+        let inner = FailSafeZfsService::new(native, inner_cfg);
+        let wrapped = Arc::new(UniversalZfsServiceEnum::FailSafe(inner));
+        let mut outer_cfg = ZfsFailSafeConfig::default();
+        outer_cfg.circuit_breaker.enabled = false;
+        let s = FailSafeZfsService::new(wrapped, outer_cfg);
+        let _ = list_datasets(&s).await;
+        let _ = get_dataset(&s, "z").await;
+    }
 }

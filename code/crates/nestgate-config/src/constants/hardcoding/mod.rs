@@ -38,7 +38,7 @@
 //! | Variable | Purpose |
 //! |----------|---------|
 //! | `NESTGATE_BIND_ADDRESS`, `NESTGATE_API_PORT`, `NESTGATE_METRICS_PORT`, `NESTGATE_HEALTH_PORT` | Core listen ports |
-//! | `NESTGATE_ORCHESTRATOR_URL` | Full orchestrator base URL when not using discovery (see `RuntimeDefaults::orchestrator_url`) |
+//! | `NESTGATE_ORCHESTRATOR_URL` | Full orchestrator base URL when not using discovery (read via env; prefer capability discovery in production) |
 //! | `NESTGATE_ORCHESTRATOR_ADDR` | Orchestrator peer when discovery is empty (see [`crate::constants::hardcoding::get_orchestrator_fallback_addr`]) |
 //! | `NESTGATE_WEBSOCKET_PORT`, `NESTGATE_RPC_PORT`, `NESTGATE_MQ_PORT`, `NESTGATE_ORCHESTRATION_PORT` | Service ports (see getters below) |
 //! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`crate::constants::hardcoding::discovery::get_timeout_ms`]) |

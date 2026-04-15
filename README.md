@@ -11,13 +11,13 @@
 - **Supply chain**: `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok  
 
 **Metrics** (re-measure as needed; see [STATUS.md](./STATUS.md))  
-- **Tests (last recorded)**: 8,472 passing, 60 ignored, 0 failures  
-- **Coverage**: 81.68% line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
+- **Tests (last recorded)**: 8,519 passing, 60 ignored, 0 failures  
+- **Coverage**: 82.06% line (`cargo llvm-cov --workspace --lib --summary-only`; wateringHole 80% met; 90% target pending)
 
 **Technical debt (honest)**  
 - **Open debt markers**: zero `TODO`/`FIXME`/`HACK`/`XXX` in production `.rs`  
 - **Hardcoding**: `DEFAULT_SERVICE_NAME` constant used everywhere; zero hardcoded primal names in production  
-- **Deprecated APIs**: 183 `#[deprecated]` markers for canonical-config migration; zero dead callers  
+- **Deprecated APIs**: 179 `#[deprecated]` markers for canonical-config migration; zero dead callers  
 - **Unsafe**: `#![forbid(unsafe_code)]` on ALL crate roots (zero exceptions)  
 - **TLS/crypto**: `ring`/`reqwest` eliminated — `ureq` + vendored `rustls-rustcrypto` (pure Rust, `rustls-webpki` 0.103.12); installer uses system `curl`  
 - **sysinfo**: Optional — Linux uses pure-Rust `/proc` parsing; `sysinfo` only on non-Linux  
@@ -133,8 +133,8 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-14 (Se
 | Build | `cargo check --workspace --all-features --all-targets` — PASS |
 | Clippy | `cargo clippy --workspace --all-targets --all-features -- -D warnings` — PASS (zero warnings) |
 | Format | `cargo fmt --all --check` — PASS |
-| Tests | `cargo test --workspace --lib` — 8,472 passing, 0 failures, 60 ignored |
-| Coverage | 81.68% line (llvm-cov) — wateringHole 80% met; 90% target pending |
+| Tests | `cargo test --workspace --lib` — 8,519 passing, 0 failures, 60 ignored |
+| Coverage | 82.06% line (llvm-cov) — wateringHole 80% met; 90% target pending |
 | Docs | `cargo doc --workspace --no-deps` — zero warnings |
 | Deprecated | 187 `#[deprecated]` for canonical migration; zero dead callers |
 | unwrap/expect | Zero in production library code; tests may use |
@@ -153,7 +153,7 @@ See [STATUS.md](./STATUS.md) for measured metrics. Verified as of 2026-04-14 (Se
 | tarpc | Pass — wired into daemon (feature-gated); `StorageBackend` trait injection via `nestgate-core` |
 | Semantic naming | Pass — `health.*`, `storage.*`, `data.*`, `session.*`, `nat.*`, `beacon.*`, `capabilities.*`, `metadata.*`, `discovery.*`, `crypto.*`, `zfs.*` |
 | sysinfo evolution | Complete — Linux `/proc` primary, sysinfo optional non-Linux only |
-| Coverage (80%+) | Pass — 81.68% line (wateringHole 80% met; 90% target pending) |
+| Coverage (80%+) | Pass — 82.06% line (wateringHole 80% met; 90% target pending) |
 | File size (<1000 production) | Pass — all under 750 LOC (4 largest files refactored Session 43) |
 | BTSP Phase 1 | Pass — `BIOMEOS_INSECURE` guard, family-scoped socket naming (`nestgate-{fid}.sock`) |
 | BTSP Phase 2 | Pass — server-side handshake wired into UDS accept (`btsp_server_handshake`); crypto delegated to BearDog |
@@ -260,8 +260,8 @@ Session archives and historical docs preserved in `ecoPrimals/infra/wateringHole
 
 ## What's Active
 
-1. Push test coverage toward 90% target (currently 81.68%)
-2. Migrate remaining 183 deprecated APIs to canonical config
+1. Push test coverage toward 90% target (currently 82.06%)
+2. Migrate remaining 179 deprecated APIs to canonical config
 3. Multi-filesystem substrate testing (ZFS, btrfs, xfs, ext4 on real hardware)
 4. Cross-gate replication (multi-node data orchestration)
 5. aarch64 musl cross-compile CI (config exists; pipeline not wired)

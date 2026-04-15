@@ -646,4 +646,34 @@ mod tests {
         assert!(metrics.cpu_usage_percent >= 0.0);
         assert!(metrics.memory_usage_percent >= 0.0);
     }
+
+    #[test]
+    fn generate_sample_log_entry_level_branches() {
+        let d = generate_sample_log_entry("debug");
+        assert!(["DEBUG", "INFO", "WARN", "ERROR"].contains(&d.level.as_str()));
+        let w = generate_sample_log_entry("warn");
+        assert!(["WARN", "ERROR"].contains(&w.level.as_str()));
+        let e = generate_sample_log_entry("error");
+        assert_eq!(e.level, "ERROR");
+        let o = generate_sample_log_entry("verbose-unknown");
+        assert!(["INFO", "WARN"].contains(&o.level.as_str()));
+    }
+
+    #[tokio::test]
+    async fn generate_sample_system_event_covers_event_variants() {
+        let state = create_test_api_state();
+        for _ in 0..48 {
+            let ev = generate_sample_system_event(&state).await;
+            assert!(!ev.id.is_empty());
+            assert!(!ev.event_type.is_empty());
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn arcstats_named_reads_known_line() {
+        let content = "hits 4 100\nmisses 4 50\n";
+        assert_eq!(super::arcstats_named(content, "hits"), 100);
+        assert_eq!(super::arcstats_named(content, "nope"), 0);
+    }
 }

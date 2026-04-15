@@ -75,34 +75,6 @@ impl RuntimeDefaults {
         }
     }
 
-    /// `NESTGATE_ORCHESTRATOR_URL` if set; otherwise a URL derived from
-    /// [`Self::orchestrator_fallback_addr`].
-    #[deprecated(
-        since = "0.4.0",
-        note = "use capability discovery (ServicesConfig::resolve_by_capability) instead of hardcoded orchestrator URLs"
-    )]
-    #[must_use]
-    pub fn orchestrator_url() -> String {
-        if let Some(url) = env::var("NESTGATE_ORCHESTRATOR_URL")
-            .ok()
-            .filter(|s| !s.trim().is_empty())
-        {
-            return url.trim().to_string();
-        }
-        let addr = Self::orchestrator_fallback_addr();
-        if addr.is_empty() {
-            return format!(
-                "http://{}:{}",
-                addresses::LOCALHOST_NAME,
-                ports::HTTP_DEFAULT
-            );
-        }
-        if addr.starts_with("http://") || addr.starts_with("https://") {
-            return addr;
-        }
-        format!("http://{addr}")
-    }
-
     /// `NESTGATE_WEBSOCKET_PORT`, else [`ports::WEBSOCKET_DEFAULT`].
     #[must_use]
     pub fn websocket_port() -> u16 {

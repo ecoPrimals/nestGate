@@ -52,10 +52,6 @@
 //! - `storage.dataset.list` → `list_datasets`
 //! - `storage.dataset.delete` → `delete_dataset`
 //!
-//! ### Data Domain (`data.*` — live feeds, NOT storage)
-//! - `data.*` → delegate to whichever primal advertises the `"data"` capability
-//!   (resolved at runtime via capability discovery, not by name). `NestGate` routes
-//!   these method names but does not fetch data itself.
 //!
 //! ### Discovery Domain (`discovery.*`)
 //! - `discovery.announce` → register service metadata
@@ -107,7 +103,6 @@ use tracing::{debug, warn};
 // Domain modules
 pub mod capabilities;
 pub mod crypto;
-pub mod data;
 pub mod discovery;
 pub mod health;
 pub mod metadata;
@@ -250,9 +245,6 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             }
             "storage.object.size" => storage::storage_object_size(self, params).await,
             "storage.namespaces.list" => storage::storage_namespaces_list(self, params).await,
-
-            // ==================== DATA DOMAIN (live feeds, not storage — wildcard delegation) ====================
-            m if m.starts_with("data.") => data::data_delegation(self, m, params),
 
             // ==================== DISCOVERY DOMAIN ====================
             "discovery.announce" => discovery::discovery_announce(self, &params),

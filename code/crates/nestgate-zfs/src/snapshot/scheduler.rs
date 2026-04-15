@@ -687,4 +687,58 @@ mod tests {
         assert!(PolicyScheduler::matches_pattern("ba", "*a"));
         assert!(!PolicyScheduler::matches_pattern("x", "a*"));
     }
+
+    #[tokio::test]
+    async fn process_policies_zero_max_snapshots_per_run_skips_queue() {
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let mut map = HashMap::new();
+        map.insert(
+            "zero_cap".into(),
+            SnapshotPolicy {
+                name: "zero_cap".into(),
+                enabled: true,
+                frequency: ScheduleFrequency::Minutes(1),
+                max_snapshots_per_run: 0,
+                dataset_patterns: vec!["*".into()],
+                ..SnapshotPolicy::default()
+            },
+        );
+        let policies: SnapshotPolicyMap = Arc::new(RwLock::new(map));
+        let queue = Arc::new(RwLock::new(Vec::new()));
+        let s = PolicyScheduler::new(dm, policies, queue.clone());
+        s.process_policies().await.expect("process");
+        assert!(queue.read().await.is_empty());
+    }
+
+    #[test]
+    fn should_execute_daily_branch_smoke() {
+        let policy = SnapshotPolicy {
+            frequency: ScheduleFrequency::Daily(12),
+            ..SnapshotPolicy::default()
+        };
+        let _ = PolicyScheduler::should_execute_policy(&policy);
+    }
+
+    #[test]
+    fn should_execute_weekly_and_monthly_smoke() {
+        let w = SnapshotPolicy {
+            frequency: ScheduleFrequency::Weekly { day: 2, hour: 3 },
+            ..SnapshotPolicy::default()
+        };
+        let _ = PolicyScheduler::should_execute_policy(&w);
+        let m = SnapshotPolicy {
+            frequency: ScheduleFrequency::Monthly { day: 15, hour: 4 },
+            ..SnapshotPolicy::default()
+        };
+        let _ = PolicyScheduler::should_execute_policy(&m);
+    }
+
+    #[test]
+    fn should_execute_hours_branch_smoke() {
+        let policy = SnapshotPolicy {
+            frequency: ScheduleFrequency::Hours(6),
+            ..SnapshotPolicy::default()
+        };
+        let _ = PolicyScheduler::should_execute_policy(&policy);
+    }
 }

@@ -93,7 +93,6 @@
 mod audit_handlers;
 mod blob_handlers;
 mod bonding_handlers;
-mod data_handlers;
 mod external_handlers;
 mod nat_handlers;
 mod session_handlers;
@@ -614,8 +613,6 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         // Game session persistence (convenience over storage.*)
         "session.save" => session_handlers::session_save(request.params.as_ref(), state).await,
         "session.load" => session_handlers::session_load(request.params.as_ref(), state).await,
-        // Data domain (live feeds, not storage — wildcard delegation to data capability provider)
-        m if m.starts_with("data.") => data_handlers::data_delegation(m, request.params.as_ref()),
         // Model cache operations (filesystem-backed via model_cache_handlers.rs)
         "model.register" => model_cache_handlers::model_register(request.params.as_ref()).await,
         "model.exists" => model_cache_handlers::model_exists(request.params.as_ref()),

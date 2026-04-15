@@ -311,3 +311,91 @@ impl ZfsHealthMonitor {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dataset::ZfsDatasetManager;
+    use crate::pool::ZfsPoolManager;
+    use crate::pool::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    #[test]
+    fn health_monitor_new_succeeds() {
+        let pm = Arc::new(ZfsPoolManager::new_for_testing());
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        ZfsHealthMonitor::new(pm, dm).expect("test: new monitor");
+    }
+
+    #[tokio::test]
+    async fn get_current_status_ok_with_cached_pool() {
+        let pm = Arc::new(ZfsPoolManager::new_for_testing());
+        pm.insert_pool_for_testing(PoolInfo {
+            name: "tank_cov".into(),
+            state: PoolState::Online,
+            health: PoolHealth::Healthy,
+            capacity: PoolCapacity {
+                total: 1000,
+                total_bytes: 1000,
+                used: 100,
+                used_bytes: 100,
+                available: 900,
+                available_bytes: 900,
+                utilization_percent: 10.0,
+                fragmentation_percent: 0.0,
+                deduplication_ratio: 1.0,
+            },
+            devices: Vec::new(),
+            properties: HashMap::new(),
+        })
+        .await;
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let m = ZfsHealthMonitor::new(pm, dm).expect("test: monitor");
+        let st = m.get_current_status().await.expect("test: status");
+        assert_eq!(st.pool_status.pools_online, 1);
+    }
+
+    #[tokio::test]
+    async fn start_monitoring_is_idempotent() {
+        let pm = Arc::new(ZfsPoolManager::new_for_testing());
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let mut m = ZfsHealthMonitor::new(pm, dm).expect("test: monitor");
+        m.start_monitoring().expect("test: start once");
+        m.start_monitoring().expect("test: start twice");
+        m.stop_monitoring().await.expect("test: stop");
+    }
+
+    #[tokio::test]
+    async fn stop_monitoring_when_inactive_is_ok() {
+        let pm = Arc::new(ZfsPoolManager::new_for_testing());
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let mut m = ZfsHealthMonitor::new(pm, dm).expect("test: monitor");
+        m.stop_monitoring().await.expect("test: stop inactive");
+    }
+
+    #[tokio::test]
+    async fn start_then_stop_aborts_background_loops() {
+        let pm = Arc::new(ZfsPoolManager::new_for_testing());
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let mut m = ZfsHealthMonitor::new(pm, dm).expect("test: monitor");
+        m.start().expect("test: start");
+        tokio::time::sleep(tokio::time::Duration::from_millis(40)).await;
+        m.stop().await.expect("test: stop");
+    }
+
+    #[tokio::test]
+    async fn check_pool_health_warns_on_missing_pool() {
+        let pm = Arc::new(ZfsPoolManager::new_for_testing());
+        let h = ZfsHealthMonitor::check_pool_health(&pm, "no_such_pool_for_health_check").await;
+        assert_eq!(h, crate::health::types::HealthStatus::Warning);
+    }
+
+    #[tokio::test]
+    async fn check_dataset_health_warns_on_missing_pool_tree() {
+        let dm = Arc::new(ZfsDatasetManager::new_for_testing());
+        let h =
+            ZfsHealthMonitor::check_dataset_health(&dm, "no_such_pool_for_dataset_health").await;
+        assert_eq!(h, crate::health::types::HealthStatus::Warning);
+    }
+}

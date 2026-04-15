@@ -90,7 +90,7 @@ async fn crypto_methods_return_not_implemented() {
 }
 
 #[tokio::test]
-async fn data_wildcard_returns_delegation_not_implemented() {
+async fn data_prefixed_methods_are_unknown_semantic_methods() {
     let router = test_router();
     for method in [
         "data.ncbi_search",
@@ -105,17 +105,14 @@ async fn data_wildcard_returns_delegation_not_implemented() {
             .call_method(method, json!({}))
             .await
             .expect_err(method);
-        let NestGateError::NotImplemented(details) = err else {
-            panic!("expected NotImplemented for {method}, got {err:?}");
+        let NestGateError::Api(details) = err else {
+            panic!("expected Api error for unknown {method}, got {err:?}");
         };
-        let msg = details.feature.as_ref();
+        assert_eq!(details.status_code, Some(404));
         assert!(
-            msg.contains("data capability providers"),
-            "unexpected message for {method}: {msg}"
-        );
-        assert!(
-            msg.contains("discovery.query") && msg.contains("NESTGATE_CAPABILITY_DATA"),
-            "delegation hint missing for {method}: {msg}"
+            details.message.contains("semantic method"),
+            "unexpected message for {method}: {}",
+            details.message
         );
     }
 }

@@ -637,4 +637,281 @@ mod tests {
         assert_eq!(MockProvider::max_services(), 200);
         assert_eq!(MockProvider::service_timeout_seconds(), 600);
     }
+
+    struct MockCommunication;
+
+    impl NativeAsyncCommunicationProvider<50, 512, 10, 2> for MockCommunication {
+        type Message = String;
+        type Address = String;
+        type ConnectionInfo = String;
+
+        fn send_message(
+            &self,
+            _endpoint: Self::Address,
+            _message: Self::Message,
+        ) -> impl std::future::Future<Output = Result<()>> + Send {
+            std::future::ready(Ok(()))
+        }
+        fn receive_message(
+            &self,
+        ) -> impl std::future::Future<Output = Result<Self::Message>> + Send {
+            std::future::ready(Ok("m".into()))
+        }
+        fn connect(
+            &self,
+            _endpoint: Self::Address,
+        ) -> impl std::future::Future<Output = Result<Self::ConnectionInfo>> + Send {
+            std::future::ready(Ok("conn".into()))
+        }
+        fn disconnect(
+            &self,
+            _connection: &Self::ConnectionInfo,
+        ) -> impl std::future::Future<Output = Result<()>> + Send {
+            std::future::ready(Ok(()))
+        }
+        fn connection_status(
+            &self,
+            _connection: &Self::ConnectionInfo,
+        ) -> impl std::future::Future<Output = Result<String>> + Send {
+            std::future::ready(Ok("open".into()))
+        }
+        fn broadcast(
+            &self,
+            _message: Self::Message,
+        ) -> impl std::future::Future<Output = Result<u32>> + Send {
+            std::future::ready(Ok(1))
+        }
+        fn list_connections(
+            &self,
+        ) -> impl std::future::Future<Output = Result<Vec<Self::ConnectionInfo>>> + Send {
+            std::future::ready(Ok(vec![]))
+        }
+        fn ping(
+            &self,
+            _connection: &Self::ConnectionInfo,
+        ) -> impl std::future::Future<Output = Result<std::time::Duration>> + Send {
+            std::future::ready(Ok(std::time::Duration::from_millis(1)))
+        }
+    }
+
+    #[test]
+    fn communication_provider_constants() {
+        assert_eq!(MockCommunication::max_connections(), 50);
+        assert_eq!(MockCommunication::max_message_size(), 512);
+        assert_eq!(MockCommunication::connection_timeout_seconds(), 10);
+        assert_eq!(MockCommunication::message_retry_attempts(), 2);
+    }
+
+    #[tokio::test]
+    async fn communication_provider_async_methods() {
+        let c = MockCommunication;
+        c.send_message("a".into(), "hi".into()).await.expect("send");
+        c.receive_message().await.expect("recv");
+        c.connect("ep".into()).await.expect("connect");
+        c.disconnect(&"conn".into()).await.expect("disc");
+        c.connection_status(&"conn".into()).await.expect("st");
+        assert_eq!(c.broadcast("x".into()).await.expect("bc"), 1);
+        c.list_connections().await.expect("list");
+        c.ping(&"conn".into()).await.expect("ping");
+    }
+
+    struct MockMcpProtocol;
+
+    impl NativeAsyncMCPProtocolHandler<10, 60, 2048, 2> for MockMcpProtocol {
+        type SessionInfo = String;
+        type Message = String;
+        type Response = String;
+        type Error = String;
+
+        fn create_session(
+            &self,
+            _client_id: String,
+        ) -> impl std::future::Future<Output = Result<Self::SessionInfo>> + Send {
+            std::future::ready(Ok("sess".into()))
+        }
+        fn close_session(
+            &self,
+            _session_id: &str,
+        ) -> impl std::future::Future<Output = Result<()>> + Send {
+            std::future::ready(Ok(()))
+        }
+        fn send_mcp_message(
+            &self,
+            _session_id: &str,
+            _message: Self::Message,
+        ) -> impl std::future::Future<Output = Result<Self::Response>> + Send {
+            std::future::ready(Ok("r".into()))
+        }
+        fn handle_message(
+            &self,
+            _session_id: &str,
+            _message: Self::Message,
+        ) -> impl std::future::Future<Output = Result<Self::Response>> + Send {
+            std::future::ready(Ok("r2".into()))
+        }
+        fn get_session(
+            &self,
+            _session_id: &str,
+        ) -> impl std::future::Future<Output = Result<Option<Self::SessionInfo>>> + Send {
+            std::future::ready(Ok(None))
+        }
+        fn list_sessions(
+            &self,
+        ) -> impl std::future::Future<Output = Result<Vec<Self::SessionInfo>>> + Send {
+            std::future::ready(Ok(vec![]))
+        }
+        fn ping_session(
+            &self,
+            _session_id: &str,
+        ) -> impl std::future::Future<Output = Result<std::time::Duration>> + Send {
+            std::future::ready(Ok(std::time::Duration::from_millis(2)))
+        }
+    }
+
+    #[test]
+    fn mcp_protocol_handler_constants() {
+        assert_eq!(MockMcpProtocol::max_sessions(), 10);
+        assert_eq!(MockMcpProtocol::session_timeout_seconds(), 60);
+        assert_eq!(MockMcpProtocol::max_message_size(), 2048);
+        assert_eq!(MockMcpProtocol::protocol_version(), 2);
+    }
+
+    #[tokio::test]
+    async fn mcp_protocol_handler_async_methods() {
+        let h = MockMcpProtocol;
+        h.create_session("c".into()).await.expect("create");
+        h.close_session("s").await.expect("close");
+        h.send_mcp_message("s", "m".into()).await.expect("send");
+        h.handle_message("s", "m".into()).await.expect("handle");
+        h.get_session("s").await.expect("get");
+        h.list_sessions().await.expect("list");
+        h.ping_session("s").await.expect("ping");
+    }
+
+    struct MockAutomation;
+
+    impl NativeAsyncAutomationService<20, 5, 120, 50> for MockAutomation {
+        type WorkflowDefinition = String;
+        type WorkflowExecution = String;
+        type ExecutionResult = String;
+
+        fn create_workflow(
+            &self,
+            _definition: Self::WorkflowDefinition,
+        ) -> impl std::future::Future<Output = Result<String>> + Send {
+            std::future::ready(Ok("wf".into()))
+        }
+        fn execute_workflow(
+            &self,
+            _workflow_id: &str,
+            _parameters: std::collections::HashMap<String, serde_json::Value>,
+        ) -> impl std::future::Future<Output = Result<Self::WorkflowExecution>> + Send {
+            std::future::ready(Ok("ex".into()))
+        }
+        fn stop_execution(
+            &self,
+            _execution_id: &str,
+        ) -> impl std::future::Future<Output = Result<()>> + Send {
+            std::future::ready(Ok(()))
+        }
+        fn get_execution_status(
+            &self,
+            _execution_id: &str,
+        ) -> impl std::future::Future<Output = Result<String>> + Send {
+            std::future::ready(Ok("running".into()))
+        }
+        fn list_executions(
+            &self,
+        ) -> impl std::future::Future<Output = Result<Vec<Self::WorkflowExecution>>> + Send
+        {
+            std::future::ready(Ok(vec![]))
+        }
+        fn get_execution_result(
+            &self,
+            _execution_id: &str,
+        ) -> impl std::future::Future<Output = Result<Self::ExecutionResult>> + Send {
+            std::future::ready(Ok("done".into()))
+        }
+    }
+
+    #[test]
+    fn automation_service_constants() {
+        assert_eq!(MockAutomation::max_workflows(), 20);
+        assert_eq!(MockAutomation::max_concurrent_executions(), 5);
+        assert_eq!(MockAutomation::execution_timeout_seconds(), 120);
+        assert_eq!(MockAutomation::max_workflow_steps(), 50);
+    }
+
+    #[tokio::test]
+    async fn automation_service_async_methods() {
+        let a = MockAutomation;
+        a.create_workflow("d".into()).await.expect("create");
+        a.execute_workflow("w", std::collections::HashMap::new())
+            .await
+            .expect("exec");
+        a.stop_execution("e").await.expect("stop");
+        a.get_execution_status("e").await.expect("st");
+        a.list_executions().await.expect("list");
+        a.get_execution_result("e").await.expect("res");
+    }
+
+    struct MockSecurity;
+
+    #[expect(
+        deprecated,
+        reason = "Exercises deprecated NativeAsyncSecurityService for coverage"
+    )]
+    impl NativeAsyncSecurityService<100, 200> for MockSecurity {
+        type AuthRequest = String;
+        type AuthResponse = String;
+
+        fn authenticate(
+            &self,
+            _request: Self::AuthRequest,
+        ) -> impl std::future::Future<Output = Result<Self::AuthResponse>> + Send {
+            std::future::ready(Ok("tok".into()))
+        }
+        fn validate_token(
+            &self,
+            _token: &str,
+        ) -> impl std::future::Future<Output = Result<bool>> + Send {
+            std::future::ready(Ok(true))
+        }
+    }
+
+    #[test]
+    #[expect(
+        deprecated,
+        reason = "Exercises deprecated NativeAsyncSecurityService for coverage"
+    )]
+    fn security_service_constants() {
+        assert_eq!(MockSecurity::max_sessions(), 100);
+        assert_eq!(MockSecurity::session_duration_seconds(), 200);
+    }
+
+    #[tokio::test]
+    #[expect(
+        deprecated,
+        reason = "Exercises deprecated NativeAsyncSecurityService for coverage"
+    )]
+    async fn security_service_async_methods() {
+        let s = MockSecurity;
+        s.authenticate("req".into()).await.expect("auth");
+        s.validate_token("t").await.expect("val");
+    }
+
+    #[tokio::test]
+    async fn load_balancer_async_surface() {
+        let lb = MockLoadBalancer;
+        lb.add_service("svc".into()).await.expect("add");
+        lb.remove_service("svc").await.expect("rm");
+        lb.route_request("r".into()).await.expect("route");
+        lb.get_stats().await.expect("stats");
+        lb.get_service_stats("svc").await.expect("svc_stats");
+        lb.health_check_all().await.expect("health");
+        lb.update_service_weight("svc", 1.0).await.expect("w");
+        lb.list_services().await.expect("list");
+        lb.get_service("svc").await.expect("get");
+        lb.service_exists("svc").await.expect("ex");
+    }
 }
