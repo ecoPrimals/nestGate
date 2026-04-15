@@ -266,14 +266,28 @@ impl IsomorphicIpcServer {
         use tokio::io::BufReader;
 
         let (reader, mut writer) = stream.into_split();
+        let mut raw_reader = BufReader::new(reader);
 
         if crate::rpc::btsp_server_handshake::is_btsp_required() {
+            // Peek the first byte via BufReader: `{` (0x7B) means plain
+            // JSON-RPC from biomeOS composition; anything else triggers
+            // BTSP handshake.
+            use tokio::io::AsyncBufReadExt;
+            let is_json_rpc = match raw_reader.fill_buf().await {
+                Ok(buf) if !buf.is_empty() => buf[0] == b'{',
+                _ => false,
+            };
+
+            if is_json_rpc {
+                tracing::debug!("BTSP: first byte is '{{', bypassing handshake (JSON-RPC)");
+                return Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler).await;
+            }
+
             let family_id = std::env::var("FAMILY_ID")
                 .or_else(|_| std::env::var("BIOMEOS_FAMILY_ID"))
                 .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
                 .unwrap_or_default();
 
-            let mut raw_reader = tokio::io::BufReader::new(reader);
             let _session = crate::rpc::btsp_server_handshake::perform_handshake(
                 &mut raw_reader,
                 &mut writer,
@@ -285,8 +299,7 @@ impl IsomorphicIpcServer {
             return Ok(());
         }
 
-        let mut reader = BufReader::new(reader);
-        Self::json_rpc_keep_alive_loop(&mut reader, &mut writer, &handler).await
+        Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler).await
     }
 
     /// Maximum idle time before a keep-alive connection is closed.

@@ -340,11 +340,25 @@ impl Drop for JsonRpcUnixServer {
 /// directly.
 async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Result<()> {
     let (reader, mut writer) = stream.into_split();
+    let mut raw_reader = BufReader::new(reader);
 
     if crate::rpc::btsp_server_handshake::is_btsp_required() {
+        // Peek the first byte via BufReader: `{` (0x7B) means plain
+        // JSON-RPC from biomeOS composition; anything else triggers
+        // BTSP handshake.
+        use tokio::io::AsyncBufReadExt;
+        let is_json_rpc = match raw_reader.fill_buf().await {
+            Ok(buf) if !buf.is_empty() => buf[0] == b'{',
+            _ => false,
+        };
+
+        if is_json_rpc {
+            tracing::debug!("BTSP: first byte is '{{', bypassing handshake (JSON-RPC)");
+            return json_rpc_loop(&mut raw_reader, &mut writer, &state).await;
+        }
+
         let family_id = state.family_id.as_deref().unwrap_or("default").to_string();
 
-        let mut raw_reader = BufReader::new(reader);
         let _session = crate::rpc::btsp_server_handshake::perform_handshake(
             &mut raw_reader,
             &mut writer,
@@ -355,8 +369,7 @@ async fn handle_connection(stream: UnixStream, state: Arc<StorageState>) -> Resu
         return json_rpc_loop(&mut raw_reader, &mut writer, &state).await;
     }
 
-    let mut reader = BufReader::new(reader);
-    json_rpc_loop(&mut reader, &mut writer, &state).await
+    json_rpc_loop(&mut raw_reader, &mut writer, &state).await
 }
 
 /// Persistent newline-delimited JSON-RPC read/dispatch/write loop (keep-alive).
