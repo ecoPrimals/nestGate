@@ -343,7 +343,7 @@ impl PoolTakeoverManager {
         available_pools: &[String],
         failed_node_id: &str,
     ) -> Result<Vec<String>> {
-        let known_pools = self.known_pools.read().await;
+        let known_pools: HashMap<String, PoolMetadata> = self.known_pools.read().await.clone();
         let mut orphaned_pools =
             orphaned_pools_from_known_registry(available_pools, &known_pools, failed_node_id);
 
@@ -489,21 +489,23 @@ impl NodeHealthMonitor {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn detect_failed_nodes(&self) -> Result<Vec<NodeHealth>> {
-        let nodes = self.known_nodes.read().await;
         let now = SystemTime::now();
         let timeout = Duration::from_secs(self.config.node_failure_timeout_secs);
 
-        let failed_nodes = nodes
-            .values()
-            .filter(|node| {
-                if let Ok(elapsed) = now.duration_since(node.last_heartbeat) {
-                    elapsed > timeout && node.is_alive
-                } else {
-                    false
-                }
-            })
-            .cloned()
-            .collect();
+        let failed_nodes: Vec<NodeHealth> = {
+            let nodes = self.known_nodes.read().await;
+            nodes
+                .values()
+                .filter(|node| {
+                    if let Ok(elapsed) = now.duration_since(node.last_heartbeat) {
+                        elapsed > timeout && node.is_alive
+                    } else {
+                        false
+                    }
+                })
+                .cloned()
+                .collect()
+        };
 
         Ok(failed_nodes)
     }

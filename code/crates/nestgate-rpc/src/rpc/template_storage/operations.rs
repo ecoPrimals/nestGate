@@ -100,11 +100,12 @@ impl TemplateStorage {
         };
 
         // Store with family isolation
-        let mut storage = self.templates.write().await;
-        let family_templates = storage
+        self.templates
+            .write()
+            .await
             .entry(family_id.clone())
-            .or_insert_with(HashMap::new);
-        family_templates.insert(template_id.clone(), template);
+            .or_insert_with(HashMap::new)
+            .insert(template_id.clone(), template);
 
         tracing::info!(
             "Stored template '{}' for family '{}'",
@@ -138,15 +139,15 @@ impl TemplateStorage {
         template_id: &str,
         family_id: &str,
     ) -> Result<GraphTemplate> {
-        let storage = self.templates.read().await;
-
-        let family_templates = storage
+        let template = self
+            .templates
+            .read()
+            .await
             .get(family_id)
-            .ok_or_else(|| NestGateError::not_found("No templates for this family"))?;
-
-        let template = family_templates
+            .ok_or_else(|| NestGateError::not_found("No templates for this family"))?
             .get(template_id)
-            .ok_or_else(|| NestGateError::not_found("Template not found"))?;
+            .ok_or_else(|| NestGateError::not_found("Template not found"))?
+            .clone();
 
         tracing::debug!(
             "Retrieved template '{}' for family '{}'",
@@ -154,7 +155,7 @@ impl TemplateStorage {
             family_id
         );
 
-        Ok(template.clone())
+        Ok(template)
     }
 
     /// List templates with optional filtering
@@ -185,13 +186,12 @@ impl TemplateStorage {
         niche_type: Option<&str>,
         is_community: Option<bool>,
     ) -> Result<Vec<GraphTemplate>> {
-        let storage = self.templates.read().await;
-
-        let family_templates = storage
+        let mut templates: Vec<GraphTemplate> = self
+            .templates
+            .read()
+            .await
             .get(family_id)
-            .ok_or_else(|| NestGateError::not_found("No templates for this family"))?;
-
-        let mut templates: Vec<GraphTemplate> = family_templates
+            .ok_or_else(|| NestGateError::not_found("No templates for this family"))?
             .values()
             .filter(|t| {
                 // Filter by user_id if specified
@@ -262,34 +262,36 @@ impl TemplateStorage {
         limit: usize,
         min_usage: u64,
     ) -> Result<Vec<(GraphTemplate, f64)>> {
-        let storage = self.templates.read().await;
-
         // Collect all community templates across families
-        let community_templates: Vec<GraphTemplate> = storage
-            .values()
-            .flat_map(|family_templates| family_templates.values())
-            .filter(|t| {
-                // Must be community template
-                if !t.metadata.is_community {
-                    return false;
-                }
+        let community_templates: Vec<GraphTemplate> = {
+            let storage = self.templates.read().await;
 
-                // Must meet minimum usage
-                if t.metadata.usage_count < min_usage {
-                    return false;
-                }
+            storage
+                .values()
+                .flat_map(|family_templates| family_templates.values())
+                .filter(|t| {
+                    // Must be community template
+                    if !t.metadata.is_community {
+                        return false;
+                    }
 
-                // Filter by niche_type if specified
-                if let Some(niche) = niche_type
-                    && t.metadata.niche_type != niche
-                {
-                    return false;
-                }
+                    // Must meet minimum usage
+                    if t.metadata.usage_count < min_usage {
+                        return false;
+                    }
 
-                true
-            })
-            .cloned()
-            .collect();
+                    // Filter by niche_type if specified
+                    if let Some(niche) = niche_type
+                        && t.metadata.niche_type != niche
+                    {
+                        return false;
+                    }
+
+                    true
+                })
+                .cloned()
+                .collect()
+        };
 
         // Calculate max usage for normalization
         let max_usage = {
@@ -355,18 +357,26 @@ impl TemplateStorage {
     /// Returns [`NestGateError`](nestgate_types::error::NestGateError) as not found when
     /// `template_id` is missing under `family_id`.
     pub async fn increment_usage(&self, template_id: &str, family_id: &str) -> Result<()> {
-        let mut storage = self.templates.write().await;
+        let updated = {
+            let mut storage = self.templates.write().await;
 
-        if let Some(family_templates) = storage.get_mut(family_id)
-            && let Some(template) = family_templates.get_mut(template_id)
-        {
-            template.metadata.usage_count += 1;
-            template.updated_at = Utc::now();
+            if let Some(family_templates) = storage.get_mut(family_id)
+                && let Some(template) = family_templates.get_mut(template_id)
+            {
+                template.metadata.usage_count += 1;
+                template.updated_at = Utc::now();
+                true
+            } else {
+                false
+            }
+        };
+
+        if updated {
             tracing::debug!("Incremented usage for template '{}'", template_id);
-            return Ok(());
+            Ok(())
+        } else {
+            Err(NestGateError::not_found("Template not found"))
         }
-
-        Err(NestGateError::not_found("Template not found"))
     }
 
     /// Update success rate for a template
@@ -389,21 +399,29 @@ impl TemplateStorage {
             ));
         }
 
-        let mut storage = self.templates.write().await;
+        let updated = {
+            let mut storage = self.templates.write().await;
 
-        if let Some(family_templates) = storage.get_mut(family_id)
-            && let Some(template) = family_templates.get_mut(template_id)
-        {
-            template.metadata.success_rate = success_rate;
-            template.updated_at = Utc::now();
+            if let Some(family_templates) = storage.get_mut(family_id)
+                && let Some(template) = family_templates.get_mut(template_id)
+            {
+                template.metadata.success_rate = success_rate;
+                template.updated_at = Utc::now();
+                true
+            } else {
+                false
+            }
+        };
+
+        if updated {
             tracing::debug!(
                 "Updated success rate for template '{}' to {}",
                 template_id,
                 success_rate
             );
-            return Ok(());
+            Ok(())
+        } else {
+            Err(NestGateError::not_found("Template not found"))
         }
-
-        Err(NestGateError::not_found("Template not found"))
     }
 }

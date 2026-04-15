@@ -11,6 +11,21 @@ use tracing::{info, warn};
 
 use super::types::{DatasetInfo, ZfsDatasetManager};
 
+/// `-o` argument pairs passed to `zfs create` for each [`CoreStorageTier`].
+///
+/// Exposed for unit tests so tier-specific command construction is covered without invoking `zfs`.
+pub(super) const fn zfs_create_tier_property_args(
+    tier: &CoreStorageTier,
+) -> &'static [&'static str] {
+    match tier {
+        CoreStorageTier::Hot => &["-o", "compression=off", "-o", "recordsize=128K"],
+        CoreStorageTier::Warm => &["-o", "compression=lz4", "-o", "recordsize=128K"],
+        CoreStorageTier::Cold => &["-o", "compression=zstd", "-o", "recordsize=1M"],
+        CoreStorageTier::Cache => &["-o", "compression=off", "-o", "recordsize=64K"],
+        CoreStorageTier::Archive => &["-o", "compression=gzip-9", "-o", "recordsize=1M"],
+    }
+}
+
 impl ZfsDatasetManager {
     /// Create a new ZFS dataset
     ///
@@ -34,34 +49,7 @@ impl ZfsDatasetManager {
         let mut cmd = tokio::process::Command::new("zfs");
         cmd.args(["create"]);
 
-        // Apply tier-specific properties based on tier type
-        match tier {
-            CoreStorageTier::Hot => {
-                // Hot tier: optimized for performance
-                cmd.args(["-o", "compression=off"]);
-                cmd.args(["-o", "recordsize=128K"]);
-            }
-            CoreStorageTier::Warm => {
-                // Warm tier: balanced performance and compression
-                cmd.args(["-o", "compression=lz4"]);
-                cmd.args(["-o", "recordsize=128K"]);
-            }
-            CoreStorageTier::Cold => {
-                // Cold tier: optimized for space efficiency
-                cmd.args(["-o", "compression=zstd"]);
-                cmd.args(["-o", "recordsize=1M"]);
-            }
-            CoreStorageTier::Cache => {
-                // Cache tier: ultra-fast, no compression
-                cmd.args(["-o", "compression=off"]);
-                cmd.args(["-o", "recordsize=64K"]);
-            }
-            CoreStorageTier::Archive => {
-                // Archive tier: maximum compression
-                cmd.args(["-o", "compression=gzip-9"]);
-                cmd.args(["-o", "recordsize=1M"]);
-            }
-        }
+        cmd.args(zfs_create_tier_property_args(&tier));
 
         cmd.arg(&dataset_path);
 
@@ -241,5 +229,61 @@ impl ZfsDatasetManager {
     /// Same as [`Self::delete_dataset`].
     pub async fn destroy_dataset(&self, name: &str) -> Result<()> {
         self.delete_dataset(name).await
+    }
+}
+
+#[cfg(test)]
+mod create_dataset_tests {
+    use nestgate_core::canonical_types::StorageTier as CoreStorageTier;
+
+    use super::zfs_create_tier_property_args;
+
+    #[test]
+    fn tier_property_args_cover_all_tiers() {
+        let hot = zfs_create_tier_property_args(&CoreStorageTier::Hot);
+        assert!(hot.contains(&"-o") && hot.contains(&"compression=off"));
+
+        let warm = zfs_create_tier_property_args(&CoreStorageTier::Warm);
+        assert!(warm.iter().any(|s| *s == "compression=lz4"));
+
+        let cold = zfs_create_tier_property_args(&CoreStorageTier::Cold);
+        assert!(cold.iter().any(|s| *s == "compression=zstd"));
+
+        let cache = zfs_create_tier_property_args(&CoreStorageTier::Cache);
+        assert!(cache.iter().any(|s| *s == "recordsize=64K"));
+
+        let arch = zfs_create_tier_property_args(&CoreStorageTier::Archive);
+        assert!(arch.iter().any(|s| *s == "compression=gzip-9"));
+    }
+
+    #[tokio::test]
+    async fn create_dataset_returns_error_when_zfs_unavailable_or_fails() {
+        let mgr = crate::dataset::ZfsDatasetManager::new_for_testing();
+        let err = mgr
+            .create_dataset(
+                "definitely_missing_dataset_xyz",
+                "invalid_pool_zzzz",
+                CoreStorageTier::Warm,
+            )
+            .await
+            .expect_err("zfs create should fail in test env without a real pool");
+        assert!(
+            err.to_string().contains("zfs") || err.to_string().contains("command"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn delete_dataset_errors_on_missing_name() {
+        let mgr = crate::dataset::ZfsDatasetManager::new_for_testing();
+        let err = mgr
+            .delete_dataset("nonexistent/pool/dataset")
+            .await
+            .expect_err("destroy should fail");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("zfs destroy") || msg.contains("command"),
+            "{msg}"
+        );
     }
 }

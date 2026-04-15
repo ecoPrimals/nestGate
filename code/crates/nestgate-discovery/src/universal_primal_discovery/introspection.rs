@@ -171,10 +171,10 @@ impl SystemIntrospection {
             cpu_cores: cores,
             logical_cores: cores,
             memory_gb: self.estimate_memory_gb()?,
-            network_interfaces: self.detect_network_interfaces()?,
-            storage_available: self.check_storage_availability()?,
+            network_interfaces: Self::detect_network_interfaces()?,
+            storage_available: Self::check_storage_availability()?,
             container_runtime: self.detect_container_runtime(),
-            os_type: self.detect_os_type(),
+            os_type: Self::detect_os_type(),
         })
     }
 
@@ -200,10 +200,10 @@ impl SystemIntrospection {
         })?;
 
         // Score components (0.0 to 1.0)
-        let cpu_score = self.calculate_cpu_score(capabilities)?;
-        let memory_score = self.calculate_memory_score(capabilities)?;
-        let storage_score = self.calculate_storage_score()?;
-        let network_score = self.calculate_network_score(capabilities)?;
+        let cpu_score = Self::calculate_cpu_score(capabilities)?;
+        let memory_score = Self::calculate_memory_score(capabilities)?;
+        let storage_score = Self::calculate_storage_score()?;
+        let network_score = Self::calculate_network_score(capabilities)?;
 
         let overall_score = (cpu_score + memory_score + storage_score + network_score) / 4.0;
 
@@ -252,7 +252,7 @@ impl SystemIntrospection {
     }
 
     /// **NETWORK INTERFACE DETECTION**: Detect available network interfaces
-    fn detect_network_interfaces(&self) -> Result<Vec<String>> {
+    fn detect_network_interfaces() -> Result<Vec<String>> {
         // Simplified implementation - in a real system would use proper network APIs
         let mut interfaces = vec!["lo".to_string()]; // Always have loopback
 
@@ -267,7 +267,7 @@ impl SystemIntrospection {
     }
 
     /// **STORAGE AVAILABILITY**: Check storage availability
-    fn check_storage_availability(&self) -> Result<bool> {
+    fn check_storage_availability() -> Result<bool> {
         // Check if we can create temporary files (basic storage test)
         Ok(matches!(std::env::temp_dir().try_exists(), Ok(true)))
     }
@@ -310,7 +310,7 @@ impl SystemIntrospection {
     }
 
     /// **OS TYPE DETECTION**: Detect operating system type
-    fn detect_os_type(&self) -> String {
+    fn detect_os_type() -> String {
         std::env::consts::OS.to_string()
     }
 
@@ -326,21 +326,21 @@ impl SystemIntrospection {
     }
 
     /// **CPU SCORING**: Calculate CPU performance score
-    fn calculate_cpu_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
+    fn calculate_cpu_score(capabilities: &SystemCapabilities) -> Result<f64> {
         // Score based on logical cores (0.1 to 1.0)
         let core_score = (capabilities.logical_cores as f64 / 16.0).clamp(0.1, 1.0);
         Ok(core_score)
     }
 
     /// **MEMORY SCORING**: Calculate memory performance score
-    fn calculate_memory_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
+    fn calculate_memory_score(capabilities: &SystemCapabilities) -> Result<f64> {
         // Score based on memory GB (0.1 to 1.0)
         let memory_score = (capabilities.memory_gb / 32.0).clamp(0.1, 1.0);
         Ok(memory_score)
     }
 
     /// **STORAGE SCORING**: Calculate storage performance score
-    fn calculate_storage_score(&self) -> Result<f64> {
+    fn calculate_storage_score() -> Result<f64> {
         // Simplified storage scoring - in a real system would benchmark I/O
         if std::path::Path::new("/sys/block").exists() {
             // Assume SSD if on modern Linux system
@@ -352,7 +352,7 @@ impl SystemIntrospection {
     }
 
     /// **NETWORK SCORING**: Calculate network performance score
-    fn calculate_network_score(&self, capabilities: &SystemCapabilities) -> Result<f64> {
+    fn calculate_network_score(capabilities: &SystemCapabilities) -> Result<f64> {
         // Score based on number of interfaces and environment
         let interface_score = (capabilities.network_interfaces.len() as f64 / 4.0).clamp(0.1, 1.0);
 

@@ -23,10 +23,8 @@ const API_ENDPOINTS: &[&str] = &[
     "/metrics",
 ];
 
-/// Simulates a production HTTP request
-async fn simulate_api_request(
-    endpoint: &str,
-) -> Result<Duration, Box<dyn std::error::Error + Send + Sync>> {
+/// Simulates a production HTTP request (latency model only; no failure path).
+async fn simulate_api_request(endpoint: &str) -> Duration {
     let start = Instant::now();
 
     // Simulate network latency (1-5ms)
@@ -44,7 +42,7 @@ async fn simulate_api_request(
     };
     sleep(processing_time).await;
 
-    Ok(start.elapsed())
+    start.elapsed()
 }
 
 /// Production load test - concurrent requests

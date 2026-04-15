@@ -177,8 +177,10 @@ impl ZfsSnapshotManager {
     pub async fn add_policy(&self, policy: SnapshotPolicy) -> CoreResult<()> {
         info!("Adding snapshot policy: {}", policy.name);
 
-        let mut policies = self.policies.write().await;
-        policies.insert(policy.name.clone(), policy);
+        self.policies
+            .write()
+            .await
+            .insert(policy.name.clone(), policy);
         Ok(())
     }
 
@@ -186,8 +188,7 @@ impl ZfsSnapshotManager {
     pub async fn remove_policy(&self, name: &str) -> CoreResult<bool> {
         info!("Removing snapshot policy: {}", name);
 
-        let mut policies = self.policies.write().await;
-        Ok(policies.remove(name).is_some())
+        Ok(self.policies.write().await.remove(name).is_some())
     }
 
     /// Get a snapshot policy
@@ -226,8 +227,7 @@ impl ZfsSnapshotManager {
 
         let operation_id = operation.id.clone();
 
-        let mut queue = self.operation_queue.write().await;
-        queue.push(operation);
+        self.operation_queue.write().await.push(operation);
 
         Ok(operation_id)
     }
@@ -251,8 +251,7 @@ impl ZfsSnapshotManager {
 
         let operation_id = operation.id.clone();
 
-        let mut queue = self.operation_queue.write().await;
-        queue.push(operation);
+        self.operation_queue.write().await.push(operation);
 
         Ok(operation_id)
     }
@@ -261,12 +260,14 @@ impl ZfsSnapshotManager {
     pub async fn list_snapshots(&self, dataset: &str) -> CoreResult<Vec<SnapshotInfo>> {
         debug!("Listing snapshots for dataset: {}", dataset);
 
-        let cache = self.snapshot_cache.read().await;
-        let snapshots: Vec<_> = cache
-            .values()
-            .filter(|snapshot| snapshot.dataset == dataset)
-            .cloned()
-            .collect();
+        let snapshots: Vec<_> = {
+            let cache = self.snapshot_cache.read().await;
+            cache
+                .values()
+                .filter(|snapshot| snapshot.dataset == dataset)
+                .cloned()
+                .collect()
+        };
 
         Ok(snapshots)
     }
@@ -402,9 +403,8 @@ impl ZfsSnapshotManager {
         debug!("Updating snapshot cache");
 
         let datasets = dataset_manager.list_datasets().await?;
-        let mut cache = snapshot_cache.write().await;
-        cache.clear();
 
+        let mut merged: HashMap<String, SnapshotInfo> = HashMap::new();
         let mut total_snapshots = 0;
         let mut total_size = 0;
 
@@ -413,15 +413,23 @@ impl ZfsSnapshotManager {
                 for snapshot in snapshots {
                     total_snapshots += 1;
                     total_size += snapshot.size;
-                    cache.insert(snapshot.full_name.clone(), snapshot);
+                    merged.insert(snapshot.full_name.clone(), snapshot);
                 }
             }
         }
 
+        {
+            let mut cache = snapshot_cache.write().await;
+            cache.clear();
+            cache.extend(merged);
+        }
+
         // Update statistics
-        let mut stats = statistics.write().await;
-        stats.total_snapshots = total_snapshots;
-        stats.total_size = total_size;
+        {
+            let mut stats = statistics.write().await;
+            stats.total_snapshots = total_snapshots;
+            stats.total_size = total_size;
+        }
 
         debug!(
             "Cache updated: {} snapshots, {} bytes total",

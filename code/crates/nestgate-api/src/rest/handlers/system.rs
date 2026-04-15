@@ -115,8 +115,7 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
         "online"
     };
 
-    let storage_detector = state.storage_detector.try_read();
-    let storage_detector_status = if storage_detector.is_ok() {
+    let storage_detector_status = if state.storage_detector.try_read().is_ok() {
         "online"
     } else {
         "busy"

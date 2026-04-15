@@ -39,6 +39,7 @@
 //! println!("Found API at: {}", api_endpoint.url());
 //! ```
 
+use crate::constants::system::DEFAULT_SERVICE_NAME;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -219,7 +220,7 @@ impl CapabilityConfig {
         // Generate unique identity (not hardcoded)
         let identity = PrimalIdentity {
             id: uuid::Uuid::new_v4().to_string(),
-            primal_type: "nestgate".to_string(),
+            primal_type: DEFAULT_SERVICE_NAME.to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
         };
 
@@ -393,6 +394,10 @@ impl CapabilityConfig {
     }
 
     /// Discover via specific method
+    #[expect(
+        clippy::unused_self,
+        reason = "Discovery backends will use self (env, discovery_config) when implemented"
+    )]
     fn discover_via_method(
         &self,
         capability: &str,
@@ -520,6 +525,10 @@ impl CapabilityConfig {
     }
 
     /// Announce via specific method
+    #[expect(
+        clippy::unused_self,
+        reason = "Announcement paths will use self (self_knowledge, discovery_config) when implemented"
+    )]
     fn announce_via_method(&self, method: &DiscoveryMethod) -> Result<()> {
         match method {
             DiscoveryMethod::Environment => {

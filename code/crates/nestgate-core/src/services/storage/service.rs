@@ -85,16 +85,7 @@ impl StorageManagerService {
             )
         })?;
 
-        // Create canonical storage manager for unified storage operations (temporarily disabled)
-        // let storage_manager = Arc::new(
-        //     crate::universal_storage::canonical_storage::create_canonical_storage_manager()
-        //         .await
-        //         .map_err(|e| NestGateError::configuration(
-        //             currentvalue: None,
-        //             expected: Some("valid storage configuration".to_string()),
-        //             user_error: false,
-        //         })?,
-        // );
+        // Canonical unified storage manager wiring deferred; see git history.
 
         // Initialize adaptive storage if feature is enabled
         let service = Self {
@@ -723,5 +714,36 @@ mod tests {
         assert_eq!(stats.total_operations, 0);
         assert!(svc.get_pools().await.is_empty());
         assert!(svc.get_quotas().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn with_config_rejects_invalid_max_concurrent_operations() {
+        let mut config = StorageServiceConfig::development();
+        config.auto_discover_pools = false;
+        config.enable_quotas = false;
+        config.enable_caching = false;
+        config.enable_monitoring = false;
+        config.max_concurrent_operations = 0;
+        let err = StorageManagerService::with_config(config).await;
+        assert!(err.is_err(), "expected validation error");
+    }
+
+    #[tokio::test]
+    async fn storage_backend_trait_methods_are_reachable() {
+        use nestgate_rpc::rpc::StorageBackend;
+
+        let mut config = StorageServiceConfig::development();
+        config.auto_discover_pools = false;
+        config.enable_quotas = false;
+        config.enable_caching = false;
+        config.enable_monitoring = false;
+
+        let svc = StorageManagerService::with_config(config)
+            .await
+            .expect("init");
+        let _ = StorageBackend::list_datasets(&svc).await;
+        let _ = svc.start_time();
+        let _ = svc.service_id();
+        let _ = svc.get_cache_configs().await;
     }
 }

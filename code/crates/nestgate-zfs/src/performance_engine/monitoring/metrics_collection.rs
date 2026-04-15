@@ -16,6 +16,152 @@ use super::super::types::{
 };
 use super::RealTimePerformanceMonitor;
 
+/// Merge one line from `/proc/spl/kstat/zfs/arcstats` into hit/miss counters (pool iostat block).
+pub(super) fn merge_arc_kstat_hits_misses_line(line: &str, hits: &mut u64, misses: &mut u64) {
+    let parts: Vec<&str> = line.split_whitespace().collect();
+    if parts.len() < 3 {
+        return;
+    }
+    match parts[0] {
+        "hits" => *hits = parts[2].parse().unwrap_or(0),
+        "misses" => *misses = parts[2].parse().unwrap_or(0),
+        _ => {}
+    }
+}
+
+/// Merge one line from `/proc/spl/kstat/zfs/arcstats` into the full ARC snapshot fields.
+pub(super) fn merge_arc_kstat_full_line(
+    line: &str,
+    hits: &mut u64,
+    misses: &mut u64,
+    size: &mut u64,
+    c: &mut u64,
+    mru_size: &mut u64,
+    mfu_size: &mut u64,
+) {
+    let parts: Vec<&str> = line.split_whitespace().collect();
+    if parts.len() < 3 {
+        return;
+    }
+    match parts[0] {
+        "hits" => *hits = parts[2].parse().unwrap_or(0),
+        "misses" => *misses = parts[2].parse().unwrap_or(0),
+        "size" => *size = parts[2].parse().unwrap_or(0),
+        "c" => *c = parts[2].parse().unwrap_or(0),
+        "mru_size" => *mru_size = parts[2].parse().unwrap_or(0),
+        "mfu_size" => *mfu_size = parts[2].parse().unwrap_or(0),
+        _ => {}
+    }
+}
+
+/// Parse `zpool list -H -o frag` stdout (trimmed) into a percentage value.
+pub(super) fn frag_percent_from_zpool_frag_stdout(stdout_trimmed: &str) -> f64 {
+    if let Some(frag_str) = stdout_trimmed.trim().strip_suffix('%') {
+        frag_str.parse().unwrap_or(10.0)
+    } else {
+        10.0
+    }
+}
+
+/// Accumulates `zfs get -H -p` lines for dataset property parsing in [`RealTimePerformanceMonitor::collect_metrics`].
+pub(super) struct DatasetPropAccum {
+    /// Effective compression ratio (from properties or derived from used vs logical).
+    pub compression_ratio: f64,
+    /// Estimated dedup ratio when dedup=on.
+    pub dedup_ratio: f64,
+    /// Parsed recordsize in bytes.
+    pub record_size: u64,
+    pub used_bytes: u64,
+    pub logical_used_bytes: u64,
+}
+
+impl DatasetPropAccum {
+    /// Default field values matching `collect_metrics` initial state.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
+            compression_ratio: 1.0,
+            dedup_ratio: 1.0,
+            record_size: 128 * 1024,
+            used_bytes: 0,
+            logical_used_bytes: 0,
+        }
+    }
+
+    /// Apply one tab-separated `zfs get` output line (`name`, `property`, `value`).
+    pub fn apply_tab_line(
+        &mut self,
+        line: &str,
+        parse_recordsize: impl Fn(&str) -> crate::error::Result<u64>,
+    ) {
+        let fields: Vec<&str> = line.split('\t').collect();
+        if fields.len() < 3 {
+            return;
+        }
+        match fields[1] {
+            "compressratio" => {
+                if let Some(ratio_str) = fields[2].strip_suffix('x') {
+                    self.compression_ratio = ratio_str.parse().unwrap_or(1.0);
+                }
+            }
+            "dedup" => {
+                if fields[2] == "on" {
+                    self.dedup_ratio = 1.2;
+                }
+            }
+            "recordsize" => {
+                self.record_size = parse_recordsize(fields[2]).unwrap_or(128 * 1024);
+            }
+            "used" => {
+                self.used_bytes = fields[2].parse().unwrap_or(0);
+            }
+            "logicalused" => {
+                self.logical_used_bytes = fields[2].parse().unwrap_or(0);
+            }
+            _ => {}
+        }
+    }
+
+    /// Derive compression ratio from logical vs used when both are present.
+    pub fn finalize_compression_ratio(&mut self) {
+        if self.logical_used_bytes > 0 && self.used_bytes > 0 {
+            self.compression_ratio = self.logical_used_bytes as f64 / self.used_bytes as f64;
+        }
+    }
+
+    /// Map record size to an [`AccessPattern`] using the same thresholds as `collect_metrics`.
+    #[must_use]
+    pub const fn access_pattern(&self) -> AccessPattern {
+        if self.record_size >= 1024 * 1024 {
+            AccessPattern::Sequential
+        } else if self.record_size <= 32 * 1024 {
+            AccessPattern::Random
+        } else {
+            AccessPattern::Mixed
+        }
+    }
+}
+
+impl Default for DatasetPropAccum {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Keep at most `max_entries` entries, removing lexicographically first keys when over capacity.
+pub(super) fn trim_metrics_cache_entries(
+    cache: &mut std::collections::HashMap<String, ZfsPerformanceMetrics>,
+    max_entries: usize,
+) {
+    if cache.len() > max_entries {
+        let mut keys: Vec<String> = cache.keys().cloned().collect();
+        keys.sort();
+        for key in keys.iter().take(cache.len().saturating_sub(max_entries)) {
+            cache.remove(key);
+        }
+    }
+}
+
 impl RealTimePerformanceMonitor {
     /// Function description
     ///
@@ -73,14 +219,7 @@ impl RealTimePerformanceMonitor {
                             let mut misses = 0u64;
 
                             for arc_line in arc_content.lines() {
-                                let parts: Vec<&str> = arc_line.split_whitespace().collect();
-                                if parts.len() >= 3 {
-                                    match parts[0] {
-                                        "hits" => hits = parts[2].parse().unwrap_or(0),
-                                        "misses" => misses = parts[2].parse().unwrap_or(0),
-                                        _ => {}
-                                    }
-                                }
+                                merge_arc_kstat_hits_misses_line(arc_line, &mut hits, &mut misses);
                             }
 
                             if hits + misses > 0 {
@@ -100,11 +239,7 @@ impl RealTimePerformanceMonitor {
                                 .await
                         {
                             let frag_stdout = String::from_utf8_lossy(&frag_output.stdout);
-                            if let Some(frag_str) = frag_stdout.trim().strip_suffix('%') {
-                                frag_str.parse().unwrap_or(10.0)
-                            } else {
-                                10.0
-                            }
+                            frag_percent_from_zpool_frag_stdout(&frag_stdout)
                         } else {
                             10.0 // Default fragmentation
                         };
@@ -145,62 +280,20 @@ impl RealTimePerformanceMonitor {
                 {
                     let prop_stdout = String::from_utf8_lossy(&prop_output.stdout);
 
-                    let mut _compression_ratio = 1.0;
-                    let mut dedup_ratio = 1.0;
-                    let mut record_size = 128 * 1024u64;
-                    let mut used_bytes = 0u64;
-                    let mut logical_used_bytes = 0u64;
-
+                    let mut props = DatasetPropAccum::new();
                     for line in prop_stdout.lines() {
-                        let fields: Vec<&str> = line.split('\t').collect();
-                        if fields.len() >= 3 {
-                            match fields[1] {
-                                "compressratio" => {
-                                    if let Some(ratio_str) = fields[2].strip_suffix('x') {
-                                        _compression_ratio = ratio_str.parse().unwrap_or(1.0);
-                                    }
-                                }
-                                "dedup" => {
-                                    if fields[2] == "on" {
-                                        dedup_ratio = 1.2; // Estimate when dedup is enabled
-                                    }
-                                }
-                                "recordsize" => {
-                                    record_size =
-                                        Self::parse_sizevalue(fields[2]).unwrap_or(128 * 1024);
-                                }
-                                "used" => {
-                                    used_bytes = fields[2].parse().unwrap_or(0);
-                                }
-                                "logicalused" => {
-                                    logical_used_bytes = fields[2].parse().unwrap_or(0);
-                                }
-                                _ => {}
-                            }
-                        }
+                        props.apply_tab_line(line, Self::parse_sizevalue);
                     }
-
-                    // Calculate actual compression ratio from used vs logical used
-                    if logical_used_bytes > 0 && used_bytes > 0 {
-                        _compression_ratio = logical_used_bytes as f64 / used_bytes as f64;
-                    }
-
-                    // Analyze access pattern based on dataset properties and usage
-                    let access_pattern = if record_size >= 1024 * 1024 {
-                        AccessPattern::Sequential // Large records suggest sequential
-                    } else if record_size <= 32 * 1024 {
-                        AccessPattern::Random // Small records suggest random
-                    } else {
-                        AccessPattern::Mixed
-                    };
+                    props.finalize_compression_ratio();
+                    let access_pattern = props.access_pattern();
 
                     dataset_metrics.insert(
                         dataset.name.clone(),
                         ZfsDatasetMetrics {
                             dataset_name: dataset.name.clone(),
                             access_pattern,
-                            dedup_ratio,
-                            record_size,
+                            dedup_ratio: props.dedup_ratio,
+                            record_size: props.record_size,
                         },
                     );
                 }
@@ -222,22 +315,19 @@ impl RealTimePerformanceMonitor {
             let mut misses = 0u64;
             let mut size = 0u64;
             let mut c = 0u64; // target size
-            let mut _mru_size = 0u64;
-            let mut _mfu_size = 0u64;
+            let mut mru_size = 0u64;
+            let mut mfu_size = 0u64;
 
             for line in arc_content.lines() {
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 3 {
-                    match parts[0] {
-                        "hits" => hits = parts[2].parse().unwrap_or(0),
-                        "misses" => misses = parts[2].parse().unwrap_or(0),
-                        "size" => size = parts[2].parse().unwrap_or(0),
-                        "c" => c = parts[2].parse().unwrap_or(0),
-                        "mru_size" => _mru_size = parts[2].parse().unwrap_or(0),
-                        "mfu_size" => _mfu_size = parts[2].parse().unwrap_or(0),
-                        _ => {}
-                    }
-                }
+                merge_arc_kstat_full_line(
+                    line,
+                    &mut hits,
+                    &mut misses,
+                    &mut size,
+                    &mut c,
+                    &mut mru_size,
+                    &mut mfu_size,
+                );
             }
 
             ArcStatistics {
@@ -272,26 +362,20 @@ impl RealTimePerformanceMonitor {
             arc_stats,
         };
 
-        // Store metrics in cache
-        let mut cache = self.metrics_cache.write().await;
-        cache.insert("latest".to_string(), metrics.clone());
-
-        // Keep only last 50 entries for trend analysis
-        if cache.len() > 50 {
-            // Remove oldest entries
-            let mut keys: Vec<String> = cache.keys().cloned().collect();
-            keys.sort();
-            for key in keys.iter().take(cache.len() - 50) {
-                cache.remove(key);
-            }
-        }
+        self.metrics_cache
+            .write()
+            .await
+            .insert("latest".to_string(), metrics.clone());
+        trim_metrics_cache_entries(&mut *self.metrics_cache.write().await, 50);
 
         // Get metrics for trending
-        let cache = self.metrics_cache.read().await;
-        if cache.is_empty() {
-            return Err(crate::error::ZfsErrorBuilder::new(
-                "No metrics available for trending",
-            ));
+        {
+            let cache = self.metrics_cache.read().await;
+            if cache.is_empty() {
+                return Err(crate::error::ZfsErrorBuilder::new(
+                    "No metrics available for trending",
+                ));
+            }
         }
 
         // Perform real-time analytics and alerts
@@ -308,6 +392,17 @@ impl RealTimePerformanceMonitor {
 
 #[cfg(test)]
 mod collect_metrics_parse_tests {
+    use std::collections::HashMap;
+    use std::time::SystemTime;
+
+    use super::{
+        DatasetPropAccum, frag_percent_from_zpool_frag_stdout, merge_arc_kstat_full_line,
+        merge_arc_kstat_hits_misses_line, trim_metrics_cache_entries,
+    };
+    use crate::performance_engine::types::{
+        AccessPattern, ArcStatistics, SystemMemoryUsage, ZfsPerformanceMetrics, ZfsPoolMetrics,
+    };
+
     /// Mirrors the pool-name gate in `RealTimePerformanceMonitor::collect_metrics`.
     /// so branch logic is covered without spawning `zpool`/`zfs`.
     fn pool_name_is_eligible_for_iostat_row(pool_name: &str) -> bool {
@@ -348,5 +443,137 @@ mod collect_metrics_parse_tests {
         let line = "tank 1 2 3";
         let fields: Vec<&str> = line.split_whitespace().collect();
         assert!(fields.len() < 7);
+    }
+
+    #[test]
+    fn merge_arc_kstat_hits_misses_parses_known_keys() {
+        let mut h = 0u64;
+        let mut m = 0u64;
+        merge_arc_kstat_hits_misses_line("hits 4 100", &mut h, &mut m);
+        merge_arc_kstat_hits_misses_line("misses 4 25", &mut h, &mut m);
+        merge_arc_kstat_hits_misses_line("other 4 99", &mut h, &mut m);
+        assert_eq!(h, 100);
+        assert_eq!(m, 25);
+    }
+
+    #[test]
+    fn merge_arc_kstat_full_covers_size_c_mru_mfu() {
+        let mut hits = 0u64;
+        let mut misses = 0u64;
+        let mut size = 0u64;
+        let mut c = 0u64;
+        let mut mru = 0u64;
+        let mut mfu = 0u64;
+        merge_arc_kstat_full_line(
+            "size 4 4096",
+            &mut hits,
+            &mut misses,
+            &mut size,
+            &mut c,
+            &mut mru,
+            &mut mfu,
+        );
+        merge_arc_kstat_full_line(
+            "c 4 8192",
+            &mut hits,
+            &mut misses,
+            &mut size,
+            &mut c,
+            &mut mru,
+            &mut mfu,
+        );
+        merge_arc_kstat_full_line(
+            "mru_size 4 1",
+            &mut hits,
+            &mut misses,
+            &mut size,
+            &mut c,
+            &mut mru,
+            &mut mfu,
+        );
+        merge_arc_kstat_full_line(
+            "mfu_size 4 2",
+            &mut hits,
+            &mut misses,
+            &mut size,
+            &mut c,
+            &mut mru,
+            &mut mfu,
+        );
+        assert_eq!(size, 4096);
+        assert_eq!(c, 8192);
+        assert_eq!(mru, 1);
+        assert_eq!(mfu, 2);
+    }
+
+    #[test]
+    fn frag_percent_strips_suffix_and_defaults() {
+        assert!((frag_percent_from_zpool_frag_stdout("12%") - 12.0).abs() < f64::EPSILON);
+        assert!((frag_percent_from_zpool_frag_stdout("  3.5%  ") - 3.5).abs() < 1e-9);
+        assert!((frag_percent_from_zpool_frag_stdout("nope") - 10.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn dataset_prop_accum_dedup_recordsize_used_logical_and_pattern() {
+        let mut p = DatasetPropAccum::new();
+        p.apply_tab_line("tank/d0\tcompressratio\t2.00x", |s| {
+            Ok(s.parse::<u64>().unwrap_or(0))
+        });
+        p.apply_tab_line("tank/d0\tdedup\ton", |s| Ok(s.parse::<u64>().unwrap_or(0)));
+        p.apply_tab_line("tank/d0\trecordsize\t65536", |s| Ok(s.parse().unwrap_or(0)));
+        p.apply_tab_line("tank/d0\tused\t100", |s| Ok(s.parse().unwrap_or(0)));
+        p.apply_tab_line("tank/d0\tlogicalused\t400", |s| Ok(s.parse().unwrap_or(0)));
+        p.finalize_compression_ratio();
+        assert!((p.compression_ratio - 4.0).abs() < f64::EPSILON);
+        assert!((p.dedup_ratio - 1.2).abs() < f64::EPSILON);
+        assert_eq!(p.record_size, 65536);
+        assert!(matches!(p.access_pattern(), AccessPattern::Mixed));
+
+        let mut small = DatasetPropAccum::new();
+        small.apply_tab_line("d\trecordsize\t16384", |s| Ok(s.parse().unwrap_or(0)));
+        assert!(matches!(small.access_pattern(), AccessPattern::Random));
+
+        let mut big = DatasetPropAccum::new();
+        big.apply_tab_line("d\trecordsize\t2097152", |s| Ok(s.parse().unwrap_or(0)));
+        assert!(matches!(big.access_pattern(), AccessPattern::Sequential));
+    }
+
+    #[test]
+    fn trim_metrics_cache_removes_lexicographic_oldest_over_limit() {
+        let mut cache: HashMap<String, ZfsPerformanceMetrics> = HashMap::new();
+        let dummy_pool = ZfsPoolMetrics {
+            pool_name: "p".into(),
+            read_ops: 0.0,
+            write_ops: 0.0,
+            read_bandwidth: 0.0,
+            write_bandwidth: 0.0,
+            latency: 0.0,
+            cache_hit_ratio: 0.0,
+            fragmentation: 0.0,
+        };
+        let snap = ZfsPerformanceMetrics {
+            timestamp: SystemTime::UNIX_EPOCH,
+            pool_metrics: HashMap::from([("p".into(), dummy_pool)]),
+            dataset_metrics: HashMap::new(),
+            system_memory: SystemMemoryUsage {
+                total: 1,
+                used: 0,
+                available: 1,
+            },
+            arc_stats: ArcStatistics {
+                hit_ratio: 0.9,
+                size: 0,
+                target_size: 0,
+                miss_ratio: 0.1,
+            },
+        };
+        for i in 0..52 {
+            cache.insert(format!("k{i:02}"), snap.clone());
+        }
+        trim_metrics_cache_entries(&mut cache, 50);
+        assert_eq!(cache.len(), 50);
+        assert!(!cache.contains_key("k00"));
+        assert!(!cache.contains_key("k01"));
+        assert!(cache.contains_key("k51"));
     }
 }

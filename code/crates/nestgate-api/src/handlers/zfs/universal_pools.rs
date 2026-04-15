@@ -6,7 +6,7 @@
 // not just ZFS. It uses the Universal Storage Bridge to translate ZFS concepts to
 // universal storage operations.
 
-// Removed unused import: crate::handlers::zfs_stub::ZeroCostZfsOperations
+// Use `crate::dev_stubs::zfs` when testing with dev-stubs feature
 //! Universal Pools module
 
 use axum::{

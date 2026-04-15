@@ -169,15 +169,7 @@ pub async fn scan_storage(
     info!("Scanning for available storage systems");
     let _detector = state.storage_detector.read().await;
 
-    // Configure scan parameters
-    // StorageDetectorConfig doesn't exist - using placeholder
-    // let mut config = StorageDetectorConfig::default();
-    // if let Some(path) = &request.path {
-    //     config.base_path = std::path::PathBuf::from(path);
-    // }
-    // config.include_cloud = request.include_cloud.unwrap_or(false);
-    // config.include_network = request.include_network.unwrap_or(false);
-    // config.include_block = request.include_block.unwrap_or(false);
+    // StorageDetectorConfig is not wired; discovery below is simplified.
 
     // Perform scan (simplified for demo)
     let mut discovered_backends = Vec::new();

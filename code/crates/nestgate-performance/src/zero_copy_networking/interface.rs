@@ -11,6 +11,9 @@ use crate::safe_concurrent::{SafeConcurrentHashMap, SafeConcurrentQueue};
 
 use super::buffer_pool::{BufferPoolStats, ZeroCopyBuffer, ZeroCopyBufferPool, ZeroCopyTxPayload};
 
+/// Default when `NESTGATE_LOCAL_BIND` is unset: all IPv4 interfaces, port 0 (ephemeral; OS-assigned).
+const DEFAULT_LOCAL_BIND_EPHEMERAL: &str = "0.0.0.0:0";
+
 /// **ZERO-COPY NETWORK INTERFACE**
 ///
 /// High-performance networking interface with zero-copy I/O
@@ -95,8 +98,8 @@ impl<const BUFFER_SIZE: usize> ZeroCopyNetworkInterface<BUFFER_SIZE> {
         let connection_id = self.generate_connection_id(&remote_addr);
 
         // Create zero-copy connection with configurable local endpoint
-        let local_addr_str =
-            std::env::var("NESTGATE_LOCAL_BIND").unwrap_or_else(|_| "0.0.0.0:0".to_string());
+        let local_addr_str = std::env::var("NESTGATE_LOCAL_BIND")
+            .unwrap_or_else(|_| DEFAULT_LOCAL_BIND_EPHEMERAL.to_string());
         let local_addr: SocketAddr = local_addr_str.parse().map_err(|e| {
             NestGateError::network_error(format!(
                 "Failed to parse local endpoint '{local_addr_str}': {e}"

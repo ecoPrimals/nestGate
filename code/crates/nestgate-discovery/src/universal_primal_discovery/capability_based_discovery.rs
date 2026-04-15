@@ -461,12 +461,16 @@ impl<
         }
 
         // Update cache
-        let mut cache = self.peer_cache.write().await;
-        for peer in &all_peers {
-            cache.insert(peer.id.clone(), peer.clone());
+        {
+            let mut cache = self.peer_cache.write().await;
+            for peer in &all_peers {
+                cache.insert(peer.id.clone(), peer.clone());
+            }
         }
-
-        self.remove_stale_peers(&mut cache);
+        {
+            let mut cache = self.peer_cache.write().await;
+            self.remove_stale_peers(&mut cache);
+        }
 
         Ok(all_peers)
     }
@@ -487,14 +491,14 @@ impl<
 
         let filtered: Vec<_> = all_peers
             .into_iter()
-            .filter(|peer| self.matches_query(peer, query))
+            .filter(|peer| Self::matches_query(peer, query))
             .collect();
 
         Ok(filtered)
     }
 
     /// Check if peer matches query
-    fn matches_query(&self, peer: &PeerDescriptor, query: &DiscoveryQuery) -> bool {
+    fn matches_query(peer: &PeerDescriptor, query: &DiscoveryQuery) -> bool {
         // Check required capabilities
         for required in &query.required_capabilities {
             if !peer.capabilities.contains(required) {
@@ -526,10 +530,13 @@ impl<
 
     /// Graceful shutdown - unannounce self
     pub async fn shutdown(&self) -> Result<()> {
-        let self_knowledge = self.self_knowledge.read().await;
+        let primal_id = {
+            let self_knowledge = self.self_knowledge.read().await;
+            self_knowledge.id.clone()
+        };
 
         for backend in &self.backends {
-            if let Err(e) = backend.unannounce(&self_knowledge.id).await {
+            if let Err(e) = backend.unannounce(&primal_id).await {
                 warn!("Failed to unannounce from backend: {}", e);
             }
         }

@@ -189,21 +189,6 @@ pub mod handler_types;
 /// [`HandlerCollection`], [`HandlerRegistry`], and handler discovery helpers.
 pub mod registry;
 
-/// **ZFS STUB MODULE** (Development Only)
-///
-/// ⚠️ **ONLY AVAILABLE WITH `dev-stubs` FEATURE** ⚠️
-///
-/// Development stub for ZFS operations when ZFS is not installed.
-/// **Never enabled in production builds.**
-#[cfg(feature = "dev-stubs")]
-/// Deprecated: Use `crate::dev_stubs::zfs` instead
-/// This re-export will be removed in v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.2",
-    note = "Use crate::dev_stubs::zfs instead - stubs organized into dev_stubs module. Migration: Replace use crate::handlers::zfs_stub with use crate::dev_stubs::zfs. Target removal: v0.12.0 (May 2026)."
-)]
-pub use crate::dev_stubs::zfs as zfs_stub;
-
 // ==================== EXPLICIT RE-EXPORTS ====================
 
 pub use handler_types::*;

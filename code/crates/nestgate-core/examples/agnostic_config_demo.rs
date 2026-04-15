@@ -18,11 +18,12 @@
 //!
 //! **Run**: `cargo run --example agnostic_config_demo`
 
+use nestgate_core::Result;
 use nestgate_core::config::agnostic_config::{migrate_endpoint, migrate_port};
 use nestgate_core::config::capability_discovery::{discover_service, discover_with_fallback};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     println!("🔄 Agnostic Configuration Demo");
     println!("================================\n");
 

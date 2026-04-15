@@ -142,7 +142,7 @@ impl DynamicEndpointResolver {
         }
 
         // 4. Dynamic port allocation (no hardcoded ports)
-        let endpoint = self.allocate_dynamic_endpoint(service_type);
+        let endpoint = Self::allocate_dynamic_endpoint(service_type);
         self.cache_endpoint(service_type, &endpoint);
         Ok(endpoint)
     }
@@ -161,7 +161,7 @@ impl DynamicEndpointResolver {
     }
 
     /// Allocate dynamic endpoint (no hardcoded localhost)
-    fn allocate_dynamic_endpoint(&self, service_type: &str) -> String {
+    fn allocate_dynamic_endpoint(service_type: &str) -> String {
         // Get hostname from environment or use canonical default
         let hostname = safe_env_var_or_default(
             "NESTGATE_HOSTNAME",
@@ -169,7 +169,7 @@ impl DynamicEndpointResolver {
         );
 
         // Allocate port dynamically based on service type
-        let port = self.get_service_port(service_type);
+        let port = Self::get_service_port(service_type);
 
         // Build protocol-appropriate URL
         let protocol = match service_type {
@@ -181,7 +181,7 @@ impl DynamicEndpointResolver {
     }
 
     /// Get service port (with dynamic allocation)
-    fn get_service_port(&self, service_type: &str) -> u16 {
+    fn get_service_port(service_type: &str) -> u16 {
         // Check environment variable first
         if let Ok(port_str) = std::env::var(format!("{}_PORT", service_type.to_uppercase()))
             && let Ok(port) = port_str.parse::<u16>()

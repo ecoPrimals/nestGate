@@ -287,6 +287,47 @@ pub(super) async fn handle_storage_retrieve_range(
     }))
 }
 
+// ── storage.store_stream / storage.retrieve_stream (chunked tensor payloads) ──
+
+pub(super) async fn handle_storage_store_stream(
+    state: &StorageState,
+    request: &JsonRpcRequest,
+) -> HandlerResult {
+    let params = require_params(request)?.clone();
+    crate::rpc::storage_stream::storage_store_stream_begin(params, Some(state.family_id.as_str()))
+        .await
+        .map_err(|e| (-32603, Cow::Owned(e.to_string())))
+}
+
+pub(super) async fn handle_storage_store_stream_chunk(request: &JsonRpcRequest) -> HandlerResult {
+    let params = require_params(request)?.clone();
+    crate::rpc::storage_stream::storage_store_stream_chunk(params)
+        .await
+        .map_err(|e| (-32603, Cow::Owned(e.to_string())))
+}
+
+pub(super) async fn handle_storage_retrieve_stream(
+    state: &StorageState,
+    request: &JsonRpcRequest,
+) -> HandlerResult {
+    let params = require_params(request)?.clone();
+    crate::rpc::storage_stream::storage_retrieve_stream_begin(
+        params,
+        Some(state.family_id.as_str()),
+    )
+    .await
+    .map_err(|e| (-32603, Cow::Owned(e.to_string())))
+}
+
+pub(super) async fn handle_storage_retrieve_stream_chunk(
+    request: &JsonRpcRequest,
+) -> HandlerResult {
+    let params = require_params(request)?.clone();
+    crate::rpc::storage_stream::storage_retrieve_stream_chunk(params)
+        .await
+        .map_err(|e| (-32603, Cow::Owned(e.to_string())))
+}
+
 // ── storage.object.size ────────────────────────────────────────────────
 
 pub(super) async fn handle_storage_object_size(
@@ -608,6 +649,8 @@ pub(super) fn capabilities_response() -> Value {
             "storage.delete", "storage.exists", "storage.fetch_external",
             "storage.store_blob", "storage.retrieve_blob",
             "storage.retrieve_range", "storage.object.size",
+            "storage.store_stream", "storage.store_stream_chunk",
+            "storage.retrieve_stream", "storage.retrieve_stream_chunk",
             "storage.namespaces.list",
             "session.save", "session.load",
             "nat.store_traversal_info", "nat.retrieve_traversal_info",

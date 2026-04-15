@@ -16,9 +16,9 @@ use tracing::info;
 use super::linux_proc;
 use super::types::{
     BenchmarkResult, ComputeAllocation, ComputeResourceRequest, ComputeResources, CpuInfo,
-    CpuMonitor, GpuInfo, GpuMonitor, HardwareMonitors, HardwareTuningConfig, LiveHardwareMetrics,
-    MemoryInfo, MemoryMonitor, SystemCapabilities, SystemMetricsCollector, SystemProfile,
-    TuningResult, TuningServiceRegistration,
+    CpuMonitor, DiskMonitor, GpuInfo, GpuMonitor, HardwareMonitors, HardwareTuningConfig,
+    LiveHardwareMetrics, MemoryInfo, MemoryMonitor, NetworkMonitor, SystemCapabilities,
+    SystemMetricsCollector, SystemProfile, TuningResult, TuningServiceRegistration,
 };
 use nestgate_core::{NestGateError, Result};
 
@@ -53,6 +53,8 @@ impl RealHardwareTuningHandler {
                 cpu_monitor: CpuMonitor,
                 memory_monitor: MemoryMonitor,
                 gpu_monitor: Some(GpuMonitor),
+                disk_monitor: DiskMonitor,
+                network_monitor: NetworkMonitor,
             },
             _monitors: HardwareMonitors {
                 cpu: CpuMonitor,

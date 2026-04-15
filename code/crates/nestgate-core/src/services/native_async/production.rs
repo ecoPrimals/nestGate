@@ -109,12 +109,15 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
     async fn add_service(&self, service: Self::ServiceInfo) -> Result<()> {
         // Native async service addition - no Future boxing overhead
         let service_name = service.metadata.name.clone();
-        let mut services = self.services.write().await;
-        services.insert(service_name.clone(), service);
+        self.services
+            .write()
+            .await
+            .insert(service_name.clone(), service);
 
         // Initialize service stats
-        let mut stats = self.stats.write().await;
-        stats
+        self.stats
+            .write()
+            .await
             .service_stats
             .insert(service_name, ServiceStats::default());
         Ok(())
@@ -123,12 +126,10 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
     /// Remove Service
     async fn remove_service(&self, service_id: &str) -> Result<()> {
         // Direct async method - no Future boxing
-        let mut services = self.services.write().await;
-        services.remove(service_id);
+        self.services.write().await.remove(service_id);
 
         // Remove service stats
-        let mut stats = self.stats.write().await;
-        stats.service_stats.remove(service_id);
+        self.stats.write().await.service_stats.remove(service_id);
         Ok(())
     }
 
@@ -165,33 +166,40 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
                     response.processing_time = response.duration.as_millis() as u64;
 
                     // Update success stats
-                    let mut stats = self.stats.write().await;
-                    stats.total_requests += 1;
-                    stats.successful_requests += 1;
-
-                    if let Some(service_stats) = stats.service_stats.get_mut(&service.metadata.name)
                     {
-                        service_stats.requests += 1;
-                        service_stats.successful_requests += 1;
-                        service_stats.last_request_time = Some(SystemTime::now());
-                        service_stats.average_response_time = (service_stats.average_response_time
-                            + response.duration.as_millis() as f64)
-                            / 2.0;
+                        let mut stats = self.stats.write().await;
+                        stats.total_requests += 1;
+                        stats.successful_requests += 1;
+
+                        if let Some(service_stats) =
+                            stats.service_stats.get_mut(&service.metadata.name)
+                        {
+                            service_stats.requests += 1;
+                            service_stats.successful_requests += 1;
+                            service_stats.last_request_time = Some(SystemTime::now());
+                            service_stats.average_response_time = (service_stats
+                                .average_response_time
+                                + response.duration.as_millis() as f64)
+                                / 2.0;
+                        }
                     }
 
                     Ok(response)
                 }
                 Err(e) => {
                     // Service communication failed, update error stats
-                    let mut stats = self.stats.write().await;
-                    stats.total_requests += 1;
-                    stats.failed_requests += 1;
-
-                    if let Some(service_stats) = stats.service_stats.get_mut(&service.metadata.name)
                     {
-                        service_stats.requests += 1;
-                        service_stats.failed_requests += 1;
-                        service_stats.last_request_time = Some(SystemTime::now());
+                        let mut stats = self.stats.write().await;
+                        stats.total_requests += 1;
+                        stats.failed_requests += 1;
+
+                        if let Some(service_stats) =
+                            stats.service_stats.get_mut(&service.metadata.name)
+                        {
+                            service_stats.requests += 1;
+                            service_stats.failed_requests += 1;
+                            service_stats.last_request_time = Some(SystemTime::now());
+                        }
                     }
 
                     Err(e)
@@ -199,9 +207,11 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
             }
         } else {
             // No service available or found
-            let mut stats = self.stats.write().await;
-            stats.total_requests += 1;
-            stats.failed_requests += 1;
+            {
+                let mut stats = self.stats.write().await;
+                stats.total_requests += 1;
+                stats.failed_requests += 1;
+            }
 
             Err(crate::NestGateError::service_unavailable(format!(
                 "Service '{}' not found or no services available",
@@ -236,20 +246,22 @@ impl NativeAsyncLoadBalancer<1000, 10000, 86400, 30> for ProductionLoadBalancer 
         let services = self.services.clone();
         async move {
             // Real health checking implementation
-            let services = services.read().await;
-            let mut health_results = Vec::new();
-
-            for (service_id, service_info) in services.iter() {
-                // Simulate health check based on available fields - in production this would be real health checking
-                let is_healthy = !service_info.endpoints.is_empty()
-                    && service_info
-                        .last_seen
-                        .elapsed()
-                        .unwrap_or(std::time::Duration::from_secs(3600))
-                        .as_secs()
-                        < 300;
-                health_results.push((service_id.clone(), is_healthy));
-            }
+            let health_results: Vec<(String, bool)> = services
+                .read()
+                .await
+                .iter()
+                .map(|(service_id, service_info)| {
+                    // Simulate health check based on available fields - in production this would be real health checking
+                    let is_healthy = !service_info.endpoints.is_empty()
+                        && service_info
+                            .last_seen
+                            .elapsed()
+                            .unwrap_or(std::time::Duration::from_secs(3600))
+                            .as_secs()
+                            < 300;
+                    (service_id.clone(), is_healthy)
+                })
+                .collect();
 
             Ok(health_results)
         }
@@ -344,8 +356,11 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
         };
 
         // Store connection
-        let mut connections = self.connections.write().await;
-        connections.insert(connection.connection_id.clone(), connection.clone());
+        let connection_id = connection.connection_id.clone();
+        self.connections
+            .write()
+            .await
+            .insert(connection_id, connection.clone());
 
         Ok(connection)
     }
@@ -353,8 +368,10 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
     /// Disconnect
     async fn disconnect(&self, connection: &Self::ConnectionInfo) -> Result<()> {
         // No Future boxing disconnection
-        let mut connections = self.connections.write().await;
-        connections.remove(&connection.connection_id);
+        self.connections
+            .write()
+            .await
+            .remove(&connection.connection_id);
         Ok(())
     }
 
@@ -367,8 +384,8 @@ impl NativeAsyncCommunicationProvider<1000, 10000, 30, 3> for ProductionCommunic
     /// Broadcast
     async fn broadcast(&self, message: Self::Message) -> Result<u32> {
         // Direct async method for broadcasting
-        let connections = self.connections.read().await;
-        let connection_count = u32::try_from(connections.len()).unwrap_or(u32::MAX);
+        let connection_count =
+            u32::try_from(self.connections.read().await.len()).unwrap_or(u32::MAX);
         info!(
             message_id = %message.message_id,
             connection_count,

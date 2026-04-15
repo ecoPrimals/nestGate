@@ -10,6 +10,8 @@ use std::sync::Arc;
 
 use nestgate_types::error::utilities::safe_env_var_or_default;
 
+use super::port_defaults::DEFAULT_API_PORT as DEFAULT_API_PORT_U16;
+
 /// Configuration for sovereignty helpers
 ///
 /// This struct captures all environment variables at initialization time,
@@ -138,7 +140,7 @@ impl SovereigntyHelpersConfig {
     /// Get API port (as u16)
     #[must_use]
     pub fn api_port(&self) -> u16 {
-        self.api_port.parse().unwrap_or(8080)
+        self.api_port.parse().unwrap_or(DEFAULT_API_PORT_U16)
     }
 
     /// Get API scheme

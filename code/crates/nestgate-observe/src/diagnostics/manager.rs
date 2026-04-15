@@ -36,8 +36,10 @@ impl DiagnosticsManager {
     ///
     /// Returns error if internal state is corrupted.
     pub async fn add_diagnostic(&self, diagnostic: Diagnostic) -> Result<()> {
-        let mut diagnostics = self.diagnostics.write().await;
-        diagnostics.push(diagnostic);
+        {
+            let mut diagnostics = self.diagnostics.write().await;
+            diagnostics.push(diagnostic);
+        }
         Ok(())
     }
 
@@ -47,8 +49,10 @@ impl DiagnosticsManager {
     ///
     /// Returns error if internal state is corrupted.
     pub async fn get_diagnostics(&self) -> Result<Vec<Diagnostic>> {
-        let diagnostics = self.diagnostics.read().await;
-        Ok(diagnostics.clone())
+        Ok({
+            let diagnostics = self.diagnostics.read().await;
+            diagnostics.clone()
+        })
     }
 
     /// Get unresolved diagnostics.
@@ -112,8 +116,10 @@ impl DiagnosticsManager {
     ///
     /// Returns error if internal state is corrupted.
     pub async fn update_metrics(&self, metrics: SystemMetrics) -> Result<()> {
-        let mut m = self.metrics.write().await;
-        *m = metrics;
+        {
+            let mut m = self.metrics.write().await;
+            *m = metrics;
+        }
         Ok(())
     }
 
@@ -123,8 +129,10 @@ impl DiagnosticsManager {
     ///
     /// Returns error if internal state is corrupted.
     pub async fn get_metrics(&self) -> Result<SystemMetrics> {
-        let metrics = self.metrics.read().await;
-        Ok(metrics.clone())
+        Ok({
+            let metrics = self.metrics.read().await;
+            metrics.clone()
+        })
     }
 
     /// Clear all resolved diagnostics, returning how many were cleared.
@@ -133,10 +141,12 @@ impl DiagnosticsManager {
     ///
     /// Returns error if internal state is corrupted.
     pub async fn clear_resolved(&self) -> Result<usize> {
-        let mut diagnostics = self.diagnostics.write().await;
-        let original_count = diagnostics.len();
-        diagnostics.retain(super::diagnostic::Diagnostic::is_unresolved);
-        let cleared_count = original_count - diagnostics.len();
+        let cleared_count = {
+            let mut diagnostics = self.diagnostics.write().await;
+            let original_count = diagnostics.len();
+            diagnostics.retain(super::diagnostic::Diagnostic::is_unresolved);
+            original_count - diagnostics.len()
+        };
         Ok(cleared_count)
     }
 }

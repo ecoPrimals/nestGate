@@ -82,13 +82,18 @@ impl ZfsPoolManager {
 
         let stdout = String::from_utf8_lossy(&output.stdout);
 
-        // Store discovered pools in cache
-        let mut pools = self.discovered_pools.write().await;
+        // Store discovered pools in cache (parse without holding the write lock)
+        let mut to_insert: Vec<PoolInfo> = Vec::new();
         for line in stdout.lines() {
             if let Some(pool_info) = self.parse_pool_line(line)? {
-                pools.insert(pool_info.name.clone(), pool_info);
+                to_insert.push(pool_info);
             }
         }
+        self.discovered_pools.write().await.extend(
+            to_insert
+                .into_iter()
+                .map(|pool_info| (pool_info.name.clone(), pool_info)),
+        );
         Ok(())
     }
 
@@ -198,12 +203,12 @@ impl ZfsPoolManager {
         // Re-discover specific pool
         if let Some(pool_info) = self.discover_single_pool(pool_name).await? {
             // Store pool info in discovered pools cache
-            let mut pools = self.discovered_pools.write().await;
-            pools.insert(pool_name.to_string(), pool_info);
-            debug!(
-                "Updated pool info for {} in discovered pools cache",
-                pool_name
-            );
+            let name = pool_name.to_string();
+            {
+                let mut pools = self.discovered_pools.write().await;
+                pools.insert(name.clone(), pool_info);
+            }
+            debug!("Updated pool info for {} in discovered pools cache", name);
         }
         Ok(())
     }

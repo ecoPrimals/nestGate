@@ -126,7 +126,7 @@ impl RuntimeDiscovery {
             })?;
 
         // Find best security primal
-        self.select_best_primal(&capabilities).map_err(|e| {
+        Self::select_best_primal(&capabilities).map_err(|e| {
             NestGateError::security_error(format!("No healthy security primal available: {e}"))
         })
     }
@@ -150,7 +150,7 @@ impl RuntimeDiscovery {
                 ))
             })?;
 
-        self.select_best_primal(&capabilities).map_err(|e| {
+        Self::select_best_primal(&capabilities).map_err(|e| {
             NestGateError::internal(format!("No healthy orchestrator available: {e:?}"))
         })
     }
@@ -170,7 +170,7 @@ impl RuntimeDiscovery {
                 NestGateError::internal(format!("Failed to discover AI capabilities: {e:?}"))
             })?;
 
-        self.select_best_primal(&capabilities)
+        Self::select_best_primal(&capabilities)
             .map_err(|e| NestGateError::internal(format!("No healthy AI primal available: {e:?}")))
     }
 
@@ -186,7 +186,7 @@ impl RuntimeDiscovery {
             NestGateError::internal(format!("Failed to discover storage capabilities: {e:?}"))
         })?;
 
-        self.select_best_primal(&capabilities).map_err(|e| {
+        Self::select_best_primal(&capabilities).map_err(|e| {
             NestGateError::internal(format!("No healthy storage primal available: {e:?}"))
         })
     }
@@ -214,7 +214,7 @@ impl RuntimeDiscovery {
                 ))
             })?;
 
-        self.select_best_primal(&capabilities).map_err(|e| {
+        Self::select_best_primal(&capabilities).map_err(|e| {
             NestGateError::internal(format!(
                 "No healthy primal available for {capability_type}: {e:?}"
             ))
@@ -243,7 +243,7 @@ impl RuntimeDiscovery {
 
         Ok(capabilities
             .into_iter()
-            .filter_map(|cap| self.capability_to_connection(cap).ok())
+            .filter_map(|cap| Self::capability_to_connection(cap).ok())
             .collect())
     }
 
@@ -354,10 +354,7 @@ impl RuntimeDiscovery {
     /// 2. Health status (prefer healthy)
     /// 3. Load distribution (round-robin when equal health)
     /// 4. Response time history (prefer faster primals)
-    fn select_best_primal(
-        &self,
-        capabilities: &[CapabilityDescriptor],
-    ) -> Result<PrimalConnection> {
+    fn select_best_primal(capabilities: &[CapabilityDescriptor]) -> Result<PrimalConnection> {
         if capabilities.is_empty() {
             return Err(NestGateError::internal(
                 "No primals discovered for connection".to_string(),
@@ -393,14 +390,11 @@ impl RuntimeDiscovery {
             compliant.len()
         );
 
-        self.capability_to_connection((*selected).clone())
+        Self::capability_to_connection((*selected).clone())
     }
 
     /// Convert capability descriptor to connection
-    fn capability_to_connection(
-        &self,
-        capability: CapabilityDescriptor,
-    ) -> Result<PrimalConnection> {
+    fn capability_to_connection(capability: CapabilityDescriptor) -> Result<PrimalConnection> {
         let endpoint = capability.endpoint.clone().ok_or_else(|| {
             NestGateError::configuration_error("endpoint", "Primal has no endpoint")
         })?;

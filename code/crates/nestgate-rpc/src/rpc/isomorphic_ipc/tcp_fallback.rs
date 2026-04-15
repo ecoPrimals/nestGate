@@ -422,6 +422,53 @@ mod tests {
         assert!(response.get("result").is_some());
     }
 
+    #[tokio::test]
+    async fn start_bound_binds_and_accepts_tcp_connection() {
+        use std::time::Duration;
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let probe = std::net::TcpListener::bind("127.0.0.1:0").expect("probe bind");
+        let port = probe.local_addr().expect("probe addr").port();
+        drop(probe);
+
+        let addr = SocketAddr::from(([127, 0, 0, 1], port));
+        let handler = Arc::new(MockHandler);
+        let server = Arc::new(TcpFallbackServer::new(
+            "sg_tcp_accept_it".to_string(),
+            handler,
+        ));
+        let _bg = tokio::spawn({
+            let s = Arc::clone(&server);
+            async move {
+                let _ = s.start_bound(addr).await;
+            }
+        });
+
+        let mut stream = None;
+        for _ in 0..80 {
+            match TcpStream::connect(addr).await {
+                Ok(s) => {
+                    stream = Some(s);
+                    break;
+                }
+                Err(_) => tokio::time::sleep(Duration::from_millis(10)).await,
+            }
+        }
+        let mut stream = stream.expect("connect to TcpFallbackServer::start_bound");
+
+        stream
+            .write_all(br#"{"jsonrpc":"2.0","method":"health","id":1}"#)
+            .await
+            .expect("write request");
+        stream.write_all(b"\n").await.expect("write newline");
+
+        let mut buf = vec![0u8; 512];
+        let n = stream.read(&mut buf).await.expect("read response");
+        assert!(n > 0, "expected JSON-RPC response bytes");
+        let line = std::str::from_utf8(&buf[..n]).expect("utf8");
+        assert!(line.contains("jsonrpc"));
+    }
+
     #[test]
     fn write_tcp_discovery_file_writes_tcp_prefix_line() {
         let dir = tempfile::tempdir().expect("tempdir");

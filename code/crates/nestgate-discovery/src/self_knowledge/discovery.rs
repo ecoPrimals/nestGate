@@ -283,8 +283,10 @@ impl<B: DiscoveryBackend<Knowledge = SelfKnowledge, PeerInfo = PrimalInfo, PeerI
 
     /// Clear the discovery cache
     pub async fn clear_cache(&self) {
-        let mut discovered = self.discovered.write().await;
-        discovered.clear();
+        {
+            let mut discovered = self.discovered.write().await;
+            discovered.clear();
+        }
         debug!("Discovery cache cleared");
     }
 
@@ -439,8 +441,10 @@ impl DiscoveryBackend for InMemoryBackend {
             last_health_check: SystemTime::now(),
         };
         async move {
-            let mut primals = self.primals.write().await;
-            primals.insert(info.id.clone(), info);
+            {
+                let mut primals = self.primals.write().await;
+                primals.insert(info.id.clone(), info);
+            }
 
             Ok(())
         }
@@ -452,12 +456,14 @@ impl DiscoveryBackend for InMemoryBackend {
     ) -> impl Future<Output = Result<Vec<PrimalInfo>>> + Send + '_ {
         let capability = capability.to_string();
         async move {
-            let primals = self.primals.read().await;
-            Ok(primals
-                .values()
-                .filter(|p| p.capabilities.iter().any(|c| c == &capability))
-                .cloned()
-                .collect())
+            Ok({
+                let primals = self.primals.read().await;
+                primals
+                    .values()
+                    .filter(|p| p.capabilities.iter().any(|c| c == &capability))
+                    .cloned()
+                    .collect()
+            })
         }
     }
 
@@ -467,8 +473,10 @@ impl DiscoveryBackend for InMemoryBackend {
     ) -> impl Future<Output = Result<Option<PrimalInfo>>> + Send + '_ {
         let id = id.clone();
         async move {
-            let primals = self.primals.read().await;
-            Ok(primals.get(&id).cloned())
+            Ok({
+                let primals = self.primals.read().await;
+                primals.get(&id).cloned()
+            })
         }
     }
 }

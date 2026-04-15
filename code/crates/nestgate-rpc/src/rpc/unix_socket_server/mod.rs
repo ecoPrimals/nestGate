@@ -82,7 +82,7 @@
 //! ```rust,ignore
 //! use nestgate_core::rpc::unix_socket_server::JsonRpcUnixServer;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! let family_id = std::env::var("NESTGATE_FAMILY_ID")?;
 //! let server = JsonRpcUnixServer::new(&family_id).await?;
 //! server.serve().await?;
@@ -567,6 +567,30 @@ async fn handle_request(request: JsonRpcRequest, state: &StorageState) -> JsonRp
         }
         "storage.retrieve_range" => {
             blob_handlers::storage_retrieve_range(request.params.as_ref(), state).await
+        }
+        "storage.store_stream" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::storage_store_stream_begin(
+                params,
+                state.family_id.as_deref(),
+            )
+            .await
+        }
+        "storage.store_stream_chunk" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::storage_store_stream_chunk(params).await
+        }
+        "storage.retrieve_stream" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::storage_retrieve_stream_begin(
+                params,
+                state.family_id.as_deref(),
+            )
+            .await
+        }
+        "storage.retrieve_stream_chunk" => {
+            let params = request.params.clone().unwrap_or_else(|| json!({}));
+            crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
         }
         "storage.object.size" => {
             external_handlers::storage_object_size(request.params.as_ref(), state).await

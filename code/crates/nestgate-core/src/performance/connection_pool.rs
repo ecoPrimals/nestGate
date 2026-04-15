@@ -272,12 +272,20 @@ where
 
     /// Get pool statistics
     pub async fn get_stats(&self) -> PoolStats {
-        let connections = self.connections.read().await;
+        let (total_connections, active_connections, idle_connections) = {
+            let connections = self.connections.read().await;
+            (
+                connections.len(),
+                connections.iter().filter(|c| c.in_use).count(),
+                connections.iter().filter(|c| !c.in_use).count(),
+            )
+        };
+
         let mut stats = self.stats.write().await;
 
-        stats.total_connections = connections.len();
-        stats.active_connections = connections.iter().filter(|c| c.in_use).count();
-        stats.idle_connections = connections.iter().filter(|c| !c.in_use).count();
+        stats.total_connections = total_connections;
+        stats.active_connections = active_connections;
+        stats.idle_connections = idle_connections;
 
         // Clone the stats data, not the guard
         PoolStats {
@@ -305,20 +313,26 @@ where
                 interval.tick().await;
 
                 // Cleanup logic
-                let mut connections = pool.write().await;
-                let initial_count = connections.len();
-                let min_connections = config.min_connections;
-                let max_idle_time = config.max_idle_time;
+                let (removed_count, pool_len_after) = {
+                    let mut connections = pool.write().await;
+                    let initial_count = connections.len();
+                    let min_connections = config.min_connections;
+                    let max_idle_time = config.max_idle_time;
 
-                connections.retain(|conn| {
-                    !conn.is_idle_too_long(max_idle_time) || initial_count <= min_connections
-                });
+                    connections.retain(|conn| {
+                        !conn.is_idle_too_long(max_idle_time) || initial_count <= min_connections
+                    });
 
-                let removed_count = initial_count - connections.len();
+                    let removed_count = initial_count - connections.len();
+                    (removed_count, connections.len())
+                };
+
                 if removed_count > 0 {
-                    let mut stats = stats.write().await;
-                    stats.connections_destroyed += removed_count as u64;
-                    stats.total_connections = connections.len();
+                    {
+                        let mut stats = stats.write().await;
+                        stats.connections_destroyed += removed_count as u64;
+                        stats.total_connections = pool_len_after;
+                    }
                     debug!(
                         "Background cleanup removed {} idle connections",
                         removed_count

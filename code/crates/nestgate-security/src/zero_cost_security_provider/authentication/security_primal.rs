@@ -114,11 +114,14 @@ mod tests {
     use std::collections::HashMap;
     use std::time::Duration;
 
+    /// Synthetic HTTP URL for the non-socket code path; production auth uses Unix sockets from discovery.
+    const TEST_NON_SOCKET_SECURITY_ENDPOINT: &str = "http://127.0.0.1:1";
+
     #[tokio::test]
     async fn non_socket_endpoint_returns_error() {
         let endpoint = std::env::var("NESTGATE_SECURITY_PRIMAL_URL")
             .ok()
-            .unwrap_or_else(|| "http://0.0.0.0:0".to_string());
+            .unwrap_or_else(|| TEST_NON_SOCKET_SECURITY_ENDPOINT.to_string());
         let conn = PrimalConnection {
             capability: CapabilityDescriptor {
                 id: "sec".to_string(),

@@ -8,6 +8,10 @@
 
 use std::net::SocketAddr;
 
+use nestgate_core::constants::DEFAULT_API_PORT;
+use nestgate_types::EnvSource;
+
+use crate::commands::env::{env_port_if_set_source, tcp_jsonrpc_default_port_requested_source};
 use crate::error::NestGateBinError;
 
 /// Compute HTTP bind address and port for standalone mode (CLI + runtime defaults).
@@ -63,11 +67,31 @@ pub fn tcp_jsonrpc_listen_addr(
     }
 }
 
+/// Resolve optional TCP JSON-RPC listen address for socket-only mode (`nestgate server` without `--enable-http`).
+///
+/// Precedence: `--listen` → `--port` → explicit `NESTGATE_API_PORT` / `NESTGATE_HTTP_PORT` / `NESTGATE_PORT` →
+/// `NESTGATE_JSONRPC_TCP` truthy with [`DEFAULT_API_PORT`] → no TCP (Unix socket only).
+pub fn resolve_socket_only_tcp_listen_port(
+    cli_port: Option<u16>,
+    listen: Option<SocketAddr>,
+    bind: &str,
+    env: &(impl EnvSource + ?Sized),
+) -> Result<Option<SocketAddr>, NestGateBinError> {
+    let port = cli_port
+        .or_else(|| env_port_if_set_source(env))
+        .or_else(|| tcp_jsonrpc_default_port_requested_source(env).then_some(DEFAULT_API_PORT));
+    tcp_jsonrpc_listen_addr(port, bind, listen)
+}
+
 #[cfg(test)]
 mod tests {
     use std::net::SocketAddr;
 
-    use super::{resolve_standalone_http_bind, tcp_jsonrpc_listen_addr};
+    use nestgate_types::MapEnv;
+
+    use super::{
+        resolve_socket_only_tcp_listen_port, resolve_standalone_http_bind, tcp_jsonrpc_listen_addr,
+    };
 
     #[test]
     fn resolve_standalone_http_bind_listen_overrides_cli_port_and_bind() {
@@ -182,5 +206,48 @@ mod tests {
             .unwrap()
             .expect("addr");
         assert_eq!(a.port(), 0);
+    }
+
+    #[test]
+    fn resolve_socket_only_explicit_api_port_8080_enables_tcp() {
+        let env = MapEnv::from([("NESTGATE_API_PORT", "8080")]);
+        let a = resolve_socket_only_tcp_listen_port(None, None, "127.0.0.1", &env)
+            .unwrap()
+            .expect("tcp");
+        assert_eq!(a, "127.0.0.1:8080".parse().unwrap());
+    }
+
+    #[test]
+    fn resolve_socket_only_opt_in_jsonrpc_tcp_uses_default_api_port() {
+        use nestgate_core::constants::DEFAULT_API_PORT;
+
+        let env = MapEnv::from([("NESTGATE_JSONRPC_TCP", "1")]);
+        let a = resolve_socket_only_tcp_listen_port(None, None, "127.0.0.1", &env)
+            .unwrap()
+            .expect("tcp");
+        assert_eq!(a.port(), DEFAULT_API_PORT);
+    }
+
+    #[test]
+    fn resolve_socket_only_no_cli_no_env_returns_none() {
+        let env = MapEnv::new();
+        assert!(
+            resolve_socket_only_tcp_listen_port(None, None, "127.0.0.1", &env)
+                .unwrap()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn resolve_socket_only_cli_port_wins_over_opt_in_env() {
+        use nestgate_core::constants::DEFAULT_API_PORT;
+
+        let env = MapEnv::from([("NESTGATE_JSONRPC_TCP", "1"), ("NESTGATE_API_PORT", "9090")]);
+        let a = resolve_socket_only_tcp_listen_port(Some(7777), None, "127.0.0.1", &env)
+            .unwrap()
+            .expect("tcp");
+        assert_eq!(a.port(), 7777);
+        assert_ne!(a.port(), DEFAULT_API_PORT);
+        assert_ne!(a.port(), 9090);
     }
 }

@@ -53,7 +53,7 @@ impl DownloadManager {
         format!("https://api.github.com/repos/{repo}/releases/tags/{tag}")
     }
 
-    fn github_repo() -> String {
+    pub(crate) fn github_repo() -> String {
         std::env::var("NESTGATE_RELEASES_REPO").unwrap_or_else(|_| DEFAULT_GITHUB_REPO.to_string())
     }
 
@@ -333,5 +333,41 @@ mod download_url_tests {
     fn user_agent_includes_version() {
         let ua = DownloadManager::user_agent();
         assert!(ua.starts_with("nestgate-installer/"));
+    }
+
+    #[test]
+    fn github_repo_defaults_and_respects_env() {
+        temp_env::with_vars([("NESTGATE_RELEASES_REPO", None::<&str>)], || {
+            assert_eq!(DownloadManager::github_repo(), "ecoprimals/nestgate");
+        });
+        temp_env::with_vars(
+            [("NESTGATE_RELEASES_REPO", Some("myfork/nestgate"))],
+            || {
+                assert_eq!(DownloadManager::github_repo(), "myfork/nestgate");
+            },
+        );
+    }
+
+    #[test]
+    fn verify_installation_fails_when_paths_missing() {
+        let dm = DownloadManager::new();
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let err = dm.verify_installation(tmp.path()).expect_err("no binary");
+        assert!(
+            err.to_string().contains("Binary not found") || err.to_string().contains("not found"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn extract_archive_creates_layout() {
+        let dm = DownloadManager::new();
+        let base = tempfile::tempdir().expect("tempdir");
+        let fake_archive = base.path().join("fake.tar.gz");
+        std::fs::write(&fake_archive, b"x").expect("write");
+        dm.extract_archive(&fake_archive, base.path())
+            .expect("extract");
+        assert!(base.path().join("bin").is_dir());
+        assert!(base.path().join("etc").join("nestgate.toml").is_file());
     }
 }

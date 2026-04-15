@@ -33,11 +33,50 @@ pub use data::*;
 /// Type alias for `NestGate` unified error type
 ///
 /// Convenience alias for `NestGateUnifiedError` used throughout the codebase.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_types::NestGateError;
+///
+/// let err = NestGateError::validation_error("name cannot be empty");
+///
+/// match &err {
+///     NestGateError::Validation(details) => {
+///         assert!(details.message.contains("empty"));
+///     }
+///     _ => panic!("expected validation variant"),
+/// }
+///
+/// assert!(err.to_string().to_lowercase().contains("validation"));
+/// # Ok(())
+/// # }
+/// ```
 pub type NestGateError = NestGateUnifiedError;
 
 /// Type alias for `NestGate` Result type
 ///
 /// Standard Result type using `NestGateError` as the error variant.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_types::error::Result;
+/// use nestgate_types::NestGateError;
+///
+/// fn work() -> Result<i32> {
+///     Err(NestGateError::validation_error("blocked"))
+/// }
+///
+/// match work() {
+///     Ok(n) => assert_eq!(n, 0),
+///     Err(e) => assert!(e.to_string().contains("Validation")),
+/// }
+/// # Ok(())
+/// # }
+/// ```
 pub type Result<T> = std::result::Result<T, NestGateError>;
 
 // Canonical result / test aliases and `ResultExt` are defined here (not re-exported from

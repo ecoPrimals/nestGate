@@ -104,8 +104,7 @@ impl BidirectionalStreamManager {
             }
             _ => {
                 // Remove the stream since we couldn't start it
-                let mut streams = self.active_streams.lock().await;
-                streams.remove(&stream_id);
+                self.active_streams.lock().await.remove(&stream_id);
                 return Err(RpcError::ServiceUnavailable(format!(
                     "Unknown streaming method: {}",
                     request.method
@@ -129,11 +128,14 @@ impl BidirectionalStreamManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn close_stream(&self, stream_id: Uuid) -> Result<(), RpcError> {
-        let mut streams = self.active_streams.lock().await;
-        if let Some(stream) = streams.remove(&stream_id) {
+        let closed = {
+            let mut streams = self.active_streams.lock().await;
+            streams.remove(&stream_id).map(|stream| stream.stream_type)
+        };
+        if let Some(stream_type) = closed {
             info!(
                 "Closed bidirectional stream {} ({})",
-                stream_id, stream.stream_type
+                stream_id, stream_type
             );
             Ok(())
         } else {
@@ -191,9 +193,13 @@ impl BidirectionalStreamManager {
         }
 
         if !failed_streams.is_empty() {
-            let mut streams = self.active_streams.lock().await;
-            for stream_id in failed_streams {
-                streams.remove(&stream_id);
+            {
+                let mut streams = self.active_streams.lock().await;
+                for stream_id in &failed_streams {
+                    streams.remove(stream_id);
+                }
+            }
+            for stream_id in &failed_streams {
                 debug!("Removed failed stream {}", stream_id);
             }
         }
@@ -202,6 +208,10 @@ impl BidirectionalStreamManager {
     }
 
     /// Start real-time metrics stream
+    #[expect(
+        clippy::unused_self,
+        reason = "Stream starter: reserved for manager-level tuning and shared stream state"
+    )]
     fn start_realtime_metrics_stream(
         &self,
         stream_id: Uuid,
@@ -245,6 +255,10 @@ impl BidirectionalStreamManager {
     }
 
     /// Start ZFS events stream
+    #[expect(
+        clippy::unused_self,
+        reason = "Stream starter: reserved for manager-level tuning and shared stream state"
+    )]
     fn start_zfs_events_stream(
         &self,
         stream_id: Uuid,
@@ -294,6 +308,10 @@ impl BidirectionalStreamManager {
     }
 
     /// Start storage events stream
+    #[expect(
+        clippy::unused_self,
+        reason = "Stream starter: reserved for manager-level tuning and shared stream state"
+    )]
     fn start_storage_events_stream(
         &self,
         stream_id: Uuid,
@@ -345,6 +363,10 @@ impl BidirectionalStreamManager {
     }
 
     /// Start system logs stream
+    #[expect(
+        clippy::unused_self,
+        reason = "Stream starter: reserved for manager-level tuning and shared stream state"
+    )]
     fn start_system_logs_stream(
         &self,
         stream_id: Uuid,
@@ -401,6 +423,10 @@ impl BidirectionalStreamManager {
     }
 
     /// Start performance data stream
+    #[expect(
+        clippy::unused_self,
+        reason = "Stream starter: reserved for manager-level tuning and shared stream state"
+    )]
     fn start_performance_data_stream(
         &self,
         stream_id: Uuid,

@@ -73,6 +73,7 @@ mod tests {
     use crate::zero_cost_zfs_operations::types::{ZeroCostDatasetInfo, ZeroCostPoolInfo};
     use nestgate_core::Result;
     use nestgate_core::canonical_types::StorageTier;
+    use serial_test::serial;
     use std::collections::HashMap;
     use std::time::SystemTime;
 
@@ -97,6 +98,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn trait_list_pools_forwards_to_pool_list() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_for_trait_forwards()));
         let m = TestingZfsManager::new();
@@ -106,6 +108,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn trait_list_datasets_forwards_to_dataset_list() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_for_trait_forwards()));
         let m = TestingZfsManager::new();
@@ -126,6 +129,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn trait_list_snapshots_forwards_to_snapshot_list() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_for_trait_forwards()));
         let m = TestingZfsManager::new();
@@ -147,6 +151,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn trait_create_dataset_forwards_to_dataset_create() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_for_trait_forwards()));
         let m = TestingZfsManager::new();
@@ -167,6 +172,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn trait_create_snapshot_forwards_to_snapshot_create() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_for_trait_forwards()));
         let m = TestingZfsManager::new();

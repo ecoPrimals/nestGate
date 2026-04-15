@@ -197,11 +197,19 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
     }
 
     /// Handle health.ping request
+    #[expect(
+        clippy::unused_self,
+        reason = "Handler method: will use self for handler state"
+    )]
     fn handle_ping(&self, _params: Value) -> Result<Value> {
         Ok(serde_json::json!({"status": "pong", "timestamp": chrono::Utc::now().timestamp()}))
     }
 
     /// Handle health.status request
+    #[expect(
+        clippy::unused_self,
+        reason = "Handler method: will use self for handler state"
+    )]
     fn handle_status(&self, _params: Value) -> Result<Value> {
         let primal = self_primal_name();
         Ok(serde_json::json!({
@@ -214,6 +222,10 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
     }
 
     /// Handle `identity.get` request per `CAPABILITY_WIRE_STANDARD` L2.
+    #[expect(
+        clippy::unused_self,
+        reason = "Handler method: will use self for handler state"
+    )]
     fn handle_identity(&self, _params: Value) -> Result<Value> {
         let family_id = std::env::var("BIOMEOS_FAMILY_ID")
             .or_else(|_| std::env::var("NESTGATE_FAMILY_ID"))
@@ -243,6 +255,10 @@ impl<S: StorageBackend + 'static> NestGateRpcHandler<S> {
     }
 
     /// Handle system.info request
+    #[expect(
+        clippy::unused_self,
+        reason = "Handler method: will use self for handler state"
+    )]
     fn handle_system_info(&self, _params: Value) -> Result<Value> {
         let primal = self_primal_name();
         Ok(serde_json::json!({

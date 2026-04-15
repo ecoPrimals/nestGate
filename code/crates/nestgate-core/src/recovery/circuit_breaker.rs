@@ -205,36 +205,50 @@ impl CircuitBreaker {
 
     /// Transition to closed state
     async fn transition_to_closed(&self) {
-        let mut state = self.state.write().await;
-        *state = CircuitState::Closed;
+        {
+            let mut state = self.state.write().await;
+            *state = CircuitState::Closed;
+        }
 
         // Reset counters
-        let mut failure_count = self.failure_count.write().await;
-        *failure_count = 0;
-        let mut success_count = self.success_count.write().await;
-        *success_count = 0;
+        {
+            let mut failure_count = self.failure_count.write().await;
+            *failure_count = 0;
+        }
+        {
+            let mut success_count = self.success_count.write().await;
+            *success_count = 0;
+        }
 
         info!("Circuit breaker closed for service: {}", self.service_name);
     }
 
     /// Transition to open state
     async fn transition_to_open(&self) {
-        let mut state = self.state.write().await;
-        *state = CircuitState::Open;
+        {
+            let mut state = self.state.write().await;
+            *state = CircuitState::Open;
+        }
 
-        let mut last_failure = self.last_failure_time.write().await;
-        *last_failure = Some(Instant::now());
+        {
+            let mut last_failure = self.last_failure_time.write().await;
+            *last_failure = Some(Instant::now());
+        }
 
         warn!("Circuit breaker opened for service: {}", self.service_name);
     }
 
     /// Transition to half-open state
     async fn transition_to_half_open(&self) {
-        let mut state = self.state.write().await;
-        *state = CircuitState::HalfOpen;
+        {
+            let mut state = self.state.write().await;
+            *state = CircuitState::HalfOpen;
+        }
 
-        let mut success_count = self.success_count.write().await;
-        *success_count = 0;
+        {
+            let mut success_count = self.success_count.write().await;
+            *success_count = 0;
+        }
 
         info!(
             "Circuit breaker half-open for service: {}",
@@ -246,13 +260,13 @@ impl CircuitBreaker {
     async fn increment_failure_count(&self) {
         self.reset_window_if_needed().await;
 
-        let mut failure_count = self.failure_count.write().await;
-        *failure_count += 1;
+        let failure_count = {
+            let mut failure_count = self.failure_count.write().await;
+            *failure_count += 1;
+            *failure_count
+        };
 
-        debug!(
-            "Failure count for {}: {}",
-            self.service_name, *failure_count
-        );
+        debug!("Failure count for {}: {}", self.service_name, failure_count);
     }
 
     /// Reset failure count
@@ -260,6 +274,7 @@ impl CircuitBreaker {
         let mut failure_count = self.failure_count.write().await;
         if *failure_count > 0 {
             *failure_count = 0;
+            drop(failure_count);
             debug!("Reset failure count for {}", self.service_name);
         }
     }
@@ -270,11 +285,15 @@ impl CircuitBreaker {
         if window_start.elapsed() >= self.config.window_size {
             drop(window_start);
 
-            let mut window_start = self.window_start.write().await;
-            *window_start = Instant::now();
+            {
+                let mut window_start = self.window_start.write().await;
+                *window_start = Instant::now();
+            }
 
-            let mut failure_count = self.failure_count.write().await;
-            *failure_count = 0;
+            {
+                let mut failure_count = self.failure_count.write().await;
+                *failure_count = 0;
+            }
 
             debug!("Reset failure window for {}", self.service_name);
         }

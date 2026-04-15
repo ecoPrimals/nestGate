@@ -113,15 +113,7 @@ impl ZfsManager {
         let _dataset_analyzer =
             Arc::new(crate::manager::dataset_operations::DatasetAnalyzer::new());
 
-        // Initialize migration engine with RwLock using shared config
-        // let migration_config = nestgate_core::config::canonical_primary::domains::test_canonical::unit::MigrationConfig::default();
-        // let migration_engine = Arc::new(RwLock::new(MigrationEngine::with_shared_config(
-        //     migration_config,
-        //     Arc::clone(&shared_config),
-        //     Arc::clone(&pool_manager),
-        //     Arc::clone(&dataset_manager),
-        //     Arc::clone(&dataset_analyzer),
-        // ))); // MigrationEngine not yet implemented
+        // MigrationEngine wiring deferred; see git history.
 
         // Initialize snapshot manager with shared config
         let snapshot_manager = Arc::new(ZfsSnapshotManager::with_shared_config(
@@ -167,26 +159,8 @@ impl ZfsManager {
         // Initialize metrics collection
         let metrics = Arc::new(ZfsMetrics::new());
 
-        // Initialize automation with canonical default (enabled)
-        let automation = {
-            // Note: AI integration sunset - using heuristic automation only
-            // let automation_config = crate::config::DatasetAutomationConfig::default();
-            // match DatasetAutomation::new(
-            //     pool_manager.clone(),
-            //     dataset_manager.clone(),
-            //     migration_engine.clone(), // migration_engine not available
-            //     automation_config,
-            // )
-            // .await
-            // {
-            //     Ok(automation) => Some(Arc::new(automation)),
-            //     Err(e) => {
-            //         warn!("Failed to initialize automation: {}", e);
-            //         None
-            //     }
-            // } // DatasetAutomation initialization commented out - migration_engine not yet implemented
-            None
-        };
+        // DatasetAutomation needs migration_engine; AI integration sunset — deferred until wired.
+        let automation = None;
 
         info!("Enhanced ZFS Manager initialization complete");
 
@@ -196,8 +170,6 @@ impl ZfsManager {
             dataset_manager,
             snapshot_manager,
             tier_manager,
-            // migration_engine, // Commented out - not yet implemented
-            // dataset_analyzer, // Commented out - not yet implemented
             performance_monitor,
             health_monitor: Some(health_monitor),
             metrics,

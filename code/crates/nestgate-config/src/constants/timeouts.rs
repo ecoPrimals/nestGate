@@ -25,6 +25,16 @@ pub const DEFAULT_KEEPALIVE_SECS: u64 = 60;
 /// Default retry delay in milliseconds
 pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
 
+/// Default connection timeout (ms) for `NetworkDefaultsConfig`.
+///
+/// Used when `NESTGATE_CONNECTION_TIMEOUT_MS` is unset.
+/// Distinct from second-based [`DEFAULT_CONNECTION_TIMEOUT_SECS`].
+pub const DEFAULT_NETWORK_DEFAULTS_CONNECTION_TIMEOUT_MS: u64 = 3000;
+
+/// Default request timeout in milliseconds for [`crate::config::defaults_config::NetworkDefaultsConfig`]
+/// when `NESTGATE_REQUEST_TIMEOUT_MS` is unset.
+pub const DEFAULT_NETWORK_DEFAULTS_REQUEST_TIMEOUT_MS: u64 = 30000;
+
 /// Default health check interval in seconds
 pub const DEFAULT_HEALTH_CHECK_INTERVAL_SECS: u64 = 30;
 

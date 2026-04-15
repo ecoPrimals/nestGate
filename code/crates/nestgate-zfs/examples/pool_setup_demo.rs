@@ -13,6 +13,7 @@
 
 //! Pool Setup Demo module
 
+use nestgate_core::NestGateError;
 use nestgate_zfs::pool_setup::ZfsPoolSetup;
 use tracing::error;
 use tracing::info;
@@ -20,7 +21,7 @@ use tracing::warn;
 // Removed unused tracing import
 
 #[tokio::main]
-async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+async fn main() -> std::result::Result<(), NestGateError> {
     // Initialize logging
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -30,13 +31,10 @@ async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     info!("=====================================");
 
     // Create pool setup manager
-    let setup = match ZfsPoolSetup::new().await {
-        Ok(setup) => setup,
-        Err(e) => {
-            error!("Failed to initialize pool setup: {}", e);
-            return Err(e.into());
-        }
-    };
+    let setup = ZfsPoolSetup::new().await.map_err(|e| {
+        error!("Failed to initialize pool setup: {}", e);
+        e
+    })?;
 
     // Get system report
     let report = setup.get_system_report();

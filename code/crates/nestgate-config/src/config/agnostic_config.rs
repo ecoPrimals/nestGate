@@ -206,7 +206,7 @@ impl ConfigBuilder {
                     );
                     LOCALHOST.to_string()
                 });
-            return Ok(format!("http://{}:{}", host, self.default_port(service)));
+            return Ok(format!("http://{}:{}", host, Self::default_port(service)));
         }
 
         Err(NestGateError::network_error(format!(
@@ -243,7 +243,7 @@ impl ConfigBuilder {
 
         // Use safe defaults
         if self.enable_defaults {
-            return Ok(self.default_port(service));
+            return Ok(Self::default_port(service));
         }
 
         Err(NestGateError::network_error(format!(
@@ -251,7 +251,7 @@ impl ConfigBuilder {
         )))
     }
 
-    fn default_port(&self, service: &str) -> u16 {
+    fn default_port(service: &str) -> u16 {
         match service {
             "api" => DEFAULT_API_PORT,
             "metrics" => DEFAULT_METRICS_PORT,
@@ -635,13 +635,12 @@ mod tests {
 
     #[test]
     fn default_port_unknown_service_is_fallback_8000() {
-        let b = ConfigBuilder::new();
         assert_eq!(
-            b.default_port("websocket"),
+            ConfigBuilder::default_port("websocket"),
             ConfigBuilder::DEFAULT_WEBSOCKET_PORT
         );
         assert_eq!(
-            b.default_port("nosuch"),
+            ConfigBuilder::default_port("nosuch"),
             ConfigBuilder::DEFAULT_FALLBACK_PORT
         );
     }

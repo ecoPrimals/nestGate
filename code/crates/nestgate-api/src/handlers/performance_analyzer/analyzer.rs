@@ -36,8 +36,8 @@ impl PerformanceAnalyzer {
             overall_score: self.calculate_overall_score(metrics),
             cpu_analysis: self.analyze_cpu(metrics.cpu_usage_percent),
             memory_analysis: self.analyze_memory(metrics.memory_usage_bytes),
-            disk_analysis: self.analyze_disk(&metrics.disk_io_metrics),
-            network_analysis: self.analyze_network(&metrics.network_metrics),
+            disk_analysis: Self::analyze_disk(&metrics.disk_io_metrics),
+            network_analysis: Self::analyze_network(&metrics.network_metrics),
             recommendations: self.generate_recommendations(metrics),
             timestamp: metrics.timestamp,
         })
@@ -47,11 +47,13 @@ impl PerformanceAnalyzer {
     fn calculate_overall_score(&self, metrics: &SystemMetrics) -> f64 {
         let cpu_score = (100.0 - metrics.cpu_usage_percent).max(0.0);
 
+        let mem_ceiling = (self.config.memory_warning_threshold as f64).max(1.0) * 2.0;
+
         let memory_score = if metrics.memory_usage_bytes == 0 {
             100.0
         } else {
-            // Heuristic: penalise above 80% of a reasonable ceiling (16 GiB).
-            let usage_ratio = metrics.memory_usage_bytes as f64 / (16.0 * 1024.0 * 1024.0 * 1024.0);
+            // Heuristic: penalise as usage approaches twice the configured warning threshold.
+            let usage_ratio = metrics.memory_usage_bytes as f64 / mem_ceiling;
             (100.0 - usage_ratio * 100.0).clamp(0.0, 100.0)
         };
 
@@ -79,9 +81,11 @@ impl PerformanceAnalyzer {
 
     /// Analyze Cpu
     fn analyze_cpu(&self, cpu_usage: f64) -> ComponentAnalysis {
-        let status = if cpu_usage > 90.0 {
+        let warn = self.config.cpu_warning_threshold;
+        let crit = self.config.cpu_critical_threshold;
+        let status = if cpu_usage > crit {
             PerformanceStatus::Critical
-        } else if cpu_usage > 70.0 {
+        } else if cpu_usage > warn {
             PerformanceStatus::Warning
         } else {
             PerformanceStatus::Good
@@ -96,16 +100,30 @@ impl PerformanceAnalyzer {
 
     /// Analyze Memory
     fn analyze_memory(&self, memory_usage: u64) -> ComponentAnalysis {
-        // Simplified memory analysis
+        let threshold = self.config.memory_warning_threshold;
+        let status = if memory_usage > threshold {
+            PerformanceStatus::Warning
+        } else {
+            PerformanceStatus::Good
+        };
+        let score = if threshold > 0 {
+            (memory_usage as f64 / threshold as f64)
+                .mul_add(-50.0, 100.0)
+                .clamp(0.0, 100.0)
+        } else {
+            75.0
+        };
         ComponentAnalysis {
-            status: PerformanceStatus::Good,
-            score: 75.0,
-            details: format!("Memory usage: {memory_usage} bytes"),
+            status,
+            score,
+            details: format!(
+                "Memory usage: {memory_usage} bytes (warning threshold: {threshold} bytes)"
+            ),
         }
     }
 
     /// Analyze Disk
-    fn analyze_disk(&self, disk_metrics: &super::metrics::DiskIOMetrics) -> ComponentAnalysis {
+    fn analyze_disk(disk_metrics: &super::metrics::DiskIOMetrics) -> ComponentAnalysis {
         ComponentAnalysis {
             status: PerformanceStatus::Good,
             score: 80.0,
@@ -118,10 +136,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Analyze Network
-    fn analyze_network(
-        &self,
-        network_metrics: &super::metrics::NetworkMetrics,
-    ) -> ComponentAnalysis {
+    fn analyze_network(network_metrics: &super::metrics::NetworkMetrics) -> ComponentAnalysis {
         ComponentAnalysis {
             status: PerformanceStatus::Good,
             score: 85.0,
@@ -134,11 +149,25 @@ impl PerformanceAnalyzer {
     }
 
     /// Generate Recommendations
-    fn generate_recommendations(&self, _metrics: &SystemMetrics) -> Vec<String> {
-        vec![
-            "System performance is within normal parameters".to_string(),
-            "Consider enabling ZFS compression for better storage efficiency".to_string(),
-        ]
+    fn generate_recommendations(&self, metrics: &SystemMetrics) -> Vec<String> {
+        let mut out = Vec::new();
+        if metrics.cpu_usage_percent > self.config.cpu_warning_threshold {
+            out.push(format!(
+                "CPU usage {:.1}% exceeds warning threshold {:.1}% — investigate load or scaling",
+                metrics.cpu_usage_percent, self.config.cpu_warning_threshold
+            ));
+        }
+        if metrics.memory_usage_bytes > self.config.memory_warning_threshold {
+            out.push(format!(
+                "Memory footprint exceeds configured warning threshold ({} bytes)",
+                self.config.memory_warning_threshold
+            ));
+        }
+        if out.is_empty() {
+            out.push("System performance is within normal parameters".to_string());
+        }
+        out.push("Consider enabling ZFS compression for better storage efficiency".to_string());
+        out
     }
 }
 
@@ -359,7 +388,7 @@ mod tests {
             write_ops_per_sec: 250,
         };
 
-        let analysis = analyzer.analyze_disk(&disk_metrics);
+        let analysis = PerformanceAnalyzer::analyze_disk(&disk_metrics);
         assert!(matches!(analysis.status, PerformanceStatus::Good));
         assert_eq!(analysis.score, 80.0);
     }
@@ -376,7 +405,7 @@ mod tests {
             tx_packets_per_sec: 1000,
         };
 
-        let analysis = analyzer.analyze_network(&network_metrics);
+        let analysis = PerformanceAnalyzer::analyze_network(&network_metrics);
         assert!(matches!(analysis.status, PerformanceStatus::Good));
         assert_eq!(analysis.score, 85.0);
     }

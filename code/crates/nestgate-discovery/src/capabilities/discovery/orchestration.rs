@@ -91,9 +91,11 @@ impl OrchestrationCapabilityDiscovery {
         }
 
         // Update cache
-        let mut cache = self.discovered_capabilities.write().await;
-        for capability in &capabilities {
-            cache.insert(capability.capability_type.clone(), capability.clone());
+        {
+            let mut cache = self.discovered_capabilities.write().await;
+            for capability in &capabilities {
+                cache.insert(capability.capability_type.clone(), capability.clone());
+            }
         }
 
         Ok(capabilities)

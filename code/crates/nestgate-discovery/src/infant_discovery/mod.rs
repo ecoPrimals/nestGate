@@ -168,11 +168,8 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     ) -> Result<Vec<CapabilityDescriptor>, InfantDiscoveryError> {
         let start_time = std::time::Instant::now();
 
-        let mut engine = self.discovery_engine.write().await;
-        engine.discovery_stats.discovery_attempts += 1;
-
         // Perform runtime capability discovery (implementation would scan environment)
-        let discovered = self.perform_runtime_discovery();
+        let discovered = Self::perform_runtime_discovery();
 
         // Validate sovereignty compliance for each capability
         let compliant_capabilities: Vec<CapabilityDescriptor> = discovered
@@ -182,14 +179,18 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
 
         // Update discovery statistics
         let discovery_time = start_time.elapsed().as_nanos() as u64;
-        engine.discovery_stats.total_discovered += compliant_capabilities.len() as u64;
-        engine.discovery_stats.avg_discovery_time_ns =
-            u64::midpoint(engine.discovery_stats.avg_discovery_time_ns, discovery_time);
+        {
+            let mut engine = self.discovery_engine.write().await;
+            engine.discovery_stats.discovery_attempts += 1;
+            engine.discovery_stats.total_discovered += compliant_capabilities.len() as u64;
+            engine.discovery_stats.avg_discovery_time_ns =
+                u64::midpoint(engine.discovery_stats.avg_discovery_time_ns, discovery_time);
 
-        for capability in &compliant_capabilities {
-            engine
-                .discovered_capabilities
-                .insert(capability.id.clone(), capability.clone());
+            for capability in &compliant_capabilities {
+                engine
+                    .discovered_capabilities
+                    .insert(capability.id.clone(), capability.clone());
+            }
         }
 
         Ok(compliant_capabilities)
@@ -238,7 +239,7 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
     // Private implementation methods
 
     /// Perform Runtime Discovery
-    fn perform_runtime_discovery(&self) -> Vec<CapabilityDescriptor> {
+    fn perform_runtime_discovery() -> Vec<CapabilityDescriptor> {
         // In a real implementation, this would:
         // 1. Scan the network environment
         // 2. Detect available services without hardcoded knowledge
@@ -279,19 +280,22 @@ impl<const MAX_CAPABILITIES: usize> InfantDiscoverySystem<MAX_CAPABILITIES> {
         capability_id: &str,
     ) -> Result<Connection, InfantDiscoveryError> {
         // O(1) connection establishment
-        let engine = self.discovery_engine.read().await;
+        let endpoint = {
+            let engine = self.discovery_engine.read().await;
+            engine
+                .discovered_capabilities
+                .get(capability_id)
+                .map(|capability| capability.endpoint.clone())
+        };
 
-        engine.discovered_capabilities.get(capability_id).map_or(
-            Err(InfantDiscoveryError::InvalidRequest),
-            |capability| {
-                Ok(Connection {
-                    id: capability_id.to_string(),
-                    endpoint: capability.endpoint.clone(),
-                    established_at: std::time::SystemTime::now(),
-                    complexity_order: 1, // O(1) guaranteed
-                })
-            },
-        )
+        endpoint.map_or(Err(InfantDiscoveryError::InvalidRequest), |endpoint| {
+            Ok(Connection {
+                id: capability_id.to_string(),
+                endpoint,
+                established_at: std::time::SystemTime::now(),
+                complexity_order: 1, // O(1) guaranteed
+            })
+        })
     }
 
     /// Verify Connection Complexity

@@ -13,9 +13,9 @@ use serde_json::json;
 
 use super::linux_proc;
 use super::types::{
-    BenchmarkResult, ComputeAllocation, ComputeResources, CpuMonitor, GpuMonitor, HardwareMonitors,
-    HardwareTuningConfig, LiveHardwareTuningSession, MemoryMonitor, SystemCapabilities,
-    SystemMetricsCollector, TuningResult,
+    BenchmarkResult, ComputeAllocation, ComputeResources, CpuMonitor, DiskMonitor, GpuMonitor,
+    HardwareMonitors, HardwareTuningConfig, LiveHardwareTuningSession, MemoryMonitor,
+    NetworkMonitor, SystemCapabilities, SystemMetricsCollector, TuningResult,
 };
 
 /// Response body when a hardware-tuning sub-feature is intentionally unavailable.
@@ -70,6 +70,8 @@ const fn metrics_collector() -> SystemMetricsCollector {
         cpu_monitor: CpuMonitor,
         memory_monitor: MemoryMonitor,
         gpu_monitor: Some(GpuMonitor),
+        disk_monitor: DiskMonitor,
+        network_monitor: NetworkMonitor,
     }
 }
 

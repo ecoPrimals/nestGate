@@ -29,14 +29,20 @@ use super::types::{AuditEvent, ComplianceViolation, ResolutionStatus, RetentionP
 pub async fn get_compliance_dashboard(
     State(state): State<ComplianceState>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
-    let compliance = state.read().await;
-    let report = compliance.generate_compliance_report();
+    let (report, total_audit_events, active_frameworks) = {
+        let compliance = state.read().await;
+        (
+            compliance.generate_compliance_report(),
+            compliance.audit_logs.len(),
+            compliance.regulatory_frameworks.len(),
+        )
+    };
     Ok(Json(serde_json::json!({
         "status": "success",
         "data": {
             "report": report,
-            "total_audit_events": compliance.audit_logs.len(),
-            "active_frameworks": compliance.regulatory_frameworks.len(),
+            "total_audit_events": total_audit_events,
+            "active_frameworks": active_frameworks,
         }
     })))
 }
@@ -49,13 +55,18 @@ pub async fn get_compliance_dashboard(
 pub async fn get_retention_policies(
     State(state): State<ComplianceState>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
-    let compliance = state.read().await;
-    let policies: Vec<&RetentionPolicy> = compliance.retention_policies.values().collect();
+    let policies: Vec<RetentionPolicy> = {
+        let compliance = state.read().await;
+        let policies = compliance.retention_policies.values().cloned().collect();
+        drop(compliance);
+        policies
+    };
+    let total = policies.len();
     Ok(Json(serde_json::json!({
         "status": "success",
         "data": {
             "policies": policies,
-            "total": policies.len(),
+            "total": total,
         }
     })))
 }
@@ -72,8 +83,10 @@ pub async fn create_retention_policy(
     policy.id = Uuid::new_v4().to_string();
     policy.created_at = Utc::now();
     policy.updated_at = Utc::now();
-    let mut compliance = state.write().await;
-    compliance.add_retention_policy(policy.clone());
+    {
+        let mut compliance = state.write().await;
+        compliance.add_retention_policy(policy.clone());
+    }
 
     Ok(Json(serde_json::json!({
         "status": "success",
@@ -93,18 +106,26 @@ pub async fn get_audit_logs(
     State(state): State<ComplianceState>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
-    let compliance = state.read().await;
     let limit = params
         .get("limit")
         .and_then(|l| l.parse::<usize>().ok())
         .unwrap_or(100);
-    let logs: Vec<&AuditEvent> = compliance.audit_logs.iter().rev().take(limit).collect();
+    let compliance = state.read().await;
+    let logs: Vec<AuditEvent> = compliance
+        .audit_logs
+        .iter()
+        .rev()
+        .take(limit)
+        .cloned()
+        .collect();
+    let total_audit = compliance.audit_logs.len();
+    drop(compliance);
 
     Ok(Json(serde_json::json!({
         "status": "success",
         "data": {
             "logs": logs,
-            "total": compliance.audit_logs.len(),
+            "total": total_audit,
             "returned": logs.len(),
         }
     })))
@@ -119,13 +140,13 @@ pub async fn get_violations(
     State(state): State<ComplianceState>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
+    let status_filter = params.get("status").cloned();
     let compliance = state.read().await;
-    let status_filter = params.get("status");
-    let violations: Vec<&ComplianceViolation> = compliance
+    let violations: Vec<ComplianceViolation> = compliance
         .violations
         .iter()
         .filter(|v| {
-            if let Some(status) = status_filter {
+            if let Some(status) = status_filter.as_ref() {
                 matches!(
                     (&v.resolution_status, status.as_str()),
                     (ResolutionStatus::Open, "open")
@@ -138,13 +159,15 @@ pub async fn get_violations(
                 true
             }
         })
+        .cloned()
         .collect();
-
+    let total = violations.len();
+    drop(compliance);
     Ok(Json(serde_json::json!({
         "status": "success",
         "data": {
             "violations": violations,
-            "total": violations.len(),
+            "total": total,
         }
     })))
 }

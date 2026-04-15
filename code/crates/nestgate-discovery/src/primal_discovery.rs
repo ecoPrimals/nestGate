@@ -276,7 +276,7 @@ impl PrimalDiscovery {
     ///
     /// ```rust,ignore
     /// # use nestgate_core::primal_discovery::*;
-    /// # async fn example(discovery: &PrimalDiscovery) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example(discovery: &PrimalDiscovery) -> std::result::Result<(), nestgate_types::NestGateError> {
     /// // Discover security capability (any primal advertising it)
     /// let security = discovery.discover_capability("security")?;
     /// println!("Security primal: {}", security.name);

@@ -225,11 +225,12 @@ impl AuditStorage {
         let execution_id = audit.execution_id.clone();
 
         // Store with family isolation
-        let mut storage = self.audits.write().await;
-        let family_audits = storage
+        self.audits
+            .write()
+            .await
             .entry(family_id.clone())
-            .or_insert_with(HashMap::new);
-        family_audits.insert(execution_id.clone(), audit);
+            .or_insert_with(HashMap::new)
+            .insert(execution_id.clone(), audit);
 
         tracing::info!(
             "Stored audit '{}' for execution '{}' (family: '{}')",
@@ -255,19 +256,19 @@ impl AuditStorage {
         execution_id: &str,
         family_id: &str,
     ) -> Result<ExecutionAudit> {
-        let storage = self.audits.read().await;
-
-        let family_audits = storage
+        let audit = self
+            .audits
+            .read()
+            .await
             .get(family_id)
-            .ok_or_else(|| NestGateError::not_found("No audits for this family"))?;
-
-        let audit = family_audits
+            .ok_or_else(|| NestGateError::not_found("No audits for this family"))?
             .get(execution_id)
-            .ok_or_else(|| NestGateError::not_found("Audit not found"))?;
+            .ok_or_else(|| NestGateError::not_found("Audit not found"))?
+            .clone();
 
         tracing::debug!("Retrieved audit for execution '{}'", execution_id);
 
-        Ok(audit.clone())
+        Ok(audit)
     }
 
     /// List audits for a family (with optional filters)
@@ -281,13 +282,12 @@ impl AuditStorage {
         user_id: Option<&str>,
         status: Option<ExecutionStatus>,
     ) -> Result<Vec<ExecutionAudit>> {
-        let storage = self.audits.read().await;
-
-        let family_audits = storage
+        let mut audits: Vec<ExecutionAudit> = self
+            .audits
+            .read()
+            .await
             .get(family_id)
-            .ok_or_else(|| NestGateError::not_found("No audits for this family"))?;
-
-        let mut audits: Vec<ExecutionAudit> = family_audits
+            .ok_or_else(|| NestGateError::not_found("No audits for this family"))?
             .values()
             .filter(|a| {
                 // Filter by user_id if specified

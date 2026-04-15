@@ -213,6 +213,18 @@ impl UnixSocketRpcHandler {
             "storage.retrieve_range" => {
                 unix_adapter_handlers::handle_storage_retrieve_range(state, &request).await
             }
+            "storage.store_stream" => {
+                unix_adapter_handlers::handle_storage_store_stream(state, &request).await
+            }
+            "storage.store_stream_chunk" => {
+                unix_adapter_handlers::handle_storage_store_stream_chunk(&request).await
+            }
+            "storage.retrieve_stream" => {
+                unix_adapter_handlers::handle_storage_retrieve_stream(state, &request).await
+            }
+            "storage.retrieve_stream_chunk" => {
+                unix_adapter_handlers::handle_storage_retrieve_stream_chunk(&request).await
+            }
             "storage.object.size" => {
                 unix_adapter_handlers::handle_storage_object_size(state, &request).await
             }

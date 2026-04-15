@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43p: Deep debt execution — streaming storage, TCP, file refactoring, supply chain (April 15, 2026)
+
+- **Streaming storage protocol**: 4 new JSON-RPC methods for chunked large-tensor
+  transfer (`storage.store_stream`, `storage.store_stream_chunk`,
+  `storage.retrieve_stream`, `storage.retrieve_stream_chunk`). 4 MiB max chunk,
+  staging file with rename-on-complete, 1-hour TTL session cleanup. Wired into
+  semantic router, legacy unix handler, and isomorphic IPC adapter. Resolves
+  neuralSpring/wetSpring large payload gap from wateringHole upstream status.
+- **TCP alongside UDS (UniBin compliance)**: `--port` CLI, `NESTGATE_API_PORT` env
+  chain, and `NESTGATE_JSONRPC_TCP=1` all activate `TcpFallbackServer` in socket-only
+  mode. Shares same JSON-RPC semantic router as UDS. Resolves compliance matrix
+  `--port` DEBT.
+- **Supply chain clean**: Vendored `rustls-rustcrypto` with `rustls-webpki` 0.103.12
+  (eliminates stale 0.102.x RUSTSEC advisories). `rand` bumped to 0.9.x.
+  `CDLA-Permissive-2.0` added to license allowlist for `webpki-roots`. `cargo deny
+  check` now passes: advisories ok, bans ok, licenses ok, sources ok.
+- **File refactoring** (0 files > 800 lines):
+  - `unix_socket_server/tests.rs` (1000L) → 5 focused modules
+  - `chaos_engineering_suite.rs` (806L) → 7 modules by chaos category
+  - `pool_setup_comprehensive_tests.rs` (805L) → 5 modules by test domain
+  - `installer.rs` (862L) → 8 modules (metadata, requirements, ops, doctor, etc.)
+- **Deprecated API cleanup**: 3 dead items removed (unused traits
+  `SecurityHealthProvider`/`SecurityMetricsProvider`, unused re-export
+  `LockFreeRingBuffer`). 187 → 183 markers.
+- **Primal self-knowledge**: `"nestgate"` string literals replaced with
+  `DEFAULT_SERVICE_NAME` constant across 6 production files.
+- **Coverage**: Tests added for 15 lowest-coverage production files. BTSP nested
+  runtime bug fixed. 81.68% line coverage (up from 81.13%).
+- **Clippy pedantic+nursery**: All `significant_drop_tightening`, `unused_self`,
+  and `redundant_closure` warnings resolved. Zero warnings.
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery), doc PASS, deny PASS,
+  8,472 tests passing, 0 failures, 0 files > 800L.
+
 ### Session 43n: Semantic router streaming parity + idle timeout (April 14, 2026)
 
 - **Semantic router streaming methods**: 5 storage streaming methods (`store_blob`,
@@ -371,12 +404,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Upgraded `capabilities.list` to Wire Standard Level 3 (Composable): now returns full
   `{primal, version, methods, provided_capabilities, consumed_capabilities, protocol, transport}` envelope
-- `provided_capabilities` groups all 57 methods into 9 capability domains (storage, model, templates,
-  session, audit, nat, beacon, data, zfs)
+- `provided_capabilities` aligns with Wire Standard L3 grouping (see current `capability_registry.toml`: **12** capability groups, **45** registry-listed methods; `data.*` is wildcard-only and not listed as concrete methods)
 - `identity.get` now includes `domain: "storage"` and `license: "AGPL-3.0-or-later"` per Wire Standard L2
-- `UNIX_SOCKET_SUPPORTED_METHODS` expanded from 37 → 57: added `identity.get`, `session.save`,
-  `session.load`, `data.ncbi_search`, `data.ncbi_fetch`, `data.noaa_ghcnd`, `data.iris_stations`,
-  `data.iris_events`, `discovery.capability.register` — all were callable but unadvertised
+- `UNIX_SOCKET_SUPPORTED_METHODS` expanded to cover the full callable UDS surface (**47** entries as of 2026-04; includes `identity.get`, `session.save`, `session.load`, `discovery.capability.register`, health/meta aliases, and ZFS/bonding routes — several were callable but previously unadvertised)
 - Added 3 Wire Standard compliance tests (L2 envelope, L3 composable, protocol+transport)
 - Fixed pre-existing clippy error in nestgate-observe (`u64::MAX` absurd comparison)
 - Updated wateringHole `CAPABILITY_WIRE_STANDARD.md` compliance table: NestGate → L3
@@ -1749,5 +1779,5 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
-**Last Updated**: April 8, 2026  
+**Last Updated**: April 15, 2026  
 **Current Version**: 4.7.0-dev

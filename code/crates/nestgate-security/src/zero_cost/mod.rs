@@ -25,6 +25,7 @@
 //! Note: Some traits are deprecated but maintained for backward compatibility.
 //! Migration to canonical traits is tracked but not yet scheduled.
 
+pub mod constants;
 pub mod providers;
 pub mod system;
 pub mod traits;
@@ -43,12 +44,17 @@ pub use types::{
 
 #[cfg(test)]
 mod integration_tests {
+    use super::constants::{
+        ZERO_COST_TEST_LATENCY_P95_NS, ZERO_COST_TEST_TIMEOUT_MS_1000,
+        ZERO_COST_TEST_TIMEOUT_MS_2000,
+    };
     use super::*;
 
     #[test]
     fn test_zero_cost_architecture_integration() {
         // Create a complete zero-cost system
-        let system = ZeroCostSystemBuilder::<64, 1000>::new().with_memory_cache();
+        let system =
+            ZeroCostSystemBuilder::<64, ZERO_COST_TEST_TIMEOUT_MS_1000>::new().with_memory_cache();
 
         // Create a request
         let request = ZeroCostRequest {
@@ -84,11 +90,13 @@ mod integration_tests {
         let security = ZeroCostJwtProvider::new([42u8; 32]);
         let storage = ZeroCostFileStorage::new("/tmp/test".to_string());
 
-        let system = ZeroCostSystem::<_, _, _, 128, 2000>::new(cache, security, storage);
+        let system = ZeroCostSystem::<_, _, _, 128, ZERO_COST_TEST_TIMEOUT_MS_2000>::new(
+            cache, security, storage,
+        );
 
         // Verify compile-time constants
         assert_eq!(system.max_size(), 128);
-        assert_eq!(system.timeout_ms(), 2000);
+        assert_eq!(system.timeout_ms(), ZERO_COST_TEST_TIMEOUT_MS_2000);
 
         // Verify provider access
         assert_eq!(system.cache().capacity(), 128);
@@ -108,12 +116,12 @@ mod integration_tests {
     fn test_zero_cost_performance_metrics() {
         let metrics = ZeroCostPerformanceMetrics {
             throughput_ops_per_sec: 10000,
-            latency_p95_ns: 50000,
+            latency_p95_ns: ZERO_COST_TEST_LATENCY_P95_NS,
             memory_usage_bytes: 1024,
         };
 
         assert_eq!(metrics.throughput_ops_per_sec, 10000);
-        assert_eq!(metrics.latency_p95_ns, 50000);
+        assert_eq!(metrics.latency_p95_ns, ZERO_COST_TEST_LATENCY_P95_NS);
         assert_eq!(metrics.memory_usage_bytes, 1024);
     }
 }

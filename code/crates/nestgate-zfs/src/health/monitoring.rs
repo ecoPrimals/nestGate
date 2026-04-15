@@ -91,21 +91,20 @@ impl ZfsHealthMonitor {
                         let health_status =
                             Self::check_pool_health(&pool_manager, &pool.name).await;
 
+                        let report = HealthReport {
+                            component_type: "pool".to_string(),
+                            component_name: pool.name.clone(),
+                            status: health_status,
+                            last_check: SystemTime::now(),
+                            details: format!(
+                                "Pool capacity: {:.1}% used",
+                                pool.capacity.utilization_percent
+                            ),
+                        };
+
                         // Update health data
                         let mut health = health_data.write().await;
-                        health.insert(
-                            "pool:error details".to_string(),
-                            HealthReport {
-                                component_type: "pool".to_string(),
-                                component_name: pool.name.clone(),
-                                status: health_status,
-                                last_check: SystemTime::now(),
-                                details: format!(
-                                    "Pool capacity: {:.1}% used",
-                                    pool.capacity.utilization_percent
-                                ),
-                            },
-                        );
+                        health.insert("pool:error details".to_string(), report);
                     }
                 }
 
@@ -300,8 +299,11 @@ impl ZfsHealthMonitor {
         self.monitoring_active.store(false, Ordering::Relaxed);
 
         // Stop all background tasks
-        let mut tasks = self.background_tasks.write().await;
-        for task in tasks.drain(..) {
+        let tasks_to_abort: Vec<_> = {
+            let mut tasks = self.background_tasks.write().await;
+            tasks.drain(..).collect()
+        };
+        for task in tasks_to_abort {
             task.abort();
         }
 

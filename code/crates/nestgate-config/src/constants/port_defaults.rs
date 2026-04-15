@@ -37,6 +37,18 @@ pub const DEFAULT_METRICS_PORT: u16 = 9090;
 /// **Usage**: Health check endpoint, load balancer
 pub const DEFAULT_HEALTH_PORT: u16 = 8082;
 
+/// Default WebSocket listener port (local development fallback).
+///
+/// **Environment Variable**: `NESTGATE_WEBSOCKET_PORT` / `NESTGATE_WS_PORT`\
+/// **Usage**: WebSocket upgrades; prefer capability discovery in production.
+pub const DEFAULT_WEBSOCKET_PORT: u16 = 8082;
+
+/// Default orchestration / coordinator listener port (local development fallback).
+///
+/// **Environment Variable**: `NESTGATE_ORCHESTRATOR_PORT`\
+/// **Usage**: Orchestrator endpoints; prefer capability discovery in production.
+pub const DEFAULT_ORCHESTRATOR_PORT: u16 = 8090;
+
 // ==================== DEVELOPMENT PORTS ====================
 
 /// Default development server port
@@ -224,6 +236,8 @@ mod tests {
         assert_eq!(DEFAULT_METRICS_PORT, 9090);
         assert_eq!(DEFAULT_POSTGRES_PORT, 5432);
         assert_eq!(DEFAULT_REDIS_PORT, 6379);
+        assert_eq!(DEFAULT_WEBSOCKET_PORT, 8082);
+        assert_eq!(DEFAULT_ORCHESTRATOR_PORT, 8090);
     }
 
     #[test]

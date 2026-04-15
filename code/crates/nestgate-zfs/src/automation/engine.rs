@@ -134,10 +134,16 @@ impl DatasetAutomation {
     async fn run_automation_cycle(&self) -> Result<()> {
         debug!("Running automation cycle");
 
-        let policies = self.policies.read().await;
+        let policies: Vec<(String, AutomationPolicy)> = self
+            .policies
+            .read()
+            .await
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
 
         // Process each active policy
-        for (policy_id, policy) in policies.iter() {
+        for (policy_id, policy) in &policies {
             if !policy.enabled {
                 continue;
             }
@@ -264,8 +270,6 @@ impl DatasetAutomation {
 
     /// Create default automation policies
     async fn create_default_policies(&self) -> Result<()> {
-        let mut policies = self.policies.write().await;
-
         // Default balanced policy
         let default_policy = AutomationPolicy {
             policy_id: "default".to_string(),
@@ -282,7 +286,10 @@ impl DatasetAutomation {
             last_modified: SystemTime::now(),
         };
 
-        policies.insert(default_policy.policy_id.clone(), default_policy);
+        self.policies
+            .write()
+            .await
+            .insert(default_policy.policy_id.clone(), default_policy);
         Ok(())
     }
 
@@ -292,8 +299,10 @@ impl DatasetAutomation {
         dataset_name: &str,
         lifecycle: DatasetLifecycle,
     ) -> Result<()> {
-        let mut lifecycle_tracker = self.lifecycle_tracker.write().await;
-        lifecycle_tracker.insert(dataset_name.to_string(), lifecycle);
+        {
+            let mut lifecycle_tracker = self.lifecycle_tracker.write().await;
+            lifecycle_tracker.insert(dataset_name.to_string(), lifecycle);
+        }
         Ok(())
     }
 

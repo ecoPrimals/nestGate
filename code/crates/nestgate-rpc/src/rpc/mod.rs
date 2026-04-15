@@ -38,7 +38,7 @@
 //! use nestgate_core::rpc::{NestGateRpcService, serve_tarpc};
 //! use std::net::SocketAddr;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! let service = NestGateRpcService::new().await.expect("Failed to create service");
 //! // Environment-driven: $NESTGATE_RPC_HOST and $NESTGATE_RPC_PORT
 //! let addr: SocketAddr = nestgate_core::constants::ports::get_rpc_server_addr().parse()?;
@@ -51,7 +51,7 @@
 //! ```rust,ignore
 //! use nestgate_core::rpc::NestGateRpcClient;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! // Environment-driven: $NESTGATE_RPC_ADDR or default
 //! let rpc_addr = std::env::var("NESTGATE_RPC_ADDR")
 //!     .unwrap_or_else(|_| "tarpc://localhost:8091".to_string());
@@ -74,6 +74,7 @@ pub mod protocol;
 pub mod semantic_router;
 pub mod socket_config;
 pub mod storage_backend;
+pub(crate) mod storage_stream;
 // Legacy primal-specific registration removed in v2.3.0; use capability-based IPC
 /// Model cache and discovery JSON-RPC handlers (smart refactoring extract)
 pub(crate) mod model_cache_handlers;

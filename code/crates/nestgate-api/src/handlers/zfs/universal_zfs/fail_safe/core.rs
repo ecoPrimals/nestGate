@@ -129,7 +129,10 @@ impl FailSafeZfsService {
         operation: &str,
         _fallback: &Arc<UniversalZfsServiceEnum>,
     ) -> UniversalZfsResult<()> {
-        warn!("Executing fallback operation: {}", operation);
+        warn!(
+            "Executing fallback operation on service {}: {}",
+            self.service_name, operation
+        );
         // For now, just return success from fallback
         Ok(())
     }

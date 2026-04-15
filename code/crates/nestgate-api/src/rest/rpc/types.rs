@@ -139,7 +139,7 @@ pub trait UnifiedRpcService: Send + Sync {
 
 /// **DYN-COMPATIBLE RPC SERVICE WRAPPER**
 /// Wrapper enum for dynamic dispatch of RPC services
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Dynrpcservice
 pub enum DynRpcService {
     /// JSON-RPC service implementation for HTTP-based communication

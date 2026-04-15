@@ -13,6 +13,7 @@ use std::time::{Duration, SystemTime};
 use super::traits::NativeAsyncLoadBalancer;
 use super::types::{LoadBalancerStats, ServiceResponse, ServiceStats};
 use crate::service_discovery::types::ServiceInfo;
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use tracing::debug;
 use uuid::Uuid;
 
@@ -145,7 +146,7 @@ impl NativeAsyncLoadBalancer<100, 1000, 3600, 60> for DevelopmentLoadBalancer {
                     metrics_endpoint: Some("/metrics".to_string()),
                 },
                 capabilities: vec![crate::service_discovery::types::ServiceCapability::Custom {
-                    namespace: "nestgate".to_string(),
+                    namespace: DEFAULT_SERVICE_NAME.to_string(),
                     capability: "development".to_string(),
                     version: "1.0.0".to_string(),
                 }],

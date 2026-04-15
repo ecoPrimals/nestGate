@@ -176,6 +176,7 @@ mod tests {
         zero_cost_pool_from_zfs_properties,
     };
     use nestgate_core::Result;
+    use serial_test::serial;
     use std::collections::HashMap;
     use std::time::SystemTime;
 
@@ -264,6 +265,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn pool_list_uses_stub_and_parses_rows() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_ok_pool_flow()));
         let m = TestingZfsManager::new();
@@ -275,6 +277,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn pool_get_properties_cache_miss_uses_stub_get() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_ok_pool_flow()));
         let m = TestingZfsManager::new();
@@ -294,6 +297,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn pool_create_with_stub_inserts_pool() {
         let _g = ZfsCommandStubGuard::set(Box::new(stub_ok_pool_flow()));
         let m = TestingZfsManager::new();

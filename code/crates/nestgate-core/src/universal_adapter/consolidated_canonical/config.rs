@@ -7,6 +7,7 @@
 //! the behavior of the adapter, including discovery, requests, monitoring,
 //! security, and performance settings.
 
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use uuid::Uuid;
@@ -64,7 +65,7 @@ impl Default for CanonicalAdapterConfig {
     fn default() -> Self {
         Self {
             service_id: Uuid::new_v4().to_string(),
-            service_name: "nestgate".to_string(),
+            service_name: DEFAULT_SERVICE_NAME.to_string(),
             service_version: env!("CARGO_PKG_VERSION").to_string(),
             discovery: DiscoveryConfig::default(),
             requests: RequestConfig::default(),

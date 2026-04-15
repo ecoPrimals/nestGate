@@ -182,12 +182,14 @@ impl MetricsRegistry {
     pub async fn collect_system_metrics(&self) -> Result<()> {
         let metrics = self.gather_system_metrics().await?;
 
-        let mut history = self.metrics_history.write().await;
-        history.push(metrics);
+        {
+            let mut history = self.metrics_history.write().await;
+            history.push(metrics);
 
-        // Keep only the last max_history entries
-        if history.len() > self.max_history {
-            history.remove(0);
+            // Keep only the last max_history entries
+            if history.len() > self.max_history {
+                history.remove(0);
+            }
         }
 
         Ok(())
@@ -214,8 +216,10 @@ impl MetricsRegistry {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn record_custom_metric(&self, name: &str, value: f64) -> Result<()> {
-        let mut custom = self.custom_metrics.write().await;
-        custom.insert(name.to_string(), MetricValue::Gauge(value));
+        {
+            let mut custom = self.custom_metrics.write().await;
+            custom.insert(name.to_string(), MetricValue::Gauge(value));
+        }
 
         tracing::debug!("Recorded custom metric: {} = {}", name, value);
         Ok(())
@@ -230,21 +234,26 @@ impl MetricsRegistry {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn get_metrics_history(&self, duration: Duration) -> Result<Vec<PerformanceMetrics>> {
-        let history = self.metrics_history.read().await;
-        let cutoff_time = SystemTime::now() - duration;
+        let filtered: Vec<PerformanceMetrics> = {
+            let history = self.metrics_history.read().await;
+            let cutoff_time = SystemTime::now() - duration;
 
-        let filtered: Vec<PerformanceMetrics> = history
-            .iter()
-            .filter(|metrics| metrics.timestamp >= cutoff_time)
-            .cloned()
-            .collect();
+            history
+                .iter()
+                .filter(|metrics| metrics.timestamp >= cutoff_time)
+                .cloned()
+                .collect()
+        };
 
         Ok(filtered)
     }
 
     /// Gather system metrics from the OS
     async fn gather_system_metrics(&self) -> Result<PerformanceMetrics> {
-        let custom = self.custom_metrics.read().await;
+        let custom: CustomMetricsMap = {
+            let guard = self.custom_metrics.read().await;
+            guard.clone()
+        };
 
         #[cfg(not(feature = "mock-metrics"))]
         {

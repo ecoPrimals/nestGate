@@ -161,6 +161,7 @@ impl StorageBackend for InMemoryStorageBackend {
                 status: String::from("active"),
             };
             g.datasets.insert(name, info.clone());
+            drop(g);
             Ok(info)
         }
     }
@@ -199,6 +200,7 @@ impl StorageBackend for InMemoryStorageBackend {
                 ));
             }
             g.objects.retain(|k, _| k.0.as_ref() != &*name);
+            drop(g);
             Ok(OperationResult {
                 success: true,
                 message: format!("Dataset {name} deleted successfully"),
@@ -226,9 +228,10 @@ impl StorageBackend for InMemoryStorageBackend {
             let ts = unix_ts();
             let size = byte_len(data.len());
             let meta = metadata.unwrap_or_default();
+            let dk: ObjectMapKey = (Arc::from(dataset.as_str()), Arc::from(key.as_str()));
             let info = ObjectInfo {
-                key: key.clone(),
-                dataset: dataset.clone(),
+                key,
+                dataset,
                 size_bytes: size,
                 created_at: ts,
                 modified_at: ts,
@@ -238,26 +241,27 @@ impl StorageBackend for InMemoryStorageBackend {
                 compressed: false,
                 metadata: meta.clone(),
             };
-            let dk: ObjectMapKey = (Arc::from(&*dataset), Arc::from(&*key));
             g.objects.insert(dk, (data, meta));
 
+            let dataset_name = info.dataset.as_str();
             let object_count = byte_len(
                 g.objects
                     .keys()
-                    .filter(|(d, _)| d.as_ref() == &*dataset)
+                    .filter(|(d, _)| d.as_ref() == dataset_name)
                     .count(),
             );
             let used_bytes: u64 = g
                 .objects
                 .iter()
-                .filter(|((d, _), _)| d.as_ref() == &*dataset)
+                .filter(|((d, _), _)| d.as_ref() == dataset_name)
                 .map(|(_, (b, _))| byte_len(b.len()))
                 .sum();
-            if let Some(ds) = g.datasets.get_mut(&dataset) {
+            if let Some(ds) = g.datasets.get_mut(info.dataset.as_str()) {
                 ds.object_count = object_count;
                 ds.size_bytes = used_bytes;
                 ds.modified_at = ts;
             }
+            drop(g);
             Ok(info)
         }
     }
@@ -292,12 +296,13 @@ impl StorageBackend for InMemoryStorageBackend {
         let key = key.to_owned();
         async move {
             let g = self.inner.read().await;
-            let lookup: ObjectMapKey = (Arc::from(&*dataset), Arc::from(&*key));
+            let not_found = format!("object {dataset}/{key}");
+            let lookup: ObjectMapKey = (Arc::from(dataset.as_str()), Arc::from(key.as_str()));
             g.objects
                 .get(&lookup)
                 .map(|(data, meta)| ObjectInfo {
-                    key: key.clone(),
-                    dataset: dataset.clone(),
+                    key,
+                    dataset,
                     size_bytes: byte_len(data.len()),
                     created_at: unix_ts(),
                     modified_at: unix_ts(),
@@ -307,11 +312,7 @@ impl StorageBackend for InMemoryStorageBackend {
                     compressed: false,
                     metadata: meta.clone(),
                 })
-                .ok_or_else(|| {
-                    nestgate_types::error::NestGateError::storage_not_found(format!(
-                        "object {dataset}/{key}",
-                    ))
-                })
+                .ok_or_else(|| nestgate_types::error::NestGateError::storage_not_found(not_found))
         }
     }
 
@@ -324,18 +325,21 @@ impl StorageBackend for InMemoryStorageBackend {
         let dataset = dataset.to_owned();
         let prefix = prefix.map(str::to_owned);
         async move {
-            let g = self.inner.read().await;
-            let mut results = Vec::new();
-            for ((ds, key), (data, meta)) in &g.objects {
-                if ds.as_ref() != &*dataset {
-                    continue;
-                }
-                if let Some(ref pfx) = prefix
-                    && !key.starts_with(&**pfx)
-                {
-                    continue;
-                }
-                results.push(ObjectInfo {
+            let take_n = limit.unwrap_or(usize::MAX);
+            let results: Vec<ObjectInfo> = self
+                .inner
+                .read()
+                .await
+                .objects
+                .iter()
+                .filter(|((ds, key), _)| {
+                    if ds.as_ref() != &*dataset {
+                        return false;
+                    }
+                    prefix.as_deref().is_none_or(|pfx| key.starts_with(pfx))
+                })
+                .take(take_n)
+                .map(|((_, key), (data, meta))| ObjectInfo {
                     key: key.as_ref().to_string(),
                     dataset: dataset.clone(),
                     size_bytes: byte_len(data.len()),
@@ -346,13 +350,8 @@ impl StorageBackend for InMemoryStorageBackend {
                     encrypted: false,
                     compressed: false,
                     metadata: meta.clone(),
-                });
-                if let Some(lim) = limit
-                    && results.len() >= lim
-                {
-                    break;
-                }
-            }
+                })
+                .collect();
             Ok(results)
         }
     }
@@ -389,6 +388,7 @@ impl StorageBackend for InMemoryStorageBackend {
                 ds.size_bytes = used_bytes;
                 ds.modified_at = unix_ts();
             }
+            drop(g);
             Ok(OperationResult {
                 success: true,
                 message: format!("Object {dataset}/{key} deleted successfully"),

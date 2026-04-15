@@ -61,3 +61,6 @@ features = ["winuser", "winsvc"]
 [target."cfg(unix)".dependencies.nix]
 version = "0.27"
 features = ["user"]
+
+[dev-dependencies]
+temp-env = { workspace = true }

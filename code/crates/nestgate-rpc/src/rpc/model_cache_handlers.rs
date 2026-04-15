@@ -187,6 +187,10 @@ pub const UNIX_SOCKET_SUPPORTED_METHODS: &[&str] = &[
     "storage.store_blob",
     "storage.retrieve_blob",
     "storage.retrieve_range",
+    "storage.store_stream",
+    "storage.store_stream_chunk",
+    "storage.retrieve_stream",
+    "storage.retrieve_stream_chunk",
     "storage.object.size",
     "storage.namespaces.list",
     "storage.fetch_external",
@@ -245,6 +249,7 @@ pub fn capabilities_list() -> Result<Value> {
                 "methods": [
                     "store", "retrieve", "exists", "delete", "list",
                     "stats", "store_blob", "retrieve_blob", "retrieve_range",
+                    "store_stream", "store_stream_chunk", "retrieve_stream", "retrieve_stream_chunk",
                     "object.size", "namespaces.list", "fetch_external"
                 ],
                 "version": env!("CARGO_PKG_VERSION"),

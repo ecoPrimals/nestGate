@@ -527,6 +527,10 @@ async fn test_capabilities_include_streaming_methods() {
     assert!(m.contains(&"storage.store_blob"));
     assert!(m.contains(&"storage.retrieve_blob"));
     assert!(m.contains(&"storage.retrieve_range"));
+    assert!(m.contains(&"storage.store_stream"));
+    assert!(m.contains(&"storage.store_stream_chunk"));
+    assert!(m.contains(&"storage.retrieve_stream"));
+    assert!(m.contains(&"storage.retrieve_stream_chunk"));
     assert!(m.contains(&"storage.object.size"));
     assert!(m.contains(&"storage.namespaces.list"));
 }

@@ -179,8 +179,7 @@ impl CapabilityDiscovery {
     ///
     /// **Called by discovery mechanisms** (mDNS, Consul, etc.), not hardcoded
     pub async fn register(&self, id: String, provider: CapabilityProvider) -> Result<()> {
-        let mut providers = self.providers.write().await;
-        providers.insert(id, provider);
+        self.providers.write().await.insert(id, provider);
         Ok(())
     }
 

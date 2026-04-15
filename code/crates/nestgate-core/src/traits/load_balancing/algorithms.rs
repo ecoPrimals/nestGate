@@ -69,13 +69,15 @@ impl LoadBalancer for RoundRobinLoadBalancer {
         service: &ServiceInfo,
         _response: &ServiceResponse,
     ) -> Result<()> {
-        let mut stats = self.stats.write();
-        stats.total_requests += 1;
-        stats
-            .service_stats
-            .entry(service.name.clone())
-            .or_default()
-            .requests += 1;
+        {
+            let mut stats = self.stats.write();
+            stats.total_requests += 1;
+            stats
+                .service_stats
+                .entry(service.name.clone())
+                .or_default()
+                .requests += 1;
+        }
         Ok(())
     }
 
@@ -185,13 +187,15 @@ impl LoadBalancer for LeastConnectionsLoadBalancer {
             .or_default()
             .requests += 1;
 
-        let mut stats = self.stats.write();
-        stats.total_requests += 1;
-        stats
-            .service_stats
-            .entry(service.name.clone())
-            .or_default()
-            .requests += 1;
+        {
+            let mut stats = self.stats.write();
+            stats.total_requests += 1;
+            stats
+                .service_stats
+                .entry(service.name.clone())
+                .or_default()
+                .requests += 1;
+        }
         Ok(())
     }
 
@@ -230,7 +234,7 @@ impl RandomLoadBalancer {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            rng: Arc::new(parking_lot::Mutex::new(StdRng::from_entropy())),
+            rng: Arc::new(parking_lot::Mutex::new(StdRng::from_os_rng())),
             stats: Arc::new(parking_lot::RwLock::new(LoadBalancerStats {
                 algorithm: "random".to_string(),
                 ..LoadBalancerStats::default()
@@ -269,13 +273,15 @@ impl LoadBalancer for RandomLoadBalancer {
         };
         let selected = services[index].clone();
 
-        let mut stats = self.stats.write();
-        stats.total_requests += 1;
-        stats
-            .service_stats
-            .entry(selected.name.clone())
-            .or_default()
-            .requests += 1;
+        {
+            let mut stats = self.stats.write();
+            stats.total_requests += 1;
+            stats
+                .service_stats
+                .entry(selected.name.clone())
+                .or_default()
+                .requests += 1;
+        }
 
         Ok(selected)
     }
@@ -286,8 +292,8 @@ impl LoadBalancer for RandomLoadBalancer {
         service: &ServiceInfo,
         _response: &ServiceResponse,
     ) -> Result<()> {
-        let mut stats = self.stats.write();
-        stats
+        self.stats
+            .write()
             .service_stats
             .entry(service.name.clone())
             .or_default()

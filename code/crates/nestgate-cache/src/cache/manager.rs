@@ -372,7 +372,7 @@ impl CacheManager {
     fn evict_one_entry(&mut self) -> Result<()> {
         // Try to evict from cold tier first
         if !self.cold_tier.is_empty()
-            && let Some(key) = self.find_lru_key(&self.cold_tier)
+            && let Some(key) = Self::find_lru_key(&self.cold_tier)
         {
             self.cold_tier.remove(&key);
             self.stats.evictions += 1;
@@ -383,7 +383,7 @@ impl CacheManager {
 
         // Then warm tier
         if !self.warm_tier.is_empty()
-            && let Some(key) = self.find_lru_key(&self.warm_tier)
+            && let Some(key) = Self::find_lru_key(&self.warm_tier)
         {
             self.warm_tier.remove(&key);
             self.stats.evictions += 1;
@@ -394,7 +394,7 @@ impl CacheManager {
 
         // Finally hot tier
         if !self.hot_tier.is_empty()
-            && let Some(key) = self.find_lru_key(&self.hot_tier)
+            && let Some(key) = Self::find_lru_key(&self.hot_tier)
         {
             self.hot_tier.remove(&key);
             self.stats.evictions += 1;
@@ -407,7 +407,7 @@ impl CacheManager {
     }
 
     /// Find least recently used key in a tier
-    fn find_lru_key(&self, tier: &HashMap<String, CacheEntry>) -> Option<String> {
+    fn find_lru_key(tier: &HashMap<String, CacheEntry>) -> Option<String> {
         tier.iter()
             .min_by_key(|(_, entry)| entry.last_accessed)
             .map(|(key, _)| key.clone())

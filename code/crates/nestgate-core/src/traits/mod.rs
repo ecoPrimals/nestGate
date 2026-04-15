@@ -75,6 +75,66 @@ pub use unified_storage::{
 // ==================== VALIDATION ====================
 
 /// Validate that a service implements the canonical interface.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_core::traits::canonical::ServiceCapabilities;
+/// use nestgate_core::traits::{validate_canonical_service, CanonicalService};
+/// use nestgate_core::NestGateError;
+///
+/// struct DemoService;
+///
+/// impl CanonicalService for DemoService {
+///     type Config = ();
+///     type Health = bool;
+///     type Metrics = u32;
+///     type Error = NestGateError;
+///
+///     fn start(
+///         &self,
+///     ) -> impl std::future::Future<Output = std::result::Result<(), Self::Error>> + Send {
+///         async { Ok(()) }
+///     }
+///
+///     fn stop(
+///         &self,
+///     ) -> impl std::future::Future<Output = std::result::Result<(), Self::Error>> + Send {
+///         async { Ok(()) }
+///     }
+///
+///     fn is_healthy(
+///         &self,
+///     ) -> impl std::future::Future<Output = std::result::Result<Self::Health, Self::Error>> + Send {
+///         async { Ok(true) }
+///     }
+///
+///     fn get_metrics(
+///         &self,
+///     ) -> impl std::future::Future<Output = std::result::Result<Self::Metrics, Self::Error>> + Send {
+///         async { Ok(0) }
+///     }
+///
+///     fn capabilities(
+///         &self,
+///     ) -> impl std::future::Future<Output = std::result::Result<ServiceCapabilities, Self::Error>> + Send
+///     {
+///         async { Ok(ServiceCapabilities::default()) }
+///     }
+///
+///     fn validate_config(
+///         &self,
+///         _config: &Self::Config,
+///     ) -> impl std::future::Future<Output = std::result::Result<Vec<String>, Self::Error>> + Send {
+///         async { Ok(Vec::new()) }
+///     }
+/// }
+///
+/// assert!(validate_canonical_service(&DemoService));
+/// # Ok(())
+/// # }
+/// ```
 pub const fn validate_canonical_service<S>(_service: &S) -> bool
 where
     S: CanonicalService,

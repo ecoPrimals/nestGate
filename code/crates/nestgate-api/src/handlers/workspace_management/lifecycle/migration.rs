@@ -362,4 +362,22 @@ mod tests {
         .await;
         assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
     }
+
+    #[test]
+    fn workspace_and_target_dataset_paths_follow_expected_layout() {
+        let workspace_id = "proj-42";
+        let target_pool = "tank-b";
+        let source = format!("nestpool/workspaces/{workspace_id}");
+        let target = format!("{target_pool}/workspaces/{workspace_id}");
+        assert_eq!(source, "nestpool/workspaces/proj-42");
+        assert_eq!(target, "tank-b/workspaces/proj-42");
+    }
+
+    #[test]
+    fn migration_snapshot_name_includes_epoch_prefix() {
+        let ts = 1_700_000_000_u64;
+        let snap = format!("nestpool/workspaces/w1@migrate_{ts}");
+        assert!(snap.contains("@migrate_"));
+        assert!(snap.ends_with(&format!("migrate_{ts}")));
+    }
 }

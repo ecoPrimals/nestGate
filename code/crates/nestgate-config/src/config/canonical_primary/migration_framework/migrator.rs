@@ -332,6 +332,10 @@ impl ConfigMigrator {
         }
     }
 
+    #[expect(
+        clippy::unused_self,
+        reason = "Stub rollback: will read backup paths and options from self when restore is implemented"
+    )]
     const fn restore_from_backup(&self, _backup: &MigrationBackup) -> Result<()> {
         Ok(())
     }

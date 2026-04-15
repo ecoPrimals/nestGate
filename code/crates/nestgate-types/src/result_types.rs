@@ -54,6 +54,47 @@ use std::sync::Arc;
 ///
 /// This is the **preferred** Result type for all `NestGate` operations.
 ///
+/// # Examples
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_types::NestGateError;
+/// use nestgate_types::Result;
+///
+/// fn greet(name: &str) -> Result<String> {
+///     if name.trim().is_empty() {
+///         return Err(NestGateError::validation_error("name cannot be empty"));
+///     }
+///     Ok(format!("Hello, {name}"))
+/// }
+///
+/// assert_eq!(greet("Ada")?, "Hello, Ada");
+/// assert!(greet("   ").unwrap_err().to_string().contains("empty"));
+/// # Ok(())
+/// # }
+/// ```
+///
+/// The same alias is available as [`crate::result_types::Result`](Result) when you want to import
+/// from this module explicitly:
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_types::result_types::Result;
+/// use nestgate_types::NestGateError;
+///
+/// fn check(n: i32) -> Result<()> {
+///     if n < 0 {
+///         return Err(NestGateError::validation_error("n must be non-negative"));
+///     }
+///     Ok(())
+/// }
+///
+/// check(1)?;
+/// assert!(check(-1).is_err());
+/// # Ok(())
+/// # }
+/// ```
+///
 /// ## Usage
 ///
 /// ```rust,ignore

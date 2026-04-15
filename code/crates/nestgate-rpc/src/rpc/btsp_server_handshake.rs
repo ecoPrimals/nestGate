@@ -195,12 +195,15 @@ where
         error!("BTSP: failed to read ClientHello: {e}");
         e
     })?;
-    let client_hello: ClientHello = serde_json::from_slice(&hello_bytes).map_err(|e| {
-        tokio::runtime::Handle::current().block_on(async {
+    let client_hello: ClientHello = match serde_json::from_slice(&hello_bytes) {
+        Ok(h) => h,
+        Err(e) => {
             write_error_frame(writer, "invalid_client_hello").await;
-        });
-        NestGateError::validation_error(format!("BTSP: malformed ClientHello: {e}"))
-    })?;
+            return Err(NestGateError::validation_error(format!(
+                "BTSP: malformed ClientHello: {e}"
+            )));
+        }
+    };
     debug!("BTSP: received ClientHello");
 
     // 2. Generate challenge
@@ -441,6 +444,58 @@ mod tests {
     }
 
     #[test]
+    fn is_btsp_required_standalone_family_disables() {
+        temp_env::with_vars(
+            [
+                ("FAMILY_ID", Some("standalone")),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", Some("would-otherwise-require-btsp")),
+                ("BIOMEOS_INSECURE", None),
+            ],
+            || assert!(!is_btsp_required()),
+        );
+    }
+
+    #[test]
+    fn is_btsp_required_prefers_family_id_over_nestgate() {
+        temp_env::with_vars(
+            [
+                ("FAMILY_ID", Some("default")),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", Some("prod-real")),
+                ("BIOMEOS_INSECURE", None),
+            ],
+            || assert!(!is_btsp_required()),
+        );
+    }
+
+    #[test]
+    fn is_btsp_required_via_nestgate_family_id() {
+        temp_env::with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", None),
+                ("NESTGATE_FAMILY_ID", Some("edge-nucleus")),
+                ("BIOMEOS_INSECURE", None),
+            ],
+            || assert!(is_btsp_required()),
+        );
+    }
+
+    #[test]
+    fn is_btsp_required_via_biomeos_family_id() {
+        temp_env::with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", Some("bio-family")),
+                ("NESTGATE_FAMILY_ID", None),
+                ("BIOMEOS_INSECURE", None),
+            ],
+            || assert!(is_btsp_required()),
+        );
+    }
+
+    #[test]
     fn challenge_is_32_bytes() {
         let c = generate_challenge();
         assert_eq!(c.len(), 32);
@@ -468,6 +523,43 @@ mod tests {
         let mut cursor = std::io::Cursor::new(fake_len.to_vec());
         let err = read_frame(&mut cursor).await.expect_err("should reject");
         assert!(err.to_string().contains("frame too large"));
+    }
+
+    #[tokio::test]
+    async fn read_frame_errors_on_truncated_payload() {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&10u32.to_be_bytes());
+        buf.extend_from_slice(&[1_u8, 2, 3]);
+        let mut cursor = std::io::Cursor::new(buf);
+        let err = read_frame(&mut cursor)
+            .await
+            .expect_err("truncated payload should fail");
+        assert!(
+            err.to_string().contains("payload") || err.to_string().contains("read"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn handshake_rejects_malformed_client_hello_json() {
+        let payload = b"{not-json";
+        let mut input = Vec::new();
+        input.extend_from_slice(&(payload.len() as u32).to_be_bytes());
+        input.extend_from_slice(payload);
+        let mut reader = std::io::Cursor::new(input);
+        let mut writer = Vec::new();
+        let err = perform_handshake(&mut reader, &mut writer, "fam")
+            .await
+            .expect_err("invalid JSON");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ClientHello") || msg.contains("malformed"),
+            "{msg}"
+        );
+        assert!(
+            !writer.is_empty(),
+            "error frame should be written for invalid ClientHello"
+        );
     }
 
     #[test]

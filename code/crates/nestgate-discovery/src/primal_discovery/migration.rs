@@ -149,10 +149,10 @@ impl DiscoveryOrEnv {
         // Determine search order based on config
         let endpoint = if self.config.prefer_environment {
             self.try_environment(env_var)
-                .or_else(|| self.try_discovery_sync(capability))
+                .or_else(|| Self::try_discovery_sync(capability))
                 .or_else(|| self.try_default(default_port))
         } else {
-            self.try_discovery_sync(capability)
+            Self::try_discovery_sync(capability)
                 .or_else(|| self.try_environment(env_var))
                 .or_else(|| self.try_default(default_port))
         };
@@ -171,7 +171,7 @@ impl DiscoveryOrEnv {
     }
 
     /// Try discovery (currently returns None, reserved for async integration)
-    const fn try_discovery_sync(&self, _capability: &str) -> Option<(String, EndpointSource)> {
+    const fn try_discovery_sync(_capability: &str) -> Option<(String, EndpointSource)> {
         // Reserved for future async discovery integration
         // Currently using environment and defaults only
         None
@@ -214,14 +214,19 @@ impl DiscoveryOrEnv {
     /// Check cache for endpoint
     async fn check_cache(&self, capability: &str) -> Option<(String, EndpointSource)> {
         let cache = self.cache.read().await;
-        cache.entries.get(capability).and_then(|entry| {
+        let out = cache.entries.get(capability).and_then(|entry| {
             if entry.cached_at.elapsed() < self.config.cache_ttl {
                 Some((entry.url.clone(), entry.source))
             } else {
-                debug!("Cache entry for {} is stale", capability);
                 None
             }
-        })
+        });
+        let stale_hit = cache.entries.contains_key(capability) && out.is_none();
+        drop(cache);
+        if stale_hit {
+            debug!("Cache entry for {} is stale", capability);
+        }
+        out
     }
 
     /// Update cache with new endpoint
@@ -239,16 +244,21 @@ impl DiscoveryOrEnv {
 
     /// Clear cache for capability
     pub async fn invalidate(&self, capability: &str) {
-        let mut cache = self.cache.write().await;
-        cache.entries.remove(capability);
+        {
+            let mut cache = self.cache.write().await;
+            cache.entries.remove(capability);
+        }
         debug!("Invalidated cache for {}", capability);
     }
 
     /// Clear all cached endpoints
     pub async fn clear_cache(&self) {
-        let mut cache = self.cache.write().await;
-        let count = cache.entries.len();
-        cache.entries.clear();
+        let count = {
+            let mut cache = self.cache.write().await;
+            let count = cache.entries.len();
+            cache.entries.clear();
+            count
+        };
         debug!("Cleared {} cached endpoints", count);
     }
 }

@@ -5,6 +5,7 @@
 
 //! Orchestrator auto-registration — stub until nestgate-discovery + nestgate-core wiring.
 
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::error::Result;
 use nestgate_types::{EnvSource, ProcessEnv};
 use serde::{Deserialize, Serialize};
@@ -99,8 +100,10 @@ impl SelfKnowledgeBuilder {
     /// returns `Ok`).
     pub fn build(self) -> Result<SelfKnowledge> {
         Ok(SelfKnowledge {
-            id: self.id.unwrap_or_else(|| "nestgate".to_string()),
-            name: self.name.unwrap_or_else(|| "nestgate".to_string()),
+            id: self.id.unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string()),
+            name: self
+                .name
+                .unwrap_or_else(|| DEFAULT_SERVICE_NAME.to_string()),
             capabilities: self.capabilities,
             version: "1.0.0".to_string(),
             endpoints: HashMap::new(),

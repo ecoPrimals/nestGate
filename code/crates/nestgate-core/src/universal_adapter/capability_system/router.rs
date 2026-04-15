@@ -91,17 +91,18 @@ impl CapabilityRouter {
         &self,
         request: &CapabilityRequest,
     ) -> Result<Vec<DiscoveredService>> {
-        let registry = self.registry.read().await;
-        let services = registry.find_providers(&request.category, &request.operation);
-
-        // Filter by availability and capability match
-        let mut capable_services = Vec::new();
-        for service in services {
-            if service.provides_capability(&request.category, &request.operation) && service.healthy
-            {
-                capable_services.push(service.clone());
-            }
-        }
+        let capable_services: Vec<DiscoveredService> = {
+            let registry = self.registry.read().await;
+            registry
+                .find_providers(&request.category, &request.operation)
+                .into_iter()
+                .filter(|service| {
+                    service.provides_capability(&request.category, &request.operation)
+                        && service.healthy
+                })
+                .cloned()
+                .collect()
+        };
 
         Ok(capable_services)
     }

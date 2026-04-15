@@ -85,10 +85,11 @@
 //! NOTE: This example demonstrates the RPC system concept.
 //! The actual implementation may have evolved. This is kept as documentation.
 
+use nestgate_core::Result;
 use serde_json::json;
 
 #[tokio::main]
-async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     println!("🚀 NestGate RPC System Demo");
     println!("================================");
     println!();

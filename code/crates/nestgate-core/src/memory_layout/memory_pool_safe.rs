@@ -70,8 +70,10 @@ impl<T, const POOL_SIZE: usize> SafeMemoryPool<T, POOL_SIZE> {
         ) {
             Ok(_) => {
                 // Successfully claimed slot - now write SAFELY
-                let mut blocks = self.blocks.lock();
-                blocks[current] = Some(value); // ✅ 100% SAFE - bounds checked!
+                {
+                    let mut blocks = self.blocks.lock();
+                    blocks[current] = Some(value); // ✅ 100% SAFE - bounds checked!
+                }
 
                 // Update statistics
                 self.stats.get().allocated.fetch_add(1, Ordering::Relaxed);
@@ -108,8 +110,10 @@ impl<T, const POOL_SIZE: usize> SafeMemoryPool<T, POOL_SIZE> {
         }
 
         // ✅ 100% SAFE - Mutex protects interior mutability
-        let mut blocks = self.blocks.lock();
-        let value = blocks[handle.index].take(); // Safely take value
+        let value = {
+            let mut blocks = self.blocks.lock();
+            blocks[handle.index].take()
+        }; // Safely take value
 
         // Update statistics
         if value.is_some() {

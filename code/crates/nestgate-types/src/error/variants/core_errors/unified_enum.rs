@@ -18,6 +18,27 @@ use super::details::{
 ///
 /// This enum is designed to be small in memory by boxing all the large variants.
 /// This eliminates the `clippy::result_large_err` warnings while maintaining full functionality.
+///
+/// # Examples
+///
+/// [`NestGateError`](crate::NestGateError) is a type alias for this enum. Create and match on it
+/// like any other error type:
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_types::NestGateError;
+///
+/// let err = NestGateError::validation_error("port out of range");
+///
+/// match err {
+///     NestGateError::Validation(ref details) => {
+///         assert!(details.message.contains("range"));
+///     }
+///     other => panic!("unexpected variant: {other:?}"),
+/// }
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Clone, Error, Serialize, Deserialize)]
 /// Errors that can occur during `NestGateUnified` operations
 pub enum NestGateUnifiedError {

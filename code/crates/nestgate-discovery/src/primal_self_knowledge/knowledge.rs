@@ -9,6 +9,7 @@
 use super::types::{Capability, DiscoveredPrimal, DiscoveryMechanism, Endpoint, PrimalIdentity};
 use anyhow::{Context, Result};
 use dashmap::DashMap;
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 use nestgate_types::{EnvSource, ProcessEnv, env_parsed};
 use std::sync::Arc;
 use tracing::{debug, info, warn};
@@ -59,7 +60,7 @@ impl PrimalSelfKnowledge {
         // Generate our identity
         let identity = Arc::new(PrimalIdentity {
             id: uuid::Uuid::new_v4().to_string(),
-            primal_type: "nestgate".to_string(),
+            primal_type: DEFAULT_SERVICE_NAME.to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             started_at: std::time::SystemTime::now(),
         });
@@ -203,7 +204,7 @@ impl PrimalSelfKnowledge {
         );
 
         for mechanism in &self.discovery_mechanisms {
-            match self.announce_via_mechanism(mechanism) {
+            match Self::announce_via_mechanism(mechanism) {
                 Ok(()) => info!("Announced via {:?}", mechanism),
                 Err(e) => warn!("Failed to announce via {:?}: {}", mechanism, e),
             }
@@ -213,7 +214,7 @@ impl PrimalSelfKnowledge {
     }
 
     /// Announce via specific mechanism
-    fn announce_via_mechanism(&self, mechanism: &DiscoveryMechanism) -> Result<()> {
+    fn announce_via_mechanism(mechanism: &DiscoveryMechanism) -> Result<()> {
         match mechanism {
             DiscoveryMechanism::Environment => {
                 // Environment doesn't support active announcement

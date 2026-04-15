@@ -14,8 +14,10 @@ pub enum Commands {
     #[command(name = "server", alias = "daemon")]
     #[command(about = "Run NestGate server")]
     Server {
-        /// Port for TCP JSON-RPC listener (alongside Unix socket). When omitted, reads from
-        /// `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT`, then default.
+        /// Port for TCP JSON-RPC listener (alongside Unix socket). When omitted, TCP activates if
+        /// `NESTGATE_API_PORT`, `NESTGATE_HTTP_PORT`, or `NESTGATE_PORT` is explicitly set, or if
+        /// `NESTGATE_JSONRPC_TCP` is truthy (`1`/`true`/`yes`/`on`) for the default API port
+        /// (see `nestgate-config` / `DEFAULT_API_PORT`).
         #[arg(short, long)]
         port: Option<u16>,
         /// Bind address for TCP JSON-RPC (`bind:port`; `--listen host:port` overrides).

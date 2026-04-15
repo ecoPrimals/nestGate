@@ -1,0 +1,38 @@
+---
+description: ecoPrimals wateringHole ecosystem standards for nestgate
+alwaysApply: true
+---
+
+# nestgate Ecosystem Standards
+
+## Licensing
+- **AGPL-3.0-or-later** for nestgate; align with **scyBorg triple license** obligations per `wateringHole/LICENSING_AND_COPYLEFT.md` (and related wateringHole docs).
+- **Every `.rs` file** starts with SPDX + copyright on the first lines, e.g.:
+  - `// SPDX-License-Identifier: AGPL-3.0-or-later`
+  - `// Copyright (c) 2025-2026 ecoPrimals Collective`
+
+## Binary & Dependencies (UniBin → ecoBin)
+- **Single binary** primal layout; **pure Rust** toolchain — no C/C++ build deps, no bundled native libs that require a C toolchain for the core product.
+- **Sovereignty-first**: no vendor cloud SDKs; **no OpenSSL**, **no *ring***, no bindings that pull non-Rust crypto by default.
+
+## IPC & Protocol
+- **JSON-RPC 2.0** and **tarpc** as the dual protocol surface (JSON-RPC for interoperability; tarpc where high-performance typed RPC is needed).
+- **Semantic method names**: `{domain}.{operation}[.{variant}]` (see `wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md`).
+- **Capability-based discovery** — no hardcoded peer names, addresses, or primal imports; other primals are discovered at **runtime via IPC/capabilities**. nestgate holds **self-knowledge only** in-tree.
+
+## Rust Quality Bar
+- **Rust 2024** edition (workspace `Cargo.toml` / resolver policy consistent with ecosystem).
+- `#![forbid(unsafe_code)]` on **every crate root**.
+- `#![warn(missing_docs)]` on **library** crates.
+- **clippy::pedantic** + **clippy::nursery** — **zero warnings** (`cargo clippy --all-features -- -D warnings` in CI).
+- **No `#[allow(...)]` in production/library code** — fix the lint or use narrowly scoped, justified `#[expect(...)]` only where the compiler supports it and with a `reason`; never blanket file-level suppression for shipping code.
+
+## Code Hygiene
+- **No file > 1000 lines** — split into modules.
+- **No TODO / FIXME / HACK** in committed code — track in handoffs or issues.
+- **No commented-out code** — use version control.
+
+## Reference
+- `wateringHole/STANDARDS_AND_EXPECTATIONS.md`
+- `wateringHole/PRIMAL_IPC_PROTOCOL.md`
+- `specs/` when present in-repo

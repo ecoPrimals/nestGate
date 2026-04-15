@@ -168,7 +168,7 @@ mod handlers_module_tests {
     #[test]
     #[cfg(feature = "dev-stubs")]
     fn test_dev_stubs_feature_enabled() {
-        // When dev-stubs feature is enabled, deprecated zfs_stub should be accessible
+        // When dev-stubs feature is enabled, `crate::dev_stubs` is available
         // This test only runs with dev-stubs feature - compilation proves feature works
         #[cfg(feature = "dev-stubs")]
         {
@@ -183,7 +183,7 @@ mod handlers_module_tests {
     #[test]
     #[cfg(not(feature = "dev-stubs"))]
     fn test_dev_stubs_feature_disabled() {
-        // When dev-stubs feature is disabled, zfs_stub should not be accessible
+        // When dev-stubs feature is disabled, `crate::dev_stubs` is not linked for non-test builds
         // Compilation proves the conditional compilation works
         #[cfg(not(feature = "dev-stubs"))]
         {

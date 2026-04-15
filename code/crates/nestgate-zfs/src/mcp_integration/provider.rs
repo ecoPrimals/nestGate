@@ -248,3 +248,104 @@ impl ZfsMcpStorageProvider {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #![expect(deprecated)]
+
+    use std::sync::Arc;
+
+    use super::{McpMountRequest, McpVolumeRequest, ZfsMcpConfig, ZfsMcpStorageProvider};
+    use crate::manager::ZfsManager;
+    use crate::types::StorageTier;
+
+    #[tokio::test]
+    async fn list_volumes_starts_empty() {
+        let provider =
+            ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
+        let vols = provider.list_volumes().await.expect("list volumes");
+        assert!(vols.is_empty());
+    }
+
+    #[tokio::test]
+    async fn remove_mount_missing_returns_error() {
+        let provider =
+            ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
+        let err = provider
+            .remove_mount("unknown-mount-id")
+            .await
+            .expect_err("missing mount");
+        assert!(err.to_string().contains("not found"));
+    }
+
+    #[tokio::test]
+    async fn remove_volume_missing_returns_error() {
+        let provider =
+            ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
+        let err = provider
+            .remove_volume("unknown-volume-id")
+            .await
+            .expect_err("missing volume");
+        assert!(err.to_string().contains("not found"));
+    }
+
+    #[tokio::test]
+    async fn create_mount_dataset_failure_returns_internal_error() {
+        let provider =
+            ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
+        let req = McpMountRequest {
+            mount_id: "mcp-test-mount-1".to_string(),
+            mount_point: "/mcp/mounts/mcp-test-mount-1".to_string(),
+            tier: StorageTier::Warm,
+            size_gb: 1,
+        };
+        let err = provider
+            .create_mount(req)
+            .await
+            .expect_err("zfs unavailable");
+        assert!(
+            err.to_string().contains("MCP Integration") || err.to_string().contains("mount"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn create_volume_dataset_failure_returns_internal_error() {
+        let provider =
+            ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
+        let req = McpVolumeRequest {
+            volume_id: "mcp-test-vol-1".to_string(),
+            tier: StorageTier::Cold,
+            size_gb: 1,
+        };
+        let err = provider
+            .create_volume(req)
+            .await
+            .expect_err("zfs unavailable");
+        assert!(
+            err.to_string().contains("MCP Integration") || err.to_string().contains("volume"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn trigger_ai_optimization_disabled_returns_error() {
+        let provider = ZfsMcpStorageProvider::new(
+            Arc::new(ZfsManager::mock()),
+            ZfsMcpConfig {
+                enable_ai_optimization: false,
+                ..ZfsMcpConfig::default()
+            },
+        );
+        let err = provider.trigger_ai_optimization().expect_err("disabled");
+        assert!(err.to_string().contains("disabled"));
+    }
+
+    #[test]
+    fn trigger_ai_optimization_enabled_returns_not_implemented() {
+        let provider =
+            ZfsMcpStorageProvider::new(Arc::new(ZfsManager::mock()), ZfsMcpConfig::default());
+        let err = provider.trigger_ai_optimization().expect_err("not wired");
+        assert!(err.to_string().contains("not") || err.to_string().contains("wired"));
+    }
+}

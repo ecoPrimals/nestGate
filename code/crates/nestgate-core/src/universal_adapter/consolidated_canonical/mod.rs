@@ -37,6 +37,7 @@ use uuid::Uuid;
 #[cfg(feature = "dev-stubs")]
 use crate::NestGateError;
 use crate::Result;
+use nestgate_config::constants::system::DEFAULT_SERVICE_NAME;
 
 // ==================== MODULE DECLARATIONS ====================
 
@@ -171,10 +172,13 @@ impl ConsolidatedCanonicalAdapter {
     /// Register our capabilities with the ecosystem
     async fn register_capabilities(&self) -> Result<()> {
         let capabilities = self.create_nestgate_capabilities();
-        let mut our_caps = self.our_capabilities.write().await;
-        *our_caps = capabilities;
+        let capability_count = capabilities.len();
+        {
+            let mut our_caps = self.our_capabilities.write().await;
+            *our_caps = capabilities;
+        }
 
-        info!("Registered {} capabilities", our_caps.len());
+        info!("Registered {} capabilities", capability_count);
         Ok(())
     }
 
@@ -187,7 +191,7 @@ impl ConsolidatedCanonicalAdapter {
                 description: "Advanced storage analytics with predictive insights".to_string(),
                 category: CapabilityCategory::Storage,
                 version: env!("CARGO_PKG_VERSION").to_string(),
-                provider: "nestgate".to_string(),
+                provider: DEFAULT_SERVICE_NAME.to_string(),
                 supported_data_types: vec![
                     DataType::Database,
                     DataType::TimeSeries,
@@ -203,7 +207,7 @@ impl ConsolidatedCanonicalAdapter {
                 description: "Advanced ZFS pool and dataset management".to_string(),
                 category: CapabilityCategory::Storage,
                 version: env!("CARGO_PKG_VERSION").to_string(),
-                provider: "nestgate".to_string(),
+                provider: DEFAULT_SERVICE_NAME.to_string(),
                 supported_data_types: vec![DataType::Binary, DataType::Database],
                 resource_requirements: ResourceRequirements::default(),
                 scalability: ScalabilityRating::VeryHigh,
@@ -288,7 +292,7 @@ impl ConsolidatedCanonicalAdapter {
             error: None,
             metadata: HashMap::new(),
             execution_time: Duration::from_millis(10),
-            provider: "nestgate".to_string(),
+            provider: DEFAULT_SERVICE_NAME.to_string(),
         })
     }
 

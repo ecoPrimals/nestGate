@@ -39,7 +39,7 @@ impl UniversalStorageBridge {
         info!("Detecting best available storage backend");
 
         // Try backends in order of preference: ZFS -> Filesystem -> Others
-        if self.is_zfs_available() {
+        if Self::is_zfs_available() {
             info!("Selected storage backend: zfs");
             self.preferred_backend = Some("zfs".to_string());
             return Ok("zfs".to_string());
@@ -52,7 +52,7 @@ impl UniversalStorageBridge {
     }
 
     /// Check if ZFS is available
-    fn is_zfs_available(&self) -> bool {
+    fn is_zfs_available() -> bool {
         std::process::Command::new("zfs")
             .args(["list"])
             .output()
@@ -75,7 +75,10 @@ impl UniversalStorageBridge {
 
     /// List ZFS pools (when ZFS is available)
     fn list_zfs_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        info!("Listing ZFS pools");
+        info!(
+            preferred_backend = ?self.preferred_backend,
+            "Listing ZFS pools"
+        );
 
         let output = std::process::Command::new("zpool")
             .args(["list", "-H", "-o", "name,size,alloc,free,health"])
@@ -104,9 +107,9 @@ impl UniversalStorageBridge {
                 let free_str = fields[3];
                 let health_str = fields[4];
 
-                let total_bytes = self.parse_size_to_bytes(size_str)?;
-                let used_bytes = self.parse_size_to_bytes(used_str)?;
-                let available_bytes = self.parse_size_to_bytes(free_str)?;
+                let total_bytes = Self::parse_size_to_bytes(size_str)?;
+                let used_bytes = Self::parse_size_to_bytes(used_str)?;
+                let available_bytes = Self::parse_size_to_bytes(free_str)?;
 
                 pools.push(PoolInfo {
                     name,
@@ -138,7 +141,10 @@ impl UniversalStorageBridge {
 
     /// List filesystem "pools" (mount points as pools)
     fn list_filesystem_pools(&self) -> UniversalZfsResult<Vec<PoolInfo>> {
-        info!("Listing filesystem pools (mount points)");
+        info!(
+            preferred_backend = ?self.preferred_backend,
+            "Listing filesystem pools (mount points)"
+        );
 
         let output = std::process::Command::new("df")
             .args(["-h", "--output=source,fstype,size,used,avail,target"])
@@ -164,10 +170,10 @@ impl UniversalStorageBridge {
                 let mount_point = parts[5];
 
                 // Only include real storage _devices
-                if self.should_include_filesystem(source, fstype, mount_point) {
-                    let total_bytes = self.parse_size_to_bytes(size_str)?;
-                    let used_bytes = self.parse_size_to_bytes(used_str)?;
-                    let available_bytes = self.parse_size_to_bytes(avail_str)?;
+                if Self::should_include_filesystem(source, fstype, mount_point) {
+                    let total_bytes = Self::parse_size_to_bytes(size_str)?;
+                    let used_bytes = Self::parse_size_to_bytes(used_str)?;
+                    let available_bytes = Self::parse_size_to_bytes(avail_str)?;
 
                     pools.push(PoolInfo {
                         name: "default_pool".to_string(),
@@ -199,6 +205,14 @@ impl UniversalStorageBridge {
         warn!("Using fallback pool listing");
 
         // Create a minimal pool representing the root filesystem
+        let mut properties = HashMap::new();
+        properties.insert(
+            "preferred_backend".to_string(),
+            self.preferred_backend
+                .clone()
+                .unwrap_or_else(|| "unset".to_string()),
+        );
+
         let pool = PoolInfo {
             name: "root-filesystem".to_string(),
             state: PoolState::Active, // Use correct enum variant
@@ -209,7 +223,7 @@ impl UniversalStorageBridge {
             },
             health: PoolHealth::Unknown,
             scrub: None,
-            properties: HashMap::new(),
+            properties,
         };
 
         Ok(vec![pool])
@@ -227,7 +241,7 @@ impl UniversalStorageBridge {
     }
 
     /// Parse size strings like "1.2G", "500M" to bytes
-    fn parse_size_to_bytes(&self, size_str: &str) -> UniversalZfsResult<u64> {
+    fn parse_size_to_bytes(size_str: &str) -> UniversalZfsResult<u64> {
         if size_str == "-" || size_str == "0" {
             return Ok(0);
         }
@@ -263,7 +277,7 @@ impl UniversalStorageBridge {
     }
 
     /// Determine if we should include this filesystem as a "pool"
-    fn should_include_filesystem(&self, source: &str, fstype: &str, mount_point: &str) -> bool {
+    fn should_include_filesystem(source: &str, fstype: &str, mount_point: &str) -> bool {
         // Include real storage _devices and important mount points
         !source.starts_with("tmpfs")
             && !source.starts_with("udev")
@@ -300,6 +314,11 @@ impl UniversalStorageBridge {
 
     /// Create ZFS dataset
     fn create_zfs_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+        debug!(
+            backend = ?self.preferred_backend,
+            dataset = %config.name,
+            "create_zfs_dataset"
+        );
         let output = std::process::Command::new("zfs")
             .args(["create", &config.name])
             .output()
@@ -326,6 +345,11 @@ impl UniversalStorageBridge {
 
     /// Create filesystem dataset (directory)
     fn create_filesystem_dataset(&self, config: &DatasetConfig) -> UniversalZfsResult<DatasetInfo> {
+        debug!(
+            backend = ?self.preferred_backend,
+            path = %config.name,
+            "create_filesystem_dataset"
+        );
         let path = std::path::Path::new(&config.name);
 
         std::fs::create_dir_all(path)
@@ -342,6 +366,20 @@ impl UniversalStorageBridge {
             mountpoint: Some(config.name.clone()), // Add missing field
             properties: HashMap::new(),            // Add missing field
         })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_parse_size_to_bytes(size_str: &str) -> UniversalZfsResult<u64> {
+        Self::parse_size_to_bytes(size_str)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_should_include_filesystem(
+        source: &str,
+        fstype: &str,
+        mount_point: &str,
+    ) -> bool {
+        Self::should_include_filesystem(source, fstype, mount_point)
     }
 }
 
@@ -414,5 +452,46 @@ mod tests {
             assert_eq!(dataset.dataset_type, DatasetType::Filesystem);
             let _ = std::fs::remove_dir_all(&config.name);
         }
+    }
+
+    #[test]
+    fn parse_size_to_bytes_dash_zero_and_units() {
+        assert_eq!(
+            UniversalStorageBridge::test_parse_size_to_bytes("-").unwrap(),
+            0
+        );
+        assert_eq!(
+            UniversalStorageBridge::test_parse_size_to_bytes("0").unwrap(),
+            0
+        );
+        assert_eq!(
+            UniversalStorageBridge::test_parse_size_to_bytes("2K").unwrap(),
+            2 * 1024
+        );
+        assert_eq!(
+            UniversalStorageBridge::test_parse_size_to_bytes("1M").unwrap(),
+            1024 * 1024
+        );
+        assert!(
+            UniversalStorageBridge::test_parse_size_to_bytes("1.5G").unwrap() > 1024 * 1024 * 1024
+        );
+        assert!(UniversalStorageBridge::test_parse_size_to_bytes("1X").is_err());
+    }
+
+    #[test]
+    fn should_include_filesystem_filters_pseudo_mounts() {
+        assert!(!UniversalStorageBridge::test_should_include_filesystem(
+            "tmpfs", "tmpfs", "/tmp"
+        ));
+        assert!(UniversalStorageBridge::test_should_include_filesystem(
+            "/dev/nvme0n1p2",
+            "ext4",
+            "/home/user"
+        ));
+        assert!(UniversalStorageBridge::test_should_include_filesystem(
+            "/dev/loop0",
+            "ext4",
+            "/"
+        ));
     }
 }

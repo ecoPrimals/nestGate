@@ -167,8 +167,10 @@ impl TierManager {
     /// - System resources are unavailable
     /// - Network or I/O errors occur
     pub async fn get_tier_status(&self, tier: StorageTier) -> Result<TierStatus> {
-        let stats = self.tier_stats.read().await;
-        let tier_stats = stats.get(&tier).cloned().unwrap_or_default();
+        let tier_stats = {
+            let stats = self.tier_stats.read().await;
+            stats.get(&tier).cloned().unwrap_or_default()
+        };
 
         let utilization = if tier_stats.total_capacity > 0 {
             (tier_stats.used_capacity as f64 / tier_stats.total_capacity as f64) * 100.0
@@ -204,15 +206,32 @@ impl TierManager {
         info!("Shutting down tier manager gracefully");
 
         // Cancel any active operations
-        let mut stats = self.tier_stats.write().await;
-        for (tier, tier_stats) in stats.iter_mut() {
-            if tier_stats.active_operations > 0 {
-                warn!(
-                    "Canceling {} active operations for tier {:?}",
-                    tier_stats.active_operations, tier
-                );
-                tier_stats.active_operations = 0;
+        let tiers_with_active_ops: Vec<(StorageTier, u32)> = {
+            let stats = self.tier_stats.read().await;
+            stats
+                .iter()
+                .filter_map(|(tier, tier_stats)| {
+                    if tier_stats.active_operations > 0 {
+                        Some((tier.clone(), tier_stats.active_operations))
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        };
+        {
+            let mut stats = self.tier_stats.write().await;
+            for (tier, _) in &tiers_with_active_ops {
+                if let Some(tier_stats) = stats.get_mut(tier) {
+                    tier_stats.active_operations = 0;
+                }
             }
+        }
+        for (tier, active_operations) in tiers_with_active_ops {
+            warn!(
+                "Canceling {} active operations for tier {:?}",
+                active_operations, tier
+            );
         }
 
         info!("Tier manager shutdown complete");

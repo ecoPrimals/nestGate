@@ -20,7 +20,7 @@
 //! use nestgate_zfs::pool::{ZfsPoolManager, PoolInfo};
 //! use nestgate_zfs::config::ZfsConfig;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! let config = ZfsConfig::default();
 //! let manager = ZfsPoolManager::new(&config).await?;
 //! manager.discover_pools().await?;

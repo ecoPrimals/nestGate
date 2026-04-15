@@ -501,4 +501,46 @@ mod tests {
         let m = s.get_metrics().await.expect("metrics");
         assert_eq!(m.service_name, "native_zfs");
     }
+
+    #[tokio::test]
+    async fn execute_zfs_command_nonzero_exit_returns_error() {
+        let s = NativeZfsService::new();
+        let err = s
+            .execute_zfs_command("false", &[])
+            .await
+            .expect_err("false exits 1");
+        assert!(
+            err.to_string().contains("Command failed") || err.to_string().contains("failed"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn execute_zfs_command_missing_binary_returns_error() {
+        let s = NativeZfsService::new();
+        let err = s
+            .execute_zfs_command("/no/such/zfs_binary_zzz", &["version"])
+            .await
+            .expect_err("missing executable");
+        assert!(
+            err.to_string().contains("Failed to execute") || err.to_string().contains("No such"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn health_check_runs_modprobe_branch() {
+        let s = NativeZfsService::new();
+        let h = s.health_check().await.expect("health");
+        assert_eq!(h.service_name, "native-zfs");
+        assert!(!h.checks.is_empty());
+    }
+
+    #[tokio::test]
+    async fn update_configuration_non_object_uses_empty_map() {
+        use crate::handlers::zfs::universal_zfs::UniversalZfsService;
+        let s = NativeZfsService::new();
+        let r = s.update_configuration(serde_json::json!("scalar")).await;
+        assert!(r.is_ok());
+    }
 }

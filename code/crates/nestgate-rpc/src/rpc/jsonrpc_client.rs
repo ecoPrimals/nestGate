@@ -24,7 +24,7 @@
 //! use nestgate_core::rpc::JsonRpcClient;
 //! use serde_json::json;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> Result<(), nestgate_types::NestGateError> {
 //! // Connect to the orchestration provider's JSON-RPC service
 //! let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
 //!
@@ -45,7 +45,7 @@
 //! use nestgate_core::rpc::JsonRpcClient;
 //! use serde_json::json;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> Result<(), nestgate_types::NestGateError> {
 //! let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
 //!
 //! // Register ourselves with the orchestration provider
@@ -138,7 +138,7 @@ impl JsonRpcClient {
     /// ```rust,ignore
     /// use nestgate_core::rpc::JsonRpcClient;
     ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example() -> Result<(), nestgate_types::NestGateError> {
     /// let client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     /// # Ok(())
     /// # }
@@ -169,7 +169,7 @@ impl JsonRpcClient {
     /// use nestgate_core::rpc::JsonRpcClient;
     /// use std::time::Duration;
     ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example() -> Result<(), nestgate_types::NestGateError> {
     /// let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     /// client.set_timeout(Duration::from_secs(10));
     /// # Ok(())
@@ -200,7 +200,7 @@ impl JsonRpcClient {
     /// use nestgate_core::rpc::JsonRpcClient;
     /// use serde_json::json;
     ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example() -> Result<(), nestgate_types::NestGateError> {
     /// let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     ///
     /// let result = client.call("ipc.resolve", json!({
@@ -305,7 +305,7 @@ impl JsonRpcClient {
     ///     capabilities: Vec<String>,
     /// }
     ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example() -> Result<(), nestgate_types::NestGateError> {
     /// let mut client = JsonRpcClient::connect_unix("/run/capability/orchestration.sock").await?;
     ///
     /// let info: ServiceInfo = client.call_typed("ipc.resolve", json!({

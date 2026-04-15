@@ -1,0 +1,37 @@
+---
+description: Rust idioms and patterns for nestgate crates
+globs: "**/*.rs"
+alwaysApply: false
+---
+
+# nestgate Rust Patterns
+
+## Edition & Tooling
+- **Rust 2024** edition for all crates in the workspace unless a crate documents a temporary exception approved in wateringHole.
+
+## Error Handling
+- **`Result<T, E>` everywhere** at fallible boundaries; use **`thiserror`** (or ecosystem-standard error enums) for typed errors.
+- **Library code**: no `.unwrap()`, `.expect()`, or `panic!()` on control flow — use `?` and explicit error variants.
+- **Binaries / `main`**: propagate to exit codes; avoid panics except for truly unrecoverable startup misconfiguration, and document those paths.
+
+## Zero-Copy & I/O
+- Prefer **zero-copy** types where payloads cross boundaries: **`bytes::Bytes`**, **`std::borrow::Cow`**, and iterators or readers instead of allocating full-buffer **`Vec`** copies when semantics allow.
+- **Streaming** APIs for large or unbounded data instead of loading everything into memory.
+
+## Style & Constants
+- **Named constants** (`const` / `static` / enum variants) for protocol limits, timeouts, sizes — **no magic numbers** in logic.
+- **No commented-out code** — delete or revert via git.
+
+## Features & Async
+- **Cargo features** gate optional behavior (integrations, backends, dev-only paths).
+- **`async`**: hold locks (`Mutex`, `RwLock`) only as long as needed — **compute outside** the critical section, **drop guards** before `.await`.
+
+## Cryptography
+- **Pure Rust** crypto only — prefer the **RustCrypto** ecosystem and project-approved crates; avoid OpenSSL/*ring*/FFI crypto in default builds.
+
+## Testing
+- **Unit tests** next to modules; **integration tests** under `tests/` (or workspace conventions).
+- **Chaos / fault-injection** and **fuzz** targets (`fuzz/` or `cargo fuzz`) where IPC, parsing, or filesystem paths are security- or robustness-critical — extend coverage as features grow.
+
+## Lint Suppressions
+- Prefer fixing the lint. If a suppression is unavoidable in tests or generated code, use **`#[expect(..., reason = "...")]`** with a concrete reason — avoid `#[allow(...)]` in production paths (see ecosystem standards).

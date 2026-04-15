@@ -170,6 +170,38 @@ fn object_path(family_id: &str, key: &str) -> std::path::PathBuf {
     family_dir(family_id).join(key)
 }
 
+/// Route `storage.store_stream`
+pub(super) async fn storage_store_stream(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    crate::rpc::storage_stream::storage_store_stream_begin(params, Some("default")).await
+}
+
+/// Route `storage.store_stream_chunk`
+pub(super) async fn storage_store_stream_chunk(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    crate::rpc::storage_stream::storage_store_stream_chunk(params).await
+}
+
+/// Route `storage.retrieve_stream`
+pub(super) async fn storage_retrieve_stream(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    crate::rpc::storage_stream::storage_retrieve_stream_begin(params, Some("default")).await
+}
+
+/// Route `storage.retrieve_stream_chunk`
+pub(super) async fn storage_retrieve_stream_chunk(
+    _router: &SemanticRouter<impl MetadataBackend>,
+    params: Value,
+) -> Result<Value> {
+    crate::rpc::storage_stream::storage_retrieve_stream_chunk(params).await
+}
+
 /// Route `storage.store_blob`
 pub(super) async fn storage_store_blob(
     _router: &SemanticRouter<impl MetadataBackend>,

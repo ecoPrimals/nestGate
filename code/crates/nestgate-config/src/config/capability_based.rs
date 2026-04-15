@@ -160,7 +160,7 @@ impl CapabilityConfig {
         // Check cache first (lock-free)
         if let Some(service) = self.discovered_services.get(&capability) {
             // Validate cached service is still alive (respects primal sovereignty)
-            if self.is_service_healthy(&service) {
+            if Self::is_service_healthy(&service) {
                 return Ok(service.clone());
             }
             // Service is stale - evict from cache and rediscover
@@ -226,7 +226,7 @@ impl CapabilityConfig {
     ///
     /// Performs lightweight health validation without blocking operations.
     /// Respects primal sovereignty - services declare their own health.
-    fn is_service_healthy(&self, service: &DiscoveredService) -> bool {
+    fn is_service_healthy(service: &DiscoveredService) -> bool {
         // Simple time-based staleness check
         // For v0.1.0: Consider cached services valid for 60 seconds
         // Future: Implement actual health endpoint checking

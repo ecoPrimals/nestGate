@@ -101,8 +101,7 @@ impl UnifiedRpcManager {
         name: impl Into<String>,
         service: DynRpcService,
     ) -> Result<(), RpcError> {
-        let mut services = self.services.write().await;
-        services.insert(name.into(), service);
+        self.services.write().await.insert(name.into(), service);
         Ok(())
     }
 
@@ -118,8 +117,11 @@ impl UnifiedRpcManager {
     ) -> Result<UnifiedRpcResponse, RpcError> {
         let start_time = Instant::now();
 
-        let services = self.services.read().await;
-        if let Some(service) = services.get(service_name) {
+        let service = {
+            let services = self.services.read().await;
+            services.get(service_name).cloned()
+        };
+        if let Some(service) = service {
             match service.call(request.clone()).await {
                 Ok(mut response) => {
                     response.metrics.processing_time_ms = start_time.elapsed().as_millis() as u64;
@@ -249,12 +251,20 @@ impl UnifiedRpcManager {
         Ok(())
     }
 
-    #[expect(clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        clippy::unused_self,
+        reason = "Scaffold matches start() contract; will wire to health/metrics using manager state"
+    )]
     const fn start_health_monitoring(&self) -> Result<(), RpcError> {
         Ok(())
     }
 
-    #[expect(clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        clippy::unused_self,
+        reason = "Scaffold matches start() contract; will wire to health/metrics using manager state"
+    )]
     const fn start_metrics_collection(&self) -> Result<(), RpcError> {
         Ok(())
     }

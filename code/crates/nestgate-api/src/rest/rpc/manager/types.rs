@@ -68,6 +68,7 @@ pub struct HealthCheckResult {
 }
 
 impl ConnectionPool {
+    /// Create a connection pool from the given configuration.
     #[must_use]
     pub fn new(config: &ConnectionPoolConfig) -> Self {
         Self {
@@ -79,6 +80,7 @@ impl ConnectionPool {
 }
 
 impl ConnectionHealthMonitor {
+    /// Create a health monitor from the given configuration.
     #[must_use]
     pub fn new(config: &HealthMonitoringConfig) -> Self {
         Self {
@@ -110,6 +112,7 @@ pub struct StreamRegistry;
 pub struct MetricsCollector;
 
 impl UniversalSecurityLayer {
+    /// Create a passthrough security layer from configuration.
     #[must_use]
     pub const fn new(_config: &RpcSecurityConfig) -> Self {
         Self
@@ -135,6 +138,7 @@ impl UniversalSecurityLayer {
 }
 
 impl LoadBalancer {
+    /// Create a passthrough load balancer from configuration.
     #[must_use]
     pub const fn new(_config: &LoadBalancingConfig) -> Self {
         Self
@@ -142,6 +146,7 @@ impl LoadBalancer {
 }
 
 impl StreamRegistry {
+    /// Create a passthrough stream registry from configuration.
     #[must_use]
     pub const fn new(_config: &StreamConfig) -> Self {
         Self
@@ -149,6 +154,7 @@ impl StreamRegistry {
 }
 
 impl MetricsCollector {
+    /// Create a no-op metrics collector from configuration.
     #[must_use]
     pub const fn new(
         _config: &nestgate_core::config::canonical_primary::domains::performance::MetricsConfig,
@@ -156,6 +162,7 @@ impl MetricsCollector {
         Self
     }
 
+    /// Record a request metric (no-op until real metrics sink wired).
     pub const fn record_request(&self, _service: &str, _duration: Duration) {}
 }
 
@@ -168,7 +175,9 @@ impl MetricsCollector {
     note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
 )]
 pub struct MetricsConfig {
+    /// Whether metrics collection is enabled.
     pub enabled: bool,
+    /// Interval between metrics collection cycles.
     pub interval_seconds: u64,
 }
 
@@ -181,5 +190,6 @@ impl Default for MetricsConfig {
     }
 }
 
+/// Canonical metrics configuration type alias.
 pub type MetricsConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

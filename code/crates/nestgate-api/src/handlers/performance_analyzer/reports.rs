@@ -60,15 +60,16 @@ impl ReportGenerator {
             &analysis.network_analysis.status,
         ];
 
-        if components
+        let has_critical = components
             .iter()
-            .any(|s| matches!(s, PerformanceStatus::Critical))
-        {
+            .any(|s| matches!(s, PerformanceStatus::Critical));
+        let has_warning = components
+            .iter()
+            .any(|s| matches!(s, PerformanceStatus::Warning));
+
+        if has_critical && self.config.include_detailed_analysis {
             OverallStatus::Critical
-        } else if components
-            .iter()
-            .any(|s| matches!(s, PerformanceStatus::Warning))
-        {
+        } else if has_critical || has_warning {
             OverallStatus::Warning
         } else {
             OverallStatus::Healthy
@@ -77,11 +78,23 @@ impl ReportGenerator {
 
     /// Generate Summary
     fn generate_summary(&self, analysis: &AnalysisResult) -> String {
+        let trends_note = if self.config.include_trends {
+            " Trend series omitted in this build."
+        } else {
+            ""
+        };
         format!(
-            "System performance score: {:.1}/100. {} components analyzed with {} recommendations.",
+            "System performance score: {:.1}/100. {} components analyzed with {} recommendations. Default export format: {:?}.{}{}",
             analysis.overall_score,
             4, // CPU, Memory, Disk, Network
-            analysis.recommendations.len()
+            analysis.recommendations.len(),
+            self.config.default_format,
+            trends_note,
+            if self.config.include_detailed_analysis {
+                " Full component detail enabled."
+            } else {
+                " Summary-only mode (detailed component analysis disabled in report config)."
+            }
         )
     }
 
@@ -92,12 +105,20 @@ impl ReportGenerator {
     ) -> HashMap<String, ComponentReport> {
         let mut reports = HashMap::new();
 
+        let detail = |s: String| -> String {
+            if self.config.include_detailed_analysis {
+                s
+            } else {
+                s.chars().take(120).collect::<String>()
+            }
+        };
+
         reports.insert(
             "cpu".to_string(),
             ComponentReport {
                 score: analysis.cpu_analysis.score,
                 status: analysis.cpu_analysis.status.clone(),
-                details: analysis.cpu_analysis.details.clone(),
+                details: detail(analysis.cpu_analysis.details.clone()),
             },
         );
 
@@ -106,7 +127,7 @@ impl ReportGenerator {
             ComponentReport {
                 score: analysis.memory_analysis.score,
                 status: analysis.memory_analysis.status.clone(),
-                details: analysis.memory_analysis.details.clone(),
+                details: detail(analysis.memory_analysis.details.clone()),
             },
         );
 
@@ -115,7 +136,7 @@ impl ReportGenerator {
             ComponentReport {
                 score: analysis.disk_analysis.score,
                 status: analysis.disk_analysis.status.clone(),
-                details: analysis.disk_analysis.details.clone(),
+                details: detail(analysis.disk_analysis.details.clone()),
             },
         );
 
@@ -124,7 +145,7 @@ impl ReportGenerator {
             ComponentReport {
                 score: analysis.network_analysis.score,
                 status: analysis.network_analysis.status.clone(),
-                details: analysis.network_analysis.details.clone(),
+                details: detail(analysis.network_analysis.details.clone()),
             },
         );
 
@@ -134,8 +155,9 @@ impl ReportGenerator {
     /// Generate Markdown Report
     fn generate_markdown_report(&self, report: &PerformanceReport) -> String {
         format!(
-            "# Performance Report\n\n**Report ID**: {}\n**Generated**: {:?}\n**Overall Score**: {:.1}/100\n**Status**: {:?}\n\n## Summary\n{}\n\n## Recommendations\n{}\n",
+            "# Performance Report\n\n**Report ID**: {}\n**Preferred format**: {:?}\n**Generated**: {:?}\n**Overall Score**: {:.1}/100\n**Status**: {:?}\n\n## Summary\n{}\n\n## Recommendations\n{}\n",
             report.report_id,
+            self.config.default_format,
             report.generated_at,
             report.overall_score,
             report.status,
@@ -152,24 +174,32 @@ impl ReportGenerator {
     /// Generate Html Report
     fn generate_html_report(&self, report: &PerformanceReport) -> String {
         format!(
-            "<html><head><title>Performance Report</title></head><body><h1>Performance Report</h1><p><strong>Score:</strong> {:.1}/100</p><p><strong>Status:</strong> {:?}</p><p>{}</p></body></html>",
-            report.overall_score, report.status, report.summary
+            "<html><head><title>Performance Report</title><meta name=\"report-format\" content=\"{:?}\" /></head><body><h1>Performance Report</h1><p><strong>Score:</strong> {:.1}/100</p><p><strong>Status:</strong> {:?}</p><p>{}</p></body></html>",
+            self.config.default_format, report.overall_score, report.status, report.summary
         )
     }
 
     /// Generate Csv Report
     fn generate_csv_report(&self, report: &PerformanceReport) -> String {
+        let rows = report
+            .component_reports
+            .iter()
+            .map(|(name, comp)| {
+                format!(
+                    "{},{:.1},{:?},\"{}\"",
+                    name,
+                    comp.score,
+                    comp.status,
+                    comp.details.replace('\"', "\"\"")
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
         format!(
-            "Component,Score,Status,Details\n{}",
-            report
-                .component_reports
-                .iter()
-                .map(|(name, comp)| format!(
-                    "{},{:.1},{:?},{}",
-                    name, comp.score, comp.status, comp.details
-                ))
-                .collect::<Vec<_>>()
-                .join("\n")
+            "# nestgate report config: include_trends={} include_detailed_analysis={} default_format={:?}\nComponent,Score,Status,Details\n{rows}",
+            self.config.include_trends,
+            self.config.include_detailed_analysis,
+            self.config.default_format
         )
     }
 }

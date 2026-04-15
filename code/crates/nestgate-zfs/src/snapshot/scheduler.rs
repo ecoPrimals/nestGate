@@ -51,9 +51,9 @@ impl PolicyScheduler {
 
     /// Process all policies and create snapshots as needed
     pub async fn process_policies(&self) -> CoreResult<()> {
-        let policies = self.policies.read().await;
+        let policies: Vec<SnapshotPolicy> = self.policies.read().await.values().cloned().collect();
 
-        for policy in policies.values() {
+        for policy in &policies {
             if !policy.enabled {
                 continue;
             }
@@ -149,8 +149,10 @@ impl PolicyScheduler {
             };
 
             // Add to operation queue
-            let mut queue = self.operation_queue.write().await;
-            queue.push(operation);
+            {
+                let mut queue = self.operation_queue.write().await;
+                queue.push(operation);
+            }
 
             info!("Queued snapshot creation for {}@{}", dataset, snapshot_name);
         }
@@ -315,9 +317,9 @@ impl PolicyScheduler {
         }
 
         // Queue deletion operations
-        let mut queue = self.operation_queue.write().await;
-        for snapshot in snapshots_to_delete {
-            let operation = SnapshotOperation {
+        let delete_operations: Vec<SnapshotOperation> = snapshots_to_delete
+            .into_iter()
+            .map(|snapshot| SnapshotOperation {
                 id: format!(
                     "delete_{}_{}",
                     snapshot.dataset.replace('/', "_"),
@@ -335,9 +337,10 @@ impl PolicyScheduler {
                 completed_at: None,
                 error_message: None,
                 policy: None,
-            };
-            queue.push(operation);
-        }
+            })
+            .collect();
+
+        self.operation_queue.write().await.extend(delete_operations);
         Ok(())
     }
 

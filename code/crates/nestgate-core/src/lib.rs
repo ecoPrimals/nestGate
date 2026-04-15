@@ -15,6 +15,7 @@
 //! - `nestgate-rpc`: rpc (JSON-RPC + tarpc)
 //! - `nestgate-discovery`: discovery, capabilities, service_discovery
 
+#![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
 #![expect(
     deprecated,
@@ -160,7 +161,7 @@ pub mod return_builders;
 /// Safe operations utilities
 pub mod safe_operations;
 
-#[cfg(feature = "dev-stubs")]
+#[cfg(any(test, feature = "dev-stubs"))]
 pub mod dev_stubs;
 
 pub use nestgate_security::jwt_validation;

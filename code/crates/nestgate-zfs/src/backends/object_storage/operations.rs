@@ -179,8 +179,10 @@ impl ZeroCostZfsOperations for ObjectStorageBackend {
     async fn list_pools(&self) -> Result<Vec<Self::Pool>> {
         debug!("Listing object storage pools");
 
-        let pools = self.pools.read().await;
-        let pool_list: Vec<_> = pools.values().cloned().collect();
+        let pool_list: Vec<_> = {
+            let pools = self.pools.read().await;
+            pools.values().cloned().collect()
+        };
 
         info!("Found {} object storage pools", pool_list.len());
 

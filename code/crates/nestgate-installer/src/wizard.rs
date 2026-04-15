@@ -69,6 +69,10 @@ impl InstallationWizard {
     }
 
     /// Configure System Integration
+    #[expect(
+        clippy::unused_self,
+        reason = "Wizard method: will use self for platform state"
+    )]
     fn configure_system_integration(&mut self) -> Result<()> {
         println!("🔧 System Integration");
 
@@ -115,6 +119,10 @@ impl InstallationWizard {
     }
 
     /// Configure Advanced Features
+    #[expect(
+        clippy::unused_self,
+        reason = "Wizard method: will use self for platform state"
+    )]
     fn configure_advanced_features(&mut self) -> Result<()> {
         println!("⚙️  Advanced Features");
 

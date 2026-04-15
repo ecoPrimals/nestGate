@@ -20,14 +20,18 @@ pub async fn create_api_key(
     // Generate API key
     let api_key = format!("nestgate_{}", uuid::Uuid::new_v4());
 
-    let mut manager = handler.get_manager_mut().await;
-    manager.add_api_key(api_key.clone(), request.user_id.clone());
+    let user_id = request.user_id.clone();
+    handler
+        .get_manager_mut()
+        .await
+        .add_api_key(api_key.clone(), user_id.clone());
+    let name = request.name.clone();
 
-    info!("API key created for user: {}", request.user_id);
+    info!("API key created for user: {}", user_id);
     Ok(Json(ApiKeyResponse {
         api_key,
-        user_id: request.user_id,
-        name: request.name,
+        user_id,
+        name,
     }))
 }
 
@@ -40,14 +44,25 @@ pub async fn validate_api_key(
 ) -> std::result::Result<Json<serde_json::Value>, StatusCode> {
     info!("Validating API key");
 
-    let manager = handler.get_manager().await;
-    match manager.validate_api_key(&api_key) {
-        Ok(context) => {
+    let outcome = {
+        let manager = handler.get_manager().await;
+        match manager.validate_api_key(&api_key) {
+            Ok(context) => {
+                let user_id = context.user_id().to_string();
+                let role = context.role().to_string();
+                Ok((user_id, role))
+            }
+            Err(err) => Err(err),
+        }
+    };
+
+    match outcome {
+        Ok((user_id, role)) => {
             info!("API key valid");
             Ok(Json(serde_json::json!({
                 "valid": true,
-                "user_id": context.user_id(),
-                "role": context.role().to_string(),
+                "user_id": user_id,
+                "role": role,
             })))
         }
         Err(err) => {

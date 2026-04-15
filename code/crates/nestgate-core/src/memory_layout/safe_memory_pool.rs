@@ -90,16 +90,9 @@ impl<T, const CAPACITY: usize> SafeMemoryPool<T, CAPACITY> {
             "Safe memory pool supports 1..63 slots (single u64 bitmap)"
         );
 
-        let slots: Box<[MutexOption<T>; CAPACITY]> = {
-            let mut vec = Vec::with_capacity(CAPACITY);
-            for _ in 0..CAPACITY {
-                vec.push(MutexOption::new(None));
-            }
-            match vec.into_boxed_slice().try_into() {
-                Ok(arr) => arr,
-                Err(_) => unreachable!("Vec has exactly CAPACITY elements"),
-            }
-        };
+        // Fixed-size array: exactly `CAPACITY` mutex slots, no fallible `Vec` → array conversion.
+        let slots: Box<[MutexOption<T>; CAPACITY]> =
+            Box::new(std::array::from_fn(|_| MutexOption::new(None)));
 
         // All bits set = all slots free
         let free_bitmap = (1u64 << CAPACITY) - 1;

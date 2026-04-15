@@ -72,17 +72,9 @@ impl<T, const CAPACITY: usize> SafeRingBuffer<T, CAPACITY> {
             "Ring buffer capacity must be power of 2"
         );
 
-        // Initialize slots - Mutex<Option<T>> for safe interior mutability
-        let slots: Box<[Mutex<Option<T>>; CAPACITY]> = {
-            let mut vec = Vec::with_capacity(CAPACITY);
-            for _ in 0..CAPACITY {
-                vec.push(Mutex::new(None));
-            }
-            match vec.into_boxed_slice().try_into() {
-                Ok(arr) => arr,
-                Err(_) => unreachable!("Vec has exactly CAPACITY elements"),
-            }
-        };
+        // Fixed-size array: exactly `CAPACITY` mutex slots, no fallible `Vec` → array conversion.
+        let slots: Box<[Mutex<Option<T>>; CAPACITY]> =
+            Box::new(std::array::from_fn(|_| Mutex::new(None)));
 
         Self {
             inner: Arc::new(RingBufferInner {

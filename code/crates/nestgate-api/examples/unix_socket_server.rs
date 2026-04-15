@@ -96,10 +96,11 @@
 //! ```
 
 use nestgate_api::transport::{NestGateRpcHandler, TransportConfig, TransportServer};
+use nestgate_core::Result;
 use tracing_subscriber;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     // Initialize logging
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)

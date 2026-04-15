@@ -120,12 +120,7 @@ impl ObjectStorageBackend {
             });
         }
 
-        // Step 2: Future - Query NestGate capability registry
-        // When capability discovery is fully integrated:
-        // let registry = CapabilityRegistry::global().await?;
-        // if let Some(service) = registry.find_by_capability("object-storage").await? {
-        //     return Ok(service.into());
-        // }
+        // Step 2: Future - Query NestGate capability registry when discovery is integrated.
 
         // Step 3: Future - Detect cloud provider metadata
         // Check EC2 IMDS for S3 endpoint

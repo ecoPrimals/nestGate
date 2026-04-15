@@ -37,21 +37,29 @@ impl PerformanceAnalyzer {
         metrics_history: &MetricsHistoryQueue,
     ) -> Result<AnalysisReport, NestGateError> {
         // Analyze performance trends from metrics history
-        let history = metrics_history.read().await;
-        if history.len() >= 2 {
-            let latest = history
-                .back()
-                .ok_or_else(|| NestGateError::internal("No latest metrics available"))?;
-            let previous = history
-                .get(history.len() - 2)
-                .ok_or_else(|| NestGateError::internal("No previous metrics available"))?;
-
+        let trend_log = {
+            let history = metrics_history.read().await;
+            if history.len() < 2 {
+                None
+            } else {
+                match (history.back(), history.get(history.len().saturating_sub(2))) {
+                    (Some(latest), Some(previous)) => Some((
+                        previous.performance_score,
+                        latest.performance_score,
+                        previous.timestamp,
+                        latest.timestamp,
+                    )),
+                    _ => None,
+                }
+            }
+        };
+        if let Some((prev_score, latest_score, prev_ts, latest_ts)) = trend_log {
             tracing::debug!(
                 "Performance trend: Score {} -> {}, Timestamp {:?} -> {:?}",
-                previous.performance_score,
-                latest.performance_score,
-                previous.timestamp,
-                latest.timestamp
+                prev_score,
+                latest_score,
+                prev_ts,
+                latest_ts
             );
         }
         Ok(AnalysisReport::default())
@@ -95,19 +103,23 @@ impl ZfsPerformanceMonitor {
     ) -> CoreResult<()> {
         debug!("Analyzing performance trends");
 
-        let current = current_metrics.read().await;
-        let snapshot = PerformanceSnapshot {
-            timestamp: SystemTime::now(),
-            metrics: current.clone(),
-            performance_score: 85.0, // Calculate based on metrics
+        let snapshot = {
+            let current = current_metrics.read().await;
+            PerformanceSnapshot {
+                timestamp: SystemTime::now(),
+                metrics: current.clone(),
+                performance_score: 85.0, // Calculate based on metrics
+            }
         };
 
-        let mut history = metrics_history.write().await;
-        history.push_back(snapshot);
+        {
+            let mut history = metrics_history.write().await;
+            history.push_back(snapshot);
 
-        if history.len() > 2880 {
-            // Default max history entries (24 hours at 30-second intervals)
-            history.pop_front();
+            if history.len() > 2880 {
+                // Default max history entries (24 hours at 30-second intervals)
+                history.pop_front();
+            }
         }
         Ok(())
     }

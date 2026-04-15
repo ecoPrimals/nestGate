@@ -215,7 +215,7 @@ impl IsomorphicIpcServer {
                         e
                     );
                     let socket_path = self.get_socket_path()?;
-                    self.prepare_socket_path(&socket_path)?;
+                    Self::prepare_socket_path(&socket_path)?;
                     (socket_path, "standalone".to_string())
                 }
             };
@@ -280,7 +280,8 @@ impl IsomorphicIpcServer {
 
             if is_json_rpc {
                 tracing::debug!("BTSP: first byte is '{{', bypassing handshake (JSON-RPC)");
-                return Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler).await;
+                return Self::json_rpc_keep_alive_loop(&mut raw_reader, &mut writer, &handler)
+                    .await;
             }
 
             let family_id = std::env::var("FAMILY_ID")
@@ -424,7 +425,7 @@ impl IsomorphicIpcServer {
     }
 
     /// Prepare socket path (create dirs, remove old socket)
-    fn prepare_socket_path(&self, socket_path: &std::path::Path) -> Result<()> {
+    fn prepare_socket_path(socket_path: &std::path::Path) -> Result<()> {
         // Create parent directory if needed
         if let Some(parent) = socket_path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -528,12 +529,10 @@ mod tests {
     fn prepare_socket_path_creates_parent_and_removes_stale_socket() {
         let dir = tempfile::tempdir().expect("tempdir");
         let sock = dir.path().join("nested").join("test.sock");
-        let handler = Arc::new(MockHandler);
-        let server = IsomorphicIpcServer::new("x".to_string(), handler);
-        server.prepare_socket_path(&sock).expect("prepare");
+        IsomorphicIpcServer::prepare_socket_path(&sock).expect("prepare");
         assert!(sock.parent().expect("parent").is_dir());
         std::fs::write(&sock, b"x").unwrap();
-        server.prepare_socket_path(&sock).expect("prepare again");
+        IsomorphicIpcServer::prepare_socket_path(&sock).expect("prepare again");
         assert!(!sock.exists());
     }
 }

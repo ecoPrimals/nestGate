@@ -102,16 +102,15 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
             endpoints: registration.endpoints.clone(),
         };
 
-        // Store the service registration (lock-free!)
-        self.services.insert(service_id, registration.clone());
-
-        // Update capability index (lock-free!)
+        // Update capability index before moving `registration` into the map.
         for capability in &registration.capabilities {
             self.capability_index
                 .entry(capability.clone())
                 .or_default()
                 .push(service_id);
         }
+
+        self.services.insert(service_id, registration);
 
         Ok(handle)
     }
@@ -121,38 +120,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
         &self,
         capabilities: Vec<ServiceCapability>,
     ) -> Result<Vec<ServiceInfo>> {
-        let mut matching_services = Vec::new();
-
-        // DashMap: Lock-free reads!
-        for capability in &capabilities {
-            if let Some(service_ids) = self.capability_index.get(capability) {
-                for &service_id in service_ids.value() {
-                    if let Some(registration) = self.services.get(&service_id) {
-                        // Check if this service has all required capabilities
-                        let has_all_capabilities = capabilities
-                            .iter()
-                            .all(|required_cap| registration.capabilities.contains(required_cap));
-
-                        if has_all_capabilities {
-                            let service_info = ServiceInfo {
-                                service_id: registration.service_id,
-                                metadata: registration.metadata.clone(),
-                                capabilities: registration.capabilities.clone(),
-                                endpoints: registration.endpoints.clone(),
-                                last_seen: std::time::SystemTime::now(),
-                            };
-                            matching_services.push(service_info);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Remove duplicates
-        matching_services.sort_by_key(|s| s.service_id);
-        matching_services.dedup_by_key(|s| s.service_id);
-
-        Ok(matching_services)
+        Ok(Self::discover_by_capabilities_inner(self, &capabilities))
     }
 
     /// Discover By Role
@@ -167,9 +135,7 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
         requirements: ServiceRequirements,
         _preferences: SelectionPreferences,
     ) -> Result<ServiceInfo> {
-        let candidates = self
-            .discover_by_capabilities(requirements.capabilities.clone())
-            .await?;
+        let candidates = Self::discover_by_capabilities_inner(self, &requirements.capabilities);
 
         // Sophisticated service selection algorithm based on multiple criteria
         if candidates.is_empty() {
@@ -287,6 +253,41 @@ impl UniversalServiceRegistry for InMemoryServiceRegistry {
 }
 
 impl InMemoryServiceRegistry {
+    fn discover_by_capabilities_inner(
+        &self,
+        capabilities: &[ServiceCapability],
+    ) -> Vec<ServiceInfo> {
+        let mut matching_services = Vec::new();
+
+        for capability in capabilities {
+            if let Some(service_ids) = self.capability_index.get(capability) {
+                for &service_id in service_ids.value() {
+                    if let Some(registration) = self.services.get(&service_id) {
+                        let has_all_capabilities = capabilities
+                            .iter()
+                            .all(|required_cap| registration.capabilities.contains(required_cap));
+
+                        if has_all_capabilities {
+                            let service_info = ServiceInfo {
+                                service_id: registration.service_id,
+                                metadata: registration.metadata.clone(),
+                                capabilities: registration.capabilities.clone(),
+                                endpoints: registration.endpoints.clone(),
+                                last_seen: std::time::SystemTime::now(),
+                            };
+                            matching_services.push(service_info);
+                        }
+                    }
+                }
+            }
+        }
+
+        matching_services.sort_by_key(|s| s.service_id);
+        matching_services.dedup_by_key(|s| s.service_id);
+
+        matching_services
+    }
+
     /// Get all registered services (for debugging/monitoring) - lock-free!
     #[must_use]
     pub fn get_all_services(&self) -> Vec<ServiceInfo> {
@@ -326,14 +327,16 @@ impl InMemoryServiceRegistry {
         let matching_services: Vec<ServiceInfo> = self
             .services
             .iter()
-            .map(|entry| entry.value().clone())
-            .filter(|registration| &registration.metadata.category == category)
-            .map(|registration| ServiceInfo {
-                service_id: registration.service_id,
-                metadata: registration.metadata.clone(),
-                capabilities: registration.capabilities.clone(),
-                endpoints: registration.endpoints,
-                last_seen: std::time::SystemTime::now(),
+            .filter(|entry| &entry.value().metadata.category == category)
+            .map(|entry| {
+                let registration = entry.value();
+                ServiceInfo {
+                    service_id: registration.service_id,
+                    metadata: registration.metadata.clone(),
+                    capabilities: registration.capabilities.clone(),
+                    endpoints: registration.endpoints.clone(),
+                    last_seen: std::time::SystemTime::now(),
+                }
             })
             .collect();
 

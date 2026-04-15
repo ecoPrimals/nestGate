@@ -56,19 +56,20 @@ pub async fn create_user(
 
     let permissions: Vec<Permission> = request.permissions.iter().map(Permission::new).collect();
 
-    let mut manager = handler.get_manager_mut().await;
-    manager.add_user(
+    handler.get_manager_mut().await.add_user(
         request.user_id.clone(),
         request.username.clone(),
         role,
         permissions,
     );
+    let user_id = request.user_id.clone();
+    let username = request.username.clone();
 
-    info!("User created successfully: {}", request.username);
+    info!("User created successfully: {}", username);
     Ok(Json(serde_json::json!({
         "success": true,
-        "user_id": request.user_id,
-        "username": request.username,
+        "user_id": user_id,
+        "username": username,
     })))
 }
 

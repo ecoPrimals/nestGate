@@ -2,7 +2,7 @@
 
 **Purpose**: Document NestGate's provided and required capabilities for primal compliance  
 **Standard**: wateringHole/SEMANTIC_METHOD_NAMING_STANDARD.md v2.0  
-**Last Updated**: April 8, 2026
+**Last Updated**: April 15, 2026
 
 ---
 
@@ -27,23 +27,29 @@ NestGate operates as a **storage & discovery primal** within the ecoPrimals ecos
 {
   "primal": "nestgate",
   "version": "<semver>",
-  "methods": ["<57 methods>"],
+  "methods": ["<47 UDS methods — `UNIX_SOCKET_SUPPORTED_METHODS`>"],
   "provided_capabilities": [
-    {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "fetch_external"]},
+    {"type": "storage", "methods": ["store", "retrieve", "exists", "delete", "list", "stats", "store_blob", "retrieve_blob", "retrieve_range", "object.size", "namespaces.list", "fetch_external"]},
     {"type": "model", "methods": ["register", "exists", "locate", "metadata"]},
     {"type": "templates", "methods": ["store", "retrieve", "list", "community_top"]},
     {"type": "session", "methods": ["save", "load"]},
     {"type": "audit", "methods": ["store_execution"]},
     {"type": "nat", "methods": ["store_traversal_info", "retrieve_traversal_info"]},
     {"type": "beacon", "methods": ["store", "retrieve", "list", "delete"]},
-    {"type": "data", "methods": ["ncbi_search", "ncbi_fetch", "noaa_ghcnd", "iris_stations", "iris_events"]},
+    {"type": "bonding", "methods": ["ledger.store", "ledger.retrieve", "ledger.list"]},
     {"type": "zfs", "methods": ["pool.list", "pool.get", "pool.health", "dataset.list", "dataset.get", "snapshot.list", "health"]}
   ],
-  "consumed_capabilities": [],
+  "consumed_capabilities": [
+    {"type": "security", "methods": ["verify_token", "encrypt", "decrypt"]},
+    {"type": "crypto", "methods": ["sign", "verify"]},
+    {"type": "network", "methods": ["resolve", "connect"]}
+  ],
   "protocol": "jsonrpc-2.0",
-  "transport": ["uds", "http"]
+  "transport": ["uds", "http", "tcp"]
 }
 ```
+
+`capability_registry.toml` is the full **12**-group / **45**-method inventory (excluding `data.*`, which is wildcard-only). The `capabilities.list` `provided_capabilities` block in `model_cache_handlers.rs` groups **9** durability domains (storage through zfs); health, identity, and discovery appear in the top-level `methods` array and related handlers instead. `data.*` is not a NestGate-implemented feed surface.
 
 `identity.get` returns `{primal, version, domain: "storage", license: "AGPL-3.0-or-later", family_id}`.
 
@@ -381,10 +387,12 @@ impl StorageService {
 
 ### **How biomeOS Routes NestGate Requests**
 
-**Graph Configuration** (in biomeOS):
+Authoritative capability and method inventory: [`capability_registry.toml`](capability_registry.toml) at the NestGate repository root (not under `graphs/`). The `graphs/` directory in this repo holds other TOML assets (for example `nestgate_standalone.toml`); it does not define a separate `nestgate_capabilities.toml`.
+
+**Illustrative biomeOS graph fragment** (conceptual routing example):
 
 ```toml
-# graphs/nestgate_capabilities.toml
+# Canonical semantic names: see capability_registry.toml (NestGate repo root).
 
 [nodes.nestgate]
 primal_name = "nestgate"
@@ -501,13 +509,13 @@ self.call_method("storage.put", json!({
 
 ---
 
-**Status**: Partial semantic naming implemented. Internal method refactoring ongoing.
+**Status**: Semantic naming complete. Streaming storage methods wired. TCP transport active.
 
 **Next Steps**:
-1. Complete internal method semantic routing
-2. Create biomeOS graph configuration
-3. Test cross-primal integration
+1. Migrate remaining 183 deprecated config types to canonical
+2. Push coverage 81.68% → 90%
+3. Test cross-primal integration with streaming tensors
 
 ---
 
-**Last Updated**: April 7, 2026
+**Last Updated**: April 15, 2026

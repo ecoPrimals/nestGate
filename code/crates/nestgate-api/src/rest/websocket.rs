@@ -132,7 +132,9 @@ async fn handle_websocket_connection(
     {
         let mut count = client_counter.write().await;
         *count += 1;
-        info!("WebSocket client connected. Total clients: {}", *count);
+        let current = *count;
+        drop(count);
+        info!("WebSocket client connected. Total clients: {current}");
     }
     // Send welcome message
     let welcome_event = WebSocketEvent::Message {
@@ -211,7 +213,9 @@ async fn handle_websocket_connection(
     {
         let mut count = client_counter.write().await;
         *count = count.saturating_sub(1);
-        info!("WebSocket client disconnected. Total clients: {}", *count);
+        let current = *count;
+        drop(count);
+        info!("WebSocket client disconnected. Total clients: {current}");
     }
 }
 

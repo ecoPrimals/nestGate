@@ -184,6 +184,18 @@ pub enum PackageManagerType {
     /// Manual installation
     Manual,
 }
+/// Minimum RAM (MiB) for installation when not overridden by policy or environment.
+pub const DEFAULT_MIN_RAM_MB: u64 = 2048;
+
+/// Recommended RAM (MiB) for a comfortable install experience.
+pub const DEFAULT_RECOMMENDED_RAM_MB: u64 = 4096;
+
+/// Minimum free disk space (MiB) for installation.
+pub const DEFAULT_MIN_DISK_SPACE_MB: u64 = 5120;
+
+/// Recommended free disk space (MiB) for logs, data, and upgrades.
+pub const DEFAULT_RECOMMENDED_DISK_SPACE_MB: u64 = 10240;
+
 /// System resource requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemRequirements {
@@ -323,10 +335,10 @@ impl Default for SystemRequirements {
                 PlatformType::MacOsX64,
                 PlatformType::MacOsArm64,
             ],
-            min_ram_mb: 2048,
-            recommended_ram_mb: 4096,
-            min_disk_space_mb: 5120,
-            recommended_disk_space_mb: 10240,
+            min_ram_mb: DEFAULT_MIN_RAM_MB,
+            recommended_ram_mb: DEFAULT_RECOMMENDED_RAM_MB,
+            min_disk_space_mb: DEFAULT_MIN_DISK_SPACE_MB,
+            recommended_disk_space_mb: DEFAULT_RECOMMENDED_DISK_SPACE_MB,
             min_cpu_cores: 2,
             min_kernel_version: None,
             required_packages: Vec::new(),

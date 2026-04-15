@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![allow(unsafe_code)] // `PATH` swap for mock `zpool` (Rust 2024: `set_var` is `unsafe`)
-
 //! Tests for [`super::operations`] using mock `zpool` on `PATH`.
 
 use std::fs;
@@ -14,36 +12,13 @@ use crate::path_cli_test_lock;
 use super::manager::ZfsPoolManager;
 use crate::pool::types::{PoolCapacity, PoolHealth, PoolInfo, PoolState};
 
-struct PathEnvGuard {
-    previous: Option<std::ffi::OsString>,
-}
-
-impl PathEnvGuard {
-    fn prepend_bin_dir(bin_dir: &Path) -> Self {
-        let previous = std::env::var_os("PATH");
-        let mut new_path = bin_dir.as_os_str().to_owned();
-        new_path.push(":");
-        if let Some(ref p) = previous {
-            new_path.push(p);
-        }
-        // SAFETY: test-only `PATH` prepend; guarded tests use `#[serial]`.
-        unsafe {
-            std::env::set_var("PATH", new_path);
-        }
-        Self { previous }
+fn path_with_bin_prepended(bin_dir: &Path) -> String {
+    let mut new_path = bin_dir.as_os_str().to_owned();
+    new_path.push(":");
+    if let Some(p) = std::env::var_os("PATH") {
+        new_path.push(p);
     }
-}
-
-impl Drop for PathEnvGuard {
-    fn drop(&mut self) {
-        // SAFETY: restores `PATH` saved in `prepend_bin_dir`.
-        unsafe {
-            match &self.previous {
-                Some(p) => std::env::set_var("PATH", p),
-                None => std::env::remove_var("PATH"),
-            }
-        }
-    }
+    new_path.to_string_lossy().into_owned()
 }
 
 fn write_executable(dir: &Path, name: &str, body: &str) {
@@ -90,13 +65,15 @@ async fn destroy_pool_removes_cached_pool_on_success() {
             "\" = \"destroy\" ]; then exit 0; fi\nexit 1\n"
         ),
     );
-    let _g = PathEnvGuard::prepend_bin_dir(tmp.path());
-
-    let m = ZfsPoolManager::new_for_testing();
-    m.insert_pool_for_testing(sample_pool("gone")).await;
-    m.destroy_pool("gone").await.expect("destroy");
-    let list = m.list_pools().await.expect("list");
-    assert!(list.is_empty());
+    let path = path_with_bin_prepended(tmp.path());
+    temp_env::async_with_vars([("PATH", Some(path.as_str()))], async {
+        let m = ZfsPoolManager::new_for_testing();
+        m.insert_pool_for_testing(sample_pool("gone")).await;
+        m.destroy_pool("gone").await.expect("destroy");
+        let list = m.list_pools().await.expect("list");
+        assert!(list.is_empty());
+    })
+    .await;
 }
 
 #[tokio::test]
@@ -111,11 +88,13 @@ echo "cannot destroy" >&2
 exit 3
 "#,
     );
-    let _g = PathEnvGuard::prepend_bin_dir(tmp.path());
-
-    let m = ZfsPoolManager::new_for_testing();
-    m.insert_pool_for_testing(sample_pool("p1")).await;
-    assert!(m.destroy_pool("p1").await.is_err());
+    let path = path_with_bin_prepended(tmp.path());
+    temp_env::async_with_vars([("PATH", Some(path.as_str()))], async {
+        let m = ZfsPoolManager::new_for_testing();
+        m.insert_pool_for_testing(sample_pool("p1")).await;
+        assert!(m.destroy_pool("p1").await.is_err());
+    })
+    .await;
 }
 
 #[tokio::test]
@@ -133,10 +112,12 @@ async fn scrub_pool_succeeds_when_zpool_returns_ok() {
             "\" = \"scrub\" ]; then exit 0; fi\nexit 1\n"
         ),
     );
-    let _g = PathEnvGuard::prepend_bin_dir(tmp.path());
-
-    let m = ZfsPoolManager::new_for_testing();
-    m.scrub_pool("tank").await.expect("scrub");
+    let path = path_with_bin_prepended(tmp.path());
+    temp_env::async_with_vars([("PATH", Some(path.as_str()))], async {
+        let m = ZfsPoolManager::new_for_testing();
+        m.scrub_pool("tank").await.expect("scrub");
+    })
+    .await;
 }
 
 #[tokio::test]
@@ -151,11 +132,13 @@ echo "scrub failed" >&2
 exit 1
 "#,
     );
-    let _g = PathEnvGuard::prepend_bin_dir(tmp.path());
-
-    let m = ZfsPoolManager::new_for_testing();
-    let err = m.scrub_pool("bad").await.expect_err("err");
-    assert!(err.to_string().contains("scrub"));
+    let path = path_with_bin_prepended(tmp.path());
+    temp_env::async_with_vars([("PATH", Some(path.as_str()))], async {
+        let m = ZfsPoolManager::new_for_testing();
+        let err = m.scrub_pool("bad").await.expect_err("err");
+        assert!(err.to_string().contains("scrub"));
+    })
+    .await;
 }
 
 #[tokio::test]
@@ -173,12 +156,14 @@ async fn create_pool_maps_zpool_create_failure() {
             "\" = \"create\" ]; then\n  echo \"no vdevs\" >&2\n  exit 1\nfi\nexit 0\n"
         ),
     );
-    let _g = PathEnvGuard::prepend_bin_dir(tmp.path());
-
-    let m = ZfsPoolManager::new_for_testing();
-    let err = m
-        .create_pool("newpool", &["/dev/null".into()])
-        .await
-        .expect_err("create should fail");
-    assert!(err.to_string().contains("zpool create"));
+    let path = path_with_bin_prepended(tmp.path());
+    temp_env::async_with_vars([("PATH", Some(path.as_str()))], async {
+        let m = ZfsPoolManager::new_for_testing();
+        let err = m
+            .create_pool("newpool", &["/dev/null".into()])
+            .await
+            .expect_err("create should fail");
+        assert!(err.to_string().contains("zpool create"));
+    })
+    .await;
 }

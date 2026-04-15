@@ -21,7 +21,7 @@
 //! // Use ZfsPerformanceMonitor::new_for_testing() for quick setup in tests.
 //! use nestgate_zfs::performance::monitor::ZfsPerformanceMonitor;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! let mut monitor = ZfsPerformanceMonitor::new_for_testing();
 //! monitor.start().await?;
 //! # Ok(())
@@ -158,81 +158,83 @@ impl ZfsPerformanceMonitor {
         &self,
         env: &(impl EnvSource + ?Sized),
     ) -> CoreResult<()> {
-        let mut conditions = self.alert_conditions.write().await;
+        let default_conditions = vec![
+            // High latency alert
+            AlertCondition {
+                id: "high-latency".to_string(),
+                name: "High Latency".to_string(),
+                description: "Average latency exceeds threshold".to_string(),
+                metric: AlertMetric::Latency,
+                operator: AlertOperator::GreaterThan,
+                threshold: 100.0, // 100ms
+                duration: Duration::from_secs(env_parsed(
+                    env,
+                    "NESTGATE_ZFS_LATENCY_ALERT_DURATION_SECS",
+                    300_u64,
+                )),
+                severity: AlertSeverity::Warning,
+                enabled: true,
+            },
+            // High IOPS alert
+            AlertCondition {
+                id: "high-iops".to_string(),
+                name: "High IOPS".to_string(),
+                description: "IOPS exceeds safe threshold".to_string(),
+                metric: AlertMetric::Iops,
+                operator: AlertOperator::GreaterThan,
+                threshold: 10_000.0, // 10K IOPS
+                duration: Duration::from_secs(env_parsed(
+                    env,
+                    "NESTGATE_ZFS_IOPS_ALERT_DURATION_SECS",
+                    180_u64,
+                )),
+                severity: AlertSeverity::Critical,
+                enabled: true,
+            },
+            // High utilization alert
+            AlertCondition {
+                id: "high-utilization".to_string(),
+                name: "High Disk Utilization".to_string(),
+                description: "Disk utilization exceeds safe threshold".to_string(),
+                metric: AlertMetric::Utilization,
+                operator: AlertOperator::GreaterThan,
+                threshold: 85.0, // 85% utilization
+                duration: Duration::from_secs(env_parsed(
+                    env,
+                    "NESTGATE_ZFS_UTILIZATION_ALERT_DURATION_SECS",
+                    600_u64,
+                )),
+                severity: AlertSeverity::Warning,
+                enabled: true,
+            },
+            // Low cache hit ratio alert
+            AlertCondition {
+                id: "low-cache-hit".to_string(),
+                name: "Low Cache Hit Ratio".to_string(),
+                description: "ZFS cache hit ratio is below optimal threshold".to_string(),
+                metric: AlertMetric::CacheHitRatio,
+                operator: AlertOperator::LessThan,
+                threshold: 80.0, // 80% cache hit ratio
+                duration: Duration::from_secs(env_parsed(
+                    env,
+                    "NESTGATE_ZFS_CACHE_ALERT_DURATION_SECS",
+                    900_u64,
+                )),
+                severity: AlertSeverity::Info,
+                enabled: true,
+            },
+        ];
 
-        // High latency alert
-        conditions.push(AlertCondition {
-            id: "high-latency".to_string(),
-            name: "High Latency".to_string(),
-            description: "Average latency exceeds threshold".to_string(),
-            metric: AlertMetric::Latency,
-            operator: AlertOperator::GreaterThan,
-            threshold: 100.0, // 100ms
-            duration: Duration::from_secs(env_parsed(
-                env,
-                "NESTGATE_ZFS_LATENCY_ALERT_DURATION_SECS",
-                300_u64,
-            )),
-            severity: AlertSeverity::Warning,
-            enabled: true,
-        });
-
-        // High IOPS alert
-        conditions.push(AlertCondition {
-            id: "high-iops".to_string(),
-            name: "High IOPS".to_string(),
-            description: "IOPS exceeds safe threshold".to_string(),
-            metric: AlertMetric::Iops,
-            operator: AlertOperator::GreaterThan,
-            threshold: 10_000.0, // 10K IOPS
-            duration: Duration::from_secs(env_parsed(
-                env,
-                "NESTGATE_ZFS_IOPS_ALERT_DURATION_SECS",
-                180_u64,
-            )),
-            severity: AlertSeverity::Critical,
-            enabled: true,
-        });
-
-        // High utilization alert
-        conditions.push(AlertCondition {
-            id: "high-utilization".to_string(),
-            name: "High Disk Utilization".to_string(),
-            description: "Disk utilization exceeds safe threshold".to_string(),
-            metric: AlertMetric::Utilization,
-            operator: AlertOperator::GreaterThan,
-            threshold: 85.0, // 85% utilization
-            duration: Duration::from_secs(env_parsed(
-                env,
-                "NESTGATE_ZFS_UTILIZATION_ALERT_DURATION_SECS",
-                600_u64,
-            )),
-            severity: AlertSeverity::Warning,
-            enabled: true,
-        });
-
-        // Low cache hit ratio alert
-        conditions.push(AlertCondition {
-            id: "low-cache-hit".to_string(),
-            name: "Low Cache Hit Ratio".to_string(),
-            description: "ZFS cache hit ratio is below optimal threshold".to_string(),
-            metric: AlertMetric::CacheHitRatio,
-            operator: AlertOperator::LessThan,
-            threshold: 80.0, // 80% cache hit ratio
-            duration: Duration::from_secs(env_parsed(
-                env,
-                "NESTGATE_ZFS_CACHE_ALERT_DURATION_SECS",
-                900_u64,
-            )),
-            severity: AlertSeverity::Info,
-            enabled: true,
-        });
+        self.alert_conditions
+            .write()
+            .await
+            .extend(default_conditions);
         Ok(())
     }
 
     /// Initialize tier performance targets
     async fn initialize_tier_targets(&self) -> CoreResult<()> {
-        let mut tier_metrics = self.tier_metrics.write().await;
+        let mut new_tier_metrics: HashMap<StorageTier, TierPerformanceData> = HashMap::new();
 
         // Initialize tier data with performance targets
         for tier in [StorageTier::Hot, StorageTier::Warm, StorageTier::Cold] {
@@ -274,16 +276,18 @@ impl ZfsPerformanceMonitor {
                 },
             };
 
-            tier_metrics.insert(
+            new_tier_metrics.insert(
                 tier.clone(),
                 TierPerformanceData {
                     tier: tier.clone(),
-                    current_metrics: TierMetrics::default_for_tier(tier),
+                    current_metrics: TierMetrics::default_for_tier(tier.clone()),
                     history: VecDeque::new(),
                     trends: PerformanceTrends::default(),
                 },
             );
         }
+
+        self.tier_metrics.write().await.extend(new_tier_metrics);
         Ok(())
     }
 

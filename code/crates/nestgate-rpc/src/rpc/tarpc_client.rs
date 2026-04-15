@@ -25,7 +25,7 @@
 //! ```rust,ignore
 //! use nestgate_core::rpc::NestGateRpcClient;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! // Discover storage capability (no hardcoding!)
 //! let client = NestGateRpcClient::discover_by_capability("storage")?;
 //!
@@ -78,7 +78,7 @@ type GeneratedClient = crate::rpc::tarpc_types::NestGateRpcClient;
 /// ```rust,ignore
 /// use nestgate_core::rpc::NestGateRpcClient;
 ///
-/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 /// // Environment-driven: $NESTGATE_RPC_ENDPOINT or default
 /// let endpoint = std::env::var("NESTGATE_RPC_ENDPOINT")
 ///     .unwrap_or_else(|_| format!("tarpc://{}", nestgate_core::constants::ports::get_rpc_server_addr()));
@@ -154,7 +154,7 @@ impl NestGateRpcClient {
     /// ```rust,ignore
     /// use nestgate_core::rpc::NestGateRpcClient;
     ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
     /// let client = NestGateRpcClient::discover_by_capability("storage")?;
     /// # Ok(())
     /// # }

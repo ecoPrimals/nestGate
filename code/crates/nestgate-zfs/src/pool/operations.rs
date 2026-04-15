@@ -94,8 +94,8 @@ impl ZfsPoolManager {
         {
             let mut pools = self.discovered_pools.write().await;
             pools.remove(name);
-            debug!("Removed pool {} from discovered pools cache", name);
         }
+        debug!("Removed pool {} from discovered pools cache", name);
 
         info!("Successfully destroyed pool: {}", name);
         Ok(())

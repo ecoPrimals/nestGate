@@ -25,7 +25,7 @@
 //! use nestgate_config::constants::ports;
 //! use std::net::SocketAddr;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! let backend = InMemoryStorageBackend::new();
 //! let service = NestGateRpcService::with_backend(backend);
 //! let addr: SocketAddr = ports::get_rpc_server_addr().parse()?;

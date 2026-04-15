@@ -13,7 +13,7 @@ use tracing::info;
 use crate::cli::{ServiceAction, port_from_env_or_default};
 use crate::error::{BinResult, NestGateBinError};
 
-use super::bind::{resolve_standalone_http_bind, tcp_jsonrpc_listen_addr};
+use super::bind::{resolve_socket_only_tcp_listen_port, resolve_standalone_http_bind};
 
 /// Service manager for CLI lifecycle operations.
 pub struct ServiceManager {
@@ -427,12 +427,8 @@ pub async fn run_daemon(
             .await
     } else {
         info!("Starting NestGate in socket-only mode (TRUE ecoBin - default)");
-        let resolved_port = port.or_else(|| {
-            let env_port = port_from_env_or_default();
-            let default_port = nestgate_core::constants::DEFAULT_API_PORT;
-            (env_port != default_port).then_some(env_port)
-        });
-        let tcp_addr = tcp_jsonrpc_listen_addr(resolved_port, bind, listen)?;
+        let tcp_addr =
+            resolve_socket_only_tcp_listen_port(port, listen, bind, &nestgate_types::ProcessEnv)?;
         run_socket_only_daemon(tcp_addr).await
     }
 }
@@ -590,7 +586,7 @@ pub async fn show_version() -> BinResult<()> {
 
 #[cfg(test)]
 mod service_manager_tests {
-    use super::ServiceManager;
+    use super::{ServiceManager, show_health, show_status, show_version};
     use crate::cli::ServiceAction;
     use std::net::SocketAddr;
 
@@ -634,6 +630,13 @@ mod service_manager_tests {
             }
             _ => panic!("start"),
         }
+    }
+
+    #[tokio::test]
+    async fn show_status_health_version_helpers_succeed() {
+        assert!(show_status().await.is_ok());
+        assert!(show_health().await.is_ok());
+        assert!(show_version().await.is_ok());
     }
 }
 

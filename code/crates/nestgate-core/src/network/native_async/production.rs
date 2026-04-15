@@ -63,8 +63,7 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         };
 
         // Add registration event (release `services` before locking `events`)
-        let mut events = self.events.write().await;
-        events.push(ServiceEvent {
+        self.events.write().await.push(ServiceEvent {
             event_type: ServiceEventType::Registered,
             service_id,
             service_info: None, // Avoid cloning service data unnecessarily
@@ -81,8 +80,7 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
             services.remove(service_id)
         };
 
-        let mut events = self.events.write().await;
-        events.push(ServiceEvent {
+        self.events.write().await.push(ServiceEvent {
             event_type: ServiceEventType::Deregistered,
             service_id: service_id.to_string(),
             service_info: service,
@@ -95,12 +93,14 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
     /// Discover
     async fn discover(&self, service_name: &str) -> Result<Vec<Self::ServiceInfo>> {
         // Native async discovery - no Future boxing
-        let services = self.services.read().await;
-        let matching_services: Vec<ServiceInfo> = services
-            .values()
-            .filter(|service| service.name == service_name)
-            .cloned()
-            .collect();
+        let matching_services: Vec<ServiceInfo> = {
+            let services = self.services.read().await;
+            services
+                .values()
+                .filter(|service| service.name == service_name)
+                .cloned()
+                .collect()
+        };
 
         Ok(matching_services)
     }
@@ -123,8 +123,7 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         }
 
         // Add health change event (release `services` before locking `events`)
-        let mut events = self.events.write().await;
-        events.push(ServiceEvent {
+        self.events.write().await.push(ServiceEvent {
             event_type: ServiceEventType::HealthChanged,
             service_id: service_id.to_string(),
             service_info: None,
@@ -151,31 +150,33 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
     /// Query
     async fn query(&self, query: Self::Query) -> Result<Vec<Self::ServiceInfo>> {
         // Native async querying with filters
-        let services = self.services.read().await;
-        let filtered_services: Vec<ServiceInfo> = services
-            .values()
-            .filter(|service| {
-                // Filter by service name
-                if let Some(ref name) = query.service_name {
-                    if service.name != *name {
-                        return false;
+        let filtered_services: Vec<ServiceInfo> = {
+            let services = self.services.read().await;
+            services
+                .values()
+                .filter(|service| {
+                    // Filter by service name
+                    if let Some(ref name) = query.service_name {
+                        if service.name != *name {
+                            return false;
+                        }
                     }
-                }
 
-                // Filter by tags (assuming ServiceInfo has tags field)
-                if !query.tags.is_empty() {
-                    // Would check service.tags.contains() if field exists
-                }
+                    // Filter by tags (assuming ServiceInfo has tags field)
+                    if !query.tags.is_empty() {
+                        // Would check service.tags.contains() if field exists
+                    }
 
-                // Filter by healthy status
-                if query.healthy_only {
-                    // Would check service.healthy if field exists
-                }
+                    // Filter by healthy status
+                    if query.healthy_only {
+                        // Would check service.healthy if field exists
+                    }
 
-                true
-            })
-            .cloned()
-            .collect();
+                    true
+                })
+                .cloned()
+                .collect()
+        };
 
         Ok(filtered_services)
     }
@@ -192,8 +193,7 @@ impl NativeAsyncServiceDiscovery<10000, 30, 1000, 60> for ProductionServiceDisco
         service_id: &str,
         _metadata: HashMap<String, String>,
     ) -> Result<()> {
-        let mut services = self.services.write().await;
-        if let Some(_service) = services.get_mut(service_id) {
+        if let Some(_service) = self.services.write().await.get_mut(service_id) {
             // Update service metadata (assuming ServiceInfo has metadata field)
             // service.metadata.extend(metadata);
         }
@@ -239,9 +239,11 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
         };
 
         // Store connection
-        let mut connections = self.connections.write().await;
         let connection_id = connection.connection_id.clone();
-        connections.insert(connection_id, connection.clone());
+        self.connections
+            .write()
+            .await
+            .insert(connection_id, connection.clone());
 
         Ok(connection)
     }
@@ -267,8 +269,10 @@ impl NativeAsyncProtocolHandler<1000, 30, 3, 8192> for ProductionProtocolHandler
     /// Disconnect
     async fn disconnect(&self, connection: &Self::Connection) -> Result<()> {
         // Native async disconnection
-        let mut connections = self.connections.write().await;
-        connections.remove(&connection.connection_id);
+        self.connections
+            .write()
+            .await
+            .remove(&connection.connection_id);
         Ok(())
     }
 

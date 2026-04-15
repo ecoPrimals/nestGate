@@ -177,17 +177,6 @@ impl ServiceMetadataStore {
     /// This is called when a new service is registered. NestGate
     /// stores the metadata persistently for discovery purposes.
     pub async fn store_service(&self, meta: ServiceMetadata) -> Result<()> {
-        // Store in main service map (lock-free!)
-        self.services.insert(meta.name.clone(), meta.clone());
-
-        // Index by capabilities (lock-free!)
-        for capability in &meta.capabilities {
-            self.capability_index
-                .entry(capability.clone())
-                .or_default()
-                .push(meta.name.clone());
-        }
-
         tracing::info!(
             service = %meta.name,
             capabilities = ?meta.capabilities,
@@ -195,6 +184,16 @@ impl ServiceMetadataStore {
             platform = %meta.platform,
             "Service metadata stored"
         );
+
+        let service_name = meta.name.clone();
+        for capability in &meta.capabilities {
+            self.capability_index
+                .entry(capability.clone())
+                .or_default()
+                .push(service_name.clone());
+        }
+
+        self.services.insert(service_name, meta);
 
         Ok(())
     }

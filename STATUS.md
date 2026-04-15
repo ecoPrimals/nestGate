@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 14, 2026 (Session 43n — semantic router streaming parity + event-driven connection lifecycle)  
+**Last Updated**: April 15, 2026 (Session 43p — deep debt execution, streaming storage, TCP wiring, file refactoring)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,13 +8,13 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-13
-Clippy:             PASS — cargo clippy --workspace --all-targets --all-features -- -D warnings (zero errors), as of 2026-04-13
-Format:             CLEAN (cargo fmt --check passes), as of 2026-04-13
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-13
-Tests:              11,994 passing, 0 failures, 460 ignored (cargo test --workspace; flaky tests stabilized)
-Coverage:           80.08% line (cargo llvm-cov --workspace, 2026-04-13) — wateringHole 80% min met; 90% target is multi-session effort
-Files > 750 lines:  0 (production; 9 largest refactored Sessions 43–43f — max 749 LOC; engine/gcs/azure/pool_setup all under 500)
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-15
+Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-15
+Format:             CLEAN (cargo fmt --check passes), as of 2026-04-15
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-15
+Tests:              8,472 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-15
+Coverage:           81.68% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-15) — wateringHole 80% met; 90% target pending
+Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)
 Unsafe code:        #![forbid(unsafe_code)] on ALL crate roots (zero exceptions — env-process-shim uses edition 2021 safe wrappers)
@@ -29,14 +29,14 @@ Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s disc
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 47 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
 IPC routes (HTTP):  storage.dataset.*, storage.object.*, discovery.capability.*, health.*, capabilities.*, identity.* — 19 methods (JSON_RPC_CAPABILITIES_METHODS const)
-IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 33 semantic-routed methods
+IPC routes (tarpc): storage.*, metadata.*, crypto.*, session.*, discovery.*, health.*, capabilities.* — 38 explicit semantic-routed methods (`semantic_router/mod.rs` match arms)
 data.* delegation:  Wildcard catch-all returns NotImplemented directing callers to discover data capability provider (not counted as methods)
 Wire Standard:      Level 3 (Composable) — {primal, version, methods} envelope, provided_capabilities (12 groups, 45 methods), consumed_capabilities (3), protocol, transport
 Emoji in logs:      ZERO in library tracing — professional structured logging only (Session 43f)
 Registry:           capability_registry.toml — machine-readable self-knowledge, cross-check invariant tests
 Capability symlink: storage[-{fid}].sock → nestgate[-{fid}].sock (auto-managed lifecycle, family-scoped per BTSP Phase 1)
 BTSP Phase 1:      PASS — BIOMEOS_INSECURE guard, family-scoped socket naming, generic FAMILY_ID fallback
-TCP JSON-RPC:      Functional — `--port`, `--listen`, or NESTGATE_API_PORT env activates TcpFallbackServer alongside UDS
+TCP JSON-RPC:      Functional — `--port`, `--listen`, NESTGATE_API_PORT, or NESTGATE_JSONRPC_TCP=1 activates TcpFallbackServer alongside UDS
 UDS keep-alive:    PASS — persistent connections (multiple sequential requests per connection); flush after every response (LD-03 resolved)
 sysinfo:            OPTIONAL — Linux uses pure-Rust /proc parsing; sysinfo on non-Linux only
 Platforms:          6+ (Linux, FreeBSD, macOS, WSL2, illumos, Android)
@@ -45,9 +45,9 @@ Primal self-knowledge: Re-exported through nestgate-core from nestgate-discovery
 Primal sovereignty: DEFAULT_SERVICE_NAME constant; env-overridable; zero other-primal refs in production code
 Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
-Serial tests:       #[serial]: 0 — last 2 eliminated via temp_env::with_vars (Session 43d)
+Serial tests:       #[serial]: scoped to ZFS command stub tests (temp_env::with_vars elsewhere)
 Numeric casts:      Dangerous narrowing `as` casts evolved to try_from/saturating; benign widening casts remain
-Supply chain:       deny.toml present, C-FFI dependencies banned per ecoBin v3.0; cargo deny check bans PASS
+Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok (rustls-webpki 0.103.12, rand 0.9.x, CDLA-Permissive-2.0 allowed)
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
 
@@ -58,7 +58,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ## Session 43 — Deep Debt Evolution & primalSpring Compliance (Apr 12, 2026)
 
 ### primalSpring Audit Response
-- **Doc drift**: STATUS.md inflated method count corrected — now per-surface: UDS 46, HTTP 19, tarpc 33, `data.*` documented as wildcard delegation
+- **Doc drift**: STATUS.md method counts reconciled to code — per-surface: UDS 47 (`UNIX_SOCKET_SUPPORTED_METHODS`), HTTP 19 (`JSON_RPC_CAPABILITIES_METHODS`), tarpc semantic router 38 explicit routes + `data.*` wildcard delegation (`semantic_router/mod.rs`)
 - **TCP/`--port` wiring**: Socket-only mode now resolves port from `NESTGATE_API_PORT` env; activates TCP alongside UDS when env port differs from default
 - **Domain symlink**: Confirmed already implemented (`storage[-{fid}].sock` → `nestgate[-{fid}].sock`); compliance matrix update proposed
 - **Deprecated APIs**: 210→187 (17 zero-caller items removed Sessions 43–43g; 6 dead port constants Session 43g; 6 dead functions Session 43j)
@@ -650,4 +650,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 12, 2026 (Session 43)
+**Latest**: April 15, 2026 (Session 43p)

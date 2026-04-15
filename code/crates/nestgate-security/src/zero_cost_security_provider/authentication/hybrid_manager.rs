@@ -98,10 +98,13 @@ impl HybridAuthenticationManager {
         debug!("Validating token");
 
         {
-            let cache = self.token_cache.read().await;
-            if let Some(cached) = cache.get(token_str) {
-                let elapsed = cached
-                    .created_at
+            let created_at = {
+                let cache = self.token_cache.read().await;
+                cache.get(token_str).map(|cached| cached.created_at)
+            };
+
+            if let Some(created_at) = created_at {
+                let elapsed = created_at
                     .elapsed()
                     .map_err(|e| NestGateError::internal(format!("System time error: {e}")))?;
 
@@ -173,19 +176,28 @@ impl HybridAuthenticationManager {
     }
 
     async fn check_rate_limit(&self, username: &str) -> Result<bool> {
-        let mut attempts = self.auth_attempts.write().await;
-        let current_attempts = *attempts.get(username).unwrap_or(&0);
+        let (at_limit, current_attempts) = {
+            let mut attempts = self.auth_attempts.write().await;
+            let current_attempts = *attempts.get(username).unwrap_or(&0);
+            if current_attempts >= self.config.max_auth_attempts {
+                drop(attempts);
+                (true, current_attempts)
+            } else {
+                attempts.insert(username.to_string(), current_attempts + 1);
+                drop(attempts);
+                (false, current_attempts)
+            }
+        };
 
-        if current_attempts >= self.config.max_auth_attempts {
+        if at_limit {
             info!(
                 "Rate limit exceeded for user: {} ({}/{} attempts)",
                 username, current_attempts, self.config.max_auth_attempts
             );
-            return Ok(false);
+            Ok(false)
+        } else {
+            Ok(true)
         }
-
-        attempts.insert(username.to_string(), current_attempts + 1);
-        Ok(true)
     }
 
     async fn reset_attempts(&self, username: &str) {
@@ -282,15 +294,17 @@ impl HybridAuthenticationManager {
                         self.config.local_token_settings.token_expiry,
                     );
 
-                    let mut cache = self.token_cache.write().await;
-                    cache.insert(
-                        token.token.clone(),
-                        CachedToken {
-                            token: token.clone(),
-                            created_at: SystemTime::now(),
-                            _last_validated: SystemTime::now(),
-                        },
-                    );
+                    {
+                        let mut cache = self.token_cache.write().await;
+                        cache.insert(
+                            token.token.clone(),
+                            CachedToken {
+                                token: token.clone(),
+                                created_at: SystemTime::now(),
+                                _last_validated: SystemTime::now(),
+                            },
+                        );
+                    }
 
                     Ok(token)
                 } else {
@@ -311,15 +325,17 @@ impl HybridAuthenticationManager {
                     self.config.local_token_settings.token_expiry,
                 );
 
-                let mut cache = self.token_cache.write().await;
-                cache.insert(
-                    token.token.clone(),
-                    CachedToken {
-                        token: token.clone(),
-                        created_at: SystemTime::now(),
-                        _last_validated: SystemTime::now(),
-                    },
-                );
+                {
+                    let mut cache = self.token_cache.write().await;
+                    cache.insert(
+                        token.token.clone(),
+                        CachedToken {
+                            token: token.clone(),
+                            created_at: SystemTime::now(),
+                            _last_validated: SystemTime::now(),
+                        },
+                    );
+                }
 
                 Ok(token)
             }
@@ -358,11 +374,14 @@ impl HybridAuthenticationManager {
     }
 
     async fn validate_token_local(&self, token_str: &str) -> Result<bool> {
-        let cache = self.token_cache.read().await;
-        Ok(cache.get(token_str).is_some_and(|cached| {
-            let elapsed = cached.created_at.elapsed().unwrap_or(Duration::MAX);
-            elapsed < self.config.local_token_settings.token_expiry
-        }))
+        let valid = {
+            let cache = self.token_cache.read().await;
+            cache.get(token_str).is_some_and(|cached| {
+                let elapsed = cached.created_at.elapsed().unwrap_or(Duration::MAX);
+                elapsed < self.config.local_token_settings.token_expiry
+            })
+        };
+        Ok(valid)
     }
 
     /// Refresh JWT via crypto capability provider IPC.
@@ -422,18 +441,71 @@ impl HybridAuthenticationManager {
     }
 
     async fn refresh_token_local(&self, token_str: &str) -> Result<ZeroCostAuthToken> {
-        let cache = self.token_cache.read().await;
-        cache.get(token_str).map_or_else(
+        let cached = {
+            let cache = self.token_cache.read().await;
+            cache
+                .get(token_str)
+                .map(|c| (c.token.user_id.clone(), c.token.permissions.clone()))
+        };
+        cached.map_or_else(
             || Err(NestGateError::security_error("Token not found for refresh")),
-            |cached| {
-                let new_token = ZeroCostAuthToken::new(
+            |(user_id, permissions)| {
+                Ok(ZeroCostAuthToken::new(
                     format!("refresh_{}", uuid::Uuid::new_v4()),
-                    cached.token.user_id.clone(),
-                    cached.token.permissions.clone(),
+                    user_id,
+                    permissions,
                     self.config.local_token_settings.token_expiry,
-                );
-                Ok(new_token)
+                ))
             },
         )
+    }
+}
+
+#[cfg(test)]
+mod hybrid_manager_direct_tests {
+    use std::time::Duration;
+
+    use super::HybridAuthenticationManager;
+    use crate::zero_cost_security_provider::types::{AuthMethod, ZeroCostCredentials};
+
+    #[tokio::test]
+    async fn token_auth_with_empty_secret_fails() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        let mgr = HybridAuthenticationManager::new(config);
+        let creds = ZeroCostCredentials {
+            username: "api".into(),
+            password: String::new(),
+            auth_method: AuthMethod::Token,
+            metadata: std::collections::HashMap::new(),
+        };
+        let err = mgr.authenticate(&creds).await.expect_err("empty api token");
+        assert!(
+            err.to_string().contains("token") || err.to_string().contains("required"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn validate_token_expired_cache_entry_falls_through() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        config.local_token_settings.token_expiry = Duration::from_nanos(1);
+        let mgr = HybridAuthenticationManager::new(config);
+        let creds = ZeroCostCredentials::new_token("slow".into(), "k".into());
+        let tok = mgr.authenticate(&creds).await.expect("auth");
+        tokio::time::sleep(Duration::from_millis(30)).await;
+        let ok = mgr.validate_token(&tok.token).await.expect("validate");
+        assert!(!ok);
+    }
+
+    #[tokio::test]
+    async fn external_auth_disabled_skips_discovery() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        let mgr = HybridAuthenticationManager::new(config);
+        let creds = ZeroCostCredentials::new_token("u".into(), "secret".into());
+        let t = mgr.authenticate(&creds).await.expect("local token ok");
+        assert!(t.token.starts_with("api_"));
     }
 }

@@ -211,7 +211,7 @@ impl<M: MetadataBackend> SemanticRouter<M> {
     /// use nestgate_core::rpc::SemanticRouter;
     /// use serde_json::json;
     ///
-    /// # async fn example(router: SemanticRouter) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn example(router: SemanticRouter) -> std::result::Result<(), nestgate_types::NestGateError> {
     /// let result = router.call_method("storage.put", json!({
     ///     "dataset": "my-dataset",
     ///     "key": "my-key",
@@ -242,6 +242,12 @@ impl<M: MetadataBackend> SemanticRouter<M> {
             "storage.store_blob" => storage::storage_store_blob(self, params).await,
             "storage.retrieve_blob" => storage::storage_retrieve_blob(self, params).await,
             "storage.retrieve_range" => storage::storage_retrieve_range(self, params).await,
+            "storage.store_stream" => storage::storage_store_stream(self, params).await,
+            "storage.store_stream_chunk" => storage::storage_store_stream_chunk(self, params).await,
+            "storage.retrieve_stream" => storage::storage_retrieve_stream(self, params).await,
+            "storage.retrieve_stream_chunk" => {
+                storage::storage_retrieve_stream_chunk(self, params).await
+            }
             "storage.object.size" => storage::storage_object_size(self, params).await,
             "storage.namespaces.list" => storage::storage_namespaces_list(self, params).await,
 

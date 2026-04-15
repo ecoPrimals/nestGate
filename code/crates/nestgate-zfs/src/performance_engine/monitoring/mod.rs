@@ -86,13 +86,13 @@ impl RealTimePerformanceMonitor {
 
     /// Analyze performance trends and generate predictive alerts
     async fn analyze_performance_trends(&self) -> Result<()> {
-        let cache = self.metrics_cache.read().await;
-
-        if cache.len() < 5 {
-            return Ok(()); // Need at least 5 data points for trend analysis
-        }
-
-        let recent_metrics: Vec<&ZfsPerformanceMetrics> = cache.values().collect();
+        let recent_metrics: Vec<ZfsPerformanceMetrics> = {
+            let cache = self.metrics_cache.read().await;
+            if cache.len() < 5 {
+                return Ok(()); // Need at least 5 data points for trend analysis
+            }
+            cache.values().cloned().collect()
+        };
 
         // Analyze ARC hit ratio trends
         let arc_hit_ratios: Vec<f64> = recent_metrics

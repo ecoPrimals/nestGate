@@ -145,12 +145,14 @@ impl MetadataBackend for InMemoryMetadataBackend {
     ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
         let capability = capability.to_owned();
         async move {
-            let guard = self.services.read().await;
-            let matches: Vec<ServiceRecord> = guard
-                .values()
-                .filter(|s| s.capabilities.iter().any(|c| c == &capability))
-                .cloned()
-                .collect();
+            let matches: Vec<ServiceRecord> = {
+                let guard = self.services.read().await;
+                guard
+                    .values()
+                    .filter(|s| s.capabilities.iter().any(|c| c == &capability))
+                    .cloned()
+                    .collect()
+            };
             Ok(matches)
         }
     }
@@ -161,12 +163,14 @@ impl MetadataBackend for InMemoryMetadataBackend {
     ) -> impl Future<Output = Result<Vec<ServiceRecord>>> + Send + '_ {
         let prefix = prefix.to_owned();
         async move {
-            let guard = self.services.read().await;
-            let mut matches: Vec<ServiceRecord> = guard
-                .values()
-                .filter(|s| s.name.starts_with(&*prefix))
-                .cloned()
-                .collect();
+            let mut matches: Vec<ServiceRecord> = {
+                let guard = self.services.read().await;
+                guard
+                    .values()
+                    .filter(|s| s.name.starts_with(&*prefix))
+                    .cloned()
+                    .collect()
+            };
             matches.sort_by(|a, b| a.name.cmp(&b.name));
             Ok(matches)
         }

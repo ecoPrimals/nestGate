@@ -21,7 +21,7 @@
 //! ```rust,ignore
 //! use nestgate_core::capabilities::discovery::{CapabilityRegistry, Capability, SecurityCapability};
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # async fn example() -> std::result::Result<(), nestgate_types::NestGateError> {
 //! // Create registry
 //! let registry = CapabilityRegistry::new();
 //!

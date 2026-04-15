@@ -218,48 +218,9 @@ pub trait SigningProvider: Send + Sync {
     fn supported_algorithms(&self) -> Vec<String>;
 }
 
-/// **Security health provider trait**
-/// Specialized trait for security health monitoring
-/// **DEPRECATED**: Health monitoring integrated into canonical security
-#[deprecated(
-    since = "0.9.0",
-    note = "Use nestgate_core::traits::canonical::CanonicalSecurity health_check method"
-)]
-/// `SecurityHealthProvider` trait
-pub trait SecurityHealthProvider: Send + Sync {
-    /// Health information type
-    type Health: Clone + Send + Sync + 'static;
-    /// Get security health status
-    fn health_check(&self) -> impl std::future::Future<Output = Self::Health> + Send;
-
-    /// Check if security provider is healthy
-    fn is_healthy(&self) -> impl std::future::Future<Output = bool> + Send;
-}
-
-/// **Security metrics provider trait**
-/// Specialized trait for security metrics collection
-/// **DEPRECATED**: Metrics integrated into canonical security
-#[deprecated(
-    since = "0.9.0",
-    note = "Use nestgate_core::traits::canonical::CanonicalSecurity metrics methods"
-)]
-/// `SecurityMetricsProvider` trait
-pub trait SecurityMetricsProvider: Send + Sync {
-    /// Metrics type
-    type Metrics: Clone + Send + Sync + 'static;
-    /// Get security metrics
-    fn get_metrics(&self) -> impl std::future::Future<Output = Self::Metrics> + Send;
-
-    /// Reset metrics
-    fn reset_metrics(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Remove unused imports
-    // use crate::zero_cost_security_provider::types::AuthMethod;
-    // use std::collections::HashMap;
 
     // Mock implementation for testing
     struct MockSecurityProvider {

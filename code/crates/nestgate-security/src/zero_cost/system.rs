@@ -12,6 +12,9 @@
 //! Deprecation warnings are suppressed via `#![expect(deprecated)]` at module level.
 //! Migration to canonical traits is tracked but not yet scheduled.
 
+use super::constants::{
+    ZERO_COST_PLACEHOLDER_AVERAGE_LATENCY_NS, ZERO_COST_PLACEHOLDER_REQUESTS_PROCESSED,
+};
 use super::traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
 use super::types::{ZeroCostError, ZeroCostMetrics, ZeroCostRequest, ZeroCostResponse};
 use std::marker::PhantomData;
@@ -78,8 +81,8 @@ where
     /// Get system metrics
     pub const fn metrics(&self) -> ZeroCostMetrics {
         ZeroCostMetrics {
-            requests_processed: 1000,   // Would be tracked in real implementation
-            average_latency_ns: 50_000, // Would be measured in real implementation
+            requests_processed: ZERO_COST_PLACEHOLDER_REQUESTS_PROCESSED,
+            average_latency_ns: ZERO_COST_PLACEHOLDER_AVERAGE_LATENCY_NS,
         }
     }
 
@@ -187,6 +190,10 @@ impl<const MAX_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostSystemBuilder<MAX_SIZ
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::zero_cost::constants::{
+        ZERO_COST_TEST_TIMEOUT_MS_1000, ZERO_COST_TEST_TIMEOUT_MS_2000,
+        ZERO_COST_TEST_TIMEOUT_MS_3000, ZERO_COST_TEST_TIMEOUT_MS_5000,
+    };
     use crate::zero_cost::providers::*;
     use crate::zero_cost::types::{RequestPriority, ZeroCostMetadata};
 
@@ -196,11 +203,13 @@ mod tests {
         let security = ZeroCostJwtProvider::new([1u8; 32]);
         let storage = ZeroCostFileStorage::new("/tmp".to_string());
 
-        let system = ZeroCostSystem::<_, _, _, 10, 5000>::new(cache, security, storage);
+        let system = ZeroCostSystem::<_, _, _, 10, ZERO_COST_TEST_TIMEOUT_MS_5000>::new(
+            cache, security, storage,
+        );
 
         // Verify compile-time constants
         assert_eq!(system.max_size(), 10);
-        assert_eq!(system.timeout_ms(), 5000);
+        assert_eq!(system.timeout_ms(), ZERO_COST_TEST_TIMEOUT_MS_5000);
     }
 
     #[test]
@@ -209,7 +218,9 @@ mod tests {
         let security = ZeroCostJwtProvider::new([2u8; 32]);
         let storage = ZeroCostFileStorage::new("/tmp".to_string());
 
-        let system = ZeroCostSystem::<_, _, _, 16, 3000>::new(cache, security, storage);
+        let system = ZeroCostSystem::<_, _, _, 16, ZERO_COST_TEST_TIMEOUT_MS_3000>::new(
+            cache, security, storage,
+        );
 
         let request = ZeroCostRequest {
             id: 1,
@@ -236,7 +247,9 @@ mod tests {
         let security = ZeroCostJwtProvider::new([3u8; 32]);
         let storage = ZeroCostFileStorage::new("/tmp".to_string());
 
-        let system = ZeroCostSystem::<_, _, _, 32, 2000>::new(cache, security, storage);
+        let system = ZeroCostSystem::<_, _, _, 32, ZERO_COST_TEST_TIMEOUT_MS_2000>::new(
+            cache, security, storage,
+        );
 
         let metrics = system.metrics();
         assert!(metrics.requests_processed > 0);
@@ -245,19 +258,21 @@ mod tests {
 
     #[test]
     fn test_zero_cost_system_builder() {
-        let system = ZeroCostSystemBuilder::<100, 1000>::new().with_memory_cache();
+        let system =
+            ZeroCostSystemBuilder::<100, ZERO_COST_TEST_TIMEOUT_MS_1000>::new().with_memory_cache();
 
         // Verify builder configuration
         assert_eq!(system.max_size(), 100);
-        assert_eq!(system.timeout_ms(), 1000);
+        assert_eq!(system.timeout_ms(), ZERO_COST_TEST_TIMEOUT_MS_1000);
     }
 
     #[test]
     fn test_zero_cost_system_builder_with_memory_cache() {
-        let system = ZeroCostSystemBuilder::<200, 3000>::new().with_memory_cache();
+        let system =
+            ZeroCostSystemBuilder::<200, ZERO_COST_TEST_TIMEOUT_MS_3000>::new().with_memory_cache();
 
         // Verify the system was built with correct configuration
         assert_eq!(system.max_size(), 200);
-        assert_eq!(system.timeout_ms(), 3000);
+        assert_eq!(system.timeout_ms(), ZERO_COST_TEST_TIMEOUT_MS_3000);
     }
 }

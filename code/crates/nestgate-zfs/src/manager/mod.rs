@@ -53,11 +53,7 @@ pub struct ZfsManager {
     pub dataset_manager: Arc<ZfsDatasetManager>,
     /// Snapshot management operations
     pub snapshot_manager: Arc<ZfsSnapshotManager>,
-    /// Reserved for future tier-migration engine (`MigrationEngine` — module not wired in yet).
-    // pub migration_engine: Arc<RwLock<MigrationEngine>>,
-    /// Reserved for dataset migration analysis (`DatasetAnalyzer` — same as migration engine).
-    // pub dataset_analyzer: Arc<crate::migration::discovery::DatasetAnalyzer>,
-    /// Performance monitoring
+    /// Performance monitoring (`MigrationEngine` / `DatasetAnalyzer` integration deferred).
     pub performance_monitor: Arc<RwLock<ZfsPerformanceMonitor>>,
     /// Tiered storage management
     pub tier_manager: Arc<TierManager>,

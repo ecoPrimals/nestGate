@@ -259,12 +259,7 @@ pub mod modern {
         );
         let _ = service_name;
 
-        // Create basic network configuration for cert service
-        // let _network_config = crate::unified_types::network_config::UnifiedNetworkConfig {
-        //     bind_endpoint: _endpoint.ip(),
-        //     port: _endpoint.port(),
-        //     ..Default::default()
-        // }; // UnifiedNetworkConfig module removed - use canonical_primary if needed
+        // UnifiedNetworkConfig was removed; use canonical_primary network types when integrating discovery.
 
         // Create and return the certificate using actual Certificate struct fields
         Ok(Certificate {

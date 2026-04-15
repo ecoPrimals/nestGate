@@ -5,6 +5,15 @@ use std::sync::Arc;
 
 use nestgate_types::{EnvSource, ProcessEnv};
 
+use crate::constants::hardcoding::addresses;
+use crate::constants::port_defaults::{
+    DEFAULT_API_PORT, DEFAULT_DEV_PORT, DEFAULT_METRICS_PORT, DEFAULT_ORCHESTRATOR_PORT,
+};
+use crate::constants::timeouts::{
+    DEFAULT_NETWORK_DEFAULTS_CONNECTION_TIMEOUT_MS, DEFAULT_NETWORK_DEFAULTS_REQUEST_TIMEOUT_MS,
+};
+use crate::defaults::network::{DEFAULT_HEALTH_PORT, DEFAULT_WS_PORT};
+
 /// Thread-safe configuration for network port defaults
 /// Captures environment variables at initialization to prevent race conditions
 #[derive(Debug, Clone)]
@@ -111,49 +120,49 @@ impl NetworkDefaultsConfig {
     /// Gets Api Port
     #[must_use]
     pub fn get_api_port(&self) -> u16 {
-        self.api_port.unwrap_or(3000) // API default (Node.js convention)
+        self.api_port.unwrap_or(DEFAULT_DEV_PORT)
     }
 
     /// Gets Websocket Port
     #[must_use]
     pub fn get_websocket_port(&self) -> u16 {
-        self.websocket_port.unwrap_or(8082) // WebSocket default
+        self.websocket_port.unwrap_or(DEFAULT_WS_PORT)
     }
 
     /// Gets Http Port
     #[must_use]
     pub fn get_http_port(&self) -> u16 {
-        self.http_port.unwrap_or(8080) // HTTP default
+        self.http_port.unwrap_or(DEFAULT_API_PORT)
     }
 
     /// Gets Nas Http Port
     #[must_use]
     pub fn get_nas_http_port(&self) -> u16 {
-        self.nas_http_port.unwrap_or(8080) // HTTP default for NAS
+        self.nas_http_port.unwrap_or(DEFAULT_API_PORT)
     }
 
     /// Gets Dev Server Port
     #[must_use]
     pub fn get_dev_server_port(&self) -> u16 {
-        self.dev_server_port.unwrap_or(3000) // Development server default
+        self.dev_server_port.unwrap_or(DEFAULT_DEV_PORT)
     }
 
     /// Gets Metrics Port
     #[must_use]
     pub fn get_metrics_port(&self) -> u16 {
-        self.metrics_port.unwrap_or(9090) // Prometheus default
+        self.metrics_port.unwrap_or(DEFAULT_METRICS_PORT)
     }
 
     /// Gets Health Port
     #[must_use]
     pub fn get_health_port(&self) -> u16 {
-        self.health_port.unwrap_or(8081) // Health check default
+        self.health_port.unwrap_or(DEFAULT_HEALTH_PORT)
     }
 
     /// Gets Orchestrator Port
     #[must_use]
     pub fn get_orchestrator_port(&self) -> u16 {
-        self.orchestrator_port.unwrap_or(8090) // Orchestrator default
+        self.orchestrator_port.unwrap_or(DEFAULT_ORCHESTRATOR_PORT)
     }
 
     // Address getters with fallback to defaults
@@ -163,7 +172,7 @@ impl NetworkDefaultsConfig {
     pub fn get_bind_address(&self) -> String {
         self.bind_address
             .clone()
-            .unwrap_or_else(|| crate::constants::network_defaults::LOCALHOST_IPV4.to_string())
+            .unwrap_or_else(|| addresses::LOCALHOST_IPV4.to_string())
     }
 
     /// Gets Development Bind Address
@@ -171,7 +180,7 @@ impl NetworkDefaultsConfig {
     pub fn get_development_bind_address(&self) -> String {
         self.dev_bind_address
             .clone()
-            .unwrap_or_else(|| crate::constants::network_defaults::BIND_ALL_IPV4.to_string())
+            .unwrap_or_else(|| addresses::BIND_ALL_IPV4.to_string())
     }
 
     /// Gets Hostname
@@ -179,7 +188,7 @@ impl NetworkDefaultsConfig {
     pub fn get_hostname(&self) -> String {
         self.hostname
             .clone()
-            .unwrap_or_else(|| crate::constants::network_defaults::LOCALHOST_NAME.to_string())
+            .unwrap_or_else(|| addresses::LOCALHOST_NAME.to_string())
     }
 
     /// Gets External Hostname
@@ -187,7 +196,7 @@ impl NetworkDefaultsConfig {
     pub fn get_external_hostname(&self) -> String {
         self.external_hostname
             .clone()
-            .unwrap_or_else(|| crate::constants::network_defaults::LOCALHOST_NAME.to_string())
+            .unwrap_or_else(|| addresses::LOCALHOST_NAME.to_string())
     }
 
     // URL getters with dynamic construction if not provided
@@ -221,13 +230,15 @@ impl NetworkDefaultsConfig {
     /// Gets Connection Timeout Ms
     #[must_use]
     pub fn get_connection_timeout_ms(&self) -> u64 {
-        self.connection_timeout_ms.unwrap_or(3000)
+        self.connection_timeout_ms
+            .unwrap_or(DEFAULT_NETWORK_DEFAULTS_CONNECTION_TIMEOUT_MS)
     }
 
     /// Gets Request Timeout Ms
     #[must_use]
     pub fn get_request_timeout_ms(&self) -> u64 {
-        self.request_timeout_ms.unwrap_or(30000)
+        self.request_timeout_ms
+            .unwrap_or(DEFAULT_NETWORK_DEFAULTS_REQUEST_TIMEOUT_MS)
     }
 
     // Builder methods for tests

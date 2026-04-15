@@ -79,18 +79,20 @@ impl InMemoryDiscoveryBackend {
 
     /// Clean up stale registrations
     async fn cleanup_stale(&self) {
-        let mut primals = self.primals.write().await;
-        let now = SystemTime::now();
-        let threshold = self.config.stale_threshold;
+        let removed = {
+            let mut primals = self.primals.write().await;
+            let now = SystemTime::now();
+            let threshold = self.config.stale_threshold;
 
-        let initial_count = primals.len();
-        primals.retain(|_, registered| {
-            now.duration_since(registered.last_updated)
-                .map(|age| age < threshold)
-                .unwrap_or(false)
-        });
+            let initial_count = primals.len();
+            primals.retain(|_, registered| {
+                now.duration_since(registered.last_updated)
+                    .map(|age| age < threshold)
+                    .unwrap_or(false)
+            });
 
-        let removed = initial_count - primals.len();
+            initial_count.saturating_sub(primals.len())
+        };
         if removed > 0 {
             debug!("Cleaned up {} stale primal registrations", removed);
         }
@@ -131,20 +133,22 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
         async move {
             self.cleanup_stale().await;
 
-            let mut primals = self.primals.write().await;
+            {
+                let mut primals = self.primals.write().await;
 
-            if !primals.contains_key(&knowledge.id) {
-                self.check_capacity(&primals)?;
+                if !primals.contains_key(&knowledge.id) {
+                    self.check_capacity(&primals)?;
+                }
+
+                let now = SystemTime::now();
+                let registered = RegisteredPrimal {
+                    knowledge: knowledge.clone(),
+                    registered_at: primals.get(&knowledge.id).map_or(now, |p| p.registered_at),
+                    last_updated: now,
+                };
+
+                primals.insert(knowledge.id.clone(), registered);
             }
-
-            let now = SystemTime::now();
-            let registered = RegisteredPrimal {
-                knowledge: knowledge.clone(),
-                registered_at: primals.get(&knowledge.id).map_or(now, |p| p.registered_at),
-                last_updated: now,
-            };
-
-            primals.insert(knowledge.id.clone(), registered);
 
             info!(
                 "Registered primal '{}' with {} capabilities",
@@ -164,18 +168,19 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
         async move {
             self.cleanup_stale().await;
 
-            let primals = self.primals.read().await;
-
-            let peers: Vec<PeerDescriptor> = primals
-                .values()
-                .filter(|p| {
-                    p.knowledge
-                        .capabilities
-                        .iter()
-                        .any(|c| c.to_string() == capability)
-                })
-                .map(|p| self.to_peer_descriptor(p))
-                .collect();
+            let peers: Vec<PeerDescriptor> = {
+                let primals = self.primals.read().await;
+                primals
+                    .values()
+                    .filter(|p| {
+                        p.knowledge
+                            .capabilities
+                            .iter()
+                            .any(|c| c.to_string() == capability)
+                    })
+                    .map(Self::to_peer_descriptor)
+                    .collect()
+            };
 
             debug!(
                 "Found {} primals with capability {:?}",
@@ -193,17 +198,22 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
     ) -> impl Future<Output = anyhow::Result<Option<PeerDescriptor>>> + Send + '_ {
         let id = id.clone();
         async move {
-            let primals = self.primals.read().await;
-            Ok(primals.get(&id).map(|p| self.to_peer_descriptor(p)))
+            Ok({
+                let primals = self.primals.read().await;
+                primals.get(&id).map(Self::to_peer_descriptor)
+            })
         }
     }
 
     fn unannounce(&self, id: &PrimalId) -> impl Future<Output = anyhow::Result<()>> + Send + '_ {
         let id = id.clone();
         async move {
-            let mut primals = self.primals.write().await;
+            let removed = {
+                let mut primals = self.primals.write().await;
+                primals.remove(&id).is_some()
+            };
 
-            if primals.remove(&id).is_some() {
+            if removed {
                 info!("Unregistered primal '{}'", id.as_str());
                 Ok(())
             } else {
@@ -218,7 +228,7 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
 }
 
 impl InMemoryDiscoveryBackend {
-    fn to_peer_descriptor(&self, p: &RegisteredPrimal) -> PeerDescriptor {
+    fn to_peer_descriptor(p: &RegisteredPrimal) -> PeerDescriptor {
         let binding = &p.knowledge.binding;
         PeerDescriptor {
             id: p.knowledge.id.clone(),

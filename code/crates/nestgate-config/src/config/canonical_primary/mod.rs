@@ -114,6 +114,35 @@ pub use phase2c_types::{
 ///
 /// This replaces ALL other configuration structures with a single,
 /// unified configuration that uses const generics for compile-time optimization.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_config::NestGateCanonicalConfig;
+/// use nestgate_config::config::canonical_primary::Environment;
+///
+/// let config = NestGateCanonicalConfig::<1000, 65_536, 30_000, 8080>::default();
+///
+/// assert_eq!(config.environment, Environment::Development);
+/// let _warnings = config.validate()?;
+/// assert_eq!(config.api.port, config.network.api.port);
+/// # Ok(())
+/// # }
+/// ```
+///
+/// The [`StandardConfig`] alias is the same struct with default const parameters:
+///
+/// ```
+/// # fn main() -> std::result::Result<(), nestgate_types::NestGateError> {
+/// use nestgate_config::config::canonical_primary::{Environment, StandardConfig};
+///
+/// let config = StandardConfig::default();
+/// assert_eq!(config.environment, Environment::Development);
+/// let _warnings = config.validate()?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration for `NestGateCanonical`
 pub struct NestGateCanonicalConfig<

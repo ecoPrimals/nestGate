@@ -163,10 +163,10 @@ hmac = "0.12"
 hex = "0.4"
 x509-parser = "0.17"
 urlencoding = "2.0"
-getrandom = "0.2"
+getrandom = "0.3"
 
 # Compression and utilities
-rand = "0.8"
+rand = "0.9.3"
 fastrand = "2.0"
 url = "2.5"
 
@@ -248,3 +248,7 @@ split-debuginfo = "unpacked"
 [profile.test]
 opt-level = 1
 debug = true
+
+# rustls-rustcrypto 0.0.2-alpha pins rustls-webpki 0.102.x; bump to 0.103.12+ for RUSTSEC fixes (pure-Rust webpki).
+[patch.crates-io]
+rustls-rustcrypto = { path = "vendor/rustls-rustcrypto" }

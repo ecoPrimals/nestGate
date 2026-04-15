@@ -64,6 +64,11 @@ pub fn all_constants() -> (
 mod tests {
     use super::defaults::{env_or_from_source, env_or_parse_from_source};
     use super::*;
+    use crate::constants::hardcoding::addresses;
+    use crate::constants::port_defaults::{
+        DEFAULT_API_PORT, DEFAULT_POSTGRES_PORT, DEFAULT_REDIS_PORT,
+    };
+    use crate::defaults::network::{DEFAULT_HEALTH_PORT, DEFAULT_WS_PORT};
     use nestgate_types::MapEnv;
 
     #[test]
@@ -97,18 +102,31 @@ mod tests {
             ("NESTGATE_WS_PORT", "8082"),
         ]);
         let nc = NetworkConstants::from_env_source(&env);
-        assert_eq!(nc.api_url(), "http://127.0.0.1:8080");
-        assert_eq!(nc.health_url(), "http://127.0.0.1:8081");
-        assert_eq!(nc.websocket_url(), "ws://127.0.0.1:8082/ws");
+        assert_eq!(
+            nc.api_url(),
+            format!("http://{}:{}", addresses::LOCALHOST_IPV4, DEFAULT_API_PORT)
+        );
+        assert_eq!(
+            nc.health_url(),
+            format!(
+                "http://{}:{}",
+                addresses::LOCALHOST_IPV4,
+                DEFAULT_HEALTH_PORT
+            )
+        );
+        assert_eq!(
+            nc.websocket_url(),
+            format!("ws://{}:{}/ws", addresses::LOCALHOST_IPV4, DEFAULT_WS_PORT)
+        );
     }
 
     #[test]
     fn test_storage_constants_default() {
         let sc = StorageConstants::default();
-        assert_eq!(sc.postgres_host(), "127.0.0.1");
-        assert_eq!(sc.postgres_port(), 5432);
-        assert_eq!(sc.redis_host(), "127.0.0.1");
-        assert_eq!(sc.redis_port(), 6379);
+        assert_eq!(sc.postgres_host(), addresses::LOCALHOST_IPV4);
+        assert_eq!(sc.postgres_port(), DEFAULT_POSTGRES_PORT);
+        assert_eq!(sc.redis_host(), addresses::LOCALHOST_IPV4);
+        assert_eq!(sc.redis_port(), DEFAULT_REDIS_PORT);
     }
 
     #[test]

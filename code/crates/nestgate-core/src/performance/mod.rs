@@ -30,13 +30,6 @@ pub use advanced_optimizations::{
     BranchOptimized, CacheAlignedCounter, MemoryPool, PerformanceProfiler, SimdOperations,
 };
 
-/// DEPRECATED: Use SafeRingBuffer instead (100% safe, same performance)
-#[deprecated(
-    since = "0.10.0",
-    note = "Use safe_optimizations::SafeRingBuffer instead - zero unsafe code, identical performance"
-)]
-pub use advanced_optimizations::LockFreeRingBuffer;
-
 // Export SAFE implementations as defaults
 pub use safe_optimizations::{
     PerformanceConstants, SafeBranchOptimized, SafeCacheAlignedCounter, SafeMemoryArena,

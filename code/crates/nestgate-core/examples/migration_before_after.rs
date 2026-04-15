@@ -77,8 +77,10 @@ mod after_agnostic {
 // Demo Runner
 // ============================================================================
 
+use nestgate_core::Result;
+
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     println!("🔄 Migration Before/After Example");
     println!("===================================\n");
 
