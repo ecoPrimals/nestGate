@@ -380,4 +380,27 @@ mod tests {
         assert!(snap.contains("@migrate_"));
         assert!(snap.ends_with(&format!("migrate_{ts}")));
     }
+
+    #[tokio::test]
+    async fn migrate_workspace_missing_source_dataset_returns_error_json_when_zfs_runs() {
+        if !tokio::process::Command::new("zfs")
+            .arg("version")
+            .output()
+            .await
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+        {
+            return;
+        }
+        let r = migrate_workspace(
+            Path("no-dataset-workspace-12345".into()),
+            Json(sample_migration_config(MigrationStrategy::Copy)),
+        )
+        .await;
+        let Ok(Json(v)) = r else {
+            panic!("expected JSON body");
+        };
+        assert_eq!(v["status"], "error");
+        assert!(v["message"].as_str().unwrap_or("").contains("not found"));
+    }
 }

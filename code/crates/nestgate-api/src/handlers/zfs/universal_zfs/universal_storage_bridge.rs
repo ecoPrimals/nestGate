@@ -476,6 +476,11 @@ mod tests {
             UniversalStorageBridge::test_parse_size_to_bytes("1.5G").unwrap() > 1024 * 1024 * 1024
         );
         assert!(UniversalStorageBridge::test_parse_size_to_bytes("1X").is_err());
+        assert!(UniversalStorageBridge::test_parse_size_to_bytes("notnumG").is_err());
+        let tb = UniversalStorageBridge::test_parse_size_to_bytes("2T").unwrap();
+        assert!(tb >= 2 * 1024_u64.pow(4));
+        let pb = UniversalStorageBridge::test_parse_size_to_bytes("1P").unwrap();
+        assert!(pb >= 1024_u64.pow(5));
     }
 
     #[test]

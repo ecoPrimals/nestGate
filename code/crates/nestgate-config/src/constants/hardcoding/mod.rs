@@ -8,7 +8,8 @@
 //! Primal code carries **self-knowledge** only: this process’s identity, capabilities, and own
 //! listen endpoints. **Other primals** (orchestrator, storage peers, etc.) are **not** baked in at
 //! compile time; their host/port (or URL) must come from **capability discovery at runtime**
-//! (service registry, mDNS, mesh, etc.). The numeric port constants in [`ports`] exist solely as
+//! (service registry, mDNS, mesh, etc.). The numeric port constants in [`runtime_fallback_ports`]
+//! exist solely as
 //! **fallback defaults** for bootstrap, tests, and legacy paths—prefer `RuntimeDefaults` (env then
 //! fallback) or your discovery layer in production.
 //!
@@ -30,8 +31,7 @@
 //! # }
 //! ```
 //!
-//! The legacy deprecated `ports` submodule has been superseded by `runtime_defaults`
-//! and `runtime_fallback_ports`.
+//! Prefer `runtime_defaults` (env-first) and [`runtime_fallback_ports`] for numeric fallbacks.
 //!
 //! ## Environment variables (central audit)
 //!
@@ -43,28 +43,28 @@
 //! | `NESTGATE_WEBSOCKET_PORT`, `NESTGATE_RPC_PORT`, `NESTGATE_MQ_PORT`, `NESTGATE_ORCHESTRATION_PORT` | Service ports (see getters below) |
 //! | `NESTGATE_DISCOVERY_TIMEOUT_MS` | Discovery timeout ([`crate::constants::hardcoding::discovery::get_timeout_ms`]) |
 //!
-//! **Deprecated [`ports`] constants → env overrides (document every fallback; wire via config/discovery in production):**
+//! **[`runtime_fallback_ports`] symbols → env overrides (document every fallback; wire via config/discovery in production):**
 //!
-//! | Constant | `NESTGATE_*` override |
+//! | Symbol | `NESTGATE_*` override |
 //! |----------|------------------------|
-//! | `HTTP_DEFAULT` | `NESTGATE_HTTP_PORT` (also influences orchestrator fallback with `NESTGATE_ORCHESTRATOR_ADDR` / `NESTGATE_ORCHESTRATOR_URL`) |
-//! | `HTTPS_DEFAULT` | `NESTGATE_HTTPS_PORT` |
-//! | `API_DEFAULT`, `API_ALT` | `NESTGATE_API_PORT` (see `RuntimeDefaults::api_port`); alt: `NESTGATE_API_ALT_PORT` |
-//! | `METRICS_DEFAULT` | `NESTGATE_METRICS_PORT` |
-//! | `HEALTH_CHECK`, `SECURITY_SERVICE_DEFAULT` | `NESTGATE_HEALTH_PORT` |
-//! | `GRPC_DEFAULT` | `NESTGATE_RPC_PORT` (see `RuntimeDefaults::grpc_port`) |
-//! | `WEBSOCKET_DEFAULT`, `NETWORKING_SERVICE_DEFAULT` | `NESTGATE_WEBSOCKET_PORT` |
-//! | `ADMIN_DEFAULT` | `NESTGATE_ADMIN_PORT` |
-//! | `STORAGE_DEFAULT` | `NESTGATE_STORAGE_PORT` |
-//! | `ORCHESTRATION_DEFAULT` | `NESTGATE_ORCHESTRATION_PORT` |
-//! | `COMPUTE_DEFAULT` | `NESTGATE_COMPUTE_PORT` |
+//! | `HTTP` | `NESTGATE_HTTP_PORT` (also influences orchestrator fallback with `NESTGATE_ORCHESTRATOR_ADDR` / `NESTGATE_ORCHESTRATOR_URL`) |
+//! | `HTTPS` | `NESTGATE_HTTPS_PORT` |
+//! | `API`, `API_ALT` | `NESTGATE_API_PORT` (see `RuntimeDefaults::api_port`); alt: `NESTGATE_API_ALT_PORT` |
+//! | `METRICS` | `NESTGATE_METRICS_PORT` |
+//! | `HEALTH` | `NESTGATE_HEALTH_PORT` |
+//! | `GRPC` | `NESTGATE_RPC_PORT` (see `RuntimeDefaults::grpc_port`) |
+//! | `WEBSOCKET` | `NESTGATE_WEBSOCKET_PORT` |
+//! | `ADMIN` | `NESTGATE_ADMIN_PORT` |
+//! | `STORAGE` | `NESTGATE_STORAGE_PORT` |
+//! | `ORCHESTRATION` | `NESTGATE_ORCHESTRATION_PORT` |
+//! | `COMPUTE` | `NESTGATE_COMPUTE_PORT` |
 //! | `EXTENDED_SERVICES` | `NESTGATE_EXTENDED_SERVICES_PORT` |
 //! | `DISCOVERY_SERVICE` | `NESTGATE_DISCOVERY_SERVICE_PORT` |
 //! | `ORCHESTRATOR_DEFAULT` | `NESTGATE_ORCHESTRATOR_PORT` |
-//! | `POSTGRES_DEFAULT` | `NESTGATE_POSTGRES_PORT` |
-//! | `REDIS_DEFAULT` | `NESTGATE_REDIS_PORT` |
-//! | `MONGODB_DEFAULT` | `NESTGATE_MONGODB_PORT` |
-//! | `MYSQL_DEFAULT` | `NESTGATE_MYSQL_PORT` |
+//! | `POSTGRES` | `NESTGATE_POSTGRES_PORT` |
+//! | `REDIS` | `NESTGATE_REDIS_PORT` |
+//! | `MONGODB` | `NESTGATE_MONGODB_PORT` |
+//! | `MYSQL` | `NESTGATE_MYSQL_PORT` |
 //! | `discovery::SCAN_PORT_START` / `SCAN_PORT_END` | `NESTGATE_DISCOVERY_SCAN_PORT_START` / `NESTGATE_DISCOVERY_SCAN_PORT_END` |
 //! | `timeouts::*`, `limits::*` | `NESTGATE_CONNECT_TIMEOUT_MS`, `NESTGATE_REQUEST_TIMEOUT_MS`, `NESTGATE_LONG_OPERATION_TIMEOUT_MS`, `NESTGATE_BUFFER_SIZE`, `NESTGATE_MAX_CONNECTIONS` (when wired) |
 //!
@@ -74,7 +74,6 @@
 pub mod addresses;
 pub mod discovery;
 pub mod limits;
-pub mod ports;
 pub mod runtime_defaults;
 pub mod runtime_fallback_ports;
 pub mod timeouts;
@@ -90,5 +89,4 @@ pub use runtime_defaults::{
 };
 
 #[cfg(test)]
-#[expect(deprecated)]
 mod tests;

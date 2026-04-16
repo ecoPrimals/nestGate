@@ -746,4 +746,16 @@ mod tests {
         let _ = svc.service_id();
         let _ = svc.get_cache_configs().await;
     }
+
+    #[tokio::test]
+    async fn storage_service_with_cache_enabled_initializes() {
+        let mut config = StorageServiceConfig::development();
+        config.auto_discover_pools = false;
+        config.enable_quotas = false;
+        config.enable_caching = true;
+        config.enable_monitoring = false;
+
+        let svc = StorageManagerService::with_config(config).await;
+        assert!(svc.is_ok(), "{:?}", svc.as_ref().err());
+    }
 }

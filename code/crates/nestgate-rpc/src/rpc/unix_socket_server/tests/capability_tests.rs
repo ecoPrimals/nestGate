@@ -221,6 +221,50 @@ async fn handle_request_discover_capabilities_dot_alias_matches_discover_capabil
 }
 
 #[tokio::test]
+async fn handle_request_identity_get_includes_primal_and_license() {
+    let state = StorageState::new().expect("storage state");
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "identity.get".into(),
+        params: None,
+        id: Some(json!(7)),
+    };
+    let resp = handle_request(req, &state).await;
+    assert!(resp.error.is_none());
+    let r = resp.result.expect("result");
+    assert_eq!(r.get("domain"), Some(&json!("storage")));
+    assert_eq!(r.get("license"), Some(&json!("AGPL-3.0-or-later")));
+}
+
+#[tokio::test]
+async fn handle_request_discovery_capability_register_missing_params() {
+    let state = StorageState::new().expect("storage state");
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "discovery.capability.register".into(),
+        params: None,
+        id: Some(json!(8)),
+    };
+    let resp = handle_request(req, &state).await;
+    let err = resp.error.expect("error");
+    assert_eq!(err.code, -32603);
+}
+
+#[tokio::test]
+async fn handle_request_discovery_capability_register_missing_capability_field() {
+    let state = StorageState::new().expect("storage state");
+    let req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        method: "discovery.capability.register".into(),
+        params: Some(json!({"endpoint": "http://x"})),
+        id: Some(json!(9)),
+    };
+    let resp = handle_request(req, &state).await;
+    let err = resp.error.expect("error");
+    assert_eq!(err.code, -32603);
+}
+
+#[tokio::test]
 async fn handle_request_nat_beacon_alias_matches_beacon_list() {
     let state = StorageState::new().expect("storage state");
     let a = JsonRpcRequest {

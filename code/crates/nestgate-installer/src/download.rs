@@ -360,6 +360,32 @@ mod download_url_tests {
     }
 
     #[test]
+    fn verify_installation_fails_when_config_missing_with_binary_present() {
+        let dm = DownloadManager::new();
+        let tmp = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(tmp.path().join("bin")).expect("bin");
+        std::fs::write(
+            tmp.path().join("bin").join("nestgate"),
+            b"#! /bin/sh\nexit 0\n",
+        )
+        .expect("shim");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let p = tmp.path().join("bin").join("nestgate");
+            let mut perms = std::fs::metadata(&p).expect("meta").permissions();
+            perms.set_mode(0o755);
+            std::fs::set_permissions(&p, perms).expect("chmod");
+        }
+        let err = dm.verify_installation(tmp.path()).expect_err("no config");
+        assert!(
+            err.to_string().contains("Configuration not found")
+                || err.to_string().contains("nestgate.toml"),
+            "{err}"
+        );
+    }
+
+    #[test]
     fn extract_archive_creates_layout() {
         let dm = DownloadManager::new();
         let base = tempfile::tempdir().expect("tempdir");

@@ -71,7 +71,7 @@ pub mod network_hardcoded;
 ///
 /// **Before** (hardcoded):
 /// ```rust,ignore
-/// use nestgate_core::constants::network_hardcoded::ports::API_DEFAULT;
+/// use nestgate_core::constants::hardcoding::runtime_fallback_ports::API;
 /// let port = API_DEFAULT; // HARDCODED!
 /// ```
 ///

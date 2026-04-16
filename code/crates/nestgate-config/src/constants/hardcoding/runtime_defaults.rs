@@ -2,12 +2,15 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Environment-backed [`RuntimeDefaults`] and `NESTGATE_*` accessor functions.
-#![expect(deprecated)]
+#![expect(
+    deprecated,
+    reason = "orchestrator fallbacks and deprecated runtime_fallback_ports literals"
+)]
 
 use std::env;
 use std::sync::OnceLock;
 
-use super::{addresses, discovery, ports};
+use super::{addresses, discovery, runtime_fallback_ports};
 
 /// Cache for bind address from environment
 static BIND_ADDRESS: OnceLock<String> = OnceLock::new();
@@ -31,36 +34,36 @@ impl RuntimeDefaults {
         })
     }
 
-    /// `NESTGATE_API_PORT`, else [`ports::API_DEFAULT`].
+    /// `NESTGATE_API_PORT`, else [`runtime_fallback_ports::API`].
     #[must_use]
     pub fn api_port() -> u16 {
         *API_PORT.get_or_init(|| {
             env::var("NESTGATE_API_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(ports::API_DEFAULT)
+                .unwrap_or(runtime_fallback_ports::API)
         })
     }
 
-    /// `NESTGATE_METRICS_PORT`, else [`ports::METRICS_DEFAULT`].
+    /// `NESTGATE_METRICS_PORT`, else [`runtime_fallback_ports::METRICS`].
     #[must_use]
     pub fn metrics_port() -> u16 {
         env::var("NESTGATE_METRICS_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(ports::METRICS_DEFAULT)
+            .unwrap_or(runtime_fallback_ports::METRICS)
     }
 
-    /// `NESTGATE_HEALTH_PORT`, else [`ports::HEALTH_CHECK`].
+    /// `NESTGATE_HEALTH_PORT`, else [`runtime_fallback_ports::HEALTH`].
     #[must_use]
     pub fn health_port() -> u16 {
         env::var("NESTGATE_HEALTH_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(ports::HEALTH_CHECK)
+            .unwrap_or(runtime_fallback_ports::HEALTH)
     }
 
-    /// `NESTGATE_ORCHESTRATOR_ADDR`, else `localhost`:[`ports::HTTP_DEFAULT`]. See
+    /// `NESTGATE_ORCHESTRATOR_ADDR`, else `localhost`:[`runtime_fallback_ports::HTTP`]. See
     /// [`get_orchestrator_fallback_addr`].
     #[deprecated(
         since = "0.4.0",
@@ -71,26 +74,30 @@ impl RuntimeDefaults {
         match env::var("NESTGATE_ORCHESTRATOR_ADDR") {
             Ok(s) if s.trim().is_empty() => String::new(),
             Ok(s) => s,
-            Err(_) => format!("{}:{}", addresses::LOCALHOST_NAME, ports::HTTP_DEFAULT),
+            Err(_) => format!(
+                "{}:{}",
+                addresses::LOCALHOST_NAME,
+                runtime_fallback_ports::HTTP
+            ),
         }
     }
 
-    /// `NESTGATE_WEBSOCKET_PORT`, else [`ports::WEBSOCKET_DEFAULT`].
+    /// `NESTGATE_WEBSOCKET_PORT`, else [`runtime_fallback_ports::WEBSOCKET`].
     #[must_use]
     pub fn websocket_port() -> u16 {
         env::var("NESTGATE_WEBSOCKET_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(ports::WEBSOCKET_DEFAULT)
+            .unwrap_or(runtime_fallback_ports::WEBSOCKET)
     }
 
-    /// `NESTGATE_RPC_PORT`, else [`ports::GRPC_DEFAULT`].
+    /// `NESTGATE_RPC_PORT`, else [`runtime_fallback_ports::GRPC`].
     #[must_use]
     pub fn grpc_port() -> u16 {
         env::var("NESTGATE_RPC_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(ports::GRPC_DEFAULT)
+            .unwrap_or(runtime_fallback_ports::GRPC)
     }
 
     /// `NESTGATE_MQ_PORT`, else [`crate::constants::port_defaults::DEFAULT_RABBITMQ_PORT`].
@@ -102,13 +109,13 @@ impl RuntimeDefaults {
             .unwrap_or(crate::constants::port_defaults::DEFAULT_RABBITMQ_PORT)
     }
 
-    /// `NESTGATE_ORCHESTRATION_PORT`, else [`ports::ORCHESTRATION_DEFAULT`].
+    /// `NESTGATE_ORCHESTRATION_PORT`, else [`runtime_fallback_ports::ORCHESTRATION`].
     #[must_use]
     pub fn orchestration_service_port() -> u16 {
         env::var("NESTGATE_ORCHESTRATION_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(ports::ORCHESTRATION_DEFAULT)
+            .unwrap_or(runtime_fallback_ports::ORCHESTRATION)
     }
 
     /// `NESTGATE_DISCOVERY_TIMEOUT_MS`, else [`discovery::TIMEOUT_MS`].
@@ -120,13 +127,13 @@ impl RuntimeDefaults {
             .unwrap_or(discovery::TIMEOUT_MS)
     }
 
-    /// `NESTGATE_ZFS_BIND_PORT`, else [`ports::COMPUTE_DEFAULT`] (legacy ZFS standalone lane).
+    /// `NESTGATE_ZFS_BIND_PORT`, else [`runtime_fallback_ports::COMPUTE`] (legacy ZFS standalone lane).
     #[must_use]
     pub fn zfs_bind_port() -> u16 {
         env::var("NESTGATE_ZFS_BIND_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
-            .unwrap_or(ports::COMPUTE_DEFAULT)
+            .unwrap_or(runtime_fallback_ports::COMPUTE)
     }
 }
 
@@ -169,7 +176,7 @@ pub fn get_health_port() -> u16 {
 /// Fallback orchestrator peer address when capability discovery finds none.
 ///
 /// Checks `NESTGATE_ORCHESTRATOR_ADDR` (host:port, unix path, or `unix://…`).
-/// Defaults to `localhost` and [`ports::HTTP_DEFAULT`] when unset.
+/// Defaults to `localhost` and [`runtime_fallback_ports::HTTP`] when unset.
 /// If the variable is set to an empty string (after trim), returns empty — callers treat that as
 /// "no configured orchestrator".
 #[deprecated(
@@ -187,7 +194,7 @@ pub fn get_websocket_port() -> u16 {
     RuntimeDefaults::websocket_port()
 }
 
-/// gRPC / RPC port from `NESTGATE_RPC_PORT` or [`ports::GRPC_DEFAULT`].
+/// gRPC / RPC port from `NESTGATE_RPC_PORT` or [`runtime_fallback_ports::GRPC`].
 #[must_use]
 pub fn get_grpc_port() -> u16 {
     RuntimeDefaults::grpc_port()
@@ -205,7 +212,7 @@ pub fn get_orchestration_service_port() -> u16 {
     RuntimeDefaults::orchestration_service_port()
 }
 
-/// ZFS primal bind port from `NESTGATE_ZFS_BIND_PORT` or [`ports::COMPUTE_DEFAULT`].
+/// ZFS primal bind port from `NESTGATE_ZFS_BIND_PORT` or [`runtime_fallback_ports::COMPUTE`].
 #[must_use]
 pub fn get_zfs_bind_port() -> u16 {
     RuntimeDefaults::zfs_bind_port()

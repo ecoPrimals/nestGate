@@ -104,11 +104,11 @@ fn test_gpu_allocation_creation() {
 
 #[test]
 fn test_tuning_service_registration() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        ports::HTTP_DEFAULT
+        runtime_fallback_ports::HTTP
     );
 
     let registration = TuningServiceRegistration {

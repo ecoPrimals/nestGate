@@ -7,13 +7,13 @@ use std::time::Duration;
 
 #[test]
 fn test_endpoint_validation() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
 
     // Valid endpoints
     let valid_http = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        ports::HTTP_DEFAULT
+        runtime_fallback_ports::HTTP
     );
     let valid_https = "https://remote.example.com:443";
 

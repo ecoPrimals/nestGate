@@ -137,6 +137,39 @@ fn infer_tier_from_properties_defaults_used_and_ratio() {
 }
 
 #[test]
+fn infer_tier_from_properties_cold_above_tib() {
+    const TIB: u64 = 1024 * 1024 * 1024 * 1024;
+    let props = HashMap::from([("used".to_owned(), format!("{}", TIB + 1))]);
+    assert_eq!(infer_tier_from_properties(&props), "cold");
+}
+
+#[test]
+fn infer_tier_from_properties_warm_compress_ratio_at_two_is_not_compressed_band() {
+    const GIB: u64 = 1024 * 1024 * 1024;
+    let props = HashMap::from([
+        ("used".to_owned(), format!("{}", GIB + 1)),
+        ("compressratio".to_owned(), "2.0x".to_owned()),
+    ]);
+    assert_eq!(infer_tier_from_properties(&props), "warm");
+}
+
+#[test]
+fn infer_tier_from_properties_invalid_used_parses_as_zero_hot() {
+    let props = HashMap::from([("used".to_owned(), "not-a-number".to_owned())]);
+    assert_eq!(infer_tier_from_properties(&props), "hot");
+}
+
+#[test]
+fn infer_tier_from_properties_compressratio_without_suffix_uses_default_ratio() {
+    const GIB: u64 = 1024 * 1024 * 1024;
+    let props = HashMap::from([
+        ("used".to_owned(), format!("{}", GIB + 1)),
+        ("compressratio".to_owned(), "3.0".to_owned()),
+    ]);
+    assert_eq!(infer_tier_from_properties(&props), "warm");
+}
+
+#[test]
 fn zfs_handler_impl_default_matches_new() {
     assert_eq!(
         format!("{:?}", ZfsHandlerImpl::default()),

@@ -457,6 +457,15 @@ mod collect_metrics_parse_tests {
     }
 
     #[test]
+    fn merge_arc_kstat_hits_misses_ignores_short_lines() {
+        let mut h = 1u64;
+        let mut m = 2u64;
+        merge_arc_kstat_hits_misses_line("x", &mut h, &mut m);
+        assert_eq!(h, 1);
+        assert_eq!(m, 2);
+    }
+
+    #[test]
     fn merge_arc_kstat_full_covers_size_c_mru_mfu() {
         let mut hits = 0u64;
         let mut misses = 0u64;

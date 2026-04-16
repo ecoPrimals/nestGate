@@ -508,4 +508,17 @@ mod hybrid_manager_direct_tests {
         let t = mgr.authenticate(&creds).await.expect("local token ok");
         assert!(t.token.starts_with("api_"));
     }
+
+    #[tokio::test]
+    async fn validate_token_rejects_unknown_string() {
+        let mut config = super::super::config::AuthenticationConfig::default();
+        config.use_external_auth = false;
+        config.local_token_settings.token_expiry = Duration::from_secs(0);
+        let mgr = HybridAuthenticationManager::new(config);
+        let ok = mgr
+            .validate_token("not-a-issued-token")
+            .await
+            .expect("call");
+        assert!(!ok);
+    }
 }

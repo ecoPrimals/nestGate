@@ -5,6 +5,7 @@
 
 use super::*;
 use crate::cli::ServiceAction;
+use std::time::Duration;
 
 #[test]
 fn test_service_manager_creation() {
@@ -252,4 +253,34 @@ fn test_service_manager_size() {
     let size = std::mem::size_of::<ServiceManager>();
     // ServiceManager should be zero-sized or very small
     assert!(size <= 8);
+}
+
+#[tokio::test]
+async fn run_daemon_without_http_times_out_or_errors_fast() {
+    let outcome = tokio::time::timeout(
+        Duration::from_millis(900),
+        run_daemon(None, "127.0.0.1", None, false, false, None),
+    )
+    .await;
+    assert!(
+        outcome.is_err() || matches!(outcome, Ok(Err(_))),
+        "expected timeout or bootstrap error from socket-only daemon, got {outcome:?}"
+    );
+}
+
+#[tokio::test]
+async fn run_daemon_with_http_blocks_until_timeout() {
+    let bind_port = {
+        let l = std::net::TcpListener::bind("127.0.0.1:0").expect("free port");
+        l.local_addr().expect("addr").port()
+    };
+    let r = tokio::time::timeout(
+        Duration::from_millis(400),
+        run_daemon(Some(bind_port), "127.0.0.1", None, false, true, None),
+    )
+    .await;
+    assert!(
+        r.is_err() || matches!(r, Ok(Err(_))),
+        "HTTP mode should not complete quickly in this harness: {r:?}"
+    );
 }

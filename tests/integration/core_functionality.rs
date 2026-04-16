@@ -7,9 +7,8 @@
 
 use crate::common::*;
 use nestgate_core::{
-
-use nestgate_core::canonical_types::StorageTier;
-    constants::{network, security, storage},
+    canonical_types::StorageTier,
+    constants::{hardcoding::runtime_fallback_ports, network, security, storage},
     error::NestGateError,
     types::{AllocationStatus, HealthStatus, StorageTier, SystemInfo},
     canonical_modernization::unified_enums::{UnifiedAlertSeverity, UnifiedHealthStatus, UnifiedServiceState},
@@ -19,10 +18,10 @@ use std::time::Duration;
 /// Test core constants are accessible and have expected values
 #[test]
 async fn test_core_constants_integration() -> Result<(), Box<dyn std::error::Error>> {
-    // Test network constants
-    assert_eq!(network::ports::API_DEFAULT, 8080);
-    assert_eq!(network::ports::HEALTH_CHECK, 8081);
-    assert_eq!(network::addresses::LOCALHOST, "127.0.0.1");
+    // Test network constants (runtime fallbacks; API listen port is `HTTP`, internal API lane is `API`)
+    assert_eq!(runtime_fallback_ports::HTTP, 8080);
+    assert_eq!(runtime_fallback_ports::HEALTH, 8081);
+    assert_eq!(network::LOCALHOST, "127.0.0.1");
 
     // Test storage constants
     assert_eq!(storage::sizes::KB, 1024);

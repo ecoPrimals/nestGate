@@ -217,7 +217,7 @@ impl ZfsPerformanceMonitor {
     }
 
     /// Get real queue depth for a tier
-    pub(super) const fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
+    pub(crate) const fn get_real_queue_depth(tier: &StorageTier) -> CoreResult<f64> {
         // This would typically read from system statistics
         // For now, return tier-appropriate defaults
         Ok(match tier {
@@ -227,5 +227,35 @@ impl ZfsPerformanceMonitor {
             StorageTier::Cache => 64.0,
             StorageTier::Archive => 4.0,
         })
+    }
+}
+
+#[cfg(test)]
+mod tier_metrics_queue_depth_tests {
+    use super::ZfsPerformanceMonitor;
+    use crate::types::StorageTier;
+
+    #[test]
+    fn queue_depth_defaults_cover_all_tiers() {
+        assert_eq!(
+            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Hot).unwrap(),
+            32.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Warm).unwrap(),
+            16.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cold).unwrap(),
+            8.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Cache).unwrap(),
+            64.0
+        );
+        assert_eq!(
+            ZfsPerformanceMonitor::get_real_queue_depth(&StorageTier::Archive).unwrap(),
+            4.0
+        );
     }
 }

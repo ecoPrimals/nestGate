@@ -70,6 +70,8 @@ pub const ECOSYSTEM: u16 = 6000;
 /// Fallback port for the discovery service.
 #[deprecated(since = "0.4.0", note = "use RuntimePortResolver")]
 pub const DISCOVERY_SERVICE: u16 = 3010;
+/// Standalone orchestrator coordination port (legacy bootstrap default).
+pub const ORCHESTRATOR_DEFAULT: u16 = 8090;
 /// Fallback alternate metrics port.
 #[deprecated(
     since = "0.4.0",

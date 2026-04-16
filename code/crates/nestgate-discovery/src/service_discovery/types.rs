@@ -605,14 +605,13 @@ pub struct DiscoveredService {
 }
 impl Default for DiscoveredService {
     /// Returns the default instance
-    #[expect(deprecated)]
     fn default() -> Self {
-        use nestgate_config::constants::hardcoding::{addresses, ports};
+        use nestgate_config::constants::hardcoding::{addresses, runtime_fallback_ports};
         Self {
             id: Uuid::new_v4().to_string(),
             name: "unknown".to_string(),
             endpoint: addresses::LOCALHOST_NAME.to_string(),
-            port: ports::HTTP_DEFAULT,
+            port: runtime_fallback_ports::HTTP,
             capabilities: vec![],
             metadata: HashMap::new(),
             discovered_at: std::time::SystemTime::now(),

@@ -7,7 +7,7 @@
 //! Sections: CONNECTION POOL TESTS, CONNECTION POOL ADVANCED TESTS
 
 use super::super::client::*;
-use crate::constants::hardcoding::{addresses, ports};
+use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
 
 // ==================== CONNECTION POOL TESTS ====================
 #[test]
@@ -25,7 +25,7 @@ async fn test_connection_pool_get_connection() {
     let config = ClientConfig::<30000>::default();
     let pool = ConnectionPool::new(config);
 
-    let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     let result = pool.get_connection(&endpoint).await;
@@ -37,7 +37,7 @@ async fn test_connection_pool_return_connection() {
     let config = ClientConfig::<30000>::default();
     let pool = ConnectionPool::new(config);
 
-    let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     let connection = pool
@@ -52,7 +52,7 @@ async fn test_connection_pool_reuse() {
     let config = ClientConfig::<30000>::default();
     let pool = ConnectionPool::new(config);
 
-    let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     // Get and return a connection

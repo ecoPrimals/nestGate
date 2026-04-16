@@ -9,11 +9,11 @@ use std::time::Duration;
 
 #[tokio::test]
 async fn test_service_name() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        ports::HTTP_DEFAULT
+        runtime_fallback_ports::HTTP
     );
 
     let config = RemoteConfig {
@@ -53,11 +53,11 @@ async fn test_multiple_service_instances() {
 
 #[tokio::test]
 async fn test_service_with_different_timeouts() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let endpoint = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        ports::HTTP_DEFAULT
+        runtime_fallback_ports::HTTP
     );
 
     let fast_config = RemoteConfig {
@@ -82,12 +82,12 @@ async fn test_service_with_different_timeouts() {
 
 #[tokio::test]
 async fn test_service_version() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = RemoteConfig {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
+            runtime_fallback_ports::HTTP
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -118,12 +118,12 @@ async fn test_service_config_access() {
 
 #[tokio::test]
 async fn test_service_uptime() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = RemoteConfig {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
+            runtime_fallback_ports::HTTP
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -143,12 +143,12 @@ async fn test_service_uptime() {
 
 #[tokio::test]
 async fn test_connection_stats_initial_state() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = RemoteConfig {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
+            runtime_fallback_ports::HTTP
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -165,12 +165,12 @@ async fn test_connection_stats_initial_state() {
 
 #[tokio::test]
 async fn test_record_success_updates_stats() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = RemoteConfig {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
+            runtime_fallback_ports::HTTP
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -189,12 +189,12 @@ async fn test_record_success_updates_stats() {
 
 #[tokio::test]
 async fn test_record_failure_updates_stats() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = RemoteConfig {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
+            runtime_fallback_ports::HTTP
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -215,12 +215,12 @@ async fn test_record_failure_updates_stats() {
 
 #[tokio::test]
 async fn test_mixed_success_and_failure() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = RemoteConfig {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
+            runtime_fallback_ports::HTTP
         ),
         timeout: Duration::from_secs(30),
         auth: None,
@@ -244,12 +244,12 @@ async fn test_mixed_success_and_failure() {
 
 #[tokio::test]
 async fn test_service_clone_independence() {
-    use nestgate_core::constants::hardcoding::{addresses, ports};
+    use nestgate_core::constants::hardcoding::{addresses, runtime_fallback_ports};
     let config = RemoteConfig {
         endpoint: format!(
             "http://{}:{}",
             addresses::LOCALHOST_NAME,
-            ports::HTTP_DEFAULT
+            runtime_fallback_ports::HTTP
         ),
         timeout: Duration::from_secs(30),
         auth: None,

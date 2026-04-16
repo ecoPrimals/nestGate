@@ -99,11 +99,11 @@ fn service_category_custom_roundtrips() {
 
 #[test]
 fn discovered_service_default_has_localhost_and_http_port() {
-    use nestgate_config::constants::hardcoding::{addresses, ports};
+    use nestgate_config::constants::hardcoding::{addresses, runtime_fallback_ports};
 
     let d = DiscoveredService::default();
     assert_eq!(d.endpoint, addresses::LOCALHOST_NAME);
-    assert_eq!(d.port, ports::HTTP_DEFAULT);
+    assert_eq!(d.port, runtime_fallback_ports::HTTP);
     assert!(d.capabilities.is_empty());
 }
 

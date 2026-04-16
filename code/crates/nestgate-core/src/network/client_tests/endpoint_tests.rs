@@ -11,12 +11,12 @@ use super::super::client::*;
 // ==================== ENDPOINT TESTS ====================
 #[test]
 fn test_endpoint_http() {
-    use crate::constants::hardcoding::{addresses, ports};
-    let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+    use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
+    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
 
     assert_eq!(endpoint.host, addresses::LOCALHOST_NAME);
-    assert_eq!(endpoint.port.get(), ports::HTTP_DEFAULT);
+    assert_eq!(endpoint.port.get(), runtime_fallback_ports::HTTP);
     assert_eq!(endpoint.scheme, Scheme::Http);
 }
 
@@ -32,13 +32,13 @@ fn test_endpoint_https() {
 
 #[test]
 fn test_endpoint_url_http() {
-    use crate::constants::hardcoding::{addresses, ports};
-    let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+    use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
+    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
     let expected_url = format!(
         "http://{}:{}",
         addresses::LOCALHOST_NAME,
-        ports::HTTP_DEFAULT
+        runtime_fallback_ports::HTTP
     );
 
     assert_eq!(endpoint.base_url(), expected_url);
@@ -54,9 +54,9 @@ fn test_endpoint_url_https() {
 
 #[test]
 fn test_endpoint_equality() {
-    use crate::constants::hardcoding::{addresses, ports};
-    let port1 = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
-    let port2 = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+    use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
+    let port1 = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
+    let port2 = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
     let endpoint1 = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port1);
     let endpoint2 = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port2);
 
@@ -65,8 +65,8 @@ fn test_endpoint_equality() {
 
 #[test]
 fn test_endpoint_serialization() {
-    use crate::constants::hardcoding::{addresses, ports};
-    let port = Port::new(ports::HTTP_DEFAULT).expect("Network operation failed");
+    use crate::constants::hardcoding::{addresses, runtime_fallback_ports};
+    let port = Port::new(runtime_fallback_ports::HTTP).expect("Network operation failed");
     let endpoint = Endpoint::http(addresses::LOCALHOST_NAME.to_string(), port);
     let json = serde_json::to_string(&endpoint);
     assert!(json.is_ok());

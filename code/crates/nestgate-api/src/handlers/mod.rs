@@ -78,6 +78,8 @@ mod auth_production_tests;
 pub mod ai_first_example;
 #[cfg(test)]
 mod ai_first_example_tests;
+#[cfg(test)]
+mod ai_first_handler_tests;
 
 /// **COMPLIANCE MODULE**
 ///
