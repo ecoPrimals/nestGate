@@ -2,10 +2,6 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 //! Environment-backed [`RuntimeDefaults`] and `NESTGATE_*` accessor functions.
-#![expect(
-    deprecated,
-    reason = "orchestrator fallbacks and deprecated runtime_fallback_ports literals"
-)]
 
 use std::env;
 use std::sync::OnceLock;
@@ -61,25 +57,6 @@ impl RuntimeDefaults {
             .ok()
             .and_then(|p| p.parse().ok())
             .unwrap_or(runtime_fallback_ports::HEALTH)
-    }
-
-    /// `NESTGATE_ORCHESTRATOR_ADDR`, else `localhost`:[`runtime_fallback_ports::HTTP`]. See
-    /// [`get_orchestrator_fallback_addr`].
-    #[deprecated(
-        since = "0.4.0",
-        note = "use capability discovery (ServicesConfig::resolve_by_capability) instead of hardcoded orchestrator addresses"
-    )]
-    #[must_use]
-    pub fn orchestrator_fallback_addr() -> String {
-        match env::var("NESTGATE_ORCHESTRATOR_ADDR") {
-            Ok(s) if s.trim().is_empty() => String::new(),
-            Ok(s) => s,
-            Err(_) => format!(
-                "{}:{}",
-                addresses::LOCALHOST_NAME,
-                runtime_fallback_ports::HTTP
-            ),
-        }
     }
 
     /// `NESTGATE_WEBSOCKET_PORT`, else [`runtime_fallback_ports::WEBSOCKET`].
@@ -171,21 +148,6 @@ pub fn get_metrics_port() -> u16 {
 #[must_use]
 pub fn get_health_port() -> u16 {
     RuntimeDefaults::health_port()
-}
-
-/// Fallback orchestrator peer address when capability discovery finds none.
-///
-/// Checks `NESTGATE_ORCHESTRATOR_ADDR` (host:port, unix path, or `unix://…`).
-/// Defaults to `localhost` and [`runtime_fallback_ports::HTTP`] when unset.
-/// If the variable is set to an empty string (after trim), returns empty — callers treat that as
-/// "no configured orchestrator".
-#[deprecated(
-    since = "0.4.0",
-    note = "use capability discovery (ServicesConfig::resolve_by_capability) instead"
-)]
-#[must_use]
-pub fn get_orchestrator_fallback_addr() -> String {
-    RuntimeDefaults::orchestrator_fallback_addr()
 }
 
 /// WebSocket port from environment or [`ports::WEBSOCKET_DEFAULT`].

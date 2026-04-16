@@ -14,9 +14,6 @@ pub mod traits;
 /// Type definitions for native async services
 pub mod types;
 // Re-export all public types and traits for backward compatibility
-#[expect(deprecated, reason = "migration in progress")]
-// Re-export for backwards compatibility
-pub use traits::NativeAsyncSecurityService;
 pub use traits::{
     NativeAsyncAutomationService, NativeAsyncCommunicationProvider, NativeAsyncLoadBalancer,
     NativeAsyncMCPProtocolHandler, NativeAsyncMcpService, NativeAsyncUniversalServiceProvider,

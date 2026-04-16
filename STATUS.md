@@ -12,8 +12,8 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-15
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-15
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-15
-Tests:              8,534 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-16
-Coverage:           82.06% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-15) — wateringHole 80% met; 90% target pending
+Tests:              8,565 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-16
+Coverage:           82.94% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-16) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
 Inline markers:     none in committed production `.rs` (wateringHole policy — verified 2026-04-11)

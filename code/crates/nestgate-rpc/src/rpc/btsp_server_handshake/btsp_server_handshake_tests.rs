@@ -1,0 +1,483 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2025-2026 ecoPrimals Collective
+
+use super::*;
+use serde_json::{Value, json};
+
+#[test]
+fn is_btsp_required_no_family() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", None::<&str>),
+            ("BIOMEOS_FAMILY_ID", None),
+            ("NESTGATE_FAMILY_ID", None),
+            ("BIOMEOS_INSECURE", None),
+        ],
+        || assert!(!is_btsp_required()),
+    );
+}
+
+#[test]
+fn is_btsp_required_default_family() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", Some("default")),
+            ("BIOMEOS_FAMILY_ID", None::<&str>),
+            ("NESTGATE_FAMILY_ID", None),
+            ("BIOMEOS_INSECURE", None),
+        ],
+        || assert!(!is_btsp_required()),
+    );
+}
+
+#[test]
+fn is_btsp_required_production_family() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", Some("fam-prod-abc")),
+            ("BIOMEOS_FAMILY_ID", None::<&str>),
+            ("NESTGATE_FAMILY_ID", None),
+            ("BIOMEOS_INSECURE", None),
+        ],
+        || assert!(is_btsp_required()),
+    );
+}
+
+#[test]
+fn is_btsp_required_insecure_override() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", Some("fam-prod-abc")),
+            ("BIOMEOS_FAMILY_ID", None::<&str>),
+            ("NESTGATE_FAMILY_ID", None),
+            ("BIOMEOS_INSECURE", Some("1")),
+        ],
+        || assert!(!is_btsp_required()),
+    );
+}
+
+#[test]
+fn is_btsp_required_standalone_family_disables() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", Some("standalone")),
+            ("BIOMEOS_FAMILY_ID", None::<&str>),
+            ("NESTGATE_FAMILY_ID", Some("would-otherwise-require-btsp")),
+            ("BIOMEOS_INSECURE", None),
+        ],
+        || assert!(!is_btsp_required()),
+    );
+}
+
+#[test]
+fn is_btsp_required_prefers_family_id_over_nestgate() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", Some("default")),
+            ("BIOMEOS_FAMILY_ID", None::<&str>),
+            ("NESTGATE_FAMILY_ID", Some("prod-real")),
+            ("BIOMEOS_INSECURE", None),
+        ],
+        || assert!(!is_btsp_required()),
+    );
+}
+
+#[test]
+fn is_btsp_required_via_nestgate_family_id() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", None::<&str>),
+            ("BIOMEOS_FAMILY_ID", None),
+            ("NESTGATE_FAMILY_ID", Some("edge-nucleus")),
+            ("BIOMEOS_INSECURE", None),
+        ],
+        || assert!(is_btsp_required()),
+    );
+}
+
+#[test]
+fn is_btsp_required_via_biomeos_family_id() {
+    temp_env::with_vars(
+        [
+            ("FAMILY_ID", None::<&str>),
+            ("BIOMEOS_FAMILY_ID", Some("bio-family")),
+            ("NESTGATE_FAMILY_ID", None),
+            ("BIOMEOS_INSECURE", None),
+        ],
+        || assert!(is_btsp_required()),
+    );
+}
+
+#[test]
+fn challenge_is_32_bytes() {
+    let c = generate_challenge();
+    assert_eq!(c.len(), 32);
+    let c2 = generate_challenge();
+    assert_ne!(c, c2, "challenges must be unique");
+}
+
+#[tokio::test]
+async fn frame_roundtrip() {
+    let payload = b"hello BTSP";
+    let mut buf = Vec::new();
+    write_frame(&mut buf, payload).await.expect("write");
+
+    assert_eq!(buf.len(), 4 + payload.len());
+    assert_eq!(&buf[..4], &(payload.len() as u32).to_be_bytes());
+
+    let mut cursor = std::io::Cursor::new(buf);
+    let read_back = read_frame(&mut cursor).await.expect("read");
+    assert_eq!(read_back, payload);
+}
+
+#[tokio::test]
+async fn frame_rejects_oversized() {
+    let fake_len = (MAX_FRAME_SIZE + 1).to_be_bytes();
+    let mut cursor = std::io::Cursor::new(fake_len.to_vec());
+    let err = read_frame(&mut cursor).await.expect_err("should reject");
+    assert!(err.to_string().contains("frame too large"));
+}
+
+#[tokio::test]
+async fn read_frame_errors_on_truncated_payload() {
+    let mut buf = Vec::new();
+    buf.extend_from_slice(&10u32.to_be_bytes());
+    buf.extend_from_slice(&[1_u8, 2, 3]);
+    let mut cursor = std::io::Cursor::new(buf);
+    let err = read_frame(&mut cursor)
+        .await
+        .expect_err("truncated payload should fail");
+    assert!(
+        err.to_string().contains("payload") || err.to_string().contains("read"),
+        "{err}"
+    );
+}
+
+#[tokio::test]
+async fn handshake_rejects_malformed_client_hello_json() {
+    let payload = b"{not-json";
+    let mut input = Vec::new();
+    input.extend_from_slice(&(payload.len() as u32).to_be_bytes());
+    input.extend_from_slice(payload);
+    let mut reader = std::io::Cursor::new(input);
+    let mut writer = Vec::new();
+    let err = perform_handshake(&mut reader, &mut writer, "fam")
+        .await
+        .expect_err("invalid JSON");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("ClientHello") || msg.contains("malformed"),
+        "{msg}"
+    );
+    assert!(
+        !writer.is_empty(),
+        "error frame should be written for invalid ClientHello"
+    );
+}
+
+#[tokio::test]
+async fn read_frame_errors_on_truncated_length_prefix() {
+    let mut cursor = std::io::Cursor::new(vec![0_u8, 1]);
+    let err = read_frame(&mut cursor)
+        .await
+        .expect_err("incomplete length prefix");
+    assert!(
+        err.to_string().contains("frame length") || err.to_string().contains("read"),
+        "{err}"
+    );
+}
+
+#[tokio::test]
+async fn write_error_frame_produces_json_error_object() {
+    let mut out = Vec::new();
+    write_error_frame(&mut out, "unit_test_reason").await;
+    assert!(!out.is_empty());
+    let mut cursor = std::io::Cursor::new(out);
+    let payload = read_frame(&mut cursor).await.expect("read error frame");
+    let v: Value = serde_json::from_slice(&payload).expect("valid JSON");
+    assert_eq!(v["error"], "handshake_failed");
+    assert_eq!(v["reason"], "unit_test_reason");
+}
+
+fn framed_json_bytes(value: &Value) -> Vec<u8> {
+    let bytes = serde_json::to_vec(value).expect("serialize");
+    let mut buf = Vec::with_capacity(4 + bytes.len());
+    buf.extend_from_slice(&(bytes.len() as u32).to_be_bytes());
+    buf.extend_from_slice(&bytes);
+    buf
+}
+
+async fn run_mock_security_server(sock_path: std::path::PathBuf, scenario: MockSecurityScenario) {
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixListener;
+
+    let listener = UnixListener::bind(&sock_path).expect("bind mock security socket");
+    for _ in 0..3 {
+        let (mut stream, _) = listener.accept().await.expect("accept");
+        let mut line = String::new();
+        BufReader::new(&mut stream)
+            .read_line(&mut line)
+            .await
+            .expect("read jsonrpc");
+        let req: Value = serde_json::from_str(line.trim()).expect("request json");
+        let method = req["method"].as_str().expect("method");
+        let id = req["id"].as_u64().expect("id");
+        let result = match (method, &scenario) {
+            ("btsp.session.create", MockSecurityScenario::CreateMissingSessionId) => {
+                json!({"server_ephemeral_pub": "c2VydmVy"})
+            }
+            ("btsp.session.create", MockSecurityScenario::CreateMissingServerPub) => {
+                json!({"session_id": "s1"})
+            }
+            ("btsp.session.create", _) => {
+                json!({
+                    "session_id": "sid-mock",
+                    "server_ephemeral_pub": "c2VydmVyLWVwaGVtZXJhbA==",
+                })
+            }
+            ("btsp.session.verify", MockSecurityScenario::VerifyRejected) => {
+                json!({"verified": false})
+            }
+            ("btsp.session.verify", _) => json!({"verified": true}),
+            ("btsp.negotiate", MockSecurityScenario::NegotiateRpcError) => {
+                let body = format!(
+                    r#"{{"jsonrpc":"2.0","id":{id},"error":{{"code":-32000,"message":"no cipher"}}}}"#
+                );
+                stream
+                    .write_all(format!("{body}\n").as_bytes())
+                    .await
+                    .expect("write err response");
+                stream.flush().await.expect("flush");
+                continue;
+            }
+            ("btsp.negotiate", _) => json!({"cipher": "chacha20_poly1305"}),
+            _ => panic!("unexpected method {method}"),
+        };
+        let body = json!({"jsonrpc":"2.0","id": id, "result": result});
+        let line_out = format!("{}\n", serde_json::to_string(&body).unwrap());
+        stream.write_all(line_out.as_bytes()).await.expect("write");
+        stream.flush().await.expect("flush");
+    }
+}
+
+#[derive(Clone, Copy)]
+enum MockSecurityScenario {
+    Success,
+    VerifyRejected,
+    CreateMissingSessionId,
+    CreateMissingServerPub,
+    NegotiateRpcError,
+}
+
+#[tokio::test]
+async fn handshake_happy_path_with_mock_security_provider() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("security.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::Success).await;
+    });
+
+    let hello = json!({"version": 1, "client_ephemeral_pub": "Y2xpZW50LWtleQ=="});
+    let mut input = framed_json_bytes(&hello);
+    let cr = json!({"response": "c2ln", "preferred_cipher": "chacha20_poly1305"});
+    input.extend(framed_json_bytes(&cr));
+
+    temp_env::async_with_vars(
+        [("SECURITY_SOCKET", Some(sock.to_str().expect("utf8 path")))],
+        async {
+            tokio::task::yield_now().await;
+            let mut reader = std::io::Cursor::new(input);
+            let mut writer = Vec::new();
+            let session = perform_handshake(&mut reader, &mut writer, "fam")
+                .await
+                .expect("handshake ok");
+            assert_eq!(session.session_id, "sid-mock");
+            assert_eq!(session.cipher, "chacha20_poly1305");
+            assert!(session.encrypted);
+            assert!(!writer.is_empty(), "ServerHello + HandshakeComplete frames");
+        },
+    )
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_fails_verification_writes_error_frame() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec2.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::VerifyRejected).await;
+    });
+
+    let hello = json!({"version": 1, "client_ephemeral_pub": "Y2xpZW50"});
+    let mut input = framed_json_bytes(&hello);
+    let cr = json!({"response": "c2ln", "preferred_cipher": null});
+    input.extend(framed_json_bytes(&cr));
+
+    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
+        tokio::task::yield_now().await;
+        let mut reader = std::io::Cursor::new(input);
+        let mut writer = Vec::new();
+        let err = perform_handshake(&mut reader, &mut writer, "fam")
+            .await
+            .expect_err("verify rejected");
+        assert!(
+            err.to_string().contains("family") || err.to_string().contains("verification"),
+            "{err}"
+        );
+        let mut cursor = std::io::Cursor::new(&writer);
+        let mut found_family_err = false;
+        while cursor.position() < writer.len() as u64 {
+            let frame = read_frame(&mut cursor).await.ok();
+            if let Some(bytes) = frame {
+                if let Ok(v) = serde_json::from_slice::<Value>(&bytes) {
+                    if v["reason"] == "family_verification" {
+                        found_family_err = true;
+                    }
+                }
+            }
+        }
+        assert!(found_family_err, "expected family_verification error frame");
+    })
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_create_missing_session_id_returns_internal_error() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec3.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::CreateMissingSessionId).await;
+    });
+
+    let hello = json!({"client_ephemeral_pub": "YQ=="});
+    let input = framed_json_bytes(&hello);
+
+    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
+        tokio::task::yield_now().await;
+        let mut reader = std::io::Cursor::new(input);
+        let mut writer = Vec::new();
+        let err = perform_handshake(&mut reader, &mut writer, "fam")
+            .await
+            .expect_err("missing session_id");
+        assert!(err.to_string().contains("session_id"), "unexpected: {err}");
+    })
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_create_missing_server_pub_returns_internal_error() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec4.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::CreateMissingServerPub).await;
+    });
+
+    let hello = json!({"client_ephemeral_pub": "YQ=="});
+    let input = framed_json_bytes(&hello);
+
+    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
+        tokio::task::yield_now().await;
+        let mut reader = std::io::Cursor::new(input);
+        let mut writer = Vec::new();
+        let err = perform_handshake(&mut reader, &mut writer, "fam")
+            .await
+            .expect_err("missing server_ephemeral_pub");
+        assert!(
+            err.to_string().contains("server_ephemeral_pub"),
+            "unexpected: {err}"
+        );
+    })
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_negotiate_error_defaults_cipher_null() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec5.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::NegotiateRpcError).await;
+    });
+
+    let hello = json!({"client_ephemeral_pub": "YQ=="});
+    let mut input = framed_json_bytes(&hello);
+    let cr = json!({"response": "c2ln"});
+    input.extend(framed_json_bytes(&cr));
+
+    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
+        tokio::task::yield_now().await;
+        let mut reader = std::io::Cursor::new(input);
+        let mut writer = Vec::new();
+        let session = perform_handshake(&mut reader, &mut writer, "fam")
+            .await
+            .expect("handshake completes with null cipher");
+        assert_eq!(session.cipher, "null");
+        assert!(!session.encrypted);
+    })
+    .await;
+    server.abort();
+}
+
+#[tokio::test]
+async fn handshake_rejects_malformed_challenge_response_json() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("sec6.sock");
+    let sock_clone = sock.clone();
+    let server = tokio::spawn(async move {
+        run_mock_security_server(sock_clone, MockSecurityScenario::Success).await;
+    });
+
+    let hello = json!({"client_ephemeral_pub": "YQ=="});
+    let mut input = framed_json_bytes(&hello);
+    let bad = b"{oops";
+    input.extend_from_slice(&(bad.len() as u32).to_be_bytes());
+    input.extend_from_slice(bad);
+
+    temp_env::async_with_vars([("SECURITY_SOCKET", Some(sock.to_str().unwrap()))], async {
+        tokio::task::yield_now().await;
+        let mut reader = std::io::Cursor::new(input);
+        let mut writer = Vec::new();
+        let err = perform_handshake(&mut reader, &mut writer, "fam")
+            .await
+            .expect_err("bad challenge response");
+        assert!(
+            err.to_string().contains("ChallengeResponse") || err.to_string().contains("malformed"),
+            "{err}"
+        );
+    })
+    .await;
+    server.abort();
+}
+
+#[test]
+fn handshake_fails_when_security_provider_unavailable() {
+    let hello = json!({"version": 1, "client_ephemeral_pub": "AAAA"});
+    let hello_bytes = serde_json::to_vec(&hello).unwrap();
+    let mut input = Vec::new();
+    input.extend_from_slice(&(hello_bytes.len() as u32).to_be_bytes());
+    input.extend_from_slice(&hello_bytes);
+
+    temp_env::with_vars(
+        [("SECURITY_SOCKET", Some("/nonexistent/btsp-test.sock"))],
+        || {
+            let rt = tokio::runtime::Runtime::new().expect("runtime");
+            let mut reader = std::io::Cursor::new(&input);
+            let mut writer = Vec::new();
+            let result = rt.block_on(perform_handshake(&mut reader, &mut writer, "test-fam"));
+            assert!(result.is_err());
+            let msg = result.unwrap_err().to_string();
+            assert!(
+                msg.contains("security provider"),
+                "error should mention security provider: {msg}"
+            );
+        },
+    );
+}

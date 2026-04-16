@@ -53,28 +53,6 @@ pub trait NativeAsyncService: Send + Sync + 'static {
 
 // ==================== SECTION ====================
 
-/// Native async storage trait - replaces `async_trait` storage patterns
-/// **DEPRECATED**: Native async now integrated into canonical storage traits
-#[deprecated(
-    since = "0.9.0",
-    note = "Use crate::traits::canonical::CanonicalStorage - all methods are native async"
-)]
-/// NativeAsyncStorage trait
-pub trait NativeAsyncStorage: Send + Sync + 'static {
-    /// Read data from storage
-    /// Write data to storage
-    /// Delete data from storage
-    /// Check if path exists
-    /// List directory contents
-    /// Get storage metadata
-    /// Create directory
-    /// Copy data
-    fn copy(&self, src: &str, dst: &str) -> impl Future<Output = Result<()>> + Send;
-
-    /// Move data
-    fn move_data(&self, src: &str, dst: &str) -> impl Future<Output = Result<()>> + Send;
-}
-
 #[derive(Debug, Clone)]
 /// Storagemetadata
 pub struct StorageMetadata {
@@ -139,44 +117,6 @@ pub struct NetworkStatistics {
     pub bytes_received: u64,
     /// Errors
     pub errors: u64,
-}
-
-// ==================== SECTION ====================
-
-/// Native async security provider trait - replaces `async_trait` security patterns
-/// **DEPRECATED**: Native async now integrated into canonical security
-#[deprecated(
-    since = "0.9.0",
-    note = "Use crate::traits::canonical::CanonicalSecurity - all methods are native async"
-)]
-/// NativeAsyncSecurityProvider trait
-pub trait NativeAsyncSecurityProvider: Send + Sync + 'static {
-    /// Credentials type
-    type Credentials: Send + Sync;
-
-    /// Token type
-    type Token: Send + Sync;
-    /// Authenticate user with credentials
-    fn authenticate(
-        &self,
-        credentials: Self::Credentials,
-    ) -> impl Future<Output = Result<Self::Token>> + Send;
-
-    /// Validate token
-    fn validate_token(&self, token: &Self::Token) -> impl Future<Output = Result<bool>> + Send;
-
-    /// Refresh token
-    fn refresh_token(&self, token: Self::Token)
-    -> impl Future<Output = Result<Self::Token>> + Send;
-
-    /// Revoke token
-    fn revoke_token(&self, token: Self::Token) -> impl Future<Output = Result<()>> + Send;
-
-    /// Encrypt data
-    fn encrypt(&self, data: &[u8]) -> impl Future<Output = Result<Vec<u8>>> + Send;
-
-    /// Decrypt data
-    fn decrypt(&self, data: &[u8]) -> impl Future<Output = Result<Vec<u8>>> + Send;
 }
 
 // ==================== SECTION ====================

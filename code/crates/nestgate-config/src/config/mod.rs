@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-use serde::{Deserialize, Serialize};
-
 /// **NESTGATE CONFIGURATION SYSTEM**
 ///
 /// This module provides the unified configuration system for NestGate.
@@ -229,14 +227,9 @@ pub fn create_testing_config() -> canonical_primary::NestGateCanonicalConfig {
 /// Type alias to canonical network configuration
 ///
 /// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
 /// Type alias for Infantdiscoveryconfigcanonical
 pub type InfantDiscoveryConfigCanonical =
     crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using InfantDiscoveryConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
 
 #[cfg(test)]
 mod tests {
@@ -289,48 +282,3 @@ mod defaults_tests;
 
 #[cfg(test)]
 mod defaults_additional_tests; // NEW: Test expansion phase (Nov 6, 2025) // Include comprehensive defaults tests
-
-/// Infant discovery configuration - no hardcoded assumptions
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::InfantDiscoveryConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::InfantDiscoveryConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for `InfantDiscovery`
-pub struct InfantDiscoveryConfig {
-    /// Whether infant discovery is enabled
-    pub enabled: bool,
-    /// Timeout for discovery operations in seconds
-    pub discovery_timeout_seconds: u64,
-    /// Time-to-live for capability cache in seconds
-    pub capability_cache_ttl_seconds: u64,
-    /// Whether to fallback to environment variables if discovery fails
-    pub fallback_to_environment: bool,
-}
-
-#[expect(deprecated)]
-impl Default for InfantDiscoveryConfig {
-    /// Returns the default instance
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            discovery_timeout_seconds: 30,
-            capability_cache_ttl_seconds: 300,
-            fallback_to_environment: true,
-        }
-    }
-}

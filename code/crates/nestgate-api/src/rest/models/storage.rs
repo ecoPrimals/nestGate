@@ -9,6 +9,14 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Canonical network configuration placeholder for REST storage request bodies.
+pub type StorageConfigurationCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
+/// Canonical network configuration placeholder for REST benchmark request bodies.
+pub type BenchmarkConfigCanonical =
+    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
+
 // Storage configuration and management structures
 
 /// Storage backend configuration and performance characteristics
@@ -26,41 +34,6 @@ pub struct StorageBackend {
     pub config: HashMap<String, String>,
     /// Performance characteristics of this storage backend
     pub performance: StoragePerformance,
-}
-
-/// Complete storage system configuration
-///
-/// Encompasses all storage backends, tier configuration, and
-/// performance requirements for a complete storage solution.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::StorageConfiguration;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::StorageConfiguration; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Storageconfiguration
-pub struct StorageConfiguration {
-    /// Descriptive name for this storage configuration
-    pub name: String,
-    /// List of configured storage backends
-    pub backends: Vec<StorageBackend>,
-    /// Storage tier classification (Hot, Warm, Cold, Archive)
-    pub tier: StorageTier,
-    /// Performance requirements this configuration must meet
-    pub performance_requirements: PerformanceRequirements,
 }
 
 /// Storage tier classification for data lifecycle management
@@ -148,41 +121,6 @@ pub struct ScalabilityAnalysis {
     pub bottlenecks: Vec<String>,
 }
 
-/// Storage benchmark configuration parameters
-///
-/// Defines parameters for storage performance benchmarking
-/// including test scenarios, duration, and load characteristics.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::BenchmarkConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::BenchmarkConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for Benchmark
-pub struct BenchmarkConfig {
-    /// Type of benchmark scenario to execute
-    pub scenario: BenchmarkScenario,
-    /// Benchmark duration in seconds
-    pub duration_seconds: u32,
-    /// Number of concurrent threads to use for testing
-    pub thread_count: u32,
-    /// I/O block size in kilobytes
-    pub block_size_kb: u32,
-}
-
 /// Available benchmark scenarios for performance testing
 ///
 /// Defines different I/O patterns and access methods for
@@ -227,9 +165,9 @@ pub struct BenchmarkResults {
 /// Request parameters for `BenchmarkStorage` operation
 pub struct BenchmarkStorageRequest {
     /// Storage configuration to benchmark
-    pub storage_config: StorageConfiguration,
+    pub storage_config: StorageConfigurationCanonical,
     /// Benchmark parameters and test configuration
-    pub benchmark_config: BenchmarkConfig,
+    pub benchmark_config: BenchmarkConfigCanonical,
     /// Target storage backend for benchmarking
     pub backend: crate::rest::models::types::StorageBackendType,
     /// Benchmark duration in seconds
@@ -321,41 +259,6 @@ pub struct LoadTestingParams {
     pub data_size_distribution: HashMap<String, f64>,
 }
 
-/// Alternative storage configuration option
-///
-/// Represents an alternative storage configuration with different
-/// trade-offs between performance, cost, and features.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::AlternativeConfiguration;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::AlternativeConfiguration; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Alternativeconfiguration
-pub struct AlternativeConfiguration {
-    /// Alternative storage configuration
-    pub config: StorageConfiguration,
-    /// Performance projection for this alternative
-    pub performance_projection: PerformanceProjection,
-    /// Cost estimate for this alternative
-    pub cost_estimate: crate::rest::models::costs::CostEstimate,
-    /// Trade-offs and considerations for this alternative
-    pub trade_offs: Vec<String>,
-}
-
 /// Detailed cost breakdown by category
 ///
 /// Provides granular cost analysis broken down by different
@@ -394,92 +297,20 @@ pub struct ScanStorageRequest {
     pub include_cloud: Option<bool>,
 }
 
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
+// Additional canonical aliases for auto-config and alternatives (same network config shape).
 
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Alternativeconfigurationcanonical
+/// Canonical network configuration for alternative storage options.
 pub type AlternativeConfigurationCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Keep using AlternativeConfiguration (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Autoconfiginputcanonical
+/// Canonical network configuration for auto-config input payloads.
 pub type AutoConfigInputCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Prefer CanonicalNetworkConfig directly for new code; this alias remains for compatibility.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Autoconfigrequestcanonical
+/// Canonical network configuration for auto-config requests.
 pub type AutoConfigRequestCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Prefer CanonicalNetworkConfig directly for new code; this alias remains for compatibility.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Autoconfigresultcanonical
+/// Canonical network configuration for auto-config results.
 pub type AutoConfigResultCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Prefer CanonicalNetworkConfig directly for new code; this alias remains for compatibility.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Benchmarkconfigcanonical
-pub type BenchmarkConfigCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using BenchmarkConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
-// ==================== CANONICAL TYPE ALIAS ====================
-// This type now aliases to the canonical network configuration
-// Original struct definition kept above for reference and backward compatibility
-
-/// Type alias to canonical network configuration
-///
-/// This provides backward compatibility while migrating to unified configuration.
-/// The original struct is marked as deprecated but still functional.
-/// Type alias for Storageconfigurationcanonical
-pub type StorageConfigurationCanonical =
-    nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-
-// Note: Keep using StorageConfiguration (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.

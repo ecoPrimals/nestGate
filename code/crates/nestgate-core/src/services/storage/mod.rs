@@ -31,8 +31,6 @@ pub mod operations;
 mod mock_pool_quota_tests;
 #[cfg(test)]
 mod mock_stats_operations_extended_tests;
-#[cfg(test)]
-mod service_tests;
 
 // Re-export all types for backward compatibility
 pub use config::CachePolicies;

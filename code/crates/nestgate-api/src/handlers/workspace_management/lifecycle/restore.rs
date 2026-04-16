@@ -181,3 +181,89 @@ async fn get_workspace_info(dataset_name: &str) -> Result<Value, ()> {
         _ => Err(()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use axum::extract::{Json, Path};
+    use axum::http::StatusCode;
+
+    use super::super::types::RestoreConfig;
+    use super::{get_workspace_info, restore_workspace};
+
+    fn sample_restore_config() -> RestoreConfig {
+        RestoreConfig {
+            backup_name: "bk".to_string(),
+            target_workspace_id: None,
+            restore_point: None,
+            force: false,
+        }
+    }
+
+    #[tokio::test]
+    async fn restore_workspace_rejects_empty_workspace_id_with_bad_request() {
+        let r = restore_workspace(Path(String::new()), Json(sample_restore_config())).await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    async fn restore_workspace_rejects_slash_in_workspace_id_with_bad_request() {
+        let r = restore_workspace(Path("bad/id".to_string()), Json(sample_restore_config())).await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    async fn restore_workspace_rejects_space_in_workspace_id_with_bad_request() {
+        let r = restore_workspace(Path("bad id".to_string()), Json(sample_restore_config())).await;
+        assert!(matches!(r, Err(StatusCode::BAD_REQUEST)));
+    }
+
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn restore_workspace_missing_backup_file_returns_error_payload() {
+        let dir = tempfile::tempdir().expect("test: tempdir");
+        let path = dir.path().to_string_lossy().into_owned();
+        nestgate_core::env_process::set_var("NESTGATE_BACKUP_DIR", &path);
+        let res = restore_workspace(
+            Path("ws_missing".to_string()),
+            Json(RestoreConfig {
+                backup_name: "nope".to_string(),
+                target_workspace_id: None,
+                restore_point: None,
+                force: false,
+            }),
+        )
+        .await
+        .expect("test: JSON response for missing file");
+        let v = res.0;
+        assert_eq!(v["status"], "error");
+        assert!(
+            v["message"]
+                .as_str()
+                .is_some_and(|m| m.contains("Backup file not found")),
+            "{v:?}"
+        );
+        nestgate_core::env_process::remove_var("NESTGATE_BACKUP_DIR");
+    }
+
+    #[test]
+    fn restore_config_serde_round_trip() {
+        let original = RestoreConfig {
+            backup_name: "daily".to_string(),
+            target_workspace_id: Some("target-ws".to_string()),
+            restore_point: Some("snap1".to_string()),
+            force: true,
+        };
+        let json_str = serde_json::to_string(&original).expect("test: serialize");
+        let parsed: RestoreConfig = serde_json::from_str(&json_str).expect("test: deserialize");
+        assert_eq!(original.backup_name, parsed.backup_name);
+        assert_eq!(original.target_workspace_id, parsed.target_workspace_id);
+        assert_eq!(original.restore_point, parsed.restore_point);
+        assert_eq!(original.force, parsed.force);
+    }
+
+    #[tokio::test]
+    async fn get_workspace_info_nonexistent_dataset_returns_err() {
+        let r = get_workspace_info("nestpool/workspaces/nonexistent_dataset_xyz_12345").await;
+        assert!(r.is_err());
+    }
+}

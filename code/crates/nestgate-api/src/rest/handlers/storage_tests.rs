@@ -3,86 +3,14 @@
 
 //! **Tests for REST storage handlers**
 
-use super::storage::*;
 use crate::rest::models::{
     BenchmarkScenario, PerformanceRequirements, StorageBackendType, StorageTier,
 };
 use crate::rest::{ApiState, ListQuery};
-use axum::extract::{Path, Query, State};
 
 /// Helper to create test API state
 fn create_test_state() -> ApiState {
     ApiState::new().expect("Failed to create test state")
-}
-
-// ==================== LIST BACKENDS TESTS ====================
-
-#[tokio::test]
-async fn test_list_backends_default() {
-    let state = create_test_state();
-    let query = ListQuery {
-        page: None,
-        per_page: None,
-        sort: None,
-        order: None,
-        filter: None,
-    };
-
-    let result = list_backends(State(state), Query(query)).await;
-    assert!(result.is_ok(), "list_backends should succeed");
-
-    let response = result.expect("Storage operation failed");
-    let backends = &response.0.data;
-
-    assert!(!backends.is_empty(), "Should have at least one backend");
-}
-
-#[tokio::test]
-async fn test_list_backends_with_filter() {
-    let state = create_test_state();
-    let query = ListQuery {
-        page: None,
-        per_page: None,
-        sort: None,
-        order: None,
-        filter: Some("memory".to_string()),
-    };
-
-    let result = list_backends(State(state), Query(query)).await;
-    assert!(result.is_ok(), "list_backends with filter should succeed");
-}
-
-#[tokio::test]
-async fn test_list_backends_with_pagination() {
-    let state = create_test_state();
-    let query = ListQuery {
-        page: Some(1),
-        per_page: Some(10),
-        sort: None,
-        order: None,
-        filter: None,
-    };
-
-    let result = list_backends(State(state), Query(query)).await;
-    assert!(
-        result.is_ok(),
-        "list_backends with pagination should succeed"
-    );
-}
-
-#[tokio::test]
-async fn test_list_backends_page_two() {
-    let state = create_test_state();
-    let query = ListQuery {
-        page: Some(2),
-        per_page: Some(1),
-        sort: None,
-        order: None,
-        filter: None,
-    };
-
-    let result = list_backends(State(state), Query(query)).await;
-    assert!(result.is_ok(), "list_backends page 2 should succeed");
 }
 
 // ==================== GET BACKEND PERFORMANCE TESTS ====================

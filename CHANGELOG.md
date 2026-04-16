@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43s: primalSpring audit response — deprecated pruning, coverage, file splits (April 16, 2026)
+
+- **25 deprecated items pruned**: federation.rs (3), primal_discovery.rs (5), config_registry
+  duplicates (2), dead storage handlers (3), dead storage models (3), dead MetricsConfig (1),
+  orchestrator fallback (2), PrimalsConfig dead fields (2), InfantDiscoveryConfig (1),
+  NativeAsync dead traits (3). 158 → 133 deprecated markers.
+- **Coverage 82.06% → 82.94%**: Tests added for 20+ lowest-coverage production files across
+  nestgate-zfs, nestgate-api, nestgate-config, nestgate-rpc, nestgate-discovery,
+  nestgate-security, nestgate-storage, nestgate-installer.
+- **File splits**: service.rs, btsp_server_handshake.rs, capability_based_config.rs split
+  to stay under 800 LOC. Zero files > 800 lines.
+- **Env test race fix**: network_environment.rs tests converted from unsafe env
+  save/restore to temp_env::with_vars.
+- **Vendored rustls-rustcrypto**: Confirmed upstream still at 0.0.2-alpha; vendor stays.
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery), doc PASS, deny PASS,
+  8,565 tests/0 failures, 82.94% line coverage.
+
 ### Session 43r: Deep debt — deprecated ports migration, traits split, doc reconciliation (April 16, 2026)
 
 - **Deprecated ports.rs vertical migrated**: 21 items removed — entire `hardcoding/ports.rs`

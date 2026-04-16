@@ -34,7 +34,6 @@ pub mod zfs;
 
 // Re-export commonly used handlers for convenience
 pub use monitoring::*;
-pub use storage::*;
 pub use system::*;
 pub use websocket::*;
 pub use zfs::*;

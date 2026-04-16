@@ -166,30 +166,6 @@ impl MetricsCollector {
     pub const fn record_request(&self, _service: &str, _duration: Duration) {}
 }
 
-/// ⚠️ DEPRECATED: Consolidated into `canonical_primary`.
-///
-/// Use `nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig`.
-/// This type alias will be maintained until v0.12.0 (May 2026).
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-pub struct MetricsConfig {
-    /// Whether metrics collection is enabled.
-    pub enabled: bool,
-    /// Interval between metrics collection cycles.
-    pub interval_seconds: u64,
-}
-
-impl Default for MetricsConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            interval_seconds: 60,
-        }
-    }
-}
-
 /// Canonical metrics configuration type alias.
 pub type MetricsConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;

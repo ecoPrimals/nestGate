@@ -60,11 +60,10 @@ pub use load_balancing::{
     LoadBalancingAlgorithm, RandomLoadBalancer, RoundRobinLoadBalancer, ServiceStats,
     WeightedRandomLoadBalancer, WeightedRoundRobinLoadBalancer,
 };
-#[expect(deprecated, reason = "migration in progress")]
 pub use native_async::{
     NativeAsyncApiHandler, NativeAsyncAutomationService, NativeAsyncMcpService,
-    NativeAsyncMonitoringService, NativeAsyncNetworkService, NativeAsyncSecurityProvider,
-    NativeAsyncService, NativeAsyncStorage, NativeAsyncUniversalProvider,
+    NativeAsyncMonitoringService, NativeAsyncNetworkService, NativeAsyncService,
+    NativeAsyncUniversalProvider,
 };
 pub use service_discovery::{ServiceDiscovery, ServiceEvent, ServiceQuery};
 pub use service_trait::Service;

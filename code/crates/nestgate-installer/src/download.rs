@@ -17,6 +17,48 @@ use tracing::info;
 /// Default GitHub `owner/repo` for release metadata (override with `NESTGATE_RELEASES_REPO`).
 const DEFAULT_GITHUB_REPO: &str = "ecoprimals/nestgate";
 
+/// Parses GitHub `/releases/tags/{tag}` JSON for the download URL and asset filename.
+///
+/// Mirrors the selection rules in [`DownloadManager::download_release`] for unit testing without I/O.
+fn release_download_from_github_body(
+    body: &serde_json::Value,
+    tag: &str,
+) -> Result<(String, String)> {
+    let assets = body["assets"].as_array().ok_or_else(|| {
+        NestGateError::internal_error("release response missing assets array", "download_release")
+    })?;
+    let asset = assets
+        .iter()
+        .find(|a| {
+            a["name"].as_str().is_some_and(|n| {
+                n.ends_with(".tar.gz") || n.ends_with(".tar.xz") || n.ends_with(".zip")
+            })
+        })
+        .or_else(|| assets.first())
+        .ok_or_else(|| {
+            NestGateError::internal_error(
+                format!("no download assets for release {tag}"),
+                "download_release",
+            )
+        })?;
+    let download_url = asset["browser_download_url"].as_str().ok_or_else(|| {
+        NestGateError::internal_error("asset missing browser_download_url", "download_release")
+    })?;
+    let asset_name = asset["name"].as_str().unwrap_or("release-asset");
+    Ok((download_url.to_string(), asset_name.to_string()))
+}
+
+/// Parses GitHub `/releases/latest` JSON for the version string (no leading `v`).
+fn latest_version_string_from_body(body: &serde_json::Value) -> Result<String> {
+    let tag = body["tag_name"].as_str().ok_or_else(|| {
+        NestGateError::internal_error(
+            "missing tag_name in GitHub releases/latest response",
+            "check_latest_version",
+        )
+    })?;
+    Ok(tag.trim_start_matches('v').to_string())
+}
+
 /// Installer error type alias
 pub type InstallerError = NestGateError;
 
@@ -140,33 +182,10 @@ impl DownloadManager {
 
         let body = Self::curl_json(&meta_url)?;
 
-        let assets = body["assets"].as_array().ok_or_else(|| {
-            NestGateError::internal_error(
-                "release response missing assets array",
-                "download_release",
-            )
-        })?;
-        let asset = assets
-            .iter()
-            .find(|a| {
-                a["name"].as_str().is_some_and(|n| {
-                    n.ends_with(".tar.gz") || n.ends_with(".tar.xz") || n.ends_with(".zip")
-                })
-            })
-            .or_else(|| assets.first())
-            .ok_or_else(|| {
-                NestGateError::internal_error(
-                    format!("no download assets for release {tag}"),
-                    "download_release",
-                )
-            })?;
-        let download_url = asset["browser_download_url"].as_str().ok_or_else(|| {
-            NestGateError::internal_error("asset missing browser_download_url", "download_release")
-        })?;
-        let asset_name = asset["name"].as_str().unwrap_or("release-asset");
+        let (download_url, asset_name) = release_download_from_github_body(&body, &tag)?;
         let path = target_dir.join(asset_name);
 
-        Self::curl_download(download_url, &path)?;
+        Self::curl_download(&download_url, &path)?;
 
         Ok(path)
     }
@@ -182,13 +201,7 @@ impl DownloadManager {
 
         let body = Self::curl_json(&url)?;
 
-        let tag = body["tag_name"].as_str().ok_or_else(|| {
-            NestGateError::internal_error(
-                "missing tag_name in GitHub releases/latest response",
-                "check_latest_version",
-            )
-        })?;
-        Ok(tag.trim_start_matches('v').to_string())
+        latest_version_string_from_body(&body)
     }
 
     /// Extract downloaded archive to target directory
@@ -297,7 +310,10 @@ impl Default for DownloadManager {
 
 #[cfg(test)]
 mod download_url_tests {
-    use super::DownloadManager;
+    use super::{
+        DownloadManager, latest_version_string_from_body, release_download_from_github_body,
+    };
+    use serde_json::json;
 
     #[test]
     fn release_tag_adds_v_prefix() {
@@ -395,5 +411,215 @@ mod download_url_tests {
             .expect("extract");
         assert!(base.path().join("bin").is_dir());
         assert!(base.path().join("etc").join("nestgate.toml").is_file());
+    }
+
+    #[test]
+    fn release_download_prefers_archive_extension() {
+        let body = json!({
+            "assets": [
+                {"name": "checksums.txt", "browser_download_url": "https://example.com/c"},
+                {"name": "nestgate-linux.tar.gz", "browser_download_url": "https://example.com/a.tgz"},
+                {"name": "other.zip", "browser_download_url": "https://example.com/z.zip"}
+            ]
+        });
+        let (url, name) = release_download_from_github_body(&body, "v1.0.0").expect("parse");
+        assert_eq!(url, "https://example.com/a.tgz");
+        assert_eq!(name, "nestgate-linux.tar.gz");
+    }
+
+    #[test]
+    fn release_download_prefers_first_archive_asset_in_list_order() {
+        let body = json!({
+            "assets": [
+                {"name": "a.zip", "browser_download_url": "https://example.com/first.zip"},
+                {"name": "b.tar.gz", "browser_download_url": "https://example.com/second.tgz"}
+            ]
+        });
+        let (url, name) = release_download_from_github_body(&body, "v1").expect("parse");
+        assert_eq!(name, "a.zip");
+        assert_eq!(url, "https://example.com/first.zip");
+    }
+
+    #[test]
+    fn release_download_selects_tar_gz_after_skipping_non_archive() {
+        let body = json!({
+            "assets": [
+                {"name": "notes.txt", "browser_download_url": "https://example.com/n"},
+                {"name": "app.tar.gz", "browser_download_url": "https://example.com/app.tgz"}
+            ]
+        });
+        let (url, name) = release_download_from_github_body(&body, "t").expect("parse");
+        assert_eq!(name, "app.tar.gz");
+        assert_eq!(url, "https://example.com/app.tgz");
+    }
+
+    #[test]
+    fn release_download_prefers_tar_xz_when_present() {
+        let body = json!({
+            "assets": [
+                {"name": "readme.md", "browser_download_url": "https://example.com/r"},
+                {"name": "bundle.tar.xz", "browser_download_url": "https://example.com/x.xz"}
+            ]
+        });
+        let (url, name) = release_download_from_github_body(&body, "v2").expect("parse");
+        assert_eq!(name, "bundle.tar.xz");
+        assert_eq!(url, "https://example.com/x.xz");
+    }
+
+    #[test]
+    fn release_download_falls_back_to_first_asset() {
+        let body = json!({
+            "assets": [
+                {"name": "only-deb.deb", "browser_download_url": "https://example.com/pkg.deb"}
+            ]
+        });
+        let (url, name) = release_download_from_github_body(&body, "v1").expect("parse");
+        assert_eq!(name, "only-deb.deb");
+        assert_eq!(url, "https://example.com/pkg.deb");
+    }
+
+    #[test]
+    fn release_download_default_name_when_asset_name_missing() {
+        let body = json!({
+            "assets": [
+                {"browser_download_url": "https://example.com/anon"}
+            ]
+        });
+        let (_url, name) = release_download_from_github_body(&body, "v1").expect("parse");
+        assert_eq!(name, "release-asset");
+    }
+
+    #[test]
+    fn release_download_errors_when_assets_missing() {
+        let body = json!({"name": "rel"});
+        let err = release_download_from_github_body(&body, "v1").expect_err("assets");
+        assert!(err.to_string().contains("assets array"), "{err}");
+    }
+
+    #[test]
+    fn release_download_errors_when_assets_empty() {
+        let body = json!({"assets": []});
+        let err = release_download_from_github_body(&body, "v9").expect_err("empty");
+        assert!(err.to_string().contains("no download assets"), "{err}");
+    }
+
+    #[test]
+    fn release_download_errors_when_browser_download_url_missing() {
+        let body = json!({
+            "assets": [
+                {"name": "nestgate-linux.tar.gz"}
+            ]
+        });
+        let err = release_download_from_github_body(&body, "v1").expect_err("url");
+        assert!(err.to_string().contains("browser_download_url"), "{err}");
+    }
+
+    #[test]
+    fn latest_version_strips_v_prefix() {
+        let body = json!({"tag_name": "v4.5.6"});
+        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "4.5.6");
+    }
+
+    #[test]
+    fn latest_version_preserves_without_v_prefix() {
+        let body = json!({"tag_name": "3.2.1"});
+        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "3.2.1");
+    }
+
+    #[test]
+    fn latest_version_errors_when_tag_name_missing() {
+        let body = json!({"name": "latest"});
+        let err = latest_version_string_from_body(&body).expect_err("tag");
+        assert!(err.to_string().contains("tag_name"), "{err}");
+    }
+
+    #[test]
+    fn latest_version_strips_multiple_leading_v_chars() {
+        let body = json!({"tag_name": "vv1.0.0"});
+        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "1.0.0");
+    }
+
+    #[test]
+    fn latest_version_empty_tag_name_is_ok() {
+        let body = json!({"tag_name": ""});
+        assert_eq!(latest_version_string_from_body(&body).expect("ok"), "");
+    }
+
+    #[test]
+    fn releases_latest_url_matches_github_api_shape() {
+        temp_env::with_vars([("NESTGATE_RELEASES_REPO", None::<&str>)], || {
+            let repo = DownloadManager::github_repo();
+            let url = format!("https://api.github.com/repos/{repo}/releases/latest");
+            assert_eq!(
+                url,
+                "https://api.github.com/repos/ecoprimals/nestgate/releases/latest"
+            );
+        });
+    }
+
+    #[test]
+    fn download_release_meta_url_matches_inline_format_in_download_release() {
+        let repo = "acme/demo";
+        let version = "1.4.2";
+        let tag = DownloadManager::release_tag(version);
+        let from_helper = DownloadManager::release_meta_url(repo, version);
+        let inline = format!("https://api.github.com/repos/{repo}/releases/tags/{tag}");
+        assert_eq!(from_helper, inline);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn verify_installation_succeeds_when_binary_reports_version() {
+        let dm = DownloadManager::new();
+        let tmp = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(tmp.path().join("bin")).expect("bin");
+        std::fs::create_dir_all(tmp.path().join("etc")).expect("etc");
+        let bin = tmp.path().join("bin").join("nestgate");
+        std::fs::write(&bin, "#!/bin/sh\necho nestgate 0.9.0\nexit 0\n").expect("shim");
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(&bin).expect("meta").permissions();
+            perms.set_mode(0o755);
+            std::fs::set_permissions(&bin, perms).expect("chmod");
+        }
+        std::fs::write(tmp.path().join("etc").join("nestgate.toml"), "[install]\n").expect("cfg");
+        dm.verify_installation(tmp.path()).expect("verified");
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn verify_installation_fails_when_version_command_nonzero() {
+        let dm = DownloadManager::new();
+        let tmp = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(tmp.path().join("bin")).expect("bin");
+        std::fs::create_dir_all(tmp.path().join("etc")).expect("etc");
+        let bin = tmp.path().join("bin").join("nestgate");
+        std::fs::write(&bin, "#!/bin/sh\nexit 1\n").expect("shim");
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(&bin).expect("meta").permissions();
+            perms.set_mode(0o755);
+            std::fs::set_permissions(&bin, perms).expect("chmod");
+        }
+        std::fs::write(tmp.path().join("etc").join("nestgate.toml"), "[install]\n").expect("cfg");
+        let err = dm.verify_installation(tmp.path()).expect_err("bad exit");
+        assert!(
+            err.to_string().contains("test_failed") || err.to_string().contains("failed"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn verify_installation_fails_when_spawn_errors() {
+        let dm = DownloadManager::new();
+        let tmp = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(tmp.path().join("bin")).expect("bin");
+        std::fs::create_dir_all(tmp.path().join("etc")).expect("etc");
+        let bin = tmp.path().join("bin").join("nestgate");
+        std::fs::create_dir(&bin).expect("dir instead of file");
+        std::fs::write(tmp.path().join("etc").join("nestgate.toml"), "[install]\n").expect("cfg");
+        let err = dm.verify_installation(tmp.path()).expect_err("spawn");
+        assert!(!err.to_string().is_empty(), "{err}");
     }
 }

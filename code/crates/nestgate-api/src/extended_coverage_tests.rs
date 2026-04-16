@@ -13,10 +13,6 @@ mod round6_tests {
         evaluate_zfs_health,
     };
     use crate::nestgate_rpc_service::NestGateJsonRpcHandler;
-    use crate::rest::handlers::storage::list_backends;
-    use crate::rest::{ApiState, ListQuery};
-    use axum::Json;
-    use axum::extract::{Query, State};
     use serde_json::json;
 
     #[test]
@@ -141,75 +137,6 @@ mod round6_tests {
             .unwrap();
         assert!(v.get("compression_ratio").is_some());
         assert!(v.get("snapshot_count").is_some());
-    }
-
-    #[tokio::test]
-    async fn r6_list_backends_paginated_shape() {
-        let state = ApiState::new().expect("api state");
-        let q = ListQuery {
-            filter: None,
-            sort: None,
-            order: None,
-            page: Some(1),
-            per_page: Some(10),
-        };
-        let Json(body) = list_backends(State(state), Query(q))
-            .await
-            .expect("list backends");
-        assert!(body.data.len() <= 10);
-    }
-
-    #[tokio::test]
-    async fn r6_list_backends_filter_memory() {
-        let state = ApiState::new().expect("api state");
-        let q = ListQuery {
-            filter: Some("Memory".into()),
-            sort: Some("name".into()),
-            order: None,
-            page: None,
-            per_page: None,
-        };
-        let Json(body) = list_backends(State(state), Query(q)).await.expect("ok");
-        assert!(!body.data.is_empty());
-    }
-
-    #[tokio::test]
-    async fn r6_list_backends_sort_performance_desc() {
-        let state = ApiState::new().expect("api state");
-        let q = ListQuery {
-            filter: None,
-            sort: Some("performance".into()),
-            order: Some("desc".into()),
-            page: None,
-            per_page: None,
-        };
-        let _ = list_backends(State(state), Query(q)).await.unwrap();
-    }
-
-    #[tokio::test]
-    async fn r6_list_backends_sort_type_branch() {
-        let state = ApiState::new().expect("api state");
-        let q = ListQuery {
-            filter: None,
-            sort: Some("type".into()),
-            order: None,
-            page: None,
-            per_page: None,
-        };
-        let _ = list_backends(State(state), Query(q)).await.unwrap();
-    }
-
-    #[tokio::test]
-    async fn r6_list_backends_default_sort_unknown_field() {
-        let state = ApiState::new().expect("api state");
-        let q = ListQuery {
-            filter: None,
-            sort: Some("unknown_field".into()),
-            order: None,
-            page: None,
-            per_page: None,
-        };
-        let _ = list_backends(State(state), Query(q)).await.unwrap();
     }
 
     macro_rules! r6_storage_pool_info_roundtrip {

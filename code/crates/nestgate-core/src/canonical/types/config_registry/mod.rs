@@ -106,81 +106,6 @@ pub struct CanonicalStorageConfig {
     pub environment_overrides: HashMap<String, serde_json::Value>,
 }
 
-/// **THE CANONICAL NETWORK CONFIGURATION**
-///
-/// **⚠️ DEPRECATED**: This is a duplicate. Use `CanonicalNetworkConfig` from `canonical_primary::domains::network`
-/// Consolidates ALL network configuration patterns:
-/// - `NetworkConfig` from `canonical_modernization/core_config.rs`
-/// - `CanonicalNetworkConfig` from `canonical_modernization/NestGateCanonicalConfig.rs`
-/// - Network settings from `unified_network_extensions.rs`
-/// - Network configs from various service modules
-///
-/// **⚠️ DEPRECATED**: Duplicate. Use the one from `canonical_primary::domains::network`
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[deprecated(
-    since = "0.10.0",
-    note = "Use canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for CanonicalNetwork
-pub struct CanonicalNetworkConfig {
-    /// Interface bindings
-    pub interfaces: network::NetworkInterfaceConfig,
-    /// Protocol settings
-    pub protocols: network::NetworkProtocolsConfig,
-    /// Connection management
-    pub connections: network::NetworkConnectionConfig,
-    /// Security settings
-    pub security: network::NetworkSecurityConfig,
-    /// Performance tuning
-    pub performance: network::NetworkPerformanceConfig,
-    /// Load balancing
-    pub load_balancing: network::NetworkLoadBalancingConfig,
-    /// Service discovery
-    pub service_discovery: network::NetworkServiceDiscoveryConfig,
-    /// Monitoring settings
-    pub monitoring: network::NetworkMonitoringConfig,
-}
-
-/// **THE CANONICAL SECURITY CONFIGURATION**
-///
-/// Consolidates ALL security configuration patterns across the ecosystem
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into canonical_primary
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::config::CanonicalSecurityConfig;
-///
-/// // NEW (canonical):
-/// use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::config::CanonicalSecurityConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for CanonicalSecurity
-pub struct CanonicalSecurityConfig {
-    /// Authentication settings
-    pub authentication: security::SecurityAuthenticationConfig,
-    /// Authorization settings
-    pub authorization: security::SecurityAuthorizationConfig,
-    /// Encryption settings
-    pub encryption: security::SecurityEncryptionConfig,
-    /// TLS/SSL settings
-    pub tls: security::SecurityTlsConfig,
-    /// Audit settings
-    pub audit: security::SecurityAuditConfig,
-    /// Threat detection
-    pub threat_detection: security::SecurityThreatDetectionConfig,
-    /// Compliance settings
-    pub compliance: security::SecurityComplianceConfig,
-}
-
 /// **THE CANONICAL MONITORING CONFIGURATION**
 ///
 /// Consolidates ALL monitoring configuration patterns
@@ -214,8 +139,6 @@ impl CanonicalConfigTypeRegistry {
     pub fn all_types() -> Vec<&'static str> {
         vec![
             "CanonicalStorageConfig",
-            "CanonicalNetworkConfig",
-            "CanonicalSecurityConfig",
             "CanonicalMonitoringConfig",
             // Storage subtypes
             "StorageBackendType",
@@ -331,14 +254,6 @@ mod tests {
         let config = CanonicalStorageConfig::default();
         // Verify default initialization works
         assert!(config.environment_overrides.is_empty());
-    }
-
-    #[test]
-    #[expect(deprecated, reason = "migration in progress")]
-    fn test_canonical_network_config_default() {
-        let config = CanonicalNetworkConfig::default();
-        // Verify default initialization works (deprecated but functional)
-        let _ = config;
     }
 
     #[test]

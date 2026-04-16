@@ -535,4 +535,246 @@ mod tests {
         IsomorphicIpcServer::prepare_socket_path(&sock).expect("prepare again");
         assert!(!sock.exists());
     }
+
+    #[test]
+    fn get_socket_path_prefers_xdg_runtime_dir_when_set() {
+        temp_env::with_vars([("XDG_RUNTIME_DIR", Some("/run/user/4242"))], || {
+            let handler = Arc::new(MockHandler);
+            let server = IsomorphicIpcServer::new("ipc-test-svc".to_string(), handler);
+            let p = server.get_socket_path().expect("path");
+            assert_eq!(p.to_string_lossy(), "/run/user/4242/ipc-test-svc.sock");
+        });
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_unix_connection_exits_on_immediate_peer_close() {
+        use tokio::time::{Duration, timeout};
+
+        temp_env::async_with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", None::<&str>),
+            ],
+            async {
+                let (server_sock, client_sock) = tokio::net::UnixStream::pair().expect("unix pair");
+                let handler = Arc::new(MockHandler);
+
+                drop(client_sock);
+
+                let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
+                timeout(Duration::from_secs(2), server)
+                    .await
+                    .expect("server should finish")
+                    .expect("server loop");
+            },
+        )
+        .await;
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_unix_connection_btsp_required_bypasses_handshake_when_json_first_byte() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        temp_env::async_with_vars(
+            [
+                ("FAMILY_ID", Some("custom-prod-family")),
+                ("BIOMEOS_INSECURE", None::<&str>),
+            ],
+            async {
+                let (server_sock, client_sock) = tokio::net::UnixStream::pair().expect("unix pair");
+                let handler = Arc::new(MockHandler);
+
+                let (mut read_half, mut write_half) = tokio::io::split(client_sock);
+                let client = async {
+                    let req = br#"{"jsonrpc":"2.0","method":"demo","id":7}"#;
+                    write_half.write_all(req).await.expect("write");
+                    write_half.write_all(b"\n").await.expect("newline");
+                    write_half.shutdown().await.expect("shutdown write half");
+
+                    let mut buf_reader = BufReader::new(&mut read_half);
+                    let mut line = String::new();
+                    buf_reader
+                        .read_line(&mut line)
+                        .await
+                        .expect("read response");
+                    let v: Value = serde_json::from_str(line.trim()).expect("json");
+                    // `MockHandler` always returns a fixed JSON-RPC envelope (`id`: 1).
+                    assert_eq!(v["id"], 1);
+                    assert_eq!(v["result"], "ok");
+                };
+
+                let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
+
+                tokio::join!(client, server).1.expect("server loop");
+            },
+        )
+        .await;
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_unix_connection_serves_multiple_requests_on_one_session() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        temp_env::async_with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", None::<&str>),
+            ],
+            async {
+                let (server_sock, client_sock) = tokio::net::UnixStream::pair().expect("unix pair");
+                let handler = Arc::new(MockHandler);
+
+                let (mut read_half, mut write_half) = tokio::io::split(client_sock);
+                let client = async {
+                    for id in [1_i64, 2_i64] {
+                        let req = format!(r#"{{"jsonrpc":"2.0","method":"demo","id":{id}}}"#);
+                        write_half.write_all(req.as_bytes()).await.expect("write");
+                        write_half.write_all(b"\n").await.expect("newline");
+                    }
+                    write_half.shutdown().await.expect("shutdown write half");
+
+                    let mut buf_reader = BufReader::new(&mut read_half);
+                    for _ in 0..2 {
+                        let mut line = String::new();
+                        buf_reader
+                            .read_line(&mut line)
+                            .await
+                            .expect("read response");
+                        let v: Value = serde_json::from_str(line.trim()).expect("json");
+                        assert_eq!(v["result"], "ok");
+                        assert_eq!(v["id"], 1);
+                    }
+                };
+
+                let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
+
+                tokio::join!(client, server).1.expect("server loop");
+            },
+        )
+        .await;
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_unix_connection_returns_parse_error_for_invalid_json() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        temp_env::async_with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", None::<&str>),
+            ],
+            async {
+                let (server_sock, client_sock) = tokio::net::UnixStream::pair().expect("unix pair");
+                let handler = Arc::new(MockHandler);
+
+                let (read_c, mut write_c) = tokio::io::split(client_sock);
+                let client = async {
+                    write_c.write_all(b"not-valid-json\n").await.expect("write");
+                    write_c.shutdown().await.expect("shutdown write half");
+
+                    let mut buf_reader = BufReader::new(read_c);
+                    let mut line = String::new();
+                    buf_reader.read_line(&mut line).await.expect("read line");
+                    let v: Value = serde_json::from_str(line.trim()).expect("json");
+                    assert_eq!(v["error"]["code"], -32700);
+                    assert_eq!(v["error"]["message"], "Parse error");
+                };
+
+                let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
+
+                tokio::join!(client, server).1.expect("server loop");
+            },
+        )
+        .await;
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_unix_connection_round_trips_json_rpc() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        temp_env::async_with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", None::<&str>),
+            ],
+            async {
+                let (server_sock, client_sock) = tokio::net::UnixStream::pair().expect("unix pair");
+                let handler = Arc::new(MockHandler);
+
+                let (mut read_half, mut write_half) = tokio::io::split(client_sock);
+                let client = async {
+                    let req = br#"{"jsonrpc":"2.0","method":"demo","id":1}"#;
+                    write_half.write_all(req).await.expect("write");
+                    write_half.write_all(b"\n").await.expect("newline");
+                    write_half.shutdown().await.expect("shutdown write half");
+
+                    let mut buf_reader = BufReader::new(&mut read_half);
+                    let mut line = String::new();
+                    buf_reader
+                        .read_line(&mut line)
+                        .await
+                        .expect("read response");
+                    let v: Value = serde_json::from_str(line.trim()).expect("json");
+                    assert_eq!(v["jsonrpc"], "2.0");
+                    assert_eq!(v["result"], "ok");
+                    assert_eq!(v["id"], 1);
+                };
+
+                let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
+
+                tokio::join!(client, server).1.expect("server loop");
+            },
+        )
+        .await;
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_unix_connection_skips_empty_lines() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        temp_env::async_with_vars(
+            [
+                ("FAMILY_ID", None::<&str>),
+                ("BIOMEOS_FAMILY_ID", None::<&str>),
+                ("NESTGATE_FAMILY_ID", None::<&str>),
+            ],
+            async {
+                let (server_sock, client_sock) = tokio::net::UnixStream::pair().expect("unix pair");
+                let handler = Arc::new(MockHandler);
+
+                let (mut read_half, mut write_half) = tokio::io::split(client_sock);
+                let client = async {
+                    write_half.write_all(b"\n\n").await.expect("blank lines");
+                    let req = br#"{"jsonrpc":"2.0","method":"x","id":1}"#;
+                    write_half.write_all(req).await.expect("write");
+                    write_half.write_all(b"\n").await.expect("newline");
+                    write_half.shutdown().await.expect("shutdown write half");
+
+                    let mut buf_reader = BufReader::new(&mut read_half);
+                    let mut line = String::new();
+                    buf_reader
+                        .read_line(&mut line)
+                        .await
+                        .expect("read response");
+                    let v: Value = serde_json::from_str(line.trim()).expect("json");
+                    assert_eq!(v["result"], "ok");
+                };
+
+                let server = IsomorphicIpcServer::handle_unix_connection(server_sock, handler);
+
+                tokio::join!(client, server).1.expect("server loop");
+            },
+        )
+        .await;
+    }
 }

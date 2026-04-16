@@ -71,10 +71,11 @@ fn connection_pool_new_reads_config() {
 }
 
 #[test]
-#[expect(deprecated)]
 fn metrics_config_default() {
+    use nestgate_core::config::canonical_primary::domains::performance::MetricsConfig;
+
     let m = MetricsConfig::default();
-    assert!(m.enabled);
+    assert!(!m.metrics.is_empty());
 }
 
 #[test]

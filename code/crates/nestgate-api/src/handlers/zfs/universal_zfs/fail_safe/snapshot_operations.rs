@@ -240,4 +240,70 @@ mod tests {
         let r = destroy_snapshot(&svc, "tank/fs@snap").await;
         assert!(r.is_err());
     }
+
+    async fn service_open_circuit_with_fallback() -> FailSafeZfsService {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = true;
+        c.failure_threshold = 1;
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let fallback = Arc::new(UniversalZfsServiceEnum::new_native());
+        let svc = FailSafeZfsService::new(primary, c).with_fallback(fallback);
+        svc.circuit_breaker.record_failure().await;
+        svc
+    }
+
+    #[tokio::test]
+    async fn list_snapshots_circuit_open_with_fallback_dispatches_fallback() {
+        let svc = service_open_circuit_with_fallback().await;
+        let _ = list_snapshots(&svc).await;
+    }
+
+    #[tokio::test]
+    async fn create_snapshot_circuit_open_with_fallback_dispatches_fallback() {
+        let svc = service_open_circuit_with_fallback().await;
+        let cfg = SnapshotConfig {
+            name: "snap".to_string(),
+            dataset: "tank/fs".to_string(),
+            properties: HashMap::new(),
+        };
+        let _ = create_snapshot(&svc, &cfg).await;
+    }
+
+    #[tokio::test]
+    async fn destroy_snapshot_circuit_open_with_fallback_dispatches_fallback() {
+        let svc = service_open_circuit_with_fallback().await;
+        let _ = destroy_snapshot(&svc, "tank/fs@snap").await;
+    }
+
+    #[tokio::test]
+    async fn destroy_snapshot_primary_failure_uses_fallback() {
+        let mut c = ZfsFailSafeConfig::default();
+        c.circuit_breaker.enabled = true;
+        c.failure_threshold = 50;
+        let primary = Arc::new(UniversalZfsServiceEnum::new_native());
+        let fallback = Arc::new(UniversalZfsServiceEnum::new_native());
+        let svc = FailSafeZfsService::new(primary, c).with_fallback(fallback);
+        let r = destroy_snapshot(&svc, "nestgate_test_nonexistent_pool/fs@missing_snap").await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn nested_fail_safe_snapshot_operations_dispatch_to_native() {
+        let native = Arc::new(UniversalZfsServiceEnum::new_native());
+        let mut inner_cfg = ZfsFailSafeConfig::default();
+        inner_cfg.circuit_breaker.enabled = false;
+        let inner = FailSafeZfsService::new(native, inner_cfg);
+        let wrapped = Arc::new(UniversalZfsServiceEnum::FailSafe(inner));
+        let mut outer_cfg = ZfsFailSafeConfig::default();
+        outer_cfg.circuit_breaker.enabled = false;
+        let svc = FailSafeZfsService::new(wrapped, outer_cfg);
+        let _ = list_snapshots(&svc).await;
+        let cfg = SnapshotConfig {
+            name: "snap".to_string(),
+            dataset: "tank/fs".to_string(),
+            properties: HashMap::new(),
+        };
+        let _ = create_snapshot(&svc, &cfg).await;
+        let _ = destroy_snapshot(&svc, "tank/fs@snap").await;
+    }
 }

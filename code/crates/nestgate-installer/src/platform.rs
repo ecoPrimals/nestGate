@@ -267,6 +267,8 @@ fn create_desktop_shortcut_windows(_install_path: &Path, _name: &str) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    use nestgate_types::MapEnv;
 
     #[test]
     fn test_platform_info_detect() {
@@ -434,5 +436,182 @@ mod tests {
                 || manager_name == "Windows Service"
                 || manager_name == "manual"
         );
+    }
+
+    #[test]
+    fn service_manager_name_branches() {
+        assert_eq!(ServiceManager::Systemd.name(), "systemd");
+        assert_eq!(ServiceManager::Launchd.name(), "launchd");
+        assert_eq!(ServiceManager::WindowsService.name(), "Windows Service");
+        assert_eq!(ServiceManager::Manual.name(), "manual");
+    }
+
+    // Exercise Windows-style binary naming without running on Windows.
+    #[test]
+    fn synthetic_platform_info_windows_get_binary_name() {
+        let info = PlatformInfo {
+            os: "windows".to_string(),
+            arch: "x86_64".to_string(),
+            service_manager: ServiceManager::WindowsService,
+            binary_extension: ".exe".to_string(),
+        };
+        assert_eq!(info.get_binary_name("nestgate"), "nestgate.exe");
+        assert!(info.service_install_supported());
+        assert_eq!(info.service_manager_name(), "Windows Service");
+    }
+
+    #[test]
+    fn synthetic_platform_info_launchd_and_manual() {
+        let launchd = PlatformInfo {
+            os: "macos".to_string(),
+            arch: "aarch64".to_string(),
+            service_manager: ServiceManager::Launchd,
+            binary_extension: String::new(),
+        };
+        assert!(launchd.service_install_supported());
+        assert_eq!(launchd.get_binary_name("nestgate"), "nestgate");
+
+        let manual = PlatformInfo {
+            os: "linux".to_string(),
+            arch: "x86_64".to_string(),
+            service_manager: ServiceManager::Manual,
+            binary_extension: String::new(),
+        };
+        assert!(!manual.service_install_supported());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn service_install_supported_matches_service_manager() {
+        let systemd = ServiceManager::Systemd;
+        let info = PlatformInfo {
+            os: "linux".to_string(),
+            arch: "x86_64".to_string(),
+            service_manager: systemd,
+            binary_extension: String::new(),
+        };
+        assert!(info.service_install_supported());
+        let manual = PlatformInfo {
+            os: "linux".to_string(),
+            arch: "x86_64".to_string(),
+            service_manager: ServiceManager::Manual,
+            binary_extension: String::new(),
+        };
+        assert!(!manual.service_install_supported());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn add_to_path_unix_writes_zshrc_when_shell_contains_zsh() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let home = tmp.path();
+        let install = tmp.path().join("nestgate-root");
+        std::fs::create_dir_all(install.join("bin")).expect("bin");
+        let env = MapEnv::from([("SHELL", "/usr/bin/zsh")]);
+        temp_env::with_vars([("HOME", Some(home.to_str().expect("utf8")))], || {
+            add_to_path_unix_from_env_source(&install, &env).expect("add path");
+        });
+        let rc = home.join(".zshrc");
+        assert!(rc.is_file(), "expected .zshrc at {:?}", rc);
+        let content = std::fs::read_to_string(&rc).expect("read");
+        assert!(content.contains("Added by NestGate installer"));
+        assert!(content.contains(&format!("{}", install.join("bin").display())));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn add_to_path_unix_writes_bashrc_when_shell_not_zsh() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let home = tmp.path();
+        let install = tmp.path().join("nestgate-root-bash");
+        std::fs::create_dir_all(install.join("bin")).expect("bin");
+        let env = MapEnv::from([("SHELL", "/bin/bash")]);
+        temp_env::with_vars([("HOME", Some(home.to_str().expect("utf8")))], || {
+            add_to_path_unix_from_env_source(&install, &env).expect("add path");
+        });
+        let rc = home.join(".bashrc");
+        assert!(rc.is_file());
+        let content = std::fs::read_to_string(&rc).expect("read");
+        assert!(content.contains("export PATH="));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn add_to_path_public_writes_rc_with_process_env() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let home = tmp.path();
+        let install = tmp.path().join("nestgate-install");
+        std::fs::create_dir_all(install.join("bin")).expect("bin");
+        temp_env::with_vars(
+            [
+                ("HOME", Some(home.to_str().expect("utf8"))),
+                ("SHELL", Some("/bin/bash")),
+            ],
+            || {
+                add_to_path(&install).expect("add_to_path");
+            },
+        );
+        let rc = home.join(".bashrc");
+        assert!(rc.is_file());
+        let content = std::fs::read_to_string(&rc).expect("read");
+        assert!(content.contains("Added by NestGate installer"));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn add_to_path_unix_zsh_public_api() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let home = tmp.path();
+        let install = tmp.path().join("zsh-install");
+        std::fs::create_dir_all(install.join("bin")).expect("bin");
+        temp_env::with_vars(
+            [
+                ("HOME", Some(home.to_str().expect("utf8"))),
+                ("SHELL", Some("/usr/local/bin/zsh")),
+            ],
+            || {
+                add_to_path(&install).expect("add_to_path zsh");
+            },
+        );
+        assert!(home.join(".zshrc").is_file());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn create_desktop_shortcut_uses_xdg_desktop_dir_when_set() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let desktop = tmp.path().join("xdg-desktop");
+        std::fs::create_dir_all(&desktop).expect("desktop");
+        let install = tmp.path().join("opt-nestgate");
+        std::fs::create_dir_all(install.join("bin")).expect("bin");
+        let env = MapEnv::from([("XDG_DESKTOP_DIR", desktop.to_str().expect("utf8"))]);
+        create_desktop_shortcut_unix_from_env_source(&install, "NestGate Test", &env)
+            .expect("shortcut");
+        let entry = desktop.join("nestgate.desktop");
+        assert!(entry.is_file());
+        let text = std::fs::read_to_string(&entry).expect("read");
+        assert!(text.contains("Name=NestGate Test"));
+        assert!(text.contains(&format!(
+            "{}",
+            install.join("bin").join("nestgate").display()
+        )));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn create_desktop_shortcut_public_uses_home_desktop_without_xdg() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let home = tmp.path();
+        let desktop = home.join("Desktop");
+        std::fs::create_dir_all(&desktop).expect("desktop");
+        let install = tmp.path().join("opt-nestgate");
+        std::fs::create_dir_all(install.join("bin")).expect("bin");
+        temp_env::with_vars([("HOME", Some(home.to_str().expect("utf8")))], || {
+            create_desktop_shortcut(&install, "NestGate From Home").expect("shortcut");
+        });
+        let entry = desktop.join("nestgate.desktop");
+        assert!(entry.is_file());
+        let text = std::fs::read_to_string(&entry).expect("read");
+        assert!(text.contains("Name=NestGate From Home"));
     }
 }
