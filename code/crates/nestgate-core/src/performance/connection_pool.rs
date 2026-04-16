@@ -530,6 +530,20 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn pooled_connection_guard_mutates_inner() {
+        let pool = Arc::new(UniversalConnectionPool::new(
+            ConnectionPoolConfig::default(),
+            || Ok(0u8),
+        ));
+        let mut guard = pool
+            .get_connection()
+            .await
+            .expect("test: pool should yield connection");
+        *guard.connection_mut() = 9;
+        assert_eq!(*guard.connection(), 9);
+    }
+
+    #[tokio::test]
     async fn universal_pool_acquires_connection() {
         let pool = Arc::new(UniversalConnectionPool::new(
             ConnectionPoolConfig::default(),

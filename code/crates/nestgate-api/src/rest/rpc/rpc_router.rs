@@ -348,7 +348,6 @@ mod tests {
     use super::*;
     use uuid::Uuid;
 
-    /// Creates  Test Request
     fn create_test_request(method: &str, target: &str) -> UnifiedRpcRequest {
         UnifiedRpcRequest {
             id: Uuid::new_v4(),
@@ -364,63 +363,152 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_security_method_routing() {
-        let router = UnifiedRpcRouter::new();
-        let request = create_test_request("encrypt_data", "unknown");
+    fn create_test_request_streaming(
+        method: &str,
+        target: &str,
+        streaming: bool,
+    ) -> UnifiedRpcRequest {
+        let mut r = create_test_request(method, target);
+        r.streaming = streaming;
+        r
+    }
 
-        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {e:?}");
-        });
+    #[test]
+    fn method_rule_matches_encrypt_data() {
+        let router = UnifiedRpcRouter::new();
+        let request = create_test_request("encrypt_data", "storage-management");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
         assert_eq!(connection_type, RpcConnectionType::Tarpc);
     }
 
-    #[tokio::test]
-    async fn test_orchestration_method_routing() {
+    #[test]
+    fn method_rule_overrides_target_rule() {
         let router = UnifiedRpcRouter::new();
-        let request = create_test_request("register_service", "unknown");
+        let request = create_test_request("encrypt_data", "storage-management");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::Tarpc);
+    }
 
-        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {e:?}");
-        });
+    #[test]
+    fn target_rule_security_encryption_tarpc() {
+        let router = UnifiedRpcRouter::new();
+        let request = create_test_request("custom_unknown", "security-encryption");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::Tarpc);
+    }
+
+    #[test]
+    fn target_rule_orchestration_discovery_json_rpc() {
+        let router = UnifiedRpcRouter::new();
+        let request = create_test_request("noop", "orchestration-discovery");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
         assert_eq!(connection_type, RpcConnectionType::JsonRpc);
     }
 
-    #[tokio::test]
-    async fn test_streaming_method_routing() {
+    #[test]
+    fn heuristic_tarpc_from_decrypt_in_method_name() {
         let router = UnifiedRpcRouter::new();
-        let request = create_test_request("stream_realtime_metrics", "unknown");
-
-        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {e:?}");
-        });
-        assert_eq!(connection_type, RpcConnectionType::WebSocket);
-    }
-
-    #[tokio::test]
-    async fn test_target_based_routing() {
-        let router = UnifiedRpcRouter::new();
-        let request = create_test_request("unknown_method", "security");
-
-        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {e:?}");
-        });
-        assert_eq!(connection_type, RpcConnectionType::WebSocket);
-    }
-
-    #[tokio::test]
-    async fn test_heuristic_routing() {
-        let router = UnifiedRpcRouter::new();
-        let request = create_test_request("decrypt_sensitive_data", "unknown_service");
-
-        let connection_type = router.route_request(&request).unwrap_or_else(|e| {
-            tracing::error!("Unwrap failed: {:?}", e);
-            panic!("Test failed: unable to continue: {e:?}");
-        });
+        let request = create_test_request("decrypt_sensitive_data", "unknown");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
         assert_eq!(connection_type, RpcConnectionType::Tarpc);
+    }
+
+    #[test]
+    fn heuristic_json_rpc_from_discover_in_method_name() {
+        let router = UnifiedRpcRouter::new();
+        let request = create_test_request("discover_mesh_peers", "unknown");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::JsonRpc);
+    }
+
+    #[test]
+    fn heuristic_websocket_streaming_flag_without_stream_prefix() {
+        let router = UnifiedRpcRouter::new();
+        let request = create_test_request_streaming("plain_name", "unknown", true);
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::WebSocket);
+    }
+
+    #[test]
+    fn heuristic_websocket_get_status_prefers_socket() {
+        let router = UnifiedRpcRouter::new();
+        let request = create_test_request("get_cluster_status", "unknown");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::WebSocket);
+    }
+
+    #[test]
+    fn unknown_method_falls_back_to_default_connection() {
+        let router = UnifiedRpcRouter::new();
+        let request = create_test_request("totally_unknown_xyz", "unknown");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::WebSocket);
+    }
+
+    #[test]
+    fn set_default_connection_changes_fallback() {
+        let mut router = UnifiedRpcRouter::new();
+        router.set_default_connection(RpcConnectionType::JsonRpc);
+        let request = create_test_request("totally_unknown_xyz", "unknown");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::JsonRpc);
+    }
+
+    #[test]
+    fn remove_method_rule_restores_heuristic() {
+        let mut router = UnifiedRpcRouter::new();
+        router.remove_method_rule("encrypt_data");
+        let request = create_test_request("encrypt_data", "unknown");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::Tarpc);
+    }
+
+    #[test]
+    fn add_method_rule_takes_precedence() {
+        let mut router = UnifiedRpcRouter::new();
+        router.add_method_rule("custom.method".to_string(), RpcConnectionType::JsonRpc);
+        let request = create_test_request("custom.method", "security-encryption");
+        let connection_type = router
+            .route_request(&request)
+            .expect("route_request should succeed");
+        assert_eq!(connection_type, RpcConnectionType::JsonRpc);
+    }
+
+    #[test]
+    fn recommend_connection_type_empty_pattern_uses_default() {
+        let router = UnifiedRpcRouter::new();
+        let rec = router.recommend_connection_type("plain");
+        assert!(rec.iter().any(|(t, _)| *t == RpcConnectionType::WebSocket));
+    }
+
+    #[test]
+    fn get_routing_stats_reflects_rule_counts() {
+        let router = UnifiedRpcRouter::new();
+        let stats = router.get_routing_stats();
+        assert!(stats.method_rules_count > 0);
+        assert!(stats.target_rules_count > 0);
+        assert_eq!(stats.default_connection, RpcConnectionType::WebSocket);
     }
 }

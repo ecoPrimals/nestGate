@@ -326,3 +326,125 @@ fn unix_secs(t: SystemTime) -> i64 {
         .as_secs();
     i64::try_from(secs).unwrap_or(i64::MAX)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::storage::config::StorageServiceConfig;
+
+    fn test_config(dir: &std::path::Path) -> StorageServiceConfig {
+        StorageServiceConfig {
+            base_path: dir.to_string_lossy().to_string(),
+            ..StorageServiceConfig::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn store_retrieve_delete_round_trip() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        let ds = "ds1";
+        let key = "obj.bin";
+        let payload: &[u8] = b"payload-bytes";
+        let info = store_object(&cfg, ds, key, payload)
+            .await
+            .expect("store should succeed");
+        assert_eq!(info.key, key);
+        assert_eq!(info.dataset, ds);
+        assert_eq!(info.size_bytes, payload.len() as u64);
+        let (bytes, meta) = retrieve_object(&cfg, ds, key).await.expect("retrieve");
+        assert_eq!(bytes.as_ref(), payload);
+        assert_eq!(meta.key, key);
+        delete_object(&cfg, ds, key).await.expect("delete");
+        let err = retrieve_object(&cfg, ds, key)
+            .await
+            .expect_err("missing object");
+        assert!(
+            err.to_string().to_lowercase().contains("not found")
+                || err.to_string().contains("object"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn nested_key_path_creates_directories() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        let key = "nested/path/file.txt";
+        store_object(&cfg, "ds", key, b"x")
+            .await
+            .expect("nested store");
+        let (data, _) = retrieve_object(&cfg, "ds", key)
+            .await
+            .expect("nested retrieve");
+        assert_eq!(data.as_ref(), b"x");
+    }
+
+    #[tokio::test]
+    async fn list_objects_prefix_and_limit() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        store_object(&cfg, "ds", "a/1", b"1").await.expect("a/1");
+        store_object(&cfg, "ds", "a/2", b"2").await.expect("a/2");
+        store_object(&cfg, "ds", "b/1", b"3").await.expect("b/1");
+        let listed = list_objects(&cfg, "ds", Some("a/"), None)
+            .await
+            .expect("list with prefix");
+        assert_eq!(listed.len(), 2);
+        let limited = list_objects(&cfg, "ds", None, Some(1))
+            .await
+            .expect("list with limit");
+        assert_eq!(limited.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn list_objects_dataset_missing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        let err = list_objects(&cfg, "nope", None, None)
+            .await
+            .expect_err("missing dataset");
+        assert!(
+            err.to_string().contains("dataset"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn get_object_metadata_matches_store() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        let stored = store_object(&cfg, "ds", "k", b"abc").await.expect("store");
+        let meta = get_object_metadata(&cfg, "ds", "k")
+            .await
+            .expect("metadata");
+        assert_eq!(meta.size_bytes, 3);
+        assert_eq!(meta.key, stored.key);
+    }
+
+    #[tokio::test]
+    async fn metadata_not_found() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        tokio::fs::create_dir_all(dir.path().join("datasets").join("ds"))
+            .await
+            .expect("mkdir");
+        let err = get_object_metadata(&cfg, "ds", "missing")
+            .await
+            .expect_err("no object");
+        assert!(err.to_string().contains("object"), "{err}");
+    }
+
+    #[tokio::test]
+    async fn delete_missing_object_errors() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        tokio::fs::create_dir_all(dir.path().join("datasets").join("ds"))
+            .await
+            .expect("mkdir");
+        let err = delete_object(&cfg, "ds", "nope")
+            .await
+            .expect_err("delete missing");
+        assert!(err.to_string().contains("object"), "{err}");
+    }
+}

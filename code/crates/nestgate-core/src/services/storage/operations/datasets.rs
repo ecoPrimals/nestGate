@@ -193,3 +193,54 @@ fn current_timestamp() -> i64 {
         .unwrap_or_default()
         .as_secs() as i64
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::storage::config::StorageServiceConfig;
+
+    fn test_config(dir: &std::path::Path) -> StorageServiceConfig {
+        StorageServiceConfig {
+            base_path: dir.to_string_lossy().to_string(),
+            ..StorageServiceConfig::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn create_list_get_delete_dataset() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        let params = crate::rpc::tarpc_types::DatasetParams {
+            description: Some("d".to_string()),
+            ..Default::default()
+        };
+        let info = create_dataset(&cfg, "alpha", params.clone())
+            .await
+            .expect("create");
+        assert_eq!(info.name, "alpha");
+        assert_eq!(info.description, params.description);
+        let listed = list_datasets(&cfg).await.expect("list");
+        assert!(listed.iter().any(|d| d.name == "alpha"));
+        let got = get_dataset(&cfg, "alpha").await.expect("get");
+        assert_eq!(got.name, "alpha");
+        delete_dataset(&cfg, "alpha").await.expect("delete");
+        let err = get_dataset(&cfg, "alpha").await.expect_err("gone");
+        assert!(err.to_string().contains("dataset"), "{err}");
+    }
+
+    #[tokio::test]
+    async fn delete_missing_dataset_errors() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        let err = delete_dataset(&cfg, "missing").await.expect_err("delete");
+        assert!(err.to_string().contains("dataset"), "{err}");
+    }
+
+    #[tokio::test]
+    async fn list_datasets_creates_root_directory() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let cfg = test_config(dir.path());
+        let empty = list_datasets(&cfg).await.expect("list empty");
+        assert!(empty.is_empty());
+    }
+}

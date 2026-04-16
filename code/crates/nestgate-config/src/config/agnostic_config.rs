@@ -496,10 +496,9 @@ mod tests {
         let config = ConfigBuilder::new()
             .with_safe_defaults()
             .with_default("api_port", "8080")
-            .build();
-
-        assert!(config.is_ok(), "Should build config with defaults");
-        let port = config.unwrap().api_port();
+            .build()
+            .expect("Should build config with defaults");
+        let port = config.api_port();
         assert!(port > 0, "Port should be valid (non-zero): {}", port);
     }
 
@@ -509,14 +508,11 @@ mod tests {
         let config = ConfigBuilder::new()
             .with_safe_defaults()
             .with_default("api_endpoint", "http://localhost:8080")
-            .build();
-
-        assert!(config.is_ok(), "Should build config with defaults");
-        let endpoint = config.unwrap().api_endpoint();
-        assert!(endpoint.is_some(), "Endpoint should be present");
-        let endpoint_str = endpoint.unwrap();
-        assert!(!endpoint_str.is_empty(), "Endpoint should not be empty");
-        assert!(endpoint_str.contains("localhost") || endpoint_str.contains("127.0.0.1"));
+            .build()
+            .expect("Should build config with defaults");
+        let endpoint = config.api_endpoint().expect("Endpoint should be present");
+        assert!(!endpoint.is_empty(), "Endpoint should not be empty");
+        assert!(endpoint.contains("localhost") || endpoint.contains("127.0.0.1"));
     }
 
     #[test]
@@ -642,6 +638,72 @@ mod tests {
         assert_eq!(
             ConfigBuilder::default_port("nosuch"),
             ConfigBuilder::DEFAULT_FALLBACK_PORT
+        );
+    }
+
+    #[test]
+    fn safe_defaults_without_host_env_uses_localhost_constant() {
+        let env = MapEnv::from([]);
+        let config = ConfigBuilder::new()
+            .with_safe_defaults()
+            .build_from_env_source(&env)
+            .expect("build with safe defaults");
+        let ep = config
+            .api_endpoint()
+            .expect("api endpoint from safe defaults");
+        assert!(
+            ep.contains(LOCALHOST) || ep.contains("localhost"),
+            "endpoint should use dev localhost fallback: {ep}"
+        );
+    }
+
+    #[test]
+    fn nestgate_api_endpoint_env_wins_over_capability_endpoint_env() {
+        let env = MapEnv::from([
+            ("NESTGATE_API_ENDPOINT", "http://from-generic-env:1111"),
+            (
+                "NESTGATE_CAPABILITY_HTTP_API_ENDPOINT",
+                "http://from-cap-env:2222",
+            ),
+        ]);
+        let config = ConfigBuilder::new()
+            .with_environment_fallback()
+            .with_default("api_port", "8080")
+            .with_default("metrics_port", "9090")
+            .with_default("health_port", "8082")
+            .build_from_env_source(&env)
+            .expect("build with env");
+
+        assert_eq!(
+            config.endpoints.get("api").map(String::as_str),
+            Some("http://from-generic-env:1111")
+        );
+    }
+
+    #[test]
+    fn custom_default_invalid_port_string_falls_back_to_safe_default() {
+        let env = MapEnv::from([]);
+        let config = ConfigBuilder::new()
+            .with_safe_defaults()
+            .with_default("api_port", "not-a-u16")
+            .build_from_env_source(&env)
+            .expect("build");
+        assert_eq!(config.api_port(), DEFAULT_API_PORT);
+    }
+
+    #[test]
+    fn build_without_endpoint_sources_has_no_api_endpoint_in_map_env() {
+        let env = MapEnv::from([]);
+        let config = ConfigBuilder::new()
+            .with_default("api_port", "8080")
+            .with_default("metrics_port", "9090")
+            .with_default("health_port", "8082")
+            .build_from_env_source(&env)
+            .expect("ports allow build");
+        assert!(
+            config
+                .api_endpoint_for_env_source(&MapEnv::from([]))
+                .is_none()
         );
     }
 }

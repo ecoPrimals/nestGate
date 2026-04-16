@@ -299,4 +299,109 @@ mod tests {
             .expect_err("test: missing dataset");
         assert!(err.contains("missing"));
     }
+
+    #[tokio::test]
+    async fn handle_list_pools_returns_json_array() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("list_pools", serde_json::json!(null))
+            .await
+            .expect("list_pools");
+        assert!(v.is_array());
+    }
+
+    #[tokio::test]
+    async fn handle_list_datasets_accepts_pool_string_param() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("list_datasets", serde_json::json!("test-pool"))
+            .await
+            .expect("list_datasets");
+        assert!(v.is_array());
+    }
+
+    #[tokio::test]
+    async fn handle_get_metrics_returns_object() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("get_metrics", serde_json::json!({}))
+            .await
+            .expect("get_metrics");
+        assert!(v.is_object());
+    }
+
+    #[tokio::test]
+    async fn handle_health_returns_status() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("health", serde_json::json!({}))
+            .await
+            .expect("health");
+        assert!(v.get("status").is_some());
+    }
+
+    #[tokio::test]
+    async fn handle_health_liveness_returns_status() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("health.liveness", serde_json::json!({}))
+            .await
+            .expect("health.liveness");
+        assert!(v.get("status").is_some());
+    }
+
+    #[tokio::test]
+    async fn handle_health_check_alias_returns_status() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("health.check", serde_json::json!({}))
+            .await
+            .expect("health.check");
+        assert!(v.get("status").is_some());
+    }
+
+    #[tokio::test]
+    async fn handle_version_returns_version_info() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("version", serde_json::json!({}))
+            .await
+            .expect("version");
+        assert!(v.get("version").is_some() || v.is_object());
+    }
+
+    #[tokio::test]
+    async fn handle_capabilities_returns_array() {
+        let h = NestGateJsonRpcHandler::new();
+        let v = h
+            .handle("capabilities", serde_json::json!({}))
+            .await
+            .expect("capabilities");
+        assert!(v.is_array());
+    }
+
+    #[tokio::test]
+    async fn handle_zfs_pool_list_follows_zpool_availability() {
+        let r = handle_zfs_method("zfs.pool.list", &serde_json::json!({})).await;
+        match r {
+            Ok(v) => assert_eq!(v["status"], "success"),
+            Err(e) => assert!(
+                e.contains("zpool") || e.contains("zfs.pool.list"),
+                "unexpected: {e}"
+            ),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_zfs_snapshot_list_missing_zfs_errors_cleanly() {
+        let r = handle_zfs_method(
+            "zfs.snapshot.list",
+            &serde_json::json!({"dataset": "tank/fs"}),
+        )
+        .await;
+        match r {
+            Ok(v) => assert_eq!(v["status"], "success"),
+            Err(e) => assert!(!e.is_empty()),
+        }
+    }
 }

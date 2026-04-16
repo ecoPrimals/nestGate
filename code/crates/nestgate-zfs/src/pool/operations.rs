@@ -11,6 +11,20 @@ use crate::pool::types::PoolInfo;
 
 use super::manager::ZfsPoolManager;
 
+fn zpool_create_argv(name: &str, devices: &[String]) -> Vec<String> {
+    let mut args = vec!["create".to_string(), name.to_string()];
+    args.extend(devices.iter().cloned());
+    args
+}
+
+fn zpool_destroy_argv(name: &str) -> [String; 3] {
+    ["destroy".to_string(), "-f".to_string(), name.to_string()]
+}
+
+fn zpool_scrub_argv(name: &str) -> [String; 2] {
+    ["scrub".to_string(), name.to_string()]
+}
+
 impl ZfsPoolManager {
     /// Create a new ZFS pool
     ///
@@ -23,11 +37,7 @@ impl ZfsPoolManager {
     pub async fn create_pool(&self, name: &str, devices: &[String]) -> Result<PoolInfo> {
         info!("Creating ZFS pool: {} with devices: {:?}", name, devices);
 
-        // Build the zpool create command
-        let mut args = vec!["create", name];
-        for device in devices {
-            args.push(device);
-        }
+        let args = zpool_create_argv(name, devices);
 
         let output = TokioCommand::new("zpool")
             .args(&args)
@@ -67,7 +77,7 @@ impl ZfsPoolManager {
         warn!("Destroying ZFS pool: {}", name);
 
         let output = TokioCommand::new("zpool")
-            .args(["destroy", "-f", name])
+            .args(zpool_destroy_argv(name))
             .output()
             .await
             .map_err(|_e| {
@@ -113,7 +123,7 @@ impl ZfsPoolManager {
         info!("Starting scrub for pool: {}", name);
 
         let output = TokioCommand::new("zpool")
-            .args(["scrub", name])
+            .args(zpool_scrub_argv(name))
             .output()
             .await
             .map_err(|_e| {
@@ -135,5 +145,50 @@ impl ZfsPoolManager {
 
         info!("Successfully started scrub for pool: {}", name);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{zpool_create_argv, zpool_destroy_argv, zpool_scrub_argv};
+
+    #[test]
+    fn zpool_create_argv_orders_name_and_devices() {
+        let argv = zpool_create_argv("tank", &["/dev/sda".into(), "/dev/sdb".into()]);
+        assert_eq!(
+            argv,
+            vec![
+                "create".to_string(),
+                "tank".to_string(),
+                "/dev/sda".to_string(),
+                "/dev/sdb".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn zpool_create_argv_empty_devices() {
+        let argv = zpool_create_argv("z", &[]);
+        assert_eq!(argv, vec!["create".to_string(), "z".to_string()]);
+    }
+
+    #[test]
+    fn zpool_destroy_argv_force_and_pool_name() {
+        assert_eq!(
+            zpool_destroy_argv("my-pool"),
+            [
+                "destroy".to_string(),
+                "-f".to_string(),
+                "my-pool".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn zpool_scrub_argv_pool_name() {
+        assert_eq!(
+            zpool_scrub_argv("tank"),
+            ["scrub".to_string(), "tank".to_string()]
+        );
     }
 }

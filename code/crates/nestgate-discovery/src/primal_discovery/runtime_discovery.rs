@@ -445,7 +445,7 @@ mod tests {
     #[tokio::test]
     async fn test_cache_ttl_customization() {
         let discovery = RuntimeDiscovery::new()
-            .unwrap()
+            .expect("runtime discovery")
             .with_cache_ttl(Duration::from_secs(60));
 
         assert_eq!(discovery.cache_ttl, Duration::from_secs(60));
@@ -453,7 +453,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_invalidation() {
-        let discovery = RuntimeDiscovery::new().unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
 
         discovery.invalidate_cache("test_capability");
         discovery.clear_cache();
@@ -487,32 +487,29 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_security_primal_no_services() {
-        let discovery = RuntimeDiscovery::new().unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
         let result = discovery.find_security_primal().await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_find_orchestrator_no_services() {
-        let discovery = RuntimeDiscovery::new().unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
         let result = discovery.find_orchestrator().await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_find_ai_primal_no_services() {
-        let discovery = RuntimeDiscovery::new().unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
         let result = discovery.find_ai_primal().await;
         assert!(result.is_err());
     }
 
     #[tokio::test]
     async fn test_find_storage_primal() {
-        let discovery = RuntimeDiscovery::new().unwrap();
-        let result = discovery.find_storage_primal().await;
-        // InfantDiscoverySystem may return mock Storage capability
-        if result.is_ok() {
-            let conn = result.unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
+        if let Ok(conn) = discovery.find_storage_primal().await {
             assert!(!conn.endpoint.is_empty());
             assert_eq!(conn.capability_type(), &CapabilityType::Storage);
         }
@@ -520,29 +517,26 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_capability_compute() {
-        let discovery = RuntimeDiscovery::new().unwrap();
-        let result = discovery.find_capability("compute").await;
-        // InfantDiscoverySystem may return mock Compute capability
-        if result.is_ok() {
-            let conn = result.unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
+        if let Ok(conn) = discovery.find_capability("compute").await {
             assert_eq!(conn.capability_type(), &CapabilityType::Compute);
         }
     }
 
     #[tokio::test]
     async fn test_find_all_capabilities_no_services() {
-        let discovery = RuntimeDiscovery::new().unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
         let result = discovery
             .find_all_capabilities("security_authentication")
             .await;
         assert!(result.is_ok());
-        let connections = result.unwrap();
+        let connections = result.expect("find_all_capabilities result");
         assert!(connections.is_empty());
     }
 
     #[tokio::test]
     async fn test_invalidate_then_rediscover() {
-        let discovery = RuntimeDiscovery::new().unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
         discovery.invalidate_cache("storage");
         let result = discovery.find_storage_primal().await;
         assert!(result.is_ok() || result.is_err());
@@ -550,7 +544,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_clear_cache_then_discover() {
-        let discovery = RuntimeDiscovery::new().unwrap();
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
         discovery.clear_cache();
         let result = discovery.find_orchestrator().await;
         assert!(result.is_err());
@@ -559,9 +553,71 @@ mod tests {
     #[tokio::test]
     async fn test_discovery_with_short_ttl() {
         let discovery = RuntimeDiscovery::new()
-            .unwrap()
+            .expect("runtime discovery")
             .with_cache_ttl(Duration::from_millis(1));
         let result = discovery.find_capability("storage").await;
         assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn discover_with_cache_hit_skips_rediscovery_same_endpoint() {
+        let discovery = RuntimeDiscovery::new()
+            .expect("runtime discovery")
+            .with_cache_ttl(Duration::from_secs(3600));
+        let first = discovery
+            .find_capability("storage")
+            .await
+            .expect("first storage discovery");
+        let second = discovery
+            .find_capability("storage")
+            .await
+            .expect("second storage discovery");
+        assert_eq!(first.endpoint, second.endpoint);
+    }
+
+    #[tokio::test]
+    async fn discover_cache_expires_after_ttl() {
+        let discovery = RuntimeDiscovery::new()
+            .expect("runtime discovery")
+            .with_cache_ttl(Duration::from_millis(40));
+        let first = discovery
+            .find_capability("storage")
+            .await
+            .expect("first storage discovery");
+        tokio::time::sleep(Duration::from_millis(80)).await;
+        let second = discovery
+            .find_capability("storage")
+            .await
+            .expect("second storage discovery after expiry");
+        assert_eq!(first.endpoint, second.endpoint);
+    }
+
+    #[tokio::test]
+    async fn find_all_capabilities_storage_returns_connections_when_present() {
+        let discovery = RuntimeDiscovery::new().expect("runtime discovery");
+        let all = discovery
+            .find_all_capabilities("storage")
+            .await
+            .expect("find_all_capabilities storage");
+        if !all.is_empty() {
+            assert_eq!(all[0].capability_type(), &CapabilityType::Storage);
+        }
+    }
+
+    #[tokio::test]
+    async fn invalidate_cache_forces_fresh_path_still_ok() {
+        let discovery = RuntimeDiscovery::new()
+            .expect("runtime discovery")
+            .with_cache_ttl(Duration::from_secs(3600));
+        let first = discovery
+            .find_capability("compute")
+            .await
+            .expect("compute discovery");
+        discovery.invalidate_cache("compute");
+        let second = discovery
+            .find_capability("compute")
+            .await
+            .expect("compute after invalidate");
+        assert_eq!(first.endpoint, second.endpoint);
     }
 }

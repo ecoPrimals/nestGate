@@ -27,6 +27,45 @@ use tracing::error;
 use tracing::info;
 use tracing::warn;
 
+fn select_snapshots_to_delete_for_retention(
+    scheduler: &PolicyScheduler,
+    snapshots: Vec<SnapshotInfo>,
+    retention: &RetentionPolicy,
+) -> Vec<SnapshotInfo> {
+    match retention {
+        RetentionPolicy::Duration(duration) => {
+            let cutoff = SystemTime::now() - *duration;
+            snapshots
+                .into_iter()
+                .filter(|s| s.created_at < cutoff)
+                .collect()
+        }
+        RetentionPolicy::Count(count) => {
+            if snapshots.len() > *count as usize {
+                let mut sorted_snapshots = snapshots;
+                sorted_snapshots.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+                sorted_snapshots.into_iter().skip(*count as usize).collect()
+            } else {
+                Vec::new()
+            }
+        }
+        RetentionPolicy::Custom {
+            hourly_hours,
+            daily_days,
+            weekly_weeks,
+            monthly_months,
+            yearly_years,
+        } => scheduler.apply_custom_retention(
+            snapshots,
+            *hourly_hours,
+            *daily_days,
+            *weekly_weeks,
+            *monthly_months,
+            *yearly_years,
+        ),
+    }
+}
+
 /// Policy scheduler for managing automated snapshot creation
 #[derive(Debug)]
 /// Policyscheduler
@@ -280,41 +319,8 @@ impl PolicyScheduler {
         debug!("Applying retention policy for dataset: {}", dataset);
 
         let snapshots = self.dataset_manager.list_snapshots(dataset).await?;
-        let mut snapshots_to_delete = Vec::new();
-
-        match retention {
-            RetentionPolicy::Duration(duration) => {
-                let cutoff = SystemTime::now() - *duration;
-                snapshots_to_delete = snapshots
-                    .into_iter()
-                    .filter(|s| s.created_at < cutoff)
-                    .collect();
-            }
-            RetentionPolicy::Count(count) => {
-                if snapshots.len() > *count as usize {
-                    let mut sorted_snapshots = snapshots;
-                    sorted_snapshots.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-                    snapshots_to_delete =
-                        sorted_snapshots.into_iter().skip(*count as usize).collect();
-                }
-            }
-            RetentionPolicy::Custom {
-                hourly_hours,
-                daily_days,
-                weekly_weeks,
-                monthly_months,
-                yearly_years,
-            } => {
-                snapshots_to_delete = self.apply_custom_retention(
-                    snapshots,
-                    *hourly_hours,
-                    *daily_days,
-                    *weekly_weeks,
-                    *monthly_months,
-                    *yearly_years,
-                );
-            }
-        }
+        let snapshots_to_delete =
+            select_snapshots_to_delete_for_retention(self, snapshots, retention);
 
         // Queue deletion operations
         let delete_operations: Vec<SnapshotOperation> = snapshots_to_delete
@@ -391,6 +397,7 @@ impl PolicyScheduler {
 
 #[cfg(test)]
 mod tests {
+    use super::select_snapshots_to_delete_for_retention;
     use super::*;
     use crate::dataset::ZfsDatasetManager;
     use crate::performance::types::SnapshotPolicyMap;
@@ -531,8 +538,8 @@ mod tests {
     #[test]
     fn retention_count_keeps_newest_only() {
         use std::time::{Duration, UNIX_EPOCH};
-        let _s = test_scheduler();
-        let mut snaps = vec![
+        let s = test_scheduler();
+        let snaps = vec![
             SnapshotInfo {
                 name: "a".into(),
                 full_name: "ds@a".into(),
@@ -564,26 +571,37 @@ mod tests {
                 tags: Vec::new(),
             },
         ];
-        snaps.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-        let retention = RetentionPolicy::Count(1);
-        let to_delete = match &retention {
-            RetentionPolicy::Count(c) => {
-                if snaps.len() > *c as usize {
-                    let mut sorted = snaps;
-                    sorted.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-                    sorted.into_iter().skip(*c as usize).collect::<Vec<_>>()
-                } else {
-                    Vec::new()
-                }
-            }
-            _ => panic!("expected count"),
-        };
+        let to_delete =
+            select_snapshots_to_delete_for_retention(&s, snaps, &RetentionPolicy::Count(1));
         assert_eq!(to_delete.len(), 1);
         assert_eq!(to_delete[0].name, "a");
     }
 
     #[test]
-    fn retention_duration_selects_snapshots_older_than_cutoff() {
+    fn select_snapshots_count_retention_empty_when_within_limit() {
+        let s = test_scheduler();
+        let snap = SnapshotInfo {
+            name: "only".into(),
+            full_name: "ds@only".into(),
+            dataset: "ds".into(),
+            created_at: UNIX_EPOCH,
+            size: 1,
+            referenced_size: 1,
+            written_size: 1,
+            compression_ratio: 1.0,
+            properties: HashMap::new(),
+            policy: None,
+            tier: StorageTier::Warm,
+            protected: false,
+            tags: Vec::new(),
+        };
+        let out =
+            select_snapshots_to_delete_for_retention(&s, vec![snap], &RetentionPolicy::Count(5));
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn select_snapshots_duration_retention_keeps_recent() {
         use std::time::Duration;
         let s = test_scheduler();
         let recent = SnapshotInfo {
@@ -616,15 +634,13 @@ mod tests {
             protected: false,
             tags: Vec::new(),
         };
-        let retention = RetentionPolicy::Duration(Duration::from_secs(3600));
-        let cutoff = SystemTime::now() - Duration::from_secs(3600);
-        let to_delete: Vec<_> = vec![recent.clone(), old.clone()]
-            .into_iter()
-            .filter(|sn| sn.created_at < cutoff)
-            .collect();
-        assert_eq!(to_delete.len(), 1);
-        assert_eq!(to_delete[0].name, "old");
-        let _ = (s, retention); // policy shape documented alongside dataset retention matcher
+        let out = select_snapshots_to_delete_for_retention(
+            &s,
+            vec![recent, old],
+            &RetentionPolicy::Duration(Duration::from_secs(3600)),
+        );
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].name, "old");
     }
 
     #[tokio::test]

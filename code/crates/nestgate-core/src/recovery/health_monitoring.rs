@@ -238,3 +238,103 @@ impl Default for HealthMonitor {
         Self::new(Duration::from_secs(30))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::NestGateError;
+    use std::future::Future;
+    use std::pin::Pin;
+
+    #[derive(Debug)]
+    struct StaticCheck {
+        name: &'static str,
+        status: HealthStatus,
+    }
+
+    impl HealthCheckDyn for StaticCheck {
+        fn check_health(
+            &self,
+        ) -> Pin<Box<dyn Future<Output = Result<HealthStatus, NestGateError>> + Send + '_>>
+        {
+            let s = self.status.clone();
+            Box::pin(async move { Ok(s) })
+        }
+
+        fn component_name(&self) -> &str {
+            self.name
+        }
+    }
+
+    #[derive(Debug)]
+    struct FailingCheck {
+        name: &'static str,
+    }
+
+    impl HealthCheckDyn for FailingCheck {
+        fn check_health(
+            &self,
+        ) -> Pin<Box<dyn Future<Output = Result<HealthStatus, NestGateError>> + Send + '_>>
+        {
+            Box::pin(
+                async move { Err(NestGateError::validation_error("simulated health failure")) },
+            )
+        }
+
+        fn component_name(&self) -> &str {
+            self.name
+        }
+    }
+
+    #[tokio::test]
+    async fn register_and_run_checks() {
+        let mut monitor = HealthMonitor::new(Duration::from_secs(1));
+        monitor.register(Box::new(StaticCheck {
+            name: "c1",
+            status: HealthStatus::Healthy,
+        }));
+        let results = monitor.check_all().await;
+        assert_eq!(results.len(), 1);
+        let h = monitor.get_health("c1").expect("component health");
+        assert_eq!(h.status, HealthStatus::Healthy);
+        assert_eq!(monitor.overall_health(), HealthStatus::Healthy);
+    }
+
+    #[tokio::test]
+    async fn failing_check_becomes_unhealthy_status() {
+        let mut monitor = HealthMonitor::new(Duration::from_secs(1));
+        monitor.register(Box::new(FailingCheck { name: "bad" }));
+        monitor.check_all().await;
+        let h = monitor.get_health("bad").expect("recorded");
+        assert_eq!(h.status, HealthStatus::Unhealthy);
+        assert_eq!(monitor.overall_health(), HealthStatus::Unhealthy);
+    }
+
+    #[tokio::test]
+    async fn warning_and_healthy_yields_overall_warning() {
+        let mut monitor = HealthMonitor::new(Duration::from_secs(1));
+        monitor.register(Box::new(StaticCheck {
+            name: "w",
+            status: HealthStatus::Warning,
+        }));
+        monitor.register(Box::new(StaticCheck {
+            name: "ok",
+            status: HealthStatus::Healthy,
+        }));
+        monitor.check_all().await;
+        assert_eq!(monitor.overall_health(), HealthStatus::Warning);
+    }
+
+    #[tokio::test]
+    async fn overall_unknown_when_no_checks_ran() {
+        let monitor = HealthMonitor::new(Duration::from_secs(1));
+        assert_eq!(monitor.overall_health(), HealthStatus::Unknown);
+    }
+
+    #[test]
+    fn check_interval_accessor() {
+        let d = Duration::from_millis(500);
+        let m = HealthMonitor::new(d);
+        assert_eq!(m.get_check_interval(), d);
+    }
+}

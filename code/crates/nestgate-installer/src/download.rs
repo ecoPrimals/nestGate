@@ -578,6 +578,21 @@ mod download_url_tests {
         assert_eq!(from_helper, inline);
     }
 
+    #[cfg(unix)]
+    fn write_test_script(path: &std::path::Path, content: &[u8]) {
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut f = std::fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .mode(0o755)
+            .open(path)
+            .expect("create script");
+        f.write_all(content).expect("write script");
+        f.sync_all().expect("sync script");
+    }
+
     #[test]
     #[cfg(unix)]
     fn verify_installation_succeeds_when_binary_reports_version() {
@@ -585,14 +600,10 @@ mod download_url_tests {
         let tmp = tempfile::tempdir().expect("tempdir");
         std::fs::create_dir_all(tmp.path().join("bin")).expect("bin");
         std::fs::create_dir_all(tmp.path().join("etc")).expect("etc");
-        let bin = tmp.path().join("bin").join("nestgate");
-        std::fs::write(&bin, "#!/bin/sh\necho nestgate 0.9.0\nexit 0\n").expect("shim");
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mut perms = std::fs::metadata(&bin).expect("meta").permissions();
-            perms.set_mode(0o755);
-            std::fs::set_permissions(&bin, perms).expect("chmod");
-        }
+        write_test_script(
+            &tmp.path().join("bin").join("nestgate"),
+            b"#!/bin/sh\necho nestgate 0.9.0\nexit 0\n",
+        );
         std::fs::write(tmp.path().join("etc").join("nestgate.toml"), "[install]\n").expect("cfg");
         dm.verify_installation(tmp.path()).expect("verified");
     }
@@ -604,14 +615,10 @@ mod download_url_tests {
         let tmp = tempfile::tempdir().expect("tempdir");
         std::fs::create_dir_all(tmp.path().join("bin")).expect("bin");
         std::fs::create_dir_all(tmp.path().join("etc")).expect("etc");
-        let bin = tmp.path().join("bin").join("nestgate");
-        std::fs::write(&bin, "#!/bin/sh\nexit 1\n").expect("shim");
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mut perms = std::fs::metadata(&bin).expect("meta").permissions();
-            perms.set_mode(0o755);
-            std::fs::set_permissions(&bin, perms).expect("chmod");
-        }
+        write_test_script(
+            &tmp.path().join("bin").join("nestgate"),
+            b"#!/bin/sh\nexit 1\n",
+        );
         std::fs::write(tmp.path().join("etc").join("nestgate.toml"), "[install]\n").expect("cfg");
         let err = dm.verify_installation(tmp.path()).expect_err("bad exit");
         assert!(

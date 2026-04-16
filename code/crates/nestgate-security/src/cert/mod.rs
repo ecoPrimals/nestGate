@@ -82,7 +82,41 @@ mod certificate_config_tests {
         let c = CertificateConfig::default();
         assert_eq!(c.validity_days, 365);
         let v = json!({ "validity_days": c.validity_days });
-        let back: CertificateConfig = serde_json::from_value(v).unwrap();
+        let back: CertificateConfig =
+            serde_json::from_value(v).expect("serde_json from_value CertificateConfig");
         assert_eq!(back.validity_days, 365);
+    }
+}
+
+#[cfg(test)]
+mod cert_module_tests {
+    use std::time::{Duration, SystemTime};
+
+    use super::utils::{CertUtils, format_system_time, parse_system_time};
+
+    #[test]
+    fn format_parse_system_time_roundtrip() {
+        let t = SystemTime::UNIX_EPOCH + Duration::from_secs(12_345);
+        let s = format_system_time(t);
+        let back = parse_system_time(&s).expect("parse_system_time");
+        assert_eq!(back, t);
+    }
+
+    #[test]
+    fn parse_system_time_rejects_non_numeric() {
+        assert!(parse_system_time("not-a-number").is_err());
+    }
+
+    #[test]
+    fn cert_utils_fingerprint_is_hex_sha256() {
+        let fp = CertUtils::calculate_fingerprint(b"hello");
+        assert_eq!(fp.len(), 64);
+        assert_eq!(fp, CertUtils::calculate_fingerprint(b"hello"));
+    }
+
+    #[test]
+    fn cert_utils_generate_self_signed_returns_not_implemented() {
+        let err = CertUtils::generate_self_signed().expect_err("not implemented");
+        assert!(err.to_string().to_lowercase().contains("implement"));
     }
 }

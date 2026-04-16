@@ -536,4 +536,94 @@ mod tests {
                 .is_ok()
         );
     }
+
+    #[tokio::test]
+    async fn dispatch_unknown_method_rejected() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::new();
+        let err = handler
+            .handle_method("unknown.method", serde_json::json!({}))
+            .await
+            .expect_err("unknown RPC method should error");
+        assert!(
+            err.to_string().contains("Unknown method"),
+            "unexpected: {err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn dispatch_health_status() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::new();
+        let v = handler
+            .handle_method("health.status", serde_json::json!({}))
+            .await
+            .expect("health.status should succeed");
+        assert_eq!(v["status"], "healthy");
+        assert_eq!(v["protocol"], "jsonrpc-2.0");
+    }
+
+    #[tokio::test]
+    async fn dispatch_identity_get() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::new();
+        let v = handler
+            .handle_method("identity.get", serde_json::json!({}))
+            .await
+            .expect("identity.get");
+        assert_eq!(v["domain"], "storage");
+        assert_eq!(v["license"], "AGPL-3.0-or-later");
+    }
+
+    #[tokio::test]
+    async fn dispatch_identity_capabilities() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::new();
+        let v = handler
+            .handle_method("identity.capabilities", serde_json::json!({}))
+            .await
+            .expect("identity.capabilities");
+        assert_eq!(v["zfs"], true);
+        assert_eq!(v["storage"], false);
+    }
+
+    #[tokio::test]
+    async fn dispatch_system_info() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::new();
+        let v = handler
+            .handle_method("system.info", serde_json::json!({}))
+            .await
+            .expect("system.info");
+        assert_eq!(v["protocol"], "jsonrpc-2.0");
+        assert!(v.get("rust_version").is_some());
+    }
+
+    #[tokio::test]
+    async fn dispatch_storage_retrieve_param_validation() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::with_storage(Arc::new(MockStorage));
+        let err = handler
+            .handle_method("storage.retrieve", serde_json::json!({"unexpected": true}))
+            .await
+            .expect_err("missing key field");
+        assert!(
+            err.to_string().contains("Invalid params") || err.to_string().contains("invalid"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn dispatch_storage_store_via_handle_method() {
+        use crate::transport::jsonrpc::RpcMethodHandler;
+        let handler = NestGateRpcHandler::with_storage(Arc::new(MockStorage));
+        let v = handler
+            .handle_method(
+                "storage.store",
+                serde_json::json!({"key": "k", "value": [1]}),
+            )
+            .await
+            .expect("storage.store");
+        assert_eq!(v["success"], true);
+    }
 }

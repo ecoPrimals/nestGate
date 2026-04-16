@@ -3,43 +3,10 @@
 
 //! Config module
 
-use nestgate_core::config::SecurityConfig;
-use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 use nestgate_core::config::canonical_primary::domains::performance::MetricsConfig;
-use nestgate_core::config::canonical_primary::domains::security_canonical::TlsSecurityConfig;
 
 use std::time::Duration;
-// Note: canonical_modernization module structure changed
-use nestgate_core::canonical_modernization::CanonicalModernizedConfig;
 
-/// **CANONICAL RPC CONFIGURATION**
-/// Extends the canonical modernization system with RPC-specific settings
-#[derive(Debug, Clone, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::CanonicalRpcConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::CanonicalRpcConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for `CanonicalRpc`
-pub struct CanonicalRpcConfig {
-    /// Base canonical configuration
-    pub base: CanonicalModernizedConfig,
-    /// RPC-specific extensions
-    pub rpc_extensions: RpcExtensions,
-}
 /// RPC-specific configuration extensions
 #[derive(Debug, Clone, Default)]
 /// Rpcextensions
@@ -182,7 +149,7 @@ pub struct RpcSecurityConfig {
     pub rate_limit_per_minute: u32,
 }
 /// Load balancing configuration
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 /// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
 ///
 /// **Migration Path**:
@@ -221,37 +188,24 @@ pub struct LoadBalancingConfig {
     pub strategy: String, // "round_robin", "least_connections", "weighted"
     /// Health check interval
     pub health_check_interval: Duration,
-    /// Circuit breaker configuration
-    pub circuit_breaker: CircuitBreakerConfig,
-}
-/// Circuit breaker configuration
-#[derive(Debug, Clone, Default)]
-/// ⚠️ DEPRECATED: This config has been consolidated into `canonical_primary`
-///
-/// **Migration Path**:
-/// ```rust,ignore
-/// // OLD (deprecated):
-/// use crate::network::config::CircuitBreakerConfig;
-///
-/// // NEW (canonical):
-/// use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
-/// // Or use type alias for compatibility:
-/// use crate::network::config::CircuitBreakerConfig; // Now aliases to CanonicalNetworkConfig
-/// ```
-///
-/// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-/// Configuration for `CircuitBreaker`
-pub struct CircuitBreakerConfig {
     /// Failure threshold before opening circuit
-    pub failure_threshold: u32,
+    pub circuit_failure_threshold: u32,
     /// Success threshold before closing circuit
-    pub success_threshold: u32,
+    pub circuit_success_threshold: u32,
     /// Timeout before attempting to close circuit
-    pub timeout: Duration,
+    pub circuit_timeout: Duration,
+}
+
+impl Default for LoadBalancingConfig {
+    fn default() -> Self {
+        Self {
+            strategy: String::new(),
+            health_check_interval: Duration::ZERO,
+            circuit_failure_threshold: 0,
+            circuit_success_threshold: 0,
+            circuit_timeout: Duration::ZERO,
+        }
+    }
 }
 /// Health monitoring configuration
 #[derive(Debug, Clone, Default)]
@@ -344,11 +298,9 @@ impl Default for NestGateRpcConfig {
             load_balancing: LoadBalancingConfig {
                 strategy: "round_robin".to_string(),
                 health_check_interval: Duration::from_secs(30),
-                circuit_breaker: CircuitBreakerConfig {
-                    failure_threshold: 5,
-                    success_threshold: 3,
-                    timeout: Duration::from_secs(60),
-                },
+                circuit_failure_threshold: 5,
+                circuit_success_threshold: 3,
+                circuit_timeout: Duration::from_secs(60),
             },
             health_monitoring: HealthMonitoringConfig {
                 enabled: true,
@@ -371,47 +323,6 @@ impl Default for NestGateRpcConfig {
                 buffer_size: 1000,
             },
         }
-    }
-}
-
-// ==================== SECTION ====================
-
-impl CanonicalRpcConfig {
-    /// Create canonical RPC config from legacy config
-    #[must_use]
-    pub fn from_legacy(legacy: NestGateRpcConfig) -> Self {
-        let mut canonical = Self::default();
-
-        // Migrate security settings to canonical base
-        // Note: SecurityConfig uses TlsSecurityConfig from canonical_primary
-        if legacy.security.enable_tls {
-            canonical.base.security.security_settings.insert(
-                "tls_enabled".to_string(),
-                serde_json::to_value(TlsSecurityConfig::default())
-                    .unwrap_or(serde_json::Value::Bool(true)),
-            );
-        }
-
-        // Keep RPC-specific settings in extensions
-        canonical.rpc_extensions.connection_pool = legacy.connection_pool;
-        canonical.rpc_extensions.load_balancing = legacy.load_balancing;
-        canonical.rpc_extensions.health_monitoring = legacy.health_monitoring;
-        canonical.rpc_extensions.metrics = legacy.metrics;
-        canonical.rpc_extensions.streams = legacy.streams;
-
-        canonical
-    }
-
-    /// Get network configuration from canonical base
-    #[must_use]
-    pub const fn network(&self) -> &CanonicalNetworkConfig {
-        &self.base.network
-    }
-
-    /// Get security configuration from canonical base
-    #[must_use]
-    pub const fn security(&self) -> &SecurityConfig {
-        &self.base.security
     }
 }
 
@@ -523,10 +434,6 @@ pub type StreamConfigCanonical =
 pub type CanonicalRpcConfigCanonical =
     nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig;
 
-// Note: Keep using CanonicalRpcConfig (the deprecated struct) for now.
-// We'll gradually migrate to CanonicalNetworkConfig directly in a later phase.
-// This alias is here for reference and future migration.
-
 // ==================== CANONICAL TYPE ALIAS ====================
 // This type now aliases to the canonical network configuration
 // Original struct definition kept above for reference and backward compatibility
@@ -555,30 +462,6 @@ mod tests {
         assert!(c.security.enable_tls);
         assert_eq!(c.load_balancing.strategy, "round_robin");
         assert!(c.health_monitoring.enabled);
-    }
-
-    #[test]
-    fn canonical_rpc_config_default_and_from_legacy() {
-        let legacy = NestGateRpcConfig::default();
-        let migrated = CanonicalRpcConfig::from_legacy(legacy);
-        assert!(
-            migrated
-                .base
-                .security
-                .security_settings
-                .contains_key("tls_enabled")
-        );
-        assert_eq!(
-            migrated.rpc_extensions.load_balancing.strategy,
-            "round_robin"
-        );
-    }
-
-    #[test]
-    fn canonical_rpc_config_accessors() {
-        let c = CanonicalRpcConfig::default();
-        let _net: &CanonicalNetworkConfig = c.network();
-        let _sec: &SecurityConfig = c.security();
     }
 
     #[test]

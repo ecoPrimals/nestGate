@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43v: Deep debt — coverage push, deprecated pruning, flaky test fix, file split (April 16, 2026)
+
+- **Coverage 83.86% → 84.12%**: New tests added for objects.rs/datasets.rs (nestgate-core
+  storage operations), health_monitoring.rs, connection_pool.rs, transport/handlers.rs dispatch,
+  semantic_router/storage.rs, rpc_router.rs, json_rpc_handler.rs, runtime_discovery.rs,
+  agnostic_config.rs edge cases, pool/operations.rs, automation/engine.rs,
+  snapshot/scheduler.rs retention, cert/mod.rs, compliance/manager.rs.
+- **Deprecated 116 → 114**: Removed `CanonicalRpcConfig` and `CircuitBreakerConfig` (RPC config
+  local) — zero external callers. Remaining 114 are active compat shims wired to REST routes
+  and config systems; will migrate callers before removal.
+- **Flaky test fix**: `verify_installation_succeeds_when_binary_reports_version` — ETXTBSY
+  race condition fixed by using `OpenOptions::mode(0o755)` with `sync_all()` for atomic
+  script creation instead of separate write + chmod.
+- **File split**: `semantic_router/storage.rs` 808 → 450 lines (tests extracted to
+  `storage_tests.rs`).
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery, 0 warnings), deny PASS,
+  1,648 lib tests/0 failures, 0 files >800L, 84.12% line coverage.
+
 ### Session 43u: Stadial parity gate — ring lockfile elimination, dyn/async_trait audit (April 16, 2026)
 
 - **ring lockfile elimination**: Vendored `rustls-webpki 0.103.12` with `ring` optional

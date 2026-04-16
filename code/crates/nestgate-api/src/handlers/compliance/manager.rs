@@ -738,4 +738,55 @@ mod tests {
 
         assert!(!manager.check_data_retention("other_type", 1));
     }
+
+    #[test]
+    fn generate_compliance_report_empty_manager_defaults() {
+        let manager = ComplianceManager::new();
+        let report = manager.generate_compliance_report();
+        assert_eq!(report.total_policies, 0);
+        assert_eq!(report.total_violations, 0);
+        assert_eq!(report.critical_violations, 0);
+        assert_eq!(report.compliance_score, 100.0);
+        assert!(report.frameworks.is_empty());
+        assert!(report.recent_violations.is_empty());
+    }
+
+    #[test]
+    fn check_access_compliance_matches_any_satisfying_policy() {
+        let mut manager = ComplianceManager::new();
+        let mut strict = create_test_access_policy();
+        strict.id = "strict".to_string();
+        strict.min_clearance_level = 9;
+
+        let mut relaxed = create_test_access_policy();
+        relaxed.id = "relaxed".to_string();
+        relaxed.min_clearance_level = 1;
+        relaxed.required_permissions = vec!["read".to_string()];
+
+        manager.add_access_policy(strict);
+        manager.add_access_policy(relaxed);
+
+        assert!(manager.check_access_compliance(&["read".to_string()], 5));
+    }
+
+    #[test]
+    fn check_data_retention_uses_policy_matching_data_type() {
+        let mut manager = ComplianceManager::new();
+        let mut short = create_test_retention_policy();
+        short.id = "short".to_string();
+        short.data_types = vec!["alpha".to_string()];
+        short.retention_days = 10;
+
+        let mut long = create_test_retention_policy();
+        long.id = "long".to_string();
+        long.data_types = vec!["beta".to_string()];
+        long.retention_days = 100;
+
+        manager.add_retention_policy(short);
+        manager.add_retention_policy(long);
+
+        assert!(manager.check_data_retention("alpha", 5));
+        assert!(!manager.check_data_retention("alpha", 20));
+        assert!(manager.check_data_retention("beta", 50));
+    }
 }

@@ -15,14 +15,14 @@ use std::time::SystemTime;
 /// Create a test automation engine with default configuration
 async fn create_test_engine() -> DatasetAutomation {
     let config = ZfsConfig::default();
-    let pool_manager = Arc::new(ZfsPoolManager::new(&config).await.unwrap());
+    let pool_manager = Arc::new(ZfsPoolManager::new(&config).await.expect("pool new"));
     let dataset_manager = Arc::new(ZfsDatasetManager::new(config.clone(), pool_manager.clone()));
 
     let automation_config = DatasetAutomationConfig::default();
 
     DatasetAutomation::new(pool_manager, dataset_manager, automation_config)
         .await
-        .unwrap()
+        .expect("automation new")
 }
 
 /// Create a test automation policy
@@ -335,7 +335,7 @@ async fn test_concurrent_status_checks() {
     }
 
     for handle in handles {
-        let status = handle.await.unwrap();
+        let status = handle.await.expect("join");
         assert!(status.enabled);
     }
 }
@@ -354,7 +354,7 @@ async fn test_concurrent_policy_validation() {
     }
 
     for handle in handles {
-        let result = handle.await.unwrap();
+        let result = handle.await.expect("join");
         assert!(result.is_ok());
     }
 }

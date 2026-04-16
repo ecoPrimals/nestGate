@@ -386,7 +386,8 @@ impl DatasetAutomation {
 mod internal_tests {
     use super::DatasetAutomation;
     use crate::automation::types::{
-        AutomationPolicy, LifecycleRule, LifecycleStage, PolicyConditions, PolicyPriority, TierRule,
+        AutomationPolicy, BandwidthLimits, LifecycleRule, LifecycleStage, MigrationRule,
+        PolicyConditions, PolicyPriority, TierRule,
     };
     use crate::config::{DatasetAutomationConfig, ZfsConfig};
     use crate::dataset::ZfsDatasetManager;
@@ -503,6 +504,106 @@ mod internal_tests {
         };
         let mut map = HashMap::new();
         map.insert("lc".into(), policy);
+        automation.replace_policies_for_test(map).await;
+        automation.run_automation_cycle().await.expect("cycle");
+    }
+
+    #[tokio::test]
+    async fn run_automation_cycle_with_empty_policy_map() {
+        let automation = test_engine().await;
+        automation.replace_policies_for_test(HashMap::new()).await;
+        automation.run_automation_cycle().await.expect("cycle");
+    }
+
+    #[tokio::test]
+    async fn run_automation_cycle_skips_when_only_migration_rules_present() {
+        let automation = test_engine().await;
+        let policy = AutomationPolicy {
+            policy_id: "mig_only".into(),
+            name: "Migration only".into(),
+            description: "test".into(),
+            priority: PolicyPriority::Normal,
+            enabled: true,
+            conditions: PolicyConditions {
+                tier_rules: vec![],
+                migration_rules: vec![MigrationRule {
+                    source_tier: StorageTier::Hot,
+                    target_tier: StorageTier::Cold,
+                    condition: "age > 1".into(),
+                    bandwidth_limits: BandwidthLimits::default(),
+                    schedule: "daily".into(),
+                }],
+                lifecycle_rules: vec![],
+            },
+            created: SystemTime::now(),
+            last_modified: SystemTime::now(),
+        };
+        let mut map = HashMap::new();
+        map.insert("mig_only".into(), policy);
+        automation.replace_policies_for_test(map).await;
+        automation.run_automation_cycle().await.expect("cycle");
+        let st = automation.get_automation_status().await;
+        assert_eq!(st.tracked_datasets, 0);
+    }
+
+    #[tokio::test]
+    async fn run_automation_cycle_tracks_dataset_after_tier_processing() {
+        let automation = test_engine().await;
+        let policy = AutomationPolicy {
+            policy_id: "track".into(),
+            name: "Track".into(),
+            description: "test".into(),
+            priority: PolicyPriority::Normal,
+            enabled: true,
+            conditions: PolicyConditions {
+                tier_rules: vec![TierRule {
+                    condition: "tank/tracked_ds".into(),
+                    target_tier: StorageTier::Warm,
+                    priority: 1,
+                }],
+                migration_rules: vec![],
+                lifecycle_rules: vec![],
+            },
+            created: SystemTime::now(),
+            last_modified: SystemTime::now(),
+        };
+        let mut map = HashMap::new();
+        map.insert("track".into(), policy);
+        automation.replace_policies_for_test(map).await;
+        automation.run_automation_cycle().await.expect("cycle");
+        let st = automation.get_automation_status().await;
+        assert_eq!(st.tracked_datasets, 1);
+        assert!(st.active_policies >= 1);
+    }
+
+    #[tokio::test]
+    async fn run_automation_cycle_runs_compress_lifecycle_action() {
+        let automation = test_engine().await;
+        let policy = AutomationPolicy {
+            policy_id: "compress_lc".into(),
+            name: "Compress".into(),
+            description: "test".into(),
+            priority: PolicyPriority::Normal,
+            enabled: true,
+            conditions: PolicyConditions {
+                tier_rules: vec![TierRule {
+                    condition: "tank/compress_ds".into(),
+                    target_tier: StorageTier::Warm,
+                    priority: 1,
+                }],
+                migration_rules: vec![],
+                lifecycle_rules: vec![LifecycleRule {
+                    stage: LifecycleStage::New,
+                    next_stage: None,
+                    conditions: vec!["always".into()],
+                    actions: vec!["compress".into()],
+                }],
+            },
+            created: SystemTime::now(),
+            last_modified: SystemTime::now(),
+        };
+        let mut map = HashMap::new();
+        map.insert("compress_lc".into(), policy);
         automation.replace_policies_for_test(map).await;
         automation.run_automation_cycle().await.expect("cycle");
     }
