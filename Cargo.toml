@@ -250,5 +250,7 @@ opt-level = 1
 debug = true
 
 # rustls-rustcrypto 0.0.2-alpha pins rustls-webpki 0.102.x; bump to 0.103.12+ for RUSTSEC fixes (pure-Rust webpki).
+# rustls-webpki vendored with ring optional dep removed to eliminate ghost lockfile stanza.
 [patch.crates-io]
 rustls-rustcrypto = { path = "vendor/rustls-rustcrypto" }
+rustls-webpki = { path = "vendor/rustls-webpki" }

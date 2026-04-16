@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 16, 2026 (Session 43t — deprecated pruning, coverage 83.86%, hardcoded ports evolved)  
+**Last Updated**: April 16, 2026 (Session 43u — stadial parity gate: ring eliminated from lockfile, dyn/async_trait audited clean)  
 **Version**: 4.7.0-dev
 
 ---
@@ -24,7 +24,7 @@ Box<dyn Error>:     ZERO in production library code (last one evolved Session 43
 async-trait:        ZERO compiled usages, ZERO dependency (not in any Cargo.toml)
 Mocks in prod:      ZERO — all mocks test-only (#[cfg(test)]) or feature-gated (dev-stubs)
 Stubs:              Feature-gated behind `dev-stubs` cargo feature (opt-in only, zero production leakage)
-TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED; installer uses system curl
+TLS/crypto:         ureq + rustls-rustcrypto (pure Rust); ring/reqwest/openssl/native-tls ELIMINATED from dep tree AND lockfile; installer uses system curl
 Discovery:          Environment variables + capability IPC (mDNS/Consul/K8s discovery_mechanism removed; delegated to orchestration provider)
 MCP:                Not a workspace member — use biomeOS `capability.call` / capability IPC instead
 IPC routes (UDS):   storage.*, session.*, model.*, templates.*, audit.*, nat.*, beacon.*, zfs.*, bonding.ledger.*, health.*, capabilities.*, identity.*, discovery.* — 51 methods (UNIX_SOCKET_SUPPORTED_METHODS const)
@@ -47,7 +47,10 @@ Workspace deps:     100% hoisted to workspace = true (zero version drift)
 Workspace members:  23 (20 code/crates + tools/unwrap-migrator + fuzz + root nestgate)
 Serial tests:       #[serial]: scoped to ZFS command stub tests (temp_env::with_vars elsewhere)
 Numeric casts:      Dangerous narrowing `as` casts evolved to try_from/saturating; benign widening casts remain
-Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok (rustls-webpki 0.103.12, rand 0.9.x, CDLA-Permissive-2.0 allowed)
+Supply chain:       cargo deny check — advisories ok, bans ok, licenses ok, sources ok (rustls-webpki 0.103.12 vendored ring-free, rand 0.9.x, CDLA-Permissive-2.0 allowed)
+ring:               ELIMINATED — zero stanzas in Cargo.lock (rustls-webpki vendored without ring optional dep)
+dyn audit:          317 matches: 154 test-only, 39 comments, ~65 dyn Error, ~22 std traits, ~37 intentional DI/strategy/plugin patterns — zero stadial debt
+async-trait:        ZERO #[async_trait] attrs, ZERO dep in Cargo.toml; 73 text matches are comments/docs/migration templates only
 CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 ```
 
@@ -650,4 +653,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 16, 2026 (Session 43t)
+**Latest**: April 16, 2026 (Session 43u)

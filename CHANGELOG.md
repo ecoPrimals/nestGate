@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43u: Stadial parity gate — ring lockfile elimination, dyn/async_trait audit (April 16, 2026)
+
+- **ring lockfile elimination**: Vendored `rustls-webpki 0.103.12` with `ring` optional
+  dependency stripped. Patched workspace `[patch.crates-io]` to use local copy. `ring`
+  stanza completely removed from `Cargo.lock` (521→519 packages). `cargo deny check`
+  passes clean. `cargo tree -i ring` confirms zero references.
+- **dyn keyword audit (317 matches)**: Classified all usages — 154 test-only, 39
+  comments/docs, ~65 `dyn Error` (standard), ~22 std trait objects, ~37 intentional
+  DI/strategy/plugin patterns (`dyn EnvSource`, `dyn RpcHandler`, `dyn HealthCheck*`,
+  `dyn CapabilityResolver`, `dyn DiscoveryMechanism`, `dyn *Detector`). Zero stadial
+  debt from trait-object dispatch.
+- **async_trait audit (73 matches)**: Zero `#[async_trait]` attributes in any `.rs` file.
+  Zero `async-trait` in any `Cargo.toml`. All 73 text matches are comments, doc strings,
+  migration template string literals, or detection helper test fixtures.
+- **Verification**: check PASS, clippy PASS, deny PASS, 1,639 tests/0 failures.
+
 ### Session 43t: Deep debt — deprecated pruning, coverage, hardcoded ports, unwrap triage (April 16, 2026)
 
 - **Deprecated pruning wave 2**: 17 more items removed (133→116). Removed entire
