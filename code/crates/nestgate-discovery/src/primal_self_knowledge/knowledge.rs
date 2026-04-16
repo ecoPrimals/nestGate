@@ -150,10 +150,7 @@ impl PrimalSelfKnowledge {
             .unwrap_or_else(|| "0.0.0.0".to_string());
 
         let api_port_str = env.get("NESTGATE_API_PORT").unwrap_or_else(|| {
-            #[expect(deprecated)]
-            {
-                nestgate_config::constants::hardcoding::runtime_fallback_ports::API.to_string()
-            }
+            nestgate_config::constants::hardcoding::runtime_fallback_ports::API.to_string()
         });
 
         let api_port = api_port_str

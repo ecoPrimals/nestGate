@@ -21,7 +21,7 @@
 //! Those operations route through the ecosystem's security capability provider.
 
 #![warn(missing_docs)]
-#![expect(deprecated, clippy::missing_errors_doc)]
+#![expect(clippy::missing_errors_doc)]
 #![cfg_attr(
     test,
     allow(

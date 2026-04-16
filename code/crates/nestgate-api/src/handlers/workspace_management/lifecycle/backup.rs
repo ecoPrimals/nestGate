@@ -155,8 +155,6 @@ pub async fn backup_workspace(
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated)]
-
     use super::*;
     use axum::extract::{Json, Path};
 

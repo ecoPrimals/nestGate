@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 4.7.0-dev
 
+### Session 43w: Deprecated cleanup — 114→0 markers, rand API migration (April 16, 2026)
+
+- **Deprecated markers 114→0**: Comprehensive deprecated attribute cleanup. Most were
+  premature deprecations on actively-used items where the noted replacement
+  (`CanonicalNetworkConfig`) didn't semantically fit domain-specific config types.
+  - **runtime_fallback_ports (21)**: Un-deprecated all 21 port constants — they ARE the
+    canonical fallback values used across the codebase. Module docs updated to reflect
+    their status as supported compile-time fallbacks.
+  - **REST handlers (21)**: Un-deprecated dataset_handlers (8), snapshot_handlers (5),
+    system (3), websocket (3), monitoring/health (1), monitoring/metrics (1) — still
+    wired to the active REST router.
+  - **Config types (~40)**: Un-deprecated domain-specific config structs across
+    config_registry/storage (7), config_registry/security (7), rest/rpc/config (6),
+    consolidated_canonical/config (4), universal_zfs/config (3), lifecycle/types (3),
+    config_types (2), zfs/config/security (2), zero_cost traits (3), cert/mod (1).
+  - **Scattered singles (~30)**: Un-deprecated config/transport/discovery types across
+    nestgate-zfs (10), nestgate-api (8), nestgate-core (5), nestgate-storage (2),
+    nestgate-cache (2), nestgate-discovery (4), nestgate-fsmonitor (1), nestgate-rpc (1).
+  - **#[expect(deprecated)] cleanup**: Removed all suppression attributes that existed
+    solely for the now-un-deprecated items — across ~30 files.
+- **rand API migration**: `rng.gen_range()` → `rng.random_range()`, `rng.r#gen::<f64>()`
+  → `rng.random::<f64>()` in load_balancing modules (Rust 2024 keyword conflict).
+- **Verification**: fmt PASS, clippy PASS (pedantic+nursery, 0 warnings), check PASS
+  (0 own-code warnings), 1,648 lib tests/0 failures.
+
 ### Session 43v: Deep debt — coverage push, deprecated pruning, flaky test fix, file split (April 16, 2026)
 
 - **Coverage 83.86% → 84.12%**: New tests added for objects.rs/datasets.rs (nestgate-core

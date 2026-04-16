@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(deprecated)]
-
 //! Zero-cost provider implementations
 //!
 //! This module provides concrete implementations of the zero-cost provider traits,
@@ -153,7 +151,6 @@ impl ZeroCostJwtProvider {
     }
 }
 
-#[expect(deprecated)] // Example provider for zero-cost patterns demonstration
 impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
     /// Authenticate
     fn authenticate(&self, credentials: &String) -> Result<String, ZeroCostError> {
@@ -180,10 +177,6 @@ impl ZeroCostSecurityProvider<String, String> for ZeroCostJwtProvider {
 }
 
 /// File system storage provider - zero-cost
-#[deprecated(
-    since = "0.9.0",
-    note = "Use nestgate_core::traits::unified_storage::UnifiedStorage with const generics for zero-cost patterns"
-)]
 pub struct ZeroCostFileStorage {
     base_path: String,
 }
@@ -242,7 +235,6 @@ impl ZeroCostFileStorage {
     }
 }
 
-#[expect(deprecated)] // Implements deprecated `ZeroCostStorageProvider`
 impl ZeroCostStorageProvider<String, Vec<u8>> for ZeroCostFileStorage {
     /// Store
     fn store(&self, _key: String, _value: Vec<u8>) -> Result<(), ZeroCostError> {
@@ -264,7 +256,6 @@ impl ZeroCostStorageProvider<String, Vec<u8>> for ZeroCostFileStorage {
 mod tests {
     use super::*;
 
-    #[expect(deprecated)]
     #[test]
     fn test_file_storage_operations() {
         let storage = ZeroCostFileStorage::new("/tmp".to_string());

@@ -114,10 +114,6 @@ pub async fn get_metrics(
 ///
 /// Returns [`Json`] containing [`DataError`] when the time-series query
 /// fails (reserved for future TSDB-backed history).
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn get_metrics_history(
     State(_state): State<ApiState>,
     Query(query): Query<MetricsHistoryQuery>,

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
-
 //! Configuration for environment detection module
 //!
 //! This module provides immutable configuration for environment detection,

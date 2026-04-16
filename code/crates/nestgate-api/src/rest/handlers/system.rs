@@ -102,10 +102,6 @@ pub struct ResourceUsage {
 }
 /// Health check endpoint
 /// GET /health
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<HealthStatus>> {
     debug!("Performing health check");
     // Check service statuses
@@ -151,10 +147,6 @@ pub async fn health_check(State(state): State<ApiState>) -> Json<DataResponse<He
 
 /// Version information endpoint
 /// GET /version
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn version_info() -> Json<DataResponse<VersionInfo>> {
     debug!("Getting version information");
     let version = VersionInfo {
@@ -172,10 +164,6 @@ pub async fn version_info() -> Json<DataResponse<VersionInfo>> {
 
 /// System status endpoint
 /// GET /system/status
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn system_status(State(state): State<ApiState>) -> Json<DataResponse<SystemStatusInfo>> {
     debug!("Getting system status");
     // Get health status

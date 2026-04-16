@@ -56,10 +56,6 @@ impl Default for ServiceDiscoveryConfig {
 impl ServiceDiscoveryConfig {
     /// Build from an injectable environment source (use [`MapEnv`](nestgate_types::MapEnv) in tests).
     #[must_use]
-    #[expect(
-        deprecated,
-        reason = "NESTGATE_DISCOVERY_BASE_PORT fallback uses runtime_fallback_ports until RuntimePortResolver wiring"
-    )]
     pub fn from_env_source(env: &(impl EnvSource + ?Sized)) -> Self {
         Self {
             endpoints: Self::load_endpoints_from_env_source(env),
@@ -77,10 +73,6 @@ impl ServiceDiscoveryConfig {
         }
     }
 
-    #[expect(
-        deprecated,
-        reason = "NESTGATE_DISCOVERY_BASE_PORT fallback uses runtime_fallback_ports until RuntimePortResolver wiring"
-    )]
     fn load_endpoints_from_env_source(env: &(impl EnvSource + ?Sized)) -> Vec<String> {
         // Try NESTGATE_DISCOVERY_ENDPOINTS (comma-separated list)
         if let Some(endpoints_str) = env.get("NESTGATE_DISCOVERY_ENDPOINTS") {

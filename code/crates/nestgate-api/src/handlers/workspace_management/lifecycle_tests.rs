@@ -84,7 +84,6 @@ async fn list_workspace_backups_returns_success_json() {
 }
 
 #[test]
-#[expect(deprecated)]
 fn migration_strategy_roundtrip_serde() {
     for s in [
         MigrationStrategy::Copy,
@@ -98,7 +97,6 @@ fn migration_strategy_roundtrip_serde() {
 }
 
 #[test]
-#[expect(deprecated)]
 fn backup_restore_migration_config_serde() {
     let b = BackupConfig {
         backup_name: "n".into(),

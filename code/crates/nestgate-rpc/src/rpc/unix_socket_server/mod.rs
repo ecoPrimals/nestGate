@@ -5,7 +5,6 @@
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
 )]
-#![expect(deprecated)] // `JsonRpcUnixServer` retained for legacy re-exports until orchestration IPC migration completes.
 
 //! # 🔌 JSON-RPC Unix Socket Server
 //!
@@ -182,12 +181,6 @@ impl StorageState {
 ///
 /// Connection logic has moved to the orchestration provider for true platform universality.
 /// See `UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md` for migration guide.
-#[deprecated(
-    since = "2.3.0",
-    note = "Connection logic moved to orchestration provider's IPC SERVICE. \
-            Call via JSON-RPC over discovered socket - DO NOT import peer primal code! \
-            See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md for service-based integration."
-)]
 pub struct JsonRpcUnixServer {
     socket_path: PathBuf,
     /// Family ID for primal identification (used in future multi-primal features)

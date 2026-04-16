@@ -269,7 +269,7 @@ impl LoadBalancer for RandomLoadBalancer {
 
         let index = {
             let mut rng = self.rng.lock();
-            rng.gen_range(0..services.len())
+            rng.random_range(0..services.len())
         };
         let selected = services[index].clone();
 

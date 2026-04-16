@@ -164,10 +164,6 @@ impl Default for ZfsConfig {
 /// The name exists for API compatibility during development.
 /// Use the real `nestgate_zfs::operations::production::ProductionZfsOperations` for production.
 #[derive(Debug, Clone)]
-#[deprecated(
-    since = "0.1.0",
-    note = "Development stub only. Use nestgate_zfs::operations::production::ProductionZfsOperations for production."
-)]
 /// Manager for `ProductionZfs` operations
 pub struct ProductionZfsManager {
     config: ZfsConfig,

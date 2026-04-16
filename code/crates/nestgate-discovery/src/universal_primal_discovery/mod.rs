@@ -97,11 +97,9 @@ pub use cache::{CacheEntry, DiscoveryCache};
 pub use fallbacks::get_fallback_port;
 pub use introspection::{HardwareProfile, SystemCapabilities};
 pub use introspection_config::{IntrospectionConfig, SharedIntrospectionConfig};
-#[expect(deprecated)]
 pub use network::{InterfaceInfo, NetworkDiscoveryConfig};
 pub use network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntimeConfig};
 pub use performance::{OptimalTimeout, PerformanceTestConfig};
-#[expect(deprecated)]
 pub use production_discovery::{ProductionServiceDiscovery, ServiceDiscoveryConfig};
 pub use production_discovery_config::{ProductionDiscoveryConfig, SharedProductionDiscoveryConfig};
 pub use registry::{DiscoveryQuery, ServiceRegistryClient};

@@ -9,7 +9,6 @@
 
 #![warn(missing_docs)]
 // Unit/integration tests use `unwrap`/`expect` and other patterns that are intentionally strict.
-#![cfg_attr(test, allow(deprecated))]
 #![cfg_attr(
     test,
     allow(

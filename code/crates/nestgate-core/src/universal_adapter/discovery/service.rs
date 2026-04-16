@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use std::time::SystemTime;
 
 /// Discover available services using canonical discovery
-#[expect(deprecated, reason = "migration in progress")]
 pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     let start_time = std::time::Instant::now();
 
@@ -36,7 +35,6 @@ pub fn discover_services(config: &DiscoveryConfig) -> Result<DiscoveryResult> {
     })
 }
 /// Discover services by capability
-#[expect(deprecated, reason = "migration in progress")]
 pub fn discover_by_capability(
     config: &DiscoveryConfig,
     capability: &str,

@@ -36,10 +36,6 @@ fn zfs_snapshot_rest_not_implemented() -> (StatusCode, Json<serde_json::Value>) 
 ///
 /// Returns [`Json`] containing [`DataError`] when the dataset is missing,
 /// snapshot listing fails, or the response cannot be built.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn list_snapshots(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -63,10 +59,6 @@ pub async fn list_snapshots(
 ///
 /// Returns [`Json`] containing [`DataError`] when the dataset is missing,
 /// validation fails, or creation fails.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn create_snapshot(
     State(state): State<ApiState>,
     Path(dataset_name): Path<String>,
@@ -86,10 +78,6 @@ pub async fn create_snapshot(
 
 /// Get a specific snapshot
 /// GET /api/v1/zfs/datasets/:dataset/snapshots/:snapshot
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn get_snapshot(
     State(state): State<ApiState>,
     Path((dataset_name, _snapshot_name)): Path<(String, String)>,
@@ -107,10 +95,6 @@ pub async fn get_snapshot(
 
 /// Delete a snapshot
 /// DELETE /api/v1/zfs/datasets/:dataset/snapshots/:snapshot
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn delete_snapshot(
     State(state): State<ApiState>,
     Path((dataset_name, snapshot_name)): Path<(String, String)>,
@@ -132,10 +116,6 @@ pub async fn delete_snapshot(
 
 /// Clone a snapshot to create a new dataset
 /// POST /api/v1/zfs/datasets/:dataset/snapshots/:snapshot/clone
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn clone_snapshot(
     State(_state): State<ApiState>,
     Path((_dataset_name, _snapshot_name)): Path<(String, String)>,

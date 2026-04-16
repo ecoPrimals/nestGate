@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 16, 2026 (Session 43v — coverage 84.12%, deprecated 114, flaky test fix, storage_tests split)  
+**Last Updated**: April 16, 2026 (Session 43w — deprecated 114→0, rand API migrated, coverage 84.12%)  
 **Version**: 4.7.0-dev
 
 ---
@@ -64,7 +64,7 @@ CONTEXT.md:         Present (per wateringHole PUBLIC_SURFACE_STANDARD)
 - **Doc drift**: STATUS.md method counts reconciled to code — per-surface: UDS 51 (`UNIX_SOCKET_SUPPORTED_METHODS`), HTTP 23 (`JSON_RPC_CAPABILITIES_METHODS`), tarpc semantic router 42 explicit routes (`semantic_router/mod.rs`)
 - **TCP/`--port` wiring**: Socket-only mode now resolves port from `NESTGATE_API_PORT` env; activates TCP alongside UDS when env port differs from default
 - **Domain symlink**: Confirmed already implemented (`storage[-{fid}].sock` → `nestgate[-{fid}].sock`); compliance matrix update proposed
-- **Deprecated APIs**: 210→187 (17 zero-caller items removed Sessions 43–43g; 6 dead port constants Session 43g; 6 dead functions Session 43j)
+- **Deprecated APIs**: 210→187→114→0 (Session 43w: all 114 remaining deprecated attrs resolved — premature deprecations un-deprecated, dead code removed)
 - **Box\<dyn Error\>**: 5 production function signatures evolved to typed `NestGateError` / `Result<T>` (Session 43g)
 
 ### Smart file refactoring (4 largest files)
@@ -540,7 +540,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
 | Coverage gap to 90% | ~8.3 pp remaining (81.7% current; Session 43 targeted low-coverage files +42 tests) |
-| Semantic router | COMPILED & WIRED — `data.*` delegates; `nat.*`, `beacon.*` routes active; `discovery` overstep modules deprecated |
+| Semantic router | COMPILED & WIRED — `nat.*`, `beacon.*` routes active; `data.*` removed; discovery modules active |
 | `#[allow(dead_code)]` | 0 production `#[allow(dead_code)]` — dead code removed rather than suppressed |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
 | Automation in-tree | DEPRECATED — zero production consumers; all deps removed from nestgate-zfs/api/fuzz |
@@ -653,4 +653,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 16, 2026 (Session 43v)
+**Latest**: April 16, 2026 (Session 43w)

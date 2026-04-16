@@ -19,10 +19,6 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `DatasetAutomation`
 pub struct DatasetAutomationConfig {
     /// Enable dataset automation

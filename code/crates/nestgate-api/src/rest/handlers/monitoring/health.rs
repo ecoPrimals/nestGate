@@ -178,10 +178,6 @@ fn push_resolved_network_example(alerts: &mut Vec<Alert>) {
 /// # Errors
 ///
 /// Returns [`Json<DataError>`] when the monitoring subsystem fails to build the response (rare for this handler).
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn get_alerts(
     State(state): State<ApiState>,
 ) -> Result<Json<DataResponse<Vec<Alert>>>, Json<DataError>> {

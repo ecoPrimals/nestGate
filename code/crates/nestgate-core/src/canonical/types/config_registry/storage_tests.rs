@@ -36,7 +36,6 @@ fn conflict_resolution_default() {
 }
 
 #[test]
-#[expect(deprecated, reason = "legacy storage config types under migration")]
 fn serde_roundtrip_storage_connection_config() {
     let c = StorageConnectionConfig {
         connection_string: Some("zfs://pool".to_string()),
@@ -53,7 +52,6 @@ fn serde_roundtrip_storage_connection_config() {
 }
 
 #[test]
-#[expect(deprecated, reason = "legacy storage config types under migration")]
 fn serde_roundtrip_storage_replication_config() {
     let c = StorageReplicationConfig {
         enabled: true,
@@ -86,7 +84,6 @@ fn serde_roundtrip_storage_resource_config() {
 }
 
 #[test]
-#[expect(deprecated, reason = "legacy storage config types under migration")]
 fn serde_roundtrip_storage_performance_and_security() {
     let perf = StoragePerformanceConfig {
         cache_size_mb: 128,

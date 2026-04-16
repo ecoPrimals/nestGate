@@ -37,10 +37,6 @@ pub struct WebSocketQuery {
 }
 /// Live metrics WebSocket stream
 /// GET /ws/metrics
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn metrics_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
@@ -52,10 +48,6 @@ pub async fn metrics_websocket(
 
 /// Live logs WebSocket stream\
 /// GET /ws/logs
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn logs_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,
@@ -67,10 +59,6 @@ pub async fn logs_websocket(
 
 /// System events WebSocket stream
 /// GET /ws/events
-#[deprecated(
-    since = "0.2.0",
-    note = "Use JSON-RPC via nestgate-rpc semantic router"
-)]
 pub async fn events_websocket(
     ws: WebSocketUpgrade,
     State(state): State<ApiState>,

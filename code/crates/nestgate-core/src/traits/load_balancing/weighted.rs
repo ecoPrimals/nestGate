@@ -231,14 +231,14 @@ impl LoadBalancer for WeightedRandomLoadBalancer {
         if total_weight <= 0.0 {
             let index = {
                 let mut rng = self.rng.lock();
-                rng.gen_range(0..services.len())
+                rng.random_range(0..services.len())
             };
             return Ok(services[index].clone());
         }
 
         let random_weight = {
             let mut rng = self.rng.lock();
-            rng.r#gen::<f64>() * total_weight
+            rng.random::<f64>() * total_weight
         };
 
         // Find the service corresponding to this weight

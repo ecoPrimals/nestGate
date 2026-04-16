@@ -53,10 +53,6 @@ impl Default for StorageBackendType {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for StorageConnection
 pub struct StorageConnectionConfig {
     /// Connection String
@@ -88,10 +84,6 @@ pub struct StorageConnectionConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for StoragePerformance
 pub struct StoragePerformanceConfig {
     /// Cache Size in megabytes
@@ -127,10 +119,6 @@ pub struct StoragePerformanceConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for StorageSecurity
 pub struct StorageSecurityConfig {
     /// Encryption Enabled
@@ -162,10 +150,6 @@ pub struct StorageSecurityConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for StorageReplication
 pub struct StorageReplicationConfig {
     /// Whether this feature is enabled
@@ -233,10 +217,6 @@ impl Default for ConflictResolutionStrategy {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for StorageTier
 pub struct StorageTierConfig {
     /// Hot Tier
@@ -305,10 +285,6 @@ pub struct MigrationCondition {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for StorageProtocols
 pub struct StorageProtocolsConfig {
     /// Nfs
@@ -433,10 +409,6 @@ pub struct FtpProtocolConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for StorageMonitoring
 pub struct StorageMonitoringConfig {
     /// Metrics Enabled

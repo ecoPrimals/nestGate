@@ -69,7 +69,6 @@ pub use types::{CapabilityRequest, CapabilityResponse, ServiceCapability, Servic
 ///
 /// **Performance**: Lock-free with DashMap (3-8x improvement)
 #[derive(Debug)]
-#[expect(deprecated, reason = "migration in progress")] // Uses deprecated config types
 pub struct ConsolidatedCanonicalAdapter {
     /// Unique service identifier (reserved for future request routing and telemetry).
     _service_id: Uuid,
@@ -105,7 +104,6 @@ pub struct ConsolidatedCanonicalAdapter {
 
 // ==================== IMPLEMENTATION ====================
 
-#[expect(deprecated, reason = "migration in progress")] // Uses deprecated config types
 impl ConsolidatedCanonicalAdapter {
     /// Create a new consolidated canonical adapter
     ///

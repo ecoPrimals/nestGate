@@ -35,7 +35,6 @@ pub mod types;
 pub use providers::{ZeroCostFileStorage, ZeroCostJwtProvider, ZeroCostMemoryCache};
 pub use system::{ZeroCostSystem, ZeroCostSystemBuilder};
 
-#[expect(deprecated)]
 pub use traits::{ZeroCostCacheProvider, ZeroCostSecurityProvider, ZeroCostStorageProvider};
 pub use types::{
     RequestPriority, ZeroCostBenchmarkResults, ZeroCostError, ZeroCostMetadata, ZeroCostMetrics,
@@ -83,7 +82,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_zero_cost_provider_composition() {
         // Test that providers can be composed at compile-time
         let cache = ZeroCostMemoryCache::<128>::new();

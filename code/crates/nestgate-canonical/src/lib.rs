@@ -23,7 +23,7 @@
         clippy::items_after_statements,
     )
 )]
-#![expect(deprecated, missing_docs, clippy::module_name_repetitions)]
+#![expect(missing_docs, clippy::module_name_repetitions)]
 
 // ==================== SECTION: CANONICAL EXPORTS ====================
 

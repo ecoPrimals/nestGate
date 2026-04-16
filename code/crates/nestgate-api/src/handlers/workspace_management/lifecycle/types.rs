@@ -17,10 +17,6 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Backup
 pub struct BackupConfig {
     /// Backup name/identifier
@@ -51,10 +47,6 @@ pub struct BackupConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Restore
 pub struct RestoreConfig {
     /// Backup to restore from
@@ -81,10 +73,6 @@ pub struct RestoreConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Migration
 pub struct MigrationConfig {
     /// Target pool for migration

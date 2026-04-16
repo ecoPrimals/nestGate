@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
-
-#![expect(deprecated, reason = "migration to RuntimePortResolver in progress")]
 // **CANONICAL SERVICE CONFIGURATION**
 //! Service configuration functionality and utilities.
 //! This module provides the unified service configuration for the `NestGate` system,

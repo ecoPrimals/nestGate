@@ -70,10 +70,6 @@
 //! ```
 
 pub mod detector;
-#[deprecated(
-    since = "0.3.0",
-    note = "Service registry and orchestration discovery are orchestration-provider concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
-)]
 /// Orchestration capability taxonomy and discovery helpers; orchestration classification belongs with the ecosystem orchestration layer.
 pub mod orchestration;
 pub mod registry;

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#[expect(deprecated)]
 use super::{
     BackupConfig, MigrationConfig, MigrationStrategy, RestoreConfig, backup_workspace,
     migrate_workspace, restore_workspace,

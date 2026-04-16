@@ -53,10 +53,6 @@ impl SovereigntyRuntimeConfig {
     /// Creates a new `SovereigntyRuntimeConfig` by reading environment variables
     /// or using default values.
     #[must_use]
-    #[expect(
-        deprecated,
-        reason = "NESTGATE_API_PORT fallback uses runtime_fallback_ports until canonical env resolution"
-    )]
     pub fn from_env() -> Self {
         let api_endpoint = env::var("NESTGATE_API_ENDPOINT").ok();
         let api_host = env::var("NESTGATE_API_HOST").ok();

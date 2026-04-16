@@ -91,10 +91,6 @@ pub struct ZfsVolumeInfo {
 
 /// ZFS MCP configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 pub struct ZfsMcpConfig {
     /// Enable AI optimization
     pub enable_ai_optimization: bool,

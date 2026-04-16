@@ -359,10 +359,6 @@ impl Environment {
 
     /// Get default port for this environment
     #[must_use]
-    #[expect(
-        deprecated,
-        reason = "Environment tier fallbacks align with runtime_fallback_ports until RuntimePortResolver"
-    )]
     pub const fn default_port(&self) -> u16 {
         match self {
             // Standard IANA HTTPS port; not defined in `runtime_fallback_ports` (that module lists NestGate-style fallbacks).

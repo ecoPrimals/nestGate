@@ -38,10 +38,6 @@ pub struct SecurityConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `KeyManagement`
 pub struct KeyManagementConfig {
     /// Key storage location
@@ -67,10 +63,6 @@ pub struct KeyManagementConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `AccessControl`
 pub struct AccessControlConfig {
     /// Default permissions for new datasets
@@ -204,7 +196,6 @@ pub type KeyManagementConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated)]
     use super::*;
     use std::path::PathBuf;
 

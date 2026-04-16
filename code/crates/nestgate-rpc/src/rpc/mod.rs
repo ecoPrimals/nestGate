@@ -112,7 +112,6 @@ pub use storage_backend::{InMemoryStorageBackend, StorageBackend};
 pub use tarpc_client::NestGateRpcClient;
 pub use tarpc_server::{NestGateRpcService, serve_tarpc};
 pub use template_storage::{GraphTemplate, TemplateMetadata, TemplateStorage};
-#[expect(deprecated)]
 // Re-export legacy Unix JSON-RPC surface until callers use orchestration IPC.
 pub use unix_socket_server::{
     JsonRpcUnixServer, LegacyUnixJsonRpcHandler, legacy_ecosystem_rpc_handler,

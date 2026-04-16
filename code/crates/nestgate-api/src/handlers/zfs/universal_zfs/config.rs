@@ -32,10 +32,6 @@ pub use nestgate_core::config::canonical_primary::{
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Remote
 pub struct RemoteConfig {
     /// Remote ZFS service endpoint URL
@@ -96,10 +92,6 @@ pub type SecurityConfig = ZfsSecurityConfig;
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `CircuitBreaker`
 pub struct CircuitBreakerConfig {
     /// Whether circuit breaker is enabled
@@ -140,10 +132,6 @@ impl Default for CircuitBreakerConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Timeout
 pub struct TimeoutConfig {
     /// Timeout for ZFS operations

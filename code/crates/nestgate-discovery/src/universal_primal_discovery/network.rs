@@ -34,10 +34,6 @@ use super::network_discovery_config::{NetworkRuntimeConfig, SharedNetworkRuntime
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `NetworkDiscovery`
 pub struct NetworkDiscoveryConfig {
     /// Scan Timeout
@@ -49,7 +45,6 @@ pub struct NetworkDiscoveryConfig {
     /// Interface Priority
     pub interface_priority: Vec<String>,
 }
-#[expect(deprecated)]
 impl Default for NetworkDiscoveryConfig {
     /// Returns the default instance
     ///
@@ -71,7 +66,6 @@ impl NetworkDiscoveryConfig {
             EnvironmentConfig::from_env().unwrap_or_else(|_| EnvironmentConfig::default());
 
         let start_port = env_config.network.port.get();
-        #[expect(deprecated)]
         let end_port = env_parsed(
             env,
             "NESTGATE_DISCOVERY_PORT_END",
@@ -111,7 +105,6 @@ pub struct NetworkDiscovery {
         reason = "Held for canonical migration; discovery uses runtime config paths"
     )]
     canonical_primary: NestGateCanonicalConfig,
-    #[expect(deprecated)]
     legacy_discovery: NetworkDiscoveryConfig,
     /// Runtime configuration (immutable, thread-safe)
     network_runtime: SharedNetworkRuntimeConfig,
@@ -123,7 +116,6 @@ impl Default for NetworkDiscovery {
     }
 }
 
-#[expect(deprecated)]
 impl NetworkDiscovery {
     /// Create new network discovery subsystem
     ///
@@ -378,7 +370,6 @@ impl NetworkDiscovery {
 
         // Default capability endpoint generation
         let bind_address = self.detect_optimal_bind_interface()?;
-        #[expect(deprecated)]
         let base_port: u16 = env_parsed(
             env,
             "NESTGATE_CAPABILITY_BASE_PORT",

@@ -11,7 +11,6 @@ use serde::{Deserialize, Serialize};
 
 /// Canonical Configuration - Top-level configuration container
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(deprecated)] // MIGRATION: Using deprecated types until v0.12.0 - will migrate to CanonicalNetworkConfig
 /// Configuration for Canonical
 pub struct CanonicalConfig {
     /// Service name
@@ -48,10 +47,6 @@ pub struct CanonicalConfig {
 /// ```
 ///
 /// **Timeline**: This type will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.9.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration for Network
 pub struct NetworkConfig {
@@ -101,10 +96,6 @@ pub struct StorageConfig {
 /// ```
 ///
 /// **Timeline**: This type will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Configuration for Security
 pub struct SecurityConfig {
@@ -171,7 +162,6 @@ pub struct AuthConfig {
 
 // ==================== Default Implementations ====================
 
-#[expect(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
 impl Default for CanonicalConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -189,7 +179,6 @@ impl Default for CanonicalConfig {
     }
 }
 
-#[expect(deprecated)] // MIGRATION: Use CanonicalNetworkConfig in next major version
 impl Default for NetworkConfig {
     /// Returns the default instance.
     ///
@@ -241,7 +230,6 @@ impl StorageConfig {
     }
 }
 
-#[expect(deprecated)]
 impl Default for SecurityConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -328,7 +316,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_network_config_default() {
         let config = NetworkConfig::default();
         assert_eq!(config.timeout_seconds, 30);
@@ -348,7 +335,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated)]
     fn test_security_config_default() {
         let config = SecurityConfig::default();
         assert!(config.authentication_enabled);

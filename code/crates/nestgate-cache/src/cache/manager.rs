@@ -32,10 +32,6 @@ use tracing::debug;
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `UnifiedCache`
 pub struct UnifiedCacheConfig {
     /// Size of max
@@ -47,10 +43,6 @@ pub struct UnifiedCacheConfig {
     /// Eviction Policy
     pub eviction_policy: String,
 }
-#[expect(
-    deprecated,
-    reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-)]
 impl Default for UnifiedCacheConfig {
     /// Returns the default instance
     fn default() -> Self {
@@ -136,18 +128,10 @@ pub struct CacheManager {
     hot_tier: HashMap<String, CacheEntry>,
     warm_tier: HashMap<String, CacheEntry>,
     cold_tier: HashMap<String, CacheEntry>,
-    #[expect(
-        deprecated,
-        reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-    )]
     config: UnifiedCacheConfig,
     stats: CacheStats,
 }
 
-#[expect(
-    deprecated,
-    reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-)]
 impl CacheManager {
     /// Create new cache manager with configuration
     #[must_use]
@@ -434,10 +418,6 @@ impl CacheManager {
     }
 }
 
-#[expect(
-    deprecated,
-    reason = "UnifiedCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-)]
 impl Default for CacheManager {
     /// Returns the default instance
     fn default() -> Self {
@@ -470,7 +450,7 @@ pub type UnifiedCacheConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated, clippy::expect_used, clippy::float_cmp)]
+    #![expect(clippy::expect_used, clippy::float_cmp)]
 
     use super::*;
 

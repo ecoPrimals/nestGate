@@ -19,7 +19,6 @@ pub struct UniversalAdapter {
     /// Discovery cache
     pub discovery_cache: HashMap<String, CachedCapability>,
     /// Adapter configuration (cache/timeout settings)
-    #[expect(deprecated, reason = "migration in progress")]
     /// Configuration for
     pub config: UniversalAdapterConfig,
     /// Discovery configuration (immutable, thread-safe)
@@ -42,10 +41,6 @@ pub struct UniversalAdapter {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for UniversalAdapter
 pub struct UniversalAdapterConfig {
     /// Discovery timeout in seconds
@@ -152,7 +147,6 @@ pub struct CapabilityResponse {
     pub latency_ms: u64,
 }
 
-#[expect(deprecated, reason = "migration in progress")]
 impl Default for UniversalAdapterConfig {
     /// Returns the default instance
     fn default() -> Self {

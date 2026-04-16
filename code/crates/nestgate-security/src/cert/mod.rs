@@ -26,10 +26,6 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Certificate
 pub struct CertificateConfig {
     /// Certificate file path
@@ -77,7 +73,6 @@ mod certificate_config_tests {
     use serde_json::json;
 
     #[test]
-    #[expect(deprecated)]
     fn certificate_config_default_and_serde_roundtrip() {
         let c = CertificateConfig::default();
         assert_eq!(c.validity_days, 365);

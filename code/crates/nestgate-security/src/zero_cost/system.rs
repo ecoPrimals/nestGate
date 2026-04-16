@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(deprecated)]
-
 //! Zero-cost system implementation
 //!
 //! This module provides the main zero-cost system that composes providers
 //! with compile-time dependency injection, eliminating runtime overhead.
 //!
 //! Note: Uses deprecated traits for backward compatibility.
-//! Deprecation warnings are suppressed via `#![expect(deprecated)]` at module level.
 //! Migration to canonical traits is tracked but not yet scheduled.
 
 use super::constants::{

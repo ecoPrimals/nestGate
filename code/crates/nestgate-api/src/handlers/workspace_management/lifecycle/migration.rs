@@ -296,8 +296,6 @@ async fn perform_replicate_migration(
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated)]
-
     use super::*;
     use axum::extract::{Json, Path};
 

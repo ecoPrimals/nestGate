@@ -31,11 +31,6 @@ use super::enums::{DiscoveryMethod, RetryBackoff};
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-#[expect(deprecated, reason = "migration in progress")]
 pub struct CanonicalAdapterConfig {
     /// Service identification
     pub service_id: String,
@@ -60,7 +55,6 @@ pub struct CanonicalAdapterConfig {
     pub performance: PerformanceConfig,
 }
 
-#[expect(deprecated, reason = "migration in progress")]
 impl Default for CanonicalAdapterConfig {
     fn default() -> Self {
         Self {
@@ -116,10 +110,6 @@ impl Default for DiscoveryConfig {
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 pub struct RequestConfig {
     /// Request timeout
     pub timeout: Duration,
@@ -133,7 +123,6 @@ pub struct RequestConfig {
     pub request_queue_size: u32,
 }
 
-#[expect(deprecated, reason = "migration in progress")]
 impl Default for RequestConfig {
     fn default() -> Self {
         Self {
@@ -186,11 +175,6 @@ impl Default for MonitoringConfig {
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
-#[expect(deprecated, reason = "migration in progress")]
 pub struct SecurityConfig {
     /// Enable authentication
     pub auth_enabled: bool,
@@ -204,7 +188,6 @@ pub struct SecurityConfig {
     pub rate_limiting: RateLimitConfig,
 }
 
-#[expect(deprecated, reason = "migration in progress")]
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
@@ -275,10 +258,6 @@ impl Default for AlertThresholds {
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 pub struct RateLimitConfig {
     /// Requests per second allowed
     pub requests_per_second: u32,
@@ -288,7 +267,6 @@ pub struct RateLimitConfig {
     pub window_size: Duration,
 }
 
-#[expect(deprecated, reason = "migration in progress")]
 impl Default for RateLimitConfig {
     fn default() -> Self {
         Self {

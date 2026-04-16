@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-#![expect(deprecated)]
 #![expect(
     clippy::unnecessary_wraps,
     reason = "Stub APIs use Result for forward-compatible error propagation"
@@ -77,10 +76,6 @@ use super::production_discovery_config::ProductionDiscoveryConfig;
 ///
 /// [`CapabilityAwareDiscovery`]: crate::universal_primal_discovery::production_capability_bridge::CapabilityAwareDiscovery
 #[derive(Debug, Clone)]
-#[deprecated(
-    since = "0.12.0",
-    note = "Use CapabilityAwareDiscovery from production_capability_bridge instead"
-)]
 /// Configuration for `ServiceDiscovery`
 pub struct ServiceDiscoveryConfig {
     /// Service endpoints discovered from environment/config

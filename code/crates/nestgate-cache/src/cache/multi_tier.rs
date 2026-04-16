@@ -61,10 +61,6 @@ pub struct SimpleCacheConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `MultiTierCache`
 pub struct MultiTierCacheConfig {
     /// Hot tier configuration (fastest access)
@@ -87,10 +83,6 @@ pub struct MultiTierCache {
     /// Cold tier for infrequently accessed data (HDD-based, slow but large)
     cold_tier: InMemoryCache,
     /// Tier byte limits and thresholds from construction-time config
-    #[expect(
-        deprecated,
-        reason = "MultiTierCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-    )]
     tier_config: MultiTierCacheConfig,
     hot_tier_hits: AtomicU64,
     warm_tier_hits: AtomicU64,
@@ -100,10 +92,6 @@ pub struct MultiTierCache {
     demotion_events: AtomicU64,
 }
 
-#[expect(
-    deprecated,
-    reason = "MultiTierCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-)]
 impl MultiTierCache {
     /// Create new multi-tier cache with specified configuration
     ///
@@ -489,10 +477,6 @@ pub fn resolve_cache_base() -> String {
         .unwrap_or_else(|_| "/tmp/nestgate".to_string())
 }
 
-#[expect(
-    deprecated,
-    reason = "MultiTierCacheConfig is deprecated; canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-)]
 impl Default for MultiTierCacheConfig {
     fn default() -> Self {
         let base = resolve_cache_base();

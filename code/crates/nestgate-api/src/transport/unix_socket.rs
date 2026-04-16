@@ -63,12 +63,6 @@ use tracing::{info, warn};
 /// let client = JsonRpcClient::connect_unix("/run/primal/orchestration.sock").await?;
 /// client.call("ipc.register", json!({"primal": "nestgate-api"})).await?;
 /// ```
-#[deprecated(
-    since = "2.3.0",
-    note = "Connection logic moved to orchestration provider's IPC SERVICE. \
-            Call via JSON-RPC over discovered socket - DO NOT import peer primal code! \
-            See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md for service-based integration."
-)]
 pub struct UnixSocketListener {
     socket_path: PathBuf,
     listener: Option<UnixListener>,

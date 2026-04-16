@@ -2,10 +2,6 @@
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
 #![forbid(unsafe_code)]
-#![expect(
-    deprecated,
-    reason = "re-exports legacy modules with documented migration paths"
-)]
 
 //! Capability and peer discovery helpers for the `NestGate` storage primal.
 //!
@@ -86,10 +82,6 @@ pub mod infant_discovery;
 pub mod primal_discovery;
 pub mod primal_self_knowledge;
 pub mod self_knowledge;
-#[deprecated(
-    since = "0.3.0",
-    note = "Service registry and orchestration discovery are orchestration-provider concerns. NestGate retains only capability-based peer lookup via env and JSON-RPC IPC."
-)]
 /// Universal service registry patterns; full registry belongs with the orchestration provider.
 pub mod service_discovery;
 pub mod universal_primal_discovery;

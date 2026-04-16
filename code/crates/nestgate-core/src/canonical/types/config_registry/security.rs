@@ -26,10 +26,6 @@ use std::time::Duration;
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for SecurityAuthentication
 pub struct SecurityAuthenticationConfig {
     /// Whether this feature is enabled
@@ -76,10 +72,6 @@ pub enum AuthenticationMethod {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for SecurityAuthorization
 pub struct SecurityAuthorizationConfig {
     /// Whether this feature is enabled
@@ -109,10 +101,6 @@ pub struct SecurityAuthorizationConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for SecurityEncryption
 pub struct SecurityEncryptionConfig {
     /// Whether this feature is enabled
@@ -153,10 +141,6 @@ pub struct KeyDerivationConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for SecurityTls
 pub struct SecurityTlsConfig {
     /// Whether this feature is enabled
@@ -184,10 +168,6 @@ pub struct SecurityTlsConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for SecurityAudit
 pub struct SecurityAuditConfig {
     /// Whether this feature is enabled
@@ -217,10 +197,6 @@ pub struct SecurityAuditConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for SecurityThreatDetection
 pub struct SecurityThreatDetectionConfig {
     /// Whether this feature is enabled
@@ -250,10 +226,6 @@ pub struct SecurityThreatDetectionConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use crate::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for SecurityCompliance
 pub struct SecurityComplianceConfig {
     /// Frameworks

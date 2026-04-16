@@ -18,10 +18,6 @@ pub trait ZeroCostCacheProvider<K, V> {
 
 /// Zero-cost security provider trait
 /// **DEPRECATED**: Zero-cost security consolidated into unified traits
-#[deprecated(
-    since = "0.9.0",
-    note = "Use nestgate_core::traits::canonical::CanonicalSecurity with const generics"
-)]
 /// `ZeroCostSecurityProvider` trait
 pub trait ZeroCostSecurityProvider<Token, Credentials> {
     /// Authenticate - compile-time specialization
@@ -35,10 +31,6 @@ pub trait ZeroCostSecurityProvider<Token, Credentials> {
 
 /// Zero-cost storage provider trait
 /// **DEPRECATED**: Zero-cost storage consolidated into unified traits
-#[deprecated(
-    since = "0.9.0",
-    note = "Use nestgate_core::traits::unified_storage::UnifiedStorage with const generics for zero-cost patterns"
-)]
 /// `ZeroCostStorageProvider` trait
 pub trait ZeroCostStorageProvider<Key, Value> {
     /// Store value - no runtime overhead

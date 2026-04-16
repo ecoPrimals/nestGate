@@ -12,10 +12,6 @@ use std::collections::HashMap;
 
 /// Storage resource configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 pub struct StorageResourceConfig {
     /// Resource name
     pub name: String,

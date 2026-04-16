@@ -41,10 +41,6 @@ pub struct RpcExtensions {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `NestGateRpc`
 pub struct NestGateRpcConfig {
     /// Connection pool configuration for managing RPC connections
@@ -76,10 +72,6 @@ pub struct NestGateRpcConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `ConnectionPool`
 pub struct ConnectionPoolConfig {
     /// Maximum number of connections per service
@@ -123,10 +115,6 @@ pub struct ConnectionPoolConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `RpcSecurity`
 pub struct RpcSecurityConfig {
     /// Enable TLS encryption
@@ -178,10 +166,6 @@ pub struct RpcSecurityConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `LoadBalancing`
 pub struct LoadBalancingConfig {
     /// Load balancing strategy
@@ -223,10 +207,6 @@ impl Default for LoadBalancingConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for `HealthMonitoring`
 pub struct HealthMonitoringConfig {
     /// Enable health monitoring
@@ -260,10 +240,6 @@ pub struct HealthMonitoringConfig {
 /// ```
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_core::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 /// Configuration for Stream
 pub struct StreamConfig {
     /// Maximum concurrent streams per connection
@@ -452,8 +428,6 @@ pub type NestGateRpcConfigCanonical =
 
 #[cfg(test)]
 mod tests {
-    #![expect(deprecated)]
-
     use super::*;
 
     #[test]

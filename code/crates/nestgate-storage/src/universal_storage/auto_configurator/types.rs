@@ -85,10 +85,6 @@ pub struct StorageRequirements {
 ///
 /// **Timeline**: This type alias will be maintained until v0.12.0 (May 2026)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    since = "0.11.0",
-    note = "Use nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig instead"
-)]
 pub struct OptimalStorageConfig {
     /// Tier configuration
     pub tier_configuration: TierConfiguration,

@@ -8,7 +8,6 @@ use crate::universal_adapter::consolidated_canonical::enums::ResponseStatus;
 
 #[test]
 fn test_adapter_config_defaults() {
-    #[expect(deprecated)]
     let config = CanonicalAdapterConfig::default();
     assert_eq!(config.service_name, "nestgate");
     assert!(config.discovery.auto_discovery);
@@ -60,7 +59,6 @@ fn test_adapter_stats_defaults() {
 async fn adapter_initialize_and_request_capability_updates_stats() {
     use std::collections::HashMap;
 
-    #[expect(deprecated)]
     let config = CanonicalAdapterConfig::default();
     let adapter = ConsolidatedCanonicalAdapter::new(config).expect("adapter new");
     adapter.initialize().await.expect("initialize");

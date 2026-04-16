@@ -28,7 +28,6 @@ pub mod multi_tier;
 /// - `StorageTier`: Multi-tier cache tier definitions
 pub mod types;
 pub use manager::CacheManager;
-#[expect(deprecated)]
 pub use multi_tier::{MultiTierCache, MultiTierCacheConfig, MultiTierCacheStats};
 pub use types::{
     CacheEntry, CachePolicy, CacheStats, CacheStorageTierExt, EfficiencyMetrics, StorageTier,
@@ -57,7 +56,6 @@ impl CacheSystem {
                 "cache hot_tier_size exceeds usize::MAX on this platform",
             )
         })?;
-        #[expect(deprecated)]
         let unified_config = crate::cache::manager::UnifiedCacheConfig {
             max_size,
             ttl_seconds: cache_config.ttl_seconds,
@@ -70,7 +68,6 @@ impl CacheSystem {
     }
 
     /// Create a multi-tier cache system
-    #[expect(deprecated)]
     pub fn multi_tier(cache_config: MultiTierCacheConfig) -> nestgate_types::Result<Self> {
         let cache = MultiTierCache::new(cache_config)?;
         Ok(Self::MultiTier(cache))
@@ -228,7 +225,6 @@ impl CacheSystemStats {
 pub struct CacheBuilder {
     config: nestgate_config::config::canonical_primary::CacheConfig,
     multi_tier: bool,
-    #[expect(deprecated)]
     multi_tier_config: Option<MultiTierCacheConfig>,
 }
 impl CacheBuilder {
@@ -273,10 +269,6 @@ impl CacheBuilder {
     /// Enable multi-tier caching
     // LINTING FIX: Add underscore prefix for unused parameter
     #[must_use]
-    #[expect(
-        deprecated,
-        reason = "Constructs MultiTierCacheConfig (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-    )]
     pub fn with_multi_tier(mut self, _config: NestGateCanonicalConfig) -> Self {
         self.multi_tier = true;
         // Convert NestGateCanonicalConfig to MultiTierCacheConfig
@@ -306,10 +298,6 @@ impl CacheBuilder {
 
     /// Enable multi-tier caching with default configuration
     #[must_use]
-    #[expect(
-        deprecated,
-        reason = "Uses MultiTierCacheConfig::default() (deprecated); canonical replacement is nestgate_config::config::canonical_primary::domains::network::CanonicalNetworkConfig"
-    )]
     pub fn enable_multi_tier(mut self) -> Self {
         self.multi_tier = true;
         self.multi_tier_config = Some(MultiTierCacheConfig::default());

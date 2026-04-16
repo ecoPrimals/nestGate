@@ -6,8 +6,6 @@
 //! Defines the protocol for communicating with storage backends,
 //! including all request and response types.
 
-#![expect(deprecated)]
-
 use super::config::StorageResourceConfig;
 use super::{
     events::StorageEventType,

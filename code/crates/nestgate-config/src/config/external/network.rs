@@ -318,10 +318,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "dev defaults align with runtime_fallback_ports until RuntimePortResolver"
-    )]
     fn test_metrics_endpoint() {
         let config = NetworkConfig::default_dev();
         assert_eq!(
@@ -331,10 +327,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(
-        deprecated,
-        reason = "example URL uses runtime_fallback_ports for parity"
-    )]
     fn test_endpoint_url() {
         let endpoint = EndpointConfig {
             host: "example.com".to_string(),
@@ -347,7 +339,6 @@ mod tests {
     }
 
     #[test]
-    #[expect(deprecated, reason = "fallback port uses runtime_fallback_ports")]
     fn test_from_env_with_defaults() {
         // Should use defaults when env vars not set
         let endpoint =

@@ -62,10 +62,6 @@ use tracing::{error, info, warn};
 /// - Automatic endpoint registration
 /// - Metadata storage integration
 /// - Works on ALL platforms (Linux, macOS, Windows, etc.)
-#[deprecated(
-    since = "2.3.0",
-    note = "Connection logic moved to orchestration provider (Universal IPC). Register via JSON-RPC and use nestgate::service_metadata for discovery. See UNIVERSAL_IPC_EVOLUTION_PLAN_JAN_19_2026.md"
-)]
 #[derive(Clone)]
 pub struct TransportServer<H> {
     config: TransportConfig,

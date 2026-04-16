@@ -20,7 +20,6 @@
     )
 )]
 #![expect(
-    deprecated,
     dead_code,
     clippy::missing_errors_doc,
     clippy::doc_markdown,
