@@ -1,6 +1,6 @@
 # NestGate - Current Status
 
-**Last Updated**: April 16, 2026 (Session 43r — deprecated migration, traits split, coverage, doc reconciliation)  
+**Last Updated**: April 16, 2026 (Session 43t — deprecated pruning, coverage 83.86%, hardcoded ports evolved)  
 **Version**: 4.7.0-dev
 
 ---
@@ -8,10 +8,10 @@
 ## Quick Metrics
 
 ```
-Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-15
-Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-15
-Format:             CLEAN (cargo fmt --check passes), as of 2026-04-15
-Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-15
+Build:              PASS — cargo check --workspace --all-features --all-targets (0 errors), as of 2026-04-16
+Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-16
+Format:             CLEAN (cargo fmt --check passes), as of 2026-04-16
+Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-16
 Tests:              8,627 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-16
 Coverage:           83.86% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-16) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
@@ -650,4 +650,4 @@ Setup script: `scripts/setup-test-substrate.sh`
 ---
 
 **Created**: February 1, 2026  
-**Latest**: April 16, 2026 (Session 43r)
+**Latest**: April 16, 2026 (Session 43t)
