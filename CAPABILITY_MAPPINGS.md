@@ -512,10 +512,10 @@ self.call_method("storage.put", json!({
 **Status**: Semantic naming complete. Streaming storage methods wired. TCP transport active.
 
 **Next Steps**:
-1. Migrate remaining 183 deprecated config types to canonical
-2. Push coverage 81.68% → 90%
-3. Test cross-primal integration with streaming tensors
+1. Push coverage 84.12% → 90%
+2. Test cross-primal integration with streaming tensors
+3. Track vendored `rustls-rustcrypto` + `rustls-webpki` upstream for drop opportunity
 
 ---
 
-**Last Updated**: April 15, 2026
+**Last Updated**: April 16, 2026

@@ -46,7 +46,7 @@ pub use automation::{
     WorkflowsConfig,
 };
 
-// **LEGACY**: Network configurations (will be migrated to consolidated system)
+// Network configuration re-exports (canonical domain types)
 pub use network::{
     ApiConfig, CanonicalNetworkConfig, NetworkDiscoveryConfig, NetworkEnvironmentConfig,
     NetworkMonitoringConfig, NetworkOrchestrationConfig, NetworkPerformanceConfig,

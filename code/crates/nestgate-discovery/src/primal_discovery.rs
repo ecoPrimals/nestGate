@@ -9,7 +9,7 @@
 //! # Architecture
 //!
 //! - **Self-Knowledge**: Each primal knows only itself (capabilities, endpoints)
-//! - **Runtime Discovery**: Primals discover each other via mDNS/DNS-SD
+//! - **Runtime Discovery**: Primals discover each other via capability IPC
 //! - **Capability-Based**: Connect by capability, not by name or hardcoded port
 //! - **Zero Configuration**: No hardcoded service locations
 //!
@@ -20,7 +20,6 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! // Uses reqwest; discovery.announce spawns network - use capability_helpers for production
 //! use nestgate_core::primal_discovery::{PrimalDiscovery, SelfKnowledge};
 //! let self_knowledge = SelfKnowledge::builder()
 //!     .name("nestgate")

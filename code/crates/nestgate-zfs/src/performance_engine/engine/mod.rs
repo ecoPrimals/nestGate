@@ -33,14 +33,6 @@ pub struct PerformanceOptimizationEngine {
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
-    // Ecosystem connections for AI intelligence
-    /// Network ecosystem discovery (feature-gated)
-    // #[cfg(feature = "network-integration")]
-    // ecosystem_discovery: Arc<EcosystemDiscovery>,
-    /// Service connection pool (feature-gated)
-    // #[cfg(feature = "network-integration")]
-    // service_connections: Arc<RwLock<ServiceConnectionPool>>,
-
     // Real-time performance monitoring
     performance_monitor: Arc<RealTimePerformanceMonitor>,
     optimization_state: Arc<tokio::sync::RwLock<OptimizationState>>,
@@ -56,21 +48,11 @@ impl PerformanceOptimizationEngine {
         config: ZfsConfig,
         pool_manager: Arc<ZfsPoolManager>,
         dataset_manager: Arc<ZfsDatasetManager>,
-        // Network integration parameters (feature-gated)
-        // #[cfg(feature = "network-integration")] ecosystem_discovery: Arc<EcosystemDiscovery>,
-        // #[cfg(feature = "network-integration")] service_connections: Arc<
-        //     RwLock<ServiceConnectionPool>,
-        // >,
     ) -> Self {
         Self {
             config,
             pool_manager,
             dataset_manager,
-            // Network integration initialization (feature-gated)
-            // #[cfg(feature = "network-integration")]
-            // ecosystem_discovery,
-            // #[cfg(feature = "network-integration")]
-            // service_connections,
             performance_monitor: Arc::new(RealTimePerformanceMonitor::new()),
             optimization_state: Arc::new(tokio::sync::RwLock::new(OptimizationState::default())),
             engine_config: PerformanceEngineConfig::default(),
@@ -85,11 +67,6 @@ impl Clone for PerformanceOptimizationEngine {
             config: self.config.clone(),
             pool_manager: Arc::clone(&self.pool_manager),
             dataset_manager: Arc::clone(&self.dataset_manager),
-            // Network integration cloning (feature-gated)
-            // #[cfg(feature = "network-integration")]
-            // ecosystem_discovery: Arc::clone(&self.ecosystem_discovery),
-            // #[cfg(feature = "network-integration")]
-            // service_connections: Arc::clone(&self.service_connections),
             performance_monitor: Arc::clone(&self.performance_monitor),
             optimization_state: Arc::clone(&self.optimization_state),
             engine_config: self.engine_config.clone(),

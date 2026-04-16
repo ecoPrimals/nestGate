@@ -112,7 +112,6 @@ pub mod load_testing;
 ///
 /// Real-time metrics collection and aggregation system.
 pub mod metrics_collector;
-// Stub tests reference undefined types (`ApplicationMetrics`, etc.); restore when aligned with collector API.
 #[cfg(test)]
 mod metrics_collector_critical_tests;
 #[cfg(test)]

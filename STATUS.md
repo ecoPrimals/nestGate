@@ -12,7 +12,7 @@ Build:              PASS — cargo check --workspace --all-features --all-target
 Clippy:             PASS — cargo clippy --workspace --lib -- -W clippy::all -W clippy::pedantic -W clippy::nursery (zero warnings), as of 2026-04-16
 Format:             CLEAN (cargo fmt --check passes), as of 2026-04-16
 Docs:               PASS — cargo doc --workspace --no-deps (zero warnings), as of 2026-04-16
-Tests:              8,636 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-16
+Tests:              8,695 passing, 0 failures, 60 ignored (cargo test --workspace --lib), as of 2026-04-16
 Coverage:           84.12% line (cargo llvm-cov --workspace --lib --summary-only, 2026-04-16) — wateringHole 80% met; 90% target pending
 Files > 800 lines:  0 (all .rs files under 800 LOC; 4 large files refactored Session 43p)
 Unwrap/Expect:      ZERO in production library code
@@ -539,7 +539,7 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 | Production stubs | EVOLVED (routes return real AppState data; dev stubs feature-gated) |
 | TLS/crypto | Delegated to security capability provider via IPC; installer uses system curl (ring/rustls/reqwest ELIMINATED) |
 | `sysinfo` dependency | OPTIONAL (Linux: pure-Rust /proc; non-Linux: sysinfo) |
-| Coverage gap to 90% | ~8.3 pp remaining (81.7% current; Session 43 targeted low-coverage files +42 tests) |
+| Coverage gap to 90% | ~5.9 pp remaining (84.12% current; Sessions 43–43w targeted low-coverage files, deprecated cleanup) |
 | Semantic router | COMPILED & WIRED — `nat.*`, `beacon.*` routes active; `data.*` removed; discovery modules active |
 | `#[allow(dead_code)]` | 0 production `#[allow(dead_code)]` — dead code removed rather than suppressed |
 | MCP in-tree | REMOVED from workspace — external biomeOS / capability.call |
@@ -550,12 +550,13 @@ Measured with `cargo check` / `cargo clippy --workspace --all-targets --all-feat
 ### Coverage
 
 ```
-Current:  ~81.7% line coverage (llvm-cov, Apr 12 2026)
-          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7%)
+Current:  84.12% line coverage (llvm-cov, Apr 16 2026)
+          (evolution: 68.4% → 71.4% → 74.3% → 77.1% → 80% → 81.4% → 81.7% → 82.06% → 82.94% → 83.86% → 84.12%)
 Target:   90% line coverage
-Gap:      ~8.3 percentage points
+Gap:      ~5.9 percentage points
 Path:     ZFS (needs real ZFS), installer (platform), cloud backends, binary entrypoints
 Session 43: pool_ops 59→99%, trait_impl 62→99%, tier 64→86%, metadata_backend +edge tests, registry +concurrent tests
+Session 43v: +tests for objects/datasets/health_monitoring/connection_pool/transport/semantic_router/rpc_router/discovery/config/zfs/automation/security
 ```
 
 ### Dependency Purity
@@ -608,7 +609,7 @@ Deprecated/shed (removed from workspace): nestgate-network, nestgate-automation,
 | ecoBin | PASS (pure Rust app code; ring/rustls/reqwest eliminated; sysinfo optional non-Linux only) |
 | JSON-RPC 2.0 | PASS — Wire Standard Level 3 (Composable) |
 | tarpc | PASS (feature-gated, version aligned) |
-| Semantic naming | PASS (storage.*, data.*, nat.*, beacon.*, health.*, capabilities.*) |
+| Semantic naming | PASS (storage.*, nat.*, beacon.*, health.*, capabilities.*, zfs.*, bonding.*, session.*, model.*, templates.*, audit.*, identity.*, discovery.*) |
 | File size (<1000 production) | PASS (max ~463 lines after Session 43 refactors) |
 | Sovereignty | PASS (capability-based discovery, storage.sock symlink, zero hardcoded primals) |
 | mDNS Discovery | Feature-gated (`mdns`); production via biomeOS |

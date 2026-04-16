@@ -1,23 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025-2026 ecoPrimals Collective
 
-// **NATIVE ASYNC TRAIT SYSTEM**
-//! Trait definitions and implementations.
-// This module provides zero-cost native async traits that replace ALL async_trait patterns
-//! in the `NestGate` codebase, achieving 20-50% performance improvements.
-//! Trait definitions and implementations.
-// **REPLACES**:
-//! - 381+ `async_trait` usages across all crates
-//! - `Arc<dyn>` patterns causing runtime overhead
-//! - Boxing and virtual dispatch in async code
+//! Native async trait definitions and implementations.
 //!
-//! Trait definitions and implementations.
-//!
-// **PROVIDES**:
-//! - Native `impl Future` patterns
-//! - Const generic configuration
-//! - Zero-cost abstractions
-//! - Compile-time optimization
+//! Zero-cost native async traits — no `async_trait` dependency, no `Box::pin` overhead.
+//! Uses native `impl Future` patterns, const generic configuration, and compile-time
+//! optimization for zero-cost abstractions.
 
 use crate::error::Result;
 use std::collections::HashMap;

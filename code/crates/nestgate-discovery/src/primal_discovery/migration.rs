@@ -27,7 +27,6 @@ use tracing::{debug, info, warn};
 /// # Example
 ///
 /// ```rust,ignore
-/// // Requires Arc<PrimalDiscovery> and reqwest; see tests for full usage
 /// use nestgate_core::primal_discovery::migration::DiscoveryOrEnv;
 /// let helper = DiscoveryOrEnv::new(discovery);
 /// let auth_endpoint = helper.endpoint_for("security", "AUTH_SERVICE_PORT", 5000).await?;

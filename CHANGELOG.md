@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **rand API migration**: `rng.gen_range()` → `rng.random_range()`, `rng.r#gen::<f64>()`
   → `rng.random::<f64>()` in load_balancing modules (Rust 2024 keyword conflict).
 - **Verification**: fmt PASS, clippy PASS (pedantic+nursery, 0 warnings), check PASS
-  (0 own-code warnings), 1,648 lib tests/0 failures.
+  (0 own-code warnings), 8,695 lib tests/0 failures.
 
 ### Session 43v: Deep debt — coverage push, deprecated pruning, flaky test fix, file split (April 16, 2026)
 
